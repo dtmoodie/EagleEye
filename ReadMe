@@ -1,0 +1,17 @@
+Eagle eye is a prototyping software for computer vision algorithms.
+
+
+This software was created with a few main goals in mind.
+
+1) Create an easy to use GUI that makes development, fast, easy and flexible
+
+2) Save developed workflows into an xml format which allows later loading and reprocessing
+
+3) Create a library that can easily be linked into other programs including command line programs
+
+4) Primarily GPU accelerated processing
+
+5) 2d and 3d vision capabilities
+
+
+
