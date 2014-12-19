@@ -26,4 +26,5 @@ ParallelStack::process(cv::cuda::GpuMat img)
     {
         retVal.get_future().get();
     }
+	return retVal.get_future().get();
 }

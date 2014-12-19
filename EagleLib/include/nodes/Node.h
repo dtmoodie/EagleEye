@@ -13,16 +13,14 @@
  *
 */
 
+#include <EagleLib.h>
 #include <opencv2/core.hpp>
 #include <opencv2/cuda.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/signals2.hpp>
-#include <boost/thread/future.hpp>
-
-
-
+#include <boost/thread/future.hpp> 
 
 
 namespace EagleLib

@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 2.8)
 
-
 project(EagleEye)
+SET(CMAKE_BUILD_TYPE "Debug")
+#set(CMAKE_DEBUG_POSTFIX "d")
+SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/Bin CACHE PATH "Library output path")
+SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/Bin CACHE PATH "Executable output path")
+SET(CMAKE_CONFIGURATION_TYPES "Debug;Release")
+IF(WIN32)
+add_definitions(-DWIN32)
+add_definitions(-D_WIN32)
+ENDIF(WIN32)
+message(Build type: ${CMAKE_BUILD_TYPE})
 add_subdirectory(EagleLib)
 add_subdirectory(EagleEye)

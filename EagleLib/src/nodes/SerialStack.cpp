@@ -16,5 +16,6 @@ SerialStack::doProcess(cv::cuda::GpuMat& img)
     {
         img = children[i]->process(img);
     }
+	return img;
 }
 

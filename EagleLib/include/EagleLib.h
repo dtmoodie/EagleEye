@@ -1,7 +1,8 @@
 #pragma once
 
-#include "nodes/Node.h"
+#include "nodes/Node.h"	
 
+#define CVAPI_EXPORTS
 
 
 /*
