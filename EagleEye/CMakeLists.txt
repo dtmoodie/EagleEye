@@ -41,7 +41,7 @@ ADD_EXECUTABLE(EagleEye
         ${headers}
         ${UIS}
 )
-add_dependencies(EagleEye EagleLib)
+#add_dependencies(EagleEye EagleLib)
 
 TARGET_LINK_LIBRARIES(EagleEye
         Qt5::Gui

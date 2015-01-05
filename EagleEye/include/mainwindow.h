@@ -2,8 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "nodes/ParallelStack.h"
-#include "nodes/SerialStack.h"
+#include <nodes/Root.h>
 
 namespace Ui {
 class MainWindow;
@@ -22,8 +21,9 @@ private slots:
 
 private:
     void onError(std::string& error);
+    void onStatus(std::string& status);
     Ui::MainWindow *ui;
-    EagleLib::SerialStack baseNode;
+    EagleLib::Root rootNode;
 };
 
 #endif // MAINWINDOW_H

@@ -1,8 +1,14 @@
 #pragma once
 
+#ifdef _WIN32
+
+#else
+#define CVAPI_EXPORTS
+#endif
+
 #include "nodes/Node.h"	
 
-#define CVAPI_EXPORTS
+
 
 
 /*

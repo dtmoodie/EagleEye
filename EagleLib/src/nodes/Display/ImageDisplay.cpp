@@ -1,5 +1,4 @@
 #include "nodes/Display/ImageDisplay.h"
-#include <opencv2/cudaarithm.hpp>
 
 using namespace EagleLib;
 

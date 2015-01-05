@@ -1,4 +1,5 @@
 #include "nodes/Node.h"
+#include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
 using namespace EagleLib;
 Node::Node()
 {
@@ -9,10 +10,20 @@ Node::~Node()
 {
 
 }
+int Node::addChild(Node* child)
+{
+    boost::shared_ptr<Node> ptr(child);
+    return addChild(ptr);
+}
+
 int Node::addChild(boost::shared_ptr<Node> child)
 {
     if(errorCallback)
         child->errorCallback = errorCallback;
+    if(statusCallback)
+        child->statusCallback = statusCallback;
+    if(warningCallback)
+        child->warningCallback = warningCallback;
     for(int i = 0; i < child->parameters.size(); ++i)
     {
         childParameters.push_back(std::make_pair(i,child->parameters[i]));
@@ -20,7 +31,11 @@ int Node::addChild(boost::shared_ptr<Node> child)
     children.push_back(child);
     return children.size() -1;
 }
+void
+Node::getInputs()
+{
 
+}
 void
 Node::removeChild(boost::shared_ptr<Node> child)
 {
@@ -109,3 +124,4 @@ Node::getName()
 }
 
 
+REGISTERCLASS( Node );

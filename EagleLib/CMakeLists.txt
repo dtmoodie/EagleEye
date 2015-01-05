@@ -2,10 +2,15 @@ cmake_minimum_required(VERSION 2.8)
 project(EagleLib)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-if(WIN32)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
-endif(WIN32)
-
+if(UNIX)
+        set(BUILD_TYPE SHARED)
+else()
+        set(BUILD_TYPE STATIC)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+        set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+endif()
 
 set(OPENCV_STATIC ON)
 find_package(OpenCV REQUIRED core imgproc highgui cuda cudaimgproc cudawarping cudafeatures2d)
@@ -24,12 +29,14 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 file(GLOB_RECURSE src "src/*.cpp" "src/nodes/*.cpp")
 file(GLOB_RECURSE hdr "include/*.h" "include/nodes/*.h")
-add_definitions(-DWIN32)
-add_definitions(-D_WIN32)
 
-INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES("include")
+INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS}
+                    ${Boost_INCLUDE_DIRS}
+                    "include"
+                    "RuntimeCompiler"
+                    "RuntimeObjectSystem"
+)
+include(cmake/ProjectFiles.cmake)
 
 set(EagleLib_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
 if(WIN32)
@@ -42,20 +49,45 @@ if(WIN32)
 	endif(CMAKE_BUILD_TYPE EQUAL "Debug")
 else()
 	if(CMAKE_BUILD_TYPE EQUAL "Debug")
-		set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/libEagleLib${CMAKE_DEBUG_POSTFIX}.so PARENT_SCOPE)
+                set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/libEagleLib${CMAKE_DEBUG_POSTFIX}.a PARENT_SCOPE)
 		else()
-		set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/libEagleLib${CMAKE_RELEASE_POSTFIX}.so PARENT_SCOPE)
+                set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/libEagleLib${CMAKE_RELEASE_POSTFIX}.a PARENT_SCOPE)
 		endif(CMAKE_BUILD_TYPE EQUAL "Debug")
 endif(WIN32)
 
-
-add_library(EagleLib SHARED 
-	${src} 
-	${hdr}
+add_library(RuntimeCompiler
+            ${BUILD_TYPE}
+            ${RuntimeCompiler_SRCS}
 )
 
+add_library(RuntimeObjectSystem
+            ${BUILD_TYPE}
+            ${RuntimeObjectSystem_SRCS}
+)
+target_link_libraries(RuntimeObjectSystem RuntimeCompiler)
+if(UNIX)
+        target_link_libraries(RuntimeObjectSystem dl)
+endif()
 
+
+add_library(EagleLib STATIC
+	${src} 
+	${hdr}
+        ${RuntimeObjectSystem_SRCS}
+
+)
+foreach(lib ${OpenCV_LIBS})
+message(${lib})
+endforeach(lib)
+get_property(dirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+message("Include directories: ")
+foreach(dir ${dirs})
+  message(STATUS "dir='${dir}'")
+endforeach()
+message("End of include directories")
 TARGET_LINK_LIBRARIES(EagleLib 
 	${Boost_LIBRARIES} 
 	${OpenCV_LIBS} 
+        RuntimeCompiler
+        RuntimeObjectSystem
 )
