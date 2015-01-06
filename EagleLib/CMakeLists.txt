@@ -37,8 +37,8 @@ INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS}
                     "RuntimeObjectSystem"
 )
 include(cmake/ProjectFiles.cmake)
-
 set(EagleLib_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
+
 if(WIN32)
 	if(CMAKE_BUILD_TYPE EQUAL "Debug")
 		set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_DEBUG_POSTFIX}.lib PARENT_SCOPE)
@@ -64,26 +64,32 @@ add_library(RuntimeObjectSystem
             ${BUILD_TYPE}
             ${RuntimeObjectSystem_SRCS}
 )
+
 target_link_libraries(RuntimeObjectSystem RuntimeCompiler)
 if(UNIX)
         target_link_libraries(RuntimeObjectSystem dl)
 endif()
 
 
+
 add_library(EagleLib STATIC
 	${src} 
 	${hdr}
-        ${RuntimeObjectSystem_SRCS}
+	${RuntimeObjectSystem_SRCS}
 )
+
 foreach(lib ${OpenCV_LIBS})
 message(${lib})
 endforeach(lib)
+
 get_property(dirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+
 message("Include directories: ")
 foreach(dir ${dirs})
   message(STATUS "dir='${dir}'")
 endforeach()
 message("End of include directories")
+
 if(UNIX)
 TARGET_LINK_LIBRARIES(EagleLib 
 	${Boost_LIBRARIES} 

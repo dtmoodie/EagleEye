@@ -14,8 +14,9 @@
 
 
 #include "nodes/Node.h"
+#ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/RuntimeObjectSystem.h"
-
+#endif
 namespace EagleLib
 {
     class Root: public Node
@@ -23,10 +24,10 @@ namespace EagleLib
     public:
         Root();
         ~Root();
-        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
-        boost::shared_ptr<RuntimeObjectSystem> objSystem;
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
     };
-
-
+#ifdef RCC_ENABLED
+    boost::shared_ptr<RuntimeObjectSystem> objSystem;
+#endif
 }
 

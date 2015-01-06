@@ -8,11 +8,11 @@ GoodFeaturesToTrackDetector::GoodFeaturesToTrackDetector():
 {
     addParameter("goodFeaturesToTrackDetector",cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1),"Good features to track detector", Parameter::Output);
     addParameter("numCorners", int(1000), "Number of corners to try to detect");
-    addParameter("qualityLevel", 0.01d, "Min relative quality level to keep. IE best corner scores 1500, qualityLevel=0.01 means rejection of anything below 15");
-    addParameter("minDistance", 0.0d, "Minimum distance between points");
+    addParameter("qualityLevel", 0.01, "Min relative quality level to keep. IE best corner scores 1500, qualityLevel=0.01 means rejection of anything below 15");
+    addParameter("minDistance", 0.0, "Minimum distance between points");
     addParameter("blockSize", int(3), "Corner detection block search size");
     addParameter("useHarris", true, "Use harris corner detector");
-    addParameter("harrisK", 0.04d, "Harris corner detector free parameter");
+    addParameter("harrisK", 0.04, "Harris corner detector free parameter");
     addParameter("calculateFlag", true, "Set flag to false to disable calculation");
     addParameter("keyPoints", cv::cuda::GpuMat(), "Detected key points", Parameter::Output);
     nodeName = std::string("GoodFeaturesToTrackDetector");

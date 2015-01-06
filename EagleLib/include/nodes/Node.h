@@ -22,19 +22,31 @@
 #include <boost/signals2.hpp>
 #include <boost/thread/future.hpp> 
 #include <type_traits>
+
+#if RCC_ENABLED
+// Strange work around for these includes not working correctly with GCC
 #include "../RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include "../RuntimeObjectSystem/ObjectInterface.h"
-
-
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda");
-
-//#define ADD_PARAMETER(NAME, CONSTRUCTOR, TYPE, PARAMTYPE) parameters.push_back(boost::shared_ptr<TypedParameter< (TYPE) >(new TypedParameter< (TYPE) >((NAME), (NAME), (CONSTRUCTOR), (PARAMTYPE))));
 class CV_EXPORTS IObject
 {
 
 };
+#endif
+
 namespace EagleLib
 {
+	enum nodeType
+	{
+		eVirtual = 0,
+		eGPU = 1,
+		eImg = 2,
+		ePtCloud = 4,
+		eProcessing = 8,
+		eFunctor = 16,
+		eObj = 32
+	};
+
     class CV_EXPORTS Parameter
     {
     public:
@@ -84,19 +96,26 @@ namespace EagleLib
         T& get();
         T data;
     };
+#if RCC_ENABLED
     class CV_EXPORTS Node: public IObject
+#else
+	class CV_EXPORTS Node
+#endif
     {
     public:
         Node();
         virtual ~Node();
         // Primary call to a node.  For simple operations this is the only thing that matters
-        cv::cuda::GpuMat          process(cv::cuda::GpuMat& img);
+        virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img);
+		virtual void					process(cv::InputArray in, cv::OutputArray out);
 
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
-        virtual void             doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat>& retVal);
-        virtual std::string      getName();
-        virtual void             getInputs();
-        /********************** Display stuff ****************************/
+        virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img);
+        virtual void					doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat>& retVal);
+		virtual void					doProcess(cv::InputArray in, boost::promise<cv::OutputArray>& retVal);
+		virtual void					doProcess(cv::InputArray in, cv::OutputArray out);
+        virtual std::string				getName();
+        virtual void					getInputs();
+        /********************** Display functions ****************************/
         // Registers a function to call for displaying the results
         virtual void registerDisplayCallback(boost::function<void(cv::Mat)>& f);
         virtual void registerDisplayCallback(boost::function<void(cv::cuda::GpuMat)>& f);
@@ -110,12 +129,59 @@ namespace EagleLib
         virtual void removeChild(int idx);
 
 		// Parameter stuff
-        template<typename T> int addParameter(const std::string& name, T data, const std::string quickHelp = std::string(), Parameter::ParamType type_ = Parameter::Control)
+        template<typename T> int  addParameter(const std::string& name, T data, const std::string quickHelp = std::string(), Parameter::ParamType type_ = Parameter::Control)
 		{
             parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, quickHelp, data, type_)));
 			return parameters.size() - 1;
 		}
-
+		template<typename T> bool updateParameter(const std::string& name, T data, const std::string quickHelp = std::string(), Parameter::ParamType type_ = Parameter::None)
+		{
+			auto param = getParameter(name);
+			if (param == NULL)
+				return false;
+			param->data = data;
+			if (type_ != Parameter::None)
+				param->type = type_;
+			if (quickHelp.size() > 0)
+				param->quickHelp = quickHelp;
+			param->changed = true;
+			return true;
+		}
+		template<typename T> bool updateParameter(int idx, T data, const std::string& name = std::string(), const std::string quickHelp = std::string(), Parameter::ParamType type_ = Parameter::None)
+		{
+			if (parameters.size() <= idx)
+				return false;
+			auto param = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[0]);
+			if (param == NULL)
+				return false;
+			param->data = data;
+			param->changed = true;
+			if (name.size() > 0)
+				param->name = name;
+			if (type_ != Parameter::None)
+				param->type = type_;
+			if (quickHelp.size() > 0)
+				param->quickHelp = quickHelp;
+			return true;
+		}
+		template<typename T> boost::shared_ptr< TypedParameter<T> > getParameterRecursive(std::string name, int depth)
+		{
+			if (depth < 0)
+				return boost::shared_ptr < TypedParameter<T> >();
+			for (int i = 0; i < parameters.size(); ++i)
+			{
+				if (parameters[i]->name == name)
+					return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[i]);
+			}
+			// Parameter doesn't exist in this scope, we must go deeper
+			for (int i = 0; i < children.size(); ++i)
+			{
+				boost::shared_ptr< TypedParameter<T> > param = children[i]->getParameterRecursive<T>(name, depth - 1);
+				if (param)
+					return param;
+			}
+			return boost::shared_ptr< TypedParameter<T> >();
+		}
         template<typename T> boost::shared_ptr< TypedParameter<T> > getParameter(std::string name)
         {
             for(int i = 0; i < parameters.size(); ++i)
@@ -125,13 +191,10 @@ namespace EagleLib
             }
             return boost::shared_ptr<T>();
         }
-
         template<typename T> boost::shared_ptr< TypedParameter<T> > getParameter(int idx)
         {
             return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[idx]);
         }
-       
-
         virtual bool subParameterExists(std::string name)
         {
             for(int i = 0; i < childParameters.size(); ++i)
@@ -190,22 +253,25 @@ namespace EagleLib
             return;
         }
 
-        boost::function<void(std::string)>                  errorCallback;
-        boost::function<void(std::string)>                  warningCallback;
-        boost::function<void(std::string)>                  statusCallback;
-        boost::function<int(std::vector<std::string>)>       inputSelector;
-        std::vector< boost::shared_ptr<Node> >  children;
-        boost::shared_ptr<Node>                 parent;
-        std::string                             nodeName;       // Constant name that describes the node ie: Sobel
-        std::string                             treeName;       // Name as placed in the tree ie: Sobel1
+        boost::function<void(std::string)>									errorCallback;
+        boost::function<void(std::string)>									warningCallback;
+        boost::function<void(std::string)>									statusCallback;
+        boost::function<int(std::vector<std::string>)>						inputSelector;
+        std::vector< boost::shared_ptr<Node> >								children;
+        boost::shared_ptr<Node>												parent;
+        std::string															nodeName;       // Constant name that describes the node ie: Sobel
+        std::string															treeName;       // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
         // Parameters of this node
-        std::vector< boost::shared_ptr< Parameter > > parameters;
+        std::vector< boost::shared_ptr< Parameter > >						parameters;
         // Parameters of the child, paired with the index of the child
-        std::vector< std::pair< int, boost::shared_ptr< Parameter > > > childParameters;
+        std::vector< std::pair< int, boost::shared_ptr< Parameter > > >		childParameters;
 
-        boost::function<void(cv::Mat)>          cpuCallback;
-        boost::function<void(cv::cuda::GpuMat)> gpuCallback;
-        bool drawResults;
+        boost::function<void(cv::Mat)>										cpuCallback;
+        boost::function<void(cv::cuda::GpuMat)>								gpuCallback;
+		// If true, draw results onto the image being processed
+        bool																drawResults;
+		// True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName
+		bool																externalDisplay;
     };
 }
 

@@ -8,7 +8,7 @@ using namespace EagleLib;
 
 BroxOpticalFlow::BroxOpticalFlow()
 {
-	addParameter(std::string("broxOpticalFlow"), new cv::cuda::BroxOpticalFlow(0.1,0.1,1,10,10,10), std::string("Used for tracking dense optical flow"), Parameter::Output);
+	addParameter(std::string("broxOpticalFlow"), new cv::cuda::BroxOpticalFlow(0.1f,0.1f,1,10,10,10), std::string("Used for tracking dense optical flow"), Parameter::Output);
 	addParameter(std::string("horizontalFlow"), cv::cuda::GpuMat(), std::string("Flow along X-Axis"), Parameter::Output);
 	addParameter(std::string("verticalFlow"), cv::cuda::GpuMat(), std::string("Flow along Y-Axis"), Parameter::Output);
 	addParameter(std::string("alpha"), 0.1f, std::string("Flow smoothness parameter"), Parameter::Control);
@@ -86,7 +86,7 @@ PyrLKOpticalFlow::getInputs()
 cv::cuda::GpuMat 
 PyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img)
 {
-
+	return img;
 }
 
 void 

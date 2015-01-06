@@ -1,9 +1,13 @@
 #include "nodes/Node.h"
+#include <opencv2/highgui.hpp>
+#ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
+REGISTERCLASS(Node);
+#endif
 using namespace EagleLib;
 Node::Node()
 {
-
+	treeName = nodeName;
 }
 
 Node::~Node()
@@ -28,6 +32,8 @@ int Node::addChild(boost::shared_ptr<Node> child)
     {
         childParameters.push_back(std::make_pair(i,child->parameters[i]));
     }
+	child->treeName = this->treeName + "/" + child->treeName + "-0";
+	// Check if this name already exists, if it does, increment 
     children.push_back(child);
     return children.size() -1;
 }
@@ -80,18 +86,46 @@ Node::process(cv::cuda::GpuMat &img)
         }
     }
 }
+void					
+Node::process(cv::InputArray in, cv::OutputArray out)
+{
+	try
+	{
+		return doProcess(in, out);
+	}
+	catch (cv::Exception &e)
+	{
+		if (errorCallback)
+		{
+			std::string message = std::string(__FUNCTION__) + std::string(e.what());
+			errorCallback(message);
+		}
+	}
+}
 
 cv::cuda::GpuMat
 Node::doProcess(cv::cuda::GpuMat& img)
 {
     return img;
 }
+void					
+Node::doProcess(cv::InputArray, cv::OutputArray)
+{
+
+}
+
 void
 Node::doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat> &retVal)
 {
     retVal.set_value(process(img));
 }
+void
+Node::doProcess(cv::InputArray in, boost::promise<cv::OutputArray> &retVal)
+{
+	// Figure this out later :(
 
+	
+}
 void
 Node::registerDisplayCallback(boost::function<void(cv::Mat)>& f)
 {
@@ -107,12 +141,14 @@ Node::registerDisplayCallback(boost::function<void(cv::cuda::GpuMat)>& f)
 void
 Node::spawnDisplay()
 {
-
+	cv::namedWindow(treeName);
+	externalDisplay = true;
 }
 void
 Node::killDisplay()
 {
-
+	if (externalDisplay)
+		cv::destroyWindow(treeName);
 }
 std::string
 Node::getName()
@@ -122,6 +158,3 @@ Node::getName()
         parent->getName() + "/" + name;
     return name;
 }
-
-
-REGISTERCLASS( Node );

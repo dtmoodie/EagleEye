@@ -1,7 +1,11 @@
 #pragma once
 
-#ifdef _WIN32
+#ifndef RCC_ENABLED
+#define RCC_ENABLED
+#endif
 
+#ifdef _WIN32
+#undef RCC_ENABLED
 #else
 #define CVAPI_EXPORTS
 #endif

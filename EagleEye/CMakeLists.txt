@@ -49,7 +49,8 @@ TARGET_LINK_LIBRARIES(EagleEye
         Qt5::Core
         Qt5::OpenGL
         Qt5::PrintSupport
-        ${EagleLib_LIBRARIES}
+		EagleLib
+        #${EagleLib_LIBRARIES}
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS} 
 )

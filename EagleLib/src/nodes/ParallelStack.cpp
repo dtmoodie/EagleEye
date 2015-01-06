@@ -20,7 +20,7 @@ ParallelStack::process(cv::cuda::GpuMat img)
     threads.reserve(children.size());
     for(int i = 0; i < children.size(); ++i)
     {
-        threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&Node::doProcess, children[i], img, boost::ref(retVal)))));
+        threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(/*cast to the correct function call to avoid mis-resolution*/(void(Node::*)(cv::cuda::GpuMat&, boost::promise<cv::cuda::GpuMat>&))&Node::doProcess, children[i], img, boost::ref(retVal)))));
     }
     for(int i = 0; i < children.size(); ++i)
     {
