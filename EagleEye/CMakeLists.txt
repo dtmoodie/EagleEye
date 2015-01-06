@@ -53,3 +53,6 @@ TARGET_LINK_LIBRARIES(EagleEye
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS} 
 )
+if(UNIX)
+    TARGET_LINK_LIBRARIES(EagleEye dl)
+endif()

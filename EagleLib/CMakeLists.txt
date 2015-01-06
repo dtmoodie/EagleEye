@@ -3,7 +3,7 @@ project(EagleLib)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 if(UNIX)
-        set(BUILD_TYPE SHARED)
+        set(BUILD_TYPE STATIC)
 else()
         set(BUILD_TYPE STATIC)
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -84,9 +84,20 @@ foreach(dir ${dirs})
   message(STATUS "dir='${dir}'")
 endforeach()
 message("End of include directories")
+if(UNIX)
 TARGET_LINK_LIBRARIES(EagleLib 
 	${Boost_LIBRARIES} 
 	${OpenCV_LIBS} 
         RuntimeCompiler
         RuntimeObjectSystem
+        dl
 )
+else(UNIX)
+TARGET_LINK_LIBRARIES(EagleLib
+        ${Boost_LIBRARIES}
+        ${OpenCV_LIBS}
+        RuntimeCompiler
+        RuntimeObjectSystem
+)
+
+endif(UNIX)
