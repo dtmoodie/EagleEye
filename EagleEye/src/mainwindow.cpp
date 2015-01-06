@@ -37,7 +37,7 @@ void MainWindow::on_pushButton_clicked()
         return;
     if(d_mat.data == 0)
         return;
-    baseNode.process(d_mat);
+    rootNode.process(d_mat);
 
 }
 void

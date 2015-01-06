@@ -24,8 +24,9 @@ namespace EagleLib
         Root();
         ~Root();
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
+        boost::shared_ptr<RuntimeObjectSystem> objSystem;
     };
-    boost::shared_ptr<RuntimeObjectSystem> objSystem;
+
 
 }
 

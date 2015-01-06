@@ -74,7 +74,6 @@ add_library(EagleLib STATIC
 	${src} 
 	${hdr}
         ${RuntimeObjectSystem_SRCS}
-
 )
 foreach(lib ${OpenCV_LIBS})
 message(${lib})
