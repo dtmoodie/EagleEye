@@ -129,13 +129,13 @@ Node::doProcess(cv::InputArray in, boost::promise<cv::OutputArray> &retVal)
 void
 Node::registerDisplayCallback(boost::function<void(cv::Mat)>& f)
 {
-    cpuCallback = f;
+    cpuDisplayCallback = f;
 }
 
 void
 Node::registerDisplayCallback(boost::function<void(cv::cuda::GpuMat)>& f)
 {
-    gpuCallback = f;
+	gpuDisplayCallback = f;
 }
 
 void

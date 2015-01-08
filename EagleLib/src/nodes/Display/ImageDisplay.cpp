@@ -9,11 +9,11 @@ ImageDisplay::ImageDisplay()
 
 ImageDisplay::ImageDisplay(boost::function<void(cv::Mat)> cpuCallback_)
 {
-    cpuCallback = cpuCallback_;
+    cpuDisplayCallback = cpuCallback_;
 }
 ImageDisplay::ImageDisplay(boost::function<void (cv::cuda::GpuMat)> gpuCallback_)
 {
-    gpuCallback = gpuCallback_;
+    gpuDisplayCallback = gpuCallback_;
 }
 
 cv::cuda::GpuMat

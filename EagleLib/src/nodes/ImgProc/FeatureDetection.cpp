@@ -56,7 +56,7 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img)
         grey = img;
     if(calculateFlag->data)
         detector->data->detect(grey,corners->data);
-    if(cpuCallback || gpuCallback || drawResults)
+    if(cpuDisplayCallback || gpuDisplayCallback || drawResults)
     {
         cv::Mat results(img), pts(corners->data);
         if(!results.empty() && !pts.empty())
@@ -69,10 +69,10 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img)
         }
         if(drawResults)
             img.upload(results);
-        if(cpuCallback)
-            cpuCallback(results);
-        if(gpuCallback)
-            gpuCallback(cv::cuda::GpuMat(results));
+        if(cpuDisplayCallback)
+            cpuDisplayCallback(results);
+        if(gpuDisplayCallback)
+            gpuDisplayCallback(cv::cuda::GpuMat(results));
     }
     return img;
 }

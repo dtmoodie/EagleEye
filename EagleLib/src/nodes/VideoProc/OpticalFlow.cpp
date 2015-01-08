@@ -46,7 +46,7 @@ cv::cuda::GpuMat BroxOpticalFlow::doProcess(cv::cuda::GpuMat &img)
     
 	(*getParameter<cv::cuda::BroxOpticalFlow*>(0)->data)(prevFrame, grey, getParameter<cv::cuda::GpuMat>(1)->data, getParameter<cv::cuda::GpuMat>(2)->data);
     prevFrame = grey;
-    if(cpuCallback || gpuCallback || drawResults)
+    if(cpuDisplayCallback || gpuDisplayCallback || drawResults)
     {
         cv::cuda::GpuMat flowX = getParameter<cv::cuda::GpuMat>(1)->data;
         cv::cuda::GpuMat flowY = getParameter<cv::cuda::GpuMat>(2)->data;
