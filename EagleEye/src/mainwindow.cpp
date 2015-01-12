@@ -2,21 +2,27 @@
 #include "ui_mainwindow.h"
 #include "EagleLib.h"
 #include <qfiledialog.h>
-#include <nodes/Display/ImageDisplay.h>
 #include <nodes/Node.h>
+#include <nodes/Display/ImageDisplay.h>
+
 #include <nodes/ImgProc/FeatureDetection.h>
 #include <nodes/SerialStack.h>
+#include <nodes/VideoProc/OpticalFlow.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    rootNode.errorCallback = boost::bind(&MainWindow::onError, this, _1);
-    rootNode.statusCallback = boost::bind(&MainWindow::onStatus, this, _1);
-    int idx = rootNode.addChild(boost::shared_ptr<EagleLib::SerialStack>(new EagleLib::SerialStack()));
-    rootNode.children[idx]->addChild(boost::shared_ptr<EagleLib::GoodFeaturesToTrackDetector>(new EagleLib::GoodFeaturesToTrackDetector(true)));
-    rootNode.children[idx]->addChild(boost::shared_ptr<EagleLib::Node>(new EagleLib::ImageDisplay()));
+    EagleLib::Node node();
+    auto ptr = rootNode.create("PyrLKOpticalFlow");
+    if(ptr)
+        rootNode.addChild(ptr);
+    //rootNode.errorCallback = boost::bind(&MainWindow::onError, this, _1);
+   // rootNode.statusCallback = boost::bind(&MainWindow::onStatus, this, _1);
+    //int idx = rootNode.addChild(boost::shared_ptr<EagleLib::SerialStack>(new EagleLib::SerialStack()));
+    //rootNode.children[idx]->addChild(boost::shared_ptr<EagleLib::GoodFeaturesToTrackDetector>(new EagleLib::GoodFeaturesToTrackDetector(true)));
+    //rootNode.children[idx]->addChild(boost::shared_ptr<EagleLib::Node>(new EagleLib::ImageDisplay()));
 }
 
 MainWindow::~MainWindow()

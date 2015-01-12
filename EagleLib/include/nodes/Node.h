@@ -14,22 +14,24 @@
 */
 
 #include <EagleLib.h>
+#include <Factory.h>
+
 #include <opencv2/core.hpp>
 #include <opencv2/cuda.hpp>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/signals2.hpp>
+//#include <boost/functional/factory.hpp>
 #include <boost/thread/future.hpp> 
+
 #include <vector>
 #include <list>
+#include <map>
 #include <type_traits>
 
-
-
-
-
-#if RCC_ENABLED
+#ifdef RCC_ENABLED
 // Strange work around for these includes not working correctly with GCC
 #include "../RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include "../RuntimeObjectSystem/ObjectInterface.h"
@@ -87,8 +89,8 @@ namespace EagleLib
     class CV_EXPORTS TypedParameter: public Parameter
     {
     public:
-        typedef boost::shared_ptr< TypedParameter<T> > Ptr;
-		typedef T type;
+        typedef typename boost::shared_ptr< TypedParameter<T> > Ptr;
+        typedef T ValType;
         TypedParameter(){}
 		~TypedParameter()
 		{
@@ -102,13 +104,21 @@ namespace EagleLib
         T& get();
         T data;
     };
-#if RCC_ENABLED
+
+
+
+#ifdef RCC_ENABLED
     class CV_EXPORTS Node: public IObject
 #else
 	class CV_EXPORTS Node
 #endif
     {
     public:
+        // Factory construction stuff
+        boost::shared_ptr<Node> create(const std::string &name);
+        static void registerType(const std::string& name, NodeFactory* factory);
+
+
         Node();
         virtual ~Node();
         
@@ -124,6 +134,8 @@ namespace EagleLib
 		virtual std::string				getName();
 		// Searches nearby nodes for possible valid inputs for each input parameter
         virtual void					getInputs();
+
+
 		// ****************************************************************************************************************
 		//
 		//									Display functions
@@ -147,7 +159,7 @@ namespace EagleLib
         virtual int						addChild(boost::shared_ptr<Node> child);
 		virtual boost::shared_ptr<Node>	getChild(int index);
 		virtual boost::shared_ptr<Node>	getChild(std::string name);
-		virtual boost::shared_ptr<Node>	getChildRecursive(std::string name);
+        virtual boost::shared_ptr<Node>	getChildRecursive(std::string treeName_);
         virtual void					removeChild(boost::shared_ptr<Node> child);
         virtual void					removeChild(int idx);
 
@@ -165,7 +177,7 @@ namespace EagleLib
 		template<typename T> bool 
 			updateParameter(const std::string& name, T data, const std::string quickHelp = std::string(), Parameter::ParamType type_ = Parameter::None)
 		{
-			auto param = getParameter(name);
+            auto param = getParameter<T>(name);
 			if (param == NULL)
 				return false;
 			param->data = data;
@@ -177,11 +189,11 @@ namespace EagleLib
 			return true;
 		}
 		template<typename T> bool 
-			updateParameter(int idx, T data, const std::string& name = std::string(), const std::string quickHelp = std::string(), Parameter::ParamType type_ = Parameter::None)
+        updateParameter(int idx, T data, const std::string& name = std::string(), const std::string quickHelp = std::string(), Parameter::ParamType type_ = Parameter::None)
 		{
 			if (parameters.size() <= idx)
 				return false;
-			TypedParameter<T>::Ptr param = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[0]);
+            typename TypedParameter<T>::Ptr param = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[0]);
 			if (param == NULL)
 				return false;
 			param->data = data;
@@ -196,7 +208,7 @@ namespace EagleLib
 		}
 		// Recursively searchs for a parameter based on name
 		template<typename T> boost::shared_ptr< TypedParameter<T> > 
-			getParameterRecursive(std::string name, int depth)
+        getParameterRecursive(std::string name, int depth)
 		{
 			if (depth < 0)
 				return boost::shared_ptr < TypedParameter<T> >();
@@ -332,7 +344,12 @@ namespace EagleLib
         bool																drawResults;
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
 		bool																externalDisplay;
+    private:
+        static std::map<std::string, NodeFactory*> NodeFactories;
     };
+
+
+
 }
 
 

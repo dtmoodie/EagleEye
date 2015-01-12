@@ -1,4 +1,4 @@
-#include <nodes\Node.h>
+#include <nodes/Node.h>
 
 namespace EagleLib
 {

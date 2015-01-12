@@ -5,7 +5,7 @@
 #include <opencv2/cudaimgproc.hpp>
 using namespace EagleLib;
 
-
+REGISTER_TYPE(BroxOpticalFlow)
 BroxOpticalFlow::BroxOpticalFlow()
 {
 	addParameter(std::string("broxOpticalFlow"), new cv::cuda::BroxOpticalFlow(0.1f,0.1f,1,10,10,10), std::string("Used for tracking dense optical flow"), Parameter::Output);
@@ -58,6 +58,9 @@ cv::cuda::GpuMat BroxOpticalFlow::doProcess(cv::cuda::GpuMat &img)
 
 }
 
+
+
+
 PyrLKOpticalFlow::PyrLKOpticalFlow()
 {
 	addParameter("pyrLykOpticalFlow", new cv::cuda::PyrLKOpticalFlow(), "Used for dense or sparse optical flow", Parameter::Output);
@@ -74,6 +77,9 @@ PyrLKOpticalFlow::PyrLKOpticalFlow()
     addParameter("sparseFunctor", boost::bind(&PyrLKOpticalFlow::sparse, this), "Function for applying sparse optical flow", Parameter::Output);
     addParameter("denseFunctor", boost::bind(&PyrLKOpticalFlow::dense,this), "Function for applying dense optical flow", Parameter::Output);
 }
+//REGISTER_TYPE(PyrLKOpticalFlow)
+
+
 
 void
 PyrLKOpticalFlow::getInputs()

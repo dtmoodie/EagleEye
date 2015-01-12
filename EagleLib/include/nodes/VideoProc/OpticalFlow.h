@@ -28,4 +28,17 @@ namespace EagleLib
 		cv::cuda::GpuMat refPts;
 		cv::cuda::GpuMat prevPts;
 	};
+    class PyrLKOpticalFlowFactory : public NodeFactory
+    {
+    public:
+        PyrLKOpticalFlowFactory()
+        {
+            Node::registerType("PyrLKOpticalFlow", this);
+        }
+        virtual boost::shared_ptr<Node> create()
+        {
+            return boost::shared_ptr<Node>(new PyrLKOpticalFlow());
+        }
+    };
+    static PyrLKOpticalFlowFactory global_PyrLKOpticalFlowFactory;  // Static object forces constructor to be called at startup
 }

@@ -1,16 +1,39 @@
 #include "nodes/Node.h"
 #include <opencv2/highgui.hpp>
+#include <regex>
+using namespace EagleLib;
 #ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
 REGISTERCLASS(Node);
 #endif
-using namespace EagleLib;
+
+std::map<std::string, NodeFactory*> Node::NodeFactories = std::map<std::string, NodeFactory*>();
+
+boost::shared_ptr<Node>
+Node::create(const std::string& name)
+{
+    if(NodeFactories[name])
+        return NodeFactories[name]->create();
+    return boost::shared_ptr<Node>();
+}
+void
+Node::registerType(const std::string& name, NodeFactory* factory)
+{
+    NodeFactories[name] = factory;
+    //NodeFactories.insert()
+}
+
 Node::Node()
 {
 	treeName = nodeName;
 }
 
 Node::~Node()
+{
+
+}
+void
+Node::getInputs()
 {
 
 }
@@ -37,11 +60,39 @@ int Node::addChild(boost::shared_ptr<Node> child)
     children.push_back(child);
     return children.size() -1;
 }
-void
-Node::getInputs()
-{
 
+
+boost::shared_ptr<Node>
+Node::getChild(int index)
+{
+    return children[index];
 }
+
+boost::shared_ptr<Node>
+Node::getChild(std::string name)
+{
+    for(int i = 0; i < children.size(); ++i)
+        if(children[i]->nodeName == name)
+            return children[i];
+    return boost::shared_ptr<Node>();
+}
+
+boost::shared_ptr<Node>
+Node::getChildRecursive(std::string treeName_)
+{
+    boost::shared_ptr<Node> ptr;
+    // TODO tree structure parsing and correct directing of the search
+    // Find the common base between this node and treeName
+
+    for(int i = 0; i < children.size(); ++i)
+    {
+        ptr = children[i]->getChildRecursive(treeName_);
+        if(ptr)
+            return ptr;
+    }
+    return ptr;
+}
+
 void
 Node::removeChild(boost::shared_ptr<Node> child)
 {

@@ -2,6 +2,8 @@
 #include <boost/thread/future.hpp>
 using namespace EagleLib;
 
+
+
 ParallelStack::ParallelStack()
 {
 

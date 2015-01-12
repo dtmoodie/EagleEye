@@ -25,9 +25,10 @@ namespace EagleLib
         Root();
         ~Root();
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
-    };
 #ifdef RCC_ENABLED
     boost::shared_ptr<RuntimeObjectSystem> objSystem;
 #endif
+    };
+
 }
 
