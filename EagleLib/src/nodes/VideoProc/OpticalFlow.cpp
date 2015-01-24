@@ -55,7 +55,6 @@ cv::cuda::GpuMat BroxOpticalFlow::doProcess(cv::cuda::GpuMat &img)
 
         }
     }
-
 }
 
 
@@ -77,7 +76,6 @@ PyrLKOpticalFlow::PyrLKOpticalFlow()
     addParameter("sparseFunctor", boost::bind(&PyrLKOpticalFlow::sparse, this), "Function for applying sparse optical flow", Parameter::Output);
     addParameter("denseFunctor", boost::bind(&PyrLKOpticalFlow::dense,this), "Function for applying dense optical flow", Parameter::Output);
 }
-//REGISTER_TYPE(PyrLKOpticalFlow)
 
 
 
@@ -89,6 +87,7 @@ PyrLKOpticalFlow::getInputs()
 
     }
 }
+
 cv::cuda::GpuMat 
 PyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img)
 {
@@ -159,7 +158,4 @@ PyrLKOpticalFlow::setReference(cv::cuda::GpuMat& img, cv::cuda::GpuMat* refPts_)
 		refImg = img;
 	if(refPts_ != NULL)
 		refPts = *refPts_;
-
-
-
 }

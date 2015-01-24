@@ -1,26 +1,42 @@
 #include "nodes/Node.h"
 #include <opencv2/highgui.hpp>
 #include <regex>
+#include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 #ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
 REGISTERCLASS(Node);
 #endif
 
-std::map<std::string, NodeFactory*> Node::NodeFactories = std::map<std::string, NodeFactory*>();
-
+//static std::map<std::string, NodeFactory*> NodeFactories = std::map<std::string, NodeFactory*>();
+boost::shared_ptr<Node>
+Node::create(std::string& name)
+{
+    if((*NodeFactories)[name])
+		return (*NodeFactories)[name]->create();
+    return boost::shared_ptr<Node>();
+}
 boost::shared_ptr<Node>
 Node::create(const std::string& name)
 {
-    if(NodeFactories[name])
-        return NodeFactories[name]->create();
-    return boost::shared_ptr<Node>();
+	if (NodeFactories)
+	{
+		if ((*NodeFactories)[name])
+			return (*NodeFactories)[name]->create();
+	}else
+	{
+		std::cout << "Node factories is NULL, nothing has been registered yet" << std::endl;
+	}
+	return boost::shared_ptr<Node>();
 }
-void
+void // This gets called before NodeFactories gets initialized :/ and so it breaks.
 Node::registerType(const std::string& name, NodeFactory* factory)
 {
-    NodeFactories[name] = factory;
-    //NodeFactories.insert()
+	if (NodeFactories == NULL)
+	{
+		NodeFactories = new std::map<std::string, NodeFactory*>();
+	}
+	(*NodeFactories)[name] = factory;
 }
 
 Node::Node()
@@ -37,14 +53,16 @@ Node::getInputs()
 {
 
 }
-int Node::addChild(Node* child)
+Node::Ptr Node::addChild(Node* child)
 {
     boost::shared_ptr<Node> ptr(child);
     return addChild(ptr);
 }
 
-int Node::addChild(boost::shared_ptr<Node> child)
+Node::Ptr Node::addChild(boost::shared_ptr<Node> child)
 {
+	if (!child)
+		return child;
     if(errorCallback)
         child->errorCallback = errorCallback;
     if(statusCallback)
@@ -52,13 +70,17 @@ int Node::addChild(boost::shared_ptr<Node> child)
     if(warningCallback)
         child->warningCallback = warningCallback;
     for(int i = 0; i < child->parameters.size(); ++i)
-    {
         childParameters.push_back(std::make_pair(i,child->parameters[i]));
-    }
-	child->treeName = this->treeName + "/" + child->treeName + "-0";
+	auto it = children.find(child->treeName);
+	int count = 0;
+	for (; it != children.end(); ++it, ++count)
+	{}
+	child->treeName = child->treeName + "-" + boost::lexical_cast<std::string>(count);
+	child->fullTreeName = this->treeName + "/" + child->treeName;
 	// Check if this name already exists, if it does, increment 
-    children.push_back(child);
-    return children.size() -1;
+    //children.push_back(child);
+	children[child->treeName] = child;
+    return child;
 }
 
 

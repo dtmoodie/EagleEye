@@ -1,5 +1,5 @@
 #include <nodes/Node.h>
-
+#include <Factory.h>
 
 
 namespace EagleLib
@@ -28,7 +28,10 @@ namespace EagleLib
 		cv::cuda::GpuMat refPts;
 		cv::cuda::GpuMat prevPts;
 	};
-    class PyrLKOpticalFlowFactory : public NodeFactory
+	// Static object forces constructor to be called at startup
+	REGISTER_TYPE(PyrLKOpticalFlow);
+	/*
+	class PyrLKOpticalFlowFactory : public NodeFactory
     {
     public:
         PyrLKOpticalFlowFactory()
@@ -40,5 +43,5 @@ namespace EagleLib
             return boost::shared_ptr<Node>(new PyrLKOpticalFlow());
         }
     };
-    static PyrLKOpticalFlowFactory global_PyrLKOpticalFlowFactory;  // Static object forces constructor to be called at startup
+	static PyrLKOpticalFlowFactory global_PyrLKOpticalFlowFactory;*/
 }

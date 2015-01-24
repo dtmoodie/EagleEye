@@ -3,16 +3,12 @@
 
 using namespace EagleLib;
 
-
-IO::VideoLoader::VideoLoader()
+IO::VideoLoader::VideoLoader(const std::string& file)
 {
 	addParameter("VideoFileReader", cv::Ptr<cv::cudacodec::VideoReader>(), std::string("Object that decodes video files on the GPU"), Parameter::Output);
 	addParameter("VideoFileName", std::string(""), std::string("Absolute file path to video file", Parameter::Control));
-}
-
-IO::VideoLoader::VideoLoader(std::string file)
-{
-	VideoLoader();
+	addParameter("EOF_reached", false, "Flag for end of file", Parameter::Output);
+	addParameter("NumFrames", int(-1), "Number of frames in file", Parameter::Output);
 	updateParameter(1, file);
 	loadFile();
 }
@@ -38,7 +34,8 @@ IO::VideoLoader::doProcess(cv::cuda::GpuMat& img)
 	}else
 	{
 		// Maybe this is the end of the video file?
-		EOF_reached = true;
+		getParameter<bool>(2)->data = true;
+		return img;
 	}
 }
 void

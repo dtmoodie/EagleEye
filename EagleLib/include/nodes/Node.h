@@ -114,10 +114,12 @@ namespace EagleLib
 #endif
     {
     public:
+		typedef boost::shared_ptr<Node> Ptr;
         // Factory construction stuff
-        boost::shared_ptr<Node> create(const std::string &name);
+        static Ptr create( std::string &name);
+		static Ptr create(const std::string &name);
         static void registerType(const std::string& name, NodeFactory* factory);
-
+		
 
         Node();
         virtual ~Node();
@@ -155,11 +157,20 @@ namespace EagleLib
 		//									Child adding and deleting
 		//
 		// ****************************************************************************************************************
-        virtual int						addChild(Node* child);
-        virtual int						addChild(boost::shared_ptr<Node> child);
-		virtual boost::shared_ptr<Node>	getChild(int index);
-		virtual boost::shared_ptr<Node>	getChild(std::string name);
-        virtual boost::shared_ptr<Node>	getChildRecursive(std::string treeName_);
+        virtual Ptr						addChild(Node* child);
+        virtual Ptr						addChild(boost::shared_ptr<Node> child);
+		virtual Ptr						getChild(int index);
+		template<typename T> boost::shared_ptr<T> getChild(int index)
+		{ return boost::dynamic_pointer_cast<T, Node>(children[index]);	}
+		virtual Ptr						getChild(std::string name);
+		template<typename T> boost::shared_ptr<T> getChild(const std::string& name)
+		{
+			for (int i = 0; i < children.size(); ++i)
+			if (children[i]->nodeName == name)
+				return boost::dynamic_pointer_cast<T,Node>(children[i]);
+			return boost::shared_ptr<T>();
+		}
+        virtual Ptr						getChildRecursive(std::string treeName_);
         virtual void					removeChild(boost::shared_ptr<Node> child);
         virtual void					removeChild(int idx);
 
@@ -326,13 +337,16 @@ namespace EagleLib
 		// Function for setting input parameters
         boost::function<int(std::vector<std::string>)>						inputSelector;
 		// Vector of children nodes
-        std::vector< boost::shared_ptr<Node> >								children;
+        //std::vector< boost::shared_ptr<Node> >								children;
+		std::map<std::string, boost::shared_ptr<Node> >						children;
 		// Pointer to parent node
         boost::shared_ptr<Node>												parent;
 		// Constant name that describes the node ie: Sobel
         std::string															nodeName;       
 		// Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
-        std::string															treeName;       
+        std::string															fullTreeName;       
+		// Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
+		std::string															treeName;
         // Parameters of this node
         std::vector< boost::shared_ptr< Parameter > >						parameters;
         // Parameters of the child, paired with the index of the child
@@ -345,10 +359,9 @@ namespace EagleLib
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
 		bool																externalDisplay;
     private:
-        static std::map<std::string, NodeFactory*> NodeFactories;
+        
     };
-
-
+	static std::map<std::string, NodeFactory*>* NodeFactories = NULL;
 
 }
 

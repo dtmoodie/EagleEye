@@ -8,18 +8,18 @@
 #include <nodes/ImgProc/FeatureDetection.h>
 #include <nodes/SerialStack.h>
 #include <nodes/VideoProc/OpticalFlow.h>
+#include <nodes/IO/VideoLoader.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    EagleLib::Node node();
-    auto ptr = rootNode.create("PyrLKOpticalFlow");
-    if(ptr)
-        rootNode.addChild(ptr);
-    //rootNode.errorCallback = boost::bind(&MainWindow::onError, this, _1);
-   // rootNode.statusCallback = boost::bind(&MainWindow::onStatus, this, _1);
+	rootNode.errorCallback  = boost::bind(&MainWindow::onError,  this, _1);
+	rootNode.statusCallback = boost::bind(&MainWindow::onStatus, this, _1);
+	auto ptr = rootNode.addChild(new EagleLib::SerialStack());
+	ptr->addChild(new EagleLib::IO::VideoLoader("E:/media/corlus.2k11.ltd.720.br.264.spks/coriolanus.2011.limited.720p.bluray.x264-sparks.mkv"));
+	ptr->addChild(new EagleLib::PyrLKOpticalFlow());
     //int idx = rootNode.addChild(boost::shared_ptr<EagleLib::SerialStack>(new EagleLib::SerialStack()));
     //rootNode.children[idx]->addChild(boost::shared_ptr<EagleLib::GoodFeaturesToTrackDetector>(new EagleLib::GoodFeaturesToTrackDetector(true)));
     //rootNode.children[idx]->addChild(boost::shared_ptr<EagleLib::Node>(new EagleLib::ImageDisplay()));
