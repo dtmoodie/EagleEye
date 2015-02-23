@@ -1,10 +1,8 @@
 #include "nodes/SerialStack.h"
 using namespace EagleLib;
 
-SerialStack::SerialStack()
-{
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SerialStack)
 
-}
 SerialStack::~SerialStack()
 {
 
@@ -13,14 +11,11 @@ cv::cuda::GpuMat
 SerialStack::doProcess(cv::cuda::GpuMat& img)
 {
 	
-	for (auto it = children.begin(); ++it)
+    for (auto it = children.begin(); it != children.end(); ++it)
 	{
-		img = it->second->process(img);
-	}
-    for(int i = 0; i < children.size(); ++i)
-    {
-        img = children[i]->process(img);
+        img = (*it)->process(img);
     }
 	return img;
 }
 
+//REGISTERCLASS(SerialStack)

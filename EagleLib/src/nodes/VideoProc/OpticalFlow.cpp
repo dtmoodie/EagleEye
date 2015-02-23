@@ -5,7 +5,17 @@
 #include <opencv2/cudaimgproc.hpp>
 using namespace EagleLib;
 
-REGISTER_TYPE(BroxOpticalFlow)
+#ifdef RCC_ENABLED
+#include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
+#if __linux
+RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda -lopencv_cudaoptflow")
+#endif
+//REGISTERCLASS(BroxOpticalFlow)
+//REGISTERCLASS(PyrLKOpticalFlow)
+
+#endif
+
+//REGISTER_TYPE(BroxOpticalFlow)
 BroxOpticalFlow::BroxOpticalFlow()
 {
 	addParameter(std::string("broxOpticalFlow"), new cv::cuda::BroxOpticalFlow(0.1f,0.1f,1,10,10,10), std::string("Used for tracking dense optical flow"), Parameter::Output);
@@ -62,6 +72,8 @@ cv::cuda::GpuMat BroxOpticalFlow::doProcess(cv::cuda::GpuMat &img)
 
 PyrLKOpticalFlow::PyrLKOpticalFlow()
 {
+    nodeName = "PyrLKOpticalFLow";
+    treeName = nodeName;
 	addParameter("pyrLykOpticalFlow", new cv::cuda::PyrLKOpticalFlow(), "Used for dense or sparse optical flow", Parameter::Output);
 	addParameter("windowSize", cv::Size(5,5), "Search window size");
 	addParameter("maxLevel", int(10), "Max level");

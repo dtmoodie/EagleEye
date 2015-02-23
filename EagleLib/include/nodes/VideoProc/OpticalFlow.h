@@ -1,5 +1,5 @@
 #include <nodes/Node.h>
-#include <Factory.h>
+#include <Manager.h>
 
 
 namespace EagleLib
@@ -29,7 +29,7 @@ namespace EagleLib
 		cv::cuda::GpuMat prevPts;
 	};
 	// Static object forces constructor to be called at startup
-	REGISTER_TYPE(PyrLKOpticalFlow);
+//	REGISTER_TYPE(PyrLKOpticalFlow);
 	/*
 	class PyrLKOpticalFlowFactory : public NodeFactory
     {

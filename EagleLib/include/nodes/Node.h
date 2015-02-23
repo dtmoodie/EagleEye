@@ -11,10 +11,13 @@
  *  4) Serial collection nodes - Input image gets processed by all child nodes in series
  *  5) Parallel collection nodes - Input image gets processed by all child nodes in parallel. One thread per node
  *
+ *  Nodes should be organized in a tree structure.  Each node will be accessible by name from the top of the tree via /parent/...../treeName where
+ *  treeName is the unique name associated with that node.  The parameters of that node can be accessed via /parent/...../treeName:name.
+ *  Nodes should be iterable by their parents by insertion order.  They should be accessible by sibling nodes.
 */
 
-#include <EagleLib.h>
-#include <Factory.h>
+#include "../EagleLib.h"
+#include "../Manager.h"
 
 #include <opencv2/core.hpp>
 #include <opencv2/cuda.hpp>
@@ -23,24 +26,145 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/signals2.hpp>
-//#include <boost/functional/factory.hpp>
 #include <boost/thread/future.hpp> 
-
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/random_access_index.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/mem_fun.hpp>
 #include <vector>
 #include <list>
 #include <map>
 #include <type_traits>
 
+using namespace boost::multi_index;
+
+// ***************************************** START RCC CODE *******************************************************
 #ifdef RCC_ENABLED
+
 // Strange work around for these includes not working correctly with GCC
-#include "../RuntimeObjectSystem/RuntimeLinkLibrary.h"
-#include "../RuntimeObjectSystem/ObjectInterface.h"
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda");
+#include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
+#include "../../RuntimeObjectSystem/ObjectInterface.h"
+#include "../../RuntimeObjectSystem/ObjectInterfacePerModule.h"
+RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
+
+// Add an enum for each object interface type we're implementing
+enum InterfaceIDEnum
+{
+    IID_IOBJECT,
+    IID_NodeObject,
+    IID_ENDInterfaceID
+};
+
+typedef unsigned int InterfaceID;
+struct ISimpleSerializer;
+class ObjectFactorySystem;
+typedef size_t PerTypeObjectId;
+typedef size_t ConstructorId;
+
+template<InterfaceID Tiid, typename TSuper> struct TInterface: public TSuper
+{
+    static const InterfaceID s_interfaceID = Tiid;
+    virtual void* GetInterface( InterfaceID _iid)
+    {
+        switch(_iid)
+        {
+        case Tiid:
+            return this;
+            break;
+        default:
+            return TSuper::GetInterface(_iid);
+        }
+    }
+};
+
+
 class CV_EXPORTS IObject
 {
+public:
+    static const InterfaceID s_interfaceID = IID_IOBJECT;
+
+    virtual void* GetInterface(InterfaceID __iid)
+    {
+        switch(__iid)
+        {
+        case IID_IOBJECT:
+            return this;
+        default:
+            return nullptr;
+        }
+    }
+
+    IObject(): _isRuntimeDelete(false){}
+
+    virtual ~IObject() {};
+
+    virtual void Init(bool isFirstInit ) {}
+    virtual PerTypeObjectId GetPerTypeId() const = 0;
+    virtual void GetObjectId( ObjectId& id) const
+    {
+        id.m_ConstructorId = GetConstructor()->GetConstructorId();
+        id.m_PerTypeId = GetPerTypeId();
+    }
+
+    //return the constructor for this class
+    virtual IObjectConstructor* GetConstructor() const = 0;
+
+    //serialise is not pure virtual as many objects do not need state
+    virtual void Serialize(ISimpleSerializer *pSerializer) {}
+
+    virtual const char* GetTypeName() const = 0;
+    ObjectId myId;
+
+protected:
+    bool isRuntimeDelete() {return _isRuntimeDelete; }
+
+private:
+    friend class ObjectFactorySystem;
+
+    bool _isRuntimeDelete;
 
 };
-#endif
+#endif // RCC_ENABLED
+// ***************************************** END RCC CODE *******************************************************
+
+
+#define NODE_DEFAULT_CONSTRUCTOR_IMPL(NodeName) \
+NodeName::NodeName():Node()                     \
+{                                               \
+    nodeName = #NodeName;                       \
+    treeName = nodeName;                        \
+    parent = NULL;                              \
+}
+
+#define EAGLE_TRY_WARNING(FunctionCall)                                 \
+    try{                                                                \
+    (FunctionCall)                                                      \
+    }catch(cv::Exception &e){                                           \
+        if(warningCallback)                                             \
+            warningCallback(std::string(__FUNCTION__) + e.what());                   \
+    }catch(std::exception &e){                                          \
+        if(warningCallback)                                             \
+            warningCallback(std::string(__FUNCTION__) + e.what());                   \
+    }
+
+#define EAGLE_TRY_ERROR(FunctionCall)                                   \
+    try{                                                                \
+    FunctionCall                                                     \
+    }catch(cv::Exception &e){                                           \
+        if(errorCallback)                                               \
+            errorCallback(std::string(__FUNCTION__) + e.what());                     \
+    }catch(std::exception &e){                                          \
+        if(errorCallback)                                               \
+            errorCallback(std::string(__FUNCTION__) + e.what());                     \
+    }
+#define EAGLE_ERROR_CHECK_RESULT(FunctionCall, DesiredResult)                 \
+    if(FunctionCall != DesiredResult){                                  \
+        if(errorCallback)                                               \
+            errorCallback(std::string(__FUNCION__ + " " + #FunctionCall + " != " #DesiredResult);                                                                \
+    }
+        
+
 
 namespace EagleLib
 {
@@ -54,7 +178,7 @@ namespace EagleLib
 		eFunctor		= 16,   /* Calling doProcess doesn't do anything, instead this node presents a function to be used in another node */
 		eObj			= 32,	/* Calling doProcess doesn't do anything, instead this node presents a object that can be used in another node */
 		eOneShot		= 64	/* Calling doProcess does something, but should only be called once.  Maybe as a setup? */
-	};
+    };
 
     class CV_EXPORTS Parameter
     {
@@ -108,17 +232,19 @@ namespace EagleLib
 
 
 #ifdef RCC_ENABLED
-    class CV_EXPORTS Node: public IObject
+    class CV_EXPORTS Node: public TInterface<IID_NodeObject, IObject>
 #else
 	class CV_EXPORTS Node
 #endif
     {
     public:
 		typedef boost::shared_ptr<Node> Ptr;
+
+
         // Factory construction stuff
         static Ptr create( std::string &name);
 		static Ptr create(const std::string &name);
-        static void registerType(const std::string& name, NodeFactory* factory);
+        //static void registerType(const std::string& name, NodeFactory* factory);
 		
 
         Node();
@@ -133,11 +259,17 @@ namespace EagleLib
 		virtual void					doProcess(cv::InputArray in, cv::OutputArray out);
 
         // Finds name in tree hierarchy, updates tree name and returns it
-		virtual std::string				getName();
+        virtual std::string				getName() const;
+        virtual std::string             getTreeName() const;
 		// Searches nearby nodes for possible valid inputs for each input parameter
         virtual void					getInputs();
 
+        struct NodeName{};
+        struct TreeName{};
 
+        typedef multi_index_container<Ptr, indexed_by<boost::multi_index::random_access<>,
+                                           hashed_unique<tag<TreeName>, const_mem_fun<Node, std::string, &Node::getTreeName > >,
+                                           hashed_non_unique<tag<NodeName>, const_mem_fun<Node, std::string, &Node::getName> > > > nodeContainer;
 		// ****************************************************************************************************************
 		//
 		//									Display functions
@@ -158,21 +290,26 @@ namespace EagleLib
 		//
 		// ****************************************************************************************************************
         virtual Ptr						addChild(Node* child);
-        virtual Ptr						addChild(boost::shared_ptr<Node> child);
-		virtual Ptr						getChild(int index);
+        virtual Ptr						addChild(const boost::shared_ptr<Node> &child);
+        virtual Ptr						getChild(const std::string& name);
 		template<typename T> boost::shared_ptr<T> getChild(int index)
-		{ return boost::dynamic_pointer_cast<T, Node>(children[index]);	}
+        {
+            if(index < children.size())
+                return boost::dynamic_pointer_cast<T, Node>(children[index]);
+            return boost::shared_ptr<T>();
+
+            //return boost::dynamic_pointer_cast<T, Node>(children[index]);
+        }
 		virtual Ptr						getChild(std::string name);
 		template<typename T> boost::shared_ptr<T> getChild(const std::string& name)
 		{
-			for (int i = 0; i < children.size(); ++i)
-			if (children[i]->nodeName == name)
-				return boost::dynamic_pointer_cast<T,Node>(children[i]);
-			return boost::shared_ptr<T>();
+            auto itr = children.get<TreeName>().find(name);
+            if(itr != children.get<TreeName>().end())
+                return boost::dynamic_pointer_cast<T,Node>(*itr);
 		}
         virtual Ptr						getChildRecursive(std::string treeName_);
         virtual void					removeChild(boost::shared_ptr<Node> child);
-        virtual void					removeChild(int idx);
+        virtual void					removeChild(const std::string& name);
 
 		// ****************************************************************************************************************
 		//
@@ -202,9 +339,9 @@ namespace EagleLib
 		template<typename T> bool 
         updateParameter(int idx, T data, const std::string& name = std::string(), const std::string quickHelp = std::string(), Parameter::ParamType type_ = Parameter::None)
 		{
-			if (parameters.size() <= idx)
+            if (idx > parameters.size() || idx < 0)
 				return false;
-            typename TypedParameter<T>::Ptr param = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[0]);
+            typename TypedParameter<T>::Ptr param = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[idx]);
 			if (param == NULL)
 				return false;
 			param->data = data;
@@ -229,12 +366,20 @@ namespace EagleLib
 					return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[i]);
 			}
 			// Parameter doesn't exist in this scope, we must go deeper
-			for (int i = 0; i < children.size(); ++i)
+            for(auto itr = children.begin(); itr != children.end(); ++itr)
+            {
+                boost::shared_ptr< TypedParameter<T> > param = itr->getParameterRecursive<T>(name, depth - 1);
+                if(param)
+                    return param;
+            }
+
+
+            /*for (int i = 0; i < children.size(); ++i)
 			{
 				boost::shared_ptr< TypedParameter<T> > param = children[i]->getParameterRecursive<T>(name, depth - 1);
 				if (param)
 					return param;
-			}
+            }*/
 			return boost::shared_ptr< TypedParameter<T> >();
 		}
         // Search for any output parameters of correct type T to a certain depth
@@ -247,8 +392,10 @@ namespace EagleLib
 				if (parameters[i]->type & Parameter::Output)
 					if (boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[i]))
 						paramNames.push_back(treeName + ":" + parameters[i]->name);
-			for (int i = 0; i < children.size(); ++i)
-				children[i]->findSuitableParameters<T>(depth - 1, paramNames);
+            for(auto itr = children.begin(); itr != children.end(); ++itr)
+                itr->findSuitableParameters<T>(depth - 1, paramNames);
+            //for (int i = 0; i < children.size(); ++i)
+                //children[i]->findSuitableParameters<T>(depth - 1, paramNames);
 		}
 		template<typename T> boost::shared_ptr< TypedParameter<T> > 
 			getParameter(std::string name)
@@ -321,15 +468,18 @@ namespace EagleLib
                     }
             }
             // Recursively check children for any available output parameters that match the input signature
-            for(int i = 0; i < children.size(); ++i)
-               children[i]->findInputs<T>(nodeNames, parameterPtrs, hops - 1);
+            /*for(int i = 0; i < children.size(); ++i)
+               children[i]->findInputs<T>(nodeNames, parameterPtrs, hops - 1);*/
+            for(auto itr = children.begin(); itr != children.end(); ++itr)
+               itr->findInputs<T>(nodeNames, parameterPtrs, hops -1 );
+
             return;
         }
 
 		// Function for displaying critical error messages, IE popup display and halting program execution
-        boost::function<void(std::string)>									errorCallback;
+        boost::function<void(const std::string&)>									errorCallback;
 		// Function for displaying warning messages, IE popup display
-        boost::function<void(std::string)>									warningCallback;
+        boost::function<void(const std::string&)>									warningCallback;
 		// Function for displaying status messages, IE writing to console
         boost::function<void(std::string)>									statusCallback;
 		// Used for logging logging information
@@ -337,12 +487,14 @@ namespace EagleLib
 		// Function for setting input parameters
         boost::function<int(std::vector<std::string>)>						inputSelector;
 		// Vector of children nodes
-        //std::vector< boost::shared_ptr<Node> >								children;
-		std::map<std::string, boost::shared_ptr<Node> >						children;
+        // Boost multi_index_container which can be accessed by insertion order and by the nodeName
+        nodeContainer                                                       children;
+
 		// Pointer to parent node
-        boost::shared_ptr<Node>												parent;
+        Node*                                                               parent;
 		// Constant name that describes the node ie: Sobel
-        std::string															nodeName;       
+        std::string                                                         nodeName;
+
 		// Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
         std::string															fullTreeName;       
 		// Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
@@ -358,10 +510,11 @@ namespace EagleLib
         bool																drawResults;
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
 		bool																externalDisplay;
+        bool                                                                enabled;
     private:
         
     };
-	static std::map<std::string, NodeFactory*>* NodeFactories = NULL;
+    //static std::map<std::string, NodeFactory*>* NodeFactories = NULL;
 
 }
 

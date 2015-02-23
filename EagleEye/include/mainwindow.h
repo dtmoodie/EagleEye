@@ -3,7 +3,8 @@
 
 #include <QMainWindow>
 #include <nodes/Root.h>
-
+#include <Manager.h>
+#include <qtimer.h>
 namespace Ui {
 class MainWindow;
 }
@@ -18,12 +19,14 @@ public:
 
 private slots:
     void on_pushButton_clicked();
+    void onTimeout();
 
 private:
-    void onError(std::string& error);
-    void onStatus(std::string& status);
+    void onError(const std::string& error);
+    void onStatus(const std::string& status);
     Ui::MainWindow *ui;
-    EagleLib::Root rootNode;
+    EagleLib::NodeManager manager;
+    QTimer* fileMonitorTimer;
 };
 
 #endif // MAINWINDOW_H

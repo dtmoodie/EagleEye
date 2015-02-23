@@ -373,9 +373,9 @@ private:
 };
 #ifndef RCCPPOFF
 	#define REGISTERBASE( T, bIsSingleton, bIsAutoConstructSingleton )	\
-		static RuntimeIncludeFiles< __COUNTER__ >       g_includeFileList_##T; \
-		static RuntimeSourceDependency< __COUNTER__ >   g_sourceDependencyList_##T; \
-		static RuntimeLinkLibrary< __COUNTER__ >        g_linkLibraryList_##T; \
+        static RuntimeIncludeFiles< __COUNTER__ >       g_includeFileList_##T; \
+        static RuntimeSourceDependency< __COUNTER__ >   g_sourceDependencyList_##T; \
+        static RuntimeLinkLibrary< __COUNTER__ >        g_linkLibraryList_##T; \
 	template<> TObjectConstructorConcrete< TActual< T > > TActual< T >::m_Constructor( __FILE__, &g_includeFileList_##T, &g_sourceDependencyList_##T, &g_linkLibraryList_##T, bIsSingleton, bIsAutoConstructSingleton );\
 	template<> const char* TActual< T >::GetTypeNameStatic() { return #T; } \
 	template class TActual< T >;

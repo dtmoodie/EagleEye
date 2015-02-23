@@ -1,7 +1,7 @@
 #include "nodes/ImgProc/FeatureDetection.h"
 #include <opencv2/cudafeatures2d.hpp>
 
-using namespace EagleLib;
+using namespace EagleLib::Features2D;
 
 GoodFeaturesToTrackDetector::GoodFeaturesToTrackDetector():
     imgType(CV_8UC1)
@@ -26,15 +26,25 @@ GoodFeaturesToTrackDetector::GoodFeaturesToTrackDetector(bool drawResults_):
 cv::cuda::GpuMat
 GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img)
 {
-    boost::shared_ptr< TypedParameter< cv::Ptr<cv::cuda::CornersDetector> > > detector = getParameter<cv::Ptr<cv::cuda::CornersDetector> >(0);
-    boost::shared_ptr< TypedParameter< int > > numCorners = getParameter<int>(1);
-    boost::shared_ptr< TypedParameter< double > > qualityLevel = getParameter<double>(2);
-    boost::shared_ptr< TypedParameter< double > > minDistance = getParameter<double>(3);
-    boost::shared_ptr< TypedParameter< int > > blockSize = getParameter<int>(4);
-    boost::shared_ptr< TypedParameter< bool > > useHarris = getParameter<bool>(5);
-    boost::shared_ptr< TypedParameter< double> > harrisK = getParameter<double>(6);
-    boost::shared_ptr< TypedParameter< bool > > calculateFlag = getParameter<bool>(7);
-    boost::shared_ptr< TypedParameter< cv::cuda::GpuMat> >corners = getParameter<cv::cuda::GpuMat>(8);
+    auto detector       = getParameter<cv::Ptr<cv::cuda::CornersDetector> >(0);
+    auto numCorners     = getParameter<int>(1);
+    auto qualityLevel   = getParameter<double>(2);
+    auto minDistance    = getParameter<double>(3);
+    auto blockSize      = getParameter<int>(4);
+    auto useHarris      = getParameter<bool>(5);
+    auto harrisK        = getParameter<double>(6);
+    auto calculateFlag  = getParameter<bool>(7);
+    auto corners        = getParameter<cv::cuda::GpuMat>(8);
+
+    //boost::shared_ptr< TypedParameter< cv::Ptr<cv::cuda::CornersDetector> > > detector = getParameter<cv::Ptr<cv::cuda::CornersDetector> >(0);
+    //boost::shared_ptr< TypedParameter< int > > numCorners = getParameter<int>(1);
+    //boost::shared_ptr< TypedParameter< double > > qualityLevel = getParameter<double>(2);
+    //boost::shared_ptr< TypedParameter< double > > minDistance = getParameter<double>(3);
+    //boost::shared_ptr< TypedParameter< int > > blockSize = getParameter<int>(4);
+    //boost::shared_ptr< TypedParameter< bool > > useHarris = getParameter<bool>(5);
+    //boost::shared_ptr< TypedParameter< double> > harrisK = getParameter<double>(6);
+    //boost::shared_ptr< TypedParameter< bool > > calculateFlag = getParameter<bool>(7);
+    //boost::shared_ptr< TypedParameter< cv::cuda::GpuMat> >corners = getParameter<cv::cuda::GpuMat>(8);
 
 
 

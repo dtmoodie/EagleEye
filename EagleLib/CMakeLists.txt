@@ -5,7 +5,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 if(UNIX)
         set(BUILD_TYPE STATIC)
 if(${CMAKE_BUILD_TYPE} MATCHES Debug)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fPIC")
 endif()
 
 else()
@@ -17,10 +17,17 @@ else()
 endif()
 
 set(OPENCV_STATIC ON)
-find_package(OpenCV REQUIRED core imgproc highgui cuda cudaimgproc cudawarping cudafeatures2d cudaoptflow)
+set(OpenCV_ROOT "/usr/local/share/OpenCV")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} /usr/local/share/OpenCV)
+find_package(OpenCV 3.0 REQUIRED core imgproc highgui cuda cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
 message(${OpenCV_CONFIG_PATH})
 
 find_package(CUDA REQUIRED)
+find_package(Qt5 REQUIRED Core)
+IF(QT5_FOUND)
+    message(Found Qt5)
+
+ENDIF()
 
 set(Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@)
 set(Boost_USE_STATIC @Boost_USE_STATIC@)
@@ -30,6 +37,7 @@ set(Boost_NO_BOOST_CMAKE ON)
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
+include(cmake/ProjectFiles.cmake)
 
 file(GLOB_RECURSE src "src/*.cpp" "src/nodes/*.cpp")
 file(GLOB_RECURSE hdr "include/*.h" "include/nodes/*.h")
@@ -39,8 +47,13 @@ INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS}
                     "include"
                     "RuntimeCompiler"
                     "RuntimeObjectSystem"
+                    ${Qt5Core_INCLUDE_DIRS}
+                    ${CMAKE_CURRENT_SOURCE_DIR}
 )
-include(cmake/ProjectFiles.cmake)
+
+INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/RuntimeObjectSystem")
+INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/RuntimeCompiler")
+
 set(EagleLib_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
 
 if(WIN32)
@@ -51,13 +64,9 @@ if(WIN32)
 		set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_RELEASE_POSTFIX}.lib PARENT_SCOPE)
 		message(${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_RELEASE_POSTFIX}.dll)
 	endif(CMAKE_BUILD_TYPE EQUAL "Debug")
-else()
-	if(CMAKE_BUILD_TYPE EQUAL "Debug")
-                set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/libEagleLib${CMAKE_DEBUG_POSTFIX}.a PARENT_SCOPE)
-		else()
-                set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/libEagleLib${CMAKE_RELEASE_POSTFIX}.a PARENT_SCOPE)
-		endif(CMAKE_BUILD_TYPE EQUAL "Debug")
 endif(WIN32)
+
+#SET(EagleLib_DEFINITIONS "-DEAGLE_LIB_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}" PARENT_SCOPE)
 
 add_library(RuntimeCompiler
             ${BUILD_TYPE}
@@ -85,14 +94,6 @@ add_library(EagleLib STATIC
 foreach(lib ${OpenCV_LIBS})
 message(${lib})
 endforeach(lib)
-
-get_property(dirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
-
-message("Include directories: ")
-foreach(dir ${dirs})
-  message(STATUS "dir='${dir}'")
-endforeach()
-message("End of include directories")
 
 if(UNIX)
 TARGET_LINK_LIBRARIES(EagleLib 

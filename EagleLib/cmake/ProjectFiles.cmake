@@ -15,7 +15,7 @@ if(UNIX)
 		list(REMOVE_ITEM SimpleFileWatcher_SRCS "RuntimeCompiler/SimpleFileWatcher/FileWatcherOSX.cpp")
 	endif()
 else()
-	list(REMOVE_ITEM RuntimeCompiler_SRCS "RuntimeCompiler/Compiler_PlatformPosix.cpp")
+        list(REMOVE_ITEM RuntimeCompiler_SRCS   "RuntimeCompiler/Compiler_PlatformPosix.cpp")
 	list(REMOVE_ITEM SimpleFileWatcher_SRCS "RuntimeCompiler/SimpleFileWatcher/FileWatcherOSX.cpp")
 	list(REMOVE_ITEM SimpleFileWatcher_SRCS "RuntimeCompiler/SimpleFileWatcher/FileWatcherLinux.cpp")
 endif()
@@ -25,6 +25,10 @@ set(RuntimeCompiler_SRCS ${RuntimeCompiler_SRCS} ${SimpleFileWatcher_SRCS})
 #
 # RuntimeObjectSystem Source
 #
+
+#file(GLOB RuntimeObjectSystem_SRCS "RuntimeObjectSystem/*")
+#file(GLOB ObjectFactorySystem_SRCS "RuntimeObjectSystem/ObjectFactorySystem/*")
+#file(GLOB SimpleSerializer_SRCS "RuntimeObjectSystem/SimpleSerializer/*")
 
 aux_source_directory(RuntimeObjectSystem RuntimeObjectSystem_SRCS)
 aux_source_directory(RuntimeObjectSystem/ObjectFactorySystem ObjectFactorySystem_SRCS)

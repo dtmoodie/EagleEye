@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(EagleEye)
 find_package(Qt5 COMPONENTS Gui Widgets Core OpenGL PrintSupport)
-find_package(OpenCV REQUIRED core imgproc highgui cuda cudaimgproc cudawarping cudafeatures2d)
+find_package(OpenCV 3.0 REQUIRED core imgproc highgui cuda cudaimgproc cudawarping cudafeatures2d)
 find_package(CUDA REQUIRED)
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
-
 
 
 set(Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@)
@@ -13,10 +12,10 @@ set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)
 set(BOOST_INCLUDEDIR "@Boost_INCLUDE_DIR@")
 set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
+
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES("EagleEye/include")
-
 INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${Qt5Core_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${Qt5PrintSupport_INCLUDE_DIRS})
@@ -41,7 +40,7 @@ ADD_EXECUTABLE(EagleEye
         ${headers}
         ${UIS}
 )
-#add_dependencies(EagleEye EagleLib)
+add_dependencies(EagleEye EagleLib)
 
 TARGET_LINK_LIBRARIES(EagleEye
         Qt5::Gui
@@ -49,8 +48,7 @@ TARGET_LINK_LIBRARIES(EagleEye
         Qt5::Core
         Qt5::OpenGL
         Qt5::PrintSupport
-		EagleLib
-        #${EagleLib_LIBRARIES}
+        EagleLib
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS} 
 )

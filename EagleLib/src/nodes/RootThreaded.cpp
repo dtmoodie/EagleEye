@@ -5,8 +5,8 @@ using namespace EagleLib;
 
 RootThreaded::RootThreaded()
 {
-	nodeName = "RootThreaded";
-	Node();
+    nodeName = "RootThreaded";
+    //Node();
 }
 RootThreaded::~RootThreaded()
 {
