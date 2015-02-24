@@ -22,6 +22,7 @@ Node::create(std::string& name)
     //if((*NodeFactories)[name])
     //	return (*NodeFactories)[name]->create();
     //return boost::shared_ptr<Node>();
+	return Node::Ptr();
 }
 boost::shared_ptr<Node>
 Node::create(const std::string& name)
@@ -35,6 +36,7 @@ Node::create(const std::string& name)
 		std::cout << "Node factories is NULL, nothing has been registered yet" << std::endl;
 	}
     return boost::shared_ptr<Node>();*/
+	return Node::Ptr();
 }
 /*
 void // This gets called before NodeFactories gets initialized :/ and so it breaks.

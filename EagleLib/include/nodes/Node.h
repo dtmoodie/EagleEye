@@ -75,7 +75,7 @@ NodeName::NodeName():Node()                     \
 
 #define EAGLE_TRY_ERROR(FunctionCall)                                   \
     try{                                                                \
-    FunctionCall                                                     \
+    FunctionCall														\
     }catch(cv::Exception &e){                                           \
         if(errorCallback)                                               \
             errorCallback(std::string(__FUNCTION__) + e.what());                     \
@@ -184,8 +184,8 @@ namespace EagleLib
 		virtual void					doProcess(cv::InputArray in, cv::OutputArray out);
 
         // Finds name in tree hierarchy, updates tree name and returns it
-        virtual std::string				getName() const;
-        virtual std::string             getTreeName() const;
+        std::string				getName() const;
+        std::string             getTreeName() const;
 		// Searches nearby nodes for possible valid inputs for each input parameter
         virtual void					getInputs();
 

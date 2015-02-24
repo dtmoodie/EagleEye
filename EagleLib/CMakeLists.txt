@@ -5,7 +5,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 if(UNIX)
         set(BUILD_TYPE STATIC)
 if(${CMAKE_BUILD_TYPE} MATCHES Debug)
+#if(WIN32)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FC")
+#else(WIN32)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fPIC")
+#endif(WIN32)
 endif()
 
 else()
@@ -59,10 +63,8 @@ set(EagleLib_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOP
 if(WIN32)
 	if(CMAKE_BUILD_TYPE EQUAL "Debug")
 		set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_DEBUG_POSTFIX}.lib PARENT_SCOPE)
-		message(${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_DEBUG_POSTFIX}.dll)
 	else()
 		set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_RELEASE_POSTFIX}.lib PARENT_SCOPE)
-		message(${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_RELEASE_POSTFIX}.dll)
 	endif(CMAKE_BUILD_TYPE EQUAL "Debug")
 endif(WIN32)
 
@@ -90,25 +92,22 @@ add_library(EagleLib STATIC
 	${hdr}
 	${RuntimeObjectSystem_SRCS}
 )
+if(MSVC)
+		set_target_properties(EagleLib PROPERTIES COMPILE_FLAGS "/FC")
+	endif()
 
 foreach(lib ${OpenCV_LIBS})
 message(${lib})
 endforeach(lib)
 
-if(UNIX)
-TARGET_LINK_LIBRARIES(EagleLib 
-	${Boost_LIBRARIES} 
-	${OpenCV_LIBS} 
-        RuntimeCompiler
-        RuntimeObjectSystem
-        dl
-)
-else(UNIX)
 TARGET_LINK_LIBRARIES(EagleLib
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS}
         RuntimeCompiler
         RuntimeObjectSystem
 )
-
+if(UNIX)
+TARGET_LINK_LIBRARIES(EagleLib 
+        dl
+)
 endif(UNIX)

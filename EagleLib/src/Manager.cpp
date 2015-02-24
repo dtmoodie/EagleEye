@@ -45,13 +45,13 @@ NodeManager::Init()
     includePath += "/include";
     m_pRuntimeObjectSystem->AddIncludeDir(includePath.c_str());
 
-
+	return true;
 }
 
 bool
 NodeManager::MainLoop()
 {
-
+	return true;
 }
 
 void
@@ -132,5 +132,5 @@ bool NodeManager::CheckRecompile()
     {
         m_pRuntimeObjectSystem->GetFileChangeNotifier()->Update(1.0f);
     }
-
+	return true;
 }

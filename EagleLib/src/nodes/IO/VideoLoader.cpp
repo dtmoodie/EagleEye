@@ -80,13 +80,16 @@ IO::VideoLoader::loadFile()
 		return;
 	if (fileName->data.size() > 0)
     {
-        EAGLE_TRY_ERROR(
 #if _WIN32
+		EAGLE_TRY_ERROR(
         ptr->data = cv::cudacodec::createVideoReader(fileName->data);
+		)
 #else
-        ptr->data = cv::VideoCapture(fileName->data);
+		EAGLE_TRY_ERROR(
+		ptr->data = cv::VideoCapture(fileName->data);
+		)
 #endif
-        )
+        
     }
 
 }

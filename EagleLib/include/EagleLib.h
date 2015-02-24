@@ -5,7 +5,7 @@
 #endif
 
 #ifdef _WIN32
-#undef RCC_ENABLED
+//#undef RCC_ENABLED
 #else
 #define CVAPI_EXPORTS
 #endif

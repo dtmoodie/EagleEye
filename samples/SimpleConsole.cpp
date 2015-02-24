@@ -11,7 +11,7 @@ int main()
     node->updateParameter("Output", std::string("Parent!"));
     node->addParameter("Test", int(5));
 
-    node->addChild(manager.addNode("TestChildNode"));
+    auto child = node->addChild(manager.addNode("TestChildNode"));
 
     //node->updateParameter("Output",  std::string("Parent"));
     //nodes.push_back(node);
@@ -24,7 +24,12 @@ int main()
     while(1)
     {
         manager.CheckRecompile();
-        node->process(img);
+        img = node->process(img);
+		child->process(img);
+#if _WIN32
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+#else
         usleep(1000*1000);
+#endif
     }
 }
