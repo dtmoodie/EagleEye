@@ -2,9 +2,12 @@
 #include <opencv2/highgui.hpp>
 #include <regex>
 #include <boost/lexical_cast.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
 using namespace EagleLib;
 #ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
+#include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #if __linux
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
 #endif
@@ -47,7 +50,7 @@ Node::registerType(const std::string& name, NodeFactory* factory)
 Node::Node()
 {
 	treeName = nodeName;
-    parent = NULL;
+    parent = nullptr;
     enabled = true;
 }
 
@@ -232,4 +235,48 @@ std::string
 Node::getTreeName() const
 {
     return treeName;
+}
+
+
+Node::Ptr
+Node::swap(const Node::Ptr &other)
+{
+    // By moving ownership of all parameters to the new node, all
+    other->parameters = parameters;
+    other->children = children;
+    for (auto it = children.begin(); it != children.end(); ++it)
+    {
+        (*it)->parent = other.get();
+    }
+    return other;
+}
+void
+Node::Init(bool firstInit)
+{
+
+}
+
+void
+Node::Init(const std::string &configFile)
+{
+
+}
+
+void
+Node::Init(const cv::FileNode& configNode)
+{
+
+}
+
+void
+Node::Serialize(ISimpleSerializer *pSerializer)
+{
+    IObject::Serialize(pSerializer);
+    std::cout << "Serializing node" << std::endl;
+    //SERIALIZE(children);
+    SERIALIZE(parameters);
+    SERIALIZE(children);
+    SERIALIZE(treeName);
+    SERIALIZE(nodeName);
+    //SERIALIZEIOBJPTR(parent);
 }

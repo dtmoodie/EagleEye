@@ -27,10 +27,10 @@
 
 
 #include "../RuntimeObjectSystem/ObjectInterface.h"
-
+#include <iostream>
 
 #define SERIALIZE(prop) pSerializer->SerializeProperty(#prop, prop);
-
+//#define SERIALIZEIOBJPTR(objPtr) SerializeIObjectPtr(pSerializer, #objPtr, &objPtr);
 
 
 
@@ -89,6 +89,7 @@ inline bool ISimpleSerializer::SerializeProperty(const char* propertyName, T& va
 {
 	if (IsLoading())
 	{
+        std::cout << "Serializing into the new object " << propertyName <<std::endl;
 		const SerializedValue<T>* pSV = static_cast<const SerializedValue<T>*>(GetISerializedValue(propertyName));
 		if (!pSV)
 		{
@@ -99,6 +100,7 @@ inline bool ISimpleSerializer::SerializeProperty(const char* propertyName, T& va
 	}
 	else
 	{
+        std::cout << "Serializing out of the old object " << propertyName <<std::endl;
 		const SerializedValue<T>* pSv = new SerializedValue<T>(value);
 		SetISerializedValue(propertyName, pSv);
 	}	

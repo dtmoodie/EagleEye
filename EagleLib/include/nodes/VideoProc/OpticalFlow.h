@@ -1,3 +1,4 @@
+#pragma once
 #include <nodes/Node.h>
 #include <Manager.h>
 
@@ -28,6 +29,8 @@ namespace EagleLib
 		cv::cuda::GpuMat refPts;
 		cv::cuda::GpuMat prevPts;
 	};
+
+
 	// Static object forces constructor to be called at startup
 //	REGISTER_TYPE(PyrLKOpticalFlow);
 	/*
@@ -45,3 +48,7 @@ namespace EagleLib
     };
 	static PyrLKOpticalFlowFactory global_PyrLKOpticalFlowFactory;*/
 }
+
+//using namespace EagleLib;
+//REGISTERCLASS(BroxOpticalFlow)
+//REGISTERCLASS(PyrLKOpticalFlow)

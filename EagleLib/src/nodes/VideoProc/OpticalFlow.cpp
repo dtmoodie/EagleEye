@@ -10,15 +10,14 @@ using namespace EagleLib;
 #if __linux
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda -lopencv_cudaoptflow")
 #endif
-//REGISTERCLASS(BroxOpticalFlow)
-//REGISTERCLASS(PyrLKOpticalFlow)
+
 
 #endif
 
 //REGISTER_TYPE(BroxOpticalFlow)
 BroxOpticalFlow::BroxOpticalFlow()
 {
-	addParameter(std::string("broxOpticalFlow"), new cv::cuda::BroxOpticalFlow(0.1f,0.1f,1,10,10,10), std::string("Used for tracking dense optical flow"), Parameter::Output);
+    addParameter("broxOpticalFlow", new cv::cuda::BroxOpticalFlow(0.1f,0.1f,1,10,10,10), std::string("Used for tracking dense optical flow"), Parameter::Output);
 	addParameter(std::string("horizontalFlow"), cv::cuda::GpuMat(), std::string("Flow along X-Axis"), Parameter::Output);
 	addParameter(std::string("verticalFlow"), cv::cuda::GpuMat(), std::string("Flow along Y-Axis"), Parameter::Output);
 	addParameter(std::string("alpha"), 0.1f, std::string("Flow smoothness parameter"), Parameter::Control);

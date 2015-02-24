@@ -32,10 +32,12 @@
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/mem_fun.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <vector>
 #include <list>
 #include <map>
 #include <type_traits>
+#include <boost/filesystem.hpp>
 
 using namespace boost::multi_index;
 
@@ -46,85 +48,8 @@ using namespace boost::multi_index;
 #include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include "../../RuntimeObjectSystem/ObjectInterface.h"
 #include "../../RuntimeObjectSystem/ObjectInterfacePerModule.h"
+#include "../../RuntimeObjectSystem/IObject.h"
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
-
-// Add an enum for each object interface type we're implementing
-enum InterfaceIDEnum
-{
-    IID_IOBJECT,
-    IID_NodeObject,
-    IID_ENDInterfaceID
-};
-
-typedef unsigned int InterfaceID;
-struct ISimpleSerializer;
-class ObjectFactorySystem;
-typedef size_t PerTypeObjectId;
-typedef size_t ConstructorId;
-
-template<InterfaceID Tiid, typename TSuper> struct TInterface: public TSuper
-{
-    static const InterfaceID s_interfaceID = Tiid;
-    virtual void* GetInterface( InterfaceID _iid)
-    {
-        switch(_iid)
-        {
-        case Tiid:
-            return this;
-            break;
-        default:
-            return TSuper::GetInterface(_iid);
-        }
-    }
-};
-
-
-class CV_EXPORTS IObject
-{
-public:
-    static const InterfaceID s_interfaceID = IID_IOBJECT;
-
-    virtual void* GetInterface(InterfaceID __iid)
-    {
-        switch(__iid)
-        {
-        case IID_IOBJECT:
-            return this;
-        default:
-            return nullptr;
-        }
-    }
-
-    IObject(): _isRuntimeDelete(false){}
-
-    virtual ~IObject() {};
-
-    virtual void Init(bool isFirstInit ) {}
-    virtual PerTypeObjectId GetPerTypeId() const = 0;
-    virtual void GetObjectId( ObjectId& id) const
-    {
-        id.m_ConstructorId = GetConstructor()->GetConstructorId();
-        id.m_PerTypeId = GetPerTypeId();
-    }
-
-    //return the constructor for this class
-    virtual IObjectConstructor* GetConstructor() const = 0;
-
-    //serialise is not pure virtual as many objects do not need state
-    virtual void Serialize(ISimpleSerializer *pSerializer) {}
-
-    virtual const char* GetTypeName() const = 0;
-    ObjectId myId;
-
-protected:
-    bool isRuntimeDelete() {return _isRuntimeDelete; }
-
-private:
-    friend class ObjectFactorySystem;
-
-    bool _isRuntimeDelete;
-
-};
 #endif // RCC_ENABLED
 // ***************************************** END RCC CODE *******************************************************
 
@@ -270,6 +195,7 @@ namespace EagleLib
         typedef multi_index_container<Ptr, indexed_by<boost::multi_index::random_access<>,
                                            hashed_unique<tag<TreeName>, const_mem_fun<Node, std::string, &Node::getTreeName > >,
                                            hashed_non_unique<tag<NodeName>, const_mem_fun<Node, std::string, &Node::getName> > > > nodeContainer;
+
 		// ****************************************************************************************************************
 		//
 		//									Display functions
@@ -403,9 +329,9 @@ namespace EagleLib
             for(int i = 0; i < parameters.size(); ++i)
             {
                 if(parameters[i]->name == name)
-                    return boost::dynamic_pointer_cast<T, Parameter>(parameters[i]);
+                    return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[i]);
             }
-            return boost::shared_ptr<T>();
+            return boost::shared_ptr<TypedParameter<T>>();
         }    
 		template<typename T> boost::shared_ptr< TypedParameter<T> > 
 			getParameter(int idx)
@@ -476,7 +402,29 @@ namespace EagleLib
             return;
         }
 
-		// Function for displaying critical error messages, IE popup display and halting program execution
+        // ****************************************************************************************************************
+        //
+        //									Dynamic reloading and persistence
+        //
+        // ****************************************************************************************************************
+
+
+        virtual Node::Ptr swap(const Node::Ptr& other);
+
+        virtual void Init(bool firstInit = true);
+        virtual void Init(const std::string& configFile);
+        virtual void Init(const cv::FileNode& configNode);
+
+        virtual void Serialize(ISimpleSerializer *pSerializer);
+
+
+        // ****************************************************************************************************************
+        //
+        //									Members
+        //
+        // ****************************************************************************************************************
+
+        // Function for displaying critical error messages, IE popup display and halting program execution
         boost::function<void(const std::string&)>									errorCallback;
 		// Function for displaying warning messages, IE popup display
         boost::function<void(const std::string&)>									warningCallback;

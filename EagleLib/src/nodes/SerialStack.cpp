@@ -18,4 +18,4 @@ SerialStack::doProcess(cv::cuda::GpuMat& img)
 	return img;
 }
 
-//REGISTERCLASS(SerialStack)
+REGISTERCLASS(SerialStack)

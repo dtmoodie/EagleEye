@@ -31,6 +31,7 @@
 #define IOBJECT_INCLUDED
 
 #include "ObjectInterface.h"
+#include <iostream>
 
 struct ISimpleSerializer;
 class ObjectFactorySystem;
@@ -39,7 +40,7 @@ class ObjectFactorySystem;
 enum InterfaceIDEnum
 {
 	IID_IOBJECT,
-
+    IID_NodeObject,
 	IID_ENDInterfaceID
 };
 
@@ -49,17 +50,17 @@ typedef unsigned int InterfaceID;
 template< InterfaceID Tiid, typename TSuper> struct TInterface : public TSuper
 {
 	static const InterfaceID s_interfaceID = Tiid;
-	virtual void GetInterface( InterfaceID _iid, void** pReturn )
-	{
-		switch(_iid)
-		{
-		case Tiid:
-			*pReturn= this;
-			break;
-		default:
-			TSuper::GetInterface(_iid, pReturn);
-		}
-	}
+    virtual IObject* GetInterface( InterfaceID _iid)
+    {
+        switch(_iid)
+        {
+        case Tiid:
+            return this;
+            break;
+        default:
+            return TSuper::GetInterface(_iid);
+        }
+    }
 };
 
 // IObject itself below is a special case as the base class
@@ -69,17 +70,16 @@ struct IObject
 {
 	static const InterfaceID s_interfaceID = IID_IOBJECT;
 
-	virtual void GetInterface( InterfaceID iid, void** pReturn )
-	{
-		switch( iid )
-		{
-		case IID_IOBJECT:
-			*pReturn = this;
-			break;
-		default:
-			*pReturn = NULL;
-		}
-	}
+    virtual IObject* GetInterface(InterfaceID __iid)
+    {
+        switch(__iid)
+        {
+        case IID_IOBJECT:
+            return this;
+        default:
+            return nullptr;
+        }
+    }
 
 	template< typename T> void GetInterface( T** pReturn )
 	{
@@ -119,7 +119,10 @@ struct IObject
 	virtual IObjectConstructor* GetConstructor() const = 0;
 
 	//serialise is not pure virtual as many objects do not need state
-	virtual void Serialize(ISimpleSerializer *pSerializer) {};
+    virtual void Serialize(ISimpleSerializer *pSerializer)
+    {
+
+    }
 
 	virtual const char* GetTypeName() const = 0;
 

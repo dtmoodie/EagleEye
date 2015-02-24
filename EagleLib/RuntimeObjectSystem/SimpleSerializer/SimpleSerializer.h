@@ -53,8 +53,6 @@ public:
 		m_bLoading = loading;
 		m_pCurrentObject = 0;
 	}
-
-
 	// ~ISimpleSerializer
 
 private:
