@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 2.8)
 
 project(samples)
 #if(WIN32)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FC")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FC")
 #else(WIN32)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fPIC")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fPIC")
 #endif(WIN32)
+
 set(Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@)
 set(Boost_USE_STATIC @Boost_USE_STATIC@)
 set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)

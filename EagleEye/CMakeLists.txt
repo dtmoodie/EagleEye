@@ -6,12 +6,14 @@ find_package(CUDA REQUIRED)
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 
 
-set(Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@)
-set(Boost_USE_STATIC @Boost_USE_STATIC@)
-set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)
-set(BOOST_INCLUDEDIR "@Boost_INCLUDE_DIR@")
-set(Boost_NO_BOOST_CMAKE ON)
+#set(Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@)
+#set(Boost_USE_STATIC @Boost_USE_STATIC@)
+#set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)
+#set(Boost_USE_STATIC_LIBS FALSE)
+#set(Boost_USE_MULTITHREAD TRUE)
+#set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
+
 
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
@@ -52,6 +54,10 @@ TARGET_LINK_LIBRARIES(EagleEye
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS} 
 )
+foreach(lib ${Boost_LIBRARIES})
+message(${lib})
+endforeach(lib)
+
 if(UNIX)
     TARGET_LINK_LIBRARIES(EagleEye dl)
 endif()

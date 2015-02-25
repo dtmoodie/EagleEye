@@ -10,8 +10,8 @@ int main()
     auto node = manager.addNode("TestNode");
     node->updateParameter("Output", std::string("Parent!"));
     node->addParameter("Test", int(5));
+    auto child = manager.addNode("TestChildNode");
 
-    auto child = node->addChild(manager.addNode("TestChildNode"));
 
     //node->updateParameter("Output",  std::string("Parent"));
     //nodes.push_back(node);

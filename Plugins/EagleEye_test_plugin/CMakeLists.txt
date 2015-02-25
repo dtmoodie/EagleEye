@@ -16,7 +16,6 @@ INCLUDE_DIRECTORIES(
 
 SET(src Visualization.cpp)
 SET(hdr Visualization.h)
-message(${CMAKE_CURRENT_SOURCE_DIR})
 QT5_WRAP_CPP(MOC ${hdr} ${src})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 

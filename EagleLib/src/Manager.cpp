@@ -76,7 +76,6 @@ NodeManager::OnConstructorsAdded()
                     {
                         if(itr->second[j]->treeName == pNode->treeName)
                         {
-
                             itr->second[j] = pNode;
                             // For some reason, trying to delete ptr yields a segfault.  Maybe the objectfactory is already handling this?
                             // Need to figure out how to notify the object factory of a delete in the case of a legitimate delete
