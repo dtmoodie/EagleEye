@@ -7,7 +7,7 @@ namespace EagleLib
 {
     namespace Features2D
     {
-        class GoodFeaturesToTrackDetector: public Node
+		class CV_EXPORTS GoodFeaturesToTrackDetector : public Node
         {
         public:
             GoodFeaturesToTrackDetector();

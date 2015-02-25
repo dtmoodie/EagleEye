@@ -172,27 +172,27 @@ namespace EagleLib
         //static void registerType(const std::string& name, NodeFactory* factory);
 		
 
-        Node();
-        virtual ~Node();
+		Node();
+		virtual ~Node();
         
-        virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img);
+		virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img);
 		virtual void					process(cv::InputArray in, cv::OutputArray out);
 		// Processing functions, these actually do the work of the node
-        virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img);
-        virtual void					doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat>& retVal);
+		virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img);
+		virtual void					doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat>& retVal);
 		virtual void					doProcess(cv::InputArray in, boost::promise<cv::OutputArray>& retVal);
 		virtual void					doProcess(cv::InputArray in, cv::OutputArray out);
 
         // Finds name in tree hierarchy, updates tree name and returns it
-        std::string				getName() const;
-        std::string             getTreeName() const;
+		std::string				getName() const;
+		std::string             getTreeName() const;
 		// Searches nearby nodes for possible valid inputs for each input parameter
-        virtual void					getInputs();
+		virtual void					getInputs();
 
-        struct NodeName{};
-        struct TreeName{};
+		CV_EXPORTS struct NodeName{};
+		CV_EXPORTS struct TreeName{};
 
-        typedef multi_index_container<Ptr, indexed_by<boost::multi_index::random_access<>,
+		typedef multi_index_container<Ptr, indexed_by<boost::multi_index::random_access<>,
                                            hashed_unique<tag<TreeName>, const_mem_fun<Node, std::string, &Node::getTreeName > >,
                                            hashed_non_unique<tag<NodeName>, const_mem_fun<Node, std::string, &Node::getName> > > > nodeContainer;
 
@@ -202,22 +202,22 @@ namespace EagleLib
 		//
 		// ****************************************************************************************************************
 		// Register a function for displaying CPU images
-        virtual void registerDisplayCallback(boost::function<void(cv::Mat)>& f);
+		 virtual void registerDisplayCallback(boost::function<void(cv::Mat)>& f);
 		// Register a function for displaying GPU images
-        virtual void registerDisplayCallback(boost::function<void(cv::cuda::GpuMat)>& f);
+		 virtual void registerDisplayCallback(boost::function<void(cv::cuda::GpuMat)>& f);
 		// Spawn an external display just for this node, with name = treeName
-        virtual void spawnDisplay();
+		 virtual void spawnDisplay();
 		// Kill any spawned external displays
-        virtual void killDisplay();
+		 virtual void killDisplay();
 
 		// ****************************************************************************************************************
 		//
 		//									Child adding and deleting
 		//
 		// ****************************************************************************************************************
-        virtual Ptr						addChild(Node* child);
-        virtual Ptr						addChild(const boost::shared_ptr<Node> &child);
-        virtual Ptr						getChild(const std::string& name);
+		virtual Ptr						addChild(Node* child);
+		virtual Ptr						addChild(const boost::shared_ptr<Node> &child);
+		virtual Ptr						getChild(const std::string& name);
 		template<typename T> boost::shared_ptr<T> getChild(int index)
         {
             if(index < children.size())

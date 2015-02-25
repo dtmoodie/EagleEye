@@ -30,3 +30,5 @@ ParallelStack::process(cv::cuda::GpuMat img)
     }
 	return retVal.get_future().get();
 }
+
+REGISTERCLASS(ParallelStack)

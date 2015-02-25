@@ -97,9 +97,6 @@ Node* NodeManager::addNode(const std::string &nodeName)
         IObject* pObj = pConstructor->Construct();
         IObject* interface = pObj->GetInterface(IID_NodeObject);
 
-        //IEntitySystem* pEntitySystem = PerModuleInterface::g_pSystemTable->pEntitySystem;
-
-
         if(interface)
         {
             Node* node = static_cast<Node*>(interface);
@@ -118,18 +115,26 @@ Node* NodeManager::addNode(const std::string &nodeName)
     }
     return nullptr;
 }
+void 
+NodeManager::addConstructors(IAUDynArray<IObjectConstructor*> & constructors)
+{
+	m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddConstructors(constructors);
+}
 
 bool NodeManager::CheckRecompile()
 {
+	static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
+	boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
+	boost::posix_time::time_duration delta = currentTime - prevTime;
     if( m_pRuntimeObjectSystem->GetIsCompiledComplete())
     {
         m_pRuntimeObjectSystem->LoadCompiledModule();
-
     }
 
     if(!m_pRuntimeObjectSystem->GetIsCompiling())
     {
-        m_pRuntimeObjectSystem->GetFileChangeNotifier()->Update(1.0f);
+        m_pRuntimeObjectSystem->GetFileChangeNotifier()->Update(float(delta.total_milliseconds())/1000.0);
     }
+	prevTime = currentTime;
 	return true;
 }

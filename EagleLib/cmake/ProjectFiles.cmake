@@ -6,6 +6,8 @@
 aux_source_directory(RuntimeCompiler RuntimeCompiler_SRCS)
 aux_source_directory(RuntimeCompiler/SimpleFileWatcher SimpleFileWatcher_SRCS)
 
+file(GLOB hdrs "RuntimeCompiler/*.h")
+
 if(UNIX)
 	list(REMOVE_ITEM RuntimeCompiler_SRCS "RuntimeCompiler/Compiler_PlatformWindows.cpp")
 	list(REMOVE_ITEM SimpleFileWatcher_SRCS "RuntimeCompiler/SimpleFileWatcher/FileWatcherWin32.cpp")
@@ -20,7 +22,7 @@ else()
 	list(REMOVE_ITEM SimpleFileWatcher_SRCS "RuntimeCompiler/SimpleFileWatcher/FileWatcherLinux.cpp")
 endif()
 
-set(RuntimeCompiler_SRCS ${RuntimeCompiler_SRCS} ${SimpleFileWatcher_SRCS})
+set(RuntimeCompiler_SRCS ${RuntimeCompiler_SRCS} ${SimpleFileWatcher_SRCS} ${hdrs})
 
 #
 # RuntimeObjectSystem Source

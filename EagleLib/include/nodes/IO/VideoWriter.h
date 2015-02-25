@@ -7,8 +7,9 @@ namespace EagleLib
 {
 	namespace IO
 	{
-		class VideoWriter : public Node
+		class CV_EXPORTS VideoWriter : public Node
 		{
+		public:
 			VideoWriter();
 			VideoWriter(std::string fileName);
 			~VideoWriter();

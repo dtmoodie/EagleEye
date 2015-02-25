@@ -86,3 +86,4 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img)
     }
     return img;
 }
+REGISTERCLASS(GoodFeaturesToTrackDetector)

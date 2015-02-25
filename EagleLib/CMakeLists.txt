@@ -11,9 +11,15 @@ message(${OpenCV_CONFIG_PATH})
 find_package(CUDA REQUIRED)
 find_package(Qt5 REQUIRED Core)
 
-set(Boost_USE_STATIC_LIBS        OFF)
-set(Boost_USE_MULTITHREADED      ON)
-set(Boost_USE_STATIC_RUNTIME    OFF)
+IF(WIN32)
+	set(Boost_USE_STATIC_LIBS        ON)
+	set(Boost_USE_MULTITHREADED      ON)
+	set(Boost_USE_STATIC_RUNTIME     OFF)
+ELSE(WIN32)
+	set(Boost_USE_STATIC_LIBS        OFF)
+	set(Boost_USE_MULTITHREADED      ON)
+	set(Boost_USE_STATIC_RUNTIME     OFF)
+ENDIF(WIN32)
 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
@@ -46,23 +52,20 @@ if(WIN32)
 endif(WIN32)
 
 add_library(RuntimeCompiler
-            ${BUILD_TYPE}
+            STATIC
             ${RuntimeCompiler_SRCS}
 )
 
 add_library(RuntimeObjectSystem
-            ${BUILD_TYPE}
+            STATIC
             ${RuntimeObjectSystem_SRCS}
 )
 
-add_library(EagleLib ${BUILD_TYPE}
+add_library(EagleLib SHARED
 	${src} 
 	${hdr}
 	${RuntimeObjectSystem_SRCS}
 )
-if(WIN32)
-    set_target_properties(EagleLib PROPERTIES COMPILE_FLAGS "/FC")
-endif()
 
 TARGET_LINK_LIBRARIES(RuntimeObjectSystem RuntimeCompiler)
 TARGET_LINK_LIBRARIES(EagleLib

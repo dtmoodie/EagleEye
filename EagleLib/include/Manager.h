@@ -1,24 +1,36 @@
 #pragma once
+#include <EagleLib.h>
 #include "nodes/Node.h"
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <string>
 #include "../RuntimeObjectSystem/ObjectInterface.h"
 #include "../RuntimeObjectSystem/IObjectFactorySystem.h"
+#include <opencv2/core/cvdef.h>
 
 
+#define ADD_CONSTRUCTORS(managerObj)  \
+	auto moduleInterface = PerModuleInterface::GetInstance();	\
+	auto vecConstructors = moduleInterface->GetConstructors();	\
+	AUDynArray<IObjectConstructor*> dynConstructors;			\
+	dynConstructors.Resize(vecConstructors.size());				\
+	for (int i = 0; i < vecConstructors.size(); ++i)			\
+		dynConstructors[i] = vecConstructors[i];				\
+	(managerObj).addConstructors(dynConstructors);
 
 
 namespace EagleLib
 {
 class Node;
-    class NodeManager: public IObjectFactoryListener
+	class CV_EXPORTS NodeManager : public IObjectFactoryListener
     {
     public:
         NodeManager();
         virtual ~NodeManager();
 
         Node *addNode(const std::string& nodeName);
+
+		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
 
         bool Init();
 

@@ -4,7 +4,7 @@ namespace EagleLib
 {
 	namespace IO
 	{
-		class VideoLoader: public Node
+		class CV_EXPORTS VideoLoader : public Node
 		{
 		public:
 			//VideoLoader();

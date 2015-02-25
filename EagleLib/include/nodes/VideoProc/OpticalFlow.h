@@ -5,7 +5,7 @@
 
 namespace EagleLib
 {
-    class BroxOpticalFlow : public Node
+	class CV_EXPORTS BroxOpticalFlow : public Node
     {
     public:
         BroxOpticalFlow();
@@ -15,7 +15,7 @@ namespace EagleLib
         cv::cuda::GpuMat prevFrame;
     };
 
-    class PyrLKOpticalFlow: public Node
+	class CV_EXPORTS PyrLKOpticalFlow : public Node
 	{
 	public:
         PyrLKOpticalFlow();

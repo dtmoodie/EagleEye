@@ -7,11 +7,16 @@ int main()
 {
     EagleLib::NodeManager manager;
     //std::vector<EagleLib::Node::Ptr> nodes;
-    auto node = manager.addNode("TestNode");
+	
+	// Since manager might have been compiled in debug or release as opposed to this executable, we need to use the AUDynArray object
+	// to pass the constructors into the manager, instead of the returned std::vector.
+	ADD_CONSTRUCTORS(manager)
+
+	auto node = manager.addNode("TestNode");
     node->updateParameter("Output", std::string("Parent!"));
     node->addParameter("Test", int(5));
     auto child = manager.addNode("TestChildNode");
-
+	
 
     //node->updateParameter("Output",  std::string("Parent"));
     //nodes.push_back(node);

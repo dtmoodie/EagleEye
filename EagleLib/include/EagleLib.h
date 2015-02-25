@@ -3,11 +3,11 @@
 #ifndef RCC_ENABLED
 #define RCC_ENABLED
 #endif
-
+#define CVAPI_EXPORTS
 #ifdef _WIN32
 //#undef RCC_ENABLED
 #else
-#define CVAPI_EXPORTS
+
 #endif
 
 #include "nodes/Node.h"	

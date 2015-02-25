@@ -282,3 +282,4 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(nodeName);
     //SERIALIZEIOBJPTR(parent);
 }
+REGISTERCLASS(Node)

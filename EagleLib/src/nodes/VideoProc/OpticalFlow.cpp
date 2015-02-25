@@ -170,3 +170,6 @@ PyrLKOpticalFlow::setReference(cv::cuda::GpuMat& img, cv::cuda::GpuMat* refPts_)
 	if(refPts_ != NULL)
 		refPts = *refPts_;
 }
+
+REGISTERCLASS(PyrLKOpticalFlow)
+REGISTERCLASS(BroxOpticalFlow)

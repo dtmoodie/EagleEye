@@ -5,10 +5,10 @@
 #include <opencv2/videoio.hpp>
 #endif
 
-
 using namespace EagleLib;
+using namespace EagleLib::IO;
 
-IO::VideoLoader::VideoLoader(const std::string& file)
+VideoLoader::VideoLoader(const std::string& file)
 {
     nodeName = "VideoLoader";
     treeName = nodeName;
@@ -24,13 +24,13 @@ IO::VideoLoader::VideoLoader(const std::string& file)
 	loadFile();
 }
 
-IO::VideoLoader::~VideoLoader()
+VideoLoader::~VideoLoader()
 {
 
 }
 
 cv::cuda::GpuMat 
-IO::VideoLoader::doProcess(cv::cuda::GpuMat& img)
+VideoLoader::doProcess(cv::cuda::GpuMat& img)
 {
 	if (parameters[1]->changed)
 		loadFile();
@@ -66,7 +66,7 @@ IO::VideoLoader::doProcess(cv::cuda::GpuMat& img)
 #endif
 }
 void
-IO::VideoLoader::loadFile()
+VideoLoader::loadFile()
 {
 #if _WIN32
 	auto ptr = boost::dynamic_pointer_cast<TypedParameter<cv::Ptr<cv::cudacodec::VideoReader>>, Parameter>(parameters[0]);
@@ -93,3 +93,4 @@ IO::VideoLoader::loadFile()
     }
 
 }
+REGISTERCLASS(VideoLoader)

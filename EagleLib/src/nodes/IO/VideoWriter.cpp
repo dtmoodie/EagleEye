@@ -1,5 +1,5 @@
 #include <nodes/IO/VideoWriter.h>
-
+using namespace EagleLib;
 using namespace EagleLib::IO;
 
 VideoWriter::VideoWriter()
@@ -48,7 +48,7 @@ VideoWriter::writeImg(cv::cuda::GpuMat& img)
 	{
 		if (d_writer == NULL)
 			d_writer = cv::cudacodec::createVideoWriter(fileName->data, imgSize, 30.0);
-		d_writer->write(img);
+		//d_writer->write(img);
 		return;
 	}
 	if (!gpuWriter)
@@ -63,3 +63,5 @@ VideoWriter::writeImg(cv::cuda::GpuMat& img)
 		return;
 	}	
 }
+
+REGISTERCLASS(VideoWriter)
