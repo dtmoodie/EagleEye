@@ -142,7 +142,7 @@ void FileMonitor::StartWatchingDir( WatchedDir& dirEntry )
 }
 
 
-void FileMonitor::ProcessChangeNotification( const FileSystemUtils::Path& file )
+void FileMonitor::ProcessChangeNotification( FileSystemUtils::Path& file )
 {
 	// Notify any listeners and add to change list if this is a watched file/dir
 	
@@ -168,7 +168,11 @@ void FileMonitor::ProcessChangeNotification( const FileSystemUtils::Path& file )
 				m_bChangeFlag = true;
 			}
 		}
-		
+		auto pos = file.m_string.find("~");
+		if (pos != file.m_string.npos)
+		{
+			file.m_string = file.m_string.substr(0, pos);
+		}
 		// Is this one of the files being watched in the directory?
 		TFileList::iterator fileIt = GetWatchedFileEntry(file, dirIt->fileWatchList);
 		if (fileIt != dirIt->fileWatchList.end())

@@ -7,7 +7,7 @@
 #include "../RuntimeObjectSystem/ObjectInterface.h"
 #include "../RuntimeObjectSystem/IObjectFactorySystem.h"
 #include <opencv2/core/cvdef.h>
-
+#define WIN32_FW_USE_FINDFIRST_API 1
 
 #define ADD_CONSTRUCTORS(managerObj)  \
 	auto moduleInterface = PerModuleInterface::GetInstance();	\

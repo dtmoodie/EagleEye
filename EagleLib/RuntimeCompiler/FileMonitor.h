@@ -110,7 +110,7 @@ private:
 	void StartWatchingDir( WatchedDir& dir );
 	TDirList::iterator GetWatchedDirEntry( const FileSystemUtils::Path& dir );
 	TFileList::iterator GetWatchedFileEntry( const FileSystemUtils::Path& file, TFileList& fileList );
-	void ProcessChangeNotification( const FileSystemUtils::Path& file );
+	void ProcessChangeNotification( FileSystemUtils::Path& file );
 	bool ArePathsEqual( const FileSystemUtils::Path& file1, const FileSystemUtils::Path& file2 ) const;
 
 	TDirList 							m_DirWatchList;
