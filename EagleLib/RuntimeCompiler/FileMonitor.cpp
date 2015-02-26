@@ -168,11 +168,13 @@ void FileMonitor::ProcessChangeNotification( FileSystemUtils::Path& file )
 				m_bChangeFlag = true;
 			}
 		}
+#if _MSC_VER == 1800
 		auto pos = file.m_string.find("~");
 		if (pos != file.m_string.npos)
 		{
 			file.m_string = file.m_string.substr(0, pos);
 		}
+#endif
 		// Is this one of the files being watched in the directory?
 		TFileList::iterator fileIt = GetWatchedFileEntry(file, dirIt->fileWatchList);
 		if (fileIt != dirIt->fileWatchList.end())

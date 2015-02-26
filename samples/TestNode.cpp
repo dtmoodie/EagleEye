@@ -26,7 +26,8 @@ namespace EagleLib
         }
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)
         {
-            cv::Mat h_img = cv::imread("E:/data/test.png");
+            //cv::Mat h_img = cv::imread("E:/data/test.png");
+			cv::Mat h_img = cv::Mat::zeros(100, 100, CV_8UC3);
             //cv::Mat h_img = cv::imread("/home/dan/Dropbox/Photos/x0ml8.png");
             std::cout << h_img.size() << std::endl;
             return cv::cuda::GpuMat(h_img);
@@ -39,7 +40,7 @@ namespace EagleLib
         {
             std::cout << "Initializing TestNode with firstInit: " << firstInit << std::endl;
             if(firstInit)
-                addParameter("Output", std::string("Defaultasdfadf!asdf!!!!!!!"));
+                addParameter("Output", std::string("Defautasdfadf!asdf!!!!!!!"));
         }
         virtual void Serialize(ISimpleSerializer *pSerializer)
         {

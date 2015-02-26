@@ -33,6 +33,7 @@
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/mem_fun.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/mpl/string.hpp>
 #include <vector>
 #include <list>
 #include <map>
@@ -49,7 +50,15 @@ using namespace boost::multi_index;
 #include "../../RuntimeObjectSystem/ObjectInterface.h"
 #include "../../RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include "../../RuntimeObjectSystem/IObject.h"
+
+#ifdef _MSC_VER
+
+//RUNTIME_COMPILER_LINKLIBRARY(  OPENCV_LIB_DIR "/opencv_core300.lib" );
+
+#else
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
+#endif
+
 #endif // RCC_ENABLED
 // ***************************************** END RCC CODE *******************************************************
 

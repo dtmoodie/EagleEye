@@ -37,13 +37,18 @@ NodeManager::Init()
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddListener(this);
     boost::filesystem::path workingDir(__FILE__);
     std::string includePath = workingDir.parent_path().parent_path().string();
-#ifdef MSVC_VERSION
+#ifdef _MSC_VER
 
 #else
     m_pRuntimeObjectSystem->SetAdditionalCompileOptions("-std=c++11");
 #endif
     includePath += "/include";
     m_pRuntimeObjectSystem->AddIncludeDir(includePath.c_str());
+	m_pRuntimeObjectSystem->AddIncludeDir(BOOST_INCLUDES);
+	m_pRuntimeObjectSystem->AddIncludeDir(OPENCV_INCLUDES);
+
+	m_pRuntimeObjectSystem->AddLibraryDir(BOOST_LIB_DIR);
+	m_pRuntimeObjectSystem->AddLibraryDir(OPENCV_LIB_DIR);
 
 	return true;
 }
