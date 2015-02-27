@@ -1,12 +1,13 @@
 #pragma once
-#include <EagleLib.h>
-#include "nodes/Node.h"
+#include "EagleLib.h"
+
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <string>
 #include "../RuntimeObjectSystem/ObjectInterface.h"
 #include "../RuntimeObjectSystem/IObjectFactorySystem.h"
 #include <opencv2/core/cvdef.h>
+#include <list>
 #define WIN32_FW_USE_FINDFIRST_API 1
 
 #define ADD_CONSTRUCTORS(managerObj)  \
@@ -21,8 +22,20 @@
 
 namespace EagleLib
 {
-class Node;
-	class CV_EXPORTS NodeManager : public IObjectFactoryListener
+    class Node;
+    class NodeTreeLeaf
+    {
+        Node*               node;
+        Node*               parent;
+        std::list<Node*>    children;
+    };
+
+    class NodeTree
+    {
+
+    };
+
+    class CV_EXPORTS NodeManager : public IObjectFactoryListener
     {
     public:
         NodeManager();
@@ -40,18 +53,21 @@ class Node;
 
         virtual bool CheckRecompile();
 
+        void onNodeRecompile(Node* node);
+        Node* getNode(const ObjectId& id);
+        Node* getNode(const std::string& treeName);
+
     private:
 
 
-        boost::shared_ptr<IRuntimeObjectSystem> m_pRuntimeObjectSystem;
-        boost::shared_ptr<ICompilerLogger> m_pCompileLogger;
-        //boost::shared_ptr<Node> node;
-        //Node* node;
-        std::map<std::string, std::vector<Node*> >        m_nodeMap;
+        boost::shared_ptr<IRuntimeObjectSystem>             m_pRuntimeObjectSystem;
+        boost::shared_ptr<ICompilerLogger>                  m_pCompileLogger;
+        std::map<std::string, std::vector<Node*> >          m_nodeMap;
 
-        // RCC works by swapping the function pointers in already existing objects.
-        // To prevent memory leaking
-        std::vector<boost::shared_ptr<Node> > nodeHistory;
+
+        std::vector<boost::shared_ptr<Node> >               nodeHistory;
+        std::list<Node*>                                    deletedNodes;
+        std::list<ObjectId>                                 deletedNodeIDs;
 
     };
 };

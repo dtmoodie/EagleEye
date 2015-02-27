@@ -13,7 +13,8 @@ SerialStack::doProcess(cv::cuda::GpuMat& img)
 	
     for (auto it = children.begin(); it != children.end(); ++it)
 	{
-        img = (*it)->process(img);
+        img = getChild(it->id)->process(img);
+
     }
 	return img;
 }

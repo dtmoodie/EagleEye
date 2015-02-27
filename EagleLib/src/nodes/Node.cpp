@@ -3,7 +3,7 @@
 #include <regex>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
-
+#include "Manager.h"
 using namespace EagleLib;
 #ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
@@ -15,120 +15,91 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
 
 #endif
 
-//static std::map<std::string, NodeFactory*> NodeFactories = std::map<std::string, NodeFactory*>();
-boost::shared_ptr<Node>
-Node::create(std::string& name)
-{
-    //if((*NodeFactories)[name])
-    //	return (*NodeFactories)[name]->create();
-    //return boost::shared_ptr<Node>();
-	return Node::Ptr();
-}
-boost::shared_ptr<Node>
-Node::create(const std::string& name)
-{
-    /*if (NodeFactories)
-    {
-		if ((*NodeFactories)[name])
-			return (*NodeFactories)[name]->create();
-	}else
-	{
-		std::cout << "Node factories is NULL, nothing has been registered yet" << std::endl;
-	}
-    return boost::shared_ptr<Node>();*/
-	return Node::Ptr();
-}
-/*
-void // This gets called before NodeFactories gets initialized :/ and so it breaks.
-Node::registerType(const std::string& name, NodeFactory* factory)
-{
-	if (NodeFactories == NULL)
-	{
-		NodeFactories = new std::map<std::string, NodeFactory*>();
-	}
-	(*NodeFactories)[name] = factory;
-}
-*/
 Node::Node()
 {
 	treeName = nodeName;
-    parent = nullptr;
+    parent.SetInvalid();
     enabled = true;
+    nodeManager = nullptr;
+
 }
 
 Node::~Node()
 {
-
+    if(nodeManager)
+        nodeManager->onNodeRecompile(this);
 }
 void
 Node::getInputs()
 {
 
 }
-Node::Ptr Node::addChild(Node* child)
+Node*
+Node::addChild(Node* child)
 {
-    return addChild(boost::shared_ptr<Node>(child));
-}
-Node::Ptr Node::addChild(const boost::shared_ptr<Node>& child)
-{
-	if (!child)
-		return child;
+    if (!child || !nodeManager)
+        return child;
     if(errorCallback)
         child->errorCallback = errorCallback;
     if(statusCallback)
         child->statusCallback = statusCallback;
     if(warningCallback)
         child->warningCallback = warningCallback;
-    for(int i = 0; i < child->parameters.size(); ++i)
-        childParameters.push_back(std::make_pair(i,child->parameters[i]));
-    int count = children.get<TreeName>().count(child->nodeName);
+
+    int count = children.get<NodeName>().count(child->nodeName);
 
     child->treeName = child->treeName + "-" + boost::lexical_cast<std::string>(count);
 	child->fullTreeName = this->treeName + "/" + child->treeName;
-    child->parent = this;
-    children.get<0>().push_back(child);
-	// Check if this name already exists, if it does, increment 
-    //children.push_back(child);
-    //children[child->treeName] = child;
+    child->parent = GetObjectId();
+    NodeInfo info;
+    info.id = child->GetObjectId();
+    info.index = children.get<0>().size();
+    info.nodeName = child->nodeName;
+    info.treeName = child->treeName;
+    children.get<0>().push_back(info);
     return child;
 }
 
 
-boost::shared_ptr<Node>
-Node::getChild(const std::string& name)
+Node*
+Node::getChild(const std::string& treeName)
 {
-    auto it = children.get<TreeName>().find(name);
-    if(it != children.get<TreeName>().end())
-        return *it;
-    return Node::Ptr();
+    auto itr = children.get<TreeName>().find(treeName);
+    if(itr == children.get<TreeName>().end())
+        return nullptr;
+    return nodeManager->getNode(itr->id);
 }
 
-boost::shared_ptr<Node>
-Node::getChild(std::string name)
+
+Node*
+Node::getChild(const int& index)
 {
-    auto it = children.get<TreeName>().find(name);
-    if(it != children.get<TreeName>().end())
-        return *it;
-    return Node::Ptr();
+    auto itr = children.get<0>()[index];
+    return nodeManager->getNode(itr.id);
 }
 
-boost::shared_ptr<Node>
+Node*
+Node::getChild(const ObjectId& id)
+{
+    return nodeManager->getNode(id);
+}
+
+Node*
 Node::getChildRecursive(std::string treeName_)
 {
-    boost::shared_ptr<Node> ptr;
+
     // TODO tree structure parsing and correct directing of the search
     // Find the common base between this node and treeName
 
 
-    return ptr;
+    return nullptr;
 }
 
 void
-Node::removeChild(boost::shared_ptr<Node> child)
+Node::removeChild(ObjectId childId)
 {
-    auto itr = children.get<NodeName>().find(child->treeName);
-    if(itr != children.get<NodeName>().end())
-        children.get<NodeName>().erase(itr);
+
+
 }
 
 void
@@ -240,22 +211,18 @@ Node::getTreeName() const
 }
 
 
-Node::Ptr
-Node::swap(const Node::Ptr &other)
+Node*
+Node::swap(Node* other)
 {
     // By moving ownership of all parameters to the new node, all
-    other->parameters = parameters;
-    other->children = children;
-    for (auto it = children.begin(); it != children.end(); ++it)
-    {
-        (*it)->parent = other.get();
-    }
+
     return other;
 }
 void
 Node::Init(bool firstInit)
 {
-
+    if(firstInit)
+        m_OID = GetObjectId();
 }
 
 void
@@ -280,6 +247,10 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(children);
     SERIALIZE(treeName);
     SERIALIZE(nodeName);
+
     //SERIALIZEIOBJPTR(parent);
 }
+
+
+
 REGISTERCLASS(Node)

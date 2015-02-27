@@ -2,7 +2,7 @@
 #include <RuntimeObjectSystem.h>
 #include "StdioLogSystem.h"
 #include <boost/filesystem.hpp>
-
+#include "nodes/Node.h"
 //#include <IObjectUtils.h>
 using namespace EagleLib;
 
@@ -95,6 +95,7 @@ NodeManager::OnConstructorsAdded()
 
 Node* NodeManager::addNode(const std::string &nodeName)
 {
+
     IObjectConstructor* pConstructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
 
     if(pConstructor)
@@ -106,6 +107,7 @@ Node* NodeManager::addNode(const std::string &nodeName)
         {
             Node* node = static_cast<Node*>(interface);
             node->Init(true);
+            node->nodeManager = this;
             m_nodeMap[nodeName].push_back(node);
             return node;
         }else
@@ -142,4 +144,30 @@ bool NodeManager::CheckRecompile()
     }
 	prevTime = currentTime;
 	return true;
+}
+void
+NodeManager::onNodeRecompile(Node *node)
+{
+    deletedNodes.push_back(node);
+    deletedNodeIDs.push_back(node->m_OID);
+}
+
+Node*
+NodeManager::getNode(const ObjectId& id)
+{
+    AUDynArray<IObjectConstructor*> constructors;
+    m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+    IObject* pObj = constructors[id.m_ConstructorId]->GetConstructedObject(id.m_PerTypeId);
+    if(!pObj)
+        return nullptr;
+    pObj = pObj->GetInterface(IID_NodeObject);
+    if(!pObj)
+        return nullptr;
+    return static_cast<Node*>(pObj);
+}
+
+Node*
+NodeManager::getNode(const std::string &treeName)
+{
+    return nullptr;
 }

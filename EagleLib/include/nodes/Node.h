@@ -17,7 +17,7 @@
 */
 
 #include "../EagleLib.h"
-#include "../Manager.h"
+
 
 #include <opencv2/core.hpp>
 #include <opencv2/cuda.hpp>
@@ -68,7 +68,6 @@ NodeName::NodeName():Node()                     \
 {                                               \
     nodeName = #NodeName;                       \
     treeName = nodeName;                        \
-    parent = NULL;                              \
 }
 
 #define EAGLE_TRY_WARNING(FunctionCall)                                 \
@@ -102,6 +101,7 @@ NodeName::NodeName():Node()                     \
 
 namespace EagleLib
 {
+    class NodeManager;
 	enum NodeType
 	{
 		eVirtual		= 0,	/* This is a virtual node, it should only be inherited */
@@ -175,9 +175,6 @@ namespace EagleLib
 		typedef boost::shared_ptr<Node> Ptr;
 
 
-        // Factory construction stuff
-        static Ptr create( std::string &name);
-		static Ptr create(const std::string &name);
         //static void registerType(const std::string& name, NodeFactory* factory);
 		
 
@@ -197,13 +194,19 @@ namespace EagleLib
 		std::string             getTreeName() const;
 		// Searches nearby nodes for possible valid inputs for each input parameter
 		virtual void					getInputs();
-
+        struct NodeInfo
+        {
+            int index;
+            std::string treeName;
+            std::string nodeName;
+            ObjectId id;
+        };
 		CV_EXPORTS struct NodeName{};
 		CV_EXPORTS struct TreeName{};
 
-		typedef multi_index_container<Ptr, indexed_by<boost::multi_index::random_access<>,
-                                           hashed_unique<tag<TreeName>, const_mem_fun<Node, std::string, &Node::getTreeName > >,
-                                           hashed_non_unique<tag<NodeName>, const_mem_fun<Node, std::string, &Node::getName> > > > nodeContainer;
+        typedef multi_index_container<NodeInfo, indexed_by<boost::multi_index::random_access<>,
+                                           hashed_unique<tag<TreeName>, member<NodeInfo, std::string, &NodeInfo::treeName > >,
+                                           hashed_non_unique<tag<NodeName>, member<NodeInfo, std::string, &NodeInfo::nodeName> > > > nodeContainer;
 
 		// ****************************************************************************************************************
 		//
@@ -224,26 +227,22 @@ namespace EagleLib
 		//									Child adding and deleting
 		//
 		// ****************************************************************************************************************
-		virtual Ptr						addChild(Node* child);
-		virtual Ptr						addChild(const boost::shared_ptr<Node> &child);
-		virtual Ptr						getChild(const std::string& name);
-		template<typename T> boost::shared_ptr<T> getChild(int index)
-        {
-            if(index < children.size())
-                return boost::dynamic_pointer_cast<T, Node>(children[index]);
-            return boost::shared_ptr<T>();
+        virtual Node *addChild(Node* child);
 
-            //return boost::dynamic_pointer_cast<T, Node>(children[index]);
+        virtual Node*					getChild(const std::string& treeName);
+        virtual Node*                   getChild(const int& index);
+        virtual Node*                   getChild(const ObjectId& id);
+        template<typename T> T* getChild(int index)
+        {
+            return dynamic_cast<T*>(index);
         }
-		virtual Ptr						getChild(std::string name);
-		template<typename T> boost::shared_ptr<T> getChild(const std::string& name)
-		{
-            auto itr = children.get<TreeName>().find(name);
-            if(itr != children.get<TreeName>().end())
-                return boost::dynamic_pointer_cast<T,Node>(*itr);
+        template<typename T> T* getChild(const std::string& name)
+        {
+            return dynamic_cast<T*>(name);
 		}
-        virtual Ptr						getChildRecursive(std::string treeName_);
-        virtual void					removeChild(boost::shared_ptr<Node> child);
+
+        virtual Node*					getChildRecursive(std::string treeName_);
+        virtual void					removeChild(ObjectId childId);
         virtual void					removeChild(const std::string& name);
 
 		// ****************************************************************************************************************
@@ -418,7 +417,7 @@ namespace EagleLib
         // ****************************************************************************************************************
 
 
-        virtual Node::Ptr swap(const Node::Ptr& other);
+        virtual Node *swap(Node *other);
 
         virtual void Init(bool firstInit = true);
         virtual void Init(const std::string& configFile);
@@ -443,12 +442,16 @@ namespace EagleLib
 		boost::function<void(std::string)>									logCallback;
 		// Function for setting input parameters
         boost::function<int(std::vector<std::string>)>						inputSelector;
-		// Vector of children nodes
-        // Boost multi_index_container which can be accessed by insertion order and by the nodeName
+
+
+
+
+        //std::vector<ObjectId>                                               children;
+
         nodeContainer                                                       children;
 
 		// Pointer to parent node
-        Node*                                                               parent;
+        ObjectId                                                            parent;
 		// Constant name that describes the node ie: Sobel
         std::string                                                         nodeName;
 
@@ -468,8 +471,12 @@ namespace EagleLib
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
 		bool																externalDisplay;
         bool                                                                enabled;
+
     private:
-        
+        friend class NodeManager;
+        NodeManager*                                                        nodeManager;
+        ObjectId                                                            m_OID;
+
     };
     //static std::map<std::string, NodeFactory*>* NodeFactories = NULL;
 

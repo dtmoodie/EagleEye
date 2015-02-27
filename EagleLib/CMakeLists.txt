@@ -2,12 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 project(EagleLib)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-
 set(OPENCV_STATIC OFF)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cuda cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
-message(${OpenCV_CONFIG_PATH})
-
 find_package(CUDA REQUIRED)
 find_package(Qt5 REQUIRED Core)
 
@@ -36,16 +32,19 @@ INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS}
                     "RuntimeObjectSystem"
                     ${Qt5Core_INCLUDE_DIRS}
                     ${CMAKE_CURRENT_SOURCE_DIR}
+                    "${CMAKE_CURRENT_SOURCE_DIR}/RuntimeCompiler"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/RuntimeObjectSystem"
 )
 
-# for RCC to be able to recompile modules
 
+
+# for RCC to be able to recompile modules
 LIST(GET OpenCV_INCLUDE_DIRS 0 OpenCV_INCLUDE_DIR)
 LIST(GET OpenCV_LIB_DIR 0 CV_LIB_DIR)
+if(${CV_LIB_DIR} MATCHES NOTFOUND)
+message("OpenCV_LIB_DIR not set, attempting to find library dir")
+endif()
 
-message("OpenCV include dir: ${OpenCV_INCLUDE_DIR}")
-message("Boost library dir: ${Boost_LIBRARY_DIRS}")
-message("OpenCV library dir: ${CV_LIB_DIR}")
 
 ADD_DEFINITIONS( -DBOOST_INCLUDES="${Boost_INCLUDE_DIRS}"   )
 ADD_DEFINITIONS( -DBOOST_LIB_DIR="${Boost_LIBRARY_DIRS}")
@@ -54,8 +53,16 @@ ADD_DEFINITIONS( -DOPENCV_INCLUDES="${OpenCV_INCLUDE_DIR}")
 ADD_DEFINITIONS( -DOPENCV_LIB_DIR="${CV_LIB_DIR}")
 
 
-INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/RuntimeObjectSystem")
-INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/RuntimeCompiler")
+# Reporting section
+message(
+"================ EagleLib ===============
+    Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}
+    OpenCV found at: ${OpenCV_CONFIG_PATH}
+++++++++++ RCC++ Defines ++++++++++++++++++
+    OpenCV include dir: ${OpenCV_INCLUDE_DIR}
+    Boost library dir: ${Boost_LIBRARY_DIRS}
+    OpenCV library dir: ${CV_LIB_DIR}")
+
 
 set(EagleLib_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
 
