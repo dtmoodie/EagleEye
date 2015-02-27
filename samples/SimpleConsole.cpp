@@ -12,25 +12,15 @@ int main()
 	// to pass the constructors into the manager, instead of the returned std::vector.
 	ADD_CONSTRUCTORS(manager)
 
-	auto node = manager.addNode("TestNode");
-    node->updateParameter("Output", std::string("Parent!"));
-    node->addParameter("Test", int(5));
-    auto child = manager.addNode("TestChildNode");
-	
-
-    //node->updateParameter("Output",  std::string("Parent"));
-    //nodes.push_back(node);
-    //node = manager.addNode("TestNode");
-    //node->updateParameter("Output", std::string("Child"));
-    //nodes.push_back(node);
-    //nodes[0]->addChild(nodes[1]);
+    auto rootNode = manager.addNode("SerialStack");
+    rootNode->addChild(manager.addNode("TestNode"));
+    rootNode->addChild(manager.addNode("TestChildNode"));
 
     cv::cuda::GpuMat img;
     while(1)
     {
         manager.CheckRecompile();
-        img = node->process(img);
-		child->process(img);
+        img = rootNode->process(img);
 #if _WIN32
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 #else

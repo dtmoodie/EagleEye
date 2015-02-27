@@ -22,22 +22,23 @@ namespace EagleLib
         }
         virtual ~TestNode()
         {
-            std::cout << "Deleting  testNode" << std::endl;
+            std::cout << "Deleting  testNode " << std::endl;
         }
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)
         {
             //cv::Mat h_img = cv::imread("E:/data/test.png");
-			cv::Mat h_img = cv::Mat::zeros(100, 100, CV_8UC3);
-            //cv::Mat h_img = cv::imread("/home/dan/Dropbox/Photos/x0ml8.png");
+            //cv::Mat h_img = cv::Mat::zeros(100, 100, CV_8UC3);
+            cv::Mat h_img = cv::imread("/home/dan/Dropbox/Photos/x0ml8.png");
             std::cout << h_img.size() << std::endl;
             return cv::cuda::GpuMat(h_img);
             std::cout << getParameter<std::string>("Output")->data << std::endl;
-            std::cout <<"Beeeyah!" << std::endl;
+            std::cout <<"Beeeya!!h!" << std::endl;
            // std::cout << "Test!" << std::endl;
             return img;
         }
         virtual void Init(bool firstInit)
         {
+            Node::Init(firstInit);
             std::cout << "Initializing TestNode with firstInit: " << firstInit << std::endl;
             if(firstInit)
                 addParameter("Output", std::string("Defautasdfadf!asdf!!!!!!!"));
@@ -61,13 +62,18 @@ namespace EagleLib
             treeName = "TestChildNode";
             //addParameter("Output", std::string("DefaultX"));
         }
-        virtual ~TestChildNode() {}
+        virtual ~TestChildNode()
+        {
+            std::cout << "Deleting TestChildNode" << std::endl;
+        }
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)
         {
 			cv::cuda::resize(img, img, cv::Size(1000, 1000));
            // std::cout << getParameter<std::string>("Output")->data << std::endl;
 			std::cout << img.size() << std::endl;
-            cv::imshow("test", cv::Mat(img));
+            std::stringstream ss;
+            ss << "TestChildNodeDisplay: " << img.size();
+            cv::imshow(ss.str(), cv::Mat(img));
 			cv::waitKey(30);
             std::cout << "ChildNode!" << std::endl;
             return img;
