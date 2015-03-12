@@ -5,7 +5,7 @@
 
 int main()
 {
-    EagleLib::NodeManager manager;
+    EagleLib::NodeManager& manager = EagleLib::NodeManager::getInstance();
     //std::vector<EagleLib::Node::Ptr> nodes;
 	
 	// Since manager might have been compiled in debug or release as opposed to this executable, we need to use the AUDynArray object
@@ -13,9 +13,10 @@ int main()
 	ADD_CONSTRUCTORS(manager)
 
     auto rootNode = manager.addNode("SerialStack");
-    rootNode->addChild(manager.addNode("TestNode"));
+	auto child = rootNode->addChild(manager.addNode("TestNode"));
     rootNode->addChild(manager.addNode("TestChildNode"));
-
+	auto list = child->listParameters();
+	auto test = manager.getNode(child->fullTreeName);
     cv::cuda::GpuMat img;
     while(1)
     {

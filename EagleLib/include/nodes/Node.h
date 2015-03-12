@@ -30,7 +30,7 @@
 */
 
 #include "../EagleLib.h"
-
+#include "Manager.h"
 
 #include <opencv2/core.hpp>
 #include <opencv2/cuda.hpp>
@@ -80,8 +80,10 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
 NodeName::NodeName():Node()                     \
 {                                               \
     nodeName = #NodeName;                       \
-    treeName = nodeName;                        \
-}
+    treeName = nodeName;						\
+	fullTreeName = treeName;					\
+}												\
+REGISTERCLASS(NodeName)
 
 #define EAGLE_TRY_WARNING(FunctionCall)                                 \
     try{                                                                \
@@ -130,6 +132,7 @@ namespace EagleLib
     class CV_EXPORTS Parameter
     {
     public:
+		virtual void setSource(const std::string& name) = 0;
         enum ParamType
         {
             None		= 0,
@@ -148,13 +151,13 @@ namespace EagleLib
         ParamType	type;
         bool		changed;
     protected:
-        Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): type(type_), changed(false), toolTip(toolTip_){}
+        Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),type(type_), changed(false), toolTip(toolTip_){}
         virtual ~Parameter(){}
     };
 
-	template<typename T> void cleanup(T ptr, typename std::enable_if<std::is_pointer<T>::value>::type* = 0) {delete ptr;}
-	template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointer<T>::value>::type* = 0){return;}
-
+	
+	template<typename T> void cleanup(T ptr, typename std::enable_if<std::is_pointer<T>::value>::type* = 0) { delete ptr; }
+	template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointer<T>::value>::type* = 0){ return; }
 
 
 
@@ -165,10 +168,13 @@ namespace EagleLib
     public:
         typedef typename boost::shared_ptr< TypedParameter<T> > Ptr;
         typedef T ValType;
+		virtual void setSource(const std::string& name) = 0;
         TypedParameter(const std::string& name_, const T& data_, const ParamType& type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false):
-            Parameter(name_, type_, toolTip_), data(data_), typeName(typeinfo(T).name()), ownsData(ownsData_) {}
+			Parameter(name_, type_, toolTip_), data(data_), ownsData(ownsData_) {
+			typeName = typeid(T).name();
+		}
         ~TypedParameter(){ if(ownsData)cleanup<T>(data);}
-
+		
         T& get();
         T data;
     private:
@@ -187,11 +193,33 @@ namespace EagleLib
           T minVal;
     };
 
-    // Special class to handle setting input data.  Not necessarily needed but it enforces types
+    
     template<typename T>
-    class CV_EXPORTS InputParameter: public TypedParameter<T>
+    class CV_EXPORTS InputParameter: public TypedParameter<T*>
     {
-        static_assert(std::is_pointer<T>::value,);
+	public:
+		InputParameter(const std::string& name_, const std::string& toolTip_ = ""):
+			TypedParameter<T*>(name_, nullptr, Input, toolTip_, false)
+		{
+			baseTypeName = typeid(T).name();
+		}
+		// TODO: TEST THIS SHIT
+		virtual void setSource(const std::string& name)
+		{
+			auto param = NodeManager::getInstance().getParameter(name);
+			auto typedParam = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
+			if(typedParam != nullptr)
+				this->data = &typedParam->data;
+			else
+			{
+				auto typedParamPtr = boost::dynamic_pointer_cast<TypedParameter<T*>, Parameter>(param);
+				this->data = typedParamPtr->data;
+			}
+		}
+
+		// The full parameter name of the source
+		std::string sourceTreeName;
+		std::string baseTypeName;
     };
 
 
@@ -222,8 +250,8 @@ namespace EagleLib
 		virtual void					doProcess(cv::InputArray in, cv::OutputArray out);
 
         // Finds name in tree hierarchy, updates tree name and returns it
-		std::string				getName() const;
-		std::string             getTreeName() const;
+		std::string						getName() const;
+		std::string						getTreeName() const;
 		// Searches nearby nodes for possible valid inputs for each input parameter
 		virtual void					getInputs();
         struct NodeInfo
@@ -259,7 +287,7 @@ namespace EagleLib
 		//									Child adding and deleting
 		//
 		// ****************************************************************************************************************
-        virtual Node *addChild(Node* child);
+        virtual Node*					addChild(Node* child);
 
         virtual Node*					getChild(const std::string& treeName);
         virtual Node*                   getChild(const int& index);
@@ -275,6 +303,17 @@ namespace EagleLib
         virtual Node*					getChildRecursive(std::string treeName_);
         virtual void					removeChild(ObjectId childId);
         virtual void					removeChild(const std::string& name);
+
+		
+		// ****************************************************************************************************************
+		//
+		//									Name and accessing functions
+		//
+		// ****************************************************************************************************************
+		virtual void setTreeName(const std::string& name);
+		virtual void setFullTreeName(const std::string& name);
+		virtual void setParentName(const std::string& name);
+		
 
 
         /*******************************************************************************************************************
@@ -297,7 +336,7 @@ namespace EagleLib
 
             As an input
             addParameter<int*>("Integer Control Parameter", nullptr, Parameter::Input, "Tooltip", false);
-            Integer Control Parameter will be the name
+			Integer Control Parameter will be the name 
 
 
 
@@ -322,8 +361,18 @@ namespace EagleLib
                      const bool& ownsData_          = false)
 		{
             parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_, toolTip_, ownsData_)));
+			parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
 			return parameters.size() - 1;
         }
+
+		template<typename T> size_t
+			addInputParameter(const std::string& name, const std::string& toolTip_ = std::string())
+		{
+			parameters.push_back(boost::shared_ptr< InputParameter<T> >(new InputParameter<T>(name, toolTip_)));
+			parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+			return parameters.size() - 1;
+		}
+
 
 		template<typename T> bool 
             updateParameter(const std::string& name,
@@ -362,7 +411,7 @@ namespace EagleLib
 			if (type_ != Parameter::None)
 				param->type = type_;
 			if (quickHelp.size() > 0)
-				param->quickHelp = quickHelp;
+				param->toolTip = quickHelp;
 			return true;
 		}
 
@@ -395,37 +444,28 @@ namespace EagleLib
 			return boost::shared_ptr< TypedParameter<T> >();
 		}
 
-        // Search for any output parameters of correct type T to a certain depth
-		template<typename T> void 
-        findSuitableParameters(int depth, std::list<std::string>& paramNames)
-		{
-			if (depth < 0)
-				return;
-			for (int i = 0; i < parameters.size(); ++i)
-				if (parameters[i]->type & Parameter::Output)
-					if (boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[i]))
-						paramNames.push_back(treeName + ":" + parameters[i]->name);
-            for(auto itr = children.begin(); itr != children.end(); ++itr)
-                itr->findSuitableParameters<T>(depth - 1, paramNames);
-            //for (int i = 0; i < children.size(); ++i)
-                //children[i]->findSuitableParameters<T>(depth - 1, paramNames);
-		}
+        // Find suitable input parameters
+
+		std::vector<std::string> findType(std::string typeName);
+		std::vector<std::string> findType(std::string typeName, std::vector<Node*>& nodes);
+		void setInputParameter(std::string sourceName, std::string inputName);
+		void setInputParameter(std::string sourceName, int inputIdx);
+		
+
+		virtual boost::shared_ptr<Parameter> getParameter(int idx);
+		virtual boost::shared_ptr<Parameter> getParameter(const std::string& name);
+		virtual std::vector<std::string>		 listParameters();
 
 		template<typename T> boost::shared_ptr< TypedParameter<T> > 
         getParameter(std::string name)
         {
-            for(int i = 0; i < parameters.size(); ++i)
-            {
-                if(parameters[i]->name == name)
-                    return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[i]);
-            }
-            return boost::shared_ptr<TypedParameter<T>>();
+			return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(getParameter(name));
         }    
 
 		template<typename T> boost::shared_ptr< TypedParameter<T> > 
         getParameter(int idx)
         {
-            return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[idx]);
+            return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(getParameter(idx));
         }
 
         //
@@ -536,10 +576,10 @@ namespace EagleLib
 
         nodeContainer                                                       children;
 
-		// Pointer to parent node
-        ObjectId                                                            parent;
+		// Parent
+        std::string                                                         parent;
 		// Constant name that describes the node ie: Sobel
-        std::string                                                         nodeName;
+        std::string															nodeName;
 
 		// Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
         std::string															fullTreeName;       
@@ -560,11 +600,10 @@ namespace EagleLib
 
     private:
         friend class NodeManager;
-        NodeManager*                                                        nodeManager;
         ObjectId                                                            m_OID;
 
     };
-    //static std::map<std::string, NodeFactory*>* NodeFactories = NULL;
+    
 
 }
 

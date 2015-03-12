@@ -18,16 +18,14 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
 Node::Node()
 {
 	treeName = nodeName;
-    parent.SetInvalid();
     enabled = true;
-    nodeManager = nullptr;
-
+	externalDisplay = false;
+	drawResults = false;
 }
 
 Node::~Node()
 {
-    if(nodeManager)
-        nodeManager->onNodeRecompile(this);
+    NodeManager::getInstance().onNodeRecompile(this);
 }
 void
 Node::getInputs()
@@ -37,7 +35,7 @@ Node::getInputs()
 Node*
 Node::addChild(Node* child)
 {
-    if (!child || !nodeManager)
+    if (!child)
         return child;
     if(errorCallback)
         child->errorCallback = errorCallback;
@@ -48,9 +46,14 @@ Node::addChild(Node* child)
 
     int count = children.get<NodeName>().count(child->nodeName);
 
-    child->treeName = child->treeName + "-" + boost::lexical_cast<std::string>(count);
-	child->fullTreeName = this->treeName + "/" + child->treeName;
-    child->parent = GetObjectId();
+	std::string prevTreeName = child->fullTreeName;
+	child->setParentName(fullTreeName);
+	child->setTreeName(child->nodeName + "-" + boost::lexical_cast<std::string>(count));
+	
+	// Notify the node manager of the tree name
+	NodeManager::getInstance().updateTreeName(child, prevTreeName);
+
+
     NodeInfo info;
     info.id = child->GetObjectId();
     info.index = children.get<0>().size();
@@ -67,7 +70,7 @@ Node::getChild(const std::string& treeName)
     auto itr = children.get<TreeName>().find(treeName);
     if(itr == children.get<TreeName>().end())
         return nullptr;
-    return nodeManager->getNode(itr->id);
+    return NodeManager::getInstance().getNode(itr->id);
 }
 
 
@@ -75,13 +78,39 @@ Node*
 Node::getChild(const int& index)
 {
     auto itr = children.get<0>()[index];
-    return nodeManager->getNode(itr.id);
+	return NodeManager::getInstance().getNode(itr.id);
 }
 
 Node*
 Node::getChild(const ObjectId& id)
 {
-    return nodeManager->getNode(id);
+	return NodeManager::getInstance().getNode(id);
+}
+
+boost::shared_ptr<Parameter> 
+Node::getParameter(int idx)
+{
+	return parameters[idx];
+}
+
+boost::shared_ptr<Parameter> 
+Node::getParameter(const std::string& name)
+{
+	for (int i = 0; i < parameters.size(); ++i)
+	{
+		if (parameters[i]->name == name)
+			return parameters[i];
+	}
+	return boost::shared_ptr<Parameter>();
+}
+std::vector<std::string> Node::listParameters()
+{
+	std::vector<std::string> paramList;
+	for (int i = 0; i < parameters.size(); ++i)
+	{
+		paramList.push_back(parameters[i]->name);
+	}
+	return paramList;
 }
 
 Node*
@@ -247,10 +276,67 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(children);
     SERIALIZE(treeName);
     SERIALIZE(nodeName);
-
-    //SERIALIZEIOBJPTR(parent);
+}
+std::vector<std::string>
+Node::findType(std::string typeName)
+{
+	std::vector<Node*> nodes;
+	NodeManager::getInstance().getAccessibleNodes(fullTreeName, nodes);
+	return findType(typeName, nodes);
 }
 
+std::vector<std::string> 
+Node::findType(std::string typeName, std::vector<Node*>& nodes)
+{
+	std::vector<std::string> output;
+	for (int i = 0; i < nodes.size(); ++i)
+	{
+		for (int j = 0; j < nodes[i]->parameters.size(); ++j)
+		{
+			if (nodes[i]->parameters[j]->typeName == typeName)
+				output.push_back(nodes[i]->parameters[j]->treeName);
+		}
+	}
+	return output;
+}
+void
+Node::setInputParameter(std::string sourceName, std::string inputName)
+{
 
+}
+
+void
+Node::setInputParameter(std::string sourceName, int inputIdx)
+{
+
+}
+void
+Node::setTreeName(const std::string& name)
+{
+	treeName = name;
+	Node* parentPtr = NodeManager::getInstance().getNode(parent);
+	std::string fullTreeName_;
+	if (parentPtr)
+		fullTreeName_ = parentPtr->fullTreeName + "." + treeName;
+	else
+		fullTreeName_ = treeName;
+	setFullTreeName(fullTreeName_);
+
+}
+void
+Node::setFullTreeName(const std::string& name)
+{
+	for (int i = 0; i < parameters.size(); ++i)
+	{
+		parameters[i]->treeName = name + ":" + parameters[i]->name;
+	}
+	fullTreeName = name;
+}
+
+void
+Node::setParentName(const std::string& name)
+{
+	parent = name;
+}
 
 REGISTERCLASS(Node)

@@ -17,7 +17,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda -lopencv_cudaoptflow")
 //REGISTER_TYPE(BroxOpticalFlow)
 BroxOpticalFlow::BroxOpticalFlow()
 {
-    addParameter("broxOpticalFlow", new cv::cuda::BroxOpticalFlow(0.1f,0.1f,1,10,10,10), std::string("Used for tracking dense optical flow"), Parameter::Output);
+    /*addParameter("broxOpticalFlow", new cv::cuda::BroxOpticalFlow(0.1f,0.1f,1,10,10,10), std::string("Used for tracking dense optical flow"), Parameter::Output);
 	addParameter(std::string("horizontalFlow"), cv::cuda::GpuMat(), std::string("Flow along X-Axis"), Parameter::Output);
 	addParameter(std::string("verticalFlow"), cv::cuda::GpuMat(), std::string("Flow along Y-Axis"), Parameter::Output);
 	addParameter(std::string("alpha"), 0.1f, std::string("Flow smoothness parameter"), Parameter::Control);
@@ -25,19 +25,14 @@ BroxOpticalFlow::BroxOpticalFlow()
 	addParameter(std::string("scaleFactor"), 0.50f, std::string("Pyramid Scale Factor"), Parameter::Control);
 	addParameter(std::string("innerIterations"), int(10), std::string("Number of lagged non-linearity iterations"), Parameter::Control);
 	addParameter(std::string("outerIterations"), int(10), std::string("Number of warping iterations (number of pyramid levels)"), Parameter::Control);
-	addParameter(std::string("solverIterations"), int(1000), std::string("Number of linear system solver iterations"), Parameter::Control);
+	addParameter(std::string("solverIterations"), int(1000), std::string("Number of linear system solver iterations"), Parameter::Control);*/
 }
 
 cv::cuda::GpuMat BroxOpticalFlow::doProcess(cv::cuda::GpuMat &img)
 {
     if(parameters[3]->changed || parameters[4]->changed || parameters[5]->changed || parameters[6]->changed || parameters[7]->changed || parameters[8]->changed)
     {
-        parameters[0].reset(new TypedParameter< cv::cuda::BroxOpticalFlow* >(std::string("broxOpticalFlow"),
-                                                                             std::string("Used for tracking dense optical flow"),
-                                                                             new cv::cuda::BroxOpticalFlow(getParameter<float>(3)->data, getParameter<float>(4)->data,
-                                                                                                           getParameter<float>(5)->data, getParameter<int>(6)->data,
-                                                                                                           getParameter<int>(7)->data,   getParameter<int>(8)->data),
-                                                                             Parameter::Output));
+
     }
     // This needs to be set as the first frame
     cv::cuda::GpuMat grey;
@@ -73,7 +68,7 @@ PyrLKOpticalFlow::PyrLKOpticalFlow()
 {
     nodeName = "PyrLKOpticalFLow";
     treeName = nodeName;
-	addParameter("pyrLykOpticalFlow", new cv::cuda::PyrLKOpticalFlow(), "Used for dense or sparse optical flow", Parameter::Output);
+/*	addParameter("pyrLykOpticalFlow", new cv::cuda::PyrLKOpticalFlow(), "Used for dense or sparse optical flow", Parameter::Output);
 	addParameter("windowSize", cv::Size(5,5), "Search window size");
 	addParameter("maxLevel", int(10), "Max level");
 	addParameter("maxIterations", int(10), "Max iterations");
@@ -82,10 +77,10 @@ PyrLKOpticalFlow::PyrLKOpticalFlow()
 	addParameter("initialPoints", cv::cuda::GpuMat(), "Initial points to track", Parameter::Input);
 	addParameter("trackedPoints", cv::cuda::GpuMat(), "Tracked points in this image", Parameter::Output);
 	addParameter("resetReference", false, "Flag to reset reference image to next input image");
-	/* Publish functions */
+	
     addParameter("resetFunctor", boost::bind(&PyrLKOpticalFlow::setReference, this), "Function for resetting the reference image", Parameter::Output);
     addParameter("sparseFunctor", boost::bind(&PyrLKOpticalFlow::sparse, this), "Function for applying sparse optical flow", Parameter::Output);
-    addParameter("denseFunctor", boost::bind(&PyrLKOpticalFlow::dense,this), "Function for applying dense optical flow", Parameter::Output);
+    addParameter("denseFunctor", boost::bind(&PyrLKOpticalFlow::dense,this), "Function for applying dense optical flow", Parameter::Output);*/
 }
 
 

@@ -2,21 +2,7 @@
 using namespace EagleLib;
 using namespace EagleLib::IO;
 
-VideoWriter::VideoWriter()
-{
-	addParameter(std::string("WriteImgFunction"), boost::bind(&VideoWriter::writeImg, this, _1), "Function for writing image to a video file", Parameter::Output);
-	addParameter(std::string("FileName"), std::string(), "Absolute path to file being writen");
-	addParameter(std::string("FourCC"), "MJPG", "Codec to use for writing videos");
-	try
-	{
-		cv::cudacodec::createVideoWriter("test.avi", cv::Size(640, 480), 30);
-	}
-	catch (cv::Exception &e)
-	{
-		e.code;
-		gpuWriter = false;
-	}
-}
+
 
 VideoWriter::VideoWriter(std::string fileName)
 {
@@ -26,6 +12,21 @@ VideoWriter::VideoWriter(std::string fileName)
 VideoWriter::~VideoWriter()
 {
 
+}
+void VideoWriter::Init(bool firstInit)
+{
+	if (firstInit)
+	{
+		try
+		{
+			cv::cudacodec::createVideoWriter("test.avi", cv::Size(640, 480), 30);
+		}
+		catch (cv::Exception &e)
+		{
+			e.code;
+			gpuWriter = false;
+		}
+	}
 }
 
 cv::cuda::GpuMat 
@@ -64,4 +65,4 @@ VideoWriter::writeImg(cv::cuda::GpuMat& img)
 	}	
 }
 
-REGISTERCLASS(VideoWriter)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoWriter);

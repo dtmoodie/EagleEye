@@ -1,7 +1,7 @@
 #include "nodes/SerialStack.h"
 using namespace EagleLib;
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SerialStack)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SerialStack);
 
 SerialStack::~SerialStack()
 {
@@ -19,4 +19,4 @@ SerialStack::doProcess(cv::cuda::GpuMat& img)
 	return img;
 }
 
-REGISTERCLASS(SerialStack)
+//REGISTERCLASS(SerialStack)

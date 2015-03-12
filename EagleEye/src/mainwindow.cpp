@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ptr->addChild(new EagleLib::Features2D::GoodFeaturesToTrackDetector());
     ptr->addChild(new EagleLib::PyrLKOpticalFlow());*/
-    manager.addNode("TestNode");
+    EagleLib::NodeManager::getInstance().addNode("TestNode");
     fileMonitorTimer = new QTimer(this);
     fileMonitorTimer->start(1000);
     connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
@@ -70,5 +70,5 @@ MainWindow::onStatus(const std::string &status)
 void
 MainWindow::onTimeout()
 {
-    manager.CheckRecompile();
+	EagleLib::NodeManager::getInstance().CheckRecompile();
 }

@@ -63,6 +63,8 @@ template< InterfaceID Tiid, typename TSuper> struct TInterface : public TSuper
     }
 };
 
+
+
 // IObject itself below is a special case as the base class
 // Also it doesn't hurt to have it coded up explicitly for reference
 

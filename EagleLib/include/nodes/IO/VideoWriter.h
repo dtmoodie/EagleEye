@@ -12,6 +12,7 @@ namespace EagleLib
 		public:
 			VideoWriter();
 			VideoWriter(std::string fileName);
+			void Init(bool firstInit);
 			~VideoWriter();
 			cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
 			void writeImg(cv::cuda::GpuMat& img);

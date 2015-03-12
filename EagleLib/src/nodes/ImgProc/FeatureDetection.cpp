@@ -6,7 +6,7 @@ using namespace EagleLib::Features2D;
 GoodFeaturesToTrackDetector::GoodFeaturesToTrackDetector():
     imgType(CV_8UC1)
 {
-    addParameter("goodFeaturesToTrackDetector",cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1),"Good features to track detector", Parameter::Output);
+/*    addParameter("goodFeaturesToTrackDetector",cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1),"Good features to track detector", Parameter::Output);
     addParameter("numCorners", int(1000), "Number of corners to try to detect");
     addParameter("qualityLevel", 0.01, "Min relative quality level to keep. IE best corner scores 1500, qualityLevel=0.01 means rejection of anything below 15");
     addParameter("minDistance", 0.0, "Minimum distance between points");
@@ -14,7 +14,7 @@ GoodFeaturesToTrackDetector::GoodFeaturesToTrackDetector():
     addParameter("useHarris", true, "Use harris corner detector");
     addParameter("harrisK", 0.04, "Harris corner detector free parameter");
     addParameter("calculateFlag", true, "Set flag to false to disable calculation");
-    addParameter("keyPoints", cv::cuda::GpuMat(), "Detected key points", Parameter::Output);
+    addParameter("keyPoints", cv::cuda::GpuMat(), "Detected key points", Parameter::Output);*/
     nodeName = std::string("GoodFeaturesToTrackDetector");
 }
 GoodFeaturesToTrackDetector::GoodFeaturesToTrackDetector(bool drawResults_):
@@ -48,13 +48,7 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img)
 
 
 
-    if(numCorners->changed || qualityLevel->changed || minDistance->changed || blockSize->changed)
-        parameters[0].reset(new TypedParameter<cv::Ptr<cv::cuda::CornersDetector> >("goodFeaturesToTrackDetector",
-                                                                               "Good features to track detector",
-                                                                               cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1,
-                                                                                    numCorners->data, qualityLevel->data, minDistance->data,
-                                                                                    blockSize->data,useHarris->data, harrisK->data),
-                                                                               Parameter::Output));
+
 
     cv::cuda::GpuMat grey;
     if(img.channels() != 1)

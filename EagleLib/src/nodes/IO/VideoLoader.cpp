@@ -11,7 +11,7 @@ using namespace EagleLib::IO;
 VideoLoader::VideoLoader(const std::string& file)
 {
     nodeName = "VideoLoader";
-    treeName = nodeName;
+	treeName = nodeName;/*
 #if _WIN32
 	addParameter("VideoFileReader", cv::Ptr<cv::cudacodec::VideoReader>(), std::string("Object that decodes video files on the GPU"), Parameter::Output);
 #else
@@ -20,7 +20,7 @@ VideoLoader::VideoLoader(const std::string& file)
 	addParameter("VideoFileName", std::string(""), std::string("Absolute file path to video file", Parameter::Control));
 	addParameter("EOF_reached", false, "Flag for end of file", Parameter::Output);
 	addParameter("NumFrames", int(-1), "Number of frames in file", Parameter::Output);
-	updateParameter(1, file);
+	updateParameter(1, file);*/
 	loadFile();
 }
 

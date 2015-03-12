@@ -16,7 +16,11 @@ using namespace EagleLib;
  *
  *
 */
-
+NodeManager& NodeManager::getInstance()
+{
+	static NodeManager instance;
+	return instance;
+}
 
 NodeManager::NodeManager()
 {
@@ -107,7 +111,8 @@ Node* NodeManager::addNode(const std::string &nodeName)
         {
             Node* node = static_cast<Node*>(interface);
             node->Init(true);
-            node->nodeManager = this;
+			if (m_nodeMap.size() == 0)
+				m_nodeTree.put(t_nodeTree::path_type{node->fullTreeName, '.' }, node);
             m_nodeMap[nodeName].push_back(node);
             return node;
         }else
@@ -122,13 +127,15 @@ Node* NodeManager::addNode(const std::string &nodeName)
     }
     return nullptr;
 }
+
 void 
 NodeManager::addConstructors(IAUDynArray<IObjectConstructor*> & constructors)
 {
 	m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddConstructors(constructors);
 }
 
-bool NodeManager::CheckRecompile()
+bool 
+NodeManager::CheckRecompile()
 {
 	static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
 	boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
@@ -145,6 +152,7 @@ bool NodeManager::CheckRecompile()
 	prevTime = currentTime;
 	return true;
 }
+
 void
 NodeManager::onNodeRecompile(Node *node)
 {
@@ -169,5 +177,67 @@ NodeManager::getNode(const ObjectId& id)
 Node*
 NodeManager::getNode(const std::string &treeName)
 {
-    return nullptr;
+	return m_nodeTree.get<Node*>(treeName);
+}
+
+void 
+NodeManager::updateTreeName(Node* node, const std::string& prevTreeName)
+{
+	m_nodeTree.put(t_nodeTree::path_type{ node->fullTreeName, '.' }, node);
+	m_nodeTree.erase(prevTreeName);
+}
+
+void 
+NodeManager::addParameters(Node* node)
+{
+	for (int i = 0; i < node->parameters.size(); ++i)
+	{
+		
+	}
+}
+
+boost::shared_ptr< Parameter > 
+NodeManager::getParameter(const std::string& name)
+{
+	// Strip off the path for the node
+	auto idx = name.find(':');
+	std::string parameterName = name.substr(idx);
+	auto node = getNode(name.substr(0, idx));
+	return node->getParameter(name);
+}
+
+void
+NodeManager::getSiblingNodes(const std::string& sourceNode, std::vector<Node*>& output)
+{
+	auto nodePtr = getParent(sourceNode);
+	if (!nodePtr)
+		return;
+
+	auto node = m_nodeTree.get_child(getParent(sourceNode)->fullTreeName);
+	for (auto itr = node.begin(); itr != node.end(); ++itr)
+	{
+		output.push_back(itr->second.get_value<Node*>());
+	}	
+}
+
+Node*
+NodeManager::getParent(const std::string& sourceNode)
+{
+	auto idx = sourceNode.find_last_of('.');
+	std::string treeName = sourceNode.substr(0, idx);
+	return m_nodeTree.get<Node*>(treeName);
+}
+void NodeManager::getParentNodes(const std::string& sourceNode, std::vector<Node*>& output)
+{
+	Node* parent = getParent(sourceNode);
+	if (!parent)
+		return;
+	output.push_back(parent);
+	getParentNodes(parent->fullTreeName, output);
+}
+
+void NodeManager::getAccessibleNodes(const std::string& sourceNode, std::vector<Node*>& output)
+{
+	getSiblingNodes(sourceNode, output);
+	getParentNodes(sourceNode, output);
 }
