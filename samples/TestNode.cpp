@@ -7,8 +7,26 @@
 #include <opencv2/cudawarping.hpp>
 
 
+#if _WIN32
+	#if _DEBUG
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_highgui300d.lib");
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_core300d.lib");
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_cuda300d.lib");
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_cudawarping300d.lib")
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_imgproc300d.lib");
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_videoio300d.lib");
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_imgcodecs300d.lib");
 
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_highgui")
+		RUNTIME_COMPILER_LINKLIBRARY("../Debug/RuntimeObjectSystem.lib");
+		RUNTIME_COMPILER_LINKLIBRARY("../Debug/RuntimeCompiler.lib");
+		RUNTIME_COMPILER_LINKLIBRARY("../Debug/EagleLib.lib");
+
+	#else
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_highgui300.lib")
+	#endif
+#else
+	RUNTIME_COMPILER_LINKLIBRARY("-lopencv_highgui")
+#endif
 namespace EagleLib
 {
     class TestNode: public Node
@@ -22,7 +40,13 @@ namespace EagleLib
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)
         {
             
-            cv::Mat h_img = cv::imread("/home/dan/Dropbox/Photos/x0ml8.png");
+            //cv::Mat h_img = cv::imread("/home/dan/Dropbox/Photos/x0ml8.png");
+			cv::Mat h_img = cv::imread("E:/drive/metadata timeoffset.png");
+			static int count = 0;
+			//std::cout << getParameter<std::string>("OutputString")->data << std::endl;
+			testVector.push_back(count);
+			std::cout << "Test Vector size: " << testVector.size() << std::endl;
+			++count;
             std::cout << h_img.size() << std::endl;
             return cv::cuda::GpuMat(h_img);
            // std::cout << "Test!" << std::endl;
@@ -34,14 +58,15 @@ namespace EagleLib
             std::cout << "Initializing TestNode with firstInit: " << firstInit << std::endl;
 			if (firstInit)
 			{
-				addParameter("Output", std::string("Defautasdfadf!asdf!!!!!!!"));
-				addParameter("Output", &testVector, Parameter::Output, "Test output vector", false);
+				addParameter("OutputString", std::string("Defaultadsaasdfdasdfsasdff!!!!!!!"));
 			}
+			updateParameter("Output", &testVector, Parameter::Output, "Test output vector", false);
                 
         }
         virtual void Serialize(ISimpleSerializer *pSerializer)
         {
             std::cout << "Running TestNode Serializer" << std::endl;
+			SERIALIZE(testVector);
             Node::Serialize(pSerializer);
         }
 
@@ -62,13 +87,17 @@ namespace EagleLib
 			Node::Init(firstInit);
 			if (firstInit)
 			{
-				addInputParameter<std::vector<int>>("Test input Vector", "Test input Vector");
+				addInputParameter<std::vector<int>>("Test input Vector", "Test  input Vector");
 			}
 		}
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)
         {
 			cv::cuda::resize(img, img, cv::Size(1000, 1000));
            // std::cout << getParameter<std::string>("Output")->data << std::endl;
+			auto ptr = getParameter<std::vector<int>*>("Test input Vector")->data;
+			if (ptr)
+				std::cout << "Successfully accessing input vector of size: " << ptr->size() << std::endl;
+
 			std::cout << img.size() << std::endl;
             std::stringstream ss;
             ss << "TestChildNodeDisplay: " << img.size();

@@ -10,13 +10,20 @@ int main()
 	
 	// Since manager might have been compiled in debug or release as opposed to this executable, we need to use the AUDynArray object
 	// to pass the constructors into the manager, instead of the returned std::vector.
-	ADD_CONSTRUCTORS(manager)
+	//ADD_CONSTRUCTORS(manager)
+	manager.setupModule(PerModuleInterface::GetInstance());
 
     auto rootNode = manager.addNode("SerialStack");
 	auto child = rootNode->addChild(manager.addNode("TestNode"));
-    rootNode->addChild(manager.addNode("TestChildNode"));
+    auto inputNode = rootNode->addChild(manager.addNode("TestChildNode"));
 	auto list = child->listParameters();
 	auto test = manager.getNode(child->fullTreeName);
+	auto inputs = inputNode->findCompatibleInputs();
+	for (int i = 0; i < inputs.size(); ++i)
+	{
+		if (inputs[i].size())
+			inputNode->setInputParameter(inputs[i][0], i);
+	}
     cv::cuda::GpuMat img;
     while(1)
     {

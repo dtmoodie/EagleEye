@@ -29,14 +29,14 @@
 #ifndef _FW_FILEWATCHERWIN32_H_
 #define _FW_FILEWATCHERWIN32_H_
 #pragma once
-
+//#define WIN32_FW_USE_FINDFIRST_API 1
 #include "FileWatcherImpl.h"
 
 #if FILEWATCHER_PLATFORM == FILEWATCHER_PLATFORM_WIN32
 
 // Uncomment define below or include in build options to use FindFirstChangeNotification
 // rather than ReadDirectoryChanges
-// #define WIN32_FW_USE_FINDFIRST_API
+//#define WIN32_FW_USE_FINDFIRST_API
 
 #ifdef WIN32_FW_USE_FINDFIRST_API
 #include "FileWatcherWin32_AltImpl.h"

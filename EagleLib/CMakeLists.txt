@@ -23,7 +23,7 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 include(cmake/ProjectFiles.cmake)
 
 file(GLOB_RECURSE src "src/*.cpp" "src/nodes/*.cpp")
-file(GLOB_RECURSE hdr "include/*.h" "include/nodes/*.h")
+file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
 
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS}
                     ${Boost_INCLUDE_DIRS}
@@ -61,7 +61,8 @@ message(
 ++++++++++ RCC++ Defines ++++++++++++++++++
     OpenCV include dir: ${OpenCV_INCLUDE_DIR}
     Boost library dir: ${Boost_LIBRARY_DIRS}
-    OpenCV library dir: ${CV_LIB_DIR}")
+    OpenCV library dir: ${CV_LIB_DIR}"
+	)
 
 
 set(EagleLib_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)

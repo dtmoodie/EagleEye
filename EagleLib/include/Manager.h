@@ -1,4 +1,5 @@
 #pragma once
+
 #include "EagleLib.h"
 
 #include <boost/shared_ptr.hpp>
@@ -10,7 +11,7 @@
 #include <opencv2/core/cvdef.h>
 #include <list>
 
-#define WIN32_FW_USE_FINDFIRST_API 1
+
 
 #define ADD_CONSTRUCTORS(managerObj)  \
 	auto moduleInterface = PerModuleInterface::GetInstance();	\
@@ -36,7 +37,7 @@ namespace EagleLib
         Node *addNode(const std::string& nodeName);
 
 		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
-
+		void setupModule(IPerModuleInterface* pPerModuleInterface);
         bool Init();
 
         bool MainLoop();

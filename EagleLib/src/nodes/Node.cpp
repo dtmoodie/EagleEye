@@ -8,9 +8,19 @@ using namespace EagleLib;
 #ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
-#if __linux
+
+#if _WIN32
+	#if _DEBUG
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_core300d.lib")
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_cuda300d.lib")
+	#else
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_core300.lib")
+		RUNTIME_COMPILER_LINKLIBRARY("opencv_cuda300.lib")
+	#endif
+#else
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
 #endif
+
 
 
 #endif
@@ -112,7 +122,16 @@ std::vector<std::string> Node::listParameters()
 	}
 	return paramList;
 }
-
+std::vector<std::string> Node::listInputs()
+{
+	std::vector<std::string> paramList;
+	for (int i = 0; i < parameters.size(); ++i)
+	{
+		if (parameters[i]->type & Parameter::Input)
+			paramList.push_back(parameters[i]->name);
+	}
+	return paramList;
+}
 Node*
 Node::getChildRecursive(std::string treeName_)
 {
@@ -276,6 +295,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(children);
     SERIALIZE(treeName);
     SERIALIZE(nodeName);
+	SERIALIZE(fullTreeName);
 }
 std::vector<std::string>
 Node::findType(std::string typeName)
@@ -289,26 +309,53 @@ std::vector<std::string>
 Node::findType(std::string typeName, std::vector<Node*>& nodes)
 {
 	std::vector<std::string> output;
+
 	for (int i = 0; i < nodes.size(); ++i)
 	{
+		if (nodes[i] == this)
+			continue;
 		for (int j = 0; j < nodes[i]->parameters.size(); ++j)
 		{
-			if (nodes[i]->parameters[j]->typeName == typeName)
+			if (nodes[i]->parameters[j]->typeName == typeName && nodes[i]->parameters[j]->type & Parameter::Output)
 				output.push_back(nodes[i]->parameters[j]->treeName);
 		}
+	}
+	return output;
+}
+std::vector<std::vector<std::string>> 
+Node::findCompatibleInputs()
+{
+	std::vector<std::vector<std::string>> output;
+	for (int i = 0; i < parameters.size(); ++i)
+	{
+		if (parameters[i]->type & Parameter::Input)
+			output.push_back(findType(parameters[i]->typeName));
 	}
 	return output;
 }
 void
 Node::setInputParameter(std::string sourceName, std::string inputName)
 {
-
+	for (int i = 0; i < parameters.size(); ++i)
+	{
+		if (parameters[i]->name == inputName && parameters[i]->type & Parameter::Input)
+			parameters[i]->setSource(sourceName);
+	}
 }
 
 void
 Node::setInputParameter(std::string sourceName, int inputIdx)
 {
-
+	int count = 0;
+	for (int i = 0; i < parameters.size(); ++i)
+	{
+		if (parameters[i]->type & Parameter::Input)
+		{
+			if (count == inputIdx)
+				parameters[i]->setSource(sourceName);
+			++count;
+		}
+	}
 }
 void
 Node::setTreeName(const std::string& name)
@@ -338,5 +385,15 @@ Node::setParentName(const std::string& name)
 {
 	parent = name;
 }
-
+void 
+Node::updateInputParameters()
+{
+	for (int i = 0; i < parameters.size(); ++i)
+	{
+		if (parameters[i]->type & EagleLib::Parameter::Input)
+		{
+			parameters[i]->setSource("");
+		}
+	}
+}
 REGISTERCLASS(Node)

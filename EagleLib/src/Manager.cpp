@@ -25,6 +25,7 @@ NodeManager& NodeManager::getInstance()
 NodeManager::NodeManager()
 {
     Init();
+
 }
 
 NodeManager::~NodeManager()
@@ -66,35 +67,32 @@ NodeManager::MainLoop()
 void
 NodeManager::OnConstructorsAdded()
 {
-    // Recompiling has occured.  Testing just one node for now
-    for(auto itr = m_nodeMap.begin(); itr != m_nodeMap.end(); ++itr)
-    {
-        IObjectConstructor* pConstructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(itr->first.c_str());
-        if(pConstructor)
-        {
-
-            for(int i = 0; i < pConstructor->GetNumberConstructedObjects(); ++i)
-            {
-                IObject* pObj = pConstructor->GetConstructedObject(i);
-
-                pObj = pObj->GetInterface(IID_NodeObject);
-                if(pObj)
-                {
-                    Node* pNode = dynamic_cast<Node*>(pObj);
-                    for(int j = 0; j < itr->second.size(); ++j)
-                    {
-                        if(itr->second[j]->treeName == pNode->treeName)
-                        {
-                            itr->second[j] = pNode;
-                            // For some reason, trying to delete ptr yields a segfault.  Maybe the objectfactory is already handling this?
-                            // Need to figure out how to notify the object factory of a delete in the case of a legitimate delete
-                        }
-                    }
-                }
-            }
-
-        }
-    }
+	AUDynArray<IObjectConstructor*> constructors;
+	m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+	std::vector<Node*> newNodes;
+	for (int i = 0; i < constructors.Size(); ++i)
+	{
+		int numObjects = constructors[i]->GetNumberConstructedObjects();
+		for (int j = 0; j < numObjects; ++j)
+		{
+			auto ptr = constructors[i]->GetConstructedObject(j);
+			ptr = ptr->GetInterface(IID_NodeObject);
+			if (ptr)
+			{
+				auto nodePtr = static_cast<Node*>(ptr);
+				m_nodeTree.erase(nodePtr->fullTreeName);
+				m_nodeTree.put(nodePtr->fullTreeName, nodePtr);
+				newNodes.push_back(nodePtr);
+			}
+		}
+	}
+	for (int i = 0; i < newNodes.size(); ++i)
+	{
+		for (int j = 0; j < newNodes[i]->parameters.size(); ++j)
+		{
+			newNodes[i]->parameters[j]->setSource(std::string());
+		}		
+	}
 }
 
 Node* NodeManager::addNode(const std::string &nodeName)
@@ -132,8 +130,14 @@ void
 NodeManager::addConstructors(IAUDynArray<IObjectConstructor*> & constructors)
 {
 	m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddConstructors(constructors);
+	//m_pRuntimeObjectSystem->SetupRuntimeFileTracking(constructors);
+	//m_pRuntimeObjectSystem->SetupObjectConstructors()
 }
-
+void 
+NodeManager::setupModule(IPerModuleInterface* pPerModuleInterface)
+{
+	m_pRuntimeObjectSystem->SetupObjectConstructors(pPerModuleInterface);
+}
 bool 
 NodeManager::CheckRecompile()
 {
@@ -201,9 +205,9 @@ NodeManager::getParameter(const std::string& name)
 {
 	// Strip off the path for the node
 	auto idx = name.find(':');
-	std::string parameterName = name.substr(idx);
+	std::string parameterName = name.substr(idx+1);
 	auto node = getNode(name.substr(0, idx));
-	return node->getParameter(name);
+	return node->getParameter(parameterName);
 }
 
 void
@@ -224,6 +228,8 @@ Node*
 NodeManager::getParent(const std::string& sourceNode)
 {
 	auto idx = sourceNode.find_last_of('.');
+	if (idx > sourceNode.size())
+		return nullptr;
 	std::string treeName = sourceNode.substr(0, idx);
 	return m_nodeTree.get<Node*>(treeName);
 }
