@@ -18,12 +18,12 @@ namespace EagleLib
 
         ~TestNode(){}
 
-        /*cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)
+        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)
         {
             std::cout << "test" << std::endl;
             //cv::imshow("Test", cv::Mat(img));
             return img;
-        }*/
+        }
 
     };
 

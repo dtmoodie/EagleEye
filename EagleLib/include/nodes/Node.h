@@ -30,7 +30,7 @@
 */
 
 #include "../EagleLib.h"
-#include "Manager.h"
+#include "../Manager.h"
 
 #include <opencv2/core.hpp>
 #include <opencv2/cuda.hpp>
@@ -187,8 +187,14 @@ namespace EagleLib
 	public:
 		typedef typename boost::shared_ptr<RangedParameter<T> > Ptr;
 		typedef T ValType;
-		RangedParameter(const std::string& name_, const T& data_, const T& maxVal_, const T& minVal_, const ParamType& type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
-			TypedParameter(name_, data_, type_, toolTip_, ownsData_), maxVal(maxVal_), minVal(minVal_){}
+        RangedParameter(const std::string& name_,
+                        const T& data_,
+                        const T& maxVal_,
+                        const T& minVal_,
+                        const Parameter::ParamType& type_ = Parameter::Control,
+                        const std::string& toolTip_ = "",
+                        bool ownsData_ = false) :
+            TypedParameter<T>(name_, data_, type_, toolTip_, ownsData_), maxVal(maxVal_), minVal(minVal_){}
 		T maxVal;
 		T minVal;
 	};
@@ -198,7 +204,7 @@ namespace EagleLib
 	{
 	public:
 		InputParameter(const std::string& name_, const std::string& toolTip_ = "") :
-			TypedParameter<T*>(name_, nullptr, Input, toolTip_, false)
+            TypedParameter<T*>(name_, nullptr, Parameter::Input, toolTip_, false)
 		{
 			baseTypeName = typeid(T).name();
 		}
@@ -207,7 +213,7 @@ namespace EagleLib
 		{
 			if (name.size() != 0)
 				sourceTreeName = name;
-			auto param = NodeManager::getInstance().getParameter(sourceTreeName);
+            auto param = EagleLib::NodeManager::getInstance().getParameter(sourceTreeName);
 			auto typedParam = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
 			if (typedParam != nullptr)
 				this->data = &typedParam->data;

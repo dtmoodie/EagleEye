@@ -1,6 +1,5 @@
 #pragma once
 
-#include "EagleLib.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -68,6 +67,7 @@ namespace EagleLib
 		void getParentNodes(const std::string& sourceNode, std::vector<Node*>& output);
 		void getAccessibleNodes(const std::string& sourceNode, std::vector<Node*>& output);
 		Node* getParent(const std::string& sourceNode);
+        std::vector<std::string> getConstructableNodes();
 
 	private:
 		NodeManager();

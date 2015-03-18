@@ -247,3 +247,15 @@ void NodeManager::getAccessibleNodes(const std::string& sourceNode, std::vector<
 	getSiblingNodes(sourceNode, output);
 	getParentNodes(sourceNode, output);
 }
+std::vector<std::string>
+NodeManager::getConstructableNodes()
+{
+    AUDynArray<IObjectConstructor*> constructors;
+    m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+    std::vector<std::string> output;
+    for(int i = 0; i < constructors.Size(); ++i)
+    {
+        output.push_back(constructors[i]->GetName());
+    }
+    return output;
+}

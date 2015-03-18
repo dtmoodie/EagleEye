@@ -27,6 +27,8 @@
 #else
 	RUNTIME_COMPILER_LINKLIBRARY("-lopencv_highgui")
 #endif
+
+
 namespace EagleLib
 {
     class TestNode: public Node
@@ -40,8 +42,8 @@ namespace EagleLib
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)
         {
             
-            //cv::Mat h_img = cv::imread("/home/dan/Dropbox/Photos/x0ml8.png");
-			cv::Mat h_img = cv::imread("E:/drive/metadata timeoffset.png");
+            cv::Mat h_img = cv::imread("/home/dan/Dropbox/Photos/x0ml8.png");
+            //cv::Mat h_img = cv::imread("E:/drive/metadata timeoffset.png");
 			static int count = 0;
 			//std::cout << getParameter<std::string>("OutputString")->data << std::endl;
 			testVector.push_back(count);
@@ -55,10 +57,9 @@ namespace EagleLib
         virtual void Init(bool firstInit)
         {
             Node::Init(firstInit);
-            std::cout << "Initializing TestNode with firstInit: " << firstInit << std::endl;
 			if (firstInit)
 			{
-				addParameter("OutputString", std::string("Defaultadsaasdfdasdfsasdff!!!!!!!"));
+                addParameter("OutputString", std::string("Default!!!!!!!"));
 			}
 			updateParameter("Output", &testVector, Parameter::Output, "Test output vector", false);
                 
@@ -113,10 +114,6 @@ namespace EagleLib
 
 }
 using namespace EagleLib;
-/*
-REGISTERCLASS(TestNode)
-REGISTERCLASS(TestChildNode)
-*/
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(TestNode);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(TestChildNode);

@@ -20,14 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    /*rootNode.errorCallback  = boost::bind(&MainWindow::onError,  this, _1);
-	rootNode.statusCallback = boost::bind(&MainWindow::onStatus, this, _1);
-	auto ptr = rootNode.addChild(new EagleLib::SerialStack());
-    ptr->addChild(new EagleLib::IO::VideoLoader("/media/dan/Data/WeddingPhotos"));
-
-    ptr->addChild(new EagleLib::Features2D::GoodFeaturesToTrackDetector());
-    ptr->addChild(new EagleLib::PyrLKOpticalFlow());*/
-    EagleLib::NodeManager::getInstance().addNode("TestNode");
+    //EagleLib::NodeManager::getInstance().addNode("TestNode");
     fileMonitorTimer = new QTimer(this);
     fileMonitorTimer->start(1000);
     connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
@@ -40,22 +33,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_clicked()
 {
+    auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
 
 
-
-    /*QDir dir(qApp->applicationDirPath());
-    dir.cd("plugins");
-    QStringList filters;
-    filters << "*.so";
-    foreach(QString fileName, dir.entryList(filters))
-    {
-        QPluginLoader loader(dir.absoluteFilePath(fileName));
-        QObject* plugin = loader.instance();
-        if(plugin)
-        {
-            NodePluginFactory* NodePlugin = qobject_cast<NodePluginFactory*>(plugin);
-        }
-    }*/
 }
 void
 MainWindow::onError(const std::string &error)
