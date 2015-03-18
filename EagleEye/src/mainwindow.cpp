@@ -24,6 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
     fileMonitorTimer = new QTimer(this);
     fileMonitorTimer->start(1000);
     connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+    nodeListDialog = new NodeListDialog(this);
+    nodeListDialog->hide();
 }
 
 MainWindow::~MainWindow()
@@ -33,7 +35,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_clicked()
 {
-    auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
+    nodeListDialog->show();
 
 
 }
