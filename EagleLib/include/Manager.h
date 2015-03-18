@@ -1,5 +1,5 @@
 #pragma once
-
+#define CVAPI_EXPORTS
 
 #include <boost/shared_ptr.hpp>
 #include <boost/property_tree/ptree.hpp>

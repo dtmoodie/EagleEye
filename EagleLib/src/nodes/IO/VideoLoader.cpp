@@ -21,7 +21,7 @@ VideoLoader::VideoLoader(const std::string& file)
 	addParameter("EOF_reached", false, "Flag for end of file", Parameter::Output);
 	addParameter("NumFrames", int(-1), "Number of frames in file", Parameter::Output);
 	updateParameter(1, file);*/
-	loadFile();
+	//loadFile();
 }
 
 VideoLoader::~VideoLoader()

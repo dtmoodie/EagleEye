@@ -2,11 +2,11 @@
 #define NODELISTDIALOG_H
 
 #include <QDialog>
-
+#include "nodes\Node.h"
 namespace Ui {
 class NodeListDialog;
 }
-class Node;
+
 class NodeListDialog : public QDialog
 {
     Q_OBJECT
@@ -16,7 +16,7 @@ public:
     void show();
     ~NodeListDialog();
 signals:
-    void nodeConstructed(Node* node);
+	void nodeConstructed(EagleLib::Node* node);
 private slots:
     void on_pushButton_clicked();
 

@@ -134,6 +134,7 @@ namespace EagleLib
     class CV_EXPORTS Parameter
     {
     public:
+		typedef boost::shared_ptr<Parameter> Ptr;
 		virtual void setSource(const std::string& name) = 0;
         enum ParamType
         {
@@ -147,6 +148,7 @@ namespace EagleLib
             State		= 64,	// State parameter to be read and displayed
 			NotifyOnRecompile = 128
         };
+		
         std::string name;
         std::string toolTip;
         std::string treeName;
@@ -175,7 +177,8 @@ namespace EagleLib
 		}
 		~TypedParameter(){ if (ownsData)cleanup<T>(data); }
 
-		T& get();
+		
+
 		T data;
 	private:
 		bool ownsData;
@@ -195,6 +198,7 @@ namespace EagleLib
                         const std::string& toolTip_ = "",
                         bool ownsData_ = false) :
             TypedParameter<T>(name_, data_, type_, toolTip_, ownsData_), maxVal(maxVal_), minVal(minVal_){}
+		void setRange(const T& _max, const T& _min){ maxVal = _max; minVal = _min; }
 		T maxVal;
 		T minVal;
 	};
