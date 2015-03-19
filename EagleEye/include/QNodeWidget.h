@@ -36,12 +36,12 @@ private:
 	{
 		if (parameter->typeName == typeid(T).name())
 		{
-			EagleLib::TypedParameter<T>::Ptr typedParam = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T>, EagleLib::Parameter>(parameter);
+            typename EagleLib::TypedParameter<T>::Ptr typedParam = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T>, EagleLib::Parameter>(parameter);
 			return &typedParam->data;
 		}
 		if (parameter->typeName == typeid(T*).name())
 		{
-			EagleLib::TypedParameter<T*>::Ptr typedParam = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T*>, EagleLib::Parameter>(parameter);
+            typename EagleLib::TypedParameter<T*>::Ptr typedParam = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T*>, EagleLib::Parameter>(parameter);
 			return typedParam->data;
 		}
 		return nullptr;

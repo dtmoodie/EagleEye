@@ -13,7 +13,7 @@
 #include <nodes/IO/VideoLoader.h>
 #include <opencv2/calib3d.hpp>
 #include <qgraphicsproxywidget.h>
-#include <QGlWidget>
+#include "QGLWidget"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),

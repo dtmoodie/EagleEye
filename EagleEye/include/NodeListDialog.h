@@ -2,7 +2,7 @@
 #define NODELISTDIALOG_H
 
 #include <QDialog>
-#include "nodes\Node.h"
+#include "nodes/Node.h"
 namespace Ui {
 class NodeListDialog;
 }
