@@ -45,24 +45,35 @@ private:
 			return typedParam->data;
 		}
 		return nullptr;
-	}
-
-/*	template<typename T> boost::enable_if<boost::is_floating_point<boost::remove_pointer<T>::type>::value, void>
-		addParameter(EagleLib::Parameter::Ptr parameter)
-	{
-		
-		getParameter<T>(parameter)
-	}
-	*/
-
-
-
-	template<typename T> void 
-		addParameter(EagleLib::Parameter::Ptr parameter)
-	{
-
-	}
+	}	
 	
 	Ui::QNodeWidget* ui;
 	
+};
+// Interface class for the interop class
+class CV_EXPORTS IQNodeInterop: public QObject
+{
+	Q_OBJECT
+
+public:
+	void updateUi();
+
+
+private:
+
+
+};
+
+template<typename T> class QNodeInterop : IQNodeInterop
+{
+public:
+
+	QNodeInterop(QNodeWidget* parent, EagleLib::TypedParameter<T>::Ptr parameter);
+	~QNodeInterop();
+
+	std::enable_if<std::is_floating_point<T>::value, void>::type updateUi();
+
+
+private:
+	EagleLib::TypedParameter<T>::Ptr parameter;
 };

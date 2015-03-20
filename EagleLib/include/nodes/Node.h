@@ -165,7 +165,7 @@ namespace EagleLib
 
 	// Default typed parameter
 	template<typename T>
-	class CV_EXPORTS TypedParameter : public Parameter
+	class /*CV_EXPORTS*/ TypedParameter : public Parameter
 	{
 	public:
 		typedef typename boost::shared_ptr< TypedParameter<T> > Ptr;
