@@ -27,7 +27,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 INCLUDE_DIRECTORIES(${EagleLib_INCLUDE_DIRECTORIES})
 
-file(GLOB sources "src/*.cpp")
+file(GLOB sources "src/*.cpp") 
 file(GLOB headers "include/*.h")
 file(GLOB forms "*UIs/*.ui")
 

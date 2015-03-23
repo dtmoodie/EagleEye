@@ -162,6 +162,26 @@ namespace EagleLib
 
 	template<typename T> void cleanup(T ptr, typename std::enable_if<std::is_pointer<T>::value>::type* = 0) { delete ptr; }
 	template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointer<T>::value>::type* = 0){ return; }
+	
+	template<typename T> T* getParameter(EagleLib::Parameter::Ptr parameter)
+	{
+		// Dynamically check what type of parameter this is refering to
+		typename EagleLib::TypedParameter<T>::Ptr typedParam = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T>, EagleLib::Parameter>(parameter);
+		if (typedParam)
+			return &typedParam->data;
+		
+		
+		typename EagleLib::TypedParameter<T*>::Ptr typedParamPtr = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T*>, EagleLib::Parameter>(parameter);
+		if (typedParamPtr)
+			return typedParamPtr->data;
+		
+		
+		typename EagleLib::TypedParameter<T&>::Ptr typedParamRef = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T&>, EagleLib::Parameter>(parameter);
+		if (typedParamRef)
+			return &typedParamRef->data;
+		
+		return nullptr;
+	}
 
 	// Default typed parameter
 	template<typename T>
@@ -173,7 +193,7 @@ namespace EagleLib
 		virtual void setSource(const std::string& name){}
 		TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
 			Parameter(name_, (ParamType)type_, toolTip_), data(data_), ownsData(ownsData_) {
-			typeName = typeid(T).name();
+			typeName = typeid(std::remove_pointer<std::remove_reference<T>::type>::type).name();
 		}
 		~TypedParameter(){ if (ownsData)cleanup<T>(data); }
 

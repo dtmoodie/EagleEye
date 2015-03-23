@@ -4,49 +4,42 @@
 #else
 #include <opencv2/videoio.hpp>
 #endif
-
+#include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 using namespace EagleLib::IO;
 
-VideoLoader::VideoLoader(const std::string& file)
-{
-    nodeName = "VideoLoader";
-	treeName = nodeName;/*
-#if _WIN32
-	addParameter("VideoFileReader", cv::Ptr<cv::cudacodec::VideoReader>(), std::string("Object that decodes video files on the GPU"), Parameter::Output);
-#else
-    addParameter("VideoFileReader", cv::VideoCapture(), "Object that decodes video files on the GPU", Parameter::Output);
-#endif
-	addParameter("VideoFileName", std::string(""), std::string("Absolute file path to video file", Parameter::Control));
-	addParameter("EOF_reached", false, "Flag for end of file", Parameter::Output);
-	addParameter("NumFrames", int(-1), "Number of frames in file", Parameter::Output);
-	updateParameter(1, file);*/
-	//loadFile();
-}
+NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoLoader);
 
 VideoLoader::~VideoLoader()
 {
 
 }
 
+void 
+VideoLoader::Init(bool firstInit)
+{
+	updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path(), Parameter::Control, "Path to video file");
+	updateParameter<std::string>("Codec", "");
+	updateParameter<std::string>("Video Chroma Format", "", Parameter::State);
+	updateParameter<std::string>("Resolution", "", Parameter::State);
+}
+
+
+
 cv::cuda::GpuMat 
 VideoLoader::doProcess(cv::cuda::GpuMat& img)
 {
-	if (parameters[1]->changed)
+	if (parameters[0]->changed)
 		loadFile();
 #if _WIN32
-	auto ptr = boost::dynamic_pointer_cast<TypedParameter<cv::Ptr<cv::cudacodec::VideoReader>>, Parameter>(parameters[0]);
-    if (ptr == NULL)
+	if (videoReader == NULL)
         return img;
-    if (ptr->data == NULL)
-        return img;
-    if(ptr->data->nextFrame(img))
+    if(videoReader->nextFrame(img))
     {
         return img;
     }else
     {
-        // Maybe this is the end of the video file?
-        getParameter<bool>(2)->data = true;
         return img;
     }
 #else
@@ -69,28 +62,82 @@ void
 VideoLoader::loadFile()
 {
 #if _WIN32
-	auto ptr = boost::dynamic_pointer_cast<TypedParameter<cv::Ptr<cv::cudacodec::VideoReader>>, Parameter>(parameters[0]);
+	std::string& fileName = getParameter<std::string>("Filename")->data;
+	if (fileName.size())
+		videoReader = cv::cudacodec::createVideoReader(fileName);
+	if (videoReader)
+	{
+		auto info = videoReader->format();
+		std::string chromaFormat;
+		switch (info.chromaFormat)
+		{
+		case cv::cudacodec::Monochrome:
+			chromaFormat = "Monochrome";
+			break;
+		case cv::cudacodec::YUV420:
+			chromaFormat = "YUV420";
+			break;
+		case cv::cudacodec::YUV422:
+			chromaFormat = "YUV422";
+			break;
+		case cv::cudacodec::YUV444:
+			chromaFormat = "YUV444";
+			break;
+		}
+		
+		std::string resolution = "Width: " + boost::lexical_cast<std::string>(info.width) + " Height: " + boost::lexical_cast<std::string>(info.height);
+		
+		std::string codec;
+		switch (info.codec)
+		{
+		case cv::cudacodec::MPEG1:
+			codec = "MPEG1";
+			break;
+		case cv::cudacodec::MPEG2:
+			codec = "MPEG2";
+			break;
+		case cv::cudacodec::MPEG4:
+			codec = "MPEG4";
+			break;
+		case cv::cudacodec::VC1:
+			codec = "VC1";
+			break;
+		case cv::cudacodec::H264:
+			codec = "H264";
+			break;
+		case cv::cudacodec::JPEG:
+			codec = "JPEG";
+			break;
+		case cv::cudacodec::H264_SVC:
+			codec = "H264_SVC";
+			break;
+		case cv::cudacodec::H264_MVC:
+			codec = "H264_MVC";
+			break;
+		case cv::cudacodec::Uncompressed_YUV420:
+			codec = "Uncompressed_YUV420";
+			break;
+		case cv::cudacodec::Uncompressed_YV12:
+			codec = "Uncompressed_YV12";
+			break;
+		case cv::cudacodec::Uncompressed_NV12:
+			codec = "Uncompressed_NV12";
+			break;
+		case cv::cudacodec::Uncompressed_YUYV:
+			codec = "Uncompressed_YUYV";
+			break;
+		case cv::cudacodec::Uncompressed_UYVY:
+			codec = "Uncompressed_UYVY";
+			break;
+		}
+		
+		updateParameter<std::string>("Codec", codec);
+		updateParameter<std::string>("Video Chroma Format", chromaFormat, Parameter::State);
+		updateParameter<std::string>("Resolution", resolution, Parameter::State);
+	}
 #else
     auto ptr = boost::dynamic_pointer_cast< TypedParameter<cv::VideoCapture> , Parameter>(parameters[0]);
 #endif
-	if (ptr == NULL)
-		return;
-	auto fileName = getParameter<std::string>(1);
-	if (fileName == NULL)
-		return;
-	if (fileName->data.size() > 0)
-    {
-#if _WIN32
-		EAGLE_TRY_ERROR(
-        ptr->data = cv::cudacodec::createVideoReader(fileName->data);
-		)
-#else
-		EAGLE_TRY_ERROR(
-		ptr->data = cv::VideoCapture(fileName->data);
-		)
-#endif
-        
-    }
+	
 
 }
-REGISTERCLASS(VideoLoader)

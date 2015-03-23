@@ -14,13 +14,13 @@
 #include <opencv2/calib3d.hpp>
 #include <qgraphicsproxywidget.h>
 #include "QGLWidget"
-
+#include <QGraphicsSceneMouseEvent>
+#include <Manager.h>
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    //EagleLib::NodeManager::getInstance().addNode("TestNode");
     fileMonitorTimer = new QTimer(this);
     fileMonitorTimer->start(1000);
     connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
@@ -28,13 +28,17 @@ MainWindow::MainWindow(QWidget *parent) :
     nodeListDialog->hide();
 	connect(nodeListDialog, SIGNAL(nodeConstructed(EagleLib::Node*)), 
 		this, SLOT(onNodeAdd(EagleLib::Node*)));
+	
 	nodeGraph = new QGraphicsScene(this);
+	connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
 	nodeGraph->addText("Test text");
-	nodeGraphView = new QGraphicsView(nodeGraph);
+	nodeGraphView = new NodeView(nodeGraph);
+	connect(nodeGraphView, SIGNAL(selectionChanged(QGraphicsProxyWidget*)), this, SLOT(onSelectionChanged(QGraphicsProxyWidget*)));
 	nodeGraphView->setInteractive(true);
 	nodeGraphView->setViewport(new QGLWidget());
 	nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
 	ui->gridLayout->addWidget(nodeGraphView, 1, 0);
+	currentSelectedNode = nullptr;
 }
 
 MainWindow::~MainWindow()
@@ -65,8 +69,38 @@ MainWindow::onTimeout()
 void 
 MainWindow::onNodeAdd(EagleLib::Node* node)
 {	
+	if (currentNodeId.IsValid)
+	{
+		auto parent = EagleLib::NodeManager::getInstance().getNode(currentNodeId);
+		parent->addChild(node);
+	}
+
+
 	// Add a new node widget to the graph
-	QNodeWidget* nodeWidget = new QNodeWidget(0, node);
-	auto proxyWidget = nodeGraph->addWidget(nodeWidget);
+	QNodeWidget* nodeWidget = new QNodeWidget(this, node);
 	
+	auto proxyWidget = nodeGraph->addWidget(nodeWidget);
+	proxyWidget->setFlag(QGraphicsItem::ItemIsMovable);
+	proxyWidget->setFlag(QGraphicsItem::ItemIsSelectable);
+	proxyWidget->setFlag(QGraphicsItem::ItemIsFocusable);
+
+	nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
+	
+	if (node->parent.size())
+	{
+		auto parent = EagleLib::NodeManager::getInstance().getNode(node->parent);
+		auto parentWidget = nodeGraphView->getWidget(parent->GetObjectId());
+		
+	}
+
+
+	if (currentSelectedNodeWidget)
+		proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 250));
+	currentSelectedNodeWidget = proxyWidget;
+}
+
+void
+MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
+{
+	currentSelectedNodeWidget = widget;
 }

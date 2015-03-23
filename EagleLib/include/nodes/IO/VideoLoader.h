@@ -1,5 +1,12 @@
 #include <nodes/Node.h>
 
+
+#if _WIN32
+#include <opencv2/cudacodec.hpp>
+#else
+#include <opencv2/videoio.hpp>
+#endif
+
 namespace EagleLib
 {
 	namespace IO
@@ -7,13 +14,17 @@ namespace EagleLib
 		class CV_EXPORTS VideoLoader : public Node
 		{
 		public:
-			//VideoLoader();
-			VideoLoader(const std::string& file = "");
+			VideoLoader();
 			~VideoLoader();
+			void Init(bool firstInit);
 			void loadFile();
 
 			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
-			//bool EOF_reached;
+#if _WIN32
+			cv::Ptr<cv::cudacodec::VideoReader> videoReader;
+#else
+
+#endif
 		};
 	}
 }
