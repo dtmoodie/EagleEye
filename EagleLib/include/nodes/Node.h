@@ -168,7 +168,7 @@ namespace EagleLib
 	class /*CV_EXPORTS*/ TypedParameter : public Parameter
 	{
 	public:
-		typedef typename boost::shared_ptr< TypedParameter<T> > Ptr;
+        typedef boost::shared_ptr< TypedParameter<T> > Ptr;
 		typedef T ValType;
 		virtual void setSource(const std::string& name){}
 		TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :

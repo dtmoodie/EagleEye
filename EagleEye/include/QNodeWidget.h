@@ -3,6 +3,11 @@
 #include "qgraphicsitem.h"
 #include "qwidget.h"
 #include <boost/type_traits.hpp>
+#include <QDoubleSpinBox>
+#include <QSpinBox>
+#include <QPushButton>
+#include <QCheckBox>
+
 namespace Ui {
 	class QNodeWidget;
 }
@@ -51,29 +56,33 @@ private:
 	
 };
 // Interface class for the interop class
-class CV_EXPORTS IQNodeInterop: public QObject
+class CV_EXPORTS IQNodeInterop: public QWidget
 {
 	Q_OBJECT
-
 public:
-	void updateUi();
-
-
+    IQNodeInterop(QWidget* parent) = 0;
+    virtual void updateUi() = 0;
 private:
-
-
 };
 
-template<typename T> class QNodeInterop : IQNodeInterop
+template<typename T, typename std::enable_if<std::is_floating_point<T>::value, void>::type* = nullptr> class QNodeInterop : IQNodeInterop
 {
 public:
 
-	QNodeInterop(QNodeWidget* parent, EagleLib::TypedParameter<T>::Ptr parameter);
+    QNodeInterop(QNodeWidget* parent, boost::shared_ptr<EagleLib::Parameter> parameter_):
+        IQNodeInterop(parent),
+        parameter(parameter_)
+    {
+        box = new QSpinBox(this);
+    }
+
 	~QNodeInterop();
 
-	std::enable_if<std::is_floating_point<T>::value, void>::type updateUi();
-
-
+    void updateUi()
+    {
+        box->setValue();
+    }
 private:
-	EagleLib::TypedParameter<T>::Ptr parameter;
+    boost::shared_ptr<EagleLib::Parameter> parameter;
+    QDoubleSpinBox* box;
 };
