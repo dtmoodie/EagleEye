@@ -19,7 +19,7 @@ void VideoWriter::Init(bool firstInit)
 	{
 		try
 		{
-			cv::cudacodec::createVideoWriter("test.avi", cv::Size(640, 480), 30);
+            cv::cudacodec::createVideoWriter(std::string("test.avi"), cv::Size(640, 480), 30);
 		}
 		catch (cv::Exception &e)
 		{

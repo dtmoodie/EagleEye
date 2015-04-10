@@ -9,8 +9,8 @@
 using namespace EagleLib;
 using namespace EagleLib::IO;
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoLoader);
 
+RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudacodec -lopencv_videoio")
 VideoLoader::~VideoLoader()
 {
 
@@ -19,10 +19,24 @@ VideoLoader::~VideoLoader()
 void 
 VideoLoader::Init(bool firstInit)
 {
-	updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path(), Parameter::Control, "Path to video file");
-	updateParameter<std::string>("Codec", "");
-	updateParameter<std::string>("Video Chroma Format", "", Parameter::State);
-	updateParameter<std::string>("Resolution", "", Parameter::State);
+    if(firstInit)
+    {
+        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path(), Parameter::Control, "Path to video file");
+        updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader, Parameter::Output);
+        updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader, Parameter::Output);
+        updateParameter<std::string>("Codec", "");
+        updateParameter<std::string>("Video Chroma Format", "", Parameter::State);
+        updateParameter<std::string>("Resolution", "", Parameter::State);
+    }else
+    {
+        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
+        auto d_reader = getParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader");
+        if(d_reader != nullptr)
+            d_videoReader = d_reader->data;
+        auto h_reader = getParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader");
+        if(h_reader != nullptr)
+            h_videoReader = h_reader->data;
+    }
 }
 
 
@@ -32,43 +46,47 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img)
 {
 	if (parameters[0]->changed)
 		loadFile();
-#if _WIN32
-	if (videoReader == NULL)
-        return img;
-    if(videoReader->nextFrame(img))
+    if(d_videoReader)
     {
-        return img;
-    }else
+        d_videoReader->nextFrame(img);
+    }else if(h_videoReader)
     {
-        return img;
-    }
-#else
-     TypedParameter<cv::VideoCapture>::Ptr ptr = boost::dynamic_pointer_cast<TypedParameter<cv::VideoCapture>, Parameter>(parameters[0]);
-     if(!ptr->data.isOpened())
-     {
-        if(!ptr->data.open(getParameter<std::string>(1)->data))
+        cv::Mat h_img;
+        if(!h_videoReader->read(h_img))
             return img;
-     }
-     cv::Mat readFrame;
-     if(!ptr->data.read(readFrame))
-         return img;
-     if(readFrame.empty())
-         return img;
-     img.upload(readFrame);
-     return img;
-#endif
+       if(h_img.empty())
+           return cv::cuda::GpuMat();
+       img.upload(h_img);
+    }
+    return img;
 }
+
 void
 VideoLoader::loadFile()
 {
-#if _WIN32
 	//std::string fileName = getParameter<boost::filesystem::path>("Filename")->data.string();
-	std::string fileName = getParameter<boost::filesystem::path>("Filename")->data.string();
-	if (fileName.size())
-		videoReader = cv::cudacodec::createVideoReader(fileName);
-	if (videoReader)
+    auto fileName = getParameter<boost::filesystem::path>("Filename");
+    if(fileName == nullptr)
+        return;
+    std::cout << "Loading file: " << fileName->data.string() << std::endl;
+    if(fileName->data.string().size() == 0)
+        return;
+    try
+    {
+        d_videoReader = cv::cudacodec::createVideoReader(fileName->data.string());
+    }catch(...)
+    {
+        // no luck with the GPU decoder, try CPU decoder
+        std::cout << "Failed to crate GPU decoder, falling back to CPU decoder" << std::endl;
+        h_videoReader.reset(new cv::VideoCapture);
+
+        h_videoReader->open(fileName->data.string());
+
+    }
+
+    if (d_videoReader)
 	{
-		auto info = videoReader->format();
+        auto info = d_videoReader->format();
 		std::string chromaFormat;
 		switch (info.chromaFormat)
 		{
@@ -86,7 +104,8 @@ VideoLoader::loadFile()
 			break;
 		}
 		
-		std::string resolution = "Width: " + boost::lexical_cast<std::string>(info.width) + " Height: " + boost::lexical_cast<std::string>(info.height);
+        std::string resolution = "Width: " + boost::lexical_cast<std::string>(info.width) +
+                " Height: " + boost::lexical_cast<std::string>(info.height);
 		
 		std::string codec;
 		switch (info.codec)
@@ -136,9 +155,7 @@ VideoLoader::loadFile()
 		updateParameter<std::string>("Video Chroma Format", chromaFormat, Parameter::State);
 		updateParameter<std::string>("Resolution", resolution, Parameter::State);
 	}
-#else
-    auto ptr = boost::dynamic_pointer_cast< TypedParameter<cv::VideoCapture> , Parameter>(parameters[0]);
-#endif
-	
+    fileName->changed = false;
 
 }
+NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoLoader);

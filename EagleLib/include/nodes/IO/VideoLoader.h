@@ -1,11 +1,8 @@
 #include <nodes/Node.h>
 
-
-#if _WIN32
 #include <opencv2/cudacodec.hpp>
-#else
 #include <opencv2/videoio.hpp>
-#endif
+
 
 namespace EagleLib
 {
@@ -20,11 +17,8 @@ namespace EagleLib
 			void loadFile();
 
 			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
-#if _WIN32
-			cv::Ptr<cv::cudacodec::VideoReader> videoReader;
-#else
-
-#endif
+            cv::Ptr<cv::cudacodec::VideoReader> d_videoReader;
+            cv::Ptr<cv::VideoCapture>           h_videoReader;
 		};
 	}
 }

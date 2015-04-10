@@ -113,8 +113,6 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 	{
 		parentList.push_back(node->GetObjectId());
 	}
-
-		
 	currentSelectedNodeWidget = proxyWidget;
 }
 
@@ -126,9 +124,9 @@ MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
 QList<EagleLib::Node*> MainWindow::getParentNodes()
 {
 	QList<EagleLib::Node*> nodes;
-	for (auto it = parentList.begin(); it != parentList.end(); ++it)
+    for(int i = 0; i < parentList.size(); ++i)
 	{
-		auto node = EagleLib::NodeManager::getInstance().getNode(*it);
+        auto node = EagleLib::NodeManager::getInstance().getNode(parentList[i]);
 		if (node)
 			nodes.push_back(node);
 	}
@@ -146,5 +144,9 @@ void MainWindow::process()
 		{
 			images[count] = (*it)->process(images[count]);
 		}
+        if(nodes.size() == 0)
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
+        EagleLib::NodeManager::getInstance().CheckRecompile();
 	}
+    std::cout << "Processing thread ending" << std::endl;
 }

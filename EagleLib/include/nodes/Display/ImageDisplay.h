@@ -4,14 +4,26 @@
 
 namespace EagleLib
 {
-    class CV_EXPORTS ImageDisplay: public Node
+    class CV_EXPORTS QtImageDisplay: public Node
     {
+        std::string prevName;
     public:
-        ImageDisplay();
-        ImageDisplay(boost::function<void(cv::Mat)> cpuCallback_);
-        ImageDisplay(boost::function<void(cv::cuda::GpuMat)> gpuCallback_);
+        QtImageDisplay();
+        QtImageDisplay(boost::function<void(cv::Mat)> cpuCallback_);
+        QtImageDisplay(boost::function<void(cv::cuda::GpuMat)> gpuCallback_);
+        virtual void Init(bool firstInit);
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img);
-        
+
+    };
+    class CV_EXPORTS OGLImageDisplay: public Node
+    {
+        std::string prevName;
+    public:
+        OGLImageDisplay();
+
+        OGLImageDisplay(boost::function<void(cv::cuda::GpuMat)> gpuCallback_);
+        virtual void Init(bool firstInit);
+        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img);
 
     };
 }

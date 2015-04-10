@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(EagleEye)
 find_package(Qt5 COMPONENTS Gui Widgets Core OpenGL PrintSupport)
-find_package(OpenCV 3.0 REQUIRED core imgproc highgui cuda cudaimgproc cudawarping cudafeatures2d)
+find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
 find_package(CUDA REQUIRED)
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 
@@ -33,7 +33,12 @@ file(GLOB forms "*UIs/*.ui")
 
 QT5_WRAP_UI(UIS ${forms})
 QT5_WRAP_CPP(MOC ${sources} ${headers})
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+
+
 
 ADD_EXECUTABLE(EagleEye
         ${sources}
@@ -61,3 +66,10 @@ endforeach(lib)
 if(UNIX)
     TARGET_LINK_LIBRARIES(EagleEye dl)
 endif()
+message(STATUS "
+************************************************************************
+  EagleEye Compile parameters
+   C++ Flags: ${CMAKE_CXX_FLAGS}
+
+
+***********************************************************************")

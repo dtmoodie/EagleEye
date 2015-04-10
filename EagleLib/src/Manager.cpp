@@ -144,6 +144,9 @@ NodeManager::CheckRecompile()
 	static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
 	boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
 	boost::posix_time::time_duration delta = currentTime - prevTime;
+    // Prevent checking too often
+    if(delta.total_milliseconds() < 10)
+        return false;
     if( m_pRuntimeObjectSystem->GetIsCompiledComplete())
     {
         m_pRuntimeObjectSystem->LoadCompiledModule();

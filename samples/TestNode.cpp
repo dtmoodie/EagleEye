@@ -1,7 +1,7 @@
 #include <nodes/Node.h>
 #include <../RuntimeObjectSystem/ISimpleSerializer.h>
 #include <opencv2/highgui.hpp>
-#include <opencv2/cuda.hpp>
+#include <opencv2/core/cuda.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudaarithm.hpp>
 #include <opencv2/cudawarping.hpp>

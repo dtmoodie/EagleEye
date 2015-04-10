@@ -16,7 +16,7 @@ set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 
-find_package(OpenCV 3.0 REQUIRED core imgproc highgui cuda cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
+find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
 
 
 INCLUDE_DIRECTORIES(
@@ -26,7 +26,6 @@ INCLUDE_DIRECTORIES(
 )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-message(${CMAKE_CXX_FLAGS})
 add_executable(SimpleConsole SimpleConsole.cpp TestNode.cpp)
 add_dependencies(SimpleConsole EagleLib)
 target_link_libraries(SimpleConsole EagleLib)

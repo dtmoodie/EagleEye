@@ -33,7 +33,7 @@
 #include "../Manager.h"
 
 #include <opencv2/core.hpp>
-#include <opencv2/cuda.hpp>
+#include <opencv2/core/cuda.hpp>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
@@ -69,7 +69,7 @@ using namespace boost::multi_index;
 //RUNTIME_COMPILER_LINKLIBRARY(  OPENCV_LIB_DIR "/opencv_core300.lib" );
 
 #else
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
+RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 #endif
 
 #endif // RCC_ENABLED
@@ -163,25 +163,7 @@ namespace EagleLib
 	template<typename T> void cleanup(T ptr, typename std::enable_if<std::is_pointer<T>::value>::type* = 0) { delete ptr; }
 	template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointer<T>::value>::type* = 0){ return; }
 	
-	template<typename T> T* getParameter(EagleLib::Parameter::Ptr parameter)
-	{
-		// Dynamically check what type of parameter this is refering to
-		typename EagleLib::TypedParameter<T>::Ptr typedParam = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T>, EagleLib::Parameter>(parameter);
-		if (typedParam)
-			return &typedParam->data;
-		
-		
-		typename EagleLib::TypedParameter<T*>::Ptr typedParamPtr = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T*>, EagleLib::Parameter>(parameter);
-		if (typedParamPtr)
-			return typedParamPtr->data;
-		
-		
-		typename EagleLib::TypedParameter<T&>::Ptr typedParamRef = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T&>, EagleLib::Parameter>(parameter);
-		if (typedParamRef)
-			return &typedParamRef->data;
-		
-		return nullptr;
-	}
+
 
 	// Default typed parameter
 	template<typename T>
@@ -194,7 +176,7 @@ namespace EagleLib
 		virtual void setSource(const std::string& name){}
 		TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
 			Parameter(name_, (ParamType)type_, toolTip_), data(data_), ownsData(ownsData_) {
-			typeName = typeid(std::remove_pointer<std::remove_reference<T>::type>::type).name();
+            typeName = typeid(typename std::remove_pointer<typename std::remove_reference<T>::type>::type).name();
 		}
 		~TypedParameter(){ if (ownsData)cleanup<T>(data); }
 
@@ -253,7 +235,25 @@ namespace EagleLib
 		std::string sourceTreeName;
 		std::string baseTypeName;
 	};
-	
+    template<typename T> T* getParameter(EagleLib::Parameter::Ptr parameter)
+    {
+        // Dynamically check what type of parameter this is refering to
+        typename EagleLib::TypedParameter<T>::Ptr typedParam = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T>, EagleLib::Parameter>(parameter);
+        if (typedParam)
+            return &typedParam->data;
+
+
+        typename EagleLib::TypedParameter<T*>::Ptr typedParamPtr = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T*>, EagleLib::Parameter>(parameter);
+        if (typedParamPtr)
+            return typedParamPtr->data;
+
+
+        typename EagleLib::TypedParameter<T&>::Ptr typedParamRef = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T&>, EagleLib::Parameter>(parameter);
+        if (typedParamRef)
+            return &typedParamRef->data;
+
+        return nullptr;
+    }
 #ifdef RCC_ENABLED
     class CV_EXPORTS Node: public TInterface<IID_NodeObject, IObject>
 #else
