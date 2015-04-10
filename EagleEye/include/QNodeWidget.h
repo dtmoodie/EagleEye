@@ -22,7 +22,7 @@ class CV_EXPORTS QNodeWidget : public QWidget
 public:
 	QNodeWidget(QWidget* parent = nullptr, EagleLib::Node* node = nullptr);
 	~QNodeWidget();
-
+	EagleLib::Node* getNode();
 private:
 
 	Ui::QNodeWidget* ui;

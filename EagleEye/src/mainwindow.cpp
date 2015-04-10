@@ -39,10 +39,14 @@ MainWindow::MainWindow(QWidget *parent) :
 	nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
 	ui->gridLayout->addWidget(nodeGraphView, 1, 0);
 	currentSelectedNodeWidget = nullptr;
+	processingThread = boost::thread(boost::bind(&MainWindow::process, this));
+	quit = false;
 }
 
 MainWindow::~MainWindow()
 {
+	quit = true;
+	processingThread.join();
     delete ui;
 }
 
@@ -89,11 +93,28 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 	if (node->parent.size())
 	{
 		auto parent = EagleLib::NodeManager::getInstance().getNode(node->parent);
-		auto parentWidget = nodeGraphView->getWidget(parent->GetObjectId());
-		
+		auto parentWidget = nodeGraphView->getWidget(parent->GetObjectId());	
 	}
 	if (currentSelectedNodeWidget)
+	{
 		proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 250));
+		auto widget = currentSelectedNodeWidget->widget();
+		auto qnodeWidget = dynamic_cast<QNodeWidget*>(widget);
+		if (qnodeWidget)
+		{
+			auto parentNode = qnodeWidget->getNode();
+			if (parentNode)
+			{
+				parentNode->addChild(node);
+			}
+		}
+	}
+	else
+	{
+		parentList.push_back(node->GetObjectId());
+	}
+
+		
 	currentSelectedNodeWidget = proxyWidget;
 }
 
@@ -101,4 +122,29 @@ void
 MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
 {
 	currentSelectedNodeWidget = widget;
+}
+QList<EagleLib::Node*> MainWindow::getParentNodes()
+{
+	QList<EagleLib::Node*> nodes;
+	for (auto it = parentList.begin(); it != parentList.end(); ++it)
+	{
+		auto node = EagleLib::NodeManager::getInstance().getNode(*it);
+		if (node)
+			nodes.push_back(node);
+	}
+	return nodes;
+}
+void MainWindow::process()
+{
+	std::vector<cv::cuda::GpuMat> images;
+	while (!quit)
+	{
+		auto nodes = getParentNodes();
+		images.resize(nodes.size());
+		int count = 0;
+		for (auto it = nodes.begin(); it != nodes.end(); ++it, ++count)
+		{
+			images[count] = (*it)->process(images[count]);
+		}
+	}
 }

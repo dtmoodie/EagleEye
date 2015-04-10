@@ -62,7 +62,8 @@ void
 VideoLoader::loadFile()
 {
 #if _WIN32
-	std::string& fileName = getParameter<std::string>("Filename")->data;
+	//std::string fileName = getParameter<boost::filesystem::path>("Filename")->data.string();
+	std::string fileName = getParameter<boost::filesystem::path>("Filename")->data.string();
 	if (fileName.size())
 		videoReader = cv::cudacodec::createVideoReader(fileName);
 	if (videoReader)

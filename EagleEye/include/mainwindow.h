@@ -9,6 +9,9 @@
 #include <qgraphicsscene.h>
 #include <qgraphicsview.h>
 #include "NodeView.h"
+#include <qlist.h>
+#include <vector>
+#include <boost/thread.hpp>
 namespace Ui {
 class MainWindow;
 }
@@ -20,12 +23,14 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-
+	void process();
+	QList<EagleLib::Node*> getParentNodes();
 private slots:
     void on_pushButton_clicked();
     void onTimeout();
 	void onNodeAdd(EagleLib::Node* node);
 	void onSelectionChanged(QGraphicsProxyWidget* widget);
+	
 
 private:
     void onError(const std::string& error);
@@ -37,6 +42,9 @@ private:
 	NodeView*	nodeGraphView;
 	QGraphicsProxyWidget* currentSelectedNodeWidget;
 	ObjectId currentNodeId;
+	std::vector<ObjectId> parentList;
+	boost::thread processingThread;
+	bool quit;
 };
 
 #endif // MAINWINDOW_H

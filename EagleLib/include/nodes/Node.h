@@ -190,6 +190,7 @@ namespace EagleLib
 	public:
         typedef boost::shared_ptr< TypedParameter<T> > Ptr;
 		typedef T ValType;
+		
 		virtual void setSource(const std::string& name){}
 		TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
 			Parameter(name_, (ParamType)type_, toolTip_), data(data_), ownsData(ownsData_) {
@@ -470,7 +471,12 @@ namespace EagleLib
 		template<typename T> boost::shared_ptr< TypedParameter<T> >
 			getParameter(std::string name)
 		{
-			return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(getParameter(name));
+			auto param =  getParameter(name);
+			if (param == nullptr)
+				return boost::shared_ptr<TypedParameter<T>>();
+			CV_Assert(param->typeName == typeid(T).name());
+			
+			return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
 		}
 
 		template<typename T> boost::shared_ptr< TypedParameter<T> >

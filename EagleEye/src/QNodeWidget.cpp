@@ -28,6 +28,14 @@ QNodeWidget::~QNodeWidget()
 {
 
 }
+EagleLib::Node* QNodeWidget::getNode()
+{
+	if (nodeId.IsValid())
+	{
+		return EagleLib::NodeManager::getInstance().getNode(nodeId);
+	}
+	return nullptr;
+}
 IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter)
 {
 	if (parameter->typeName == typeid(double).name())
@@ -62,3 +70,4 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
 
 	return nullptr;
 }
+
