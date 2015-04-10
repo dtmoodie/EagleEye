@@ -38,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	nodeGraphView->setViewport(new QGLWidget());
 	nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
 	ui->gridLayout->addWidget(nodeGraphView, 1, 0);
-	currentSelectedNode = nullptr;
+	currentSelectedNodeWidget = nullptr;
 }
 
 MainWindow::~MainWindow()
@@ -69,7 +69,7 @@ MainWindow::onTimeout()
 void 
 MainWindow::onNodeAdd(EagleLib::Node* node)
 {	
-	if (currentNodeId.IsValid)
+	if (currentNodeId.IsValid())
 	{
 		auto parent = EagleLib::NodeManager::getInstance().getNode(currentNodeId);
 		parent->addChild(node);
@@ -77,7 +77,7 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 
 
 	// Add a new node widget to the graph
-	QNodeWidget* nodeWidget = new QNodeWidget(this, node);
+	QNodeWidget* nodeWidget = new QNodeWidget(0, node);
 	
 	auto proxyWidget = nodeGraph->addWidget(nodeWidget);
 	proxyWidget->setFlag(QGraphicsItem::ItemIsMovable);
@@ -92,8 +92,6 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 		auto parentWidget = nodeGraphView->getWidget(parent->GetObjectId());
 		
 	}
-
-
 	if (currentSelectedNodeWidget)
 		proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 250));
 	currentSelectedNodeWidget = proxyWidget;
