@@ -29,7 +29,8 @@ VideoLoader::Init(bool firstInit)
         updateParameter<std::string>("Resolution", "", Parameter::State);
     }else
     {
-        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
+
+        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/thor.mp4"), Parameter::Control, "Path to video file");
         auto d_reader = getParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader");
         if(d_reader != nullptr)
             d_videoReader = d_reader->data;
@@ -69,8 +70,13 @@ VideoLoader::loadFile()
     if(fileName == nullptr)
         return;
     std::cout << "Loading file: " << fileName->data.string() << std::endl;
-    if(fileName->data.string().size() == 0)
+
+    if(!boost::filesystem::exists(fileName->data))
+    {
+        std::cout << "File doesn't exist" << std::endl;
         return;
+    }
+
     try
     {
         d_videoReader = cv::cudacodec::createVideoReader(fileName->data.string());
