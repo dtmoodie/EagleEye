@@ -15,7 +15,7 @@ namespace EagleLib
 			~VideoLoader();
 			void Init(bool firstInit);
 			void loadFile();
-
+            virtual bool SkipEmpty() const;
 			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
             cv::Ptr<cv::cudacodec::VideoReader> d_videoReader;
             cv::Ptr<cv::VideoCapture>           h_videoReader;

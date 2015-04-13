@@ -66,29 +66,26 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img)
 void
 VideoLoader::loadFile()
 {
-	//std::string fileName = getParameter<boost::filesystem::path>("Filename")->data.string();
+
     auto fileName = getParameter<boost::filesystem::path>("Filename");
     if(fileName == nullptr)
         return;
-    std::cout << "Loading file: " << fileName->data.string() << std::endl;
+    log(Status, "Loading file: " + fileName->data.string());
 
     if(!boost::filesystem::exists(fileName->data))
     {
-        std::cout << "File doesn't exist" << std::endl;
+        log(Warning, "File doesn't exist");
         return;
     }
-
     try
     {
         d_videoReader = cv::cudacodec::createVideoReader(fileName->data.string());
     }catch(...)
     {
         // no luck with the GPU decoder, try CPU decoder
-        std::cout << "Failed to crate GPU decoder, falling back to CPU decoder" << std::endl;
+        log(Error, "Failed to crate GPU decoder, falling back to CPU decoder");
         h_videoReader.reset(new cv::VideoCapture);
-
         h_videoReader->open(fileName->data.string());
-
     }
 
     if (d_videoReader)
@@ -165,4 +162,9 @@ VideoLoader::loadFile()
     fileName->changed = false;
 
 }
+bool VideoLoader::SkipEmpty() const
+{
+    return false;
+}
+
 NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoLoader);

@@ -22,8 +22,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img)
         std::stringstream ss;
         ss << "Too many channels, can only handle 1 or 2 channel input. Input has ";
         ss << img.channels() << " channels.";
-        if(warningCallback)
-            warningCallback(ss.str());
+        log(Warning, ss.str());
         return img;
     }
     cv::cuda::GpuMat floatImg;

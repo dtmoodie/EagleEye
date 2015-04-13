@@ -53,8 +53,7 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img)
     cv::cuda::GpuMat grey;
     if(img.channels() != 1)
     {
-        if(warningCallback)
-            warningCallback("Img not greyscale, converting");
+        log(Warning, "Img not greyscale, converting");
         cv::cuda::cvtColor(img,grey,cv::COLOR_BGR2GRAY);
     }else
         grey = img;

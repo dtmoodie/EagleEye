@@ -57,7 +57,7 @@ Node::addChild(Node* child)
     int count = children.get<NodeName>().count(child->nodeName);
 
 	std::string prevTreeName = child->fullTreeName;
-	child->setParentName(fullTreeName);
+    child->setParent(fullTreeName, GetObjectId());
 	child->setTreeName(child->nodeName + "-" + boost::lexical_cast<std::string>(count));
 	
 	// Notify the node manager of the tree name
@@ -162,26 +162,18 @@ Node::removeChild(const std::string &name)
 cv::cuda::GpuMat
 Node::process(cv::cuda::GpuMat &img)
 {
-    if(img.empty())
+    if(img.empty() && SkipEmpty())
         return img;
     try
     {
         if(enabled)
             return doProcess(img);
-    }catch(cv::Exception &e)
+    }catch(cv::Exception &err)
     {
-        if(errorCallback)
-        {
-         std::string message = nodeName + std::string(e.what());
-            errorCallback(message);
-        }
-    }catch(std::exception &e)
+        log(Error, err.what());
+    }catch(std::exception &err)
     {
-        if(errorCallback)
-        {
-         std::string message = nodeName + std::string(e.what());
-            errorCallback(message);
-        }
+        log(Error, err.what());
     }
     return img;
 }
@@ -193,13 +185,9 @@ Node::process(cv::InputArray in, cv::OutputArray out)
 	{
 		return doProcess(in, out);
 	}
-	catch (cv::Exception &e)
+    catch (cv::Exception &err)
 	{
-		if (errorCallback)
-		{
-            std::string message = nodeName + std::string(e.what());
-			errorCallback(message);
-		}
+        log(Error, err.what());
 	}
 }
 
@@ -259,6 +247,14 @@ std::string
 Node::getTreeName() const
 {
     return treeName;
+}
+Node* Node::getParent()
+{
+    if(parentId.IsValid())
+        return NodeManager::getInstance().getNode(parentId);
+    if(parentName.size())
+        return NodeManager::getInstance().getNode(parentName);
+    return nullptr;
 }
 
 
@@ -364,7 +360,7 @@ void
 Node::setTreeName(const std::string& name)
 {
 	treeName = name;
-	Node* parentPtr = NodeManager::getInstance().getNode(parent);
+    Node* parentPtr = NodeManager::getInstance().getNode(parentName);
 	std::string fullTreeName_;
 	if (parentPtr)
 		fullTreeName_ = parentPtr->fullTreeName + "." + treeName;
@@ -384,9 +380,10 @@ Node::setFullTreeName(const std::string& name)
 }
 
 void
-Node::setParentName(const std::string& name)
+Node::setParent(const std::string& name, const ObjectId& parentId_)
 {
-	parent = name;
+    parentName = name;
+    parentId = parentId_;
 }
 void 
 Node::updateInputParameters()
@@ -399,4 +396,36 @@ Node::updateInputParameters()
 		}
 	}
 }
+bool Node::SkipEmpty() const
+{
+    return true;
+}
+void Node::log(Verbosity level, const std::string &msg)
+{
+    switch(level)
+    {
+    case Profiling:
+        if(profilingCallback)
+            return profilingCallback(msg, this);
+    case Status:
+        if(statusCallback)
+            return statusCallback(msg, this);
+        std::cout << "[ " << fullTreeName << " - STATUS ]" << msg << std::endl;
+    case Warning:
+        if(warningCallback)
+            return warningCallback(msg,this);
+        std::cout << "[ " << fullTreeName << " - WARNING ]" << msg << std::endl;
+    case Error:
+        if(errorCallback)
+            return errorCallback(msg,this);
+        std::cout << "[ " << fullTreeName << " - ERROR ]" << msg << std::endl;
+    case Critical:
+        if(errorCallback)
+            return errorCallback(msg,this);
+        std::cout << "[ " << fullTreeName << " - CRITICAL ]" << msg << std::endl;
+    }
+
+
+}
+
 REGISTERCLASS(Node)

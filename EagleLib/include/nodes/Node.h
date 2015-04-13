@@ -47,6 +47,7 @@
 #include <boost/multi_index/mem_fun.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/mpl/string.hpp>
+#include <boost/lexical_cast.hpp>
 #include <vector>
 #include <list>
 #include <map>
@@ -119,6 +120,7 @@ REGISTERCLASS(NodeName)
 namespace EagleLib
 {
     class NodeManager;
+    class Node;
 	enum NodeType
 	{
 		eVirtual		= 0,	/* This is a virtual node, it should only be inherited */
@@ -129,6 +131,14 @@ namespace EagleLib
 		eFunctor		= 16,   /* Calling doProcess doesn't do anything, instead this node presents a function to be used in another node */
 		eObj			= 32,	/* Calling doProcess doesn't do anything, instead this node presents a object that can be used in another node */
 		eOneShot		= 64	/* Calling doProcess does something, but should only be called once.  Maybe as a setup? */
+    };
+    enum Verbosity
+    {
+        Profiling = 0,
+        Status = 1,
+        Warning = 2,
+        Error = 3,
+        Critical = 4
     };
 
     class CV_EXPORTS Parameter
@@ -155,6 +165,7 @@ namespace EagleLib
         std::string typeName;
         ParamType	type;
         bool		changed;
+        boost::function<void(boost::shared_ptr<Parameter>)> updateCallback;
     protected:
         Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),type(type_), changed(false), toolTip(toolTip_){}
         virtual ~Parameter(){}
@@ -167,14 +178,14 @@ namespace EagleLib
 
 	// Default typed parameter
 	template<typename T>
-	class /*CV_EXPORTS*/ TypedParameter : public Parameter
+    class TypedParameter : public Parameter
 	{
 	public:
         typedef boost::shared_ptr< TypedParameter<T> > Ptr;
 		typedef T ValType;
 		
 		virtual void setSource(const std::string& name){}
-		TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
+        TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
 			Parameter(name_, (ParamType)type_, toolTip_), data(data_), ownsData(ownsData_) {
             typeName = typeid(typename std::remove_pointer<typename std::remove_reference<T>::type>::type).name();
 		}
@@ -254,6 +265,7 @@ namespace EagleLib
 
         return nullptr;
     }
+
 #ifdef RCC_ENABLED
     class CV_EXPORTS Node: public TInterface<IID_NodeObject, IObject>
 #else
@@ -281,8 +293,10 @@ namespace EagleLib
         // Finds name in tree hierarchy, updates tree name and returns it
 		std::string						getName() const;
 		std::string						getTreeName() const;
+        Node*                           getParent();
 		// Searches nearby nodes for possible valid inputs for each input parameter
 		virtual void					getInputs();
+        virtual void                    log(Verbosity level, const std::string& msg);
         struct NodeInfo
         {
             int index;
@@ -341,7 +355,7 @@ namespace EagleLib
 		// ****************************************************************************************************************
 		virtual void setTreeName(const std::string& name);
 		virtual void setFullTreeName(const std::string& name);
-		virtual void setParentName(const std::string& name);
+        virtual void setParent(const std::string& name, const ObjectId& parentId);
 		
 
 
@@ -571,6 +585,8 @@ namespace EagleLib
         virtual void Init(const cv::FileNode& configNode);
 
         virtual void Serialize(ISimpleSerializer *pSerializer);
+        virtual bool SkipEmpty() const;
+
 
 
         // ****************************************************************************************************************
@@ -580,11 +596,12 @@ namespace EagleLib
         // ****************************************************************************************************************
 
         // Function for displaying critical error messages, IE popup display and halting program execution
-        boost::function<void(const std::string&)>									errorCallback;
+        boost::function<void(const std::string&, Node*)>                    errorCallback;
 		// Function for displaying warning messages, IE popup display
-        boost::function<void(const std::string&)>									warningCallback;
+        boost::function<void(const std::string&, Node*)>                    warningCallback;
 		// Function for displaying status messages, IE writing to console
-        boost::function<void(std::string)>									statusCallback;
+        boost::function<void(const std::string&, Node*)>                    statusCallback;
+        boost::function<void(const std::string&, Node*)>                    profilingCallback;
 		// Used for logging logging information
 		boost::function<void(std::string)>									logCallback;
 		// Function for setting input parameters
@@ -598,7 +615,8 @@ namespace EagleLib
         nodeContainer                                                       children;
 
 		// Parent
-        std::string                                                         parent;
+        std::string                                                         parentName;
+        ObjectId                                                            parentId;
 		// Constant name that describes the node ie: Sobel
         std::string															nodeName;
 

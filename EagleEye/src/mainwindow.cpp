@@ -16,6 +16,7 @@
 #include "QGLWidget"
 #include <QGraphicsSceneMouseEvent>
 #include <Manager.h>
+#include <statebox.h>
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -30,17 +31,17 @@ MainWindow::MainWindow(QWidget *parent) :
 		this, SLOT(onNodeAdd(EagleLib::Node*)));
 	
 	nodeGraph = new QGraphicsScene(this);
-	connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
-	nodeGraph->addText("Test text");
+    connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
 	nodeGraphView = new NodeView(nodeGraph);
 	connect(nodeGraphView, SIGNAL(selectionChanged(QGraphicsProxyWidget*)), this, SLOT(onSelectionChanged(QGraphicsProxyWidget*)));
 	nodeGraphView->setInteractive(true);
-	nodeGraphView->setViewport(new QGLWidget());
+    nodeGraphView->setViewport(new QGLWidget());
 	nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
 	ui->gridLayout->addWidget(nodeGraphView, 1, 0);
 	currentSelectedNodeWidget = nullptr;
 	processingThread = boost::thread(boost::bind(&MainWindow::process, this));
 	quit = false;
+    //resizer = new WidgetResizer(nodeGraph);
 }
 
 MainWindow::~MainWindow()
@@ -79,48 +80,41 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 		parent->addChild(node);
 	}
 
-
 	// Add a new node widget to the graph
 	QNodeWidget* nodeWidget = new QNodeWidget(0, node);
-	
-	auto proxyWidget = nodeGraph->addWidget(nodeWidget);
-	proxyWidget->setFlag(QGraphicsItem::ItemIsMovable);
-	proxyWidget->setFlag(QGraphicsItem::ItemIsSelectable);
-	proxyWidget->setFlag(QGraphicsItem::ItemIsFocusable);
+    auto proxyWidget = nodeGraph->addWidget(nodeWidget);
 
-	nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
+    nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
+    nodeGraphView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 	
-	if (node->parent.size())
+    if (node->parentName.size())
 	{
-		auto parent = EagleLib::NodeManager::getInstance().getNode(node->parent);
+        auto parent = EagleLib::NodeManager::getInstance().getNode(node->parentName);
 		auto parentWidget = nodeGraphView->getWidget(parent->GetObjectId());	
 	}
 	if (currentSelectedNodeWidget)
 	{
-		proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 250));
-		auto widget = currentSelectedNodeWidget->widget();
-		auto qnodeWidget = dynamic_cast<QNodeWidget*>(widget);
-		if (qnodeWidget)
-		{
-			auto parentNode = qnodeWidget->getNode();
-			if (parentNode)
-			{
-				parentNode->addChild(node);
-			}
-		}
+        proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 250));
 	}
 	else
 	{
 		parentList.push_back(node->GetObjectId());
 	}
 	currentSelectedNodeWidget = proxyWidget;
+    currentNodeId = node->GetObjectId();
 }
 
 void
 MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
 {
 	currentSelectedNodeWidget = widget;
+    auto ptr = dynamic_cast<QNodeWidget*>(widget->widget());
+    if(ptr)
+    {
+        currentNodeId = ptr->getNode()->GetObjectId();
+    }
 }
+
 QList<EagleLib::Node*> MainWindow::getParentNodes()
 {
 	QList<EagleLib::Node*> nodes;
@@ -132,10 +126,11 @@ QList<EagleLib::Node*> MainWindow::getParentNodes()
 	}
 	return nodes;
 }
+
 void MainWindow::process()
 {
 	std::vector<cv::cuda::GpuMat> images;
-	while (!quit)
+    while (quit == false)
 	{
 		auto nodes = getParentNodes();
 		images.resize(nodes.size());
@@ -149,4 +144,86 @@ void MainWindow::process()
         EagleLib::NodeManager::getInstance().CheckRecompile();
 	}
     std::cout << "Processing thread ending" << std::endl;
+}
+WidgetResizer::WidgetResizer(QGraphicsScene* scene_):
+    scene(scene_),
+    currentWidget(nullptr)
+{
+    if(scene_)
+    {
+        corners.push_back(new CornerGrabber());
+        corners.push_back(new CornerGrabber());
+        corners.push_back(new CornerGrabber());
+        corners.push_back(new CornerGrabber());
+        corners[0]->hide();
+        corners[1]->hide();
+        corners[2]->hide();
+        corners[3]->hide();
+        scene->addItem(corners[0]);
+        scene->addItem(corners[1]);
+        scene->addItem(corners[2]);
+        scene->addItem(corners[3]);
+        scene->addItem(this);
+    }
+}
+
+bool WidgetResizer::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
+{
+    if(watched != currentWidget) return false;
+    std::cout << event->type() << std::endl;
+}
+void WidgetResizer::setWidget(QGraphicsProxyWidget* widget)
+{
+    auto pos = widget->pos();
+    auto size = widget->size();
+    corners[0]->setPos(pos);
+    corners[1]->setPos(pos.x() + size.width(), pos.y());
+    corners[2]->setPos(pos.x() + size.width(), pos.y() + size.height());
+    corners[3]->setPos(pos.x(), pos.y() + size.height());
+    corners[0]->show();
+    corners[1]->show();
+    corners[2]->show();
+    corners[3]->show();
+    widget->installSceneEventFilter(this);
+    currentWidget = widget;
+}
+
+
+void WidgetResizer::mouseMoveEvent ( QGraphicsSceneMouseEvent * event )
+{
+    event->setAccepted(false);
+}
+
+void WidgetResizer::mouseMoveEvent(QGraphicsSceneDragDropEvent *event)
+{
+    event->setAccepted(false);
+}
+
+void WidgetResizer::mousePressEvent (QGraphicsSceneMouseEvent * event )
+{
+    event->setAccepted(false);
+}
+
+void WidgetResizer::mousePressEvent(QGraphicsSceneDragDropEvent *event)
+{
+ event->setAccepted(false);
+}
+
+void WidgetResizer::mouseReleaseEvent (QGraphicsSceneMouseEvent * event )
+{
+    event->setAccepted(false);
+}
+QRectF WidgetResizer::boundingRect() const
+{
+    if(currentWidget)
+    {
+        auto pos = currentWidget->pos();
+        auto size = currentWidget->size();
+        return QRectF(pos,size);
+    }
+    return QRectF(0,0,0,0);
+}
+void WidgetResizer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+
 }
