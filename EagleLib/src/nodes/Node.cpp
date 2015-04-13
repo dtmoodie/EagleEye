@@ -162,6 +162,8 @@ Node::removeChild(const std::string &name)
 cv::cuda::GpuMat
 Node::process(cv::cuda::GpuMat &img)
 {
+    if(img.empty())
+        return img;
     try
     {
         if(enabled)
@@ -186,6 +188,7 @@ Node::process(cv::cuda::GpuMat &img)
 void					
 Node::process(cv::InputArray in, cv::OutputArray out)
 {
+
 	try
 	{
 		return doProcess(in, out);

@@ -474,7 +474,8 @@ namespace EagleLib
 			auto param =  getParameter(name);
 			if (param == nullptr)
 				return boost::shared_ptr<TypedParameter<T>>();
-			CV_Assert(param->typeName == typeid(T).name());
+            std::string T_name = typeid(T).name();
+            CV_Assert(param->typeName == T_name);
 			
 			return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
 		}

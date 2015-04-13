@@ -147,7 +147,7 @@ public:
 	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
 	{
 		parameter = parameter_;
-		box = new QSpinBox(parent);
+        box = new QSpinBox(parent);
 		box->setMaximum(std::numeric_limits<T>::max());
 		box->setMinimum(std::numeric_limits<T>::min());
 		box->setValue(*EagleLib::getParameter<T>(parameter_));
