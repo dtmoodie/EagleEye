@@ -23,6 +23,8 @@ public:
 	QNodeWidget(QWidget* parent = nullptr, EagleLib::Node* node = nullptr);
 	~QNodeWidget();
 	EagleLib::Node* getNode();
+private slots:
+    void on_enableClicked(bool state);
 private:
 
 	Ui::QNodeWidget* ui;
@@ -35,7 +37,7 @@ class IQNodeProxy
 {
 public:
 	IQNodeProxy(){}
-	virtual ~IQNodeProxy(){};
+    virtual ~IQNodeProxy(){}
 	virtual void updateUi() = 0;
 	virtual void onUiUpdated() = 0;
 	virtual QWidget* getWidget() = 0;
@@ -50,55 +52,17 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 {
 	Q_OBJECT
 public:
-	IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent = nullptr) :
-		QWidget(parent)
-	{
-		layout = new QGridLayout(this);
-		layout->setVerticalSpacing(0);
-		nameElement = new QLabel(QString::fromStdString(parameter_->name), parent);
-		proxy = dispatchParameter(this, parameter_);
-		if (proxy)
-			layout->addWidget(proxy->getWidget(), 0, 1);
-		layout->addWidget(nameElement, 0, 0);
-		nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
-	}
-	virtual ~IQNodeInterop()
-	{
-		delete proxy;
-	}
-	virtual void updateUi()
-	{
-		if (proxy)
-			proxy->updateUi();
-	}
+    IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent = nullptr);
+    virtual ~IQNodeInterop();
+    virtual void updateUi();
 
 private slots:
-	void on_valueChanged(double value)
-	{
-		if (proxy)
-			proxy->onUiUpdated();
-	}
-	void on_valueChanged(int value)
-	{
-		if (proxy)
-			proxy->onUiUpdated();
-	}
-	void on_valueChanged(bool value)
-	{
-		if (proxy)
-			proxy->onUiUpdated();
-	}
-	void on_valueChanged(QString value)
-	{
-		if (proxy)
-			proxy->onUiUpdated();
-	}
-	void on_valueChanged()
-	{
-		if (proxy)
-			proxy->onUiUpdated();
-	}
-
+    void on_valueChanged(double value);
+    void on_valueChanged(int value);
+    void on_valueChanged(bool value);
+    void on_valueChanged(QString value);
+    void on_valueChanged();
+    void onParameterUpdate(boost::shared_ptr<EagleLib::Parameter> parameter);
 protected:
 	QLabel* nameElement;	
 	IQNodeProxy* proxy;

@@ -52,6 +52,7 @@ void IQNodeInterop::on_valueChanged(QString value)
     if (proxy)
         proxy->onUiUpdated();
 }
+
 void IQNodeInterop::on_valueChanged()
 {
     if (proxy)
@@ -87,6 +88,7 @@ QNodeWidget::~QNodeWidget()
 {
 
 }
+
 void QNodeWidget::on_enableClicked(bool state)
 {
     EagleLib::NodeManager::getInstance().getNode(nodeId)->enabled = state;
