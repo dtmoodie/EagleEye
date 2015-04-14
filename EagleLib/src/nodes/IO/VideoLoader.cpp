@@ -74,7 +74,7 @@ VideoLoader::loadFile()
 
     if(!boost::filesystem::exists(fileName->data))
     {
-        log(Warning, "File doesn't exist");
+        log(Warning, fileName->data.string() + " doesn't exist");
         return;
     }
     try

@@ -297,15 +297,15 @@ Node::Serialize(ISimpleSerializer *pSerializer)
 	SERIALIZE(fullTreeName);
 }
 std::vector<std::string>
-Node::findType(std::string typeName)
+Node::findType(Loki::TypeInfo &typeInfo)
 {
 	std::vector<Node*> nodes;
 	NodeManager::getInstance().getAccessibleNodes(fullTreeName, nodes);
-	return findType(typeName, nodes);
+    return findType(typeInfo, nodes);
 }
 
 std::vector<std::string> 
-Node::findType(std::string typeName, std::vector<Node*>& nodes)
+Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*>& nodes)
 {
 	std::vector<std::string> output;
 
@@ -315,7 +315,7 @@ Node::findType(std::string typeName, std::vector<Node*>& nodes)
 			continue;
 		for (int j = 0; j < nodes[i]->parameters.size(); ++j)
 		{
-			if (nodes[i]->parameters[j]->typeName == typeName && nodes[i]->parameters[j]->type & Parameter::Output)
+            if (nodes[i]->parameters[j]->typeInfo == typeInfo && nodes[i]->parameters[j]->type & Parameter::Output)
 				output.push_back(nodes[i]->parameters[j]->treeName);
 		}
 	}
@@ -328,7 +328,7 @@ Node::findCompatibleInputs()
 	for (int i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->type & Parameter::Input)
-			output.push_back(findType(parameters[i]->typeName));
+            output.push_back(findType(parameters[i]->typeInfo));
 	}
 	return output;
 }

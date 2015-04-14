@@ -78,9 +78,9 @@ Colormap::buildLUT()
     {
     case 0:
     default:
-        red = ColorScale(50, 255/25, true);
-        green = ColorScale(50 / 3, 255/25, true);
-        blue = ColorScale(0, 255/25, true);
+        red     = ColorScale(50, 255/25, true);
+        green   = ColorScale(50 / 3, 255/25, true);
+        blue    = ColorScale(0, 255/25, true);
         break;
     }
     LUT.resize(resolution);
@@ -90,7 +90,7 @@ Colormap::buildLUT()
     double location = 0.0;
     for(int i = 0; i < resolution; ++i, location += step)
     {
-        LUT[i] = cv::Vec3b(red(location), green(location), blue(location));
+        LUT[i] = cv::Vec3b(blue(location), green(location), red(location));
     }
 }
 

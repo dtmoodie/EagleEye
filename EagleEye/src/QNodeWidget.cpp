@@ -13,7 +13,10 @@ IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, 
     nameElement = new QLabel(QString::fromStdString(parameter_->name), parent);
     proxy = dispatchParameter(this, parameter_);
     if (proxy)
+    {
         layout->addWidget(proxy->getWidget(), 0, 1);
+        layout->addWidget(proxy->getTypename(), 0, 2);
+    }
     layout->addWidget(nameElement, 0, 0);
     nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
     parameter_->updateCallback = boost::bind(&IQNodeInterop::onParameterUpdate,this, _1);
@@ -85,14 +88,10 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node* node) :
 	}
 }
 QNodeWidget::~QNodeWidget()
-{
-
-}
+{}
 
 void QNodeWidget::on_enableClicked(bool state)
-{
-    EagleLib::NodeManager::getInstance().getNode(nodeId)->enabled = state;
-}
+{    EagleLib::NodeManager::getInstance().getNode(nodeId)->enabled = state;     }
 
 EagleLib::Node* QNodeWidget::getNode()
 {
@@ -106,24 +105,60 @@ EagleLib::Node* QNodeWidget::getNode()
 
 IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter)
 {
-	if (parameter->typeName == typeid(double).name())
-		return new QNodeProxy<double>(parent, parameter);
+    if(parameter->type & EagleLib::Parameter::Control)
+    {
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(double)))
+            return new QNodeProxy<double, false>(parent, parameter);
 
-	if (parameter->typeName == typeid(int).name())
-		return new QNodeProxy<int>(parent, parameter);
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(int)))
+            return new QNodeProxy<int, false>(parent, parameter);
 
-	if (parameter->typeName == typeid(unsigned int).name())
-		return new QNodeProxy<unsigned int>(parent, parameter);
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(unsigned int)))
+            return new QNodeProxy<unsigned int, false>(parent, parameter);
 
-	if (parameter->typeName == typeid(unsigned char).name())
-		return new QNodeProxy<unsigned char>(parent, parameter);
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(unsigned char)))
+            return new QNodeProxy<unsigned char, false>(parent, parameter);
 
-	if (parameter->typeName == typeid(char).name())
-		return new QNodeProxy<char>(parent, parameter);
-	if (parameter->typeName == typeid(std::string).name())
-		return new QNodeProxy<std::string>(parent, parameter);
-	if (parameter->typeName == typeid(boost::filesystem::path).name())
-		return new QNodeProxy<boost::filesystem::path>(parent, parameter);
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(char)))
+            return new QNodeProxy<char, false>(parent, parameter);
+
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(std::string)))
+            return new QNodeProxy<std::string, false>(parent, parameter);
+
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(boost::filesystem::path)))
+            return new QNodeProxy<boost::filesystem::path, false>(parent, parameter);
+
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(bool)))
+            return new QNodeProxy<bool, false>(parent, parameter);
+    }
+
+    if(parameter->type & EagleLib::Parameter::Output || parameter->type & EagleLib::Parameter::State)
+    {
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(double)))
+            return new QNodeProxy<double, true>(parent, parameter);
+
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(int)))
+            return new QNodeProxy<int, true>(parent, parameter);
+
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(unsigned int)))
+            return new QNodeProxy<unsigned int, true>(parent, parameter);
+
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(unsigned char)))
+            return new QNodeProxy<unsigned char, true>(parent, parameter);
+
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(char)))
+            return new QNodeProxy<char, true>(parent, parameter);
+
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(std::string)))
+            return new QNodeProxy<std::string, true>(parent, parameter);
+
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(boost::filesystem::path)))
+            return new QNodeProxy<boost::filesystem::path, true>(parent, parameter);
+
+        if (parameter->typeInfo == Loki::TypeInfo(typeid(bool)))
+            return new QNodeProxy<bool, true>(parent, parameter);
+    }
+
 
 	/*if (parameter->typeName == typeid(cv::Scalar).name())
 	return new QNodeProxy<cv::Scalar>(parent, parameter);
@@ -133,8 +168,7 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
 	if (parameter->typeName == typeid(cv::Mat).name())
 	return new QNodeProxy<cv::Mat>(parent, parameter);*/
 
-	if (parameter->typeName == typeid(bool).name())
-		return new QNodeProxy<bool>(parent, parameter);
+
 
 	return nullptr;
 }

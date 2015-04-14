@@ -41,6 +41,9 @@ public:
 	virtual void updateUi() = 0;
 	virtual void onUiUpdated() = 0;
 	virtual QWidget* getWidget() = 0;
+    virtual QWidget* getTypename()
+    {        return new QLineEdit(QString::fromStdString(parameter->typeInfo.name()));    }
+
 	boost::shared_ptr<EagleLib::Parameter> parameter;
 };
 class IQNodeInterop;
@@ -70,16 +73,16 @@ protected:
 };
 
 // Proxy class for handling
-template<typename T, typename Enable = void> class QNodeProxy : public IQNodeProxy
+template<typename T, bool display, typename Enable = void> class QNodeProxy : public IQNodeProxy
 {
 
 };
 
 
 
-// Proxy class for handling
+// **************************************************************************************************************
 template<typename T>
-class QNodeProxy<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public IQNodeProxy
+class QNodeProxy<T, false, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public IQNodeProxy
 {
 public:
 	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
@@ -91,7 +94,6 @@ public:
 		box->setValue(*EagleLib::getParameter<T>(parameter_));
 		parent->connect(box, SIGNAL(valueChanged(double)), parent, SLOT(on_valueChanged(double)));
 	}
-
 	virtual void updateUi()
 	{
 		box->setValue(*EagleLib::getParameter<T>(parameter));
@@ -104,8 +106,31 @@ public:
 private:
 	QDoubleSpinBox* box;
 };
+// **************************************************************************************************************
 template<typename T>
-class QNodeProxy<T, typename std::enable_if<std::is_integral<T>::value, void>::type> : public IQNodeProxy
+class QNodeProxy<T, true, typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value, void>::type> : public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        parameter = parameter_;
+        box = new QLineEdit(parent);
+        box->setText(QString::number(*EagleLib::getParameter<T>(parameter_)));
+    }
+    virtual void updateUi()
+    {
+        box->setText(QString::number(*EagleLib::getParameter<T>(parameter)));
+    }
+    virtual void onUiUpdated()
+    {
+    }
+    virtual QWidget* getWidget() { return box; }
+private:
+    QLineEdit* box;
+};
+// **************************************************************************************************************
+template<typename T>
+class QNodeProxy<T, false, typename std::enable_if<std::is_integral<T>::value, void>::type> : public IQNodeProxy
 {
 public:
 	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
@@ -129,8 +154,9 @@ public:
 private:
 	QSpinBox* box;
 };
+// **************************************************************************************************************
 template<>
-class QNodeProxy<bool, void>: public IQNodeProxy
+class QNodeProxy<bool, false, void>: public IQNodeProxy
 {
 public:
 	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)	
@@ -147,9 +173,27 @@ public:
 private:
 	QCheckBox* box;
 };
-
 template<>
-class QNodeProxy<std::string, void> : public IQNodeProxy
+class QNodeProxy<bool, true, void>: public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        box = new QCheckBox(parent);
+        box->setCheckable(false);
+        parameter=parameter_;
+    }
+    virtual void updateUi()
+    {	box->setChecked(*EagleLib::getParameter<bool>(parameter));	}
+    virtual void onUiUpdated()
+    {	}
+    virtual QWidget* getWidget() { return box; }
+private:
+    QCheckBox* box;
+};
+// **************************************************************************************************************
+template<>
+class QNodeProxy<std::string, false, void> : public IQNodeProxy
 {
 public:
 	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
@@ -171,9 +215,30 @@ public:
 private:
 	QLineEdit* box;
 };
-
 template<>
-class QNodeProxy<boost::filesystem::path, void> : public IQNodeProxy
+class QNodeProxy<std::string, true, void> : public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        box = new QLineEdit(parent);
+        box->setText(QString::fromStdString(*EagleLib::getParameter<std::string>(parameter_)));
+        parameter = parameter_;
+    }
+    virtual void updateUi()
+    {
+        box->setText(QString::fromStdString(*EagleLib::getParameter<std::string>(parameter)));
+    }
+    virtual void onUiUpdated()
+    {
+    }
+    virtual QWidget* getWidget() { return box; }
+private:
+    QLineEdit* box;
+};
+// **************************************************************************************************************
+template<>
+class QNodeProxy<boost::filesystem::path, false, void> : public IQNodeProxy
 {
 public:
 	QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
@@ -205,6 +270,27 @@ public:
 	virtual QWidget* getWidget() { return button; }
 private:
 	QPushButton* button;
-	QWidget* parent;
-	
+    QWidget* parent;
+};
+
+template<>
+class QNodeProxy<boost::filesystem::path, true, void> : public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        box = new QLineEdit(parent);
+        box->setText(QString::fromStdString(EagleLib::getParameter<boost::filesystem::path>(parameter_)->string()));
+        parameter = parameter_;
+    }
+    virtual void updateUi()
+    {
+        box->setText(QString::fromStdString(EagleLib::getParameter<boost::filesystem::path>(parameter)->string()));
+    }
+    virtual void onUiUpdated()
+    {
+    }
+    virtual QWidget* getWidget() { return box; }
+private:
+    QLineEdit* box;
 };

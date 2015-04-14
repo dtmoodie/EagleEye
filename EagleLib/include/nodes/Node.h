@@ -53,6 +53,7 @@
 #include <map>
 #include <type_traits>
 #include <boost/filesystem.hpp>
+#include "../LokiTypeInfo.h"
 
 using namespace boost::multi_index;
 
@@ -162,7 +163,7 @@ namespace EagleLib
         std::string name;
         std::string toolTip;
         std::string treeName;
-        std::string typeName;
+        Loki::TypeInfo typeInfo;
         ParamType	type;
         bool		changed;
         boost::function<void(boost::shared_ptr<Parameter>)> updateCallback;
@@ -187,7 +188,7 @@ namespace EagleLib
 		virtual void setSource(const std::string& name){}
         TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
 			Parameter(name_, (ParamType)type_, toolTip_), data(data_), ownsData(ownsData_) {
-            typeName = typeid(typename std::remove_pointer<typename std::remove_reference<T>::type>::type).name();
+            typeInfo = Loki::TypeInfo(typeid(typename std::remove_pointer<typename std::remove_reference<T>::type>::type));
 		}
 		~TypedParameter(){ if (ownsData)cleanup<T>(data); }
 
@@ -224,7 +225,8 @@ namespace EagleLib
 		InputParameter(const std::string& name_, const std::string& toolTip_ = "") :
             TypedParameter<T*>(name_, nullptr, Parameter::Input, toolTip_, false)
 		{
-			baseTypeName = typeid(T).name();
+            //baseTypeName = typeid(T).name();
+            //baseTypeName = type_info::type();
 		}
 		// TODO: TEST THIS SHIT
 		virtual void setSource(const std::string& name = std::string())
@@ -386,8 +388,8 @@ namespace EagleLib
         // Find suitable input parameters
 		virtual std::vector<std::string> listInputs();
 		virtual std::vector<std::string>	 listParameters();
-		virtual std::vector<std::string> findType(std::string typeName);
-		virtual std::vector<std::string> findType(std::string typeName, std::vector<Node*>& nodes);
+        virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo);
+        virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo, std::vector<Node*>& nodes);
 		virtual std::vector<std::vector<std::string>> findCompatibleInputs();
 		virtual void setInputParameter(std::string sourceName, std::string inputName);
 		virtual void setInputParameter(std::string sourceName, int inputIdx);
@@ -488,8 +490,8 @@ namespace EagleLib
 			auto param =  getParameter(name);
 			if (param == nullptr)
 				return boost::shared_ptr<TypedParameter<T>>();
-            std::string T_name = typeid(T).name();
-            CV_Assert(param->typeName == T_name);
+
+
 			
 			return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
 		}
