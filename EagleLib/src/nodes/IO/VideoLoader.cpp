@@ -21,17 +21,19 @@ VideoLoader::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dan/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
-        parameters[0]->changed = true;
+        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
+        //parameters[0]->changed = true;
         //updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path(), Parameter::Control, "Path to video file");
         updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader, Parameter::Output);
         updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader, Parameter::Output);
         updateParameter<std::string>("Codec", "");
         updateParameter<std::string>("Video Chroma Format", "", Parameter::State);
         updateParameter<std::string>("Resolution", "", Parameter::State);
+        updateParameter<boost::function<void(void)>>("Restart Video",boost::bind(&VideoLoader::restartVideo,this), Parameter::Control);
     }else
     {
-        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dan/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
+        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
+
         auto d_reader = getParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader");
         if(d_reader != nullptr)
             d_videoReader = d_reader->data;
@@ -40,9 +42,6 @@ VideoLoader::Init(bool firstInit)
             h_videoReader = h_reader->data;
     }
 }
-
-
-
 cv::cuda::GpuMat 
 VideoLoader::doProcess(cv::cuda::GpuMat& img)
 {
@@ -55,7 +54,11 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img)
     {
         cv::Mat h_img;
         if(!h_videoReader->read(h_img))
+        {
+            log(Status, "End of video reached");
             return img;
+        }
+
        if(h_img.empty())
            return cv::cuda::GpuMat();
        img.upload(h_img);
@@ -165,6 +168,11 @@ VideoLoader::loadFile()
 bool VideoLoader::SkipEmpty() const
 {
     return false;
+}
+void
+VideoLoader::restartVideo()
+{
+
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoLoader);

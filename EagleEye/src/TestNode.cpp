@@ -39,7 +39,80 @@ namespace EagleLib
             updateParameter<double*>("double*",0);
 
             updateParameter<std::string>("std::string","test string");
-            updateParameter<std::string*>("std::string",nullptr);
+            updateParameter<std::string*>("std::string*",nullptr);
+
+
+            updateParameter<boost::function<void(void)>>("Function", boost::bind(&TestNode::testFunction,this));
+
+            updateParameter<int>("int state",0, Parameter::State);
+            updateParameter<short>("short state",0, Parameter::State);
+            updateParameter<char>("char state",0, Parameter::State);
+            updateParameter<unsigned int>("unsigned int state",0, Parameter::State);
+            updateParameter<unsigned short>("unsigned short state",0, Parameter::State);
+            updateParameter<unsigned char>("unsigned char state",0, Parameter::State);
+
+            updateParameter<int*>("int* state",0, Parameter::State);
+            updateParameter<short*>("short* state",0, Parameter::State);
+            updateParameter<char*>("char* state",0, Parameter::State);
+            updateParameter<unsigned int*>("unsigned int* state",0, Parameter::State);
+            updateParameter<unsigned short*>("unsigned short* state",0, Parameter::State);
+            updateParameter<unsigned char*>("unsigned char* state",0, Parameter::State);
+
+            updateParameter<float>("float state",0, Parameter::State);
+            updateParameter<double>("double state",0, Parameter::State);
+            updateParameter<float*>("float* state",0, Parameter::State);
+            updateParameter<double*>("double* state",0, Parameter::State);
+
+            updateParameter<std::string>("std::string state","test string", Parameter::State);
+            updateParameter<std::string*>("std::string* state",nullptr, Parameter::State);
+
+            updateParameter<cv::Mat>("cv::Mat state", cv::Mat(), Parameter::State);
+
+            updateParameter<int>("int output",0, Parameter::Output);
+            updateParameter<short>("short output",0, Parameter::Output);
+            updateParameter<char>("char output",0, Parameter::Output);
+            updateParameter<unsigned int>("unsigned int output",0, Parameter::Output);
+            updateParameter<unsigned short>("unsigned short output",0, Parameter::Output);
+            updateParameter<unsigned char>("unsigned char output",0, Parameter::Output);
+
+            updateParameter<int*>("int* output",0, Parameter::Output);
+            updateParameter<short*>("short* output",0, Parameter::Output);
+            updateParameter<char*>("char* output",0, Parameter::Output);
+            updateParameter<unsigned int*>("unsigned int* output",0, Parameter::Output);
+            updateParameter<unsigned short*>("unsigned short* output",0, Parameter::Output);
+            updateParameter<unsigned char*>("unsigned char* output",0, Parameter::Output);
+
+            updateParameter<float>("float output",0, Parameter::Output);
+            updateParameter<double>("double output",0, Parameter::Output);
+            updateParameter<float*>("float* output",0, Parameter::Output);
+            updateParameter<double*>("double* output",0, Parameter::Output);
+
+            updateParameter<std::string>("std::string output","test string", Parameter::Output);
+            updateParameter<std::string*>("std::string* output",nullptr, Parameter::Output);
+
+            updateParameter<cv::Mat>("cv::Mat output", cv::Mat(), Parameter::Output);
+
+            updateParameter<int>("int input",0, Parameter::Input);
+            updateParameter<short>("short input",0, Parameter::Input);
+            updateParameter<char>("char input",0, Parameter::Input);
+            updateParameter<unsigned int>("unsigned int input",0, Parameter::Input);
+            updateParameter<unsigned short>("unsigned short input",0, Parameter::Input);
+            updateParameter<unsigned char>("unsigned char input",0, Parameter::Input);
+
+            updateParameter<int*>("int* input",0, Parameter::Input);
+            updateParameter<short*>("short* input",0, Parameter::Input);
+            updateParameter<char*>("char* input",0, Parameter::Input);
+            updateParameter<unsigned int*>("unsigned int* input",0, Parameter::Input);
+            updateParameter<unsigned short*>("unsigned short* input",0, Parameter::Input);
+            updateParameter<unsigned char*>("unsigned char* input",0, Parameter::Input);
+
+            updateParameter<float>("float input",0, Parameter::Input);
+            updateParameter<double>("double input",0, Parameter::Input);
+            updateParameter<float*>("float* input",0, Parameter::Input);
+            updateParameter<double*>("double* input",0, Parameter::Input);
+
+            updateParameter<std::string>("std::string input","test string", Parameter::Input);
+            updateParameter<std::string*>("std::string* input",nullptr, Parameter::Input);
         }
 
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)
@@ -48,6 +121,11 @@ namespace EagleLib
             //cv::imshow("Test", cv::Mat(img));
             return img;
         }
+        void testFunction()
+        {
+            log(Status, "Test function called");
+        }
+        //boost::function<void(void)> function;
 
     };
 

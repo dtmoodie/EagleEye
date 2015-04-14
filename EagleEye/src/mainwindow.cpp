@@ -100,18 +100,26 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 	{
 		parentList.push_back(node->GetObjectId());
 	}
-	currentSelectedNodeWidget = proxyWidget;
-    currentNodeId = node->GetObjectId();
+    if(!currentSelectedNodeWidget)
+    {
+        nodeWidget->setSelected(true);
+        currentSelectedNodeWidget = proxyWidget;
+        currentNodeId = node->GetObjectId();
+    }
+
 }
 
 void
 MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
 {
-	currentSelectedNodeWidget = widget;
-    auto ptr = dynamic_cast<QNodeWidget*>(widget->widget());
-    if(ptr)
+    if(currentSelectedNodeWidget)
+        if(auto oldWidget = dynamic_cast<QNodeWidget*>(currentSelectedNodeWidget->widget()))
+            oldWidget->setSelected(false);
+    currentSelectedNodeWidget = widget;
+    if(auto ptr = dynamic_cast<QNodeWidget*>(widget->widget()))
     {
         currentNodeId = ptr->getNode()->GetObjectId();
+        ptr->setSelected(true);
     }
 }
 

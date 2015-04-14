@@ -295,6 +295,11 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(treeName);
     SERIALIZE(nodeName);
 	SERIALIZE(fullTreeName);
+    SERIALIZE(errorCallback);
+    SERIALIZE(warningCallback);
+    SERIALIZE(statusCallback);
+    SERIALIZE(profilingCallback);
+
 }
 std::vector<std::string>
 Node::findType(Loki::TypeInfo &typeInfo)
@@ -332,8 +337,19 @@ Node::findCompatibleInputs()
 	}
 	return output;
 }
+std::vector<std::string> Node::findCompatibleInputs(const std::string& paramName)
+{
+    std::vector<std::string> output;
+    {
+        auto param = getParameter(paramName);
+        if(param)
+            output = findType(param->typeInfo);
+    }
+    return output;
+}
+
 void
-Node::setInputParameter(std::string sourceName, std::string inputName)
+Node::setInputParameter(const std::string& sourceName, const std::string& inputName)
 {
 	for (int i = 0; i < parameters.size(); ++i)
 	{
@@ -343,7 +359,7 @@ Node::setInputParameter(std::string sourceName, std::string inputName)
 }
 
 void
-Node::setInputParameter(std::string sourceName, int inputIdx)
+Node::setInputParameter(const std::string& sourceName, int inputIdx)
 {
 	int count = 0;
 	for (int i = 0; i < parameters.size(); ++i)

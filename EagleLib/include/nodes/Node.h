@@ -188,7 +188,7 @@ namespace EagleLib
 		virtual void setSource(const std::string& name){}
         TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
 			Parameter(name_, (ParamType)type_, toolTip_), data(data_), ownsData(ownsData_) {
-            typeInfo = Loki::TypeInfo(typeid(typename std::remove_pointer<typename std::remove_reference<T>::type>::type));
+            typeInfo = Loki::TypeInfo(typeid(T));
 		}
 		~TypedParameter(){ if (ownsData)cleanup<T>(data); }
 
@@ -391,8 +391,9 @@ namespace EagleLib
         virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo);
         virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo, std::vector<Node*>& nodes);
 		virtual std::vector<std::vector<std::string>> findCompatibleInputs();
-		virtual void setInputParameter(std::string sourceName, std::string inputName);
-		virtual void setInputParameter(std::string sourceName, int inputIdx);
+        std::vector<std::string> findCompatibleInputs(const std::string& paramName);
+        virtual void setInputParameter(const std::string& sourceName, const std::string& inputName);
+        virtual void setInputParameter(const std::string& sourceName, int inputIdx);
 		virtual void updateInputParameters();
 		virtual boost::shared_ptr<Parameter> getParameter(int idx);
 		virtual boost::shared_ptr<Parameter> getParameter(const std::string& name);
@@ -411,6 +412,20 @@ namespace EagleLib
 			parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
 			return parameters.size() - 1;
 		}
+        template<typename T> size_t
+            addParameter(const std::string& name,
+                        T& data,
+                        Parameter::ParamType type_ = Parameter::Control,
+                        const std::string& toolTip_ = std::string(),
+                        const bool& ownsData_ = false)
+        {
+            if(std::is_pointer<T>::value)
+                parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_ + Parameter::NotifyOnRecompile, toolTip_, ownsData_)));
+            else
+                    parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_, toolTip_, ownsData_)));
+            parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+            return parameters.size() - 1;
+        }
 
 
 		template<typename T> size_t
@@ -440,6 +455,24 @@ namespace EagleLib
 			param->changed = true;
 			return true;
 		}
+        template<typename T> bool
+            updateParameter(const std::string& name,
+                            T& data,
+                            Parameter::ParamType type_ = Parameter::Control,
+                            const std::string& toolTip_ = std::string(),
+                            const bool& ownsData_ = false)
+        {
+            auto param = getParameter<T>(name);
+            if (param == NULL)
+                return addParameter(name, data, type_, toolTip_, ownsData_);
+            param->data = data;
+            if (type_ != Parameter::None)
+                param->type = type_;
+            if (toolTip_.size() > 0)
+                param->toolTip = toolTip_;
+            param->changed = true;
+            return true;
+        }
 
 		template<typename T> bool
 			updateParameter(int idx,

@@ -10,9 +10,13 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <qgridlayout.h>
+#include <QLayout>
 #include <qsizepolicy.h>
 #include <boost/filesystem.hpp>
 #include <qfiledialog.h>
+#include <QLineEdit>
+#include <QComboBox>
+#include <type.h>
 namespace Ui {
 	class QNodeWidget;
 }
@@ -23,13 +27,22 @@ public:
 	QNodeWidget(QWidget* parent = nullptr, EagleLib::Node* node = nullptr);
 	~QNodeWidget();
 	EagleLib::Node* getNode();
+    void setSelected(bool state);
 private slots:
     void on_enableClicked(bool state);
-private:
+    void on_status(const std::string& msg, EagleLib::Node* node);
+    void on_warning(const std::string& msg, EagleLib::Node* node);
+    void on_error(const std::string& msg, EagleLib::Node* node);
+    void on_critical(const std::string& msg, EagleLib::Node* node);
 
+private:
 	Ui::QNodeWidget* ui;
 	ObjectId nodeId;
 	ObjectId nodeParentId;
+    QLineEdit* statusDisplay;
+    QLineEdit* warningDisplay;
+    QLineEdit* errorDisplay;
+    QLineEdit* criticalDisplay;
 };
 
 
@@ -42,12 +55,12 @@ public:
 	virtual void onUiUpdated() = 0;
 	virtual QWidget* getWidget() = 0;
     virtual QWidget* getTypename()
-    {        return new QLineEdit(QString::fromStdString(parameter->typeInfo.name()));    }
+    {        return new QLabel(QString::fromStdString(type_info::demangle(parameter->typeInfo.name())));    }
 
 	boost::shared_ptr<EagleLib::Parameter> parameter;
 };
 class IQNodeInterop;
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter);
+IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node* node);
 
 
 // Interface class for the interop class
@@ -55,7 +68,7 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 {
 	Q_OBJECT
 public:
-    IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent = nullptr);
+    IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent = nullptr, EagleLib::Node* node_= nullptr);
     virtual ~IQNodeInterop();
     virtual void updateUi();
 
@@ -69,7 +82,20 @@ private slots:
 protected:
 	QLabel* nameElement;	
 	IQNodeProxy* proxy;
-	QGridLayout* layout;
+    QGridLayout* layout;
+    EagleLib::Node* node;
+};
+// Class for UI elements relavent to finding valid input parameters
+class QInputProxy: public IQNodeProxy
+{
+public:
+    QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node* node_);
+    virtual void onUiUpdated();
+    virtual void updateUi();
+    virtual QWidget* getWidget();
+private:
+    EagleLib::Node* node;
+    QComboBox* box;
 };
 
 // Proxy class for handling
@@ -91,16 +117,22 @@ public:
 		box = new QDoubleSpinBox(parent);
 		box->setMaximum(std::numeric_limits<T>::max());
 		box->setMinimum(std::numeric_limits<T>::min());
-		box->setValue(*EagleLib::getParameter<T>(parameter_));
+        box->setMaximumWidth(100);
+        auto param = EagleLib::getParameter<T>(parameter_);
+        if(param)
+            box->setValue(*param);
 		parent->connect(box, SIGNAL(valueChanged(double)), parent, SLOT(on_valueChanged(double)));
 	}
 	virtual void updateUi()
 	{
-		box->setValue(*EagleLib::getParameter<T>(parameter));
+        if(auto param = EagleLib::getParameter<T>(parameter))
+            box->setValue(*param);
 	}
 	virtual void onUiUpdated()
 	{
-		*EagleLib::getParameter<T>(parameter) = box->value();
+        if(auto param = EagleLib::getParameter<T>(parameter))
+            *param = box->value();
+        parameter->changed = true;
 	}
 	virtual QWidget* getWidget() { return box; }
 private:
@@ -114,19 +146,24 @@ public:
     QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
     {
         parameter = parameter_;
-        box = new QLineEdit(parent);
-        box->setText(QString::number(*EagleLib::getParameter<T>(parameter_)));
+        box = new QLabel(parent);
+
+        auto param = EagleLib::getParameter<T>(parameter_);
+        if(param)
+            box->setText(QString::number(*param));
+
     }
     virtual void updateUi()
     {
-        box->setText(QString::number(*EagleLib::getParameter<T>(parameter)));
+        if(auto param = EagleLib::getParameter<T>(parameter))
+            box->setText(QString::number(*param));
     }
     virtual void onUiUpdated()
     {
     }
     virtual QWidget* getWidget() { return box; }
 private:
-    QLineEdit* box;
+    QLabel* box;
 };
 // **************************************************************************************************************
 template<typename T>
@@ -139,16 +176,21 @@ public:
         box = new QSpinBox(parent);
 		box->setMaximum(std::numeric_limits<T>::max());
 		box->setMinimum(std::numeric_limits<T>::min());
-		box->setValue(*EagleLib::getParameter<T>(parameter_));
+        auto param = EagleLib::getParameter<T>(parameter_);
+        if(param)
+            box->setValue(*param);
 		parent->connect(box, SIGNAL(valueChanged(int)), parent, SLOT(on_valueChanged(int)));
 	}
 	virtual void updateUi()
 	{
-		box->setValue(*EagleLib::getParameter<T>(parameter));
+        if(auto param = EagleLib::getParameter<T>(parameter))
+            box->setValue(*param);
 	}
 	virtual void onUiUpdated()
 	{
-		*EagleLib::getParameter<T>(parameter) = box->value();
+        if(auto param = EagleLib::getParameter<T>(parameter))
+            *param = box->value();
+        parameter->changed = true;
 	}
 	virtual QWidget* getWidget() { return box; }
 private:
@@ -162,13 +204,21 @@ public:
 	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)	
 	{
 		box = new QCheckBox(parent);
+        updateUi();
 		parent->connect(box, SIGNAL(stateChanged(int)), parent, SLOT(on_valueChanged(int)));
 		parameter=parameter_;
 	}
 	virtual void updateUi()
-	{	box->setChecked(*EagleLib::getParameter<bool>(parameter));	}
+    {
+        if(auto param = EagleLib::getParameter<bool>(parameter))
+            box->setChecked(*param);
+    }
 	virtual void onUiUpdated()
-	{	*EagleLib::getParameter<bool>(parameter) = box->isChecked();	}
+    {
+        if(auto param = EagleLib::getParameter<bool>(parameter))
+            *param = box->isChecked();
+        parameter->changed = true;
+    }
 	virtual QWidget* getWidget() { return box; }
 private:
 	QCheckBox* box;
@@ -182,9 +232,12 @@ public:
         box = new QCheckBox(parent);
         box->setCheckable(false);
         parameter=parameter_;
+        updateUi();
     }
     virtual void updateUi()
-    {	box->setChecked(*EagleLib::getParameter<bool>(parameter));	}
+    {	if(auto param = EagleLib::getParameter<bool>(parameter))
+            box->setChecked(*param);
+    }
     virtual void onUiUpdated()
     {	}
     virtual QWidget* getWidget() { return box; }
@@ -199,17 +252,21 @@ public:
 	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
 	{
 		box = new QLineEdit(parent);
-		box->setText(QString::fromStdString(*EagleLib::getParameter<std::string>(parameter_)));
+        if(auto param = EagleLib::getParameter<std::string>(parameter_))
+            box->setText(QString::fromStdString(*param));
 		parent->connect(box, SIGNAL(textChanged(QString)), parent, SLOT(on_valueChanged(QString)));
 		parameter = parameter_;
 	}
 	virtual void updateUi()
 	{
-		box->setText(QString::fromStdString(*EagleLib::getParameter<std::string>(parameter)));
+        if(auto param = EagleLib::getParameter<std::string>(parameter))
+        box->setText(QString::fromStdString(*param));
 	}
 	virtual void onUiUpdated()
 	{
-		*EagleLib::getParameter<std::string>(parameter) = box->text().toStdString();
+        if(auto param = EagleLib::getParameter<std::string>(parameter))
+        *param = box->text().toStdString();
+        parameter->changed = true;
 	}
 	virtual QWidget* getWidget() { return box; }
 private:
@@ -222,12 +279,14 @@ public:
     QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
     {
         box = new QLineEdit(parent);
-        box->setText(QString::fromStdString(*EagleLib::getParameter<std::string>(parameter_)));
+        if(auto param = EagleLib::getParameter<std::string>(parameter_))
+            box->setText(QString::fromStdString(*param));
         parameter = parameter_;
     }
     virtual void updateUi()
     {
-        box->setText(QString::fromStdString(*EagleLib::getParameter<std::string>(parameter)));
+        if(auto param = EagleLib::getParameter<std::string>(parameter))
+            box->setText(QString::fromStdString(*param));
     }
     virtual void onUiUpdated()
     {
@@ -245,7 +304,8 @@ public:
 	{
 		parent = parent_;
 		button = new QPushButton(parent);
-		button->setText(QString::fromStdString(EagleLib::getParameter<boost::filesystem::path>(parameter_)->string()));
+        if(auto param = EagleLib::getParameter<boost::filesystem::path>(parameter_))
+            button->setText(QString::fromStdString(param->string()));
 		if (!button->text().size())
 			button->setText("Select a file");
 		parent->connect(button, SIGNAL(clicked()), parent, SLOT(on_valueChanged()));
@@ -253,7 +313,9 @@ public:
 	}
 	virtual void updateUi()
 	{
-		std::string fileName = EagleLib::getParameter<boost::filesystem::path>(parameter)->string();
+        std::string fileName;
+        if(auto param = EagleLib::getParameter<boost::filesystem::path>(parameter))
+            fileName = param->string();
 		if (fileName.size())
 			button->setText(QString::fromStdString(fileName));
 		else
@@ -262,7 +324,8 @@ public:
 	virtual void onUiUpdated()
 	{
 		QString filename = QFileDialog::getOpenFileName(parent, "Select file");
-		*EagleLib::getParameter<boost::filesystem::path>(parameter) = boost::filesystem::path(filename.toStdString());
+        if(auto param = EagleLib::getParameter<boost::filesystem::path>(parameter))
+        *param = boost::filesystem::path(filename.toStdString());
 		button->setText(filename);
 		button->setToolTip(filename);
 		parameter->changed = true;
@@ -280,12 +343,14 @@ public:
     QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
     {
         box = new QLineEdit(parent);
-        box->setText(QString::fromStdString(EagleLib::getParameter<boost::filesystem::path>(parameter_)->string()));
+        if(auto param = EagleLib::getParameter<boost::filesystem::path>(parameter_))
+            box->setText(QString::fromStdString(param->string()));
         parameter = parameter_;
     }
     virtual void updateUi()
     {
-        box->setText(QString::fromStdString(EagleLib::getParameter<boost::filesystem::path>(parameter)->string()));
+        if(auto param = EagleLib::getParameter<boost::filesystem::path>(parameter))
+            box->setText(QString::fromStdString(param->string()));
     }
     virtual void onUiUpdated()
     {
@@ -294,3 +359,34 @@ public:
 private:
     QLineEdit* box;
 };
+
+template<>
+class QNodeProxy<boost::function<void(void)>, false, void> : public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        parent = parent_;
+        button = new QPushButton(parent);
+        button->setText(QString::fromStdString(parameter_->name));
+        parent->connect(button, SIGNAL(clicked()), parent, SLOT(on_valueChanged()));
+        parameter = parameter_;
+    }
+    virtual void updateUi()
+    {
+
+    }
+    virtual void onUiUpdated()
+    {
+        auto function = EagleLib::getParameter<boost::function<void(void)>>(parameter);
+        if(function)
+        {
+            (*function)();
+        }
+    }
+    virtual QWidget* getWidget() { return button; }
+private:
+    QPushButton* button;
+    QWidget* parent;
+};
+

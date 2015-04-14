@@ -10,6 +10,7 @@ void FFT::Init(bool firstInit)
     updateParameter("DFT scale flag", false);
     updateParameter("DFT inverse flag", false);
     updateParameter("DFT real output flag", false);
+    updateParameter("Desired output", int(-1));
 }
 
 cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img)
@@ -41,6 +42,14 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img)
     if(getParameter<bool>(3)->data)
         flags = flags | cv::DFT_REAL_OUTPUT;
     cv::cuda::dft(floatImg,dest,img.size(),flags);
+    if(int channel = getParameter<int>("Desired output")->data != -1)
+    {
+        std::vector<cv::cuda::GpuMat> channels;
+        cv::cuda::split(dest,channels);
+        if(channel < channels.size())
+            dest = channels[channel];
+    }
+    return dest;
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FFT);

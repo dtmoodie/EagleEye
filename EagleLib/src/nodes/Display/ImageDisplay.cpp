@@ -24,6 +24,11 @@ void QtImageDisplay::Init(bool firstInit)
 cv::cuda::GpuMat
 QtImageDisplay::doProcess(cv::cuda::GpuMat& img)
 {
+    if(img.channels() != 1 && img.channels() != 3)
+    {
+        log(Warning, "Image has " + boost::lexical_cast<std::string>(img.channels()) + " channels! Cannot display!");
+        return img;
+    }
     if(img.empty())
         return img;
     if(gpuDisplayCallback)
@@ -38,8 +43,16 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img)
         cpuDisplayCallback(h_img);
         return img;
     }
+
     std::string name = getParameter<std::string>("Name")->data;
-    cv::imshow(name,h_img);
+    try
+    {
+        cv::imshow(name,h_img);
+    }catch(cv::Exception &err)
+    {
+        log(Warning, err.what());
+    }
+
     return img;
 }
 
