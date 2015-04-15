@@ -174,8 +174,11 @@ public:
 	{
 		parameter = parameter_;
         box = new QSpinBox(parent);
-		box->setMaximum(std::numeric_limits<T>::max());
-		box->setMinimum(std::numeric_limits<T>::min());
+        if(std::numeric_limits<T>::max() > std::numeric_limits<int>::max())
+            box->setMaximum(std::numeric_limits<int>::max());
+        else
+            box->setMaximum(std::numeric_limits<T>::max());
+        box->setMinimum(std::numeric_limits<T>::min());
         auto param = EagleLib::getParameter<T>(parameter_);
         if(param)
             box->setValue(*param);

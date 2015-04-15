@@ -17,6 +17,15 @@
 #include <QGraphicsSceneMouseEvent>
 #include <Manager.h>
 #include <statebox.h>
+
+
+int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
+{
+
+}
+
+
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -41,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	currentSelectedNodeWidget = nullptr;
 	processingThread = boost::thread(boost::bind(&MainWindow::process, this));
 	quit = false;
-    //resizer = new WidgetResizer(nodeGraph);
+    cv::redirectError(&static_errorHandler);
 }
 
 MainWindow::~MainWindow()
@@ -89,7 +98,7 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 	
     if (node->parentName.size())
 	{
-        auto parent = EagleLib::NodeManager::getInstance().getNode(node->parentName);
+        auto parent = EagleLib::NodeManager::getInstance().getNode(node->parentId);
 		auto parentWidget = nodeGraphView->getWidget(parent->GetObjectId());	
 	}
 	if (currentSelectedNodeWidget)

@@ -42,7 +42,8 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img)
     if(getParameter<bool>(3)->data)
         flags = flags | cv::DFT_REAL_OUTPUT;
     cv::cuda::dft(floatImg,dest,img.size(),flags);
-    if(int channel = getParameter<int>("Desired output")->data != -1)
+    int channel = getParameter<int>("Desired output")->data;
+    if(channel != -1)
     {
         std::vector<cv::cuda::GpuMat> channels;
         cv::cuda::split(dest,channels);

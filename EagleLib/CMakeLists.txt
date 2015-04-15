@@ -27,6 +27,7 @@ file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
 
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS}
                     ${Boost_INCLUDE_DIRS}
+                    ${CUDA_INCLUDE_DIRS}
                     "include"
                     "RuntimeCompiler"
                     "RuntimeObjectSystem"
@@ -51,6 +52,8 @@ ADD_DEFINITIONS( -DBOOST_LIB_DIR="${Boost_LIBRARY_DIRS}")
 
 ADD_DEFINITIONS( -DOPENCV_INCLUDES="${OpenCV_INCLUDE_DIR}")
 ADD_DEFINITIONS( -DOPENCV_LIB_DIR="${CV_LIB_DIR}")
+ADD_DEFINITIONS( -DCUDA_INCLUDES="${CUDA_INCLUDE_DIRS}" )
+ADD_DEFINITIONS( -DCUDA_LIB_DIR="${CUDA_TOOLKIT_ROOT_DIR}/lib64")
 
 
 # Reporting section
@@ -61,8 +64,11 @@ message(
 ++++++++++ RCC++ Defines ++++++++++++++++++
     OpenCV include dir: ${OpenCV_INCLUDE_DIR}
     Boost library dir: ${Boost_LIBRARY_DIRS}
-    OpenCV library dir: ${CV_LIB_DIR}"
-	)
+    OpenCV library dir: ${CV_LIB_DIR}
+    Cuda include dir: ${CUDA_INCLUDE_DIRS}
+    Cuda RT libs: ${CUDA_LIBRARIES}
+    Cuda root dir: ${CUDA_TOOLKIT_ROOT_DIR}
+=====================================")
 
 
 set(EagleLib_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)

@@ -51,9 +51,11 @@ NodeManager::Init()
     m_pRuntimeObjectSystem->AddIncludeDir(includePath.c_str());
 	m_pRuntimeObjectSystem->AddIncludeDir(BOOST_INCLUDES);
 	m_pRuntimeObjectSystem->AddIncludeDir(OPENCV_INCLUDES);
+    m_pRuntimeObjectSystem->AddIncludeDir(CUDA_INCLUDES);
 
 	m_pRuntimeObjectSystem->AddLibraryDir(BOOST_LIB_DIR);
 	m_pRuntimeObjectSystem->AddLibraryDir(OPENCV_LIB_DIR);
+    m_pRuntimeObjectSystem->AddLibraryDir(CUDA_LIB_DIR);
 
 	return true;
 }
@@ -184,7 +186,16 @@ NodeManager::getNode(const ObjectId& id)
 Node*
 NodeManager::getNode(const std::string &treeName)
 {
-	return m_nodeTree.get<Node*>(treeName);
+    Node* ptr = nullptr;
+    try
+    {
+        m_nodeTree.get<Node*>(treeName);
+    }catch(boost::exception &err)
+    {
+        std::cout << "Error getting node by name: " << treeName << std::endl;
+    }
+
+    return ptr;
 }
 
 void 

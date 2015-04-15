@@ -376,7 +376,7 @@ void
 Node::setTreeName(const std::string& name)
 {
 	treeName = name;
-    Node* parentPtr = NodeManager::getInstance().getNode(parentName);
+    Node* parentPtr = NodeManager::getInstance().getNode(parentId);
 	std::string fullTreeName_;
 	if (parentPtr)
 		fullTreeName_ = parentPtr->fullTreeName + "." + treeName;

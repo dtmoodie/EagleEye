@@ -22,11 +22,10 @@ VideoLoader::Init(bool firstInit)
     if(firstInit)
     {
         updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
-        //parameters[0]->changed = true;
-        //updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path(), Parameter::Control, "Path to video file");
+        parameters[0]->changed = true;
         updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader, Parameter::Output);
         updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader, Parameter::Output);
-        updateParameter<std::string>("Codec", "");
+        updateParameter<std::string>("Codec", "", Parameter::State);
         updateParameter<std::string>("Video Chroma Format", "", Parameter::State);
         updateParameter<std::string>("Resolution", "", Parameter::State);
         updateParameter<boost::function<void(void)>>("Restart Video",boost::bind(&VideoLoader::restartVideo,this), Parameter::Control);
@@ -172,7 +171,7 @@ bool VideoLoader::SkipEmpty() const
 void
 VideoLoader::restartVideo()
 {
-
+    loadFile();
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoLoader);
