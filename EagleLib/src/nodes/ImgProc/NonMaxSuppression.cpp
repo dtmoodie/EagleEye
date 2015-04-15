@@ -6,7 +6,7 @@ using namespace EagleLib;
 void NonMaxSuppression::Init(bool firstInit)
 {
     updateParameter<int>("Size", 3);
-    updateParameter<cv::cuda::GpuMat>("Mask", cv::cuda::GpuMat(), Parameter::Input);
+    addInputParameter<cv::cuda::GpuMat>("Mask");
 }
 
 cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img)
@@ -18,9 +18,9 @@ cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img)
     int sz = getParameter<int>("Size")->data;
 
     cv::Mat mask;
-    if(auto maskParam = getParameter<cv::cuda::GpuMat>("Mask"))
-        if(!maskParam->data.empty())
-            maskParam->data.download(mask);
+    if(auto maskParam = getParameterPtr<cv::cuda::GpuMat>(parameters[1]))
+        if(!maskParam->empty())
+            maskParam->download(mask);
     const bool masked = !mask.empty();
     cv::Mat block = 255*cv::Mat_<uint8_t>::ones(cv::Size(2*sz+1,2*sz+1));
     cv::Mat dst = cv::Mat_<uint8_t>::zeros(src.size());
@@ -57,6 +57,7 @@ cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img)
             }
         }
     }
+    return cv::cuda::GpuMat(dst);
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(NonMaxSuppression)

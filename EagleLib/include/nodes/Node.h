@@ -147,6 +147,8 @@ namespace EagleLib
     public:
 		typedef boost::shared_ptr<Parameter> Ptr;
 		virtual void setSource(const std::string& name) = 0;
+        virtual void update() = 0;
+        virtual bool acceptsInput(const Loki::TypeInfo& type) = 0;
         enum ParamType
         {
             None		= 0,
@@ -166,9 +168,10 @@ namespace EagleLib
         Loki::TypeInfo typeInfo;
         ParamType	type;
         bool		changed;
+        unsigned int subscribers; // Used with input / output parameters to list the number of subscribers to an output
         boost::function<void(boost::shared_ptr<Parameter>)> updateCallback;
     protected:
-        Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),type(type_), changed(false), toolTip(toolTip_){}
+        Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),type(type_), changed(false), toolTip(toolTip_), subscribers(0){}
         virtual ~Parameter(){}
     };
 
@@ -186,6 +189,8 @@ namespace EagleLib
 		typedef T ValType;
 		
 		virtual void setSource(const std::string& name){}
+        virtual void update(){}
+        virtual bool acceptsInput(const Loki::TypeInfo& type){ return false;}
         TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
 			Parameter(name_, (ParamType)type_, toolTip_), data(data_), ownsData(ownsData_) {
             typeInfo = Loki::TypeInfo(typeid(T));
@@ -217,6 +222,7 @@ namespace EagleLib
 		T maxVal;
 		T minVal;
 	};
+    template<typename T> T* getParameterPtr(EagleLib::Parameter::Ptr parameter);
 
 	template<typename T>
 	class CV_EXPORTS InputParameter : public TypedParameter<T*>
@@ -224,31 +230,33 @@ namespace EagleLib
 	public:
 		InputParameter(const std::string& name_, const std::string& toolTip_ = "") :
             TypedParameter<T*>(name_, nullptr, Parameter::Input, toolTip_, false)
-		{
-            //baseTypeName = typeid(T).name();
-            //baseTypeName = type_info::type();
+        {
+
 		}
-		// TODO: TEST THIS SHIT
+        // TODO: TEST THIS
 		virtual void setSource(const std::string& name = std::string())
 		{
 			if (name.size() != 0)
 				sourceTreeName = name;
-            auto param = EagleLib::NodeManager::getInstance().getParameter(sourceTreeName);
-			auto typedParam = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
-			if (typedParam != nullptr)
-				this->data = &typedParam->data;
-			else
-			{
-				auto typedParamPtr = boost::dynamic_pointer_cast<TypedParameter<T*>, Parameter>(param);
-				this->data = typedParamPtr->data;
-			}
+            update();
 		}
+        virtual void update()
+        {
+            if(sourceTreeName.size() == 0)
+                return;
+            auto param = EagleLib::NodeManager::getInstance().getParameter(sourceTreeName);
+            this->data = getParameterPtr<T>(param);
+        }
+        virtual bool acceptsInput(const Loki::TypeInfo &type)
+        {
+            return type == Loki::TypeInfo(typeid(T)) || type == Loki::TypeInfo(typeid(T*)) || type == Loki::TypeInfo(typeid(T&));
+        }
+
 
 		// The full parameter name of the source
-		std::string sourceTreeName;
-		std::string baseTypeName;
+        std::string sourceTreeName;
 	};
-    template<typename T> T* getParameter(EagleLib::Parameter::Ptr parameter)
+    template<typename T> T* getParameterPtr(EagleLib::Parameter::Ptr parameter)
     {
         // Dynamically check what type of parameter this is refering to
         typename EagleLib::TypedParameter<T>::Ptr typedParam = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T>, EagleLib::Parameter>(parameter);
@@ -641,7 +649,7 @@ namespace EagleLib
 		boost::function<void(std::string)>									logCallback;
 		// Function for setting input parameters
         boost::function<int(std::vector<std::string>)>						inputSelector;
-
+        boost::function<void(void)>                                         onUpdate;
 
 
 

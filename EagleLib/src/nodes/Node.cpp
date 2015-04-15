@@ -170,7 +170,7 @@ Node::process(cv::cuda::GpuMat &img)
         try
         {
             if(enabled)
-                return doProcess(img);
+                img = doProcess(img);
         }catch(cv::Exception &err)
         {
             log(Error, err.what());
@@ -179,9 +179,32 @@ Node::process(cv::cuda::GpuMat &img)
             log(Error, err.what());
         }
     }
-    for (auto it = children.begin(); it != children.end(); ++it)
+    try
     {
-        img = getChild(it->id)->process(img);
+        int idx = 0;
+        for (auto it = children.begin(); it != children.end(); ++it, ++idx)
+        {
+            ObjectId id = it->id;
+            auto child = getChild(id);
+            if(child)
+                img = child->process(img);
+            else
+                log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(idx) +
+                    " id: " + boost::lexical_cast<std::string>(id.m_ConstructorId) +
+                    " " + boost::lexical_cast<std::string>(id.m_PerTypeId));
+        }
+    }catch(cv::Exception &err)
+    {
+        log(Error, err.what());
+    }catch(std::exception &err)
+    {
+        log(Error, err.what());
+    }catch(boost::exception &err)
+    {
+        log(Error, "Boost exception");
+    }catch(...)
+    {
+        log(Error, "Unknown exception");
     }
     return img;
 }

@@ -2,19 +2,20 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
+
 RUNTIME_COMPILER_LINKLIBRARY("-lcudart")
 using namespace EagleLib;
 
 void SetDevice::Init(bool firstInit)
 {
-
     updateParameter<unsigned int>("Device Number", 0);
-    updateParameter<std::string>("Device name","");
+    updateParameter<std::string>("Device name","", Parameter::State);
     firstRun = true;
 }
 
 cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img)
 {
+    cv::Mat asd;
     int currentDevice = cv::cuda::getDevice();
     int maxDevice = cv::cuda::getCudaEnabledDeviceCount();
     if(firstRun)
@@ -39,6 +40,8 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img)
     {
         log(Status, "Switching device from " + boost::lexical_cast<std::string>(currentDevice) + " to " + boost::lexical_cast<std::string>(device) + " " + prop.name);
         updateParameter<std::string>("Device name", cv::cuda::DeviceInfo(device).name());
+        if(onUpdate)
+            onUpdate();
     }
     cv::cuda::setDevice(device);
     return cv::cuda::GpuMat();
@@ -46,7 +49,6 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img)
 bool SetDevice::SkipEmpty() const
 {
     return false;
-
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SetDevice)

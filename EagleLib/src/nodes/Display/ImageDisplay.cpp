@@ -2,8 +2,8 @@
 
 using namespace EagleLib;
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay);
-
+NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(OGLImageDisplay)
 
 QtImageDisplay::QtImageDisplay(boost::function<void(cv::Mat)> cpuCallback_)
 {
@@ -17,7 +17,7 @@ void QtImageDisplay::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter("Name", std::string("Default Name"), Parameter::Control, "Set name for window");
+        updateParameter("Name", fullTreeName, Parameter::Control, "Set name for window");
     }
 }
 
@@ -43,22 +43,16 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img)
         cpuDisplayCallback(h_img);
         return img;
     }
-
-    std::string name = getParameter<std::string>("Name")->data;
+    std::string name = getParameter<std::string>(0)->data;
     try
     {
-        cv::imshow(name,h_img);
+        cv::imshow(name, h_img);
     }catch(cv::Exception &err)
     {
         log(Warning, err.what());
     }
 
     return img;
-}
-
-OGLImageDisplay::OGLImageDisplay()
-{
-
 }
 
 

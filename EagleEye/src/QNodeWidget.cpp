@@ -3,6 +3,7 @@
 #include "ui_QNodeWidget.h"
 #include <boost/bind.hpp>
 #include <QPalette>
+#include <QDateTime>
 
 
 IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent, EagleLib::Node* node_) :
@@ -100,11 +101,21 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node* node) :
 		for (int i = 0; i < node->parameters.size(); ++i)
 		{
             auto interop = new IQNodeInterop(node->parameters[i], this, node);
+            interops.push_back(interop);
             //interop->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
             ui->verticalLayout->addWidget(interop);
 		}
+        node->onUpdate = boost::bind(&QNodeWidget::updateUi, this);
 	}
 }
+void QNodeWidget::updateUi()
+{
+    for(int i = 0; i < interops.size(); ++i)
+    {
+        interops[i]->updateUi();
+    }
+}
+
 QNodeWidget::~QNodeWidget()
 {}
 
@@ -122,25 +133,29 @@ EagleLib::Node* QNodeWidget::getNode()
 void QNodeWidget::on_status(const std::string& msg, EagleLib::Node* node)
 {
     statusDisplay->show();
-    statusDisplay->setText("Status: " + QString::fromStdString(msg));
+    statusDisplay->setText(QDateTime::currentDateTime().toString("[hh:mm.ss.zzz] ") + " Status: " + QString::fromStdString(msg));
+    update();
 }
 
 void QNodeWidget::on_warning(const std::string& msg, EagleLib::Node* node)
 {
     warningDisplay->show();
-    warningDisplay->setText("Warning: " + QString::fromStdString(msg));
+    warningDisplay->setText(QDateTime::currentDateTime().toString("[hh:mm.ss.zzz] ") + "Warning: " + QString::fromStdString(msg));
+    update();
 }
 
 void QNodeWidget::on_error(const std::string& msg, EagleLib::Node* node)
 {
     errorDisplay->show();
-    errorDisplay->setText("Error: " + QString::fromStdString(msg));
+    errorDisplay->setText(QDateTime::currentDateTime().toString("[hh:mm.ss.zzz] ") + "Error: " + QString::fromStdString(msg));
+    update();
 }
 
 void QNodeWidget::on_critical(const std::string& msg, EagleLib::Node* node)
 {
     criticalDisplay->show();
     criticalDisplay->setText("Critical: " + QString::fromStdString(msg));
+    update();
 }
 void QNodeWidget::setSelected(bool state)
 {
@@ -226,16 +241,6 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE_(boost::filesystem::path);
         MAKE_TYPE_(bool);
     }
-
-
-	/*if (parameter->typeName == typeid(cv::Scalar).name())
-	return new QNodeProxy<cv::Scalar>(parent, parameter);
-
-	
-
-	if (parameter->typeName == typeid(cv::Mat).name())
-	return new QNodeProxy<cv::Mat>(parent, parameter);*/
-
 
 
 	return nullptr;

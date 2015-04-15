@@ -12,7 +12,15 @@ void ConvertToGrey::Init(bool firstInit)
 cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img)
 {
     cv::cuda::GpuMat grey;
-    cv::cuda::cvtColor(img, grey, cv::COLOR_BGR2GRAY);
+    try
+    {
+        cv::cuda::cvtColor(img, grey, cv::COLOR_BGR2GRAY);
+    }catch(cv::Exception &err)
+    {
+        log(Error, err.what());
+        return img;
+    }
+
     return grey;
 }
 

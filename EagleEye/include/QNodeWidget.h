@@ -20,6 +20,11 @@
 namespace Ui {
 	class QNodeWidget;
 }
+class IQNodeInterop;
+class QNodeWidget;
+class IQNodeProxy;
+class QInputProxy;
+
 class CV_EXPORTS QNodeWidget : public QWidget
 {
 	Q_OBJECT
@@ -28,13 +33,13 @@ public:
 	~QNodeWidget();
 	EagleLib::Node* getNode();
     void setSelected(bool state);
+    void updateUi();
 private slots:
     void on_enableClicked(bool state);
     void on_status(const std::string& msg, EagleLib::Node* node);
     void on_warning(const std::string& msg, EagleLib::Node* node);
     void on_error(const std::string& msg, EagleLib::Node* node);
     void on_critical(const std::string& msg, EagleLib::Node* node);
-
 private:
 	Ui::QNodeWidget* ui;
 	ObjectId nodeId;
@@ -43,6 +48,7 @@ private:
     QLineEdit* warningDisplay;
     QLineEdit* errorDisplay;
     QLineEdit* criticalDisplay;
+    std::vector<IQNodeInterop*> interops;
 };
 
 
@@ -59,7 +65,6 @@ public:
 
 	boost::shared_ptr<EagleLib::Parameter> parameter;
 };
-class IQNodeInterop;
 IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node* node);
 
 
@@ -118,19 +123,19 @@ public:
 		box->setMaximum(std::numeric_limits<T>::max());
 		box->setMinimum(std::numeric_limits<T>::min());
         box->setMaximumWidth(100);
-        auto param = EagleLib::getParameter<T>(parameter_);
+        auto param = EagleLib::getParameterPtr<T>(parameter_);
         if(param)
             box->setValue(*param);
 		parent->connect(box, SIGNAL(valueChanged(double)), parent, SLOT(on_valueChanged(double)));
 	}
 	virtual void updateUi()
 	{
-        if(auto param = EagleLib::getParameter<T>(parameter))
+        if(auto param = EagleLib::getParameterPtr<T>(parameter))
             box->setValue(*param);
 	}
 	virtual void onUiUpdated()
 	{
-        if(auto param = EagleLib::getParameter<T>(parameter))
+        if(auto param = EagleLib::getParameterPtr<T>(parameter))
             *param = box->value();
         parameter->changed = true;
 	}
@@ -148,14 +153,14 @@ public:
         parameter = parameter_;
         box = new QLabel(parent);
 
-        auto param = EagleLib::getParameter<T>(parameter_);
+        auto param = EagleLib::getParameterPtr<T>(parameter_);
         if(param)
             box->setText(QString::number(*param));
 
     }
     virtual void updateUi()
     {
-        if(auto param = EagleLib::getParameter<T>(parameter))
+        if(auto param = EagleLib::getParameterPtr<T>(parameter))
             box->setText(QString::number(*param));
     }
     virtual void onUiUpdated()
@@ -179,19 +184,19 @@ public:
         else
             box->setMaximum(std::numeric_limits<T>::max());
         box->setMinimum(std::numeric_limits<T>::min());
-        auto param = EagleLib::getParameter<T>(parameter_);
+        auto param = EagleLib::getParameterPtr<T>(parameter_);
         if(param)
             box->setValue(*param);
 		parent->connect(box, SIGNAL(valueChanged(int)), parent, SLOT(on_valueChanged(int)));
 	}
 	virtual void updateUi()
 	{
-        if(auto param = EagleLib::getParameter<T>(parameter))
+        if(auto param = EagleLib::getParameterPtr<T>(parameter))
             box->setValue(*param);
 	}
 	virtual void onUiUpdated()
 	{
-        if(auto param = EagleLib::getParameter<T>(parameter))
+        if(auto param = EagleLib::getParameterPtr<T>(parameter))
             *param = box->value();
         parameter->changed = true;
 	}
@@ -213,12 +218,12 @@ public:
 	}
 	virtual void updateUi()
     {
-        if(auto param = EagleLib::getParameter<bool>(parameter))
+        if(auto param = EagleLib::getParameterPtr<bool>(parameter))
             box->setChecked(*param);
     }
 	virtual void onUiUpdated()
     {
-        if(auto param = EagleLib::getParameter<bool>(parameter))
+        if(auto param = EagleLib::getParameterPtr<bool>(parameter))
             *param = box->isChecked();
         parameter->changed = true;
     }
@@ -238,7 +243,7 @@ public:
         updateUi();
     }
     virtual void updateUi()
-    {	if(auto param = EagleLib::getParameter<bool>(parameter))
+    {	if(auto param = EagleLib::getParameterPtr<bool>(parameter))
             box->setChecked(*param);
     }
     virtual void onUiUpdated()
@@ -255,19 +260,19 @@ public:
 	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
 	{
 		box = new QLineEdit(parent);
-        if(auto param = EagleLib::getParameter<std::string>(parameter_))
+        if(auto param = EagleLib::getParameterPtr<std::string>(parameter_))
             box->setText(QString::fromStdString(*param));
-		parent->connect(box, SIGNAL(textChanged(QString)), parent, SLOT(on_valueChanged(QString)));
+        parent->connect(box, SIGNAL(editingFinished()), parent, SLOT(on_valueChanged()));
 		parameter = parameter_;
 	}
 	virtual void updateUi()
 	{
-        if(auto param = EagleLib::getParameter<std::string>(parameter))
+        if(auto param = EagleLib::getParameterPtr<std::string>(parameter))
         box->setText(QString::fromStdString(*param));
 	}
 	virtual void onUiUpdated()
 	{
-        if(auto param = EagleLib::getParameter<std::string>(parameter))
+        if(auto param = EagleLib::getParameterPtr<std::string>(parameter))
         *param = box->text().toStdString();
         parameter->changed = true;
 	}
@@ -282,13 +287,13 @@ public:
     QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
     {
         box = new QLineEdit(parent);
-        if(auto param = EagleLib::getParameter<std::string>(parameter_))
+        if(auto param = EagleLib::getParameterPtr<std::string>(parameter_))
             box->setText(QString::fromStdString(*param));
         parameter = parameter_;
     }
     virtual void updateUi()
     {
-        if(auto param = EagleLib::getParameter<std::string>(parameter))
+        if(auto param = EagleLib::getParameterPtr<std::string>(parameter))
             box->setText(QString::fromStdString(*param));
     }
     virtual void onUiUpdated()
@@ -307,7 +312,7 @@ public:
 	{
 		parent = parent_;
 		button = new QPushButton(parent);
-        if(auto param = EagleLib::getParameter<boost::filesystem::path>(parameter_))
+        if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter_))
             button->setText(QString::fromStdString(param->string()));
 		if (!button->text().size())
 			button->setText("Select a file");
@@ -317,7 +322,7 @@ public:
 	virtual void updateUi()
 	{
         std::string fileName;
-        if(auto param = EagleLib::getParameter<boost::filesystem::path>(parameter))
+        if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter))
             fileName = param->string();
 		if (fileName.size())
 			button->setText(QString::fromStdString(fileName));
@@ -327,7 +332,7 @@ public:
 	virtual void onUiUpdated()
 	{
 		QString filename = QFileDialog::getOpenFileName(parent, "Select file");
-        if(auto param = EagleLib::getParameter<boost::filesystem::path>(parameter))
+        if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter))
         *param = boost::filesystem::path(filename.toStdString());
 		button->setText(filename);
 		button->setToolTip(filename);
@@ -346,13 +351,13 @@ public:
     QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
     {
         box = new QLineEdit(parent);
-        if(auto param = EagleLib::getParameter<boost::filesystem::path>(parameter_))
+        if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter_))
             box->setText(QString::fromStdString(param->string()));
         parameter = parameter_;
     }
     virtual void updateUi()
     {
-        if(auto param = EagleLib::getParameter<boost::filesystem::path>(parameter))
+        if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter))
             box->setText(QString::fromStdString(param->string()));
     }
     virtual void onUiUpdated()
@@ -381,7 +386,7 @@ public:
     }
     virtual void onUiUpdated()
     {
-        auto function = EagleLib::getParameter<boost::function<void(void)>>(parameter);
+        auto function = EagleLib::getParameterPtr<boost::function<void(void)>>(parameter);
         if(function)
         {
             (*function)();
