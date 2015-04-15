@@ -163,17 +163,25 @@ cv::cuda::GpuMat
 Node::process(cv::cuda::GpuMat &img)
 {
     if(img.empty() && SkipEmpty())
-        return img;
-    try
     {
-        if(enabled)
-            return doProcess(img);
-    }catch(cv::Exception &err)
+
+    }else
     {
-        log(Error, err.what());
-    }catch(std::exception &err)
+        try
+        {
+            if(enabled)
+                return doProcess(img);
+        }catch(cv::Exception &err)
+        {
+            log(Error, err.what());
+        }catch(std::exception &err)
+        {
+            log(Error, err.what());
+        }
+    }
+    for (auto it = children.begin(); it != children.end(); ++it)
     {
-        log(Error, err.what());
+        img = getChild(it->id)->process(img);
     }
     return img;
 }
