@@ -45,8 +45,12 @@ VideoLoader::Init(bool firstInit)
 cv::cuda::GpuMat 
 VideoLoader::doProcess(cv::cuda::GpuMat& img)
 {
+    bool firstLoad = false;
 	if (parameters[0]->changed)
+    {
 		loadFile();
+        firstLoad = true;
+    }
     if(d_videoReader)
     {
         d_videoReader->nextFrame(img);
@@ -62,6 +66,13 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img)
        if(h_img.empty())
            return cv::cuda::GpuMat();
        img.upload(h_img);
+    }
+    if(firstLoad)
+    {
+        std::stringstream ss;
+        ss << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
+
+        log(Status,  ss.str());
     }
     return img;
 }

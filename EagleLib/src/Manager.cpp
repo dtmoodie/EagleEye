@@ -147,17 +147,19 @@ NodeManager::CheckRecompile()
     // Prevent checking too often
     if(delta.total_milliseconds() < 10)
         return false;
+    prevTime = currentTime;
     if( m_pRuntimeObjectSystem->GetIsCompiledComplete())
     {
         m_pRuntimeObjectSystem->LoadCompiledModule();
     }
-
-    if(!m_pRuntimeObjectSystem->GetIsCompiling())
+    if(m_pRuntimeObjectSystem->GetIsCompiling())
+    {
+       return true;
+    }else
     {
         m_pRuntimeObjectSystem->GetFileChangeNotifier()->Update(float(delta.total_milliseconds())/1000.0);
     }
-	prevTime = currentTime;
-	return true;
+    return false;
 }
 
 void

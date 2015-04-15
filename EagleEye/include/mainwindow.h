@@ -12,31 +12,11 @@
 #include <qlist.h>
 #include <vector>
 #include <boost/thread.hpp>
-#include "cornergrabber.h"
 
 namespace Ui {
 class MainWindow;
 }
 
-class WidgetResizer: public QGraphicsItem
-{
-public:
-    WidgetResizer(QGraphicsScene *scene_ = nullptr);
-    bool sceneEventFilter(QGraphicsItem *watched, QEvent *event);
-
-    void setWidget(QGraphicsProxyWidget *widget);
-private:
-    std::vector<CornerGrabber*> corners;
-    QGraphicsScene* scene;
-    QGraphicsProxyWidget* currentWidget;
-    virtual void mouseMoveEvent ( QGraphicsSceneMouseEvent * event );
-    virtual void mouseMoveEvent(QGraphicsSceneDragDropEvent *event);
-    virtual void mousePressEvent (QGraphicsSceneMouseEvent * event );
-    virtual void mousePressEvent(QGraphicsSceneDragDropEvent *event);
-    virtual void mouseReleaseEvent (QGraphicsSceneMouseEvent * event );
-    virtual QRectF boundingRect() const;
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-};
 
 class MainWindow : public QMainWindow
 {

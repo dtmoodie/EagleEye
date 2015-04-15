@@ -16,7 +16,7 @@
 #include "QGLWidget"
 #include <QGraphicsSceneMouseEvent>
 #include <Manager.h>
-#include <statebox.h>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -149,89 +149,11 @@ void MainWindow::process()
 		}
         if(nodes.size() == 0)
             boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
-        EagleLib::NodeManager::getInstance().CheckRecompile();
+        if(EagleLib::NodeManager::getInstance().CheckRecompile())
+        {
+
+        }
 	}
     std::cout << "Processing thread ending" << std::endl;
 }
-WidgetResizer::WidgetResizer(QGraphicsScene* scene_):
-    scene(scene_),
-    currentWidget(nullptr)
-{
-    if(scene_)
-    {
-        corners.push_back(new CornerGrabber());
-        corners.push_back(new CornerGrabber());
-        corners.push_back(new CornerGrabber());
-        corners.push_back(new CornerGrabber());
-        corners[0]->hide();
-        corners[1]->hide();
-        corners[2]->hide();
-        corners[3]->hide();
-        scene->addItem(corners[0]);
-        scene->addItem(corners[1]);
-        scene->addItem(corners[2]);
-        scene->addItem(corners[3]);
-        scene->addItem(this);
-    }
-}
 
-bool WidgetResizer::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
-{
-    if(watched != currentWidget) return false;
-    std::cout << event->type() << std::endl;
-}
-void WidgetResizer::setWidget(QGraphicsProxyWidget* widget)
-{
-    auto pos = widget->pos();
-    auto size = widget->size();
-    corners[0]->setPos(pos);
-    corners[1]->setPos(pos.x() + size.width(), pos.y());
-    corners[2]->setPos(pos.x() + size.width(), pos.y() + size.height());
-    corners[3]->setPos(pos.x(), pos.y() + size.height());
-    corners[0]->show();
-    corners[1]->show();
-    corners[2]->show();
-    corners[3]->show();
-    widget->installSceneEventFilter(this);
-    currentWidget = widget;
-}
-
-
-void WidgetResizer::mouseMoveEvent ( QGraphicsSceneMouseEvent * event )
-{
-    event->setAccepted(false);
-}
-
-void WidgetResizer::mouseMoveEvent(QGraphicsSceneDragDropEvent *event)
-{
-    event->setAccepted(false);
-}
-
-void WidgetResizer::mousePressEvent (QGraphicsSceneMouseEvent * event )
-{
-    event->setAccepted(false);
-}
-
-void WidgetResizer::mousePressEvent(QGraphicsSceneDragDropEvent *event)
-{
- event->setAccepted(false);
-}
-
-void WidgetResizer::mouseReleaseEvent (QGraphicsSceneMouseEvent * event )
-{
-    event->setAccepted(false);
-}
-QRectF WidgetResizer::boundingRect() const
-{
-    if(currentWidget)
-    {
-        auto pos = currentWidget->pos();
-        auto size = currentWidget->size();
-        return QRectF(pos,size);
-    }
-    return QRectF(0,0,0,0);
-}
-void WidgetResizer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
-{
-
-}

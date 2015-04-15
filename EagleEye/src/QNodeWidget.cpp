@@ -228,16 +228,6 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
     }
 
 
-	/*if (parameter->typeName == typeid(cv::Scalar).name())
-	return new QNodeProxy<cv::Scalar>(parent, parameter);
-
-	
-
-	if (parameter->typeName == typeid(cv::Mat).name())
-	return new QNodeProxy<cv::Mat>(parent, parameter);*/
-
-
-
 	return nullptr;
 }
 
