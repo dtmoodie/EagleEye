@@ -51,7 +51,7 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img)
     {
         log(Warning, err.what());
     }
-
+    parameters[0]->changed = false;
     return img;
 }
 

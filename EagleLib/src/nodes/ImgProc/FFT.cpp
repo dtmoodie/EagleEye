@@ -11,13 +11,18 @@ void FFT::Init(bool firstInit)
     updateParameter("DFT inverse flag", false);
     updateParameter("DFT real output flag", false);
     updateParameter("Desired output", int(-1));
+    updateParameter("Log scale", true);
 }
 
 cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img)
 {
     if(img.empty())
         return img;
-
+    int rows = cv::getOptimalDFTSize(img.rows);
+    int cols = cv::getOptimalDFTSize(img.cols);
+    cv::cuda::GpuMat padded;
+    cv::cuda::copyMakeBorder(img,padded, 0, rows - img.rows, 0, cols - img.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
+    img = padded;
     if(img.channels() > 2)
     {
         std::stringstream ss;
@@ -42,18 +47,32 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img)
     if(getParameter<bool>(3)->data)
         flags = flags | cv::DFT_REAL_OUTPUT;
     cv::cuda::dft(floatImg,dest,img.size(),flags);
-    int channel = getParameter<int>("Desired output")->data;
+    int channel = getParameter<int>(4)->data;
     if(parameters[4]->changed)
     {
-        log(Status, channel == 0 ? "Amplitude" : "Phase");
+        log(Status, channel == 0 ? "Magnitude" : "Phase");
+        parameters[4]->changed = false;
     }
     if(channel != -1)
     {
-        std::vector<cv::cuda::GpuMat> channels;
-        cv::cuda::split(dest,channels);
-        if(channel < channels.size())
-            dest = channels[channel];
+        if(channel == 0)
+        {
 
+            cv::cuda::magnitude(dest,dest);
+            if(getParameter<bool>(5)->data)
+            {
+                // Convert to log scale
+                cv::cuda::add(dest,cv::Scalar::all(1), dest);
+                cv::cuda::log(dest,dest);
+            }
+        }
+        if(channel == 1)
+        {
+            std::vector<cv::cuda::GpuMat> channels;
+            cv::cuda::split(dest,channels);
+
+            cv::cuda::phase(channels[0],channels[1],dest);
+        }
     }
     return dest;
 }

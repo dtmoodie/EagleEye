@@ -54,6 +54,13 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QLabel" name="processingTime">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>

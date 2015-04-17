@@ -34,7 +34,10 @@ cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img)
             // get the maximal candidate within the block
             cv::Range ic(m, cv::min(m+sz+1,M));
             cv::Range jc(n, cv::min(n+sz+1,N));
+
             cv::minMaxLoc(src(ic,jc), NULL, &vcmax, NULL, &ijmax, masked ? mask(ic,jc) : cv::noArray());
+
+
             cv::Point cc = ijmax + cv::Point(jc.start,ic.start);
 
             // search the neighbours centered around the candidate for the true maxima

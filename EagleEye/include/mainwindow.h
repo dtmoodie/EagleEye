@@ -32,7 +32,10 @@ private slots:
     void onTimeout();
 	void onNodeAdd(EagleLib::Node* node);
 	void onSelectionChanged(QGraphicsProxyWidget* widget);
+    void log(QString message);
 
+signals:
+    void eLog(QString message);
 
 private:
     void onError(const std::string& error);
@@ -45,6 +48,7 @@ private:
 	QGraphicsProxyWidget* currentSelectedNodeWidget;
 	ObjectId currentNodeId;
 	std::vector<ObjectId> parentList;
+    boost::mutex parentMtx;
     std::vector<QNodeWidget*> widgets;
 	boost::thread processingThread;
 	bool quit;

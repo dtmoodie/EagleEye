@@ -64,13 +64,23 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img)
 
        if(h_img.empty())
            return cv::cuda::GpuMat();
-       img.upload(h_img);
+       try
+       {
+           img.upload(h_img);
+       }catch(cv::Exception &err)
+       {
+           log(Error, err.what());
+           return img;
+       }
+       updateParameter<double>("Timestamp",h_videoReader->get(cv::CAP_PROP_POS_MSEC));
+       updateParameter<double>("Frame index",h_videoReader->get(cv::CAP_PROP_POS_FRAMES));
+       updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO));
+
     }
     if(firstLoad)
     {
         std::stringstream ss;
         ss << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
-
         log(Status,  ss.str());
     }
     return img;
@@ -99,6 +109,35 @@ VideoLoader::loadFile()
         log(Error, "Failed to crate GPU decoder, falling back to CPU decoder");
         h_videoReader.reset(new cv::VideoCapture);
         h_videoReader->open(fileName->data.string());
+        /*
+        -   **CV_CAP_PROP_POS_MSEC** Current position of the video file in milliseconds or video
+            capture timestamp.
+        -   **CV_CAP_PROP_POS_FRAMES** 0-based index of the frame to be decoded/captured next.
+        -   **CV_CAP_PROP_POS_AVI_RATIO** Relative position of the video file: 0 - start of the
+            film, 1 - end of the film.
+        -   **CV_CAP_PROP_FRAME_WIDTH** Width of the frames in the video stream.
+        -   **CV_CAP_PROP_FRAME_HEIGHT** Height of the frames in the video stream.
+        -   **CV_CAP_PROP_FPS** Frame rate.
+        -   **CV_CAP_PROP_FOURCC** 4-character code of codec.
+        -   **CV_CAP_PROP_FRAME_COUNT** Number of frames in the video file.
+        -   **CV_CAP_PROP_FORMAT** Format of the Mat objects returned by retrieve() .
+        -   **CV_CAP_PROP_MODE** Backend-specific value indicating the current capture mode.
+        -   **CV_CAP_PROP_BRIGHTNESS** Brightness of the image (only for cameras).
+        -   **CV_CAP_PROP_CONTRAST** Contrast of the image (only for cameras).
+        -   **CV_CAP_PROP_SATURATION** Saturation of the image (only for cameras).
+        -   **CV_CAP_PROP_HUE** Hue of the image (only for cameras).
+        -   **CV_CAP_PROP_GAIN** Gain of the image (only for cameras).
+        -   **CV_CAP_PROP_EXPOSURE** Exposure (only for cameras).
+        -   **CV_CAP_PROP_CONVERT_RGB** Boolean flags indicating whether images should be converted
+            to RGB.
+        -   **CV_CAP_PROP_WHITE_BALANCE** Currently not supported
+        -   **CV_CAP_PROP_RECTIFICATION** Rectification flag for stereo cameras (note: only supported
+            by DC1394 v 2.x backend currently)*/
+        updateParameter<double>("Timestamp",h_videoReader->get(cv::CAP_PROP_POS_MSEC));
+        updateParameter<double>("Frame index",h_videoReader->get(cv::CAP_PROP_POS_FRAMES));
+        updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO));
+        updateParameter<double>("Frame count",h_videoReader->get(cv::CAP_PROP_FRAME_COUNT));
+
     }
 
     if (d_videoReader)
@@ -186,3 +225,4 @@ VideoLoader::restartVideo()
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoLoader);
+

@@ -44,6 +44,7 @@ namespace EagleLib
         virtual void OnConstructorsAdded();
 
         virtual bool CheckRecompile();
+        virtual bool CheckRecompile(bool swapAllowed);
 
         void onNodeRecompile(Node* node);
         Node* getNode(const ObjectId& id);

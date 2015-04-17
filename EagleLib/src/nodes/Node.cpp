@@ -47,12 +47,9 @@ Node::addChild(Node* child)
 {
     if (!child)
         return child;
-    if(errorCallback)
-        child->errorCallback = errorCallback;
-    if(statusCallback)
-        child->statusCallback = statusCallback;
-    if(warningCallback)
-        child->warningCallback = warningCallback;
+    if(messageCallback)
+        child->messageCallback = messageCallback;
+
 
     int count = children.get<NodeName>().count(child->nodeName);
 
@@ -169,8 +166,12 @@ Node::process(cv::cuda::GpuMat &img)
     {
         try
         {
+            auto start = boost::posix_time::microsec_clock::universal_time();
             if(enabled)
                 img = doProcess(img);
+            auto end = boost::posix_time::microsec_clock::universal_time();
+            auto delta =  end - start;
+            processingTime = delta.total_milliseconds();
         }catch(cv::Exception &err)
         {
             log(Error, err.what());
@@ -326,10 +327,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(treeName);
     SERIALIZE(nodeName);
 	SERIALIZE(fullTreeName);
-    SERIALIZE(errorCallback);
-    SERIALIZE(warningCallback);
-    SERIALIZE(statusCallback);
-    SERIALIZE(profilingCallback);
+    SERIALIZE(messageCallback);
 
 }
 std::vector<std::string>
@@ -449,27 +447,24 @@ bool Node::SkipEmpty() const
 }
 void Node::log(Verbosity level, const std::string &msg)
 {
+    if(messageCallback)
+        return messageCallback(level, msg, this);
     switch(level)
     {
     case Profiling:
-        if(profilingCallback)
-            return profilingCallback(msg, this);
+
     case Status:
-        if(statusCallback)
-            return statusCallback(msg, this);
         std::cout << "[ " << fullTreeName << " - STATUS ]" << msg << std::endl;
+        break;
     case Warning:
-        if(warningCallback)
-            return warningCallback(msg,this);
         std::cout << "[ " << fullTreeName << " - WARNING ]" << msg << std::endl;
+        break;
     case Error:
-        if(errorCallback)
-            return errorCallback(msg,this);
         std::cout << "[ " << fullTreeName << " - ERROR ]" << msg << std::endl;
+        break;
     case Critical:
-        if(errorCallback)
-            return errorCallback(msg,this);
         std::cout << "[ " << fullTreeName << " - CRITICAL ]" << msg << std::endl;
+        break;
     }
 
 

@@ -168,8 +168,9 @@ namespace EagleLib
         Loki::TypeInfo typeInfo;
         ParamType	type;
         bool		changed;
-        unsigned int subscribers; // Used with input / output parameters to list the number of subscribers to an output
-        boost::function<void(boost::shared_ptr<Parameter>)> updateCallback;
+        // Used with input / output parameters to list the number of subscribers to an output
+        unsigned int subscribers;
+        boost::mutex mtx;
     protected:
         Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),type(type_), changed(false), toolTip(toolTip_), subscribers(0){}
         virtual ~Parameter(){}
@@ -638,18 +639,11 @@ namespace EagleLib
         //
         // ****************************************************************************************************************
 
-        // Function for displaying critical error messages, IE popup display and halting program execution
-        boost::function<void(const std::string&, Node*)>                    errorCallback;
-		// Function for displaying warning messages, IE popup display
-        boost::function<void(const std::string&, Node*)>                    warningCallback;
-		// Function for displaying status messages, IE writing to console
-        boost::function<void(const std::string&, Node*)>                    statusCallback;
-        boost::function<void(const std::string&, Node*)>                    profilingCallback;
-		// Used for logging logging information
-		boost::function<void(std::string)>									logCallback;
+
+        boost::function<void(Verbosity, const std::string&, Node*)>         messageCallback;
 		// Function for setting input parameters
         boost::function<int(std::vector<std::string>)>						inputSelector;
-        boost::function<void(void)>                                         onUpdate;
+        boost::function<void(Node*)>                                        onUpdate;
 
 
 
@@ -679,7 +673,7 @@ namespace EagleLib
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
 		bool																externalDisplay;
         bool                                                                enabled;
-
+        double                                                              processingTime;
     private:
         friend class NodeManager;
         ObjectId                                                            m_OID;

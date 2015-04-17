@@ -8,7 +8,8 @@
 
 IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent, EagleLib::Node* node_) :
     QWidget(parent),
-    node(node_)
+    nodeId(node_->GetObjectId()),
+    parameter(parameter_)
 {
     layout = new QGridLayout(this);
     layout->setVerticalSpacing(0);
@@ -21,7 +22,7 @@ IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, 
     }
     layout->addWidget(nameElement, 0, 0);
     nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
-    parameter_->updateCallback = boost::bind(&IQNodeInterop::onParameterUpdate,this, _1);
+    //parameter_->updateCallback = boost::bind(&IQNodeInterop::onParameterUpdate,this, _1);
     layout->addWidget(new QLabel(QString::fromStdString(type_info::demangle(parameter_->typeInfo.name()))), 0,2);
 }
 
@@ -87,9 +88,6 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node* node) :
     errorDisplay->hide();
     criticalDisplay->hide();
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    node->statusCallback    = boost::bind(&QNodeWidget::on_status, this, _1, _2);
-    node->warningCallback   = boost::bind(&QNodeWidget::on_warning, this, _1, _2);
-    node->errorCallback     = boost::bind(&QNodeWidget::on_error, this, _1, _2);
 
 	if (node)
 	{
@@ -106,13 +104,64 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node* node) :
             ui->verticalLayout->addWidget(interop);
 		}
         node->onUpdate = boost::bind(&QNodeWidget::updateUi, this);
+        node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2, _3);
 	}
 }
 void QNodeWidget::updateUi()
 {
+    service.run();
+    EagleLib::Node* node = EagleLib::NodeManager::getInstance().getNode(nodeId);
+    if(node == nullptr)
+        return;
+    ui->processingTime->setText(QString::number(node->processingTime));
+    if(node->parameters.size() != interops.size())
+    {
+        for(int i = 0; i < node->parameters.size(); ++i)
+        {
+            bool found = false;
+            for(int j = 0; j < interops.size(); ++j)
+            {
+                if(node->parameters[i] == interops[j]->parameter)
+                    found = true;
+            }
+            if(found == false)
+            {
+                // Need to add a new interop for this node
+                auto interop = new IQNodeInterop(node->parameters[i], this, node);
+                interops.push_back(interop);
+                ui->verticalLayout->addWidget(interop);
+            }
+        }
+    }
     for(int i = 0; i < interops.size(); ++i)
     {
         interops[i]->updateUi();
+    }
+
+}
+void QNodeWidget::on_nodeUpdate()
+{
+
+}
+
+void QNodeWidget::on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node)
+{
+    switch(verb)
+    {
+    case EagleLib::Profiling:
+
+    case EagleLib::Status:
+        service.post(boost::bind(&QNodeWidget::on_status,this, msg,node));
+        return;
+    case EagleLib::Warning:
+        service.post(boost::bind(&QNodeWidget::on_warning,this, msg,node));
+        return;
+    case EagleLib::Error:
+        service.post(boost::bind(&QNodeWidget::on_error,this, msg,node));
+        return;
+    case EagleLib::Critical:
+        service.post(boost::bind(&QNodeWidget::on_error,this, msg,node));
+        return;
     }
 }
 
@@ -168,7 +217,7 @@ void QNodeWidget::setSelected(bool state)
     setPalette(pal);
 }
 QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_, EagleLib::Node* node_):
-    node(node_)
+    nodeId(node_->GetObjectId())
 {
     box = new QComboBox(parent);
     parameter = parameter_;
@@ -186,10 +235,10 @@ QWidget* QInputProxy::getWidget()
 {
     return box;
 }
-void QInputProxy::updateUi()
+void QInputProxy::updateUi(bool init)
 {
     box->clear();
-    auto inputs = node->findCompatibleInputs(parameter->name);
+    auto inputs = EagleLib::NodeManager::getInstance().getNode(nodeId)->findCompatibleInputs(parameter->name);
     for(int i = 0; i < inputs.size(); ++i)
     {
         box->addItem(QString::fromStdString(inputs[i]));

@@ -41,6 +41,13 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img);
     };
+    class Normalize: public Node
+    {
+    public:
+        Normalize();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img);
+    };
 
 
 

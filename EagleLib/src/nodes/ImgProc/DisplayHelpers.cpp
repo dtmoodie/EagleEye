@@ -26,6 +26,8 @@ AutoScale::doProcess(cv::cuda::GpuMat &img)
         cv::cuda::minMax(channels[i], &minVal, &maxVal);
         double scaleFactor = 255.0 / (maxVal - minVal);
         channels[i].convertTo(channels[0], CV_8U, scaleFactor, minVal*scaleFactor);
+        updateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal, Parameter::State);
+        updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal, Parameter::State);
     }
 
 
@@ -55,6 +57,10 @@ Colormap::doProcess(cv::cuda::GpuMat &img)
         cv::cuda::minMax(img, &minVal,&maxVal);
         scale = double(resolution) / (maxVal - minVal);
         shift = minVal * scale;
+        updateParameter<double>("Min", minVal, Parameter::State);
+        updateParameter<double>("Max", maxVal, Parameter::State);
+        updateParameter<double>("Scale", scale, Parameter::State);
+        updateParameter<double>("Shift", shift, Parameter::State);
         buildLUT();
     }
     cv::cuda::GpuMat scaledImg;
@@ -129,7 +135,18 @@ uchar ColorScale::getValue(double location_)
     if (inverted) value = 255 - value;
     return (uchar)value;
 }
+void Normalize::Init(bool firstInit)
+{
+    updateParameter<double>("Alpha", 0);
+    updateParameter<double>("Beta", 1);
+}
 
+cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img)
+{
+    cv::cuda::normalize(img,img, getParameter<double>(0)->data, getParameter<double>(1)->data, CV_MINMAX, img.type());
+    return img;
+}
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(AutoScale);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Colormap);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Normalize);

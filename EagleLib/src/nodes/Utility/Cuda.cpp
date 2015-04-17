@@ -41,7 +41,7 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img)
         log(Status, "Switching device from " + boost::lexical_cast<std::string>(currentDevice) + " to " + boost::lexical_cast<std::string>(device) + " " + prop.name);
         updateParameter<std::string>("Device name", cv::cuda::DeviceInfo(device).name());
         if(onUpdate)
-            onUpdate();
+            onUpdate(this);
     }
     cv::cuda::setDevice(device);
     return cv::cuda::GpuMat();

@@ -10,8 +10,7 @@ SerialStack::~SerialStack()
 cv::cuda::GpuMat
 SerialStack::doProcess(cv::cuda::GpuMat& img)
 {
-	
-
+    return img;
 }
 
 bool SerialStack::SkipEmpty() const

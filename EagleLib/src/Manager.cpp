@@ -163,6 +163,29 @@ NodeManager::CheckRecompile()
     }
     return false;
 }
+bool
+NodeManager::CheckRecompile(bool swapAllowed)
+{
+    static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
+    boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
+    boost::posix_time::time_duration delta = currentTime - prevTime;
+    // Prevent checking too often
+    if(delta.total_milliseconds() < 10)
+        return false;
+    prevTime = currentTime;
+    if( m_pRuntimeObjectSystem->GetIsCompiledComplete() && swapAllowed)
+    {
+        m_pRuntimeObjectSystem->LoadCompiledModule();
+    }
+    if(m_pRuntimeObjectSystem->GetIsCompiling())
+    {
+       return true;
+    }else
+    {
+        m_pRuntimeObjectSystem->GetFileChangeNotifier()->Update(float(delta.total_milliseconds())/1000.0);
+    }
+    return false;
+}
 
 void
 NodeManager::onNodeRecompile(Node *node)
