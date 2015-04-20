@@ -8,7 +8,7 @@ namespace EagleLib
     {
     public:
         GetOutputImage();
-        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img);
+        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
         void Init(bool firstInit);
     };
 }

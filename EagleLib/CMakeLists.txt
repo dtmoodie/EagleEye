@@ -22,8 +22,9 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 include(cmake/ProjectFiles.cmake)
 
-file(GLOB_RECURSE src "src/*.cpp" "src/nodes/*.cpp")
-file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
+file(GLOB_RECURSE src "src/*.cpp")
+file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")
+file(GLOB_RECURSE knl "src/*.cu")
 
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS}
                     ${Boost_INCLUDE_DIRS}
@@ -54,13 +55,14 @@ ADD_DEFINITIONS( -DOPENCV_INCLUDES="${OpenCV_INCLUDE_DIR}")
 ADD_DEFINITIONS( -DOPENCV_LIB_DIR="${CV_LIB_DIR}")
 ADD_DEFINITIONS( -DCUDA_INCLUDES="${CUDA_INCLUDE_DIRS}" )
 ADD_DEFINITIONS( -DCUDA_LIB_DIR="${CUDA_TOOLKIT_ROOT_DIR}/lib64")
-
+SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 
 # Reporting section
 message(
 "================ EagleLib ===============
     Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}
     OpenCV found at: ${OpenCV_CONFIG_PATH}
+    NVCC Flags: ${CUDA_NVCC_FLAGS}
 ++++++++++ RCC++ Defines ++++++++++++++++++
     OpenCV include dir: ${OpenCV_INCLUDE_DIR}
     Boost library dir: ${Boost_LIBRARY_DIRS}
@@ -68,6 +70,10 @@ message(
     Cuda include dir: ${CUDA_INCLUDE_DIRS}
     Cuda RT libs: ${CUDA_LIBRARIES}
     Cuda root dir: ${CUDA_TOOLKIT_ROOT_DIR}
+************* FILES ***********************
+    Headers: ${hdr}
+    Source files: ${src}
+    Kernels: ${knl}
 =====================================")
 
 
@@ -91,9 +97,10 @@ add_library(RuntimeObjectSystem
             ${RuntimeObjectSystem_SRCS}
 )
 
-add_library(EagleLib SHARED
+cuda_add_library(EagleLib SHARED
 	${src} 
 	${hdr}
+        ${knl}
 	${RuntimeObjectSystem_SRCS}
 )
 

@@ -24,7 +24,7 @@ GoodFeaturesToTrackDetector::GoodFeaturesToTrackDetector(bool drawResults_):
 }
 
 cv::cuda::GpuMat
-GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img)
+GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 {
     auto detector       = getParameter<cv::Ptr<cv::cuda::CornersDetector> >(0);
     auto numCorners     = getParameter<int>(1);

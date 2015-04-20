@@ -159,7 +159,7 @@ Node::removeChild(const std::string &name)
 }
 
 cv::cuda::GpuMat
-Node::process(cv::cuda::GpuMat &img)
+Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     if(img.empty() && SkipEmpty())
     {
@@ -174,7 +174,7 @@ Node::process(cv::cuda::GpuMat &img)
                 log(Status, "Start: " + fullTreeName);
             }
             if(enabled)
-                img = doProcess(img);
+                img = doProcess(img, stream);
             auto end = boost::posix_time::microsec_clock::universal_time();
             if(debug_verbosity <= Status)
             {
@@ -198,7 +198,7 @@ Node::process(cv::cuda::GpuMat &img)
             ObjectId id = it->id;
             auto child = getChild(id);
             if(child)
-                img = child->process(img);
+                img = child->process(img, stream);
             else
                 log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(idx) +
                     " id: " + boost::lexical_cast<std::string>(id.m_ConstructorId) +
@@ -220,12 +220,7 @@ Node::process(cv::cuda::GpuMat &img)
     return img;
 }
 
-cv::cuda::GpuMat
-EventLoopNode::process(cv::cuda::GpuMat &img)
-{
-    service.run();
-    return Node::process(img);
-}
+
 void					
 Node::process(cv::InputArray in, cv::OutputArray out)
 {
@@ -241,7 +236,7 @@ Node::process(cv::InputArray in, cv::OutputArray out)
 }
 
 cv::cuda::GpuMat
-Node::doProcess(cv::cuda::GpuMat& img)
+Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream )
 {
     return img;
 }
@@ -345,14 +340,48 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(nodeName);
 	SERIALIZE(fullTreeName);
     SERIALIZE(messageCallback);
+    SERIALIZE(onUpdate);
+    SERIALIZE(parentName);
+    SERIALIZE(parentId);
+    SERIALIZE(cpuDisplayCallback);
+    SERIALIZE(gpuDisplayCallback);
+    SERIALIZE(drawResults);
+    SERIALIZE(externalDisplay);
+    SERIALIZE(enabled);
+
 
 }
+std::vector<std::string>
+Node::findType(Parameter::Ptr param)
+{
+    std::vector<Node*> nodes;
+    NodeManager::getInstance().getAccessibleNodes(fullTreeName, nodes);
+    return findType(param, nodes);
+}
+
 std::vector<std::string>
 Node::findType(Loki::TypeInfo &typeInfo)
 {
 	std::vector<Node*> nodes;
 	NodeManager::getInstance().getAccessibleNodes(fullTreeName, nodes);
     return findType(typeInfo, nodes);
+}
+std::vector<std::string>
+Node::findType(Parameter::Ptr param, std::vector<Node*>& nodes)
+{
+    std::vector<std::string> output;
+
+    for (int i = 0; i < nodes.size(); ++i)
+    {
+        if (nodes[i] == this)
+            continue;
+        for (int j = 0; j < nodes[i]->parameters.size(); ++j)
+        {
+            if (param->acceptsInput(nodes[i]->parameters[j]->typeInfo) && nodes[i]->parameters[j]->type & Parameter::Output)
+                output.push_back(nodes[i]->parameters[j]->treeName);
+        }
+    }
+    return output;
 }
 
 std::vector<std::string> 
@@ -389,10 +418,20 @@ std::vector<std::string> Node::findCompatibleInputs(const std::string& paramName
     {
         auto param = getParameter(paramName);
         if(param)
-            output = findType(param->typeInfo);
+            output = findType(param);
     }
     return output;
 }
+std::vector<std::string> Node::findCompatibleInputs(int paramIdx)
+{
+    return findCompatibleInputs(parameters[paramIdx]);
+}
+
+std::vector<std::string> Node::findCompatibleInputs(Parameter::Ptr param)
+{
+    return findType(param);
+}
+
 
 void
 Node::setInputParameter(const std::string& sourceName, const std::string& inputName)
@@ -486,8 +525,14 @@ void Node::log(Verbosity level, const std::string &msg)
         std::cout << "[ " << fullTreeName << " - CRITICAL ]" << msg << std::endl;
         break;
     }
+}
 
-
+cv::cuda::GpuMat
+EventLoopNode::process(cv::cuda::GpuMat &img)
+{
+    service.run();
+    return Node::process(img);
 }
 
 REGISTERCLASS(Node)
+REGISTERCLASS(EventLoopNode)

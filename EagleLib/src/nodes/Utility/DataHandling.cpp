@@ -7,7 +7,7 @@ void GetOutputImage::Init(bool firstInit)
     addInputParameter<cv::cuda::GpuMat>("Input");
 }
 
-cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img)
+cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat*>("Input")->data;
     if(input == nullptr)

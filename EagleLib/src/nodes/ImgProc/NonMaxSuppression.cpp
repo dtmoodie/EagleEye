@@ -9,7 +9,7 @@ void NonMaxSuppression::Init(bool firstInit)
     addInputParameter<cv::cuda::GpuMat>("Mask");
 }
 
-cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img)
+cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     // initialise the block mask and destination
     const int M = img.rows;

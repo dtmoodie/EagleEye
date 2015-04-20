@@ -9,7 +9,7 @@ void ConvertToGrey::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img)
+cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     cv::cuda::GpuMat grey;
     try
@@ -29,7 +29,7 @@ void ConvertToHSV::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img)
+cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
 	return img;
 }
@@ -40,7 +40,7 @@ void ExtractChannels::Init(bool firstInit)
     channelNum = 0;
 }
 
-cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img)
+cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     std::vector<cv::cuda::GpuMat> channels;
     cv::cuda::split(img,channels);

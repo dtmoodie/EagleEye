@@ -13,7 +13,7 @@ RootThreaded::~RootThreaded()
 
 }
 cv::cuda::GpuMat 
-RootThreaded::doProcess(cv::cuda::GpuMat& img)
+RootThreaded::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 {
 	return img;
 }

@@ -30,14 +30,14 @@ void VideoWriter::Init(bool firstInit)
 }
 
 cv::cuda::GpuMat 
-VideoWriter::doProcess(cv::cuda::GpuMat& img)
+VideoWriter::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 {
 	return img;
 }
 void 
 VideoWriter::writeImg(cv::cuda::GpuMat& img)
 {
-	auto fileName = getParameter<std::string>(1);
+    auto fileName = getParameter<std::string>(1);
 	if (fileName->data.size() == 0)
 		return;
 	static cv::Size imgSize = img.size();

@@ -19,7 +19,7 @@ namespace EagleLib
     public:
         ParallelStack();
         ~ParallelStack();
-        virtual cv::cuda::GpuMat process(cv::cuda::GpuMat img);
+        virtual cv::cuda::GpuMat process(cv::cuda::GpuMat img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
 //        virtual void registerDisplayCallback(boost::function<void(cv::Mat)>& f);
 //        virtual void registerDisplayCallback(boost::function<void(cv::cuda::GpuMat)>& f);
 //        virtual void spawnDisplay();

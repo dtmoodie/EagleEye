@@ -8,7 +8,7 @@ namespace EagleLib
 	{
 		RootThreaded();
 		~RootThreaded();
-		cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
+        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
 
 		boost::shared_ptr<boost::thread> _thread;
 

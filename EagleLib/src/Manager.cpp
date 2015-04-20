@@ -214,7 +214,7 @@ NodeManager::getNode(const std::string &treeName)
     Node* ptr = nullptr;
     try
     {
-        m_nodeTree.get<Node*>(treeName);
+        ptr = m_nodeTree.get<Node*>(treeName);
     }catch(boost::exception &err)
     {
         std::cout << "Error getting node by name: " << treeName << std::endl;
@@ -246,6 +246,8 @@ NodeManager::getParameter(const std::string& name)
 	auto idx = name.find(':');
 	std::string parameterName = name.substr(idx+1);
 	auto node = getNode(name.substr(0, idx));
+    if(node == nullptr)
+        return Parameter::Ptr();
 	return node->getParameter(parameterName);
 }
 

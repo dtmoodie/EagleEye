@@ -239,6 +239,8 @@ namespace EagleLib
         // TODO: TEST THIS
 		virtual void setSource(const std::string& name = std::string())
 		{
+            if(name == sourceTreeName)
+                return;
 			if (name.size() != 0)
 				sourceTreeName = name;
             update();
@@ -248,7 +250,10 @@ namespace EagleLib
             if(sourceTreeName.size() == 0)
                 return;
             auto param = EagleLib::NodeManager::getInstance().getParameter(sourceTreeName);
-            this->data = getParameterPtr<T>(param);
+            if(param == nullptr)
+                this->data = nullptr;
+            else
+                this->data = getParameterPtr<T>(param);
         }
         virtual bool acceptsInput(const Loki::TypeInfo &type)
         {
@@ -296,10 +301,10 @@ namespace EagleLib
 		Node();
 		virtual ~Node();
         
-		virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img);
+        virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img, cv::cuda::Stream steam = cv::cuda::Stream::Null());
 		virtual void					process(cv::InputArray in, cv::OutputArray out);
 		// Processing functions, these actually do the work of the node
-		virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img);
+        virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
 		virtual void					doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat>& retVal);
 		virtual void					doProcess(cv::InputArray in, boost::promise<cv::OutputArray>& retVal);
 		virtual void					doProcess(cv::InputArray in, cv::OutputArray out);
@@ -400,10 +405,14 @@ namespace EagleLib
         // Find suitable input parameters
 		virtual std::vector<std::string> listInputs();
 		virtual std::vector<std::string>	 listParameters();
+        virtual std::vector<std::string> findType(Parameter::Ptr param);
         virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo);
         virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo, std::vector<Node*>& nodes);
+        virtual std::vector<std::string> findType(Parameter::Ptr param, std::vector<Node*>& nodes);
 		virtual std::vector<std::vector<std::string>> findCompatibleInputs();
         std::vector<std::string> findCompatibleInputs(const std::string& paramName);
+        std::vector<std::string> findCompatibleInputs(int paramIdx);
+        std::vector<std::string> findCompatibleInputs(Parameter::Ptr param);
         virtual void setInputParameter(const std::string& sourceName, const std::string& inputName);
         virtual void setInputParameter(const std::string& sourceName, int inputIdx);
 		virtual void updateInputParameters();
@@ -630,11 +639,9 @@ namespace EagleLib
         virtual void Init(bool firstInit = true);
         virtual void Init(const std::string& configFile);
         virtual void Init(const cv::FileNode& configNode);
-
         virtual void Serialize(ISimpleSerializer *pSerializer);
+
         virtual bool SkipEmpty() const;
-
-
 
         // ****************************************************************************************************************
         //
@@ -647,19 +654,14 @@ namespace EagleLib
 		// Function for setting input parameters
         boost::function<int(std::vector<std::string>)>						inputSelector;
         boost::function<void(Node*)>                                        onUpdate;
-
-
-
-        //std::vector<ObjectId>                                               children;
-
         nodeContainer                                                       children;
 
-		// Parent
+        // Parent full tree name
         std::string                                                         parentName;
+        // Object ID of parent node
         ObjectId                                                            parentId;
 		// Constant name that describes the node ie: Sobel
         std::string															nodeName;
-
 		// Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
         std::string															fullTreeName;       
 		// Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
@@ -668,7 +670,6 @@ namespace EagleLib
         std::vector< boost::shared_ptr< Parameter > >						parameters;
         // Parameters of the child, paired with the index of the child
         std::vector< std::pair< int, boost::shared_ptr< Parameter > > >		childParameters;
-
         boost::function<void(cv::Mat)>										cpuDisplayCallback;
         boost::function<void(cv::cuda::GpuMat)>								gpuDisplayCallback;
 		/* If true, draw results onto the image being processed */
@@ -692,8 +693,3 @@ namespace EagleLib
     };
 
 }
-
-
-
-
-

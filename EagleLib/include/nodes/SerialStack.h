@@ -14,7 +14,7 @@ namespace EagleLib
     public:
         SerialStack();
         ~SerialStack();
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
         virtual bool SkipEmpty() const;
     };
 

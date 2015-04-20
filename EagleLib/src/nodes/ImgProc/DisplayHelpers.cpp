@@ -16,7 +16,7 @@ AutoScale::Init(bool firstInit)
 }
 
 cv::cuda::GpuMat
-AutoScale::doProcess(cv::cuda::GpuMat &img)
+AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     std::vector<cv::cuda::GpuMat> channels;
     cv::cuda::split(img,channels);
@@ -29,8 +29,6 @@ AutoScale::doProcess(cv::cuda::GpuMat &img)
         updateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal, Parameter::State);
         updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal, Parameter::State);
     }
-
-
     cv::cuda::merge(channels,img);
     return img;
 }
@@ -44,7 +42,7 @@ Colormap::Init(bool firstInit)
 }
 
 cv::cuda::GpuMat
-Colormap::doProcess(cv::cuda::GpuMat &img)
+Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     if(img.channels() != 1)
     {
@@ -76,9 +74,12 @@ Colormap::doProcess(cv::cuda::GpuMat &img)
     }
     return cv::cuda::GpuMat(colorScaledImage);
 }
+
+
 void
 Colormap::buildLUT()
 {
+    //thrust::host_vector<cv::Vec3b> h_LUT;
     int scalingScheme = getParameter<int>(0)->data;
     switch(scalingScheme)
     {
@@ -98,6 +99,7 @@ Colormap::buildLUT()
     {
         LUT[i] = cv::Vec3b(blue(location), green(location), red(location));
     }
+    //d_LUT = h_LUT;
 }
 
 
@@ -141,7 +143,7 @@ void Normalize::Init(bool firstInit)
     updateParameter<double>("Beta", 1);
 }
 
-cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img)
+cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     cv::cuda::normalize(img,img, getParameter<double>(0)->data, getParameter<double>(1)->data, CV_MINMAX, img.type());
     return img;

@@ -42,7 +42,7 @@ VideoLoader::Init(bool firstInit)
     }
 }
 cv::cuda::GpuMat 
-VideoLoader::doProcess(cv::cuda::GpuMat& img)
+VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 {
     bool firstLoad = false;
 	if (parameters[0]->changed)
@@ -61,7 +61,6 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img)
             log(Status, "End of video reached");
             return img;
         }
-
        if(h_img.empty())
            return cv::cuda::GpuMat();
        try
@@ -72,15 +71,14 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img)
            log(Error, err.what());
            return img;
        }
-       updateParameter<double>("Timestamp",h_videoReader->get(cv::CAP_PROP_POS_MSEC));
-       updateParameter<double>("Frame index",h_videoReader->get(cv::CAP_PROP_POS_FRAMES));
-       updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO));
 
+       updateParameter<double>("Timestamp",h_videoReader->get(cv::CAP_PROP_POS_MSEC), Parameter::State);
+       updateParameter<double>("Frame index",h_videoReader->get(cv::CAP_PROP_POS_FRAMES), Parameter::State);
+       updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO), Parameter::State);
     }
     if(firstLoad && !img.empty())
     {
         std::stringstream ss;
-
         ss << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
         log(Status,  ss.str());
     }
@@ -164,7 +162,6 @@ VideoLoader::loadFile()
 		
         std::string resolution = "Width: " + boost::lexical_cast<std::string>(info.width) +
                 " Height: " + boost::lexical_cast<std::string>(info.height);
-		
 		std::string codec;
 		switch (info.codec)
 		{

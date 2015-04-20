@@ -13,7 +13,7 @@ void SetDevice::Init(bool firstInit)
     firstRun = true;
 }
 
-cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img)
+cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     cv::Mat asd;
     int currentDevice = cv::cuda::getDevice();

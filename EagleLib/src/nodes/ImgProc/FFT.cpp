@@ -6,15 +6,20 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaarithm")
 
 void FFT::Init(bool firstInit)
 {
-    updateParameter("DFT rows flag", false);
-    updateParameter("DFT scale flag", false);
-    updateParameter("DFT inverse flag", false);
-    updateParameter("DFT real output flag", false);
-    updateParameter("Desired output", int(-1));
-    updateParameter("Log scale", true);
+    if(firstInit)
+    {
+        updateParameter("DFT rows flag", false);        // 0
+        updateParameter("DFT scale flag", false);       // 1
+        updateParameter("DFT inverse flag", false);     // 2
+        updateParameter("DFT real output flag", false); // 3
+        updateParameter("Desired output", int(-1));     // 4
+        updateParameter("Log scale", true);             // 5
+        updateParameter<cv::cuda::GpuMat>("Magnitude", cv::cuda::GpuMat(), Parameter::Output);  // 6
+        updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat(), Parameter::Output);      // 7
+    }
 }
 
-cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img)
+cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     if(img.empty())
         return img;
@@ -53,26 +58,29 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img)
         log(Status, channel == 0 ? "Magnitude" : "Phase");
         parameters[4]->changed = false;
     }
-    if(channel != -1)
+    if(channel == 0 || parameters[6]->subscribers != 0)
     {
+        cv::cuda::GpuMat magnitude;
+        cv::cuda::magnitude(dest,magnitude);
+        if(getParameter<bool>(5)->data)
+        {
+            // Convert to log scale
+            cv::cuda::add(dest,cv::Scalar::all(1), dest);
+            cv::cuda::log(dest,dest);
+        }
         if(channel == 0)
-        {
-
-            cv::cuda::magnitude(dest,dest);
-            if(getParameter<bool>(5)->data)
-            {
-                // Convert to log scale
-                cv::cuda::add(dest,cv::Scalar::all(1), dest);
-                cv::cuda::log(dest,dest);
-            }
-        }
+            dest = magnitude;
+        updateParameter(6,magnitude);
+    }
+    if(channel == 1 || parameters[7]->subscribers != 0)
+    {
+        cv::cuda::GpuMat phase;
+        std::vector<cv::cuda::GpuMat> channels;
+        cv::cuda::split(dest,channels);
+        cv::cuda::phase(channels[0],channels[1],phase);
         if(channel == 1)
-        {
-            std::vector<cv::cuda::GpuMat> channels;
-            cv::cuda::split(dest,channels);
-
-            cv::cuda::phase(channels[0],channels[1],dest);
-        }
+            dest = phase;
+        updateParameter(7, phase);
     }
     return dest;
 }

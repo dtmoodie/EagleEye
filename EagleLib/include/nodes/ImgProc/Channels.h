@@ -8,7 +8,7 @@ namespace EagleLib
     public:
         ConvertToGrey();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
     };
 
     class ConvertToHSV: public Node
@@ -16,7 +16,7 @@ namespace EagleLib
     public:
         ConvertToHSV();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
     };
 
     class ExtractChannels: public Node
@@ -25,6 +25,6 @@ namespace EagleLib
     public:
         ExtractChannels();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
     };
 }

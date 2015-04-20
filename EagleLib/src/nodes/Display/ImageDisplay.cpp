@@ -22,7 +22,7 @@ void QtImageDisplay::Init(bool firstInit)
 }
 
 cv::cuda::GpuMat
-QtImageDisplay::doProcess(cv::cuda::GpuMat& img)
+QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 {
     if(img.channels() != 1 && img.channels() != 3)
     {
@@ -75,7 +75,7 @@ void OGLImageDisplay::Init(bool firstInit)
     }
 }
 
-cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img)
+cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     if(parameters[0]->changed)
     {
