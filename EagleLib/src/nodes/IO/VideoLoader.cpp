@@ -8,7 +8,7 @@
 #include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 using namespace EagleLib::IO;
-
+//#define GPU_DECODE_ENABLED
 
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudacodec -lopencv_videoio")
 VideoLoader::~VideoLoader()
@@ -27,7 +27,7 @@ VideoLoader::Init(bool firstInit)
         updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader, Parameter::Output);
         updateParameter<std::string>("Codec", "", Parameter::State);
         updateParameter<std::string>("Video Chroma Format", "", Parameter::State);
-        updateParameter<std::string>("Resolution", "", Parameter::State);
+        updateParameter<std::string>("Resolution", std::string(), Parameter::State);
         updateParameter<boost::function<void(void)>>("Restart Video",boost::bind(&VideoLoader::restartVideo,this), Parameter::Control);
     }else
     {
@@ -77,9 +77,10 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img)
        updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO));
 
     }
-    if(firstLoad)
+    if(firstLoad && !img.empty())
     {
         std::stringstream ss;
+
         ss << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
         log(Status,  ss.str());
     }
@@ -100,13 +101,15 @@ VideoLoader::loadFile()
         log(Warning, fileName->data.string() + " doesn't exist");
         return;
     }
+#ifdef GPU_DECODE_ENABLED
     try
     {
         d_videoReader = cv::cudacodec::createVideoReader(fileName->data.string());
     }catch(...)
+#endif
     {
         // no luck with the GPU decoder, try CPU decoder
-        log(Error, "Failed to crate GPU decoder, falling back to CPU decoder");
+        log(Error, "Failed to create GPU decoder, falling back to CPU decoder");
         h_videoReader.reset(new cv::VideoCapture);
         h_videoReader->open(fileName->data.string());
         /*
@@ -137,7 +140,6 @@ VideoLoader::loadFile()
         updateParameter<double>("Frame index",h_videoReader->get(cv::CAP_PROP_POS_FRAMES));
         updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO));
         updateParameter<double>("Frame count",h_videoReader->get(cv::CAP_PROP_FRAME_COUNT));
-
     }
 
     if (d_videoReader)

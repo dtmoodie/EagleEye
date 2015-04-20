@@ -186,15 +186,18 @@ void getParentNodes(std::vector<ObjectId>* parentList, boost::mutex* mtx, QList<
     boost::mutex::scoped_try_lock lock(*mtx);
     if(!lock)
         return;
+    bool exists;
     for(int i = 0; i < parentList->size(); ++i)
     {
         auto node = EagleLib::NodeManager::getInstance().getNode((*parentList)[i]);
         if (node)
         {
+            exists = false;
             for(auto it = nodes.begin(); it != nodes.end(); ++it)
                 if(*it == node)
-                    continue;
-            nodes.push_back(node);
+                    exists = true;
+            if(!exists)
+                nodes.push_back(node);
         }
 
     }
@@ -236,4 +239,5 @@ void processThread(std::vector<ObjectId>* parentList, boost::mutex *mtx)
         if(nodes.size() == 0)
             boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
     }
+    std::cout << "Interrupt requested, processing thread ended" << std::endl;
 }

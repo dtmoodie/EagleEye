@@ -31,7 +31,7 @@ void ConvertToHSV::Init(bool firstInit)
 
 cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img)
 {
-
+	return img;
 }
 
 void ExtractChannels::Init(bool firstInit)

@@ -17,7 +17,7 @@ void QtImageDisplay::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter("Name", fullTreeName, Parameter::Control, "Set name for window");
+        updateParameter("Name", std::string(), Parameter::Control, "Set name for window");
     }
 }
 
@@ -44,6 +44,10 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img)
         return img;
     }
     std::string name = getParameter<std::string>(0)->data;
+    if(name.size() == 0)
+    {
+        name = fullTreeName;
+    }
     try
     {
         cv::imshow(name, h_img);
@@ -65,9 +69,9 @@ void OGLImageDisplay::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter("Name", std::string("Default Name"), Parameter::Control, "Set name for window");
-        cv::namedWindow("Name", cv::WINDOW_OPENGL);
-        prevName = "Name";
+        updateParameter("Default Name", std::string("Default Name"), Parameter::Control, "Set name for window");
+        cv::namedWindow("Default Name", cv::WINDOW_OPENGL);
+        prevName = "Default Name";
     }
 }
 

@@ -54,6 +54,8 @@
 #include <type_traits>
 #include <boost/filesystem.hpp>
 #include "../LokiTypeInfo.h"
+#include <boost/thread.hpp>
+#include <boost/asio.hpp>
 
 using namespace boost::multi_index;
 
@@ -284,6 +286,7 @@ namespace EagleLib
 #endif
     {
     public:
+        static Verbosity  debug_verbosity;
 		typedef boost::shared_ptr<Node> Ptr;
 
 
@@ -680,6 +683,13 @@ namespace EagleLib
 
     };
     
+    class CV_EXPORTS EventLoopNode: public Node
+    {
+    protected:
+        boost::asio::io_service service;
+    public:
+        virtual cv::cuda::GpuMat process(cv::cuda::GpuMat &img);
+    };
 
 }
 

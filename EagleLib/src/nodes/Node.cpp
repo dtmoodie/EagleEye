@@ -4,6 +4,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include "Manager.h"
+#include <boost/date_time.hpp>
 using namespace EagleLib;
 #ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
@@ -24,6 +25,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
 
 
 #endif
+Verbosity Node::debug_verbosity = Error;
 
 Node::Node()
 {
@@ -167,9 +169,17 @@ Node::process(cv::cuda::GpuMat &img)
         try
         {
             auto start = boost::posix_time::microsec_clock::universal_time();
+            if(debug_verbosity <= Status)
+            {
+                log(Status, "Start: " + fullTreeName);
+            }
             if(enabled)
                 img = doProcess(img);
             auto end = boost::posix_time::microsec_clock::universal_time();
+            if(debug_verbosity <= Status)
+            {
+                log(Status, "End:   " + fullTreeName);
+            }
             auto delta =  end - start;
             processingTime = delta.total_milliseconds();
         }catch(cv::Exception &err)
@@ -208,6 +218,13 @@ Node::process(cv::cuda::GpuMat &img)
         log(Error, "Unknown exception");
     }
     return img;
+}
+
+cv::cuda::GpuMat
+EventLoopNode::process(cv::cuda::GpuMat &img)
+{
+    service.run();
+    return Node::process(img);
 }
 void					
 Node::process(cv::InputArray in, cv::OutputArray out)
@@ -447,8 +464,11 @@ bool Node::SkipEmpty() const
 }
 void Node::log(Verbosity level, const std::string &msg)
 {
+
     if(messageCallback)
-        return messageCallback(level, msg, this);
+        messageCallback(level, msg, this);
+    if(debug_verbosity > level && messageCallback)
+        return;
     switch(level)
     {
     case Profiling:
