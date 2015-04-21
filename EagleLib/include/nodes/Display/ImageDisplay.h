@@ -9,8 +9,8 @@ namespace EagleLib
         std::string prevName;
     public:
         QtImageDisplay();
-        QtImageDisplay(boost::function<void(cv::Mat)> cpuCallback_);
-        QtImageDisplay(boost::function<void(cv::cuda::GpuMat)> gpuCallback_);
+        QtImageDisplay(boost::function<void(cv::Mat, Node*)> cpuCallback_);
+        QtImageDisplay(boost::function<void(cv::cuda::GpuMat, Node*)> gpuCallback_);
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
 
@@ -21,7 +21,7 @@ namespace EagleLib
     public:
         OGLImageDisplay();
 
-        OGLImageDisplay(boost::function<void(cv::cuda::GpuMat)> gpuCallback_);
+        OGLImageDisplay(boost::function<void(cv::cuda::GpuMat, Node*)> gpuCallback_);
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
 

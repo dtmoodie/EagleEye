@@ -65,8 +65,8 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
         if(getParameter<bool>(5)->data)
         {
             // Convert to log scale
-            cv::cuda::add(dest,cv::Scalar::all(1), dest);
-            cv::cuda::log(dest,dest);
+            cv::cuda::add(magnitude,cv::Scalar::all(1), magnitude);
+            cv::cuda::log(magnitude,magnitude);
         }
         if(channel == 0)
             dest = magnitude;

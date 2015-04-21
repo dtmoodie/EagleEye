@@ -88,6 +88,8 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node* node) :
     errorDisplay->hide();
     criticalDisplay->hide();
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    connect(this, SIGNAL(eLog(EagleLib::Verbosity,std::string,EagleLib::Node*)),
+            this, SLOT(log(EagleLib::Verbosity,std::string,EagleLib::Node*)));
 
 	if (node)
 	{
@@ -109,7 +111,6 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node* node) :
 }
 void QNodeWidget::updateUi()
 {
-    service.run();
     EagleLib::Node* node = EagleLib::NodeManager::getInstance().getNode(nodeId);
     if(node == nullptr)
         return;
@@ -143,26 +144,30 @@ void QNodeWidget::on_nodeUpdate()
 {
 
 }
-
-void QNodeWidget::on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node)
+void QNodeWidget::log(EagleLib::Verbosity verb, const std::string &msg, EagleLib::Node *node)
 {
     switch(verb)
     {
     case EagleLib::Profiling:
 
     case EagleLib::Status:
-        service.post(boost::bind(&QNodeWidget::on_status,this, msg,node));
+        on_status(msg,node);
         return;
     case EagleLib::Warning:
-        service.post(boost::bind(&QNodeWidget::on_warning,this, msg,node));
+        on_warning(msg,node);
         return;
     case EagleLib::Error:
-        service.post(boost::bind(&QNodeWidget::on_error,this, msg,node));
+        on_error(msg,node);
         return;
     case EagleLib::Critical:
-        service.post(boost::bind(&QNodeWidget::on_error,this, msg,node));
+        on_critical(msg,node);
         return;
     }
+}
+
+void QNodeWidget::on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node)
+{
+    emit eLog(verb, msg, node);
 }
 
 QNodeWidget::~QNodeWidget()
@@ -228,6 +233,8 @@ QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Para
 void QInputProxy::onUiUpdated()
 {
     QString inputName = box->currentText();
+    if(inputName.size() == 0)
+        return;
     parameter->setSource(inputName.toStdString());
     //node->setInputParameter(inputName.toStdString(), parameter->name);
 }
@@ -238,7 +245,7 @@ QWidget* QInputProxy::getWidget()
 void QInputProxy::updateUi(bool init)
 {
     box->clear();
-    auto inputs = EagleLib::NodeManager::getInstance().getNode(nodeId)->findCompatibleInputs(parameter->name);
+    auto inputs = EagleLib::NodeManager::getInstance().getNode(nodeId)->findCompatibleInputs(parameter);
     for(int i = 0; i < inputs.size(); ++i)
     {
         box->addItem(QString::fromStdString(inputs[i]));

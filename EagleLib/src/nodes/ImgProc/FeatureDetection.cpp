@@ -73,9 +73,9 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream s
         if(drawResults)
             img.upload(results);
         if(cpuDisplayCallback)
-            cpuDisplayCallback(results);
+            cpuDisplayCallback(results, this);
         if(gpuDisplayCallback)
-            gpuDisplayCallback(cv::cuda::GpuMat(results));
+            gpuDisplayCallback(cv::cuda::GpuMat(results), this);
     }
     return img;
 }

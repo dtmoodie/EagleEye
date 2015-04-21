@@ -18,7 +18,6 @@
 #include <QComboBox>
 #include <type.h>
 #include <boost/thread/mutex.hpp>
-#include <boost/asio.hpp>
 namespace Ui {
 	class QNodeWidget;
 }
@@ -45,8 +44,11 @@ private slots:
     void on_warning(const std::string& msg, EagleLib::Node* node);
     void on_error(const std::string& msg, EagleLib::Node* node);
     void on_critical(const std::string& msg, EagleLib::Node* node);
+    void log(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
+signals:
+    void eLog(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
 private:
-    boost::asio::io_service service;
+
 	Ui::QNodeWidget* ui;
 	ObjectId nodeId;
 	ObjectId nodeParentId;

@@ -25,7 +25,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-	void process();
+    void oglDisplay(cv::cuda::GpuMat img, EagleLib::Node *node);
 	QList<EagleLib::Node*> getParentNodes();
 private slots:
     void on_pushButton_clicked();
@@ -33,9 +33,10 @@ private slots:
 	void onNodeAdd(EagleLib::Node* node);
 	void onSelectionChanged(QGraphicsProxyWidget* widget);
     void log(QString message);
-
+    void onOGLDisplay(std::string name, cv::cuda::GpuMat img);
 signals:
     void eLog(QString message);
+    void displayImage(std::string name, cv::cuda::GpuMat img);
 
 private:
     void onError(const std::string& error);

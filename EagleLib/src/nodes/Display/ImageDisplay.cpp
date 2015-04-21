@@ -5,11 +5,11 @@ using namespace EagleLib;
 NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(OGLImageDisplay)
 
-QtImageDisplay::QtImageDisplay(boost::function<void(cv::Mat)> cpuCallback_)
+QtImageDisplay::QtImageDisplay(boost::function<void(cv::Mat, Node*)> cpuCallback_)
 {
     cpuDisplayCallback = cpuCallback_;
 }
-QtImageDisplay::QtImageDisplay(boost::function<void (cv::cuda::GpuMat)> gpuCallback_)
+QtImageDisplay::QtImageDisplay(boost::function<void (cv::cuda::GpuMat, Node*)> gpuCallback_)
 {
     gpuDisplayCallback = gpuCallback_;
 }
@@ -33,14 +33,14 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
         return img;
     if(gpuDisplayCallback)
     {
-        gpuDisplayCallback(img);
+        gpuDisplayCallback(img, this);
         return img;
     }
     cv::Mat h_img;
     img.download(h_img);
     if(cpuDisplayCallback)
     {
-        cpuDisplayCallback(h_img);
+        cpuDisplayCallback(h_img, this);
         return img;
     }
     std::string name = getParameter<std::string>(0)->data;
@@ -60,7 +60,7 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 }
 
 
-OGLImageDisplay::OGLImageDisplay(boost::function<void(cv::cuda::GpuMat)> gpuCallback_)
+OGLImageDisplay::OGLImageDisplay(boost::function<void(cv::cuda::GpuMat,Node*)> gpuCallback_)
 {
     gpuDisplayCallback = gpuCallback_;
 }
@@ -70,8 +70,6 @@ void OGLImageDisplay::Init(bool firstInit)
     if(firstInit)
     {
         updateParameter("Default Name", std::string("Default Name"), Parameter::Control, "Set name for window");
-        cv::namedWindow("Default Name", cv::WINDOW_OPENGL);
-        prevName = "Default Name";
     }
 }
 
@@ -86,9 +84,17 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     }
     if(gpuDisplayCallback)
     {
-        gpuDisplayCallback(img);
+        gpuDisplayCallback(img, this);
         return img;
     }
-    cv::imshow(prevName, img);
+    cv::namedWindow(prevName, cv::WINDOW_OPENGL);
+    try
+    {
+        cv::imshow(prevName, img);
+    }catch(cv::Exception &e)
+    {
+        log(Error, "This node needs to be run from the UI / main thread. ");
+    }
+
     return img;
 }

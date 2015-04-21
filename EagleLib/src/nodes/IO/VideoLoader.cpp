@@ -6,6 +6,7 @@
 #endif
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
+#include <RuntimeObjectSystem/ISimpleSerializer.h>
 using namespace EagleLib;
 using namespace EagleLib::IO;
 //#define GPU_DECODE_ENABLED
@@ -25,22 +26,19 @@ VideoLoader::Init(bool firstInit)
         parameters[0]->changed = true;
         updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader, Parameter::Output);
         updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader, Parameter::Output);
-        updateParameter<std::string>("Codec", "", Parameter::State);
-        updateParameter<std::string>("Video Chroma Format", "", Parameter::State);
-        updateParameter<std::string>("Resolution", std::string(), Parameter::State);
         updateParameter<boost::function<void(void)>>("Restart Video",boost::bind(&VideoLoader::restartVideo,this), Parameter::Control);
     }else
     {
-        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
 
-        auto d_reader = getParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader");
-        if(d_reader != nullptr)
-            d_videoReader = d_reader->data;
-        auto h_reader = getParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader");
-        if(h_reader != nullptr)
-            h_videoReader = h_reader->data;
     }
 }
+void VideoLoader::Serialize(ISimpleSerializer *pSerializer)
+{
+    Node::Serialize(pSerializer);
+    SERIALIZE(d_videoReader);
+    SERIALIZE(h_videoReader);
+}
+
 cv::cuda::GpuMat 
 VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 {
@@ -71,7 +69,6 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
            log(Error, err.what());
            return img;
        }
-
        updateParameter<double>("Timestamp",h_videoReader->get(cv::CAP_PROP_POS_MSEC), Parameter::State);
        updateParameter<double>("Frame index",h_videoReader->get(cv::CAP_PROP_POS_FRAMES), Parameter::State);
        updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO), Parameter::State);
@@ -138,6 +135,7 @@ VideoLoader::loadFile()
         updateParameter<double>("Frame index",h_videoReader->get(cv::CAP_PROP_POS_FRAMES));
         updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO));
         updateParameter<double>("Frame count",h_videoReader->get(cv::CAP_PROP_FRAME_COUNT));
+
     }
 
     if (d_videoReader)

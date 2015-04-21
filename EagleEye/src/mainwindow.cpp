@@ -21,13 +21,16 @@ int static_errorHandler( int status, const char* func_name,const char* err_msg, 
 {
 
 }
-static void getParentNodes(std::vector<ObjectId>* parentList, boost::mutex *mtx, QList<EagleLib::Node *> &nodes);
+static void getParentNodes(std::vector<ObjectId>* parentList, boost::mutex *mtx, std::vector<EagleLib::Node *> &nodes);
 static void processThread(std::vector<ObjectId>* parentList, boost::mutex* mtx);
-
+static void process(std::vector<ObjectId>* parentList, boost::mutex* mtx);
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    qRegisterMetaType<std::string>("std::string");
+    qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
+    qRegisterMetaType<EagleLib::Verbosity>("EagleLib::Verbosity");
     ui->setupUi(this);
     fileMonitorTimer = new QTimer(this);
     fileMonitorTimer->start(1000);
@@ -50,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	quit = false;
     cv::redirectError(&static_errorHandler);
     connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
+    connect(this, SIGNAL(displayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
 }
 
 MainWindow::~MainWindow()
@@ -78,16 +82,21 @@ void
 MainWindow::onTimeout()
 {
     static bool swapRequired = false;
+    static bool joined = false;
     for(int i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi();
     }
     if(swapRequired)
     {
-        if(!processingThread.try_join_for(boost::chrono::milliseconds(30)))
+        if(!processingThread.try_join_for(boost::chrono::milliseconds(200)) && !joined)
         {
             log("Processing thread not joined, cannot perform object swap");
             return;
+        }else
+        {
+            log("Processing thread joined");
+            joined = true;
         }
         if(EagleLib::NodeManager::getInstance().CheckRecompile(true))
         {
@@ -97,7 +106,7 @@ MainWindow::onTimeout()
         {
             log("Recompile complete");
             quit = false;
-            processingThread = boost::thread(boost::bind(&MainWindow::process, this));
+            processingThread = boost::thread(boost::bind(&processThread, &parentList, &parentMtx));
             swapRequired = false;
         }
         return;
@@ -106,8 +115,8 @@ MainWindow::onTimeout()
     {
         log("Recompiling.....");
         swapRequired = true;
+        joined = false;
         processingThread.interrupt();
-        processingThread.try_join_for(boost::chrono::milliseconds(30));
         return;
     }
 
@@ -116,6 +125,17 @@ MainWindow::onTimeout()
 void MainWindow::log(QString message)
 {
     ui->console->appendPlainText(message);
+}
+// Called from the processing thread
+void MainWindow::oglDisplay(cv::cuda::GpuMat img, EagleLib::Node* node)
+{
+    emit displayImage(node->fullTreeName, img);
+}
+
+void MainWindow::onOGLDisplay(std::string name, cv::cuda::GpuMat img)
+{
+    cv::namedWindow(name, cv::WINDOW_OPENGL);
+    cv::imshow(name, img);
 }
 
 void 
@@ -126,11 +146,14 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 		auto parent = EagleLib::NodeManager::getInstance().getNode(currentNodeId);
 		parent->addChild(node);
 	}
+    if(node->nodeName == "OGLImageDisplay")
+    {
+        node->gpuDisplayCallback = boost::bind(&MainWindow::oglDisplay, this, _1, _2);
+    }
 
 	// Add a new node widget to the graph
 	QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
-
 
     nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
     nodeGraphView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
@@ -181,63 +204,46 @@ QList<EagleLib::Node*> MainWindow::getParentNodes()
 	}
 	return nodes;
 }
-void getParentNodes(std::vector<ObjectId>* parentList, boost::mutex* mtx, QList<EagleLib::Node*>& nodes)
+void getParentNodes(std::vector<ObjectId>* parentList, boost::mutex* mtx, std::vector<EagleLib::Node*>& nodes)
 {
+    nodes.clear();
+    nodes.reserve(parentList->size());
+
     boost::mutex::scoped_try_lock lock(*mtx);
     if(!lock)
         return;
-    bool exists;
     for(int i = 0; i < parentList->size(); ++i)
     {
         auto node = EagleLib::NodeManager::getInstance().getNode((*parentList)[i]);
         if (node)
         {
-            exists = false;
-            for(auto it = nodes.begin(); it != nodes.end(); ++it)
-                if(*it == node)
-                    exists = true;
-            if(!exists)
-                nodes.push_back(node);
+            nodes.push_back(node);
         }
-
     }
     return;
 }
 
-void MainWindow::process()
+void process(std::vector<ObjectId>* parentList, boost::mutex* mtx)
 {
-	std::vector<cv::cuda::GpuMat> images;
-    emit eLog("Processing thread started");
-    while (!boost::this_thread::interruption_requested())
-	{
-		auto nodes = getParentNodes();
-		images.resize(nodes.size());
-		int count = 0;
-		for (auto it = nodes.begin(); it != nodes.end(); ++it, ++count)
-		{
-			images[count] = (*it)->process(images[count]);
-		}
-        if(nodes.size() == 0)
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
-	}
-    emit eLog("Processing thread ending");
+    std::vector<EagleLib::Node*> nodes;
+    getParentNodes(parentList, mtx, nodes);
+    static std::vector<cv::cuda::GpuMat> images;
+    images.resize(nodes.size());
+    int count = 0;
+    for (auto it = nodes.begin(); it != nodes.end(); ++it, ++count)
+    {
+        images[count] = (*it)->process(images[count]);
+    }
+    if(nodes.size() == 0)
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
 }
 
 void processThread(std::vector<ObjectId>* parentList, boost::mutex *mtx)
 {
-    std::vector<cv::cuda::GpuMat> images;
-    QList<EagleLib::Node*> nodes;
+    std::cout << "Processing thread started" << std::endl;
     while (!boost::this_thread::interruption_requested())
     {
-        getParentNodes(parentList, mtx, nodes);
-        images.resize(nodes.size());
-        int count = 0;
-        for (auto it = nodes.begin(); it != nodes.end(); ++it, ++count)
-        {
-            images[count] = (*it)->process(images[count]);
-        }
-        if(nodes.size() == 0)
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
+        process(parentList, mtx);
     }
     std::cout << "Interrupt requested, processing thread ended" << std::endl;
 }

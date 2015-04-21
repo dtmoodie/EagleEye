@@ -336,9 +336,9 @@ namespace EagleLib
 		//
 		// ****************************************************************************************************************
 		// Register a function for displaying CPU images
-		 virtual void registerDisplayCallback(boost::function<void(cv::Mat)>& f);
+         virtual void registerDisplayCallback(boost::function<void(cv::Mat, Node*)>& f);
 		// Register a function for displaying GPU images
-		 virtual void registerDisplayCallback(boost::function<void(cv::cuda::GpuMat)>& f);
+         virtual void registerDisplayCallback(boost::function<void(cv::cuda::GpuMat, Node*)>& f);
 		// Spawn an external display just for this node, with name = treeName
 		 virtual void spawnDisplay();
 		// Kill any spawned external displays
@@ -670,8 +670,8 @@ namespace EagleLib
         std::vector< boost::shared_ptr< Parameter > >						parameters;
         // Parameters of the child, paired with the index of the child
         std::vector< std::pair< int, boost::shared_ptr< Parameter > > >		childParameters;
-        boost::function<void(cv::Mat)>										cpuDisplayCallback;
-        boost::function<void(cv::cuda::GpuMat)>								gpuDisplayCallback;
+        boost::function<void(cv::Mat, Node*)>								cpuDisplayCallback;
+        boost::function<void(cv::cuda::GpuMat, Node*)>						gpuDisplayCallback;
 		/* If true, draw results onto the image being processed */
         bool																drawResults;
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
