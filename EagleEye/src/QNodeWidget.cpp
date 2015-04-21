@@ -245,6 +245,7 @@ QWidget* QInputProxy::getWidget()
 void QInputProxy::updateUi(bool init)
 {
     box->clear();
+    box->addItem("");
     auto inputs = EagleLib::NodeManager::getInstance().getNode(nodeId)->findCompatibleInputs(parameter);
     for(int i = 0; i < inputs.size(); ++i)
     {

@@ -1,7 +1,50 @@
 #include "nodes/ImgProc/NonMaxSuppression.h"
-
+#include <opencv2/cudaarithm.hpp>
 
 using namespace EagleLib;
+
+void MinMax::Init(bool firstInit)
+{
+    updateParameter<double>("Min value", 0.0, Parameter::Output);
+    updateParameter<double>("Max value", 0.0, Parameter::Output);
+}
+
+cv::cuda::GpuMat MinMax::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+{
+    cv::cuda::minMax(img, &getParameter<double>(0)->data, &getParameter<double>(1)->data);
+
+    return img;
+}
+void Threshold::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        addInputParameter<double>("Input max"); // 0
+        addInputParameter<double>("Input min"); // 1
+        updateParameter<double>("Replace Value", 255.0); // 2
+        updateParameter<double>("Max", 0.0); // 3
+        updateParameter<double>("Min", 0.0); // 4
+        updateParameter<bool>("Two sided", false, Parameter::Control, "If true, min and max are used to define a threshold range");
+        updateParameter<bool>("Truncate", false, Parameter::Control, "If true, threshold to original value, not replace value");
+        updateParameter<bool>("Inverse", false, Parameter::Control, "If true, inverse threshold is applied, ie values greater than max and less than min pass");
+        updateParameter<cv::cuda::GpuMat>("Mask", cv::cuda::GpuMat(), Parameter::Output);
+    }
+}
+
+cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+{
+    cv::cuda::GpuMat mask;
+    bool inverse = getParameter<bool>(7)->data;
+    bool truncate = getParameter<bool>(6)->data;
+    if(getParameter<bool>(6)->data)
+    {
+        // Two sided means max value will also be used to find an upper bound
+
+
+    }
+
+
+}
 
 void NonMaxSuppression::Init(bool firstInit)
 {
@@ -64,3 +107,4 @@ cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(NonMaxSuppression)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(MinMax)

@@ -50,6 +50,8 @@ cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     }
     if(parameters[0]->changed)
         channelNum = getParameter<int>(0)->data;
+    if(channelNum == -1)
+        return img;
     if(channelNum < channels.size())
         return channels[channelNum];
     else

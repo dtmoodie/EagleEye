@@ -689,7 +689,8 @@ namespace EagleLib
     protected:
         boost::asio::io_service service;
     public:
-        virtual cv::cuda::GpuMat process(cv::cuda::GpuMat &img);
+        EventLoopNode();
+        virtual cv::cuda::GpuMat process(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
     };
 
 }

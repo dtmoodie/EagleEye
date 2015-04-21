@@ -8,8 +8,9 @@ namespace EagleLib
 {
 	namespace IO
 	{
-		class CV_EXPORTS VideoLoader : public Node
+        class CV_EXPORTS VideoLoader : public EventLoopNode
 		{
+            bool load;
 		public:
 			VideoLoader();
 			~VideoLoader();
@@ -21,6 +22,7 @@ namespace EagleLib
             virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
             cv::Ptr<cv::cudacodec::VideoReader> d_videoReader;
             cv::Ptr<cv::VideoCapture>           h_videoReader;
+
 		};
 	}
 }

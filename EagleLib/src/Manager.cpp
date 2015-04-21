@@ -272,7 +272,15 @@ NodeManager::getParent(const std::string& sourceNode)
 	if (idx > sourceNode.size())
 		return nullptr;
 	std::string treeName = sourceNode.substr(0, idx);
-	return m_nodeTree.get<Node*>(treeName);
+    Node* node = nullptr;
+    try
+    {
+        node = m_nodeTree.get<Node*>(treeName);
+    }catch(...)
+    {
+        return nullptr;
+    }
+    return node;
 }
 void NodeManager::getParentNodes(const std::string& sourceNode, std::vector<Node*>& output)
 {

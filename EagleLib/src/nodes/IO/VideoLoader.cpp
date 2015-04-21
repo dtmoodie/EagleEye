@@ -6,7 +6,7 @@
 #endif
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-#include <RuntimeObjectSystem/ISimpleSerializer.h>
+#include <ISimpleSerializer.h>
 using namespace EagleLib;
 using namespace EagleLib::IO;
 //#define GPU_DECODE_ENABLED
@@ -22,13 +22,15 @@ VideoLoader::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
-        parameters[0]->changed = true;
+        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/data/Som_output.avi"), Parameter::Control, "Path to video file");
         updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader, Parameter::Output);
         updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader, Parameter::Output);
         updateParameter<boost::function<void(void)>>("Restart Video",boost::bind(&VideoLoader::restartVideo,this), Parameter::Control);
+        updateParameter<bool>("Loop",true);
+        load = false;
     }else
     {
+        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/data/Som_output.avi"), Parameter::Control, "Path to video file");
 
     }
 }
@@ -43,10 +45,11 @@ cv::cuda::GpuMat
 VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 {
     bool firstLoad = false;
-	if (parameters[0]->changed)
+    if (parameters[0]->changed || load)
     {
 		loadFile();
         firstLoad = true;
+        load = false;
     }
     if(d_videoReader)
     {
@@ -57,6 +60,10 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
         if(!h_videoReader->read(h_img))
         {
             log(Status, "End of video reached");
+            auto reload = getParameter<bool>("Loop");
+            if(reload)
+                if(reload->data)
+                    loadFile();
             return img;
         }
        if(h_img.empty())
@@ -218,8 +225,15 @@ bool VideoLoader::SkipEmpty() const
 void
 VideoLoader::restartVideo()
 {
-    loadFile();
+    load = true;
+    //service.post(boost::bind(&VideoLoader::loadFile, this));
+    //loadFile();
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoLoader);
-
+VideoLoader::VideoLoader():EventLoopNode()
+{
+    nodeName = "VideoLoader";
+    treeName = nodeName;
+    fullTreeName = treeName;
+}
+REGISTERCLASS(VideoLoader)

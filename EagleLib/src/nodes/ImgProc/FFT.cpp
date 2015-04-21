@@ -58,9 +58,9 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
         log(Status, channel == 0 ? "Magnitude" : "Phase");
         parameters[4]->changed = false;
     }
+    cv::cuda::GpuMat magnitude, phase;
     if(channel == 0 || parameters[6]->subscribers != 0)
     {
-        cv::cuda::GpuMat magnitude;
         cv::cuda::magnitude(dest,magnitude);
         if(getParameter<bool>(5)->data)
         {
@@ -68,20 +68,20 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
             cv::cuda::add(magnitude,cv::Scalar::all(1), magnitude);
             cv::cuda::log(magnitude,magnitude);
         }
-        if(channel == 0)
-            dest = magnitude;
+
         updateParameter(6,magnitude);
     }
     if(channel == 1 || parameters[7]->subscribers != 0)
     {
-        cv::cuda::GpuMat phase;
         std::vector<cv::cuda::GpuMat> channels;
         cv::cuda::split(dest,channels);
         cv::cuda::phase(channels[0],channels[1],phase);
-        if(channel == 1)
-            dest = phase;
         updateParameter(7, phase);
     }
+    if(channel == 1)
+        dest = phase;
+    if(channel == 0)
+        dest = magnitude;
     return dest;
 }
 
