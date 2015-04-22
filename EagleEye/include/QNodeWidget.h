@@ -56,7 +56,7 @@ private:
     QLineEdit* warningDisplay;
     QLineEdit* errorDisplay;
     QLineEdit* criticalDisplay;
-    std::vector<IQNodeInterop*> interops;
+    std::vector<boost::shared_ptr<IQNodeInterop>> interops;
 };
 
 
@@ -441,5 +441,42 @@ public:
 private:
     QPushButton* button;
     QWidget* parent;
+};
+
+template<>
+class QNodeProxy<EagleLib::EnumParameter, false, void> : public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        parent = parent_;
+        parameter = parameter_;
+        box = new QComboBox(parent);
+        updateUi(true);
+        parent->connect(box, SIGNAL(currentIndexChanged(int)), parent_, SLOT(on_valueChanged(int)));
+
+    }
+    virtual void updateUi(bool init = false)
+    {
+        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        if(!lock)
+            return;
+        EagleLib::EnumParameter* param = EagleLib::getParameterPtr<EagleLib::EnumParameter>(parameter);
+        if(init)
+            for(int i = 0; i < param->enumerations.size(); ++i)
+                box->addItem(QString::fromStdString(param->enumerations[i]));
+    }
+    virtual void onUiUpdated()
+    {
+        boost::mutex::scoped_lock lock(parameter->mtx);
+        EagleLib::EnumParameter* param = EagleLib::getParameterPtr<EagleLib::EnumParameter>(parameter);
+        param->currentSelection = param->values[box->currentIndex()];
+        parameter->changed = true;
+    }
+    virtual QWidget* getWidget(){return box;}
+
+private:
+    QWidget* parent;
+    QComboBox* box;
 };
 

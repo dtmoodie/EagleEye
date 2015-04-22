@@ -22,16 +22,12 @@ VideoLoader::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/data/Som_output.avi"), Parameter::Control, "Path to video file");
+        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/oimg.jpeg"), Parameter::Control, "Path to video file");
         updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader, Parameter::Output);
         updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader, Parameter::Output);
         updateParameter<boost::function<void(void)>>("Restart Video",boost::bind(&VideoLoader::restartVideo,this), Parameter::Control);
         updateParameter<bool>("Loop",true);
         load = false;
-    }else
-    {
-        updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/data/Som_output.avi"), Parameter::Control, "Path to video file");
-
     }
 }
 void VideoLoader::Serialize(ISimpleSerializer *pSerializer)

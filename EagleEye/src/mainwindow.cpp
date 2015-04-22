@@ -54,6 +54,8 @@ MainWindow::MainWindow(QWidget *parent) :
     cv::redirectError(&static_errorHandler);
     connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(displayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
+    connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
+    connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
 }
 
 MainWindow::~MainWindow()
@@ -182,6 +184,11 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 void
 MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
 {
+    if(widget == nullptr)
+    {
+        currentSelectedNodeWidget = nullptr;
+        return;
+    }
     if(currentSelectedNodeWidget)
         if(auto oldWidget = dynamic_cast<QNodeWidget*>(currentSelectedNodeWidget->widget()))
             oldWidget->setSelected(false);
@@ -228,11 +235,13 @@ void process(std::vector<ObjectId>* parentList, boost::mutex* mtx)
     std::vector<EagleLib::Node*> nodes;
     getParentNodes(parentList, mtx, nodes);
     static std::vector<cv::cuda::GpuMat> images;
+    static std::vector<cv::cuda::Stream> streams;
+    streams.resize(nodes.size());
     images.resize(nodes.size());
     int count = 0;
     for (auto it = nodes.begin(); it != nodes.end(); ++it, ++count)
     {
-        images[count] = (*it)->process(images[count]);
+        (*it)->process(images[count], streams[count]);
     }
     if(nodes.size() == 0)
         boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
@@ -246,4 +255,13 @@ void processThread(std::vector<ObjectId>* parentList, boost::mutex *mtx)
         process(parentList, mtx);
     }
     std::cout << "Interrupt requested, processing thread ended" << std::endl;
+}
+void MainWindow::startProcessingThread()
+{
+    processingThread = boost::thread(boost::bind(&processThread, &parentList, &parentMtx));
+}
+void MainWindow::stopProcessingThread()
+{
+    processingThread.interrupt();
+    processingThread.join();
 }

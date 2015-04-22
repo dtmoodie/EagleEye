@@ -37,7 +37,8 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
         return img;
     }
     cv::Mat h_img;
-    img.download(h_img);
+    img.download(h_img, stream);
+    stream.waitForCompletion();
     if(cpuDisplayCallback)
     {
         cpuDisplayCallback(h_img, this);

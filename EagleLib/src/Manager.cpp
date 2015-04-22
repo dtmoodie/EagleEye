@@ -81,9 +81,8 @@ NodeManager::OnConstructorsAdded()
 			ptr = ptr->GetInterface(IID_NodeObject);
 			if (ptr)
 			{
-				auto nodePtr = static_cast<Node*>(ptr);
-				m_nodeTree.erase(nodePtr->fullTreeName);
-				m_nodeTree.put(nodePtr->fullTreeName, nodePtr);
+                auto nodePtr = static_cast<Node*>(ptr);
+                m_nodeTree.put(t_nodeTree::path_type{nodePtr->fullTreeName,'.'}, nodePtr);
 				newNodes.push_back(nodePtr);
 			}
 		}
@@ -111,7 +110,8 @@ Node* NodeManager::addNode(const std::string &nodeName)
         {
             Node* node = static_cast<Node*>(interface);
             node->Init(true);
-			if (m_nodeMap.size() == 0)
+            // Add the first node here, however later the tree is updated in updateTreeName
+            if (m_nodeMap.size() == 0)
 				m_nodeTree.put(t_nodeTree::path_type{node->fullTreeName, '.' }, node);
             m_nodeMap[nodeName].push_back(node);
             return node;
@@ -127,13 +127,24 @@ Node* NodeManager::addNode(const std::string &nodeName)
     }
     return nullptr;
 }
+bool NodeManager::removeNode(const std::string& nodeName)
+{
+
+    return false;
+}
+
+bool NodeManager::removeNode(ObjectId oid)
+{
+    auto path = getNode(oid)->fullTreeName;
+    m_nodeTree.erase(path);
+    delete m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(oid.m_ConstructorId)->GetConstructedObject(oid.m_PerTypeId);
+    return true;
+}
 
 void 
 NodeManager::addConstructors(IAUDynArray<IObjectConstructor*> & constructors)
 {
-	m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddConstructors(constructors);
-	//m_pRuntimeObjectSystem->SetupRuntimeFileTracking(constructors);
-	//m_pRuntimeObjectSystem->SetupObjectConstructors()
+    m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddConstructors(constructors);
 }
 void 
 NodeManager::setupModule(IPerModuleInterface* pPerModuleInterface)
@@ -199,6 +210,12 @@ NodeManager::getNode(const ObjectId& id)
 {
     AUDynArray<IObjectConstructor*> constructors;
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+    if(!id.IsValid())
+        return nullptr;
+    if(id.m_ConstructorId >= constructors.Size())
+        return nullptr;
+    if(id.m_PerTypeId >= constructors[id.m_ConstructorId]->GetNumberConstructedObjects())
+        return nullptr;
     IObject* pObj = constructors[id.m_ConstructorId]->GetConstructedObject(id.m_PerTypeId);
     if(!pObj)
         return nullptr;

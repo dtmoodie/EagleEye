@@ -1,12 +1,17 @@
 #include "NodeView.h"
 
 NodeView::NodeView(QWidget* parent) :
-    QGraphicsView(parent), currentWidget(nullptr), resizeGrabSize(20)
+    QGraphicsView(parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
 {}
 
 NodeView::NodeView(QGraphicsScene *scene, QWidget *parent):
-    QGraphicsView(scene, parent), currentWidget(nullptr), resizeGrabSize(20)
-{}
+    QGraphicsView(scene, parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
+{
+    actions.push_back(new QAction("Delete Node", rightClickMenu));
+    rightClickMenu->addActions(actions);
+
+    connect(rightClickMenu, SIGNAL(triggered(QAction*)), this, SLOT(on_actionSelect(QAction*)));
+}
 void NodeView::addWidget(QGraphicsProxyWidget * widget, ObjectId id)
 {
     widgetMap[id] = widget;
@@ -20,6 +25,30 @@ QGraphicsProxyWidget* NodeView::getWidget(ObjectId id)
         return itr->second;
     else return nullptr;
 }
+void NodeView::on_actionSelect(QAction *action)
+{
+    if(action == actions[0])
+    {
+        // Delete the current node
+        auto nodeWidget = dynamic_cast<QNodeWidget*>(currentWidget->widget());
+        if(nodeWidget)
+        {
+            auto node = nodeWidget->getNode();
+
+            auto parent = node->getParent();
+            if(parent)
+                parent->removeChild(node->GetObjectId());
+            // Remove this node from the node manager
+            emit stopThread();
+            EagleLib::NodeManager::getInstance().removeNode(node->GetObjectId());
+            emit selectionChanged(nullptr);
+            delete currentWidget;
+            currentWidget = nullptr;
+            emit startThread();
+        }
+    }
+}
+
 void NodeView::mousePressEvent(QMouseEvent* event)
 {
     if (QGraphicsItem* item = itemAt(event->pos().x(), event->pos().y()))
@@ -29,33 +58,42 @@ void NodeView::mousePressEvent(QMouseEvent* event)
             mousePressPosition = event->pos();
             currentWidget = widget;
             emit selectionChanged(widget);
-            // If within the 5x5 corners of the widget, resize
-            auto pos = widget->pos();
-            auto size = widget->size();
-            grabPoint = mapToScene(event->pos());
-            int x = grabPoint.x();
-            int y = grabPoint.y();
-            if(x < pos.x() + resizeGrabSize && y < pos.y() + resizeGrabSize)// Top left corner
+            if(event->button() == Qt::LeftButton)
             {
-                corner = 0;
-                resize = true;
-            }
-            if(x < pos.x() + resizeGrabSize && y > pos.y() + size.height() - resizeGrabSize)    // bottom left corner
-            {
-                corner = 3;
-                resize = true;
-            }
-            if(x > pos.x() + size.width() - 5 && y < pos.y() + resizeGrabSize)   // Top right
-            {
-                corner = 1;
-                resize = true;
-            }
-            if(x > pos.x() + size.width() - 5 && y > pos.y() + size.height() - resizeGrabSize) // Bottom right
-            {
-                corner = 2;
-                resize = true;
-            }
+                // If within the 5x5 corners of the widget, resize
+                auto pos = widget->pos();
+                auto size = widget->size();
+                grabPoint = mapToScene(event->pos());
+                int x = grabPoint.x();
+                int y = grabPoint.y();
+                if(x < pos.x() + resizeGrabSize && y < pos.y() + resizeGrabSize)// Top left corner
+                {
+                    corner = 0;
+                    resize = true;
+                }
+                if(x < pos.x() + resizeGrabSize && y > pos.y() + size.height() - resizeGrabSize)    // bottom left corner
+                {
+                    corner = 3;
+                    resize = true;
+                }
+                if(x > pos.x() + size.width() - 5 && y < pos.y() + resizeGrabSize)   // Top right
+                {
+                    corner = 1;
+                    resize = true;
+                }
+                if(x > pos.x() + size.width() - 5 && y > pos.y() + size.height() - resizeGrabSize) // Bottom right
+                {
+                    corner = 2;
+                    resize = true;
+                }
+            }else
+                if(event->button() == Qt::RightButton)
+                {
 
+                    // Spawn the right click dialog
+                    QPoint pos = mapToGlobal(mousePressPosition);
+                    rightClickMenu->popup(pos);
+                }
         }
     }else
     {
@@ -111,7 +149,10 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
     QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(child->widget());
     if(nodeWidget == nullptr)
         return nullptr;
-    auto parentId = nodeWidget->getNode()->parentId;
+    EagleLib::Node* node = nodeWidget->getNode();
+    if(!node)
+        return nullptr;
+    auto parentId = node->parentId;
     if(!parentId.IsValid())
         return nullptr;
     // First check if this child's line already exists

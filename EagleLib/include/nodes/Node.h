@@ -143,6 +143,22 @@ namespace EagleLib
         Error = 3,
         Critical = 4
     };
+#define ENUM(value) (int)value, #value
+    class CV_EXPORTS EnumParameter
+    {
+    public:
+        EnumParameter()
+        {            currentSelection = 0;        }
+
+        void addEnum(int value, const std::string& enumeration)
+        {
+            enumerations.push_back(enumeration);
+            values.push_back(value);
+        }
+        std::vector<std::string> enumerations;
+        std::vector<int>         values;
+        int currentSelection;
+    };
 
     class CV_EXPORTS Parameter
     {

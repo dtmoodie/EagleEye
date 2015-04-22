@@ -34,9 +34,12 @@ private slots:
 	void onSelectionChanged(QGraphicsProxyWidget* widget);
     void log(QString message);
     void onOGLDisplay(std::string name, cv::cuda::GpuMat img);
+    void stopProcessingThread();
+    void startProcessingThread();
 signals:
     void eLog(QString message);
     void displayImage(std::string name, cv::cuda::GpuMat img);
+
 
 private:
     void onError(const std::string& error);

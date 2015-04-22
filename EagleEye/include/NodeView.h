@@ -4,7 +4,7 @@
 #include <qgraphicsproxywidget.h>
 #include <nodes/Node.h>
 #include <QNodeWidget.h>
-
+#include <QMenu>
 class NodeView : public QGraphicsView
 {
 	Q_OBJECT
@@ -22,7 +22,10 @@ public:
 
 signals:
 	void selectionChanged(QGraphicsProxyWidget* widget);
-	
+    void stopThread();
+    void startThread();
+private slots:
+    void on_actionSelect(QAction* action);
 private:
 	QGraphicsProxyWidget* currentWidget;
 	QPoint mousePressPosition;
@@ -32,5 +35,7 @@ private:
     QPointF grabPoint;
     int corner;
     std::map<QGraphicsProxyWidget*, QGraphicsLineItem*> parentLineMap;
+    QMenu* rightClickMenu;
+    QList<QAction*> actions;
 };
 

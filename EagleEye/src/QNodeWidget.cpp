@@ -101,7 +101,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node* node) :
 		for (int i = 0; i < node->parameters.size(); ++i)
 		{
             auto interop = new IQNodeInterop(node->parameters[i], this, node);
-            interops.push_back(interop);
+            interops.push_back(boost::shared_ptr<IQNodeInterop>(interop));
             //interop->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
             ui->verticalLayout->addWidget(interop);
 		}
@@ -129,7 +129,7 @@ void QNodeWidget::updateUi()
             {
                 // Need to add a new interop for this node
                 auto interop = new IQNodeInterop(node->parameters[i], this, node);
-                interops.push_back(interop);
+                interops.push_back(boost::shared_ptr<IQNodeInterop>(interop));
                 ui->verticalLayout->addWidget(interop);
             }
         }
@@ -171,7 +171,9 @@ void QNodeWidget::on_logReceive(EagleLib::Verbosity verb, const std::string& msg
 }
 
 QNodeWidget::~QNodeWidget()
-{}
+{
+
+}
 
 void QNodeWidget::on_enableClicked(bool state)
 {    EagleLib::NodeManager::getInstance().getNode(nodeId)->enabled = state;     }
@@ -244,13 +246,17 @@ QWidget* QInputProxy::getWidget()
 }
 void QInputProxy::updateUi(bool init)
 {
+    QString currentItem = box->currentText();
     box->clear();
     box->addItem("");
     auto inputs = EagleLib::NodeManager::getInstance().getNode(nodeId)->findCompatibleInputs(parameter);
     for(int i = 0; i < inputs.size(); ++i)
     {
-        box->addItem(QString::fromStdString(inputs[i]));
+        QString text = QString::fromStdString(inputs[i]);
+        box->addItem(text);
     }
+    if(currentItem.size())
+        box->setCurrentText(currentItem);
 }
 
 template<typename T> bool acceptsType(Loki::TypeInfo& type)
@@ -282,6 +288,7 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE(boost::filesystem::path);
         MAKE_TYPE(bool);
         MAKE_TYPE(boost::function<void(void)>);
+        MAKE_TYPE(EagleLib::EnumParameter);
     }
 
     if(parameter->type & EagleLib::Parameter::Output || parameter->type & EagleLib::Parameter::State)
@@ -298,8 +305,6 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE_(boost::filesystem::path);
         MAKE_TYPE_(bool);
     }
-
-
 	return nullptr;
 }
 

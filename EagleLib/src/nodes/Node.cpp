@@ -62,7 +62,6 @@ Node::addChild(Node* child)
 	// Notify the node manager of the tree name
 	NodeManager::getInstance().updateTreeName(child, prevTreeName);
 
-
     NodeInfo info;
     info.id = child->GetObjectId();
     info.index = children.get<0>().size();
@@ -145,7 +144,11 @@ Node::getChildRecursive(std::string treeName_)
 void
 Node::removeChild(ObjectId childId)
 {
-
+    for(auto it = children.begin(); it != children.end(); ++it)
+    {
+        if(it->id == childId)
+            children.erase(it);
+    }
 
 }
 
@@ -192,13 +195,18 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
     }
     try
     {
+        if(children.size() == 0)
+            return img;
         int idx = 0;
+        cv::cuda::GpuMat childResults;
+        if(!img.empty())
+            img.copyTo(childResults,stream);
         for (auto it = children.begin(); it != children.end(); ++it, ++idx)
         {
             ObjectId id = it->id;
             auto child = getChild(id);
             if(child)
-                img = child->process(img, stream);
+                childResults = child->process(childResults, stream);
             else
                 log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(idx) +
                     " id: " + boost::lexical_cast<std::string>(id.m_ConstructorId) +

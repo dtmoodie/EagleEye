@@ -34,6 +34,8 @@ namespace EagleLib
 		static NodeManager& getInstance();
 
         Node *addNode(const std::string& nodeName);
+        bool removeNode(const std::string& nodeName);
+        bool removeNode(ObjectId oid);
 
 		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
 		void setupModule(IPerModuleInterface* pPerModuleInterface);

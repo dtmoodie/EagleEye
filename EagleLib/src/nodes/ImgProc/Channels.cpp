@@ -14,7 +14,7 @@ cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     cv::cuda::GpuMat grey;
     try
     {
-        cv::cuda::cvtColor(img, grey, cv::COLOR_BGR2GRAY);
+        cv::cuda::cvtColor(img, grey, cv::COLOR_BGR2GRAY, 0, stream);
     }catch(cv::Exception &err)
     {
         log(Error, err.what());
@@ -43,7 +43,7 @@ void ExtractChannels::Init(bool firstInit)
 cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
     std::vector<cv::cuda::GpuMat> channels;
-    cv::cuda::split(img,channels);
+    cv::cuda::split(img,channels,stream);
     for(int i = 0; i < channels.size(); ++i)
     {
         updateParameter("Channel " + std::to_string(i), channels[i], Parameter::Output);
@@ -57,7 +57,28 @@ cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     else
         return channels[0];
 }
+void ConvertDataType::Init(bool firstInit)
+{
+    EnumParameter dataType;
+    dataType.addEnum(ENUM(CV_8U));
+    dataType.addEnum(ENUM(CV_8S));
+    dataType.addEnum(ENUM(CV_16U));
+    dataType.addEnum(ENUM(CV_16S));
+    dataType.addEnum(ENUM(CV_32S));
+    dataType.addEnum(ENUM(CV_32F));
+    dataType.addEnum(ENUM(CV_64F));
+    updateParameter("Data type", dataType);
+    updateParameter("Alpha", 0.0);
+    updateParameter("Beta", 0.0);
+}
+
+cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+{
+    img.convertTo(img, getParameter<EnumParameter>(0)->data.currentSelection, getParameter<double>(1)->data, getParameter<double>(2)->data,stream);
+    return img;
+}
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToGrey);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToHSV);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ExtractChannels);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertDataType);
