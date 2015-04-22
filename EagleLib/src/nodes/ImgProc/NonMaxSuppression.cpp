@@ -43,7 +43,7 @@ cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream st
 
     }
 
-
+	return img;
 }
 
 void NonMaxSuppression::Init(bool firstInit)

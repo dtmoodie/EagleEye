@@ -1,5 +1,6 @@
 #ifndef TYPE_HPP
 #define TYPE_HPP
+#ifndef _MSC_VER
 
 #include <string>
 #include <typeinfo>
@@ -13,5 +14,5 @@ std::string type(const T& t) {
     return demangle(typeid(t).name());
 }
 }
-
+#endif
 #endif

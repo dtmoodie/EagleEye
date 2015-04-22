@@ -19,14 +19,15 @@ std::string demangle(const char* name) {
 }
 }
 #else
-
+#ifndef _MSC_VER
 namespace type_info
 {
+
 // does nothing if not g++
 std::string demangle(const char* name) {
     return name;
 }
 }
 
-
+#endif
 #endif

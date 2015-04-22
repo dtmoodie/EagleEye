@@ -6,7 +6,7 @@ set(OPENCV_STATIC OFF)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
 find_package(CUDA REQUIRED)
 find_package(Qt5 REQUIRED Core)
-
+cmake_policy(SET CMP0012 NEW)
 IF(WIN32)
 	set(Boost_USE_STATIC_LIBS        ON)
 	set(Boost_USE_MULTITHREADED      ON)
@@ -17,7 +17,7 @@ ELSE(WIN32)
 	set(Boost_USE_STATIC_RUNTIME     OFF)
 ENDIF(WIN32)
 
-set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
+set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 include(cmake/ProjectFiles.cmake)
@@ -74,6 +74,8 @@ message(
     Headers: ${hdr}
     Source files: ${src}
     Kernels: ${knl}
+
+	Boost LIBS: ${Boost_LIBRARIES}
 =====================================")
 
 
