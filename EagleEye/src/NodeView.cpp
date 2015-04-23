@@ -42,8 +42,11 @@ void NodeView::on_actionSelect(QAction *action)
             emit stopThread();
             EagleLib::NodeManager::getInstance().removeNode(node->GetObjectId());
             emit selectionChanged(nullptr);
+            emit widgetDeleted(currentWidget->widget());
             delete currentWidget;
+
             currentWidget = nullptr;
+
             emit startThread();
         }
     }

@@ -114,6 +114,9 @@ void QNodeWidget::updateUi()
     EagleLib::Node* node = EagleLib::NodeManager::getInstance().getNode(nodeId);
     if(node == nullptr)
         return;
+//    boost::recursive_mutex::scoped_try_lock lock(node->mtx);
+//    if(!lock)
+//        return;
     ui->processingTime->setText(QString::number(node->processingTime));
     if(node->parameters.size() != interops.size())
     {
@@ -138,7 +141,6 @@ void QNodeWidget::updateUi()
     {
         interops[i]->updateUi();
     }
-
 }
 void QNodeWidget::on_nodeUpdate()
 {
@@ -304,6 +306,7 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE_(std::string);
         MAKE_TYPE_(boost::filesystem::path);
         MAKE_TYPE_(bool);
+        MAKE_TYPE_(EagleLib::EnumParameter);
     }
 	return nullptr;
 }

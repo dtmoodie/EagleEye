@@ -59,23 +59,27 @@ cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 }
 void ConvertDataType::Init(bool firstInit)
 {
-    EnumParameter dataType;
-    dataType.addEnum(ENUM(CV_8U));
-    dataType.addEnum(ENUM(CV_8S));
-    dataType.addEnum(ENUM(CV_16U));
-    dataType.addEnum(ENUM(CV_16S));
-    dataType.addEnum(ENUM(CV_32S));
-    dataType.addEnum(ENUM(CV_32F));
-    dataType.addEnum(ENUM(CV_64F));
-    updateParameter("Data type", dataType);
-    updateParameter("Alpha", 0.0);
-    updateParameter("Beta", 0.0);
+    if(firstInit)
+    {
+        EnumParameter dataType;
+        dataType.addEnum(ENUM(CV_8U));
+        dataType.addEnum(ENUM(CV_8S));
+        dataType.addEnum(ENUM(CV_16U));
+        dataType.addEnum(ENUM(CV_16S));
+        dataType.addEnum(ENUM(CV_32S));
+        dataType.addEnum(ENUM(CV_32F));
+        dataType.addEnum(ENUM(CV_64F));
+        updateParameter("Data type", dataType);
+        updateParameter("Alpha", 0.0);
+        updateParameter("Beta", 0.0);
+    }
 }
 
 cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
-    img.convertTo(img, getParameter<EnumParameter>(0)->data.currentSelection, getParameter<double>(1)->data, getParameter<double>(2)->data,stream);
-    return img;
+    cv::cuda::GpuMat output;
+    img.convertTo(output, getParameter<EnumParameter>(0)->data.currentSelection, getParameter<double>(1)->data, getParameter<double>(2)->data,stream);
+    return output;
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToGrey);

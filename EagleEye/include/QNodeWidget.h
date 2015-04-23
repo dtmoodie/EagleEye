@@ -17,7 +17,7 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <type.h>
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 namespace Ui {
 	class QNodeWidget;
 }
@@ -135,14 +135,14 @@ public:
 	}
     virtual void updateUi(bool init = false)
 	{
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock) return;
         if(auto param = EagleLib::getParameterPtr<T>(parameter))
             box->setValue(*param);
 	}
 	virtual void onUiUpdated()
 	{
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<T>(parameter))
@@ -166,7 +166,7 @@ public:
     }
     virtual void updateUi(bool init = false)
     {
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<T>(parameter))
@@ -198,7 +198,7 @@ public:
 	}
     virtual void updateUi(bool init = false)
 	{
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<T>(parameter))
@@ -206,7 +206,7 @@ public:
 	}
 	virtual void onUiUpdated()
 	{
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<T>(parameter))
@@ -231,7 +231,7 @@ public:
 	}
     virtual void updateUi(bool init = false)
     {
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<bool>(parameter))
@@ -239,7 +239,7 @@ public:
     }
 	virtual void onUiUpdated()
     {
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<bool>(parameter))
@@ -263,7 +263,7 @@ public:
     }
     virtual void updateUi(bool init = false)
     {
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<bool>(parameter))
@@ -290,7 +290,7 @@ public:
 	}
     virtual void updateUi(bool init = false)
 	{
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<std::string>(parameter))
@@ -299,6 +299,9 @@ public:
 	}
 	virtual void onUiUpdated()
 	{
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
+        if(!lock)
+            return;
         if(auto param = EagleLib::getParameterPtr<std::string>(parameter))
             *param = box->text().toStdString();
         parameter->changed = true;
@@ -319,7 +322,7 @@ public:
     }
     virtual void updateUi(bool init = false)
     {
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<std::string>(parameter))
@@ -350,7 +353,7 @@ public:
     virtual void updateUi(bool init = false)
 	{
         std::string fileName;
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter))
@@ -364,7 +367,7 @@ public:
 	virtual void onUiUpdated()
 	{
 		QString filename = QFileDialog::getOpenFileName(parent, "Select file");
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter))
@@ -392,7 +395,7 @@ public:
     }
     virtual void updateUi(bool init = false)
     {
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock)
             return;
         if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter))
@@ -416,7 +419,7 @@ public:
         parameter = parameter_;
         button = new QPushButton(parent);
         parent->connect(button, SIGNAL(clicked()), parent, SLOT(on_valueChanged()));
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock)
             return;
         button->setText(QString::fromStdString(parameter_->name));
@@ -428,7 +431,7 @@ public:
     }
     virtual void onUiUpdated()
     {
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
         if(!lock)
             return;
         auto function = EagleLib::getParameterPtr<boost::function<void(void)>>(parameter);
@@ -458,19 +461,25 @@ public:
     }
     virtual void updateUi(bool init = false)
     {
-        boost::mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
         if(!lock)
             return;
         EagleLib::EnumParameter* param = EagleLib::getParameterPtr<EagleLib::EnumParameter>(parameter);
         if(init)
             for(int i = 0; i < param->enumerations.size(); ++i)
                 box->addItem(QString::fromStdString(param->enumerations[i]));
+        if(parameter->changed)
+        {
+            box->setCurrentIndex(param->currentSelection);
+        }
     }
     virtual void onUiUpdated()
     {
-        boost::mutex::scoped_lock lock(parameter->mtx);
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
+        if(!lock)
+            return;
         EagleLib::EnumParameter* param = EagleLib::getParameterPtr<EagleLib::EnumParameter>(parameter);
-        param->currentSelection = param->values[box->currentIndex()];
+        param->currentSelection = box->currentIndex();
         parameter->changed = true;
     }
     virtual QWidget* getWidget(){return box;}
@@ -480,3 +489,42 @@ private:
     QComboBox* box;
 };
 
+template<>
+class QNodeProxy<EagleLib::EnumParameter, true, void> : public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        parent = parent_;
+        parameter = parameter_;
+        box = new QComboBox(parent);
+        updateUi(true);
+        parent->connect(box, SIGNAL(currentIndexChanged(int)), parent_, SLOT(on_valueChanged(int)));
+
+    }
+    virtual void updateUi(bool init = false)
+    {
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        if(!lock)
+            return;
+        EagleLib::EnumParameter* param = EagleLib::getParameterPtr<EagleLib::EnumParameter>(parameter);
+        if(init)
+        {
+            for(int i = 0; i < param->enumerations.size(); ++i)
+                box->addItem(QString::fromStdString(param->enumerations[i]));
+        }
+        if(parameter->changed)
+        {
+            box->setCurrentIndex(param->currentSelection);
+        }
+    }
+    virtual void onUiUpdated()
+    {
+
+    }
+    virtual QWidget* getWidget(){return box;}
+
+private:
+    QWidget* parent;
+    QComboBox* box;
+};

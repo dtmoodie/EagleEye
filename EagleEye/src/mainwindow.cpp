@@ -22,8 +22,8 @@ int static_errorHandler( int status, const char* func_name,const char* err_msg, 
 
 }
 static void getParentNodes(std::vector<ObjectId>* parentList, boost::mutex *mtx, std::vector<EagleLib::Node *> &nodes);
-static void processThread(std::vector<ObjectId>* parentList, boost::mutex* mtx);
-static void process(std::vector<ObjectId>* parentList, boost::mutex* mtx);
+static void processThread(std::vector<ObjectId>* parentList, boost::recursive_mutex *mtx);
+static void process(std::vector<ObjectId>* parentList, boost::recursive_mutex *mtx);
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -56,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(displayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
     connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
     connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
+    connect(nodeGraphView, SIGNAL(widgetDeleted(QWidget*)), this, SLOT(onWidgetDeleted(QWidget*)));
 }
 
 MainWindow::~MainWindow()
@@ -89,6 +90,7 @@ MainWindow::onTimeout()
     {
         widgets[i]->updateUi();
     }
+
     if(swapRequired)
     {
         if(!processingThread.try_join_for(boost::chrono::milliseconds(200)) && !joined)
@@ -121,8 +123,6 @@ MainWindow::onTimeout()
         processingThread.interrupt();
         return;
     }
-
-
 }
 void MainWindow::log(QString message)
 {
@@ -146,7 +146,8 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 	if (currentNodeId.IsValid())
 	{
 		auto parent = EagleLib::NodeManager::getInstance().getNode(currentNodeId);
-		parent->addChild(node);
+        if(parent)
+            parent->addChild(node);
 	}
     if(node->nodeName == "OGLImageDisplay")
     {
@@ -154,6 +155,7 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
     }
 
 	// Add a new node widget to the graph
+    boost::recursive_mutex::scoped_lock lock(parentMtx);
 	QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
 
@@ -166,6 +168,7 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 	}
 	else
 	{
+        boost::recursive_mutex::scoped_try_lock lock(parentMtx);
 		parentList.push_back(node->GetObjectId());
 	}
     if(!currentSelectedNodeWidget)
@@ -174,11 +177,18 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
         currentSelectedNodeWidget = proxyWidget;
         currentNodeId = node->GetObjectId();
     }
+
     for(int i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi();
     }
     widgets.push_back(nodeWidget);
+}
+void MainWindow::onWidgetDeleted(QWidget* widget)
+{
+    auto itr = std::find(widgets.begin(), widgets.end(), widget);
+    if(itr != widgets.end())
+        widgets.erase(itr);
 }
 
 void
@@ -187,6 +197,7 @@ MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
     if(widget == nullptr)
     {
         currentSelectedNodeWidget = nullptr;
+        currentNodeId.SetInvalid();
         return;
     }
     if(currentSelectedNodeWidget)
@@ -211,14 +222,11 @@ QList<EagleLib::Node*> MainWindow::getParentNodes()
 	}
 	return nodes;
 }
-void getParentNodes(std::vector<ObjectId>* parentList, boost::mutex* mtx, std::vector<EagleLib::Node*>& nodes)
+void getParentNodes(std::vector<ObjectId>* parentList, std::vector<EagleLib::Node*>& nodes, boost::recursive_mutex* mtx)
 {
     nodes.clear();
+    boost::recursive_mutex::scoped_lock lock(*mtx);
     nodes.reserve(parentList->size());
-
-    boost::mutex::scoped_try_lock lock(*mtx);
-    if(!lock)
-        return;
     for(int i = 0; i < parentList->size(); ++i)
     {
         auto node = EagleLib::NodeManager::getInstance().getNode((*parentList)[i]);
@@ -230,10 +238,11 @@ void getParentNodes(std::vector<ObjectId>* parentList, boost::mutex* mtx, std::v
     return;
 }
 
-void process(std::vector<ObjectId>* parentList, boost::mutex* mtx)
+void process(std::vector<ObjectId>* parentList, boost::recursive_mutex* mtx)
 {
+
     std::vector<EagleLib::Node*> nodes;
-    getParentNodes(parentList, mtx, nodes);
+    getParentNodes(parentList, nodes, mtx);
     static std::vector<cv::cuda::GpuMat> images;
     static std::vector<cv::cuda::Stream> streams;
     streams.resize(nodes.size());
@@ -244,10 +253,13 @@ void process(std::vector<ObjectId>* parentList, boost::mutex* mtx)
         (*it)->process(images[count], streams[count]);
     }
     if(nodes.size() == 0)
+    {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
+    }
+
 }
 
-void processThread(std::vector<ObjectId>* parentList, boost::mutex *mtx)
+void processThread(std::vector<ObjectId>* parentList, boost::recursive_mutex *mtx)
 {
     std::cout << "Processing thread started" << std::endl;
     while (!boost::this_thread::interruption_requested())

@@ -52,6 +52,7 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
     try
     {
         cv::imshow(name, h_img);
+        cv::waitKey(1);
     }catch(cv::Exception &err)
     {
         log(Warning, err.what());

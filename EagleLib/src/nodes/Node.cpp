@@ -171,14 +171,26 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
     {
         try
         {
-            auto start = boost::posix_time::microsec_clock::universal_time();
-            if(debug_verbosity <= Status)
+            boost::posix_time::ptime start, end;
             {
-                log(Status, "Start: " + fullTreeName);
+                //boost::recursive_mutex::scoped_lock lock(mtx);
+                start = boost::posix_time::microsec_clock::universal_time();
+                if(debug_verbosity <= Status)
+                {
+                    log(Status, "Start: " + fullTreeName);
+                }
+                if(enabled)
+                {
+                    std::vector<boost::recursive_mutex::scoped_lock> locks;
+                    for(int i = 0; i < parameters.size(); ++i)
+                    {
+                        locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
+                    }
+                    img = doProcess(img, stream);
+
+                }
+                end = boost::posix_time::microsec_clock::universal_time();
             }
-            if(enabled)
-                img = doProcess(img, stream);
-            auto end = boost::posix_time::microsec_clock::universal_time();
             if(debug_verbosity <= Status)
             {
                 log(Status, "End:   " + fullTreeName);

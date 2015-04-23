@@ -36,6 +36,7 @@ private slots:
     void onOGLDisplay(std::string name, cv::cuda::GpuMat img);
     void stopProcessingThread();
     void startProcessingThread();
+    void onWidgetDeleted(QWidget* widget);
 signals:
     void eLog(QString message);
     void displayImage(std::string name, cv::cuda::GpuMat img);
@@ -52,7 +53,7 @@ private:
 	QGraphicsProxyWidget* currentSelectedNodeWidget;
 	ObjectId currentNodeId;
 	std::vector<ObjectId> parentList;
-    boost::mutex parentMtx;
+    boost::recursive_mutex parentMtx;
     std::vector<QNodeWidget*> widgets;
 	boost::thread processingThread;
 	bool quit;

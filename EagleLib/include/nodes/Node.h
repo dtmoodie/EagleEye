@@ -188,7 +188,7 @@ namespace EagleLib
         bool		changed;
         // Used with input / output parameters to list the number of subscribers to an output
         unsigned int subscribers;
-        boost::mutex mtx;
+        boost::recursive_mutex mtx;
     protected:
         Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),type(type_), changed(false), toolTip(toolTip_), subscribers(0){}
         virtual ~Parameter(){}
@@ -684,6 +684,8 @@ namespace EagleLib
 		std::string															treeName;
         // Parameters of this node
         std::vector< boost::shared_ptr< Parameter > >						parameters;
+        //std::vector<boost::recursive_mutex::scoped_lock>                    parameterLocks;
+    //  boost::recursive_mutex                                              mtx;
         // Parameters of the child, paired with the index of the child
         std::vector< std::pair< int, boost::shared_ptr< Parameter > > >		childParameters;
         boost::function<void(cv::Mat, Node*)>								cpuDisplayCallback;
