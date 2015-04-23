@@ -6,6 +6,8 @@
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudalegacy.hpp>
 #include <opencv2/cudaobjdetect.hpp>
+#include <algorithm>
+#include <utility>
 using namespace EagleLib;
 
 void MorphologyFilter::Init(bool firstInit)
@@ -84,6 +86,7 @@ void FindContours::Init(bool firstInit)
         updateParameter<bool>("Calculate contour Area", false); // 4
         updateParameter<bool>("Calculate Moments", false);  // 5
     }
+
 }
 
 cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
@@ -100,19 +103,47 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     updateParameter<int>("Contours found",ptr->size(), Parameter::State);
     parameters[2]->changed = true;
     parameters[3]->changed = true;
-    if(getParameter<bool>(5)->data)
+    if(getParameter<bool>(4)->data)
     {
-        if(parameters[5]->changed)
+        if(parameters[4]->changed)
         {
-            updateParameter<std::vector<double>>("Contour Area",std::vector<double>());
+            updateParameter<std::vector<std::pair<int,double>>>("Contour Area",std::vector<std::pair<int,double>>());
             updateParameter<bool>("Oriented Area",false);
+            updateParameter<bool>("Filter area", false);
+            parameters[4]->changed = false;
         }
-        std::vector<double>* areaPtr = getParameterPtr<std::vector<double>>(getParameter("Contour Area"));
+        boost::shared_ptr<TypedParameter<bool>> areaParam = getParameter<bool>("Filter area");
+        if(areaParam != nullptr && areaParam->data && areaParam->changed)
+        {
+            updateParameter<double>("Filter threshold", 0.0);
+            updateParameter<double>("Filter sigma", 0.0);
+            areaParam->changed = false;
+        }
+        std::vector<std::pair<int,double>>* areaPtr = getParameterPtr<std::vector<std::pair<int,double>>>(getParameter("Contour Area"));
         bool oriented = getParameter<bool>("Oriented Area")->data;
         areaPtr->resize(ptr->size());
         for(int i = 0; i < ptr->size(); ++i)
         {
-            (*areaPtr)[i] = cv::contourArea((*ptr)[i], oriented);
+            (*areaPtr)[i] = std::pair<int,double>(i,cv::contourArea((*ptr)[i], oriented));
+        }
+        TypedParameter<double>::Ptr thresholdParam = getParameter<double>("Filter threshold");
+        if(thresholdParam != nullptr && thresholdParam->data != 0)
+        {
+            areaPtr->erase(std::remove_if(areaPtr->begin(), areaPtr->end(),
+                            [thresholdParam](std::pair<int,double> x){return x.second < thresholdParam->data;}), areaPtr->end());
+        }
+        TypedParameter<double>::Ptr sigmaParam = getParameter<double>("Filter sigma");
+        if(sigmaParam != nullptr && sigmaParam->data != 0.0)
+        {
+            // Calculate mean and sigma
+            double sum = 0;
+            double sumSq = 0;
+            for(int i = 0; i < areaPtr->size(); ++i)
+            {
+                sum += (*areaPtr)[i].second;
+                sumSq += (*areaPtr)[i].second*(*areaPtr)[i].second;
+            }
+
         }
     }
 
@@ -126,8 +157,10 @@ void ContourBoundingBox::Init(bool firstInit)
         addInputParameter<std::vector<cv::Vec4i>>("Hierarchy");
         addParameter<cv::Scalar>("Box color", cv::Scalar(0,0,255));
         addParameter<int>("Line thickness", 2);
+        addInputParameter<std::vector<std::pair<int,double>>>("Contour Area");
+        updateParameter<bool>("Use filtered area", false);
     }
-    //updateParameter<cv::Scalar>(2, cv::Scalar(128,0,0));
+
 }
 
 cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
@@ -148,9 +181,22 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
         replace = getParameter<cv::Scalar>(2)->data;
     else
         replace = cv::Scalar(128,0,0);
-    for(int i = 0; i < boxes.size(); ++i)
+    auto useArea = getParameter<bool>("Use filtered area");
+    int lineWidth = getParameter<int>(3)->data;
+    auto areaParam = getParameter<std::vector<std::pair<int,double>>*>("Contour Area");
+    if(useArea && useArea->data && areaParam && areaParam->data)
     {
-        cv::rectangle(h_img, boxes[i],replace, getParameter<int>(3)->data);
+        for(int i = 0; i < areaParam->data->size(); ++i)
+        {
+
+            cv::rectangle(h_img, boxes[(*areaParam->data)[i].first], replace, lineWidth);
+        }
+    }else
+    {
+        for(int i = 0; i < boxes.size(); ++i)
+        {
+            cv::rectangle(h_img, boxes[i],replace, lineWidth);
+        }
     }
     img.upload(h_img,stream);
     return img;

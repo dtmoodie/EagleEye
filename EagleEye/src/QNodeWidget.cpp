@@ -281,6 +281,10 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         // Create a ui for finding relavent inputs
         return new QInputProxy(parent, parameter, node);
     }
+    typedef std::vector<std::pair<int,double>> vec_ID;
+    typedef std::vector<std::pair<double,double>> vec_DD;
+    typedef std::vector<std::pair<double,int>> vec_DI;
+    typedef std::vector<std::pair<int, int>> vec_II;
     if(parameter->type & EagleLib::Parameter::Control)
     {
         MAKE_TYPE(double);
@@ -298,7 +302,11 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE(EagleLib::EnumParameter);
         MAKE_TYPE(cv::Scalar);
         MAKE_TYPE(std::vector<int>);
-        MAKE_TYPE(std::vector<double>)
+        MAKE_TYPE(std::vector<double>);
+        MAKE_TYPE(vec_ID);
+        MAKE_TYPE(vec_DD);
+        MAKE_TYPE(vec_DI);
+        MAKE_TYPE(vec_II);
     }
 
     if(parameter->type & EagleLib::Parameter::Output || parameter->type & EagleLib::Parameter::State)
@@ -317,7 +325,11 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE_(EagleLib::EnumParameter);
         MAKE_TYPE_(cv::Scalar);
         MAKE_TYPE_(std::vector<int>);
-        MAKE_TYPE_(std::vector<double>)
+        MAKE_TYPE_(std::vector<double>);
+        MAKE_TYPE_(vec_ID);
+        MAKE_TYPE_(vec_DD);
+        MAKE_TYPE_(vec_DI);
+        MAKE_TYPE_(vec_II);
     }
 	return nullptr;
 }

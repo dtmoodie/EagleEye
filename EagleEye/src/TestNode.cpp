@@ -19,6 +19,10 @@ namespace EagleLib
         ~TestNode(){}
         void Init(bool firstInit)
         {
+            typedef std::vector<std::pair<int,double>> vec_ID;
+            typedef std::vector<std::pair<double,double>> vec_DD;
+            typedef std::vector<std::pair<double,int>> vec_DI;
+            typedef std::vector<std::pair<int, int>> vec_II;
             updateParameter<int>("int",0);
             updateParameter<short>("short",0);
             updateParameter<char>("char",0);
@@ -51,6 +55,33 @@ namespace EagleLib
             updateParameter<std::vector<double>>("std::vector<double>", std::vector<double>());
             getParameter<std::vector<double>>("std::vector<double>")->data.push_back(10.5);
             getParameter<std::vector<double>>("std::vector<double>")->data.push_back(15.5);
+
+            vec_ID vecID;
+            vecID.push_back(std::pair<int,double>(0, 0.5));
+            vecID.push_back(std::pair<int,double>(1, 0.6));
+            vecID.push_back(std::pair<int,double>(2, 0.7));
+            updateParameter<vec_ID>("std::vector<std::pair<int,double>> control", vecID);
+            updateParameter<vec_ID>("std::vector<std::pair<int,double>> state", vecID, Parameter::State);
+            vec_DD vecDD;
+            vecID.push_back(std::pair<double,double>(0, 0.5));
+            vecID.push_back(std::pair<double,double>(1, 0.6));
+            vecID.push_back(std::pair<double,double>(2, 0.7));
+            updateParameter<vec_DD>("std::vector<std::pair<double,double>> control", vecDD);
+            updateParameter<vec_DD>("std::vector<std::pair<double,double>> state", vecDD, Parameter::State);
+
+            vec_II vecII;
+            vecII.push_back(std::pair<int,int>(0, 3));
+            vecII.push_back(std::pair<int,int>(1, 2));
+            vecII.push_back(std::pair<int,int>(2, 1));
+            updateParameter<vec_II>("std::vector<std::pair<int,int>> control", vecII);
+            updateParameter<vec_II>("std::vector<std::pair<int,int>> state", vecII, Parameter::State);
+
+            vec_DI vecDI;
+            vecDI.push_back(std::pair<double, int>(0.5, 3));
+            vecDI.push_back(std::pair<double, int>(1.2, 2));
+            vecDI.push_back(std::pair<double, int>(2.3, 1));
+            updateParameter<vec_DI>("std::vector<std::pair<double,int>> control", vecDI, Parameter::State);
+            updateParameter<vec_DI>("std::vector<std::pair<double,int>> state", vecDI, Parameter::State);
 
             updateParameter<int>("int state",0, Parameter::State);
             updateParameter<short>("short state",0, Parameter::State);

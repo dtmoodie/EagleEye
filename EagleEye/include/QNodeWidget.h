@@ -642,6 +642,9 @@ public:
         size = new QLabel(parent_);
         index = new QSpinBox(parent_);
         value = new QDoubleSpinBox(parent_);
+        value->setMaximum(std::numeric_limits<T>::max());
+        value->setMinimum(std::numeric_limits<T>::min());
+        value->setMaximumWidth(100);
         prevIndex = 0;
         updateUi(true);
         parent_->connect(index, SIGNAL(valueChanged(int)), parent_, SLOT(on_valueChanged(int)));
@@ -707,6 +710,7 @@ private:
     QDoubleSpinBox* value;
     int prevIndex;
 };
+
 template<typename T>
 class QNodeProxy<std::vector<T>, true, void> : public IQNodeProxy
 {
@@ -718,6 +722,7 @@ public:
         size = new QLabel(parent_);
         index = new QSpinBox(parent_);
         value = new QLabel(parent_);
+
         parent_->connect(index, SIGNAL(valueChanged(int)), parent_, SLOT(on_valueChanged(int)));
         updateUi(true);
     }
@@ -761,4 +766,185 @@ private:
     QLabel* size;
     QSpinBox* index;
     QLabel* value;
+};
+
+template<typename T1, typename T2>
+class QNodeProxy<std::vector<std::pair<T1, T2>>, false, void> : public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        parent = parent_;
+        parameter = parameter_;
+
+        size = new QLabel(parent_);
+        index = new QSpinBox(parent_);
+        value1 = new QDoubleSpinBox(parent_);
+        value1->setMaximum(std::numeric_limits<T1>::max());
+        value1->setMinimum(std::numeric_limits<T1>::min());
+        value1->setMaximumWidth(100);
+
+        value2 = new QDoubleSpinBox(parent_);
+        value2->setMaximum(std::numeric_limits<T2>::max());
+        value2->setMinimum(std::numeric_limits<T2>::min());
+        value2->setMaximumWidth(100);
+
+        prevIndex = 0;
+        updateUi(true);
+        parent_->connect(index, SIGNAL(valueChanged(int)), parent_, SLOT(on_valueChanged(int)));
+        parent_->connect(value1, SIGNAL(valueChanged(double)), parent_, SLOT(on_valueChanged(double)));
+        parent_->connect(value2, SIGNAL(valueChanged(double)), parent_, SLOT(on_valueChanged(double)));
+    }
+    virtual void updateUi(bool init = false)
+    {
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        if(!lock)
+            return;
+        std::vector<std::pair<T1,T2>>* param = EagleLib::getParameterPtr<std::vector<std::pair<T1, T2>>>(parameter);
+        if(param->size())
+            index->setMaximum(param->size()-1);
+        else
+            index->setMaximum(0);
+        index->setMinimum(0);
+        if(index->value() < param->size())
+        {
+            value1->setValue((*param)[index->value()].first);
+            value2->setValue((*param)[index->value()].second);
+        }
+    }
+    virtual void onUiUpdated(QWidget* widget)
+    {
+
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
+        if(!lock)
+            return;
+        std::vector<std::pair<T1, T2>>* param = EagleLib::getParameterPtr<std::vector<std::pair<T1, T2>>>(parameter);
+        if(widget == index)
+        {
+            if(index->value() < param->size())
+            {
+                value1->setValue((*param)[index->value()].first);
+                value2->setValue((*param)[index->value()].second);
+            }
+            return;
+        }
+        if(widget == value1)
+        {
+            if(index->value() < param->size())
+            {
+                (*param)[index->value()].first = value1->value();
+            }
+        }
+        if(widget == value2)
+        {
+            if(index->value() < param->size())
+            {
+                (*param)[index->value()].second = value2->value();
+            }
+        }
+
+        parameter->changed = true;
+    }
+    virtual QWidget* getWidget(int num = 0)
+    {
+        if(num == 0)
+            return size;
+        if(num == 1)
+            return index;
+        if(num == 2)
+            return value1;
+        if(num == 3)
+            return value2;
+        return nullptr;
+    }
+    virtual int getNumWidgets()
+    {
+        return 4;
+    }
+
+private:
+    QWidget* parent;
+    QLabel* size;
+    QSpinBox* index;
+    QDoubleSpinBox* value1;
+    QDoubleSpinBox* value2;
+    int prevIndex;
+};
+template<typename T1, typename T2>
+class QNodeProxy<std::vector<std::pair<T1, T2>>, true, void> : public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        parent = parent_;
+        parameter = parameter_;
+
+        size = new QLabel(parent_);
+        index = new QSpinBox(parent_);
+        value1 = new QLabel(parent_);
+        value2 = new QLabel(parent_);
+
+        prevIndex = 0;
+        updateUi(true);
+        parent_->connect(index, SIGNAL(valueChanged(int)), parent_, SLOT(on_valueChanged(int)));
+    }
+    virtual void updateUi(bool init = false)
+    {
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        if(!lock)
+            return;
+        std::vector<std::pair<T1,T2>>* param = EagleLib::getParameterPtr<std::vector<std::pair<T1, T2>>>(parameter);
+        if(param->size())
+            index->setMaximum(param->size()-1);
+        else
+            index->setMaximum(0);
+        index->setMinimum(0);
+        if(index->value() < param->size())
+        {
+            value1->setText(QString::number((*param)[index->value()].first));
+            value2->setText(QString::number((*param)[index->value()].second));
+        }
+    }
+    virtual void onUiUpdated(QWidget* widget)
+    {
+
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
+        if(!lock)
+            return;
+        std::vector<std::pair<T1, T2>>* param = EagleLib::getParameterPtr<std::vector<std::pair<T1, T2>>>(parameter);
+        if(widget == index)
+        {
+            if(index->value() < param->size())
+            {
+                value1->setText(QString::number((*param)[index->value()].first));
+                value2->setText(QString::number((*param)[index->value()].second));
+            }
+            return;
+        }
+        parameter->changed = true;
+    }
+    virtual QWidget* getWidget(int num = 0)
+    {
+        if(num == 0)
+            return size;
+        if(num == 1)
+            return index;
+        if(num == 2)
+            return value1;
+        if(num == 3)
+            return value2;
+        return nullptr;
+    }
+    virtual int getNumWidgets()
+    {
+        return 4;
+    }
+
+private:
+    QWidget* parent;
+    QLabel* size;
+    QSpinBox* index;
+    QLabel* value1;
+    QLabel* value2;
+    int prevIndex;
 };

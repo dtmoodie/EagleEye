@@ -30,7 +30,9 @@ void Threshold::Init(bool firstInit)
         updateParameter<bool>("Source value",true,Parameter::Control, "If true, threshold to original source value");
         updateParameter<cv::cuda::GpuMat>("Mask", cv::cuda::GpuMat(), Parameter::Output);
         updateParameter<double>("Input %", 0.9, Parameter::Control);
+        updateParameter<bool>("Output mask", false);
     }
+
 }
 
 cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
@@ -97,6 +99,8 @@ cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream st
 //    else
         mask.convertTo(mask, img.type(), stream);
     updateParameter<cv::cuda::GpuMat>("Mask", mask, Parameter::Output);
+    if(getParameter<bool>("Output mask")->data)
+        return mask;
 	return img;
 }
 

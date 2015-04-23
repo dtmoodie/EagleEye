@@ -224,6 +224,8 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
                     " id: " + boost::lexical_cast<std::string>(id.m_ConstructorId) +
                     " " + boost::lexical_cast<std::string>(id.m_PerTypeId));
         }
+        // So here is the debate of is a node's output the output of it, or the output of its children....
+        // img = childResults;
     }catch(cv::Exception &err)
     {
         log(Error, err.what());
