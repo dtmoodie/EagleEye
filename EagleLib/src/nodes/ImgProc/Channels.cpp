@@ -70,7 +70,7 @@ void ConvertDataType::Init(bool firstInit)
         dataType.addEnum(ENUM(CV_32F));
         dataType.addEnum(ENUM(CV_64F));
         updateParameter("Data type", dataType);
-        updateParameter("Alpha", 0.0);
+        updateParameter("Alpha", 255.0);
         updateParameter("Beta", 0.0);
     }
 }

@@ -16,14 +16,19 @@ IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, 
     nameElement = new QLabel(QString::fromStdString(parameter_->name), parent);
     nameElement->setSizePolicy(QSizePolicy::Policy::MinimumExpanding, QSizePolicy::Policy::Fixed);
     proxy = dispatchParameter(this, parameter_, node_);
+    int pos = 1;
     if (proxy)
     {
-        layout->addWidget(proxy->getWidget(), 0, 1);
+        int numWidgets = proxy->getNumWidgets();
+        for(int i = 0; i < numWidgets; ++i, ++pos)
+        {
+            layout->addWidget(proxy->getWidget(i), 0, pos);
+        }
     }
     layout->addWidget(nameElement, 0, 0);
     nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
     //parameter_->updateCallback = boost::bind(&IQNodeInterop::onParameterUpdate,this, _1);
-    layout->addWidget(new QLabel(QString::fromStdString(type_info::demangle(parameter_->typeInfo.name()))), 0,2);
+    layout->addWidget(new QLabel(QString::fromStdString(type_info::demangle(parameter_->typeInfo.name()))), 0,pos);
 }
 
 IQNodeInterop::~IQNodeInterop()
@@ -34,36 +39,36 @@ IQNodeInterop::~IQNodeInterop()
 void IQNodeInterop::updateUi()
 {
     if (proxy)
-        proxy->updateUi();
+        proxy->updateUi(static_cast<QWidget*>(sender()));
 }
 
 void IQNodeInterop::on_valueChanged(double value)
 {
     if (proxy)
-        proxy->onUiUpdated();
+        proxy->onUiUpdated(static_cast<QWidget*>(sender()));
 }
 
 void IQNodeInterop::on_valueChanged(int value)
 {
     if (proxy)
-        proxy->onUiUpdated();
+        proxy->onUiUpdated(static_cast<QWidget*>(sender()));
 }
 
 void IQNodeInterop::on_valueChanged(bool value)
 {
     if (proxy)
-        proxy->onUiUpdated();
+        proxy->onUiUpdated(static_cast<QWidget*>(sender()));
 }
 void IQNodeInterop::on_valueChanged(QString value)
 {
     if (proxy)
-        proxy->onUiUpdated();
+        proxy->onUiUpdated(static_cast<QWidget*>(sender()));
 }
 
 void IQNodeInterop::on_valueChanged()
 {
     if (proxy)
-        proxy->onUiUpdated();
+        proxy->onUiUpdated(static_cast<QWidget*>(sender()));
 }
 void IQNodeInterop::onParameterUpdate(boost::shared_ptr<EagleLib::Parameter> parameter)
 {
@@ -234,7 +239,7 @@ QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Para
     parent->connect(box, SIGNAL(currentIndexChanged(int)), parent, SLOT(on_valueChanged(int)));
 }
 
-void QInputProxy::onUiUpdated()
+void QInputProxy::onUiUpdated(QWidget* sender)
 {
     QString inputName = box->currentText();
     if(inputName.size() == 0)
@@ -242,7 +247,7 @@ void QInputProxy::onUiUpdated()
     parameter->setSource(inputName.toStdString());
     //node->setInputParameter(inputName.toStdString(), parameter->name);
 }
-QWidget* QInputProxy::getWidget()
+QWidget* QInputProxy::getWidget(int num)
 {
     return box;
 }
@@ -291,6 +296,9 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE(bool);
         MAKE_TYPE(boost::function<void(void)>);
         MAKE_TYPE(EagleLib::EnumParameter);
+        MAKE_TYPE(cv::Scalar);
+        MAKE_TYPE(std::vector<int>);
+        MAKE_TYPE(std::vector<double>)
     }
 
     if(parameter->type & EagleLib::Parameter::Output || parameter->type & EagleLib::Parameter::State)
@@ -307,6 +315,9 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE_(boost::filesystem::path);
         MAKE_TYPE_(bool);
         MAKE_TYPE_(EagleLib::EnumParameter);
+        MAKE_TYPE_(cv::Scalar);
+        MAKE_TYPE_(std::vector<int>);
+        MAKE_TYPE_(std::vector<double>)
     }
 	return nullptr;
 }

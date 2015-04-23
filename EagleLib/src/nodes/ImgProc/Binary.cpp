@@ -10,24 +10,27 @@ using namespace EagleLib;
 
 void MorphologyFilter::Init(bool firstInit)
 {
-    EnumParameter structuringElement;
-    structuringElement.addEnum(ENUM(cv::MORPH_RECT));
-    structuringElement.addEnum(ENUM(cv::MORPH_CROSS));
-    structuringElement.addEnum(ENUM(cv::MORPH_ELLIPSE));
-    updateParameter("Structuring Element Type", structuringElement);    // 0
-    EnumParameter morphType;
-    morphType.addEnum(ENUM(cv::MORPH_ERODE));
-    morphType.addEnum(ENUM(cv::MORPH_DILATE));
-    morphType.addEnum(ENUM(cv::MORPH_OPEN));
-    morphType.addEnum(ENUM(cv::MORPH_CLOSE));
-    morphType.addEnum(ENUM(cv::MORPH_GRADIENT));
-    morphType.addEnum(ENUM(cv::MORPH_TOPHAT));
-    morphType.addEnum(ENUM(cv::MORPH_BLACKHAT));
-    updateParameter("Morphology type", morphType);  //1
-    updateParameter("Structuring Element Size", int(5)); // 2
-    updateParameter("Anchor Point", cv::Point(-1,-1));  // 3
-    updateParameter("Structuring Element", cv::getStructuringElement(0,cv::Size(5,5))); // 4
-    updateParameter("Iterations", int(1));
+    if(firstInit)
+    {
+        EnumParameter structuringElement;
+        structuringElement.addEnum(ENUM(cv::MORPH_RECT));
+        structuringElement.addEnum(ENUM(cv::MORPH_CROSS));
+        structuringElement.addEnum(ENUM(cv::MORPH_ELLIPSE));
+        updateParameter("Structuring Element Type", structuringElement);    // 0
+        EnumParameter morphType;
+        morphType.addEnum(ENUM(cv::MORPH_ERODE));
+        morphType.addEnum(ENUM(cv::MORPH_DILATE));
+        morphType.addEnum(ENUM(cv::MORPH_OPEN));
+        morphType.addEnum(ENUM(cv::MORPH_CLOSE));
+        morphType.addEnum(ENUM(cv::MORPH_GRADIENT));
+        morphType.addEnum(ENUM(cv::MORPH_TOPHAT));
+        morphType.addEnum(ENUM(cv::MORPH_BLACKHAT));
+        updateParameter("Morphology type", morphType);  //1
+        updateParameter("Structuring Element Size", int(5)); // 2
+        updateParameter("Anchor Point", cv::Point(-1,-1));  // 3
+        updateParameter("Structuring Element", cv::getStructuringElement(0,cv::Size(5,5))); // 4
+        updateParameter("Iterations", int(1));
+    }
 }
 
 cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
@@ -61,25 +64,26 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 }
 void FindContours::Init(bool firstInit)
 {
-    EnumParameter mode;
-    mode.addEnum(ENUM(cv::RETR_EXTERNAL));
-    mode.addEnum(ENUM(cv::RETR_LIST));
-    mode.addEnum(ENUM(cv::RETR_CCOMP));
-    mode.addEnum(ENUM(cv::RETR_TREE));
-    mode.addEnum(ENUM(cv::RETR_FLOODFILL));
-    EnumParameter method;
-    method.addEnum(ENUM(cv::CHAIN_APPROX_NONE));
-    method.addEnum(ENUM(cv::CHAIN_APPROX_SIMPLE));
-    method.addEnum(ENUM(cv::CHAIN_APPROX_TC89_L1));
-    method.addEnum(ENUM(cv::CHAIN_APPROX_TC89_KCOS));
-    updateParameter("Mode", mode);
-    updateParameter("Method", method);
-    updateParameter<std::vector<std::vector<cv::Point>>>("Contours", std::vector<std::vector<cv::Point>>(), Parameter::Output);
-    updateParameter<std::vector<cv::Vec4i>>("Hierarchy", std::vector<cv::Vec4i>());
-    updateParameter<bool>("Calculate bounding Rects", false);
-    updateParameter<bool>("Calculate contour Area", false);
-    updateParameter<bool>("Calculate Moments", false);
-
+    if(firstInit)
+    {
+        EnumParameter mode;
+        mode.addEnum(ENUM(cv::RETR_EXTERNAL));
+        mode.addEnum(ENUM(cv::RETR_LIST));
+        mode.addEnum(ENUM(cv::RETR_CCOMP));
+        mode.addEnum(ENUM(cv::RETR_TREE));
+        mode.addEnum(ENUM(cv::RETR_FLOODFILL));
+        EnumParameter method;
+        method.addEnum(ENUM(cv::CHAIN_APPROX_NONE));
+        method.addEnum(ENUM(cv::CHAIN_APPROX_SIMPLE));
+        method.addEnum(ENUM(cv::CHAIN_APPROX_TC89_L1));
+        method.addEnum(ENUM(cv::CHAIN_APPROX_TC89_KCOS));
+        updateParameter("Mode", mode);      // 0
+        updateParameter("Method", method);  // 1
+        updateParameter<std::vector<std::vector<cv::Point>>>("Contours", std::vector<std::vector<cv::Point>>(), Parameter::Output); // 2
+        updateParameter<std::vector<cv::Vec4i>>("Hierarchy", std::vector<cv::Vec4i>()); // 3
+        updateParameter<bool>("Calculate contour Area", false); // 4
+        updateParameter<bool>("Calculate Moments", false);  // 5
+    }
 }
 
 cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
@@ -96,6 +100,22 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     updateParameter<int>("Contours found",ptr->size(), Parameter::State);
     parameters[2]->changed = true;
     parameters[3]->changed = true;
+    if(getParameter<bool>(5)->data)
+    {
+        if(parameters[5]->changed)
+        {
+            updateParameter<std::vector<double>>("Contour Area",std::vector<double>());
+            updateParameter<bool>("Oriented Area",false);
+        }
+        std::vector<double>* areaPtr = getParameterPtr<std::vector<double>>(getParameter("Contour Area"));
+        bool oriented = getParameter<bool>("Oriented Area")->data;
+        areaPtr->resize(ptr->size());
+        for(int i = 0; i < ptr->size(); ++i)
+        {
+            (*areaPtr)[i] = cv::contourArea((*ptr)[i], oriented);
+        }
+    }
+
     return img;
 }
 void ContourBoundingBox::Init(bool firstInit)

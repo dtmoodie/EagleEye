@@ -44,6 +44,14 @@ namespace EagleLib
 
             updateParameter<boost::function<void(void)>>("Function", boost::bind(&TestNode::testFunction,this));
 
+            updateParameter<cv::Scalar>("cv::Scalar", cv::Scalar());
+            updateParameter<std::vector<int>>("std::vector<int>", std::vector<int>());
+            getParameter<std::vector<int>>("std::vector<int>")->data.push_back(10);
+            getParameter<std::vector<int>>("std::vector<int>")->data.push_back(15);
+            updateParameter<std::vector<double>>("std::vector<double>", std::vector<double>());
+            getParameter<std::vector<double>>("std::vector<double>")->data.push_back(10.5);
+            getParameter<std::vector<double>>("std::vector<double>")->data.push_back(15.5);
+
             updateParameter<int>("int state",0, Parameter::State);
             updateParameter<short>("short state",0, Parameter::State);
             updateParameter<char>("char state",0, Parameter::State);
@@ -67,7 +75,13 @@ namespace EagleLib
             updateParameter<std::string*>("std::string* state",nullptr, Parameter::State);
 
             updateParameter<cv::Mat>("cv::Mat state", cv::Mat(), Parameter::State);
-
+            updateParameter<cv::Scalar>("cv::Scalar state", cv::Scalar(), Parameter::State);
+            updateParameter<std::vector<int>>("std::vector<int> state", std::vector<int>(), Parameter::State);
+            getParameter<std::vector<int>>("std::vector<int> state")->data.push_back(11);
+            getParameter<std::vector<int>>("std::vector<int> state")->data.push_back(12);
+            updateParameter<std::vector<double>>("std::vector<double> state", std::vector<double>(), Parameter::State);
+            getParameter<std::vector<double>>("std::vector<double> state")->data.push_back(11.5);
+            getParameter<std::vector<double>>("std::vector<double> state")->data.push_back(12.5);
             updateParameter<int>("int output",0, Parameter::Output);
             updateParameter<short>("short output",0, Parameter::Output);
             updateParameter<char>("char output",0, Parameter::Output);
