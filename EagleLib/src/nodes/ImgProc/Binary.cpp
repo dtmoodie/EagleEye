@@ -107,7 +107,7 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     {
         if(parameters[4]->changed)
         {
-            updateParameter<std::vector<std::pair<int,double>>>("Contour Area",std::vector<std::pair<int,double>>());
+            updateParameter<std::vector<std::pair<int,double>>>("Contour Area",std::vector<std::pair<int,double>>(), Parameter::Output);
             updateParameter<bool>("Oriented Area",false);
             updateParameter<bool>("Filter area", false);
             parameters[4]->changed = false;
@@ -160,6 +160,7 @@ void ContourBoundingBox::Init(bool firstInit)
         addInputParameter<std::vector<std::pair<int,double>>>("Contour Area");
         updateParameter<bool>("Use filtered area", false);
     }
+    updateParameter<bool>("Merge contours", false);
 
 }
 
@@ -173,6 +174,34 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     {
         boxes.push_back(cv::boundingRect((*contourPtr)[i]));
     }
+    auto mergeParam = getParameter<bool>("Merge contours");
+    if(mergeParam && mergeParam->changed)
+    {
+        updateParameter<int>("Separation distance", 5,Parameter::Control, "Max distance between contours to still merge contours");
+    }
+    if(mergeParam && mergeParam->data)
+    {
+        int distance = getParameter<int>("Separation distance")->data;
+        for(int i = 0; i < boxes.size() - 1; ++i)
+        {
+            for(int j = i + 1; j < boxes.size(); ++j)
+            {
+                // Check distance between bounding rects
+                cv::Point c1 = boxes[i].tl() + cv::Point(boxes[i].width/2, boxes[i].height/2);
+                cv::Point c2 = boxes[j].tl() + cv::Point(boxes[j].width/2, boxes[j].height/2);
+                auto dist = cv::norm(c1 - c2);
+                auto thresh = 1.3*(cv::norm(boxes[i].tl() - c1) + cv::norm(boxes[j].tl() - c2));
+                if(dist > thresh)
+                    continue;
+
+                // If we've made it this far, then we need to merge the rectangles
+                cv::Rect newRect = boxes[i] | boxes[j];
+                boxes[i] = newRect;
+                boxes.erase(boxes.begin() + j);
+            }
+        }
+    }
+
     cv::Mat h_img;
     img.download(h_img,stream);
     stream.waitForCompletion();
@@ -188,7 +217,6 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     {
         for(int i = 0; i < areaParam->data->size(); ++i)
         {
-
             cv::rectangle(h_img, boxes[(*areaParam->data)[i].first], replace, lineWidth);
         }
     }else

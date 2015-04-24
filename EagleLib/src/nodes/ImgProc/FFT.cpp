@@ -84,5 +84,55 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
         dest = magnitude;
     return dest;
 }
+cv::Mat getShiftMat(cv::Size matSize)
+{
+    cv::Mat shift(matSize, CV_32F);
+    for(int y = 0; y < matSize.height; ++y)
+    {
+        for(int x = 0; x < matSize.width; ++x)
+        {
+            shift.at<float>(y,x) = 1.0 - 2.0 * ((x+y)&1);
+        }
+    }
+
+    return shift;
+}
+
+void FFTPreShiftImage::Init(bool firstInit)
+{
+
+}
+
+cv::cuda::GpuMat FFTPreShiftImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+{
+    if(d_shiftMat.size() != img.size())
+    {
+        d_shiftMat.upload(getShiftMat(img.size()), stream);
+    }
+    cv::cuda::GpuMat result;
+    cv::cuda::multiply(d_shiftMat,img, result,1,-1,stream);
+    return result;
+}
+void FFTPostShift::Init(bool firstInit)
+{
+
+}
+
+cv::cuda::GpuMat FFTPostShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+{
+    if(d_shiftMat.size() != img.size())
+    {
+        d_shiftMat.upload(getShiftMat(img.size()), stream);
+        std::vector<cv::cuda::GpuMat> channels;
+        channels.push_back(d_shiftMat);
+        channels.push_back(d_shiftMat);
+        cv::cuda::merge(channels, d_shiftMat, stream);
+    }
+    cv::cuda::GpuMat result;
+    cv::cuda::multiply(d_shiftMat,img, result, 1 / float(img.size().area()), -1, stream);
+    return result;
+}
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FFT);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FFTPreShiftImage);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FFTPostShift);
