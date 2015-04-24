@@ -9,7 +9,7 @@
 #include "../RuntimeObjectSystem/IObjectFactorySystem.h"
 #include <opencv2/core/cvdef.h>
 #include <list>
-
+#include <boost/function.hpp>
 
 
 #define ADD_CONSTRUCTORS(managerObj)  \
@@ -26,6 +26,19 @@ namespace EagleLib
 {
     class Node;
 	class Parameter;
+    const size_t LOGSYSTEM_MAX_BUFFER = 4096;
+    class CompileLogger: public ICompilerLogger
+    {
+        char m_buff[LOGSYSTEM_MAX_BUFFER];
+        void log(int level, const char* format,  va_list args);
+
+    public:
+        boost::function<void(const std::string&, int)> callback;
+        virtual void LogError(const char * format, ...);
+        virtual void LogWarning(const char * format, ...);
+        virtual void LogInfo(const char * format, ...);
+
+    };
 
     class CV_EXPORTS NodeManager : public IObjectFactoryListener
     {
@@ -54,7 +67,7 @@ namespace EagleLib
 		void updateTreeName(Node* node, const std::string& prevTreeName);
 		void addParameters(Node* node);
 		boost::shared_ptr< Parameter > getParameter(const std::string& name);
-
+        void setCompileCallback(boost::function<void(const std::string&, int)> & f);
 		// Returns a list of nodes ordered in closeness relative to sourceNode
 		// If a tree is something like the following:
 		//				A
@@ -76,7 +89,8 @@ namespace EagleLib
 		NodeManager();
 		virtual ~NodeManager();
         boost::shared_ptr<IRuntimeObjectSystem>             m_pRuntimeObjectSystem;
-        boost::shared_ptr<ICompilerLogger>                  m_pCompileLogger;
+        //boost::shared_ptr<ICompilerLogger>                  m_pCompileLogger;
+        boost::shared_ptr<CompileLogger>                  m_pCompileLogger;
         std::map<std::string, std::vector<Node*> >          m_nodeMap;
 
 

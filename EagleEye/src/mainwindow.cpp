@@ -59,6 +59,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
     connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
     connect(nodeGraphView, SIGNAL(widgetDeleted(QNodeWidget*)), this, SLOT(onWidgetDeleted(QNodeWidget*)));
+    boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
+    EagleLib::NodeManager::getInstance().setCompileCallback(f);
 }
 
 MainWindow::~MainWindow()
@@ -67,6 +69,10 @@ MainWindow::~MainWindow()
     processingThread.interrupt();
     processingThread.join();
     delete ui;
+}
+void MainWindow::onCompileLog(const std::string& msg, int level)
+{
+    ui->console->appendPlainText(QString::fromStdString(msg));
 }
 
 void MainWindow::on_pushButton_clicked()

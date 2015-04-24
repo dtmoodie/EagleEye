@@ -3,8 +3,52 @@
 #include "StdioLogSystem.h"
 #include <boost/filesystem.hpp>
 #include "nodes/Node.h"
+#include <stdarg.h>
+#include <assert.h>
+#include <iostream>
 //#include <IObjectUtils.h>
 using namespace EagleLib;
+
+#ifdef _WIN32
+    #include "Windows.h"
+    #pragma warning( disable : 4996 4800 )
+#endif
+
+void CompileLogger::log(int level, const char *format, va_list args)
+{
+    int result = vsnprintf(m_buff, LOGSYSTEM_MAX_BUFFER-1, format, args);
+    // Make sure there's a limit to the amount of rubbish we can output
+    m_buff[LOGSYSTEM_MAX_BUFFER-1] = '\0';
+    if(callback)
+        callback(std::string(m_buff), level);
+    std::cout << m_buff;
+#ifdef _WIN32
+    OutputDebugStringA( m_buff );
+#endif
+}
+
+void CompileLogger::LogError(const char * format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    log(2, format, args);
+}
+
+void CompileLogger::LogWarning(const char * format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    log(1, format, args);
+}
+
+void CompileLogger::LogInfo(const char * format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    log(0, format, args);
+}
+
+
 
 /*
  * TODO:
@@ -37,7 +81,7 @@ bool
 NodeManager::Init()
 {
     m_pRuntimeObjectSystem.reset(new RuntimeObjectSystem);
-    m_pCompileLogger.reset(new StdioLogSystem());
+    m_pCompileLogger.reset(new CompileLogger());
     m_pRuntimeObjectSystem->Initialise(m_pCompileLogger.get(), nullptr);
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddListener(this);
     boost::filesystem::path workingDir(__FILE__);
@@ -281,6 +325,10 @@ NodeManager::getSiblingNodes(const std::string& sourceNode, std::vector<Node*>& 
 	{
 		output.push_back(itr->second.get_value<Node*>());
 	}	
+}
+void NodeManager::setCompileCallback(boost::function<void (const std::string &, int)> &f)
+{
+    m_pCompileLogger->callback = f;
 }
 
 Node*

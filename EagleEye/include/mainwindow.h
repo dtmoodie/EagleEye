@@ -28,6 +28,7 @@ public:
     void oglDisplay(cv::cuda::GpuMat img, EagleLib::Node *node);
     void qtDisplay(cv::Mat img, EagleLib::Node *node);
 	QList<EagleLib::Node*> getParentNodes();
+    void onCompileLog(const std::string& msg, int level);
 private slots:
     void on_pushButton_clicked();
     void onTimeout();
