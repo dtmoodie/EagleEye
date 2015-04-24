@@ -131,6 +131,15 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
         {
             areaPtr->erase(std::remove_if(areaPtr->begin(), areaPtr->end(),
                             [thresholdParam](std::pair<int,double> x){return x.second < thresholdParam->data;}), areaPtr->end());
+            // This should be more efficient, needs to be tested though
+            /*for(auto it = areaPtr->begin(); it != areaPtr->end(); ++it)
+            {
+                if(it->second < thresholdParam->data)
+                {
+                    std::swap(*it, areaPtr->back());
+                    areaPtr->pop_back();
+                }
+            }*/
         }
         TypedParameter<double>::Ptr sigmaParam = getParameter<double>("Filter sigma");
         if(sigmaParam != nullptr && sigmaParam->data != 0.0)

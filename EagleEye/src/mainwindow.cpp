@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
+    qRegisterMetaType<cv::Mat>("cv::Mat");
     qRegisterMetaType<EagleLib::Verbosity>("EagleLib::Verbosity");
     ui->setupUi(this);
     fileMonitorTimer = new QTimer(this);
@@ -53,7 +54,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	quit = false;
     cv::redirectError(&static_errorHandler);
     connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
-    connect(this, SIGNAL(displayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
+    connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
+    connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
     connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
     connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
     connect(nodeGraphView, SIGNAL(widgetDeleted(QWidget*)), this, SLOT(onWidgetDeleted(QWidget*)));
@@ -131,12 +133,21 @@ void MainWindow::log(QString message)
 // Called from the processing thread
 void MainWindow::oglDisplay(cv::cuda::GpuMat img, EagleLib::Node* node)
 {
-    emit displayImage(node->fullTreeName, img);
+    emit oglDisplayImage(node->fullTreeName, img);
+}
+void MainWindow::qtDisplay(cv::Mat img, EagleLib::Node *node)
+{
+    emit qtDisplayImage(node->fullTreeName, img);
 }
 
 void MainWindow::onOGLDisplay(std::string name, cv::cuda::GpuMat img)
 {
     cv::namedWindow(name, cv::WINDOW_OPENGL);
+    cv::imshow(name, img);
+}
+void MainWindow::onQtDisplay(std::string name, cv::Mat img)
+{
+    cv::namedWindow(name);
     cv::imshow(name, img);
 }
 
@@ -152,6 +163,10 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
     if(node->nodeName == "OGLImageDisplay")
     {
         node->gpuDisplayCallback = boost::bind(&MainWindow::oglDisplay, this, _1, _2);
+    }
+    if(node->nodeName == "QtImageDisplay")
+    {
+        node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
     }
 
 	// Add a new node widget to the graph
@@ -256,7 +271,6 @@ void process(std::vector<ObjectId>* parentList, boost::recursive_mutex* mtx)
     {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
     }
-
 }
 
 void processThread(std::vector<ObjectId>* parentList, boost::recursive_mutex *mtx)
@@ -272,6 +286,9 @@ void MainWindow::startProcessingThread()
 {
     processingThread = boost::thread(boost::bind(&processThread, &parentList, &parentMtx));
 }
+// So the problem here is that cv::imshow operates on the main thread, thus if the main thread blocks
+// because it's waiting for processingThread to join, then cv::imshow will block, thus causing deadlock.
+// What we need is a signal beforehand that will disable all imshow's before a delete.
 void MainWindow::stopProcessingThread()
 {
     processingThread.interrupt();

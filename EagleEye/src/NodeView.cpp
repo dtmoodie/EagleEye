@@ -39,10 +39,18 @@ void NodeView::on_actionSelect(QAction *action)
             if(parent)
                 parent->removeChild(node->GetObjectId());
             // Remove this node from the node manager
+            // This causes a deadlock due to this (gui) thread blocking, while waiting for stopThread to finish
+            // But some UI calls to imshow operate on the main thread.... Maybe those should be handled via a
+            // queued connection to the main thread.
             emit stopThread();
             EagleLib::NodeManager::getInstance().removeNode(node->GetObjectId());
             emit selectionChanged(nullptr);
             emit widgetDeleted(currentWidget->widget());
+
+            // Causes segfault sometimes, processing thread has fully exited but segfault still occurs in ~QNodeWidget
+            // Looks like it has to do with the QGraphicsProxyWidget trying to handle deletion.  Maybe we need to delete that first?
+            // Or maybe we just need to delete the QNodeWidget first.
+            scene()->removeItem(currentWidget);
             delete currentWidget;
 
             currentWidget = nullptr;
