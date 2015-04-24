@@ -24,7 +24,7 @@ signals:
 	void selectionChanged(QGraphicsProxyWidget* widget);
     void stopThread();
     void startThread();
-    void widgetDeleted(QWidget*);
+    void widgetDeleted(QNodeWidget*);
 private slots:
     void on_actionSelect(QAction* action);
 private:

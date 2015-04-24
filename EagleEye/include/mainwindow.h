@@ -38,7 +38,7 @@ private slots:
     void onQtDisplay(std::string name, cv::Mat img);
     void stopProcessingThread();
     void startProcessingThread();
-    void onWidgetDeleted(QWidget* widget);
+    void onWidgetDeleted(QNodeWidget* widget);
 signals:
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);

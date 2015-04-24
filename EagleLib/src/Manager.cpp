@@ -136,6 +136,7 @@ bool NodeManager::removeNode(const std::string& nodeName)
 bool NodeManager::removeNode(ObjectId oid)
 {
     auto path = getNode(oid)->fullTreeName;
+    // THIS ISN"T WORKING
     m_nodeTree.erase(path);
     delete m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(oid.m_ConstructorId)->GetConstructedObject(oid.m_PerTypeId);
     return true;

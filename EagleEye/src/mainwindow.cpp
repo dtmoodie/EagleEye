@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
 	ui->gridLayout->addWidget(nodeGraphView, 1, 0);
 	currentSelectedNodeWidget = nullptr;
-    processingThread = boost::thread(boost::bind(&processThread, &parentList, &parentMtx));
+    startProcessingThread();
 	quit = false;
     cv::redirectError(&static_errorHandler);
     connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
     connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
     connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
-    connect(nodeGraphView, SIGNAL(widgetDeleted(QWidget*)), this, SLOT(onWidgetDeleted(QWidget*)));
+    connect(nodeGraphView, SIGNAL(widgetDeleted(QNodeWidget*)), this, SLOT(onWidgetDeleted(QNodeWidget*)));
 }
 
 MainWindow::~MainWindow()
@@ -199,11 +199,15 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
     }
     widgets.push_back(nodeWidget);
 }
-void MainWindow::onWidgetDeleted(QWidget* widget)
+void MainWindow::onWidgetDeleted(QNodeWidget* widget)
 {
     auto itr = std::find(widgets.begin(), widgets.end(), widget);
     if(itr != widgets.end())
         widgets.erase(itr);
+    boost::recursive_mutex::scoped_lock(parentMtx);
+    auto parentItr = std::find(parentList.begin(), parentList.end(), widget->getNode()->GetObjectId());
+    if(parentItr != parentList.end())
+        parentList.erase(parentItr);
 }
 
 void
