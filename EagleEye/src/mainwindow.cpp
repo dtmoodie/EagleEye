@@ -21,9 +21,9 @@ int static_errorHandler( int status, const char* func_name,const char* err_msg, 
 {
 	return 0;
 }
-static void getParentNodes(std::vector<ObjectId>* parentList, boost::mutex *mtx, std::vector<EagleLib::Node *> &nodes);
-static void processThread(std::vector<ObjectId>* parentList, boost::recursive_mutex *mtx);
-static void process(std::vector<ObjectId>* parentList, boost::recursive_mutex *mtx);
+
+static void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursive_mutex *mtx);
+static void process(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursive_mutex *mtx);
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
     qRegisterMetaType<cv::Mat>("cv::Mat");
+    qRegisterMetaType<EagleLib::Node::Ptr>("EagleLib::Node::Ptr");
     qRegisterMetaType<EagleLib::Verbosity>("EagleLib::Verbosity");
     ui->setupUi(this);
     fileMonitorTimer = new QTimer(this);
@@ -38,8 +39,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
     nodeListDialog = new NodeListDialog(this);
     nodeListDialog->hide();
-	connect(nodeListDialog, SIGNAL(nodeConstructed(EagleLib::Node*)), 
-		this, SLOT(onNodeAdd(EagleLib::Node*)));
+    connect(nodeListDialog, SIGNAL(nodeConstructed(EagleLib::Node::Ptr)),
+        this, SLOT(onNodeAdd(EagleLib::Node::Ptr)));
 	
 	nodeGraph = new QGraphicsScene(this);
     connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
@@ -158,13 +159,11 @@ void MainWindow::onQtDisplay(std::string name, cv::Mat img)
 }
 
 void 
-MainWindow::onNodeAdd(EagleLib::Node* node)
+MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
 {	
-	if (currentNodeId.IsValid())
+    if (currentNode != nullptr)
 	{
-		auto parent = EagleLib::NodeManager::getInstance().getNode(currentNodeId);
-        if(parent)
-            parent->addChild(node);
+        currentNode->addChild(node);
 	}
     if(node->nodeName == "OGLImageDisplay")
     {
@@ -190,13 +189,13 @@ MainWindow::onNodeAdd(EagleLib::Node* node)
 	else
 	{
         boost::recursive_mutex::scoped_try_lock lock(parentMtx);
-		parentList.push_back(node->GetObjectId());
+        parentList.push_back(node);
 	}
     if(!currentSelectedNodeWidget)
     {
         nodeWidget->setSelected(true);
         currentSelectedNodeWidget = proxyWidget;
-        currentNodeId = node->GetObjectId();
+        currentNode = node;
     }
 
     for(int i = 0; i < widgets.size(); ++i)
@@ -211,7 +210,7 @@ void MainWindow::onWidgetDeleted(QNodeWidget* widget)
     if(itr != widgets.end())
         widgets.erase(itr);
     boost::recursive_mutex::scoped_lock(parentMtx);
-    auto parentItr = std::find(parentList.begin(), parentList.end(), widget->getNode()->GetObjectId());
+    auto parentItr = std::find(parentList.begin(), parentList.end(), widget->getNode());
     if(parentItr != parentList.end())
         parentList.erase(parentItr);
 }
@@ -222,7 +221,7 @@ MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
     if(widget == nullptr)
     {
         currentSelectedNodeWidget = nullptr;
-        currentNodeId.SetInvalid();
+        currentNode = EagleLib::Node::Ptr();
         return;
     }
     if(currentSelectedNodeWidget)
@@ -231,59 +230,30 @@ MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
     currentSelectedNodeWidget = widget;
     if(auto ptr = dynamic_cast<QNodeWidget*>(widget->widget()))
     {
-        currentNodeId = ptr->getNode()->GetObjectId();
+        currentNode = ptr->getNode();
         ptr->setSelected(true);
     }
 }
 
-QList<EagleLib::Node*> MainWindow::getParentNodes()
-{
-	QList<EagleLib::Node*> nodes;
-    for(int i = 0; i < parentList.size(); ++i)
-	{
-        auto node = EagleLib::NodeManager::getInstance().getNode(parentList[i]);
-		if (node)
-			nodes.push_back(node);
-	}
-	return nodes;
-}
-void getParentNodes(std::vector<ObjectId>* parentList, std::vector<EagleLib::Node*>& nodes, boost::recursive_mutex* mtx)
-{
-    nodes.clear();
-    boost::recursive_mutex::scoped_lock lock(*mtx);
-    nodes.reserve(parentList->size());
-    for(int i = 0; i < parentList->size(); ++i)
-    {
-        auto node = EagleLib::NodeManager::getInstance().getNode((*parentList)[i]);
-        if (node)
-        {
-            nodes.push_back(node);
-        }
-    }
-    return;
-}
 
-void process(std::vector<ObjectId>* parentList, boost::recursive_mutex* mtx)
+void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::recursive_mutex* mtx)
 {
-
-    std::vector<EagleLib::Node*> nodes;
-    getParentNodes(parentList, nodes, mtx);
     static std::vector<cv::cuda::GpuMat> images;
     static std::vector<cv::cuda::Stream> streams;
-    streams.resize(nodes.size());
-    images.resize(nodes.size());
+    streams.resize(nodes->size());
+    images.resize(nodes->size());
     int count = 0;
-    for (auto it = nodes.begin(); it != nodes.end(); ++it, ++count)
+    for (auto it = nodes->begin(); it != nodes->end(); ++it, ++count)
     {
         (*it)->process(images[count], streams[count]);
     }
-    if(nodes.size() == 0)
+    if(nodes->size() == 0)
     {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
     }
 }
 
-void processThread(std::vector<ObjectId>* parentList, boost::recursive_mutex *mtx)
+void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursive_mutex *mtx)
 {
     std::cout << "Processing thread started" << std::endl;
     while (!boost::this_thread::interruption_requested())

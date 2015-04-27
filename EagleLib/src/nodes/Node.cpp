@@ -5,7 +5,6 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include "Manager.h"
 #include <boost/date_time.hpp>
-#include <NodeNotifiable.h>
 using namespace EagleLib;
 #ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
@@ -34,14 +33,11 @@ Node::Node()
     enabled = true;
 	externalDisplay = false;
 	drawResults = false;
+    parent = nullptr;
 }
 
 Node::~Node()
 {
-    for(int i = 0; i < notifiers.size(); ++i)
-    {
-        notifiers[i]->updateNode(nullptr);
-    }
     NodeManager::getInstance().onNodeRecompile(this);
 }
 void
@@ -49,65 +45,96 @@ Node::getInputs()
 {
 
 }
-Node*
+Node::Ptr
 Node::addChild(Node* child)
 {
-    if (!child)
+    return addChild(Node::Ptr(child));
+}
+Node::Ptr
+Node::addChild(Node::Ptr child)
+{
+    if (child == nullptr)
         return child;
     if(messageCallback)
         child->messageCallback = messageCallback;
-
-
-    int count = children.get<NodeName>().count(child->nodeName);
-
-	std::string prevTreeName = child->fullTreeName;
-    child->setParent(fullTreeName, GetObjectId());
-	child->setTreeName(child->nodeName + "-" + boost::lexical_cast<std::string>(count));
-	
-	// Notify the node manager of the tree name
-	NodeManager::getInstance().updateTreeName(child, prevTreeName);
-
-    NodeInfo info;
-    info.id = child->GetObjectId();
-    info.index = children.get<0>().size();
-    info.nodeName = child->nodeName;
-    info.treeName = child->treeName;
-    children.get<0>().push_back(info);
+    int count = 0;
+    for(int i = 0; i < children.size(); ++i)
+    {
+        if(children[i]->nodeName == child->nodeName)
+            ++count;
+    }
+    child->setParent(this);
+    child->setTreeName(child->nodeName + "-" + boost::lexical_cast<std::string>(count));
+    children.push_back(child);
     return child;
 }
- void Node::addNotifier(NodeNotifiable* notifier)
- {
-     notifiers.push_back(notifier);
- }
 
- void Node::removeNotifier(NodeNotifiable* notifier)
- {
-     auto itr = std::find(notifiers.begin(), notifiers.end(), notifier);
-     if(itr != notifiers.end())
-         notifiers.erase(itr);
- }
-
-Node*
+Node::Ptr
 Node::getChild(const std::string& treeName)
 {
-    auto itr = children.get<TreeName>().find(treeName);
-    if(itr == children.get<TreeName>().end())
-        return nullptr;
-    return NodeManager::getInstance().getNode(itr->id);
+    for(int i = 0; i < children.size(); ++i)
+    {
+        if(children[i]->treeName == treeName)
+            return children[i];
+    }
+    return Node::Ptr();
 }
 
 
-Node*
+Node::Ptr
 Node::getChild(const int& index)
 {
-    auto itr = children.get<0>()[index];
-	return NodeManager::getInstance().getNode(itr.id);
+    return children[index];
+}
+void
+Node::swapChildren(int idx1, int idx2)
+{
+    std::iter_swap(children.begin() + idx1, children.begin() + idx2);
 }
 
-Node*
-Node::getChild(const ObjectId& id)
+void
+Node::swapChildren(const std::string& name1, const std::string& name2)
 {
-	return NodeManager::getInstance().getNode(id);
+    auto itr1 = children.begin();
+    auto itr2 = children.begin();
+    for(; itr1 != children.begin(); ++itr1)
+    {
+        if((*itr1)->treeName == name1)
+            break;
+    }
+    for(; itr2 != children.begin(); ++itr2)
+    {
+        if((*itr2)->treeName == name2)
+            break;
+    }
+    if(itr1 != children.end() && itr2 != children.end())
+        std::iter_swap(itr1,itr2);
+}
+void
+Node::swapChildren(Node::Ptr child1, Node::Ptr child2)
+{
+    auto itr1 = std::find(children.begin(),children.end(), child1);
+    if(itr1 == children.end())
+        return;
+    auto itr2 = std::find(children.begin(), children.end(), child2);
+    if(itr2 == children.end())
+        return;
+    std::iter_swap(itr1,itr2);
+}
+std::vector<Node::Ptr>
+Node::getNodesInScope()
+{
+    std::vector<Node::Ptr> nodes;
+    if(parent)
+        parent->getNodesInScope(nodes);
+    return nodes;
+}
+void
+Node::getNodesInScope(std::vector<Node::Ptr>& nodes)
+{
+    nodes.insert(children.begin(), children.end(), nodes.end());
+    if(parent)
+        parent->getNodesInScope(nodes);
 }
 
 boost::shared_ptr<Parameter> 
@@ -157,28 +184,34 @@ Node::getChildRecursive(std::string treeName_)
 }
 
 void
-Node::removeChild(ObjectId childId)
+Node::removeChild(Node::Ptr node)
 {
-	/*auto it = children.get<ID>().find(childId);
-	if (it != children.get<ID>().end())
-		children.get<ID>().erase(it);*/
-	for (auto it = children.begin(); it != children.end(); ++it)
-	{
-		if (it->id == childId)
-		{
-			children.erase(it);
-			return;
-		}
-	}
+    for(auto itr = children.begin(); itr != children.end(); ++itr)
+    {
+        if(*itr == node)
+        {
+            children.erase(itr);
+                    return;
+        }
+    }
+}
+void
+Node::removeChild(int idx)
+{
+    children.erase(children.begin() + idx);
 }
 
 void
 Node::removeChild(const std::string &name)
 {
-    auto itr = children.get<NodeName>().find(name);
-    if(itr != children.get<NodeName>().end())
-        children.get<NodeName>().erase(itr);
-
+    for(auto itr = children.begin(); itr != children.end(); ++itr)
+    {
+        if((*itr)->treeName == name)
+        {
+            children.erase(itr);
+            return;
+        }
+    }
 }
 
 cv::cuda::GpuMat
@@ -233,16 +266,13 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
         cv::cuda::GpuMat childResults;
         if(!img.empty())
             img.copyTo(childResults,stream);
-        for (auto it = children.begin(); it != children.end(); ++it, ++idx)
+        for (auto it = children.begin(); it != children.end(); ++it)
         {
-            ObjectId id = it->id;
-            auto child = getChild(id);
-            if(child)
-                childResults = child->process(childResults, stream);
+            if(it->get() != nullptr)
+                childResults = (*it)->process(childResults, stream);
             else
-                log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(idx) +
-                    " id: " + boost::lexical_cast<std::string>(id.m_ConstructorId) +
-                    " " + boost::lexical_cast<std::string>(id.m_PerTypeId));
+                log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(idx));
+
         }
         // So here is the debate of is a node's output the output of it, or the output of its children....
         // img = childResults;
@@ -334,13 +364,10 @@ Node::getTreeName() const
 {
     return treeName;
 }
-Node* Node::getParent()
+Node*
+Node::getParent()
 {
-    if(parentId.IsValid())
-        return NodeManager::getInstance().getNode(parentId);
-    if(parentName.size())
-        return NodeManager::getInstance().getNode(parentName);
-    return nullptr;
+    return parent;
 }
 
 
@@ -354,10 +381,7 @@ Node::swap(Node* other)
 void
 Node::Init(bool firstInit)
 {
-    for(int i = 0; i < notifiers.size(); ++i)
-    {
-        notifiers[i]->updateNode(this);
-    }
+    IObject::Init(firstInit);
 }
 
 void
@@ -383,14 +407,13 @@ Node::Serialize(ISimpleSerializer *pSerializer)
 	SERIALIZE(fullTreeName);
     SERIALIZE(messageCallback);
     SERIALIZE(onUpdate);
-    SERIALIZE(parentName);
-    SERIALIZE(parentId);
+    SERIALIZE(parent);
     SERIALIZE(cpuDisplayCallback);
     SERIALIZE(gpuDisplayCallback);
     SERIALIZE(drawResults);
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);
-    SERIALIZE(notifiers);
+
 }
 std::vector<std::string>
 Node::findType(Parameter::Ptr param)
@@ -501,13 +524,12 @@ Node::setInputParameter(const std::string& sourceName, int inputIdx)
 void
 Node::setTreeName(const std::string& name)
 {
-	treeName = name;
-    Node* parentPtr = NodeManager::getInstance().getNode(parentId);
+    treeName = name;
 	std::string fullTreeName_;
-	if (parentPtr)
-		fullTreeName_ = parentPtr->fullTreeName + "." + treeName;
+    if (parent == nullptr)
+        fullTreeName_ = treeName;
 	else
-		fullTreeName_ = treeName;
+        fullTreeName_ = parent->fullTreeName + "." + treeName;
 	setFullTreeName(fullTreeName_);
 
 }
@@ -522,11 +544,21 @@ Node::setFullTreeName(const std::string& name)
 }
 
 void
-Node::setParent(const std::string& name, const ObjectId& parentId_)
+Node::setParent(Node* parent_)
 {
-    parentName = name;
-    parentId = parentId_;
+    if(parent)
+    {
+        parent->deregisterNotifier(this);
+    }
+    parent = parent_;
+    parent->registerNotifier(this);
 }
+void
+Node::updateObject(IObject* ptr)
+{
+    parent = static_cast<Node*>(ptr);
+}
+
 void 
 Node::updateInputParameters()
 {

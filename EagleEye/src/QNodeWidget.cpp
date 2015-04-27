@@ -6,9 +6,9 @@
 #include <QDateTime>
 
 
-IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent, EagleLib::Node* node_) :
+IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent, EagleLib::Node::Ptr node_) :
     QWidget(parent),
-    nodeId(node_->GetObjectId()),
+    node(node_),
     parameter(parameter_)
 {
     layout = new QGridLayout(this);
@@ -79,8 +79,9 @@ void IQNodeInterop::onParameterUpdate(boost::shared_ptr<EagleLib::Parameter> par
     updateUi();
 }
 
-QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node* node) :
+QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
     QWidget(parent),
+    node(node_),
 	ui(new Ui::QNodeWidget())
 {
 	ui->setupUi(this);
@@ -100,11 +101,10 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node* node) :
     connect(this, SIGNAL(eLog(EagleLib::Verbosity,std::string,EagleLib::Node*)),
             this, SLOT(log(EagleLib::Verbosity,std::string,EagleLib::Node*)));
 
-	if (node)
+    if (node != nullptr)
 	{
         ui->chkEnabled->setChecked(node->enabled);
         connect(ui->chkEnabled, SIGNAL(clicked(bool)), this, SLOT(on_enableClicked(bool)));
-		nodeId = node->GetObjectId();
 		ui->nodeName->setText(QString::fromStdString(node->fullTreeName));
         ui->verticalLayout->setSpacing(0);
 		for (int i = 0; i < node->parameters.size(); ++i)
@@ -120,12 +120,9 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node* node) :
 }
 void QNodeWidget::updateUi()
 {
-    EagleLib::Node* node = EagleLib::NodeManager::getInstance().getNode(nodeId);
+
     if(node == nullptr)
         return;
-//    boost::recursive_mutex::scoped_try_lock lock(node->mtx);
-//    if(!lock)
-//        return;
     ui->processingTime->setText(QString::number(node->processingTime));
     if(node->parameters.size() != interops.size())
     {
@@ -155,7 +152,7 @@ void QNodeWidget::on_nodeUpdate()
 {
 
 }
-void QNodeWidget::log(EagleLib::Verbosity verb, const std::string &msg, EagleLib::Node *node)
+void QNodeWidget::log(EagleLib::Verbosity verb, const std::string &msg, EagleLib::Node* node)
 {
     switch(verb)
     {
@@ -187,15 +184,11 @@ QNodeWidget::~QNodeWidget()
 }
 
 void QNodeWidget::on_enableClicked(bool state)
-{    EagleLib::NodeManager::getInstance().getNode(nodeId)->enabled = state;     }
+{    node->enabled = state;     }
 
-EagleLib::Node* QNodeWidget::getNode()
+EagleLib::Node::Ptr QNodeWidget::getNode()
 {
-	if (nodeId.IsValid())
-	{
-		return EagleLib::NodeManager::getInstance().getNode(nodeId);
-	}
-	return nullptr;
+    return node;
 }
 void QNodeWidget::on_status(const std::string& msg, EagleLib::Node* node)
 {
@@ -234,8 +227,8 @@ void QNodeWidget::setSelected(bool state)
     setAutoFillBackground(true);
     setPalette(pal);
 }
-QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_, EagleLib::Node* node_):
-    nodeId(node_->GetObjectId())
+QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_, EagleLib::Node::Ptr node_):
+    node(node_)
 {
     box = new QComboBox(parent);
     parameter = parameter_;
@@ -260,7 +253,7 @@ void QInputProxy::updateUi(bool init)
     QString currentItem = box->currentText();
     box->clear();
     box->addItem("");
-    auto inputs = EagleLib::NodeManager::getInstance().getNode(nodeId)->findCompatibleInputs(parameter);
+    auto inputs = node->findCompatibleInputs(parameter);
     for(int i = 0; i < inputs.size(); ++i)
     {
         QString text = QString::fromStdString(inputs[i]);
@@ -278,7 +271,7 @@ template<typename T> bool acceptsType(Loki::TypeInfo& type)
 #define MAKE_TYPE_(type) if(acceptsType<type>(parameter->typeInfo)) return new QNodeProxy<type, true>(parent, parameter);
 
 
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node *node)
+IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node::Ptr node)
 {
     if(parameter->type & EagleLib::Parameter::Input)
     {

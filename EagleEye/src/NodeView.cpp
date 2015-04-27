@@ -36,8 +36,8 @@ void NodeView::on_actionSelect(QAction *action)
             auto node = nodeWidget->getNode();
 
             auto parent = node->getParent();
-            if(parent)
-                parent->removeChild(node->GetObjectId());
+            if(parent != nullptr)
+                parent->removeChild(node);
             // Remove this node from the node manager
             // This causes a deadlock due to this (gui) thread blocking, while waiting for stopThread to finish
             // But some UI calls to imshow operate on the main thread.... Maybe those should be handled via a
@@ -157,11 +157,8 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
     QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(child->widget());
     if(nodeWidget == nullptr)
         return nullptr;
-    EagleLib::Node* node = nodeWidget->getNode();
-    if(!node)
-        return nullptr;
-    auto parentId = node->parentId;
-    if(!parentId.IsValid())
+    EagleLib::Node::Ptr node = nodeWidget->getNode();
+    if(node == nullptr)
         return nullptr;
     // First check if this child's line already exists
     auto itr = parentLineMap.find(child);
@@ -179,11 +176,16 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
     }
     if(nodeWidget)
     {
-        if(QGraphicsProxyWidget* parentWidget = getWidget(parentId))
+        auto parentPtr = node->getParent();
+        if(parentPtr != nullptr)
         {
-            auto center = parentWidget->pos() += QPointF(parentWidget->size().width()/2, parentWidget->size().height()/2);
-            // Draw line from this widget to parent
-            connectingLine->setLine(center.x(), center.y(), child->pos().x() + child->size().width()/2, child->pos().y() + child->size().height()/2);
+            QGraphicsProxyWidget* parentWidget = getWidget(node->getParent()->GetObjectId());
+            if(parentWidget)
+            {
+                auto center = parentWidget->pos() += QPointF(parentWidget->size().width()/2, parentWidget->size().height()/2);
+                // Draw line from this widget to parent
+                connectingLine->setLine(center.x(), center.y(), child->pos().x() + child->size().width()/2, child->pos().y() + child->size().height()/2);
+            }
         }
     }
     return connectingLine;

@@ -19,6 +19,7 @@ VideoLoader::~VideoLoader()
 void 
 VideoLoader::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/oimg.jpeg"), Parameter::Control, "Path to video file");

@@ -9,9 +9,9 @@
 #else
 
 #endif
+#include "nodes/Node.h"
+#include "Manager.h"
 
-#include "nodes/Node.h"	
-//#include "nodes/VideoProc/OpticalFlow.h"
 
 
 

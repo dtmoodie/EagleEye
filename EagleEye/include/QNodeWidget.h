@@ -30,9 +30,9 @@ class CV_EXPORTS QNodeWidget : public QWidget
 {
 	Q_OBJECT
 public:
-	QNodeWidget(QWidget* parent = nullptr, EagleLib::Node* node = nullptr);
+    QNodeWidget(QWidget* parent = nullptr, EagleLib::Node::Ptr node = EagleLib::Node::Ptr());
 	~QNodeWidget();
-	EagleLib::Node* getNode();
+    EagleLib::Node::Ptr getNode();
     void setSelected(bool state);
     void updateUi();
     // Used for thread safety
@@ -50,8 +50,7 @@ signals:
 private:
 
 	Ui::QNodeWidget* ui;
-	ObjectId nodeId;
-	ObjectId nodeParentId;
+    EagleLib::Node::Ptr node;
     QLineEdit* statusDisplay;
     QLineEdit* warningDisplay;
     QLineEdit* errorDisplay;
@@ -79,7 +78,7 @@ public:
 #endif
 	boost::shared_ptr<EagleLib::Parameter> parameter;
 };
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node* node);
+IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node::Ptr node);
 
 
 // Interface class for the interop class
@@ -87,7 +86,7 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 {
 	Q_OBJECT
 public:
-    IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent = nullptr, EagleLib::Node* node_= nullptr);
+    IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent = nullptr, EagleLib::Node::Ptr node_= EagleLib::Node::Ptr());
     virtual ~IQNodeInterop();
     virtual void updateUi();
     IQNodeProxy* proxy;
@@ -102,18 +101,18 @@ private slots:
 protected:
 	QLabel* nameElement;	
     QGridLayout* layout;
-    ObjectId nodeId;
+    EagleLib::Node::Ptr node;
 };
 // Class for UI elements relavent to finding valid input parameters
 class QInputProxy: public IQNodeProxy
 {
 public:
-    QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node* node_);
+    QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node::Ptr node_);
     virtual void onUiUpdated(QWidget* widget);
     virtual void updateUi(bool init = false);
     virtual QWidget* getWidget(int num = 0);
 private:
-    ObjectId nodeId;
+    EagleLib::Node::Ptr node;
     QComboBox* box;
 };
 

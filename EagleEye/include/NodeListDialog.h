@@ -16,7 +16,7 @@ public:
     void show();
     ~NodeListDialog();
 signals:
-	void nodeConstructed(EagleLib::Node* node);
+    void nodeConstructed(EagleLib::Node::Ptr node);
 private slots:
     void on_pushButton_clicked();
 

@@ -125,7 +125,7 @@ namespace EagleLib
 {
     class NodeManager;
     class Node;
-    class NodeNotifiable;
+
 
 
 	enum NodeType
@@ -148,16 +148,11 @@ namespace EagleLib
         Critical = 4
     };
 
-
-#ifdef RCC_ENABLED
-    class CV_EXPORTS Node: public TInterface<IID_NodeObject, IObject>
-#else
-	class CV_EXPORTS Node
-#endif
+    class CV_EXPORTS Node: public TInterface<IID_NodeObject, IObject>, public IObjectNotifiable
     {
     public:
         static Verbosity  debug_verbosity;
-		typedef boost::shared_ptr<Node> Ptr;
+        typedef shared_ptr<Node> Ptr;
 
 
         //static void registerType(const std::string& name, NodeFactory* factory);
@@ -177,12 +172,11 @@ namespace EagleLib
         // Finds name in tree hierarchy, updates tree name and returns it
 		std::string						getName() const;
 		std::string						getTreeName() const;
-        Node*                           getParent();
+        Node *getParent();
 		// Searches nearby nodes for possible valid inputs for each input parameter
 		virtual void					getInputs();
         virtual void                    log(Verbosity level, const std::string& msg);
-        virtual void addNotifier(NodeNotifiable* notifier);
-        virtual void removeNotifier(NodeNotifiable* notifier);
+
         struct NodeInfo
         {
             int index;
@@ -190,13 +184,8 @@ namespace EagleLib
             std::string nodeName;
             ObjectId id;
         };
-		CV_EXPORTS struct NodeName{};
-		CV_EXPORTS struct TreeName{};
-		CV_EXPORTS struct ID{};
 
-        typedef multi_index_container<NodeInfo, indexed_by<boost::multi_index::random_access<>,
-                                           hashed_unique<tag<TreeName>, member<NodeInfo, std::string, &NodeInfo::treeName > >,
-                                           hashed_non_unique<tag<NodeName>, member<NodeInfo, std::string, &NodeInfo::nodeName> > > > nodeContainer;
+
 
 		// ****************************************************************************************************************
 		//
@@ -214,14 +203,13 @@ namespace EagleLib
 
 		// ****************************************************************************************************************
 		//
-		//									Child adding and deleting
+        //									Child adding and deleting
 		//
 		// ****************************************************************************************************************
-        virtual Node*					addChild(Node* child);
-
-        virtual Node*					getChild(const std::string& treeName);
-        virtual Node*                   getChild(const int& index);
-        virtual Node*                   getChild(const ObjectId& id);
+        virtual Node::Ptr               addChild(Node* child);
+        virtual Node::Ptr               addChild(Node::Ptr child);
+        virtual Node::Ptr               getChild(const std::string& treeName);
+        virtual Node::Ptr               getChild(const int& index);
         template<typename T> T* getChild(int index)
         {
             return dynamic_cast<T*>(index);
@@ -231,9 +219,14 @@ namespace EagleLib
             return dynamic_cast<T*>(name);
 		}
         virtual Node*					getChildRecursive(std::string treeName_);
-        virtual void					removeChild(ObjectId childId);
         virtual void					removeChild(const std::string& name);
-
+        virtual void					removeChild(EagleLib::Node::Ptr node);
+        virtual void					removeChild(int idx);
+        virtual void                    swapChildren(int idx1, int idx2);
+        virtual void                    swapChildren(const std::string& name1, const std::string& name2);
+        virtual void                    swapChildren(Node::Ptr child1, Node::Ptr child2);
+        virtual std::vector<Node::Ptr>  getNodesInScope();
+        virtual void getNodesInScope(std::vector<Node::Ptr>& nodes);
 		
 		// ****************************************************************************************************************
 		//
@@ -242,7 +235,8 @@ namespace EagleLib
 		// ****************************************************************************************************************
 		virtual void setTreeName(const std::string& name);
 		virtual void setFullTreeName(const std::string& name);
-        virtual void setParent(const std::string& name, const ObjectId& parentId);
+        virtual void setParent(Node *parent);
+        virtual void updateObject(IObject* ptr);
 		
 
 
@@ -428,13 +422,7 @@ namespace EagleLib
 		bool
 			subParameterExists(std::string name)
 		{
-			for (int i = 0; i < childParameters.size(); ++i)
-			{
-				if (childParameters[i].second->name == name)
-				{
-					return true;
-				}
-			}
+
 			return false;
 		}
 
@@ -442,25 +430,13 @@ namespace EagleLib
 		template<typename T> bool
 			checkSubParameterType(std::string name)
 		{
-			for (int i = 0; i < childParameters.size(); ++i)
-			{
-				if (childParameters[i].second->name == name)
-				{
-					return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(childParameters[i]) != NULL;
-				}
-			}
+
 		}
 					// Get's a pointer to a sub parameter based on the name of the sub parameter
 		template<typename T> boost::shared_ptr< TypedParameter<T> >
 			getSubParameter(std::string name)
 		{
-			for (int i = 0; i < childParameters.size(); ++i)
-			{
-				if (childParameters[i].second->name == name)
-				{
-					return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(childParameters[i].second);
-				}
-			}
+
 			return boost::shared_ptr< TypedParameter<T> >(); // Return a NULL pointer
 		}
 
@@ -522,24 +498,15 @@ namespace EagleLib
 		// Function for setting input parameters
         boost::function<int(std::vector<std::string>)>						inputSelector;
         boost::function<void(Node*)>                                        onUpdate;
-        nodeContainer                                                       children;
+        std::vector<Node::Ptr>                                              children;
 
-        // Parent full tree name
-        std::string                                                         parentName;
-        // Object ID of parent node
-        ObjectId                                                            parentId;
 		// Constant name that describes the node ie: Sobel
         std::string															nodeName;
 		// Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
         std::string															fullTreeName;       
 		// Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
-		std::string															treeName;
-        // Parameters of this node
+        std::string															treeName;
         std::vector< boost::shared_ptr< Parameter > >						parameters;
-        //std::vector<boost::recursive_mutex::scoped_lock>                    parameterLocks;
-    //  boost::recursive_mutex                                              mtx;
-        // Parameters of the child, paired with the index of the child
-        std::vector< std::pair< int, boost::shared_ptr< Parameter > > >		childParameters;
         boost::function<void(cv::Mat, Node*)>								cpuDisplayCallback;
         boost::function<void(cv::cuda::GpuMat, Node*)>						gpuDisplayCallback;
 		/* If true, draw results onto the image being processed */
@@ -548,11 +515,11 @@ namespace EagleLib
 		bool																externalDisplay;
         bool                                                                enabled;
         double                                                              processingTime;
+
     private:
         friend class NodeManager;
         ObjectId                                                            m_OID;
-        std::vector<NodeNotifiable*>                                        notifiers;
-
+        Node*                                                               parent;
     };
     
     class CV_EXPORTS EventLoopNode: public Node

@@ -27,12 +27,11 @@ public:
     ~MainWindow();
     void oglDisplay(cv::cuda::GpuMat img, EagleLib::Node *node);
     void qtDisplay(cv::Mat img, EagleLib::Node *node);
-	QList<EagleLib::Node*> getParentNodes();
     void onCompileLog(const std::string& msg, int level);
 private slots:
     void on_pushButton_clicked();
     void onTimeout();
-	void onNodeAdd(EagleLib::Node* node);
+    void onNodeAdd(EagleLib::Node::Ptr node);
 	void onSelectionChanged(QGraphicsProxyWidget* widget);
     void log(QString message);
     void onOGLDisplay(std::string name, cv::cuda::GpuMat img);
@@ -55,8 +54,8 @@ private:
 	QGraphicsScene* nodeGraph;
 	NodeView*	nodeGraphView;
 	QGraphicsProxyWidget* currentSelectedNodeWidget;
-	ObjectId currentNodeId;
-	std::vector<ObjectId> parentList;
+    EagleLib::Node::Ptr currentNode;
+    std::vector<EagleLib::Node::Ptr> parentList;
     boost::recursive_mutex parentMtx;
     std::vector<QNodeWidget*> widgets;
 	boost::thread processingThread;

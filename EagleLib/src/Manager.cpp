@@ -15,12 +15,58 @@ using namespace EagleLib;
     #pragma warning( disable : 4996 4800 )
 #endif
 /*
-NodeTreeLeaf::NodeTreeLeaf(Node* node_, NodeTreeLeaf* parent_):
-    parent(parent_), INodeTreeLeaf(node_)
+INodeTreeLeaf::INodeTreeLeaf(Node* node_, INodeTreeLeaf* parent_):
+    parent(parent_)
+{    m_node = shared_ptr<Node>(node_);}
+
+INodeTreeLeaf::INodeTreeLeaf(shared_ptr<Node> node_, INodeTreeLeaf *parent_):
+    m_node(node_), parent(parent_)
+{}
+
+NodeTree::NodeTree()
 {
 
 }
-void NodeTreeLeaf::addChild(Node* node_)
+
+void NodeTree::addChild(shared_ptr<Node> node, const std::string& path)
+{
+    auto itr = path.find_first_of('.');
+    if(itr != std::string::npos)
+    {
+        std::string parentNode = path.substr(0, itr);
+        INodeTreeLeaf* parent = topLevelNodes.get<LeafName>()[parentNode];
+        parent->addChild(node);
+    }else
+    {
+        topLevelNodes.get<0>().push_back(new NodeTreeLeaf(node));
+    }
+}
+
+shared_ptr<Node> NodeTree::getNode(const std::string& path)
+{
+
+}
+
+
+NodeTreeLeaf::NodeTreeLeaf(shared_ptr<Node> node_, INodeTreeLeaf* parent_):
+    INodeTreeLeaf(node_, parent_)
+{}
+
+NodeTreeLeaf::NodeTreeLeaf(Node* node_, INodeTreeLeaf* parent_):
+    INodeTreeLeaf(node_, parent_)
+{
+}
+
+void NodeTreeLeaf::addChild(shared_ptr<Node> node_)
+{
+    if(node_ == nullptr)
+        return;
+    int count = children.get<LeafName>().count(node_->nodeName);
+    node_->treeName = node_->nodeName + "-" + boost::lexical_cast<std::string>(count);
+    // Push it into the container based on the insertion order
+    children.get<0>().push_back(new NodeTreeLeaf(node_, this));
+}
+virtual void addChild(Node* node_)
 {
     if(node_ == nullptr)
         return;
@@ -30,32 +76,32 @@ void NodeTreeLeaf::addChild(Node* node_)
     children.get<0>().push_back(new NodeTreeLeaf(node_, this));
 }
 
-Node* NodeTreeLeaf::getNode()
+shared_ptr<Node> NodeTreeLeaf::getNode()
 {
     return m_node;
 }
 
-Node* NodeTreeLeaf::getChildNode(const std::string& name)
+shared_ptr<Node> NodeTreeLeaf::getChildNode(const std::string& name)
 {
     INodeTreeLeaf* childLeaf = getChildLeaf(name);
     if(childLeaf)
-        childLeaf->getNode();
-    return nullptr;
+        return childLeaf->getNode();
+    return shared_ptr<Node>();
 }
-Node* NodeTreeLeaf::getChildNode(int idx)
+shared_ptr<Node> NodeTreeLeaf::getChildNode(int idx)
 {
     INodeTreeLeaf* childLeaf = getChildLeaf(idx);
     if(childLeaf)
         return childLeaf->getNode();
-    return nullptr;
+    return shared_ptr<Node>();
 }
 
-Node* NodeTreeLeaf::getParentNode()
+shared_ptr<Node> NodeTreeLeaf::getParentNode()
 {
     auto parentLeaf = getParentLeaf();
     if(parentLeaf)
         return parentLeaf->getNode();
-    return nullptr;
+    return shared_ptr<Node>();
 }
 
 INodeTreeLeaf* NodeTreeLeaf::getParentLeaf()
@@ -88,10 +134,6 @@ void NodeTreeLeaf::swapChildren(int initialIdx, int newIdx)
 
 }
 */
-
-
-
-
 void CompileLogger::log(int level, const char *format, va_list args)
 {
     int result = vsnprintf(m_buff, LOGSYSTEM_MAX_BUFFER-1, format, args);
@@ -193,7 +235,7 @@ NodeManager::OnConstructorsAdded()
 			if (ptr)
 			{
                 auto nodePtr = static_cast<Node*>(ptr);
-                m_nodeTree.put(t_nodeTree::path_type{nodePtr->fullTreeName,'.'}, nodePtr);
+                //m_nodeTree.put(t_nodeTree::path_type{nodePtr->fullTreeName,'.'}, nodePtr);
 				newNodes.push_back(nodePtr);
 			}
 		}
@@ -207,7 +249,7 @@ NodeManager::OnConstructorsAdded()
 	}
 }
 
-Node* NodeManager::addNode(const std::string &nodeName)
+shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
 {
 
     IObjectConstructor* pConstructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
@@ -222,21 +264,21 @@ Node* NodeManager::addNode(const std::string &nodeName)
             Node* node = static_cast<Node*>(interface);
             node->Init(true);
             // Add the first node here, however later the tree is updated in updateTreeName
-            if (m_nodeMap.size() == 0)
-				m_nodeTree.put(t_nodeTree::path_type{node->fullTreeName, '.' }, node);
+            /*if (m_nodeMap.size() == 0)
+                m_nodeTree.put(t_nodeTree::path_type{node->fullTreeName, '.' }, node);*/
             m_nodeMap[nodeName].push_back(node);
-            return node;
+            return Node::Ptr(node);
         }else
         {
             // Input nodename is a compatible object but it is not a node
-            return nullptr;
+            return shared_ptr<Node>();
         }
     }else
     {
         // Invalid nodeName
-        return nullptr;
+        return shared_ptr<Node>();
     }
-    return nullptr;
+    return shared_ptr<Node>();
 }
 bool NodeManager::removeNode(const std::string& nodeName)
 {
@@ -246,7 +288,7 @@ bool NodeManager::removeNode(const std::string& nodeName)
 
 bool NodeManager::removeNode(ObjectId oid)
 {
-    Node* node =getNode(oid);
+ /*   Node* node =getNode(oid);
     if(node == nullptr)
         return false;
     auto path = node->fullTreeName;
@@ -266,8 +308,7 @@ bool NodeManager::removeNode(ObjectId oid)
     }
     saveTree("test.xml");
     delete m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(oid.m_ConstructorId)->GetConstructedObject(oid.m_PerTypeId);
-
-    return true;
+    return true;*/
 }
 
 void 
@@ -314,7 +355,7 @@ void writeOutNodes(t_nodeTree& ptree, int level)
 
 void NodeManager::saveTree(const std::string &fileName)
 {
-    writeOutNodes(m_nodeTree, 0);
+    //writeOutNodes(m_nodeTree, 0);
 }
 
 bool
@@ -371,23 +412,23 @@ NodeManager::getNode(const ObjectId& id)
 Node*
 NodeManager::getNode(const std::string &treeName)
 {
-    Node* ptr = nullptr;
+    /*Node* ptr = nullptr;
     try
     {
         ptr = m_nodeTree.get<Node*>(treeName);
     }catch(boost::exception &err)
     {
         std::cout << "Error getting node by name: " << treeName << std::endl;
-    }
+    }*/
 
-    return ptr;
+    return nullptr;
 }
 
 void 
 NodeManager::updateTreeName(Node* node, const std::string& prevTreeName)
 {
-	m_nodeTree.put(t_nodeTree::path_type{ node->fullTreeName, '.' }, node);
-	m_nodeTree.erase(prevTreeName);
+    /*m_nodeTree.put(t_nodeTree::path_type{ node->fullTreeName, '.' }, node);
+    m_nodeTree.erase(prevTreeName);*/
 }
 
 void 
@@ -414,7 +455,7 @@ NodeManager::getParameter(const std::string& name)
 void
 NodeManager::getSiblingNodes(const std::string& sourceNode, std::vector<Node*>& output)
 {
-	auto nodePtr = getParent(sourceNode);
+    /*auto nodePtr = getParent(sourceNode);
 	if (!nodePtr)
 		return;
 
@@ -422,7 +463,7 @@ NodeManager::getSiblingNodes(const std::string& sourceNode, std::vector<Node*>& 
 	for (auto itr = node.begin(); itr != node.end(); ++itr)
 	{
 		output.push_back(itr->second.get_value<Node*>());
-	}	
+    }*/
 }
 void NodeManager::setCompileCallback(boost::function<void (const std::string &, int)> &f)
 {
@@ -432,7 +473,7 @@ void NodeManager::setCompileCallback(boost::function<void (const std::string &, 
 Node*
 NodeManager::getParent(const std::string& sourceNode)
 {
-	auto idx = sourceNode.find_last_of('.');
+    /*auto idx = sourceNode.find_last_of('.');
 	if (idx > sourceNode.size())
 		return nullptr;
 	std::string treeName = sourceNode.substr(0, idx);
@@ -444,15 +485,16 @@ NodeManager::getParent(const std::string& sourceNode)
     {
         return nullptr;
     }
-    return node;
+    return node;*/
+    return nullptr;
 }
 void NodeManager::getParentNodes(const std::string& sourceNode, std::vector<Node*>& output)
 {
-	Node* parent = getParent(sourceNode);
+    /*Node* parent = getParent(sourceNode);
 	if (!parent)
 		return;
 	output.push_back(parent);
-	getParentNodes(parent->fullTreeName, output);
+    getParentNodes(parent->fullTreeName, output);*/
 }
 
 void NodeManager::getAccessibleNodes(const std::string& sourceNode, std::vector<Node*>& output)

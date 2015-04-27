@@ -16,7 +16,7 @@
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/mem_fun.hpp>
-#include "NodeNotifiable.h"
+#include "../RuntimeObjectSystem/IObject.h"
 
 #define ADD_CONSTRUCTORS(managerObj)  \
 	auto moduleInterface = PerModuleInterface::GetInstance();	\
@@ -36,20 +36,24 @@ namespace EagleLib
 
     class NodeTreeLeaf;
     CV_EXPORTS struct LeafName{};
-
-    class INodeTreeLeaf: public NodeNotifiable
+    /*
+    class INodeTreeLeaf
     {
+    protected:
+        shared_ptr<Node> m_node;
     public:
         std::string name;
+        INodeTreeLeaf* parent;
         INodeTreeLeaf(Node* node_, INodeTreeLeaf* parent_ = nullptr);
-        virtual Node* getNode() = 0;
-        virtual Node* getChildNode(const std::string& name) = 0;
-        virtual Node* getChildNode(int idx) = 0;
-        virtual Node* getParentNode() = 0;
+        INodeTreeLeaf(shared_ptr<Node> node_, INodeTreeLeaf* parent_ = nullptr);
+        virtual shared_ptr<Node> getNode() = 0;
+        virtual shared_ptr<Node> getChildNode(const std::string& name) = 0;
+        virtual shared_ptr<Node> getChildNode(int idx) = 0;
+        virtual shared_ptr<Node> getParentNode() = 0;
         virtual INodeTreeLeaf* getParentLeaf() = 0;
         virtual INodeTreeLeaf* getChildLeaf(const std::string& name) = 0;
         virtual INodeTreeLeaf* getChildLeaf(int idx) = 0;
-        virtual void addChild(Node* node_) = 0;
+        virtual void addChild(shared_ptr<Node> node_) = 0;
         virtual void swapChildren(const std::string& currentName, const std::string& newName) = 0;
         virtual void swapChildren(int initialIdx, int newIdx) = 0;
     };
@@ -61,30 +65,32 @@ namespace EagleLib
 
     class NodeTree
     {
-        NodeTreeLeafContainer children;
+        NodeTreeLeafContainer topLevelNodes;
     public:
-        void addChild(Node* node, const std::string& path);
-        Node* getNode(const std::string& path);
+        NodeTree();
+        void addChild(shared_ptr<Node> node, const std::string& path);
+        shared_ptr<Node> getNode(const std::string& path);
     };
 
     class NodeTreeLeaf: public INodeTreeLeaf
     {
+
     public:
         NodeTreeLeafContainer children;
-        NodeTreeLeaf* parent;
-        std::string name;
-        NodeTreeLeaf(Node* node_, NodeTreeLeaf* parent_ = nullptr);
-        virtual Node* getNode();
-        virtual Node* getChildNode(const std::string& name);
-        virtual Node* getChildNode(int idx);
-        virtual Node* getParentNode();
+        NodeTreeLeaf(shared_ptr<Node> node_, INodeTreeLeaf* parent_ = nullptr);
+        NodeTreeLeaf(Node* node_, INodeTreeLeaf* parent_ = nullptr);
+        virtual shared_ptr<Node> getNode();
+        virtual shared_ptr<Node> getChildNode(const std::string& name);
+        virtual shared_ptr<Node> getChildNode(int idx);
+        virtual shared_ptr<Node> getParentNode();
         virtual INodeTreeLeaf* getParentLeaf();
         virtual INodeTreeLeaf* getChildLeaf(const std::string& name);
         virtual INodeTreeLeaf* getChildLeaf(int idx);
+        virtual void addChild(shared_ptr<Node> node_);
         virtual void addChild(Node* node_);
         virtual void swapChildren(const std::string& currentName, const std::string& newName);
         virtual void swapChildren(int initialIdx, int newIdx);
-    };
+    };*/
 
 
     class CompileLogger: public ICompilerLogger
@@ -107,7 +113,7 @@ namespace EagleLib
 	public:
 		static NodeManager& getInstance();
 
-        Node *addNode(const std::string& nodeName);
+        shared_ptr<Node> addNode(const std::string& nodeName);
         bool removeNode(const std::string& nodeName);
         bool removeNode(ObjectId oid);
 
@@ -151,17 +157,14 @@ namespace EagleLib
 		NodeManager();
 		virtual ~NodeManager();
         boost::shared_ptr<IRuntimeObjectSystem>             m_pRuntimeObjectSystem;
-        //boost::shared_ptr<ICompilerLogger>                  m_pCompileLogger;
-        boost::shared_ptr<CompileLogger>                  m_pCompileLogger;
+        boost::shared_ptr<CompileLogger>                    m_pCompileLogger;
         std::map<std::string, std::vector<Node*> >          m_nodeMap;
 
 
         std::vector<boost::shared_ptr<Node> >               nodeHistory;
         std::list<Node*>                                    deletedNodes;
         std::list<ObjectId>                                 deletedNodeIDs;
-
-		//typedef boost::property_tree::ptree t_nodeTree;
-		t_nodeTree m_nodeTree;
+        //t_nodeTree m_nodeTree;
 		
     }; // class NodeManager
 } // namespace EagleLib
