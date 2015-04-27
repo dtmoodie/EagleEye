@@ -10,7 +10,13 @@
 #include <opencv2/core/cvdef.h>
 #include <list>
 #include <boost/function.hpp>
-
+//#include "nodes/Node.h"
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/random_access_index.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+#include "NodeNotifiable.h"
 
 #define ADD_CONSTRUCTORS(managerObj)  \
 	auto moduleInterface = PerModuleInterface::GetInstance();	\
@@ -21,12 +27,66 @@
 		dynConstructors[i] = vecConstructors[i];				\
 	(managerObj).addConstructors(dynConstructors);
 
-
+using namespace boost::multi_index;
 namespace EagleLib
 {
     class Node;
 	class Parameter;
     const size_t LOGSYSTEM_MAX_BUFFER = 4096;
+
+    class NodeTreeLeaf;
+    CV_EXPORTS struct LeafName{};
+
+    class INodeTreeLeaf: public NodeNotifiable
+    {
+    public:
+        std::string name;
+        INodeTreeLeaf(Node* node_, INodeTreeLeaf* parent_ = nullptr);
+        virtual Node* getNode() = 0;
+        virtual Node* getChildNode(const std::string& name) = 0;
+        virtual Node* getChildNode(int idx) = 0;
+        virtual Node* getParentNode() = 0;
+        virtual INodeTreeLeaf* getParentLeaf() = 0;
+        virtual INodeTreeLeaf* getChildLeaf(const std::string& name) = 0;
+        virtual INodeTreeLeaf* getChildLeaf(int idx) = 0;
+        virtual void addChild(Node* node_) = 0;
+        virtual void swapChildren(const std::string& currentName, const std::string& newName) = 0;
+        virtual void swapChildren(int initialIdx, int newIdx) = 0;
+    };
+    typedef boost::multi_index_container<INodeTreeLeaf*, indexed_by<
+                                                    boost::multi_index::random_access<>,                                 // Random access indexing to allow changing of order
+                                                    hashed_unique<tag<LeafName>, member<INodeTreeLeaf, std::string, &INodeTreeLeaf::name > >
+                                                > > NodeTreeLeafContainer;
+
+
+    class NodeTree
+    {
+        NodeTreeLeafContainer children;
+    public:
+        void addChild(Node* node, const std::string& path);
+        Node* getNode(const std::string& path);
+    };
+
+    class NodeTreeLeaf: public INodeTreeLeaf
+    {
+    public:
+        NodeTreeLeafContainer children;
+        NodeTreeLeaf* parent;
+        std::string name;
+        NodeTreeLeaf(Node* node_, NodeTreeLeaf* parent_ = nullptr);
+        virtual Node* getNode();
+        virtual Node* getChildNode(const std::string& name);
+        virtual Node* getChildNode(int idx);
+        virtual Node* getParentNode();
+        virtual INodeTreeLeaf* getParentLeaf();
+        virtual INodeTreeLeaf* getChildLeaf(const std::string& name);
+        virtual INodeTreeLeaf* getChildLeaf(int idx);
+        virtual void addChild(Node* node_);
+        virtual void swapChildren(const std::string& currentName, const std::string& newName);
+        virtual void swapChildren(int initialIdx, int newIdx);
+    };
+
+
     class CompileLogger: public ICompilerLogger
     {
         char m_buff[LOGSYSTEM_MAX_BUFFER];
@@ -40,6 +100,7 @@ namespace EagleLib
 
     };
 
+    typedef boost::property_tree::basic_ptree<std::string, Node*> t_nodeTree;
     class CV_EXPORTS NodeManager : public IObjectFactoryListener
     {
 
@@ -52,6 +113,7 @@ namespace EagleLib
 
 		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
 		void setupModule(IPerModuleInterface* pPerModuleInterface);
+        void saveTree(const std::string& fileName);
         bool Init();
 
         bool MainLoop();
@@ -97,9 +159,9 @@ namespace EagleLib
         std::vector<boost::shared_ptr<Node> >               nodeHistory;
         std::list<Node*>                                    deletedNodes;
         std::list<ObjectId>                                 deletedNodeIDs;
-		typedef boost::property_tree::basic_ptree<std::string, Node*> t_nodeTree;
+
 		//typedef boost::property_tree::ptree t_nodeTree;
 		t_nodeTree m_nodeTree;
 		
-    };
-};
+    }; // class NodeManager
+} // namespace EagleLib

@@ -16,6 +16,9 @@ void ImageLoader::load()
         {
             cv::Mat h_img = cv::imread(path->data.string());
             d_img.upload(h_img);
+        }else
+        {
+            log(Status, "File doesn't exist");
         }
     }
 }
@@ -27,7 +30,10 @@ cv::cuda::GpuMat ImageLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
         load();
         parameters[0]->changed = false;
     }
-    return d_img.clone();
+	if (!d_img.empty())
+		return d_img.clone();
+	else
+		return img;
 }
 
 bool ImageLoader::SkipEmpty() const

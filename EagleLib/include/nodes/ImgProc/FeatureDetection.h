@@ -5,18 +5,11 @@
 
 namespace EagleLib
 {
-    namespace Features2D
+    class CV_EXPORTS GoodFeaturesToTrackDetector : public Node
     {
-		class CV_EXPORTS GoodFeaturesToTrackDetector : public Node
-        {
-        public:
-            GoodFeaturesToTrackDetector();
-            GoodFeaturesToTrackDetector(bool drawResults_);
-            virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
-        ;
-        private:
-            int imgType;
-
-        };
-    }
+    public:
+        GoodFeaturesToTrackDetector();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
+    };
 }

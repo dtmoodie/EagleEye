@@ -3,6 +3,7 @@ PROJECT(VisualizationPlugin)
 
 find_package(Qt5 REQUIRED Core)
 find_package(OpenCV 3.0 REQUIRED core)
+find_package(Boost REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 INCLUDE_DIRECTORIES(
     ${Qt5Core_INCLUDE_DIRS}
     ${QT_QTCORE_INCLUDE_DIR}
@@ -26,6 +27,6 @@ add_library(VisualizationPlugin SHARED ${src} ${hdr} ${MOC})
 
 TARGET_LINK_LIBRARIES(VisualizationPlugin
         Qt5::Core
-
+		${Boost_LIBRARIES}
 )
 qt5_use_modules(${PROJECT_NAME} Core)

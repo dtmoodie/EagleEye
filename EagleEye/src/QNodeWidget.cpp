@@ -28,7 +28,11 @@ IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, 
     layout->addWidget(nameElement, 0, 0);
     nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
     //parameter_->updateCallback = boost::bind(&IQNodeInterop::onParameterUpdate,this, _1);
+#ifdef _MSC_VER
+	layout->addWidget(new QLabel(QString::fromStdString(parameter_->typeInfo.name())), 0, pos);
+#else
     layout->addWidget(new QLabel(QString::fromStdString(type_info::demangle(parameter_->typeInfo.name()))), 0,pos);
+#endif
 }
 
 IQNodeInterop::~IQNodeInterop()

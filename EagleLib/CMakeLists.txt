@@ -18,7 +18,7 @@ ELSE(WIN32)
 ENDIF(WIN32)
 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex)
-find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
+find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 
 include(cmake/ProjectFiles.cmake)
 
@@ -100,7 +100,7 @@ add_library(RuntimeObjectSystem
 )
 
 cuda_add_library(EagleLib SHARED
-	${src} 
+	${src}  
 	${hdr}
         ${knl}
 	${RuntimeObjectSystem_SRCS}

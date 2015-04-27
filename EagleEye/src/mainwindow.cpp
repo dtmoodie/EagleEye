@@ -19,7 +19,7 @@
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
-
+	return 0;
 }
 static void getParentNodes(std::vector<ObjectId>* parentList, boost::mutex *mtx, std::vector<EagleLib::Node *> &nodes);
 static void processThread(std::vector<ObjectId>* parentList, boost::recursive_mutex *mtx);

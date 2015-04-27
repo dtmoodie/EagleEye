@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <iostream>
+#include <boost/property_tree/xml_parser.hpp>
 //#include <IObjectUtils.h>
 using namespace EagleLib;
 
@@ -13,6 +14,83 @@ using namespace EagleLib;
     #include "Windows.h"
     #pragma warning( disable : 4996 4800 )
 #endif
+/*
+NodeTreeLeaf::NodeTreeLeaf(Node* node_, NodeTreeLeaf* parent_):
+    parent(parent_), INodeTreeLeaf(node_)
+{
+
+}
+void NodeTreeLeaf::addChild(Node* node_)
+{
+    if(node_ == nullptr)
+        return;
+    int count = children.get<LeafName>().count(node_->nodeName);
+    node_->treeName = node_->nodeName + "-" + boost::lexical_cast<std::string>(count);
+    // Push it into the container based on the insertion order
+    children.get<0>().push_back(new NodeTreeLeaf(node_, this));
+}
+
+Node* NodeTreeLeaf::getNode()
+{
+    return m_node;
+}
+
+Node* NodeTreeLeaf::getChildNode(const std::string& name)
+{
+    INodeTreeLeaf* childLeaf = getChildLeaf(name);
+    if(childLeaf)
+        childLeaf->getNode();
+    return nullptr;
+}
+Node* NodeTreeLeaf::getChildNode(int idx)
+{
+    INodeTreeLeaf* childLeaf = getChildLeaf(idx);
+    if(childLeaf)
+        return childLeaf->getNode();
+    return nullptr;
+}
+
+Node* NodeTreeLeaf::getParentNode()
+{
+    auto parentLeaf = getParentLeaf();
+    if(parentLeaf)
+        return parentLeaf->getNode();
+    return nullptr;
+}
+
+INodeTreeLeaf* NodeTreeLeaf::getParentLeaf()
+{
+    return parent;
+}
+
+INodeTreeLeaf* NodeTreeLeaf::getChildLeaf(const std::string& name)
+{
+    auto itr = children.get<LeafName>().find(name);
+    if(itr != children.get<LeafName>().end())
+        return *itr;
+    return nullptr;
+}
+
+INodeTreeLeaf* NodeTreeLeaf::getChildLeaf(int idx)
+{
+    if(idx >= children.get<0>().size())
+        return nullptr;
+    return children.get<0>()[idx];
+}
+
+void NodeTreeLeaf::swapChildren(const std::string& currentName, const std::string& newName)
+{
+
+}
+
+void NodeTreeLeaf::swapChildren(int initialIdx, int newIdx)
+{
+
+}
+*/
+
+
+
 
 void CompileLogger::log(int level, const char *format, va_list args)
 {
@@ -49,17 +127,6 @@ void CompileLogger::LogInfo(const char * format, ...)
 }
 
 
-
-/*
- * TODO:
- *  - Nodes can be swapped in and out correctly, but any changes to their parameters is lost.  It would seem..... Fixed by swapping old nodes for the newly created ones.  Will need to figure out how to do this elegantly without leaking memory.
- *  - See if swapping of nodes causes a memory leak.  Might not really matter but need to figoure out how to tell the objectfactory when you delete an object.
- *  - Look into loading constructors from libraries.
- *
- *
- *
- *
-*/
 NodeManager& NodeManager::getInstance()
 {
 	static NodeManager instance;
@@ -179,10 +246,27 @@ bool NodeManager::removeNode(const std::string& nodeName)
 
 bool NodeManager::removeNode(ObjectId oid)
 {
-    auto path = getNode(oid)->fullTreeName;
-    // THIS ISN"T WORKING
-    m_nodeTree.erase(path);
+    Node* node =getNode(oid);
+    if(node == nullptr)
+        return false;
+    auto path = node->fullTreeName;
+    // First we need to get the parent property tree node.
+    /////// GRRRRR I've tried everything but I can't get the property tree to delete the node.
+    saveTree("test.xml");
+    auto idx = path.find_last_of(".");
+    auto parentPath = path.substr(0, idx);
+    auto parentNode = m_nodeTree.get_child(parentPath);
+    for(auto it = parentNode.begin(); it != parentNode.end(); ++it)
+    {
+        if(it->second.get_value<Node*>() == node)
+        {
+            parentNode.erase(it);
+            break;
+        }
+    }
+    saveTree("test.xml");
     delete m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(oid.m_ConstructorId)->GetConstructedObject(oid.m_PerTypeId);
+
     return true;
 }
 
@@ -219,6 +303,20 @@ NodeManager::CheckRecompile()
     }
     return false;
 }
+void writeOutNodes(t_nodeTree& ptree, int level)
+{
+    for(auto itr = ptree.begin(); itr != ptree.end(); ++itr)
+    {
+        std::cout << level << ": " << itr->first << std::endl;
+        writeOutNodes(itr->second, level + 1);
+    }
+}
+
+void NodeManager::saveTree(const std::string &fileName)
+{
+    writeOutNodes(m_nodeTree, 0);
+}
+
 bool
 NodeManager::CheckRecompile(bool swapAllowed)
 {

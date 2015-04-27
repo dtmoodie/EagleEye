@@ -8,7 +8,6 @@
 #include <boost/lexical_cast.hpp>
 #include <ISimpleSerializer.h>
 using namespace EagleLib;
-using namespace EagleLib::IO;
 //#define GPU_DECODE_ENABLED
 
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudacodec -lopencv_videoio")

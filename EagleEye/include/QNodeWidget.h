@@ -70,7 +70,13 @@ public:
     virtual QWidget* getWidget(int num = 0) = 0;
     virtual int getNumWidgets(){return 1;}
     virtual QWidget* getTypename()
+#ifdef _MSC_VER
+	{
+		return new QLabel(QString::fromStdString(parameter->typeInfo.name()));
+	}
+#else
     {        return new QLabel(QString::fromStdString(type_info::demangle(parameter->typeInfo.name())));    }
+#endif
 	boost::shared_ptr<EagleLib::Parameter> parameter;
 };
 IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node* node);

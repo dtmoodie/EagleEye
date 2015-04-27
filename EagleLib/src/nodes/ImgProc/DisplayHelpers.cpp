@@ -53,7 +53,7 @@ Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
     {
         double minVal, maxVal;
         cv::cuda::minMax(img, &minVal,&maxVal);
-        scale = double(resolution) / (maxVal - minVal);
+        scale = double(resolution - 1) / (maxVal - minVal);
         shift = minVal * scale;
         updateParameter<double>("Min", minVal, Parameter::State);
         updateParameter<double>("Max", maxVal, Parameter::State);

@@ -5,6 +5,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include "Manager.h"
 #include <boost/date_time.hpp>
+#include <NodeNotifiable.h>
 using namespace EagleLib;
 #ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
@@ -37,6 +38,10 @@ Node::Node()
 
 Node::~Node()
 {
+    for(int i = 0; i < notifiers.size(); ++i)
+    {
+        notifiers[i]->updateNode(nullptr);
+    }
     NodeManager::getInstance().onNodeRecompile(this);
 }
 void
@@ -70,7 +75,17 @@ Node::addChild(Node* child)
     children.get<0>().push_back(info);
     return child;
 }
+ void Node::addNotifier(NodeNotifiable* notifier)
+ {
+     notifiers.push_back(notifier);
+ }
 
+ void Node::removeNotifier(NodeNotifiable* notifier)
+ {
+     auto itr = std::find(notifiers.begin(), notifiers.end(), notifier);
+     if(itr != notifiers.end())
+         notifiers.erase(itr);
+ }
 
 Node*
 Node::getChild(const std::string& treeName)
@@ -144,12 +159,17 @@ Node::getChildRecursive(std::string treeName_)
 void
 Node::removeChild(ObjectId childId)
 {
-    for(auto it = children.begin(); it != children.end(); ++it)
-    {
-        if(it->id == childId)
-            children.erase(it);
-    }
-
+	/*auto it = children.get<ID>().find(childId);
+	if (it != children.get<ID>().end())
+		children.get<ID>().erase(it);*/
+	for (auto it = children.begin(); it != children.end(); ++it)
+	{
+		if (it->id == childId)
+		{
+			children.erase(it);
+			return;
+		}
+	}
 }
 
 void
@@ -334,8 +354,10 @@ Node::swap(Node* other)
 void
 Node::Init(bool firstInit)
 {
-    if(firstInit)
-        m_OID = GetObjectId();
+    for(int i = 0; i < notifiers.size(); ++i)
+    {
+        notifiers[i]->updateNode(this);
+    }
 }
 
 void
@@ -354,8 +376,6 @@ void
 Node::Serialize(ISimpleSerializer *pSerializer)
 {
     IObject::Serialize(pSerializer);
-    std::cout << "Serializing node" << std::endl;
-    //SERIALIZE(children);
     SERIALIZE(parameters);
     SERIALIZE(children);
     SERIALIZE(treeName);
@@ -370,8 +390,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(drawResults);
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);
-
-
+    SERIALIZE(notifiers);
 }
 std::vector<std::string>
 Node::findType(Parameter::Ptr param)

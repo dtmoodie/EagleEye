@@ -13,3 +13,16 @@ cv::cuda::GpuMat FrameRate::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream st
     updateParameter<double>("Framerate", 1000.0 / delta.total_milliseconds());
     return img;
 }
+
+void FrameLimiter::Init(bool firstInit)
+{
+
+}
+
+cv::cuda::GpuMat FrameLimiter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+{
+
+}
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameRate);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameLimiter);

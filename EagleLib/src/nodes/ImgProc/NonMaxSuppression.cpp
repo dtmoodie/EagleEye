@@ -94,6 +94,7 @@ cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream st
         // Hopefully this preserves values instead of railing it to 255, but I can't be sure.
         cv::cuda::bitwise_and(upperMask, lowerMask, mask, cv::noArray(), stream);
     }
+
 //    if(!sourceValue)
 //        mask.convertTo(mask, CV_8U, stream);
 //    else
@@ -106,8 +107,11 @@ cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream st
 
 void NonMaxSuppression::Init(bool firstInit)
 {
-    updateParameter<int>("Size", 3);
-    addInputParameter<cv::cuda::GpuMat>("Mask");
+    if(firstInit)
+    {
+        updateParameter<int>("Size", 3);
+        addInputParameter<cv::cuda::GpuMat>("Mask");
+    }
 }
 
 cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
@@ -162,7 +166,10 @@ cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
             }
         }
     }
-    return cv::cuda::GpuMat(dst);
+    cv::cuda::GpuMat maxMask;
+    maxMask.upload(dst);
+    updateParameter("Output Mask", maxMask);
+    return maxMask;
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(NonMaxSuppression)
