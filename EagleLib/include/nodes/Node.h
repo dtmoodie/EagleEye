@@ -71,7 +71,6 @@ using namespace boost::multi_index;
 
 #ifdef _MSC_VER
 
-//RUNTIME_COMPILER_LINKLIBRARY(  OPENCV_LIB_DIR "/opencv_core300.lib" );
 
 #else
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
@@ -515,7 +514,7 @@ namespace EagleLib
 		bool																externalDisplay;
         bool                                                                enabled;
         double                                                              processingTime;
-
+        boost::recursive_mutex                                              mtx;
     private:
         friend class NodeManager;
         ObjectId                                                            m_OID;

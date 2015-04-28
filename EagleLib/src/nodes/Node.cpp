@@ -234,6 +234,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
                 }
                 if(enabled)
                 {
+                    boost::recursive_mutex::scoped_lock lock(mtx);
                     std::vector<boost::recursive_mutex::scoped_lock> locks;
                     for(int i = 0; i < parameters.size(); ++i)
                     {
@@ -266,7 +267,8 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
         cv::cuda::GpuMat childResults;
         if(!img.empty())
             img.copyTo(childResults,stream);
-        for (auto it = children.begin(); it != children.end(); ++it)
+        boost::recursive_mutex::scoped_lock lock(mtx);
+        for (auto it = children.begin(); it != children.end(); ++it, ++idx)
         {
             if(it->get() != nullptr)
                 childResults = (*it)->process(childResults, stream);

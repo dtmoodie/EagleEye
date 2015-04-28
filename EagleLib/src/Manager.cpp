@@ -196,7 +196,7 @@ NodeManager::Init()
     boost::filesystem::path workingDir(__FILE__);
     std::string includePath = workingDir.parent_path().parent_path().string();
 #ifdef _MSC_VER
-
+	
 #else
     m_pRuntimeObjectSystem->SetAdditionalCompileOptions("-std=c++11");
 #endif
@@ -209,7 +209,9 @@ NodeManager::Init()
 	m_pRuntimeObjectSystem->AddLibraryDir(BOOST_LIB_DIR);
 	m_pRuntimeObjectSystem->AddLibraryDir(OPENCV_LIB_DIR);
     m_pRuntimeObjectSystem->AddLibraryDir(CUDA_LIB_DIR);
-
+#ifdef BINARY_DIR
+	m_pRuntimeObjectSystem->AddLibraryDir(BINARY_DIR);
+#endif
 	return true;
 }
 
@@ -309,6 +311,7 @@ bool NodeManager::removeNode(ObjectId oid)
     saveTree("test.xml");
     delete m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(oid.m_ConstructorId)->GetConstructedObject(oid.m_PerTypeId);
     return true;*/
+	return false;
 }
 
 void 

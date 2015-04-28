@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	nodeGraphView->setInteractive(true);
     nodeGraphView->setViewport(new QGLWidget());
 	nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
-	ui->gridLayout->addWidget(nodeGraphView, 1, 0);
+	ui->gridLayout->addWidget(nodeGraphView, 2, 0);
 	currentSelectedNodeWidget = nullptr;
     startProcessingThread();
 	quit = false;
@@ -161,8 +161,10 @@ void MainWindow::onQtDisplay(std::string name, cv::Mat img)
 void 
 MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
 {	
+
     if (currentNode != nullptr)
 	{
+        boost::recursive_mutex::scoped_lock(currentNode->mtx);
         currentNode->addChild(node);
 	}
     if(node->nodeName == "OGLImageDisplay")
@@ -175,7 +177,7 @@ MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
     }
 
 	// Add a new node widget to the graph
-    boost::recursive_mutex::scoped_lock lock(parentMtx);
+
 	QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
 
@@ -240,11 +242,14 @@ void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::recursive_mutex* mt
 {
     static std::vector<cv::cuda::GpuMat> images;
     static std::vector<cv::cuda::Stream> streams;
+
     streams.resize(nodes->size());
     images.resize(nodes->size());
     int count = 0;
+    boost::recursive_mutex::scoped_lock lock(*mtx);
     for (auto it = nodes->begin(); it != nodes->end(); ++it, ++count)
     {
+
         (*it)->process(images[count], streams[count]);
     }
     if(nodes->size() == 0)
@@ -256,9 +261,17 @@ void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::recursive_mutex* mt
 void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursive_mutex *mtx)
 {
     std::cout << "Processing thread started" << std::endl;
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
+    boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
+    boost::posix_time::time_duration delta;
     while (!boost::this_thread::interruption_requested())
     {
         process(parentList, mtx);
+        end = boost::posix_time::microsec_clock::universal_time();
+        delta = end - start;
+        start = end;
+        if(delta.total_milliseconds() < 15)
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
     }
     std::cout << "Interrupt requested, processing thread ended" << std::endl;
 }

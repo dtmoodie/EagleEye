@@ -21,7 +21,7 @@ void FrameLimiter::Init(bool firstInit)
 
 cv::cuda::GpuMat FrameLimiter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
-
+	return img;
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameRate);

@@ -33,16 +33,12 @@ void NodeView::on_actionSelect(QAction *action)
         auto nodeWidget = dynamic_cast<QNodeWidget*>(currentWidget->widget());
         if(nodeWidget)
         {
+            emit stopThread();
             auto node = nodeWidget->getNode();
 
             auto parent = node->getParent();
             if(parent != nullptr)
                 parent->removeChild(node);
-            // Remove this node from the node manager
-            // This causes a deadlock due to this (gui) thread blocking, while waiting for stopThread to finish
-            // But some UI calls to imshow operate on the main thread.... Maybe those should be handled via a
-            // queued connection to the main thread.
-            emit stopThread();
             emit selectionChanged(nullptr);
             emit widgetDeleted(nodeWidget);
             // Causes segfault sometimes, processing thread has fully exited but segfault still occurs in ~QNodeWidget

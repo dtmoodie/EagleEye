@@ -2,6 +2,8 @@
 #include <opencv2/imgcodecs.hpp>
 using namespace EagleLib;
 
+
+
 void ImageLoader::Init(bool firstInit)
 {
     updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/oimg.jpeg"), Parameter::Control, "Path to image file");
@@ -14,13 +16,13 @@ void ImageLoader::load()
     {
         if(boost::filesystem::exists(path->data))
         {
-            cv::Mat h_img = cv::imread(path->data.string());
-            d_img.upload(h_img);
+            cv::Mat h_img = cv::imread(path->data.string()); 
+            d_img.upload(h_img); 
         }else
         {
             log(Status, "File doesn't exist");
         }
-    }
+    } 
 }
 
 cv::cuda::GpuMat ImageLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
