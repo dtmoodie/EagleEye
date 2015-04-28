@@ -27,6 +27,7 @@ void ImageLoader::load()
 
 cv::cuda::GpuMat ImageLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {
+    //std::cout << "Image loaded" << std::endl;
     if(parameters[0]->changed)
     {
         load();

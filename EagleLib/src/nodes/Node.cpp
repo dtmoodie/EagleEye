@@ -19,7 +19,7 @@ using namespace EagleLib;
 		RUNTIME_COMPILER_LINKLIBRARY("opencv_cuda300.lib")
 	#endif
 #else
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda")
+RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 #endif
 
 
@@ -38,7 +38,8 @@ Node::Node()
 
 Node::~Node()
 {
-    NodeManager::getInstance().onNodeRecompile(this);
+    if(parent)
+        parent->deregisterNotifier(this);
 }
 void
 Node::getInputs()
@@ -263,18 +264,20 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
     {
         if(children.size() == 0)
             return img;
-        int idx = 0;
+
         cv::cuda::GpuMat childResults;
         if(!img.empty())
             img.copyTo(childResults,stream);
         boost::recursive_mutex::scoped_lock lock(mtx);
-        for (auto it = children.begin(); it != children.end(); ++it, ++idx)
+        for(int i = 0; i < children.size(); ++i)
         {
-            if(it->get() != nullptr)
-                childResults = (*it)->process(childResults, stream);
-            else
-                log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(idx));
-
+            if(children[i] != nullptr)
+            {
+                childResults = children[i]->process(childResults, stream);
+            }else
+            {
+                log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(i));
+            }
         }
         // So here is the debate of is a node's output the output of it, or the output of its children....
         // img = childResults;
@@ -384,6 +387,8 @@ void
 Node::Init(bool firstInit)
 {
     IObject::Init(firstInit);
+    if(parent)
+        parent->registerNotifier(this);
 }
 
 void
@@ -395,7 +400,28 @@ Node::Init(const std::string &configFile)
 void
 Node::Init(const cv::FileNode& configNode)
 {
-
+    configNode["NodeName"] >> nodeName;
+    configNode["NodeTreeName"] >> treeName;
+    configNode["FullTreeName"] >> fullTreeName;
+    configNode["DrawResults"] >> drawResults;
+    configNode["Enabled"] >> enabled;
+    configNode["ExternalDisplay"] >> externalDisplay;
+    cv::FileNode childrenFS = configNode["Children"];
+    int childCount = (int)childrenFS["Count"];
+    for(int i = 0; i < childCount; ++i)
+    {
+        cv::FileNode childNode = childrenFS["Node-" + boost::lexical_cast<std::string>(i)];
+        std::string name = (std::string)childNode["NodeName"];
+        auto node = NodeManager::getInstance().addNode(name);
+        node->Init(childNode);
+        children.push_back(node);
+    }
+    cv::FileNode paramNode =  configNode["Parameters"];
+    for(int i = 0; i < parameters.size(); ++i)
+    {
+        parameters[i]->Init(paramNode);
+    }
+    // Figure out parameter loading :/  Need some kind of factory for all of the parameter types
 }
 
 void
@@ -415,8 +441,41 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(drawResults);
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);
-
 }
+void
+Node::Serialize(cv::FileStorage& fs)
+{
+    if(fs.isOpened())
+    {
+        fs << "NodeName" << nodeName;
+        fs << "NodeTreeName" << treeName;
+        fs << "FullTreeName" << fullTreeName;
+        fs << "DrawResults" << drawResults;
+        fs << "Enabled" << enabled;
+        fs << "ExternalDisplay" << externalDisplay;
+        fs << "Children" << "{";
+        fs << "Count" << (int)children.size();
+        for(int i = 0; i < children.size(); ++i)
+        {
+            fs << "Node-" + boost::lexical_cast<std::string>(i) << "{";
+            children[i]->Serialize(fs);
+            fs << "}";
+        }
+        fs << "}"; // end children
+
+        fs << "Parameters" << "{";
+        for(int i = 0; i < parameters.size(); ++i)
+        {
+            if(parameters[i]->type & Parameter::Control)
+            {
+                parameters[i]->Serialize(fs);
+            }
+        }
+        fs << "}"; // end parameters
+
+    }
+}
+
 std::vector<std::string>
 Node::findType(Parameter::Ptr param)
 {
@@ -540,7 +599,7 @@ Node::setFullTreeName(const std::string& name)
 {
 	for (int i = 0; i < parameters.size(); ++i)
 	{
-		parameters[i]->treeName = name + ":" + parameters[i]->name;
+        parameters[i]->treeName = name + ":" + parameters[i]->name;
 	}
 	fullTreeName = name;
 }

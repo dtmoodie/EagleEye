@@ -158,41 +158,44 @@ void ObjectFactorySystem::ProtectedObjectSwapper::ProtectedFunc()
             }
         }
 	}
+    /// I really need to delete the old object before initializing the new object to get registration
+    /// to work correctly, however I'm terrified this might break everything......
 
-
-	// Do a second pass, initializing objects now that they've all been serialized
+    // Do a second pass, initializing objects now that they've all been serialized
     // and testing serialization if required
-	m_ProtectedPhase = PHASE_INITANDSERIALIZEOUTTEST;
+    m_ProtectedPhase = PHASE_INITANDSERIALIZEOUTTEST;
     if( m_bTestSerialization )
     {
-	    if( m_pLogger ) m_pLogger->LogInfo( "Initialising and testing new serialisation...\n");
+        if( m_pLogger ) m_pLogger->LogInfo( "Initialising and testing new serialisation...\n");
     }
     else
     {
-	    if( m_pLogger ) m_pLogger->LogInfo( "Initialising...\n");
+        if( m_pLogger ) m_pLogger->LogInfo( "Initialising...\n");
+    }
+    std::vector<IObject*> constructedObjects;
+    for( size_t i = 0; i < constructorsNew.size(); ++i )
+    {
+        IObjectConstructor* pConstructor = constructorsNew[i];
+        for( PerTypeObjectId objId = 0; objId < pConstructor->GetNumberConstructedObjects(); ++ objId )
+        {
+            IObject* pObject = pConstructor->GetConstructedObject( objId );
+            if (pObject)
+            {
+                // if a singleton was newly constructed in earlier phase, pass true to init.
+                pObject->Init( bSingletonConstructed[i] );
+
+                if( m_bTestSerialization && ( m_ConstructorsOld.size() <= i || m_ConstructorsOld[ i ] != constructorsNew[ i ] ) )
+                {
+                    //test serialize out for all new objects, we assume old objects are OK.
+                    SimpleSerializer tempSerializer;
+                    tempSerializer.SetIsLoading( false );
+                    tempSerializer.Serialize( pObject );
+                }
+                constructedObjects.push_back(pObject);
+            }
+        }
     }
 
-	for( size_t i = 0; i < constructorsNew.size(); ++i )
-	{
-		IObjectConstructor* pConstructor = constructorsNew[i];
-		for( PerTypeObjectId objId = 0; objId < pConstructor->GetNumberConstructedObjects(); ++ objId )
-		{
-			IObject* pObject = pConstructor->GetConstructedObject( objId );
-			if (pObject)
-			{
-                // if a singleton was newly constructed in earlier phase, pass true to init.
-				pObject->Init( bSingletonConstructed[i] );
-
-				if( m_bTestSerialization && ( m_ConstructorsOld.size() <= i || m_ConstructorsOld[ i ] != constructorsNew[ i ] ) )
-				{
-					//test serialize out for all new objects, we assume old objects are OK.
-					SimpleSerializer tempSerializer;
-					tempSerializer.SetIsLoading( false );
-					tempSerializer.Serialize( pObject );
-				}
-			}
-		}
-	}
 
 	m_ProtectedPhase = PHASE_DELETEOLD;
 	//delete old objects which have been replaced
@@ -217,6 +220,12 @@ void ObjectFactorySystem::ProtectedObjectSwapper::ProtectedFunc()
 			assert( 0 == pOldConstructor->GetNumberConstructedObjects() );
 		}
 	}
+    for(size_t i = 0; i < constructedObjects.size(); ++i)
+    {
+        constructedObjects[i]->updateNotifiers();
+    }
+
+
 }
 
 bool ObjectFactorySystem::HandleRedoUndo( const TConstructors& constructors )

@@ -1,7 +1,12 @@
 #pragma once
 #include <string>
 #include "../Manager.h"
-
+#include <opencv2/core/persistence.hpp>
+#include "../type.h"
+#include "../LokiTypeInfo.h"
+#include <opencv2/core.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+#include <boost/filesystem.hpp>
 namespace EagleLib
 {
 #define ENUM(value) (int)value, #value
@@ -28,6 +33,21 @@ namespace EagleLib
         virtual void setSource(const std::string& name) = 0;
         virtual void update() = 0;
         virtual bool acceptsInput(const Loki::TypeInfo& type) = 0;
+        virtual void Init(cv::FileNode& fs){}
+
+        virtual void Serialize(cv::FileStorage& fs)
+        {
+            fs << name << "{";
+            fs << "ToolTip" << toolTip;
+            fs << "TreeName" << treeName;
+            fs << "ParamType" << type;
+#ifndef _MSC_VER
+            fs << "DataType" << type_info::demangle(typeInfo.name());
+#else
+            fs << "DataType" << typeInfo.name();
+#endif
+        }
+
         enum ParamType
         {
             None		= 0,
@@ -71,18 +91,90 @@ namespace EagleLib
         virtual void setSource(const std::string& name){}
         virtual void update(){}
         virtual bool acceptsInput(const Loki::TypeInfo& type){ return false;}
+        virtual void Serialize(cv::FileStorage &fs);
+        virtual void Init(cv::FileNode &fs);
         TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
             Parameter(name_, (ParamType)type_, toolTip_), data(data_), ownsData(ownsData_) {
             typeInfo = Loki::TypeInfo(typeid(T));
         }
         ~TypedParameter(){ if (ownsData)cleanup<T>(data); }
-
-
-
         T data;
     private:
         bool ownsData;
     };
+    template<typename T> void TypedParameter<T>::Serialize(cv::FileStorage& fs){
+    }
+    template<typename T> void TypedParameter<T>::Init(cv::FileNode& fs){
+    }
+#define SERIALIZE_TYPE(type) template<> inline void TypedParameter<type>::Serialize(cv::FileStorage& fs){       \
+    Parameter::Serialize(fs);                                                                                   \
+    fs << "Data" << data;\
+    fs << "}";\
+}                                                                                                               \
+    template<> inline void TypedParameter<type>::Init(cv::FileNode& fs){                                        \
+    cv::FileNode myNode = fs[name];                                                                             \
+    myNode["Data"] >> data;                                                                                     \
+}
+
+
+    SERIALIZE_TYPE(double)
+    SERIALIZE_TYPE(float)
+    SERIALIZE_TYPE(unsigned char)
+    SERIALIZE_TYPE(short)
+    SERIALIZE_TYPE(unsigned short)
+    //SERIALIZE_TYPE(int)
+
+    SERIALIZE_TYPE(bool)
+
+    template<> inline void TypedParameter<boost::filesystem::path>::Serialize(cv::FileStorage& fs){
+        Parameter::Serialize(fs);
+        fs << "Data" << data.string();
+        fs << "}";
+    }
+        template<> inline void TypedParameter<boost::filesystem::path>::Init(cv::FileNode& fs){
+        cv::FileNode myNode = fs[name];
+        std::string pathStr = (std::string)myNode["Data"];
+        data = boost::filesystem::path(pathStr);
+    }
+
+    template<> inline void TypedParameter<unsigned int>::Serialize(cv::FileStorage& fs){
+        Parameter::Serialize(fs);
+        fs << "Data" << (int)data;
+        fs << "}";
+    }
+        template<> inline void TypedParameter<unsigned int>::Init(cv::FileNode& fs){
+        cv::FileNode myNode = fs[name];
+        data = (int)myNode["Data"];
+    }
+
+    template<> inline void TypedParameter<int>::Serialize(cv::FileStorage& fs){
+        Parameter::Serialize(fs);
+        fs << "Data" << data;
+        fs << "}";
+    }
+        template<> inline void TypedParameter<int>::Init(cv::FileNode& fs){
+        cv::FileNode myNode = fs[name];
+        data = (int)myNode["Data"];
+    }
+
+    template<> void inline TypedParameter<EnumParameter>::Serialize(cv::FileStorage& fs)
+    {
+        Parameter::Serialize(fs);
+        fs << "Enumerations" << "[:";
+        for(int i = 0; i < data.enumerations.size(); ++i)
+        {
+            fs << data.enumerations[i];
+        }
+        fs << "]";
+        fs << "Values" << "[:";
+        for(int i = 0; i < data.values.size(); ++i)
+        {
+            fs << data.values[i];
+        }
+        fs << "]";
+        fs << "CurrentSelection" << data.currentSelection;
+        fs << "}";
+    }
 
     template<typename T>
     class CV_EXPORTS RangedParameter : public TypedParameter<T>

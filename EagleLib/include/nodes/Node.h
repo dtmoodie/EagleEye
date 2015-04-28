@@ -291,7 +291,7 @@ namespace EagleLib
 				parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_ + Parameter::NotifyOnRecompile, toolTip_, ownsData_)));
 			else
 					parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_, toolTip_, ownsData_)));
-			parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+            parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
 			return parameters.size() - 1;
 		}
         template<typename T> size_t
@@ -314,7 +314,7 @@ namespace EagleLib
 			addInputParameter(const std::string& name, const std::string& toolTip_ = std::string())
 		{
 			parameters.push_back(boost::shared_ptr< InputParameter<T> >(new InputParameter<T>(name, toolTip_)));
-			parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+            parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
 			return parameters.size() - 1;
 		}
 
@@ -483,6 +483,7 @@ namespace EagleLib
         virtual void Init(const std::string& configFile);
         virtual void Init(const cv::FileNode& configNode);
         virtual void Serialize(ISimpleSerializer *pSerializer);
+        virtual void Serialize(cv::FileStorage& fs);
 
         virtual bool SkipEmpty() const;
 

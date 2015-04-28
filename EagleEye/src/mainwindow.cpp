@@ -60,6 +60,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
     connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
     connect(nodeGraphView, SIGNAL(widgetDeleted(QNodeWidget*)), this, SLOT(onWidgetDeleted(QNodeWidget*)));
+    connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(onSaveClicked()));
+    connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
     EagleLib::NodeManager::getInstance().setCompileCallback(f);
 }
@@ -90,6 +92,43 @@ MainWindow::onStatus(const std::string &status)
 {
 
 }
+void
+MainWindow::onSaveClicked()
+{
+    auto file = QFileDialog::getSaveFileName(this, "File to save to");
+    if(file.size() == 0)
+        return;
+    stopProcessingThread();
+    EagleLib::NodeManager::getInstance().saveNodes(parentList, file.toStdString());
+    startProcessingThread();
+}
+
+void
+MainWindow::onLoadClicked()
+{
+    auto file = QFileDialog::getSaveFileName(this, "Load file");
+    if(file.size() == 0)
+        return;
+    stopProcessingThread();
+    std::vector<EagleLib::Node::Ptr> nodes = EagleLib::NodeManager::getInstance().loadNodes(file.toStdString());
+    if(nodes.size())
+    {
+        for(int i = 0; i < widgets.size(); ++i)
+        {
+            delete widgets[i];
+        }
+        widgets.clear();
+        currentSelectedNodeWidget = nullptr;
+        parentList = nodes;
+        for(int i =0; i < parentList.size(); ++i)
+        {
+            addNode(parentList[i]);
+        }
+    }
+
+    startProcessingThread();
+}
+
 void
 MainWindow::onTimeout()
 {
@@ -157,16 +196,8 @@ void MainWindow::onQtDisplay(std::string name, cv::Mat img)
     cv::namedWindow(name);
     cv::imshow(name, img);
 }
-
-void 
-MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
-{	
-
-    if (currentNode != nullptr)
-	{
-        boost::recursive_mutex::scoped_lock(currentNode->mtx);
-        currentNode->addChild(node);
-	}
+void MainWindow::addNode(EagleLib::Node::Ptr node)
+{
     if(node->nodeName == "OGLImageDisplay")
     {
         node->gpuDisplayCallback = boost::bind(&MainWindow::oglDisplay, this, _1, _2);
@@ -175,36 +206,45 @@ MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
     {
         node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
     }
-
-	// Add a new node widget to the graph
-
-	QNodeWidget* nodeWidget = new QNodeWidget(0, node);
+    QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
-
     nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
     nodeGraphView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-
-	if (currentSelectedNodeWidget)
-	{
+    if (currentSelectedNodeWidget)
+    {
         proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 50));
-	}
-	else
-	{
-        boost::recursive_mutex::scoped_try_lock lock(parentMtx);
-        parentList.push_back(node);
-	}
+    }
     if(!currentSelectedNodeWidget)
     {
         nodeWidget->setSelected(true);
         currentSelectedNodeWidget = proxyWidget;
         currentNode = node;
     }
-
     for(int i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi();
     }
     widgets.push_back(nodeWidget);
+    for(int i = 0; i < node->children.size(); ++i)
+    {
+        addNode(node->children[i]);
+    }
+}
+
+void 
+MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
+{	
+    if (currentNode != nullptr)
+	{
+        boost::recursive_mutex::scoped_lock(currentNode->mtx);
+        currentNode->addChild(node);
+	}
+    addNode(node);
+    if(node->getParent() == nullptr)
+    {
+        boost::recursive_mutex::scoped_try_lock lock(parentMtx);
+        parentList.push_back(node);
+    }
 }
 void MainWindow::onWidgetDeleted(QNodeWidget* widget)
 {

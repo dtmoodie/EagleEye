@@ -167,7 +167,7 @@ cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
         }
     }
     cv::cuda::GpuMat maxMask;
-    maxMask.upload(dst);
+    maxMask.upload(dst, stream);
     updateParameter("Output Mask", maxMask);
     return maxMask;
 }

@@ -207,6 +207,10 @@ struct IObject
     IObject() : _isRuntimeDelete(false) {}
     virtual ~IObject()
     {
+        for(int i = 0; i < notifiers.size(); ++i)
+        {
+            notifiers[i]->updateObject(nullptr);
+        }
     }
 
     // Perform any object initialization
@@ -214,10 +218,7 @@ struct IObject
     // Will automatically be called with isFirstInit=false whenever a system serialization is performed
     virtual void Init( bool isFirstInit )
     {
-        for(int i = 0; i < notifiers.size(); ++i)
-        {
-            notifiers[i]->updateObject(this);
-        }
+
     }
 
     //return the PerTypeObjectId of this object, which is unique per class
@@ -243,10 +244,7 @@ struct IObject
     virtual void Serialize(ISimpleSerializer *pSerializer)
     {
         SERIALIZE(notifiers);
-        for(int i = 0; i < notifiers.size(); ++i)
-        {
-            notifiers[i]->updateObject(this);
-        }
+
     }
     virtual const char* GetTypeName() const = 0;
 
@@ -263,6 +261,14 @@ struct IObject
         if(itr != notifiers.end())
             notifiers.erase(itr);
     }
+    void updateNotifiers()
+    {
+        for(int i = 0; i < notifiers.size(); ++i)
+        {
+            notifiers[i]->updateObject(this);
+        }
+    }
+
     std::vector<IObjectNotifiable*> notifiers;
 protected:
     bool IsRuntimeDelete() { return _isRuntimeDelete; }

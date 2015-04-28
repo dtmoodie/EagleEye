@@ -12,6 +12,6 @@ namespace EagleLib
         ImageLoader();
         virtual bool SkipEmpty() const;
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
     };
 }

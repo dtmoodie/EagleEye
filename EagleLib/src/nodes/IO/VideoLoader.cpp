@@ -29,6 +29,7 @@ VideoLoader::Init(bool firstInit)
         updateParameter<bool>("Loop",true);
         load = false;
     }
+    updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
 }
 void VideoLoader::Serialize(ISimpleSerializer *pSerializer)
 {
@@ -41,6 +42,7 @@ cv::cuda::GpuMat
 VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 {
     bool firstLoad = false;
+    std::cout << "Beyah" << std::endl;
     if (parameters[0]->changed || load)
     {
 		loadFile();
@@ -222,14 +224,6 @@ void
 VideoLoader::restartVideo()
 {
     load = true;
-    //service.post(boost::bind(&VideoLoader::loadFile, this));
-    //loadFile();
 }
 
-VideoLoader::VideoLoader():EventLoopNode()
-{
-    nodeName = "VideoLoader";
-    treeName = nodeName;
-    fullTreeName = treeName;
-}
-REGISTERCLASS(VideoLoader)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoLoader)

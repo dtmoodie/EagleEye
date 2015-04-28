@@ -14,126 +14,7 @@ using namespace EagleLib;
     #include "Windows.h"
     #pragma warning( disable : 4996 4800 )
 #endif
-/*
-INodeTreeLeaf::INodeTreeLeaf(Node* node_, INodeTreeLeaf* parent_):
-    parent(parent_)
-{    m_node = shared_ptr<Node>(node_);}
 
-INodeTreeLeaf::INodeTreeLeaf(shared_ptr<Node> node_, INodeTreeLeaf *parent_):
-    m_node(node_), parent(parent_)
-{}
-
-NodeTree::NodeTree()
-{
-
-}
-
-void NodeTree::addChild(shared_ptr<Node> node, const std::string& path)
-{
-    auto itr = path.find_first_of('.');
-    if(itr != std::string::npos)
-    {
-        std::string parentNode = path.substr(0, itr);
-        INodeTreeLeaf* parent = topLevelNodes.get<LeafName>()[parentNode];
-        parent->addChild(node);
-    }else
-    {
-        topLevelNodes.get<0>().push_back(new NodeTreeLeaf(node));
-    }
-}
-
-shared_ptr<Node> NodeTree::getNode(const std::string& path)
-{
-
-}
-
-
-NodeTreeLeaf::NodeTreeLeaf(shared_ptr<Node> node_, INodeTreeLeaf* parent_):
-    INodeTreeLeaf(node_, parent_)
-{}
-
-NodeTreeLeaf::NodeTreeLeaf(Node* node_, INodeTreeLeaf* parent_):
-    INodeTreeLeaf(node_, parent_)
-{
-}
-
-void NodeTreeLeaf::addChild(shared_ptr<Node> node_)
-{
-    if(node_ == nullptr)
-        return;
-    int count = children.get<LeafName>().count(node_->nodeName);
-    node_->treeName = node_->nodeName + "-" + boost::lexical_cast<std::string>(count);
-    // Push it into the container based on the insertion order
-    children.get<0>().push_back(new NodeTreeLeaf(node_, this));
-}
-virtual void addChild(Node* node_)
-{
-    if(node_ == nullptr)
-        return;
-    int count = children.get<LeafName>().count(node_->nodeName);
-    node_->treeName = node_->nodeName + "-" + boost::lexical_cast<std::string>(count);
-    // Push it into the container based on the insertion order
-    children.get<0>().push_back(new NodeTreeLeaf(node_, this));
-}
-
-shared_ptr<Node> NodeTreeLeaf::getNode()
-{
-    return m_node;
-}
-
-shared_ptr<Node> NodeTreeLeaf::getChildNode(const std::string& name)
-{
-    INodeTreeLeaf* childLeaf = getChildLeaf(name);
-    if(childLeaf)
-        return childLeaf->getNode();
-    return shared_ptr<Node>();
-}
-shared_ptr<Node> NodeTreeLeaf::getChildNode(int idx)
-{
-    INodeTreeLeaf* childLeaf = getChildLeaf(idx);
-    if(childLeaf)
-        return childLeaf->getNode();
-    return shared_ptr<Node>();
-}
-
-shared_ptr<Node> NodeTreeLeaf::getParentNode()
-{
-    auto parentLeaf = getParentLeaf();
-    if(parentLeaf)
-        return parentLeaf->getNode();
-    return shared_ptr<Node>();
-}
-
-INodeTreeLeaf* NodeTreeLeaf::getParentLeaf()
-{
-    return parent;
-}
-
-INodeTreeLeaf* NodeTreeLeaf::getChildLeaf(const std::string& name)
-{
-    auto itr = children.get<LeafName>().find(name);
-    if(itr != children.get<LeafName>().end())
-        return *itr;
-    return nullptr;
-}
-
-INodeTreeLeaf* NodeTreeLeaf::getChildLeaf(int idx)
-{
-    if(idx >= children.get<0>().size())
-        return nullptr;
-    return children.get<0>()[idx];
-}
-
-void NodeTreeLeaf::swapChildren(const std::string& currentName, const std::string& newName)
-{
-
-}
-
-void NodeTreeLeaf::swapChildren(int initialIdx, int newIdx)
-{
-
-}
-*/
 void CompileLogger::log(int level, const char *format, va_list args)
 {
     int result = vsnprintf(m_buff, LOGSYSTEM_MAX_BUFFER-1, format, args);
@@ -167,7 +48,44 @@ void CompileLogger::LogInfo(const char * format, ...)
     va_start(args, format);
     log(0, format, args);
 }
+bool TestCallback::TestBuildCallback(const char* file, TestBuildResult type)
+{
+    bool success = true;
+    switch(type)
+    {
+        case TESTBUILDRRESULT_SUCCESS:
+            std::cout << "TESTBUILDRRESULT_SUCCESS - ";
+            break;
+        case TESTBUILDRRESULT_NO_FILES_TO_BUILD:
+            std::cout << "TESTBUILDRRESULT_NO_FILES_TO_BUILD - ";
+            success = false;
+            break;
+        case TESTBUILDRRESULT_BUILD_FILE_GONE:
+            std::cout << "TESTBUILDRRESULT_BUILD_FILE_GONE - ";
+            success = false;
+            break;
+        case TESTBUILDRRESULT_BUILD_NOT_STARTED:
+            std::cout << "TESTBUILDRRESULT_BUILD_NOT_STARTED - ";
+            success = false;
+            break;
+        case TESTBUILDRRESULT_BUILD_FAILED:
+            std::cout << "TESTBUILDRRESULT_BUILD_FAILED - ";
+            success = false;
+            break;
+        case TESTBUILDRRESULT_OBJECT_SWAP_FAIL:
+            std::cout << "TESTBUILDRRESULT_OBJECT_SWAP_FAIL - ";
+            success = false;
+            break;
+    }
+    std::cout << file << std::endl;
+    return success;
+}
 
+bool TestCallback::TestBuildWaitAndUpdate()
+{
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+    return true;
+}
 
 NodeManager& NodeManager::getInstance()
 {
@@ -189,6 +107,7 @@ NodeManager::~NodeManager()
 bool
 NodeManager::Init()
 {
+    testCallback = nullptr;
     m_pRuntimeObjectSystem.reset(new RuntimeObjectSystem);
     m_pCompileLogger.reset(new CompileLogger());
     m_pRuntimeObjectSystem->Initialise(m_pCompileLogger.get(), nullptr);
@@ -282,6 +201,46 @@ shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
     }
     return shared_ptr<Node>();
 }
+std::vector<shared_ptr<Node>> NodeManager::loadNodes(const std::string& saveFile)
+{
+    cv::FileStorage fs;
+    try
+    {
+        fs.open(saveFile, cv::FileStorage::READ);
+    }catch(cv::Exception &e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+
+    int nodeCount = (int)fs["TopLevelNodeCount"];
+    std::vector<shared_ptr<Node>> nodes;
+    nodes.reserve(nodeCount);
+    for(int i = 0;i < nodeCount; ++i)
+    {
+        auto nodeFS = fs["Node-" + boost::lexical_cast<std::string>(i)];
+        std::string name = (std::string)nodeFS["NodeName"];
+        Node::Ptr node = addNode(name);
+        node->Init(nodeFS);
+        nodes.push_back(node);
+    }
+    return nodes;
+}
+
+void NodeManager::saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, const std::string& fileName)
+{
+    cv::FileStorage fs;
+    fs.open(fileName, cv::FileStorage::WRITE);
+    fs << "TopLevelNodeCount" << (int)topLevelNodes.size();
+
+    for(int i = 0; i < topLevelNodes.size(); ++i)
+    {
+        fs << "Node-" + boost::lexical_cast<std::string>(i) << "{";
+        topLevelNodes[i]->Serialize(fs);
+        fs << "}";
+    }
+    fs.release();
+}
+
 bool NodeManager::removeNode(const std::string& nodeName)
 {
 
@@ -347,18 +306,11 @@ NodeManager::CheckRecompile()
     }
     return false;
 }
-void writeOutNodes(t_nodeTree& ptree, int level)
-{
-    for(auto itr = ptree.begin(); itr != ptree.end(); ++itr)
-    {
-        std::cout << level << ": " << itr->first << std::endl;
-        writeOutNodes(itr->second, level + 1);
-    }
-}
+
 
 void NodeManager::saveTree(const std::string &fileName)
 {
-    //writeOutNodes(m_nodeTree, 0);
+
 }
 
 bool
@@ -383,6 +335,13 @@ NodeManager::CheckRecompile(bool swapAllowed)
         m_pRuntimeObjectSystem->GetFileChangeNotifier()->Update(float(delta.total_milliseconds())/1000.0);
     }
     return false;
+}
+bool NodeManager::TestRuntimeCompilation()
+{
+    if(testCallback == nullptr)
+        testCallback = new TestCallback();
+    m_pRuntimeObjectSystem->TestBuildAllRuntimeHeaders(testCallback,true);
+    m_pRuntimeObjectSystem->TestBuildAllRuntimeSourceFiles(testCallback, true);
 }
 
 void

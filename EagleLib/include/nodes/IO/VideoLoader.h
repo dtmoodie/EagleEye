@@ -7,7 +7,7 @@
 namespace EagleLib
 {
 
-    class CV_EXPORTS VideoLoader : public EventLoopNode
+    class  VideoLoader: public Node
     {
         bool load;
     public:

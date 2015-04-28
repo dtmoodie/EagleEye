@@ -39,10 +39,14 @@ private slots:
     void stopProcessingThread();
     void startProcessingThread();
     void onWidgetDeleted(QNodeWidget* widget);
+    void onSaveClicked();
+    void onLoadClicked();
+    void addNode(EagleLib::Node::Ptr ndoe);
 signals:
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);
+
 
 
 private:
