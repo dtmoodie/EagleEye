@@ -80,7 +80,7 @@ void IQNodeInterop::onParameterUpdate(boost::shared_ptr<EagleLib::Parameter> par
 }
 
 QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
-    QWidget(parent),
+    mainWindow(parent),
     node(node_),
 	ui(new Ui::QNodeWidget())
 {

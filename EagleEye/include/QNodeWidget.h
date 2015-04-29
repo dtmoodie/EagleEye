@@ -38,6 +38,7 @@ public:
     // Used for thread safety
     void on_nodeUpdate();
     void on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
+    QWidget* mainWindow;
 private slots:
     void on_enableClicked(bool state);
     void on_status(const std::string& msg, EagleLib::Node* node);
@@ -56,6 +57,7 @@ private:
     QLineEdit* errorDisplay;
     QLineEdit* criticalDisplay;
     std::vector<boost::shared_ptr<IQNodeInterop>> interops;
+
 };
 
 
@@ -91,6 +93,7 @@ public:
     virtual void updateUi();
     IQNodeProxy* proxy;
     boost::shared_ptr<EagleLib::Parameter> parameter;
+
 private slots:
     void on_valueChanged(double value);
     void on_valueChanged(int value);
@@ -371,8 +374,13 @@ public:
 			button->setText("Select a file");
 	}
     virtual void onUiUpdated(QWidget* widget)
-	{
-		QString filename = QFileDialog::getOpenFileName(parent, "Select file");
+    {
+        QString filename;
+        QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(parent->parentWidget());
+        if(nodeWidget)
+            filename = QFileDialog::getOpenFileName(nodeWidget->mainWindow, "Select file");
+        else
+            filename = QFileDialog::getOpenFileName(parent, "Select file");
         boost::recursive_mutex::scoped_lock lock(parameter->mtx);
         if(!lock)
             return;
@@ -386,7 +394,7 @@ public:
     virtual QWidget* getWidget(int num = 0) { return button; }
 private:
 	QPushButton* button;
-    QWidget* parent;
+    IQNodeInterop* parent;
 };
 
 template<>
