@@ -42,6 +42,7 @@ private slots:
     void onSaveClicked();
     void onLoadClicked();
     void addNode(EagleLib::Node::Ptr ndoe);
+    void updateLines();
 signals:
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);

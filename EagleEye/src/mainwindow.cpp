@@ -106,7 +106,7 @@ MainWindow::onSaveClicked()
 void
 MainWindow::onLoadClicked()
 {
-    auto file = QFileDialog::getSaveFileName(this, "Load file");
+    auto file = QFileDialog::getOpenFileName(this, "Load file");
     if(file.size() == 0)
         return;
     stopProcessingThread();
@@ -123,6 +123,10 @@ MainWindow::onLoadClicked()
         for(int i =0; i < parentList.size(); ++i)
         {
             addNode(parentList[i]);
+        }
+        for(int i = 0; i < widgets.size(); ++i)
+        {
+            widgets[i]->updateUi();
         }
     }
 
@@ -220,15 +224,15 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
         currentSelectedNodeWidget = proxyWidget;
         currentNode = node;
     }
-    for(int i = 0; i < widgets.size(); ++i)
-    {
-        widgets[i]->updateUi();
-    }
     widgets.push_back(nodeWidget);
     for(int i = 0; i < node->children.size(); ++i)
     {
         addNode(node->children[i]);
     }
+}
+void MainWindow::updateLines()
+{
+
 }
 
 void 
@@ -240,6 +244,10 @@ MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
         currentNode->addChild(node);
 	}
     addNode(node);
+    for(int i = 0; i < widgets.size(); ++i)
+    {
+        widgets[i]->updateUi();
+    }
     if(node->getParent() == nullptr)
     {
         boost::recursive_mutex::scoped_try_lock lock(parentMtx);

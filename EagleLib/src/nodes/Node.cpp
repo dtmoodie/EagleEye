@@ -56,6 +56,8 @@ Node::addChild(Node::Ptr child)
 {
     if (child == nullptr)
         return child;
+    if(std::find(children.begin(), children.end(), child) != children.end())
+        return child;
     if(messageCallback)
         child->messageCallback = messageCallback;
     int count = 0;
