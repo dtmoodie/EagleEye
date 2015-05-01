@@ -175,6 +175,11 @@ namespace EagleLib
         fs << "CurrentSelection" << data.currentSelection;
         fs << "}";
     }
+    template<> void inline TypedParameter<EnumParameter>::Init(cv::FileNode& fs)
+    {
+        cv::FileNode myNode = fs[name];
+        data.currentSelection = (int)myNode["CurrentSelection"];
+    }
 
     template<typename T>
     class CV_EXPORTS RangedParameter : public TypedParameter<T>

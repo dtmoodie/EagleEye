@@ -377,10 +377,11 @@ public:
     {
         QString filename;
         QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(parent->parentWidget());
+
         if(nodeWidget)
-            filename = QFileDialog::getOpenFileName(nodeWidget->mainWindow, "Select file");
+            filename = QFileDialog::getSaveFileName(nodeWidget->mainWindow, "Select file");
         else
-            filename = QFileDialog::getOpenFileName(parent, "Select file");
+            filename = QFileDialog::getSaveFileName(parent, "Select file");
         boost::recursive_mutex::scoped_lock lock(parameter->mtx);
         if(!lock)
             return;
@@ -482,10 +483,8 @@ public:
         if(init)
             for(int i = 0; i < param->enumerations.size(); ++i)
                 box->addItem(QString::fromStdString(param->enumerations[i]));
-        if(parameter->changed)
-        {
-            box->setCurrentIndex(param->currentSelection);
-        }
+        box->setCurrentIndex(param->currentSelection);
+
     }
     virtual void onUiUpdated(QWidget* widget)
     {

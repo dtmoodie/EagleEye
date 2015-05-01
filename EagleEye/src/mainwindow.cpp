@@ -52,7 +52,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->gridLayout->addWidget(nodeGraphView, 2, 0);
 	currentSelectedNodeWidget = nullptr;
     startProcessingThread();
-	quit = false;
     cv::redirectError(&static_errorHandler);
     connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
@@ -68,9 +67,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	quit = true;
-    processingThread.interrupt();
-    processingThread.join();
+    stopProcessingThread();
     delete ui;
 }
 void MainWindow::onCompileLog(const std::string& msg, int level)
@@ -129,7 +126,6 @@ MainWindow::onLoadClicked()
             widgets[i]->updateUi();
         }
     }
-
     startProcessingThread();
 }
 
@@ -161,7 +157,6 @@ MainWindow::onTimeout()
         }else
         {
             log("Recompile complete");
-            quit = false;
             processingThread = boost::thread(boost::bind(&processThread, &parentList, &parentMtx));
             swapRequired = false;
         }
@@ -202,6 +197,7 @@ void MainWindow::onQtDisplay(std::string name, cv::Mat img)
 }
 void MainWindow::addNode(EagleLib::Node::Ptr node)
 {
+
     if(node->nodeName == "OGLImageDisplay")
     {
         node->gpuDisplayCallback = boost::bind(&MainWindow::oglDisplay, this, _1, _2);
@@ -218,16 +214,22 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     {
         proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 50));
     }
-    if(!currentSelectedNodeWidget)
+    QGraphicsProxyWidget* prevWidget = currentSelectedNodeWidget;
+    widgets.push_back(nodeWidget);
+    currentSelectedNodeWidget = proxyWidget;
+    currentNode = node;
+    for(int i = 0; i < node->children.size(); ++i)
+    {
+        addNode(node->children[i]);
+    }
+    if(!prevWidget)
     {
         nodeWidget->setSelected(true);
         currentSelectedNodeWidget = proxyWidget;
         currentNode = node;
-    }
-    widgets.push_back(nodeWidget);
-    for(int i = 0; i < node->children.size(); ++i)
+    }else
     {
-        addNode(node->children[i]);
+        currentSelectedNodeWidget = prevWidget;
     }
 }
 void MainWindow::updateLines()
@@ -238,11 +240,11 @@ void MainWindow::updateLines()
 void 
 MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
 {	
-    if (currentNode != nullptr)
-	{
+    if(currentNode != nullptr)
+    {
         boost::recursive_mutex::scoped_lock(currentNode->mtx);
         currentNode->addChild(node);
-	}
+    }
     addNode(node);
     for(int i = 0; i < widgets.size(); ++i)
     {

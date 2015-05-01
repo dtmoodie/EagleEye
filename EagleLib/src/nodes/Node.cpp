@@ -416,7 +416,7 @@ Node::Init(const cv::FileNode& configNode)
         std::string name = (std::string)childNode["NodeName"];
         auto node = NodeManager::getInstance().addNode(name);
         node->Init(childNode);
-        children.push_back(node);
+        addChild(node);
     }
     cv::FileNode paramNode =  configNode["Parameters"];
     for(int i = 0; i < parameters.size(); ++i)

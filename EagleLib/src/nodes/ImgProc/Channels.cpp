@@ -36,8 +36,11 @@ cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
 
 void ExtractChannels::Init(bool firstInit)
 {
-    updateParameter("Output Channel", int(0));
-    channelNum = 0;
+    if(firstInit)
+    {
+        updateParameter("Output Channel", int(0));
+    }
+    channelNum = getParameter<int>(0)->data;
 }
 
 cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)

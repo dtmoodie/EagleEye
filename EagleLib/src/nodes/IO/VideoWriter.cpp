@@ -1,12 +1,11 @@
 #include <nodes/IO/VideoWriter.h>
 using namespace EagleLib;
-using namespace EagleLib::IO;
 
 
 
 VideoWriter::VideoWriter(std::string fileName)
 {
-	updateParameter(1, fileName);
+    updateParameter(0, boost::filesystem::path(fileName));
 }
 
 VideoWriter::~VideoWriter()
@@ -17,52 +16,109 @@ void VideoWriter::Init(bool firstInit)
 {
 	if (firstInit)
 	{
-		try
-		{
-            cv::cudacodec::createVideoWriter(std::string("test.avi"), cv::Size(640, 480), 30);
-		}
-		catch (cv::Exception &e)
-		{
-			e.code;
-			gpuWriter = false;
-		}
+        EnumParameter param;
+        param.addEnum(cv::VideoWriter::fourcc('x','2','6','4'), "x264");
+        param.addEnum(cv::VideoWriter::fourcc('h','2','6','4'), "h264");
+        param.addEnum(cv::VideoWriter::fourcc('m','j','p','g'), "mjpg");
+        param.addEnum(cv::VideoWriter::fourcc('d','i','v','x'), "divx");
+        updateParameter("Codec", param);
+        updateParameter("Filename", boost::filesystem::path(""));
 	}
+    updateParameter<boost::function<void(void)>>("Restart Functor", boost::bind(&VideoWriter::restartFunc, this));
+    restart = false;
+
+}
+void VideoWriter::restartFunc()
+{
+    restart = true;
+}
+
+void VideoWriter::Serialize(ISimpleSerializer *pSerializer)
+{
+    Node::Serialize(pSerializer);
+    SERIALIZE(d_writer);
+    SERIALIZE(h_writer);
 }
 
 cv::cuda::GpuMat 
 VideoWriter::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 {
+    size = img.size();
+    if(parameters[0]->changed || parameters[1]->changed || restart)
+        startWrite();
+    if(d_writer != nullptr || h_writer != nullptr)
+        writeImg(img);
 	return img;
 }
 void 
 VideoWriter::writeImg(cv::cuda::GpuMat& img)
 {
-    auto fileName = getParameter<std::string>(1);
-	if (fileName->data.size() == 0)
-		return;
-	static cv::Size imgSize = img.size();
-	if (imgSize != img.size())
-	{
+    if(d_writer)
+    {
+        d_writer->write(img);
+        return;
+    }
+    if(h_writer)
+    {
+        cv::Mat h_img(img);
+        h_writer->write(h_img);
+    }
+}
+void
+VideoWriter::startWrite()
+{
+    log(Status, "Starting write");
+    auto param = getParameter<boost::filesystem::path>(1);
+    if(param == nullptr)
+        return;
+    if(boost::filesystem::exists(param->data))
+        log(Warning, "File exists, overwriting");
+    if(h_writer == nullptr)
+    {
+        try
+        {
+            cv::cudacodec::EncoderParams params;
+            d_writer = cv::cudacodec::createVideoWriter(param->data.string(), size, 30, params);
+            log(Status, "Using GPU encoder");
+        }catch(cv::Exception &e)
+        {
+            h_writer = cv::Ptr<cv::VideoWriter>(new cv::VideoWriter);
+            auto codec = getParameter<EnumParameter>(0);
+            bool success;
+            if(codec)
+            {
+                success = h_writer->open(param->data.string(),codec->data.currentSelection,30,size);
+            }else
+            {
+                success = h_writer->open(param->data.string(), -1, 30, size);
+            }
+            if(success)
+                log(Status, "Using CPU encoder");
+            else
+                log(Status, "Unable to open file");
 
-	}
-	if (gpuWriter)
-	{
-		if (d_writer == NULL)
-			d_writer = cv::cudacodec::createVideoWriter(fileName->data, imgSize, 30.0);
-        //d_writer->write(img);
-		return;
-	}
-	if (!gpuWriter)
-	{
-		if (!h_writer.isOpened())
-		{
-			auto fourcc = getParameter<const char*>(2);
-			h_writer.open(fileName->data, cv::VideoWriter::fourcc(fourcc->data[0], fourcc->data[1], fourcc->data[2], fourcc->data[3]), 30, imgSize, img.channels() == 3);
-		}
-		cv::Mat h_img(img);
-		h_writer << h_img;
-		return;
-	}	
+        }
+    }else
+    {
+        h_writer = cv::Ptr<cv::VideoWriter>(new cv::VideoWriter);
+        auto codec = getParameter<EnumParameter>(0);
+        bool success;
+        if(codec)
+        {
+            success = h_writer->open(param->data.string(),codec->data.currentSelection,30,size);
+        }else
+        {
+            success = h_writer->open(param->data.string(), -1, 30, size);
+        }
+        if(success)
+            log(Status, "Using CPU encoder");
+        else
+            log(Status, "Unable to open file");
+    }
+    parameters[0]->changed = false;
+    parameters[1]->changed = false;
+    restart = false;
+
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoWriter);

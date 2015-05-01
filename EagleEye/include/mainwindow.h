@@ -41,15 +41,12 @@ private slots:
     void onWidgetDeleted(QNodeWidget* widget);
     void onSaveClicked();
     void onLoadClicked();
-    void addNode(EagleLib::Node::Ptr ndoe);
+    void addNode(EagleLib::Node::Ptr node);
     void updateLines();
 signals:
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);
-
-
-
 private:
     void onError(const std::string& error);
     void onStatus(const std::string& status);
@@ -63,8 +60,7 @@ private:
     std::vector<EagleLib::Node::Ptr> parentList;
     boost::recursive_mutex parentMtx;
     std::vector<QNodeWidget*> widgets;
-	boost::thread processingThread;
-	bool quit;
+    boost::thread processingThread;
 };
 
 
