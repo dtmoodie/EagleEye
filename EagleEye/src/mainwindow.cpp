@@ -215,6 +215,7 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
         proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 50));
     }
     QGraphicsProxyWidget* prevWidget = currentSelectedNodeWidget;
+    auto prevNode = currentNode;
     widgets.push_back(nodeWidget);
     currentSelectedNodeWidget = proxyWidget;
     currentNode = node;
@@ -226,7 +227,7 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     {
         nodeWidget->setSelected(true);
         currentSelectedNodeWidget = proxyWidget;
-        currentNode = node;
+        currentNode = prevNode;
     }else
     {
         currentSelectedNodeWidget = prevWidget;
@@ -240,10 +241,14 @@ void MainWindow::updateLines()
 void 
 MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
 {	
+    EagleLib::Node::Ptr prevNode = currentNode;
     if(currentNode != nullptr)
     {
         boost::recursive_mutex::scoped_lock(currentNode->mtx);
         currentNode->addChild(node);
+    }else
+    {
+
     }
     addNode(node);
     for(int i = 0; i < widgets.size(); ++i)
@@ -254,6 +259,13 @@ MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
     {
         boost::recursive_mutex::scoped_try_lock lock(parentMtx);
         parentList.push_back(node);
+    }
+    if(currentNode == nullptr)
+    {
+        currentNode = node;
+    }else
+    {
+        currentNode = prevNode;
     }
 }
 void MainWindow::onWidgetDeleted(QNodeWidget* widget)

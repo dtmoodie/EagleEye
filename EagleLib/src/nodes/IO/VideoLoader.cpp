@@ -42,7 +42,7 @@ cv::cuda::GpuMat
 VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
 {
     bool firstLoad = false;
-    std::cout << "Beyah" << std::endl;
+    //std::cout << "Beyah" << std::endl;
     if (parameters[0]->changed || load)
     {
 		loadFile();
@@ -111,7 +111,14 @@ VideoLoader::loadFile()
         // no luck with the GPU decoder, try CPU decoder
         log(Error, "Failed to create GPU decoder, falling back to CPU decoder");
         h_videoReader.reset(new cv::VideoCapture);
-        h_videoReader->open(fileName->data.string());
+        try
+        {
+            h_videoReader->open(fileName->data.string());
+        }catch(cv::Exception &e)
+        {
+            log(Error, "Failed to fallback on CPU decoder");
+        }
+
         /*
         -   **CV_CAP_PROP_POS_MSEC** Current position of the video file in milliseconds or video
             capture timestamp.
