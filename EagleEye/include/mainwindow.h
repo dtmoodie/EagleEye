@@ -36,6 +36,7 @@ private slots:
     void log(QString message);
     void onOGLDisplay(std::string name, cv::cuda::GpuMat img);
     void onQtDisplay(std::string name, cv::Mat img);
+    void onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::Node* node);
     void stopProcessingThread();
     void startProcessingThread();
     void onWidgetDeleted(QNodeWidget* widget);
@@ -47,6 +48,7 @@ signals:
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);
+    void qtDisplayImage(boost::function<cv::Mat(void)> function, EagleLib::Node* node);
 private:
     void onError(const std::string& error);
     void onStatus(const std::string& status);

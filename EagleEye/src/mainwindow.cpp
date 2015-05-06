@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<cv::Mat>("cv::Mat");
     qRegisterMetaType<EagleLib::Node::Ptr>("EagleLib::Node::Ptr");
     qRegisterMetaType<EagleLib::Verbosity>("EagleLib::Verbosity");
+    qRegisterMetaType<boost::function<cv::Mat(void)>>("boost::function<cv::Mat(void)>");
     ui->setupUi(this);
     fileMonitorTimer = new QTimer(this);
     fileMonitorTimer->start(1000);
@@ -195,6 +196,13 @@ void MainWindow::onQtDisplay(std::string name, cv::Mat img)
     cv::namedWindow(name);
     cv::imshow(name, img);
 }
+void MainWindow::onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::Node* node)
+{
+    cv::Mat img = function();
+    cv::namedWindow(node->fullTreeName);
+    cv::imshow(node->fullTreeName, img);
+}
+
 void MainWindow::addNode(EagleLib::Node::Ptr node)
 {
 
@@ -203,6 +211,10 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
         node->gpuDisplayCallback = boost::bind(&MainWindow::oglDisplay, this, _1, _2);
     }
     if(node->nodeName == "QtImageDisplay")
+    {
+        node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
+    }
+    if(node->nodeName == "KeyPointDisplay")
     {
         node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
     }

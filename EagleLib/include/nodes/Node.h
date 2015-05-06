@@ -510,6 +510,9 @@ namespace EagleLib
         std::vector< boost::shared_ptr< Parameter > >						parameters;
         boost::function<void(cv::Mat, Node*)>								cpuDisplayCallback;
         boost::function<void(cv::cuda::GpuMat, Node*)>						gpuDisplayCallback;
+        // This is a function that operates on the UI thread, on a cv::Mat for display.
+        // This can be used for
+        boost::function<void(boost::function<cv::Mat()>, Node*)>                    uiThreadCallback;
 		/* If true, draw results onto the image being processed */
         bool																drawResults;
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
