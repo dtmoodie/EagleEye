@@ -374,15 +374,6 @@ NodeManager::getNode(const ObjectId& id)
 Node*
 NodeManager::getNode(const std::string &treeName)
 {
-    /*Node* ptr = nullptr;
-    try
-    {
-        ptr = m_nodeTree.get<Node*>(treeName);
-    }catch(boost::exception &err)
-    {
-        std::cout << "Error getting node by name: " << treeName << std::endl;
-    }*/
-
     return nullptr;
 }
 

@@ -225,6 +225,7 @@ namespace EagleLib
         virtual void                    swapChildren(const std::string& name1, const std::string& name2);
         virtual void                    swapChildren(Node::Ptr child1, Node::Ptr child2);
         virtual std::vector<Node::Ptr>  getNodesInScope();
+        virtual Node *getNodeInScope(const std::string& name);
         virtual void getNodesInScope(std::vector<Node::Ptr>& nodes);
 		
 		// ****************************************************************************************************************
@@ -268,8 +269,8 @@ namespace EagleLib
 		virtual std::vector<std::string>	 listParameters();
         virtual std::vector<std::string> findType(Parameter::Ptr param);
         virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo);
-        virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo, std::vector<Node*>& nodes);
-        virtual std::vector<std::string> findType(Parameter::Ptr param, std::vector<Node*>& nodes);
+        virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo, std::vector<Node::Ptr>& nodes);
+        virtual std::vector<std::string> findType(Parameter::Ptr param, std::vector<Ptr> &nodes);
 		virtual std::vector<std::vector<std::string>> findCompatibleInputs();
         std::vector<std::string> findCompatibleInputs(const std::string& paramName);
         std::vector<std::string> findCompatibleInputs(int paramIdx);

@@ -132,10 +132,30 @@ Node::getNodesInScope()
         parent->getNodesInScope(nodes);
     return nodes;
 }
+Node*
+Node::getNodeInScope(const std::string& name)
+{
+    // Check if this is a child node of mine, if not go up
+    int ret = name.compare(0, fullTreeName.length(), fullTreeName);
+    if(ret == 0)
+    {
+        // name is a child of current node, or is the current node
+        if(fullTreeName.size() == name.size())
+            return this;
+        std::string childName = name.substr(fullTreeName.size() + 1);
+        auto child = getChild(childName);
+        if(child != nullptr)
+            return child.get();
+    }
+    if(parent)
+        return parent->getNodeInScope(name);
+    return nullptr;
+}
+
 void
 Node::getNodesInScope(std::vector<Node::Ptr>& nodes)
 {
-    nodes.insert(children.begin(), children.end(), nodes.end());
+    nodes.insert(nodes.end(), children.begin(), children.end());
     if(parent)
         parent->getNodesInScope(nodes);
 }
@@ -481,20 +501,20 @@ Node::Serialize(cv::FileStorage& fs)
 std::vector<std::string>
 Node::findType(Parameter::Ptr param)
 {
-    std::vector<Node*> nodes;
-    NodeManager::getInstance().getAccessibleNodes(fullTreeName, nodes);
+    std::vector<Node::Ptr> nodes;
+    getNodesInScope(nodes);
     return findType(param, nodes);
 }
 
 std::vector<std::string>
 Node::findType(Loki::TypeInfo &typeInfo)
 {
-	std::vector<Node*> nodes;
-	NodeManager::getInstance().getAccessibleNodes(fullTreeName, nodes);
+    std::vector<Node::Ptr> nodes;
+    getNodesInScope(nodes);
     return findType(typeInfo, nodes);
 }
 std::vector<std::string>
-Node::findType(Parameter::Ptr param, std::vector<Node*>& nodes)
+Node::findType(Parameter::Ptr param, std::vector<Node::Ptr>& nodes)
 {
     std::vector<std::string> output;
 
@@ -512,7 +532,7 @@ Node::findType(Parameter::Ptr param, std::vector<Node*>& nodes)
 }
 
 std::vector<std::string> 
-Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*>& nodes)
+Node::findType(Loki::TypeInfo &typeInfo, std::vector<Ptr> &nodes)
 {
 	std::vector<std::string> output;
 

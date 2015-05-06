@@ -31,6 +31,7 @@ namespace EagleLib
     public:
         typedef boost::shared_ptr<Parameter> Ptr;
         virtual void setSource(const std::string& name) = 0;
+        virtual void setSource(EagleLib::Parameter::Ptr param) = 0;
         virtual void update() = 0;
         virtual bool acceptsInput(const Loki::TypeInfo& type) = 0;
         virtual void Init(cv::FileNode& fs){}
@@ -89,6 +90,7 @@ namespace EagleLib
         typedef T ValType;
 
         virtual void setSource(const std::string& name){}
+        virtual void setSource(Parameter::Ptr param){}
         virtual void update(){}
         virtual bool acceptsInput(const Loki::TypeInfo& type){ return false;}
         virtual void Serialize(cv::FileStorage &fs);
@@ -219,6 +221,11 @@ namespace EagleLib
                 sourceTreeName = name;
             update();
         }
+        virtual void setSource(Parameter::Ptr param)
+        {
+            this->data = getParameterPtr<T>(param);
+        }
+
         virtual void update()
         {
             if(sourceTreeName.size() == 0)

@@ -257,7 +257,7 @@ MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
     }
     if(node->getParent() == nullptr)
     {
-        boost::recursive_mutex::scoped_try_lock lock(parentMtx);
+        boost::recursive_mutex::scoped_lock lock(parentMtx);
         parentList.push_back(node);
     }
     if(currentNode == nullptr)
@@ -307,12 +307,10 @@ void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::recursive_mutex* mt
 
     streams.resize(nodes->size());
     images.resize(nodes->size());
-    int count = 0;
     boost::recursive_mutex::scoped_lock lock(*mtx);
-    for (auto it = nodes->begin(); it != nodes->end(); ++it, ++count)
+    for (int i = 0; i < nodes->size(); ++i)
     {
-
-        (*it)->process(images[count], streams[count]);
+        (*nodes)[i]->process(images[i], streams[i]);
     }
     if(nodes->size() == 0)
     {

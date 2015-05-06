@@ -17,10 +17,10 @@ void VideoWriter::Init(bool firstInit)
 	if (firstInit)
 	{
         EnumParameter param;
-        param.addEnum(cv::VideoWriter::fourcc('x','2','6','4'), "x264");
-        param.addEnum(cv::VideoWriter::fourcc('h','2','6','4'), "h264");
-        param.addEnum(cv::VideoWriter::fourcc('m','j','p','g'), "mjpg");
-        param.addEnum(cv::VideoWriter::fourcc('d','i','v','x'), "divx");
+        param.addEnum(cv::VideoWriter::fourcc('X','2','6','4'), "X264");
+        param.addEnum(cv::VideoWriter::fourcc('Y','U','V','9'), "YUV9");
+        param.addEnum(cv::VideoWriter::fourcc('Y','U','Y','V'), "YUYV");
+        param.addEnum(cv::VideoWriter::fourcc('M','J','P','G'), "MPJG");
         updateParameter("Codec", param);
         updateParameter("Filename", boost::filesystem::path(""));
 	}
