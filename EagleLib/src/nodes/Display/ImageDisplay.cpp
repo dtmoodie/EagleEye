@@ -6,6 +6,7 @@ using namespace EagleLib;
 NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(OGLImageDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyPointDisplay)
+
 QtImageDisplay::QtImageDisplay(boost::function<void(cv::Mat, Node*)> cpuCallback_)
 {
     cpuDisplayCallback = cpuCallback_;
@@ -193,4 +194,5 @@ void KeyPointDisplay::Serialize(ISimpleSerializer *pSerializer)
     Node::Serialize(pSerializer);
     SERIALIZE(keyPointMats);
     SERIALIZE(hostImages);
+    SERIALIZE(displayType);
 }

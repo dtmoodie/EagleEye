@@ -7,17 +7,24 @@ using namespace EagleLib;
 
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #if __linux
-    RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda -lopencv_cudaoptflow");
+RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cuda -lopencv_cudaoptflow")
 #endif
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SparsePyrLKOpticalFlow)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(BroxOpticalFlow)
+
 
 void SparsePyrLKOpticalFlow::Init(bool firstInit)
 {
-    updateParameter("Window size", int(21));
-    updateParameter("Max Levels", int(3));
-    updateParameter("Iterations", int(30));
-    updateParameter("Use initial flow", true);
-    addInputParameter<cv::cuda::GpuMat>("Key points");
-    optFlow = cv::cuda::SparsePyrLKOpticalFlow::create();
+    if(firstInit)
+    {
+        updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat)>>(
+            "Set Reference", boost::bind(&SparsePyrLKOpticalFlow::setReferenceImage, this, _1, _2), Parameter::Output);
+        updateParameter("Window size", int(21));
+        updateParameter("Max Levels", int(3));
+        updateParameter("Iterations", int(30));
+        updateParameter("Use initial flow", true);
+        optFlow = cv::cuda::SparsePyrLKOpticalFlow::create();
+    }
 }
 
 cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
@@ -32,7 +39,26 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
         int iters = getParameter<int>(2)->data;
         bool useInital = getParameter<bool>(3)->data;
         optFlow = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(winSize,winSize),levels,iters,useInital);
+        parameters[0]->changed = false;
+        parameters[1]->changed = false;
+        parameters[2]->changed = false;
+        parameters[3]->changed = false;
     }
+    cv::cuda::GpuMat greyImg;
+    if(img.channels() != 1)
+        cv::cuda::cvtColor(img,greyImg, CV_BGR2RGB,0, stream);
+    else
+        greyImg = img;
+    if(prevGreyImg.empty())
+    {
+        prevGreyImg = greyImg;
+        return img;
+    }else
+    {
+        optFlow->calc(prevGreyImg, greyImg, prevKeyPoints, trackedKeyPoints, );
+    }
+
+
 
 }
 
