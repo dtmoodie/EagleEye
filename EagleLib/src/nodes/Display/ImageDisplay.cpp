@@ -135,7 +135,9 @@ cv::Mat KeyPointDisplay::uicallback()
             {
                 cv::circle(hostImage, cv::Point(pts->val[0], pts->val[1]), 10, cv::Scalar(255,0,0), 1);
             }
+            return hostImage;
         }
+
     }
 }
 
@@ -157,6 +159,8 @@ void KeyPointDisplay::Init(bool firstInit)
         addInputParameter<cv::Mat>("Host keypoints");
         updateParameter("Radius", int(5));
         updateParameter("Color", cv::Scalar(255,0,0));
+        hostImages.resize(20);
+        keyPointMats.resize(20);
         displayType = -1;
     }
 }
@@ -174,6 +178,7 @@ cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         img.download(h_img->data, stream);
         h_img->fillEvent.record(stream);
         stream.enqueueHostCallback(KeyPointDisplay_callback, this);
+        displayType = 0;
         return img;
     }
     auto h_mat = getParameter<cv::Mat*>(1)->data;
@@ -182,4 +187,10 @@ cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 
     }
     return img;
+}
+void KeyPointDisplay::Serialize(ISimpleSerializer *pSerializer)
+{
+    Node::Serialize(pSerializer);
+    SERIALIZE(keyPointMats);
+    SERIALIZE(hostImages);
 }

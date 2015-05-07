@@ -27,11 +27,15 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream s
        parameters[3]->changed || parameters[4]->changed ||
        parameters[5]->changed || parameters[6]->changed)
     {
-        //updateParameter(0,
-            cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1,
-                getParameter<int>(1)->data, getParameter<double>(2)->data,
-                getParameter<double>(3)->data, getParameter<int>(4)->data,
-                getParameter<bool>(5)->data, getParameter<double>(6)->data);//, Parameter::Output);
+        int numCorners = getParameter<int>(1)->data;
+        double qualityLevel = getParameter<double>(2)->data;
+        double minDistance = getParameter<double>(3)->data;
+        int blockSize = getParameter<int>(4)->data;
+        bool useHarris = getParameter<bool>(5)->data;
+        double harrisK = getParameter<double>(6)->data;
+        std::cout << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel << " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK << std::endl;
+        updateParameter(0,
+            cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1,numCorners,qualityLevel,minDistance,blockSize,useHarris,harrisK));
         log(Status, "Feature Detector updated");
         parameters[1]->changed = false;
         parameters[2]->changed = false;

@@ -1,4 +1,4 @@
-#pragma once
+
 
 #include "nodes/Node.h"
 //#include <opencv2/highgui.hpp>
