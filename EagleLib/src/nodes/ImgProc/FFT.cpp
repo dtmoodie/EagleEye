@@ -17,6 +17,7 @@ void FFT::Init(bool firstInit)
         updateParameter<cv::cuda::GpuMat>("Magnitude", cv::cuda::GpuMat(), Parameter::Output);  // 6
         updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat(), Parameter::Output);      // 7
     }
+    updateParameter("Use optimized size",false);
 }
 
 cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
@@ -26,7 +27,10 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
     int rows = cv::getOptimalDFTSize(img.rows);
     int cols = cv::getOptimalDFTSize(img.cols);
     cv::cuda::GpuMat padded;
-    cv::cuda::copyMakeBorder(img,padded, 0, rows - img.rows, 0, cols - img.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), stream);
+    if(getParameter<bool>("Use optimized size")->data)
+        cv::cuda::copyMakeBorder(img,padded, 0, rows - img.rows, 0, cols - img.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), stream);
+    else
+        padded = img;
     img = padded;
     if(img.channels() > 2)
     {

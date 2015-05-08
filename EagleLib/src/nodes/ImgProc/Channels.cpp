@@ -85,7 +85,36 @@ cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     return output;
 }
 
+void Merge::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        addInputParameter<cv::cuda::GpuMat>("Channel1");
+        addInputParameter<cv::cuda::GpuMat>("Channel2");
+        addInputParameter<cv::cuda::GpuMat>("Channel3");
+    }
+}
+
+cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+{
+    auto chan1 = getParameter<cv::cuda::GpuMat*>(0);
+    auto chan2 = getParameter<cv::cuda::GpuMat*>(2);
+    auto chan3 = getParameter<cv::cuda::GpuMat*>(3);
+    std::vector<cv::cuda::GpuMat> channels;
+    if(chan1->data)
+        channels.push_back(*chan1->data);
+    else
+        channels.push_back(img);
+    if(chan2->data)
+        channels.push_back(*chan2->data);
+    if(chan3->data)
+        channels.push_back(*chan3->data);
+    cv::cuda::merge(channels, mergedChannels);
+    return mergedChannels;
+}
+
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToGrey);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToHSV);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ExtractChannels);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertDataType);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Merge);

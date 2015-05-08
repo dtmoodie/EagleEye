@@ -28,6 +28,7 @@ public:
     void oglDisplay(cv::cuda::GpuMat img, EagleLib::Node *node);
     void qtDisplay(cv::Mat img, EagleLib::Node *node);
     void onCompileLog(const std::string& msg, int level);
+    virtual void closeEvent(QCloseEvent *event);
 private slots:
     void on_pushButton_clicked();
     void onTimeout();

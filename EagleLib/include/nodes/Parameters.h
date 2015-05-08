@@ -221,9 +221,13 @@ namespace EagleLib
                 sourceTreeName = name;
             update();
         }
-        virtual void setSource(Parameter::Ptr param)
+        virtual void setSource(Parameter::Ptr param_)
         {
+            if(param)
+                --param->subscribers;
+            param = param_;
             this->data = getParameterPtr<T>(param);
+            ++param->subscribers;
         }
 
         virtual void update()
@@ -241,7 +245,7 @@ namespace EagleLib
             return type == Loki::TypeInfo(typeid(T)) || type == Loki::TypeInfo(typeid(T*)) || type == Loki::TypeInfo(typeid(T&));
         }
 
-
+        Parameter::Ptr param;
         // The full parameter name of the source
         std::string sourceTreeName;
     };
