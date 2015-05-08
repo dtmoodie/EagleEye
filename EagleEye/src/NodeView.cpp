@@ -33,9 +33,10 @@ void NodeView::on_actionSelect(QAction *action)
         auto nodeWidget = dynamic_cast<QNodeWidget*>(currentWidget->widget());
         if(nodeWidget)
         {
-            emit stopThread();
             auto node = nodeWidget->getNode();
-
+            node->enabled = false;
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
+            emit stopThread();
             auto parent = node->getParent();
             if(parent != nullptr)
                 parent->removeChild(node);
@@ -47,7 +48,6 @@ void NodeView::on_actionSelect(QAction *action)
             scene()->removeItem(currentWidget);
             delete currentWidget;
             currentWidget = nullptr;
-            EagleLib::NodeManager::getInstance().removeNode(node->GetObjectId());
             emit startThread();
         }
     }
