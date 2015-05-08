@@ -2,7 +2,10 @@
 
 
 using namespace EagleLib;
-void KeyFrameTracker::Init(bool firstInit);
+void KeyFrameTracker::Init(bool firstInit)
+{
+
+}
 
 cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
 {

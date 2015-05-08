@@ -17,8 +17,8 @@ void SparsePyrLKOpticalFlow::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat)>>(
-            "Set Reference", boost::bind(&SparsePyrLKOpticalFlow::setReferenceImage, this, _1, _2), Parameter::Output);
+        updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::Stream)>>(
+            "Set Reference", boost::bind(&SparsePyrLKOpticalFlow::setReferenceImage, this, _1, _2, _3), Parameter::Output);
         updateParameter("Window size", int(21));
         updateParameter("Max Levels", int(3));
         updateParameter("Iterations", int(30));
@@ -46,7 +46,7 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
     }
     cv::cuda::GpuMat greyImg;
     if(img.channels() != 1)
-        cv::cuda::cvtColor(img,greyImg, CV_BGR2RGB,0, stream);
+        cv::cuda::cvtColor(img,greyImg, cv::COLOR_BGR2GRAY,0, stream);
     else
         greyImg = img;
     if(prevGreyImg.empty())
@@ -55,11 +55,18 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
         return img;
     }else
     {
-        optFlow->calc(prevGreyImg, greyImg, prevKeyPoints, trackedKeyPoints, );
+        optFlow->calc(prevGreyImg, greyImg, prevKeyPoints, trackedKeyPoints, status, error, stream);
+        updateParameter("Tracked points", trackedKeyPoints);
+        updateParameter("Status", status);
+        updateParameter("Error", error);
     }
-
-
-
+}
+void SparsePyrLKOpticalFlow::setReferenceImage(cv::cuda::GpuMat img, cv::cuda::GpuMat keyPoints, cv::cuda::Stream stream)
+{
+    if(img.channels() != 1)
+        cv::cuda::cvtColor(img, refImg, cv::COLOR_BGR2GRAY,0, stream);
+    refPts  = keyPoints;
+    trackedKeyPoints = keyPoints.clone();
 }
 
 void BroxOpticalFlow::Init(bool firstInit)
