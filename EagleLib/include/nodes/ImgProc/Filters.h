@@ -8,7 +8,7 @@ namespace EagleLib
     public:
         Sobel();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
 
     };
 
@@ -17,7 +17,7 @@ namespace EagleLib
     public:
         Canny();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
 
     class Laplacian: public Node
@@ -25,34 +25,34 @@ namespace EagleLib
     public:
         Laplacian();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
     class BiLateral: public Node
     {
     public:
         BiLateral();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
     class MeanShiftFilter: public Node
     {
     public:
         MeanShiftFilter();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
     class MeanShiftProc: public Node
     {
     public:
         MeanShiftProc();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
     class MeanShiftSegmentation: public Node
     {
     public:
         MeanShiftSegmentation();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
 }

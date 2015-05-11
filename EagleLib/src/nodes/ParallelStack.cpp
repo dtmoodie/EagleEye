@@ -15,7 +15,7 @@ ParallelStack::~ParallelStack()
 }
 
 cv::cuda::GpuMat
-ParallelStack::process(cv::cuda::GpuMat img, cv::cuda::Stream stream)
+ParallelStack::process(cv::cuda::GpuMat img, cv::cuda::Stream& stream)
 {
     //std::vector<boost::promise<cv::cuda::GpuMat> > retVals(children.size());
     boost::promise<cv::cuda::GpuMat> retVal;

@@ -16,7 +16,7 @@ AutoScale::Init(bool firstInit)
 }
 
 cv::cuda::GpuMat
-AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     std::vector<cv::cuda::GpuMat> channels;
     cv::cuda::split(img,channels);
@@ -42,7 +42,7 @@ Colormap::Init(bool firstInit)
 }
 
 cv::cuda::GpuMat
-Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(img.channels() != 1)
     {
@@ -143,7 +143,7 @@ void Normalize::Init(bool firstInit)
     updateParameter<double>("Beta", 1);
 }
 
-cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::normalize(img,img, getParameter<double>(0)->data, getParameter<double>(1)->data, CV_MINMAX, img.type());
     return img;

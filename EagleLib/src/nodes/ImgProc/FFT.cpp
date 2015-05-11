@@ -20,7 +20,7 @@ void FFT::Init(bool firstInit)
     updateParameter("Use optimized size",false);
 }
 
-cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(img.empty())
         return img;
@@ -107,7 +107,7 @@ void FFTPreShiftImage::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat FFTPreShiftImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat FFTPreShiftImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(d_shiftMat.size() != img.size())
     {
@@ -122,7 +122,7 @@ void FFTPostShift::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat FFTPostShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat FFTPostShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(d_shiftMat.size() != img.size())
     {

@@ -9,7 +9,7 @@ void MinMax::Init(bool firstInit)
     updateParameter<double>("Max value", 0.0, Parameter::Output);
 }
 
-cv::cuda::GpuMat MinMax::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat MinMax::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     stream.waitForCompletion();
     cv::cuda::minMax(img, &getParameter<double>(0)->data, &getParameter<double>(1)->data);
@@ -35,7 +35,7 @@ void Threshold::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat mask, upperMask, lowerMask;
     bool inverse = getParameter<bool>(7)->data;
@@ -114,7 +114,7 @@ void NonMaxSuppression::Init(bool firstInit)
     }
 }
 
-cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     // initialise the block mask and destination
     const int M = img.rows;

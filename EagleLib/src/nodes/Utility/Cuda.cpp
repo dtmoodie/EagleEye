@@ -13,7 +13,7 @@ void SetDevice::Init(bool firstInit)
     firstRun = true;
 }
 
-cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::Mat asd;
     int currentDevice = cv::cuda::getDevice();
@@ -49,6 +49,29 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream st
 bool SetDevice::SkipEmpty() const
 {
     return false;
+}
+
+
+bool StreamDispatcher::SkipEmpty() const
+{
+    return false;
+}
+void StreamDispatcher::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        updateParameter("Number of streams", int(20));
+    }
+}
+
+cv::cuda::GpuMat StreamDispatcher::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+    if(parameters[0]->changed)
+    {
+        streams.resize(getParameter<int>(0)->data);
+    }
+    stream = *streams.getFront();
+    return img;
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SetDevice)

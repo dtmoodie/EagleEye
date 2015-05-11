@@ -13,7 +13,7 @@ namespace EagleLib
         QtImageDisplay(boost::function<void(cv::Mat, Node*)> cpuCallback_);
         QtImageDisplay(boost::function<void(cv::cuda::GpuMat, Node*)> gpuCallback_);
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         void displayImage(cv::cuda::HostMem image);
 
     };
@@ -26,24 +26,31 @@ namespace EagleLib
 
         OGLImageDisplay(boost::function<void(cv::cuda::GpuMat, Node*)> gpuCallback_);
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 
     };
     class KeyPointDisplay: public Node
     {
-        ConstBuffer<std::pair<cv::cuda::HostMem, cv::cuda::HostMem>> hostData;
+        ConstEventBuffer<std::pair<cv::cuda::HostMem, cv::cuda::HostMem>> hostData;
         int displayType;
     public:
 
         KeyPointDisplay();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         cv::Mat uicallback();
         virtual void Serialize(ISimpleSerializer *pSerializer);
     };
     class FlowVectorDisplay: public Node
     {
+        // First buffer is the image, second is a pair of the points to be used
+        ConstEventBuffer<cv::cuda::HostMem[4]> hostData;
     public:
+        FlowVectorDisplay();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        cv::Mat uicallback();
+        virtual void Serialize(ISimpleSerializer *pSerializer);
 
     };
 }

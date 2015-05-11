@@ -6,7 +6,7 @@ namespace EagleLib
     public:
         MorphologyFilter();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
 
     };
 
@@ -15,7 +15,7 @@ namespace EagleLib
     public:
         FindContours();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
 
     class ContourBoundingBox: public Node
@@ -23,6 +23,6 @@ namespace EagleLib
     public:
         ContourBoundingBox();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
 }

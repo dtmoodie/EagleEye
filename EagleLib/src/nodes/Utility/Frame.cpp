@@ -6,7 +6,7 @@ void FrameRate::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat FrameRate::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat FrameRate::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta = currentTime - prevTime;
@@ -19,7 +19,7 @@ void FrameLimiter::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat FrameLimiter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat FrameLimiter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 	return img;
 }
@@ -43,7 +43,7 @@ void CreateMat::Init(bool firstInit)
     }
 }
 
-cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(parameters[0]->changed ||
        parameters[1]->changed ||

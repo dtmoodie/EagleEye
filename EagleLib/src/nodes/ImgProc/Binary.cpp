@@ -35,7 +35,7 @@ void MorphologyFilter::Init(bool firstInit)
     }
 }
 
-cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     bool updateFilter = parameters.size() != 7;
     if(parameters[0]->changed || parameters[2]->changed)
@@ -89,7 +89,7 @@ void FindContours::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::Mat h_img;
     img.download(h_img, stream);
@@ -173,7 +173,7 @@ void ContourBoundingBox::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     auto contourPtr = getParameter<std::vector<std::vector<cv::Point>>*>(0)->data;
     if(!contourPtr)

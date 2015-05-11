@@ -13,7 +13,7 @@ namespace EagleLib
         void Init(bool firstInit);
         void Serialize(ISimpleSerializer *pSerializer);
         ~VideoWriter();
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         void writeImg(cv::cuda::GpuMat& img);
         void startWrite();
         void restartFunc();

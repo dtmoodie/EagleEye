@@ -18,7 +18,7 @@ namespace EagleLib
         void restartVideo();
         virtual void Serialize(ISimpleSerializer *pSerializer);
         virtual bool SkipEmpty() const;
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         cv::Ptr<cv::cudacodec::VideoReader> d_videoReader;
         cv::Ptr<cv::VideoCapture>           h_videoReader;
 

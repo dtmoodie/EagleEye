@@ -39,7 +39,7 @@ void VideoLoader::Serialize(ISimpleSerializer *pSerializer)
 }
 
 cv::cuda::GpuMat 
-VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
+VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     bool firstLoad = false;
     //std::cout << "Beyah" << std::endl;
@@ -77,6 +77,7 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
        updateParameter<double>("Timestamp",h_videoReader->get(cv::CAP_PROP_POS_MSEC), Parameter::State);
        updateParameter<double>("Frame index",h_videoReader->get(cv::CAP_PROP_POS_FRAMES), Parameter::State);
        updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO), Parameter::State);
+       updateParameter("Source Image", img, Parameter::Output);
     }
     if(firstLoad && !img.empty())
     {

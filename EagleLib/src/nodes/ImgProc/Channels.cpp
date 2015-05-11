@@ -9,7 +9,7 @@ void ConvertToGrey::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat grey;
     try
@@ -29,7 +29,7 @@ void ConvertToHSV::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 	return img;
 }
@@ -43,7 +43,7 @@ void ExtractChannels::Init(bool firstInit)
     channelNum = getParameter<int>(0)->data;
 }
 
-cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     std::vector<cv::cuda::GpuMat> channels;
     cv::cuda::split(img,channels,stream);
@@ -78,7 +78,7 @@ void ConvertDataType::Init(bool firstInit)
     }
 }
 
-cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat output;
     img.convertTo(output, getParameter<EnumParameter>(0)->data.currentSelection, getParameter<double>(1)->data, getParameter<double>(2)->data,stream);
@@ -95,7 +95,7 @@ void Merge::Init(bool firstInit)
     }
 }
 
-cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     auto chan1 = getParameter<cv::cuda::GpuMat*>(0);
     auto chan2 = getParameter<cv::cuda::GpuMat*>(2);

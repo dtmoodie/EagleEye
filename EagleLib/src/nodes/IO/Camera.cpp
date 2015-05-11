@@ -24,7 +24,7 @@ void Camera::Init(bool firstInit)
     changeStream(0);
 }
 
-cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(parameters[0]->changed)
         changeStream(getParameter<int>(0)->data);

@@ -160,10 +160,10 @@ namespace EagleLib
 		Node();
 		virtual ~Node();
         
-        virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img, cv::cuda::Stream steam = cv::cuda::Stream::Null());
+        virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img, cv::cuda::Stream& steam = cv::cuda::Stream::Null());
 		virtual void					process(cv::InputArray in, cv::OutputArray out);
 		// Processing functions, these actually do the work of the node
-        virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
+        virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 		virtual void					doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat>& retVal);
 		virtual void					doProcess(cv::InputArray in, boost::promise<cv::OutputArray>& retVal);
 		virtual void					doProcess(cv::InputArray in, cv::OutputArray out);
@@ -224,9 +224,9 @@ namespace EagleLib
         virtual void                    swapChildren(int idx1, int idx2);
         virtual void                    swapChildren(const std::string& name1, const std::string& name2);
         virtual void                    swapChildren(Node::Ptr child1, Node::Ptr child2);
-        virtual std::vector<Node::Ptr>  getNodesInScope();
+        virtual std::vector<Node*>  getNodesInScope();
         virtual Node *getNodeInScope(const std::string& name);
-        virtual void getNodesInScope(std::vector<Node::Ptr>& nodes);
+        virtual void getNodesInScope(std::vector<Node*>& nodes);
 		
 		// ****************************************************************************************************************
 		//
@@ -269,8 +269,8 @@ namespace EagleLib
 		virtual std::vector<std::string>	 listParameters();
         virtual std::vector<std::string> findType(Parameter::Ptr param);
         virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo);
-        virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo, std::vector<Node::Ptr>& nodes);
-        virtual std::vector<std::string> findType(Parameter::Ptr param, std::vector<Ptr> &nodes);
+        virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo, std::vector<Node*>& nodes);
+        virtual std::vector<std::string> findType(Parameter::Ptr param, std::vector<Node *> &nodes);
 		virtual std::vector<std::vector<std::string>> findCompatibleInputs();
         std::vector<std::string> findCompatibleInputs(const std::string& paramName);
         std::vector<std::string> findCompatibleInputs(int paramIdx);
@@ -532,7 +532,7 @@ namespace EagleLib
         boost::asio::io_service service;
     public:
         EventLoopNode();
-        virtual cv::cuda::GpuMat process(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
+        virtual cv::cuda::GpuMat process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 
 }
