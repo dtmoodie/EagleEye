@@ -31,8 +31,7 @@ namespace EagleLib
     };
     class KeyPointDisplay: public Node
     {
-        ConstBuffer<cv::cuda::HostMem> keyPointMats;
-        ConstBuffer<cv::cuda::HostMem> hostImages;
+        ConstBuffer<std::pair<cv::cuda::HostMem, cv::cuda::HostMem>> hostData;
         int displayType;
     public:
 

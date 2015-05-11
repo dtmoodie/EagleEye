@@ -124,22 +124,23 @@ cv::Mat KeyPointDisplay::uicallback()
 {
     if(displayType == 0)
     {
-        EventBuffer<cv::cuda::HostMem>* buffer = keyPointMats.getBack();
-        EventBuffer<cv::cuda::HostMem>* imgBuffer = hostImages.getBack();
-
-        if(buffer && imgBuffer)
+        EventBuffer<std::pair<cv::cuda::HostMem,cv::cuda::HostMem>>* buffer = hostData.getBack();
+        cv::Scalar color = getParameter<cv::Scalar>(3)->data;
+        int radius = getParameter<int>(2)->data;
+        if(buffer)
         {
-            cv::Mat keyPoints = buffer->data.createMatHeader();
-            cv::Mat hostImage = imgBuffer->data.createMatHeader();
+            cv::Mat keyPoints = buffer->data.first.createMatHeader();
+            cv::Mat hostImage = buffer->data.second.createMatHeader();
             cv::Vec2f* pts = keyPoints.ptr<cv::Vec2f>(0);
             for(int i = 0; i < keyPoints.cols; ++i, ++pts)
             {
-                cv::circle(hostImage, cv::Point(pts->val[0], pts->val[1]), 10, cv::Scalar(255,0,0), 1);
+                cv::circle(hostImage, cv::Point(pts->val[0], pts->val[1]), radius, color, 1);
             }
             return hostImage;
         }
-
+        return cv::Mat();
     }
+    return cv::Mat();
 }
 
 
@@ -149,7 +150,8 @@ void KeyPointDisplay_callback(int status, void* userData)
     if(node->uiThreadCallback)
         return node->uiThreadCallback(boost::bind(&KeyPointDisplay::uicallback,node), node);
     cv::Mat img = node->uicallback();
-    cv::imshow(node->fullTreeName, img);
+    if(!img.empty())
+        cv::imshow(node->fullTreeName, img);
 }
 
 void KeyPointDisplay::Init(bool firstInit)
@@ -160,8 +162,7 @@ void KeyPointDisplay::Init(bool firstInit)
         addInputParameter<cv::Mat>("Host keypoints");
         updateParameter("Radius", int(5));
         updateParameter("Color", cv::Scalar(255,0,0));
-        hostImages.resize(20);
-        keyPointMats.resize(20);
+        hostData.resize(20);
         displayType = -1;
     }
 }
@@ -172,12 +173,10 @@ cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 
     if(d_mat)
     {
-        auto keyPts = keyPointMats.getFront();
-        d_mat->download(keyPts->data, stream);
-        keyPts->fillEvent.record(stream);
-        auto h_img = hostImages.getFront();
-        img.download(h_img->data, stream);
-        h_img->fillEvent.record(stream);
+        auto buffer = hostData.getFront();
+        d_mat->download(buffer->data.first, stream);
+        img.download(buffer->data.second, stream);
+        buffer->fillEvent.record(stream);
         stream.enqueueHostCallback(KeyPointDisplay_callback, this);
         displayType = 0;
         return img;
@@ -192,7 +191,6 @@ cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 void KeyPointDisplay::Serialize(ISimpleSerializer *pSerializer)
 {
     Node::Serialize(pSerializer);
-    SERIALIZE(keyPointMats);
-    SERIALIZE(hostImages);
+    SERIALIZE(hostData);
     SERIALIZE(displayType);
 }
