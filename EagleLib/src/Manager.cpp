@@ -375,6 +375,13 @@ NodeManager::getNode(const ObjectId& id)
 Node*
 NodeManager::getNode(const std::string &treeName)
 {
+    for(int i = 0; i < nodes.size(); ++i)
+    {
+        if(nodes[i]->fullTreeName == treeName)
+        {
+            return nodes[i].get();
+        }
+    }
     return nullptr;
 }
 
@@ -409,15 +416,7 @@ NodeManager::getParameter(const std::string& name)
 void
 NodeManager::getSiblingNodes(const std::string& sourceNode, std::vector<Node*>& output)
 {
-    /*auto nodePtr = getParent(sourceNode);
-	if (!nodePtr)
-		return;
 
-	auto node = m_nodeTree.get_child(getParent(sourceNode)->fullTreeName);
-	for (auto itr = node.begin(); itr != node.end(); ++itr)
-	{
-		output.push_back(itr->second.get_value<Node*>());
-    }*/
 }
 void NodeManager::setCompileCallback(boost::function<void (const std::string &, int)> &f)
 {
@@ -427,28 +426,12 @@ void NodeManager::setCompileCallback(boost::function<void (const std::string &, 
 Node*
 NodeManager::getParent(const std::string& sourceNode)
 {
-    /*auto idx = sourceNode.find_last_of('.');
-	if (idx > sourceNode.size())
-		return nullptr;
-	std::string treeName = sourceNode.substr(0, idx);
-    Node* node = nullptr;
-    try
-    {
-        node = m_nodeTree.get<Node*>(treeName);
-    }catch(...)
-    {
-        return nullptr;
-    }
-    return node;*/
+
     return nullptr;
 }
 void NodeManager::getParentNodes(const std::string& sourceNode, std::vector<Node*>& output)
 {
-    /*Node* parent = getParent(sourceNode);
-	if (!parent)
-		return;
-	output.push_back(parent);
-    getParentNodes(parent->fullTreeName, output);*/
+
 }
 
 void NodeManager::getAccessibleNodes(const std::string& sourceNode, std::vector<Node*>& output)
