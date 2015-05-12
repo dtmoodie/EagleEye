@@ -6,6 +6,12 @@ set(OPENCV_STATIC OFF)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
 find_package(CUDA REQUIRED)
 find_package(Qt5 REQUIRED Core)
+find_package(PCL COMPONENTS COMMON)
+if(${PCL_FOUND})
+message(STATUS
+"Found PCL, looking for Eigen")
+find_package(Eigen3)
+endif()
 cmake_policy(SET CMP0012 NEW)
 IF(WIN32)
 	set(Boost_USE_STATIC_LIBS        ON)
@@ -26,16 +32,19 @@ file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
 
-INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS}
-                    ${Boost_INCLUDE_DIRS}
-                    ${CUDA_INCLUDE_DIRS}
-                    "include"
-                    "RuntimeCompiler"
-                    "RuntimeObjectSystem"
-                    ${Qt5Core_INCLUDE_DIRS}
-                    ${CMAKE_CURRENT_SOURCE_DIR}
-                    "${CMAKE_CURRENT_SOURCE_DIR}/RuntimeCompiler"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/RuntimeObjectSystem"
+INCLUDE_DIRECTORIES(
+    ${OpenCV_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+    "include"
+    "RuntimeCompiler"
+    "RuntimeObjectSystem"
+    ${Qt5Core_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    "${CMAKE_CURRENT_SOURCE_DIR}/RuntimeCompiler"
+    "${CMAKE_CURRENT_SOURCE_DIR}/RuntimeObjectSystem"
+    ${PCL_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIR}
 )
 
 
@@ -55,6 +64,13 @@ ADD_DEFINITIONS( -DOPENCV_INCLUDES="${OpenCV_INCLUDE_DIR}")
 ADD_DEFINITIONS( -DOPENCV_LIB_DIR="${CV_LIB_DIR}") 
 ADD_DEFINITIONS( -DCUDA_INCLUDES="${CUDA_INCLUDE_DIRS}" )
 ADD_DEFINITIONS( -DCUDA_LIB_DIR="${CUDA_TOOLKIT_ROOT_DIR}/lib64")
+
+IF(${PCL_FOUND})
+ADD_DEFINITIONS( -DHAVE_PCL )
+ADD_DEFINITIONS( -DPCL_INCLUDES="${PCL_INCLUDE_DIRS}")
+ADD_DEFINITIONS( -DPCL_LIB_DIR="${PCL_LIBRARY_DIRS}")
+ENDIF()
+
 IF(WIN32)
 ADD_DEFINITIONS( -DBINARY_DIR="${CMAKE_BINARY_DIR}/Debug")
 
@@ -65,7 +81,7 @@ ENDIF(WIN32)
 SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 
 # Reporting section
-message(
+message(STATUS
 "================ EagleLib ===============
     Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}
     OpenCV found at: ${OpenCV_CONFIG_PATH}
@@ -77,12 +93,22 @@ message(
     Cuda include dir: ${CUDA_INCLUDE_DIRS}
     Cuda RT libs: ${CUDA_LIBRARIES}
     Cuda root dir: ${CUDA_TOOLKIT_ROOT_DIR}
+    Binary Dir: ${CMAKE_BINARY_DIR}
+    Boost LIBS: ${Boost_LIBRARIES}
+    PCL_found: ${PCL_FOUND}
+    PCL_LIB_DIR: ${PCL_LIBRARY_DIRS}
+    Eigen inc: ${EIGEN3_INCLUDE_DIR}
 ************* FILES ***********************
+
     Headers: ${hdr}
-    Source files: ${src}
+
+
+   Source files: ${src}
+
+
     Kernels: ${knl}
-	Binary Dir: ${CMAKE_BINARY_DIR}
-	Boost LIBS: ${Boost_LIBRARIES}
+
+
 =====================================")
 
 

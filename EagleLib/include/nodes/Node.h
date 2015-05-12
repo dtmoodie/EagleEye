@@ -58,12 +58,17 @@
 #include <boost/asio.hpp>
 #include "Parameters.h"
 
+#ifdef HAVE_PCL
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/pcl_macros.h>
+#else
+#pragma warning Not building with PCL support
+#endif
+
+
 using namespace boost::multi_index;
 
-// ***************************************** START RCC CODE *******************************************************
-#ifdef RCC_ENABLED
-
-// Strange work around for these includes not working correctly with GCC
 #include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include "../../RuntimeObjectSystem/ObjectInterface.h"
 #include "../../RuntimeObjectSystem/ObjectInterfacePerModule.h"
@@ -74,10 +79,9 @@ using namespace boost::multi_index;
 
 #else
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
+
 #endif
 
-#endif // RCC_ENABLED
-// ***************************************** END RCC CODE *******************************************************
 
 
 #define NODE_DEFAULT_CONSTRUCTOR_IMPL(NodeName) \
@@ -512,7 +516,7 @@ namespace EagleLib
         boost::function<void(cv::cuda::GpuMat, Node*)>						gpuDisplayCallback;
         // This is a function that operates on the UI thread, on a cv::Mat for display.
         // This can be used for
-        boost::function<void(boost::function<cv::Mat()>, Node*)>                    uiThreadCallback;
+        boost::function<void(boost::function<cv::Mat()>, Node*)>            uiThreadCallback;
 		/* If true, draw results onto the image being processed */
         bool																drawResults;
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */

@@ -131,6 +131,10 @@ NodeManager::Init()
 #ifdef BINARY_DIR
 	m_pRuntimeObjectSystem->AddLibraryDir(BINARY_DIR);
 #endif
+#ifdef HAVE_PCL
+    //m_pRuntimeObjectSystem->AddLibraryDir(PCL_LIB_DIR);
+    m_pRuntimeObjectSystem->AddIncludeDir(PCL_INCLUDES);
+#endif
 	return true;
 }
 

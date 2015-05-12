@@ -4,7 +4,15 @@
 using namespace EagleLib;
 void KeyFrameTracker::Init(bool firstInit)
 {
+    if(firstInit)
+    {
+        auto detector = NodeManager::getInstance().addNode("GoodFeaturesToTrackDetector");
+        detector->getParameter<bool>("Enabled")->data = false;
+        auto tracker = NodeManager::getInstance().addNode("SparsePyrLKOpticalFlow");
+        children.push_back(detector);
+        children.push_back(tracker);
 
+    }
 }
 
 cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)

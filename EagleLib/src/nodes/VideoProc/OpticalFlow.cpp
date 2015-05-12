@@ -17,7 +17,7 @@ void SparsePyrLKOpticalFlow::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::Stream)>>(
+        updateParameter<boost::function<int(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::Stream)>>(
             "Set Reference", boost::bind(&SparsePyrLKOpticalFlow::setReferenceImage, this, _1, _2, _3), Parameter::Output);
         updateParameter("Window size", int(21));
         updateParameter("Max Levels", int(3));
@@ -61,12 +61,13 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
         updateParameter("Error", error);
     }
 }
-void SparsePyrLKOpticalFlow::setReferenceImage(cv::cuda::GpuMat img, cv::cuda::GpuMat keyPoints, cv::cuda::Stream stream)
+int SparsePyrLKOpticalFlow::setReferenceImage(cv::cuda::GpuMat img, cv::cuda::GpuMat keyPoints, cv::cuda::Stream stream, int idx)
 {
     if(img.channels() != 1)
         cv::cuda::cvtColor(img, refImg, cv::COLOR_BGR2GRAY,0, stream);
     refPts  = keyPoints;
-    trackedKeyPoints = keyPoints.clone();
+    keyPoints.copyTo(trackedKeyPoints,stream);
+
 }
 
 void BroxOpticalFlow::Init(bool firstInit)

@@ -16,6 +16,9 @@ void GoodFeaturesToTrackDetector::Init(bool firstInit)
     updateParameter("Block Size", int(3));
     updateParameter("Use harris", false);
     updateParameter("Harris K", double(0.04));
+    updateParameter("Enabled", true);
+    updateParameter<boost::function<cv::cuda::GpuMat(cv::cuda::GpuMat img)>>(
+        "Detection functor", boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2), Parameter::Output);
 }
 
 
@@ -44,7 +47,13 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream s
         parameters[5]->changed = false;
         parameters[6]->changed = false;
     }
-
+    if(!getParameter<bool>(7)->data)
+        return img;
+    detect(img);
+    return img;
+}
+cv::cuda::GpuMat GoodFeaturesToTrackDetector::detect(cv::cuda::GpuMat img)
+{
     cv::cuda::GpuMat greyImg;
     if(img.channels() != 1)
     {
@@ -57,7 +66,6 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream s
     auto detectorParam = getParameter<cv::Ptr<cv::cuda::CornersDetector>>("Feature Detector");
     if(detectorParam == nullptr)
     {
-
         return img;
     }
     cv::Ptr<cv::cuda::CornersDetector> detector = detectorParam->data;
@@ -70,6 +78,7 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream s
     detector->detect(greyImg, detectedCorners, cv::cuda::GpuMat(), stream);
     updateParameter("Detected Corners", detectedCorners, Parameter::Output);
     updateParameter("Num corners", detectedCorners.cols, Parameter::State);
-    return img;
+    return detectedCorners;
 }
+
 NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrackDetector)

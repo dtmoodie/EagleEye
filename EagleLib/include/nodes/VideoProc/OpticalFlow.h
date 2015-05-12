@@ -20,7 +20,8 @@ namespace EagleLib
         SparsePyrLKOpticalFlow();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
-        virtual void setReferenceImage(cv::cuda::GpuMat img, cv::cuda::GpuMat keyPoints, cv::cuda::Stream stream = cv::cuda::Stream::Null());
+        virtual cv::cuda::GpuMat track(cv::cuda::GpuMat img, cv::cuda::GpuMat* status = nullptr, cv::cuda::GpuMat* error = status);
+        virtual int setReferenceImage(cv::cuda::GpuMat img, cv::cuda::GpuMat keyPoints, cv::cuda::Stream stream = cv::cuda::Stream::Null(), int idx = -1);
     };
 
     class BroxOpticalFlow: public Node

@@ -9,5 +9,6 @@ namespace EagleLib
         GoodFeaturesToTrackDetector();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
+        cv::cuda::GpuMat detect(cv::cuda::GpuMat img);
     };
 }
