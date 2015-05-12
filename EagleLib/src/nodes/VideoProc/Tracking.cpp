@@ -48,3 +48,24 @@ bool KeyFrame::hasCorrespondence(int otherIdx)
 {
     return correspondences.find(otherIdx) != correspondences.end();
 }
+cv::cuda::GpuMat& KeyFrame::getKeyPoints()
+{
+    auto itr = data.find(KeyPoints);
+    if(itr == data.end())
+    {
+        data[KeyPoints] = cv::cuda::GpuMat();
+    }
+
+    return boost::any_cast<cv::cuda::GpuMat&>(data[KeyPoints]);
+}
+
+cv::cuda::GpuMat& KeyFrame::getDescriptors()
+{
+    auto itr = data.find(Descriptors);
+    if(itr == data.end())
+    {
+        data[Descriptors] = cv::cuda::GpuMat();
+    }
+
+    return boost::any_cast<cv::cuda::GpuMat&>(data[Descriptors]);
+}

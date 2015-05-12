@@ -21,6 +21,11 @@ namespace EagleLib
             enumerations.push_back(enumeration);
             values.push_back(value);
         }
+        int getValue()
+        {
+            return values[currentSelection];
+        }
+
         std::vector<std::string> enumerations;
         std::vector<int>         values;
         int currentSelection;
@@ -242,7 +247,19 @@ namespace EagleLib
         }
         virtual bool acceptsInput(const Loki::TypeInfo &type)
         {
-            return type == Loki::TypeInfo(typeid(T)) || type == Loki::TypeInfo(typeid(T*)) || type == Loki::TypeInfo(typeid(T&));
+            return type == Loki::TypeInfo(typeid(T)) ||
+                    type == Loki::TypeInfo(typeid(T*)) ||
+                    type == Loki::TypeInfo(typeid(T&));
+        }
+        void Serialize(cv::FileStorage &fs)
+        {
+            Parameter::Serialize(fs);
+            fs << "Data" << sourceTreeName;
+        }
+
+        void Init(cv::FileNode &fs)
+        {
+
         }
 
         Parameter::Ptr param;

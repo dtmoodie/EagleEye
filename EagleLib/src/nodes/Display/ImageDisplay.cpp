@@ -211,7 +211,7 @@ void FlowVectorDisplay_callback(int status, void* userData)
         }
         cv::Mat img = node->uicallback();
         if(!img.empty())
-            cv::imshow(node->fullTreeName, img);
+            cv::imshow(node->displayName, img);
     }
 }
 
@@ -230,7 +230,23 @@ void FlowVectorDisplay::Init(bool firstInit)
         addInputParameter<cv::cuda::GpuMat>("Point mask");
         updateParameter("Good Color", cv::Scalar(0,255,0));
         updateParameter("Bad Color", cv::Scalar(0,0,255));
+        updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>>
+                ("Display functor", boost::bind(&FlowVectorDisplay::display, this, _1, _2, _3, _4, _5, _6));
     }
+}
+void FlowVectorDisplay::display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial,
+                                cv::cuda::GpuMat final, cv::cuda::GpuMat mask,
+                                std::string &name, cv::cuda::Stream stream)
+{
+    displayName = name;
+    auto buffer = hostData.getFront();
+    img.download(buffer->data[0], stream);
+    if(!mask.empty())
+        mask.download(buffer->data[1], stream);
+    initial.download(buffer->data[2], stream);
+    final.download(buffer->data[3], stream);
+    buffer->fillEvent.record(stream);
+    stream.enqueueHostCallback(FlowVectorDisplay_callback, this);
 }
 
 cv::cuda::GpuMat FlowVectorDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -240,14 +256,7 @@ cv::cuda::GpuMat FlowVectorDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
     cv::cuda::GpuMat* d_mask = getParameter<cv::cuda::GpuMat*>(2)->data;
     if(d_initial && d_final)
     {
-        auto buffer = hostData.getFront();
-        img.download(buffer->data[0], stream);
-        if(d_mask && !d_mask->empty())
-            d_mask->download(buffer->data[1], stream);
-        d_initial->download(buffer->data[2], stream);
-        d_final->download(buffer->data[3], stream);
-        buffer->fillEvent.record(stream);
-        stream.enqueueHostCallback(FlowVectorDisplay_callback, this);
+        display(img, *d_initial, *d_final, d_mask ? *d_mask : cv::cuda::GpuMat(), fullTreeName, stream);
     }
     return img;
 }

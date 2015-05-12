@@ -55,7 +55,6 @@ namespace EagleLib
         virtual bool TestBuildWaitAndUpdate();
     };
 
-    //typedef boost::property_tree::basic_ptree<std::string, Node*> t_nodeTree;
 
     class CV_EXPORTS NodeManager : public IObjectFactoryListener
     {
@@ -89,16 +88,6 @@ namespace EagleLib
 		void addParameters(Node* node);
 		boost::shared_ptr< Parameter > getParameter(const std::string& name);
         void setCompileCallback(boost::function<void(const std::string&, int)> & f);
-		// Returns a list of nodes ordered in closeness relative to sourceNode
-		// If a tree is something like the following:
-		//				A
-		//			   /  \
-		//			  B    C
-		//          / | \    \
-		//         D  E  F    G
-		// Then calling getNodes("A.B.D", 1) will return a vector with [B,E,F]
-		// Calling getNodes("A.B.D", 2) will return a vector with [B,E,F,A,C,G]
-		// Calling getNodes("A.B", 0) will return a vector with [D,E,F] in insertion order
 
 		void getSiblingNodes(const std::string& sourceNode, std::vector<Node*>& output);
 		void getParentNodes(const std::string& sourceNode, std::vector<Node*>& output);
@@ -111,13 +100,8 @@ namespace EagleLib
 		virtual ~NodeManager();
         boost::shared_ptr<IRuntimeObjectSystem>             m_pRuntimeObjectSystem;
         boost::shared_ptr<CompileLogger>                    m_pCompileLogger;
-        std::map<std::string, std::vector<Node*> >          m_nodeMap;
-
-
-        std::vector<boost::shared_ptr<Node> >               nodeHistory;
-        std::list<Node*>                                    deletedNodes;
-        std::list<ObjectId>                                 deletedNodeIDs;
         TestCallback*                                       testCallback;
+        std::vector<weak_ptr<Node>>                         nodes;
 		
     }; // class NodeManager
 } // namespace EagleLib

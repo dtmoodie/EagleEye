@@ -45,7 +45,9 @@ namespace EagleLib
     {
         // First buffer is the image, second is a pair of the points to be used
         ConstEventBuffer<cv::cuda::HostMem[4]> hostData;
+        void display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial, cv::cuda::GpuMat final, cv::cuda::GpuMat mask, std::string& name, cv::cuda::Stream);
     public:
+        std::string displayName;
         FlowVectorDisplay();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());

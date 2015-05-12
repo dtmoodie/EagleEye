@@ -324,8 +324,10 @@ void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::recursive_mutex* mt
     static std::vector<cv::cuda::GpuMat> images;
     static std::vector<cv::cuda::Stream> streams;
     boost::recursive_mutex::scoped_lock lock(*mtx);
-    streams.resize(nodes->size());
-    images.resize(nodes->size());
+    if(nodes->size() != streams.size())
+        streams.resize(nodes->size());
+    if(nodes->size() != images.size())
+        images.resize(nodes->size());
     for (int i = 0; i < nodes->size(); ++i)
     {
         (*nodes)[i]->process(images[i], streams[i]);

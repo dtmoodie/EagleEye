@@ -243,6 +243,8 @@ void QInputProxy::onUiUpdated(QWidget* sender)
         return;
     auto tokens = inputName.split(":");
     auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
+    if(sourceNode == nullptr)
+        return;
     auto param = sourceNode->getParameter(tokens[1].toStdString());
     if(param)
         parameter->setSource(param);

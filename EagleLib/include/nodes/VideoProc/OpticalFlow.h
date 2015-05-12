@@ -20,17 +20,14 @@ namespace EagleLib
     public:
         SparsePyrLKOpticalFlow();
         virtual void Init(bool firstInit);
-<<<<<<< HEAD
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream = cv::cuda::Stream::Null());
-        virtual cv::cuda::GpuMat track(cv::cuda::GpuMat img, cv::cuda::GpuMat* status = nullptr, cv::cuda::GpuMat* error = status);
-        virtual int setReferenceImage(cv::cuda::GpuMat img, cv::cuda::GpuMat keyPoints, cv::cuda::Stream stream = cv::cuda::Stream::Null(), int idx = -1);
-=======
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         virtual void setReferenceImage(cv::cuda::GpuMat img, cv::cuda::GpuMat keyPoints, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-        virtual cv::cuda::GpuMat trackSparse(cv::cuda::GpuMat refImg, cv::cuda::GpuMat curImg,
-            cv::cuda::GpuMat refPts, cv::cuda::GpuMat prevPts, cv::cuda::GpuMat& status,
-            cv::cuda::GpuMat& err, cv::cuda::Stream stream = cv::cuda::Stream::Null());
->>>>>>> 591e3beeebd8738622ec58f3a2913592780a1ecd
+        virtual void trackSparse(
+                cv::cuda::GpuMat refImg, cv::cuda::GpuMat curImg,
+                cv::cuda::GpuMat refPts, cv::cuda::GpuMat &trackedPts,
+                cv::cuda::GpuMat& status,cv::cuda::GpuMat& err,
+                cv::cuda::Stream stream = cv::cuda::Stream::Null());
+        virtual void Serialize(ISimpleSerializer *pSerializer);
     };
 
     class BroxOpticalFlow: public Node

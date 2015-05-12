@@ -2,8 +2,57 @@
 
 #include <opencv2/core/cuda.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <queue>
 namespace EagleLib
 {
+
+    template<typename Data>
+    class concurrent_queue
+    {
+    private:
+        boost::condition_variable the_condition_variable;
+        std::queue<Data> the_queue;
+        mutable boost::mutex the_mutex;
+    public:
+        void wait_for_data()
+        {
+            boost::mutex::scoped_lock lock(the_mutex);
+            while(the_queue.empty())
+            {
+                the_condition_variable.wait(lock);
+            }
+        }
+        void push(Data const& data)
+        {
+            boost::mutex::scoped_lock lock(the_mutex);
+            bool const was_empty=the_queue.empty();
+            the_queue.push(data);
+
+            lock.unlock(); // unlock the mutex
+
+            if(was_empty)
+            {
+                the_condition_variable.notify_one();
+            }
+        }
+        void wait_and_pop(Data& popped_value)
+        {
+            boost::mutex::scoped_lock lock(the_mutex);
+            while(the_queue.empty())
+            {
+                the_condition_variable.wait(lock);
+            }
+
+            popped_value=the_queue.front();
+            the_queue.pop();
+        }
+        size_t size()
+        {
+            boost::mutex::scoped_lock lock(the_mutex);
+            return the_queue.size();
+        }
+    };
+
     template<typename T> struct EventBuffer
     {
         T data;

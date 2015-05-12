@@ -188,10 +188,7 @@ shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
         {
             Node* node = static_cast<Node*>(interface);
             node->Init(true);
-            // Add the first node here, however later the tree is updated in updateTreeName
-            /*if (m_nodeMap.size() == 0)
-                m_nodeTree.put(t_nodeTree::path_type{node->fullTreeName, '.' }, node);*/
-            m_nodeMap[nodeName].push_back(node);
+            nodes.push_back(weak_ptr<Node>(node));
             return Node::Ptr(node);
         }else
         {

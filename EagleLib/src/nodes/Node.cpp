@@ -628,7 +628,10 @@ Node::setTreeName(const std::string& name)
 	else
         fullTreeName_ = parent->fullTreeName + "." + treeName;
 	setFullTreeName(fullTreeName_);
-
+    for(int i = 0; i < children.size(); ++i)
+    {
+        children[i]->setTreeName(children[i]->treeName);
+    }
 }
 void
 Node::setFullTreeName(const std::string& name)

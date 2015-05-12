@@ -1,33 +1,30 @@
+#pragma once
 #include <boost/function.hpp>
-<<<<<<< HEAD
-#include <opencv2/core.hpp>
-#include <opencv2/core/cuda.hpp>
-
-namespace EagleLib
-{
-typedef boost::function<int(cv::cuda::GpuMat,cv::cuda::GpuMat,cv::cuda::Stream,int)> setReferenceFunctor;
-typedef boost::function<cv::cuda::GpuMat(cv::cuda::GpuMat, cv::cuda::GpuMat*, cv::cuda::GpuMat*)> trackFunctor;
-}
-
-=======
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
-
+#include <boost/thread.hpp>
 #include <opencv2/core/cuda.hpp>
 #include <map>
 
 namespace EagleLib
 {
-    typedef
-boost::function<cv::cuda::GpuMat(
-    cv::cuda::GpuMat,       // reference image
-    cv::cuda::GpuMat,       // Current image
-    cv::cuda::GpuMat,       // Reference points
-    cv::cuda::GpuMat,       // Estimated current image points
-    cv::cuda::GpuMat&,      // status output
-    cv::cuda::GpuMat&,      // error output
-    cv::cuda::Stream)>      // stream
-        TrackSparseFunctor;
+    typedef boost::function<void(
+        cv::cuda::GpuMat,       // reference image
+        cv::cuda::GpuMat,       // Current image
+        cv::cuda::GpuMat,       // Reference points
+        cv::cuda::GpuMat&,      // Tracked points (gets updated by the tracker
+        cv::cuda::GpuMat&,      // status output
+        cv::cuda::GpuMat&,      // error output
+        cv::cuda::Stream&)>      // stream
+            TrackSparseFunctor;
+
+    typedef boost::function<void(
+        cv::cuda::GpuMat,           // Input image
+        cv::cuda::GpuMat,           // Mask
+        cv::cuda::GpuMat&,          // Keypoints
+        cv::cuda::GpuMat&,          // Descriptors
+        cv::cuda::Stream&)>          // Stream
+            DetectAndComputeFunctor;
 
     class Correspondence
     {
@@ -36,7 +33,6 @@ boost::function<cv::cuda::GpuMat(
 
     };
 
-
     class KeyFrame
     {
         enum VariableType
@@ -44,7 +40,9 @@ boost::function<cv::cuda::GpuMat(
             Pose = 0,
             CameraMatrix,
             Homography,
-            CoordinateSystem
+            CoordinateSystem,
+            KeyPoints,
+            Descriptors
         };
         std::map<VariableType, boost::any> data;
         std::map<int, boost::shared_ptr<Correspondence>> correspondences;
@@ -56,11 +54,40 @@ boost::function<cv::cuda::GpuMat(
         bool setPose(cv::Mat pose);
         bool setPoseCoordinateSystem(std::string coordinateSyste);
         bool setCamera(cv::Mat cameraMatrix);
+        cv::cuda::GpuMat& getKeyPoints();
+        cv::cuda::GpuMat& getDescriptors();
         bool setCorrespondene(int otherIdx, cv::cuda::GpuMat thisFramePts, cv::cuda::GpuMat otherFramePts);
         bool getCorrespondence(int otherIdx, cv::cuda::GpuMat& thisFramePts, cv::cuda::GpuMat& otherFramePts);
         bool getCorrespondence(int otherIdx, cv::Mat& homography);
         bool getHomography(int otherIdx, cv::Mat& homography);
         bool hasCorrespondence(int otherIdx);
     };
+
+    struct TrackedFrame
+    {
+        TrackedFrame(cv::cuda::GpuMat img_, int idx_): keyFrame(img_, idx_){}
+        KeyFrame keyFrame;
+        cv::cuda::GpuMat trackedPoints;
+        cv::cuda::GpuMat status;
+        cv::cuda::GpuMat error;
+        float trackingQuality;
+    };
+    struct TrackingResults
+    {
+        int KeyFrameIdx;
+        int TrackedFrameIdx;
+        cv::cuda::GpuMat d_keyFramePts;
+        cv::cuda::GpuMat d_trackedFramePts;
+        cv::cuda::GpuMat d_status;
+        cv::cuda::HostMem h_keyFramePts;
+        cv::cuda::HostMem h_trackedFramePts;
+        cv::cuda::HostMem h_status;
+        cv::Mat homography;
+        bool preFilter;
+    };
+
+    struct TrackedObject
+    {
+
+    };
 }
->>>>>>> 591e3beeebd8738622ec58f3a2913592780a1ecd

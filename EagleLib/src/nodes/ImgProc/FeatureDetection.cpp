@@ -5,22 +5,11 @@
 #include <opencv2/cudaoptflow.hpp>
 #include <opencv2/cudafeatures2d.hpp>
 #include <opencv2/cudaimgproc.hpp>
+#include "nodes/VideoProc/Tracking.hpp"
 using namespace EagleLib;
 
 void GoodFeaturesToTrackDetector::Init(bool firstInit)
 {
-<<<<<<< HEAD
-    updateParameter("Feature Detector", cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1), Parameter::Output);
-    updateParameter("Max corners", int(1000), Parameter::Control);
-    updateParameter("Quality Level", double(0.01));
-    updateParameter("Min Distance", double(0.0), Parameter::Control, "The minimum distance between detected points");
-    updateParameter("Block Size", int(3));
-    updateParameter("Use harris", false);
-    updateParameter("Harris K", double(0.04));
-    updateParameter("Enabled", true);
-    updateParameter<boost::function<cv::cuda::GpuMat(cv::cuda::GpuMat img)>>(
-        "Detection functor", boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2), Parameter::Output);
-=======
     if(firstInit)
     {
         updateParameter("Feature Detector",
@@ -39,10 +28,12 @@ void GoodFeaturesToTrackDetector::Init(bool firstInit)
             double(0.04));
         updateParameter("Enabled",
             false);
-        updateParameter<boost::function<cv::cuda::GpuMat(cv::cuda::GpuMat, cv::cuda::Stream)>>("Detection functor",
-            boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2));
+        updateParameter<DetectAndComputeFunctor>("Detection functor",
+            boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2, _3, _4, _5), Parameter::Output);
+        greyImgs.resize(5);
+        addInputParameter<cv::cuda::GpuMat>("Mask");
     }
->>>>>>> 591e3beeebd8738622ec58f3a2913592780a1ecd
+    detectedPoints.resize(5);
 }
 
 
@@ -75,48 +66,212 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         parameters[5]->changed = false;
         parameters[6]->changed = false;
     }
-<<<<<<< HEAD
     if(!getParameter<bool>(7)->data)
         return img;
-    detect(img);
-    return img;
-}
-cv::cuda::GpuMat GoodFeaturesToTrackDetector::detect(cv::cuda::GpuMat img)
-{
-    cv::cuda::GpuMat greyImg;
-=======
-    if(getParameter<bool>(7)->data)
-        return detect(img);
+    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>("Mask")->data;
+    auto keyPoints = detectedPoints.getFront();
+    if(mask)
+    {
+        detect(img, *mask, keyPoints->first, keyPoints->second, stream);
+    }else
+    {
+        detect(img, cv::cuda::GpuMat(), keyPoints->first, keyPoints->second, stream);
+    }
     return img;
 }
 
-cv::cuda::GpuMat GoodFeaturesToTrackDetector::detect(cv::cuda::GpuMat img, cv::cuda::Stream& stream)
+void GoodFeaturesToTrackDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
+                    cv::cuda::GpuMat& keyPoints,
+                    cv::cuda::GpuMat& descriptors,
+                    cv::cuda::Stream& stream)
 {
-
->>>>>>> 591e3beeebd8738622ec58f3a2913592780a1ecd
+    cv::cuda::GpuMat* greyImg = greyImgs.getFront();
     if(img.channels() != 1)
     {
         // Internal greyscale conversion
-        cv::cuda::cvtColor(img, greyImg, CV_BGR2GRAY,0, stream);
+        cv::cuda::cvtColor(img, *greyImg, CV_BGR2GRAY,0, stream);
     }else
     {
-        greyImg = img;
+        *greyImg = img;
     }
     auto detectorParam = getParameter<cv::Ptr<cv::cuda::CornersDetector>>(0);
     if(detectorParam == nullptr)
     {
-        return img;
+        log(Error, "Detector not built");
+        return;
     }
     cv::Ptr<cv::cuda::CornersDetector> detector = detectorParam->data;
     if(detector == nullptr)
     {
         log(Error, "Detector not built");
-        return img;
+        return;
     }
-    detector->detect(greyImg, detectedCorners, cv::cuda::GpuMat(), stream);
-    updateParameter("Detected Corners", detectedCorners, Parameter::Output);
-    updateParameter("Num corners", detectedCorners.cols, Parameter::State);
-    return detectedCorners;
+    detector->detect(*greyImg, keyPoints, mask, stream);
+    updateParameter("Detected Corners", keyPoints, Parameter::Output);
+    updateParameter("Num corners", keyPoints.cols, Parameter::State);
 }
 
+/// *****************************************************************************************
+/// *****************************************************************************************
+/// *****************************************************************************************
+/// // See if fast can use color images, probably not but worth a shot
+void FastFeatureDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
+            cv::cuda::GpuMat& keyPoints,
+            cv::cuda::GpuMat& descriptors,
+            cv::cuda::Stream& stream)
+{
+
+    cv::Ptr<cv::cuda::FastFeatureDetector> detector = getParameter<cv::Ptr<cv::cuda::FastFeatureDetector>>(0)->data;
+    if(detector)
+    {
+        detector->detectAndComputeAsync(img,mask,keyPoints,descriptors,false, stream);
+        updateParameter("KeyPoints", keyPoints);
+        updateParameter("Descriptors", descriptors);
+    }
+
+}
+
+void FastFeatureDetector::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        updateParameter("Detector object", cv::cuda::FastFeatureDetector::create());
+        updateParameter("Threshold", int(10));
+        updateParameter("Use nonmax suppression", true);
+        EnumParameter param;
+        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_5_8));
+        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_7_12));
+        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_9_16));
+        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::THRESHOLD));
+        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::NONMAX_SUPPRESSION));
+        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::FAST_N));
+        param.currentSelection = 2;
+        updateParameter("Type", param);
+        updateParameter("Max detected points", int(5000));
+        addInputParameter<cv::cuda::GpuMat>("Mask");
+    }
+    detectedPoints.resize(5);
+    updateParameter<DetectAndComputeFunctor>("Detection Functor", boost::bind(&FastFeatureDetector::detect, this, _1, _2, _3, _4, _5));
+}
+
+cv::cuda::GpuMat FastFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+{
+    if(parameters[1]->changed ||
+       parameters[2]->changed ||
+       parameters[3]->changed ||
+       parameters[4]->changed)
+    {
+        updateParameter(0, cv::cuda::FastFeatureDetector::create(
+                            getParameter<int>(1)->data,
+                            getParameter<bool>(2)->data,
+                            getParameter<EnumParameter>(3)->data.getValue(),
+                            getParameter<int>(4)->data));
+        parameters[1]->changed = false;
+        parameters[2]->changed = false;
+        parameters[3]->changed = false;
+        parameters[4]->changed = false;
+    }
+    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>("Mask")->data;
+    auto keyPoints = detectedPoints.getFront();
+    if(mask)
+    {
+        detect(img, *mask, keyPoints->first, keyPoints->second, stream);
+    }else
+    {
+        detect(img, cv::cuda::GpuMat(), keyPoints->first, keyPoints->second, stream);
+    }
+    return img;
+}
+/// *****************************************************************************************
+/// *****************************************************************************************
+/// *****************************************************************************************
+void ORBFeatureDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
+            cv::cuda::GpuMat& keyPoints,
+            cv::cuda::GpuMat& descriptors,
+            cv::cuda::Stream& stream)
+{
+    cv::Ptr<cv::cuda::ORB> detector = getParameter<cv::Ptr<cv::cuda::ORB>>(0)->data;
+    if(detector)
+    {
+        detector->detectAndComputeAsync(img,mask,keyPoints,descriptors,false, stream);
+    }
+}
+
+void ORBFeatureDetector::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        updateParameter("Detector", cv::cuda::ORB::create(500,1.5,8,31,0,2,cv::ORB::HARRIS_SCORE, 31,20,true));
+        updateParameter("Number of features", int(500));    //1
+        updateParameter("Scale Factor", float(1.2));        //2
+        updateParameter("Num Levels", int(8));              //3
+        updateParameter("Edge Threshold", int(31));         //4
+        updateParameter("First Level", int(0));             //5
+        updateParameter("WTA_K", int(2));                   //6
+        EnumParameter param;
+        param.addEnum(ENUM(cv::ORB::kBytes));
+        param.addEnum(ENUM(cv::ORB::HARRIS_SCORE));
+        param.addEnum(ENUM(cv::ORB::FAST_SCORE));
+        param.currentSelection = 1;
+        updateParameter("Score Type", param);               //7
+        updateParameter("Patch Size", int(31));             //8
+        updateParameter("Fast Threshold", int(20));         //9
+        updateParameter("Blur for Descriptors", true);      //10
+        addInputParameter<cv::cuda::GpuMat>("Mask");
+    }
+    updateParameter<DetectAndComputeFunctor>("Detection Functor", boost::bind(&ORBFeatureDetector::detect, this, _1, _2, _3, _4, _5));
+
+}
+
+cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+{
+    if(parameters[1]->changed ||
+       parameters[2]->changed ||
+       parameters[3]->changed ||
+       parameters[4]->changed ||
+       parameters[5]->changed ||
+       parameters[6]->changed ||
+       parameters[7]->changed ||
+       parameters[8]->changed ||
+       parameters[9]->changed ||
+       parameters[10]->changed)
+    {
+        updateParameter(0,
+            cv::cuda::ORB::create(
+                    getParameter<int>(1)->data,
+                    getParameter<float>(2)->data,
+                    getParameter<int>(3)->data,
+                    getParameter<int>(4)->data,
+                    getParameter<int>(5)->data,
+                    getParameter<int>(6)->data,
+                    getParameter<EnumParameter>(7)->data.getValue(),
+                    getParameter<int>(8)->data,
+                    getParameter<int>(9)->data,
+                    getParameter<bool>(10)->data));
+       parameters[1]->changed = false;
+       parameters[2]->changed = false;
+       parameters[3]->changed = false;
+       parameters[4]->changed = false;
+       parameters[5]->changed = false;
+       parameters[6]->changed = false;
+       parameters[7]->changed = false;
+       parameters[8]->changed = false;
+       parameters[9]->changed = false;
+       parameters[10]->changed = false;
+    }
+    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>("Mask")->data;
+    auto keyPoints = detectedPoints.getFront();
+    if(mask)
+    {
+        detect(img, *mask, keyPoints->first, keyPoints->second, stream);
+    }else
+    {
+        detect(img, cv::cuda::GpuMat(), keyPoints->first, keyPoints->second, stream);
+    }
+    return img;
+}
+
+
 NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrackDetector)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ORBFeatureDetector)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FastFeatureDetector)
