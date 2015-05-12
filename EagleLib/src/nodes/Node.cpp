@@ -124,10 +124,9 @@ Node::swapChildren(Node::Ptr child1, Node::Ptr child2)
         return;
     std::iter_swap(itr1,itr2);
 }
-std::vector<Node::Ptr>
-Node::getNodesInScope()
+std::vector<Node *> Node::getNodesInScope()
 {
-    std::vector<Node::Ptr> nodes;
+    std::vector<Node*> nodes;
     if(parent)
         parent->getNodesInScope(nodes);
     return nodes;
@@ -153,11 +152,26 @@ Node::getNodeInScope(const std::string& name)
 }
 
 void
-Node::getNodesInScope(std::vector<Node::Ptr>& nodes)
+Node::getNodesInScope(std::vector<Node *> &nodes)
 {
-    nodes.insert(nodes.end(), children.begin(), children.end());
-    if(parent)
-        parent->getNodesInScope(nodes);
+    // First travel to the root node
+
+    if(nodes.size() == 0)
+    {
+        Node* node = this;
+        while(node->parent != nullptr)
+        {
+            node = node->parent;
+        }
+        nodes.push_back(node);
+        node->getNodesInScope(nodes);
+        return;
+    }
+    nodes.push_back(this);
+    for(int i = 0; i < children.size(); ++i)
+    {
+        children[i]->getNodesInScope(nodes);
+    }
 }
 
 boost::shared_ptr<Parameter> 
@@ -238,7 +252,7 @@ Node::removeChild(const std::string &name)
 }
 
 cv::cuda::GpuMat
-Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(img.empty() && SkipEmpty())
     {
@@ -335,7 +349,7 @@ Node::process(cv::InputArray in, cv::OutputArray out)
 }
 
 cv::cuda::GpuMat
-Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream )
+Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )
 {
     return img;
 }
@@ -501,7 +515,7 @@ Node::Serialize(cv::FileStorage& fs)
 std::vector<std::string>
 Node::findType(Parameter::Ptr param)
 {
-    std::vector<Node::Ptr> nodes;
+    std::vector<Node*> nodes;
     getNodesInScope(nodes);
     return findType(param, nodes);
 }
@@ -509,12 +523,12 @@ Node::findType(Parameter::Ptr param)
 std::vector<std::string>
 Node::findType(Loki::TypeInfo &typeInfo)
 {
-    std::vector<Node::Ptr> nodes;
+    std::vector<Node*> nodes;
     getNodesInScope(nodes);
     return findType(typeInfo, nodes);
 }
 std::vector<std::string>
-Node::findType(Parameter::Ptr param, std::vector<Node::Ptr>& nodes)
+Node::findType(Parameter::Ptr param, std::vector<Node*>& nodes)
 {
     std::vector<std::string> output;
 
@@ -532,7 +546,7 @@ Node::findType(Parameter::Ptr param, std::vector<Node::Ptr>& nodes)
 }
 
 std::vector<std::string> 
-Node::findType(Loki::TypeInfo &typeInfo, std::vector<Ptr> &nodes)
+Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*> &nodes)
 {
 	std::vector<std::string> output;
 
@@ -689,7 +703,7 @@ EventLoopNode::EventLoopNode():
 }
 
 cv::cuda::GpuMat
-EventLoopNode::process(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+EventLoopNode::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     service.run();
     return Node::process(img);

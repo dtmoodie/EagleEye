@@ -9,7 +9,7 @@ void ConvertToGrey::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat grey;
     try
@@ -29,7 +29,7 @@ void ConvertToHSV::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 	return img;
 }
@@ -43,7 +43,7 @@ void ExtractChannels::Init(bool firstInit)
     channelNum = getParameter<int>(0)->data;
 }
 
-cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     std::vector<cv::cuda::GpuMat> channels;
     cv::cuda::split(img,channels,stream);
@@ -78,14 +78,43 @@ void ConvertDataType::Init(bool firstInit)
     }
 }
 
-cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat output;
     img.convertTo(output, getParameter<EnumParameter>(0)->data.currentSelection, getParameter<double>(1)->data, getParameter<double>(2)->data,stream);
     return output;
 }
 
+void Merge::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        addInputParameter<cv::cuda::GpuMat>("Channel1");
+        addInputParameter<cv::cuda::GpuMat>("Channel2");
+        addInputParameter<cv::cuda::GpuMat>("Channel3");
+    }
+}
+
+cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+    auto chan1 = getParameter<cv::cuda::GpuMat*>(0);
+    auto chan2 = getParameter<cv::cuda::GpuMat*>(2);
+    auto chan3 = getParameter<cv::cuda::GpuMat*>(3);
+    std::vector<cv::cuda::GpuMat> channels;
+    if(chan1->data)
+        channels.push_back(*chan1->data);
+    else
+        channels.push_back(img);
+    if(chan2->data)
+        channels.push_back(*chan2->data);
+    if(chan3->data)
+        channels.push_back(*chan3->data);
+    cv::cuda::merge(channels, mergedChannels);
+    return mergedChannels;
+}
+
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToGrey);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToHSV);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ExtractChannels);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertDataType);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Merge);

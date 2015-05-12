@@ -8,7 +8,7 @@ SerialStack::~SerialStack()
 
 }
 cv::cuda::GpuMat
-SerialStack::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
+SerialStack::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     return img;
 }

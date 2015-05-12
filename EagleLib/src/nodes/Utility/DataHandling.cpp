@@ -8,7 +8,7 @@ void GetOutputImage::Init(bool firstInit)
         addInputParameter<cv::cuda::GpuMat>("Input");
 }
 
-cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat*>("Input")->data;
     if(input == nullptr)
@@ -32,7 +32,7 @@ void ImageInfo::Init(bool firstInit)
     dataType.addEnum(ENUM(CV_64F));
     updateParameter<EnumParameter>("Type",dataType, Parameter::State);
 }
-cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream stream)
+cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     getParameter<EnumParameter>(0)->data.currentSelection = img.type();
     parameters[0]->changed = true;

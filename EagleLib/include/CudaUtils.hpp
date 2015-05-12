@@ -21,20 +21,20 @@ namespace EagleLib
         }
     };
 
-    template<typename T> class ConstBuffer
+    template<typename T> class ConstEventBuffer
     {
         std::vector<EventBuffer<T>> buffer;
         size_t getItr;
         size_t putItr;
         size_t size;
         boost::recursive_mutex mtx;
-public:
-        ConstBuffer():buffer(10), getItr(0), putItr(0), size(10){}
-        ConstBuffer(size_t size_):
+    public:
+        ConstEventBuffer():buffer(10), getItr(0), putItr(0), size(10){}
+        ConstEventBuffer(size_t size_):
             buffer(size_), size(size_), getItr(0), putItr(0), size(size_){}
-        ConstBuffer(size_t size_, const T& init):
+        ConstEventBuffer(size_t size_, const T& init):
             buffer(size_, EventBuffer<T>(init)), size(size_), getItr(0), putItr(0), size(size_){}
-        ConstBuffer(const ConstBuffer<T>& other):
+        ConstEventBuffer(const ConstEventBuffer<T>& other):
             buffer(other.buffer), getItr(other.getItr), putItr(other.putItr), size(other.size){}
 
         EventBuffer<T>* getFront()
@@ -64,6 +64,51 @@ public:
             size= size_;
             buffer.resize(size);
         }
+        ConstEventBuffer& operator =(const ConstEventBuffer<T>& rhs)
+        {
+            getItr = rhs.getItr;
+            putItr = rhs.putItr;
+            size = rhs.size;
+            buffer = rhs.buffer;
+        }
+    };
+
+    template<typename T> class ConstBuffer
+    {
+        std::vector<T> buffer;
+        size_t getItr;
+        size_t putItr;
+        size_t size;
+        boost::recursive_mutex mtx;
+    public:
+        ConstBuffer():buffer(10), getItr(0), putItr(0), size(10){}
+        ConstBuffer(size_t size_):
+            buffer(size_), size(size_), getItr(0), putItr(0), size(size_){}
+        ConstBuffer(size_t size_, const T& init):
+            buffer(size_, EventBuffer<T>(init)), size(size_), getItr(0), putItr(0), size(size_){}
+        ConstBuffer(const ConstEventBuffer<T>& other):
+            buffer(other.buffer), getItr(other.getItr), putItr(other.putItr), size(other.size){}
+
+        T* getFront()
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            if(size == 0)
+                return nullptr;
+            return &buffer[putItr++%size];
+        }
+
+        T* getBack()
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            return &buffer[getItr++%size];
+        }
+        void resize(size_t size_)
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            size= size_;
+            buffer.resize(size);
+        }
+
         ConstBuffer& operator =(const ConstBuffer<T>& rhs)
         {
             getItr = rhs.getItr;

@@ -68,9 +68,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    stopProcessingThread();
+
     delete ui;
 }
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    stopProcessingThread();
+    cv::destroyAllWindows();
+    QMainWindow::closeEvent(event);
+}
+
 void MainWindow::onCompileLog(const std::string& msg, int level)
 {
     ui->console->appendPlainText(QString::fromStdString(msg));

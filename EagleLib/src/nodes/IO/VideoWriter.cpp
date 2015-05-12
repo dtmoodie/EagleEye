@@ -41,7 +41,7 @@ void VideoWriter::Serialize(ISimpleSerializer *pSerializer)
 }
 
 cv::cuda::GpuMat 
-VideoWriter::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream stream)
+VideoWriter::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     size = img.size();
     if(parameters[0]->changed || parameters[1]->changed || restart)
