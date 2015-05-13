@@ -348,8 +348,6 @@ bool NodeManager::TestRuntimeCompilation()
 void
 NodeManager::onNodeRecompile(Node *node)
 {
-    deletedNodes.push_back(node);
-    deletedNodeIDs.push_back(node->m_OID);
 }
 
 Node*
@@ -377,9 +375,12 @@ NodeManager::getNode(const std::string &treeName)
 {
     for(int i = 0; i < nodes.size(); ++i)
     {
-        if(nodes[i]->fullTreeName == treeName)
+        if(nodes[i] != nullptr)
         {
-            return nodes[i].get();
+            if(nodes[i]->fullTreeName == treeName)
+            {
+                return nodes[i].get();
+            }
         }
     }
     return nullptr;

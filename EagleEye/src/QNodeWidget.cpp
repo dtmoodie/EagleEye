@@ -259,6 +259,7 @@ void QInputProxy::updateUi(bool init)
     QString currentItem = box->currentText();
     box->clear();
     box->addItem("");
+    parameter->update();
     auto inputs = node->findCompatibleInputs(parameter);
     for(int i = 0; i < inputs.size(); ++i)
     {

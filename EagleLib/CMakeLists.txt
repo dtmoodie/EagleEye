@@ -86,6 +86,7 @@ message(STATUS
     Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}
     OpenCV found at: ${OpenCV_CONFIG_PATH}
     NVCC Flags: ${CUDA_NVCC_FLAGS}
+
 ++++++++++ RCC++ Defines ++++++++++++++++++
     OpenCV include dir: ${OpenCV_INCLUDE_DIR}
     Boost library dir: ${Boost_LIBRARY_DIRS}
@@ -94,19 +95,23 @@ message(STATUS
     Cuda RT libs: ${CUDA_LIBRARIES}
     Cuda root dir: ${CUDA_TOOLKIT_ROOT_DIR}
     Binary Dir: ${CMAKE_BINARY_DIR}
+
     Boost LIBS: ${Boost_LIBRARIES}
+
     PCL_found: ${PCL_FOUND}
     PCL_LIB_DIR: ${PCL_LIBRARY_DIRS}
     Eigen inc: ${EIGEN3_INCLUDE_DIR}
 ************* FILES ***********************
 
-    Headers: ${hdr}
+============= Headers ==================
 
+${hdr}
 
-   Source files: ${src}
+============= Source files ==================
+${src}
 
-
-    Kernels: ${knl}
+============= Kernels ==================
+${knl}
 
 
 =====================================")

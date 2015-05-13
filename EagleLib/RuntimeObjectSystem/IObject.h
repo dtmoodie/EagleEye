@@ -37,6 +37,7 @@
 #include <assert.h>
 struct ISimpleSerializer;
 class ObjectFactorySystem;
+template<typename T> class shared_ptr;
 
 // IIDs
 enum InterfaceIDEnum
@@ -70,23 +71,16 @@ protected:
     friend class IObject;
     virtual void updateObject(IObject* ptr) = 0;
 };
-/**
- *  The weak_ptr class is used when we want to have an updated pointer to an object, but we don't
- *  want to maintain a reference count.  That way someone else can maintain ownership but this pointer
- *  will be updated to a nullptr upon deletion of the object
- */
-template<typename T> class weak_ptr: public IObjectNotifiable
+template<typename T> class weak_ptr : public IObjectNotifiable
 {
     T* m_object;
-
     friend class IObject;
+    friend class shared_ptr<T>;
     virtual void updateObject(IObject *ptr)
     {
         m_object = static_cast<T*>(ptr);
 
     }
-    virtual void decrement();
-    virtual void increment();
 
 
 public:
@@ -96,7 +90,6 @@ public:
     weak_ptr(IObject* ptr):
         m_object(dynamic_cast<T*>(ptr))
     {
-        *refCount = 1;
         m_object->registerNotifier(this);
     }
     weak_ptr(T* ptr):
@@ -104,8 +97,7 @@ public:
     {
         m_object->registerNotifier(this);
     }
-    weak_ptr(shared_ptr const & ptr):
-        shared_ptr()
+    weak_ptr(weak_ptr const & ptr)
     {
         swap(ptr);
     }
@@ -113,41 +105,48 @@ public:
     {
         if(m_object)
             m_object->deregisterNotifier(this);
-        decrement();
     }
-    virtual T* operator->()
+    T* operator->()
     {
         assert(m_object != nullptr);
         return m_object;
     }
-    virtual weak_ptr& operator=(weak_ptr const & r)
+    weak_ptr& operator=(weak_ptr const & r)
     {
         swap(r);
         return *this;
     }
-    virtual bool operator ==(T* p)
+    bool operator ==(T* p)
     {
         return m_object == p;
     }
-    virtual bool operator !=(T* p)
+    bool operator !=(T* p)
     {
         return m_object != p;
     }
-    virtual bool operator == (shared_ptr const & r)
+    bool operator == (weak_ptr const & r)
     {
         return r.get() == m_object;
     }
-    virtual bool operator != (shared_ptr const& r)
+    bool operator == (shared_ptr<T> const & r)
+    {
+        return r.get() == m_object;
+    }
+
+    bool operator != (weak_ptr const& r)
     {
         return r.get() != m_object;
     }
-    virtual void swap(shared_ptr const & r)
+    bool operator !=(shared_ptr<T> const& r)
     {
-        decrement();
+        return r.get() != m_object;
+    }
+
+    void swap(weak_ptr const & r)
+    {
         if(m_object)
             m_object->deregisterNotifier(this);
         m_object = r.m_object;
-        increment();
         if(m_object)
             m_object->registerNotifier(this);
     }
@@ -156,15 +155,24 @@ public:
         assert(m_object != nullptr);
         return m_object;
     }
+
 };
 
 /**
  *  The RCC_shared_ptr class is similar to boost::shared_ptr except that it auto updates the ptr when
  *  an object swap is performed.  It does this by registering itself as updatable to the IObject
  */
-template<typename T> class shared_ptr : public weak_ptr<T>
+template<typename T> class shared_ptr : public IObjectNotifiable
 {
+    T* m_object;
     int* refCount;
+    friend class IObject;
+    friend class weak_ptr<T>;
+    virtual void updateObject(IObject *ptr)
+    {
+        m_object = static_cast<T*>(ptr);
+
+    }
     void decrement()
     {
         if(refCount)
@@ -183,34 +191,54 @@ template<typename T> class shared_ptr : public weak_ptr<T>
         if(refCount)
             ++(*refCount);
     }
+
+
 public:
-    shared_ptr(): weak_ptr(),refCount(nullptr)
+    shared_ptr(): m_object(nullptr), refCount(nullptr)
     {
     }
     shared_ptr(IObject* ptr):
-        weak_ptr(ptr),
+        m_object(dynamic_cast<T*>(ptr)),
         refCount(new int)
     {
         *refCount = 1;
+        m_object->registerNotifier(this);
     }
     shared_ptr(T* ptr):
-        weak_ptr(ptr),
+        m_object(ptr),
         refCount(new int)
     {
         *refCount = 1;
+        m_object->registerNotifier(this);
     }
     shared_ptr(shared_ptr const & ptr):
-        weak_ptr(),shared_ptr()
+        shared_ptr()
     {
         swap(ptr);
     }
     ~shared_ptr()
     {
+        if(m_object)
+            m_object->deregisterNotifier(this);
+        decrement();
+    }
+    T* operator->()
+    {
+        assert(m_object != nullptr);
+        return m_object;
     }
     shared_ptr& operator=(shared_ptr const & r)
     {
         swap(r);
         return *this;
+    }
+    bool operator ==(T* p)
+    {
+        return m_object == p;
+    }
+    bool operator !=(T* p)
+    {
+        return m_object != p;
     }
     bool operator == (shared_ptr const & r)
     {
@@ -231,6 +259,12 @@ public:
         if(m_object)
             m_object->registerNotifier(this);
     }
+    T* get() const
+    {
+        assert(m_object != nullptr);
+        return m_object;
+    }
+
 };
 
 // IObject itself below is a special case as the base class
