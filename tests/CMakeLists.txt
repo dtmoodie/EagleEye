@@ -8,7 +8,7 @@ set(Boost_USE_STATIC @Boost_USE_STATIC@)
 set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)
 set(BOOST_INCLUDEDIR "@Boost_INCLUDE_DIR@")
 set(Boost_NO_BOOST_CMAKE ON)
-set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
+set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono program_options)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 
@@ -36,4 +36,4 @@ target_link_libraries(test_rcc EagleLib)
 
 add_executable(perf_test perf_test.cpp)
 add_dependencies(perf_test EagleLib)
-target_link_libraries(perf_test EagleLib)
+target_link_libraries(perf_test EagleLib ${Boost_LIBRARIES})
