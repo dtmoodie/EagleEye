@@ -97,7 +97,8 @@ public:
     {
         m_object->registerNotifier(this);
     }
-    weak_ptr(weak_ptr const & ptr)
+    weak_ptr(weak_ptr const & ptr):
+        m_object(nullptr)
     {
         swap(ptr);
     }
