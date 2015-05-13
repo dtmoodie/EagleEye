@@ -241,13 +241,13 @@ void QInputProxy::onUiUpdated(QWidget* sender)
     QString inputName = box->currentText();
     if(inputName.size() == 0)
         return;
-    auto tokens = inputName.split(":");
-    auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
-    if(sourceNode == nullptr)
-        return;
-    auto param = sourceNode->getParameter(tokens[1].toStdString());
-    if(param)
-        parameter->setSource(param);
+    //auto tokens = inputName.split(":");
+    //auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
+    //if(sourceNode == nullptr)
+      //  return;
+    //auto param = sourceNode->getParameter(tokens[1].toStdString());
+    //if(param)
+    parameter->setSource(inputName.toStdString());
 
 }
 QWidget* QInputProxy::getWidget(int num)

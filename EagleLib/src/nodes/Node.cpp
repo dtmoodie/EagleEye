@@ -456,6 +456,7 @@ Node::Init(const cv::FileNode& configNode)
     for(int i = 0; i < parameters.size(); ++i)
     {
         parameters[i]->Init(paramNode);
+        parameters[i]->update();
     }
     // Figure out parameter loading :/  Need some kind of factory for all of the parameter types
 }
@@ -502,7 +503,7 @@ Node::Serialize(cv::FileStorage& fs)
         fs << "Parameters" << "{";
         for(int i = 0; i < parameters.size(); ++i)
         {
-            if(parameters[i]->type & Parameter::Control)
+            if(parameters[i]->type & Parameter::Control || parameters[i]->type & Parameter::Input)
             {
                 parameters[i]->Serialize(fs);
             }

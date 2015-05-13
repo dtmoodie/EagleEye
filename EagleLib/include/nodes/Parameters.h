@@ -113,6 +113,7 @@ namespace EagleLib
     }
     template<typename T> void TypedParameter<T>::Init(cv::FileNode& fs){
     }
+
 #define SERIALIZE_TYPE(type) template<> inline void TypedParameter<type>::Serialize(cv::FileStorage& fs){       \
     Parameter::Serialize(fs);                                                                                   \
     fs << "Data" << data;\
@@ -129,22 +130,24 @@ namespace EagleLib
     SERIALIZE_TYPE(unsigned char)
     SERIALIZE_TYPE(short)
     SERIALIZE_TYPE(unsigned short)
-    //SERIALIZE_TYPE(int)
-
     SERIALIZE_TYPE(bool)
 
-    template<> inline void TypedParameter<boost::filesystem::path>::Serialize(cv::FileStorage& fs){
+    template<> inline void TypedParameter<boost::filesystem::path>::Serialize(cv::FileStorage& fs)
+    {
         Parameter::Serialize(fs);
         fs << "Data" << data.string();
         fs << "}";
     }
-        template<> inline void TypedParameter<boost::filesystem::path>::Init(cv::FileNode& fs){
+
+    template<> inline void TypedParameter<boost::filesystem::path>::Init(cv::FileNode& fs)
+    {
         cv::FileNode myNode = fs[name];
         std::string pathStr = (std::string)myNode["Data"];
         data = boost::filesystem::path(pathStr);
     }
 
-    template<> inline void TypedParameter<unsigned int>::Serialize(cv::FileStorage& fs){
+    template<> inline void TypedParameter<unsigned int>::Serialize(cv::FileStorage& fs)
+    {
         Parameter::Serialize(fs);
         fs << "Data" << (int)data;
         fs << "}";
@@ -154,12 +157,14 @@ namespace EagleLib
         data = (int)myNode["Data"];
     }
 
-    template<> inline void TypedParameter<int>::Serialize(cv::FileStorage& fs){
+    template<> inline void TypedParameter<int>::Serialize(cv::FileStorage& fs)
+    {
         Parameter::Serialize(fs);
         fs << "Data" << data;
         fs << "}";
     }
-        template<> inline void TypedParameter<int>::Init(cv::FileNode& fs){
+    template<> inline void TypedParameter<int>::Init(cv::FileNode& fs)
+    {
         cv::FileNode myNode = fs[name];
         data = (int)myNode["Data"];
     }
@@ -255,11 +260,13 @@ namespace EagleLib
         {
             Parameter::Serialize(fs);
             fs << "Data" << sourceTreeName;
+            fs << "}";
         }
 
-        void Init(cv::FileNode &fs)
+        void inline Init(cv::FileNode &fs)
         {
-
+            cv::FileNode myNode = fs[Parameter::name];
+            sourceTreeName = (std::string)myNode["Data"];
         }
 
         Parameter::Ptr param;
