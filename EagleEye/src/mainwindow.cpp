@@ -346,7 +346,14 @@ void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursiv
     boost::posix_time::time_duration delta;
     while (!boost::this_thread::interruption_requested())
     {
-        process(parentList, mtx);
+        try
+        {
+            process(parentList, mtx);
+        }catch(boost::thread_interrupted& err)
+        {
+            break;
+        }
+
         end = boost::posix_time::microsec_clock::universal_time();
         delta = end - start;
         start = end;

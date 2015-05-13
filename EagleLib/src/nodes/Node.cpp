@@ -5,6 +5,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include "Manager.h"
 #include <boost/date_time.hpp>
+#include <boost/thread.hpp>
 using namespace EagleLib;
 #ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
@@ -254,6 +255,8 @@ Node::removeChild(const std::string &name)
 cv::cuda::GpuMat
 Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
+    if(boost::this_thread::interruption_requested())
+        return img;
     if(img.empty() && SkipEmpty())
     {
 
@@ -325,7 +328,17 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         log(Error, err.what());
     }catch(boost::exception &err)
     {
-        log(Error, "Boost exception");
+        log(Error, "Boost error");
+    }catch(boost::thread_exception& err)
+    {
+        log(Error, err.what());
+    }catch(boost::thread_interrupted& err)
+    {
+        log(Error, "Thread interrupted");
+        throw err;
+    }catch(boost::thread_resource_error& err)
+    {
+        log(Error, err.what());
     }catch(...)
     {
         log(Error, "Unknown exception");

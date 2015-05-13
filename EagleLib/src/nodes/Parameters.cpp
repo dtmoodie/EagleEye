@@ -1,4 +1,4 @@
-#include "nodes/Parameters.h"
+#include "Parameters.h"
 namespace EagleLib
 {
 //#define SERIALIZE_TYPE(type) template<> inline void TypedParameter<type>::Serialize(cv::FileStorage& fs){    \

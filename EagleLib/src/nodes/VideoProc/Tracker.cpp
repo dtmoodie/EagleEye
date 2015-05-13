@@ -1,13 +1,22 @@
 #include "nodes/VideoProc/Tracker.h"
 #include "nodes/VideoProc/Tracking.hpp"
 #include "opencv2/imgproc.hpp"
+#include <opencv2/highgui.hpp>
 #include <opencv2/calib3d.hpp>
+#include <opencv2/cudawarping.hpp>
+#include <opencv2/cudaimgproc.hpp>
 using namespace EagleLib;
 NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyFrameTracker)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(CMTTracker)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(TLDTracker)
+#ifdef _MSC_VER
 
 
+#else
+RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudawarping")
+RUNTIME_COMPILER_LINKLIBRARY("-lopencv_highgui")
+
+#endif
 
 void KeyFrameTracker::Init(bool firstInit)
 {
@@ -24,14 +33,19 @@ void KeyFrameTracker::Init(bool firstInit)
         addInputParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
                                                cv::cuda::GpuMat, cv::cuda::GpuMat,
                                                std::string&, cv::cuda::Stream)>>("Display functor");
-        homographyBuffer.resize(20);
-        trackedFrames.set_capacity(5);
-    }
 
+    }
+    updateParameter("Display", true);
+    homographyBuffer.resize(20, nullptr);
+    trackedFrames.set_capacity(5);
+    warpedImageBuffer.resize(20);
 }
+
 void KeyFrameTracker_findHomographyCallback(int status, void* userData)
 {
+
     TrackingResults* results = (TrackingResults*)userData;
+    boost::mutex::scoped_lock(results->mtx);
     cv::Mat mask, refPts, trackedPts;
     cv::Mat finalMask = results->h_status.createMatHeader();
     // Pre filter points
@@ -45,13 +59,15 @@ void KeyFrameTracker_findHomographyCallback(int status, void* userData)
         uchar* maskPtr = finalMask.ptr<uchar>(0);
         cv::Mat refPts_ = results->h_keyFramePts.createMatHeader();
         cv::Mat trackedPts_ = results->h_trackedFramePts.createMatHeader();
+        int itr = 0; // Insertion iterator
         for(int i = 0; i < results->h_keyFramePts.cols; ++i, ++maskPtr)
         {
             if(*maskPtr)
             {
-                trackedPts.at<cv::Vec2f>(i) = trackedPts_.at<cv::Vec2f>(i);
-                refPts.at<cv::Vec2f>(i) = refPts_.at<cv::Vec2f>(i);
+               trackedPts.at<cv::Vec2f>(itr) = trackedPts_.at<cv::Vec2f>(i);
+                refPts.at<cv::Vec2f>(itr) = refPts_.at<cv::Vec2f>(i);
                 idxMap.push_back(i);
+                ++itr;
             }
         }
     }else
@@ -59,28 +75,43 @@ void KeyFrameTracker_findHomographyCallback(int status, void* userData)
         refPts = results->h_keyFramePts.createMatHeader();
         trackedPts = results->h_trackedFramePts.createMatHeader();
     }
-    cv::findHomography(refPts, trackedPts, cv::RANSAC, 3, mask, 2000, 0.995);
+    results->homography = cv::findHomography(refPts, trackedPts, cv::RANSAC, 3, mask, 2000, 0.995);
     // Post filter based on ransac inliers
 
     finalMask = cv::Scalar(0);
-    for(int i = 0; i < mask.cols; ++i)
+    int count = 0;
+    for(int i = 0; i < mask.rows; ++i)
     {
         if(idxMap.size())
         {
             if(mask.at<uchar>(i))
             {
                 finalMask.at<uchar>(idxMap[i]) = 255;
+                ++count;
             }
         }else
         {
             finalMask.at<uchar>(i) = 255;
+            ++count;
         }
     }
-    std::cout << 2 << " " << clock() << std::endl;
+    results->cv.notify_one();
+    results->quality = float(count) / float(mask.rows);
+    std::cout << results->quality << std::endl;
+    results->calculated = true;
+}
+void KeyFrameTracker_displayCallback(int status, void* userData)
+{
+    std::pair<cv::cuda::GpuMat*, std::string>* data = (std::pair<cv::cuda::GpuMat*, std::string>*)userData;
+    cv::namedWindow(data->second, cv::WINDOW_OPENGL);
+    cv::imshow(data->second, *data->first);
+
+    delete data;
 }
 
 cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
+
     if(parameters[0]->changed)
     {
         trackedFrames.set_capacity(getParameter<int>(0)->data);
@@ -95,67 +126,119 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         display = getParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
                                                     cv::cuda::GpuMat, cv::cuda::GpuMat,
                                                     std::string&, cv::cuda::Stream)>*>("Display functor")->data;
+    if(getParameter<bool>("Display")->data)
+    {
+        if(nonWarpedMask.size() != img.size())
+        {
+            nonWarpedMask = cv::cuda::GpuMat(img.size(), CV_32F);
+            nonWarpedMask.setTo(cv::Scalar(1), stream);
+        }
+    }
     int* index = getParameter<int*>("Index")->data;
     static int frameCount = 0;
     if(index)
         frameCount = *index;
-
-    if(detector && tracker)
+    bool addKeyFrame = false;
+    if(!detector || !tracker)
+        return img;
+    if(trackedFrames.empty())
     {
-        if(trackedFrames.empty())
-        {
-            TrackedFrame tf(img,frameCount);
-            cv::cuda::GpuMat& keyPoints = tf.keyFrame.getKeyPoints();
-            (*detector)(img,
-                        mask? *mask: cv::cuda::GpuMat(),
-                        keyPoints,
-                        tf.keyFrame.getDescriptors(),
-                        stream);
-            if(keyPoints.cols > getParameter<int>(3)->data)
-                trackedFrames.push_back(tf);
-        }else
-        {
-            // Track this frame relative to all of the tracked frames
-            static std::vector<cv::cuda::Stream> workStreams;
-            static cv::cuda::Event startEvent;
-            static std::vector<cv::cuda::Event> workFinishedEvents;
-            startEvent.record(stream);
-            workStreams.resize(trackedFrames.size());
-            workFinishedEvents.resize(trackedFrames.size());
+        addKeyFrame = true;
 
-            int i = 0;
-            for(auto itr = trackedFrames.begin(); itr != trackedFrames.end(); ++itr, ++i)
+    }else
+    {
+        // Track this frame relative to all of the tracked frames
+        static std::vector<cv::cuda::Stream> workStreams;
+        static cv::cuda::Event startEvent;
+        static std::vector<cv::cuda::Event> workFinishedEvents;
+        startEvent.record(stream);
+        workStreams.resize(trackedFrames.size());
+        workFinishedEvents.resize(trackedFrames.size());
+
+        int i = 0;
+        std::vector<TrackingResults*> results;
+        for(auto itr = trackedFrames.begin(); itr != trackedFrames.end(); ++itr, ++i)
+        {
+            workStreams[i].waitEvent(startEvent);
+
+            (*tracker)(itr->keyFrame.img, img,
+                       itr->keyFrame.getKeyPoints(),
+                       itr->trackedPoints,
+                       itr->status,
+                       itr->error, workStreams[i]);
+
+            TrackingResults** tmp = homographyBuffer.getFront();
+            if(*tmp == nullptr)
+                *tmp = new TrackingResults();
+            TrackingResults* h_buffer = *tmp;
+            h_buffer->KeyFrameIdx = itr->keyFrame.frameIndex;
+            h_buffer->TrackedFrameIdx = frameCount;
+            h_buffer->d_keyFramePts = itr->keyFrame.getKeyPoints();
+            h_buffer->d_status = itr->status;
+            h_buffer->d_trackedFramePts = itr->trackedPoints;
+            h_buffer->d_keyFramePts.download(h_buffer->h_keyFramePts, workStreams[i]);
+            h_buffer->d_status.download(h_buffer->h_status, workStreams[i]);
+            h_buffer->d_trackedFramePts.download(h_buffer->h_trackedFramePts, workStreams[i]);
+            h_buffer->preFilter = true;
+            h_buffer->calculated = false;
+
+            workStreams[i].enqueueHostCallback(KeyFrameTracker_findHomographyCallback, h_buffer);
+            results.push_back(h_buffer);
+        }
+        i = 0;
+        for(auto itr = trackedFrames.begin(); itr != trackedFrames.end(); ++itr, ++i)
+        {
+            boost::mutex::scoped_lock lock(results[i]->mtx);
+            if(results[i]->calculated == false)
             {
-                workStreams[i].waitEvent(startEvent);
-
-                (*tracker)(itr->keyFrame.img, img,
-                           itr->keyFrame.getKeyPoints(),
-                           itr->trackedPoints,
-                           itr->status,
-                           itr->error, workStreams[i]);
-                EventBuffer<TrackingResults>* h_buffer = homographyBuffer.getFront();
-                h_buffer->data.KeyFrameIdx = itr->keyFrame.frameIndex;
-                h_buffer->data.TrackedFrameIdx = frameCount;
-                h_buffer->data.d_keyFramePts = itr->keyFrame.getKeyPoints();
-                h_buffer->data.d_status = itr->status;
-                h_buffer->data.d_trackedFramePts = itr->trackedPoints;
-                h_buffer->data.d_keyFramePts.download(h_buffer->data.h_keyFramePts, workStreams[i]);
-                h_buffer->data.d_status.download(h_buffer->data.h_status, workStreams[i]);
-                h_buffer->data.d_trackedFramePts.download(h_buffer->data.h_trackedFramePts, workStreams[i]);
-                h_buffer->data.preFilter = true;
-                h_buffer->fillEvent.record(workStreams[i]);
+                auto start = clock();
+                results[i]->cv.wait(lock);
+                std::cout << "Waited for: " << clock() - start << " cycles" << std::endl;
             }
-            i = 0;
-            for(auto itr = trackedFrames.begin(); itr != trackedFrames.end(); ++itr, ++i)
+            if(results[i]->calculated)
             {
-                std::cout << "Wait cycles: " << clock() << " ";
-                EventBuffer<TrackingResults>* h_buffer = homographyBuffer.waitBack();
-                std::cout << clock() << std::endl;
-                KeyFrameTracker_findHomographyCallback(0, (void*)&h_buffer->data);
+                if(results[i]->quality < getParameter<double>(2)->data)
+                    addKeyFrame = true;
+                if(i == trackedFrames.size() - 1 && results[i]->quality < getParameter<double>(1)->data)
+                    addKeyFrame = true;
+            }
+            if(getParameter<bool>("Display")->data == true)
+            {
+                cv::cuda::GpuMat* warpBuffer = warpedImageBuffer.getFront();
+                cv::cuda::GpuMat* maskBuffer = warpedMaskBuffer.getFront();
+
+                cv::cuda::warpPerspective(img,
+                    *warpBuffer,
+                    results[i]->homography,
+                    img.size(), cv::INTER_CUBIC,
+                    cv::BORDER_REPLICATE, cv::Scalar(), workStreams[i]);
+
+                cv::cuda::warpPerspective(nonWarpedMask,
+                    *maskBuffer,
+                    results[i]->homography,
+                    img.size(), cv::INTER_CUBIC,
+                    cv::BORDER_CONSTANT, cv::Scalar(0), workStreams[i]);
+                cv::cuda::GpuMat* d_disp = d_displayBuffer.getFront();
+                cv::cuda::blendLinear(img, *warpBuffer, nonWarpedMask, *maskBuffer, *d_disp, workStreams[i]);
+                workStreams[i].enqueueHostCallback(KeyFrameTracker_displayCallback,
+                    new std::pair<cv::cuda::GpuMat*, std::string>(d_disp, "Warped image " + boost::lexical_cast<std::string>(i)));
             }
         }
     }
-    std::cout << ++frameCount << std::endl;
+    if(addKeyFrame)
+    {
+        log(Status, "Adding key frame " + boost::lexical_cast<std::string>(frameCount));
+        TrackedFrame tf(img,frameCount);
+        cv::cuda::GpuMat& keyPoints = tf.keyFrame.getKeyPoints();
+        (*detector)(img,
+                    mask? *mask: cv::cuda::GpuMat(),
+                    keyPoints,
+                    tf.keyFrame.getDescriptors(),
+                    stream);
+        if(keyPoints.cols > getParameter<int>(3)->data)
+            trackedFrames.push_back(tf);
+    }
+    ++frameCount;
     return img;
 }
 

@@ -84,6 +84,10 @@ namespace EagleLib
         cv::cuda::HostMem h_status;
         cv::Mat homography;
         bool preFilter;
+        boost::condition_variable cv;
+        boost::mutex mtx;
+        float quality;
+        bool calculated;
     };
 
     struct TrackedObject

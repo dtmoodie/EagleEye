@@ -10,7 +10,11 @@ namespace EagleLib
     class KeyFrameTracker: public Node
     {
         // Used to find homography once the data has been downloaded from the stream
-        ConstEventBuffer<TrackingResults> homographyBuffer;
+        ConstBuffer<TrackingResults*> homographyBuffer;
+        ConstBuffer<cv::cuda::GpuMat> warpedImageBuffer;
+        ConstBuffer<cv::cuda::GpuMat> warpedMaskBuffer;
+        ConstBuffer<cv::cuda::GpuMat> d_displayBuffer;
+        cv::cuda::GpuMat nonWarpedMask;
         boost::circular_buffer<TrackedFrame> trackedFrames;
         std::map<int, KeyFrame> keyFrames;
 

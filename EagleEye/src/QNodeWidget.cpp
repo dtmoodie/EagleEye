@@ -266,6 +266,11 @@ void QInputProxy::updateUi(bool init)
         QString text = QString::fromStdString(inputs[i]);
         box->addItem(text);
     }
+    if(parameter->inputName.size())
+    {
+        box->setCurrentText(QString::fromStdString(parameter->inputName));
+        return;
+    }
     if(currentItem.size())
         box->setCurrentText(currentItem);
 }

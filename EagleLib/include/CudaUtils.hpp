@@ -3,6 +3,7 @@
 #include <opencv2/core/cuda.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <queue>
+#include "Parameters.h"
 namespace EagleLib
 {
 
@@ -60,6 +61,11 @@ namespace EagleLib
         EventBuffer(){}
         EventBuffer(const T& init): data(init){}
         EventBuffer(const EventBuffer<T>& other): data(other.data), fillEvent(other.fillEvent){}
+        ~EventBuffer()
+        {
+            cleanup(data);
+        }
+
         bool ready()
         {
             return fillEvent.queryIfComplete();
@@ -137,6 +143,13 @@ namespace EagleLib
             buffer(size_, EventBuffer<T>(init)), size(size_), getItr(0), putItr(0), size(size_){}
         ConstBuffer(const ConstEventBuffer<T>& other):
             buffer(other.buffer), getItr(other.getItr), putItr(other.putItr), size(other.size){}
+        ~ConstBuffer()
+        {
+            for(int i = 0; i < buffer.size(); ++i)
+            {
+                cleanup(buffer[i]);
+            }
+        }
 
         T* getFront()
         {
@@ -156,6 +169,12 @@ namespace EagleLib
             boost::recursive_mutex::scoped_lock lock(mtx);
             size= size_;
             buffer.resize(size);
+        }
+        void resize(size_t size_, const T& init)
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            size= size_;
+            buffer.resize(size, init);
         }
 
         ConstBuffer& operator =(const ConstBuffer<T>& rhs)

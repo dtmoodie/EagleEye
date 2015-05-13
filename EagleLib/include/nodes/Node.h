@@ -56,7 +56,7 @@
 #include "../LokiTypeInfo.h"
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
-#include "Parameters.h"
+#include "../Parameters.h"
 
 #ifdef HAVE_PCL
 #include <pcl/point_types.h>
@@ -517,6 +517,7 @@ namespace EagleLib
         // This is a function that operates on the UI thread, on a cv::Mat for display.
         // This can be used for
         boost::function<void(boost::function<cv::Mat()>, Node*)>            uiThreadCallback;
+        boost::function<void(boost::function<void()>, Node*)>               d_uiThreadCallback;
 		/* If true, draw results onto the image being processed */
         bool																drawResults;
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */

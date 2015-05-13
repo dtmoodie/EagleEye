@@ -33,3 +33,7 @@ target_link_libraries(test_tree EagleLib)
 add_executable(test_rcc test_rcc.cpp)
 add_dependencies(test_rcc EagleLib)
 target_link_libraries(test_rcc EagleLib)
+
+add_executable(perf_test perf_test.cpp)
+add_dependencies(perf_test EagleLib)
+target_link_libraries(perf_test EagleLib)

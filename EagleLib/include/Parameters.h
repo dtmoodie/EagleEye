@@ -1,9 +1,9 @@
 #pragma once
 #include <string>
-#include "../Manager.h"
+#include "Manager.h"
 #include <opencv2/core/persistence.hpp>
-#include "../type.h"
-#include "../LokiTypeInfo.h"
+#include "type.h"
+#include "LokiTypeInfo.h"
 #include <opencv2/core.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/filesystem.hpp>
@@ -70,6 +70,7 @@ namespace EagleLib
         std::string name;
         std::string toolTip;
         std::string treeName;
+        std::string inputName;
         Loki::TypeInfo typeInfo;
         ParamType	type;
         bool		changed;
@@ -225,10 +226,10 @@ namespace EagleLib
         // TODO: TEST THIS
         virtual void setSource(const std::string& name = std::string())
         {
-            if(name == sourceTreeName)
+            if(name == Parameter::inputName)
                 return;
             if (name.size() != 0)
-                sourceTreeName = name;
+                Parameter::inputName = name;
             update();
         }
         virtual void setSource(Parameter::Ptr param_)
@@ -242,9 +243,9 @@ namespace EagleLib
 
         virtual void update()
         {
-            if(sourceTreeName.size() == 0)
+            if(Parameter::inputName.size() == 0)
                 return;
-            auto param = EagleLib::NodeManager::getInstance().getParameter(sourceTreeName);
+            auto param = EagleLib::NodeManager::getInstance().getParameter(Parameter::inputName);
             if(param == nullptr)
                 this->data = nullptr;
             else
@@ -259,19 +260,17 @@ namespace EagleLib
         void Serialize(cv::FileStorage &fs)
         {
             Parameter::Serialize(fs);
-            fs << "Data" << sourceTreeName;
+            fs << "Data" << Parameter::inputName;
             fs << "}";
         }
 
         void inline Init(cv::FileNode &fs)
         {
             cv::FileNode myNode = fs[Parameter::name];
-            sourceTreeName = (std::string)myNode["Data"];
+            Parameter::inputName = (std::string)myNode["Data"];
         }
 
         Parameter::Ptr param;
-        // The full parameter name of the source
-        std::string sourceTreeName;
     };
     template<typename T> T* getParameterPtr(EagleLib::Parameter::Ptr parameter)
     {
