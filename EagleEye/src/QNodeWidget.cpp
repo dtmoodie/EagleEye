@@ -26,6 +26,7 @@ IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, 
         }
     }
     layout->addWidget(nameElement, 0, 0);
+    nameElement->installEventFilter(parent);
     nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
     //parameter_->updateCallback = boost::bind(&IQNodeInterop::onParameterUpdate,this, _1);
 #ifdef _MSC_VER
@@ -118,6 +119,14 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
         node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2, _3);
 	}
 }
+bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
+{
+    if(event->type() == QEvent::MouseButtonPress)
+    {
+        return true;
+    }
+}
+
 void QNodeWidget::updateUi()
 {
 

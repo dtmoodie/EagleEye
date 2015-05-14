@@ -245,7 +245,7 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     nodeGraphView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
     if (currentSelectedNodeWidget)
     {
-        proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 50));
+        proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 100));
     }
     QGraphicsProxyWidget* prevWidget = currentSelectedNodeWidget;
     auto prevNode = currentNode;

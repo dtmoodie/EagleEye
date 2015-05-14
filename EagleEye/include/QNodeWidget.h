@@ -38,6 +38,7 @@ public:
     // Used for thread safety
     void on_nodeUpdate();
     void on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
+    bool eventFilter(QObject *object, QEvent *event);
     QWidget* mainWindow;
 private slots:
     void on_enableClicked(bool state);
@@ -106,6 +107,8 @@ protected:
     QGridLayout* layout;
     EagleLib::Node::Ptr node;
 };
+
+
 // Class for UI elements relavent to finding valid input parameters
 class QInputProxy: public IQNodeProxy
 {

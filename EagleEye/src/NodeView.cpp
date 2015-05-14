@@ -30,6 +30,8 @@ void NodeView::on_actionSelect(QAction *action)
     if(action == actions[0])
     {
         // Delete the current node
+        if(currentWidget == nullptr)
+            return;
         auto nodeWidget = dynamic_cast<QNodeWidget*>(currentWidget->widget());
         if(nodeWidget)
         {
@@ -93,7 +95,6 @@ void NodeView::mousePressEvent(QMouseEvent* event)
             }else
                 if(event->button() == Qt::RightButton)
                 {
-
                     // Spawn the right click dialog
                     QPoint pos = mapToGlobal(mousePressPosition);
                     rightClickMenu->popup(pos);
