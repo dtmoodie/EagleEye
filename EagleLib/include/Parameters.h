@@ -231,7 +231,10 @@ namespace EagleLib
                 return;
             if (name.size() != 0)
                 Parameter::inputName = name;
+            if(param)
+                --param->subscribers;
             update();
+            ++param->subscribers;
         }
         virtual void setSource(Parameter::Ptr param_)
         {
@@ -246,7 +249,7 @@ namespace EagleLib
         {
             if(Parameter::inputName.size() == 0)
                 return;
-            auto param = EagleLib::NodeManager::getInstance().getParameter(Parameter::inputName);
+            param = EagleLib::NodeManager::getInstance().getParameter(Parameter::inputName);
             if(param == nullptr)
                 this->data = nullptr;
             else

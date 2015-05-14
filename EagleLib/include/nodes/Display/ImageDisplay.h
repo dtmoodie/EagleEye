@@ -2,6 +2,7 @@
 
 #include <opencv2/highgui.hpp>
 #include <CudaUtils.hpp>
+
 namespace EagleLib
 {
     class QtImageDisplay: public Node
@@ -53,6 +54,16 @@ namespace EagleLib
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         cv::Mat uicallback();
         virtual void Serialize(ISimpleSerializer *pSerializer);
+    };
 
+    class HistogramDisplay: public Node
+    {
+
+    public:
+        ConstBuffer<cv::cuda::HostMem> histograms;
+        void displayHistogram();
+        HistogramDisplay();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 }

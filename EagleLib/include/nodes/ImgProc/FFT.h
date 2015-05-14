@@ -1,11 +1,18 @@
 #pragma once
 
 #include <nodes/Node.h>
-
+#include "CudaUtils.hpp"
 namespace EagleLib
 {
     class FFT: public Node
     {
+        enum output
+        {
+            Coefficients = -1,
+            Magnitude = 0,
+            Phase = 1
+        };
+
     public:
         FFT();
         virtual void Init(bool firstInit);

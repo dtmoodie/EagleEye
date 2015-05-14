@@ -42,4 +42,14 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
+
+    class HistogramRange: public Node
+    {
+        cv::cuda::GpuMat levels;
+        void updateLevels();
+    public:
+        HistogramRange();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
 }

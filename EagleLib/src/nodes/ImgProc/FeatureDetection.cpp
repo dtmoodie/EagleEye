@@ -270,8 +270,52 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
     }
     return img;
 }
+void HistogramRange::Init(bool firstInit)
+{
+    updateParameter<double>("Lower bound", 0.0);
+    updateParameter<double>("Upper bound", 1.0);
+    updateParameter<int>("Bins", 100);
+    updateParameter<cv::cuda::GpuMat>("Histogram", cv::cuda::GpuMat(), Parameter::Output);
+    updateLevels();
+}
 
+cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+    if(parameters[0]->changed ||
+       parameters[1]->changed ||
+       parameters[2]->changed)
+        updateLevels();
+    if(img.channels() == 1)
+    {
+        cv::cuda::GpuMat hist;
+        cv::cuda::histRange(img, hist, levels, stream);
+        updateParameter("Histogram", hist, Parameter::Output);
+        if(parameters[3]->subscribers > 0)
+            return img;
+        return hist;
+    }else
+    {
+        log(Warning, "Multi channel histograms not supported for " + boost::lexical_cast<std::string>(img.channels()) + " channels");
+    }
+    return img;
+}
+void HistogramRange::updateLevels()
+{
+    double lower = getParameter<double>(0)->data;
+    double upper = getParameter<double>(1)->data;
+    int bins = getParameter<int>(2)->data;
+    cv::Mat h_mat(1,bins,CV_32F);
+    double step = (upper - lower) / double(bins);
+
+    double val = lower;
+    for(int i = 0; i < bins; ++i, val += step)
+    {
+        h_mat.at<float>(i) = val;
+    }
+    levels.upload(h_mat);
+}
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrackDetector)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ORBFeatureDetector)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FastFeatureDetector)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramRange)

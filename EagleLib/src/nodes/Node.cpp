@@ -171,7 +171,8 @@ Node::getNodesInScope(std::vector<Node *> &nodes)
     nodes.push_back(this);
     for(int i = 0; i < children.size(); ++i)
     {
-        children[i]->getNodesInScope(nodes);
+        if(children[i] != nullptr)
+            children[i]->getNodesInScope(nodes);
     }
 }
 

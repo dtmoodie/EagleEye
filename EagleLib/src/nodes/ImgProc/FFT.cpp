@@ -8,11 +8,16 @@ void FFT::Init(bool firstInit)
 {
     if(firstInit)
     {
+        EnumParameter param;
+        param.addEnum(ENUM(Coefficients));
+        param.addEnum(ENUM(Magnitude));
+        param.addEnum(ENUM(Phase));
         updateParameter("DFT rows flag", false);        // 0
         updateParameter("DFT scale flag", false);       // 1
         updateParameter("DFT inverse flag", false);     // 2
         updateParameter("DFT real output flag", false); // 3
-        updateParameter("Desired output", int(-1));     // 4
+        updateParameter("Desired output", param);
+        //updateParameter("Desired output", int(-1));     // 4
         updateParameter("Log scale", true);             // 5
         updateParameter<cv::cuda::GpuMat>("Magnitude", cv::cuda::GpuMat(), Parameter::Output);  // 6
         updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat(), Parameter::Output);      // 7
@@ -56,7 +61,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     if(getParameter<bool>(3)->data)
         flags = flags | cv::DFT_REAL_OUTPUT;
     cv::cuda::dft(floatImg,dest,img.size(),flags, stream);
-    int channel = getParameter<int>(4)->data;
+    int channel = getParameter<EnumParameter>(4)->data.getValue();
     if(parameters[4]->changed)
     {
         log(Status, channel == 0 ? "Magnitude" : "Phase");

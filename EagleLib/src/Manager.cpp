@@ -158,6 +158,13 @@ NodeManager::Init()
 #else
     m_pRuntimeObjectSystem->SetAdditionalCompileOptions("-std=c++11");
 #endif
+
+#ifdef _DEBUG
+    m_pRuntimeObjectSystem->SetOptimizationLevel(RCCPPOPTIMIZATIONLEVEL_DEBUG);
+#else
+    m_pRuntimeObjectSystem->SetOptimizationLevel(RCCPPOPTIMIZATIONLEVEL_PERF);
+#endif
+
     includePath += "/include";
     m_pRuntimeObjectSystem->AddIncludeDir(includePath.c_str());
 	m_pRuntimeObjectSystem->AddIncludeDir(BOOST_INCLUDES);

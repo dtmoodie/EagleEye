@@ -7,6 +7,7 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(OGLImageDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyPointDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FlowVectorDisplay)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramDisplay)
 QtImageDisplay::QtImageDisplay(boost::function<void(cv::Mat, Node*)> cpuCallback_)
 {
     cpuDisplayCallback = cpuCallback_;
@@ -282,4 +283,68 @@ cv::Mat FlowVectorDisplay::uicallback()
         return img;
     }
     return cv::Mat();
+}
+void histogramDisplayCallback(int status, void* userData)
+{
+    HistogramDisplay* node = (HistogramDisplay*)userData;
+    UIThreadCallback::getInstance().addCallback(boost::bind(&HistogramDisplay::displayHistogram, node));
+
+}
+void HistogramDisplay::displayHistogram()
+{
+    cv::cuda::HostMem* dataPtr = histograms.getBack();
+    cv::Mat data = dataPtr->createMatHeader();
+    if(data.channels() != 1)
+    {
+        log(Error, "Currently only supports 1 channel histograms, input has " + boost::lexical_cast<std::string>(data.channels()) + " channels");
+        return;
+    }
+    double minVal, maxVal;
+    int minIdx, maxIdx;
+    cv::minMaxIdx(data, &minVal, &maxVal, &minIdx, &maxIdx);
+    cv::Mat img(100, data.cols*5,CV_8U, cv::Scalar(0));
+    updateParameter("Min value", minVal, Parameter::State);
+    updateParameter("Min bin", minIdx, Parameter::State);
+    updateParameter("Max value", maxVal, Parameter::State);
+    updateParameter("Max bin", maxIdx, Parameter::State);
+    for(int i = 0; i < data.cols; ++i)
+    {
+        double height = data.at<int>(i);
+        height -= minVal;
+        height /=(maxVal - minVal);
+        height *= 100;
+        //std::min(100,int(100*(-minVal)/(maxVal-minVal)));
+        cv::rectangle(img, cv::Rect(i*5, 100 - (int)height, 5, 100), cv::Scalar(255),-1);
+    }
+    cv::imshow(fullTreeName, img);
+
+}
+
+void HistogramDisplay::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        addInputParameter<cv::cuda::GpuMat>("Input");
+    }
+}
+
+cv::cuda::GpuMat HistogramDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+    cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat*>(0)->data;
+    if(input)
+    {
+        if(input->rows == 1 || input->cols == 1)
+        {
+            input->download(*histograms.getFront(), stream);
+            stream.enqueueHostCallback(histogramDisplayCallback,this);
+            return img;
+        }
+    }
+    if(img.rows == 1 || img.cols == 1)
+    {
+        img.download(*histograms.getFront(), stream);
+        stream.enqueueHostCallback(histogramDisplayCallback,this);
+    }
+    // Currently assuming the input image is a histogram
+    return img;
 }

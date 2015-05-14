@@ -419,7 +419,14 @@ namespace EagleLib
 		template<typename T> boost::shared_ptr< TypedParameter<T> >
 			getParameter(int idx)
 		{
-			return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(getParameter(idx));
+            Parameter::Ptr param = getParameter(idx);
+            if(param == nullptr)
+                throw cv::Exception(0, "Failed to get parameter by index " + boost::lexical_cast<std::string>(idx), __FUNCTION__, __FILE__, __LINE__);
+            boost::shared_ptr< TypedParameter<T> > typedParam = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
+            if(typedParam == nullptr)
+                throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
+                                    type_info::demangle(typeid(T).name()) + " parameter actual type: " + type_info::demangle(param->typeInfo.name()),__FUNCTION__, __FILE__, __LINE__);
+            return typedParam;
 		}
 
 					//
