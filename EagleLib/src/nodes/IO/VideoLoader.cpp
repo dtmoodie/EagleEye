@@ -30,6 +30,7 @@ VideoLoader::Init(bool firstInit)
         updateParameter<bool>("End of video", false, Parameter::Output);
         load = false;
     }
+    h_img.resize(20);
 }
 void VideoLoader::Serialize(ISimpleSerializer *pSerializer)
 {
@@ -42,7 +43,6 @@ cv::cuda::GpuMat
 VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     bool firstLoad = false;
-    //std::cout << "Beyah" << std::endl;
     if (parameters[0]->changed || load)
     {
 		loadFile();
@@ -54,8 +54,8 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
         d_videoReader->nextFrame(img);
     }else if(h_videoReader)
     {
-
-        if(!h_videoReader->read(h_img))
+        auto buffer = h_img.getFront();
+        if(!h_videoReader->read(*buffer))
         {
             updateParameter<bool>(5, true);
             log(Status, "End of video reached");
@@ -65,11 +65,11 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
                     loadFile();
             return img;
         }
-       if(h_img.empty())
+       if(buffer->empty())
            return cv::cuda::GpuMat();
        try
        {
-           img.upload(h_img, stream);
+           img.upload(*buffer, stream);
        }catch(cv::Exception &err)
        {
            log(Error, err.what());
