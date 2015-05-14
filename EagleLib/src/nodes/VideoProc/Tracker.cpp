@@ -100,12 +100,17 @@ void KeyFrameTracker_findHomographyCallback(int status, void* userData)
     std::cout << results->quality << std::endl;
     results->calculated = true;
 }
+void displayCallback(cv::cuda::GpuMat img, std::string name)
+{
+    cv::namedWindow(name, cv::WINDOW_OPENGL);
+    cv::imshow(name, img);
+}
+
 void KeyFrameTracker_displayCallback(int status, void* userData)
 {
     std::pair<cv::cuda::GpuMat*, std::string>* data = (std::pair<cv::cuda::GpuMat*, std::string>*)userData;
-    cv::namedWindow(data->second, cv::WINDOW_OPENGL);
-    cv::imshow(data->second, *data->first);
-
+    boost::function<void(void)> f = boost::bind(displayCallback, *data->first, data->second);
+    UIThreadCallback::getInstance().addCallback(f);
     delete data;
 }
 

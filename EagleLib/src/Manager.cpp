@@ -86,6 +86,39 @@ bool TestCallback::TestBuildWaitAndUpdate()
     boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
     return true;
 }
+UIThreadCallback::UIThreadCallback()
+{
+
+}
+
+UIThreadCallback::~UIThreadCallback()
+{
+
+}
+UIThreadCallback& UIThreadCallback::getInstance()
+{
+    static UIThreadCallback instance;
+    return instance;
+}
+void UIThreadCallback::addCallback(boost::function<void(void)> f)
+{
+    queue.push(f);
+}
+
+void UIThreadCallback::processCallback()
+{
+    boost::function<void(void)> f;
+    if(queue.try_pop(f))
+        f();
+}
+void UIThreadCallback::processAllCallbacks()
+{
+    boost::function<void(void)> f;
+    while(queue.try_pop(f))
+    {
+        f();
+    }
+}
 
 NodeManager& NodeManager::getInstance()
 {

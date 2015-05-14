@@ -7,6 +7,8 @@
 #include <opencv2/core.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/filesystem.hpp>
+#include "CudaUtils.hpp"
+
 namespace EagleLib
 {
 #define ENUM(value) (int)value, #value
@@ -82,8 +84,7 @@ namespace EagleLib
         virtual ~Parameter(){}
     };
 
-    template<typename T> void cleanup(T ptr, typename std::enable_if<std::is_pointer<T>::value>::type* = 0) { delete ptr; }
-    template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointer<T>::value>::type* = 0){ return; }
+
 
 
 

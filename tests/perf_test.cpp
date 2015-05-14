@@ -9,6 +9,7 @@ EagleLib::Node::Ptr setVideoFile(EagleLib::Node::Ptr node, const std::string& vi
     if(node->nodeName == "VideoLoader")
     {
         node->updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path(videoFile));
+        node->updateParameter<bool>("Loop", false);
         return node;
     }
     for(int i = 0; i < node->children.size(); ++i)
@@ -21,8 +22,6 @@ EagleLib::Node::Ptr setVideoFile(EagleLib::Node::Ptr node, const std::string& vi
     }
     return EagleLib::Node::Ptr();
 }
-
-
 
 int main(int argc, char* argv[])
 {

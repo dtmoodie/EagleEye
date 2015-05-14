@@ -142,6 +142,7 @@ MainWindow::onTimeout()
 {
     static bool swapRequired = false;
     static bool joined = false;
+    EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
     for(int i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi();

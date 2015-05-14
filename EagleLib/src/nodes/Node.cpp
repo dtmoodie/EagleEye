@@ -320,6 +320,18 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         }
         // So here is the debate of is a node's output the output of it, or the output of its children....
         // img = childResults;
+    }catch(boost::thread_exception& err)
+    {
+        log(Error, err.what());
+
+    }catch(boost::thread_resource_error& err)
+    {
+        log(Error, err.what());
+
+    }catch(boost::thread_interrupted& err)
+    {
+        log(Error, "Thread interrupted");
+        throw err;
     }catch(cv::Exception &err)
     {
         log(Error, err.what());
@@ -329,16 +341,6 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     }catch(boost::exception &err)
     {
         log(Error, "Boost error");
-    }catch(boost::thread_exception& err)
-    {
-        log(Error, err.what());
-    }catch(boost::thread_interrupted& err)
-    {
-        log(Error, "Thread interrupted");
-        throw err;
-    }catch(boost::thread_resource_error& err)
-    {
-        log(Error, err.what());
     }catch(...)
     {
         log(Error, "Unknown exception");

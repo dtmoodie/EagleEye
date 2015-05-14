@@ -18,6 +18,7 @@
 #include <boost/multi_index/mem_fun.hpp>
 #include "../RuntimeObjectSystem/IObject.h"
 #include "../RuntimeObjectSystem/IRuntimeObjectSystem.h"
+#include "CudaUtils.hpp"
 
 #define ADD_CONSTRUCTORS(managerObj)  \
 	auto moduleInterface = PerModuleInterface::GetInstance();	\
@@ -54,7 +55,19 @@ namespace EagleLib
         virtual bool TestBuildCallback(const char* file, TestBuildResult type);
         virtual bool TestBuildWaitAndUpdate();
     };
+    class UIThreadCallback
+    {
+    private:
+        concurrent_queue<boost::function<void(void)>> queue;
+        UIThreadCallback();
+        virtual ~UIThreadCallback();
+    public:
 
+        static UIThreadCallback& getInstance();
+        void addCallback(boost::function<void(void)> f);
+        void processCallback();
+        void processAllCallbacks();
+    };
 
     class CV_EXPORTS NodeManager : public IObjectFactoryListener
     {

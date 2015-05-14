@@ -3,10 +3,12 @@
 #include <opencv2/core/cuda.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <queue>
-#include "Parameters.h"
+#include <boost/thread.hpp>
 namespace EagleLib
 {
 
+template<typename T> void cleanup(T ptr, typename std::enable_if<std::is_pointer<T>::value>::type* = 0) { delete ptr; }
+template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointer<T>::value>::type* = 0){ return; }
     template<typename Data>
     class concurrent_queue
     {
@@ -47,6 +49,16 @@ namespace EagleLib
             popped_value=the_queue.front();
             the_queue.pop();
         }
+        bool try_pop(Data& popped_value)
+        {
+            boost::mutex::scoped_lock lock(the_mutex);
+            if(the_queue.empty())
+                return false;
+            popped_value=the_queue.front();
+            the_queue.pop();
+            return true;
+        }
+
         size_t size()
         {
             boost::mutex::scoped_lock lock(the_mutex);

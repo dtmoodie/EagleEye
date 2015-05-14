@@ -37,3 +37,6 @@ target_link_libraries(test_rcc EagleLib)
 add_executable(perf_test perf_test.cpp)
 add_dependencies(perf_test EagleLib)
 target_link_libraries(perf_test EagleLib ${Boost_LIBRARIES})
+
+add_executable(bind_test bind_test.cpp)
+target_link_libraries(perf_test EagleLib ${Boost_LIBRARIES})
