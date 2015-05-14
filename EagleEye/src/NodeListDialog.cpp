@@ -7,16 +7,23 @@ NodeListDialog::NodeListDialog(QWidget *parent) :
     ui(new Ui::NodeListDialog)
 {
     ui->setupUi(this);
+    update();
+}
+
+
+NodeListDialog::~NodeListDialog()
+{
+    delete ui;
+}
+void
+NodeListDialog::update()
+{
+    ui->NodeList->clear();
     auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
     for(int i = 0; i < nodes.size(); ++i)
     {
         ui->NodeList->addItem(QString::fromStdString(nodes[i]));
     }
-}
-
-NodeListDialog::~NodeListDialog()
-{
-    delete ui;
 }
 
 void

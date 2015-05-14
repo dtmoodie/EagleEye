@@ -317,6 +317,8 @@ NodeManager::setupModule(IPerModuleInterface* pPerModuleInterface)
 {
 	m_pRuntimeObjectSystem->SetupObjectConstructors(pPerModuleInterface);
 }
+
+
 bool 
 NodeManager::CheckRecompile()
 {

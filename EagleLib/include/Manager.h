@@ -83,6 +83,7 @@ namespace EagleLib
 
 		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
 		void setupModule(IPerModuleInterface* pPerModuleInterface);
+        void loadModule(const std::string& filePath);
         void saveTree(const std::string& fileName);
         bool Init();
 

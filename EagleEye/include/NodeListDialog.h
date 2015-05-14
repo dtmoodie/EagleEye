@@ -13,6 +13,7 @@ class NodeListDialog : public QDialog
 
 public:
     explicit NodeListDialog(QWidget *parent = 0);
+    void update();
     void show();
     ~NodeListDialog();
 signals:

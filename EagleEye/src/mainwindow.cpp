@@ -11,6 +11,7 @@
 #include <nodes/SerialStack.h>
 #include <nodes/VideoProc/OpticalFlow.h>
 #include <nodes/IO/VideoLoader.h>
+#include "Plugins.h"
 #include <opencv2/calib3d.hpp>
 #include <qgraphicsproxywidget.h>
 #include "QGLWidget"
@@ -54,6 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	currentSelectedNodeWidget = nullptr;
     startProcessingThread();
     cv::redirectError(&static_errorHandler);
+
     connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
     connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
@@ -62,6 +64,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(nodeGraphView, SIGNAL(widgetDeleted(QNodeWidget*)), this, SLOT(onWidgetDeleted(QNodeWidget*)));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(onSaveClicked()));
     connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
+    connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
     EagleLib::NodeManager::getInstance().setCompileCallback(f);
 }
@@ -135,6 +138,14 @@ MainWindow::onLoadClicked()
         }
     }
     startProcessingThread();
+}
+void MainWindow::onLoadPluginClicked()
+{
+    QString filename = QFileDialog::getOpenFileName(this, "Select file");
+    if(filename.size() == 0)
+        return;
+    EagleLib::loadPlugin(filename.toStdString());
+    nodeListDialog->update();
 }
 
 void

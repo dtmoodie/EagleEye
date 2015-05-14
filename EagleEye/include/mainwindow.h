@@ -43,6 +43,7 @@ private slots:
     void onWidgetDeleted(QNodeWidget* widget);
     void onSaveClicked();
     void onLoadClicked();
+    void onLoadPluginClicked();
     void addNode(EagleLib::Node::Ptr node);
     void updateLines();
 signals:
