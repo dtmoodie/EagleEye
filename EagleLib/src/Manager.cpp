@@ -103,6 +103,8 @@ UIThreadCallback& UIThreadCallback::getInstance()
 void UIThreadCallback::addCallback(boost::function<void(void)> f)
 {
     queue.push(f);
+    if(notifier)
+        notifier();
 }
 
 void UIThreadCallback::processCallback()
@@ -118,6 +120,10 @@ void UIThreadCallback::processAllCallbacks()
     {
         f();
     }
+}
+void UIThreadCallback::setUINotifier(boost::function<void(void)> f)
+{
+    notifier = f;
 }
 
 NodeManager& NodeManager::getInstance()

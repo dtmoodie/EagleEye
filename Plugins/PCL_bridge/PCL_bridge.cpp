@@ -12,7 +12,6 @@ IPerModuleInterface* GetModule()
 
 cv::cuda::GpuMat PCL_bridge::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-    std::cout << "Beyah" << std::endl;
     return img;
 }
 void PCL_bridge::Init(bool firstInit)

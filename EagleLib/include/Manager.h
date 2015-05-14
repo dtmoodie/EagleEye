@@ -60,13 +60,14 @@ namespace EagleLib
     private:
         concurrent_queue<boost::function<void(void)>> queue;
         UIThreadCallback();
+        boost::function<void(void)> notifier;
         virtual ~UIThreadCallback();
     public:
-
         static UIThreadCallback& getInstance();
         void addCallback(boost::function<void(void)> f);
         void processCallback();
         void processAllCallbacks();
+        void setUINotifier(boost::function<void(void)> f);
     };
 
     class CV_EXPORTS NodeManager : public IObjectFactoryListener

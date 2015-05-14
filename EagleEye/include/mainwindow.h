@@ -46,11 +46,14 @@ private slots:
     void onLoadPluginClicked();
     void addNode(EagleLib::Node::Ptr node);
     void updateLines();
+    void uiNotifier();
+    void onUiUpdate();
 signals:
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);
     void qtDisplayImage(boost::function<cv::Mat(void)> function, EagleLib::Node* node);
+    void uiNeedsUpdate();
 private:
     void onError(const std::string& error);
     void onStatus(const std::string& status);

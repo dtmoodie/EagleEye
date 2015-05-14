@@ -65,6 +65,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(onSaveClicked()));
     connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
     connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
+    connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
+    EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
     EagleLib::NodeManager::getInstance().setCompileCallback(f);
 }
@@ -308,6 +310,15 @@ void MainWindow::onWidgetDeleted(QNodeWidget* widget)
     auto parentItr = std::find(parentList.begin(), parentList.end(), widget->getNode());
     if(parentItr != parentList.end())
         parentList.erase(parentItr);
+}
+void
+MainWindow::uiNotifier()
+{
+    emit uiNeedsUpdate();
+}
+void MainWindow::onUiUpdate()
+{
+    EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
 }
 
 void

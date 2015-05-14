@@ -9,6 +9,7 @@ namespace EagleLib
 
     class  VideoLoader: public Node
     {
+        cv::cuda::HostMem h_img;
         bool load;
     public:
         VideoLoader();
