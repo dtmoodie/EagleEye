@@ -238,8 +238,112 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     img.upload(h_img,stream);
     return img;
 }
+void HistogramThreshold::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        EnumParameter param;
+        param.addEnum(ENUM(KeepCenter));
+        param.addEnum(ENUM(SuppressCenter));
+        updateParameter("Threshold type", param);
+        updateParameter("Threshold width", 0.5, Parameter::Control, "Percent of histogram to threshold");
+        addInputParameter<cv::cuda::GpuMat>("Input histogram");
+        addInputParameter<cv::cuda::GpuMat>("Input image", "Optional");
+        addInputParameter<cv::cuda::GpuMat>("Input mask", "Optional");
+        addInputParameter<cv::Mat>("Histogram bins");
+    }
+}
+
+void histogramThresholdCallback(int status, void* userData)
+{
+    HistogramThreshold* node = (HistogramThreshold*)userData;
+    node->runFilter();
+}
+
+
+void HistogramThreshold::runFilter()
+{
+//    cv::Mat loc = currentLocBuffer->createMatHeader();
+//    std::cout << loc.row(0) << std::endl;
+//    switch(type)
+//    {
+//    case KeepCenter:
+//        //
+
+//        break;
+//    case SuppressCenter:
+
+//        break;
+//    }
+}
+
+cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+    inputHistogram = getParameter<cv::cuda::GpuMat*>(2)->data;
+    inputImage = getParameter<cv::cuda::GpuMat*>(3)->data;
+    inputMask = getParameter<cv::cuda::GpuMat*>(4)->data;
+    type = (ThresholdType)getParameter<EnumParameter>(0)->data.getValue();
+    cv::Mat* bins = getParameter<cv::Mat*>("Histogram bins")->data;
+    _stream = stream;
+    if(bins == nullptr)
+        return img;
+    if(inputImage == nullptr)
+        inputImage = &img;
+    if(inputHistogram == nullptr)
+        return img;
+    if(img.channels() != 1)
+    {
+        log(Error, "Image to threshold needs to be a single channel image");
+        return img;
+    }
+    cv::cuda::HostMem histogram;
+    inputHistogram->download(histogram, stream);
+    //cv::cuda::findMinMaxLoc(*inputHistogram, values, location, inputMask == nullptr ? cv::noArray(): *inputMask, stream);
+    stream.waitForCompletion();
+    //ss << values.createMatHeader().row(0) << " " << location.createMatHeader().row(0) << " " << histogram.createMatHeader().row(0) << std::endl;
+    cv::Mat hist = histogram.createMatHeader();
+    int maxVal = 0;
+    int maxIdx = 0;
+    for(int i = 0 ; i < hist.cols; ++i)
+    {
+        if(hist.at<int>(i) > maxVal)
+        {
+            maxVal = hist.at<int>(i);
+            maxIdx = i;
+        }
+    }
+    int numBins = hist.cols;
+    int thresholdWidth = numBins * getParameter<double>(1)->data*0.5;
+    int minBin = maxIdx - thresholdWidth;
+    int maxBin = maxIdx + thresholdWidth;
+    minBin = std::max(minBin, 0);
+    maxBin = std::min(maxBin, hist.cols - 1);
+    float thresholdMin = bins->at<float>(minBin);
+    float thresholdMax = bins->at<float>(maxBin);
+    updateParameter("Threshold min value", thresholdMin, Parameter::Output);
+    updateParameter("Threshold max value", thresholdMax, Parameter::Output);
+    updateParameter("Max Idx", maxIdx);
+    switch(type)
+    {
+    case KeepCenter:
+        // We want to threshold such that just the center passes
+        // To do this, we threshold a positive mask for all values greater than the min
+        // As well as for all values below the max, then we AND them together.
+        cv::cuda::threshold(img, lowerMask, thresholdMin, 255, cv::THRESH_BINARY, stream);
+        cv::cuda::threshold(img, upperMask, thresholdMax, 255, cv::THRESH_BINARY_INV, stream);
+        cv::cuda::bitwise_and(lowerMask, upperMask, img, cv::noArray(), stream);
+        break;
+    case SuppressCenter:
+        cv::cuda::threshold(img, lowerMask, thresholdMax, 255, cv::THRESH_BINARY, stream);
+        cv::cuda::threshold(img, upperMask, thresholdMin, 255, cv::THRESH_BINARY_INV, stream);
+        cv::cuda::bitwise_or(lowerMask, upperMask, img, cv::noArray(), stream);
+    }
+    updateParameter("Image mask", img, Parameter::Output);
+
+    return img;
+}
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(MorphologyFilter)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FindContours)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ContourBoundingBox)
-
+NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramThreshold)

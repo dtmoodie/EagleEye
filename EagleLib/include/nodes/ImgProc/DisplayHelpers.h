@@ -3,6 +3,7 @@
 #include "nodes/Node.h"
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
+#include <CudaUtils.hpp>
 
 namespace EagleLib
 {
@@ -46,6 +47,7 @@ namespace EagleLib
     };
     class Normalize: public Node
     {
+        ConstBuffer<cv::cuda::GpuMat> normalizedBuf;
     public:
         Normalize();
         virtual void Init(bool firstInit);

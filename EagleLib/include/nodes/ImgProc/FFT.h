@@ -12,6 +12,7 @@ namespace EagleLib
             Magnitude = 0,
             Phase = 1
         };
+        ConstBuffer<cv::cuda::GpuMat> destBuf;
 
     public:
         FFT();

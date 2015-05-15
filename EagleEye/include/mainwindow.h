@@ -48,7 +48,10 @@ private slots:
     void updateLines();
     void uiNotifier();
     void onUiUpdate();
+    void on_NewParameter();
+    void newParameter();
 signals:
+    void onNewParameter();
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);

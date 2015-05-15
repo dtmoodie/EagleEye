@@ -35,6 +35,7 @@ Node::Node()
 	externalDisplay = false;
 	drawResults = false;
     parent = nullptr;
+    onParameterAdded.reset(new boost::signals2::signal<void(void)>);
 }
 
 Node::~Node()
@@ -494,6 +495,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(drawResults);
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);
+    SERIALIZE(onParameterAdded);
 }
 void
 Node::Serialize(cv::FileStorage& fs)

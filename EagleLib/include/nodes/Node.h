@@ -297,6 +297,7 @@ namespace EagleLib
 			else
 					parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_, toolTip_, ownsData_)));
             parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+            (*onParameterAdded)();
 			return parameters.size() - 1;
 		}
         template<typename T> size_t
@@ -311,6 +312,7 @@ namespace EagleLib
             else
                     parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_, toolTip_, ownsData_)));
             parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+            (*onParameterAdded)();
             return parameters.size() - 1;
         }
 
@@ -340,6 +342,7 @@ namespace EagleLib
 			if (toolTip_.size() > 0)
 				param->toolTip = toolTip_;
 			param->changed = true;
+            param->onUpdate();
 			return true;
 		}
         template<typename T> bool
@@ -358,6 +361,7 @@ namespace EagleLib
             if (toolTip_.size() > 0)
                 param->toolTip = toolTip_;
             param->changed = true;
+            param->onUpdate();
             return true;
         }
 
@@ -373,14 +377,16 @@ namespace EagleLib
 			typename TypedParameter<T>::Ptr param = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[idx]);
 			if (param == NULL)
 				return false;
-			param->data = data;
-			param->changed = true;
+
 			if (name.size() > 0)
 				param->name = name;
 			if (type_ != Parameter::None)
 				param->type = type_;
 			if (quickHelp.size() > 0)
 				param->toolTip = quickHelp;
+            param->data = data;
+            param->changed = true;
+            param->onUpdate();
 			return true;
 		}
 
@@ -532,6 +538,7 @@ namespace EagleLib
         bool                                                                enabled;
         double                                                              processingTime;
         boost::recursive_mutex                                              mtx;
+        boost::shared_ptr<boost::signals2::signal<void(void)>>              onParameterAdded;
     private:
         friend class NodeManager;
         ObjectId                                                            m_OID;

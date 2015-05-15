@@ -61,7 +61,33 @@ cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     }
     return img;
 }
+void SetMatrixValues::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        addInputParameter<cv::cuda::GpuMat>("Input image");
+        addInputParameter<cv::cuda::GpuMat>("Input mask");
+        updateParameter("Replace value", cv::Scalar(0,0,0));
+    }
+}
 
+cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+    cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat*>(0)->data;
+    if(input == nullptr)
+        input = &img;
+    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>(1)->data;
+    if(mask && mask->size() == input->size())
+    {
+        input->setTo(getParameter<cv::Scalar>(2)->data, *mask, stream);
+    }else
+    {
+        input->setTo(getParameter<cv::Scalar>(2)->data, stream);
+    }
+    return *input;
+}
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SetMatrixValues)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameRate)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameLimiter)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(CreateMat)

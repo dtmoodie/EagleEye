@@ -10,10 +10,13 @@ NodeView::NodeView(QGraphicsScene *scene, QWidget *parent):
     actions.push_back(new QAction("Delete Node", rightClickMenu));
     actions.push_back(new QAction("Display as image", rightClickMenu));
     actions.push_back(new QAction("Plot", rightClickMenu));
-
+    actions[1]->setEnabled(false);
+    actions[2]->setEnabled(false);
     rightClickMenu->addActions(actions);
+    connect(actions[0], SIGNAL(triggered()), this, SLOT(on_deleteNode()));
+    connect(actions[1], SIGNAL(triggered()), this, SLOT(on_displayImage()));
+    connect(actions[2], SIGNAL(triggered()), this, SLOT(on_plotData()));
 
-    connect(rightClickMenu, SIGNAL(triggered(QAction*)), this, SLOT(on_actionSelect(QAction*)));
 }
 void NodeView::addWidget(QGraphicsProxyWidget * widget, ObjectId id)
 {
@@ -30,37 +33,42 @@ QGraphicsProxyWidget* NodeView::getWidget(ObjectId id)
 }
 void NodeView::on_parameter_clicked(EagleLib::Parameter::Ptr param)
 {
-    currentParameter = param;
+    currentParam = param;
 }
 
-void NodeView::on_actionSelect(QAction *action)
+void NodeView::on_deleteNode()
 {
-    if(action == actions[0])
+    // Delete the current node
+    if(currentWidget == nullptr)
+        return;
+    auto nodeWidget = dynamic_cast<QNodeWidget*>(currentWidget->widget());
+    if(nodeWidget)
     {
-        // Delete the current node
-        if(currentWidget == nullptr)
-            return;
-        auto nodeWidget = dynamic_cast<QNodeWidget*>(currentWidget->widget());
-        if(nodeWidget)
-        {
-            auto node = nodeWidget->getNode();
-            node->enabled = false;
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
-            emit stopThread();
-            auto parent = node->getParent();
-            if(parent != nullptr)
-                parent->removeChild(node);
-            emit selectionChanged(nullptr);
-            emit widgetDeleted(nodeWidget);
-            // Causes segfault sometimes, processing thread has fully exited but segfault still occurs in ~QNodeWidget
-            // Looks like it has to do with the QGraphicsProxyWidget trying to handle deletion.  Maybe we need to delete that first?
-            // Or maybe we just need to delete the QNodeWidget first.
-            scene()->removeItem(currentWidget);
-            delete currentWidget;
-            currentWidget = nullptr;
-            emit startThread();
-        }
+        auto node = nodeWidget->getNode();
+        node->enabled = false;
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
+        emit stopThread();
+        auto parent = node->getParent();
+        if(parent != nullptr)
+            parent->removeChild(node);
+        emit selectionChanged(nullptr);
+        emit widgetDeleted(nodeWidget);
+        scene()->removeItem(currentWidget);
+        delete currentWidget;
+        currentWidget = nullptr;
+        emit startThread();
     }
+    return;
+}
+void NodeView::on_displayImage()
+{
+    if(currentParam != nullptr)
+        emit displayImage(currentParam);
+}
+void NodeView::on_plotData()
+{
+    if(currentParam != nullptr)
+        emit plotData(currentParam);
 }
 
 void NodeView::mousePressEvent(QMouseEvent* event)
@@ -122,7 +130,16 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                             currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec3b>))    ||
                             currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec3f>))    ||
                             currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec3d>)))
-
+                        {
+                            actions[1]->setEnabled(true);
+                            actions[2]->setEnabled(true);
+                            actions[1]->setText("Display as image (" + QString::fromStdString(currentParam->name) + ")");
+                            actions[2]->setText("Plot (" + QString::fromStdString(currentParam->name) + ")");
+                        }
+                    }else
+                    {
+                        actions[1]->setEnabled(false);
+                        actions[2]->setEnabled(false);
                     }
                     QPoint pos = mapToGlobal(mousePressPosition);
                     rightClickMenu->popup(pos);
@@ -204,7 +221,7 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
         auto parentPtr = node->getParent();
         if(parentPtr != nullptr)
         {
-            QGraphicsProxyWidget* parentWidget = getWidget(node->getParent()->GetObjectId());
+            QGraphicsProxyWidget* parentWidget = getWidget(parentPtr->GetObjectId());
             if(parentWidget)
             {
                 auto center = parentWidget->pos() += QPointF(parentWidget->size().width()/2, parentWidget->size().height()/2);

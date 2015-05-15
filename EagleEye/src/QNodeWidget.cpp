@@ -27,21 +27,24 @@ IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, 
     }
     layout->addWidget(nameElement, 0, 0);
     nameElement->installEventFilter(parent);
-
     nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
+    connect(this, SIGNAL(updateNeeded()), this, SLOT(updateUi()), Qt::QueuedConnection);
+    parameter->onUpdate.connect(boost::bind(&IQNodeInterop::onParameterUpdate, this));
     QLabel* typeElement = new QLabel(QString::fromStdString(type_info::demangle(parameter_->typeInfo.name())));
+
     typeElement->installEventFilter(parent);
     parent->addParameterWidgetMap(typeElement, parameter_);
-#ifdef _MSC_VER
-	layout->addWidget(new QLabel(QString::fromStdString(parameter_->typeInfo.name())), 0, pos);
-#else
-    layout->addWidget(typeElement, 0,pos);
-#endif
+    layout->addWidget(typeElement, 0, pos);
 }
 
 IQNodeInterop::~IQNodeInterop()
 {
     delete proxy;
+}
+
+void IQNodeInterop::onParameterUpdate()
+{
+    emit updateNeeded();
 }
 
 void IQNodeInterop::updateUi()
@@ -82,6 +85,30 @@ void IQNodeInterop::onParameterUpdate(boost::shared_ptr<EagleLib::Parameter> par
 {
     updateUi();
 }
+DraggableLabel::DraggableLabel(QString name, EagleLib::Parameter::Ptr param_):
+    QLabel(name), param(param_)
+{
+    setAcceptDrops(true);
+}
+
+void DraggableLabel::dropEvent(QDropEvent* event)
+{
+    QLabel::dropEvent(event);
+    return;
+}
+
+void DraggableLabel::dragLeaveEvent(QDragLeaveEvent* event)
+{
+    QLabel::dragLeaveEvent(event);
+    return;
+}
+
+void DraggableLabel::dragMoveEvent(QDragMoveEvent* event)
+{
+    QLabel::dragMoveEvent(event);
+    return;
+}
+
 
 QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
     mainWindow(parent),
@@ -280,13 +307,17 @@ QWidget* QInputProxy::getWidget(int num)
 {
     return box;
 }
+// This only needs to be called when a new output parameter is added to the environment......
+// The best way of doing this would be to add a signal that each node emits when a new parameter is added
+// to the environment, this signal is then caught and used to update all input proxies.
 void QInputProxy::updateUi(bool init)
 {
     QString currentItem = box->currentText();
+
+    //parameter->update();
+    auto inputs = node->findCompatibleInputs(parameter);
     box->clear();
     box->addItem("");
-    parameter->update();
-    auto inputs = node->findCompatibleInputs(parameter);
     for(int i = 0; i < inputs.size(); ++i)
     {
         QString text = QString::fromStdString(inputs[i]);

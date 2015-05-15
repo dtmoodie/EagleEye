@@ -7,6 +7,7 @@
 #include <opencv2/core.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/signals2.hpp>
 #include "CudaUtils.hpp"
 
 namespace EagleLib
@@ -79,6 +80,8 @@ namespace EagleLib
         // Used with input / output parameters to list the number of subscribers to an output
         unsigned int subscribers;
         boost::recursive_mutex mtx;
+        boost::signals2::signal<void(void)> onUpdate;
+
     protected:
         Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),type(type_), changed(false), toolTip(toolTip_), subscribers(0){}
         virtual ~Parameter(){}
@@ -233,8 +236,10 @@ namespace EagleLib
                 Parameter::inputName = name;
             if(param)
                 --param->subscribers;
+            param = EagleLib::NodeManager::getInstance().getParameter(Parameter::inputName);
             update();
             ++param->subscribers;
+            param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
         }
         virtual void setSource(Parameter::Ptr param_)
         {
@@ -243,13 +248,15 @@ namespace EagleLib
             param = param_;
             this->data = getParameterPtr<T>(param);
             ++param->subscribers;
+            param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
+
         }
 
         virtual void update()
         {
             if(Parameter::inputName.size() == 0)
                 return;
-            param = EagleLib::NodeManager::getInstance().getParameter(Parameter::inputName);
+            //
             if(param == nullptr)
                 this->data = nullptr;
             else
@@ -271,7 +278,7 @@ namespace EagleLib
         void inline Init(cv::FileNode &fs)
         {
             cv::FileNode myNode = fs[Parameter::name];
-            Parameter::inputName = (std::string)myNode["Data"];
+            setSource((std::string)myNode["Data"]);
         }
 
         Parameter::Ptr param;

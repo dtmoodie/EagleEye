@@ -284,7 +284,12 @@ cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     if(parameters[0]->changed ||
        parameters[1]->changed ||
        parameters[2]->changed)
+    {
         updateLevels();
+        parameters[0]->changed = false;
+        parameters[1]->changed = false;
+        parameters[2]->changed = false;
+    }
     if(img.channels() == 1)
     {
         cv::cuda::GpuMat hist;
@@ -313,6 +318,7 @@ void HistogramRange::updateLevels()
         h_mat.at<float>(i) = val;
     }
     levels.upload(h_mat);
+    updateParameter("Histogram bins", h_mat, Parameter::Output);
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrackDetector)

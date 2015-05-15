@@ -23,6 +23,7 @@ void FFT::Init(bool firstInit)
         updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat(), Parameter::Output);      // 7
     }
     updateParameter("Use optimized size",false);
+    destBuf.resize(5);
 }
 
 cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -50,7 +51,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         img.convertTo(floatImg,CV_MAKETYPE(CV_32F,img.channels()), stream);
     else
         floatImg = img;
-    cv::cuda::GpuMat dest;
+    cv::cuda::GpuMat dest = *destBuf.getFront();
     int flags = 0;
     if(getParameter<bool>(0)->data)
         flags = flags | cv::DFT_ROWS;
@@ -62,6 +63,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         flags = flags | cv::DFT_REAL_OUTPUT;
     cv::cuda::dft(floatImg,dest,img.size(),flags, stream);
     int channel = getParameter<EnumParameter>(4)->data.getValue();
+    updateParameter("Coefficients", dest, Parameter::Output);
     if(parameters[4]->changed)
     {
         log(Status, channel == 0 ? "Magnitude" : "Phase");
@@ -80,6 +82,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 
         updateParameter(6,magnitude);
     }
+
     if(channel == 1 || parameters[7]->subscribers != 0)
     {
         std::vector<cv::cuda::GpuMat> channels;

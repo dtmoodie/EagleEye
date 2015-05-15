@@ -62,7 +62,15 @@ private:
     std::vector<boost::shared_ptr<IQNodeInterop>> interops;
 
 };
-
+class DraggableLabel: public QLabel
+{
+    EagleLib::Parameter::Ptr param;
+public:
+    DraggableLabel(QString name, EagleLib::Parameter::Ptr param_);
+    void dropEvent(QDropEvent* event);
+    void dragLeaveEvent(QDragLeaveEvent* event);
+    void dragMoveEvent(QDragMoveEvent* event);
+};
 
 class IQNodeProxy
 {
@@ -93,10 +101,11 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 public:
     IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QNodeWidget* parent = nullptr, EagleLib::Node::Ptr node_= EagleLib::Node::Ptr());
     virtual ~IQNodeInterop();
-    virtual void updateUi();
+
     IQNodeProxy* proxy;
     boost::shared_ptr<EagleLib::Parameter> parameter;
-
+public slots:
+    virtual void updateUi();
 private slots:
     void on_valueChanged(double value);
     void on_valueChanged(int value);
@@ -104,6 +113,9 @@ private slots:
     void on_valueChanged(QString value);
     void on_valueChanged();
     void onParameterUpdate(boost::shared_ptr<EagleLib::Parameter> parameter);
+    void onParameterUpdate();
+signals:
+    void updateNeeded();
 protected:
 	QLabel* nameElement;	
     QGridLayout* layout;
@@ -144,6 +156,7 @@ public:
 		box->setMaximum(std::numeric_limits<T>::max());
 		box->setMinimum(std::numeric_limits<T>::min());
         box->setMaximumWidth(100);
+        box->setSingleStep(0.01);
         updateUi(true);
 		parent->connect(box, SIGNAL(valueChanged(double)), parent, SLOT(on_valueChanged(double)));
 	}

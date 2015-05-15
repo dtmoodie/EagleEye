@@ -25,9 +25,13 @@ signals:
     void stopThread();
     void startThread();
     void widgetDeleted(QNodeWidget*);
+    void plotData(EagleLib::Parameter::Ptr param);
+    void displayImage(EagleLib::Parameter::Ptr param);
 private slots:
     void on_parameter_clicked(EagleLib::Parameter::Ptr param);
-    void on_actionSelect(QAction* action);
+    void on_deleteNode();
+    void on_displayImage();
+    void on_plotData();
 private:
     EagleLib::Parameter::Ptr currentParam;
 	QGraphicsProxyWidget* currentWidget;

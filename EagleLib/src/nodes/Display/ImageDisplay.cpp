@@ -313,7 +313,6 @@ void HistogramDisplay::displayHistogram()
         height -= minVal;
         height /=(maxVal - minVal);
         height *= 100;
-        //std::min(100,int(100*(-minVal)/(maxVal-minVal)));
         cv::rectangle(img, cv::Rect(i*5, 100 - (int)height, 5, 100), cv::Scalar(255),-1);
     }
     cv::imshow(fullTreeName, img);

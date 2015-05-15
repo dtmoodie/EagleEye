@@ -8,14 +8,22 @@ namespace EagleLib
     {
     public:
         GetOutputImage();
-        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-        void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        virtual void Init(bool firstInit);
     };
+    class ExportInputImage: public Node
+    {
+    public:
+        ExportInputImage();
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        virtual void Init(bool firstInit);
+    };
+
     class ImageInfo: public Node
     {
     public:
         ImageInfo();
-        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
-        void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+        virtual void Init(bool firstInit);
     };
 }
