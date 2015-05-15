@@ -8,6 +8,9 @@ NodeView::NodeView(QGraphicsScene *scene, QWidget *parent):
     QGraphicsView(scene, parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
 {
     actions.push_back(new QAction("Delete Node", rightClickMenu));
+    actions.push_back(new QAction("Display as image", rightClickMenu));
+    actions.push_back(new QAction("Plot", rightClickMenu));
+
     rightClickMenu->addActions(actions);
 
     connect(rightClickMenu, SIGNAL(triggered(QAction*)), this, SLOT(on_actionSelect(QAction*)));
@@ -25,6 +28,11 @@ QGraphicsProxyWidget* NodeView::getWidget(ObjectId id)
         return itr->second;
     else return nullptr;
 }
+void NodeView::on_parameter_clicked(EagleLib::Parameter::Ptr param)
+{
+    currentParameter = param;
+}
+
 void NodeView::on_actionSelect(QAction *action)
 {
     if(action == actions[0])
@@ -95,7 +103,27 @@ void NodeView::mousePressEvent(QMouseEvent* event)
             }else
                 if(event->button() == Qt::RightButton)
                 {
+                    QGraphicsView::mousePressEvent(event);
                     // Spawn the right click dialog
+                    if(currentParam!= nullptr)
+                    {
+                        if(currentParam->typeInfo == Loki::TypeInfo(typeid(cv::cuda::GpuMat))           ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(cv::cuda::GpuMat*))         ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(cv::cuda::GpuMat&))         ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(cv::Mat))                   ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(cv::Mat*))                  ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(cv::Mat&))                  ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<int>))          ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<float>))        ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<double>))       ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec2b>))    ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec2f>))    ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec2d>))    ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec3b>))    ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec3f>))    ||
+                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec3d>)))
+
+                    }
                     QPoint pos = mapToGlobal(mousePressPosition);
                     rightClickMenu->popup(pos);
                 }

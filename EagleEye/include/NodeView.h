@@ -26,8 +26,10 @@ signals:
     void startThread();
     void widgetDeleted(QNodeWidget*);
 private slots:
+    void on_parameter_clicked(EagleLib::Parameter::Ptr param);
     void on_actionSelect(QAction* action);
 private:
+    EagleLib::Parameter::Ptr currentParam;
 	QGraphicsProxyWidget* currentWidget;
 	QPoint mousePressPosition;
 	std::map<ObjectId, QGraphicsProxyWidget*> widgetMap;

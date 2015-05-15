@@ -6,7 +6,7 @@
 #include <QDateTime>
 
 
-IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent, EagleLib::Node::Ptr node_) :
+IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QNodeWidget* parent, EagleLib::Node::Ptr node_) :
     QWidget(parent),
     node(node_),
     parameter(parameter_)
@@ -27,12 +27,15 @@ IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, 
     }
     layout->addWidget(nameElement, 0, 0);
     nameElement->installEventFilter(parent);
+
     nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
-    //parameter_->updateCallback = boost::bind(&IQNodeInterop::onParameterUpdate,this, _1);
+    QLabel* typeElement = new QLabel(QString::fromStdString(type_info::demangle(parameter_->typeInfo.name())));
+    typeElement->installEventFilter(parent);
+    parent->addParameterWidgetMap(typeElement, parameter_);
 #ifdef _MSC_VER
 	layout->addWidget(new QLabel(QString::fromStdString(parameter_->typeInfo.name())), 0, pos);
 #else
-    layout->addWidget(new QLabel(QString::fromStdString(type_info::demangle(parameter_->typeInfo.name()))), 0,pos);
+    layout->addWidget(typeElement, 0,pos);
 #endif
 }
 
@@ -123,8 +126,22 @@ bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
 {
     if(event->type() == QEvent::MouseButtonPress)
     {
-        return true;
+        auto itr = widgetParamMap.find(static_cast<QWidget*>(object));
+        if(itr != widgetParamMap.end())
+        {
+            emit parameterClicked(itr->second);
+            return true;
+        }
+        return false;
+
     }
+    return false;
+}
+
+void QNodeWidget::addParameterWidgetMap(QWidget* widget, EagleLib::Parameter::Ptr param)
+{
+    if(widgetParamMap.find(widget) == widgetParamMap.end())
+        widgetParamMap[widget] = param;
 }
 
 void QNodeWidget::updateUi()

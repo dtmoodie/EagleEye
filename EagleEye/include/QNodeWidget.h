@@ -39,6 +39,7 @@ public:
     void on_nodeUpdate();
     void on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
     bool eventFilter(QObject *object, QEvent *event);
+    void addParameterWidgetMap(QWidget* widget, EagleLib::Parameter::Ptr param);
     QWidget* mainWindow;
 private slots:
     void on_enableClicked(bool state);
@@ -49,8 +50,9 @@ private slots:
     void log(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
 signals:
     void eLog(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
+    void parameterClicked(EagleLib::Parameter::Ptr param);
 private:
-
+    std::map<QWidget*, EagleLib::Parameter::Ptr> widgetParamMap;
 	Ui::QNodeWidget* ui;
     EagleLib::Node::Ptr node;
     QLineEdit* statusDisplay;
@@ -89,7 +91,7 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 {
 	Q_OBJECT
 public:
-    IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QWidget* parent = nullptr, EagleLib::Node::Ptr node_= EagleLib::Node::Ptr());
+    IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QNodeWidget* parent = nullptr, EagleLib::Node::Ptr node_= EagleLib::Node::Ptr());
     virtual ~IQNodeInterop();
     virtual void updateUi();
     IQNodeProxy* proxy;
