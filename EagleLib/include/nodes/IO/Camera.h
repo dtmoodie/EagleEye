@@ -1,6 +1,7 @@
 #pragma once
 #include "nodes/Node.h"
 #include <opencv2/videoio.hpp>
+
 namespace EagleLib
 {
     class Camera: public Node

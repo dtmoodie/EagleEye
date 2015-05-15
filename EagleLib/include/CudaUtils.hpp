@@ -72,6 +72,7 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
         cv::cuda::Event fillEvent;
         EventBuffer(){}
         EventBuffer(const T& init): data(init){}
+		// currently doesn't build on windows due to this line when T = an array.. Plan to use std::is_array to determine and then SFINAE to disable
         EventBuffer(const EventBuffer<T>& other): data(other.data), fillEvent(other.fillEvent){}
         ~EventBuffer()
         {

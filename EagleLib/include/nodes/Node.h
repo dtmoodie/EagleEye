@@ -430,8 +430,14 @@ namespace EagleLib
                 throw cv::Exception(0, "Failed to get parameter by index " + boost::lexical_cast<std::string>(idx), __FUNCTION__, __FILE__, __LINE__);
             boost::shared_ptr< TypedParameter<T> > typedParam = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
             if(typedParam == nullptr)
-                throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
-                                    type_info::demangle(typeid(T).name()) + " parameter actual type: " + type_info::demangle(param->typeInfo.name()),__FUNCTION__, __FILE__, __LINE__);
+#ifdef _MSC_VER
+				throw cv::Exception(0, std::string("Failed to cast parameter to the appropriate type, requested type: ") +  std::string(typeid(T).name()) + std::string(" parameter actual type: ") + std::string(  param->typeInfo.name()), __FUNCTION__, __FILE__, __LINE__);
+#else
+
+			throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
+				type_info::demangle(typeid(T).name()) + " parameter actual type: " + type_info::demangle(param->typeInfo.name()), __FUNCTION__, __FILE__, __LINE__);
+#endif
+			
             return typedParam;
 		}
 
