@@ -70,7 +70,7 @@
 #pragma warning Not building with PCL support
 #endif
 
-#define TIME timings.push_back(clock());
+#define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 using namespace boost::multi_index;
 
 #include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
@@ -550,7 +550,7 @@ namespace EagleLib
         double                                                              processingTime;
         boost::recursive_mutex                                              mtx;
         boost::shared_ptr<boost::signals2::signal<void(void)>>              onParameterAdded;
-        std::vector<clock_t> timings;
+        std::vector<std::pair<clock_t, int>> timings;
     private:
         friend class NodeManager;
         ObjectId                                                            m_OID;

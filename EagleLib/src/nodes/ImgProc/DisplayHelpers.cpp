@@ -151,7 +151,6 @@ void Normalize::Init(bool firstInit)
     {
         addInputParameter<cv::cuda::GpuMat>("Mask");
     }
-
 }
 
 cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)

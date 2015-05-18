@@ -312,8 +312,7 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     connect(nodeWidget, SIGNAL(parameterClicked(EagleLib::Parameter::Ptr)), nodeGraphView, SLOT(on_parameter_clicked(EagleLib::Parameter::Ptr)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
-    nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
-    nodeGraphView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+
     auto itr = positionMap.find(node->fullTreeName);
     if(itr != positionMap.end())
     {
@@ -341,6 +340,8 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
                 proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(500, yOffset));
         }
     }
+    nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
+    nodeGraphView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 
     QGraphicsProxyWidget* prevWidget = currentSelectedNodeWidget;
     auto prevNode = currentNode;

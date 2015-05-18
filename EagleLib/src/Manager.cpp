@@ -297,6 +297,16 @@ bool NodeManager::removeNode(const std::string& nodeName)
 
     return false;
 }
+std::string NodeManager::getNodeFile(const ObjectId& id)
+{
+    AUDynArray<IObjectConstructor*> constructors;
+    m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+    if(constructors.Size() > id.m_ConstructorId)
+    {
+        return std::string(constructors[id.m_ConstructorId]->GetFileName());
+    }
+    return std::string();
+}
 
 bool NodeManager::removeNode(ObjectId oid)
 {

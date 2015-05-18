@@ -88,6 +88,7 @@ namespace EagleLib
 		void setupModule(IPerModuleInterface* pPerModuleInterface);
         void loadModule(const std::string& filePath);
         void saveTree(const std::string& fileName);
+        std::string getNodeFile(const ObjectId& id);
         bool Init();
 
         bool MainLoop();

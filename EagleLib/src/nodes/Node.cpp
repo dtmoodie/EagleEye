@@ -293,10 +293,12 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                     {
                         TIME
                         std::stringstream time;
-                        for(int i = 1; i < timings.size(); ++i)
+                        time << "Start: " << timings[1].first - timings[0].first << " ";
+                        for(int i = 2; i < timings.size()-1; ++i)
                         {
-                            time << timings[i] - timings[i - 1] << " ";
+                            time << "(" << timings[i-1].second << "," << timings[i].second << "," << timings[i].first - timings[i-1].first << ")";
                         }
+                        time << "End: " << timings[timings.size() - 1].first - timings[timings.size() - 2].first;
                         log(Profiling, time.str());
                     }
                 }

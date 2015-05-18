@@ -13,6 +13,7 @@ namespace EagleLib
             Phase = 1
         };
         ConstBuffer<cv::cuda::GpuMat> destBuf;
+        ConstBuffer<cv::cuda::GpuMat> floatBuf;
 
     public:
         FFT();

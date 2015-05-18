@@ -1,6 +1,7 @@
 #include "NodeView.h"
 #include "qapplication.h"
-
+#include "qdrag.h"
+#include <qmimedata.h>
 NodeView::NodeView(QWidget* parent) :
     QGraphicsView(parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
 {}
@@ -78,6 +79,27 @@ void NodeView::mousePressEvent(QMouseEvent* event)
     {
         if (QGraphicsProxyWidget* widget = dynamic_cast<QGraphicsProxyWidget*>(item))
         {
+            if(event->button() == Qt::MiddleButton)
+            {
+                QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(widget->widget());
+                auto node = nodeWidget->getNode();
+                std::string fileName;
+                if(node != nullptr)
+                {
+                    auto id = node->GetObjectId();
+                    if(id.IsValid())
+                        fileName = EagleLib::NodeManager::getInstance().getNodeFile(id);
+                }
+                QDrag* drag = new QDrag(this);
+                QMimeData* mimeData = new QMimeData();
+                QList<QUrl> urls;
+
+                urls << QUrl::fromLocalFile(QString::fromStdString(fileName));
+                mimeData->setUrls(urls);
+                drag->setMimeData(mimeData);
+                Qt::DropAction dropAction = drag->exec();
+                return QGraphicsView::mousePressEvent(event);
+            }
             mousePressPosition = event->pos();
             currentWidget = widget;
             emit selectionChanged(widget);
@@ -110,6 +132,7 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                     resize = true;
                 }
             }else
+            {
                 if(event->button() == Qt::RightButton)
                 {
                     QGraphicsView::mousePressEvent(event);
@@ -145,6 +168,7 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                     QPoint pos = mapToGlobal(mousePressPosition);
                     rightClickMenu->popup(pos);
                 }
+            }
         }
     }else
     {
