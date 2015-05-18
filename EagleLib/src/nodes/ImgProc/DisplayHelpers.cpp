@@ -55,14 +55,14 @@ Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         cv::cuda::minMax(img, &minVal,&maxVal);
         scale = double(resolution - 1) / (maxVal - minVal);
         shift = minVal * scale;
-        updateParameter<double>("Min", minVal, Parameter::State);
-        updateParameter<double>("Max", maxVal, Parameter::State);
+        updateParameter<double>("Min", minVal,  Parameter::State);
+        updateParameter<double>("Max", maxVal,  Parameter::State);
         updateParameter<double>("Scale", scale, Parameter::State);
         updateParameter<double>("Shift", shift, Parameter::State);
         buildLUT();
     }
     cv::cuda::GpuMat scaledImg;
-    img.convertTo(scaledImg, CV_16U, scale,shift);
+    img.convertTo(scaledImg, CV_16U, scale,shift, stream);
     cv::Mat h_img;
     scaledImg.download(h_img);
     cv::Mat colorScaledImage(h_img.size(),CV_8UC3);

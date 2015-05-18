@@ -40,7 +40,6 @@ void GoodFeaturesToTrackDetector::Init(bool firstInit)
 cv::cuda::GpuMat
 GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-
     if(parameters[1]->changed || parameters[2]->changed ||
        parameters[3]->changed || parameters[4]->changed ||
        parameters[5]->changed || parameters[6]->changed)
@@ -54,7 +53,7 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
 
         updateParameter(0,
             cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1,
-                numCorners,qualityLevel,minDistance,blockSize,useHarris,harrisK));
+            numCorners,qualityLevel,minDistance,blockSize,useHarris,harrisK));
         std::stringstream ss;
         ss << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
            << " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
@@ -248,6 +247,7 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
                     getParameter<int>(8)->data,
                     getParameter<int>(9)->data,
                     getParameter<bool>(10)->data));
+
        parameters[1]->changed = false;
        parameters[2]->changed = false;
        parameters[3]->changed = false;
@@ -304,6 +304,7 @@ cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     }
     return img;
 }
+
 void HistogramRange::updateLevels()
 {
     double lower = getParameter<double>(0)->data;
