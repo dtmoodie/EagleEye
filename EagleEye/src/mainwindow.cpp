@@ -50,9 +50,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(nodeGraphView, SIGNAL(selectionChanged(QGraphicsProxyWidget*)), this, SLOT(onSelectionChanged(QGraphicsProxyWidget*)));
 	nodeGraphView->setInteractive(true);
     nodeGraphView->setViewport(new QGLWidget());
-	nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
-	ui->gridLayout->addWidget(nodeGraphView, 2, 0);
+    nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
+    ui->gridLayout->addWidget(nodeGraphView, 2, 0);
 	currentSelectedNodeWidget = nullptr;
+    rccSettings = new RCCSettingsDialog(this);
+    rccSettings->hide();
     startProcessingThread();
     cv::redirectError(&static_errorHandler);
 
@@ -67,6 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
     connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
     connect(this, SIGNAL(onNewParameter()), this, SLOT(on_NewParameter()), Qt::QueuedConnection);
+    connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
     EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
     EagleLib::NodeManager::getInstance().setCompileCallback(f);
@@ -82,6 +85,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
     stopProcessingThread();
     cv::destroyAllWindows();
     QMainWindow::closeEvent(event);
+}
+void MainWindow::displayRCCSettings()
+{
+    rccSettings->show();
 }
 
 void MainWindow::onCompileLog(const std::string& msg, int level)
@@ -103,6 +110,24 @@ MainWindow::onStatus(const std::string &status)
 {
 
 }
+void saveWidgetPosition(NodeView* nodeView, cv::FileStorage& fs, EagleLib::Node::Ptr node, int& count)
+{
+    QGraphicsProxyWidget* widget = nodeView->getWidget(node->GetObjectId());
+    if(widget)
+    {
+        fs << "{:";
+        fs << "Name" << node->fullTreeName;
+        fs << "x" << widget->pos().x();
+        fs << "y" << widget->pos().y();
+        fs << "}";
+        ++count;
+    }
+    for(int i = 0; i < node->children.size(); ++i)
+    {
+        saveWidgetPosition(nodeView, fs, node->children[i], count);
+    }
+}
+
 void
 MainWindow::onSaveClicked()
 {
@@ -110,7 +135,18 @@ MainWindow::onSaveClicked()
     if(file.size() == 0)
         return;
     stopProcessingThread();
-    EagleLib::NodeManager::getInstance().saveNodes(parentList, file.toStdString());
+    cv::FileStorage fs;
+    fs.open(file.toStdString(), cv::FileStorage::WRITE);
+    EagleLib::NodeManager::getInstance().saveNodes(parentList,fs);
+    // Save node widget positions
+    fs << "WidgetPositions" << "[";
+    int count = 0;
+    for(int i = 0; i <parentList.size(); ++i)
+    {
+        saveWidgetPosition(nodeGraphView, fs, parentList[i], count);
+    }
+    fs << "]";
+    fs.release();
     startProcessingThread();
 }
 
@@ -122,6 +158,27 @@ MainWindow::onLoadClicked()
         return;
     stopProcessingThread();
     std::vector<EagleLib::Node::Ptr> nodes = EagleLib::NodeManager::getInstance().loadNodes(file.toStdString());
+    cv::FileStorage fs;
+    fs.open(file.toStdString(), cv::FileStorage::READ);
+    positionMap.clear();
+    try
+    {
+        cv::FileNode positions = fs["WidgetPositions"];
+        for(cv::FileNodeIterator it = positions.begin(); it != positions.end(); ++it)
+        {
+            std::string name = (std::string)(*it)["Name"];
+            float x = (float)(*it)["x"];
+            float y = (float)(*it)["y"];
+            //cv::Vec2f pos = (cv::Vec2f)(*it)["Position"];
+            positionMap[name] = cv::Vec2f(x,y);
+        }
+
+    }catch(cv::Exception &e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+
+
     if(nodes.size())
     {
         for(int i = 0; i < widgets.size(); ++i)
@@ -154,7 +211,7 @@ void MainWindow::on_NewParameter()
 {
     for(int i = 0; i < widgets.size(); ++i)
     {
-        widgets[i]->updateUi();
+        widgets[i]->updateUi(true);
     }
 }
 // Called from the processing thread, that's why we need a queued connection here.
@@ -169,10 +226,10 @@ MainWindow::onTimeout()
     static bool swapRequired = false;
     static bool joined = false;
     EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
-//    for(int i = 0; i < widgets.size(); ++i)
-//    {
-//        widgets[i]->updateUi();
-//    }
+    for(int i = 0; i < widgets.size(); ++i)
+    {
+        widgets[i]->updateUi(false);
+    }
 
     if(swapRequired)
     {
@@ -257,10 +314,34 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
     nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
     nodeGraphView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-    if (currentSelectedNodeWidget)
+    auto itr = positionMap.find(node->fullTreeName);
+    if(itr != positionMap.end())
     {
-        proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(0, 100));
+        cv::Vec2f pt = itr->second;
+        proxyWidget->setPos(pt.val[0], pt.val[1]);
+    }else
+    {
+        if (currentSelectedNodeWidget)
+        {
+            int yOffset = 0;
+            auto parentNode = currentNode->getParent();
+            if(parentNode)
+            {
+                auto itr = std::find(parentNode->children.begin(), parentNode->children.end(), node);
+                if(itr != parentNode->children.end())
+                {
+                    auto idx = std::distance(itr, parentNode->children.begin());
+                    yOffset -= idx*100;
+                }
+            }
+            auto parentWidget = nodeGraphView->getParent(node);
+            if(parentWidget)
+                proxyWidget->setPos(parentWidget->pos() + QPointF(500, yOffset));
+            else
+                proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(500, yOffset));
+        }
     }
+
     QGraphicsProxyWidget* prevWidget = currentSelectedNodeWidget;
     auto prevNode = currentNode;
     widgets.push_back(nodeWidget);

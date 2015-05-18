@@ -277,6 +277,11 @@ void NodeManager::saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, const 
 {
     cv::FileStorage fs;
     fs.open(fileName, cv::FileStorage::WRITE);
+    saveNodes(topLevelNodes, fs);
+    fs.release();
+}
+void NodeManager::saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, cv::FileStorage fs)
+{
     fs << "TopLevelNodeCount" << (int)topLevelNodes.size();
 
     for(int i = 0; i < topLevelNodes.size(); ++i)
@@ -285,7 +290,6 @@ void NodeManager::saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, const 
         topLevelNodes[i]->Serialize(fs);
         fs << "}";
     }
-    fs.release();
 }
 
 bool NodeManager::removeNode(const std::string& nodeName)
@@ -500,4 +504,17 @@ NodeManager::getConstructableNodes()
         output.push_back(constructors[i]->GetName());
     }
     return output;
+}
+RCppOptimizationLevel NodeManager::getOptimizationLevel()
+{
+    return m_pRuntimeObjectSystem->GetOptimizationLevel();
+}
+
+void NodeManager::setOptimizationLevel(RCppOptimizationLevel level)
+{
+    m_pRuntimeObjectSystem->SetOptimizationLevel(level);
+}
+int NodeManager::getNumLoadedModules()
+{
+    return m_pRuntimeObjectSystem->GetNumberLoadedModules();
 }

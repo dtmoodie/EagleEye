@@ -1,4 +1,5 @@
 #include "NodeView.h"
+#include "qapplication.h"
 
 NodeView::NodeView(QWidget* parent) :
     QGraphicsView(parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
@@ -194,6 +195,24 @@ void NodeView::mouseReleaseEvent(QMouseEvent* event)
     QGraphicsView::mouseReleaseEvent(event);
     resize = false;
 }
+void NodeView::wheelEvent(QWheelEvent* event)
+{
+    if(QApplication::keyboardModifiers() & Qt::ControlModifier)
+    {
+        setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+        static double scaleFactor = 1.15;
+        if(event->delta() > 0)
+        {
+            scale(scaleFactor, scaleFactor);
+        }else
+        {
+            scale(1.0/scaleFactor, 1.0 / scaleFactor);
+        }
+    }
+
+    return QGraphicsView::wheelEvent(event);
+}
+
 QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
 {
     QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(child->widget());
@@ -231,4 +250,14 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
         }
     }
     return connectingLine;
+}
+QGraphicsProxyWidget* NodeView::getParent(EagleLib::Node::Ptr child)
+{
+    auto parentPtr = child->getParent();
+    if(parentPtr != nullptr)
+    {
+        QGraphicsProxyWidget* parentWidget = getWidget(parentPtr->GetObjectId());
+        return parentWidget;
+    }
+    return nullptr;
 }

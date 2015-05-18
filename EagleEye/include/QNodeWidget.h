@@ -34,7 +34,7 @@ public:
 	~QNodeWidget();
     EagleLib::Node::Ptr getNode();
     void setSelected(bool state);
-    void updateUi();
+    void updateUi(bool parameterUpdate = false);
     // Used for thread safety
     void on_nodeUpdate();
     void on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
@@ -43,10 +43,13 @@ public:
     QWidget* mainWindow;
 private slots:
     void on_enableClicked(bool state);
+    void on_profileClicked(bool state);
     void on_status(const std::string& msg, EagleLib::Node* node);
     void on_warning(const std::string& msg, EagleLib::Node* node);
     void on_error(const std::string& msg, EagleLib::Node* node);
     void on_critical(const std::string& msg, EagleLib::Node* node);
+    void on_profile(const std::string& msg, EagleLib::Node* node);
+
     void log(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
 signals:
     void eLog(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
@@ -55,13 +58,16 @@ private:
     std::map<QWidget*, EagleLib::Parameter::Ptr> widgetParamMap;
 	Ui::QNodeWidget* ui;
     EagleLib::Node::Ptr node;
+    QLineEdit* profileDisplay;
     QLineEdit* statusDisplay;
     QLineEdit* warningDisplay;
     QLineEdit* errorDisplay;
     QLineEdit* criticalDisplay;
     std::vector<boost::shared_ptr<IQNodeInterop>> interops;
-
+    QNodeWidget* parentWidget;
+    std::vector<QNodeWidget*> childWidgets;
 };
+
 class DraggableLabel: public QLabel
 {
     EagleLib::Parameter::Ptr param;
@@ -87,7 +93,7 @@ public:
 		return new QLabel(QString::fromStdString(parameter->typeInfo.name()));
 	}
 #else
-    {        return new QLabel(QString::fromStdString(type_info::demangle(parameter->typeInfo.name())));    }
+    {        return new QLabel(QString::fromStdString(TypeInfo::demangle(parameter->typeInfo.name())));    }
 #endif
 	boost::shared_ptr<EagleLib::Parameter> parameter;
 };

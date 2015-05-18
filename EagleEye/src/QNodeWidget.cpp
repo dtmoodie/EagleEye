@@ -51,7 +51,7 @@ void IQNodeInterop::onParameterUpdate()
 void IQNodeInterop::updateUi()
 {
     if (proxy)
-        proxy->updateUi(static_cast<QWidget*>(sender()));
+        proxy->updateUi(false);
 }
 
 void IQNodeInterop::on_valueChanged(double value)
@@ -121,10 +121,13 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
     warningDisplay = new QLineEdit();
     errorDisplay = new QLineEdit();
     criticalDisplay = new QLineEdit();
+    profileDisplay = new QLineEdit();
+    ui->verticalLayout->addWidget(profileDisplay);
     ui->verticalLayout->addWidget(statusDisplay);
     ui->verticalLayout->addWidget(warningDisplay);
     ui->verticalLayout->addWidget(errorDisplay);
     ui->verticalLayout->addWidget(criticalDisplay);
+    profileDisplay->hide();
     statusDisplay->hide();
     warningDisplay->hide();
     errorDisplay->hide();
@@ -136,7 +139,9 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
     if (node != nullptr)
 	{
         ui->chkEnabled->setChecked(node->enabled);
+        ui->profile->setChecked(node->profile);
         connect(ui->chkEnabled, SIGNAL(clicked(bool)), this, SLOT(on_enableClicked(bool)));
+        connect(ui->profile, SIGNAL(clicked(bool)), this, SLOT(on_profileClicked(bool)));
 		ui->nodeName->setText(QString::fromStdString(node->fullTreeName));
         ui->verticalLayout->setSpacing(0);
 		for (int i = 0; i < node->parameters.size(); ++i)
@@ -146,7 +151,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
             //interop->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
             ui->verticalLayout->addWidget(interop);
 		}
-        node->onUpdate = boost::bind(&QNodeWidget::updateUi, this);
+        node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true);
         node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2, _3);
 	}
 }
@@ -161,7 +166,6 @@ bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
             return true;
         }
         return false;
-
     }
     return false;
 }
@@ -172,34 +176,36 @@ void QNodeWidget::addParameterWidgetMap(QWidget* widget, EagleLib::Parameter::Pt
         widgetParamMap[widget] = param;
 }
 
-void QNodeWidget::updateUi()
+void QNodeWidget::updateUi(bool parameterUpdate)
 {
-
     if(node == nullptr)
         return;
     ui->processingTime->setText(QString::number(node->processingTime));
-    if(node->parameters.size() != interops.size())
+    if(parameterUpdate)
     {
-        for(int i = 0; i < node->parameters.size(); ++i)
+        if(node->parameters.size() != interops.size())
         {
-            bool found = false;
-            for(int j = 0; j < interops.size(); ++j)
+            for(int i = 0; i < node->parameters.size(); ++i)
             {
-                if(node->parameters[i] == interops[j]->parameter)
-                    found = true;
-            }
-            if(found == false)
-            {
-                // Need to add a new interop for this node
-                auto interop = new IQNodeInterop(node->parameters[i], this, node);
-                interops.push_back(boost::shared_ptr<IQNodeInterop>(interop));
-                ui->verticalLayout->addWidget(interop);
+                bool found = false;
+                for(int j = 0; j < interops.size(); ++j)
+                {
+                    if(node->parameters[i] == interops[j]->parameter)
+                        found = true;
+                }
+                if(found == false)
+                {
+                    // Need to add a new interop for this node
+                    auto interop = new IQNodeInterop(node->parameters[i], this, node);
+                    interops.push_back(boost::shared_ptr<IQNodeInterop>(interop));
+                    ui->verticalLayout->addWidget(interop);
+                }
             }
         }
-    }
-    for(int i = 0; i < interops.size(); ++i)
-    {
-        interops[i]->updateUi();
+        for(int i = 0; i < interops.size(); ++i)
+        {
+            interops[i]->updateUi();
+        }
     }
 }
 void QNodeWidget::on_nodeUpdate()
@@ -211,7 +217,7 @@ void QNodeWidget::log(EagleLib::Verbosity verb, const std::string &msg, EagleLib
     switch(verb)
     {
     case EagleLib::Profiling:
-
+        on_profile(msg, node);
     case EagleLib::Status:
         on_status(msg,node);
         return;
@@ -227,10 +233,13 @@ void QNodeWidget::log(EagleLib::Verbosity verb, const std::string &msg, EagleLib
     }
 }
 
+
 void QNodeWidget::on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node)
 {
     emit eLog(verb, msg, node);
 }
+
+
 
 QNodeWidget::~QNodeWidget()
 {
@@ -239,11 +248,22 @@ QNodeWidget::~QNodeWidget()
 
 void QNodeWidget::on_enableClicked(bool state)
 {    node->enabled = state;     }
+void QNodeWidget::on_profileClicked(bool state)
+{
+    if(node != nullptr)
+        node->profile = state;
+}
 
 EagleLib::Node::Ptr QNodeWidget::getNode()
 {
     return node;
 }
+
+void QNodeWidget::on_profile(const std::string &msg, EagleLib::Node *node)
+{
+
+}
+
 void QNodeWidget::on_status(const std::string& msg, EagleLib::Node* node)
 {
     statusDisplay->show();
@@ -315,7 +335,7 @@ void QInputProxy::updateUi(bool init)
 {
     QString currentItem = box->currentText();
 
-    //parameter->update();
+    parameter->update();
     auto inputs = node->findCompatibleInputs(parameter);
     box->clear();
     box->addItem("");

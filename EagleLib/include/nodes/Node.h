@@ -48,6 +48,9 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/mpl/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/rolling_mean.hpp>
 #include <vector>
 #include <list>
 #include <map>
@@ -58,6 +61,7 @@
 #include <boost/asio.hpp>
 #include "../Parameters.h"
 
+
 #ifdef HAVE_PCL
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -66,7 +70,7 @@
 #pragma warning Not building with PCL support
 #endif
 
-
+#define TIME timings.push_back(clock());
 using namespace boost::multi_index;
 
 #include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
@@ -435,7 +439,7 @@ namespace EagleLib
 #else
 
 			throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
-				type_info::demangle(typeid(T).name()) + " parameter actual type: " + type_info::demangle(param->typeInfo.name()), __FUNCTION__, __FILE__, __LINE__);
+                TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + TypeInfo::demangle(param->typeInfo.name()), __FUNCTION__, __FILE__, __LINE__);
 #endif
 			
             return typedParam;
@@ -542,13 +546,17 @@ namespace EagleLib
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
 		bool																externalDisplay;
         bool                                                                enabled;
+        bool                                                                profile;
         double                                                              processingTime;
         boost::recursive_mutex                                              mtx;
         boost::shared_ptr<boost::signals2::signal<void(void)>>              onParameterAdded;
+        std::vector<clock_t> timings;
     private:
         friend class NodeManager;
         ObjectId                                                            m_OID;
         Node*                                                               parent;
+        boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
+        ConstBuffer<cv::cuda::GpuMat>                                       childResults;
     };
     
     class CV_EXPORTS EventLoopNode: public Node

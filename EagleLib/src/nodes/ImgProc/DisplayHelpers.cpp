@@ -139,14 +139,32 @@ uchar ColorScale::getValue(double location_)
 }
 void Normalize::Init(bool firstInit)
 {
+    EnumParameter param;
+    param.addEnum(ENUM(CV_MINMAX));
+    param.addEnum(ENUM(cv::NORM_L2));
+    param.addEnum(ENUM(cv::NORM_L1));
+    param.addEnum(ENUM(cv::NORM_INF));
+    updateParameter("Norm type", param);
     updateParameter<double>("Alpha", 0);
     updateParameter<double>("Beta", 1);
+    if(firstInit)
+    {
+        addInputParameter<cv::cuda::GpuMat>("Mask");
+    }
+
 }
 
 cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
+    TIME
     cv::cuda::GpuMat normalized = *normalizedBuf.getFront();
-    cv::cuda::normalize(img,normalized, getParameter<double>(0)->data, getParameter<double>(1)->data, CV_MINMAX, img.type());
+    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>(3)->data;
+    cv::cuda::normalize(img,normalized,
+            getParameter<double>(1)->data,
+            getParameter<double>(2)->data,
+            getParameter<EnumParameter>(0)->data.getValue(), img.type(),
+            mask == nullptr ? cv::noArray(): *mask,
+            stream);
     return normalized;
 }
 

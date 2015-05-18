@@ -28,7 +28,8 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 #endif
 Verbosity Node::debug_verbosity = Error;
 
-Node::Node()
+Node::Node():
+    averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
 {
 	treeName = nodeName;
     enabled = true;
@@ -282,8 +283,22 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                     {
                         locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
                     }
+                    if(profile)
+                    {
+                        timings.clear();
+                        TIME
+                    }
                     img = doProcess(img, stream);
-
+                    if(profile)
+                    {
+                        TIME
+                        std::stringstream time;
+                        for(int i = 1; i < timings.size(); ++i)
+                        {
+                            time << timings[i] - timings[i - 1] << " ";
+                        }
+                        log(Profiling, time.str());
+                    }
                 }
                 end = boost::posix_time::microsec_clock::universal_time();
             }
@@ -292,7 +307,8 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                 log(Status, "End:   " + fullTreeName);
             }
             auto delta =  end - start;
-            processingTime = delta.total_milliseconds();
+            averageFrameTime(delta.total_milliseconds());
+            processingTime = boost::accumulators::rolling_mean(averageFrameTime);
         }catch(cv::Exception &err)
         {
             log(Error, err.what());
@@ -306,15 +322,15 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         if(children.size() == 0)
             return img;
 
-        cv::cuda::GpuMat childResults;
+        cv::cuda::GpuMat* childResult = childResults.getFront();
         if(!img.empty())
-            img.copyTo(childResults,stream);
+            img.copyTo(*childResult,stream);
         boost::recursive_mutex::scoped_lock lock(mtx);
         for(int i = 0; i < children.size(); ++i)
         {
             if(children[i] != nullptr)
             {
-                childResults = children[i]->process(childResults, stream);
+                *childResult = children[i]->process(*childResult, stream);
             }else
             {
                 log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(i));

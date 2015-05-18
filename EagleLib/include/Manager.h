@@ -80,6 +80,7 @@ namespace EagleLib
         shared_ptr<Node> addNode(const std::string& nodeName);
         std::vector<shared_ptr<Node>> loadNodes(const std::string& saveFile);
         void saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, const std::string& fileName);
+        void saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, cv::FileStorage fs);
         bool removeNode(const std::string& nodeName);
         bool removeNode(ObjectId oid);
 
@@ -110,7 +111,9 @@ namespace EagleLib
 		void getAccessibleNodes(const std::string& sourceNode, std::vector<Node*>& output);
 		Node* getParent(const std::string& sourceNode);
         std::vector<std::string> getConstructableNodes();
-
+        RCppOptimizationLevel getOptimizationLevel();
+        void setOptimizationLevel(RCppOptimizationLevel level);
+        int getNumLoadedModules();
 	private:
 		NodeManager();
 		virtual ~NodeManager();

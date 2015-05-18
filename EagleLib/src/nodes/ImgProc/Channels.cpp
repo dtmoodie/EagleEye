@@ -41,24 +41,30 @@ void ExtractChannels::Init(bool firstInit)
         updateParameter("Output Channel", int(0));
     }
     channelNum = getParameter<int>(0)->data;
+    channelsBuffer.resize(5);
 }
 
 cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    std::vector<cv::cuda::GpuMat> channels;
-    cv::cuda::split(img,channels,stream);
-    for(int i = 0; i < channels.size(); ++i)
+    TIME
+    std::vector<cv::cuda::GpuMat>* channels = channelsBuffer.getFront();
+    TIME
+    cv::cuda::split(img,*channels,stream);
+    TIME
+    for(int i = 0; i < channels->size(); ++i)
     {
-        updateParameter("Channel " + std::to_string(i), channels[i], Parameter::Output);
+        updateParameter("Channel " + std::to_string(i), (*channels)[i], Parameter::Output);
     }
+    TIME
     if(parameters[0]->changed)
         channelNum = getParameter<int>(0)->data;
+    TIME
     if(channelNum == -1)
         return img;
-    if(channelNum < channels.size())
-        return channels[channelNum];
+    if(channelNum < channels->size())
+        return (*channels)[channelNum];
     else
-        return channels[0];
+        return (*channels)[0];
 }
 void ConvertDataType::Init(bool firstInit)
 {

@@ -1,7 +1,7 @@
 
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-
+#include <iostream>
 void testFunfionct(int x)
 {
     std::cout << x << std::endl;

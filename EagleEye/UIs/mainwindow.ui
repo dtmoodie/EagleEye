@@ -56,7 +56,7 @@
      <x>0</x>
      <y>0</y>
      <width>873</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -67,22 +67,40 @@
     <addaction name="actionLoad"/>
     <addaction name="actionLoad_Plugin"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="actionRCC_settings"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionSave">
    <property name="text">
     <string>Save</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
   <action name="actionLoad">
    <property name="text">
-    <string>Load</string>
+    <string>Open</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionLoad_Plugin">
    <property name="text">
     <string>Load Plugin</string>
+   </property>
+  </action>
+  <action name="actionRCC_settings">
+   <property name="text">
+    <string>RCC settings</string>
    </property>
   </action>
  </widget>

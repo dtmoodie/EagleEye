@@ -1,6 +1,6 @@
 #pragma once
 #include "nodes/Node.h"
-
+#include <CudaUtils.hpp>
 namespace EagleLib
 {
     class ConvertToGrey: public Node
@@ -22,6 +22,8 @@ namespace EagleLib
     class ExtractChannels: public Node
     {
         int channelNum;
+        ConstBuffer<std::vector<cv::cuda::GpuMat>> channelsBuffer;
+        //std::vector<cv::cuda::GpuMat> channels;
     public:
         ExtractChannels();
         virtual void Init(bool firstInit);

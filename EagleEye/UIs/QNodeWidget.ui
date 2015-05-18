@@ -55,6 +55,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="profile">
+       <property name="text">
+        <string>Profile</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="processingTime">
        <property name="text">
         <string>TextLabel</string>

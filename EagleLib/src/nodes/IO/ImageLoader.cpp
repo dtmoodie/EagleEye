@@ -27,16 +27,18 @@ void ImageLoader::load()
 
 cv::cuda::GpuMat ImageLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    //std::cout << "Image loaded" << std::endl;
+    TIME
     if(parameters[0]->changed)
     {
         load();
         parameters[0]->changed = false;
     }
+    TIME
 	if (!d_img.empty())
     {
-        return d_img.clone();
-        //d_img.copyTo(img,stream);
+        TIME
+        d_img.copyTo(img,stream);
+        TIME
     }
     return img;
 }

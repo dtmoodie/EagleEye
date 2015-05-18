@@ -53,7 +53,7 @@ namespace EagleLib
             fs << "TreeName" << treeName;
             fs << "ParamType" << type;
 #ifndef _MSC_VER
-            fs << "DataType" << type_info::demangle(typeInfo.name());
+            fs << "DataType" << TypeInfo::demangle(typeInfo.name());
 #else
             fs << "DataType" << typeInfo.name();
 #endif
@@ -238,11 +238,13 @@ namespace EagleLib
                 Parameter::inputName = name;
             if(param)
                 --param->subscribers;
-			param = Parameter::getParameter(Parameter::inputName);
-            //param = EagleLib::NodeManager::getInstance().getParameter(Parameter::inputName);
+            param = Parameter::getParameter(Parameter::inputName);
             update();
-            ++param->subscribers;
-            param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
+            if(param)
+            {
+                ++param->subscribers;
+                param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
+            }
         }
         virtual void setSource(Parameter::Ptr param_)
         {
@@ -259,7 +261,15 @@ namespace EagleLib
         {
             if(Parameter::inputName.size() == 0)
                 return;
-            //
+            if(param == nullptr && Parameter::inputName.size())
+            {
+                param = Parameter::getParameter(Parameter::inputName);
+                if(param)
+                {
+                    ++param->subscribers;
+                    param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
+                }
+            }
             if(param == nullptr)
                 this->data = nullptr;
             else

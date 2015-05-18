@@ -12,7 +12,7 @@
 #include <qlist.h>
 #include <vector>
 #include <boost/thread.hpp>
-
+#include "rccsettingsdialog.h"
 namespace Ui {
 class MainWindow;
 }
@@ -50,6 +50,7 @@ private slots:
     void onUiUpdate();
     void on_NewParameter();
     void newParameter();
+    void displayRCCSettings();
 signals:
     void onNewParameter();
     void eLog(QString message);
@@ -71,6 +72,8 @@ private:
     boost::recursive_mutex parentMtx;
     std::vector<QNodeWidget*> widgets;
     boost::thread processingThread;
+    RCCSettingsDialog* rccSettings;
+    std::map<std::string, cv::Vec2f> positionMap;
 };
 
 
