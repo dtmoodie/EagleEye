@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "Manager.h"
+//#include "Manager.h"
 #include <opencv2/core/persistence.hpp>
 #include "type.h"
 #include "LokiTypeInfo.h"
@@ -37,7 +37,9 @@ namespace EagleLib
     class CV_EXPORTS Parameter
     {
     public:
+		
         typedef boost::shared_ptr<Parameter> Ptr;
+		static Ptr getParameter(const std::string& fulltreeName);
         virtual void setSource(const std::string& name) = 0;
         virtual void setSource(EagleLib::Parameter::Ptr param) = 0;
         virtual void update() = 0;
@@ -236,7 +238,8 @@ namespace EagleLib
                 Parameter::inputName = name;
             if(param)
                 --param->subscribers;
-            param = EagleLib::NodeManager::getInstance().getParameter(Parameter::inputName);
+			param = Parameter::getParameter(Parameter::inputName);
+            //param = EagleLib::NodeManager::getInstance().getParameter(Parameter::inputName);
             update();
             ++param->subscribers;
             param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));

@@ -391,6 +391,7 @@ bool NodeManager::TestRuntimeCompilation()
         testCallback = new TestCallback();
     m_pRuntimeObjectSystem->TestBuildAllRuntimeHeaders(testCallback,true);
     m_pRuntimeObjectSystem->TestBuildAllRuntimeSourceFiles(testCallback, true);
+	return true;
 }
 
 void

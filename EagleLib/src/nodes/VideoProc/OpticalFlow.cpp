@@ -113,7 +113,7 @@ void BroxOpticalFlow::Init(bool firstInit)
 
 cv::cuda::GpuMat BroxOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-
+	return img;
 }
 
 

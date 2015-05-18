@@ -30,7 +30,8 @@ IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, 
     nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
     connect(this, SIGNAL(updateNeeded()), this, SLOT(updateUi()), Qt::QueuedConnection);
     parameter->onUpdate.connect(boost::bind(&IQNodeInterop::onParameterUpdate, this));
-    QLabel* typeElement = new QLabel(QString::fromStdString(type_info::demangle(parameter_->typeInfo.name())));
+
+	QLabel* typeElement = new QLabel(QString::fromStdString(TypeInfo::demangle(parameter_->typeInfo.name())));
 
     typeElement->installEventFilter(parent);
     parent->addParameterWidgetMap(typeElement, parameter_);

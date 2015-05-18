@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <memory>
 #include <cxxabi.h>
-namespace type_info
+namespace TypeInfo
 {
 std::string demangle(const char* name) {
 
@@ -20,13 +20,23 @@ std::string demangle(const char* name) {
 }
 #else
 #ifndef _MSC_VER
-namespace type_info
+namespace TypeInfo
 {
 
 // does nothing if not g++
 std::string demangle(const char* name) {
     return name;
 }
+}
+
+#endif
+#ifdef _MSC_VER
+namespace TypeInfo
+{
+	std::string demangle(const char* name) 
+	{
+		return std::string(name);
+	}
 }
 
 #endif

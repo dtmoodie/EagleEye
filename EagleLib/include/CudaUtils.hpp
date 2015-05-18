@@ -73,7 +73,9 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
         EventBuffer(){}
         EventBuffer(const T& init): data(init){}
 		// currently doesn't build on windows due to this line when T = an array.. Plan to use std::is_array to determine and then SFINAE to disable
+#ifndef _MSC_VER
         EventBuffer(const EventBuffer<T>& other): data(other.data), fillEvent(other.fillEvent){}
+#endif
         ~EventBuffer()
         {
             cleanup(data);
@@ -138,6 +140,7 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
             putItr = rhs.putItr;
             size = rhs.size;
             buffer = rhs.buffer;
+			return *this;
         }
     };
 

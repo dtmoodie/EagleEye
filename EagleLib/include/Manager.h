@@ -19,6 +19,7 @@
 #include "../RuntimeObjectSystem/IObject.h"
 #include "../RuntimeObjectSystem/IRuntimeObjectSystem.h"
 #include "CudaUtils.hpp"
+#include "nodes/Node.h"
 
 #define ADD_CONSTRUCTORS(managerObj)  \
 	auto moduleInterface = PerModuleInterface::GetInstance();	\
@@ -55,7 +56,7 @@ namespace EagleLib
         virtual bool TestBuildCallback(const char* file, TestBuildResult type);
         virtual bool TestBuildWaitAndUpdate();
     };
-    class UIThreadCallback
+	class CV_EXPORTS UIThreadCallback
     {
     private:
         concurrent_queue<boost::function<void(void)>> queue;
