@@ -1,12 +1,12 @@
 #ifndef TYPE_HPP
 #define TYPE_HPP
 
-//#ifndef _MSC_VER
+#include "opencv2/core/cvdef.h"
 #include <string>
 #include <typeinfo>
 namespace TypeInfo
 {
-std::string demangle(const char* name);
+std::string CV_EXPORTS demangle(const char* name);
 
 template <class T>
 std::string type(const T& t) {

@@ -3,7 +3,18 @@
 
 
 #ifdef _MSC_VER
+#include "Windows.h"
 
+void EagleLib::loadPlugin(const std::string& fullPluginPath)
+{
+	HMODULE handle = LoadLibrary(fullPluginPath.c_str());
+	if (handle == nullptr)
+		return;
+	typedef IPerModuleInterface* (*moduleFunctor)();
+	moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetModule");
+	NodeManager::getInstance().setupModule(module());
+	FreeLibrary(handle);
+}
 
 
 
