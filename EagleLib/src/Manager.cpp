@@ -528,3 +528,16 @@ int NodeManager::getNumLoadedModules()
 {
     return m_pRuntimeObjectSystem->GetNumberLoadedModules();
 }
+std::vector<std::string> NodeManager::getParametersOfType(boost::function<bool(Loki::TypeInfo&)> selector)
+{
+    std::vector<std::string> parameters;
+    for(int i = 0; i < nodes.size(); ++i)
+    {
+        for(int j = 0; j < nodes[i]->parameters.size(); ++j)
+        {
+            if(selector(nodes[i]->parameters[j]->typeInfo))
+                parameters.push_back(nodes[i]->parameters[j]->treeName);
+        }
+    }
+    return parameters;
+}

@@ -296,8 +296,15 @@ namespace EagleLib
 
         Parameter::Ptr param;
     };
+    template<typename T> bool acceptsType(Loki::TypeInfo& type)
+    {
+        return Loki::TypeInfo(typeid(T)) == type || Loki::TypeInfo(typeid(T*)) == type || Loki::TypeInfo(typeid(T&)) == type;
+    }
+
     template<typename T> T* getParameterPtr(EagleLib::Parameter::Ptr parameter)
     {
+        if(parameter == nullptr)
+            return nullptr;
         // Dynamically check what type of parameter this is refering to
         typename EagleLib::TypedParameter<T>::Ptr typedParam = boost::dynamic_pointer_cast<EagleLib::TypedParameter<T>, EagleLib::Parameter>(parameter);
         if (typedParam)

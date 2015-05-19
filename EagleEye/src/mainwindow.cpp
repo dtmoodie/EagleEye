@@ -27,7 +27,9 @@ static void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::r
 static void process(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursive_mutex *mtx);
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    plotWizardDialog(new PlotWizardDialog(this)),
+    rccSettings(new RCCSettingsDialog(this))
 {
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
@@ -35,7 +37,10 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<EagleLib::Node::Ptr>("EagleLib::Node::Ptr");
     qRegisterMetaType<EagleLib::Verbosity>("EagleLib::Verbosity");
     qRegisterMetaType<boost::function<cv::Mat(void)>>("boost::function<cv::Mat(void)>");
+    qRegisterMetaType<EagleLib::Parameter::Ptr>("EagleLib::Parameter::Ptr");
+
     ui->setupUi(this);
+
     fileMonitorTimer = new QTimer(this);
     fileMonitorTimer->start(1000);
     connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
@@ -53,11 +58,14 @@ MainWindow::MainWindow(QWidget *parent) :
     nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->gridLayout->addWidget(nodeGraphView, 2, 0);
 	currentSelectedNodeWidget = nullptr;
-    rccSettings = new RCCSettingsDialog(this);
+
     rccSettings->hide();
+    plotWizardDialog->hide();
+
     startProcessingThread();
     cv::redirectError(&static_errorHandler);
 
+    connect(nodeGraphView, SIGNAL(plotData(EagleLib::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(EagleLib::Parameter::Ptr)));
     connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
     connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
@@ -70,6 +78,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
     connect(this, SIGNAL(onNewParameter()), this, SLOT(on_NewParameter()), Qt::QueuedConnection);
     connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
+
     EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
     EagleLib::NodeManager::getInstance().setCompileCallback(f);

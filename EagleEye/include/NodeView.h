@@ -34,6 +34,7 @@ private slots:
     void on_deleteNode();
     void on_displayImage();
     void on_plotData();
+    bool eventFilter(QObject *object, QEvent *event);
 private:
     EagleLib::Parameter::Ptr currentParam;
 	QGraphicsProxyWidget* currentWidget;

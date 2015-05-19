@@ -2,6 +2,11 @@
 #define PLOTWIZARDDIALOG_H
 
 #include <QDialog>
+#include <QVector>
+
+#include "Parameters.h"
+#include "plotwindow.h"
+#include "parameterplotter.h"
 
 namespace Ui {
 class PlotWizardDialog;
@@ -20,9 +25,19 @@ class PlotWizardDialog : public QDialog
 public:
     explicit PlotWizardDialog(QWidget *parent = 0);
     ~PlotWizardDialog();
-
+signals:
+    void on_plotAdded(PlotWindow* plot);
+public slots:
+    void plotParameter(EagleLib::Parameter::Ptr param);
+private slots:
+    void on_addPlotBtn_clicked();
 private:
+    QVector<PlotWindow*> plotWindows;
+    QVector<ParameterPlotter*> plots;
     Ui::PlotWizardDialog *ui;
+    QList<QCheckBox*> plotOptions;
+
+    QList<ParameterPlotterFactory*> availablePlotters;
 };
 
 #endif // PLOTWIZARDDIALOG_H

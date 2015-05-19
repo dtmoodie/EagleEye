@@ -28,7 +28,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 INCLUDE_DIRECTORIES(${EagleLib_INCLUDE_DIRECTORIES})
 
 file(GLOB sources "src/*.cpp") 
-file(GLOB headers "include/*.h")
+file(GLOB headers "include/*.h" "include/*.hpp")
 file(GLOB forms "*UIs/*.ui")
 
 QT5_WRAP_UI(UIS ${forms})

@@ -15,6 +15,7 @@ NodeView::NodeView(QGraphicsScene *scene, QWidget *parent):
     actions[1]->setEnabled(false);
     actions[2]->setEnabled(false);
     rightClickMenu->addActions(actions);
+    rightClickMenu->installEventFilter(this);
     connect(actions[0], SIGNAL(triggered()), this, SLOT(on_deleteNode()));
     connect(actions[1], SIGNAL(triggered()), this, SLOT(on_displayImage()));
     connect(actions[2], SIGNAL(triggered()), this, SLOT(on_plotData()));
@@ -216,8 +217,9 @@ void NodeView::mouseMoveEvent(QMouseEvent* event)
 void NodeView::mouseReleaseEvent(QMouseEvent* event)
 {
     currentWidget = nullptr;
-    QGraphicsView::mouseReleaseEvent(event);
     resize = false;
+    QGraphicsView::mouseReleaseEvent(event);
+
 }
 void NodeView::wheelEvent(QWheelEvent* event)
 {
@@ -235,6 +237,19 @@ void NodeView::wheelEvent(QWheelEvent* event)
     }
 
     return QGraphicsView::wheelEvent(event);
+}
+bool NodeView::eventFilter(QObject *object, QEvent *event)
+{
+    if(object == rightClickMenu)
+    {
+        if(event->type() == QEvent::MouseButtonRelease)
+        {
+            currentWidget = nullptr;
+            resize = false;
+            return false;
+        }
+    }
+    return false;
 }
 
 QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)

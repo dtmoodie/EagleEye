@@ -10,7 +10,6 @@
 #include <opencv2/core/cvdef.h>
 #include <list>
 #include <boost/function.hpp>
-//#include "nodes/Node.h"
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/random_access_index.hpp>
 #include <boost/multi_index/hashed_index.hpp>
@@ -20,7 +19,7 @@
 #include "../RuntimeObjectSystem/IRuntimeObjectSystem.h"
 #include "CudaUtils.hpp"
 #include "nodes/Node.h"
-
+#include "LokiTypeInfo.h"
 #define ADD_CONSTRUCTORS(managerObj)  \
 	auto moduleInterface = PerModuleInterface::GetInstance();	\
 	auto vecConstructors = moduleInterface->GetConstructors();	\
@@ -81,8 +80,7 @@ namespace EagleLib
         std::vector<shared_ptr<Node>> loadNodes(const std::string& saveFile);
         void saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, const std::string& fileName);
         void saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, cv::FileStorage fs);
-        bool removeNode(const std::string& nodeName);
-        bool removeNode(ObjectId oid);
+
 
 		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
 		void setupModule(IPerModuleInterface* pPerModuleInterface);
@@ -91,17 +89,24 @@ namespace EagleLib
         std::string getNodeFile(const ObjectId& id);
         bool Init();
 
-        bool MainLoop();
+        bool MainLoop(); // Depricated
 
         virtual void OnConstructorsAdded();
 
         virtual bool CheckRecompile();
         virtual bool CheckRecompile(bool swapAllowed);
         virtual bool TestRuntimeCompilation();
+        RCppOptimizationLevel getOptimizationLevel();
+        void setOptimizationLevel(RCppOptimizationLevel level);
+        int getNumLoadedModules();
 
         void onNodeRecompile(Node* node);
+
         Node* getNode(const ObjectId& id);
         Node* getNode(const std::string& treeName);
+        bool removeNode(const std::string& nodeName);
+        bool removeNode(ObjectId oid);
+
 		void updateTreeName(Node* node, const std::string& prevTreeName);
 		void addParameters(Node* node);
 		boost::shared_ptr< Parameter > getParameter(const std::string& name);
@@ -112,9 +117,22 @@ namespace EagleLib
 		void getAccessibleNodes(const std::string& sourceNode, std::vector<Node*>& output);
 		Node* getParent(const std::string& sourceNode);
         std::vector<std::string> getConstructableNodes();
-        RCppOptimizationLevel getOptimizationLevel();
-        void setOptimizationLevel(RCppOptimizationLevel level);
-        int getNumLoadedModules();
+        std::vector<std::string> getParametersOfType(boost::function<bool(Loki::TypeInfo&)> selector);
+//        template<typename T> std::vector<std::string> getParametersOfType()
+//        {
+//            std::vector<std::string> parameters;
+//            for(int i = 0; i < nodes.size(); ++i)
+//            {
+//                for(int j = 0; j < nodes[i]->parameters.size(); ++j)
+//                {
+//                    if(acceptsType<T>(nodes[i]->parameters[j]->typeInfo))
+//                        parameters.push_back(nodes[i]->parameters[j]->treeName);
+//                }
+//            }
+//            return parameters;
+//        }
+
+
 	private:
 		NodeManager();
 		virtual ~NodeManager();

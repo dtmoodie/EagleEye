@@ -29,10 +29,13 @@ class PlotWindow;
 class PlotWindow : public QWidget
 {
     Q_OBJECT
-
+    QString _name;
 public:
     explicit PlotWindow(QWidget *parent = 0);
     ~PlotWindow();
+    QString getPlotName(){return _name;}
+public slots:
+    void addPlotter(boost::shared_ptr<ParameterPlotter> plotter);
 
 private:
     Ui::PlotWindow *ui;

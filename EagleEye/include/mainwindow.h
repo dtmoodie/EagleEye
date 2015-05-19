@@ -13,6 +13,7 @@
 #include <vector>
 #include <boost/thread.hpp>
 #include "rccsettingsdialog.h"
+#include "plotwizarddialog.h"
 namespace Ui {
 class MainWindow;
 }
@@ -74,6 +75,7 @@ private:
     boost::thread processingThread;
     RCCSettingsDialog* rccSettings;
     std::map<std::string, cv::Vec2f> positionMap;
+    PlotWizardDialog* plotWizardDialog;
 };
 
 
