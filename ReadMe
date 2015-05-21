@@ -5,7 +5,7 @@ This software was created with a few main goals in mind.
 
 1) Create an easy to use GUI that makes development, fast, easy and flexible
 
-2) Save developed workflows into an xml format which allows later loading and reprocessing
+2) Save processing algorithm configurations into a portable container to allow for fast assembly of algorithm components.
 
 3) Create a library that can easily be linked into other programs including command line programs
 
@@ -13,5 +13,5 @@ This software was created with a few main goals in mind.
 
 5) 2d and 3d vision capabilities
 
-
+6) Rapid prototyping capabilities via runtime modifiable code and an easy to use plugin interface.
 
