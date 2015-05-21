@@ -80,6 +80,8 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     }
     TIME
     cv::cuda::GpuMat magnitude, phase;
+//    magnitude = *magBuffer.getFront();
+//    phase = *phaseBuffer.getFront();
     if(channel == 0 || parameters[6]->subscribers != 0)
     {
         cv::cuda::magnitude(dest,magnitude, stream);

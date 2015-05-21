@@ -14,7 +14,6 @@ namespace EagleLib
         };
         ConstBuffer<cv::cuda::GpuMat> destBuf;
         ConstBuffer<cv::cuda::GpuMat> floatBuf;
-
     public:
         FFT();
         virtual void Init(bool firstInit);

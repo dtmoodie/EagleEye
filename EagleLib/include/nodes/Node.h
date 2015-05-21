@@ -71,7 +71,6 @@
 #endif
 
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
-using namespace boost::multi_index;
 
 #include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include "../../RuntimeObjectSystem/ObjectInterface.h"
@@ -88,6 +87,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 
 
 
+
 #define NODE_DEFAULT_CONSTRUCTOR_IMPL(NodeName) \
 NodeName::NodeName():Node()                     \
 {                                               \
@@ -97,43 +97,11 @@ NodeName::NodeName():Node()                     \
 }												\
 REGISTERCLASS(NodeName)
 
-#define EAGLE_TRY_WARNING(FunctionCall)                                 \
-    try{                                                                \
-    (FunctionCall)                                                      \
-    }catch(cv::Exception &e){                                           \
-        if(warningCallback)                                             \
-            warningCallback(std::string(__FUNCTION__) + e.what());                   \
-    }catch(std::exception &e){                                          \
-        if(warningCallback)                                             \
-            warningCallback(std::string(__FUNCTION__) + e.what());                   \
-    }
-
-#define EAGLE_TRY_ERROR(FunctionCall)                                   \
-    try{                                                                \
-    FunctionCall														\
-    }catch(cv::Exception &e){                                           \
-        if(errorCallback)                                               \
-            errorCallback(std::string(__FUNCTION__) + e.what());                     \
-    }catch(std::exception &e){                                          \
-        if(errorCallback)                                               \
-            errorCallback(std::string(__FUNCTION__) + e.what());                     \
-    }
-#define EAGLE_ERROR_CHECK_RESULT(FunctionCall, DesiredResult)                 \
-    if(FunctionCall != DesiredResult){                                  \
-        if(errorCallback)                                               \
-            errorCallback(std::string(__FUNCION__ + " " + #FunctionCall + " != " #DesiredResult);                                                                \
-    }
-        
-#define AddParameter(Parameter, ...)        addParameter(#Parameter, Parameter, __VA_ARGS__)
-#define AddOutputParameter(Parameter, ...)  addParameter(#Parameter, &Parameter, Parameter::Output, __VA_ARGS__);
-
 
 namespace EagleLib
 {
     class NodeManager;
     class Node;
-
-
 
 	enum NodeType
 	{
@@ -160,30 +128,57 @@ namespace EagleLib
     public:
         static Verbosity  debug_verbosity;
         typedef shared_ptr<Node> Ptr;
-
-
-        //static void registerType(const std::string& name, NodeFactory* factory);
-		
-
 		Node();
 		virtual ~Node();
-        
+        /**
+         * @brief process Gets called by processing threads and parent nodes.  Process should be left alone because
+         * @brief it is where all of the exception handling occurs
+         * @param img input image
+         * @param steam input stream
+         * @return output image
+         */
         virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img, cv::cuda::Stream& steam = cv::cuda::Stream::Null());
 		virtual void					process(cv::InputArray in, cv::OutputArray out);
-		// Processing functions, these actually do the work of the node
+        /**
+         * @brief doProcess this is the most used node and where the bulk of the work is performed.
+         * @param img input image
+         * @param stream input stream
+         * @return output image
+         */
         virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 		virtual void					doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat>& retVal);
 		virtual void					doProcess(cv::InputArray in, boost::promise<cv::OutputArray>& retVal);
 		virtual void					doProcess(cv::InputArray in, cv::OutputArray out);
 
-        // Finds name in tree hierarchy, updates tree name and returns it
+        /**
+         * @brief getName depricated?  Idea was to recursively go through parent nodes and rebuild my tree name, useful I guess once
+         * @brief node swapping and moving is implemented
+         * @return
+         */
 		std::string						getName() const;
+        /**
+         * @brief getTreeName depricated?
+         * @return
+         */
 		std::string						getTreeName() const;
+        /**
+         * @brief getParent returns a pointer to the parent node... depricated?
+         * @return
+         */
         Node *getParent();
-		// Searches nearby nodes for possible valid inputs for each input parameter
+        /**
+         * @brief getInputs [DEPRICATED]
+         */
 		virtual void					getInputs();
+        /**
+         * @brief log internally used to log node status, warnings, and errors
+         * @param level
+         * @param msg
+         */
         virtual void                    log(Verbosity level, const std::string& msg);
-
+        /**
+         * @brief The NodeInfo struct [DEPRICATED]
+         */
         struct NodeInfo
         {
             int index;
@@ -241,9 +236,25 @@ namespace EagleLib
 		//									Name and accessing functions
 		//
 		// ****************************************************************************************************************
+        /**
+         * @brief setTreeName
+         * @param name
+         */
 		virtual void setTreeName(const std::string& name);
+        /**
+         * @brief setFullTreeName
+         * @param name
+         */
 		virtual void setFullTreeName(const std::string& name);
+        /**
+         * @brief setParent
+         * @param parent
+         */
         virtual void setParent(Node *parent);
+        /**
+         * @brief updateObject [DEPRICATED]
+         * @param ptr
+         */
         virtual void updateObject(IObject* ptr);
 		
 
@@ -273,28 +284,111 @@ namespace EagleLib
 
         // ****************************************************************************************************************/
         // Find suitable input parameters
+        /**
+         * @brief listInputs
+         * @return
+         */
 		virtual std::vector<std::string> listInputs();
+        /**
+         * @brief listParameters
+         * @return
+         */
 		virtual std::vector<std::string>	 listParameters();
+        /**
+         * @brief findType
+         * @param param
+         * @return
+         */
         virtual std::vector<std::string> findType(Parameter::Ptr param);
+        /**
+         * @brief findType
+         * @param typeInfo
+         * @return
+         */
         virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo);
+        /**
+         * @brief findType
+         * @param typeInfo
+         * @param nodes
+         * @return
+         */
         virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo, std::vector<Node*>& nodes);
+        /**
+         * @brief findType
+         * @param param
+         * @param nodes
+         * @return
+         */
         virtual std::vector<std::string> findType(Parameter::Ptr param, std::vector<Node *> &nodes);
+        /**
+         * @brief findCompatibleInputs
+         * @return
+         */
 		virtual std::vector<std::vector<std::string>> findCompatibleInputs();
+        /**
+         * @brief findCompatibleInputs
+         * @param paramName
+         * @return
+         */
         std::vector<std::string> findCompatibleInputs(const std::string& paramName);
+        /**
+         * @brief findCompatibleInputs
+         * @param paramIdx
+         * @return
+         */
         std::vector<std::string> findCompatibleInputs(int paramIdx);
+        /**
+         * @brief findCompatibleInputs
+         * @param param
+         * @return
+         */
         std::vector<std::string> findCompatibleInputs(Parameter::Ptr param);
+        /**
+         * @brief setInputParameter
+         * @param sourceName
+         * @param inputName
+         */
         virtual void setInputParameter(const std::string& sourceName, const std::string& inputName);
+        /**
+         * @brief setInputParameter
+         * @param sourceName
+         * @param inputIdx
+         */
         virtual void setInputParameter(const std::string& sourceName, int inputIdx);
+        /**
+         * @brief updateInputParameters
+         */
 		virtual void updateInputParameters();
+
+        /**
+         * @brief getParameter
+         * @param idx
+         * @return
+         */
 		virtual boost::shared_ptr<Parameter> getParameter(int idx);
+
+        /**
+         * @brief getParameter
+         * @param name
+         * @return
+         */
 		virtual boost::shared_ptr<Parameter> getParameter(const std::string& name);
 		
-		template<typename T> size_t
-			addParameter(const std::string& name,
-						const T& data,
-						Parameter::ParamType type_ = Parameter::Control,
-						const std::string& toolTip_ = std::string(),
-						const bool& ownsData_ = false)
+        /**
+         * @brief addParameter
+         * @param name
+         * @param data
+         * @param type_
+         * @param toolTip_
+         * @param ownsData_
+         * @return
+         */
+        template<typename T> size_t
+        addParameter(const std::string& name,
+                    const T& data,
+                    Parameter::ParamType type_ = Parameter::Control,
+                    const std::string& toolTip_ = std::string(),
+                    const bool& ownsData_ = false)
 		{
 			if(std::is_pointer<T>::value)
 				parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_ + Parameter::NotifyOnRecompile, toolTip_, ownsData_)));
@@ -304,8 +398,18 @@ namespace EagleLib
             (*onParameterAdded)();
 			return parameters.size() - 1;
 		}
+
+        /**
+         * @brief addParameter adds a parameter of specified type to the parameter list, mostly used by updateParameter, since update parameter checks for existence
+         * @param name is the name for the parameter
+         * @param data initialized data for the parameter
+         * @param type_ is the parameter type, ie Control, Status, Input, Output
+         * @param toolTip_ is the tooltip to be displayed on theuser interface for this parameter, ie units, ranges, etc
+         * @param ownsData_ set to true if you want this parameter to try to delete the data upon parameter destruction
+         * @return
+         */
         template<typename T> size_t
-            addParameter(const std::string& name,
+        addParameter(const std::string& name,
                         T& data,
                         Parameter::ParamType type_ = Parameter::Control,
                         const std::string& toolTip_ = std::string(),
@@ -320,8 +424,13 @@ namespace EagleLib
             return parameters.size() - 1;
         }
 
-
-		template<typename T> size_t
+        /**
+          * @brief addInputParameter is used to define an input parameter for a node
+          * @param name is the internal name of the input parameter
+          * @param toolTip_ is the tooltip to be displayed on the UI
+          * @return the index of the parameter
+          */
+         template<typename T> size_t
 			addInputParameter(const std::string& name, const std::string& toolTip_ = std::string())
 		{
 			parameters.push_back(boost::shared_ptr< InputParameter<T> >(new InputParameter<T>(name, toolTip_)));
@@ -329,13 +438,24 @@ namespace EagleLib
 			return parameters.size() - 1;
 		}
 
+        /**
+          * @brief updateParameter is frequently used in nodes to add or update a parameter's value
+          * @param name is the name of the parameter
+          * @param data is the data that the parameter stores
+          * @param type_ is the parameter type, ie Control, Status, Input, Output
+          * @param toolTip_ is the tooltip to be displayed on the user interface for this parameter, IE units, ranges, etc
+          * @param ownsData_ is used to flag if this parameter object owns the data being passed into it.
+          * @param this is used if the parameter is a raw pointer, in which case on destruction of the parameter, it needs to be
+          * @param deleted.
+          * @return true on success, false on failure to add parameter.
+          */
 
-		template<typename T> bool
-			updateParameter(const std::string& name,
-							const T& data,
-							Parameter::ParamType type_ = Parameter::Control,
-							const std::string& toolTip_ = std::string(),
-							const bool& ownsData_ = false)
+        template<typename T> bool
+        updateParameter(const std::string& name,
+                        const T& data,
+                        Parameter::ParamType type_ = Parameter::Control,
+                        const std::string& toolTip_ = std::string(),
+                        const bool& ownsData_ = false)
 		{
 			auto param = getParameter<T>(name);
 			if (param == NULL)
@@ -349,6 +469,7 @@ namespace EagleLib
             param->onUpdate();
 			return true;
 		}
+        // Is this needed?  Will the above suffice?
         template<typename T> bool
             updateParameter(const std::string& name,
                             T& data,
@@ -368,8 +489,16 @@ namespace EagleLib
             param->onUpdate();
             return true;
         }
-
-		template<typename T> bool
+        /**
+         * @brief updateParameter overload of the above accept accessing a paramter via index instead of name
+         * @param idx index of parameter
+         * @param data see above
+         * @param name see above
+         * @param quickHelp see above
+         * @param type_ see above
+         * @return see above
+         */
+        template<typename T> bool
 			updateParameter(int idx,
 							T data,
 							const std::string& name = std::string(),
@@ -504,15 +633,46 @@ namespace EagleLib
         //
         // ****************************************************************************************************************
 
-
+        /**
+         * @brief swap is supposed to swap positions of this node and other node.  This would swap it into the same place
+         * @brief wrt other's parent, and swap all children.  This would not do anything to the parameters.  Not implemented
+         * @brief and tested yet.
+         * @param other
+         * @return
+         */
         virtual Node *swap(Node *other);
 
         virtual void Init(bool firstInit = true);
+        /**
+         * @brief Init [DEPRICATED], would be used to load the configuration of this node froma  file
+         * @param configFile
+         */
         virtual void Init(const std::string& configFile);
+        /**
+         * @brief Init is used to reload a node based on a saved .yml configuration.
+         * @brief base implementation reloads children, parameters and name information.
+         * @brief override to extend to include other node specific persistence.
+         * @brief Needs to match with the Serialize(cv::FileStorage& fs) function.
+         * @param configNode is the fileNode representing the configuration of this node
+         */
         virtual void Init(const cv::FileNode& configNode);
+        /**
+         * @brief Serialize serializes in and out the variables of a node during runtime object swapping.
+         * @brief The default implementation handles serializing name parameters, children and parameters.
+         * @param pSerializer is the serializer object that stores variables during swap
+         */
         virtual void Serialize(ISimpleSerializer *pSerializer);
+        /**
+         * @brief Serialize [DEPRICATED] initial intention was to use this for persistence
+         * @param fs
+         */
         virtual void Serialize(cv::FileStorage& fs);
-
+        /**
+         * @brief SkipEmpty is used to flag if a node's doProcess function should be called on an empty input img.
+         * @brief by default, all nodes just skip processing on an empty input.  For file loading nodes, this isn't desirable
+         * @brief so for any nodes that generate an output, they override this function to return false.
+         * @return true if this node should skip empty images, false otherwise.
+         */
         virtual bool SkipEmpty() const;
 
         // ****************************************************************************************************************
@@ -521,11 +681,15 @@ namespace EagleLib
         //
         // ****************************************************************************************************************
 
-
+        // Used for logging / UI updating when an error occurs.
         boost::function<void(Verbosity, const std::string&, Node*)>         messageCallback;
-		// Function for setting input parameters
+        // Depricated
         boost::function<int(std::vector<std::string>)>						inputSelector;
+        // Used to signal if an update is required.  IE if performing static image analysis, if no parameters of a node
+        // are updated, there is no reason to re-process the image with the same parameters.
+        // Just need to figure out the best way of implementing it.
         boost::function<void(Node*)>                                        onUpdate;
+        // Vector of child nodes
         std::vector<Node::Ptr>                                              children;
 
 		// Constant name that describes the node ie: Sobel
@@ -534,31 +698,42 @@ namespace EagleLib
         std::string															fullTreeName;       
 		// Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
         std::string															treeName;
+        // Vector of parameters for this node
         std::vector< boost::shared_ptr< Parameter > >						parameters;
+        // These can be used to for user defined UI displaying of images.  IE if you havea  custom widget for displaying
+        // nodes, you can plug that in here.
         boost::function<void(cv::Mat, Node*)>								cpuDisplayCallback;
         boost::function<void(cv::cuda::GpuMat, Node*)>						gpuDisplayCallback;
-        // This is a function that operates on the UI thread, on a cv::Mat for display.
-        // This can be used for
+        // This is depricated since we now use the UIThreadCallback singleton for posting functions to a queue for processing
         boost::function<void(boost::function<cv::Mat()>, Node*)>            uiThreadCallback;
         boost::function<void(boost::function<void()>, Node*)>               d_uiThreadCallback;
-		/* If true, draw results onto the image being processed */
+
+        /* If true, draw results onto the image being processed, hardly ever used */
         bool																drawResults;
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
 		bool																externalDisplay;
+        // Toggling this disables a node's doProcess code from ever being called
         bool                                                                enabled;
+
         bool                                                                profile;
+
         double                                                              processingTime;
+        // Mutex for blocking processing of a node during parameter update
         boost::recursive_mutex                                              mtx;
         boost::shared_ptr<boost::signals2::signal<void(void)>>              onParameterAdded;
         std::vector<std::pair<clock_t, int>> timings;
     private:
         friend class NodeManager;
+        // Depricated, I think
         ObjectId                                                            m_OID;
+        // Pointer to parent node
         Node*                                                               parent;
         boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
         ConstBuffer<cv::cuda::GpuMat>                                       childResults;
     };
-    
+    /**
+     * @brief The EventLoopNode class depricated?
+     */
     class CV_EXPORTS EventLoopNode: public Node
     {
     protected:

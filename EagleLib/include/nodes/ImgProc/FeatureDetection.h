@@ -43,6 +43,7 @@ namespace EagleLib
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 
+<<<<<<< Updated upstream
     class HistogramRange: public Node
     {
         cv::cuda::GpuMat levels;
@@ -51,5 +52,15 @@ namespace EagleLib
         HistogramRange();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+=======
+    class Histogram: public Node
+    {
+        cv::cuda::GpuMat levels;
+    public:
+        Histogram();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        void updateRange();
+>>>>>>> Stashed changes
     };
 }

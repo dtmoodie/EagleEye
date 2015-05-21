@@ -88,8 +88,7 @@ namespace EagleLib
         std::vector<shared_ptr<Node>> loadNodes(const std::string& saveFile);
         void saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, const std::string& fileName);
         void saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, cv::FileStorage fs);
-
-
+        void printNodeTree(boost::function<void(std::string)> f);
 		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
 		void setupModule(IPerModuleInterface* pPerModuleInterface);
         void loadModule(const std::string& filePath);

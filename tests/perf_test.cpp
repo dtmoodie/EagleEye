@@ -29,7 +29,8 @@ int main(int argc, char* argv[])
     desc.add_options()
             ("Help", "Produce help message")
             ("nodeFile", po::value<std::string>(), "Set input file describing node map")
-            ("videoFile",po::value<std::string>(), "Set file to process");
+            ("videoFile",po::value<std::string>(), "Set file to process")
+            ("loop", po::value<bool>(), "flag to loop video, defaults to false");
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
@@ -40,7 +41,13 @@ int main(int argc, char* argv[])
     }
 
     auto nodes = EagleLib::NodeManager::getInstance().loadNodes(vm["nodeFile"].as<std::string>());
+    EagleLib::NodeManager::getInstance().printNodeTree();
     EagleLib::Node::Ptr playbackNode;
+    bool loop = false;
+    if(vm.count("loop"))
+    {
+        loop = vm["loop"].as<bool>();
+    }
     if(vm.count("videoFile"))
     {
         std::string fileName = vm["videoFile"].as<std::string>();
@@ -48,13 +55,20 @@ int main(int argc, char* argv[])
         {
            EagleLib::Node::Ptr tmpNode = setVideoFile(nodes[i], fileName);
            if(tmpNode != nullptr)
+           {
                playbackNode = tmpNode;
+               playbackNode->updateParameter("Loop", loop);
+           }
         }
         if(playbackNode == nullptr)
         {
             std::cout << "Error, no video playback node defined" << std::endl;
             return 1;
         }
+
+
+
+
         std::vector<cv::cuda::GpuMat> images(nodes.size());
         std::vector<cv::cuda::Stream> streams(nodes.size());
         while(!playbackNode->getParameter<bool>("End of video")->data)

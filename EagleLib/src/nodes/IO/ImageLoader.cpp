@@ -22,7 +22,7 @@ void ImageLoader::load()
         {
             log(Status, "File doesn't exist");
         }
-    } 
+    }
 }
 
 cv::cuda::GpuMat ImageLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)

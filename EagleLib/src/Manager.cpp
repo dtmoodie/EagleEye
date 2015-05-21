@@ -523,6 +523,46 @@ void NodeManager::setCompileCallback(boost::function<void (const std::string &, 
 {
     m_pCompileLogger->callback = f;
 }
+void printTreeHelper(std::stringstream& tree, int level, Node* node)
+{
+    for(int i = 0; i < level; ++i)
+    {
+        tree << "+";
+    }
+    tree << node->fullTreeName << std::endl;
+    for(int i = 0; i < node->children.size(); ++i)
+    {
+        printTreeHelper(tree, level+1, node->children[i].get());
+    }
+}
+
+void NodeManager::printNodeTree(boost::function<void(std::string)> f)
+{
+    std::stringstream tree;
+    std::vector<weak_ptr<Node>> parentNodes;
+    // First get the top level nodes for the tree
+    for(int i = 0; i < nodes.size(); ++i)
+    {
+        if(nodes[i] != nullptr)
+        {
+            if(nodes[i]->parent == nullptr)
+            {
+                parentNodes.push_back(nodes[i]);
+            }
+        }
+    }
+    for(int i = 0; i < parentNodes.size(); ++i)
+    {
+        printTreeHelper(tree, 0, parentNodes[i].get());
+    }
+    if(f)
+    {
+        f(tree.str());
+    }else
+    {
+        std::cout << tree << std::endl;
+    }
+}
 
 Node*
 NodeManager::getParent(const std::string& sourceNode)

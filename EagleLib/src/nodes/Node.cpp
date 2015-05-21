@@ -271,6 +271,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
             {
                 //boost::recursive_mutex::scoped_lock lock(mtx);
                 start = boost::posix_time::microsec_clock::universal_time();
+                // Used for debugging which nodes have started, thus if a segfault occurs you can know which node caused it
                 if(debug_verbosity <= Status)
                 {
                     log(Status, "Start: " + fullTreeName);
@@ -278,6 +279,9 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                 if(enabled)
                 {
                     boost::recursive_mutex::scoped_lock lock(mtx);
+                    // Do I lock each parameters mutex or do I just lock each node?
+                    // I should only lock each node, but then I need to make sure the UI keeps track of the node
+                    // to access the node's mutex while accessing a parameter, for now this works though.
                     std::vector<boost::recursive_mutex::scoped_lock> locks;
                     for(int i = 0; i < parameters.size(); ++i)
                     {
@@ -314,9 +318,27 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         }catch(cv::Exception &err)
         {
             log(Error, err.what());
+        }catch(boost::thread_resource_error& err)
+        {
+            log(Error, err.what());
+        }catch(boost::thread_exception& err)
+        {
+            log(Error, err.what());
+        }catch(boost::thread_interrupted& err)
+        {
+            log(Error, "Thread interrupted");
+            // Needs to pass this back up to the chain to the processing thread.
+            // That way it knowns it needs to exit this thread
+            throw err;
+        }catch(boost::exception &err)
+        {
+            log(Error, "Boost error");
         }catch(std::exception &err)
         {
             log(Error, err.what());
+        }catch(...)
+        {
+            log(Error, "Unknown exception");
         }
     }
     try
@@ -327,6 +349,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         cv::cuda::GpuMat* childResult = childResults.getFront();
         if(!img.empty())
             img.copyTo(*childResult,stream);
+        // Prevents adding of children while running, debatable how much this is needed
         boost::recursive_mutex::scoped_lock lock(mtx);
         for(int i = 0; i < children.size(); ++i)
         {
@@ -343,24 +366,28 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     }catch(boost::thread_exception& err)
     {
         log(Error, err.what());
-
+    }catch(cv::Exception &err)
+    {
+        log(Error, err.what());
     }catch(boost::thread_resource_error& err)
+    {
+        log(Error, err.what());
+    }catch(boost::thread_exception& err)
     {
         log(Error, err.what());
 
     }catch(boost::thread_interrupted& err)
     {
         log(Error, "Thread interrupted");
+        // Needs to pass this back up to the chain to the processing thread.
+        // That way it knowns it needs to exit this thread
         throw err;
-    }catch(cv::Exception &err)
-    {
-        log(Error, err.what());
-    }catch(std::exception &err)
-    {
-        log(Error, err.what());
     }catch(boost::exception &err)
     {
         log(Error, "Boost error");
+    }catch(std::exception &err)
+    {
+        log(Error, err.what());
     }catch(...)
     {
         log(Error, "Unknown exception");

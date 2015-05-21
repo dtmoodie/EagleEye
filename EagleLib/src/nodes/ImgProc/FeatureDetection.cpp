@@ -270,6 +270,7 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
     }
     return img;
 }
+<<<<<<< Updated upstream
 void HistogramRange::Init(bool firstInit)
 {
     updateParameter<double>("Lower bound", 0.0);
@@ -320,9 +321,62 @@ void HistogramRange::updateLevels()
     }
     levels.upload(h_mat);
     updateParameter("Histogram bins", h_mat, Parameter::Output);
+=======
+void Histogram::Init(bool firstInit)
+{
+    updateParameter("Lower bound", double(0.0));
+    updateParameter("Upper bound", double(1.0));
+    updateParameter("Bin count", int(100));
+    updateRange();
+}
+
+cv::cuda::GpuMat Histogram::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+{
+    if(parameters[0]->changed ||
+       parameters[1]->changed ||
+       parameters[2]->changed)
+        updateRange();
+    cv::cuda::GpuMat hist;
+    if(img.channels() == 1)
+    {
+        cv::cuda::histRange(img,hist, levels,stream);
+        return hist;
+    }else
+    {
+        if(img.channels() == 4)
+        {
+
+        }else
+        {
+            log(Warning,"Image channels != 1 or 4");
+        }
+    }
+    return img;
+}
+void Histogram::updateRange()
+{
+    double lower = getParameter<double>(0)->data;
+    double upper = getParameter<double>(1)->data;
+    int count = getParameter<int>(2)->data;
+    cv::Mat h_range(1, count, CV_32F);
+    // Evenly divide the range between upper and lower
+    double range = upper - lower;
+    double step = range / double(count);
+    int i = 0;
+    for(double val = lower; val < upper; val += step)
+    {
+        h_range.at<float>(i) = val;
+        ++i;
+    }
+    levels.upload(h_range);
+>>>>>>> Stashed changes
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrackDetector)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ORBFeatureDetector)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FastFeatureDetector)
+<<<<<<< Updated upstream
 NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramRange)
+=======
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Histogram)
+>>>>>>> Stashed changes
