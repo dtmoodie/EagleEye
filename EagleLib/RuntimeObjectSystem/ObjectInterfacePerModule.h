@@ -311,6 +311,10 @@ public:
 		m_FreeIds.clear();
 		m_ConstructedObjects.clear();
 	}
+        virtual int GetInterfaceId() const
+        {
+            return T::s_interfaceID;
+        }
 
 private:
 	bool                            m_bIsSingleton;
@@ -366,6 +370,7 @@ public:
 	{
 		return GetTypeNameStatic();
 	}
+
 private:
 	void SetPerTypeId( PerTypeObjectId id ) { m_Id = id; }
 	PerTypeObjectId m_Id;

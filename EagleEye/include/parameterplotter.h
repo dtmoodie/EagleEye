@@ -2,7 +2,7 @@
 #define PARAMETERPLOTTER_H
 #include <qcustomplot.h>
 #include "Parameters.h"
-#include "ParameterPlotter.hpp"
+#include "ParameterPlotterImpl.hpp"
 
 
 

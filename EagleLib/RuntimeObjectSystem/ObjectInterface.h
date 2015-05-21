@@ -79,6 +79,7 @@ struct IObjectConstructor
 	virtual const char* GetSourceDependency( size_t Num_ ) const = 0;
     virtual void SetProjectId( unsigned short projectId_ ) = 0;
     virtual unsigned short GetProjectId() const = 0;
+    virtual int GetInterfaceId() const = 0;
 
     // Singleton functions
     virtual bool        GetIsSingleton() const = 0;

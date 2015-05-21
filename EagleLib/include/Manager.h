@@ -34,6 +34,7 @@ namespace EagleLib
 {
     class Node;
 	class Parameter;
+    class Plotter;
     const size_t LOGSYSTEM_MAX_BUFFER = 4096;
 
 
@@ -68,6 +69,13 @@ namespace EagleLib
         void processCallback();
         void processAllCallbacks();
         void setUINotifier(boost::function<void(void)> f);
+    };
+    class CV_EXPORTS PlotManager
+    {
+    public:
+        static PlotManager& getInstance();
+        shared_ptr<Plotter> getPlot(const std::string& plotName);
+        std::vector<std::string> getAvailablePlots();
     };
 
     class CV_EXPORTS NodeManager : public IObjectFactoryListener
@@ -118,22 +126,11 @@ namespace EagleLib
 		Node* getParent(const std::string& sourceNode);
         std::vector<std::string> getConstructableNodes();
         std::vector<std::string> getParametersOfType(boost::function<bool(Loki::TypeInfo&)> selector);
-//        template<typename T> std::vector<std::string> getParametersOfType()
-//        {
-//            std::vector<std::string> parameters;
-//            for(int i = 0; i < nodes.size(); ++i)
-//            {
-//                for(int j = 0; j < nodes[i]->parameters.size(); ++j)
-//                {
-//                    if(acceptsType<T>(nodes[i]->parameters[j]->typeInfo))
-//                        parameters.push_back(nodes[i]->parameters[j]->treeName);
-//                }
-//            }
-//            return parameters;
-//        }
+
 
 
 	private:
+        friend class PlotManager;
 		NodeManager();
 		virtual ~NodeManager();
         boost::shared_ptr<IRuntimeObjectSystem>             m_pRuntimeObjectSystem;

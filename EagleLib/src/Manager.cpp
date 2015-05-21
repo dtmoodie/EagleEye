@@ -3,6 +3,7 @@
 #include "StdioLogSystem.h"
 #include <boost/filesystem.hpp>
 #include "nodes/Node.h"
+#include "plotters/Plotter.h"
 #include <stdarg.h>
 #include <assert.h>
 #include <iostream>
@@ -126,6 +127,42 @@ void UIThreadCallback::setUINotifier(boost::function<void(void)> f)
     notifier = f;
 }
 
+PlotManager& PlotManager::getInstance()
+{
+    static PlotManager instance;
+    return instance;
+}
+
+shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
+{
+    IObjectConstructor* pConstructor = NodeManager::getInstance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(plotName.c_str());
+    if(pConstructor && pConstructor->GetInterfaceId() == IID_Plotter)
+    {
+        IObject* obj = pConstructor->Construct();
+        if(obj)
+        {
+            obj = obj->GetInterface(IID_Plotter);
+            if(obj)
+            {
+                Plotter* plotter = static_cast<Plotter*>(obj);
+            }
+        }
+    }
+}
+
+std::vector<std::string> PlotManager::getAvailablePlots()
+{
+    AUDynArray<IObjectConstructor*> constructors;
+    NodeManager::getInstance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+    std::vector<std::string> output;
+    for(int i = 0; i < constructors.Size(); ++i)
+    {
+        if(constructors[i]->GetInterfaceId() == IID_Plotter)
+            output.push_back(constructors[i]->GetName());
+    }
+    return output;
+}
+
 NodeManager& NodeManager::getInstance()
 {
 	static NodeManager instance;
@@ -222,10 +259,9 @@ NodeManager::OnConstructorsAdded()
 
 shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
 {
-
     IObjectConstructor* pConstructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
 
-    if(pConstructor)
+    if(pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
     {
         IObject* pObj = pConstructor->Construct();
         IObject* interface = pObj->GetInterface(IID_NodeObject);
@@ -246,6 +282,7 @@ shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
         // Invalid nodeName
         return shared_ptr<Node>();
     }
+
     return shared_ptr<Node>();
 }
 std::vector<shared_ptr<Node>> NodeManager::loadNodes(const std::string& saveFile)
@@ -511,7 +548,8 @@ NodeManager::getConstructableNodes()
     std::vector<std::string> output;
     for(int i = 0; i < constructors.Size(); ++i)
     {
-        output.push_back(constructors[i]->GetName());
+        if(constructors[i]->GetInterfaceId() == IID_NodeObject)
+            output.push_back(constructors[i]->GetName());
     }
     return output;
 }
