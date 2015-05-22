@@ -43,8 +43,7 @@ template<typename T> class shared_ptr;
 enum InterfaceIDEnum
 {
 	IID_IOBJECT,
-        IID_NodeObject,
-        IID_Plotter,
+    IID_NodeObject,
 	IID_ENDInterfaceID
 };
 
