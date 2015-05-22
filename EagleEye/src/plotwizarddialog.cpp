@@ -1,11 +1,19 @@
 #include "plotwizarddialog.h"
 #include "ui_plotwizarddialog.h"
-
+#include "Manager.h"
 PlotWizardDialog::PlotWizardDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::PlotWizardDialog)
 {
     ui->setupUi(this);
+    // Create plots for each plotter for demonstration purposes.
+    auto plotters = EagleLib::PlotManager::getInstance().getAvailablePlots();
+    for(int i = 0; i < plotters.size(); ++i)
+    {
+        EagleLib::PlotManager::getInstance().getPlot(plotters[i]);
+    }
+
+
 }
 
 PlotWizardDialog::~PlotWizardDialog()

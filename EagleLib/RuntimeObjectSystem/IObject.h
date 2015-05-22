@@ -44,6 +44,7 @@ enum InterfaceIDEnum
 {
 	IID_IOBJECT,
     IID_NodeObject,
+    IID_Plotter,
 	IID_ENDInterfaceID
 };
 
@@ -217,6 +218,8 @@ public:
     {
         swap(ptr);
     }
+
+
     ~shared_ptr()
     {
         if(m_object)

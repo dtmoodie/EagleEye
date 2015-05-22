@@ -19,6 +19,7 @@
 #include "../RuntimeObjectSystem/IRuntimeObjectSystem.h"
 #include "CudaUtils.hpp"
 #include "nodes/Node.h"
+#include "plotters/Plotter.h"
 #include "LokiTypeInfo.h"
 #define ADD_CONSTRUCTORS(managerObj)  \
 	auto moduleInterface = PerModuleInterface::GetInstance();	\
@@ -88,7 +89,7 @@ namespace EagleLib
         std::vector<shared_ptr<Node>> loadNodes(const std::string& saveFile);
         void saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, const std::string& fileName);
         void saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, cv::FileStorage fs);
-        void printNodeTree(boost::function<void(std::string)> f);
+        void printNodeTree(boost::function<void(std::string)> f = boost::function<void(std::string)>());
 		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
 		void setupModule(IPerModuleInterface* pPerModuleInterface);
         void loadModule(const std::string& filePath);

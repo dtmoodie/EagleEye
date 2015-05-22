@@ -270,7 +270,7 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
     }
     return img;
 }
-<<<<<<< Updated upstream
+
 void HistogramRange::Init(bool firstInit)
 {
     updateParameter<double>("Lower bound", 0.0);

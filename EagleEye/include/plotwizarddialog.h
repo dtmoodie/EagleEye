@@ -7,7 +7,8 @@
 #include "Parameters.h"
 #include "plotwindow.h"
 #include "parameterplotter.h"
-
+#include "../RuntimeObjectSystem/IObject.h"
+#include "plotters/Plotter.h"
 namespace Ui {
 class PlotWizardDialog;
 }
@@ -31,9 +32,16 @@ public slots:
     void plotParameter(EagleLib::Parameter::Ptr param);
 private slots:
     void on_addPlotBtn_clicked();
+    void on_tabWidget_currentChanged(int index);
 private:
+
+    // These are all the plot windows currently in the environment
     QVector<PlotWindow*> plotWindows;
-    QVector<ParameterPlotter*> plots;
+    // These are all the
+    QVector<QCustomPlot*> previewPlots;
+
+    // These are all the ploters which generate data from parameters that go into the plot window
+    QVector<shared_ptr<EagleLib::Plotter>> plotters;
     Ui::PlotWizardDialog *ui;
     QList<QCheckBox*> plotOptions;
 

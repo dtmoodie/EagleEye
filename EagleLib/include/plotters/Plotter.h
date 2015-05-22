@@ -76,6 +76,11 @@ namespace EagleLib
             bc = param_->onUpdate.connect(boost::bind(&QtPlotter::onUpdate, this));
         }
 
+        /**
+         * @brief acceptsType
+         * @param param
+         * @return
+         */
         virtual bool acceptsType(EagleLib::Parameter::Ptr param) const = 0;
 
 
