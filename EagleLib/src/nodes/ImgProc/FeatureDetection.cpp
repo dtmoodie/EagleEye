@@ -1,7 +1,7 @@
 #include "nodes/ImgProc/FeatureDetection.h"
 #include <opencv2/cudafeatures2d.hpp>
 #include <opencv2/cudafilters.hpp>
-#include <opencv2/cudaobjdetect.hpp>
+//#include <opencv2/cudaobjdetect.hpp>
 #include <opencv2/cudaoptflow.hpp>
 #include <opencv2/cudafeatures2d.hpp>
 #include <opencv2/cudaimgproc.hpp>

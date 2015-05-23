@@ -35,6 +35,19 @@
 #include "ISimpleSerializer.h"
 #include <algorithm>
 #include <assert.h>
+
+
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined CVAPI_EXPORTS
+#  define RCC_EXPORTS __declspec(dllexport)
+#elif defined __GNUC__ && __GNUC__ >= 4
+#  define RCC_EXPORTS  __attribute__ ((visibility ("default")))
+#else
+#  define RCC_EXPORTS 
+#endif
+
+
+
+
 struct ISimpleSerializer;
 class ObjectFactorySystem;
 template<typename T> class shared_ptr;
@@ -274,7 +287,7 @@ public:
 // IObject itself below is a special case as the base class
 // Also it doesn't hurt to have it coded up explicitly for reference
 
-struct IObject
+struct RCC_EXPORTS IObject
 {
     static const InterfaceID s_interfaceID = IID_IOBJECT;
 

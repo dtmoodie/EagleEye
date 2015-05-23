@@ -145,9 +145,14 @@ shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
             if(obj)
             {
                 Plotter* plotter = static_cast<Plotter*>(obj);
+				if (plotter)
+				{
+					return shared_ptr<Plotter>(plotter);
+				}
             }
         }
     }
+	return shared_ptr<Plotter>();
 }
 
 std::vector<std::string> PlotManager::getAvailablePlots()
@@ -560,7 +565,7 @@ void NodeManager::printNodeTree(boost::function<void(std::string)> f)
         f(tree.str());
     }else
     {
-        std::cout << tree << std::endl;
+        std::cout << tree.str() << std::endl;
     }
 }
 

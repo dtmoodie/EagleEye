@@ -363,26 +363,24 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         }
         // So here is the debate of is a node's output the output of it, or the output of its children....
         // img = childResults;
-    }catch(boost::thread_exception& err)
+	}catch (boost::thread_resource_error& err)
+	{
+		log(Error, err.what());
+	}catch (boost::thread_interrupted& err)
+	{
+		log(Error, "Thread interrupted");
+		// Needs to pass this back up to the chain to the processing thread.
+		// That way it knowns it needs to exit this thread
+		throw err;
+	}catch (boost::thread_exception& err)
     {
         log(Error, err.what());
-    }catch(cv::Exception &err)
-    {
-        log(Error, err.what());
-    }catch(boost::thread_resource_error& err)
-    {
-        log(Error, err.what());
-    }catch(boost::thread_exception& err)
-    {
-        log(Error, err.what());
-
-    }catch(boost::thread_interrupted& err)
-    {
-        log(Error, "Thread interrupted");
-        // Needs to pass this back up to the chain to the processing thread.
-        // That way it knowns it needs to exit this thread
-        throw err;
-    }catch(boost::exception &err)
+	}
+	catch (cv::Exception &err)
+	{
+		log(Error, err.what());
+	}
+	catch (boost::exception &err)
     {
         log(Error, "Boost error");
     }catch(std::exception &err)
