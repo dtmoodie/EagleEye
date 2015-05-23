@@ -11,6 +11,11 @@
 // EagleLib only contains the interface for the plotting mechanisms, actual implementations will be handled inside of
 // the plotting plugin
 
+
+
+
+
+
 class QCustomPlot;
 class QWidget;
 
@@ -53,6 +58,11 @@ namespace EagleLib
             {f = f_;}
     };
 
+    // The workflow for Qt visualization objects is as follows:
+    // 1) Check if a parameter can be plotted by a certain plotter via the acceptsType parameter
+    // 2) A parameter is set to monitor via setInput
+    // 3) A plot is set via the addPlot method
+    // 3)
 
     class QtPlotter: public Plotter
     {
@@ -105,6 +115,16 @@ namespace EagleLib
         }
 
         virtual QWidget* getSettingsWidget() const = 0;
+    };
+    class TestPlot: public QtPlotter
+    {
+    public:
+        TestPlot();
+        virtual bool acceptsType(EagleLib::Parameter::Ptr param) const;
+
+        virtual std::string plotName() const;
+
+        virtual QWidget* getSettingsWidget() const;
     };
 
 }

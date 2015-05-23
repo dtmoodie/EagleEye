@@ -52,6 +52,8 @@ private slots:
     void on_NewParameter();
     void newParameter();
     void displayRCCSettings();
+    void onPlotAdd(PlotWindow* plot);
+    void onPlotRemove(PlotWindow* plot);
 signals:
     void onNewParameter();
     void eLog(QString message);
@@ -59,6 +61,8 @@ signals:
     void qtDisplayImage(std::string name, cv::Mat img);
     void qtDisplayImage(boost::function<cv::Mat(void)> function, EagleLib::Node* node);
     void uiNeedsUpdate();
+    void pluginLoaded();
+
 private:
     void onError(const std::string& error);
     void onStatus(const std::string& status);

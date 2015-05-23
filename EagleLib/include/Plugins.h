@@ -2,5 +2,5 @@
 
 namespace EagleLib
 {
-    void loadPlugin(const std::string& fullPluginPath);
+    bool loadPlugin(const std::string& fullPluginPath);
 }

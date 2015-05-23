@@ -5,7 +5,7 @@ file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB forms "*UIs/*.ui")
 
-find_package(Qt5 REQUIRED Core)
+find_package(Qt5 REQUIRED Core Widgets PrintSupport)
 set(Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@)
 set(Boost_USE_STATIC @Boost_USE_STATIC@)
 set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)
@@ -26,7 +26,9 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}
     ${QT_INCLUDES}
-${Qt5Core_INCLUDE_DIRS}
+    ${Qt5Core_INCLUDE_DIRS}
+    ${Qt5Widgets_INCLUDE_DIRS}
+    ${Qt5PrintSupport_INCLUDE_DIRS}
 )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -35,4 +37,5 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 add_library(Plotting SHARED ${src} ${hdr} ${knl} ${UIS} ${MOC})
 add_dependencies(Plotting EagleLib)
-target_link_libraries(Plotting EagleLib)
+#add_custom_command(TARGET Plotting POST_BUILD COMMAND ${CMAKE_COMMAND} -E COPY_FILE)
+#target_link_libraries(Plotting EagleLib)

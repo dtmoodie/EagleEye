@@ -29,6 +29,7 @@ public:
 signals:
     void on_plotAdded(PlotWindow* plot);
 public slots:
+    void setup();
     void plotParameter(EagleLib::Parameter::Ptr param);
 private slots:
     void on_addPlotBtn_clicked();
@@ -41,7 +42,8 @@ private:
     QVector<QCustomPlot*> previewPlots;
 
     // These are all the ploters which generate data from parameters that go into the plot window
-    QVector<shared_ptr<EagleLib::Plotter>> plotters;
+    QVector<shared_ptr<EagleLib::QtPlotter>> previewPlotters;
+    QVector<shared_ptr<EagleLib::QtPlotter>> plotters;
     Ui::PlotWizardDialog *ui;
     QList<QCheckBox*> plotOptions;
 

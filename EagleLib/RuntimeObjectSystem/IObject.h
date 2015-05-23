@@ -182,7 +182,8 @@ template<typename T> class shared_ptr : public IObjectNotifiable
     T* m_object;
     int* refCount;
     friend class IObject;
-    friend class weak_ptr<T>;
+    template<typename U> friend class weak_ptr;
+    template<typename U> friend class shared_ptr;
     virtual void updateObject(IObject *ptr)
     {
         m_object = static_cast<T*>(ptr);
@@ -231,6 +232,11 @@ public:
     {
         swap(ptr);
     }
+    template<typename V> shared_ptr(shared_ptr<V> const& ptr):
+        shared_ptr()
+    {
+        swap(ptr);
+    }
 
 
     ~shared_ptr()
@@ -249,6 +255,12 @@ public:
         swap(r);
         return *this;
     }
+    template<typename V> shared_ptr& operator=(shared_ptr<V> const& r)
+    {
+        swap(r);
+        return &this;
+    }
+
     bool operator ==(T* p)
     {
         return m_object == p;
@@ -276,12 +288,29 @@ public:
         if(m_object)
             m_object->registerNotifier(this);
     }
+    template<typename V> void swap(shared_ptr<V> const & r)
+    {
+        decrement();
+        if(m_object)
+            m_object->deregisterNotifier(this);
+        m_object = dynamic_cast<T*>(r.m_object);
+        if(m_object == nullptr)
+            return;
+        refCount = r.refCount;
+        increment();
+        if(m_object)
+            m_object->registerNotifier(this);
+    }
     T* get() const
     {
         assert(m_object != nullptr);
         return m_object;
     }
-
+    template<typename V> V* get()
+    {
+        assert(m_object != nullptr);
+        return dynamic_cast<V*>(m_object);
+    }
 };
 
 // IObject itself below is a special case as the base class

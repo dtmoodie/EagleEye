@@ -5,15 +5,16 @@
 #ifdef _MSC_VER
 #include "Windows.h"
 
-void EagleLib::loadPlugin(const std::string& fullPluginPath)
+bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
 	HMODULE handle = LoadLibrary(fullPluginPath.c_str());
 	if (handle == nullptr)
-		return;
+        return false;
 	typedef IPerModuleInterface* (*moduleFunctor)();
 	moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetModule");
 	NodeManager::getInstance().setupModule(module());
 	FreeLibrary(handle);
+    return true;
 }
 
 
@@ -21,7 +22,7 @@ void EagleLib::loadPlugin(const std::string& fullPluginPath)
 #else
 #include "dlfcn.h"
 
-void EagleLib::loadPlugin(const std::string& fullPluginPath)
+bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
     void* handle = dlopen(fullPluginPath.c_str(), RTLD_LAZY);
     typedef IPerModuleInterface* (*moduleFunctor)();
@@ -32,11 +33,12 @@ void EagleLib::loadPlugin(const std::string& fullPluginPath)
            std::cerr << "Cannot load symbol 'GetModule': " << dlsym_error <<
                '\n';
            dlclose(handle);
-           return;
+           return false;
        }
     if(module == nullptr)
-        return;
+        return false;
     NodeManager::getInstance().setupModule(module());
+    return true;
 }
 
 

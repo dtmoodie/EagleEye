@@ -7,6 +7,8 @@ int main()
         shared_ptr<EagleLib::Node> nullPtr;
         {
             shared_ptr<EagleLib::Node> ptr(EagleLib::NodeManager::getInstance().addNode("VideoLoader"));
+            shared_ptr<EagleLib::Plotter> plotPtr = EagleLib::PlotManager::getInstance().getPlot("TestPlot");
+            shared_ptr<EagleLib::QtPlotter> qPlotPtr(plotPtr);
             for(int i = 0; i < 10; ++i)
             {
                 EagleLib::NodeManager::getInstance().CheckRecompile(true);

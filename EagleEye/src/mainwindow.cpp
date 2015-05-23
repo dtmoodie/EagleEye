@@ -78,6 +78,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
     connect(this, SIGNAL(onNewParameter()), this, SLOT(on_NewParameter()), Qt::QueuedConnection);
     connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
+    connect(plotWizardDialog, SIGNAL(on_plotAdded(PlotWindow*)), this, SLOT(onPlotAdd(PlotWindow*)));
+    connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
 
     EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
@@ -119,6 +121,15 @@ MainWindow::onStatus(const std::string &status)
 {
 
 }
+void MainWindow::onPlotAdd(PlotWindow* plot)
+{
+    ui->plotTabs->addTab(plot,plot->getPlotName());
+}
+void MainWindow::onPlotRemove(PlotWindow* plot)
+{
+
+}
+
 void saveWidgetPosition(NodeView* nodeView, cv::FileStorage& fs, EagleLib::Node::Ptr node, int& count)
 {
     QGraphicsProxyWidget* widget = nodeView->getWidget(node->GetObjectId());
@@ -213,8 +224,11 @@ void MainWindow::onLoadPluginClicked()
     QString filename = QFileDialog::getOpenFileName(this, "Select file");
     if(filename.size() == 0)
         return;
-    EagleLib::loadPlugin(filename.toStdString());
-    nodeListDialog->update();
+    if(EagleLib::loadPlugin(filename.toStdString()))
+    {
+        nodeListDialog->update();
+        emit pluginLoaded();
+    }
 }
 void MainWindow::on_NewParameter()
 {
