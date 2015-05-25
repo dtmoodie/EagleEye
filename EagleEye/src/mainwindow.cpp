@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
     rccSettings->hide();
     plotWizardDialog->hide();
 
-    startProcessingThread();
+
     cv::redirectError(&static_errorHandler);
 
     connect(nodeGraphView, SIGNAL(plotData(EagleLib::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(EagleLib::Parameter::Ptr)));
@@ -84,6 +84,26 @@ MainWindow::MainWindow(QWidget *parent) :
     EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
     EagleLib::NodeManager::getInstance().setCompileCallback(f);
+    QDir dir(QDir::currentPath());
+    dir.cd("Plugins");
+#ifdef _MSC_VER
+    QDir::entryInfoList("lib*.dll");
+#else
+    QFileInfoList files = dir.entryInfoList(QStringList("lib*.so"));
+#endif
+    for(int i = 0; i < files.size(); ++i)
+    {
+        if(files[i].isFile())
+        {
+            EagleLib::loadPlugin(files[i].absoluteFilePath().toStdString());
+        }
+    }
+    nodeListDialog->update();
+    emit pluginLoaded();
+
+
+    startProcessingThread();
+
 }
 
 MainWindow::~MainWindow()

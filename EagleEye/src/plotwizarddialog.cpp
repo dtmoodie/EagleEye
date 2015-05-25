@@ -10,6 +10,7 @@ PlotWizardDialog::PlotWizardDialog(QWidget *parent) :
     ui->setupUi(this);
     // Create plots for each plotter for demonstration purposes.
     setup();
+    connect(this, SIGNAL(update(int)), this, SLOT(handleUpdate(int)));
 }
 
 void PlotWizardDialog::setup()
@@ -28,12 +29,16 @@ void PlotWizardDialog::setup()
             if(plotter->type() == EagleLib::Plotter::QT_Plotter)
             {
                 shared_ptr<EagleLib::QtPlotter> qtPlotter(plotter);
+                plotter->setCallback(boost::bind(&PlotWizardDialog::onUpdate, this, (int)previewPlots.size()));
                 QCustomPlot* plot = new QCustomPlot(this);
                 previewPlots.push_back(plot);
+
                 QCPPlotTitle* title = new QCPPlotTitle(plot, QString::fromStdString(qtPlotter->plotName()));
                 qtPlotter->addPlot(plot);
+                plot->setInteractions((QCP::Interaction)255);
                 plot->plotLayout()->insertRow(0);
                 plot->plotLayout()->addElement(0,0,title);
+
                 ui->plotPreviewLayout->addWidget(plot);
                 previewPlotters.push_back(qtPlotter);
             }
@@ -45,6 +50,16 @@ PlotWizardDialog::~PlotWizardDialog()
 {
     delete ui;
 }
+void PlotWizardDialog::onUpdate(int idx)
+{
+    // Emit a signal with the idx from the current processing thread to the UI thread
+    emit update(idx);
+}
+void PlotWizardDialog::handleUpdate(int idx)
+{
+    previewPlotters[idx]->doUpdate();
+}
+
 void PlotWizardDialog::plotParameter(EagleLib::Parameter::Ptr param)
 {
     this->show();

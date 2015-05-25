@@ -41,9 +41,17 @@ namespace EagleLib
             SERIALIZE(param);
         }
 
-        virtual bool setInput(EagleLib::Parameter::Ptr param) = 0;
+        virtual bool setInput(EagleLib::Parameter::Ptr param_ = EagleLib::Parameter::Ptr())
+        {
+            bc.disconnect();
+            param = param_;
+            if(param)
+                bc = param->onUpdate.connect(boost::bind(&Plotter::onUpdate, this));
+        }
+
         virtual bool acceptsType(EagleLib::Parameter::Ptr param) const = 0;
-        virtual void onUpdate() const
+        virtual void doUpdate() = 0;
+        virtual void onUpdate()
         { if(f) f();}
         virtual std::string plotName() const = 0;
         virtual PlotterType type() const = 0;
@@ -66,7 +74,7 @@ namespace EagleLib
 
     class QtPlotter: public Plotter
     {
-
+    protected:
         std::vector<QCustomPlot*> plots;
     public:
         virtual void addPlot(QCustomPlot* plot_)
@@ -79,15 +87,6 @@ namespace EagleLib
             SERIALIZE(plots);
         }
 
-        virtual bool setInput(EagleLib::Parameter::Ptr param_ = EagleLib::Parameter::Ptr())
-        {
-
-            bc.disconnect();
-            param = param_;
-            if(param)
-                bc = param_->onUpdate.connect(boost::bind(&QtPlotter::onUpdate, this));
-        }
-
         /**
          * @brief acceptsType
          * @param param
@@ -95,12 +94,6 @@ namespace EagleLib
          */
         virtual bool acceptsType(EagleLib::Parameter::Ptr param) const = 0;
 
-
-        /**
-         * @brief onUpdate is called by a parameter's signal whenever a parameter is updated
-         */
-        virtual void onUpdate() const
-        {Plotter::onUpdate(); }
 
         /**
          * @brief plotName is the name of this specific plotting implementation
@@ -118,16 +111,16 @@ namespace EagleLib
 
         virtual QWidget* getSettingsWidget() const = 0;
     };
-    class TestPlot: public QtPlotter
-    {
-    public:
-        TestPlot();
-        virtual bool acceptsType(EagleLib::Parameter::Ptr param) const;
+//    class TestPlot: public QtPlotter
+//    {
+//    public:
+//        TestPlot();
+//        virtual bool acceptsType(EagleLib::Parameter::Ptr param) const;
 
-        virtual std::string plotName() const;
+//        virtual std::string plotName() const;
 
-        virtual QWidget* getSettingsWidget() const;
-    };
+//        virtual QWidget* getSettingsWidget() const;
+//    };
 
 }
 

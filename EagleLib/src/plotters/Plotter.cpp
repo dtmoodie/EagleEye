@@ -2,24 +2,24 @@
 
 using namespace EagleLib;
 
-TestPlot::TestPlot()
-{
+//TestPlot::TestPlot()
+//{
 
-}
-bool TestPlot::acceptsType(Parameter::Ptr param) const
-{
-    return true;
-}
+//}
+//bool TestPlot::acceptsType(Parameter::Ptr param) const
+//{
+//    return true;
+//}
 
-std::string TestPlot::plotName()const
-{
-    return "TestPlot";
-}
+//std::string TestPlot::plotName()const
+//{
+//    return "TestPlot";
+//}
 
-QWidget* TestPlot::getSettingsWidget() const
-{
-    return nullptr;
-}
+//QWidget* TestPlot::getSettingsWidget() const
+//{
+//    return nullptr;
+//}
 
 
-REGISTERCLASS(TestPlot)
+//REGISTERCLASS(TestPlot)
