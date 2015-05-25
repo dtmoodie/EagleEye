@@ -244,7 +244,7 @@ bool NodeView::eventFilter(QObject *object, QEvent *event)
     {
         if(event->type() == QEvent::MouseButtonRelease)
         {
-            currentWidget = nullptr;
+            //currentWidget = nullptr;
             resize = false;
             return false;
         }
