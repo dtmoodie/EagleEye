@@ -18,7 +18,7 @@ class PlotWizardDialog;
  *  It will then ask the user which plot to insert the data into.
  *  It will then spawn a ParameterPlotter object which will handle plotting and pass that object to the selected plot
 */
-
+class QCustomPlotter;
 class PlotWizardDialog : public QDialog
 {
     Q_OBJECT
@@ -32,6 +32,7 @@ public slots:
     void setup();
     void plotParameter(EagleLib::Parameter::Ptr param);
 private slots:
+    void on_drop();
     void on_addPlotBtn_clicked();
     void on_tabWidget_currentChanged(int index);
 private:
@@ -47,7 +48,7 @@ private:
     Ui::PlotWizardDialog *ui;
     QList<QCheckBox*> plotOptions;
 
-    QList<ParameterPlotterFactory*> availablePlotters;
+    shared_ptr<EagleLib::QtPlotter> currentPlotter;
 };
 
 #endif // PLOTWIZARDDIALOG_H

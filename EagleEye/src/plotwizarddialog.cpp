@@ -14,14 +14,11 @@ PlotWizardDialog::PlotWizardDialog(QWidget *parent) :
 
 void PlotWizardDialog::setup()
 {
-    for(int i = ui->plotPreviewLayout->count() - 1; i > 0 ; --i)
+    for(int i = 0; i < previewPlots.size(); ++i)
     {
-        QCustomPlot* plot = dynamic_cast<QCustomPlot*>(ui->plotPreviewLayout->itemAt(i));
-        if(plot)
-        {
-            delete plot;
-        }
+        delete previewPlots[i];
     }
+    previewPlots.clear();
     auto plotters = EagleLib::PlotManager::getInstance().getAvailablePlots();
     for(int i = 0; i < plotters.size(); ++i)
     {
@@ -32,6 +29,7 @@ void PlotWizardDialog::setup()
             {
                 shared_ptr<EagleLib::QtPlotter> qtPlotter(plotter);
                 QCustomPlot* plot = new QCustomPlot(this);
+                previewPlots.push_back(plot);
                 QCPPlotTitle* title = new QCPPlotTitle(plot, QString::fromStdString(qtPlotter->plotName()));
                 qtPlotter->addPlot(plot);
                 plot->plotLayout()->insertRow(0);
@@ -52,31 +50,37 @@ void PlotWizardDialog::plotParameter(EagleLib::Parameter::Ptr param)
     this->show();
     ui->tabWidget->setCurrentIndex(0);
     ui->inputDataType->setText(QString::fromStdString(TypeInfo::demangle(param->typeInfo.name())));
-//    for(auto it = plotOptions.begin(); it != plotOptions.end(); ++it)
-//    {
-//        //ui->plotOptionLayout->removeWidget((*it));
-//    }
-//    plotOptions.clear();
-//    availablePlotters.clear();
-//    availablePlotters = ParameterPlotter::getPlotters(param);
-//    for(auto itr = availablePlotters.begin(); itr != availablePlotters.end(); ++itr)
-//    {
-//        QCheckBox* box = new QCheckBox((*itr)->plotName());
-//        box->setChecked(false);
-//        box->setCheckable(true);
-//        plotOptions.push_back(box);
-//        //ui->plotOptionLayout->addWidget(box);
-//    }
+    for(int i = 0; i < previewPlotters.size(); ++i)
+    {
+        if(previewPlotters[i]->acceptsType(param))
+        {
+            previewPlotters[i]->setInput(param);
+        }else
+        {
+            previewPlotters[i]->setInput();
+        }
+    }
 }
 void PlotWizardDialog::on_addPlotBtn_clicked()
 {
     PlotWindow* plot = new PlotWindow(this);
     emit on_plotAdded(plot);
+    connect(plot, SIGNAL(onDrop()), this, SLOT(on_drop()));
     QCheckBox* box = new QCheckBox(plot->getPlotName());
     box->setCheckable(true);
     box->setChecked(false);
     ui->currentPlots->addWidget(box);
     plotWindows.push_back(plot);
+}
+void PlotWizardDialog::on_drop()
+{
+    for(int i = 0; i < plotWindows.size(); ++i)
+    {
+        if(plotWindows[i] == sender())
+        {
+            plotWindows[i]->addPlotter(currentPlotter);
+        }
+    }
 }
 
 void PlotWizardDialog::on_tabWidget_currentChanged(int index)

@@ -79,11 +79,13 @@ namespace EagleLib
             SERIALIZE(plots);
         }
 
-        virtual bool setInput(EagleLib::Parameter::Ptr param_)
+        virtual bool setInput(EagleLib::Parameter::Ptr param_ = EagleLib::Parameter::Ptr())
         {
+
             bc.disconnect();
             param = param_;
-            bc = param_->onUpdate.connect(boost::bind(&QtPlotter::onUpdate, this));
+            if(param)
+                bc = param_->onUpdate.connect(boost::bind(&QtPlotter::onUpdate, this));
         }
 
         /**

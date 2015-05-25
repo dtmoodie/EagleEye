@@ -1,8 +1,9 @@
 #ifndef PLOTWINDOW_H
 #define PLOTWINDOW_H
 #include "qcustomplot.h"
-#include "parameterplotter.h"
+#include "plotters/Plotter.h"
 #include <boost/shared_ptr.hpp>
+
 /* The plot window class used used to create a widget that looks as follows
  *
  *   --------------------------------------------------
@@ -34,13 +35,15 @@ public:
     explicit PlotWindow(QWidget *parent = 0);
     ~PlotWindow();
     QString getPlotName(){return _name;}
+    bool eventFilter(QObject *, QEvent *);
 public slots:
-    void addPlotter(boost::shared_ptr<ParameterPlotter> plotter);
-
+    void addPlotter(shared_ptr<EagleLib::QtPlotter> plotter);
+signals:
+    void onDrop();
 private:
     Ui::PlotWindow *ui;
     QCustomPlot* plot;
-    std::vector<boost::shared_ptr<ParameterPlotter>> plots;
+    std::vector<shared_ptr<EagleLib::QtPlotter>> plots;
 };
 
 #endif // PLOTWINDOW_H
