@@ -65,11 +65,13 @@ void NodeView::on_deleteNode()
 }
 void NodeView::on_displayImage()
 {
+    currentWidget = nullptr;
     if(currentParam != nullptr)
         emit displayImage(currentParam);
 }
 void NodeView::on_plotData()
 {
+    currentWidget = nullptr;
     if(currentParam != nullptr)
         emit plotData(currentParam);
 }

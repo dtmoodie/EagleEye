@@ -1,17 +1,34 @@
 #include "plotters/Plotter.h"
-#include "Histogram.h"
-
-
-
+#include "QVector"
+#include "PlottingImpl.hpp"
+#include "qcustomplot.h"
 
 using namespace EagleLib;
 
+namespace EagleLib
+{
+    class HistogramPlotter: public QtPlotter, public StaticPlotPolicy
+    {
+        QVector<QCPBars*> hists;
+        QVector<double> bins;
+    public:
+        HistogramPlotter();
+        virtual bool acceptsType(EagleLib::Parameter::Ptr param) const;
+        virtual std::string plotName() const;
+        virtual QWidget* getSettingsWidget() const;
+        virtual void addPlot(QCustomPlot *plot_);
+        virtual void doUpdate();
+        virtual void setInput(Parameter::Ptr param_);
+
+    };
+}
 HistogramPlotter::HistogramPlotter()
 {
 
 }
 bool HistogramPlotter::acceptsType(EagleLib::Parameter::Ptr param) const
 {
+
     return true;
 }
 std::string HistogramPlotter::plotName() const
@@ -51,8 +68,20 @@ void HistogramPlotter::addPlot(QCustomPlot *plot_)
     QtPlotter::addPlot(plot_);
     QCPBars* hist = new QCPBars(plot_->xAxis, plot_->yAxis);
     hist->setWidth(1);
+    plot_->addPlottable(hist);
+    plot_->rescaleAxes();
+    plot_->replot();
     hists.push_back(hist);
 }
-
+void HistogramPlotter::setInput(Parameter::Ptr param_)
+{
+    Plotter::setInput(param_);
+    doUpdate();
+    for(int i = 0; i < plots.size(); ++i)
+    {
+        plots[i]->rescaleAxes();
+        plots[i]->replot();
+    }
+}
 REGISTERCLASS(HistogramPlotter)
 

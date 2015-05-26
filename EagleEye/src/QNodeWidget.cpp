@@ -29,7 +29,7 @@ IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, 
     nameElement->installEventFilter(parent);
     nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
     connect(this, SIGNAL(updateNeeded()), this, SLOT(updateUi()), Qt::QueuedConnection);
-    parameter->onUpdate.connect(boost::bind(&IQNodeInterop::onParameterUpdate, this));
+    bc = parameter->onUpdate.connect(boost::bind(&IQNodeInterop::onParameterUpdate, this));
 
 	QLabel* typeElement = new QLabel(QString::fromStdString(TypeInfo::demangle(parameter_->typeInfo.name())));
 
@@ -45,7 +45,13 @@ IQNodeInterop::~IQNodeInterop()
 
 void IQNodeInterop::onParameterUpdate()
 {
-    emit updateNeeded();
+    boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
+    boost::posix_time::time_duration delta = currentTime - previousUpdateTime;
+    if(delta.total_milliseconds() > 30)
+    {
+        previousUpdateTime = currentTime;
+        emit updateNeeded();
+    }
 }
 
 void IQNodeInterop::updateUi()

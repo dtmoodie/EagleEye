@@ -25,6 +25,9 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
     void* handle = dlopen(fullPluginPath.c_str(), RTLD_LAZY);
+    // Fallback on old module
+
+
     typedef IPerModuleInterface* (*moduleFunctor)();
 
     moduleFunctor module = (moduleFunctor)dlsym(handle, "GetModule");

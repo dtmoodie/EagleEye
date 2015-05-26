@@ -283,7 +283,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                     // I should only lock each node, but then I need to make sure the UI keeps track of the node
                     // to access the node's mutex while accessing a parameter, for now this works though.
                     std::vector<boost::recursive_mutex::scoped_lock> locks;
-                    for(int i = 0; i < parameters.size(); ++i)
+                    for(size_t i = 0; i < parameters.size(); ++i)
                     {
                         locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
                     }

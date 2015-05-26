@@ -41,7 +41,7 @@ namespace EagleLib
             SERIALIZE(param);
         }
 
-        virtual bool setInput(EagleLib::Parameter::Ptr param_ = EagleLib::Parameter::Ptr())
+        virtual void setInput(EagleLib::Parameter::Ptr param_ = EagleLib::Parameter::Ptr())
         {
             bc.disconnect();
             param = param_;
@@ -51,8 +51,11 @@ namespace EagleLib
 
         virtual bool acceptsType(EagleLib::Parameter::Ptr param) const = 0;
         virtual void doUpdate() = 0;
+
         virtual void onUpdate()
-        { if(f) f();}
+        {
+            if(f) f();
+        }
         virtual std::string plotName() const = 0;
         virtual PlotterType type() const = 0;
         /**
@@ -93,6 +96,7 @@ namespace EagleLib
          * @return
          */
         virtual bool acceptsType(EagleLib::Parameter::Ptr param) const = 0;
+
 
 
         /**

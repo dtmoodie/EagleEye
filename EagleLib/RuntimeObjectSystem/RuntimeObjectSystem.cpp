@@ -468,6 +468,8 @@ void RuntimeObjectSystem::SetupRuntimeFileTracking(const IAUDynArray<IObjectCons
 
 	for (size_t i = 0, iMax = constructors_.Size(); i < iMax; ++i)
 	{
+        if(constructors_[i] == nullptr)
+            continue;
 		const char* pFilename = constructors_[i]->GetFileName(); // GetFileName returns full path including GetCompiledPath()
 		if( !pFilename )
 		{

@@ -4,5 +4,6 @@ project(Plugins)
 
 add_subdirectory(PCL_bridge)
 add_subdirectory(Plotting)
+add_subdirectory(Dev)
 
 

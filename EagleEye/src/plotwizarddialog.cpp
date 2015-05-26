@@ -20,6 +20,7 @@ void PlotWizardDialog::setup()
         delete previewPlots[i];
     }
     previewPlots.clear();
+    previewPlotters.clear();
     auto plotters = EagleLib::PlotManager::getInstance().getAvailablePlots();
     for(int i = 0; i < plotters.size(); ++i)
     {
@@ -30,7 +31,9 @@ void PlotWizardDialog::setup()
             {
                 shared_ptr<EagleLib::QtPlotter> qtPlotter(plotter);
                 plotter->setCallback(boost::bind(&PlotWizardDialog::onUpdate, this, (int)previewPlots.size()));
+
                 QCustomPlot* plot = new QCustomPlot(this);
+                plot->installEventFilter(this);
                 previewPlots.push_back(plot);
 
                 QCPPlotTitle* title = new QCPPlotTitle(plot, QString::fromStdString(qtPlotter->plotName()));
@@ -44,16 +47,56 @@ void PlotWizardDialog::setup()
             }
         }
     }
+    lastUpdateTime.resize(plotters.size());
 }
 
 PlotWizardDialog::~PlotWizardDialog()
 {
     delete ui;
 }
+bool PlotWizardDialog::eventFilter(QObject *obj, QEvent *ev)
+{
+    if(ev->type() == QEvent::MouseButtonPress)
+    {
+        bool found = false;
+        int i = 0;
+        for(; i < previewPlots.size(); ++i)
+        {
+            if(previewPlots[i] == obj)
+            {
+                found = true;
+                break;
+            }
+        }
+        if(found == false)
+            return false;
+        QMouseEvent* mev = dynamic_cast<QMouseEvent*>(ev);
+        if(mev->button() == Qt::MiddleButton)
+        {
+            currentPlotter = previewPlotters[i];
+            QDrag* drag = new QDrag(obj);
+            QMimeData* data = new QMimeData();
+            drag->setMimeData(data);
+            drag->exec();
+            return true;
+        }
+    }
+}
+
 void PlotWizardDialog::onUpdate(int idx)
 {
+    if(idx >= lastUpdateTime.size())
+        return;
     // Emit a signal with the idx from the current processing thread to the UI thread
-    emit update(idx);
+    // Limit the update rate by checking update time for each idx
+    boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
+    boost::posix_time::time_duration delta = currentTime - lastUpdateTime[idx];
+    // Prevent updating plots too often by limiting the update rate to every 30ms.
+    if(delta.total_milliseconds() > 30)
+    {
+        lastUpdateTime[idx] = currentTime;
+        emit update(idx);
+    }
 }
 void PlotWizardDialog::handleUpdate(int idx)
 {
@@ -93,7 +136,8 @@ void PlotWizardDialog::on_drop()
     {
         if(plotWindows[i] == sender())
         {
-            plotWindows[i]->addPlotter(currentPlotter);
+            if(currentPlotter != nullptr)
+                plotWindows[i]->addPlotter(currentPlotter);
         }
     }
 }

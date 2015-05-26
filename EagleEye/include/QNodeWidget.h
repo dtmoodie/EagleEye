@@ -110,6 +110,8 @@ public:
 
     IQNodeProxy* proxy;
     boost::shared_ptr<EagleLib::Parameter> parameter;
+    boost::signals2::connection bc;
+    boost::posix_time::ptime previousUpdateTime;
 public slots:
     virtual void updateUi();
 private slots:

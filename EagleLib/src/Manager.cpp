@@ -238,10 +238,10 @@ NodeManager::OnConstructorsAdded()
 	AUDynArray<IObjectConstructor*> constructors;
 	m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
 	std::vector<Node*> newNodes;
-	for (int i = 0; i < constructors.Size(); ++i)
+    for (size_t i = 0; i < constructors.Size(); ++i)
 	{
-		int numObjects = constructors[i]->GetNumberConstructedObjects();
-		for (int j = 0; j < numObjects; ++j)
+        size_t numObjects = constructors[i]->GetNumberConstructedObjects();
+        for (size_t j = 0; j < numObjects; ++j)
 		{
 			auto ptr = constructors[i]->GetConstructedObject(j);
 			ptr = ptr->GetInterface(IID_NodeObject);
@@ -253,9 +253,9 @@ NodeManager::OnConstructorsAdded()
 			}
 		}
 	}
-	for (int i = 0; i < newNodes.size(); ++i)
+    for (size_t i = 0; i < newNodes.size(); ++i)
 	{
-		for (int j = 0; j < newNodes[i]->parameters.size(); ++j)
+        for (size_t j = 0; j < newNodes[i]->parameters.size(); ++j)
 		{
 			newNodes[i]->parameters[j]->setSource(std::string());
 		}		
@@ -386,7 +386,49 @@ NodeManager::setupModule(IPerModuleInterface* pPerModuleInterface)
 {
 	m_pRuntimeObjectSystem->SetupObjectConstructors(pPerModuleInterface);
 }
+#ifdef _MSC_VER
 
+
+#else
+#include "dlfcn.h"
+bool
+NodeManager::loadModule(const std::string &filePath)
+{
+    void* handle = dlopen(filePath.c_str(), RTLD_LAZY);
+
+    typedef IPerModuleInterface* (*moduleFunctor)();
+
+    moduleFunctor module = (moduleFunctor)dlsym(handle, "GetModule");
+    const char *dlsym_error = dlerror();
+    if (dlsym_error) {
+           std::cerr << "Cannot load symbol 'GetModule': " << dlsym_error << '\n';
+           dlclose(handle);
+           return false;
+       }
+    if(module == nullptr)
+        return false;
+    NodeManager::getInstance().setupModule(module());
+
+    // Get additional compilation path directories
+
+    typedef void (*SetupModuleFunctor)(IRuntimeObjectSystem*);
+
+    SetupModuleFunctor pathFunctor = (SetupModuleFunctor)dlsym(handle, "SetupModule");
+    dlsym_error = dlerror();
+    if(dlsym_error)
+    {
+        std::cerr << "Cannot load symbol 'SetupModule': " << dlsym_error << '\n';
+        dlclose(handle);
+        return true;
+    }
+    if(pathFunctor == nullptr)
+        return true;
+    // This is scary and dangerous :/
+    pathFunctor(m_pRuntimeObjectSystem.get());
+    dlclose(handle);
+    return true;
+}
+#endif
 
 bool 
 NodeManager::CheckRecompile()

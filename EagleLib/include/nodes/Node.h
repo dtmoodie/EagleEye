@@ -62,13 +62,6 @@
 #include "../Parameters.h"
 
 
-#ifdef HAVE_PCL
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
-#include <pcl/pcl_macros.h>
-#else
-#pragma warning Not building with PCL support
-#endif
 
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 

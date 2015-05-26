@@ -37,7 +37,7 @@ namespace EagleLib
     class CV_EXPORTS Parameter
     {
     public:
-		
+
         typedef boost::shared_ptr<Parameter> Ptr;
 		static Ptr getParameter(const std::string& fulltreeName);
         virtual void setSource(const std::string& name) = 0;
@@ -52,11 +52,7 @@ namespace EagleLib
             fs << "ToolTip" << toolTip;
             fs << "TreeName" << treeName;
             fs << "ParamType" << type;
-#ifndef _MSC_VER
             fs << "DataType" << TypeInfo::demangle(typeInfo.name());
-#else
-            fs << "DataType" << typeInfo.name();
-#endif
         }
 
         enum ParamType
@@ -180,13 +176,13 @@ namespace EagleLib
     {
         Parameter::Serialize(fs);
         fs << "Enumerations" << "[:";
-        for(int i = 0; i < data.enumerations.size(); ++i)
+        for(size_t i = 0; i < data.enumerations.size(); ++i)
         {
             fs << data.enumerations[i];
         }
         fs << "]";
         fs << "Values" << "[:";
-        for(int i = 0; i < data.values.size(); ++i)
+        for(size_t i = 0; i < data.values.size(); ++i)
         {
             fs << data.values[i];
         }
@@ -229,6 +225,11 @@ namespace EagleLib
         {
 
         }
+        ~InputParameter()
+        {
+            bc.disconnect();
+        }
+
         // TODO: TEST THIS
         virtual void setSource(const std::string& name = std::string())
         {
@@ -237,23 +238,29 @@ namespace EagleLib
             if (name.size() != 0)
                 Parameter::inputName = name;
             if(param)
+            {
                 --param->subscribers;
+                bc.disconnect();
+            }
             param = Parameter::getParameter(Parameter::inputName);
             update();
             if(param)
             {
                 ++param->subscribers;
-                param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
+                bc = param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
             }
         }
         virtual void setSource(Parameter::Ptr param_)
         {
             if(param)
+            {
                 --param->subscribers;
+                bc.disconnect();
+            }
             param = param_;
             this->data = getParameterPtr<T>(param);
             ++param->subscribers;
-            param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
+            bc = param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
 
         }
 
@@ -267,7 +274,7 @@ namespace EagleLib
                 if(param)
                 {
                     ++param->subscribers;
-                    param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
+                    bc = param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
                 }
             }
             if(param == nullptr)
@@ -293,7 +300,7 @@ namespace EagleLib
             cv::FileNode myNode = fs[Parameter::name];
             setSource((std::string)myNode["Data"]);
         }
-
+        boost::signals2::connection bc;
         Parameter::Ptr param;
     };
     template<typename T> bool acceptsType(Loki::TypeInfo& type)

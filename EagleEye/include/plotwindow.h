@@ -38,12 +38,17 @@ public:
     bool eventFilter(QObject *, QEvent *);
 public slots:
     void addPlotter(shared_ptr<EagleLib::QtPlotter> plotter);
+    void on_resizePlot_activated();
 signals:
     void onDrop();
+private slots:
+
 private:
+
     Ui::PlotWindow *ui;
     QCustomPlot* plot;
     std::vector<shared_ptr<EagleLib::QtPlotter>> plots;
+    QMenu* rightClickMenu;
 };
 
 #endif // PLOTWINDOW_H

@@ -11,6 +11,10 @@ PlotWindow::PlotWindow(QWidget *parent) :
     plot->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
     plot->installEventFilter(this);
     plot->setAcceptDrops(true);
+    plot->setInteractions((QCP::Interaction)255);
+    rightClickMenu = new QMenu(this);
+    QAction* resizeAction = rightClickMenu->addAction("Rescale plot");
+    connect(resizeAction, SIGNAL(triggered()), this, SLOT(on_resizePlot_activated()));
 }
 
 PlotWindow::~PlotWindow()
@@ -22,6 +26,10 @@ void PlotWindow::addPlotter(shared_ptr<EagleLib::QtPlotter> plotter)
     plots.push_back(plotter);
     plotter->addPlot(plot);
 }
+void PlotWindow::on_resizePlot_activated()
+{
+    plot->rescaleAxes();
+}
 
 bool PlotWindow::eventFilter(QObject *obj, QEvent *ev)
 {
@@ -31,10 +39,24 @@ bool PlotWindow::eventFilter(QObject *obj, QEvent *ev)
         {
             QDragEnterEvent* dev = dynamic_cast<QDragEnterEvent*>(ev);
             dev->accept();
+            return true;
         }
         if(ev->type() == QEvent::Drop)
         {
             emit onDrop();
+            return true;
+        }
+        if(ev->type() == QEvent::MouseButtonPress)
+        {
+            QMouseEvent* mev = dynamic_cast<QMouseEvent*>(ev);
+            if(mev == nullptr)
+                return false;
+            if(mev->button() == Qt::RightButton)
+            {
+
+                rightClickMenu->popup(mapToGlobal(mev->pos()));
+            }
         }
     }
+    return false;
 }

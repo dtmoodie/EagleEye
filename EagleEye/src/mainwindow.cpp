@@ -95,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         if(files[i].isFile())
         {
+            //EagleLib::NodeManager::getInstance().loadModule(files[i].absoluteFilePath().toStdString());
             EagleLib::loadPlugin(files[i].absoluteFilePath().toStdString());
         }
     }
@@ -241,9 +242,14 @@ MainWindow::onLoadClicked()
 }
 void MainWindow::onLoadPluginClicked()
 {
-    QString filename = QFileDialog::getOpenFileName(this, "Select file");
+#ifdef _MSC_VER
+    QString filename = QFileDialog::getOpenFileName(this, "Select file", QString(), QString("*.dll"));
+#else
+    QString filename = QFileDialog::getOpenFileName(this, "Select file", QString(), QString("*.so"));
+#endif
     if(filename.size() == 0)
         return;
+    //if(EagleLib::NodeManager::getInstance().loadModule(filename.toStdString()))
     if(EagleLib::loadPlugin(filename.toStdString()))
     {
         nodeListDialog->update();

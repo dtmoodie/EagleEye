@@ -92,7 +92,7 @@ namespace EagleLib
         void printNodeTree(boost::function<void(std::string)> f = boost::function<void(std::string)>());
 		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
 		void setupModule(IPerModuleInterface* pPerModuleInterface);
-        void loadModule(const std::string& filePath);
+        bool loadModule(const std::string& filePath);
         void saveTree(const std::string& fileName);
         std::string getNodeFile(const ObjectId& id);
         bool Init();

@@ -26,6 +26,7 @@ class PlotWizardDialog : public QDialog
 public:
     explicit PlotWizardDialog(QWidget *parent = 0);
     ~PlotWizardDialog();
+    bool eventFilter(QObject *, QEvent *);
 signals:
     void on_plotAdded(PlotWindow* plot);
     void update(int idx);
@@ -52,6 +53,7 @@ private:
     QList<QCheckBox*> plotOptions;
 
     shared_ptr<EagleLib::QtPlotter> currentPlotter;
+    std::vector<boost::posix_time::ptime> lastUpdateTime;
 };
 
 #endif // PLOTWIZARDDIALOG_H

@@ -31,8 +31,19 @@ INCLUDE_DIRECTORIES(
     ${Qt5PrintSupport_INCLUDE_DIRS}
 )
 
+#add_definitions(-DQT_INCLUDE_DIR=${Qt5Core_INCLUDE_DIRS})
+add_definitions(-DPROJECT_INCLUDE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/include")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+message(STATUS
+"
+==============================================
+            Plotting
+    Qt core include dir: ${Qt5Core_INCLUDE_DIRS}
 
+
+
+
+")
 
 
 add_library(Plotting SHARED ${src} ${hdr} ${knl} ${UIS} ${MOC})
