@@ -25,3 +25,9 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_library(PCL_bridge SHARED PCL_bridge.h PCL_bridge.cpp)
 add_dependencies(PCL_bridge EagleLib)
 target_link_libraries(PCL_bridge EagleLib)
+
+set_target_properties(PCL_bridge PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
+            ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
+            LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
+)

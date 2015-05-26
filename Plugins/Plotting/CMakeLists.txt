@@ -37,5 +37,10 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 add_library(Plotting SHARED ${src} ${hdr} ${knl} ${UIS} ${MOC})
 add_dependencies(Plotting EagleLib)
+set_target_properties(Plotting PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
+            ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
+            LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
+)
 #add_custom_command(TARGET Plotting POST_BUILD COMMAND ${CMAKE_COMMAND} -E COPY_FILE)
 #target_link_libraries(Plotting EagleLib)
