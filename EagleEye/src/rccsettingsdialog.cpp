@@ -12,11 +12,12 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
 //    RCCPPOPTIMIZATIONLEVEL_PERF,			// Optimization for performance, debug experience may suffer. Default in RELEASE
 //    RCCPPOPTIMIZATIONLEVEL_NOT_SET,			// No optimization set in compile, so either underlying compiler default or set through SetAdditionalCompileOptions
 //    RCCPPOPTIMIZATIONLEVEL_SIZE
-    ui->comboBox->addItem("Default");
-    ui->comboBox->addItem("Debug");
-    ui->comboBox->addItem("Performance");
-    ui->comboBox->addItem("Not Set");
-    ui->comboBox->addItem("Size");
+
+    ui->comboBox->addItem(RCppOptimizationLevelStrings[0]);
+    ui->comboBox->addItem(RCppOptimizationLevelStrings[1]);
+    ui->comboBox->addItem(RCppOptimizationLevelStrings[2]);
+    ui->comboBox->addItem(RCppOptimizationLevelStrings[3]);
+    ui->comboBox->addItem(RCppOptimizationLevelStrings[4]);
     ui->comboBox->setCurrentIndex(EagleLib::NodeManager::getInstance().getOptimizationLevel());
 }
 

@@ -158,7 +158,7 @@ cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
             blockmask(iis, jis) = cv::Mat_<uint8_t>::zeros(cv::Size(jis.size(),iis.size()));
 
             cv::minMaxLoc(src(in,jn), NULL, &vnmax, NULL, &ijmax, masked ? mask(in,jn).mul(blockmask) : blockmask);
-            cv::Point cn = ijmax + cv::Point(jn.start, in.start);
+            //cv::Point cn = ijmax + cv::Point(jn.start, in.start);
 
             // if the block centre is also the neighbour centre, then it's a local maxima
             if (vcmax > vnmax) {

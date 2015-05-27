@@ -12,7 +12,7 @@ PlotWizardDialog::PlotWizardDialog(QWidget *parent) :
     ui->setupUi(this);
     // Create plots for each plotter for demonstration purposes.
     setup();
-    connect(this, SIGNAL(update(int)), this, SLOT(handleUpdate(int)));
+    connect(this, SIGNAL(update(size_t)), this, SLOT(handleUpdate(size_t)));
 }
 
 void PlotWizardDialog::setup()
@@ -85,7 +85,7 @@ bool PlotWizardDialog::eventFilter(QObject *obj, QEvent *ev)
     }
 }
 
-void PlotWizardDialog::onUpdate(int idx)
+void PlotWizardDialog::onUpdate(size_t idx)
 {
     if(idx >= lastUpdateTime.size())
         return;
@@ -100,7 +100,7 @@ void PlotWizardDialog::onUpdate(int idx)
         emit update(idx);
     }
 }
-void PlotWizardDialog::handleUpdate(int idx)
+void PlotWizardDialog::handleUpdate(size_t idx)
 {
     previewPlotters[idx]->doUpdate();
 }

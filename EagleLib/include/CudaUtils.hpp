@@ -76,6 +76,7 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
         bool wait()
         {
             fillEvent.waitForCompletion();
+            return true;
         }
         bool record(cv::cuda::Stream& stream)
         {

@@ -18,7 +18,7 @@ using namespace EagleLib;
 
 void CompileLogger::log(int level, const char *format, va_list args)
 {
-    int result = vsnprintf(m_buff, LOGSYSTEM_MAX_BUFFER-1, format, args);
+    vsnprintf(m_buff, LOGSYSTEM_MAX_BUFFER-1, format, args);
     // Make sure there's a limit to the amount of rubbish we can output
     m_buff[LOGSYSTEM_MAX_BUFFER-1] = '\0';
     if(callback)
@@ -160,7 +160,7 @@ std::vector<std::string> PlotManager::getAvailablePlots()
     AUDynArray<IObjectConstructor*> constructors;
     NodeManager::getInstance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
     std::vector<std::string> output;
-    for(int i = 0; i < constructors.Size(); ++i)
+    for(size_t i = 0; i < constructors.Size(); ++i)
     {
         if(constructors[i]->GetInterfaceId() == IID_Plotter)
             output.push_back(constructors[i]->GetName());
@@ -326,7 +326,7 @@ void NodeManager::saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, cv::Fi
 {
     fs << "TopLevelNodeCount" << (int)topLevelNodes.size();
 
-    for(int i = 0; i < topLevelNodes.size(); ++i)
+    for(size_t i = 0; i < topLevelNodes.size(); ++i)
     {
         fs << "Node-" + boost::lexical_cast<std::string>(i) << "{";
         topLevelNodes[i]->Serialize(fs);
@@ -520,7 +520,7 @@ NodeManager::getNode(const ObjectId& id)
 Node*
 NodeManager::getNode(const std::string &treeName)
 {
-    for(int i = 0; i < nodes.size(); ++i)
+    for(size_t i = 0; i < nodes.size(); ++i)
     {
         if(nodes[i] != nullptr)
         {
@@ -543,7 +543,7 @@ NodeManager::updateTreeName(Node* node, const std::string& prevTreeName)
 void 
 NodeManager::addParameters(Node* node)
 {
-	for (int i = 0; i < node->parameters.size(); ++i)
+    for (size_t i = 0; i < node->parameters.size(); ++i)
 	{
 		
 	}
@@ -577,7 +577,7 @@ void printTreeHelper(std::stringstream& tree, int level, Node* node)
         tree << "+";
     }
     tree << node->fullTreeName << std::endl;
-    for(int i = 0; i < node->children.size(); ++i)
+    for(size_t i = 0; i < node->children.size(); ++i)
     {
         printTreeHelper(tree, level+1, node->children[i].get());
     }
@@ -588,7 +588,7 @@ void NodeManager::printNodeTree(boost::function<void(std::string)> f)
     std::stringstream tree;
     std::vector<weak_ptr<Node>> parentNodes;
     // First get the top level nodes for the tree
-    for(int i = 0; i < nodes.size(); ++i)
+    for(size_t i = 0; i < nodes.size(); ++i)
     {
         if(nodes[i] != nullptr)
         {
@@ -598,7 +598,7 @@ void NodeManager::printNodeTree(boost::function<void(std::string)> f)
             }
         }
     }
-    for(int i = 0; i < parentNodes.size(); ++i)
+    for(size_t i = 0; i < parentNodes.size(); ++i)
     {
         printTreeHelper(tree, 0, parentNodes[i].get());
     }
@@ -633,7 +633,7 @@ NodeManager::getConstructableNodes()
     AUDynArray<IObjectConstructor*> constructors;
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
     std::vector<std::string> output;
-    for(int i = 0; i < constructors.Size(); ++i)
+    for(size_t i = 0; i < constructors.Size(); ++i)
     {
         if(constructors[i]->GetInterfaceId() == IID_NodeObject)
             output.push_back(constructors[i]->GetName());
@@ -656,9 +656,9 @@ int NodeManager::getNumLoadedModules()
 std::vector<std::string> NodeManager::getParametersOfType(boost::function<bool(Loki::TypeInfo&)> selector)
 {
     std::vector<std::string> parameters;
-    for(int i = 0; i < nodes.size(); ++i)
+    for(size_t i = 0; i < nodes.size(); ++i)
     {
-        for(int j = 0; j < nodes[i]->parameters.size(); ++j)
+        for(size_t j = 0; j < nodes[i]->parameters.size(); ++j)
         {
             if(selector(nodes[i]->parameters[j]->typeInfo))
                 parameters.push_back(nodes[i]->parameters[j]->treeName);

@@ -51,7 +51,7 @@ cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     TIME
     cv::cuda::split(img,*channels,stream);
     TIME
-    for(int i = 0; i < channels->size(); ++i)
+    for(size_t i = 0; i < channels->size(); ++i)
     {
         updateParameter("Channel " + std::to_string(i), (*channels)[i], Parameter::Output);
     }

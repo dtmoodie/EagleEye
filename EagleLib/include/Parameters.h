@@ -81,7 +81,7 @@ namespace EagleLib
         boost::signals2::signal<void(void)> onUpdate;
 		static Parameter::Ptr getParameter(const std::string& fulltreeName);
     protected:
-        Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),type(type_), changed(false), toolTip(toolTip_), subscribers(0){}
+        Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),toolTip(toolTip_),type(type_), changed(false), subscribers(0){}
         virtual ~Parameter(){}
     };
 	

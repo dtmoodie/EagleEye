@@ -64,7 +64,7 @@ Node::addChild(Node::Ptr child)
     if(messageCallback)
         child->messageCallback = messageCallback;
     int count = 0;
-    for(int i = 0; i < children.size(); ++i)
+    for(size_t i = 0; i < children.size(); ++i)
     {
         if(children[i]->nodeName == child->nodeName)
             ++count;
@@ -78,7 +78,7 @@ Node::addChild(Node::Ptr child)
 Node::Ptr
 Node::getChild(const std::string& treeName)
 {
-    for(int i = 0; i < children.size(); ++i)
+    for(size_t i = 0; i < children.size(); ++i)
     {
         if(children[i]->treeName == treeName)
             return children[i];
@@ -171,7 +171,7 @@ Node::getNodesInScope(std::vector<Node *> &nodes)
         return;
     }
     nodes.push_back(this);
-    for(int i = 0; i < children.size(); ++i)
+    for(size_t i = 0; i < children.size(); ++i)
     {
         if(children[i] != nullptr)
             children[i]->getNodesInScope(nodes);
@@ -187,7 +187,7 @@ Node::getParameter(int idx)
 boost::shared_ptr<Parameter> 
 Node::getParameter(const std::string& name)
 {
-	for (int i = 0; i < parameters.size(); ++i)
+    for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->name == name)
 			return parameters[i];
@@ -197,7 +197,7 @@ Node::getParameter(const std::string& name)
 std::vector<std::string> Node::listParameters()
 {
 	std::vector<std::string> paramList;
-	for (int i = 0; i < parameters.size(); ++i)
+    for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		paramList.push_back(parameters[i]->name);
 	}
@@ -206,7 +206,7 @@ std::vector<std::string> Node::listParameters()
 std::vector<std::string> Node::listInputs()
 {
 	std::vector<std::string> paramList;
-	for (int i = 0; i < parameters.size(); ++i)
+    for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->type & Parameter::Input)
 			paramList.push_back(parameters[i]->name);
@@ -298,7 +298,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                         TIME
                         std::stringstream time;
                         time << "Start: " << timings[1].first - timings[0].first << " ";
-                        for(int i = 2; i < timings.size()-1; ++i)
+                        for(size_t i = 2; i < timings.size()-1; ++i)
                         {
                             time << "(" << timings[i-1].second << "," << timings[i].second << "," << timings[i].first - timings[i-1].first << ")";
                         }
@@ -327,7 +327,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
             img.copyTo(*childResult,stream);
         // Prevents adding of children while running, debatable how much this is needed
         boost::recursive_mutex::scoped_lock lock(mtx);
-        for(int i = 0; i < children.size(); ++i)
+        for(size_t i = 0; i < children.size(); ++i)
         {
             if(children[i] != nullptr)
             {
@@ -466,7 +466,7 @@ Node::Init(const cv::FileNode& configNode)
         addChild(node);
     }
     cv::FileNode paramNode =  configNode["Parameters"];
-    for(int i = 0; i < parameters.size(); ++i)
+    for(size_t i = 0; i < parameters.size(); ++i)
     {
         parameters[i]->Init(paramNode);
         parameters[i]->update();
@@ -506,7 +506,7 @@ Node::Serialize(cv::FileStorage& fs)
         fs << "ExternalDisplay" << externalDisplay;
         fs << "Children" << "{";
         fs << "Count" << (int)children.size();
-        for(int i = 0; i < children.size(); ++i)
+        for(size_t i = 0; i < children.size(); ++i)
         {
             fs << "Node-" + boost::lexical_cast<std::string>(i) << "{";
             children[i]->Serialize(fs);
@@ -515,7 +515,7 @@ Node::Serialize(cv::FileStorage& fs)
         fs << "}"; // end children
 
         fs << "Parameters" << "{";
-        for(int i = 0; i < parameters.size(); ++i)
+        for(size_t i = 0; i < parameters.size(); ++i)
         {
             if(parameters[i]->type & Parameter::Control || parameters[i]->type & Parameter::Input)
             {
@@ -547,11 +547,11 @@ Node::findType(Parameter::Ptr param, std::vector<Node*>& nodes)
 {
     std::vector<std::string> output;
 
-    for (int i = 0; i < nodes.size(); ++i)
+    for (size_t i = 0; i < nodes.size(); ++i)
     {
         if (nodes[i] == this)
             continue;
-        for (int j = 0; j < nodes[i]->parameters.size(); ++j)
+        for (size_t j = 0; j < nodes[i]->parameters.size(); ++j)
         {
             if (param->acceptsInput(nodes[i]->parameters[j]->typeInfo) && nodes[i]->parameters[j]->type & Parameter::Output)
                 output.push_back(nodes[i]->parameters[j]->treeName);
@@ -565,11 +565,11 @@ Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*> &nodes)
 {
 	std::vector<std::string> output;
 
-	for (int i = 0; i < nodes.size(); ++i)
+    for (size_t i = 0; i < nodes.size(); ++i)
 	{
 		if (nodes[i] == this)
 			continue;
-		for (int j = 0; j < nodes[i]->parameters.size(); ++j)
+        for (size_t j = 0; j < nodes[i]->parameters.size(); ++j)
 		{
             if (nodes[i]->parameters[j]->typeInfo == typeInfo && nodes[i]->parameters[j]->type & Parameter::Output)
 				output.push_back(nodes[i]->parameters[j]->treeName);
@@ -581,7 +581,7 @@ std::vector<std::vector<std::string>>
 Node::findCompatibleInputs()
 {
 	std::vector<std::vector<std::string>> output;
-	for (int i = 0; i < parameters.size(); ++i)
+    for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->type & Parameter::Input)
             output.push_back(findType(parameters[i]->typeInfo));
@@ -612,7 +612,7 @@ std::vector<std::string> Node::findCompatibleInputs(Parameter::Ptr param)
 void
 Node::setInputParameter(const std::string& sourceName, const std::string& inputName)
 {
-	for (int i = 0; i < parameters.size(); ++i)
+    for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->name == inputName && parameters[i]->type & Parameter::Input)
 			parameters[i]->setSource(sourceName);
@@ -623,7 +623,7 @@ void
 Node::setInputParameter(const std::string& sourceName, int inputIdx)
 {
 	int count = 0;
-	for (int i = 0; i < parameters.size(); ++i)
+    for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->type & Parameter::Input)
 		{
@@ -643,7 +643,7 @@ Node::setTreeName(const std::string& name)
 	else
         fullTreeName_ = parent->fullTreeName + "." + treeName;
 	setFullTreeName(fullTreeName_);
-    for(int i = 0; i < children.size(); ++i)
+    for(size_t i = 0; i < children.size(); ++i)
     {
         children[i]->setTreeName(children[i]->treeName);
     }
@@ -651,7 +651,7 @@ Node::setTreeName(const std::string& name)
 void
 Node::setFullTreeName(const std::string& name)
 {
-	for (int i = 0; i < parameters.size(); ++i)
+    for (size_t i = 0; i < parameters.size(); ++i)
 	{
         parameters[i]->treeName = name + ":" + parameters[i]->name;
 	}
@@ -677,7 +677,7 @@ Node::updateObject(IObject* ptr)
 void 
 Node::updateInputParameters()
 {
-	for (int i = 0; i < parameters.size(); ++i)
+    for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->type & EagleLib::Parameter::Input)
 		{

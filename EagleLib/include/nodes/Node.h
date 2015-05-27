@@ -603,12 +603,12 @@ namespace EagleLib
 			return false;
 		}
 
-					// Check to see if a sub parameter is of a certain type
-		template<typename T> bool
-			checkSubParameterType(std::string name)
-		{
+//					// Check to see if a sub parameter is of a certain type
+//		template<typename T> bool
+//			checkSubParameterType(std::string name)
+//		{
 
-		}
+//		}
 					// Get's a pointer to a sub parameter based on the name of the sub parameter
 		template<typename T> boost::shared_ptr< TypedParameter<T> >
 			getSubParameter(std::string name)

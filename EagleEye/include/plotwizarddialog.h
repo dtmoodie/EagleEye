@@ -29,12 +29,12 @@ public:
     bool eventFilter(QObject *, QEvent *);
 signals:
     void on_plotAdded(PlotWindow* plot);
-    void update(int idx);
+    void update(size_t idx);
 public slots:
     void setup();
     void plotParameter(EagleLib::Parameter::Ptr param);
-    void onUpdate(int idx);
-    void handleUpdate(int idx);
+    void onUpdate(size_t idx);
+    void handleUpdate(size_t idx);
 private slots:
     void on_drop();
     void on_addPlotBtn_clicked();
