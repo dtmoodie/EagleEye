@@ -1,5 +1,5 @@
 #include "Stereo.h"
-#include "opencv2/cudastereo.hpp"
+
 
 #if _WIN32
     #if _DEBUG
@@ -17,13 +17,48 @@ using namespace EagleLib;
 
 void StereoBM::Init(bool firstInit)
 {
-
+    if(firstInit)
+    {
+        updateParameter("Num disparities", int(64));
+        updateParameter("Block size", int(19));
+        addInputParameter<cv::cuda::GpuMat>("Left image");
+        addInputParameter<cv::cuda::GpuMat>("Right image");
+    }
+    stereoBM = cv::cuda::createStereoBM(getParameter<int>(0)->data, getParameter<int>(1)->data);
 }
 
 cv::cuda::GpuMat StereoBM::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
+    if(parameters[0]->changed || parameters[1]->changed)
+    {
+        stereoBM = cv::cuda::createStereoBM(getParameter<int>(0)->data, getParameter<int>(1)->data);
+    }
+    cv::cuda::GpuMat* left = getParameter<cv::cuda::GpuMat*>(2)->data;
+    cv::cuda::GpuMat* right = getParameter<cv::cuda::GpuMat*>(3)->data;
+    if(left == nullptr)
+    {
+        left = &img;
+    }
+    if(right == nullptr)
+    {
+        log(Error, "No input selected for right image");
+        return img;
+    }
+    if(left->size() != right->size())
+    {
+        log(Error, "Images are of mismatched size");
+        return img;
+    }
+    if(left->channels() != right->channels())
+    {
+        log(Error, "Images are of mismatched channels");
+        return img;
+    }
+    auto buf = disparityBuf.getFront();
 
-    return img;
+    stereoBM->compute(*left,*right,buf->data, stream);
+    buf->record(stream);
+    return buf->data;
 }
 
 void StereoBilateralFilter::Init(bool firstInit)

@@ -78,6 +78,34 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 
 #endif
 
+#define CATCH_MACRO                                                         \
+}catch (boost::thread_resource_error& err)                                  \
+{                                                                           \
+    log(Error, err.what());                                                 \
+}catch (boost::thread_interrupted& err)                                     \
+{                                                                           \
+    log(Error, "Thread interrupted");                                       \
+    /* Needs to pass this back up to the chain to the processing thread.*/    \
+    /* That way it knowns it needs to exit this thread */                     \
+    throw err;                                                              \
+}catch (boost::thread_exception& err)                                       \
+{                                                                           \
+    log(Error, err.what());                                                 \
+}                                                                           \
+catch (cv::Exception &err)                                                  \
+{                                                                           \
+    log(Error, err.what());                                                 \
+}                                                                           \
+catch (boost::exception &err)                                               \
+{                                                                           \
+    log(Error, "Boost error");                                              \
+}catch(std::exception &err)                                                 \
+{                                                                           \
+    log(Error, err.what());                                                 \
+}catch(...)                                                                 \
+{                                                                           \
+    log(Error, "Unknown exception");                                        \
+}
 
 
 

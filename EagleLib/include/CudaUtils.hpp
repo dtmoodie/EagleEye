@@ -77,7 +77,11 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
         {
             fillEvent.waitForCompletion();
         }
-
+        bool record(cv::cuda::Stream& stream)
+        {
+            fillEvent.record(stream);
+            return true;
+        }
     };
     struct LockedPolicy
     {
@@ -94,6 +98,10 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
             boost::recursive_mutex::scoped_lock lock(mtx);
             return true;
         }
+        bool record(cv::cuda::Stream& stream)
+        {
+            return false;
+        }
 
     };
     struct NullPolicy
@@ -105,6 +113,10 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
         bool wait()
         {
             return true;
+        }
+        bool record(cv::cuda::Stream& stream)
+        {
+            return false;
         }
     };
 
@@ -124,10 +136,14 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
         {
             return P1::wait() && P2::wait();
         }
+        bool record(cv::cuda::Stream& stream)
+        {
+            return P1::record(stream) || P2::record(stream);
+        }
 
     };
 
-    template<typename T, typename P1, typename P2> class BufferPool
+    template<typename T, typename P1 = NullPolicy, typename P2 = NullPolicy> class BufferPool
     {
         size_t getItr;
         size_t putItr;

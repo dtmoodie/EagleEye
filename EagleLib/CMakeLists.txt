@@ -129,12 +129,12 @@ if(WIN32)
 endif(WIN32)
 
 add_library(RuntimeCompiler
-            STATIC
+            SHARED
             ${RuntimeCompiler_SRCS}
 )
 
 add_library(RuntimeObjectSystem
-            STATIC
+            SHARED
             ${RuntimeObjectSystem_SRCS}
 )
 

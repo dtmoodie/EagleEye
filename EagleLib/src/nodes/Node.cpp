@@ -315,31 +315,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
             auto delta =  end - start;
             averageFrameTime(delta.total_milliseconds());
             processingTime = boost::accumulators::rolling_mean(averageFrameTime);
-        }catch(cv::Exception &err)
-        {
-            log(Error, err.what());
-        }catch(boost::thread_resource_error& err)
-        {
-            log(Error, err.what());
-        }catch(boost::thread_exception& err)
-        {
-            log(Error, err.what());
-        }catch(boost::thread_interrupted& err)
-        {
-            log(Error, "Thread interrupted");
-            // Needs to pass this back up to the chain to the processing thread.
-            // That way it knowns it needs to exit this thread
-            throw err;
-        }catch(boost::exception &err)
-        {
-            log(Error, "Boost error");
-        }catch(std::exception &err)
-        {
-            log(Error, err.what());
-        }catch(...)
-        {
-            log(Error, "Unknown exception");
-        }
+        CATCH_MACRO
     }
     try
     {
@@ -355,7 +331,10 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         {
             if(children[i] != nullptr)
             {
+                try
+                {
                 *childResult = children[i]->process(*childResult, stream);
+                CATCH_MACRO
             }else
             {
                 log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(i));
@@ -363,33 +342,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         }
         // So here is the debate of is a node's output the output of it, or the output of its children....
         // img = childResults;
-	}catch (boost::thread_resource_error& err)
-	{
-		log(Error, err.what());
-	}catch (boost::thread_interrupted& err)
-	{
-		log(Error, "Thread interrupted");
-		// Needs to pass this back up to the chain to the processing thread.
-		// That way it knowns it needs to exit this thread
-		throw err;
-	}catch (boost::thread_exception& err)
-    {
-        log(Error, err.what());
-	}
-	catch (cv::Exception &err)
-	{
-		log(Error, err.what());
-	}
-	catch (boost::exception &err)
-    {
-        log(Error, "Boost error");
-    }catch(std::exception &err)
-    {
-        log(Error, err.what());
-    }catch(...)
-    {
-        log(Error, "Unknown exception");
-    }
+    CATCH_MACRO
     return img;
 }
 

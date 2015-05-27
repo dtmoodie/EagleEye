@@ -89,6 +89,7 @@ cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stre
         cam.read(hostBuf);
         img.upload(hostBuf,stream);
     }
+    updateParameter("Output", img, Parameter::Output);
     return img;
 }
 bool Camera::SkipEmpty() const
@@ -187,6 +188,7 @@ cv::cuda::GpuMat GStreamerCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         }
 
     }
+    updateParameter("Output", img, Parameter::Output);
     return img;
 }
 bool GStreamerCamera::SkipEmpty() const
