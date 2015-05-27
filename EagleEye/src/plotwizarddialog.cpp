@@ -1,7 +1,9 @@
-#include "plotwizarddialog.h"
-#include "ui_plotwizarddialog.h"
 #include "Manager.h"
 #include "plotters/Plotter.h"
+
+#include "plotwizarddialog.h"
+#include "ui_plotwizarddialog.h"
+
 
 PlotWizardDialog::PlotWizardDialog(QWidget *parent) :
     QDialog(parent),

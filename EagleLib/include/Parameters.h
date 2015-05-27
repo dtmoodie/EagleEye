@@ -39,7 +39,7 @@ namespace EagleLib
     public:
 
         typedef boost::shared_ptr<Parameter> Ptr;
-		static Ptr getParameter(const std::string& fulltreeName);
+		
         virtual void setSource(const std::string& name) = 0;
         virtual void setSource(EagleLib::Parameter::Ptr param) = 0;
         virtual void update() = 0;
@@ -79,13 +79,16 @@ namespace EagleLib
         unsigned int subscribers;
         boost::recursive_mutex mtx;
         boost::signals2::signal<void(void)> onUpdate;
-
+		static Parameter::Ptr getParameter(const std::string& fulltreeName);
     protected:
         Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),type(type_), changed(false), toolTip(toolTip_), subscribers(0){}
         virtual ~Parameter(){}
     };
+	
+	
+	
 
-
+	
 
 
 
@@ -242,7 +245,7 @@ namespace EagleLib
                 --param->subscribers;
                 bc.disconnect();
             }
-            param = Parameter::getParameter(Parameter::inputName);
+			param = Parameter::getParameter(Parameter::inputName);
             update();
             if(param)
             {
@@ -258,7 +261,7 @@ namespace EagleLib
                 bc.disconnect();
             }
             param = param_;
-            this->data = getParameterPtr<T>(param);
+			this->data = getParameterPtr<T>(param);
             ++param->subscribers;
             bc = param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
 
@@ -270,7 +273,7 @@ namespace EagleLib
                 return;
             if(param == nullptr && Parameter::inputName.size())
             {
-                param = Parameter::getParameter(Parameter::inputName);
+				param = Parameter::getParameter(Parameter::inputName);
                 if(param)
                 {
                     ++param->subscribers;

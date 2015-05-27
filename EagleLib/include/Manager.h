@@ -1,26 +1,35 @@
 #pragma once
 #define CVAPI_EXPORTS
 
-#include <boost/shared_ptr.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <map>
-#include <string>
-#include "../RuntimeObjectSystem/ObjectInterface.h"
-#include "../RuntimeObjectSystem/IObjectFactorySystem.h"
-#include <opencv2/core/cvdef.h>
 #include <list>
+#include <string>
+
+#include <boost/shared_ptr.hpp>
+//#include <boost/property_tree/ptree.hpp>
 #include <boost/function.hpp>
-#include <boost/multi_index_container.hpp>
+/*#include <boost/multi_index_container.hpp>
 #include <boost/multi_index/random_access_index.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/member.hpp>
-#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/mem_fun.hpp>*/
+
+
+#include "../RuntimeObjectSystem/ObjectInterface.h"
+#include "../RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "../RuntimeObjectSystem/IObject.h"
 #include "../RuntimeObjectSystem/IRuntimeObjectSystem.h"
-#include "CudaUtils.hpp"
-#include "nodes/Node.h"
-#include "plotters/Plotter.h"
+
+#include <opencv2/core/cvdef.h>
+
 #include "LokiTypeInfo.h"
+
+#include "nodes/Node.h"
+#include "CudaUtils.hpp"
+#include "plotters/Plotter.h"
+
+
+
 #define ADD_CONSTRUCTORS(managerObj)  \
 	auto moduleInterface = PerModuleInterface::GetInstance();	\
 	auto vecConstructors = moduleInterface->GetConstructors();	\

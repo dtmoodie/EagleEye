@@ -5,7 +5,7 @@
 #ifdef _MSC_VER
 #include "Windows.h"
 
-bool EagleLib::loadPlugin(const std::string& fullPluginPath)
+bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
 	HMODULE handle = LoadLibrary(fullPluginPath.c_str());
 	if (handle == nullptr)
@@ -22,7 +22,7 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 #else
 #include "dlfcn.h"
 
-bool EagleLib::loadPlugin(const std::string& fullPluginPath)
+bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
     void* handle = dlopen(fullPluginPath.c_str(), RTLD_LAZY);
     // Fallback on old module

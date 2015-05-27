@@ -87,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QDir dir(QDir::currentPath());
     dir.cd("Plugins");
 #ifdef _MSC_VER
-    QDir::entryInfoList("lib*.dll");
+	QFileInfoList files = dir.entryInfoList(QStringList("lib*.dll"));
 #else
     QFileInfoList files = dir.entryInfoList(QStringList("lib*.so"));
 #endif

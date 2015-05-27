@@ -2,5 +2,5 @@
 
 namespace EagleLib
 {
-    bool loadPlugin(const std::string& fullPluginPath);
+    bool CV_EXPORTS loadPlugin(const std::string& fullPluginPath);
 }

@@ -34,7 +34,7 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/core/cuda.hpp>
-
+#include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -58,7 +58,7 @@
 #include <boost/filesystem.hpp>
 #include "../LokiTypeInfo.h"
 #include <boost/thread.hpp>
-#include <boost/asio.hpp>
+
 #include "../Parameters.h"
 
 
