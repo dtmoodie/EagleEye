@@ -1,6 +1,7 @@
 #include "Segmentation.h"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudaimgproc.hpp"
+#include <opencv2/cudaarithm.hpp>
 
 using namespace EagleLib;
 IPerModuleInterface* GetModule()
@@ -122,6 +123,24 @@ SegmentMeanShift::Init(bool firstInit)
 
 cv::cuda::GpuMat SegmentMeanShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
+    if(img.depth() != CV_8U)
+    {
+        log(Error, "Image not CV_8U type");
+        return img;
+    }
+    if(img.channels() != 4)
+    {
+        log(Warning, "Image doesn't have 4 channels, appending blank image");
+        if(blank.size() != img.size())
+        {
+            blank.create(img.size(), CV_8U);
+            blank.setTo(cv::Scalar(0), stream);
+        }
+        std::vector<cv::cuda::GpuMat> channels;
+        channels.push_back(img);
+        channels.push_back(blank);
+        cv::cuda::merge(channels, img, stream);
+    }
     cv::cuda::meanShiftSegmentation(img, dest,
         getParameter<int>(0)->data,
         getParameter<int>(1)->data,
@@ -148,6 +167,7 @@ void ManualMask::Init(bool firstInit)
         updateParameter("Radius", int(5));
         updateParameter("Inverted", false);
     }
+    parameters[0]->changed = true;
 }
 
 cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
@@ -155,7 +175,7 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
     if(parameters[0]->changed ||
        parameters[1]->changed ||
        parameters[2]->changed ||
-       parameters[3]->changed)
+       parameters[3]->changed || parameters.size() == 4)
     {
         bool inverted = getParameter<bool>(4)->data;
         cv::Scalar origin = getParameter<cv::Scalar>(1)->data;

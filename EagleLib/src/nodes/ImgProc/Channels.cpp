@@ -42,13 +42,14 @@ void ExtractChannels::Init(bool firstInit)
     {
         updateParameter("Output Channel", int(0));
     }
-    channelNum = getParameter<int>(0)->data;
+
     channelsBuffer.resize(5);
 }
 
 cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     TIME
+    channelNum = getParameter<int>(0)->data;
     std::vector<cv::cuda::GpuMat>* channels = channelsBuffer.getFront();
     TIME
     cv::cuda::split(img,*channels,stream);
@@ -103,6 +104,7 @@ void Merge::Init(bool firstInit)
         addInputParameter<cv::cuda::GpuMat>("Channel2");
         addInputParameter<cv::cuda::GpuMat>("Channel3");
     }
+    addInputParameter<cv::cuda::GpuMat>("Channel4");
 }
 
 cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -110,6 +112,7 @@ cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
     auto chan1 = getParameter<cv::cuda::GpuMat*>(0);
     auto chan2 = getParameter<cv::cuda::GpuMat*>(1);
     auto chan3 = getParameter<cv::cuda::GpuMat*>(2);
+    auto chan4 = getParameter<cv::cuda::GpuMat*>(3);
     std::vector<cv::cuda::GpuMat> channels;
     if(chan1->data)
         channels.push_back(*chan1->data);
@@ -119,6 +122,8 @@ cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
         channels.push_back(*chan2->data);
     if(chan3->data)
         channels.push_back(*chan3->data);
+    if(chan4->data)
+        channels.push_back(*chan4->data);
     cv::cuda::merge(channels, mergedChannels,stream);
     return mergedChannels;
 }

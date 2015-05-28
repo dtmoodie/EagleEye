@@ -148,7 +148,9 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
         ui->profile->setChecked(node->profile);
         connect(ui->chkEnabled, SIGNAL(clicked(bool)), this, SLOT(on_enableClicked(bool)));
         connect(ui->profile, SIGNAL(clicked(bool)), this, SLOT(on_profileClicked(bool)));
-		ui->nodeName->setText(QString::fromStdString(node->fullTreeName));
+        ui->nodeName->setText(QString::fromStdString(node->nodeName));
+        ui->nodeName->setToolTip(QString::fromStdString(node->fullTreeName));
+        ui->nodeName->setMaximumWidth(200);
         ui->verticalLayout->setSpacing(0);
         for (size_t i = 0; i < node->parameters.size(); ++i)
 		{
@@ -311,6 +313,7 @@ QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Para
     node(node_)
 {
     box = new QComboBox(parent);
+    box->setMaximumWidth(200);
     parameter = parameter_;
     updateUi();
     parent->connect(box, SIGNAL(currentIndexChanged(int)), parent, SLOT(on_valueChanged(int)));

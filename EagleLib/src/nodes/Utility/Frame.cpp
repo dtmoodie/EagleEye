@@ -39,9 +39,10 @@ void CreateMat::Init(bool firstInit)
         updateParameter("Datatype", dataType);
         updateParameter("Channels", int(1));
         updateParameter("Width", 1920);
-        updateParameter("Height", 10280);
+        updateParameter("Height", 1080);
         updateParameter("Fill", cv::Scalar::all(0));
     }
+    parameters[0]->changed = true;
 }
 
 cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)

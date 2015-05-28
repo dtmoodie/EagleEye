@@ -35,16 +35,17 @@ void QtImageDisplay_cpuCallback(int status, void* userData)
 {
     UserData* tmp = (UserData*)userData;
     tmp->node->displayImage(tmp->displayImage);
+    EagleLib::UIThreadCallback::getInstance().addCallback(boost::bind(&QtImageDisplay::displayImage, tmp->node, tmp->displayImage));
     delete tmp;
 }
 
 void QtImageDisplay::displayImage(cv::cuda::HostMem image)
 {
-    if(cpuDisplayCallback)
-    {
-        cpuDisplayCallback(image.createMatHeader(), this);
-        return;
-    }
+//    if(cpuDisplayCallback)
+//    {
+//        cpuDisplayCallback(image.createMatHeader(), this);
+//        return;
+//    }
     std::string name = getParameter<std::string>(0)->data;
     if(name.size() == 0)
     {

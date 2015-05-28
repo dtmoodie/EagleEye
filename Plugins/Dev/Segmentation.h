@@ -49,6 +49,7 @@ namespace EagleLib
 
     class SegmentMeanShift: public Node
     {
+        cv::cuda::GpuMat blank;
         cv::cuda::HostMem dest;
     public:
         SegmentMeanShift();

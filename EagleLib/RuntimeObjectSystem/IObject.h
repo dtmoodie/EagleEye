@@ -282,7 +282,7 @@ public:
         decrement();
         if(m_object)
             m_object->deregisterNotifier(this);
-        m_object = r.m_object;
+         m_object = r.m_object;
         refCount = r.refCount;
         increment();
         if(m_object)

@@ -471,6 +471,8 @@ MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
 {
     if(widget == nullptr)
     {
+        if(currentSelectedNodeWidget)
+            currentSelectedNodeWidget->setZValue(0);
         currentSelectedNodeWidget = nullptr;
         currentNode = EagleLib::Node::Ptr();
         return;
@@ -479,6 +481,7 @@ MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
         if(auto oldWidget = dynamic_cast<QNodeWidget*>(currentSelectedNodeWidget->widget()))
             oldWidget->setSelected(false);
     currentSelectedNodeWidget = widget;
+    currentSelectedNodeWidget->setZValue(1);
     if(auto ptr = dynamic_cast<QNodeWidget*>(widget->widget()))
     {
         currentNode = ptr->getNode();
