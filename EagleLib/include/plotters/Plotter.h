@@ -81,17 +81,12 @@ namespace EagleLib
         std::vector<QWidget*> plots;
     public:
 
-        virtual QWidget* getPlot();
+        virtual QWidget* getPlot(QWidget* parent) = 0;
 
-        virtual void addPlot(QWidget* plot_)
-        {
-            plots.push_back(plot_);
-        }
-        virtual void Serialize(ISimpleSerializer *pSerializer)
-        {
-            Plotter::Serialize(pSerializer);
-            SERIALIZE(plots);
-        }
+        virtual void addPlot(QWidget* plot_);
+
+
+        virtual void Serialize(ISimpleSerializer *pSerializer);
         /**
          * @brief acceptsWidget determines if this plotter can be dropped into a particular widget
          * @param widget widget is the end point of the drop
@@ -105,8 +100,6 @@ namespace EagleLib
          * @return
          */
         virtual bool acceptsType(EagleLib::Parameter::Ptr param) const = 0;
-
-
 
         /**
          * @brief plotName is the name of this specific plotting implementation
@@ -124,16 +117,7 @@ namespace EagleLib
 
         virtual QWidget* getSettingsWidget() const = 0;
     };
-//    class TestPlot: public QtPlotter
-//    {
-//    public:
-//        TestPlot();
-//        virtual bool acceptsType(EagleLib::Parameter::Ptr param) const;
 
-//        virtual std::string plotName() const;
-
-//        virtual QWidget* getSettingsWidget() const;
-//    };
 
 
 }

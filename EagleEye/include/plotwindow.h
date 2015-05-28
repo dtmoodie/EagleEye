@@ -26,16 +26,32 @@
 namespace Ui {
 class PlotWindow;
 }
+class IPlotWindow: public QWidget
+{
+    Q_OBJECT
+public:
+    explicit IPlotWindow(QWidget* parent = 0);
 
-class PlotWindow : public QWidget
+    virtual QString getPlotName() = 0;
+
+public slots:
+    virtual void addPlotter(shared_ptr<EagleLib::QtPlotter> plotter) = 0;
+
+signals:
+    virtual void onDrop();
+};
+
+
+class PlotWindow : public IPlotWindow
 {
     Q_OBJECT
     QString _name;
 public:
     explicit PlotWindow(QWidget *parent = 0);
-    ~PlotWindow();
-    QString getPlotName(){return _name;}
+    virtual ~PlotWindow();
+    virtual QString getPlotName(){return _name;}
     bool eventFilter(QObject *, QEvent *);
+
 public slots:
     void addPlotter(shared_ptr<EagleLib::QtPlotter> plotter);
     void on_resizePlot_activated();
@@ -50,5 +66,19 @@ private:
     std::vector<shared_ptr<EagleLib::QtPlotter>> plots;
     QMenu* rightClickMenu;
 };
+
+class MatrixViewWindow: public IPlotWindow
+{
+    Q_OBJECT
+    QString _name;
+public:
+    explicit MatrixViewWindow(QWidget* parent = 0);
+    virtual ~MatrixViewWindow();
+    void addPlotter(shared_ptr<EagleLib::QtPlotter> plotter);
+    QString getPlotName() {return _name;}
+signals:
+    void onDrop();
+};
+
 
 #endif // PLOTWINDOW_H

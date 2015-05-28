@@ -104,8 +104,8 @@ void Merge::Init(bool firstInit)
 cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     auto chan1 = getParameter<cv::cuda::GpuMat*>(0);
-    auto chan2 = getParameter<cv::cuda::GpuMat*>(2);
-    auto chan3 = getParameter<cv::cuda::GpuMat*>(3);
+    auto chan2 = getParameter<cv::cuda::GpuMat*>(1);
+    auto chan3 = getParameter<cv::cuda::GpuMat*>(2);
     std::vector<cv::cuda::GpuMat> channels;
     if(chan1->data)
         channels.push_back(*chan1->data);
@@ -115,7 +115,7 @@ cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
         channels.push_back(*chan2->data);
     if(chan3->data)
         channels.push_back(*chan3->data);
-    cv::cuda::merge(channels, mergedChannels);
+    cv::cuda::merge(channels, mergedChannels,stream);
     return mergedChannels;
 }
 

@@ -398,9 +398,11 @@ struct RCC_EXPORTS IObject
     {
         for(size_t i = 0; i < notifiers.size(); ++i)
         {
-            notifiers[i]->updateObject(this);
+            if(notifiers[i] != nullptr)
+                notifiers[i]->updateObject(this);
         }
     }
+    virtual void updateParent(){}
 
     std::vector<IObjectNotifiable*> notifiers;
 protected:

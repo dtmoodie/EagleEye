@@ -28,7 +28,7 @@ public:
     ~PlotWizardDialog();
     bool eventFilter(QObject *, QEvent *);
 signals:
-    void on_plotAdded(PlotWindow* plot);
+    void on_plotAdded(QWidget* plot);
     void update(size_t idx);
 public slots:
     void setup();
@@ -42,9 +42,9 @@ private slots:
 private:
 
     // These are all the plot windows currently in the environment
-    QVector<PlotWindow*> plotWindows;
+    QVector<IPlotWindow*> plotWindows;
     // These are all the
-    QVector<QCustomPlot*> previewPlots;
+    QVector<QWidget*> previewPlots;
 
     // These are all the ploters which generate data from parameters that go into the plot window
     QVector<shared_ptr<EagleLib::QtPlotter>> previewPlotters;

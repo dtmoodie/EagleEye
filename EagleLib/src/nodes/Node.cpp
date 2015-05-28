@@ -44,6 +44,12 @@ Node::~Node()
     if(parent)
         parent->deregisterNotifier(this);
 }
+void Node::updateParent()
+{
+    if(parent)
+        parent->registerNotifier(this);
+}
+
 void
 Node::getInputs()
 {
@@ -436,8 +442,6 @@ void
 Node::Init(bool firstInit)
 {
     IObject::Init(firstInit);
-    if(parent)
-        parent->registerNotifier(this);
 }
 
 void

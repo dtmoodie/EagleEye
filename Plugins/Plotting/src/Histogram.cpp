@@ -13,10 +13,12 @@ namespace EagleLib
         QVector<double> bins;
     public:
         HistogramPlotter();
+        virtual QWidget* getPlot(QWidget* parent);
+        virtual bool acceptsWidget(QWidget *widget);
         virtual bool acceptsType(EagleLib::Parameter::Ptr param) const;
         virtual std::string plotName() const;
         virtual QWidget* getSettingsWidget() const;
-        virtual void addPlot(QCustomPlot *plot_);
+        virtual void addPlot(QWidget *plot_);
         virtual void doUpdate();
         virtual void setInput(Parameter::Ptr param_);
 
@@ -26,6 +28,19 @@ HistogramPlotter::HistogramPlotter()
 {
 
 }
+
+QWidget* HistogramPlotter::getPlot(QWidget* parent)
+{
+    QCustomPlot* plot = new QCustomPlot(parent);
+    plot->setInteractions((QCP::Interaction)255);
+    return plot;
+}
+
+bool HistogramPlotter::acceptsWidget(QWidget *widget)
+{
+    return dynamic_cast<QCustomPlot*>(widget) != nullptr;
+}
+
 bool HistogramPlotter::acceptsType(EagleLib::Parameter::Ptr param) const
 {
 
@@ -59,18 +74,27 @@ void HistogramPlotter::doUpdate()
 
     for(size_t i = 0; i < plots.size(); ++i)
     {
-        plots[i]->replot();
+        dynamic_cast<QCustomPlot*>(plots[i])->replot();
     }
 }
 
-void HistogramPlotter::addPlot(QCustomPlot *plot_)
+void HistogramPlotter::addPlot(QWidget *plot_)
 {
+    QCustomPlot* _plot = dynamic_cast<QCustomPlot*>(plot_);
+    if(_plot == nullptr)
+        return;
     QtPlotter::addPlot(plot_);
-    QCPBars* hist = new QCPBars(plot_->xAxis, plot_->yAxis);
+    QCPBars* hist = new QCPBars(_plot->xAxis, _plot->yAxis);
     hist->setWidth(1);
-    plot_->addPlottable(hist);
-    plot_->rescaleAxes();
-    plot_->replot();
+    _plot->addPlottable(hist);
+    _plot->rescaleAxes();
+    _plot->replot();
+    if(_plot->plotLayout()->rowCount() == 0)
+    {
+        QCPPlotTitle* title = new QCPPlotTitle(_plot, QString::fromStdString(this->plotName()));
+        _plot->plotLayout()->insertRow(0);
+        _plot->plotLayout()->addElement(0,0, title);
+    }
     hists.push_back(hist);
 }
 void HistogramPlotter::setInput(Parameter::Ptr param_)
@@ -79,8 +103,9 @@ void HistogramPlotter::setInput(Parameter::Ptr param_)
     doUpdate();
     for(size_t i = 0; i < plots.size(); ++i)
     {
-        plots[i]->rescaleAxes();
-        plots[i]->replot();
+        QCustomPlot* plot = dynamic_cast<QCustomPlot*>(plots[i]);
+        plot->rescaleAxes();
+        plot->replot();
     }
 }
 REGISTERCLASS(HistogramPlotter)

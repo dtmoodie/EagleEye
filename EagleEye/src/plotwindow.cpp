@@ -1,8 +1,12 @@
 #include "plotwindow.h"
 #include "ui_plotwindow.h"
+IPlotWindow::IPlotWindow(QWidget *parent):
+    QWidget(parent){}
+
+
 
 PlotWindow::PlotWindow(QWidget *parent) :
-    QWidget(parent),
+    IPlotWindow(parent),
     ui(new Ui::PlotWindow)
 {
     ui->setupUi(this);
@@ -23,8 +27,11 @@ PlotWindow::~PlotWindow()
 }
 void PlotWindow::addPlotter(shared_ptr<EagleLib::QtPlotter> plotter)
 {
-    plots.push_back(plotter);
-    plotter->addPlot(plot);
+    if(plotter->acceptsWidget(plot))
+    {
+        plotter->addPlot(plot);
+        plots.push_back(plotter);
+    }
 }
 void PlotWindow::on_resizePlot_activated()
 {
@@ -60,3 +67,17 @@ bool PlotWindow::eventFilter(QObject *obj, QEvent *ev)
     }
     return false;
 }
+MatrixViewWindow::MatrixViewWindow(QWidget *parent):
+    IPlotWindow(parent)
+{
+
+}
+MatrixViewWindow::~MatrixViewWindow()
+{
+
+}
+void MatrixViewWindow::addPlotter(shared_ptr<EagleLib::QtPlotter> plotter)
+{
+
+}
+

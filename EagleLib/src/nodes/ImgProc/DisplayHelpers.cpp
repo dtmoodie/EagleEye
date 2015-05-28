@@ -12,7 +12,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaarithm")
 void
 AutoScale::Init(bool firstInit)
 {
-
+    Node::Init(firstInit);
 }
 
 cv::cuda::GpuMat
@@ -36,6 +36,7 @@ AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 void
 Colormap::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     resolution = 5000;
     updateParameter("Colormapping scheme", int(0));
     updateParameter("Colormap resolution", &resolution);
@@ -139,6 +140,7 @@ uchar ColorScale::getValue(double location_)
 }
 void Normalize::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     EnumParameter param;
     param.addEnum(ENUM(CV_MINMAX));
     param.addEnum(ENUM(cv::NORM_L2));

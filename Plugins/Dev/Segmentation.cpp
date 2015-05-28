@@ -1,5 +1,6 @@
 #include "Segmentation.h"
 #include "opencv2/imgproc.hpp"
+#include "opencv2/cudaimgproc.hpp"
 
 using namespace EagleLib;
 IPerModuleInterface* GetModule()
@@ -106,6 +107,33 @@ cv::cuda::GpuMat SegmentKMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
 {
     return img;
 }
+void
+SegmentMeanShift::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        updateParameter("Spatial window radius", int(5));
+        updateParameter("Color radius", int(5));
+        updateParameter("Min size", int(5));
+        updateParameter("Max iterations", 5);
+        updateParameter("Epsilon", double(1.0));
+    }
+}
+
+cv::cuda::GpuMat SegmentMeanShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+    cv::cuda::meanShiftSegmentation(img, dest,
+        getParameter<int>(0)->data,
+        getParameter<int>(1)->data,
+        getParameter<int>(2)->data,
+        cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, getParameter<int>(3)->data,
+        getParameter<double>(4)->data), stream);
+    img.upload(dest,stream);
+    return img;
+}
+
+
+
 void ManualMask::Init(bool firstInit)
 {
 

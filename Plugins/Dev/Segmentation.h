@@ -16,16 +16,16 @@ namespace EagleLib
     {
     public:
         OtsuThreshold();
-        void Init(bool firstInit);
-        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
     class SegmentWatershed: public Node
     {
     public:
         SegmentWatershed();
-        void Init(bool firstInit);
-        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
     class SegmentGrabCut: public Node
@@ -35,17 +35,27 @@ namespace EagleLib
         ConstBuffer<cv::Mat> maskBuf;
     public:
         SegmentGrabCut();
-        void Init(bool firstInit);
-        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
     class SegmentKMeans: public Node
     {
     public:
         SegmentKMeans();
-        void Init(bool firstInit);
-        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+
+    class SegmentMeanShift: public Node
+    {
+        cv::cuda::HostMem dest;
+    public:
+        SegmentMeanShift();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
+
     class ManualMask: public Node
     {
         enum MaskType
@@ -56,7 +66,9 @@ namespace EagleLib
         cv::cuda::GpuMat mask;
     public:
         ManualMask();
-        void Init(bool firstInit);
-        cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+
+
 }

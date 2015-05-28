@@ -183,7 +183,7 @@ void ObjectFactorySystem::ProtectedObjectSwapper::ProtectedFunc()
             {
                 // if a singleton was newly constructed in earlier phase, pass true to init.
                 pObject->Init( bSingletonConstructed[i] );
-
+                pObject->updateParent();
                 if( m_bTestSerialization && ( m_ConstructorsOld.size() <= i || m_ConstructorsOld[ i ] != constructorsNew[ i ] ) )
                 {
                     //test serialize out for all new objects, we assume old objects are OK.
