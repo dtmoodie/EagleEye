@@ -20,7 +20,7 @@ NodeListDialog::update()
 {
     ui->NodeList->clear();
     auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
-    for(int i = 0; i < nodes.size(); ++i)
+    for(size_t i = 0; i < nodes.size(); ++i)
     {
         ui->NodeList->addItem(QString::fromStdString(nodes[i]));
     }

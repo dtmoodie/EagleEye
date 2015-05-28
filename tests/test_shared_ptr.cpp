@@ -16,7 +16,7 @@ int main()
                 {
                     shared_ptr<EagleLib::Node> cpyConstructor(ptr);
                     cpyConstructor->drawResults = false;
-                    for(int i = 0; i < ptr->notifiers.size(); ++i)
+                    for(size_t i = 0; i < ptr->notifiers.size(); ++i)
                     {
                         std::cout << ptr->notifiers[i] << " ";
                     }

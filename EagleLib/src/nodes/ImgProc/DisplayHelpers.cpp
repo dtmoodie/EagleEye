@@ -20,7 +20,7 @@ AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     std::vector<cv::cuda::GpuMat> channels;
     cv::cuda::split(img,channels);
-    for(int i = 0; i < channels.size(); ++i)
+    for(size_t i = 0; i < channels.size(); ++i)
     {
         double minVal, maxVal;
         cv::cuda::minMax(channels[i], &minVal, &maxVal);
@@ -95,7 +95,7 @@ Colormap::buildLUT()
     // color scales are defined between 0 and 100
     double step = 100.0 / double(resolution);
     double location = 0.0;
-    for(int i = 0; i < resolution; ++i, location += step)
+    for(size_t i = 0; i < resolution; ++i, location += step)
     {
         LUT[i] = cv::Vec3b(blue(location), green(location), red(location));
     }

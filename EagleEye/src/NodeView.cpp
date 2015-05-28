@@ -100,7 +100,7 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                 urls << QUrl::fromLocalFile(QString::fromStdString(fileName));
                 mimeData->setUrls(urls);
                 drag->setMimeData(mimeData);
-                Qt::DropAction dropAction = drag->exec();
+                drag->exec();
                 return QGraphicsView::mousePressEvent(event);
             }
             mousePressPosition = event->pos();

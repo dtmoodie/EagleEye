@@ -28,8 +28,8 @@ static void process(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursi
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    plotWizardDialog(new PlotWizardDialog(this)),
-    rccSettings(new RCCSettingsDialog(this))
+    rccSettings(new RCCSettingsDialog(this)),
+    plotWizardDialog(new PlotWizardDialog(this))
 {
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
@@ -163,7 +163,7 @@ void saveWidgetPosition(NodeView* nodeView, cv::FileStorage& fs, EagleLib::Node:
         fs << "}";
         ++count;
     }
-    for(int i = 0; i < node->children.size(); ++i)
+    for(size_t i = 0; i < node->children.size(); ++i)
     {
         saveWidgetPosition(nodeView, fs, node->children[i], count);
     }
@@ -182,7 +182,7 @@ MainWindow::onSaveClicked()
     // Save node widget positions
     fs << "WidgetPositions" << "[";
     int count = 0;
-    for(int i = 0; i <parentList.size(); ++i)
+    for(size_t i = 0; i <parentList.size(); ++i)
     {
         saveWidgetPosition(nodeGraphView, fs, parentList[i], count);
     }
@@ -222,18 +222,18 @@ MainWindow::onLoadClicked()
 
     if(nodes.size())
     {
-        for(int i = 0; i < widgets.size(); ++i)
+        for(size_t i = 0; i < widgets.size(); ++i)
         {
             delete widgets[i];
         }
         widgets.clear();
         currentSelectedNodeWidget = nullptr;
         parentList = nodes;
-        for(int i =0; i < parentList.size(); ++i)
+        for(size_t i =0; i < parentList.size(); ++i)
         {
             addNode(parentList[i]);
         }
-        for(int i = 0; i < widgets.size(); ++i)
+        for(size_t i = 0; i < widgets.size(); ++i)
         {
             widgets[i]->updateUi();
         }
@@ -258,7 +258,7 @@ void MainWindow::onLoadPluginClicked()
 }
 void MainWindow::on_NewParameter()
 {
-    for(int i = 0; i < widgets.size(); ++i)
+    for(size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi(true);
     }
@@ -275,7 +275,7 @@ MainWindow::onTimeout()
     static bool swapRequired = false;
     static bool joined = false;
     EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
-    for(int i = 0; i < widgets.size(); ++i)
+    for(size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi(false);
     }
@@ -397,7 +397,7 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     widgets.push_back(nodeWidget);
     currentSelectedNodeWidget = proxyWidget;
     currentNode = node;
-    for(int i = 0; i < node->children.size(); ++i)
+    for(size_t i = 0; i < node->children.size(); ++i)
     {
         addNode(node->children[i]);
     }
@@ -429,7 +429,7 @@ MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
 
     }
     addNode(node);
-    for(int i = 0; i < widgets.size(); ++i)
+    for(size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi();
     }
@@ -496,7 +496,7 @@ void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::recursive_mutex* mt
         streams.resize(nodes->size());
     if(nodes->size() != images.size())
         images.resize(nodes->size());
-    for (int i = 0; i < nodes->size(); ++i)
+    for (size_t i = 0; i < nodes->size(); ++i)
     {
         (*nodes)[i]->process(images[i], streams[i]);
     }

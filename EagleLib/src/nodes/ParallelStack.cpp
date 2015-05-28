@@ -24,7 +24,7 @@ ParallelStack::process(cv::cuda::GpuMat img, cv::cuda::Stream& stream)
     {
         //threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(/*cast to the correct function call to avoid mis-resolution*/(void(Node::*)(cv::cuda::GpuMat&, boost::promise<cv::cuda::GpuMat>&))&Node::doProcess, *itr, img, boost::ref(retVal)))));
     }
-    for(int i = 0; i < children.size(); ++i)
+    for(size_t i = 0; i < children.size(); ++i)
     {
         retVal.get_future().get();
     }

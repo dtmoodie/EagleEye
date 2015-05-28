@@ -507,7 +507,7 @@ public:
             return;
         EagleLib::EnumParameter* param = EagleLib::getParameterPtr<EagleLib::EnumParameter>(parameter);
         if(init)
-            for(int i = 0; i < param->enumerations.size(); ++i)
+            for(size_t i = 0; i < param->enumerations.size(); ++i)
                 box->addItem(QString::fromStdString(param->enumerations[i]));
         box->setCurrentIndex(param->currentSelection);
 
@@ -549,7 +549,7 @@ public:
         EagleLib::EnumParameter* param = EagleLib::getParameterPtr<EagleLib::EnumParameter>(parameter);
         if(init)
         {
-            for(int i = 0; i < param->enumerations.size(); ++i)
+            for(size_t i = 0; i < param->enumerations.size(); ++i)
                 box->addItem(QString::fromStdString(param->enumerations[i]));
         }
         if(parameter->changed)
@@ -699,7 +699,7 @@ public:
         else
             index->setMaximum(0);
         index->setMinimum(0);
-        if(index->value() < param->size())
+        if(index->value() < (int)param->size())
         {
             value->setValue((*param)[index->value()]);
         }
@@ -713,13 +713,13 @@ public:
         std::vector<T>* param = EagleLib::getParameterPtr<std::vector<T>>(parameter);
         if(widget == index)
         {
-            if(index->value() < param->size())
+            if(index->value() < (int)param->size())
             {
                 value->setValue((*param)[index->value()]);
             }
             return;
         }
-        if(index->value() < param->size())
+        if(index->value() < (int)param->size())
         {
             (*param)[index->value()] = value->value();
         }
@@ -775,7 +775,7 @@ public:
         else
             index->setMaximum(0);
         index->setMinimum(0);
-        if(index->value() < param->size())
+        if(index->value() < (int)param->size())
         {
             value->setText(QString::number(((*param)[index->value()])));
         }
@@ -844,7 +844,7 @@ public:
         else
             index->setMaximum(0);
         index->setMinimum(0);
-        if(index->value() < param->size())
+        if(index->value() < (int)param->size())
         {
             value1->setValue((*param)[index->value()].first);
             value2->setValue((*param)[index->value()].second);
@@ -859,7 +859,7 @@ public:
         std::vector<std::pair<T1, T2>>* param = EagleLib::getParameterPtr<std::vector<std::pair<T1, T2>>>(parameter);
         if(widget == index)
         {
-            if(index->value() < param->size())
+            if(index->value() < (int)param->size())
             {
                 value1->setValue((*param)[index->value()].first);
                 value2->setValue((*param)[index->value()].second);
@@ -868,14 +868,14 @@ public:
         }
         if(widget == value1)
         {
-            if(index->value() < param->size())
+            if(index->value() < (int)param->size())
             {
                 (*param)[index->value()].first = value1->value();
             }
         }
         if(widget == value2)
         {
-            if(index->value() < param->size())
+            if(index->value() < (int)param->size())
             {
                 (*param)[index->value()].second = value2->value();
             }
@@ -937,7 +937,7 @@ public:
         else
             index->setMaximum(0);
         index->setMinimum(0);
-        if(index->value() < param->size())
+        if(index->value() < (int)param->size())
         {
             value1->setText(QString::number((*param)[index->value()].first));
             value2->setText(QString::number((*param)[index->value()].second));
@@ -952,7 +952,7 @@ public:
         std::vector<std::pair<T1, T2>>* param = EagleLib::getParameterPtr<std::vector<std::pair<T1, T2>>>(parameter);
         if(widget == index)
         {
-            if(index->value() < param->size())
+            if(index->value() < (int)param->size())
             {
                 value1->setText(QString::number((*param)[index->value()].first));
                 value2->setText(QString::number((*param)[index->value()].second));

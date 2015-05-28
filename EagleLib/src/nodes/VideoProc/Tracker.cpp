@@ -125,12 +125,12 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     DetectAndComputeFunctor* detector = getParameter<DetectAndComputeFunctor*>("Detector")->data;
     TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor*>("Tracker")->data;
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>("Mask")->data;
-    boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
-                         cv::cuda::GpuMat, cv::cuda::GpuMat,
-                         std::string&, cv::cuda::Stream)>*
-        display = getParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
-                                                    cv::cuda::GpuMat, cv::cuda::GpuMat,
-                                                    std::string&, cv::cuda::Stream)>*>("Display functor")->data;
+//    boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
+//                         cv::cuda::GpuMat, cv::cuda::GpuMat,
+//                         std::string&, cv::cuda::Stream)>*
+//        display = getParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
+//                                                    cv::cuda::GpuMat, cv::cuda::GpuMat,
+//                                                    std::string&, cv::cuda::Stream)>*>("Display functor")->data;
     if(getParameter<bool>("Display")->data)
     {
         if(nonWarpedMask.size() != img.size())
@@ -160,7 +160,7 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         workStreams.resize(trackedFrames.size());
         workFinishedEvents.resize(trackedFrames.size());
 
-        int i = 0;
+        size_t i = 0;
         std::vector<TrackingResults*> results;
         for(auto itr = trackedFrames.begin(); itr != trackedFrames.end(); ++itr, ++i)
         {

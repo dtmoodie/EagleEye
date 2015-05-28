@@ -122,7 +122,7 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
         std::vector<std::pair<int,double>>* areaPtr = getParameterPtr<std::vector<std::pair<int,double>>>(getParameter("Contour Area"));
         bool oriented = getParameter<bool>("Oriented Area")->data;
         areaPtr->resize(ptr->size());
-        for(int i = 0; i < ptr->size(); ++i)
+        for(size_t i = 0; i < ptr->size(); ++i)
         {
             (*areaPtr)[i] = std::pair<int,double>(i,cv::contourArea((*ptr)[i], oriented));
         }
@@ -147,7 +147,7 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
             // Calculate mean and sigma
             double sum = 0;
             double sumSq = 0;
-            for(int i = 0; i < areaPtr->size(); ++i)
+            for(size_t i = 0; i < areaPtr->size(); ++i)
             {
                 sum += (*areaPtr)[i].second;
                 sumSq += (*areaPtr)[i].second*(*areaPtr)[i].second;
@@ -179,7 +179,7 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     if(!contourPtr)
         return img;
     std::vector<cv::Rect> boxes;
-    for(int i = 0; i < contourPtr->size(); ++i)
+    for(size_t i = 0; i < contourPtr->size(); ++i)
     {
         boxes.push_back(cv::boundingRect((*contourPtr)[i]));
     }
@@ -190,10 +190,10 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     }
     if(mergeParam && mergeParam->data)
     {
-        int distance = getParameter<int>("Separation distance")->data;
-        for(int i = 0; i < boxes.size() - 1; ++i)
+        //int distance = getParameter<int>("Separation distance")->data;
+        for(size_t i = 0; i < boxes.size() - 1; ++i)
         {
-            for(int j = i + 1; j < boxes.size(); ++j)
+            for(size_t j = i + 1; j < boxes.size(); ++j)
             {
                 // Check distance between bounding rects
                 cv::Point c1 = boxes[i].tl() + cv::Point(boxes[i].width/2, boxes[i].height/2);
@@ -224,13 +224,13 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     auto areaParam = getParameter<std::vector<std::pair<int,double>>*>("Contour Area");
     if(useArea && useArea->data && areaParam && areaParam->data)
     {
-        for(int i = 0; i < areaParam->data->size(); ++i)
+        for(size_t i = 0; i < areaParam->data->size(); ++i)
         {
             cv::rectangle(h_img, boxes[(*areaParam->data)[i].first], replace, lineWidth);
         }
     }else
     {
-        for(int i = 0; i < boxes.size(); ++i)
+        for(size_t i = 0; i < boxes.size(); ++i)
         {
             cv::rectangle(h_img, boxes[i],replace, lineWidth);
         }

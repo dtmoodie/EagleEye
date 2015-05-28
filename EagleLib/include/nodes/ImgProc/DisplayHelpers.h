@@ -37,7 +37,7 @@ namespace EagleLib
         ColorScale red, green, blue;
         //thrust::device_vector<cv::Vec3b> d_LUT;
         std::vector<cv::Vec3b> LUT;
-        int resolution;
+        size_t resolution;
         double scale, shift;
         void buildLUT();
     public:

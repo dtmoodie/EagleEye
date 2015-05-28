@@ -78,9 +78,12 @@ namespace EagleLib
     class QtPlotter: public Plotter
     {
     protected:
-        std::vector<QCustomPlot*> plots;
+        std::vector<QWidget*> plots;
     public:
-        virtual void addPlot(QCustomPlot* plot_)
+
+        virtual QWidget* getPlot();
+
+        virtual void addPlot(QWidget* plot_)
         {
             plots.push_back(plot_);
         }
@@ -89,6 +92,12 @@ namespace EagleLib
             Plotter::Serialize(pSerializer);
             SERIALIZE(plots);
         }
+        /**
+         * @brief acceptsWidget determines if this plotter can be dropped into a particular widget
+         * @param widget widget is the end point of the drop
+         * @return true if it can go into that widget, false otehrwise
+         */
+        virtual bool acceptsWidget(QWidget* widget) = 0;
 
         /**
          * @brief acceptsType
@@ -125,6 +134,7 @@ namespace EagleLib
 
 //        virtual QWidget* getSettingsWidget() const;
 //    };
+
 
 }
 

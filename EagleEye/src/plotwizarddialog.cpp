@@ -24,7 +24,7 @@ void PlotWizardDialog::setup()
     previewPlots.clear();
     previewPlotters.clear();
     auto plotters = EagleLib::PlotManager::getInstance().getAvailablePlots();
-    for(int i = 0; i < plotters.size(); ++i)
+    for(size_t i = 0; i < plotters.size(); ++i)
     {
         shared_ptr<EagleLib::Plotter> plotter = EagleLib::PlotManager::getInstance().getPlot(plotters[i]);
         if(plotter != nullptr)
@@ -83,6 +83,7 @@ bool PlotWizardDialog::eventFilter(QObject *obj, QEvent *ev)
             return true;
         }
     }
+    return false;
 }
 
 void PlotWizardDialog::onUpdate(size_t idx)

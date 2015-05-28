@@ -152,7 +152,7 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
         std::vector<Buffer<T, P1, P2>> buffer;
         boost::recursive_mutex mtx;
     public:
-        BufferPool():buffer(10), getItr(0), putItr(0), size(10){}
+        BufferPool():getItr(0), putItr(0), size(10), buffer(10){}
         BufferPool(size_t size_):
             buffer(size_), size(size_), getItr(0), putItr(0), size(size_){}
         BufferPool(size_t size_, const T& init):
@@ -380,7 +380,7 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
             buffer(other.buffer), getItr(other.getItr), putItr(other.putItr), size(other.size){}
         ~ConstBuffer()
         {
-            for(int i = 0; i < buffer.size(); ++i)
+            for(size_t i = 0; i < buffer.size(); ++i)
             {
                 cleanup(buffer[i]);
             }

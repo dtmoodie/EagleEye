@@ -17,7 +17,7 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 {
     cv::Mat asd;
     int currentDevice = cv::cuda::getDevice();
-    int maxDevice = cv::cuda::getCudaEnabledDeviceCount();
+    unsigned int maxDevice = cv::cuda::getCudaEnabledDeviceCount();
     if(firstRun)
     {
         std::stringstream ss;

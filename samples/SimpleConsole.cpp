@@ -16,10 +16,10 @@ int main()
     auto rootNode = manager.addNode("SerialStack");
 	auto child = rootNode->addChild(manager.addNode("TestNode"));
     auto inputNode = rootNode->addChild(manager.addNode("TestChildNode"));
-	auto list = child->listParameters();
-	auto test = manager.getNode(child->fullTreeName);
+//	auto list = child->listParameters();
+//	auto test = manager.getNode(child->fullTreeName);
 	auto inputs = inputNode->findCompatibleInputs();
-	for (int i = 0; i < inputs.size(); ++i)
+    for (size_t i = 0; i < inputs.size(); ++i)
 	{
 		if (inputs[i].size())
 			inputNode->setInputParameter(inputs[i][0], i);

@@ -8,8 +8,8 @@
 
 IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QNodeWidget* parent, EagleLib::Node::Ptr node_) :
     QWidget(parent),
-    node(node_),
-    parameter(parameter_)
+    parameter(parameter_),
+    node(node_)
 {
     layout = new QGridLayout(this);
     layout->setVerticalSpacing(0);
@@ -119,8 +119,8 @@ void DraggableLabel::dragMoveEvent(QDragMoveEvent* event)
 
 QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
     mainWindow(parent),
-    node(node_),
-	ui(new Ui::QNodeWidget())
+    ui(new Ui::QNodeWidget()),
+    node(node_)
 {
 	ui->setupUi(this);
     statusDisplay = new QLineEdit();
@@ -150,7 +150,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
         connect(ui->profile, SIGNAL(clicked(bool)), this, SLOT(on_profileClicked(bool)));
 		ui->nodeName->setText(QString::fromStdString(node->fullTreeName));
         ui->verticalLayout->setSpacing(0);
-		for (int i = 0; i < node->parameters.size(); ++i)
+        for (size_t i = 0; i < node->parameters.size(); ++i)
 		{
             auto interop = new IQNodeInterop(node->parameters[i], this, node);
             interops.push_back(boost::shared_ptr<IQNodeInterop>(interop));
@@ -191,10 +191,10 @@ void QNodeWidget::updateUi(bool parameterUpdate)
     {
         if(node->parameters.size() != interops.size())
         {
-            for(int i = 0; i < node->parameters.size(); ++i)
+            for(size_t i = 0; i < node->parameters.size(); ++i)
             {
                 bool found = false;
-                for(int j = 0; j < interops.size(); ++j)
+                for(size_t j = 0; j < interops.size(); ++j)
                 {
                     if(node->parameters[i] == interops[j]->parameter)
                         found = true;
@@ -208,7 +208,7 @@ void QNodeWidget::updateUi(bool parameterUpdate)
                 }
             }
         }
-        for(int i = 0; i < interops.size(); ++i)
+        for(size_t i = 0; i < interops.size(); ++i)
         {
             interops[i]->updateUi();
         }
@@ -345,7 +345,7 @@ void QInputProxy::updateUi(bool init)
     auto inputs = node->findCompatibleInputs(parameter);
     box->clear();
     box->addItem("");
-    for(int i = 0; i < inputs.size(); ++i)
+    for(size_t i = 0; i < inputs.size(); ++i)
     {
         QString text = QString::fromStdString(inputs[i]);
         box->addItem(text);

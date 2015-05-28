@@ -65,8 +65,8 @@ RuntimeObjectSystem::RuntimeObjectSystem()
 	, m_bAutoCompile( true )
     , m_TotalLoadedModulesEver(1) // starts at one for current exe
     , m_bProtectionEnabled( true )
-    , m_pImpl( 0 )
     , m_CurrentlyBuildingProject( 0 )
+    , m_pImpl( 0 )
 {
     ProjectSettings::ms_DefaultIntermediatePath = FileSystemUtils::GetCurrentPath() / "Runtime";
     CreatePlatformImpl();
@@ -870,7 +870,7 @@ static int TestBuildFile( ICompilerLogger* pLog, RuntimeObjectSystem* pRTObjSys,
             else
             {
                 ++numErrors;
-                if( pRTObjSys->GetNumberLoadedModules() == numCurrLoadedModules )
+                if( (int)pRTObjSys->GetNumberLoadedModules() == numCurrLoadedModules )
                 {
                     if( !callback->TestBuildCallback( file.c_str(), TESTBUILDRRESULT_BUILD_FAILED ) ) { return -numErrors; }
                 }

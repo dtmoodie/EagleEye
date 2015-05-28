@@ -57,7 +57,7 @@ void HistogramPlotter::doUpdate()
         hists[i]->setData(bins, StaticPlotPolicy::getPlotData());
     }
 
-    for(int i = 0; i < plots.size(); ++i)
+    for(size_t i = 0; i < plots.size(); ++i)
     {
         plots[i]->replot();
     }
@@ -77,7 +77,7 @@ void HistogramPlotter::setInput(Parameter::Ptr param_)
 {
     Plotter::setInput(param_);
     doUpdate();
-    for(int i = 0; i < plots.size(); ++i)
+    for(size_t i = 0; i < plots.size(); ++i)
     {
         plots[i]->rescaleAxes();
         plots[i]->replot();

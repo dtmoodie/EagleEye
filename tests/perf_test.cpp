@@ -12,7 +12,7 @@ EagleLib::Node::Ptr setVideoFile(EagleLib::Node::Ptr node, const std::string& vi
         node->updateParameter<bool>("Loop", false);
         return node;
     }
-    for(int i = 0; i < node->children.size(); ++i)
+    for(size_t i = 0; i < node->children.size(); ++i)
     {
         auto retNode = setVideoFile(node->children[i], videoFile);
         if(retNode != nullptr)
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     if(vm.count("videoFile"))
     {
         std::string fileName = vm["videoFile"].as<std::string>();
-        for(int i = 0; i < nodes.size(); ++i)
+        for(size_t i = 0; i < nodes.size(); ++i)
         {
            EagleLib::Node::Ptr tmpNode = setVideoFile(nodes[i], fileName);
            if(tmpNode != nullptr)
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
         std::vector<cv::cuda::Stream> streams(nodes.size());
         while(!playbackNode->getParameter<bool>("End of video")->data)
         {
-            for(int i = 0; i < nodes.size(); ++i)
+            for(size_t i = 0; i < nodes.size(); ++i)
             {
                 images[i] = nodes[i]->process(images[i], streams[i]);
             }

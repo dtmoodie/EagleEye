@@ -520,7 +520,7 @@ namespace EagleLib
          * @return see above
          */
         template<typename T> bool
-			updateParameter(int idx,
+            updateParameter(size_t idx,
 							T data,
 							const std::string& name = std::string(),
 							const std::string quickHelp = std::string(),

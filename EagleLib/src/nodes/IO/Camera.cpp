@@ -161,7 +161,7 @@ void GStreamerCamera::setString()
     else
         log(Error, "Failed to open camera");
 
-    for(int i = 0; i < parameters.size(); ++i)
+    for(size_t i = 0; i < parameters.size(); ++i)
     {
         parameters[i]->changed = false;
     }
