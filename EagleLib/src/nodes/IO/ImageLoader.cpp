@@ -6,6 +6,7 @@ using namespace EagleLib;
 
 void ImageLoader::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/oimg.jpeg"), Parameter::Control, "Path to image file");
     parameters[0]->changed = true;
 }

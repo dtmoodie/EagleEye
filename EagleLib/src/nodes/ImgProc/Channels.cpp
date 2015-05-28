@@ -6,7 +6,7 @@ using namespace EagleLib;
 
 void ConvertToGrey::Init(bool firstInit)
 {
-
+    Node::Init(firstInit);
 }
 
 cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -14,19 +14,20 @@ cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     cv::cuda::GpuMat grey;
     try
     {
+        TIME
         cv::cuda::cvtColor(img, grey, cv::COLOR_BGR2GRAY, 0, stream);
     }catch(cv::Exception &err)
     {
         log(Error, err.what());
         return img;
     }
-
+    TIME
     return grey;
 }
 
 void ConvertToHSV::Init(bool firstInit)
 {
-
+    Node::Init(firstInit);
 }
 
 cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -36,6 +37,7 @@ cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
 
 void ExtractChannels::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter("Output Channel", int(0));
@@ -68,6 +70,7 @@ cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 }
 void ConvertDataType::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         EnumParameter dataType;
@@ -93,6 +96,7 @@ cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 
 void Merge::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         addInputParameter<cv::cuda::GpuMat>("Channel1");

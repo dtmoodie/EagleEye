@@ -74,16 +74,23 @@ void SetMatrixValues::Init(bool firstInit)
 
 cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
+    TIME
     cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat*>(0)->data;
     if(input == nullptr)
         input = &img;
+    TIME
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>(1)->data;
+
     if(mask && mask->size() == input->size())
     {
+        TIME
         input->setTo(getParameter<cv::Scalar>(2)->data, *mask, stream);
+        TIME
     }else
     {
+        TIME
         input->setTo(getParameter<cv::Scalar>(2)->data, stream);
+        TIME
     }
     return *input;
 }

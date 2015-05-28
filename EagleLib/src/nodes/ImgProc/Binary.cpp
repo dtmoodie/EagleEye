@@ -12,6 +12,7 @@ using namespace EagleLib;
 
 void MorphologyFilter::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         EnumParameter structuringElement;
@@ -66,6 +67,7 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 }
 void FindContours::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         EnumParameter mode;
@@ -160,6 +162,7 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
 }
 void ContourBoundingBox::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         addInputParameter<std::vector<std::vector<cv::Point>>>("Contours");
@@ -240,6 +243,7 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
 }
 void HistogramThreshold::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         EnumParameter param;

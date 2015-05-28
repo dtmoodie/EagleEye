@@ -14,6 +14,7 @@ VideoWriter::~VideoWriter()
 }
 void VideoWriter::Init(bool firstInit)
 {
+    Node::Init(firstInit);
 	if (firstInit)
 	{
         EnumParameter param;

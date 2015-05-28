@@ -40,6 +40,7 @@ Camera::~Camera()
 
 void Camera::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter<int>("Camera Number", 0);
@@ -98,6 +99,7 @@ bool Camera::SkipEmpty() const
 }
 void GStreamerCamera::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         EnumParameter param;

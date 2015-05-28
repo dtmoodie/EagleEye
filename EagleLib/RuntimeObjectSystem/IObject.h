@@ -386,6 +386,8 @@ struct RCC_EXPORTS IObject
         auto itr = std::find(notifiers.begin(), notifiers.end(), notifier);
         if(itr == notifiers.end())
             notifiers.push_back(notifier);
+        else
+            return;
     }
 
     void deregisterNotifier(IObjectNotifiable* notifier)
@@ -393,6 +395,8 @@ struct RCC_EXPORTS IObject
         auto itr = std::find(notifiers.begin(), notifiers.end(), notifier);
         if(itr != notifiers.end())
             notifiers.erase(itr);
+        else
+            return;
     }
     void updateNotifiers()
     {

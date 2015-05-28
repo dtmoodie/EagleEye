@@ -18,6 +18,7 @@ QtImageDisplay::QtImageDisplay(boost::function<void (cv::cuda::GpuMat, Node*)> g
 }
 void QtImageDisplay::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter("Name", std::string(), Parameter::Control, "Set name for window");
@@ -88,6 +89,7 @@ OGLImageDisplay::OGLImageDisplay(boost::function<void(cv::cuda::GpuMat,Node*)> g
 
 void OGLImageDisplay::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter("Default Name", std::string("Default Name"), Parameter::Control, "Set name for window");
@@ -164,6 +166,7 @@ void KeyPointDisplay_callback(int status, void* userData)
 
 void KeyPointDisplay::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         addInputParameter<cv::cuda::GpuMat>("Device keypoints");
@@ -224,6 +227,7 @@ void FlowVectorDisplay::Serialize(ISimpleSerializer *pSerializer)
 
 void FlowVectorDisplay::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         addInputParameter<cv::cuda::GpuMat>("Device initial poitns");
@@ -321,6 +325,7 @@ void HistogramDisplay::displayHistogram()
 
 void HistogramDisplay::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         addInputParameter<cv::cuda::GpuMat>("Input");
