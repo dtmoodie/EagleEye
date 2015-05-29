@@ -557,7 +557,7 @@ Node::findType(Parameter::Ptr param, std::vector<Node*>& nodes)
             continue;
         for (size_t j = 0; j < nodes[i]->parameters.size(); ++j)
         {
-            if (param->acceptsInput(nodes[i]->parameters[j]->typeInfo) && nodes[i]->parameters[j]->type & Parameter::Output)
+            if (param->acceptsInput(nodes[i]->parameters[j]) && nodes[i]->parameters[j]->type & Parameter::Output)
                 output.push_back(nodes[i]->parameters[j]->treeName);
         }
     }

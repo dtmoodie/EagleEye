@@ -43,7 +43,7 @@ namespace EagleLib
         virtual void setSource(const std::string& name) = 0;
         virtual void setSource(EagleLib::Parameter::Ptr param) = 0;
         virtual void update() = 0;
-        virtual bool acceptsInput(const Loki::TypeInfo& type) = 0;
+        virtual bool acceptsInput(const Ptr& param) = 0;
         virtual void Init(cv::FileNode& fs){}
 
         virtual void Serialize(cv::FileStorage& fs)
@@ -103,7 +103,7 @@ namespace EagleLib
         virtual void setSource(const std::string& name){}
         virtual void setSource(Parameter::Ptr param){}
         virtual void update(){}
-        virtual bool acceptsInput(const Loki::TypeInfo& type){ return false;}
+        virtual bool acceptsInput(const Parameter::Ptr& param){ return false;}
         virtual void Serialize(cv::FileStorage &fs);
         virtual void Init(cv::FileNode &fs);
         TypedParameter(const std::string& name_, const T& data_, int type_ = Control, const std::string& toolTip_ = "", bool ownsData_ = false) :
@@ -236,8 +236,8 @@ namespace EagleLib
     class CV_EXPORTS InputParameter : public TypedParameter<T*>
     {
     public:
-        InputParameter(const std::string& name_, const std::string& toolTip_ = "") :
-            TypedParameter<T*>(name_, nullptr, Parameter::Input, toolTip_, false)
+        InputParameter(const std::string& name_, const std::string& toolTip_ = "", const boost::function<bool(const Parameter::Ptr&)> qualifier_ = boost::function<bool(const Parameter::Ptr&)>()) :
+            TypedParameter<T*>(name_, nullptr, Parameter::Input, toolTip_, false), qualifier(qualifier_)
         {
 
         }
@@ -245,8 +245,6 @@ namespace EagleLib
         {
             bc.disconnect();
         }
-
-        // TODO: TEST THIS
         virtual void setSource(const std::string& name = std::string())
         {
             if(name == Parameter::inputName)
@@ -277,7 +275,6 @@ namespace EagleLib
 			this->data = getParameterPtr<T>(param);
             ++param->subscribers;
             bc = param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
-
         }
 
         virtual void update()
@@ -298,11 +295,17 @@ namespace EagleLib
             else
                 this->data = getParameterPtr<T>(param);
         }
-        virtual bool acceptsInput(const Loki::TypeInfo &type)
+        virtual bool acceptsInput(const Parameter::Ptr& param)
         {
-            return type == Loki::TypeInfo(typeid(T)) ||
-                    type == Loki::TypeInfo(typeid(T*)) ||
-                    type == Loki::TypeInfo(typeid(T&));
+            if(param->typeInfo == Loki::TypeInfo(typeid(T)) ||
+               param->typeInfo == Loki::TypeInfo(typeid(T*)) ||
+               param->typeInfo == Loki::TypeInfo(typeid(T&)))
+            {
+                if(qualifier)
+                    return qualifier(param);
+                return true;
+            }
+            return false;
         }
         void Serialize(cv::FileStorage &fs)
         {
@@ -318,6 +321,8 @@ namespace EagleLib
         }
         boost::signals2::connection bc;
         Parameter::Ptr param;
+        boost::function<bool(const Parameter::Ptr)> qualifier;
+
     };
     template<typename T> bool acceptsType(Loki::TypeInfo& type)
     {
