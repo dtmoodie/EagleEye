@@ -1,5 +1,5 @@
 #include "nodes/Node.h"
-//
+#include <opencv2/cudabgsegm.hpp>
 #include "CudaUtils.hpp"
 #ifdef __cplusplus
 extern "C"{
@@ -17,6 +17,17 @@ namespace EagleLib
     public:
         OtsuThreshold();
         virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
+
+    class SegmentMOG2: public Node
+    {
+
+        cv::Ptr<cv::cuda::BackgroundSubtractorMOG2> mog2;
+    public:
+        SegmentMOG2();
+        virtual void Init(bool firstInit);
+        virtual void Serialize(ISimpleSerializer *pSerializer);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 

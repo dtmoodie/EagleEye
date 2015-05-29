@@ -64,6 +64,11 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
             boost::mutex::scoped_lock lock(the_mutex);
             return the_queue.size();
         }
+        void clear()
+        {
+            boost::mutex::scoped_lock lock(the_mutex);
+            the_queue = std::queue<Data>();
+        }
     };
 
     struct EventPolicy

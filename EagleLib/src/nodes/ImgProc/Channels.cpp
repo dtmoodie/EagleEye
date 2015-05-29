@@ -103,8 +103,9 @@ void Merge::Init(bool firstInit)
         addInputParameter<cv::cuda::GpuMat>("Channel1");
         addInputParameter<cv::cuda::GpuMat>("Channel2");
         addInputParameter<cv::cuda::GpuMat>("Channel3");
+        addInputParameter<cv::cuda::GpuMat>("Channel4");
     }
-    addInputParameter<cv::cuda::GpuMat>("Channel4");
+
 }
 
 cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)

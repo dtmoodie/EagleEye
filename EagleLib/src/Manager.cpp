@@ -122,6 +122,11 @@ void UIThreadCallback::processAllCallbacks()
         f();
     }
 }
+void UIThreadCallback::clearCallbacks()
+{
+    queue.clear();
+}
+
 void UIThreadCallback::setUINotifier(boost::function<void(void)> f)
 {
     notifier = f;

@@ -34,7 +34,7 @@ struct UserData
 void QtImageDisplay_cpuCallback(int status, void* userData)
 {
     UserData* tmp = (UserData*)userData;
-    tmp->node->displayImage(tmp->displayImage);
+    //tmp->node->displayImage(tmp->displayImage);
     EagleLib::UIThreadCallback::getInstance().addCallback(boost::bind(&QtImageDisplay::displayImage, tmp->node, tmp->displayImage));
     delete tmp;
 }

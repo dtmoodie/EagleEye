@@ -1,6 +1,7 @@
 #pragma once
 #include "nodes/Node.h"
 #include <CudaUtils.hpp>
+#include <cudnn.h>
 namespace EagleLib
 {
     class ConvertToGrey: public Node

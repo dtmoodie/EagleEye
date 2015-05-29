@@ -270,14 +270,22 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
     }
     return img;
 }
+void HistogramRange::Serialize(ISimpleSerializer *pSerializer)
+{
+    Node::Serialize(pSerializer);
+    SERIALIZE(levels)
+}
 
 void HistogramRange::Init(bool firstInit)
 {
-    updateParameter<double>("Lower bound", 0.0);
-    updateParameter<double>("Upper bound", 1.0);
-    updateParameter<int>("Bins", 100);
-    updateParameter<cv::cuda::GpuMat>("Histogram", cv::cuda::GpuMat(), Parameter::Output);
-    updateLevels();
+    if(firstInit)
+    {
+        updateParameter<double>("Lower bound", 0.0);
+        updateParameter<double>("Upper bound", 1.0);
+        updateParameter<int>("Bins", 100);
+        updateParameter<cv::cuda::GpuMat>("Histogram", cv::cuda::GpuMat(), Parameter::Output);
+        updateLevels(CV_8U);
+    }
 }
 
 cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
@@ -286,16 +294,19 @@ cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
        parameters[1]->changed ||
        parameters[2]->changed)
     {
-        updateLevels();
+        updateLevels(img.type());
         parameters[0]->changed = false;
         parameters[1]->changed = false;
         parameters[2]->changed = false;
     }
-    if(img.channels() == 1)
+    if(img.channels() == 1 || img.channels() == 4)
     {
+        TIME
         cv::cuda::GpuMat hist;
         cv::cuda::histRange(img, hist, levels, stream);
-        updateParameter("Histogram", hist, Parameter::Output);
+        TIME
+        updateParameter(3, hist);
+        TIME
         if(parameters[3]->subscribers > 0)
             return img;
         return hist;
@@ -306,18 +317,25 @@ cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     return img;
 }
 
-void HistogramRange::updateLevels()
+void HistogramRange::updateLevels(int type)
 {
     double lower = getParameter<double>(0)->data;
     double upper = getParameter<double>(1)->data;
     int bins = getParameter<int>(2)->data;
-    cv::Mat h_mat(1,bins,CV_32F);
+    cv::Mat h_mat;
+    if(type == CV_32F)
+        h_mat = cv::Mat(1, bins, CV_32F);
+    else
+        h_mat = cv::Mat(1, bins, CV_32S);
     double step = (upper - lower) / double(bins);
 
     double val = lower;
     for(int i = 0; i < bins; ++i, val += step)
     {
-        h_mat.at<float>(i) = val;
+        if(type == CV_32F)
+            h_mat.at<float>(i) = val;
+        if(type == CV_8U)
+            h_mat.at<int>(i) = val;
     }
     levels.upload(h_mat);
     updateParameter("Histogram bins", h_mat, Parameter::Output);

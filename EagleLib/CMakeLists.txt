@@ -3,7 +3,7 @@ project(EagleLib)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(OPENCV_STATIC OFF)
-find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
+find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
 find_package(CUDA REQUIRED)
 find_package(Qt5 REQUIRED Core)
 find_package(PCL COMPONENTS COMMON)

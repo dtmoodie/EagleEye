@@ -76,6 +76,7 @@ namespace EagleLib
     public:
         static UIThreadCallback& getInstance();
         void addCallback(boost::function<void(void)> f);
+        void clearCallbacks();
         void processCallback();
         void processAllCallbacks();
         void setUINotifier(boost::function<void(void)> f);

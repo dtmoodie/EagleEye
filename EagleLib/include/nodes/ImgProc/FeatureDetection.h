@@ -47,10 +47,11 @@ namespace EagleLib
     class HistogramRange: public Node
     {
         cv::cuda::GpuMat levels;
-        void updateLevels();
+        void updateLevels(int type);
     public:
         HistogramRange();
         virtual void Init(bool firstInit);
+        virtual void Serialize(ISimpleSerializer *pSerializer);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 }

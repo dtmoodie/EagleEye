@@ -138,6 +138,19 @@ namespace EagleLib
     SERIALIZE_TYPE(unsigned short)
     SERIALIZE_TYPE(bool)
 
+
+    template<> inline void TypedParameter<cv::Scalar>::Serialize(cv::FileStorage& fs)
+    {
+        Parameter::Serialize(fs);
+        fs << "Data" << data;
+        fs << "}";
+    }
+    template<> inline void TypedParameter<cv::Scalar>::Init(cv::FileNode& fs)
+    {
+        cv::FileNode myNode = fs[name];
+        data = (cv::Scalar)myNode["Data"];
+    }
+
     template<> inline void TypedParameter<boost::filesystem::path>::Serialize(cv::FileStorage& fs)
     {
         Parameter::Serialize(fs);
