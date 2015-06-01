@@ -39,10 +39,18 @@ namespace EagleLib
     };
     class Merge: public Node
     {
+        bool qualifiersSet;
         cv::cuda::GpuMat mergedChannels;
     public:
         Merge();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+    };
+    class Reshape: public Node
+    {
+    public:
+        Reshape();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 }

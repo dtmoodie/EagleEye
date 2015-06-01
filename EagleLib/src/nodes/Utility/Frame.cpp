@@ -60,6 +60,11 @@ cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
                     getParameter<int>(2)->data,
                     dtype, getParameter<cv::Scalar>(4)->data);
         updateParameter("Output", createdMat, Parameter::Output);
+        parameters[0]->changed = false;
+        parameters[1]->changed = false;
+        parameters[2]->changed = false;
+        parameters[3]->changed = false;
+        parameters[4]->changed = false;
     }
     return img;
 }
@@ -71,6 +76,7 @@ void SetMatrixValues::Init(bool firstInit)
         addInputParameter<cv::cuda::GpuMat>("Input mask");
         updateParameter("Replace value", cv::Scalar(0,0,0));
     }
+    qualifiersSetup = false;
 }
 
 cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -80,6 +86,11 @@ cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     if(input == nullptr)
         input = &img;
     TIME
+    if(parameters[0]->changed || qualifiersSetup == false)
+    {
+        boost::function<bool(const Parameter::Ptr&)> f = GpuMatQualifier::get(input->cols, input->rows, 1, CV_8U);
+        updateInputQualifier<cv::cuda::GpuMat>(1, f);
+    }
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>(1)->data;
 
     if(mask && mask->size() == input->size())

@@ -49,9 +49,20 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+    void kmeans_impl(cv::cuda::GpuMat input, cv::cuda::GpuMat& labels, cv::cuda::GpuMat& clusters, int k, cv::cuda::Stream stream, cv::cuda::GpuMat weights = cv::cuda::GpuMat());
+    class KMeans: public Node
+    {
+    public:
+        KMeans();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
 
     class SegmentKMeans: public Node
     {
+//        cv::cuda::HostMem labels;
+//        cv::cuda::HostMem clusters;
+        cv::cuda::HostMem hostBuf;
     public:
         SegmentKMeans();
         virtual void Init(bool firstInit);

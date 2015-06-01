@@ -139,7 +139,9 @@ public:
     virtual void onUiUpdated(QWidget* widget);
     virtual void updateUi(bool init = false);
     virtual QWidget* getWidget(int num = 0);
+
 private:
+    boost::signals2::connection bc;
     EagleLib::Node::Ptr node;
     QComboBox* box;
 };

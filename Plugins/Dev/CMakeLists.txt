@@ -7,7 +7,7 @@ set(Boost_NO_BOOST_CMAKE ON)
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
-
+find_package(CUDA REQUIRED)
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
 
@@ -19,7 +19,8 @@ INCLUDE_DIRECTORIES(
 )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-add_library(Dev SHARED Segmentation.h Segmentation.cpp Stereo.h Stereo.cpp)
+
+cuda_add_library(Dev SHARED Segmentation.h Segmentation.cpp Stereo.h Stereo.cpp Segmentation.cu)
 add_dependencies(Dev EagleLib)
 target_link_libraries(Dev 
     EagleLib

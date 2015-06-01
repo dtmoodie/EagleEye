@@ -37,8 +37,11 @@ NodeListDialog::show()
 
 void NodeListDialog::on_pushButton_clicked()
 {
-    EagleLib::Node::Ptr node = EagleLib::NodeManager::getInstance().addNode(ui->NodeList->currentItem()->text().toStdString());
-    emit nodeConstructed(node);
+    if(ui->NodeList->currentItem())
+    {
+        EagleLib::Node::Ptr node = EagleLib::NodeManager::getInstance().addNode(ui->NodeList->currentItem()->text().toStdString());
+        emit nodeConstructed(node);
+    }
 }
 
 void NodeListDialog::on_pushButton_2_clicked()

@@ -30,6 +30,7 @@ namespace EagleLib
     };
     class SetMatrixValues: public Node
     {
+        bool qualifiersSetup;
     public:
         SetMatrixValues();
         virtual void Init(bool firstInit);

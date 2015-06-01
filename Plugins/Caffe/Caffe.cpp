@@ -130,7 +130,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
             parameters[0]->changed = false;
         }else
         {
-            log(Warning, "Invalid architecture file");
+            log(Warning, "Architecture file does not exist");
         }
     }
     if(parameters[1]->changed && NN)
@@ -143,7 +143,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
             parameters[1]->changed = false;
         }else
         {
-            log(Warning, "Invalid weights file");
+            log(Warning, "Weight file does not exist");
         }
     }
     if(NN == nullptr)

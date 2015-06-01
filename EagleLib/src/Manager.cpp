@@ -253,13 +253,17 @@ NodeManager::OnConstructorsAdded()
         for (size_t j = 0; j < numObjects; ++j)
 		{
 			auto ptr = constructors[i]->GetConstructedObject(j);
-			ptr = ptr->GetInterface(IID_NodeObject);
-			if (ptr)
-			{
-                auto nodePtr = static_cast<Node*>(ptr);
-                //m_nodeTree.put(t_nodeTree::path_type{nodePtr->fullTreeName,'.'}, nodePtr);
-				newNodes.push_back(nodePtr);
-			}
+            if(ptr)
+            {
+                ptr = ptr->GetInterface(IID_NodeObject);
+                if (ptr)
+                {
+                    auto nodePtr = static_cast<Node*>(ptr);
+                    //m_nodeTree.put(t_nodeTree::path_type{nodePtr->fullTreeName,'.'}, nodePtr);
+                    newNodes.push_back(nodePtr);
+                }
+            }
+
 		}
 	}
     for (size_t i = 0; i < newNodes.size(); ++i)

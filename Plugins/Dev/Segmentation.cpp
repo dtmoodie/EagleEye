@@ -287,13 +287,98 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     }
     return img;
 }
-void SegmentKMeans::Init(bool firstInit)
+
+void KMeans::Init(bool firstInit)
 {
 
 }
 
+cv::cuda::GpuMat KMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+
+    return img;
+}
+
+
+void SegmentKMeans::Init(bool firstInit)
+{
+    EnumParameter flags;
+    flags.addEnum(ENUM(cv::KMEANS_PP_CENTERS));
+    flags.addEnum(ENUM(cv::KMEANS_RANDOM_CENTERS));
+    flags.addEnum(ENUM(cv::KMEANS_USE_INITIAL_LABELS));
+    updateParameter("K", int(10));
+    updateParameter("Iterations", 100);
+    updateParameter("Epsilon", double(0.1));
+    updateParameter("Attempts", int(1));
+    updateParameter("Flags", flags);
+    updateParameter("Color weight", double(1.0));
+    updateParameter("Distance weight", double(1.0));
+}
+
 cv::cuda::GpuMat SegmentKMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
+    int k = getParameter<int>(0)->data;
+
+    img.download(hostBuf, stream);
+    stream.waitForCompletion();
+    cv::Mat h_img = hostBuf.createMatHeader();
+    const int numSamples = h_img.size().area();
+    cv::Mat samples(numSamples, img.channels() + 2, CV_32F);
+    double colorWeight = getParameter<double>(5)->data;
+    double distanceWeight = getParameter<double>(6)->data;
+    float* samplePtr = samples.ptr<float>();
+    cv::Vec3b* pixels = 0;
+    uchar* pixel = 0;
+    if(img.channels() == 1)
+    {
+        pixel = h_img.ptr<uchar>(0);
+    }
+    if(img.channels() == 3)
+    {
+        pixels = h_img.ptr<cv::Vec3b>(0);
+    }
+    if(pixels == 0 && pixel == 0)
+    {
+        return img;
+    }
+    for(int i = 0; i < numSamples; ++i)
+    {
+        if(pixels)
+        {
+            *samplePtr = pixels->val[0] * colorWeight;
+            ++samplePtr;
+            *samplePtr = pixels->val[1] * colorWeight;
+            ++samplePtr;
+            *samplePtr = pixels->val[2] * colorWeight;
+            ++samplePtr;
+            *samplePtr = distanceWeight*(i / h_img.cols); // row
+            ++samplePtr;
+            *samplePtr = distanceWeight*(i % h_img.cols); // col
+            ++samplePtr;
+            ++pixels;
+        }
+        if(pixel)
+        {
+            *samplePtr = *pixel;
+            ++samplePtr;
+            *samplePtr = i / h_img.cols; // row
+            ++samplePtr;
+            *samplePtr = i % h_img.cols; // col
+            ++samplePtr;
+            ++pixel;
+        }
+    }
+    cv::Mat labels;
+    cv::Mat clusters;
+    cv::TermCriteria termCrit( cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS, getParameter<int>(1)->data, getParameter<double>(2)->data);
+    double ret = cv::kmeans(samples, k, labels, termCrit, getParameter<int>(3)->data, getParameter<EnumParameter>(4)->data.getValue(), clusters);
+    labels = labels.reshape(0, h_img.rows);
+    cv::cuda::GpuMat d_clusters, d_labels;
+    d_clusters.upload(clusters, stream);
+    d_labels.upload(labels, stream);
+    updateParameter("Clusters", d_clusters, Parameter::Output);
+    updateParameter("Labels", d_labels, Parameter::Output);
+    updateParameter("Compactedness", ret, Parameter::Output);
     return img;
 }
 void
@@ -391,6 +476,10 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
                 cv::rectangle(h_mask, cv::Rect(origin.val[0], origin.val[1], size.val[0], size.val[1]), cv::Scalar(0),-1);
         }
         updateParameter("Manually defined mask", cv::cuda::GpuMat(h_mask), Parameter::Output);
+        parameters[0]->changed = false;
+        parameters[1]->changed = false;
+        parameters[2]->changed = false;
+        parameters[3]->changed = false;
     }
     return img;
 }

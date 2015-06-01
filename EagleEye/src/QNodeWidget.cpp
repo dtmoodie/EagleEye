@@ -331,6 +331,7 @@ void QInputProxy::onUiUpdated(QWidget* sender)
     //auto param = sourceNode->getParameter(tokens[1].toStdString());
     //if(param)
     parameter->setSource(inputName.toStdString());
+    parameter->changed = true;
 
 }
 QWidget* QInputProxy::getWidget(int num)
@@ -343,7 +344,6 @@ QWidget* QInputProxy::getWidget(int num)
 void QInputProxy::updateUi(bool init)
 {
     QString currentItem = box->currentText();
-
     parameter->update();
     auto inputs = node->findCompatibleInputs(parameter);
     box->clear();
@@ -355,7 +355,9 @@ void QInputProxy::updateUi(bool init)
     }
     if(parameter->inputName.size())
     {
-        box->setCurrentText(QString::fromStdString(parameter->inputName));
+        QString inputName = QString::fromStdString(parameter->inputName);
+        if(box->currentText() != inputName)
+            box->setCurrentText(inputName);
         return;
     }
     if(currentItem.size())
@@ -391,6 +393,7 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE(unsigned short);
         MAKE_TYPE(char);
         MAKE_TYPE(unsigned char);
+        MAKE_TYPE(unsigned long);
         MAKE_TYPE(std::string);
         MAKE_TYPE(boost::filesystem::path);
         MAKE_TYPE(bool);
@@ -415,6 +418,7 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE_(unsigned short);
         MAKE_TYPE_(char);
         MAKE_TYPE_(unsigned char);
+        MAKE_TYPE_(unsigned long);
         MAKE_TYPE_(std::string);
         MAKE_TYPE_(boost::filesystem::path);
         MAKE_TYPE_(bool);

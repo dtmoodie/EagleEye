@@ -236,7 +236,8 @@ namespace EagleLib
     class CV_EXPORTS InputParameter : public TypedParameter<T*>
     {
     public:
-        InputParameter(const std::string& name_, const std::string& toolTip_ = "", const boost::function<bool(const Parameter::Ptr&)> qualifier_ = boost::function<bool(const Parameter::Ptr&)>()) :
+        typedef typename boost::shared_ptr<InputParameter<T>> Ptr;
+        InputParameter(const std::string& name_, const std::string& toolTip_ = "", const boost::function<bool(const Parameter::Ptr&)>& qualifier_ = boost::function<bool(const Parameter::Ptr&)>()) :
             TypedParameter<T*>(name_, nullptr, Parameter::Input, toolTip_, false), qualifier(qualifier_)
         {
 
@@ -249,20 +250,14 @@ namespace EagleLib
         {
             if(name == Parameter::inputName)
                 return;
-            if (name.size() != 0)
-                Parameter::inputName = name;
+
             if(param)
             {
                 --param->subscribers;
                 bc.disconnect();
             }
-			param = Parameter::getParameter(Parameter::inputName);
+            Parameter::inputName = name;
             update();
-            if(param)
-            {
-                ++param->subscribers;
-                bc = param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
-            }
         }
         virtual void setSource(Parameter::Ptr param_)
         {
@@ -272,15 +267,22 @@ namespace EagleLib
                 bc.disconnect();
             }
             param = param_;
-			this->data = getParameterPtr<T>(param);
-            ++param->subscribers;
-            bc = param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
+            if(param)
+            {
+                this->data = getParameterPtr<T>(param);
+                ++param->subscribers;
+                bc = param->onUpdate.connect(boost::bind(static_cast<void(InputParameter<T>::*)()>(&InputParameter<T>::update), this));
+            }
         }
 
         virtual void update()
         {
             if(Parameter::inputName.size() == 0)
+            {
+                param.reset();
+                this->data = nullptr;
                 return;
+            }
             if(param == nullptr && Parameter::inputName.size())
             {
 				param = Parameter::getParameter(Parameter::inputName);

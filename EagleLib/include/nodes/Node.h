@@ -58,7 +58,7 @@
 #include <boost/filesystem.hpp>
 #include "../LokiTypeInfo.h"
 #include <boost/thread.hpp>
-
+#include <Qualifiers.hpp>
 #include "../Parameters.h"
 
 
@@ -454,12 +454,45 @@ namespace EagleLib
           * @return the index of the parameter
           */
          template<typename T> size_t
-			addInputParameter(const std::string& name, const std::string& toolTip_ = std::string())
+            addInputParameter(const std::string& name, const std::string& toolTip_ = std::string(), const boost::function<bool(const EagleLib::Parameter::Ptr&)>& qualifier_ = boost::function<bool(const EagleLib::Parameter::Ptr&)>())
 		{
-			parameters.push_back(boost::shared_ptr< InputParameter<T> >(new InputParameter<T>(name, toolTip_)));
+            parameters.push_back(boost::shared_ptr< InputParameter<T> >(new InputParameter<T>(name, toolTip_,qualifier_)));
             parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
 			return parameters.size() - 1;
 		}
+
+        template<typename T> bool
+            updateInputQualifier(const std::string& name, const boost::function<bool(const EagleLib::Parameter::Ptr&)>& qualifier_)
+        {
+            Parameter::Ptr param = getParameter(name);
+            if(param)
+            {
+                typename EagleLib::InputParameter<T>::Ptr inputParam = boost::dynamic_pointer_cast<typename EagleLib::InputParameter<T>, typename EagleLib::Parameter>(param);
+                if(inputParam)
+                {
+                    inputParam->qualifier = qualifier_;
+                    inputParam->onUpdate();
+                    return true;
+                }
+            }
+            return false;
+        }
+        template<typename T> bool
+            updateInputQualifier(int idx, const boost::function<bool(const EagleLib::Parameter::Ptr&)>& qualifier_)
+        {
+            Parameter::Ptr param = getParameter(idx);
+            if(param)
+            {
+                typename EagleLib::InputParameter<T>::Ptr inputParam = boost::dynamic_pointer_cast<typename EagleLib::InputParameter<T>, typename EagleLib::Parameter>(param);
+                if(inputParam)
+                {
+                    inputParam->qualifier = qualifier_;
+                    inputParam->onUpdate();
+                    return true;
+                }
+            }
+            return false;
+        }
 
         /**
           * @brief updateParameter is frequently used in nodes to add or update a parameter's value
@@ -586,14 +619,8 @@ namespace EagleLib
                 throw cv::Exception(0, "Failed to get parameter by index " + boost::lexical_cast<std::string>(idx), __FUNCTION__, __FILE__, __LINE__);
             boost::shared_ptr< TypedParameter<T> > typedParam = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
             if(typedParam == nullptr)
-#ifdef _MSC_VER
-				throw cv::Exception(0, std::string("Failed to cast parameter to the appropriate type, requested type: ") +  std::string(typeid(T).name()) + std::string(" parameter actual type: ") + std::string(  param->typeInfo.name()), __FUNCTION__, __FILE__, __LINE__);
-#else
-
-			throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
-                TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + TypeInfo::demangle(param->typeInfo.name()), __FUNCTION__, __FILE__, __LINE__);
-#endif
-			
+                throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
+                    TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + TypeInfo::demangle(param->typeInfo.name()), __FUNCTION__, __FILE__, __LINE__);
             return typedParam;
 		}
 
@@ -605,12 +632,6 @@ namespace EagleLib
 			return false;
 		}
 
-//					// Check to see if a sub parameter is of a certain type
-//		template<typename T> bool
-//			checkSubParameterType(std::string name)
-//		{
-
-//		}
 					// Get's a pointer to a sub parameter based on the name of the sub parameter
 		template<typename T> boost::shared_ptr< TypedParameter<T> >
 			getSubParameter(std::string name)
