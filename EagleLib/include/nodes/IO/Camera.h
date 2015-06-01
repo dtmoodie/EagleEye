@@ -4,6 +4,16 @@
 #include <CudaUtils.hpp>
 namespace EagleLib
 {
+    enum SourceType
+    {
+        v4l2src = 0,
+        rtspsrc = 1
+    };
+    enum VideoType
+    {
+        h264 = 0,
+        mjpg = 1
+    };
     class Camera: public Node
     {
         virtual bool changeStream(const std::string& gstreamParams);
@@ -26,19 +36,25 @@ namespace EagleLib
     {
         cv::VideoCapture cam;
         cv::cuda::HostMem hostBuf;
-        enum SourceType
-        {
-            v4l2src = 0
-        };
-        enum VideoType
-        {
-            h264 = 0
-        };
+
         void setString();
     public:
         GStreamerCamera();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
         virtual bool SkipEmpty() const;
+    };
+
+    class RTSPCamera: public Node
+    {
+        cv::VideoCapture cam;
+        cv::cuda::HostMem hostBuf;
+        void setString();
+    public:
+        RTSPCamera();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+        virtual bool SkipEmpty() const;
+
     };
 }

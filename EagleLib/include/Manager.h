@@ -136,7 +136,7 @@ namespace EagleLib
 		Node* getParent(const std::string& sourceNode);
         std::vector<std::string> getConstructableNodes();
         std::vector<std::string> getParametersOfType(boost::function<bool(Loki::TypeInfo&)> selector);
-
+        void addIncludeDir(const std::string& dir);
 
 
 	private:

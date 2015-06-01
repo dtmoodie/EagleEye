@@ -113,6 +113,8 @@ void GStreamerCamera::Init(bool firstInit)
         updateParameter("Height", int(1080));
         updateParameter<std::string>("Framerate", "30/1");
         updateParameter("Queue", true);
+        updateParameter<std::string>("Username", "");
+        updateParameter<std::string>("Password", "");
         setString();
         //updateParameter("Gstreamer string", "v4l2src device=/dev/video0 ! video/x-h264, width=1920, height=1080, framerate=30/1 ! queue ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink");
     }
@@ -120,32 +122,64 @@ void GStreamerCamera::Init(bool firstInit)
 void GStreamerCamera::setString()
 {
     std::stringstream str;
-    switch(getParameter<EnumParameter>(0)->data.getValue())
+    SourceType src = (SourceType)getParameter<EnumParameter>(0)->data.getValue();
+    VideoType encoding = (VideoType)getParameter<EnumParameter>(1)->data.getValue();
+
+    switch(src)
     {
-        case v4l2src:
+    case v4l2src:
         str << "v4l2src ";
         break;
+    case rtspsrc:
+        str << "rtspsrc ";
+        break;
+    }
+    if(src == v4l2src)
+        
+    if(src == rtspsrc)
+    {
+        std::string userName = getParameter<std::string>(7)->data;
+        std::string pass = getParameter<std::string>(8)->data;
+        if(userName.size() && pass.size())
+        {
+            str << "location=rtsp://" << userName << ":" << pass << "@" << getParameter<std::string>(2)->data << " ! ";
+        }else
+        {
+            str << "location=rtsp://" << getParameter<std::string>(2)->data << " ! ";
+        }
+        if(encoding == h264)
+        {
+            str << " rtph264depay ! avdec_h264 ! ";
+        }
+    }
+    
+    if(src == v4l2src)
+    {
+        str << "device=" << getParameter<std::string>(2)->data << " ! ";
+        if(encoding == h264)
+            str << "video/x-h264, width=";
+        str << getParameter<int>(3)->data;
+        str << ", height=";
+        str << getParameter<int>(4)->data;
+        str << ", framerate=";
+        str << getParameter<std::string>(5)->data;
+        str << " ! ";
     }
 
-    str << "device=" << getParameter<std::string>(2)->data << " ! ";
-    VideoType encoding = (VideoType)getParameter<EnumParameter>(1)->data.getValue();
-    if(encoding == h264)
-        str << "video/x-h264, width=";
-    str << getParameter<int>(3)->data;
-    str << ", height=";
-    str << getParameter<int>(4)->data;
-    str << ", framerate=";
-    str << getParameter<std::string>(5)->data;
-    str << " ! ";
+
     if(getParameter<bool>(6)->data)
         str << "queue ! ";
-    if(encoding == h264)
+    if(encoding == h264 && src == v4l2src)
+    {
+
         str << "h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=";
-    str << getParameter<int>(3)->data;
-    str << ", height=";
-    str << getParameter<int>(4)->data;
+        str << getParameter<int>(3)->data;
+        str << ", height=";
+        str << getParameter<int>(4)->data;
+    }
     str << " ! appsink";
     std::string result = str.str();
+    std::cout << result << std::endl;
     // "v4l2src device=/dev/video0 ! video/x-h264, width=1920, height=1080, framerate=30/1 ! queue ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink"
     updateParameter<std::string>("Gstreamer string", result);
     cam.release();
@@ -169,6 +203,8 @@ void GStreamerCamera::setString()
     }
 }
 
+// rtsp://192.168.10.35:554/axis-media/media.amp?videocodec=h264
+
 cv::cuda::GpuMat GStreamerCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
     if(parameters[0]->changed ||
@@ -178,7 +214,8 @@ cv::cuda::GpuMat GStreamerCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         parameters[4]->changed ||
         parameters[5]->changed ||
         parameters[6]->changed ||
-        parameters[7]->changed)
+        parameters[7]->changed ||
+        parameters[8]->changed)
     {
         setString();
     }
@@ -197,6 +234,102 @@ bool GStreamerCamera::SkipEmpty() const
 {
     return false;
 }
+void RTSPCamera::Init(bool firstInit)
+{
+    Node::Init(firstInit);
+    if(firstInit)
+    {
+        EnumParameter param;
+        param.addEnum(ENUM(rtspsrc));
+        EnumParameter type;
+        type.addEnum(ENUM(h264));
+        updateParameter("Source type", param);
+        updateParameter("Source encoding", type);
+        updateParameter<std::string>("Source", "192.168.10.35:554/axis-media/media.amp");
+        updateParameter<std::string>("Username", "");
+        updateParameter<std::string>("Password", "");
+        setString();
+        //updateParameter("Gstreamer string", "v4l2src device=/dev/video0 ! video/x-h264, width=1920, height=1080, framerate=30/1 ! queue ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink");
+    }
+}
+void RTSPCamera::setString()
+{
+    std::stringstream str;
+    SourceType src = (SourceType)getParameter<EnumParameter>(0)->data.getValue();
+    VideoType encoding = (VideoType)getParameter<EnumParameter>(1)->data.getValue();
+    std::string result;
+    if(src == rtspsrc)
+    {
+        if(encoding == h264)
+        {
+            std::string userName = getParameter<std::string>("Username")->data;
+            std::string pw = getParameter<std::string>("Password")->data;
+            str << "rtspsrc location=rtsp://";
+            if(userName.size())
+                str << userName << ":";
+            if(pw.size())
+                str << pw << "@";
+            str << getParameter<std::string>(2)->data << " ! ";
+            str << "rtph264depay ! ";
+            str << "avdec_h264 ! ";
+            str << "appsink";
+            result = str.str();
+            std::cout << result << std::endl;
+            updateParameter<std::string>("Gstreamer string", result);
+        }
 
+        if(encoding == mjpg)
+        {
+
+        }
+    }
+    cam.release();
+    try
+    {
+        cam.open(result);
+    }catch(cv::Exception &e)
+    {
+        log(Error, e.what());
+        return;
+    }
+
+    if(cam.isOpened())
+        log(Status, "Successfully opened camera");
+    else
+        log(Error, "Failed to open camera");
+
+    for(size_t i = 0; i < parameters.size(); ++i)
+    {
+        parameters[i]->changed = false;
+    }
+}
+
+cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+{
+    if(parameters[0]->changed ||
+       parameters[1]->changed ||
+       parameters[2]->changed ||
+       parameters[3]->changed ||
+       parameters[4]->changed)
+    {
+        setString();
+    }
+    if(cam.isOpened())
+    {
+        if(cam.read(hostBuf))
+        {
+            img.upload(hostBuf,stream);
+        }
+    }
+    updateParameter("Output", img, Parameter::Output);
+    return img;
+
+}
+
+bool RTSPCamera::SkipEmpty() const
+{
+    return false;
+}
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Camera)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(GStreamerCamera)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(RTSPCamera)

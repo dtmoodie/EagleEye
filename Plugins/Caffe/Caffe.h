@@ -7,6 +7,7 @@
 extern "C"{
 #endif
     IPerModuleInterface* GetModule();
+    void setupIncludes();
 
 #ifdef __cplusplus
 }

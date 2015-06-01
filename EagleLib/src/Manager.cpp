@@ -189,6 +189,10 @@ NodeManager::~NodeManager()
 {
 
 }
+void NodeManager::addIncludeDir(const std::string& dir)
+{
+    m_pRuntimeObjectSystem->AddIncludeDir(dir.c_str());
+}
 
 bool
 NodeManager::Init()
