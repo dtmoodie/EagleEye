@@ -1,7 +1,7 @@
 #include "nodes/ImgProc/DisplayHelpers.h"
 using namespace EagleLib;
 #include <opencv2/cudaarithm.hpp>
-
+#include <opencv2/highgui.hpp>
 
 #ifdef _MSC_VER
 
@@ -205,15 +205,76 @@ uchar ColorScale::getValue(double location_)
 //    }
 //    return d_buffer->data;
 //}
+QtColormapDisplay::QtColormapDisplay():
+    Colormap()
+{
+    nodeName = "QtColormapDisplay";
+    treeName = nodeName;
+    fullTreeName = treeName;
+}
 
+void QtColormapDisplayCallback(int status, void* data)
+{
+    QtColormapDisplay* node = static_cast<QtColormapDisplay*>(data);
+    UIThreadCallback::getInstance().addCallback(boost::bind(&QtColormapDisplay::display, node));
+}
+
+void QtColormapDisplay::display()
+{
+    Buffer<cv::cuda::HostMem, EventPolicy>* h_buffer = h_bufferPool.getBack();
+    // h_buffer contains the 16bit scaled image
+    try
+    {
+        if(!h_buffer->data.empty())
+        {
+            cv::Mat h_img = h_buffer->data.createMatHeader();
+            cv::Mat colorScaledImage(h_img.size(),CV_8UC3);
+            cv::Vec3b* putPtr = colorScaledImage.ptr<cv::Vec3b>(0);
+            unsigned short* getPtr = h_img.ptr<unsigned short>(0);
+            for(int i = 0; i < h_img.rows*h_img.cols; ++i, ++putPtr, ++ getPtr)
+            {
+                *putPtr = LUT[*getPtr];
+            }
+            cv::imshow(fullTreeName, colorScaledImage);
+        }
+
+    }catch(...)
+    {
+
+    }
+}
 
 void QtColormapDisplay::Init(bool firstInit)
 {
-
+    Colormap::Init(firstInit);
 }
 cv::cuda::GpuMat QtColormapDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
+    if(img.channels() != 1)
+    {
+        log(Warning, "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels");
+        return img;
+    }
+    if(LUT.size() != resolution)
+    {
+        double minVal, maxVal;
 
+        cv::cuda::minMax(img, &minVal,&maxVal);
+        scale = double(resolution - 1) / (maxVal - minVal);
+        shift = minVal * scale;
+        updateParameter<double>("Min", minVal,  Parameter::State);
+        updateParameter<double>("Max", maxVal,  Parameter::State);
+        updateParameter<double>("Scale", scale, Parameter::State);
+        updateParameter<double>("Shift", shift, Parameter::State);
+        buildLUT();
+    }
+    auto scaledImg = d_scaledBufferPool.getFront();
+
+    img.convertTo(scaledImg->data, CV_16U, scale,shift, stream);
+    auto h_buffer = h_bufferPool.getFront();
+    scaledImg->data.download(h_buffer->data, stream);
+    stream.enqueueHostCallback(QtColormapDisplayCallback, this);
+    return img;
 }
 
 void Normalize::Init(bool firstInit)
@@ -250,4 +311,4 @@ cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 NODE_DEFAULT_CONSTRUCTOR_IMPL(AutoScale)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Colormap)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Normalize)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(QtColormapDisplay)
+REGISTERCLASS(QtColormapDisplay)

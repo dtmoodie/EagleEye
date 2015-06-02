@@ -1,6 +1,7 @@
 #include "nodes/Node.h"
 #include <opencv2/cudabgsegm.hpp>
 #include "CudaUtils.hpp"
+#include "Segmentation_impl.h"
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -35,6 +36,21 @@ namespace EagleLib
     {
     public:
         SegmentWatershed();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
+    class SegmentCPMC: public Node
+    {
+        enum BackgroundInitialization
+        {
+            AllBoarders = 0,
+            TopAndSides = 1,
+            Top = 2,
+            Sides = 3
+        };
+
+    public:
+        SegmentCPMC();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };

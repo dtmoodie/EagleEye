@@ -33,6 +33,7 @@ namespace EagleLib
 
     class Colormap: public Node
     {
+    protected:
         static void applyLUT(thrust::device_vector<cv::Vec3b> d_LUT, cv::cuda::GpuMat& input, cv::cuda::GpuMat& output, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         ColorScale red, green, blue;
         //thrust::device_vector<cv::Vec3b> d_LUT;
@@ -47,7 +48,13 @@ namespace EagleLib
     };
     class QtColormapDisplay: public Colormap
     {
+
+//        Buffer<cv::cuda::HostMem, EventPolicy>* h_buffer;
+//        Buffer<cv::cuda::GpuMat, EventPolicy>* d_buffer;
+        BufferPool<cv::cuda::HostMem, EventPolicy> h_bufferPool;
+        BufferPool<cv::cuda::GpuMat, EventPolicy> d_scaledBufferPool;
     public:
+        void display();
         QtColormapDisplay();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());

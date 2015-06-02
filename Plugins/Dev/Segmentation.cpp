@@ -2,8 +2,11 @@
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudaimgproc.hpp"
 #include <opencv2/cudaarithm.hpp>
+#include <opencv2/cudalegacy.hpp>
 
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudabgsegm")
+RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudalegacy")
+
 using namespace EagleLib;
 IPerModuleInterface* GetModule()
 {
@@ -217,6 +220,18 @@ cv::cuda::GpuMat SegmentWatershed::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     return img;
 }
 
+void SegmentCPMC::Init(bool firstInit)
+{
+
+}
+
+cv::cuda::GpuMat SegmentCPMC::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+
+    return img;
+}
+
+
 void SegmentGrabCut::Init(bool firstInit)
 {
     if(firstInit)
@@ -321,58 +336,12 @@ cv::cuda::GpuMat SegmentKMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
 
     img.download(hostBuf, stream);
     stream.waitForCompletion();
-    cv::Mat h_img = hostBuf.createMatHeader();
-    const int numSamples = h_img.size().area();
-    cv::Mat samples(numSamples, img.channels() + 2, CV_32F);
-    double colorWeight = getParameter<double>(5)->data;
-    double distanceWeight = getParameter<double>(6)->data;
-    float* samplePtr = samples.ptr<float>();
-    cv::Vec3b* pixels = 0;
-    uchar* pixel = 0;
-    if(img.channels() == 1)
-    {
-        pixel = h_img.ptr<uchar>(0);
-    }
-    if(img.channels() == 3)
-    {
-        pixels = h_img.ptr<cv::Vec3b>(0);
-    }
-    if(pixels == 0 && pixel == 0)
-    {
-        return img;
-    }
-    for(int i = 0; i < numSamples; ++i)
-    {
-        if(pixels)
-        {
-            *samplePtr = pixels->val[0] * colorWeight;
-            ++samplePtr;
-            *samplePtr = pixels->val[1] * colorWeight;
-            ++samplePtr;
-            *samplePtr = pixels->val[2] * colorWeight;
-            ++samplePtr;
-            *samplePtr = distanceWeight*(i / h_img.cols); // row
-            ++samplePtr;
-            *samplePtr = distanceWeight*(i % h_img.cols); // col
-            ++samplePtr;
-            ++pixels;
-        }
-        if(pixel)
-        {
-            *samplePtr = *pixel;
-            ++samplePtr;
-            *samplePtr = i / h_img.cols; // row
-            ++samplePtr;
-            *samplePtr = i % h_img.cols; // col
-            ++samplePtr;
-            ++pixel;
-        }
-    }
+    cv::Mat samples = hostBuf.createMatHeader();
+
     cv::Mat labels;
     cv::Mat clusters;
     cv::TermCriteria termCrit( cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS, getParameter<int>(1)->data, getParameter<double>(2)->data);
     double ret = cv::kmeans(samples, k, labels, termCrit, getParameter<int>(3)->data, getParameter<EnumParameter>(4)->data.getValue(), clusters);
-    labels = labels.reshape(0, h_img.rows);
     cv::cuda::GpuMat d_clusters, d_labels;
     d_clusters.upload(clusters, stream);
     d_labels.upload(labels, stream);
@@ -491,3 +460,4 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentWatershed)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentKMeans)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ManualMask)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentMeanShift)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentCPMC)

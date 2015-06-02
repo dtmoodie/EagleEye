@@ -148,7 +148,8 @@ namespace EagleLib
     template<> inline void TypedParameter<cv::Scalar>::Init(cv::FileNode& fs)
     {
         cv::FileNode myNode = fs[name];
-        data = (cv::Scalar)myNode["Data"];
+        myNode["Data"] >> data;
+        //data = (cv::Scalar)myNode["Data"];
     }
 
     template<> inline void TypedParameter<boost::filesystem::path>::Serialize(cv::FileStorage& fs)

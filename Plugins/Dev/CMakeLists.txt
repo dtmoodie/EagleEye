@@ -16,11 +16,13 @@ INCLUDE_DIRECTORIES(
         ${EagleLib_INCLUDE_DIRECTORIES}
         ${OpenCV_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
+        ${CUDA_INCLUDE_DIRS}
 )
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-cuda_add_library(Dev SHARED Segmentation.h Segmentation.cpp Stereo.h Stereo.cpp)
+SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
+
+cuda_add_library(Dev SHARED Segmentation.h Segmentation.cpp Stereo.h Stereo.cpp Segmentation_impl.h Segmentation_impl.cu)
 add_dependencies(Dev EagleLib)
 target_link_libraries(Dev 
     EagleLib

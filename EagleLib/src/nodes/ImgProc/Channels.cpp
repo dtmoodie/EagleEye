@@ -114,31 +114,31 @@ cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
     auto chan2 = getParameter<cv::cuda::GpuMat*>(1);
     auto chan3 = getParameter<cv::cuda::GpuMat*>(2);
     auto chan4 = getParameter<cv::cuda::GpuMat*>(3);
-    if(qualifiersSet == false || chan1->changed)
-    {
-        int type = img.type();
-        int width = img.cols;
-        int height = img.rows;
-        boost::function<bool(const Parameter::Ptr&)> f;
-        if(chan1->changed)
-        {
-            if(chan1->data)
-            {
-                type = chan1->data->type();
-                width = chan1->data->cols;
-                height = chan1->data->rows;
-            }
-        }
-        f = GpuMatQualifier::get(width, height, 1, type);
-        updateInputQualifier<cv::cuda::GpuMat>(1,f);
-        updateInputQualifier<cv::cuda::GpuMat>(2,f);
-        updateInputQualifier<cv::cuda::GpuMat>(3,f);
-        parameters[0]->changed = false;
-        parameters[1]->changed = false;
-        parameters[2]->changed = false;
-        parameters[3]->changed = false;
-        qualifiersSet = true;
-    }
+//    if(qualifiersSet == false || chan1->changed)
+//    {
+//        int type = img.type();
+//        int width = img.cols;
+//        int height = img.rows;
+//        boost::function<bool(const Parameter::Ptr&)> f;
+//        if(chan1->changed)
+//        {
+//            if(chan1->data)
+//            {
+//                type = chan1->data->type();
+//                width = chan1->data->cols;
+//                height = chan1->data->rows;
+//            }
+//        }
+//        f = GpuMatQualifier::get(width, height, 1, type);
+//        updateInputQualifier<cv::cuda::GpuMat>(1,f);
+//        updateInputQualifier<cv::cuda::GpuMat>(2,f);
+//        updateInputQualifier<cv::cuda::GpuMat>(3,f);
+//        parameters[0]->changed = false;
+//        parameters[1]->changed = false;
+//        parameters[2]->changed = false;
+//        parameters[3]->changed = false;
+//        qualifiersSet = true;
+//    }
     std::vector<cv::cuda::GpuMat> channels;
     if(chan1->data)
         channels.push_back(*chan1->data);
