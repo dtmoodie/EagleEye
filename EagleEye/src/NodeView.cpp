@@ -45,6 +45,9 @@ void NodeView::on_deleteNode()
     if(currentWidget == nullptr)
         return;
     auto nodeWidget = dynamic_cast<QNodeWidget*>(currentWidget->widget());
+    auto itr = parentLineMap.find(currentWidget);
+    if(itr != parentLineMap.end());
+        delete itr->second;
     if(nodeWidget)
     {
         auto node = nodeWidget->getNode();
