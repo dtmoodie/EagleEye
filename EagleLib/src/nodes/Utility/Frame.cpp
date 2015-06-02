@@ -11,7 +11,7 @@ cv::cuda::GpuMat FrameRate::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta = currentTime - prevTime;
     prevTime = currentTime;
-    updateParameter<double>("Framerate", 1000.0 / delta.total_milliseconds(), Parameter::State);
+    updateParameter<double>("Framerate", 1000.0/delta.total_milliseconds(), Parameter::State);
     return img;
 }
 

@@ -20,7 +20,7 @@ INCLUDE_DIRECTORIES(
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-cuda_add_library(Dev SHARED Segmentation.h Segmentation.cpp Stereo.h Stereo.cpp Segmentation.cu)
+cuda_add_library(Dev SHARED Segmentation.h Segmentation.cpp Stereo.h Stereo.cpp)
 add_dependencies(Dev EagleLib)
 target_link_libraries(Dev 
     EagleLib

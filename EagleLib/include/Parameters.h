@@ -187,6 +187,17 @@ namespace EagleLib
         cv::FileNode myNode = fs[name];
         data = (int)myNode["Data"];
     }
+    template<> void inline TypedParameter<std::string>::Serialize(cv::FileStorage& fs)
+    {
+        Parameter::Serialize(fs);
+        fs << "Data" << data;
+        fs << "}";
+    }
+    template<> void inline TypedParameter<std::string>::Init(cv::FileNode& fs)
+    {
+        cv::FileNode myNode = fs[name];
+        data = (std::string)myNode["Data"];
+    }
 
     template<> void inline TypedParameter<EnumParameter>::Serialize(cv::FileStorage& fs)
     {

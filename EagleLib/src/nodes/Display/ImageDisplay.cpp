@@ -54,7 +54,6 @@ void QtImageDisplay::displayImage(cv::cuda::HostMem image)
     try
     {
         cv::imshow(name, image.createMatHeader());
-        cv::waitKey(1);
     }catch(cv::Exception &err)
     {
         log(Warning, err.what());
