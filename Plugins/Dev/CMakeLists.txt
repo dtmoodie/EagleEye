@@ -18,11 +18,13 @@ INCLUDE_DIRECTORIES(
         ${Boost_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
 )
-
+file(GLOB_RECURSE src "*.cpp")
+file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
+file(GLOB_RECURSE knl "*.cu")
 
 SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
 
-cuda_add_library(Dev SHARED Segmentation.h Segmentation.cpp Stereo.h Stereo.cpp Segmentation_impl.h Segmentation_impl.cu)
+cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})
 add_dependencies(Dev EagleLib)
 target_link_libraries(Dev 
     EagleLib
