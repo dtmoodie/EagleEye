@@ -16,6 +16,9 @@ NodeView::NodeView(QGraphicsScene *scene, QWidget *parent):
     actions[2]->setEnabled(false);
     rightClickMenu->addActions(actions);
     rightClickMenu->installEventFilter(this);
+    actions[0]->installEventFilter(this);
+    actions[1]->installEventFilter(this);
+    actions[2]->installEventFilter(this);
     connect(actions[0], SIGNAL(triggered()), this, SLOT(on_deleteNode()));
     connect(actions[1], SIGNAL(triggered()), this, SLOT(on_displayImage()));
     connect(actions[2], SIGNAL(triggered()), this, SLOT(on_plotData()));
@@ -254,6 +257,17 @@ bool NodeView::eventFilter(QObject *object, QEvent *event)
             //currentWidget = nullptr;
             resize = false;
             return false;
+        }
+    }
+    if(event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick || event->type() == QEvent::MouseButtonRelease)
+    {
+        QMouseEvent* mev = dynamic_cast<QMouseEvent*>(event);
+        if(mev)
+        {
+            if(mev->button() == Qt::RightButton)
+            {
+                return true; // Ignore right clicks in this menu
+            }
         }
     }
     return false;

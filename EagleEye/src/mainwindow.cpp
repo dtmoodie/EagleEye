@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<EagleLib::Verbosity>("EagleLib::Verbosity");
     qRegisterMetaType<boost::function<cv::Mat(void)>>("boost::function<cv::Mat(void)>");
     qRegisterMetaType<EagleLib::Parameter::Ptr>("EagleLib::Parameter::Ptr");
+    qRegisterMetaType<size_t>("size_t");
 
     ui->setupUi(this);
 

@@ -43,8 +43,7 @@ bool HistogramPlotter::acceptsWidget(QWidget *widget)
 
 bool HistogramPlotter::acceptsType(EagleLib::Parameter::Ptr param) const
 {
-
-    return true;
+    return VectorSizePolicy::acceptsSize(getSize(param));
 }
 std::string HistogramPlotter::plotName() const
 {
@@ -56,6 +55,8 @@ QWidget* HistogramPlotter::getSettingsWidget() const
 }
 void HistogramPlotter::doUpdate()
 {
+    if(param == nullptr)
+        return;
     boost::recursive_mutex::scoped_lock lock(param->mtx);
     StaticPlotPolicy::addPlotData(param);
     lock.unlock();

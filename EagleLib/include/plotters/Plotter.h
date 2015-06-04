@@ -54,7 +54,8 @@ namespace EagleLib
 
         virtual void onUpdate()
         {
-            if(f) f();
+            if(f)
+                f();
         }
         virtual std::string plotName() const = 0;
         virtual PlotterType type() const = 0;

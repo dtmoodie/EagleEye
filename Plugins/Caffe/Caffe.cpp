@@ -139,8 +139,16 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         if(boost::filesystem::exists(path))
         {
             NN->CopyTrainedLayersFrom(path.string());
+            const  std::vector<boost::shared_ptr<caffe::Layer<float>>>& layers = NN->layers();
+            std::vector<std::string> layerNames;
+            layerNames.reserve(layers.size());
+            for(auto layer: layers)
+            {
+                layerNames.push_back(std::string(layer->type()));
+            }
             log(Status, "Weights loaded");
             parameters[1]->changed = false;
+            updateParameter("Loaded layers", layerNames);
         }else
         {
             log(Warning, "Weight file does not exist");
@@ -151,43 +159,43 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         log(Error, "Model not loaded");
         return img;
     }
-    TIME
-    cv::Mat h_img;
-    img.download(h_img,stream);
-    caffe::Datum datum;
-    stream.waitForCompletion();
-    TIME
-    caffe::CVMatToDatum(h_img,&datum);
-    caffe::BlobProto blobProto;
-    blobProto.set_num(1);
-    blobProto.set_channels(h_img.channels());
-    blobProto.set_width(h_img.cols);
-    blobProto.set_height(h_img.rows);
-    const int datumSize = datum.channels() * datum.height() * datum.width();
-    const std::string& data = datum.data();
-    for(int i = 0; i < datumSize; ++i)
-    {
-        blobProto.add_data(uchar(data[i]));
-    }
-    caffe::Blob<float>* blob = new caffe::Blob<float>(1, datum.channels(), datum.height(), datum.width());
-    blob->FromProto(blobProto);
-    std::vector<caffe::Blob<float>*> bottom;
-    bottom.push_back(blob);
+//    TIME
+//    cv::Mat h_img;
+//    img.download(h_img,stream);
+//    caffe::Datum datum;
+//    stream.waitForCompletion();
+//    TIME
+//    caffe::CVMatToDatum(h_img,&datum);
+//    caffe::BlobProto blobProto;
+//    blobProto.set_num(1);
+//    blobProto.set_channels(h_img.channels());
+//    blobProto.set_width(h_img.cols);
+//    blobProto.set_height(h_img.rows);
+//    const int datumSize = datum.channels() * datum.height() * datum.width();
+//    const std::string& data = datum.data();
+//    for(int i = 0; i < datumSize; ++i)
+//    {
+//        blobProto.add_data(uchar(data[i]));
+//    }
+//    caffe::Blob<float>* blob = new caffe::Blob<float>(1, datum.channels(), datum.height(), datum.width());
+//    blob->FromProto(blobProto);
+//    std::vector<caffe::Blob<float>*> bottom;
+//    bottom.push_back(blob);
 
 
-    TIME
-    float loss;
-    const std::vector<caffe::Blob<float>*>& result = NN->Forward(bottom, &loss);
-    const std::vector<float> probs = std::vector<float>(result[1]->cpu_data(), result[1]->cpu_data() + result[1]->count());
-    TIME
-    updateParameter("Probabilities", probs);
-    auto maxvalue = std::max_element(probs.begin(), probs.end());
-    TIME
-    int idx = maxvalue - probs.begin();
-    float score = *maxvalue;
-    updateParameter("Highest scoring class", idx);
-    updateParameter("Highest score", score);
-    TIME
+//    TIME
+//    float loss;
+//    const std::vector<caffe::Blob<float>*>& result = NN->Forward(bottom, &loss);
+//    const std::vector<float> probs = std::vector<float>(result[1]->cpu_data(), result[1]->cpu_data() + result[1]->count());
+//    TIME
+//    updateParameter("Probabilities", probs);
+//    auto maxvalue = std::max_element(probs.begin(), probs.end());
+//    TIME
+//    int idx = maxvalue - probs.begin();
+//    float score = *maxvalue;
+//    updateParameter("Highest scoring class", idx);
+//    updateParameter("Highest score", score);
+//    TIME
     return img;
 }
 
