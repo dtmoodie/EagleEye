@@ -29,10 +29,11 @@ namespace EagleLib
         std::vector<cv::Vec2f> imagePointCentroids;
         std::vector<cv::Point3f> objectPoints3d;
         boost::recursive_mutex pointCollectionMtx;
-
+		int lastCalibration;
 
     public:
-        CalibrateStereoPair();
+		virtual void clear();
+		CalibrateStereoPair();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };

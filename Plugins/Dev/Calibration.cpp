@@ -99,12 +99,16 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 
 void CalibrateStereoPair::Init(bool firstInit)
 {
-    updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateCamera::clear, this));
+	updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateStereoPair::clear, this));
     updateParameter("Num corners X", 6);
     updateParameter("Num corners Y", 9);
     updateParameter("Corner distance (mm)", double(18.75));
     updateParameter("Min pixel distance", 10.0);
     lastCalibration = 0;
+}
+void CalibrateStereoPair::clear()
+{
+
 }
 
 cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
