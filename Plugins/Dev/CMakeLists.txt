@@ -22,7 +22,7 @@ file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
 file(GLOB_RECURSE knl "*.cu")
 
-#SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
+SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
 
 cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})
 add_dependencies(Dev EagleLib)

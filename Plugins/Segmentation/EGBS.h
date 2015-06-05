@@ -26,10 +26,21 @@
 
 #ifndef __EfficientGraphBasedImageSegmentation__EGBS__
 #define __EfficientGraphBasedImageSegmentation__EGBS__
-
+#include "nodes/Node.h"
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include "DisjointSetForest.h"
+
+#ifdef __cplusplus
+extern "C"{
+#endif
+    IPerModuleInterface* GetModule();
+
+#ifdef __cplusplus
+}
+#endif
+
+
 
 using namespace cv;
 using namespace std;
@@ -50,5 +61,16 @@ protected:
     DisjointSetForest forest;
     inline float diff( Mat& rgb, int x1, int y1, int x2, int y2 );
 };
+
+
+namespace EagleLib
+{
+    class SegmentEGBS: public Node
+    {
+    public:
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cuda::GpuMat &img, cuda::Stream &stream);
+    };
+}
 
 #endif /* defined(__EfficientGraphBasedImageSegmentation__EGBS__) */

@@ -24,9 +24,16 @@
 //  Copyright (c) 2014 Saburo Okita. All rights reserved.
 //
 
+
+
 #include "EGBS.h"
 #include <map>
 
+using namespace EagleLib;
+IPerModuleInterface* GetModule()
+{
+    return PerModuleInterface::GetInstance();
+}
 
 EGBS::EGBS() {
     
