@@ -5,11 +5,11 @@ RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 
 using namespace EagleLib;
 
-IPerModuleInterface* GetModule()
+IPerModuleInterface* CALL GetModule()
 {
     return PerModuleInterface::GetInstance();
 }
-void setupIncludes()
+void CALL setupIncludes()
 {
 
 }

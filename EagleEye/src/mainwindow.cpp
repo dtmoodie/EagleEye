@@ -201,7 +201,15 @@ MainWindow::onLoadClicked()
     stopProcessingThread();
     std::vector<EagleLib::Node::Ptr> nodes = EagleLib::NodeManager::getInstance().loadNodes(file.toStdString());
     cv::FileStorage fs;
-    fs.open(file.toStdString(), cv::FileStorage::READ);
+	try
+	{
+		fs.open(file.toStdString(), cv::FileStorage::READ);
+	}
+	catch (cv::Exception &e)
+	{
+		return;
+	}
+    
     positionMap.clear();
     try
     {
@@ -250,6 +258,7 @@ void MainWindow::onLoadPluginClicked()
 #endif
     if(filename.size() == 0)
         return;
+	filename = QDir::toNativeSeparators(filename);
     //if(EagleLib::NodeManager::getInstance().loadModule(filename.toStdString()))
     if(EagleLib::loadPlugin(filename.toStdString()))
     {

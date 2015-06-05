@@ -14,6 +14,7 @@ set(Boost_NO_BOOST_CMAKE ON)
 set(BOOST_REQUIRED_MODULES system chrono thread date_time)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
+find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
 ADD_DEFINITIONS( -DHAVE_QT5 )
 QT5_WRAP_UI(UIS ${forms})
 QT5_WRAP_CPP(MOC ${src} ${hdr})
@@ -29,6 +30,7 @@ INCLUDE_DIRECTORIES(
     ${Qt5Core_INCLUDE_DIRS}
     ${Qt5Widgets_INCLUDE_DIRS}
     ${Qt5PrintSupport_INCLUDE_DIRS}
+	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 #add_definitions(-DQT_INCLUDE_DIR=${Qt5Core_INCLUDE_DIRS})
@@ -41,7 +43,7 @@ message(STATUS
     Qt core include dir: ${Qt5Core_INCLUDE_DIRS}
 
 
-
+	 
 
 ")
 
@@ -53,5 +55,6 @@ set_target_properties(Plotting PROPERTIES
             ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
             LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
 )
+target_link_libraries(Plotting ${Boost_LIBRARIES})
 #add_custom_command(TARGET Plotting POST_BUILD COMMAND ${CMAKE_COMMAND} -E COPY_FILE)
 #target_link_libraries(Plotting EagleLib)

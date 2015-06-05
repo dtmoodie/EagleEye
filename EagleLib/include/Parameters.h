@@ -45,7 +45,7 @@ namespace EagleLib
         virtual void update() = 0;
         virtual bool acceptsInput(const Ptr& param) = 0;
         virtual void Init(cv::FileNode& fs){}
-
+		static Parameter::Ptr getParameter(const std::string& fulltreeName);
         virtual void Serialize(cv::FileStorage& fs)
         {
             fs << name << "{";
@@ -79,7 +79,7 @@ namespace EagleLib
         unsigned int subscribers;
         boost::recursive_mutex mtx;
         boost::signals2::signal<void(void)> onUpdate;
-		static Parameter::Ptr getParameter(const std::string& fulltreeName);
+		
     protected:
         Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),toolTip(toolTip_),type(type_), changed(false), subscribers(0){}
         virtual ~Parameter(){}
@@ -297,7 +297,7 @@ namespace EagleLib
             }
             if(param == nullptr && Parameter::inputName.size())
             {
-				param = Parameter::getParameter(Parameter::inputName);
+				param = getParameter(Parameter::inputName);
                 if(param)
                 {
                     ++param->subscribers;

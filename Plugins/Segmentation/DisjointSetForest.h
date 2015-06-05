@@ -30,8 +30,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
-using namespace std;
-using namespace cv;
 
 /**
  * Set within the disjoint forest
@@ -72,10 +70,10 @@ public:
     int size( int x );
     int noOfElements();
     
-    void segmentGraph( int no_of_vertices, int no_of_edges, vector<Edge>& edges, float c );
+    void segmentGraph( int no_of_vertices, int no_of_edges, std::vector<Edge>& edges, float c );
     
 private:
-    vector<SetNode> elements;
+   std::vector<SetNode> elements;
     int num;
 };
 

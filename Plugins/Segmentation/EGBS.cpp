@@ -30,7 +30,7 @@
 #include <map>
 
 using namespace EagleLib;
-IPerModuleInterface* GetModule()
+IPerModuleInterface* CALL GetModule()
 {
     return PerModuleInterface::GetInstance();
 }
@@ -47,25 +47,25 @@ EGBS::~EGBS() {
  * Calculate the difference between two (3 channels) pixels, by 
  * taking the L2 norm of their differences.
  */
-float EGBS::diff( Mat& rgb, int x1, int y1, int x2, int y2 ) {
-    Vec3f pix1 = rgb.at<Vec3f>(y1, x1);
-    Vec3f pix2 = rgb.at<Vec3f>(y2, x2);
+float EGBS::diff( cv::Mat& rgb, int x1, int y1, int x2, int y2 ) {
+    cv::Vec3f pix1 = rgb.at<cv::Vec3f>(y1, x1);
+    cv::Vec3f pix2 = rgb.at<cv::Vec3f>(y2, x2);
     return sqrt( (pix1 - pix2).dot((pix1 - pix2)) );
 }
 
 /**
  * Apply segmentation
  */
-int EGBS::applySegmentation( Mat& image, float sigma, float threshold, int min_component_size ) {
+int EGBS::applySegmentation( cv::Mat& image, float sigma, float threshold, int min_component_size ) {
     this->image = image.clone();
     this->imageSize = image.size();
     
     /* Apply gaussian blur to smoothen the image */
-    Mat smoothed;
+    cv::Mat smoothed;
     image.convertTo( smoothed, CV_32FC1 );
-    GaussianBlur( smoothed, smoothed, Size(5,5), sigma );
+    GaussianBlur( smoothed, smoothed, cv::Size(5,5), sigma );
     
-    vector<Edge> edges( imageSize.area() * 4 );
+    std::vector<Edge> edges( imageSize.area() * 4 );
     int no_of_edges = 0;
     
     /* Create edges between each pixels, with the weight as the L2 norm between each color channels of the pixels */
@@ -127,16 +127,16 @@ int EGBS::noOfConnectedComponents() {
 /**
  * Recolor the image based on either average color of each cluster, or randomized color scheme
  */
-Mat EGBS::recolor( bool random_color) {
-    Mat result( imageSize, CV_8UC3, Scalar(0, 0, 0) );
-    map<int, Vec3f> colors;
+cv::Mat EGBS::recolor( bool random_color) {
+    cv::Mat result( imageSize, CV_8UC3, cv::Scalar(0, 0, 0) );
+    std::map<int, cv::Vec3f> colors;
     
     if( !random_color ){
-        map<int, int> count;
+        std::map<int, int> count;
         
         /* If it's not random coloring, color based on the average of each clusters */
         for(int y = 0; y < imageSize.height; y++ ) {
-            Vec3b * ptr = image.ptr<Vec3b>(y);
+            cv::Vec3b * ptr = image.ptr<cv::Vec3b>(y);
             
             for(int x = 0; x < imageSize.width; x++ ) {
                 int component = forest.find( y * imageSize.width + x );
@@ -155,22 +155,46 @@ Mat EGBS::recolor( bool random_color) {
             for(int x = 0; x < imageSize.width; x++ ) {
                 int component = forest.find( y * imageSize.width + x );
                 if( colors.count( component ) == 0 )
-                    colors[component] = Vec3f( rand() % 255, rand() % 255, rand() % 255 );
+                    colors[component] = cv::Vec3f( rand() % 255, rand() % 255, rand() % 255 );
             }
         }
     }
     
     /* Recolor the image */
     for(int y = 0; y < imageSize.height; y++ ) {
-        Vec3b * ptr = result.ptr<Vec3b>(y);
+        cv::Vec3b * ptr = result.ptr<cv::Vec3b>(y);
         
         for(int x = 0; x < imageSize.width; x++ ) {
             int component = forest.find( y * imageSize.width + x );
-            Vec3f color = colors[component];
-            ptr[x] = Vec3b( color[0], color[1], color[2] );
+            cv::Vec3f color = colors[component];
+            ptr[x] = cv::Vec3b( color[0], color[1], color[2] );
         }
     }
 
 
     return result;
 }
+
+
+using namespace EagleLib;
+void SegmentEGBS::Init(bool firstInit)
+{
+	updateParameter("Sigma", float(0.5));
+	updateParameter("Threshold" float(1500));
+	updateparameter("Min component size", int(20));
+	updateParameter("Recolor", false);
+}
+cv::cuda::GpuMat SegmentEGBS::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+	float sigma = getParameter<float>(0)->data;
+	float thresh = getParameter<float>(1)->data;
+	int minSize = getParameter<float>(2)->data;
+	img.download(h_buf, stream);
+	stream.waitForCompletion();
+	egbs.applySegmentation(h_buf.createMatHeader(), sigma, thresh, minSize);
+	cv::Mat result = egbs.recolor(getParameter<bool>(3)->data);
+	img.upload(result, stream);
+	return img;
+}
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentEGBS)

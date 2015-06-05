@@ -99,14 +99,14 @@ int DisjointSetForest::noOfElements() {
 /**
  * Segment the graph based on the weight of each edges
  */
-void DisjointSetForest::segmentGraph( int no_of_vertices, int no_of_edges, vector<Edge>& edges, float c ) {
+void DisjointSetForest::segmentGraph( int no_of_vertices, int no_of_edges, std::vector<Edge>& edges, float c ) {
     init( no_of_vertices );
     
     sort( edges.begin(), edges.end(), []( Edge& a, Edge& b){
         return a.weight < b.weight;
     });
     
-    vector<float> thresholds( no_of_vertices, c );
+    std::vector<float> thresholds( no_of_vertices, c );
 
     for( Edge& edge: edges ){
         int a = this->find( edge.a );

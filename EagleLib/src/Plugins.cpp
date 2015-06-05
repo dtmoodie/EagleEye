@@ -7,13 +7,25 @@
 
 bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
+	
 	HMODULE handle = LoadLibrary(fullPluginPath.c_str());
 	if (handle == nullptr)
-        return false;
+	{
+		auto err = GetLastError();
+		std::cout << "Failed to load library due to: " << err << std::endl;
+		return false;
+	}
+        
 	typedef IPerModuleInterface* (*moduleFunctor)();
 	moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetModule");
-	NodeManager::getInstance().setupModule(module());
-	FreeLibrary(handle);
+	if (module)
+		NodeManager::getInstance().setupModule(module());
+	else
+	{
+		std::cout << "GetModule not found in plugin " << fullPluginPath << std::endl;
+		FreeLibrary(handle);
+	}
+		
     return true;
 }
 

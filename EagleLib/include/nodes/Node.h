@@ -61,8 +61,6 @@
 #include <Qualifiers.hpp>
 #include "../Parameters.h"
 
-
-
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 
 #include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
@@ -71,11 +69,11 @@
 #include "../../RuntimeObjectSystem/IObject.h"
 
 #ifdef _MSC_VER
-
+#define CALL __stdcall
 
 #else
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
-
+#define CALL
 #endif
 
 #define CATCH_MACRO                                                         \

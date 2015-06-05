@@ -596,7 +596,7 @@ std::vector<std::string> Node::findCompatibleInputs(const std::string& paramName
 {
     std::vector<std::string> output;
     {
-        auto param = getParameter(paramName);
+        auto param = Node::getParameter(paramName);
         if(param)
             output = findType(param);
     }

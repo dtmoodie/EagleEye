@@ -34,7 +34,8 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
-    IPerModuleInterface* GetModule();
+
+    CV_EXPORTS IPerModuleInterface* CALL GetModule();
 
 #ifdef __cplusplus
 }
@@ -42,8 +43,7 @@ extern "C"{
 
 
 
-using namespace cv;
-using namespace std;
+
 
 
 class EGBS {
@@ -51,15 +51,15 @@ public:
     EGBS();
     ~EGBS();
     
-    int applySegmentation( Mat& image, float sigma, float threshold, int min_component_size );
-    Mat recolor( bool random_color = false );
+    int applySegmentation( cv::Mat& image, float sigma, float threshold, int min_component_size );
+    cv::Mat recolor( bool random_color = false );
     int noOfConnectedComponents();
     
 protected:
-    Mat image;
-    Size imageSize;
+    cv::Mat image;
+    cv::Size imageSize;
     DisjointSetForest forest;
-    inline float diff( Mat& rgb, int x1, int y1, int x2, int y2 );
+    inline float diff( cv::Mat& rgb, int x1, int y1, int x2, int y2 );
 };
 
 
@@ -67,9 +67,12 @@ namespace EagleLib
 {
     class SegmentEGBS: public Node
     {
+		EGBS egbs;
+		cv::cuda::HostMem h_buf;
     public:
+		SegmentEGBS();
         virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cuda::GpuMat &img, cuda::Stream &stream);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 }
 
