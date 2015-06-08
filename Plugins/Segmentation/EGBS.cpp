@@ -180,8 +180,8 @@ using namespace EagleLib;
 void SegmentEGBS::Init(bool firstInit)
 {
 	updateParameter("Sigma", float(0.5));
-	updateParameter("Threshold" float(1500));
-	updateparameter("Min component size", int(20));
+    updateParameter("Threshold", float(1500));
+    updateParameter("Min component size", int(20));
 	updateParameter("Recolor", false);
 }
 cv::cuda::GpuMat SegmentEGBS::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
@@ -191,7 +191,8 @@ cv::cuda::GpuMat SegmentEGBS::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 	int minSize = getParameter<float>(2)->data;
 	img.download(h_buf, stream);
 	stream.waitForCompletion();
-	egbs.applySegmentation(h_buf.createMatHeader(), sigma, thresh, minSize);
+    cv::Mat mat = h_buf.createMatHeader();
+    egbs.applySegmentation(mat, sigma, thresh, minSize);
 	cv::Mat result = egbs.recolor(getParameter<bool>(3)->data);
 	img.upload(result, stream);
 	return img;

@@ -8,7 +8,7 @@ set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 find_package(CUDA REQUIRED)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
-
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 INCLUDE_DIRECTORIES(
         ${EagleLib_INCLUDE_DIRECTORIES}
