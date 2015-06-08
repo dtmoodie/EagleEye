@@ -206,17 +206,18 @@ cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 void FlowVectorDisplay_callback(int status, void* userData)
 {
     FlowVectorDisplay* node = (FlowVectorDisplay*)userData;
-    if(node)
-    {
-        if(node->uiThreadCallback)
-        {
-            node->uiThreadCallback(boost::bind(&FlowVectorDisplay::uicallback, node), node);
-            return;
-        }
-        cv::Mat img = node->uicallback();
-        if(!img.empty())
-            cv::imshow(node->displayName, img);
-    }
+    UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow),node->displayName, node->uicallback()));
+//    if(node)
+//    {
+//        if(node->uiThreadCallback)
+//        {
+//            //node->uiThreadCallback(boost::bind(&FlowVectorDisplay::uicallback, node), node);
+//            return;
+//        }
+//        cv::Mat img = node->uicallback();
+//        if(!img.empty())
+//            cv::imshow(node->displayName, img);
+//    }
 }
 
 void FlowVectorDisplay::Serialize(ISimpleSerializer *pSerializer)
@@ -236,7 +237,7 @@ void FlowVectorDisplay::Init(bool firstInit)
         updateParameter("Good Color", cv::Scalar(0,255,0));
         updateParameter("Bad Color", cv::Scalar(0,0,255));
         updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>>
-                ("Display functor", boost::bind(&FlowVectorDisplay::display, this, _1, _2, _3, _4, _5, _6));
+                ("Display functor", boost::bind(&FlowVectorDisplay::display, this, _1, _2, _3, _4, _5, _6), Parameter::Output);
     }
 }
 void FlowVectorDisplay::display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial,
