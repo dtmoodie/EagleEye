@@ -179,7 +179,7 @@ cv::Mat EGBS::recolor( bool random_color) {
 using namespace EagleLib;
 void SegmentEGBS::Init(bool firstInit)
 {
-	updateParameter("Sigma", float(0.5));
+    updateParameter("Sigma", float(0.5));;
     updateParameter("Threshold", float(1500));
     updateParameter("Min component size", int(20));
 	updateParameter("Recolor", false);
@@ -188,7 +188,7 @@ cv::cuda::GpuMat SegmentEGBS::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 {
 	float sigma = getParameter<float>(0)->data;
 	float thresh = getParameter<float>(1)->data;
-	int minSize = getParameter<float>(2)->data;
+    int minSize = getParameter<int>(2)->data;
 	img.download(h_buf, stream);
 	stream.waitForCompletion();
     cv::Mat mat = h_buf.createMatHeader();
