@@ -382,21 +382,24 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
         if (currentSelectedNodeWidget)
         {
             int yOffset = 0;
-            auto parentNode = currentNode->getParent();
-            if(parentNode)
+            if(currentNode != nullptr)
             {
-                auto itr = std::find(parentNode->children.begin(), parentNode->children.end(), node);
-                if(itr != parentNode->children.end())
+                auto parentNode = currentNode->getParent();
+                if(parentNode)
                 {
-                    auto idx = std::distance(itr, parentNode->children.begin());
-                    yOffset -= idx*100;
+                    auto itr = std::find(parentNode->children.begin(), parentNode->children.end(), node);
+                    if(itr != parentNode->children.end())
+                    {
+                        auto idx = std::distance(itr, parentNode->children.begin());
+                        yOffset -= idx*100;
+                    }
                 }
+                auto parentWidget = nodeGraphView->getParent(node);
+                if(parentWidget)
+                    proxyWidget->setPos(parentWidget->pos() + QPointF(500, yOffset));
+                else
+                    proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(500, yOffset));
             }
-            auto parentWidget = nodeGraphView->getParent(node);
-            if(parentWidget)
-                proxyWidget->setPos(parentWidget->pos() + QPointF(500, yOffset));
-            else
-                proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(500, yOffset));
         }
     }
     nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
@@ -513,10 +516,7 @@ void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::recursive_mutex* mt
     {
         (*nodes)[i]->process(images[i], streams[i]);
     }
-    if(nodes->size() == 0)
-    {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
-    }
+
 }
 
 void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursive_mutex *mtx)
@@ -538,7 +538,7 @@ void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursiv
         end = boost::posix_time::microsec_clock::universal_time();
         delta = end - start;
         start = end;
-        if(delta.total_milliseconds() < 15)
+        if(delta.total_milliseconds() < 15 || parentList->size() == 0)
             boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
     }
     std::cout << "Interrupt requested, processing thread ended" << std::endl;
