@@ -416,7 +416,8 @@ namespace EagleLib
 			else
 					parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_, toolTip_, ownsData_)));
             parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
-            (*onParameterAdded)();
+            if(onParameterAdded)
+                (*onParameterAdded)();
 			return parameters.size() - 1;
 		}
 
@@ -441,7 +442,8 @@ namespace EagleLib
             else
                     parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_, toolTip_, ownsData_)));
             parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
-            (*onParameterAdded)();
+            if(onParameterAdded)
+                (*onParameterAdded)();
             return parameters.size() - 1;
         }
 
@@ -456,6 +458,8 @@ namespace EagleLib
 		{
             parameters.push_back(boost::shared_ptr< InputParameter<T> >(new InputParameter<T>(name, toolTip_,qualifier_)));
             parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+            if(onParameterAdded)
+                (*onParameterAdded)();
 			return parameters.size() - 1;
 		}
 
@@ -511,9 +515,14 @@ namespace EagleLib
                         const std::string& toolTip_ = std::string(),
                         const bool& ownsData_ = false)
 		{
-			auto param = getParameter<T>(name);
-			if (param == NULL)
-				return addParameter(name, data, type_, toolTip_, ownsData_);
+            typename TypedParameter<T>::Ptr param;
+            try
+            {
+                param = getParameter<T>(name);
+            }catch(cv::Exception &e)
+            {
+                return addParameter(name, data, type_, toolTip_, ownsData_);
+            }
 			param->data = data;
 			if (type_ != Parameter::None)
 				param->type = type_;
@@ -523,26 +532,26 @@ namespace EagleLib
             param->onUpdate();
 			return true;
 		}
-        // Is this needed?  Will the above suffice?
-        template<typename T> bool
-            updateParameter(const std::string& name,
-                            T& data,
-                            Parameter::ParamType type_ = Parameter::Control,
-                            const std::string& toolTip_ = std::string(),
-                            const bool& ownsData_ = false)
-        {
-            auto param = getParameter<T>(name);
-            if (param == NULL)
-                return addParameter(name, data, type_, toolTip_, ownsData_);
-            param->data = data;
-            if (type_ != Parameter::None)
-                param->type = type_;
-            if (toolTip_.size() > 0)
-                param->toolTip = toolTip_;
-            param->changed = true;
-            param->onUpdate();
-            return true;
-        }
+//        // Is this needed?  Will the above suffice?
+//        template<typename T> bool
+//            updateParameter(const std::string& name,
+//                            T& data,
+//                            Parameter::ParamType type_ = Parameter::Control,
+//                            const std::string& toolTip_ = std::string(),
+//                            const bool& ownsData_ = false)
+//        {
+//            auto param = getParameter<T>(name);
+//            if (param == NULL)
+//                return addParameter(name, data, type_, toolTip_, ownsData_);
+//            param->data = data;
+//            if (type_ != Parameter::None)
+//                param->type = type_;
+//            if (toolTip_.size() > 0)
+//                param->toolTip = toolTip_;
+//            param->changed = true;
+//            param->onUpdate();
+//            return true;
+//        }
         /**
          * @brief updateParameter overload of the above accept accessing a paramter via index instead of name
          * @param idx index of parameter
@@ -602,11 +611,16 @@ namespace EagleLib
 		{
 			auto param =  getParameter(name);
 			if (param == nullptr)
+            {
+                throw cv::Exception(0, "Failed to get parameter by name " + name, __FUNCTION__, __FILE__, __LINE__);
 				return boost::shared_ptr<TypedParameter<T>>();
-
-
+            }
+            boost::shared_ptr< TypedParameter<T> > typedParam = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
+            if(typedParam == nullptr)
+                throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
+                    TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + TypeInfo::demangle(param->typeInfo.name()), __FUNCTION__, __FILE__, __LINE__);
 			
-			return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
+            return typedParam;
 		}
 
 		template<typename T> boost::shared_ptr< TypedParameter<T> >

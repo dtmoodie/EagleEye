@@ -13,6 +13,20 @@
 namespace EagleLib
 {
 #define ENUM(value) (int)value, #value
+struct ReadFile: public boost::filesystem::path{};
+struct WriteFile: public boost::filesystem::path{};
+struct ReadDirectory: public boost::filesystem::path
+{
+    ReadDirectory(const boost::filesystem::path& path): boost::filesystem::path(path){}
+};
+struct WriteDirectory: public boost::filesystem::path{};
+
+//    typedef boost::filesystem::path ReadFile;
+//    typedef boost::filesystem::path WriteFile;
+//    typedef boost::filesystem::path ReadDirectory;
+//    typedef boost::filesystem::path WriteDirectory;
+
+
     class CV_EXPORTS EnumParameter
     {
     public:
@@ -84,12 +98,6 @@ namespace EagleLib
         Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),toolTip(toolTip_),type(type_), changed(false), subscribers(0){}
         virtual ~Parameter(){}
     };
-	
-	
-	
-
-	
-
 
 
     // Default typed parameter
@@ -128,6 +136,8 @@ namespace EagleLib
     template<> inline void TypedParameter<type>::Init(cv::FileNode& fs){                                        \
     cv::FileNode myNode = fs[name];                                                                             \
     myNode["Data"] >> data;                                                                                     \
+    changed = true;                                                                                             \
+    onUpdate();                                                                                    \
 }
 
 
@@ -157,6 +167,8 @@ namespace EagleLib
         Parameter::Serialize(fs);
         fs << "Data" << data.string();
         fs << "}";
+        changed = true;
+        onUpdate();
     }
 
     template<> inline void TypedParameter<boost::filesystem::path>::Init(cv::FileNode& fs)
@@ -164,6 +176,7 @@ namespace EagleLib
         cv::FileNode myNode = fs[name];
         std::string pathStr = (std::string)myNode["Data"];
         data = boost::filesystem::path(pathStr);
+        changed = true;
     }
 
     template<> inline void TypedParameter<unsigned int>::Serialize(cv::FileStorage& fs)
@@ -175,6 +188,8 @@ namespace EagleLib
         template<> inline void TypedParameter<unsigned int>::Init(cv::FileNode& fs){
         cv::FileNode myNode = fs[name];
         data = (int)myNode["Data"];
+        changed = true;
+        onUpdate();
     }
 
     template<> inline void TypedParameter<int>::Serialize(cv::FileStorage& fs)
@@ -187,6 +202,8 @@ namespace EagleLib
     {
         cv::FileNode myNode = fs[name];
         data = (int)myNode["Data"];
+        changed = true;
+        onUpdate();
     }
     template<> void inline TypedParameter<std::string>::Serialize(cv::FileStorage& fs)
     {
@@ -198,6 +215,8 @@ namespace EagleLib
     {
         cv::FileNode myNode = fs[name];
         data = (std::string)myNode["Data"];
+        changed = true;
+        onUpdate();
     }
 
     template<> void inline TypedParameter<EnumParameter>::Serialize(cv::FileStorage& fs)
@@ -222,6 +241,8 @@ namespace EagleLib
     {
         cv::FileNode myNode = fs[name];
         data.currentSelection = (int)myNode["CurrentSelection"];
+        changed = true;
+        onUpdate();
     }
 
     template<typename T>
@@ -297,7 +318,7 @@ namespace EagleLib
             }
             if(param == nullptr && Parameter::inputName.size())
             {
-				param = getParameter(Parameter::inputName);
+                param = Parameter::getParameter(Parameter::inputName);
                 if(param)
                 {
                     ++param->subscribers;
