@@ -23,7 +23,7 @@ class QWidget;
 namespace EagleLib
 {
 
-    class Plotter: public TInterface<IID_Plotter, IObject>
+	class CV_EXPORTS Plotter : public TInterface<IID_Plotter, IObject>
     {
 
     protected:
@@ -76,7 +76,7 @@ namespace EagleLib
     // 3) A plot is set via the addPlot method
     // 3)
 
-    class QtPlotter: public Plotter
+	class CV_EXPORTS QtPlotter : public Plotter
     {
     protected:
         std::vector<QWidget*> plots;

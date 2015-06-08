@@ -1,4 +1,5 @@
 #pragma once
+#define CVAPI_EXPORTS
 #include <string>
 //#include "Manager.h"
 #include <opencv2/core/persistence.hpp>
@@ -47,19 +48,19 @@ struct WriteDirectory: public boost::filesystem::path{};
         std::vector<int>         values;
         int currentSelection;
     };
-
+	
     class CV_EXPORTS Parameter
     {
     public:
 
         typedef boost::shared_ptr<Parameter> Ptr;
-		
+		static Ptr globalGetParameter(const std::string& fulltreeName);
         virtual void setSource(const std::string& name) = 0;
         virtual void setSource(EagleLib::Parameter::Ptr param) = 0;
         virtual void update() = 0;
         virtual bool acceptsInput(const Ptr& param) = 0;
         virtual void Init(cv::FileNode& fs){}
-		static Parameter::Ptr getParameter(const std::string& fulltreeName);
+		
         virtual void Serialize(cv::FileStorage& fs)
         {
             fs << name << "{";
@@ -98,7 +99,7 @@ struct WriteDirectory: public boost::filesystem::path{};
         Parameter(const std::string& name_ = "", const ParamType& type_ = None, const std::string toolTip_ = ""): name(name_),toolTip(toolTip_),type(type_), changed(false), subscribers(0){}
         virtual ~Parameter(){}
     };
-
+	
 
     // Default typed parameter
     template<typename T>
@@ -318,7 +319,7 @@ struct WriteDirectory: public boost::filesystem::path{};
             }
             if(param == nullptr && Parameter::inputName.size())
             {
-                param = Parameter::getParameter(Parameter::inputName);
+                param = Parameter::globalGetParameter(Parameter::inputName);
                 if(param)
                 {
                     ++param->subscribers;

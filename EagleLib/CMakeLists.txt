@@ -141,11 +141,12 @@ add_library(RuntimeObjectSystem
 cuda_add_library(EagleLib SHARED
 	${src}  
 	${hdr}
-        ${knl}
+    ${knl}
 	${RuntimeObjectSystem_SRCS}
 )
 
 TARGET_LINK_LIBRARIES(RuntimeObjectSystem RuntimeCompiler)
+
 TARGET_LINK_LIBRARIES(EagleLib
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS}

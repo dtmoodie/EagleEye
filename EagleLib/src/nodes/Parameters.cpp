@@ -2,7 +2,7 @@
 #include "Manager.h"
 using namespace EagleLib;
 
-Parameter::Ptr Parameter::getParameter(const std::string& fulltreeName)
+Parameter::Ptr Parameter::globalGetParameter(const std::string& fulltreeName)
 {
 	return EagleLib::NodeManager::getInstance().getParameter(fulltreeName);
 }
