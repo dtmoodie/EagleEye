@@ -24,9 +24,11 @@ void SparsePyrLKOpticalFlow::Init(bool firstInit)
         updateParameter("Use initial flow", true);
         updateParameter("Enabled", false);
         parameters[1]->changed = true;
+        addInputParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>>("Display function");
     }
     updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::Stream)>>(
         "Set Reference", boost::bind(&SparsePyrLKOpticalFlow::setReferenceImage, this, _1, _2, _3), Parameter::Output);
+
     updateParameter<TrackSparseFunctor>("Sparse Track Functor", boost::bind(&SparsePyrLKOpticalFlow::trackSparse, this, _1,_2,_3, _4, _5, _6, _7), Parameter::Output);
 }
 void SparsePyrLKOpticalFlow::Serialize(ISimpleSerializer *pSerializer)
@@ -100,10 +102,19 @@ void SparsePyrLKOpticalFlow::trackSparse(
         trackedPts = cv::cuda::GpuMat(refPts.size(), refPts.type());
         refPts.copyTo(trackedPts,stream);
     }
+    boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>* display =
+            getParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>*>("Display function")->data;
+
+
     optFlow->calc(refImg, curImg, refPts, trackedPts, status, err, stream);
+    if(display)
+    {
+        (*display)(curImg, refPts, trackedPts, status, fullTreeName, stream);
+    }
     updateParameter("Tracked points", trackedPts, Parameter::Output);
     updateParameter("Status", status, Parameter::Output);
     updateParameter("Error", err, Parameter::Output);
+
 }
 
 void BroxOpticalFlow::Init(bool firstInit)
