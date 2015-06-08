@@ -406,6 +406,7 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE(vec_DD);
         MAKE_TYPE(vec_DI);
         MAKE_TYPE(vec_II);
+        MAKE_TYPE(EagleLib::ReadDirectory);
     }
 
     if(parameter->type & EagleLib::Parameter::Output || parameter->type & EagleLib::Parameter::State)
@@ -430,6 +431,7 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE_(vec_DD);
         MAKE_TYPE_(vec_DI);
         MAKE_TYPE_(vec_II);
+        MAKE_TYPE_(EagleLib::ReadDirectory);
     }
 	return nullptr;
 }

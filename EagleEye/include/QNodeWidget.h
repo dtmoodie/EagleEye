@@ -453,6 +453,87 @@ private:
 };
 
 template<>
+class QNodeProxy<EagleLib::ReadDirectory, false, void> : public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        parent = parent_;
+        button = new QPushButton(parent);
+        parameter = parameter_;
+        updateUi(true);
+        parent->connect(button, SIGNAL(clicked()), parent, SLOT(on_valueChanged()));
+
+    }
+    virtual void updateUi(bool init = false)
+    {
+        std::string fileName;
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        if(!lock)
+            return;
+        if(auto param = EagleLib::getParameterPtr<EagleLib::ReadDirectory>(parameter))
+            fileName = param->string();
+        lock.unlock();
+        if (fileName.size())
+            button->setText(QString::fromStdString(fileName));
+        else
+            button->setText("Select a Directory");
+    }
+    virtual void onUiUpdated(QWidget* widget)
+    {
+        QString filename;
+        QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(parent->parentWidget());
+
+        if(nodeWidget)
+            //filename = QFileDialog::getSaveFileName(nodeWidget->mainWindow, "Select file");
+            filename = QFileDialog::getExistingDirectory(nodeWidget->mainWindow, "Select directory");
+        else
+            filename = QFileDialog::getExistingDirectory(parent, "Select directory");
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
+        if(!lock)
+            return;
+        if(auto param = EagleLib::getParameterPtr<EagleLib::ReadDirectory>(parameter))
+            *param = boost::filesystem::path(filename.toStdString());
+        lock.unlock();
+        button->setText(filename);
+        button->setToolTip(filename);
+        parameter->changed = true;
+    }
+    virtual QWidget* getWidget(int num = 0) { return button; }
+private:
+    QPushButton* button;
+    IQNodeInterop* parent;
+};
+
+template<>
+class QNodeProxy<EagleLib::ReadDirectory, true, void> : public IQNodeProxy
+{
+public:
+    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    {
+        parameter = parameter_;
+        box = new QLineEdit(parent);
+        updateUi();
+    }
+    virtual void updateUi(bool init = false)
+    {
+        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
+        if(!lock)
+            return;
+        if(auto param = EagleLib::getParameterPtr<EagleLib::ReadDirectory>(parameter))
+            box->setText(QString::fromStdString(param->string()));
+    }
+    virtual void onUiUpdated(QWidget* widget)
+    {
+    }
+    virtual QWidget* getWidget(int num = 0) { return box; }
+private:
+    QLineEdit* box;
+};
+
+
+
+template<>
 class QNodeProxy<boost::function<void(void)>, false, void> : public IQNodeProxy
 {
 public:
