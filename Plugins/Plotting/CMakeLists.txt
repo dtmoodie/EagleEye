@@ -6,13 +6,7 @@ file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB forms "*UIs/*.ui")
 
 find_package(Qt5 REQUIRED Core Widgets PrintSupport)
-set(Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@)
-set(Boost_USE_STATIC @Boost_USE_STATIC@)
-set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)
-set(BOOST_INCLUDEDIR "@Boost_INCLUDE_DIR@")
-set(Boost_NO_BOOST_CMAKE ON)
-set(BOOST_REQUIRED_MODULES system chrono thread date_time)
-find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
+
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
 ADD_DEFINITIONS( -DHAVE_QT5 )
@@ -47,7 +41,6 @@ message(STATUS
 
 ")
 
-
 add_library(Plotting SHARED ${src} ${hdr} ${knl} ${UIS} ${MOC})
 add_dependencies(Plotting EagleLib)
 set_target_properties(Plotting PROPERTIES
@@ -55,6 +48,6 @@ set_target_properties(Plotting PROPERTIES
             ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
             LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
 )
-target_link_libraries(Plotting ${Boost_LIBRARIES})
+target_link_libraries(Plotting EagleLib)
 #add_custom_command(TARGET Plotting POST_BUILD COMMAND ${CMAKE_COMMAND} -E COPY_FILE)
 #target_link_libraries(Plotting EagleLib)
