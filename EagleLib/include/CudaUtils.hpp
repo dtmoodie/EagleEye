@@ -6,9 +6,10 @@
 #include <boost/thread.hpp>
 namespace EagleLib
 {
+template<typename T> void cleanup(T& ptr, typename std::enable_if< std::is_array<T>::value>::type* = 0) { /*delete[] ptr;*/ }
+template<typename T> void cleanup(T& ptr, typename std::enable_if< std::is_pointer<T>::value && !std::is_array<T>::value>::type* = 0) { delete ptr; }
+template<typename T> void cleanup(T& ptr, typename std::enable_if<!std::is_pointer<T>::value && !std::is_array<T>::value>::type* = 0) { return; }
 
-template<typename T> void cleanup(T ptr, typename std::enable_if<std::is_pointer<T>::value>::type* = 0) { delete ptr; }
-template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointer<T>::value>::type* = 0){ return; }
     template<typename Data>
     class concurrent_queue
     {
@@ -205,19 +206,6 @@ template<typename T> void cleanup(T ptr, typename std::enable_if<!std::is_pointe
             return *this;
         }
     };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
