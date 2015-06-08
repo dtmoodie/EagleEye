@@ -27,7 +27,7 @@ cv::cuda::GpuMat SegmentFastMumfordShah::doProcess(cv::cuda::GpuMat& img, cv::cu
 	param.iterations = getParameter<int>(3)->data;
 	param.stop_eps = getParameter<double>(4)->data;
 	param.stop_k = getParameter<int>(5)->data;
-	param.adapt_params = getParameter<double>(6)->data;
+	param.adapt_params = getParameter<bool>(6)->data;
 	param.weight = getParameter<bool>(7)->data;
 	param.edges = getParameter<bool>(8)->data;
 	cv::Mat result = solver.run(h_img.createMatHeader(), param);

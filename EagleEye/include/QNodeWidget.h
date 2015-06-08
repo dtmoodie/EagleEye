@@ -167,6 +167,7 @@ public:
 		box->setMinimum(std::numeric_limits<T>::min());
         box->setMaximumWidth(100);
         box->setSingleStep(0.01);
+		box->setDecimals(10);
         updateUi(true);
 		parent->connect(box, SIGNAL(valueChanged(double)), parent, SLOT(on_valueChanged(double)));
 	}

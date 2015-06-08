@@ -19,6 +19,21 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
+	class ConvertToLab : public Node
+	{
+	public:
+		ConvertToLab();
+		virtual void Init(bool firstInit);
+		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+	};
+	class ConvertColorspace : public Node
+	{
+		BufferPool<cv::cuda::GpuMat, EventPolicy> resultBuffer;
+	public:
+		ConvertColorspace();
+		virtual void Init(bool firstInit);
+		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+	};
 
     class ExtractChannels: public Node
     {

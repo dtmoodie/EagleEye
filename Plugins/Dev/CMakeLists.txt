@@ -29,7 +29,7 @@ add_dependencies(Dev EagleLib)
 target_link_libraries(Dev 
     EagleLib
     ${OpenCV_LIBS}
-	fastmsd.lib
+	debug;fastmsd.lib;optimized;fastms.lib
 	${CUDA_CUBLAS_LIBRARIES}
 )
 
