@@ -17,7 +17,10 @@ cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
         return img;
     }
     if(input->empty())
+    {
         log(Status, "Input is empty");
+        return img;
+    }
     return *input;
 }
 cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -150,8 +153,60 @@ cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& 
     }
     return img;
 }
+cv::cuda::GpuMat ConcatTensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+    bool full = true;
+    std::vector<cv::cuda::GpuMat*> inputs;
+    int type = -1;
+    for(int i = 1; i < parameters.size(); ++i)
+    {
+        auto param = boost::dynamic_pointer_cast<TypedParameter<cv::cuda::GpuMat*>, Parameter>(parameters[i]);
+        if(param)
+        {
+            if(param->data == nullptr)
+                full = false;
+            else
+                inputs.push_back(param->data);
+        }
+    }
+    if(full == true)
+    {
+        addInputParameter<cv::cuda::GpuMat>("Input " + boost::lexical_cast<std::string>(parameters.size()-1));
+    }
+    int cols = 0;
+    int rows = 0;
+    for(int i = 0; i < inputs.size(); ++i)
+    {
+        cols += inputs[i]->cols;
+        rows = inputs[i]->rows;
+        if(type == -1)
+            type = inputs[i]->type();
+        else
+            if(type != inputs[i]->type())
+                throw cv::Exception(0, "Datatype mismatch!",__FUNCTION__, __FILE__, __LINE__);
+    }
+    Buffer<cv::cuda::GpuMat, EventPolicy>* buf = d_buffer.getFront();
+    buf->data.create(rows, cols, type);
+    int colItr = 0;
+    for(int i = 0; i < inputs.size(); ++i)
+    {
+        inputs[i]->copyTo(buf->data(cv::Rect(colItr,0, inputs[i]->cols, rows)), stream);
+        colItr += inputs[i]->cols;
+    }
+    if(buf->data.empty())
+        return img;
+    else
+        return buf->data;
+}
+
+void ConcatTensor::Init(bool firstInit)
+{
+    updateParameter("Include Input", true);
+    addInputParameter<cv::cuda::GpuMat>("Input 0");
+}
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(GetOutputImage)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ImageInfo)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ExportInputImage)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Mat2Tensor)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ConcatTensor)

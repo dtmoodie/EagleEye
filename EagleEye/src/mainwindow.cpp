@@ -23,8 +23,8 @@ int static_errorHandler( int status, const char* func_name,const char* err_msg, 
 	return 0;
 }
 
-static void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursive_mutex *mtx);
-static void process(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursive_mutex *mtx);
+static void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mutex *mtx);
+static void process(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mutex *mtx);
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -448,8 +448,18 @@ MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
     }
     if(node->getParent() == nullptr)
     {
-        boost::recursive_mutex::scoped_lock lock(parentMtx);
-        parentList.push_back(node);
+        boost::timed_mutex::scoped_lock lock(parentMtx, boost::chrono::milliseconds(1000));
+        if(lock.owns_lock())
+        {
+            parentList.push_back(node);
+        }else
+        {
+            stopProcessingThread();
+            parentList.push_back(node);
+            startProcessingThread();
+        }
+
+
     }
     if(currentNode == nullptr)
     {
@@ -464,7 +474,7 @@ void MainWindow::onWidgetDeleted(QNodeWidget* widget)
     auto itr = std::find(widgets.begin(), widgets.end(), widget);
     if(itr != widgets.end())
         widgets.erase(itr);
-    boost::recursive_mutex::scoped_lock(parentMtx);
+    boost::mutex::scoped_lock(parentMtx);
     auto parentItr = std::find(parentList.begin(), parentList.end(), widget->getNode());
     if(parentItr != parentList.end())
         parentList.erase(parentItr);
@@ -503,11 +513,11 @@ MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
 }
 
 
-void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::recursive_mutex* mtx)
+void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::timed_mutex* mtx)
 {
     static std::vector<cv::cuda::GpuMat> images;
     static std::vector<cv::cuda::Stream> streams;
-    boost::recursive_mutex::scoped_lock lock(*mtx);
+    boost::timed_mutex::scoped_lock lock(*mtx);
     if(nodes->size() != streams.size())
         streams.resize(nodes->size());
     if(nodes->size() != images.size())
@@ -519,7 +529,7 @@ void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::recursive_mutex* mt
 
 }
 
-void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursive_mutex *mtx)
+void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mutex *mtx)
 {
     std::cout << "Processing thread started" << std::endl;
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
@@ -534,7 +544,6 @@ void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::recursiv
         {
             break;
         }
-
         end = boost::posix_time::microsec_clock::universal_time();
         delta = end - start;
         start = end;

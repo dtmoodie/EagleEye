@@ -322,8 +322,6 @@ QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Para
 void QInputProxy::onUiUpdated(QWidget* sender)
 {
     QString inputName = box->currentText();
-    if(inputName.size() == 0)
-        return;
     //auto tokens = inputName.split(":");
     //auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
     //if(sourceNode == nullptr)

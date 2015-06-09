@@ -18,12 +18,15 @@ NodeListDialog::~NodeListDialog()
 void
 NodeListDialog::update()
 {
+
     ui->NodeList->clear();
     auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
     for(size_t i = 0; i < nodes.size(); ++i)
     {
         ui->NodeList->addItem(QString::fromStdString(nodes[i]));
     }
+    ui->NodeList->sortItems();
+
 }
 
 void

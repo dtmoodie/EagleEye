@@ -331,15 +331,24 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         cv::cuda::GpuMat* childResult = childResults.getFront();
         if(!img.empty())
             img.copyTo(*childResult,stream);
-        // Prevents adding of children while running, debatable how much this is needed
-        boost::recursive_mutex::scoped_lock lock(mtx);
-        for(size_t i = 0; i < children.size(); ++i)
+
+        std::vector<Node::Ptr>  children_;
+        children_.reserve(children.size());
         {
-            if(children[i] != nullptr)
+            // Prevents adding of children while running, debatable how much this is needed
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            for(int i = 0; i < children.size(); ++i)
+            {
+                children_.push_back(children[i]);
+            }
+        }
+        for(size_t i = 0; i < children_.size(); ++i)
+        {
+            if(children_[i] != nullptr)
             {
                 try
                 {
-                *childResult = children[i]->process(*childResult, stream);
+                *childResult = children_[i]->process(*childResult, stream);
                 CATCH_MACRO
             }else
             {

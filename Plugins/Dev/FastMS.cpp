@@ -2,7 +2,7 @@
 #include "FastMS.h"
 
 using namespace EagleLib;
-
+#ifdef FASTMS_FOUND
 
 void SegmentFastMumfordShah::Init(bool firstInit)
 {
@@ -36,3 +36,4 @@ cv::cuda::GpuMat SegmentFastMumfordShah::doProcess(cv::cuda::GpuMat& img, cv::cu
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentFastMumfordShah);
+#endif

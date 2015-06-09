@@ -74,7 +74,7 @@ private:
 	QGraphicsProxyWidget* currentSelectedNodeWidget;
     EagleLib::Node::Ptr currentNode;
     std::vector<EagleLib::Node::Ptr> parentList;
-    boost::recursive_mutex parentMtx;
+    boost::timed_mutex parentMtx;
     std::vector<QNodeWidget*> widgets;
     boost::thread processingThread;
     RCCSettingsDialog* rccSettings;

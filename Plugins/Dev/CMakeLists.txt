@@ -13,11 +13,13 @@ find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cu
 
 
 INCLUDE_DIRECTORIES(
+        ${fastms_INCLUDE_DIRECTORIES}
         ${EagleLib_INCLUDE_DIRECTORIES}
         ${OpenCV_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
 ) 
+
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
 #file(GLOB_RECURSE knl "*.cu")
@@ -29,8 +31,7 @@ add_dependencies(Dev EagleLib)
 target_link_libraries(Dev 
     EagleLib
     ${OpenCV_LIBS}
-	debug;fastmsd.lib;optimized;fastms.lib
-	${CUDA_CUBLAS_LIBRARIES}
+    ${CUDA_CUBLAS_LIBRARIES}
 )
 
 set_target_properties(Dev PROPERTIES
@@ -38,3 +39,9 @@ set_target_properties(Dev PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
     LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
 )
+
+IF(TARGET fastms)
+    add_dependencies(Dev fastms)
+    target_link_libraries(Dev fastms)
+    add_definitions(-DFASTMS_FOUND)
+ENDIF()
