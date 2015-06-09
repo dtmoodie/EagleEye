@@ -41,3 +41,7 @@ void RCCSettingsDialog::on_comboBox_currentIndexChanged(int index)
 {
 
 }
+void RCCSettingsDialog::on_btnAddIncludeDir_clicked()
+{
+    EagleLib::NodeManager::getInstance().addIncludeDir(ui->includeDir->text().toStdString());
+}

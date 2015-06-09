@@ -21,7 +21,7 @@ private slots:
     void on_buttonBox_rejected();
 
     void on_comboBox_currentIndexChanged(int index);
-
+    void on_btnAddIncludeDir_clicked();
 private:
     Ui::RCCSettingsDialog *ui;
 };

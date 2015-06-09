@@ -1,9 +1,9 @@
 
 #include "FastMS.h"
 
-using namespace EagleLib;
-#ifdef FASTMS_FOUND
 
+#ifdef FASTMS_FOUND
+using namespace EagleLib;
 void SegmentFastMumfordShah::Init(bool firstInit)
 {
 	updateParameter("Lambda", double(0.1), Parameter::Control, "For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities");
@@ -19,8 +19,8 @@ void SegmentFastMumfordShah::Init(bool firstInit)
 
 cv::cuda::GpuMat SegmentFastMumfordShah::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-	img.download(h_img, stream);
-	Par param;
+    img.download(h_img, stream);
+    Par param;
 	param.lambda = getParameter<double>(0)->data;
 	param.alpha = getParameter<double>(1)->data;
 	param.temporal = getParameter<double>(2)->data;
