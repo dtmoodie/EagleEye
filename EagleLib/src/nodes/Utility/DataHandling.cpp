@@ -136,7 +136,10 @@ cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& 
     if(position && !positionMat.empty())
     {
         TIME
-        buf->data.create(rows, newCols, type);
+        //buf->data.create(rows, newCols, type);
+
+        if(buf->data.rows != rows || buf->data.cols != newCols || buf->data.type() != type)
+            buf->data = cv::cuda::createContinuous(rows, newCols, type);
         TIME
         img.convertTo(typeBuf->data, type,stream);
         TIME
@@ -147,8 +150,8 @@ cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& 
         return buf->data;
     }else
     {
-        if(typeBuf->data.empty())
-            typeBuf->data = cv::cuda::createContinuous(img.size(), img.type());
+        if(typeBuf->data.size() != img.size() || typeBuf->data.type() != type)
+            typeBuf->data = cv::cuda::createContinuous(img.size(), type);
         img.convertTo(typeBuf->data, type, stream);
         TIME
         return typeBuf->data.reshape(1, rows);
