@@ -147,6 +147,8 @@ cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& 
         return buf->data;
     }else
     {
+        if(typeBuf->data.empty())
+            typeBuf->data = cv::cuda::createContinuous(img.size(), img.type());
         img.convertTo(typeBuf->data, type, stream);
         TIME
         return typeBuf->data.reshape(1, rows);

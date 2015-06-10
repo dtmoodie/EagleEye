@@ -1,6 +1,8 @@
 #include "Caffe.h"
 #include "caffe/caffe.hpp"
-
+#include <external_includes/cv_cudaimgproc.hpp>
+#include <external_includes/cv_cudaarithm.hpp>
+#include <external_includes/cv_cudawarping.hpp>
 RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 
 using namespace EagleLib;
@@ -93,8 +95,12 @@ namespace EagleLib
 {
 	class CaffeImageClassifier : public Node
 	{
-		boost::shared_ptr<caffe::Net<float>> NN;
-		boost::shared_ptr<caffe::MemoryDataLayer<float> > memory_data_layer;
+        caffe::Blob<float>* input_layer;
+        boost::shared_ptr<caffe::Net<float>> NN;
+        bool weightsLoaded;
+        boost::shared_ptr< std::vector< std::string > > labels;
+        std::vector<cv::cuda::GpuMat> wrappedChannels;
+        cv::Scalar channel_mean;
 	public:
 		CaffeImageClassifier();
 		virtual void Serialize(ISimpleSerializer* pSerializer);
@@ -106,29 +112,51 @@ void CaffeImageClassifier::Serialize(ISimpleSerializer* pSerializer)
 {
     Node::Serialize(pSerializer);
     SERIALIZE(NN);
+    SERIALIZE(weightsLoaded);
+    SERIALIZE(labels);
+    SERIALIZE(input_layer);
 }
 
 void CaffeImageClassifier::Init(bool firstInit)
 {
-	std::cout << caffe::LayerRegistry<float>::LayerTypeList() << std::endl;
+    //std::cout << caffe::LayerRegistry<float>::LayerTypeList() << std::endl;
+
     if(firstInit)
     {
         updateParameter("NN model file", boost::filesystem::path());
         updateParameter("NN weights file", boost::filesystem::path());
-
+        updateParameter("Label file", boost::filesystem::path());
+        updateParameter("Mean file", boost::filesystem::path());
+        weightsLoaded = false;
+        //labels.reset(new std::vector<std::string>>);
+        input_layer = nullptr;
     }
 }
 
 cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-    std::cout << "beyah" << std::endl;
     if(parameters[0]->changed)
     {
-        boost::filesystem::path path = getParameter<boost::filesystem::path>(0)->data;
+        boost::filesystem::path& path = getParameter<boost::filesystem::path>(0)->data;
         if(boost::filesystem::exists(path))
         {
             NN.reset(new caffe::Net<float>(path.string(), caffe::TEST));
-            log(Status, "Architecture loaded");
+            std::stringstream ss;
+            ss << "Architecture loaded, num inputs: " << NN->num_inputs();
+            ss << " num outputs: " << NN->num_outputs();
+            input_layer = NN->input_blobs()[0];
+            ss << " input channels: " << input_layer->channels();
+            ss << " input size: (" << input_layer->width() << ", " << input_layer->height() << ")";
+            float* input_data = input_layer->mutable_gpu_data();
+            int width = input_layer->width();
+            int height = input_layer->height();
+            for(int i = 0; i < input_layer->channels(); ++i)
+            {
+                cv::cuda::GpuMat channel(height, width, CV_32FC1, input_data);
+                wrappedChannels.push_back(channel);
+                input_data += height*width;
+            }
+            log(Status, ss.str());
             parameters[0]->changed = false;
         }else
         {
@@ -150,65 +178,142 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
             }
             log(Status, "Weights loaded");
             parameters[1]->changed = false;
+            weightsLoaded = true;
             updateParameter("Loaded layers", layerNames);
         }else
         {
             log(Warning, "Weight file does not exist");
         }
     }
-    if(NN == nullptr)
+    if(parameters[2]->changed)
+    {
+        // Handle loading of the label file
+        boost::filesystem::path& path = getParameter<boost::filesystem::path>(2)->data;
+        if(boost::filesystem::exists(path))
+        {
+            if(boost::filesystem::is_regular_file(path))
+            {
+                std::ifstream ifs(path.string().c_str());
+                if(!ifs)
+                {
+                    log(Error, "Unable to load label file");
+                }
+                labels.reset(new std::vector<std::string>());
+                std::string line;
+                while(std::getline(ifs,line))
+                {
+                    labels->push_back(line);
+                }
+                log(Status, "Loaded " + boost::lexical_cast<std::string>(labels->size()) + " classes");
+                parameters[2]->changed = false;
+            }
+        }
+    }
+    if(parameters[3]->changed)
+    {
+        boost::filesystem::path& path = getParameter<boost::filesystem::path>(3)->data;
+        if(boost::filesystem::exists(path))
+        {
+            if(boost::filesystem::is_regular_file(path))
+            {
+                caffe::BlobProto blob_proto;
+                if(caffe::ReadProtoFromBinaryFile(path.string().c_str(), &blob_proto))
+                {
+                    caffe::Blob<float> mean_blob;
+                    mean_blob.FromProto(blob_proto);
+                    if(input_layer->channels() != mean_blob.channels())
+                    {
+                        log(Error,"Number of channels of mean file doesn't match input layer.");
+                        return img;
+                    }
+
+                    /* The format of the mean file is planar 32-bit float BGR or grayscale. */
+                    std::vector<cv::Mat> channels;
+                    float* data = mean_blob.mutable_cpu_data();
+                    for (int i = 0; i < input_layer->channels(); ++i) {
+                      /* Extract an individual channel. */
+                      cv::Mat channel(mean_blob.height(), mean_blob.width(), CV_32FC1, data);
+                      channels.push_back(channel);
+                      data += mean_blob.height() * mean_blob.width();
+                    }
+
+                    /* Merge the separate channels into a single image. */
+                    cv::Mat mean;
+                    cv::merge(channels, mean);
+
+                    /* Compute the global mean pixel value and create a mean image
+                     * filled with this value. */
+                    channel_mean = cv::mean(mean);
+                    updateParameter("Required mean subtraction", channel_mean);
+                    updateParameter("Subtraction required", false);
+                }else
+                {
+                    log(Error, "Unable to load mean file");
+                }
+            }
+        }
+    }
+    if(NN == nullptr || weightsLoaded == false)
     {
         log(Error, "Model not loaded");
         return img;
     }
-    TIME
+    if(img.size() != cv::Size(input_layer->width(), input_layer->height()))
+    {
+        cv::cuda::resize(img,img,cv::Size(input_layer->width(), input_layer->height()), 0, 0, cv::INTER_LINEAR, stream);
+    }
+    if(img.depth() != CV_32F)
+    {
+        img.convertTo(img, CV_32F,stream);
+    }
+    if(getParameter<bool>("Subtraction required")->data)
+    {
+        cv::cuda::subtract(img, channel_mean, img, cv::noArray(), -1, stream);
+    }
+    cv::cuda::split(img,wrappedChannels,stream);
+    // Check if channels are still wrapping correctly
+    if(input_layer->gpu_data() != reinterpret_cast<float*>(wrappedChannels[0].data))
+    {
+        log(Error, "Gpu mat not wrapping input blob!");
+        wrappedChannels.clear();
+        float* input_data = input_layer->mutable_gpu_data();
+        int width = input_layer->width();
+        int height = input_layer->height();
+        for(int i = 0; i < input_layer->channels(); ++i)
+        {
+            cv::cuda::GpuMat channel(height, width, CV_32FC1, input_data);
+            wrappedChannels.push_back(channel);
+            input_data += height*width;
+        }
 
-    cv::Mat h_img;
-    img.download(h_img,stream);
-    //caffe::Datum datum;
+        return img;
+    }
+
     stream.waitForCompletion();
     TIME
-    //caffe::CVMatToDatum(h_img,&datum);
-    caffe::BlobProto blobProto;
-    blobProto.set_num(1);
-    blobProto.set_channels(h_img.channels());
-    blobProto.set_width(h_img.cols);
-    blobProto.set_height(h_img.rows);
-    //const int datumSize = datum.channels() * datum.height() * datum.width();
-    //const std::string& data = datum.data();
-	for (int c = 0; c < h_img.channels(); ++c)
-	{
-		for (int i = 0; i < h_img.rows; ++i)
-		{
-			for (int j = 0; j < h_img.cols; ++j)
-			{
-				blobProto.add_data(h_img.at<cv::Vec3f>(i, j).val[c]);
-			}
-		}
-	}
-	/*for(int i = 0; i < datumSize; ++i)
-    {
-        blobProto.add_data(uchar(data[i]));
-    }*/
 
-	caffe::Blob<float>* blob = new caffe::Blob<float>(1, h_img.channels(), h_img.rows, h_img.cols);
-    blob->FromProto(blobProto);
-    std::vector<caffe::Blob<float>*> bottom;
-    bottom.push_back(blob);
-
-
-    TIME
     float loss;
-    const std::vector<caffe::Blob<float>*>& result = NN->Forward(bottom, &loss);
-    const std::vector<float> probs = std::vector<float>(result[0]->cpu_data(), result[0]->cpu_data() + result[0]->count());
+    input_layer->mutable_gpu_data();
     TIME
-    updateParameter("Probabilities", probs);
-    auto maxvalue = std::max_element(probs.begin(), probs.end());
+    NN->ForwardPrefilled(&loss);
     TIME
-    int idx = maxvalue - probs.begin();
+    caffe::Blob<float>* output_layer = NN->output_blobs()[0];
+    const float* begin = output_layer->cpu_data();
+    const float* end = begin + output_layer->channels();
+    auto maxvalue = std::max_element(begin, end);
+    TIME
+    int idx = maxvalue - begin;
     float score = *maxvalue;
     updateParameter("Highest scoring class", idx);
     updateParameter("Highest score", score);
+    if(labels)
+    {
+        if(idx < labels->size())
+        {
+            std::string label = (*labels)[idx];
+            updateParameter("Highest scoring label", label);
+        }
+    }
     TIME
     return img;
 }
