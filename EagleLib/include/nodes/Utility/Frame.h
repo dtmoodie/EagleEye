@@ -1,5 +1,6 @@
 #pragma once
 #include "nodes/Node.h"
+#include "CudaUtils.hpp"
 namespace EagleLib
 {
     class FrameRate: public Node
@@ -36,4 +37,19 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
+	class Resize : public Node
+	{
+		BufferPool<cv::cuda::GpuMat, EventPolicy> bufferPool;
+	public:
+		Resize();
+		virtual void Init(bool firstInit);
+		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+	};
+	class Subtract : public Node
+	{
+	public:
+		Subtract();
+		virtual void Init(bool firstInit);
+		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+	};
 }

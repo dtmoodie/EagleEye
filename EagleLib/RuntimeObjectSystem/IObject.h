@@ -35,7 +35,7 @@
 #include "ISimpleSerializer.h"
 #include <algorithm>
 #include <assert.h>
-
+#include <boost/thread/recursive_mutex.hpp>
 
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined CVAPI_EXPORTS
 #  define RCC_EXPORTS __declspec(dllexport)
@@ -383,6 +383,7 @@ struct RCC_EXPORTS IObject
 
     virtual void registerNotifier(IObjectNotifiable* notifier)
     {
+		boost::recursive_mutex::scoped_lock lock(notifierMutex);
         auto itr = std::find(notifiers.begin(), notifiers.end(), notifier);
         if(itr == notifiers.end())
             notifiers.push_back(notifier);
@@ -392,6 +393,7 @@ struct RCC_EXPORTS IObject
 
     void deregisterNotifier(IObjectNotifiable* notifier)
     {
+		boost::recursive_mutex::scoped_lock lock(notifierMutex);
         auto itr = std::find(notifiers.begin(), notifiers.end(), notifier);
         if(itr != notifiers.end())
             notifiers.erase(itr);
@@ -400,6 +402,7 @@ struct RCC_EXPORTS IObject
     }
     void updateNotifiers()
     {
+		boost::recursive_mutex::scoped_lock lock(notifierMutex);
         for(size_t i = 0; i < notifiers.size(); ++i)
         {
             if(notifiers[i] != nullptr)
@@ -421,6 +424,7 @@ private:
     // Destructor should use this information to not delete other IObjects in this case
     // since these objects will still be needed
     bool _isRuntimeDelete;
+	boost::recursive_mutex notifierMutex;
 };
 
 

@@ -40,7 +40,7 @@ DisjointSetForest::DisjointSetForest( int no_of_elements ) {
  */
 void DisjointSetForest::init( int no_of_elements ) {
     this->elements.clear();
-    this->elements.reserve( no_of_elements );
+    this->elements.resize( no_of_elements );
     this->num = no_of_elements;
     
     for( int i = 0; i < no_of_elements; i++ ) {

@@ -1,4 +1,6 @@
 #include "nodes/Utility/Frame.h"
+#include "external_includes/cv_cudawarping.hpp"
+#include "external_includes/cv_cudaarithm.hpp"
 
 using namespace EagleLib;
 void FrameRate::Init(bool firstInit)
@@ -106,8 +108,29 @@ cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     }
     return *input;
 }
-
+void Resize::Init(bool firstInit)
+{
+	updateParameter("Width", int(224));
+	updateParameter("Height", int(224));
+}
+cv::cuda::GpuMat Resize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+	auto buf = bufferPool.getFront();
+	cv::cuda::resize(img, buf->data, cv::Size(getParameter<int>(0)->data, getParameter<int>(1)->data), 0.0, 0.0, 1, stream);
+	return buf->data;
+}
+void Subtract::Init(bool firstInit)
+{
+	updateParameter("Value to subtract", cv::Scalar(0, 0, 0));
+}
+cv::cuda::GpuMat Subtract::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+	cv::cuda::subtract(img, getParameter<cv::Scalar>(0)->data, img, cv::noArray(), -1, stream);
+	return img;
+}
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SetMatrixValues)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameRate)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameLimiter)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(CreateMat)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Resize)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Subtract)

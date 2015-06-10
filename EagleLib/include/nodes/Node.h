@@ -70,7 +70,11 @@
 
 #ifdef _MSC_VER
 #define CALL __stdcall
-
+#ifdef _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY("opencv_core300d.lib")
+#else
+RUNTIME_COMPILER_LINKLIBRARY("opencv_core300.lib")
+#endif
 #else
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 #define CALL

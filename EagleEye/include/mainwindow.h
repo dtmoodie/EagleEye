@@ -63,6 +63,7 @@ signals:
     void uiNeedsUpdate();
     void pluginLoaded();
 
+
 private:
     void onError(const std::string& error);
     void onStatus(const std::string& status);

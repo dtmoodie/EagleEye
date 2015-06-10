@@ -126,7 +126,8 @@ void MainWindow::displayRCCSettings()
 
 void MainWindow::onCompileLog(const std::string& msg, int level)
 {
-    ui->console->appendPlainText(QString::fromStdString(msg));
+	emit eLog(QString::fromStdString(msg));
+	//ui->console->appendPlainText(QString::fromStdString(msg));
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -540,15 +541,16 @@ void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mu
         try
         {
             process(parentList, mtx);
+			end = boost::posix_time::microsec_clock::universal_time();
+			delta = end - start;
+			start = end;
+			if (delta.total_milliseconds() < 15 || parentList->size() == 0)
+				boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
         }catch(boost::thread_interrupted& err)
         {
             break;
         }
-        end = boost::posix_time::microsec_clock::universal_time();
-        delta = end - start;
-        start = end;
-        if(delta.total_milliseconds() < 15 || parentList->size() == 0)
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
+        
     }
     std::cout << "Interrupt requested, processing thread ended" << std::endl;
 }

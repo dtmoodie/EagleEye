@@ -89,18 +89,19 @@ void CALL setupIncludes()
 //	Log(ss.str());
 //	return 0;
 //}
-
-class CaffeImageClassifier: public Node
+namespace EagleLib
 {
-    boost::shared_ptr<caffe::Net<float>> NN;
-    boost::shared_ptr<caffe::MemoryDataLayer<float> > memory_data_layer;
-public:
-    CaffeImageClassifier();
-    virtual void Serialize(ISimpleSerializer* pSerializer);
-    virtual void Init(bool firstInit);
-    virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-};
-
+	class CaffeImageClassifier : public Node
+	{
+		boost::shared_ptr<caffe::Net<float>> NN;
+		boost::shared_ptr<caffe::MemoryDataLayer<float> > memory_data_layer;
+	public:
+		CaffeImageClassifier();
+		virtual void Serialize(ISimpleSerializer* pSerializer);
+		virtual void Init(bool firstInit);
+		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+	};
+}
 void CaffeImageClassifier::Serialize(ISimpleSerializer* pSerializer)
 {
     Node::Serialize(pSerializer);
@@ -109,6 +110,7 @@ void CaffeImageClassifier::Serialize(ISimpleSerializer* pSerializer)
 
 void CaffeImageClassifier::Init(bool firstInit)
 {
+	std::cout << caffe::LayerRegistry<float>::LayerTypeList() << std::endl;
     if(firstInit)
     {
         updateParameter("NN model file", boost::filesystem::path());
@@ -139,7 +141,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         if(boost::filesystem::exists(path))
         {
             NN->CopyTrainedLayersFrom(path.string());
-            const  std::vector<boost::shared_ptr<caffe::Layer<float>>>& layers = NN->layers();
+            const std::vector<boost::shared_ptr<caffe::Layer<float>>>& layers = NN->layers();
             std::vector<std::string> layerNames;
             layerNames.reserve(layers.size());
             for(auto layer: layers)
@@ -159,43 +161,55 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         log(Error, "Model not loaded");
         return img;
     }
-//    TIME
-//    cv::Mat h_img;
-//    img.download(h_img,stream);
-//    caffe::Datum datum;
-//    stream.waitForCompletion();
-//    TIME
-//    caffe::CVMatToDatum(h_img,&datum);
-//    caffe::BlobProto blobProto;
-//    blobProto.set_num(1);
-//    blobProto.set_channels(h_img.channels());
-//    blobProto.set_width(h_img.cols);
-//    blobProto.set_height(h_img.rows);
-//    const int datumSize = datum.channels() * datum.height() * datum.width();
-//    const std::string& data = datum.data();
-//    for(int i = 0; i < datumSize; ++i)
-//    {
-//        blobProto.add_data(uchar(data[i]));
-//    }
-//    caffe::Blob<float>* blob = new caffe::Blob<float>(1, datum.channels(), datum.height(), datum.width());
-//    blob->FromProto(blobProto);
-//    std::vector<caffe::Blob<float>*> bottom;
-//    bottom.push_back(blob);
+    TIME
+
+    cv::Mat h_img;
+    img.download(h_img,stream);
+    //caffe::Datum datum;
+    stream.waitForCompletion();
+    TIME
+    //caffe::CVMatToDatum(h_img,&datum);
+    caffe::BlobProto blobProto;
+    blobProto.set_num(1);
+    blobProto.set_channels(h_img.channels());
+    blobProto.set_width(h_img.cols);
+    blobProto.set_height(h_img.rows);
+    //const int datumSize = datum.channels() * datum.height() * datum.width();
+    //const std::string& data = datum.data();
+	for (int c = 0; c < h_img.channels(); ++c)
+	{
+		for (int i = 0; i < h_img.rows; ++i)
+		{
+			for (int j = 0; j < h_img.cols; ++j)
+			{
+				blobProto.add_data(h_img.at<cv::Vec3f>(i, j).val[c]);
+			}
+		}
+	}
+	/*for(int i = 0; i < datumSize; ++i)
+    {
+        blobProto.add_data(uchar(data[i]));
+    }*/
+
+	caffe::Blob<float>* blob = new caffe::Blob<float>(1, h_img.channels(), h_img.rows, h_img.cols);
+    blob->FromProto(blobProto);
+    std::vector<caffe::Blob<float>*> bottom;
+    bottom.push_back(blob);
 
 
-//    TIME
-//    float loss;
-//    const std::vector<caffe::Blob<float>*>& result = NN->Forward(bottom, &loss);
-//    const std::vector<float> probs = std::vector<float>(result[1]->cpu_data(), result[1]->cpu_data() + result[1]->count());
-//    TIME
-//    updateParameter("Probabilities", probs);
-//    auto maxvalue = std::max_element(probs.begin(), probs.end());
-//    TIME
-//    int idx = maxvalue - probs.begin();
-//    float score = *maxvalue;
-//    updateParameter("Highest scoring class", idx);
-//    updateParameter("Highest score", score);
-//    TIME
+    TIME
+    float loss;
+    const std::vector<caffe::Blob<float>*>& result = NN->Forward(bottom, &loss);
+    const std::vector<float> probs = std::vector<float>(result[0]->cpu_data(), result[0]->cpu_data() + result[0]->count());
+    TIME
+    updateParameter("Probabilities", probs);
+    auto maxvalue = std::max_element(probs.begin(), probs.end());
+    TIME
+    int idx = maxvalue - probs.begin();
+    float score = *maxvalue;
+    updateParameter("Highest scoring class", idx);
+    updateParameter("Highest score", score);
+    TIME
     return img;
 }
 

@@ -24,7 +24,7 @@ bool Camera::changeStream(const std::string &gstreamParams)
         log(Status, "Setting camera with gstreamer settings: " + gstreamParams);
         cam.release();
         cam = cv::VideoCapture(gstreamParams);
-        return cam.isOpened();
+        return cam.isOpened(); 
     }catch(cv::Exception &e)
     {
         log(Error, e.what());

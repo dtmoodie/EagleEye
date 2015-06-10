@@ -1,6 +1,6 @@
 #pragma once
 #include "nodes/Node.h"
-#include <opencv2/videoio.hpp>
+#include "external_includes/cv_videoio.hpp"
 #include <CudaUtils.hpp>
 namespace EagleLib
 {

@@ -104,10 +104,15 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                 QDrag* drag = new QDrag(this);
                 QMimeData* mimeData = new QMimeData();
                 QList<QUrl> urls;
-
+#if _MSC_VER
+				urls << QUrl::fromLocalFile(QString::fromStdString(fileName));
+#else
                 urls << QUrl::fromLocalFile(QString::fromStdString(fileName));
+#endif
                 mimeData->setUrls(urls);
                 drag->setMimeData(mimeData);
+				auto formats = mimeData->formats();
+				
                 drag->exec();
                 return QGraphicsView::mousePressEvent(event);
             }
