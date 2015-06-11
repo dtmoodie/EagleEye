@@ -13,7 +13,7 @@ find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cu
 
 
 INCLUDE_DIRECTORIES(
-        ${fastms_INCLUDE_DIRECTORIES}
+
         ${EagleLib_INCLUDE_DIRECTORIES}
         ${OpenCV_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
@@ -40,9 +40,4 @@ set_target_properties(Dev PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
 )
 
-IF(TARGET fastms)
-    add_dependencies(Dev fastms)
-    target_link_libraries(Dev fastms)
-    add_definitions(-DFASTMS_FOUND)
-    add_definitions(-DFASTMS_INCLUDE=${fastms_INCLUDE_DIRECTORIES})
-ENDIF()
+

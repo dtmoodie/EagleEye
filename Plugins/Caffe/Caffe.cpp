@@ -221,6 +221,11 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
                 {
                     caffe::Blob<float> mean_blob;
                     mean_blob.FromProto(blob_proto);
+                    if(input_layer == nullptr)
+                    {
+                        log(Error, "Input layer not defined");
+                        return img;
+                    }
                     if(input_layer->channels() != mean_blob.channels())
                     {
                         log(Error,"Number of channels of mean file doesn't match input layer.");
@@ -246,6 +251,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
                     channel_mean = cv::mean(mean);
                     updateParameter("Required mean subtraction", channel_mean);
                     updateParameter("Subtraction required", false);
+                    parameters[3]->changed = false;
                 }else
                 {
                     log(Error, "Unable to load mean file");

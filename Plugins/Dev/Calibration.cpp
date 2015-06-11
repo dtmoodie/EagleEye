@@ -11,7 +11,10 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaimgproc")
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaarithm")
 
 using namespace EagleLib;
-
+IPerModuleInterface* CALL GetModule()
+{
+    return PerModuleInterface::GetInstance();
+}
 void CalibrateCamera::Init(bool firstInit)
 {
     updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateCamera::clear, this));

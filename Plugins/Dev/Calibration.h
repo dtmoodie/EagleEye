@@ -2,7 +2,14 @@
 
 
 #include "nodes/Node.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+    CV_EXPORTS IPerModuleInterface* CALL GetModule();
 
+#ifdef __cplusplus
+}
+#endif
 namespace EagleLib
 {
     class CalibrateCamera: public Node

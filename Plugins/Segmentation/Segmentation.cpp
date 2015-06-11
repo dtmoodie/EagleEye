@@ -8,10 +8,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudabgsegm")
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudalegacy")
 
 using namespace EagleLib;
-IPerModuleInterface* CALL GetModule()
-{
-    return PerModuleInterface::GetInstance();
-}
+
 
 void OtsuThreshold::Init(bool firstInit)
 {

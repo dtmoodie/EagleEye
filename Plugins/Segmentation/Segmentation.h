@@ -2,14 +2,7 @@
 #include <opencv2/cudabgsegm.hpp>
 #include "CudaUtils.hpp"
 #include "Segmentation_impl.h"
-#ifdef __cplusplus
-extern "C"{
-#endif
-    CV_EXPORTS IPerModuleInterface* CALL GetModule();
 
-#ifdef __cplusplus
-}
-#endif
 
 namespace EagleLib
 {

@@ -16,13 +16,14 @@ INCLUDE_DIRECTORIES(
         ${Boost_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
 )
+
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
 file(GLOB_RECURSE knl "*.cu")
 
 #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
 
-cuda_add_library(Segmentation SHARED ${src} ${hdr} ${knl})
+cuda_add_library(Segmentation SHARED ${src} ${hdr})
 add_dependencies(Segmentation EagleLib)
 target_link_libraries(Segmentation
     EagleLib
@@ -34,3 +35,10 @@ set_target_properties(Segmentation PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
     LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
 )
+IF(TARGET fastms)
+    add_dependencies(Segmentation fastms)
+    target_link_libraries(Segmentation fastms)
+    add_definitions(-DFASTMS_FOUND)
+    add_definitions(-DFASTMS_INCLUDE=${fastms_INCLUDE_DIRECTORIES})
+    INCLUDE_DIRECTORIES(${fastms_INCLUDE_DIRECTORIES})
+ENDIF()
