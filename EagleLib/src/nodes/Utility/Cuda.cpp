@@ -42,8 +42,10 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
         updateParameter<std::string>("Device name", cv::cuda::DeviceInfo(device).name());
         if(onUpdate)
             onUpdate(this);
+        cv::cuda::setDevice(device);
+        stream = cv::cuda::Stream();
     }
-    cv::cuda::setDevice(device);
+
     return cv::cuda::GpuMat();
 }
 bool SetDevice::SkipEmpty() const

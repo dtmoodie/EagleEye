@@ -1,9 +1,31 @@
 #include "Caffe.h"
-#include "caffe/caffe.hpp"
+
 #include <external_includes/cv_cudaimgproc.hpp>
 #include <external_includes/cv_cudaarithm.hpp>
 #include <external_includes/cv_cudawarping.hpp>
+#include <Manager.h>
+#include "caffe/caffe.hpp"
+#ifdef _MSC_VER // Windows
+
+#ifdef _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/lib/Debug/libcaffe-d.lib")
+RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/lib/Debug/proto-d.lib")
+RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/protobuf/vsprojects/x64/Debug/libprotobufd.lib")
+RUNTIME_COMPILER_LINKLIBRARY("C:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/lib/x64/v120/libglog.lib")
+#else
+RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/bin/Release/libcaffe.lib")
+RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/lib/Release/proto.lib")
+RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/protobuf/vsprojects/x64/Release/libprotobuf.lib")
+RUNTIME_COMPILER_LINKLIBRARY("C:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/lib/x64/v120/libglog.lib")
+
+#endif
+#define CALL
+  
+#else // Linux
 RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
+#define CALL
+#endif
+
 
 using namespace EagleLib;
 
@@ -11,86 +33,26 @@ IPerModuleInterface* CALL GetModule()
 {
     return PerModuleInterface::GetInstance();
 }
-void CALL setupIncludes()
+void CALL SetupIncludes()
 {
+    EagleLib::NodeManager::getInstance().addIncludeDir("C:/code/EagleEye/EagleLib/include");
+    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/caffe/include");
+    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libs/OpenBLAS/include");
+    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libs/opencv/include");
+    EagleLib::NodeManager::getInstance().addIncludeDir("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v6.5/include");
+    EagleLib::NodeManager::getInstance().addIncludeDir("E:/code/caffe/3rdparty/include/Snappy");
+	EagleLib::NodeManager::getInstance().addIncludeDir("E:/code/caffe/3rdparty/include");
+    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/leveldb/include");
+    EagleLib::NodeManager::getInstance().addIncludeDir("E:/code/caffe/3rdparty/include/lmdb");
+    EagleLib::NodeManager::getInstance().addIncludeDir("E:/code/caffe/3rdparty/include/hdf5");
+    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/caffe/build/include");
+    EagleLib::NodeManager::getInstance().addIncludeDir("C:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/include");
+    EagleLib::NodeManager::getInstance().addIncludeDir("C:/libs/boost_1_57_0");
+    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/caffe/src");
+    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/protobuf/src/");
 
 }
 
-//#include "ros/ros.h"
-//#include <iostream>
-//#include <caffe/caffe.hpp>
-//#include <vector>
-//#include <sstream>
-//using std::string;
-//using caffe::Blob;
-//using caffe::Caffe;
-//using caffe::Datum;
-//using caffe::Net;
-//using caffe::shared_ptr;
-//using caffe::vector;
-//using caffe::MemoryDataLayer;
-
-//void Log(std::string msg) {
-//	std::cout << msg << std::endl;
-//}
-
-//int main(int argc, char **argv) {
-//#ifdef CPU_ONLY:
-//	std::cout<<"CPU_ONLY" << std::endl;
-//    Caffe::set_mode(Caffe::CPU);
-//#endif
-//	ros::init(argc, argv, "ros_caffe_main");
-
-//	std::string model_path = "/home/darrenl/workspace/eclipse_clusplus_workspace/TestCaffe/bvlc_reference_deploy_memorylayer.prototxt";
-//	std::string weights_path = "/home/darrenl/workspace/eclipse_clusplus_workspace/TestCaffe/bvlc_reference_caffenet.caffemodel";
-//	std::string image_path = "/home/darrenl/cat.jpg";
-//	// Use CPU only.
-//	// Initial
-//	Net<float> *caffe_net;
-//	caffe_net = new Net<float>(model_path, caffe::TEST);
-//	caffe_net->CopyTrainedLayersFrom(weights_path);
-//	// Assign datum
-//	Datum datum;
-//	if (!ReadImageToDatum(image_path, 1, 227, 227, &datum)) {
-//		Log("Read Image fail");
-//		return -1;
-//	}
-//	// Use MemoryDataLayer
-//	const boost::shared_ptr<MemoryDataLayer<float> > memory_data_layer =
-//			boost::static_pointer_cast<MemoryDataLayer<float> >(
-//					caffe_net->layer_by_name("data"));
-//	std::vector<Datum> datum_vector;
-//	datum_vector.push_back(datum);
-//	memory_data_layer->AddDatumVector(datum_vector);
-//	std::vector<Blob<float>*> dummy_bottom_vec;
-//	float loss;
-//	const std::vector<Blob<float>*>& result = caffe_net->Forward(
-//			dummy_bottom_vec, &loss);
-//	const std::vector<float> probs = std::vector<float>(result[1]->cpu_data(),
-//			result[1]->cpu_data() + result[1]->count());
-//	// Find the index with max prob
-//	int max_index = -1;
-//	float max_value;
-//	for (int index = 0; index != probs.size(); index++) {
-//		if (index == 0) {
-//			max_index = 0;
-//			max_value = probs[max_index];
-//			continue;
-//		}
-//		// Compare
-//		if (max_value < probs[index]) {
-//			max_value = probs[index];
-//			max_index = index;
-//		}
-//	}
-//	/**
-//	 * Result : Toilet is 861 Cat is 281, etc..
-//	 **/
-//	std::stringstream ss;
-//	ss << "max index: " << max_index;
-//	Log(ss.str());
-//	return 0;
-//}
 namespace EagleLib
 {
 	class CaffeImageClassifier : public Node
@@ -106,7 +68,7 @@ namespace EagleLib
 		virtual void Serialize(ISimpleSerializer* pSerializer);
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-	};
+        };
 }
 void CaffeImageClassifier::Serialize(ISimpleSerializer* pSerializer)
 {
@@ -127,6 +89,7 @@ void CaffeImageClassifier::Init(bool firstInit)
         updateParameter("NN weights file", boost::filesystem::path());
         updateParameter("Label file", boost::filesystem::path());
         updateParameter("Mean file", boost::filesystem::path());
+		updateParameter("Subtraction required", false);
         weightsLoaded = false;
         //labels.reset(new std::vector<std::string>>);
         input_layer = nullptr;

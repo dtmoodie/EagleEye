@@ -32,7 +32,7 @@
 #include "../EagleLib.h"
 #include "../Manager.h"
 
-#include <opencv2/core.hpp>
+
 #include <opencv2/core/cuda.hpp>
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
@@ -60,7 +60,7 @@
 #include <boost/thread.hpp>
 #include <Qualifiers.hpp>
 #include "../Parameters.h"
-
+#include <external_includes/cv_core.hpp>
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 
 #include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
@@ -69,15 +69,13 @@
 #include "../../RuntimeObjectSystem/IObject.h"
 
 #ifdef _MSC_VER
-#define CALL __stdcall
 #ifdef _DEBUG
-RUNTIME_COMPILER_LINKLIBRARY("opencv_core300d.lib")
+	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
 #else
-RUNTIME_COMPILER_LINKLIBRARY("opencv_core300.lib")
+	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
 #endif
 #else
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
-#define CALL
+	RUNTIME_COMPILER_LINKLIBRARY("-lEagleLib")
 #endif
 
 #define CATCH_MACRO                                                         \

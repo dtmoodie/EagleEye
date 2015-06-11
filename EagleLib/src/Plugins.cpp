@@ -25,7 +25,10 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 		std::cout << "GetModule not found in plugin " << fullPluginPath << std::endl;
 		FreeLibrary(handle);
 	}
-		
+	typedef void(*includeFunctor)();
+	includeFunctor functor = (includeFunctor)GetProcAddress(handle, "SetupIncludes");
+	if (functor)
+		functor();
     return true;
 }
 

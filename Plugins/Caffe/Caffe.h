@@ -7,7 +7,7 @@
 extern "C"{
 #endif
     CV_EXPORTS IPerModuleInterface* CALL GetModule();
-    CV_EXPORTS void CALL setupIncludes();
+    CV_EXPORTS void CALL SetupIncludes();
 
 #ifdef __cplusplus
 }
