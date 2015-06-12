@@ -8,9 +8,12 @@ using namespace EagleLib;
 
 void SetDevice::Init(bool firstInit)
 {
-    updateParameter<unsigned int>("Device Number", 0);
-    updateParameter<std::string>("Device name","", Parameter::State);
-    firstRun = true;
+	if (firstInit)
+	{
+		updateParameter<unsigned int>("Device Number", 0);
+		updateParameter<std::string>("Device name", "", Parameter::State);
+		firstRun = true;
+	}    
 }
 
 cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -44,9 +47,9 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
             onUpdate(this);
         cv::cuda::setDevice(device);
         stream = cv::cuda::Stream();
+		return cv::cuda::GpuMat();
     }
-
-    return cv::cuda::GpuMat();
+	return img;
 }
 bool SetDevice::SkipEmpty() const
 {
