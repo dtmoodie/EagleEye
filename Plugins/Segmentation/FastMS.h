@@ -8,10 +8,11 @@ namespace EagleLib
 	class SegmentFastMumfordShah : public Node
 	{
 		cv::cuda::HostMem h_img;
-		Solver solver;
+		boost::shared_ptr<Solver> solver;
 	public:
 		SegmentFastMumfordShah();
 		virtual void Init(bool firstInit);
+		virtual void Serialize(ISimpleSerializer* serializer);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
 	};
 }

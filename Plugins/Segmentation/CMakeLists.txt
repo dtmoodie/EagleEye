@@ -28,6 +28,7 @@ add_dependencies(Segmentation EagleLib)
 target_link_libraries(Segmentation
     EagleLib
     ${OpenCV_LIBS}
+	
 )
 
 set_target_properties(Segmentation PROPERTIES
@@ -37,8 +38,10 @@ set_target_properties(Segmentation PROPERTIES
 )
 IF(TARGET fastms)
     add_dependencies(Segmentation fastms)
-    target_link_libraries(Segmentation fastms)
+    target_link_libraries(Segmentation fastms ${fastms_LIBS})
     add_definitions(-DFASTMS_FOUND)
     add_definitions(-DFASTMS_INCLUDE=${fastms_INCLUDE_DIRECTORIES})
     INCLUDE_DIRECTORIES(${fastms_INCLUDE_DIRECTORIES})
+	message(STATUS "FastMS include: ${fastms_INCLUDE_DIRECTORIES}") 
+
 ENDIF()

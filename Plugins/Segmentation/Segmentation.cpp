@@ -1,11 +1,8 @@
 #include "Segmentation.h"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/cudaimgproc.hpp"
-#include <opencv2/cudaarithm.hpp>
-#include <opencv2/cudalegacy.hpp>
-
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudabgsegm")
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudalegacy")
+#include <external_includes/cv_imgproc.hpp>
+#include <external_includes/cv_cudaimgproc.hpp>
+#include <external_includes/cv_cudaarithm.hpp>
+#include <external_includes/cv_cudalegacy.hpp>
 
 using namespace EagleLib;
 
@@ -376,7 +373,7 @@ cv::cuda::GpuMat SegmentMeanShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
             blank.setTo(cv::Scalar(0), stream);
         }
         std::vector<cv::cuda::GpuMat> channels;
-        channels.push_back(img);
+        cv::cuda::split(img,channels, stream);
         channels.push_back(blank);
         cv::cuda::merge(channels, img, stream);
     }

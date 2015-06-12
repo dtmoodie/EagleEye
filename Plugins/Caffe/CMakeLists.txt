@@ -46,9 +46,14 @@ if(${Caffe_FOUND})
 
 add_library(Caffe SHARED Caffe.h Caffe.cpp)
 add_dependencies(Caffe EagleLib)
+IF(WIN32)
 target_link_libraries(Caffe
     EagleLib
-    ${Caffe_LIBRARIES}
+	debug;E:/libsrc/caffe/build_dev/lib/Debug/libcaffe-d.lib;optimized;E:/libsrc/caffe/build_dev/lib/Release/libcaffe.lib
+	debug;E:/libsrc/caffe/build_dev/lib/Debug/proto-d.lib;optimized;E:/libsrc/caffe/build_dev/lib/Release/proto.lib
+	"E:/code/caffe/3rdparty/lib/gflags.lib"
+	"C:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/lib/x64/v120/libglog.lib"
+	debug;E:/libsrc/protobuf/vsprojects/x64/debug/libprotobufd.lib;optimized;E:/libsrc/protobuf/vsprojects/x64/release/libprotobuf.lib
     ${CUDA_LIBRARIES}
     ${CUDA_CUFFT_LIBRARIES}
     ${CUDA_CUBLAS_LIBRARIES}
@@ -61,6 +66,28 @@ target_link_libraries(Caffe
     ${CUDA_npps_LIBRARY}
 )
 
+
+
+
+
+
+
+ELSE()
+target_link_libraries(Caffe
+    EagleLib
+	${Caffe_LIBRARIES}
+    ${CUDA_LIBRARIES}
+    ${CUDA_CUFFT_LIBRARIES}
+    ${CUDA_CUBLAS_LIBRARIES}
+    ${CUDA_cupti_LIBRARY}
+    ${CUDA_curand_LIBRARY}
+    ${CUDA_cusparse_LIBRARY}
+    ${CUDA_npp_LIBRARY}
+    ${CUDA_nppc_LIBRARY}
+    ${CUDA_nppc_LIBRARY}
+    ${CUDA_npps_LIBRARY}
+)
+ENDIF()
 set_target_properties(Caffe PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
     ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins

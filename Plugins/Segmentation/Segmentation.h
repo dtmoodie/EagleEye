@@ -1,5 +1,5 @@
 #include "nodes/Node.h"
-#include <opencv2/cudabgsegm.hpp>
+#include <external_includes/cv_cudabgsegm.hpp>
 #include "CudaUtils.hpp"
 #include "Segmentation_impl.h"
 
