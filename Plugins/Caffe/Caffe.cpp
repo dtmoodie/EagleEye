@@ -35,6 +35,7 @@ IPerModuleInterface* CALL GetModule()
 }
 void CALL SetupIncludes()
 {
+#ifdef _MSC_VER
     EagleLib::NodeManager::getInstance().addIncludeDir("C:/code/EagleEye/EagleLib/include");
     EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/caffe/include");
     EagleLib::NodeManager::getInstance().addIncludeDir("E:/libs/OpenBLAS/include");
@@ -50,6 +51,7 @@ void CALL SetupIncludes()
     EagleLib::NodeManager::getInstance().addIncludeDir("C:/libs/boost_1_57_0");
     EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/caffe/src");
     EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/protobuf/src/");
+#endif
 
 }
 
@@ -82,7 +84,7 @@ void CaffeImageClassifier::Serialize(ISimpleSerializer* pSerializer)
 void CaffeImageClassifier::Init(bool firstInit)
 {
     //std::cout << caffe::LayerRegistry<float>::LayerTypeList() << std::endl;
-
+    caffe::Caffe::set_mode(caffe::Caffe::GPU);
     if(firstInit)
     {
         updateParameter("NN model file", boost::filesystem::path());
