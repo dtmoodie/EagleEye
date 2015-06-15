@@ -35,7 +35,7 @@
 extern "C"{
 #endif
 
-    CV_EXPORTS IPerModuleInterface* CALL GetModule();
+    CV_EXPORTS IPerModuleInterface* GetModule();
 
 #ifdef __cplusplus
 }

@@ -30,7 +30,7 @@
 #include <map>
 
 using namespace EagleLib;
-IPerModuleInterface* CALL GetModule()
+IPerModuleInterface* GetModule()
 {
     return PerModuleInterface::GetInstance();
 }

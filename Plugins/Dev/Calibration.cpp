@@ -11,7 +11,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaimgproc")
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaarithm")
 
 using namespace EagleLib;
-IPerModuleInterface* CALL GetModule()
+IPerModuleInterface* GetModule()
 {
     return PerModuleInterface::GetInstance();
 }

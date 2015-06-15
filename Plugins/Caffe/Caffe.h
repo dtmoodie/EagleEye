@@ -6,8 +6,8 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
-    CV_EXPORTS IPerModuleInterface* CALL GetModule();
-    CV_EXPORTS void CALL SetupIncludes();
+    CV_EXPORTS IPerModuleInterface* GetModule();
+    CV_EXPORTS void SetupIncludes();
 
 #ifdef __cplusplus
 }
