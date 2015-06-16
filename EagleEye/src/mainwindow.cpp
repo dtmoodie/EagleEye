@@ -86,10 +86,14 @@ MainWindow::MainWindow(QWidget *parent) :
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
     EagleLib::NodeManager::getInstance().setCompileCallback(f);
     QDir dir(QDir::currentPath());
-    dir.cd("Plugins");
+    
 #ifdef _MSC_VER
-	QFileInfoList files = dir.entryInfoList(QStringList("lib*.dll"));
+	auto str = dir.absolutePath();
+	dir.cd("../Bin/Plugins/Plugins/Debug");
+	str = dir.absolutePath();
+	QFileInfoList files = dir.entryInfoList(QStringList("*.dll"));
 #else
+	dir.cd("Plugins");
     QFileInfoList files = dir.entryInfoList(QStringList("lib*.so"));
 #endif
     for(int i = 0; i < files.size(); ++i)
