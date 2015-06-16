@@ -1,7 +1,7 @@
 #include "nodes/IO/ImageLoader.h"
-#include <opencv2/imgcodecs.hpp>
+#include <external_includes/cv_imgcodec.hpp>
 using namespace EagleLib;
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_imgcodecs")
+
 
 
 void ImageLoader::Init(bool firstInit)
