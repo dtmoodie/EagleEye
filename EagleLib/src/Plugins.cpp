@@ -56,6 +56,11 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
     if(module == nullptr)
         return false;
     NodeManager::getInstance().setupModule(module());
+    typedef void(*includeFunctor)();
+    includeFunctor functor = (includeFunctor)dlsym(handle, "SetupIncludes");
+    if(functor)
+        functor();
+
     return true;
 }
 
