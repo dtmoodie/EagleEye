@@ -1,5 +1,6 @@
 #pragma once
 #include <opencv2/highgui.hpp>
+#include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #if _WIN32
 #if _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("opencv_highgui300d.lib")
