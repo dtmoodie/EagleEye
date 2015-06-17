@@ -8,6 +8,8 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(OGLImageDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyPointDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FlowVectorDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramDisplay)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(DetectionDisplay)
+
 QtImageDisplay::QtImageDisplay(boost::function<void(cv::Mat, Node*)> cpuCallback_)
 {
     cpuDisplayCallback = cpuCallback_;
@@ -351,5 +353,49 @@ cv::cuda::GpuMat HistogramDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
         stream.enqueueHostCallback(histogramDisplayCallback,this);
     }
     // Currently assuming the input image is a histogram
+    return img;
+}
+void DetectionDisplay_callback(int status, void* data)
+{
+    DetectionDisplay* node = static_cast<DetectionDisplay*>(data);
+    node->displayCallback();
+}
+
+void DetectionDisplay::displayCallback()
+{
+    std::pair<cv::cuda::HostMem, std::vector<DetectedObject>>* data = hostData.getBack();
+    cv::Mat h_img = data->first.createMatHeader();
+    for(int i = 0; i < data->second.size(); ++i)
+    {
+        cv::rectangle(h_img, data->second[i].boundingBox, cv::Scalar(0,255,0), 1);
+        for(int j = 0; j < data->second[i].detections.size(); ++j)
+        {
+            std::stringstream ss;
+            ss << data->second[i].detections[j].classNumber << ":" << data->second[i].detections[j].confidence << " " << data->second[i].detections[j].label;
+            cv::Point pos = data->second[i].boundingBox.tl() + cv::Point(0, -10);
+            if(pos.x < 0)
+                pos.x = 5;
+            if(pos.x > h_img.cols - 100)
+                pos.x = h_img.cols - 100;
+            if(pos.y < 0)
+                pos.y = 5;
+            if(pos.y > h_img.rows - 100)
+                pos.y = h_img.rows - 100;
+        }
+    }
+    UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
+}
+
+void DetectionDisplay::Init(bool firstInit)
+{
+    addInputParameter<DetectedObject>("Input detections");
+}
+
+cv::cuda::GpuMat DetectionDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+    auto buf = hostData.getFront();
+    img.download(buf->first, stream);
+
+    stream.enqueueHostCallback(DetectionDisplay_callback, this);
     return img;
 }

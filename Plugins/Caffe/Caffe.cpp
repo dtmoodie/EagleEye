@@ -5,6 +5,9 @@
 #include <external_includes/cv_cudawarping.hpp>
 #include <Manager.h>
 #include "caffe/caffe.hpp"
+#include <boost/tokenizer.hpp>
+#include <ObjectDetection.hpp>
+#include <string>
 #ifdef _MSC_VER // Windows
 
 #ifdef _DEBUG
@@ -51,8 +54,51 @@ void CALL SetupIncludes()
     EagleLib::NodeManager::getInstance().addIncludeDir("C:/libs/boost_1_57_0");
     EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/caffe/src");
     EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/protobuf/src/");
+#else
+#ifdef CAFFE_INCLUDES
+    std::string text(CAFFE_INCLUDES);
+    boost::char_separator<char> sep(",");
+    boost::tokenizer< boost::char_separator<char> > tokens(text, sep);
+
+    for(auto itr = tokens.begin();itr != tokens.end(); ++itr)
+    {
+        EagleLib::NodeManager::getInstance().addIncludeDir(*itr);
+    }
+#endif // CAFFE_INCLUDES
+
 #endif
 
+}
+template <typename T>
+std::vector<size_t> sort_indexes(const std::vector<T> &v) {
+
+  // initialize original index locations
+  std::vector<size_t> idx(v.size());
+  for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
+
+  // sort indexes based on comparing values in v
+  std::sort(idx.begin(), idx.end(),
+       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+
+  return idx;
+}
+
+
+template <typename T>
+std::vector<size_t> sort_indexes(const T* begin, size_t size) {
+
+  // initialize original index locations
+  std::vector<size_t> idx(size);
+  for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
+
+  // sort indexes based on comparing values in v
+  std::sort(idx.begin(), idx.end(), [&begin](size_t i1, size_t i2) {return begin[i1] < begin[i2];});
+
+  return idx;
+}
+template <typename T>
+std::vector<size_t> sort_indexes(const T* begin, const T* end) {
+    return sort_indexes<T>(begin, end - begin);
 }
 
 namespace EagleLib
@@ -63,15 +109,55 @@ namespace EagleLib
         boost::shared_ptr<caffe::Net<float>> NN;
         bool weightsLoaded;
         boost::shared_ptr< std::vector< std::string > > labels;
-        std::vector<cv::cuda::GpuMat> wrappedChannels;
+        std::vector<std::vector<cv::cuda::GpuMat>> wrappedInputs;
         cv::Scalar channel_mean;
 	public:
 		CaffeImageClassifier();
 		virtual void Serialize(ISimpleSerializer* pSerializer);
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+        virtual void WrapInput();
         };
 }
+
+void CaffeImageClassifier::WrapInput()
+{
+    if(NN == nullptr)
+    {
+        log(Error,"Neural network not defined");
+        return;
+    }
+    if(NN->num_inputs() == 0)
+        return;
+
+    input_layer = NN->input_blobs()[0];
+
+    std::stringstream ss;
+    ss << "Architecture loaded, num inputs: " << NN->num_inputs();
+    ss << " num outputs: " << NN->num_outputs();
+    input_layer = NN->input_blobs()[0];
+    ss << " input batch size: " << input_layer->num();
+    ss << " input channels: " << input_layer->channels();
+    ss << " input size: (" << input_layer->width() << ", " << input_layer->height() << ")";
+    float* input_data = input_layer->mutable_gpu_data();
+
+    int width = input_layer->width();
+    int height = input_layer->height();
+
+    for(int j = 0; j < input_layer->num(); ++j)
+    {
+        std::vector<cv::cuda::GpuMat> wrappedChannels;
+        for(int i = 0; i < input_layer->channels(); ++i)
+        {
+            cv::cuda::GpuMat channel(height, width, CV_32FC1, input_data);
+            wrappedChannels.push_back(channel);
+            input_data += height*width;
+        }
+        wrappedInputs.push_back(wrappedChannels);
+    }
+
+}
+
 void CaffeImageClassifier::Serialize(ISimpleSerializer* pSerializer)
 {
     Node::Serialize(pSerializer);
@@ -92,8 +178,9 @@ void CaffeImageClassifier::Init(bool firstInit)
         updateParameter("Label file", boost::filesystem::path());
         updateParameter("Mean file", boost::filesystem::path());
 		updateParameter("Subtraction required", false);
+        updateParameter("Num classifications", 5);
+        addInputParameter<std::vector<cv::Rect>>("Bounding boxes");
         weightsLoaded = false;
-        //labels.reset(new std::vector<std::string>>);
         input_layer = nullptr;
     }
 }
@@ -106,22 +193,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         if(boost::filesystem::exists(path))
         {
             NN.reset(new caffe::Net<float>(path.string(), caffe::TEST));
-            std::stringstream ss;
-            ss << "Architecture loaded, num inputs: " << NN->num_inputs();
-            ss << " num outputs: " << NN->num_outputs();
-            input_layer = NN->input_blobs()[0];
-            ss << " input channels: " << input_layer->channels();
-            ss << " input size: (" << input_layer->width() << ", " << input_layer->height() << ")";
-            float* input_data = input_layer->mutable_gpu_data();
-            int width = input_layer->width();
-            int height = input_layer->height();
-            for(int i = 0; i < input_layer->channels(); ++i)
-            {
-                cv::cuda::GpuMat channel(height, width, CV_32FC1, input_data);
-                wrappedChannels.push_back(channel);
-                input_data += height*width;
-            }
-            log(Status, ss.str());
+            WrapInput();
             parameters[0]->changed = false;
         }else
         {
@@ -200,7 +272,8 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
                     /* The format of the mean file is planar 32-bit float BGR or grayscale. */
                     std::vector<cv::Mat> channels;
                     float* data = mean_blob.mutable_cpu_data();
-                    for (int i = 0; i < input_layer->channels(); ++i) {
+                    for (int i = 0; i < input_layer->channels(); ++i)
+                    {
                       /* Extract an individual channel. */
                       cv::Mat channel(mean_blob.height(), mean_blob.width(), CV_32FC1, data);
                       channels.push_back(channel);
@@ -232,6 +305,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     if(img.size() != cv::Size(input_layer->width(), input_layer->height()))
     {
         cv::cuda::resize(img,img,cv::Size(input_layer->width(), input_layer->height()), 0, 0, cv::INTER_LINEAR, stream);
+        log(Warning, "Resize required");
     }
     if(img.depth() != CV_32F)
     {
@@ -241,23 +315,27 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     {
         cv::cuda::subtract(img, channel_mean, img, cv::noArray(), -1, stream);
     }
-    cv::cuda::split(img,wrappedChannels,stream);
+    std::vector<cv::Rect> defaultROI;
+    defaultROI.push_back(cv::Rect(cv::Point(), img.size()));
+    std::vector<cv::Rect>* inputROIs = getParameter<std::vector<cv::Rect>*>("Bounding boxes")->data;
+    if(inputROIs == nullptr)
+    {
+        inputROIs = &defaultROI;
+    }
+
+    if(inputROIs->size() > wrappedInputs.size())
+    {
+        log(Warning, "Too many input Regions of interest to handle in one pass, this network can only handle " + boost::lexical_cast<std::string>(wrappedInputs.size()) + " inputs at a time");
+    }
+    for(int i = 0; i < inputROIs->size() && i < wrappedInputs.size(); ++i)
+    {
+        cv::cuda::split(img((*inputROIs)[i]), wrappedInputs[i], stream);
+    }
     // Check if channels are still wrapping correctly
-    if(input_layer->gpu_data() != reinterpret_cast<float*>(wrappedChannels[0].data))
+    if(input_layer->gpu_data() != reinterpret_cast<float*>(wrappedInputs[0][0].data))
     {
         log(Error, "Gpu mat not wrapping input blob!");
-        wrappedChannels.clear();
-        float* input_data = input_layer->mutable_gpu_data();
-        int width = input_layer->width();
-        int height = input_layer->height();
-        for(int i = 0; i < input_layer->channels(); ++i)
-        {
-            cv::cuda::GpuMat channel(height, width, CV_32FC1, input_data);
-            wrappedChannels.push_back(channel);
-            input_data += height*width;
-        }
-
-        return img;
+        WrapInput();
     }
 
     stream.waitForCompletion();
@@ -269,8 +347,27 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     NN->ForwardPrefilled(&loss);
     TIME
     caffe::Blob<float>* output_layer = NN->output_blobs()[0];
+
     const float* begin = output_layer->cpu_data();
-    const float* end = begin + output_layer->channels();
+    const float* end = begin + output_layer->channels()*output_layer->num();
+    int numClassifications = getParameter<int>("Num classifications")->data;
+    std::vector<DetectedObject> objects(std::min(inputROIs->size(), wrappedInputs.size()));
+    for(int i = 0; i < inputROIs->size() && i < wrappedInputs.size(); ++i)
+    {
+        auto idx = sort_indexes(begin + i * output_layer->channels(), (size_t)output_layer->channels());
+        objects[i].detections.resize(numClassifications);
+        for(int j = 0; j < numClassifications; ++j)
+        {
+            objects[i].detections[j].confidence = (begin + i * output_layer->channels())[idx[j]];
+            objects[i].detections[j].classNumber = idx[j];
+            if(labels && idx[j] < labels->size())
+            {
+                objects[i].detections[j].label = (*labels)[idx[j]];
+            }
+        }
+        objects[i].boundingBox = (*inputROIs)[i];
+    }
+    updateParameter("Detections", objects, Parameter::Output);
     auto maxvalue = std::max_element(begin, end);
     TIME
     int idx = maxvalue - begin;

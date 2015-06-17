@@ -2,6 +2,7 @@
 
 #include <opencv2/highgui.hpp>
 #include <CudaUtils.hpp>
+#include <ObjectDetection.hpp>
 
 namespace EagleLib
 {
@@ -66,4 +67,14 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
+    class DetectionDisplay: public Node
+    {
+    public:
+        ConstBuffer<std::pair<cv::cuda::HostMem, std::vector<DetectedObject>>> hostData;
+        void displayCallback();
+        DetectionDisplay();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+    };
+
 }

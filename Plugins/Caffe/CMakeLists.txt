@@ -8,11 +8,12 @@ include_directories(
  ${Caffe_INCLUDE_DIRS}
  ${EagleLib_INCLUDE_DIRECTORIES}
 )
+STRING(REPLACE ";" "," Caffe_INCLUDE_DIRS_ "${Caffe_INCLUDE_DIRS}")
 
 message(STATUS
 " ===================== Caffe Plugin ========================
   Caffe found: ${Caffe_FOUND}
-  Caffe Include: ${Caffe_INCLUDE_DIRS}
+  Caffe Include: ${Caffe_INCLUDE_DIRS_}
 
   Caffe libs: ${Caffe_LIBRARIES}
 
@@ -79,6 +80,9 @@ target_link_libraries(Caffe
     ${CUDA_nppc_LIBRARY}
     ${CUDA_npps_LIBRARY}
 )
+
+
+add_definitions(-DCAFFE_INCLUDES="${Caffe_INCLUDE_DIRS_}")
 ENDIF(WIN32)
 
 set_target_properties(Caffe PROPERTIES
