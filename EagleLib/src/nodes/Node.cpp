@@ -727,18 +727,6 @@ void Node::log(Verbosity level, const std::string &msg)
         break;
     }
 }
-EventLoopNode::EventLoopNode():
-    Node()
-{
 
-}
-
-cv::cuda::GpuMat
-EventLoopNode::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    service.run();
-    return Node::process(img);
-}
 
 REGISTERCLASS(Node)
-REGISTERCLASS(EventLoopNode)

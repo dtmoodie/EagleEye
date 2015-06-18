@@ -193,6 +193,12 @@ NodeManager::~NodeManager()
 void NodeManager::addIncludeDir(const std::string& dir)
 {
     m_pRuntimeObjectSystem->AddIncludeDir(dir.c_str());
+
+}
+void NodeManager::addSourceFile(const std::string &file)
+{
+    m_pRuntimeObjectSystem->AddToRuntimeFileList(file.c_str());
+
 }
 
 bool
@@ -236,6 +242,7 @@ NodeManager::Init()
     //m_pRuntimeObjectSystem->AddLibraryDir(PCL_LIB_DIR);
     m_pRuntimeObjectSystem->AddIncludeDir(PCL_INCLUDES);
 #endif
+    m_pRuntimeObjectSystem->SetCompilerLocation("/usr/local/cuda/bin/nvcc");
 	return true;
 }
 

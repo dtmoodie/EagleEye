@@ -136,7 +136,8 @@ void Compiler::RunCompile( const std::vector<FileSystemUtils::Path>&	filesToComp
     const char* pLinkOptions = compilerOptions_.linkOptions.c_str();
 
     std::string compilerLocation = compilerOptions_.compilerLocation.m_string;
-    if (compilerLocation.size()==0){
+    if (compilerLocation.size()==0)
+    {
 #ifdef __clang__
         compilerLocation = "clang++ ";
 #else // default to g++
@@ -198,7 +199,7 @@ void Compiler::RunCompile( const std::vector<FileSystemUtils::Path>&	filesToComp
     close( m_pImplData->m_PipeStdErr[0] );
     m_pImplData->m_PipeStdErr[0] = 0;
 
-	std::string compileString = compilerLocation + " " + "-g -fPIC -fvisibility=hidden -shared ";
+    std::string compileString = compilerLocation + " " + "-g --compiler-options '-fPIC -fvisibility=hidden -shared' ";
 
 #ifndef __LP64__
 	compileString += "-m32 ";
@@ -229,8 +230,9 @@ void Compiler::RunCompile( const std::vector<FileSystemUtils::Path>&	filesToComp
     // library and framework directories
     for( size_t i = 0; i < libraryDirList.size(); ++i )
 	{
+
         compileString += "-L\"" + libraryDirList[i].m_string + "\" ";
-        compileString += "-F\"" + libraryDirList[i].m_string + "\" ";
+        //compileString += "-F\"" + libraryDirList[i].m_string + "\" ";
     }
     
     // output file

@@ -34,28 +34,29 @@
 
 
 #include <opencv2/core/cuda.hpp>
-#include <boost/asio.hpp>
+//#include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/signals2.hpp>
-#include <boost/thread/future.hpp> 
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/random_access_index.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/member.hpp>
-#include <boost/multi_index/mem_fun.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/mpl/string.hpp>
+//#include <boost/thread/future.hpp>
+//#include <boost/multi_index_container.hpp>
+//#include <boost/multi_index/random_access_index.hpp>
+//#include <boost/multi_index/hashed_index.hpp>
+//#include <boost/multi_index/member.hpp>
+//#include <boost/multi_index/mem_fun.hpp>
+//#include <boost/property_tree/ptree.hpp>
+//#include <boost/mpl/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/rolling_mean.hpp>
+#include <boost/filesystem.hpp>
 #include <vector>
 #include <list>
 #include <map>
 #include <type_traits>
-#include <boost/filesystem.hpp>
+
 #include "../LokiTypeInfo.h"
 #include <boost/thread.hpp>
 #include <Qualifiers.hpp>
@@ -788,17 +789,6 @@ namespace EagleLib
         Node*                                                               parent;
         boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
         ConstBuffer<cv::cuda::GpuMat>                                       childResults;
-    };
-    /**
-     * @brief The EventLoopNode class depricated?
-     */
-    class CV_EXPORTS EventLoopNode: public Node
-    {
-    protected:
-        boost::asio::io_service service;
-    public:
-        EventLoopNode();
-        virtual cv::cuda::GpuMat process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 
 }
