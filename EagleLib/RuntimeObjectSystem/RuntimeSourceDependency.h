@@ -25,7 +25,7 @@
 //requires use of __COUNTER__ predefined macro, which is in gcc 4.3+, clang/llvm and MSVC
 
 #ifndef RCCPPOFF
-
+#include <vector>
 struct IRuntimeSourceDependencyList
 {
 	IRuntimeSourceDependencyList( size_t max ) : MaxNum( max )
@@ -38,6 +38,26 @@ struct IRuntimeSourceDependencyList
 		return 0;
 	}
 	size_t MaxNum; // initialized in constructor below
+};
+
+struct RuntimeSourceDependencyList_: public IRuntimeSourceDependencyList
+{
+    virtual const char* GetSourceDependency(size_t Num_) const
+    {
+        if(Num_ < sourceFiles.size())
+        {
+            return sourceFiles[Num_];
+        }
+        return 0;
+    }
+    virtual void addSourceDependency(const char* file)
+    {
+        sourceFiles.push_back(file);
+        MaxNum = sourceFiles.size();
+    }
+
+private:
+    std::vector<const char*> sourceFiles;
 };
 
 
@@ -80,6 +100,7 @@ template<> struct RuntimeSourceDependency<0> : public IRuntimeSourceDependencyLi
 
 
 
+
 #define RUNTIME_COMPILER_SOURCEDEPENDENCY_BASE( SOURCEFILE, N ) \
 	template<> struct RuntimeSourceDependency< N + 1 >  : public RuntimeSourceDependency< N >\
 	{ \
@@ -102,7 +123,7 @@ template<> struct RuntimeSourceDependency<0> : public IRuntimeSourceDependencyLi
 // The RUNTIME_COMPILER_SOURCEDEPENDENCY macro will return the name of the current file, which should be a header file.
 // The runtime system will strip off the extension and add .cpp
 #define RUNTIME_COMPILER_SOURCEDEPENDENCY namespace { RUNTIME_COMPILER_SOURCEDEPENDENCY_BASE( __FILE__, __COUNTER__ ) }
-
+#define RUNTIME_COMPILER_ADDITIONAL_SOURCE_DEPENDENCY( filename )     namespace { RUNTIME_COMPILER_SOURCEDEPENDENCY_BASE( filename, __COUNTER__ ) }
 }
 #else
 #define RUNTIME_COMPILER_SOURCEDEPENDENCY

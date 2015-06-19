@@ -386,6 +386,7 @@ private:
 	PerTypeObjectId m_Id;
 	static TObjectConstructorConcrete<TActual> m_Constructor;
 };
+
 #ifndef RCCPPOFF
 	#define REGISTERBASE( T, bIsSingleton, bIsAutoConstructSingleton )	\
         static RuntimeIncludeFiles< __COUNTER__ >       g_includeFileList_##T; \
@@ -400,6 +401,7 @@ private:
 	template<> const char* TActual< T >::GetTypeNameStatic() { return #T; } \
 	template class TActual< T >;
 #endif
+
 
 //NOTE: the file macro will only emit the full path if /FC option is used in visual studio or /ZI (Which forces /FC)
 #define REGISTERCLASS( T )	REGISTERBASE( T, false, false )
