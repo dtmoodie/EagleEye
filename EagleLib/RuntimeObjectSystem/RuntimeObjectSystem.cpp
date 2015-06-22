@@ -553,6 +553,22 @@ void RuntimeObjectSystem::SetupRuntimeFileTracking(const IAUDynArray<IObjectCons
                 pathInc = FindFile( pathInc.GetCleanPath() );
                 FileSystemUtils::Path pathSrc = pathInc;
                 // Don't strip path of cuda source dependencies
+				
+				if (pathSrc.m_string[pathSrc.m_string.size() - 1] == '#')
+				{
+					auto idx = pathSrc.m_string.find_first_of('#');
+					auto base = pathSrc.m_string.substr(0, idx);
+					auto file = pathSrc.m_string.substr(idx);
+					file = file.substr(1, file.size() - 2);
+#ifdef _MSC_VER
+					idx = base.find_last_of('\\');
+#else
+					idx = base.find_last_of('/');
+#endif
+					base = base.substr(0, idx);
+					pathSrc.m_string = base + "\\" + file;
+
+				}
                 if(pathSrc.Extension() == ".cu" || pathSrc.Extension() == ".cuh")
                 {
 

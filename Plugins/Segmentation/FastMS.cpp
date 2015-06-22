@@ -35,6 +35,7 @@ cv::cuda::GpuMat SegmentFastMumfordShah::doProcess(cv::cuda::GpuMat& img, cv::cu
 	param.adapt_params = getParameter<bool>(6)->data;
 	param.weight = getParameter<bool>(7)->data;
 	param.edges = getParameter<bool>(8)->data;
+	stream.waitForCompletion();
 	cv::Mat result = solver->run(h_img.createMatHeader(), param);
 	img.upload(result, stream);
 	return img;

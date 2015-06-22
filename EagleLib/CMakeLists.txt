@@ -6,12 +6,6 @@ set(OPENCV_STATIC OFF)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
 find_package(CUDA REQUIRED)
 find_package(Qt5 REQUIRED Core)
-find_package(PCL COMPONENTS COMMON)
-if(${PCL_FOUND})
-message(STATUS
-"Found PCL, looking for Eigen")
-find_package(Eigen3)
-endif()
 cmake_policy(SET CMP0012 NEW)
 IF(WIN32)
 	set(Boost_USE_STATIC_LIBS        ON)
@@ -64,20 +58,21 @@ ADD_DEFINITIONS( -DOPENCV_INCLUDES="${OpenCV_INCLUDE_DIR}")
 ADD_DEFINITIONS( -DOPENCV_LIB_DIR="${CV_LIB_DIR}") 
 ADD_DEFINITIONS( -DCUDA_INCLUDES="${CUDA_INCLUDE_DIRS}" )
 ADD_DEFINITIONS( -DCUDA_LIB_DIR="${CUDA_TOOLKIT_ROOT_DIR}/lib64")
-IF(${PCL_FOUND})
-ADD_DEFINITIONS( -DHAVE_PCL )
-ADD_DEFINITIONS( -DPCL_INCLUDES="${PCL_INCLUDE_DIRS}")
-ADD_DEFINITIONS( -DPCL_LIB_DIR="${PCL_LIBRARY_DIRS}")
-ENDIF()
+
+
+IF(WIN32)
+ ADD_DEFINITIONS( -DNVCC_PATH="${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc.exe")
+ ADD_DEFINITIONS( -DBINARY_DIR="${CMAKE_BINARY_DIR}/Debug")
+ SET(CUDA_DEVRT ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/cudadevrt.lib)
+ELSE(WIN32)
+ ADD_DEFINITIONS( -DNVCC_PATH="${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc")
+ ADD_DEFINITIONS( -DBINARY_DIR="${CMAKE_BINARY_DIR}/Bin")
+ SET(CUDA_DEVRT ${CUDA_TOOLKIT_ROOT_DIR}/lib64/cudadevrt)
+ENDIF(WIN32)
+
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 
-IF(WIN32)
-ADD_DEFINITIONS( -DBINARY_DIR="${CMAKE_BINARY_DIR}/Debug")
-ELSE()
-ADD_DEFINITIONS( -DBINARY_DIR="${CMAKE_BINARY_DIR}/Bin")
-
-ENDIF(WIN32)
 SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 
 # Reporting section
@@ -92,7 +87,9 @@ message(STATUS
     Boost library dir: ${Boost_LIBRARY_DIRS}
     OpenCV library dir: ${CV_LIB_DIR}
     Cuda include dir: ${CUDA_INCLUDE_DIRS}
+	NVCC: ${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc
     Cuda RT libs: ${CUDA_LIBRARIES}
+	Cuda Dev RT libs: ${CUDA_DEVRT}
     Cuda root dir: ${CUDA_TOOLKIT_ROOT_DIR}
     Binary Dir: ${CMAKE_BINARY_DIR}
 
@@ -101,6 +98,7 @@ message(STATUS
     PCL_found: ${PCL_FOUND}
     PCL_LIB_DIR: ${PCL_LIBRARY_DIRS}
     Eigen inc: ${EIGEN3_INCLUDE_DIR}
+
 ************* FILES ***********************
 
 ============= Headers ==================
@@ -117,13 +115,13 @@ ${knl}
 =====================================")
 
 
-set(EagleLib_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
+set(EagleLib_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS}" PARENT_SCOPE)
 
 if(WIN32)
     if(CMAKE_BUILD_TYPE EQUAL "Debug")
-        set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_DEBUG_POSTFIX}.lib PARENT_SCOPE)
+        set(EagleLib_LIBRARIES "${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_DEBUG_POSTFIX}.lib;${Boost_LIBRARIES}" PARENT_SCOPE)
     else()
-        set(EagleLib_LIBRARIES ${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_RELEASE_POSTFIX}.lib PARENT_SCOPE)
+        set(EagleLib_LIBRARIES "${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_RELEASE_POSTFIX}.lib;${Boost_LIBRARIES}" PARENT_SCOPE)
     endif(CMAKE_BUILD_TYPE EQUAL "Debug")
 endif(WIN32)
 

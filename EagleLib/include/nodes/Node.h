@@ -127,14 +127,16 @@ namespace EagleLib
 
 	enum NodeType
 	{
-		eVirtual		= 0,	/* This is a virtual node, it should only be inherited */
-		eGPU			= 1,	/* This node processes on the GPU, if this flag isn't set it processes on the CPU*/
-		eImg			= 2,	/* This node processes images */
-		ePtCloud		= 4,	/* This node processes point cloud data */
-		eProcessing		= 8,	/* Calling the doProcess function actually does something */
-		eFunctor		= 16,   /* Calling doProcess doesn't do anything, instead this node presents a function to be used in another node */
-		eObj			= 32,	/* Calling doProcess doesn't do anything, instead this node presents a object that can be used in another node */
-		eOneShot		= 64	/* Calling doProcess does something, but should only be called once.  Maybe as a setup? */
+		eVirtual		= 1,	/* This is a virtual node, it should only be inherited */
+		eGPU			= 2,	/* This node processes on the GPU, if this flag isn't set it processes on the CPU*/
+		eImg			= 4,	/* This node processes images */
+		ePtCloud		= 8,	/* This node processes point cloud data */
+		eProcessing		= 16,	/* Calling the doProcess function actually does something */
+		eFunctor		= 32,   /* Calling doProcess doesn't do anything, instead this node presents a function to be used in another node */
+		eObj			= 64,	/* Calling doProcess doesn't do anything, instead this node presents a object that can be used in another node */
+		eOneShot		= 128,	/* Calling doProcess does something, but should only be called once.  Maybe as a setup? */
+		eSource         = 256,  /* this node generates data*/
+		eSink           = 512   /* This node accepts and saves data */
     };
     enum Verbosity
     {
@@ -781,6 +783,7 @@ namespace EagleLib
         boost::recursive_mutex                                              mtx;
         boost::shared_ptr<boost::signals2::signal<void(void)>>              onParameterAdded;
         std::vector<std::pair<clock_t, int>> timings;
+		NodeType															nodeType;
     private:
         friend class NodeManager;
         // Depricated, I think

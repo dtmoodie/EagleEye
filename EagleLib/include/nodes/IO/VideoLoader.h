@@ -1,7 +1,6 @@
 #include <nodes/Node.h>
-
-#include <opencv2/cudacodec.hpp>
-#include <opencv2/videoio.hpp>
+#include <external_includes/cv_videoio.hpp>
+#include <external_includes/cv_cudacodec.hpp>
 
 
 namespace EagleLib

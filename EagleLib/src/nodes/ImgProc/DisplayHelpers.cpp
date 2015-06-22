@@ -233,7 +233,10 @@ void QtColormapDisplay::display()
             unsigned short* getPtr = h_img.ptr<unsigned short>(0);
             for(int i = 0; i < h_img.rows*h_img.cols; ++i, ++putPtr, ++ getPtr)
             {
-                *putPtr = LUT[*getPtr];
+				if (*getPtr >= LUT.size())
+					*putPtr = LUT[LUT.size() - 1];
+				else
+					*putPtr = LUT[*getPtr];
             }
             cv::imshow(fullTreeName, colorScaledImage);
         }

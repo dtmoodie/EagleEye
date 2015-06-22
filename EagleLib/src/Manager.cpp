@@ -242,11 +242,14 @@ NodeManager::Init()
     //m_pRuntimeObjectSystem->AddLibraryDir(PCL_LIB_DIR);
     m_pRuntimeObjectSystem->AddIncludeDir(PCL_INCLUDES);
 #endif
-#ifdef _MSC_VER
-	m_pRuntimeObjectSystem->SetCompilerLocation("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v7.0/bin/nvcc.exe");
-	m_pRuntimeObjectSystem->SetAdditionalCompileOptions("-ccbin \"C:/Program Files(x86)/Microsoft Visual Studio 12.0/VC/bin\"");
-#else
-    m_pRuntimeObjectSystem->SetCompilerLocation("/usr/local/cuda/bin/nvcc");
+//#ifdef _MSC_VER
+//	m_pRuntimeObjectSystem->SetCompilerLocation("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v7.0/bin/nvcc.exe");
+//	m_pRuntimeObjectSystem->SetAdditionalCompileOptions("-ccbin \"C:/Program Files(x86)/Microsoft Visual Studio 12.0/VC/bin\"");
+//#else
+//    m_pRuntimeObjectSystem->SetCompilerLocation("/usr/local/cuda/bin/nvcc");
+//#endif
+#ifdef NVCC_PATH
+	m_pRuntimeObjectSystem->SetCompilerLocation( NVCC_PATH );
 #endif
 	return true;
 }

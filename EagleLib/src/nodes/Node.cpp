@@ -36,6 +36,7 @@ Node::Node():
 	externalDisplay = false;
 	drawResults = false;
     parent = nullptr;
+	nodeType = eVirtual;
     onParameterAdded.reset(new boost::signals2::signal<void(void)>);
 }
 

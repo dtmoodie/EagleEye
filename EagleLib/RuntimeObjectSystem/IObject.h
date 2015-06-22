@@ -82,13 +82,13 @@ template< InterfaceID Tiid, typename TSuper> struct TInterface : public TSuper
 class IObjectNotifiable
 {
 protected:
-    friend class IObject;
+    friend struct IObject;
     virtual void updateObject(IObject* ptr) = 0;
 };
 template<typename T> class weak_ptr : public IObjectNotifiable
 {
     T* m_object;
-    friend class IObject;
+    friend struct IObject;
     friend class shared_ptr<T>;
     virtual void updateObject(IObject *ptr)
     {
@@ -181,7 +181,7 @@ template<typename T> class shared_ptr : public IObjectNotifiable
 {
     T* m_object;
     int* refCount;
-    friend class IObject;
+    friend struct IObject;
     template<typename U> friend class weak_ptr;
     template<typename U> friend class shared_ptr;
     virtual void updateObject(IObject *ptr)

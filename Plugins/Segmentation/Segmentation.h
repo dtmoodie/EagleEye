@@ -2,7 +2,7 @@
 #include <external_includes/cv_cudabgsegm.hpp>
 #include "CudaUtils.hpp"
 #include "Segmentation_impl.h"
-
+#include "libfastms/solver/solver.h"
 
 namespace EagleLib
 {
@@ -101,6 +101,20 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
-
+	class SLaT : public Node
+	{
+		cv::cuda::HostMem imageBuffer;
+		cv::Mat lab;
+		cv::Mat smoothed_32f;
+		cv::Mat lab_32f;
+		cv::Mat tensor;
+		cv::Mat labels;
+		cv::Mat centers;
+		boost::shared_ptr<Solver> solver;
+	public:
+		SLaT();
+		virtual void Init(bool firstInit);
+		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+	};
 
 }

@@ -1,5 +1,6 @@
 #include "nodes/IO/ImageWriter.h"
-#include <opencv2/imgcodecs.hpp>
+//#include <opencv2/imgcodecs.hpp>
+#include <external_includes/cv_imgcodec.hpp>
 
 using namespace EagleLib;
 
@@ -29,6 +30,7 @@ void ImageWriter::writeImage()
 
 void ImageWriter::Init(bool firstInit)
 {
+	nodeType = eSink;
     writeRequested = false;
     frameCount = 0;
     frameSkip = 0;
@@ -85,7 +87,7 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
         writeRequested = false;
     }
     ++frameSkip;
-    return img;
+    return img; 
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ImageWriter)

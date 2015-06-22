@@ -17,7 +17,7 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 	}
         
 	typedef IPerModuleInterface* (*moduleFunctor)();
-	moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetModule");
+	moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetPerModuleInterface");
 	if (module)
 		NodeManager::getInstance().setupModule(module());
 	else

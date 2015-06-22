@@ -1,5 +1,6 @@
 #include "nodes/Node.h"
-
+#include <external_includes/cv_cudafeatures3d.hpp>
+#include <external_includes/cv_cudaimgproc.hpp>
 
 namespace EagleLib
 {
@@ -14,6 +15,7 @@ namespace EagleLib
 
     class Canny: public Node
     {
+		cv::Ptr<cv::cuda::CannyEdgeDetector> detector;
     public:
         Canny();
         virtual void Init(bool firstInit);

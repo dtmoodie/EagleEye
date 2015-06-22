@@ -10,7 +10,6 @@
 using namespace EagleLib;
 //#define GPU_DECODE_ENABLED
 
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudacodec -lopencv_videoio")
 VideoLoader::~VideoLoader()
 {
 
@@ -20,6 +19,7 @@ void
 VideoLoader::Init(bool firstInit)
 {
     Node::Init(firstInit);
+	nodeType = eSource;
     if(firstInit)
     {
         updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");

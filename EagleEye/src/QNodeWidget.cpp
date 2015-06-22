@@ -313,7 +313,9 @@ QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Para
     node(node_)
 {
     box = new QComboBox(parent);
-    box->setMaximumWidth(200);
+    //box->setMaximumWidth(200);
+	box->setMinimumWidth(200);
+	box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     parameter = parameter_;
     updateUi();
     parent->connect(box, SIGNAL(currentIndexChanged(int)), parent, SLOT(on_valueChanged(int)));
