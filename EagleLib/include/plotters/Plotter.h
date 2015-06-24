@@ -11,11 +11,6 @@
 // EagleLib only contains the interface for the plotting mechanisms, actual implementations will be handled inside of
 // the plotting plugin
 
-
-
-
-
-
 class QCustomPlot;
 class QWidget;
 

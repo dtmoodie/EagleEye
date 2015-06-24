@@ -320,6 +320,18 @@ struct IObject
         }
     }
 
+	virtual void GetInterface(InterfaceID iid, void** pReturn)
+	{
+		switch (iid)
+		{
+		case IID_IOBJECT:
+			*pReturn = this;
+			break;
+		default:
+			*pReturn = NULL;
+		}
+	}
+
     template< typename T> void GetInterface( T** pReturn )
     {
         GetInterface( T::s_interfaceID, (void**)pReturn );

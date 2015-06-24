@@ -228,7 +228,7 @@ NodeManager::Init()
 	includePath += "/include";
 #endif
     m_pRuntimeObjectSystem->AddIncludeDir(includePath.c_str());
-	m_pRuntimeObjectSystem->AddIncludeDir(BOOST_INCLUDES);
+	/*m_pRuntimeObjectSystem->AddIncludeDir(BOOST_INCLUDES);
 	m_pRuntimeObjectSystem->AddIncludeDir(OPENCV_INCLUDES);
     m_pRuntimeObjectSystem->AddIncludeDir(CUDA_INCLUDES);
 
@@ -241,7 +241,7 @@ NodeManager::Init()
 #ifdef HAVE_PCL
     //m_pRuntimeObjectSystem->AddLibraryDir(PCL_LIB_DIR);
     m_pRuntimeObjectSystem->AddIncludeDir(PCL_INCLUDES);
-#endif
+#endif*/
 //#ifdef _MSC_VER
 //	m_pRuntimeObjectSystem->SetCompilerLocation("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v7.0/bin/nvcc.exe");
 //	m_pRuntimeObjectSystem->SetAdditionalCompileOptions("-ccbin \"C:/Program Files(x86)/Microsoft Visual Studio 12.0/VC/bin\"");

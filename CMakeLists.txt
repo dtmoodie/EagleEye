@@ -1,11 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(EagleEye)
-if(${CMAKE_BUILD_TYPE})
-message(${CMAKE_BUILD_TYPE})
-else()
-endif(${CMAKE_BUILD_TYPE})
-#set(CMAKE_DEBUG_POSTFIX "d")
+
 set(BUILD_TYPE STATIC)
 
 SET(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/Bin/Plugins" CACHE PATH "Library output path")

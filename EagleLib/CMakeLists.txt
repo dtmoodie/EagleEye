@@ -20,11 +20,12 @@ ENDIF(WIN32)
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 
-include(cmake/ProjectFiles.cmake)
+#include(cmake/ProjectFiles.cmake)
 
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
+
 
 INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
@@ -37,9 +38,7 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
     "${CMAKE_CURRENT_SOURCE_DIR}/RuntimeCompiler"
     "${CMAKE_CURRENT_SOURCE_DIR}/RuntimeObjectSystem"
-    ${PCL_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIR}
-)
+	)
 
 
 
@@ -47,17 +46,29 @@ INCLUDE_DIRECTORIES(
 LIST(GET OpenCV_INCLUDE_DIRS 0 OpenCV_INCLUDE_DIR)
 LIST(GET OpenCV_LIB_DIR 0 CV_LIB_DIR)
 if(${CV_LIB_DIR} MATCHES NOTFOUND)
-message("OpenCV_LIB_DIR not set, attempting to find library dir")
+ message("OpenCV_LIB_DIR not set, attempting to find library dir")
 endif()
 
 
-ADD_DEFINITIONS( -DBOOST_INCLUDES="${Boost_INCLUDE_DIRS}"   )
-ADD_DEFINITIONS( -DBOOST_LIB_DIR="${Boost_LIBRARY_DIRS}")
+#ADD_DEFINITIONS( -DBOOST_INCLUDES="${Boost_INCLUDE_DIRS}"   )
+#ADD_DEFINITIONS( -DBOOST_LIB_DIR="${Boost_LIBRARY_DIRS}")
 
-ADD_DEFINITIONS( -DOPENCV_INCLUDES="${OpenCV_INCLUDE_DIR}")
-ADD_DEFINITIONS( -DOPENCV_LIB_DIR="${CV_LIB_DIR}") 
-ADD_DEFINITIONS( -DCUDA_INCLUDES="${CUDA_INCLUDE_DIRS}" )
-ADD_DEFINITIONS( -DCUDA_LIB_DIR="${CUDA_TOOLKIT_ROOT_DIR}/lib64")
+#ADD_DEFINITIONS( -DOPENCV_INCLUDES="${OpenCV_INCLUDE_DIR}")
+#ADD_DEFINITIONS( -DOPENCV_LIB_DIR="${CV_LIB_DIR}") 
+#ADD_DEFINITIONS( -DCUDA_INCLUDES="${CUDA_INCLUDE_DIRS}" )
+#ADD_DEFINITIONS( -DCUDA_LIB_DIR="${CUDA_TOOLKIT_ROOT_DIR}/lib64")
+
+#
+SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+SET(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIR};${CUDA_INCLUDE_DIRS}")
+
+IF(WIN32)
+	SET(RCC_LIBRARY_DIRS "${Boost_LIBRARY_DIRS};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64")
+ELSE()
+	SET(RCC_LIBRARY_DIRS "${Boost_LIBRARY_DIRS};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib64")
+ENDIF()
+
+ADD_SUBDIRECTORY("RCC")
 
 
 IF(WIN32)
@@ -125,24 +136,23 @@ if(WIN32)
     endif(CMAKE_BUILD_TYPE EQUAL "Debug")
 endif(WIN32)
 
-add_library(RuntimeCompiler
-            STATIC
-            ${RuntimeCompiler_SRCS}
-)
+#add_library(RuntimeCompiler
+#            STATIC
+#            ${RuntimeCompiler_SRCS}
+#)
 
-add_library(RuntimeObjectSystem
-            STATIC
-            ${RuntimeObjectSystem_SRCS}
-)
+#add_library(RuntimeObjectSystem
+#            STATIC
+#            ${RuntimeObjectSystem_SRCS}
+#)
 
 cuda_add_library(EagleLib SHARED
 	${src}  
 	${hdr}
-    ${knl}
+	    ${knl}
 	${RuntimeObjectSystem_SRCS}
 )
 
-TARGET_LINK_LIBRARIES(RuntimeObjectSystem RuntimeCompiler)
 
 TARGET_LINK_LIBRARIES(EagleLib
         ${Boost_LIBRARIES}
@@ -152,6 +162,6 @@ TARGET_LINK_LIBRARIES(EagleLib
 )
 
 if(UNIX)
-    TARGET_LINK_LIBRARIES(RuntimeObjectSystem dl)
+
     TARGET_LINK_LIBRARIES(EagleLib dl)
 endif()
