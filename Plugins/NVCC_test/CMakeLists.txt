@@ -26,6 +26,8 @@ message(STATUS
 "============================ nvcc_test ==================================
   Cuda includes: ${CUDA_INCLUDE_DIRS}
 
+  Cuda libs: ${CUDA_LIBRARIES}
+
 ==========================================================================")
 include_directories(
  ${EagleLib_INCLUDE_DIRECTORIES}
@@ -33,6 +35,8 @@ include_directories(
 )
 IF(WIN32)
 LINK_DIRECTORIES("${CUDA_TOOLKIT_ROOT_DIR}/lib/x64")
+ELSE(WIN32)
+LINK_DIRECTORIES("${CUDA_TOOLKIT_ROOT_DIR}/lib64")
 ENDIF(WIN32)
 
 cuda_add_library(nvcc_test SHARED nvcc_test.cu nvcc_test.h nvcc_test.cpp nvcc_test.cuh)
