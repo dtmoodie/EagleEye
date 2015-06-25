@@ -25,19 +25,15 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
+FILE(GLOB_RECURSE ext_inc "include/external_includes")
 
 
 INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
-    "include"
-    "RuntimeCompiler"
-    "RuntimeObjectSystem"
     ${Qt5Core_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    "${CMAKE_CURRENT_SOURCE_DIR}/RuntimeCompiler"
-    "${CMAKE_CURRENT_SOURCE_DIR}/RuntimeObjectSystem"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
 	)
 
 
@@ -50,14 +46,6 @@ if(${CV_LIB_DIR} MATCHES NOTFOUND)
 endif()
 
 
-#ADD_DEFINITIONS( -DBOOST_INCLUDES="${Boost_INCLUDE_DIRS}"   )
-#ADD_DEFINITIONS( -DBOOST_LIB_DIR="${Boost_LIBRARY_DIRS}")
-
-#ADD_DEFINITIONS( -DOPENCV_INCLUDES="${OpenCV_INCLUDE_DIR}")
-#ADD_DEFINITIONS( -DOPENCV_LIB_DIR="${CV_LIB_DIR}") 
-#ADD_DEFINITIONS( -DCUDA_INCLUDES="${CUDA_INCLUDE_DIRS}" )
-#ADD_DEFINITIONS( -DCUDA_LIB_DIR="${CUDA_TOOLKIT_ROOT_DIR}/lib64")
-
 #
 SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 SET(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIR};${CUDA_INCLUDE_DIRS}")
@@ -69,7 +57,7 @@ ELSE()
 ENDIF()
 
 ADD_SUBDIRECTORY("RCC")
-
+INCLUDE_DIRECTORIES(${RCC_INCLUDE_DIRS})
 
 IF(WIN32)
  ADD_DEFINITIONS( -DNVCC_PATH="${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc.exe")
@@ -136,22 +124,27 @@ if(WIN32)
     endif(CMAKE_BUILD_TYPE EQUAL "Debug")
 endif(WIN32)
 
-#add_library(RuntimeCompiler
-#            STATIC
-#            ${RuntimeCompiler_SRCS}
-#)
+macro(GroupSources curdir)
+file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
+    foreach(child ${children})
+		if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+            GroupSources(${curdir}/${child})
+        else()
+            string(REPLACE "/" "\\" groupname ${curdir})
+            source_group(${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+        endif()
+   endforeach()
+endmacro()
 
-#add_library(RuntimeObjectSystem
-#            STATIC
-#            ${RuntimeObjectSystem_SRCS}
-#)
-
+GroupSources(include)
+GroupSources(src)
 cuda_add_library(EagleLib SHARED
 	${src}  
 	${hdr}
-	    ${knl}
+	${knl}
 	${RuntimeObjectSystem_SRCS}
 )
+SOURCE_GROUP("Header Files\\External" FILES ${ext_inc})
 
 
 TARGET_LINK_LIBRARIES(EagleLib
@@ -162,6 +155,5 @@ TARGET_LINK_LIBRARIES(EagleLib
 )
 
 if(UNIX)
-
     TARGET_LINK_LIBRARIES(EagleLib dl)
 endif()

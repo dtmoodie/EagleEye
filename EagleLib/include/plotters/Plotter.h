@@ -3,10 +3,10 @@
 #include "Parameters.h"
 
 
-#include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
-#include "../../RuntimeObjectSystem/ObjectInterface.h"
-#include "../../RuntimeObjectSystem/ObjectInterfacePerModule.h"
-#include "../../RuntimeObjectSystem/IObject.h"
+#include "RuntimeLinkLibrary.h"
+#include "ObjectInterface.h"
+#include "ObjectInterfacePerModule.h"
+#include "IObject.h"
 
 // EagleLib only contains the interface for the plotting mechanisms, actual implementations will be handled inside of
 // the plotting plugin

@@ -39,14 +39,6 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/signals2.hpp>
-//#include <boost/thread/future.hpp>
-//#include <boost/multi_index_container.hpp>
-//#include <boost/multi_index/random_access_index.hpp>
-//#include <boost/multi_index/hashed_index.hpp>
-//#include <boost/multi_index/member.hpp>
-//#include <boost/multi_index/mem_fun.hpp>
-//#include <boost/property_tree/ptree.hpp>
-//#include <boost/mpl/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/accumulators.hpp>
@@ -64,10 +56,10 @@
 #include <external_includes/cv_core.hpp>
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 
-#include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
-#include "../../RuntimeObjectSystem/ObjectInterface.h"
-#include "../../RuntimeObjectSystem/ObjectInterfacePerModule.h"
-#include "../../RuntimeObjectSystem/IObject.h"
+#include "RuntimeLinkLibrary.h"
+#include "ObjectInterface.h"
+#include "ObjectInterfacePerModule.h"
+#include "IObject.h"
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
