@@ -15,10 +15,10 @@
 #include <boost/multi_index/mem_fun.hpp>*/
 
 
-#include "../RuntimeObjectSystem/ObjectInterface.h"
-#include "../RuntimeObjectSystem/IObjectFactorySystem.h"
-#include "../RuntimeObjectSystem/IObject.h"
-#include "../RuntimeObjectSystem/IRuntimeObjectSystem.h"
+#include "ObjectInterface.h"
+#include "IObjectFactorySystem.h"
+#include "IObject.h"
+#include "IRuntimeObjectSystem.h"
 
 #include <opencv2/core/cvdef.h>
 

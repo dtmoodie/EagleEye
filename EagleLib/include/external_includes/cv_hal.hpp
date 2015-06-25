@@ -1,6 +1,6 @@
 #pragma once
 #include "opencv2/hal.hpp"
-#include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
+#include "RuntimeLinkLibrary.h"
 #ifdef _MSC_VER // Windows
 
 #ifdef _DEBUG

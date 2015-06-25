@@ -114,7 +114,7 @@ ${knl}
 =====================================")
 
 
-set(EagleLib_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS}" PARENT_SCOPE)
+set(EagleLib_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
 
 if(WIN32)
     if(CMAKE_BUILD_TYPE EQUAL "Debug")

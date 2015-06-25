@@ -1,5 +1,5 @@
 #pragma once
-#include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
+#include "RuntimeLinkLibrary.h"
 #include <opencv2/stitching.hpp>
 #if _WIN32
 #if _DEBUG

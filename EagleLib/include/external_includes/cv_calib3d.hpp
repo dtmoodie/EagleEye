@@ -1,7 +1,7 @@
 
 #pragma once
 #include "opencv2/calib3d.hpp"
-#include "../../RuntimeObjectSystem/RuntimeLinkLibrary.h"
+#include "RuntimeLinkLibrary.h"
 #ifdef _MSC_VER // Windows
 
 #ifdef _DEBUG
