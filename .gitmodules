@@ -1,3 +1,6 @@
 [submodule "EagleLib/RCC"]
 	path = EagleLib/RCC
 	url = https://dtmoodie@github.com/dtmoodie/RuntimeCompiledCPlusPlus
+[submodule "Plugins/fastms"]
+	path = Plugins/fastms
+	url = https://dtmoodie@github.com/dtmoodie/fastms
