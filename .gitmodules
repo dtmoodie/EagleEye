@@ -1,0 +1,3 @@
+[submodule "EagleLib/RCC"]
+	path = EagleLib/RCC
+	url = https://dtmoodie@github.com/dtmoodie/RuntimeCompiledCPlusPlus
