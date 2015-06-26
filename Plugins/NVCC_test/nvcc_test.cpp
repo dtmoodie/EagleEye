@@ -1,6 +1,6 @@
 #include "nvcc_test.h"
 #include "nvcc_test.cuh"
-#include "../RuntimeObjectSystem/RuntimeSourceDependency.h"
+#include "RuntimeSourceDependency.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
 using namespace EagleLib;
 

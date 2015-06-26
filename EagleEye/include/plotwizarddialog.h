@@ -7,7 +7,7 @@
 #include "Parameters.h"
 #include "plotwindow.h"
 #include "parameterplotter.h"
-#include "../RuntimeObjectSystem/IObject.h"
+#include "IObject.h"
 #include "plotters/Plotter.h"
 namespace Ui {
 class PlotWizardDialog;

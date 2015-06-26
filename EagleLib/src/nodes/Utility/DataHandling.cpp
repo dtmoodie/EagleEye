@@ -86,7 +86,7 @@ cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& 
         newCols += 2;
     int rows = img.size().area();
     TIME
-    if(position && positionMat.empty() || parameters[0]->changed)
+    if((position && positionMat.empty()) || parameters[0]->changed)
     {
         cv::Mat h_positionMat(img.size().area(), 2, type);
         int row = 0;

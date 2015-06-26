@@ -490,7 +490,7 @@ cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream
 	smoothed_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(0, 3)));
 	lab_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(3, 6)));
 	
-	double compactedness = cv::kmeans(tensor, getParameter<int>(9)->data, labels,
+    cv::kmeans(tensor, getParameter<int>(9)->data, labels,
 		cv::TermCriteria(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, getParameter<int>(10)->data, getParameter<double>(11)->data),
 		1, cv::KMEANS_RANDOM_CENTERS, centers);
 

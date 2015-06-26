@@ -27,7 +27,7 @@ add_dependencies(PCL_bridge EagleLib)
 target_link_libraries(PCL_bridge EagleLib)
 
 set_target_properties(PCL_bridge PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
-            ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
-            LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/Plugins
+            RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+            ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+            LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
 )
