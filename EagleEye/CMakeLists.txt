@@ -58,17 +58,14 @@ TARGET_LINK_LIBRARIES(EagleEye
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS} 
 )
-foreach(lib ${Boost_LIBRARIES})
-message(${lib})
-endforeach(lib)
 
 if(UNIX)
     TARGET_LINK_LIBRARIES(EagleEye dl)
 endif()
 message(STATUS "
-************************************************************************
+=====================================
   EagleEye Compile parameters
    C++ Flags: ${CMAKE_CXX_FLAGS}
 
 
-***********************************************************************")
+")

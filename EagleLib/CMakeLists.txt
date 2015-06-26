@@ -81,14 +81,15 @@ message(STATUS
     OpenCV found at: ${OpenCV_CONFIG_PATH}
     NVCC Flags: ${CUDA_NVCC_FLAGS}
     Bulid Type: ${CMAKE_BUILD_TYPE}
+
 ++++++++++ RCC++ Defines ++++++++++++++++++
     OpenCV include dir: ${OpenCV_INCLUDE_DIR}
     Boost library dir: ${Boost_LIBRARY_DIRS}
     OpenCV library dir: ${CV_LIB_DIR}
     Cuda include dir: ${CUDA_INCLUDE_DIRS}
-	NVCC: ${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc
+    NVCC: ${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc
     Cuda RT libs: ${CUDA_LIBRARIES}
-	Cuda Dev RT libs: ${CUDA_DEVRT}
+    Cuda Dev RT libs: ${CUDA_DEVRT}
     Cuda root dir: ${CUDA_TOOLKIT_ROOT_DIR}
     Binary Dir: ${CMAKE_BINARY_DIR}
 
@@ -98,20 +99,7 @@ message(STATUS
     PCL_LIB_DIR: ${PCL_LIBRARY_DIRS}
     Eigen inc: ${EIGEN3_INCLUDE_DIR}
 
-************* FILES ***********************
-
-============= Headers ==================
-
-${hdr}
-
-============= Source files ==================
-${src}
-
-============= Kernels ==================
-${knl}
-
-
-=====================================")
+")
 
 
 set(EagleLib_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}" PARENT_SCOPE)

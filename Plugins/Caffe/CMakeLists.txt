@@ -11,7 +11,7 @@ include_directories(
 STRING(REPLACE ";" "," Caffe_INCLUDE_DIRS_ "${Caffe_INCLUDE_DIRS}")
 
 message(STATUS
-" ===================== Caffe Plugin ========================
+" =========== Caffe Plugin ==========
   Caffe found: ${Caffe_FOUND}
   Caffe Include: ${Caffe_INCLUDE_DIRS_}
 
@@ -39,7 +39,8 @@ message(STATUS
     ${CUDA_nppc_LIBRARY}
 
     ${CUDA_npps_LIBRARY}
-  ===========================================================")
+
+")
 
 if(${Caffe_FOUND})
 
