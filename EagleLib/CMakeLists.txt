@@ -20,7 +20,6 @@ ENDIF(WIN32)
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 
-#include(cmake/ProjectFiles.cmake)
 
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")

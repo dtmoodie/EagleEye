@@ -18,10 +18,4 @@ FOREACH(subdir ${SUBDIRS})
     ADD_SUBDIRECTORY(${subdir})
 ENDFOREACH()
 
-#add_subdirectory(fastms)
-#add_subdirectory(PCL_bridge)
-#add_subdirectory(Plotting)
-#add_subdirectory(Dev)
-#add_subdirectory(Caffe)
-#add_subdirectory(Segmentation)
 

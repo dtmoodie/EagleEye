@@ -5,13 +5,6 @@ find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cu
 find_package(CUDA REQUIRED)
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 
-
-#set(Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@)
-#set(Boost_USE_STATIC @Boost_USE_STATIC@)
-#set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)
-#set(Boost_USE_STATIC_LIBS FALSE)
-#set(Boost_USE_MULTITHREAD TRUE)
-#set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 
@@ -33,11 +26,8 @@ file(GLOB forms "*UIs/*.ui")
 
 QT5_WRAP_UI(UIS ${forms})
 QT5_WRAP_CPP(MOC ${sources} ${headers})
-set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
-
-
 
 ADD_EXECUTABLE(EagleEye
         ${sources}
@@ -46,6 +36,7 @@ ADD_EXECUTABLE(EagleEye
         ${headers}
         ${UIS}
 )
+
 add_dependencies(EagleEye EagleLib)
 
 TARGET_LINK_LIBRARIES(EagleEye
@@ -62,10 +53,4 @@ TARGET_LINK_LIBRARIES(EagleEye
 if(UNIX)
     TARGET_LINK_LIBRARIES(EagleEye dl)
 endif()
-message(STATUS "
-=====================================
-  EagleEye Compile parameters
-   C++ Flags: ${CMAKE_CXX_FLAGS}
 
-
-")
