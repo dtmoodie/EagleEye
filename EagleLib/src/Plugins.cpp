@@ -45,12 +45,11 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 
     typedef IPerModuleInterface* (*moduleFunctor)();
 
-    moduleFunctor module = (moduleFunctor)dlsym(handle, "GetModule");
+    moduleFunctor module = (moduleFunctor)dlsym(handle, "GetPerModuleInterface");
     const char *dlsym_error = dlerror();
     if (dlsym_error) {
            std::cerr << "Cannot load symbol 'GetModule': " << dlsym_error <<
                '\n';
-           dlclose(handle);
            return false;
        }
     if(module == nullptr)
