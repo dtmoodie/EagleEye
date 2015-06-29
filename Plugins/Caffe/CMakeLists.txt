@@ -8,12 +8,15 @@ include_directories(
  ${Caffe_INCLUDE_DIRS}
  ${EagleLib_INCLUDE_DIRECTORIES}
 )
-STRING(REPLACE ";" "," Caffe_INCLUDE_DIRS_ "${Caffe_INCLUDE_DIRS}")
+#STRING(REPLACE ";" "," Caffe_INCLUDE_DIRS_ "${Caffe_INCLUDE_DIRS}")
 
 message(STATUS
 " =========== Caffe Plugin ==========
   Caffe found: ${Caffe_FOUND}
-  Caffe Include: ${Caffe_INCLUDE_DIRS_}
+
+  Caffe dir: ${Caffe_CMAKE_DIR}
+
+  Caffe Include: ${Caffe_INCLUDE_DIRS}
 
   Caffe libs: ${Caffe_LIBRARIES}
 
@@ -26,7 +29,7 @@ message(STATUS
 
     ${CUDA_CUBLAS_LIBRARIES}
 
-    ${CUDA_cupti_LIBRARY}
+    ${CUDA_cupti_LIBRARY} 
 
     ${CUDA_curand_LIBRARY}
 
@@ -36,7 +39,7 @@ message(STATUS
 
     ${CUDA_nppc_LIBRARY}
 
-    ${CUDA_nppc_LIBRARY}
+    ${CUDA_nppc_LIBRARY} 
 
     ${CUDA_npps_LIBRARY}
 
@@ -85,10 +88,5 @@ target_link_libraries(Caffe
 
 add_definitions(-DCAFFE_INCLUDES="${Caffe_INCLUDE_DIRS_}")
 ENDIF(WIN32)
-
-set_target_properties(Caffe PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-)
+#SET_TARGET_PROPERTIES(Caffe PROPERTIES LOCATION "${CMAKE_BINARY_DIR}/$(Configuration)/Plugins/libCaffed.lib")
 endif()

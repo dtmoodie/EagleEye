@@ -88,9 +88,13 @@ MainWindow::MainWindow(QWidget *parent) :
     QDir dir(QDir::currentPath());
     
 #ifdef _MSC_VER
-	auto str = dir.absolutePath();
-	dir.cd("../Bin/Plugins/Plugins/Debug");
-	str = dir.absolutePath();
+	std::string str = dir.absolutePath().toStdString();
+#ifdef _DEBUG
+	dir.cd("../Debug");
+#else
+	dir.cd("../Release");
+#endif
+	str = dir.absolutePath().toStdString();
 	QFileInfoList files = dir.entryInfoList(QStringList("*.dll"));
 #else
 	dir.cd("Plugins");

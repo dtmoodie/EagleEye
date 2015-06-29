@@ -36,11 +36,24 @@ ADD_EXECUTABLE(EagleEye
         ${headers}
         ${UIS}
 )
+IF(WIN32)
+	SET(OpenCV_BIN_DIR "${OpenCV_DIR}/x64/vc12/bin")
+	SET(Qt5_BIN_DIR "${Qt5_DIR}/../../../bin")
+	SET(CAFFE_RELEASE "${Caffe_DIR}/bin/Release")
+	SET(CAFFE_DEBUG "${Caffe_DIR}/bin/Debug")
+	CONFIGURE_FILE(EagleEye.vcxproj.user.in ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
+ENDIF(WIN32)
 
 add_dependencies(EagleEye EagleLib)
 SOURCE_GROUP("MOC"  FILES ${MOC} ${UIS})
 SOURCE_GROUP("UIs" FILES ${forms})
 
+message(STATUS
+"======== EagleEye Reporting =======
+  Qt bin dir: ${Qt5_DIR}
+
+  
+")
 
 TARGET_LINK_LIBRARIES(EagleEye
         Qt5::Gui

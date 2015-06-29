@@ -7,7 +7,7 @@
 
 bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
-	
+	std::cout << "Loading plugin " << fullPluginPath << std::endl;
 	HMODULE handle = LoadLibrary(fullPluginPath.c_str());
 	if (handle == nullptr)
 	{
