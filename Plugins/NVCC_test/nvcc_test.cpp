@@ -22,8 +22,8 @@ void nvcc_test::init(bool firstInit)
 
 cv::cuda::GpuMat nvcc_test::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    //run_kernel(img.data, img.size().area()*img.cols, cv::cuda::StreamAccessor::getStream(stream));
-	      
+    run_kernel(img.data, img.size().area()*img.cols, cv::cuda::StreamAccessor::getStream(stream));
+
     return img;
 }
 

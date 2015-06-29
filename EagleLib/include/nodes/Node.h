@@ -68,7 +68,11 @@
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
 #endif
 #else
-	RUNTIME_COMPILER_LINKLIBRARY("-lEagleLib")
+#ifdef _DEBUG
+    RUNTIME_COMPILER_LINKLIBRARY("-lEagleLibd")
+#else
+
+#endif
 #endif
 
 #define CATCH_MACRO                                                         \

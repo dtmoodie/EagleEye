@@ -1,5 +1,7 @@
 #include "nvcc_test.cuh"
-
+#include "opencv2/core/cuda/common.hpp"
+#include <cuda.h>
+#include <cuda_runtime.h>
 __global__ void kernel()
 {
 
@@ -20,5 +22,7 @@ void run_kernel(unsigned char *data, int pixels, cudaStream_t stream)
 {
     int threads = 1024;
     int blocks = pixels / 1024;
-    kernel<<<blocks, threads, 0, stream>>>(data, pixels);  
+    kernel<<<1024, threads, 0, stream>>>(data, pixels);
+
+    cudaSafeCall(cudaPeekAtLastError());
 }
