@@ -31,11 +31,10 @@ target_link_libraries(Segmentation
 	
 )
 
-set_target_properties(Segmentation PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-)
+#set_target_properties(Segmentation PROPERTIES
+    #RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+    #ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+    #LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 IF(TARGET fastms)
     add_dependencies(Segmentation fastms)
     target_link_libraries(Segmentation fastms ${fastms_LIBS})

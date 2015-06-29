@@ -45,11 +45,10 @@ message(STATUS
 
 add_library(Plotting SHARED ${src} ${hdr} ${knl} ${UIS} ${MOC})
 add_dependencies(Plotting EagleLib)
-set_target_properties(Plotting PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-            ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-            LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-)
+#set_target_properties(Plotting PROPERTIES
+            #RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+            #ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+            #LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 target_link_libraries(Plotting 
 	EagleLib 
 	Qt5::Core 

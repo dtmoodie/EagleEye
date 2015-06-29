@@ -38,6 +38,9 @@ ADD_EXECUTABLE(EagleEye
 )
 
 add_dependencies(EagleEye EagleLib)
+SOURCE_GROUP("MOC"  FILES ${MOC} ${UIS})
+SOURCE_GROUP("UIs" FILES ${forms})
+
 
 TARGET_LINK_LIBRARIES(EagleEye
         Qt5::Gui

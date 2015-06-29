@@ -42,8 +42,7 @@ ENDIF(WIN32)
 cuda_add_library(nvcc_test SHARED nvcc_test.cu nvcc_test.h nvcc_test.cpp nvcc_test.cuh)
 target_link_libraries(nvcc_test EagleLib ${Boost_LIBRARIES} ${CUDA_LIBRARIES})
 
-set_target_properties(nvcc_test PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-)
+#set_target_properties(nvcc_test PROPERTIES
+    #RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+    #ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+    #LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
