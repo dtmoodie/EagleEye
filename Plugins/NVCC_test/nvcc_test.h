@@ -3,7 +3,6 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
-    IPerModuleInterface* GetModule();
     CV_EXPORTS void SetupIncludes();
 #ifdef __cplusplus
 }

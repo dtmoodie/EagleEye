@@ -130,6 +130,7 @@ namespace EagleLib
         std::vector<std::string> getParametersOfType(boost::function<bool(Loki::TypeInfo&)> selector);
         void addIncludeDir(const std::string& dir);
         void addSourceFile(const std::string& file);
+		void addLinkDir(const std::string& dir);
 
 
 	private:

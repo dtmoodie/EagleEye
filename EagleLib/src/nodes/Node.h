@@ -53,6 +53,8 @@
 #include <Qualifiers.hpp>
 #include "../Parameters.h"
 #include <external_includes/cv_core.hpp>
+#include <external_includes/cv_highgui.hpp>
+#include <external_includes/cv_videoio.hpp>
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 
 #include "RuntimeLinkLibrary.h"
@@ -66,15 +68,16 @@ RUNTIME_MODIFIABLE_INCLUDE
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
-	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
+	RUNTIME_COMPILER_LINKLIBRARY("EagleLibd.lib")
 #else
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
 #endif
+
 #else
 #ifdef _DEBUG
     RUNTIME_COMPILER_LINKLIBRARY("-lEagleLibd")
 #else
-
+	RUNTIME_COMPILER_LINKLIBRARY("-lEagleLib")
 #endif
 #endif
 

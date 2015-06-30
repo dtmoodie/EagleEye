@@ -195,6 +195,11 @@ void NodeManager::addIncludeDir(const std::string& dir)
     m_pRuntimeObjectSystem->AddIncludeDir(dir.c_str());
 
 }
+void NodeManager::addLinkDir(const std::string& dir)
+{
+	m_pRuntimeObjectSystem->AddLibraryDir(dir.c_str());
+}
+
 void NodeManager::addSourceFile(const std::string &file)
 {
     m_pRuntimeObjectSystem->AddToRuntimeFileList(file.c_str());

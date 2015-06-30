@@ -11,7 +11,7 @@ __global__ void kernel(unsigned char* data, int N)
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if(tid >= N)
         return;
-    data[tid] *= 2;
+    //data[tid] *= 2;  
 }
 
 void run_kernel()
@@ -24,5 +24,5 @@ void run_kernel(unsigned char *data, int pixels, cudaStream_t stream)
     int blocks = pixels / 1024;
     kernel<<<1024, threads, 0, stream>>>(data, pixels);
 
-    cudaSafeCall(cudaPeekAtLastError());
+    cudaSafeCall(cudaPeekAtLastError()); 
 }

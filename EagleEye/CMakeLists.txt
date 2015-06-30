@@ -45,7 +45,7 @@ IF(WIN32)
 	SET(CAFFE_DEBUG "${Caffe_DIR}/bin/Debug")
 	CONFIGURE_FILE(EagleEye.vcxproj.user.in ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
 ENDIF(WIN32)
-
+ADD_DEFINITIONS(-DBUILD_DIR="${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 add_dependencies(EagleEye EagleLib)
 SOURCE_GROUP("MOC"  FILES ${MOC} ${UIS})
 SOURCE_GROUP("UIs" FILES ${forms})

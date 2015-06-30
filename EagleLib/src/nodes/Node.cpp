@@ -1,5 +1,5 @@
 #include "nodes/Node.h"
-#include <opencv2/highgui.hpp>
+
 #include <regex>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
