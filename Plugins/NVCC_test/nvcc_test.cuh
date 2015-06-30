@@ -1,5 +1,9 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
 
 
 void run_kernel();

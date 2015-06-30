@@ -1,5 +1,4 @@
 #include "caffe/caffe.hpp"
-//#include "EagleLib/include/nodes/Node.h"
 
 #include "nodes/Node.h"
 
