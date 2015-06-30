@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 find_package(CUDA REQUIRED)
 
-find_package(Ceres)
+find_package(Ceres QUIET)
 
 IF(Ceres_FOUND)
 include_directories(

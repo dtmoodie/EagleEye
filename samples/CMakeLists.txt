@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(samples)
 
-
+CMAKE_POLICY(SET CMP0053 OLD)
 set(Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@)
 set(Boost_USE_STATIC @Boost_USE_STATIC@)
 set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)
