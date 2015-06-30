@@ -2,7 +2,10 @@
 #include <nodes/Node.h>
 #include <opencv2/videoio.hpp>
 #include <opencv2/cudacodec.hpp>
-
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
     class VideoWriter : public Node

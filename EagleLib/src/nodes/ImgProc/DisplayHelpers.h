@@ -4,7 +4,10 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <CudaUtils.hpp>
-
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
     struct ColorScale

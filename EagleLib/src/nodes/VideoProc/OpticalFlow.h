@@ -3,6 +3,10 @@
 #include <Manager.h>
 #include <opencv2/cudaoptflow.hpp>
 #include "CudaUtils.hpp"
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
     class SparsePyrLKOpticalFlow: public Node

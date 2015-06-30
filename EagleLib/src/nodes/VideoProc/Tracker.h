@@ -4,6 +4,10 @@
 #include "Tracking.hpp"
 #include <boost/circular_buffer.hpp>
 #include "CudaUtils.hpp"
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
 

@@ -1,7 +1,10 @@
 #include "nodes/Node.h"
 #include <external_includes/cv_cudafeatures3d.hpp>
 #include <external_includes/cv_cudaimgproc.hpp>
-
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
     class Sobel: public Node
