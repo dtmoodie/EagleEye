@@ -22,7 +22,7 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 
 file(GLOB_RECURSE src "src/*.cpp")
-file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")
+file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
 FILE(GLOB_RECURSE ext_inc "include/external_includes")
 
@@ -32,7 +32,7 @@ INCLUDE_DIRECTORIES(
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
     ${Qt5Core_INCLUDE_DIRS}
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
 	)
 
 
@@ -101,7 +101,7 @@ message(STATUS
 ")
 
 
-set(EagleLib_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
+set(EagleLib_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/src;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
 
 if(WIN32)
     if(CMAKE_BUILD_TYPE EQUAL "Debug")
