@@ -7,6 +7,10 @@
  *
 */
 #include "Node.h"
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
     class CV_EXPORTS SerialStack: public Node

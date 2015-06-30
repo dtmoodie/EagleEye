@@ -2,6 +2,10 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include <vector>
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
 /*  Parallel stack nodes execute all child nodes in parallel on separate threads
  *
  *

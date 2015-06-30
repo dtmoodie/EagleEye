@@ -34,7 +34,6 @@
 
 
 #include <opencv2/core/cuda.hpp>
-//#include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -60,6 +59,10 @@
 #include "ObjectInterface.h"
 #include "ObjectInterfacePerModule.h"
 #include "IObject.h"
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
