@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(EagleEye)
 
 set(BUILD_TYPE STATIC)
-
+CMAKE_POLICY(SET CMP0020 NEW)
 
 SET(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 SET(CMAKE_VERBOSE_MAKEFILE "true")

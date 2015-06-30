@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 2.8)
+
 project(EagleEye)
-cmake_policy(SET CMP0020 NEW)
+CMAKE_POLICY(SET CMP0020 NEW)
 CMAKE_POLICY(SET CMP0053 OLD)
 find_package(Qt5 COMPONENTS Gui Widgets Core OpenGL PrintSupport)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d)

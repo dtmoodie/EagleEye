@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 2.8)
+
 find_package(CUDA REQUIRED)
+cmake_policy(SET CMP0020 NEW)
 cmake_policy(SET CMP0012 NEW)
-CMAKE_POLICY(SET CMP0053 OLD)
+cmake_policy(SET CMP0053 OLD)
 IF(WIN32)
 	set(Boost_USE_STATIC_LIBS        ON)
 	set(Boost_USE_MULTITHREADED      ON)

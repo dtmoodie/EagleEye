@@ -4,7 +4,7 @@ file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB forms "*UIs/*.ui")
-
+CMAKE_POLICY(SET CMP0020 NEW)
 find_package(Qt5 REQUIRED Core Widgets PrintSupport OpenGL)
 
 

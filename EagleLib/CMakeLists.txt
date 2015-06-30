@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 2.8)
-project(EagleLib)
 
+project(EagleLib)
+CMAKE_POLICY(SET CMP0020 NEW)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(OPENCV_STATIC OFF)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
