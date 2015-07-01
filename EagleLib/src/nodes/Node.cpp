@@ -27,7 +27,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 
 #endif
 Verbosity Node::debug_verbosity = Error;
-
+boost::signals2::signal<void(void)> Node::resetSignal = boost::signals2::signal<void(void)>();
 Node::Node():
     averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
 {
@@ -38,6 +38,7 @@ Node::Node():
     parent = nullptr;
 	nodeType = eVirtual;
     onParameterAdded.reset(new boost::signals2::signal<void(void)>);
+	resetConnection = resetSignal.connect(boost::bind(&Node::reset, this));
 }
 
 Node::~Node()
@@ -45,6 +46,11 @@ Node::~Node()
     if(parent)
         parent->deregisterNotifier(this);
 }
+void Node::reset()
+{
+	Init(false);
+}
+
 void Node::updateParent()
 {
     if(parent)

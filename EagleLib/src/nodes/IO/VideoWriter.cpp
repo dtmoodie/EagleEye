@@ -24,14 +24,20 @@ void VideoWriter::Init(bool firstInit)
         param.addEnum(cv::VideoWriter::fourcc('M','J','P','G'), "MPJG");
         updateParameter("Codec", param);
         updateParameter("Filename", boost::filesystem::path(""));
+		writeOut = false;
 	}
     updateParameter<boost::function<void(void)>>("Restart Functor", boost::bind(&VideoWriter::restartFunc, this));
+	updateParameter<boost::function<void(void)>>("Stop Functor", boost::bind(&VideoWriter::endWrite, this));
     restart = false;
 
 }
 void VideoWriter::restartFunc()
 {
     restart = true;
+}
+void VideoWriter::endWrite()
+{
+	writeOut = true;
 }
 
 void VideoWriter::Serialize(ISimpleSerializer *pSerializer)
@@ -49,6 +55,14 @@ VideoWriter::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
         startWrite();
     if(d_writer != nullptr || h_writer != nullptr)
         writeImg(img);
+	if (writeOut)
+	{
+		if (h_writer)
+			h_writer.release();
+		if (d_writer)
+			d_writer.release();
+		writeOut = false;
+	}
 	return img;
 }
 void 

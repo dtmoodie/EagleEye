@@ -10,6 +10,12 @@ namespace EagleLib
 {
     class VideoWriter : public Node
     {
+		bool gpuWriter;
+		bool restart;
+		cv::Size size;
+		cv::Ptr<cv::cudacodec::VideoWriter> d_writer;
+		cv::Ptr<cv::VideoWriter>    h_writer;
+		bool writeOut;
     public:
         VideoWriter();
         VideoWriter(std::string fileName);
@@ -20,11 +26,8 @@ namespace EagleLib
         void writeImg(cv::cuda::GpuMat& img);
         void startWrite();
         void restartFunc();
-        bool gpuWriter;
-        bool restart;
-        cv::Size size;
-        cv::Ptr<cv::cudacodec::VideoWriter> d_writer;
-        cv::Ptr<cv::VideoWriter>    h_writer;
+		void endWrite();
+        
     };
 
 }

@@ -25,11 +25,12 @@ VideoLoader::Init(bool firstInit)
         updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameter::Control, "Path to video file");
         updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader, Parameter::Output);
         updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader, Parameter::Output);
-        updateParameter<boost::function<void(void)>>("Restart Video",boost::bind(&VideoLoader::restartVideo,this), Parameter::Control);
+        
         updateParameter<bool>("Loop",true);
         updateParameter<bool>("End of video", false, Parameter::Output);
         load = false;
     }
+	updateParameter<boost::function<void(void)>>("Restart Video", boost::bind(&VideoLoader::restartVideo, this), Parameter::Control);
     h_img.resize(20);
 }
 void VideoLoader::Serialize(ISimpleSerializer *pSerializer)
@@ -49,27 +50,36 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
         firstLoad = true;
         load = false;
     }
+	TIME
     if(d_videoReader)
     {
         d_videoReader->nextFrame(img);
     }else if(h_videoReader)
     {
         auto buffer = h_img.getFront();
+		TIME
         if(!h_videoReader->read(*buffer))
         {
             updateParameter<bool>(5, true);
             log(Status, "End of video reached");
             auto reload = getParameter<bool>("Loop");
-            if(reload)
-                if(reload->data)
-                    loadFile();
+			TIME
+            if(reload && reload->data)	
+			{
+				resetSignal();
+				loadFile();
+			}
+                    
+			TIME
             return img;
         }
        if(buffer->empty())
            return cv::cuda::GpuMat();
+	   TIME
        try
        {
            img.upload(*buffer, stream);
+		   TIME
        }catch(cv::Exception &err)
        {
            log(Error, err.what());
@@ -79,6 +89,7 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
        updateParameter<int>("Frame index",(int)h_videoReader->get(cv::CAP_PROP_POS_FRAMES), Parameter::Output);
        updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO), Parameter::State);
        updateParameter("Source Image", img, Parameter::Output);
+	   TIME
     }
     if(firstLoad && !img.empty())
     {

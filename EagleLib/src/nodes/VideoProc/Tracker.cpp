@@ -40,6 +40,10 @@ void KeyFrameTracker::Init(bool firstInit)
     trackedFrames.set_capacity(5);
     warpedImageBuffer.resize(20);
 }
+void KeyFrameTracker::reset()
+{
+	trackedFrames.clear();
+}
 
 void KeyFrameTracker_findHomographyCallback(int status, void* userData)
 {

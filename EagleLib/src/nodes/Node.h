@@ -176,6 +176,8 @@ namespace EagleLib
 		virtual void					doProcess(cv::InputArray in, boost::promise<cv::OutputArray>& retVal);
 		virtual void					doProcess(cv::InputArray in, cv::OutputArray out);
 
+		virtual void					reset();
+
         /**
          * @brief getName depricated?  Idea was to recursively go through parent nodes and rebuild my tree name, useful I guess once
          * @brief node swapping and moving is implemented
@@ -786,6 +788,8 @@ namespace EagleLib
         boost::shared_ptr<boost::signals2::signal<void(void)>>              onParameterAdded;
         std::vector<std::pair<clock_t, int>> timings;
 		NodeType															nodeType;
+	protected:
+		static boost::signals2::signal<void(void)>							resetSignal;
     private:
         friend class NodeManager;
         // Depricated, I think
@@ -794,6 +798,8 @@ namespace EagleLib
         Node*                                                               parent;
         boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
         ConstBuffer<cv::cuda::GpuMat>                                       childResults;
+		
+		boost::signals2::connection											resetConnection;
     };
 
 }
