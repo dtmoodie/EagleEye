@@ -1,4 +1,3 @@
-
 project(EagleLib)
 CMAKE_POLICY(SET CMP0020 NEW)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -56,6 +55,7 @@ ELSE()
 ENDIF()
 
 ADD_SUBDIRECTORY("RCC")
+ADD_SUBDIRECTORY("Parameters")
 INCLUDE_DIRECTORIES(${RCC_INCLUDE_DIRS})
 
 IF(WIN32)
@@ -122,7 +122,7 @@ file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR
         endif()
    endforeach()
 endmacro()
-
+ 
 GroupSources(include)
 GroupSources(src)
 cuda_add_library(EagleLib SHARED
@@ -140,6 +140,7 @@ TARGET_LINK_LIBRARIES(EagleLib
         RuntimeCompiler
         RuntimeObjectSystem
 )
+
 
 if(UNIX)
     TARGET_LINK_LIBRARIES(EagleLib dl)
