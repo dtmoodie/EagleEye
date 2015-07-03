@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(Tests)
+IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 CMAKE_POLICY(SET CMP0053 OLD)
+ENDIF()
 cmake_policy(SET CMP0020 NEW)
 set(Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@)
 set(Boost_USE_STATIC @Boost_USE_STATIC@)

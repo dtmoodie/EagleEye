@@ -1,7 +1,9 @@
 
 project(EagleEye)
 CMAKE_POLICY(SET CMP0020 NEW)
+IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 CMAKE_POLICY(SET CMP0053 OLD)
+ENDIF()
 find_package(Qt5 COMPONENTS Gui Widgets Core OpenGL PrintSupport)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
 find_package(CUDA REQUIRED)

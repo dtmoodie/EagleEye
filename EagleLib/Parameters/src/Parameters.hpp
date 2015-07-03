@@ -4,14 +4,10 @@
 #include "LokiTypeInfo.h"
 #include "UI/UI.hpp"
 #include "Persistence/Persistence.hpp"
-
 namespace Parameters
 {
     class Parameter
     {
-		std::string name;
-	protected:
-		boost::signals2::signal<void(void)> UpdateSignal;
 	public:
 		enum ParameterTypes
 		{
@@ -20,20 +16,25 @@ namespace Parameters
 			State = 4,
 			Control = 8
 		};
+		Parameter(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "");
 		typedef boost::shared_ptr<Parameter> Ptr;
 		virtual Loki::TypeInfo GetTypeInfo() = 0;
-		virtual const std::string& GetName()
-		{
-			return name;
-		}
-		virtual void SetName(const std::string& name_)
-		{
-			name = name_;
-		}
-		virtual boost::signals2::connection RegisterNotifier(const boost::function<void(void)>& f)
-		{
-			return UpdateSignal.connect(f);
-		}
+
+		virtual std::string& GetName();
+		virtual void SetName(const std::string& name_);
+		virtual const std::string& GetTooltip();
+		virtual void SetTooltip(const std::string& tooltip_);
+		virtual const std::string& GetTreeName();
+		virtual void SetTreeName(const std::string& treeName_);
+		virtual boost::signals2::connection RegisterNotifier(const boost::function<void(void)>& f);
+
+	protected:
+		boost::signals2::signal<void(void)> UpdateSignal;
+	private:
+		std::string name;
+		std::string tooltip;
+		std::string treeName;
+		ParameterTypes type;
     };
 	class InputParameter
 	{
@@ -54,22 +55,32 @@ namespace Parameters
 		virtual void UpdateData(T& data_) = 0;
 		virtual void UpdateData(const T& data_) = 0;
 		virtual void UpdateData(T* data_) = 0;
-
+		ITypedParameter(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "") :
+			Parameter(name, type, tooltip){}
 		virtual Loki::TypeInfo GetTypeInfo()
 		{
 			return Loki::TypeInfo(typeid(T));
 		}
+		/*bool operator ==(const ITypedParameter& lhs, const Parameter& rhs)
+		{
+			if (lhs.GetType() == rhs.GetType())
+			{
+				auto typedRhs = dynamic_cast<ITypedParameter<T>>(rhs);
+				return *Data() == *typedRhs.Data();
+			}
+			return false;
+		}*/
     };
 
 	template<typename T, 
-		template<typename> class Policy1 = PersistencePolicy,
-		template<typename> class Policy2 = UiPolicy> class MetaTypedParameter : 
+		template<typename> class Policy1 = Persistence::PersistencePolicy,
+		template<typename> class Policy2 = UiPolicy> 
+	class MetaTypedParameter : 
 		public ITypedParameter<T>, public Policy1<T>, public Policy2<T>
 	{
 	public:
-		MetaTypedParameter():
-			PersistencePolicy<T>,
-			UiPolicy<T>{}
+		MetaTypedParameter(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
+			ITypedParameter<T>(name, type, tooltip){}
 	};
 
 
@@ -78,12 +89,13 @@ namespace Parameters
         T data;
     public:
 		typedef boost::shared_ptr<TypedParameter<T>> Ptr;
-		static Ptr create(const T& init)
+		static Ptr create(const T& init, const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "")
 		{
-			return Ptr(new TypedParameter<T>(init));
+			return Ptr(new TypedParameter<T>(name, init, type, tooltip));
 		}
-		TypedParameter() {}
-		TypedParameter(const T& init) : data(init) {}
+		TypedParameter(const std::string& name, const T& init = T(), const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
+			MetaTypedParameter<T>(name, type, tooltip), data(init) {}
+
         virtual T* Data()
         {
             return &data;
@@ -110,7 +122,8 @@ namespace Parameters
 		T& data;
 	public:
 		typedef boost::shared_ptr<TypedParameterRef<T>> Ptr;
-
+		TypedParameterRef(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
+			MetaTypedParameter<T>(name, type, tooltip){}
 		virtual T* Data()
 		{
 			return &data;
@@ -133,12 +146,16 @@ namespace Parameters
         T* ptr;
     public:
 		typedef boost::shared_ptr<TypedParameterPtr<T>> Ptr;
-		static Ptr create(T* ptr_)
+		static Ptr create(const std::string& name, T* ptr_ = nullptr,
+			const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "")
 		{
-			return Ptr(new TypedInputParameterPtr(ptr_));
+			return Ptr(new TypedInputParameterPtr(name, ptr_, type, tooltip));
 		}
-		TypedParameterPtr(): ptr(nullptr){}
-		TypedParameterPtr(T* ptr_) : ptr(ptr_) {}
+		TypedParameterPtr(const std::string& name, T* ptr_ = nullptr, 
+			const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "") : 
+			ptr(ptr_),
+			MetaTypedParameter<T>(name, type, tooltip){}
+
         virtual T* Data()
         {
             return ptr;   
@@ -166,9 +183,12 @@ namespace Parameters
 		boost::signals2::connection inputConnection;
 		virtual void onInputUpdate()
 		{
+
 		}
 	public:
 		typedef boost::shared_ptr<TypedInputParameter<T>> Ptr;
+		TypedInputParameter(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
+			MetaTypedParameter<T>(name, type, tooltip){}
 		virtual bool SetInput(const std::string& name_)
 		{
 			return false;
@@ -236,10 +256,9 @@ namespace Parameters
 		{
 			return Ptr(new TypedInputParameterPtr(userVar_));
 		}
-		TypedInputParameterPtr(T** userVar_)
-		{
-			userVar = userVar_;
-		}
+		TypedInputParameterPtr(const std::string& name, T** userVar_, 
+			const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
+			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_){}
 
 		virtual bool SetInput(const std::string& name_)
 		{
@@ -287,10 +306,5 @@ namespace Parameters
 		{
 
 		}
-
 	};
-
-
-
-
 }
