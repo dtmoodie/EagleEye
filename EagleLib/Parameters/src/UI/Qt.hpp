@@ -7,7 +7,25 @@
 
 namespace Parameters
 {
-    class QtPolicy: public Parameter
+	class QtRegistry
+	{
+	public:
+		typedef std::function<QWidget*(Parameters::Parameter*)> WidgetMaker;
+
+	private:
+		std::map<Loki::TypeInfo, WidgetMaker> registry;
+	};
+
+
+
+
+
+
+
+
+
+	/*
+    class QtPolicy
     {
     public:
         virtual std::vector<QWidget*> GetSettingWidget() = 0;
@@ -57,7 +75,7 @@ namespace Parameters
             widgets.insert(widgets.end(), superWidgets.begin(), superWidgets.end());
             return widgets;
         }
-    };
+    };*/
 
 
 }

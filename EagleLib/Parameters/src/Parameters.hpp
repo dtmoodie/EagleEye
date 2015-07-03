@@ -36,6 +36,7 @@ namespace Parameters
 		std::string treeName;
 		ParameterTypes type;
     };
+
 	class InputParameter
 	{
 	public:
@@ -72,9 +73,7 @@ namespace Parameters
 		}*/
     };
 
-	template<typename T, 
-		template<typename> class Policy1 = Persistence::PersistencePolicy,
-		template<typename> class Policy2 = UiPolicy> 
+	template<typename T, template<typename> class Policy1 = Persistence::PersistencePolicy, template<typename> class Policy2 = UiPolicy> 
 	class MetaTypedParameter : 
 		public ITypedParameter<T>, public Policy1<T>, public Policy2<T>
 	{

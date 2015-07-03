@@ -57,7 +57,6 @@ int main()
 		auto scalarResult = *s_param.Data() == *d_param.Data();
 		auto matResult = *s_matParam.Data() == *d_matParam.Data();
 		//Parameters::Persistence::cv::InterpreterRegistry::GetInterpretingFunction(param.GetTypeInfo())(&fs, &param);
-
 	}
 
 	//Parameters::Persistence::cv::InterpreterRegistry::GetInterpretingFunction()

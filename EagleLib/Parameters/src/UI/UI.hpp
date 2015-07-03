@@ -1,6 +1,15 @@
 #pragma once
+#include "Qt.hpp"
 
-template<typename T> class UiPolicy
+
+namespace Parameters
 {
+	namespace UI
+	{
+		template<typename T> class UiPolicy
+		{
+		public:
 
-};
+		};
+	}
+}
