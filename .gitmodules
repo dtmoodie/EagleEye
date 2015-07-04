@@ -4,3 +4,6 @@
 [submodule "Plugins/fastms"]
 	path = Plugins/fastms
 	url = https://dtmoodie@github.com/dtmoodie/fastms
+[submodule "EagleLib/parameters"]
+	path = EagleLib/parameters
+	url = https://github.com/dtmoodie/parameters
