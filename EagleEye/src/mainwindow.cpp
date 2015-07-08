@@ -554,6 +554,7 @@ void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mu
     {
         try
         {
+			EagleLib::ProcessingThreadCallback::Run();
             process(parentList, mtx);
 			end = boost::posix_time::microsec_clock::universal_time();
 			delta = end - start;

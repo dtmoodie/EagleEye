@@ -15,7 +15,10 @@ namespace EagleLib
 {
 #define ENUM(value) (int)value, #value
 struct ReadFile: public boost::filesystem::path{};
-struct WriteFile: public boost::filesystem::path{};
+struct WriteFile: public boost::filesystem::path
+{
+	WriteFile(const std::string& file) : boost::filesystem::path(file){}
+};
 struct ReadDirectory: public boost::filesystem::path
 {
     ReadDirectory(const boost::filesystem::path& path): boost::filesystem::path(path){}

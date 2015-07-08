@@ -7,6 +7,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
+#include <boost/asio/io_service.hpp>
 #include "ObjectInterface.h"
 #include "IObjectFactorySystem.h"
 #include "IObject.h"
@@ -21,17 +22,6 @@
 #include "plotters/Plotter.h"
 
 
-
-#define ADD_CONSTRUCTORS(managerObj)  \
-	auto moduleInterface = PerModuleInterface::GetInstance();	\
-	auto vecConstructors = moduleInterface->GetConstructors();	\
-	AUDynArray<IObjectConstructor*> dynConstructors;			\
-	dynConstructors.Resize(vecConstructors.size());				\
-	for (int i = 0; i < vecConstructors.size(); ++i)			\
-		dynConstructors[i] = vecConstructors[i];				\
-	(managerObj).addConstructors(dynConstructors);
-
-using namespace boost::multi_index;
 namespace EagleLib
 {
     class Node;
@@ -73,6 +63,17 @@ namespace EagleLib
         void processAllCallbacks();
         void setUINotifier(boost::function<void(void)> f);
     };
+	class CV_EXPORTS ProcessingThreadCallback
+	{
+	private:
+		static boost::asio::io_service service;
+
+	public:
+		static boost::asio::io_service& Instance();
+		static void Run();
+
+	};
+
     class CV_EXPORTS PlotManager
     {
     public:

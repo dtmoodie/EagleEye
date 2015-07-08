@@ -31,6 +31,7 @@ namespace EagleLib
         int lastCalibration;
         cv::Size imgSize;
     public:
+		virtual void save();
         virtual void clear();
         virtual void calibrate();
         CalibrateCamera();

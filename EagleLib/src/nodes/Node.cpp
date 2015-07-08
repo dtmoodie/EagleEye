@@ -32,6 +32,7 @@ Node::Node():
     averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
 {
 	treeName = nodeName;
+	profile = false;
     enabled = true;
 	externalDisplay = false;
 	drawResults = false;

@@ -10,7 +10,6 @@ int main()
 	
 	// Since manager might have been compiled in debug or release as opposed to this executable, we need to use the AUDynArray object
 	// to pass the constructors into the manager, instead of the returned std::vector.
-	//ADD_CONSTRUCTORS(manager)
 	manager.setupModule(PerModuleInterface::GetInstance());
 
     auto rootNode = manager.addNode("SerialStack");

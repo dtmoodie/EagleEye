@@ -24,10 +24,12 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     if(firstRun)
     {
         std::stringstream ss;
-        ss << "Current device: " << currentDevice << " " << cv::cuda::DeviceInfo(currentDevice).name();
+		auto deviceInfo = cv::cuda::DeviceInfo(currentDevice);
+		
+		ss << "Current device: " << currentDevice << " " << deviceInfo.name() << " Async engines: " << deviceInfo.asyncEngineCount();
         ss << " - Num available devices: " << maxDevice;
         log(Status, ss.str());
-        updateParameter<std::string>("Device name", cv::cuda::DeviceInfo(currentDevice).name());
+        updateParameter<std::string>("Device name", deviceInfo.name());
         firstRun = false;
     }
 
@@ -41,7 +43,7 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     cudaGetDeviceProperties(&prop,device);
     if(currentDevice != device)
     {
-        log(Status, "Switching device from " + boost::lexical_cast<std::string>(currentDevice) + " to " + boost::lexical_cast<std::string>(device) + " " + prop.name);
+        log(Status, "Switching device from " + boost::lexical_cast<std::string>(currentDevice) + " to " + boost::lexical_cast<std::string>(device) + " " + prop.name + " async engines: " + boost::lexical_cast<std::string>(prop.asyncEngineCount));
         updateParameter<std::string>("Device name", cv::cuda::DeviceInfo(device).name());
         if(onUpdate)
             onUpdate(this);

@@ -562,7 +562,8 @@ public:
         auto function = EagleLib::getParameterPtr<boost::function<void(void)>>(parameter);
         if(function)
         {
-            (*function)();
+            //(*function)();
+			EagleLib::ProcessingThreadCallback::Instance().post(*function);
         }
     }
     virtual QWidget* getWidget(int num = 0) { return button; }

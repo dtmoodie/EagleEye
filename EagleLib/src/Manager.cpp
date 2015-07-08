@@ -132,6 +132,17 @@ void UIThreadCallback::setUINotifier(boost::function<void(void)> f)
 {
     notifier = f;
 }
+boost::asio::io_service ProcessingThreadCallback::service = boost::asio::io_service();
+
+boost::asio::io_service& ProcessingThreadCallback::Instance()
+{
+	return service;
+}
+
+void ProcessingThreadCallback::Run()
+{
+	service.run();
+}
 
 PlotManager& PlotManager::getInstance()
 {

@@ -1,14 +1,10 @@
 #include "Calibration.h"
-#include <opencv2/calib3d.hpp>
-#include <opencv2/highgui.hpp>
+#include <external_includes/cv_calib3d.hpp>
+#include <external_includes/cv_highgui.hpp>
 #include <nodes/VideoProc/Tracking.hpp>
-#include <opencv2/cudaarithm.hpp>
-#include <opencv2/cudaimgproc.hpp>
+#include <external_includes/cv_cudaarithm.hpp>
+#include <external_includes/cv_cudaimgproc.hpp>
 
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_calib3d")
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_highgui")
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaimgproc")
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaarithm")
 
 using namespace EagleLib;
 IPerModuleInterface* GetModule()
@@ -17,20 +13,37 @@ IPerModuleInterface* GetModule()
 }
 void CalibrateCamera::Init(bool firstInit)
 {
-    updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateCamera::clear, this));
-    updateParameter<boost::function<void(void)>>("Force calibration", boost::bind(&CalibrateCamera::calibrate, this));
+    updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateCamera::clear, this));					// 0
+    updateParameter<boost::function<void(void)>>("Force calibration", boost::bind(&CalibrateCamera::calibrate, this));	// 1
+	updateParameter<boost::function<void(void)>>("Save calibration", boost::bind(&CalibrateCamera::save, this));		// 2
+
     if(firstInit)
     {
-        updateParameter("Num corners X", 6);
-        updateParameter("Num corners Y", 9);
-        updateParameter("Corner distance", double(18.75), Parameter::Control, "Distance between corners in mm");
-        updateParameter("Min pixel distance", float(10.0));
+        updateParameter("Num corners X", 6);																			// 3
+        updateParameter("Num corners Y", 9);																			// 4
+        updateParameter("Corner distance", double(18.75), Parameter::Control, "Distance between corners in mm");		// 5
+        updateParameter("Min pixel distance", float(10.0));																// 6
         addInputParameter<TrackSparseFunctor>("Sparse tracking functor");
+		updateParameter<EagleLib::WriteFile>("Save file", EagleLib::WriteFile("Camera Matrix.yml"));
     }
 
     lastCalibration = 0;
-
-
+}
+void CalibrateCamera::save()
+{
+	auto K = getParameter<cv::Mat>("Camera matrix");
+	auto file = getParameter<EagleLib::WriteFile>("Save file");
+	auto dist = getParameter<cv::Mat>("Distortion matrix");
+	if (K && file && dist)
+	{
+		cv::FileStorage fs;
+		fs.open(file->data.string(), cv::FileStorage::WRITE);
+		if (fs.isOpened())
+		{
+			fs << "Camera Matrix" << K->data;
+			fs << "Distortion Matrix" << dist->data;
+		}
+	}
 }
 void CalibrateCamera::clear()
 {
@@ -45,17 +58,17 @@ void callibrateCameraThread(std::vector<cv::Mat>& imagePointCollection, std::vec
 
 cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    int numX = getParameter<int>(2)->data;
-    int numY = getParameter<int>(3)->data;
+    int numX = getParameter<int>(3)->data;
+    int numY = getParameter<int>(4)->data;
 
     cv::Mat h_corners;
     bool found = false;
-    TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor*>(6)->data;
+    TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor*>(7)->data;
 
-    if(parameters[2]->changed || parameters[3]->changed || parameters[4]->changed || objectPoints3d.size() == 0)
+    if(parameters[3]->changed || parameters[4]->changed || parameters[5]->changed || objectPoints3d.size() == 0)
     {
         imgSize = img.size();
-        double dx = getParameter<double>(4)->data;
+        double dx = getParameter<double>(5)->data;
         clear();
         objectPoints3d.clear();
         for(int i = 0; i < numY; ++i)
