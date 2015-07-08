@@ -105,9 +105,9 @@ set(EagleLib_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/src;${Boost_INCLUD
 
 if(WIN32)
     if(CMAKE_BUILD_TYPE EQUAL "Debug")
-        set(EagleLib_LIBRARIES "${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_DEBUG_POSTFIX}.lib;${Boost_LIBRARIES}" PARENT_SCOPE)
+        set(EagleLib_LIBRARIES "EagleLib;${Boost_LIBRARIES}" PARENT_SCOPE)
     else()
-        set(EagleLib_LIBRARIES "${CMAKE_BINARY_DIR}/Bin/${CMAKE_BUILD_TYPE}/EagleLib${CMAKE_RELEASE_POSTFIX}.lib;${Boost_LIBRARIES}" PARENT_SCOPE)
+        set(EagleLib_LIBRARIES "EagleLib;${Boost_LIBRARIES}" PARENT_SCOPE)
     endif(CMAKE_BUILD_TYPE EQUAL "Debug")
 endif(WIN32)
 
@@ -139,7 +139,13 @@ TARGET_LINK_LIBRARIES(EagleLib
         ${OpenCV_LIBS}
         RuntimeCompiler
         RuntimeObjectSystem
+		libParameter
 )
+ADD_DEPENDENCIES(EagleLib
+	RuntimeCompiler
+	RuntimeObjectSystem
+	libParameter
+	)
 
 
 if(UNIX)

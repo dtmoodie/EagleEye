@@ -1,5 +1,5 @@
 #pragma once
-
+#define  GLOG_NO_ABBREVIATED_SEVERITIES
 #include "nodes/Node.h"
 #include <iostream>
 #include <external_includes/cv_core.hpp>
