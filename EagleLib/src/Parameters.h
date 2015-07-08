@@ -14,22 +14,18 @@
 namespace EagleLib
 {
 #define ENUM(value) (int)value, #value
-struct ReadFile: public boost::filesystem::path{};
-struct WriteFile: public boost::filesystem::path
-{
-	WriteFile(const std::string& file) : boost::filesystem::path(file){}
-};
-struct ReadDirectory: public boost::filesystem::path
-{
-    ReadDirectory(const boost::filesystem::path& path): boost::filesystem::path(path){}
-};
-struct WriteDirectory: public boost::filesystem::path{};
 
-//    typedef boost::filesystem::path ReadFile;
-//    typedef boost::filesystem::path WriteFile;
-//    typedef boost::filesystem::path ReadDirectory;
-//    typedef boost::filesystem::path WriteDirectory;
-
+	// Special classes so that the UI code can generate the right type of dialog for each parameter
+	struct ReadFile: public boost::filesystem::path{};
+	struct WriteFile: public boost::filesystem::path
+	{
+		WriteFile(const std::string& file) : boost::filesystem::path(file){}
+	};
+	struct ReadDirectory: public boost::filesystem::path
+	{
+		ReadDirectory(const boost::filesystem::path& path): boost::filesystem::path(path){}
+	};
+	struct WriteDirectory: public boost::filesystem::path{};
 
     class CV_EXPORTS EnumParameter
     {

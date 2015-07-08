@@ -24,7 +24,7 @@ file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
 FILE(GLOB_RECURSE ext_inc "include/external_includes")
-
+ADD_SUBDIRECTORY("Parameters")
 
 INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
@@ -32,6 +32,7 @@ INCLUDE_DIRECTORIES(
     ${CUDA_INCLUDE_DIRS}
     ${Qt5Core_INCLUDE_DIRS}
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+	${Parameters_INCLUDE}
 	)
 
 
@@ -55,7 +56,7 @@ ELSE()
 ENDIF()
 
 ADD_SUBDIRECTORY("RCC")
-ADD_SUBDIRECTORY("Parameters")
+
 INCLUDE_DIRECTORIES(${RCC_INCLUDE_DIRS})
 
 IF(WIN32)
