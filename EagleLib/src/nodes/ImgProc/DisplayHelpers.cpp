@@ -26,8 +26,8 @@ AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         cv::cuda::minMax(channels[i], &minVal, &maxVal);
         double scaleFactor = 255.0 / (maxVal - minVal);
         channels[i].convertTo(channels[0], CV_8U, scaleFactor, minVal*scaleFactor);
-        updateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal, Parameter::State);
-        updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal, Parameter::State);
+        updateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal, Parameters::Parameter::State);
+		updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal, Parameters::Parameter::State);
     }
     cv::cuda::merge(channels,img);
     return img;
@@ -56,10 +56,10 @@ Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         cv::cuda::minMax(img, &minVal,&maxVal);
         scale = double(resolution - 1) / (maxVal - minVal);
         shift = minVal * scale;
-        updateParameter<double>("Min", minVal,  Parameter::State);
-        updateParameter<double>("Max", maxVal,  Parameter::State);
-        updateParameter<double>("Scale", scale, Parameter::State);
-        updateParameter<double>("Shift", shift, Parameter::State);
+		updateParameter<double>("Min", minVal, Parameters::Parameter::State);
+		updateParameter<double>("Max", maxVal, Parameters::Parameter::State);
+		updateParameter<double>("Scale", scale, Parameters::Parameter::State);
+		updateParameter<double>("Shift", shift, Parameters::Parameter::State);
         buildLUT();
     }
     cv::cuda::GpuMat scaledImg;
@@ -81,7 +81,7 @@ void
 Colormap::buildLUT()
 {
     //thrust::host_vector<cv::Vec3b> h_LUT;
-    int scalingScheme = getParameter<int>(0)->data;
+    int scalingScheme = *getParameter<int>(0)->Data();
     switch(scalingScheme)
     {
     case 0:
@@ -265,10 +265,10 @@ cv::cuda::GpuMat QtColormapDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
         cv::cuda::minMax(img, &minVal,&maxVal);
         scale = double(resolution - 1) / (maxVal - minVal);
         shift = minVal * scale;
-        updateParameter<double>("Min", minVal,  Parameter::State);
-        updateParameter<double>("Max", maxVal,  Parameter::State);
-        updateParameter<double>("Scale", scale, Parameter::State);
-        updateParameter<double>("Shift", shift, Parameter::State);
+		updateParameter<double>("Min", minVal, Parameters::Parameter::State);
+		updateParameter<double>("Max", maxVal, Parameters::Parameter::State);
+		updateParameter<double>("Scale", scale, Parameters::Parameter::State);
+		updateParameter<double>("Shift", shift, Parameters::Parameter::State);
         buildLUT();
     }
     auto scaledImg = d_scaledBufferPool.getFront();
@@ -301,11 +301,11 @@ cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 {
     TIME
     cv::cuda::GpuMat normalized = *normalizedBuf.getFront();
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>(3)->data;
+    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>(3)->Data();
     cv::cuda::normalize(img,normalized,
-            getParameter<double>(1)->data,
-            getParameter<double>(2)->data,
-            getParameter<EnumParameter>(0)->data.getValue(), img.type(),
+            *getParameter<double>(1)->Data(),
+            *getParameter<double>(2)->Data(),
+            getParameter<EnumParameter>(0)->Data()->getValue(), img.type(),
             mask == nullptr ? cv::noArray(): *mask,
             stream);
     return normalized;

@@ -55,13 +55,13 @@ cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
        parameters[3]->changed ||
        parameters[4]->changed )
     {
-        TypedParameter<EnumParameter>::Ptr typeParam = getParameter<EnumParameter>(0);
-        int selection = typeParam->data.currentSelection;
-        int dtype = typeParam->data.values[selection];
-        createdMat = cv::cuda::GpuMat(getParameter<int>(3)->data,
-                    getParameter<int>(2)->data,
-                    dtype, getParameter<cv::Scalar>(4)->data);
-        updateParameter("Output", createdMat, Parameter::Output);
+        auto typeParam = getParameter<EnumParameter>(0);
+		int selection = typeParam->Data()->currentSelection;
+		int dtype = typeParam->Data()->values[selection];
+		createdMat = cv::cuda::GpuMat(*getParameter<int>(3)->Data(),
+					*getParameter<int>(2)->Data(),
+					dtype, *getParameter<cv::Scalar>(4)->Data());
+        updateParameter("Output", createdMat, Parameters::Parameter::Output);
         parameters[0]->changed = false;
         parameters[1]->changed = false;
         parameters[2]->changed = false;
@@ -84,7 +84,7 @@ void SetMatrixValues::Init(bool firstInit)
 cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     TIME
-    cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat*>(0)->data;
+		cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat>(0)->Data();
     if(input == nullptr)
         input = &img;
     TIME
@@ -93,17 +93,17 @@ cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         boost::function<bool(const Parameter::Ptr&)> f = GpuMatQualifier::get(input->cols, input->rows, 1, CV_8U);
         updateInputQualifier<cv::cuda::GpuMat>(1, f);
     }
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>(1)->data;
+	cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>(1)->Data();
 
     if(mask && mask->size() == input->size())
     {
         TIME
-        input->setTo(getParameter<cv::Scalar>(2)->data, *mask, stream);
+			input->setTo(*getParameter<cv::Scalar>(2)->Data(), *mask, stream);
         TIME
     }else
     {
         TIME
-        input->setTo(getParameter<cv::Scalar>(2)->data, stream);
+        input->setTo(*getParameter<cv::Scalar>(2)->Data(), stream);
         TIME
     }
     return *input;
@@ -116,7 +116,7 @@ void Resize::Init(bool firstInit)
 cv::cuda::GpuMat Resize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 	auto buf = bufferPool.getFront();
-	cv::cuda::resize(img, buf->data, cv::Size(getParameter<int>(0)->data, getParameter<int>(1)->data), 0.0, 0.0, 1, stream);
+	cv::cuda::resize(img, buf->data, cv::Size(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data()), 0.0, 0.0, 1, stream);
 	return buf->data;
 }
 void Subtract::Init(bool firstInit)
@@ -125,7 +125,7 @@ void Subtract::Init(bool firstInit)
 }
 cv::cuda::GpuMat Subtract::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-	cv::cuda::subtract(img, getParameter<cv::Scalar>(0)->data, img, cv::noArray(), -1, stream);
+	cv::cuda::subtract(img, *getParameter<cv::Scalar>(0)->Data(), img, cv::noArray(), -1, stream);
 	return img;
 }
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SetMatrixValues)

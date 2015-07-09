@@ -10,7 +10,7 @@ void GetOutputImage::Init(bool firstInit)
 
 cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat*>("Input")->data;
+    cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat>("Input")->Data();
     if(input == nullptr)
     {
         log(Status, "Input not defined");
@@ -25,7 +25,7 @@ cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
 }
 cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    updateParameter("Output image", img, Parameter::Output);
+    updateParameter("Output image", img, Parameters::Parameter::Output);
     return img;
 }
 
@@ -44,24 +44,24 @@ void ImageInfo::Init(bool firstInit)
     dataType.addEnum(ENUM(CV_32S));
     dataType.addEnum(ENUM(CV_32F));
     dataType.addEnum(ENUM(CV_64F));
-    updateParameter<EnumParameter>("Type",dataType, Parameter::State);
+    updateParameter<EnumParameter>("Type",dataType, Parameters::Parameter::State);
 }
 cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 
     auto param = getParameter<EnumParameter>(0);
-    if(param->data.currentSelection != img.type())
+    if(param->Data()->currentSelection != img.type())
     {
-        param->data.currentSelection = img.type();
+        param->Data()->currentSelection = img.type();
         parameters[0]->changed = true;
-        parameters[0]->onUpdate();
+        
     }
-    updateParameter<int>("Depth",img.depth(), Parameter::State);
-    updateParameter<int>("Rows",img.rows, Parameter::State);
-    updateParameter<int>("Cols", img.cols, Parameter::State);
-    updateParameter<int>("Channels", img.channels(), Parameter::State);
-    updateParameter<int>("Step", img.step, Parameter::State);
-    updateParameter<int>("Ref count", *img.refcount, Parameter::State);
+	updateParameter<int>("Depth", img.depth(), Parameters::Parameter::State);
+	updateParameter<int>("Rows", img.rows, Parameters::Parameter::State);
+	updateParameter<int>("Cols", img.cols, Parameters::Parameter::State);
+	updateParameter<int>("Channels", img.channels(), Parameters::Parameter::State);
+	updateParameter<int>("Step", img.step, Parameters::Parameter::State);
+	updateParameter<int>("Ref count", *img.refcount, Parameters::Parameter::State);
     return img;
 }
 void Mat2Tensor::Init(bool firstInit)
@@ -79,8 +79,8 @@ void Mat2Tensor::Init(bool firstInit)
 }
 cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    int type = getParameter<EnumParameter>(0)->data.currentSelection;
-    bool position = getParameter<bool>(1)->data;
+    int type = getParameter<EnumParameter>(0)->Data()->currentSelection;
+    bool position = *getParameter<bool>(1)->Data();
     int newCols = img.channels();
     if(position)
         newCols += 2;
@@ -165,13 +165,13 @@ cv::cuda::GpuMat ConcatTensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     int type = -1;
     for(int i = 1; i < parameters.size(); ++i)
     {
-        auto param = boost::dynamic_pointer_cast<TypedParameter<cv::cuda::GpuMat*>, Parameter>(parameters[i]);
+        auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(parameters[i]);
         if(param)
         {
-            if(param->data == nullptr)
+            if(param->Data() == nullptr)
                 full = false;
             else
-                inputs.push_back(param->data);
+                inputs.push_back(param->Data());
         }
     }
     if(full == true)

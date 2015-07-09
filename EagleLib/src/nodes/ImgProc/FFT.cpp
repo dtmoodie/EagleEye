@@ -19,8 +19,8 @@ void FFT::Init(bool firstInit)
         updateParameter("Desired output", param);
         //updateParameter("Desired output", int(-1));     // 4
         updateParameter("Log scale", true);             // 5
-        updateParameter<cv::cuda::GpuMat>("Magnitude", cv::cuda::GpuMat(), Parameter::Output);  // 6
-        updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat(), Parameter::Output);      // 7
+		updateParameter<cv::cuda::GpuMat>("Magnitude", cv::cuda::GpuMat(), Parameters::Parameter::Output);  // 6
+		updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat(), Parameters::Parameter::Output);      // 7
     }
     updateParameter("Use optimized size",false);
     destBuf.resize(5);
@@ -35,7 +35,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     int rows = cv::getOptimalDFTSize(img.rows);
     int cols = cv::getOptimalDFTSize(img.cols);
     cv::cuda::GpuMat padded;
-    if(getParameter<bool>("Use optimized size")->data)
+    if(*getParameter<bool>("Use optimized size")->Data())
         cv::cuda::copyMakeBorder(img,padded, 0, rows - img.rows, 0, cols - img.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), stream);
     else
         padded = img;
@@ -58,20 +58,20 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     TIME
     cv::cuda::GpuMat* destPtr = destBuf.getFront();
     int flags = 0;
-    if(getParameter<bool>(0)->data)
+    if(*getParameter<bool>(0)->Data())
         flags = flags | cv::DFT_ROWS;
-    if(getParameter<bool>(1)->data)
+    if(*getParameter<bool>(1)->Data())
         flags = flags | cv::DFT_SCALE;
-    if(getParameter<bool>(2)->data)
+    if(*getParameter<bool>(2)->Data())
         flags = flags | cv::DFT_INVERSE;
-    if(getParameter<bool>(3)->data)
+    if(*getParameter<bool>(3)->Data())
         flags = flags | cv::DFT_REAL_OUTPUT;
     TIME
     cv::cuda::dft(*floatImg,*destPtr,img.size(),flags, stream);
     cv::cuda::GpuMat dest = *destPtr; // This is done to make sure the destBuf gets allocated correctly and doesn't get de-allocated.
     TIME
-    int channel = getParameter<EnumParameter>(4)->data.getValue();
-    updateParameter("Coefficients", dest, Parameter::Output);
+    int channel = getParameter<EnumParameter>(4)->Data()->getValue();
+	updateParameter("Coefficients", dest, Parameters::Parameter::Output);
     TIME
     if(parameters[4]->changed)
     {
@@ -85,7 +85,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     if(channel == 0 || parameters[6]->subscribers != 0)
     {
         cv::cuda::magnitude(dest,magnitude, stream);
-        if(getParameter<bool>(5)->data)
+        if(*getParameter<bool>(5)->Data())
         {
             // Convert to log scale
             cv::cuda::add(magnitude,cv::Scalar::all(1), magnitude, cv::noArray(), -1, stream);

@@ -13,13 +13,13 @@ void GoodFeaturesToTrackDetector::Init(bool firstInit)
     if(firstInit)
     {
         updateParameter("Feature Detector",
-            cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1), Parameter::Output);
+			cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1), Parameters::Parameter::Output);
         updateParameter("Max corners",
-            int(1000), Parameter::Control);
+			int(1000), Parameters::Parameter::Control);
         updateParameter("Quality Level",
             double(0.01));
         updateParameter("Min Distance",
-            double(0.0), Parameter::Control, "The minimum distance between detected points");
+			double(0.0), Parameters::Parameter::Control, "The minimum distance between detected points");
         updateParameter("Block Size",
             int(3));
         updateParameter("Use harris",
@@ -29,7 +29,7 @@ void GoodFeaturesToTrackDetector::Init(bool firstInit)
         updateParameter("Enabled",
             false);
         updateParameter<DetectAndComputeFunctor>("Detection functor",
-            boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2, _3, _4, _5), Parameter::Output);
+			boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2, _3, _4, _5), Parameters::Parameter::Output);
         greyImgs.resize(5);
         addInputParameter<cv::cuda::GpuMat>("Mask");
     }
@@ -44,12 +44,12 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
        parameters[3]->changed || parameters[4]->changed ||
        parameters[5]->changed || parameters[6]->changed)
     {
-        int numCorners = getParameter<int>(1)->data;
-        double qualityLevel = getParameter<double>(2)->data;
-        double minDistance = getParameter<double>(3)->data;
-        int blockSize = getParameter<int>(4)->data;
-        bool useHarris = getParameter<bool>(5)->data;
-        double harrisK = getParameter<double>(6)->data;
+        int numCorners = *getParameter<int>(1)->Data();
+        double qualityLevel = *getParameter<double>(2)->Data();
+        double minDistance = *getParameter<double>(3)->Data();
+        int blockSize = *getParameter<int>(4)->Data();
+        bool useHarris = *getParameter<bool>(5)->Data();
+        double harrisK = *getParameter<double>(6)->Data();
 
         updateParameter(0,
             cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1,
@@ -65,9 +65,9 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         parameters[5]->changed = false;
         parameters[6]->changed = false;
     }
-    if(!getParameter<bool>(7)->data)
+    if(!*getParameter<bool>(7)->Data())
         return img;
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>("Mask")->data;
+    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
     auto keyPoints = detectedPoints.getFront();
     if(mask)
     {
@@ -99,15 +99,15 @@ void GoodFeaturesToTrackDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat 
         log(Error, "Detector not built");
         return;
     }
-    cv::Ptr<cv::cuda::CornersDetector> detector = detectorParam->data;
+    cv::Ptr<cv::cuda::CornersDetector> detector = *detectorParam->Data();
     if(detector == nullptr)
     {
         log(Error, "Detector not built");
         return;
     }
     detector->detect(*greyImg, keyPoints, mask, stream);
-    updateParameter("Detected Corners", keyPoints, Parameter::Output);
-    updateParameter("Num corners", keyPoints.cols, Parameter::State);
+	updateParameter("Detected Corners", keyPoints, Parameters::Parameter::Output);
+	updateParameter("Num corners", keyPoints.cols, Parameters::Parameter::State);
 }
 
 /// *****************************************************************************************
@@ -120,7 +120,7 @@ void FastFeatureDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
             cv::cuda::Stream& stream)
 {
 
-    cv::Ptr<cv::cuda::FastFeatureDetector> detector = getParameter<cv::Ptr<cv::cuda::FastFeatureDetector>>(0)->data;
+    cv::Ptr<cv::cuda::FastFeatureDetector> detector = *getParameter<cv::Ptr<cv::cuda::FastFeatureDetector>>(0)->Data();
     if(detector)
     {
         detector->detectAndComputeAsync(img,mask,keyPoints,descriptors,false, stream);
@@ -161,16 +161,16 @@ cv::cuda::GpuMat FastFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda:
        parameters[4]->changed)
     {
         updateParameter(0, cv::cuda::FastFeatureDetector::create(
-                            getParameter<int>(1)->data,
-                            getParameter<bool>(2)->data,
-                            getParameter<EnumParameter>(3)->data.getValue(),
-                            getParameter<int>(4)->data));
+                            *getParameter<int>(1)->Data(),
+                            *getParameter<bool>(2)->Data(),
+                            getParameter<EnumParameter>(3)->Data()->getValue(),
+                            *getParameter<int>(4)->Data()));
         parameters[1]->changed = false;
         parameters[2]->changed = false;
         parameters[3]->changed = false;
         parameters[4]->changed = false;
     }
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>("Mask")->data;
+    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
     auto keyPoints = detectedPoints.getFront();
     if(mask)
     {
@@ -189,7 +189,7 @@ void ORBFeatureDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
             cv::cuda::GpuMat& descriptors,
             cv::cuda::Stream& stream)
 {
-    cv::Ptr<cv::cuda::ORB> detector = getParameter<cv::Ptr<cv::cuda::ORB>>(0)->data;
+    cv::Ptr<cv::cuda::ORB> detector = *getParameter<cv::Ptr<cv::cuda::ORB>>(0)->Data();
     if(detector)
     {
         detector->detectAndComputeAsync(img,mask,keyPoints,descriptors,false, stream);
@@ -237,16 +237,16 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
     {
         updateParameter(0,
             cv::cuda::ORB::create(
-                    getParameter<int>(1)->data,
-                    getParameter<float>(2)->data,
-                    getParameter<int>(3)->data,
-                    getParameter<int>(4)->data,
-                    getParameter<int>(5)->data,
-                    getParameter<int>(6)->data,
-                    getParameter<EnumParameter>(7)->data.getValue(),
-                    getParameter<int>(8)->data,
-                    getParameter<int>(9)->data,
-                    getParameter<bool>(10)->data));
+			*getParameter<int>(1)->Data(),
+					*getParameter<float>(2)->Data(),
+					*getParameter<int>(3)->Data(),
+					*getParameter<int>(4)->Data(),
+					*getParameter<int>(5)->Data(),
+					*getParameter<int>(6)->Data(),
+					getParameter<EnumParameter>(7)->Data()->getValue(),
+					*getParameter<int>(8)->Data(),
+					*getParameter<int>(9)->Data(),
+					*getParameter<bool>(10)->Data()));
 
        parameters[1]->changed = false;
        parameters[2]->changed = false;
@@ -259,7 +259,7 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
        parameters[9]->changed = false;
        parameters[10]->changed = false;
     }
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>("Mask")->data;
+	cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
     auto keyPoints = detectedPoints.getFront();
     if(mask)
     {
@@ -283,7 +283,7 @@ void HistogramRange::Init(bool firstInit)
         updateParameter<double>("Lower bound", 0.0);
         updateParameter<double>("Upper bound", 1.0);
         updateParameter<int>("Bins", 100);
-        updateParameter<cv::cuda::GpuMat>("Histogram", cv::cuda::GpuMat(), Parameter::Output);
+        updateParameter<cv::cuda::GpuMat>("Histogram", cv::cuda::GpuMat(), Parameters::Parameter::Output);
         updateLevels(CV_8U);
     }
 }
@@ -319,9 +319,9 @@ cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
 
 void HistogramRange::updateLevels(int type)
 {
-    double lower = getParameter<double>(0)->data;
-    double upper = getParameter<double>(1)->data;
-    int bins = getParameter<int>(2)->data;
+	double lower = *getParameter<double>(0)->Data();
+	double upper = *getParameter<double>(1)->Data();
+	int bins = *getParameter<int>(2)->Data();
     cv::Mat h_mat;
     if(type == CV_32F)
         h_mat = cv::Mat(1, bins, CV_32F);
@@ -338,7 +338,7 @@ void HistogramRange::updateLevels(int type)
             h_mat.at<int>(i) = val;
     }
     levels.upload(h_mat);
-    updateParameter("Histogram bins", h_mat, Parameter::Output);
+    updateParameter("Histogram bins", h_mat, Parameters::Parameter::Output);
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrackDetector)

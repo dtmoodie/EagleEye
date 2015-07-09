@@ -115,7 +115,7 @@ void ConvertColorspace::Init(bool firstInit)
 cv::cuda::GpuMat ConvertColorspace::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
 	auto buf =  resultBuffer.getFront();
-	cv::cuda::cvtColor(img, buf->data, getParameter<EnumParameter>(0)->data.getValue(), 0, stream);
+	cv::cuda::cvtColor(img, buf->data, getParameter<EnumParameter>(0)->Data()->getValue(), 0, stream);
 	return buf->data;
 }
 
@@ -135,18 +135,18 @@ void ExtractChannels::Init(bool firstInit)
 cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     TIME
-    channelNum = getParameter<int>(0)->data;
+    channelNum = *getParameter<int>(0)->Data();
     std::vector<cv::cuda::GpuMat>* channels = channelsBuffer.getFront();
     TIME
     cv::cuda::split(img,*channels,stream);
     TIME
     for(size_t i = 0; i < channels->size(); ++i)
     {
-        updateParameter("Channel " + std::to_string(i), (*channels)[i], Parameter::Output);
+        updateParameter("Channel " + std::to_string(i), (*channels)[i], Parameters::Parameter::Output);
     }
     TIME
     if(parameters[0]->changed)
-        channelNum = getParameter<int>(0)->data;
+        channelNum = *getParameter<int>(0)->Data();
     TIME
     if(channelNum == -1)
         return img;
@@ -177,7 +177,7 @@ void ConvertDataType::Init(bool firstInit)
 cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat output;
-    img.convertTo(output, getParameter<EnumParameter>(0)->data.currentSelection, getParameter<double>(1)->data, getParameter<double>(2)->data,stream);
+    img.convertTo(output, getParameter<EnumParameter>(0)->Data()->currentSelection, *getParameter<double>(1)->Data(), *getParameter<double>(2)->Data(),stream);
     return output;
 }
 
@@ -196,10 +196,10 @@ void Merge::Init(bool firstInit)
 
 cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    auto chan1 = getParameter<cv::cuda::GpuMat*>(0);
-    auto chan2 = getParameter<cv::cuda::GpuMat*>(1);
-    auto chan3 = getParameter<cv::cuda::GpuMat*>(2);
-    auto chan4 = getParameter<cv::cuda::GpuMat*>(3);
+    auto chan1 = getParameter<cv::cuda::GpuMat>(0);
+    auto chan2 = getParameter<cv::cuda::GpuMat>(1);
+    auto chan3 = getParameter<cv::cuda::GpuMat>(2);
+    auto chan4 = getParameter<cv::cuda::GpuMat>(3);
 //    if(qualifiersSet == false || chan1->changed)
 //    {
 //        int type = img.type();
@@ -226,16 +226,16 @@ cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
 //        qualifiersSet = true;
 //    }
     std::vector<cv::cuda::GpuMat> channels;
-    if(chan1->data)
-        channels.push_back(*chan1->data);
+    if(chan1->Data())
+        channels.push_back(*chan1->Data());
     else
         channels.push_back(img);
-    if(chan2->data)
-        channels.push_back(*chan2->data);
-    if(chan3->data)
-        channels.push_back(*chan3->data);
-    if(chan4->data)
-        channels.push_back(*chan4->data);
+    if(chan2->Data())
+        channels.push_back(*chan2->Data());
+    if(chan3->Data())
+        channels.push_back(*chan3->Data());
+    if(chan4->Data())
+        channels.push_back(*chan4->Data());
     cv::cuda::merge(channels, mergedChannels,stream);
     return mergedChannels;
 }
@@ -247,7 +247,7 @@ void Reshape::Init(bool firstInit)
 
 cv::cuda::GpuMat Reshape::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    return img.reshape(getParameter<int>(0)->data, getParameter<int>(1)->data);
+    return img.reshape(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToGrey)

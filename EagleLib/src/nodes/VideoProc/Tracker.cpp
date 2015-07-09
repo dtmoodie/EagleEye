@@ -123,19 +123,19 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 
     if(parameters[0]->changed)
     {
-        trackedFrames.set_capacity(getParameter<int>(0)->data);
+        trackedFrames.set_capacity(*getParameter<int>(0)->Data());
         parameters[0]->changed = false;
     }
-    DetectAndComputeFunctor* detector = getParameter<DetectAndComputeFunctor*>("Detector")->data;
-    TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor*>("Tracker")->data;
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat*>("Mask")->data;
+    DetectAndComputeFunctor* detector = getParameter<DetectAndComputeFunctor>("Detector")->Data();
+    TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor>("Tracker")->Data();
+    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
 //    boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
 //                         cv::cuda::GpuMat, cv::cuda::GpuMat,
 //                         std::string&, cv::cuda::Stream)>*
 //        display = getParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
 //                                                    cv::cuda::GpuMat, cv::cuda::GpuMat,
 //                                                    std::string&, cv::cuda::Stream)>*>("Display functor")->data;
-    if(getParameter<bool>("Display")->data)
+    if(*getParameter<bool>("Display")->Data())
     {
         if(nonWarpedMask.size() != img.size())
         {
@@ -143,7 +143,7 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
             nonWarpedMask.setTo(cv::Scalar(1), stream);
         }
     }
-    int* index = getParameter<int*>("Index")->data;
+	int* index = getParameter<int>("Index")->Data();
     static int frameCount = 0;
     if(index)
         frameCount = *index;
@@ -206,12 +206,12 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
             }
             if(results[i]->calculated)
             {
-                if(results[i]->quality < getParameter<double>(2)->data)
+				if (results[i]->quality < *getParameter<double>(2)->Data())
                     addKeyFrame = true;
-                if(i == trackedFrames.size() - 1 && results[i]->quality < getParameter<double>(1)->data)
+				if (i == trackedFrames.size() - 1 && results[i]->quality <*getParameter<double>(1)->Data())
                     addKeyFrame = true;
             }
-            if(getParameter<bool>("Display")->data == true)
+			if (*getParameter<bool>("Display")->Data() == true)
             {
                 cv::cuda::GpuMat* warpBuffer = warpedImageBuffer.getFront();
                 cv::cuda::GpuMat* maskBuffer = warpedMaskBuffer.getFront();
@@ -244,7 +244,7 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
                     keyPoints,
                     tf.keyFrame.getDescriptors(),
                     stream);
-        if(keyPoints.cols > getParameter<int>(3)->data)
+		if (keyPoints.cols > *getParameter<int>(3)->Data())
             trackedFrames.push_back(tf);
     }
     ++frameCount;

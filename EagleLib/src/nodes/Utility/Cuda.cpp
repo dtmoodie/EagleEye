@@ -33,7 +33,7 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
         firstRun = false;
     }
 
-    unsigned int device = getParameter<unsigned int>(0)->data;
+    unsigned int device = *getParameter<unsigned int>(0)->Data();
     if(device >= maxDevice)
     {
         log(Status, "Desired device greater than max allowed device index, max index: " + boost::lexical_cast<std::string>(maxDevice - 1));
@@ -75,7 +75,7 @@ cv::cuda::GpuMat StreamDispatcher::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 {
     if(parameters[0]->changed)
     {
-        streams.resize(getParameter<int>(0)->data);
+        streams.resize(*getParameter<int>(0)->Data());
     }
     stream = *streams.getFront();
     return img;

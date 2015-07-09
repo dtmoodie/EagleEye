@@ -18,11 +18,11 @@ void SyncFunctionCall::call()
 {
     for(int i = 1; i < parameters.size(); ++i)
     {
-        auto param = boost::dynamic_pointer_cast<TypedParameter<boost::function<void(void)>*>, Parameter>(parameters[i]);
+		auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<boost::function<void(void)>>>(parameters[i]);
         if(param)
         {
-            if(param->data != nullptr)
-                (*param->data)();
+            if(param->Data() != nullptr)
+                (*param->Data())();
         }
     }
 }
@@ -32,10 +32,11 @@ cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     bool full = true;
     for(int i = 1; i < parameters.size(); ++i)
     {
-        auto param = boost::dynamic_pointer_cast<TypedParameter<boost::function<void(void)>*>, Parameter>(parameters[i]);
+        auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<boost::function<void(void)>>>(parameters[i]);
+		
         if(param)
         {
-            if(param->data == nullptr)
+            if(param->Data() == nullptr)
                 full = false;
         }
     }

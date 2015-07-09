@@ -51,7 +51,7 @@
 #include "../LokiTypeInfo.h"
 #include <boost/thread.hpp>
 #include <Qualifiers.hpp>
-#include "../Parameters.h"
+#include <parameters.hpp>
 #include <external_includes/cv_core.hpp>
 #include <external_includes/cv_highgui.hpp>
 #include <external_includes/cv_videoio.hpp>
@@ -329,7 +329,7 @@ namespace EagleLib
          * @param param
          * @return
          */
-        virtual std::vector<std::string> findType(Parameter::Ptr param);
+        virtual std::vector<std::string> findType(Parameters::Parameter::Ptr param);
         /**
          * @brief findType
          * @param typeInfo
@@ -349,7 +349,7 @@ namespace EagleLib
          * @param nodes
          * @return
          */
-        virtual std::vector<std::string> findType(Parameter::Ptr param, std::vector<Node *> &nodes);
+        virtual std::vector<std::string> findType(Parameters::Parameter::Ptr param, std::vector<Node *> &nodes);
         /**
          * @brief findCompatibleInputs
          * @return
@@ -372,7 +372,7 @@ namespace EagleLib
          * @param param
          * @return
          */
-        std::vector<std::string> findCompatibleInputs(Parameter::Ptr param);
+        std::vector<std::string> findCompatibleInputs(Parameters::Parameter::Ptr param);
         /**
          * @brief setInputParameter
          * @param sourceName
@@ -395,14 +395,14 @@ namespace EagleLib
          * @param idx
          * @return
          */
-		virtual boost::shared_ptr<Parameter> getParameter(int idx);
+		virtual Parameters::Parameter::Ptr getParameter(int idx);
 
         /**
          * @brief getParameter
          * @param name
          * @return
          */
-		virtual boost::shared_ptr<Parameter> getParameter(const std::string& name);
+		virtual Parameters::Parameter::Ptr getParameter(const std::string& name);
 		
         /**
          * @brief addParameter
@@ -413,48 +413,38 @@ namespace EagleLib
          * @param ownsData_
          * @return
          */
-        template<typename T> size_t
-        addParameter(const std::string& name,
-                    const T& data,
-                    Parameter::ParamType type_ = Parameter::Control,
-                    const std::string& toolTip_ = std::string(),
-                    const bool& ownsData_ = false)
+		template<typename T, typename Enable = void> size_t addParameter(const std::string& name,
+			const T& data, Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control, const std::string& toolTip_ = std::string(), bool ownsData = false)
 		{
-			if(std::is_pointer<T>::value)
-				parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_ + Parameter::NotifyOnRecompile, toolTip_, ownsData_)));
-			else
-					parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_, toolTip_, ownsData_)));
-            parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
-            if(onParameterAdded)
-                (*onParameterAdded)();
+			return 0;
+		}
+
+		template<typename T, typename std::enable_if<std::is_pointer<T>::value, void>::type> size_t
+			addParameter(const std::string& name,
+			const T& data,
+			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+			const std::string& toolTip_ = std::string(), bool ownsData = false)
+		{
+			parameters.push_back(Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data, type_, toolTip_)));
+			parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+			if (onParameterAdded)
+				(*onParameterAdded)();
 			return parameters.size() - 1;
 		}
 
-        /**
-         * @brief addParameter adds a parameter of specified type to the parameter list, mostly used by updateParameter, since update parameter checks for existence
-         * @param name is the name for the parameter
-         * @param data initialized data for the parameter
-         * @param type_ is the parameter type, ie Control, Status, Input, Output
-         * @param toolTip_ is the tooltip to be displayed on theuser interface for this parameter, ie units, ranges, etc
-         * @param ownsData_ set to true if you want this parameter to try to delete the data upon parameter destruction
-         * @return
-         */
-        template<typename T> size_t
-        addParameter(const std::string& name,
-                        T& data,
-                        Parameter::ParamType type_ = Parameter::Control,
-                        const std::string& toolTip_ = std::string(),
-                        const bool& ownsData_ = false)
-        {
-            if(std::is_pointer<T>::value)
-                parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_ + Parameter::NotifyOnRecompile, toolTip_, ownsData_)));
-            else
-                    parameters.push_back(boost::shared_ptr< TypedParameter<T> >(new TypedParameter<T>(name, data, type_, toolTip_, ownsData_)));
-            parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
-            if(onParameterAdded)
-                (*onParameterAdded)();
-            return parameters.size() - 1;
-        }
+		template<typename T, typename std::enable_if<!std::is_pointer<T>::value, void>::type> size_t
+			addParameter(const std::string& name,
+			const T& data,
+			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+			const std::string& toolTip_ = std::string(), bool ownsData = false)
+		{
+			parameters.push_back(Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
+			parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+			if (onParameterAdded)
+				(*onParameterAdded)();
+			return parameters.size() - 1;
+		}
+
 
         /**
           * @brief addInputParameter is used to define an input parameter for a node
@@ -463,10 +453,10 @@ namespace EagleLib
           * @return the index of the parameter
           */
          template<typename T> size_t
-            addInputParameter(const std::string& name, const std::string& toolTip_ = std::string(), const boost::function<bool(const EagleLib::Parameter::Ptr&)>& qualifier_ = boost::function<bool(const EagleLib::Parameter::Ptr&)>())
+			 addInputParameter(const std::string& name, const std::string& toolTip_ = std::string(), const boost::function<bool(const Parameter*)>& qualifier_ = boost::function<bool(const Parameter*)>())
 		{
-            parameters.push_back(boost::shared_ptr< InputParameter<T> >(new InputParameter<T>(name, toolTip_,qualifier_)));
-            parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+				parameters.push_back(Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
+				parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
             if(onParameterAdded)
                 (*onParameterAdded)();
 			return parameters.size() - 1;
@@ -520,11 +510,11 @@ namespace EagleLib
         template<typename T> bool
         updateParameter(const std::string& name,
                         const T& data,
-                        Parameter::ParamType type_ = Parameter::Control,
+                        Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
                         const std::string& toolTip_ = std::string(),
                         const bool& ownsData_ = false)
 		{
-            typename TypedParameter<T>::Ptr param;
+            typename Parameters::ITypedParameter<T>::Ptr param;
             try
             {
                 param = getParameter<T>(name);
@@ -532,13 +522,11 @@ namespace EagleLib
             {
                 return addParameter(name, data, type_, toolTip_, ownsData_);
             }
-			param->data = data;
 			if (type_ != Parameter::None)
 				param->type = type_;
 			if (toolTip_.size() > 0)
-				param->toolTip = toolTip_;
-			param->changed = true;
-            param->onUpdate();
+				param->SetTooltip(toolTip_);
+			param->UpdateData(data);
 			return true;
 		}
 //        // Is this needed?  Will the above suffice?
@@ -575,91 +563,56 @@ namespace EagleLib
 							T data,
 							const std::string& name = std::string(),
 							const std::string quickHelp = std::string(),
-							Parameter::ParamType type_ = Parameter::None)
+							Parameters::Parameter::ParameterType type_ = Parameters::Parameter::None)
 		{
 			if (idx > parameters.size() || idx < 0)
 				return false;
-			typename TypedParameter<T>::Ptr param = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[idx]);
+			auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(parameters[idx]);
 			if (param == NULL)
 				return false;
 
 			if (name.size() > 0)
-				param->name = name;
-			if (type_ != Parameter::None)
+				param->SetName( name );
+			if (type_ != Parameters::Parameter::None)
 				param->type = type_;
 			if (quickHelp.size() > 0)
-				param->toolTip = quickHelp;
-            param->data = data;
-            param->changed = true;
-            param->onUpdate();
+				param->SetTooltip(quickHelp);
+			param->UpdateData(data);
 			return true;
 		}
 
-		// Recursively searchs for a parameter based on name
-		template<typename T> boost::shared_ptr< TypedParameter<T> >
-			getParameterRecursive(std::string name, int depth)
-		{
-			if (depth < 0)
-				return boost::shared_ptr < TypedParameter<T> >();
-			for (int i = 0; i < parameters.size(); ++i)
-			{
-				if (parameters[i]->name == name)
-					return boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[i]);
-			}
-			// Parameter doesn't exist in this scope, we must go deeper
-			for (auto itr = children.begin(); itr != children.end(); ++itr)
-			{
-				boost::shared_ptr< TypedParameter<T> > param = itr->getParameterRecursive<T>(name, depth - 1);
-				if (param)
-					return param;
-			}
-			return boost::shared_ptr< TypedParameter<T> >();
-		}
-		template<typename T> boost::shared_ptr< TypedParameter<T> >
+
+
+		template<typename T> typename Parameters::ITypedParameter<T>::Ptr
 			getParameter(std::string name)
 		{
 			auto param =  getParameter(name);
 			if (param == nullptr)
             {
                 throw cv::Exception(0, "Failed to get parameter by name " + name, __FUNCTION__, __FILE__, __LINE__);
-				return boost::shared_ptr<TypedParameter<T>>();
+				return Parameters::ITypedParameter<T>::Ptr();
             }
-            boost::shared_ptr< TypedParameter<T> > typedParam = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
+			auto typedParam = std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(param);
             if(typedParam == nullptr)
                 throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
-                    TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + TypeInfo::demangle(param->typeInfo.name()), __FUNCTION__, __FILE__, __LINE__);
+                    TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + TypeInfo::demangle(param->GetTypeInfo().name()), __FUNCTION__, __FILE__, __LINE__);
 			
             return typedParam;
 		}
 
-		template<typename T> boost::shared_ptr< TypedParameter<T> >
-			getParameter(int idx)
+		template<typename T> typename Parameters::ITypedParameter<T>::Ptr getParameter(int idx)
 		{
-            Parameter::Ptr param = getParameter(idx);
+            auto param = getParameter(idx);
             if(param == nullptr)
                 throw cv::Exception(0, "Failed to get parameter by index " + boost::lexical_cast<std::string>(idx), __FUNCTION__, __FILE__, __LINE__);
-            boost::shared_ptr< TypedParameter<T> > typedParam = boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(param);
+
+            auto typedParam = std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(param);
             if(typedParam == nullptr)
                 throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
-                    TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + TypeInfo::demangle(param->typeInfo.name()), __FUNCTION__, __FILE__, __LINE__);
+                    TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + TypeInfo::demangle(param->GetTypeInfo().name()), __FUNCTION__, __FILE__, __LINE__);
             return typedParam;
 		}
 
-					//
-		bool
-			subParameterExists(std::string name)
-		{
-
-			return false;
-		}
-
-					// Get's a pointer to a sub parameter based on the name of the sub parameter
-		template<typename T> boost::shared_ptr< TypedParameter<T> >
-			getSubParameter(std::string name)
-		{
-
-			return boost::shared_ptr< TypedParameter<T> >(); // Return a NULL pointer
-		}
 
 		/*!
 		*  \brief findInputs recursively finds any compatible inputs wrt the templated desired type.
@@ -764,7 +717,7 @@ namespace EagleLib
 		// Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
         std::string															treeName;
         // Vector of parameters for this node
-        std::vector< boost::shared_ptr< Parameter > >						parameters;
+        std::vector< Parameters::Parameter::Ptr >							parameters;
         // These can be used to for user defined UI displaying of images.  IE if you havea  custom widget for displaying
         // nodes, you can plug that in here.
         boost::function<void(cv::Mat, Node*)>								cpuDisplayCallback;

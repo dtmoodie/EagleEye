@@ -23,7 +23,7 @@ void QtImageDisplay::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-        updateParameter("Name", std::string(), Parameter::Control, "Set name for window");
+		updateParameter("Name", std::string(), Parameters::Parameter::Control, "Set name for window");
     }
 }
 struct UserData
@@ -48,7 +48,7 @@ void QtImageDisplay::displayImage(cv::cuda::HostMem image)
 //        cpuDisplayCallback(image.createMatHeader(), this);
 //        return;
 //    }
-    std::string name = getParameter<std::string>(0)->data;
+    std::string name = *getParameter<std::string>(0)->Data();
     if(name.size() == 0)
     {
         name = fullTreeName;
@@ -94,7 +94,7 @@ void OGLImageDisplay::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-        updateParameter("Default Name", std::string("Default Name"), Parameter::Control, "Set name for window");
+		updateParameter("Default Name", std::string("Default Name"), Parameters::Parameter::Control, "Set name for window");
     }
 }
 
@@ -103,7 +103,7 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     if(parameters[0]->changed)
     {
         cv::destroyWindow(prevName);
-        prevName = getParameter<std::string>(0)->data;
+        prevName = *getParameter<std::string>(0)->Data();
         parameters[0]->changed = false;
         cv::namedWindow(prevName, cv::WINDOW_OPENGL);
     }
@@ -130,8 +130,8 @@ cv::Mat KeyPointDisplay::uicallback()
     if(displayType == 0)
     {
         EventBuffer<std::pair<cv::cuda::HostMem,cv::cuda::HostMem>>* buffer = hostData.waitBack();
-        cv::Scalar color = getParameter<cv::Scalar>(3)->data;
-        int radius = getParameter<int>(2)->data;
+        cv::Scalar color = *getParameter<cv::Scalar>(3)->Data();
+        int radius = *getParameter<int>(2)->Data();
         if(buffer)
         {
             cv::Mat keyPoints = buffer->data.first.createMatHeader();
@@ -186,7 +186,7 @@ void KeyPointDisplay::Serialize(ISimpleSerializer *pSerializer)
 }
 cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    cv::cuda::GpuMat* d_mat = getParameter<cv::cuda::GpuMat*>(0)->data;
+    cv::cuda::GpuMat* d_mat = getParameter<cv::cuda::GpuMat>(0)->Data();
 
     if(d_mat)
     {
@@ -198,7 +198,7 @@ cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         displayType = 0;
         return img;
     }
-    auto h_mat = getParameter<cv::Mat*>(1)->data;
+    auto h_mat = getParameter<cv::Mat*>(1)->Data();
     if(h_mat)
     {
 
@@ -239,7 +239,7 @@ void FlowVectorDisplay::Init(bool firstInit)
         updateParameter("Good Color", cv::Scalar(0,255,0));
         updateParameter("Bad Color", cv::Scalar(0,0,255));
         updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>>
-                ("Display functor", boost::bind(&FlowVectorDisplay::display, this, _1, _2, _3, _4, _5, _6), Parameter::Output);
+			("Display functor", boost::bind(&FlowVectorDisplay::display, this, _1, _2, _3, _4, _5, _6), Parameters::Parameter::Output);
     }
 }
 void FlowVectorDisplay::display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial,
@@ -259,9 +259,9 @@ void FlowVectorDisplay::display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial,
 
 cv::cuda::GpuMat FlowVectorDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    cv::cuda::GpuMat* d_initial = getParameter<cv::cuda::GpuMat*>(0)->data;
-    cv::cuda::GpuMat* d_final = getParameter<cv::cuda::GpuMat*>(1)->data;
-    cv::cuda::GpuMat* d_mask = getParameter<cv::cuda::GpuMat*>(2)->data;
+    cv::cuda::GpuMat* d_initial = getParameter<cv::cuda::GpuMat>(0)->Data();
+    cv::cuda::GpuMat* d_final = getParameter<cv::cuda::GpuMat>(1)->Data();
+    cv::cuda::GpuMat* d_mask = getParameter<cv::cuda::GpuMat>(2)->Data();
     if(d_initial && d_final)
     {
         display(img, *d_initial, *d_final, d_mask ? *d_mask : cv::cuda::GpuMat(), fullTreeName, stream);
@@ -278,7 +278,7 @@ cv::Mat FlowVectorDisplay::uicallback()
         cv::Mat mask = buffer->data[1].createMatHeader();
         cv::Mat initial = buffer->data[2].createMatHeader();
         cv::Mat final = buffer->data[3].createMatHeader();
-        cv::Scalar color = getParameter<cv::Scalar>(3)->data;
+        cv::Scalar color = *getParameter<cv::Scalar>(3)->Data();
         // Iterate through all points and draw them vectors
         if(mask.empty())
         {
@@ -310,10 +310,10 @@ void HistogramDisplay::displayHistogram()
     int minIdx, maxIdx;
     cv::minMaxIdx(data, &minVal, &maxVal, &minIdx, &maxIdx);
     cv::Mat img(100, data.cols*5,CV_8U, cv::Scalar(0));
-    updateParameter("Min value", minVal, Parameter::State);
-    updateParameter("Min bin", minIdx, Parameter::State);
-    updateParameter("Max value", maxVal, Parameter::State);
-    updateParameter("Max bin", maxIdx, Parameter::State);
+	updateParameter("Min value", minVal, Parameters::Parameter::State);
+	updateParameter("Min bin", minIdx, Parameters::Parameter::State);
+	updateParameter("Max value", maxVal, Parameters::Parameter::State);
+	updateParameter("Max bin", maxIdx, Parameters::Parameter::State);
     for(int i = 0; i < data.cols; ++i)
     {
         double height = data.at<int>(i);
@@ -337,7 +337,7 @@ void HistogramDisplay::Init(bool firstInit)
 
 cv::cuda::GpuMat HistogramDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat*>(0)->data;
+    cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat>(0)->Data();
     if(input)
     {
         if(input->rows == 1 || input->cols == 1)

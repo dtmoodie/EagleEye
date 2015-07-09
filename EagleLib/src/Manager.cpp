@@ -305,7 +305,11 @@ NodeManager::OnConstructorsAdded()
 	{
         for (size_t j = 0; j < newNodes[i]->parameters.size(); ++j)
 		{
-			newNodes[i]->parameters[j]->setSource(std::string());
+			if (newNodes[i]->parameters[j]->type & Parameters::Parameter::Input)
+			{
+				auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(newNodes[i]->parameters[j]);
+				inputParam->SetInput(std::string());
+			}
 		}		
 	}
 }
@@ -597,7 +601,7 @@ NodeManager::addParameters(Node* node)
 	}
 }
 
-boost::shared_ptr< Parameter > 
+Parameters::Parameter::Ptr
 NodeManager::getParameter(const std::string& name)
 {
 	// Strip off the path for the node
@@ -605,7 +609,7 @@ NodeManager::getParameter(const std::string& name)
 	std::string parameterName = name.substr(idx+1);
 	auto node = getNode(name.substr(0, idx));
     if(node == nullptr)
-        return Parameter::Ptr();
+        return Parameters::Parameter::Ptr();
 	return node->getParameter(parameterName);
 }
 
@@ -708,8 +712,8 @@ std::vector<std::string> NodeManager::getParametersOfType(boost::function<bool(L
     {
         for(size_t j = 0; j < nodes[i]->parameters.size(); ++j)
         {
-            if(selector(nodes[i]->parameters[j]->typeInfo))
-                parameters.push_back(nodes[i]->parameters[j]->treeName);
+            if(selector(nodes[i]->parameters[j]->GetTypeInfo()))
+                parameters.push_back(nodes[i]->parameters[j]->GetTreeName());
         }
     }
     return parameters;

@@ -192,28 +192,26 @@ Node::getNodesInScope(std::vector<Node *> &nodes)
     }
 }
 
-boost::shared_ptr<Parameter> 
-Node::getParameter(int idx)
+Parameters::Parameter::Ptr Node::getParameter(int idx)
 {
 	return parameters[idx];
 }
 
-boost::shared_ptr<Parameter> 
-Node::getParameter(const std::string& name)
+Parameters::Parameter::Ptr Node::getParameter(const std::string& name)
 {
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
-		if (parameters[i]->name == name)
+		if (parameters[i]->GetName() == name)
 			return parameters[i];
 	}
-	return boost::shared_ptr<Parameter>();
+	return Parameters::Parameter::Ptr();
 }
 std::vector<std::string> Node::listParameters()
 {
 	std::vector<std::string> paramList;
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
-		paramList.push_back(parameters[i]->name);
+		paramList.push_back(parameters[i]->GetName());
 	}
 	return paramList;
 }
@@ -222,8 +220,8 @@ std::vector<std::string> Node::listInputs()
 	std::vector<std::string> paramList;
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
-		if (parameters[i]->type & Parameter::Input)
-			paramList.push_back(parameters[i]->name);
+		if (parameters[i]->type & Parameters::Parameter::Input)
+			paramList.push_back(parameters[i]->GetName());
 	}
 	return paramList;
 }
@@ -296,10 +294,10 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                     // Do I lock each parameters mutex or do I just lock each node?
                     // I should only lock each node, but then I need to make sure the UI keeps track of the node
                     // to access the node's mutex while accessing a parameter, for now this works though.
-                    std::vector<boost::recursive_mutex::scoped_lock> locks;
+                    std::vector<std::lock_guard<std::recursive_mutex>> locks;
                     for(size_t i = 0; i < parameters.size(); ++i)
                     {
-                        locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
+						locks.push_back(std::lock_guard<std::recursive_mutex>(parameters[i]->mtx));
                     }
                     if(profile)
                     {
@@ -489,8 +487,9 @@ Node::Init(const cv::FileNode& configNode)
     cv::FileNode paramNode =  configNode["Parameters"];
     for(size_t i = 0; i < parameters.size(); ++i)
     {
-        parameters[i]->Init(paramNode);
-        parameters[i]->update();
+		// TODO
+        //parameters[i]->Init(paramNode);
+        //parameters[i]->update();
     }
     // Figure out parameter loading :/  Need some kind of factory for all of the parameter types
 }
@@ -538,9 +537,10 @@ Node::Serialize(cv::FileStorage& fs)
         fs << "Parameters" << "{";
         for(size_t i = 0; i < parameters.size(); ++i)
         {
-            if(parameters[i]->type & Parameter::Control || parameters[i]->type & Parameter::Input)
+            if(parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::Input)
             {
-                parameters[i]->Serialize(fs);
+				// TODO
+                //parameters[i]->Serialize(fs);
             }
         }
         fs << "}"; // end parameters
@@ -549,7 +549,7 @@ Node::Serialize(cv::FileStorage& fs)
 }
 
 std::vector<std::string>
-Node::findType(Parameter::Ptr param)
+Node::findType(Parameters::Parameter::Ptr param)
 {
     std::vector<Node*> nodes;
     getNodesInScope(nodes);
@@ -564,20 +564,31 @@ Node::findType(Loki::TypeInfo &typeInfo)
     return findType(typeInfo, nodes);
 }
 std::vector<std::string>
-Node::findType(Parameter::Ptr param, std::vector<Node*>& nodes)
+Node::findType(Parameters::Parameter::Ptr param, std::vector<Node*>& nodes)
 {
     std::vector<std::string> output;
+	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
+	if (inputParam)
+	{
+		for (size_t i = 0; i < nodes.size(); ++i)
+		{
+			if (nodes[i] == this)
+				continue;
+			for (size_t j = 0; j < nodes[i]->parameters.size(); ++j)
+			{
 
-    for (size_t i = 0; i < nodes.size(); ++i)
-    {
-        if (nodes[i] == this)
-            continue;
-        for (size_t j = 0; j < nodes[i]->parameters.size(); ++j)
-        {
-            if (param->acceptsInput(nodes[i]->parameters[j]) && nodes[i]->parameters[j]->type & Parameter::Output)
-                output.push_back(nodes[i]->parameters[j]->treeName);
-        }
-    }
+				if (nodes[i]->parameters[j]->type & Parameters::Parameter::Output)
+				{
+					if (inputParam->AcceptsInput(nodes[i]->parameters[j]))
+					{
+						output.push_back(nodes[i]->parameters[j]->GetTreeName());
+					}
+					
+				}
+
+			}
+		}
+	}
     return output;
 }
 
@@ -592,8 +603,14 @@ Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*> &nodes)
 			continue;
         for (size_t j = 0; j < nodes[i]->parameters.size(); ++j)
 		{
-            if (nodes[i]->parameters[j]->typeInfo == typeInfo && nodes[i]->parameters[j]->type & Parameter::Output)
-				output.push_back(nodes[i]->parameters[j]->treeName);
+			if (nodes[i]->parameters[j]->type & Parameters::Parameter::Output)
+			{
+				if (nodes[i]->parameters[j]->GetTypeInfo() == typeInfo)
+				{
+					output.push_back(nodes[i]->parameters[j]->GetTreeName());
+				}
+			}
+			
 		}
 	}
 	return output;
@@ -605,7 +622,7 @@ Node::findCompatibleInputs()
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->type & Parameter::Input)
-            output.push_back(findType(parameters[i]->typeInfo));
+            output.push_back(findType(parameters[i]->GetTypeInfo()));
 	}
 	return output;
 }
@@ -624,7 +641,7 @@ std::vector<std::string> Node::findCompatibleInputs(int paramIdx)
     return findCompatibleInputs(parameters[paramIdx]);
 }
 
-std::vector<std::string> Node::findCompatibleInputs(Parameter::Ptr param)
+std::vector<std::string> Node::findCompatibleInputs(Parameters::Parameter::Ptr param)
 {
     return findType(param);
 }
@@ -633,25 +650,22 @@ std::vector<std::string> Node::findCompatibleInputs(Parameter::Ptr param)
 void
 Node::setInputParameter(const std::string& sourceName, const std::string& inputName)
 {
-    for (size_t i = 0; i < parameters.size(); ++i)
+	auto param = getParameter(inputName);
+	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
+	if (inputParam)
 	{
-		if (parameters[i]->name == inputName && parameters[i]->type & Parameter::Input)
-			parameters[i]->setSource(sourceName);
+		inputParam->SetInput(sourceName);
 	}
 }
 
 void
 Node::setInputParameter(const std::string& sourceName, int inputIdx)
 {
-	int count = 0;
-    for (size_t i = 0; i < parameters.size(); ++i)
+	auto param = getParameter(inputIdx);
+	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
+	if (inputParam)
 	{
-		if (parameters[i]->type & Parameter::Input)
-		{
-			if (count == inputIdx)
-				parameters[i]->setSource(sourceName);
-			++count;
-		}
+		inputParam->SetInput(sourceName);
 	}
 }
 void
@@ -674,7 +688,7 @@ Node::setFullTreeName(const std::string& name)
 {
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
-        parameters[i]->treeName = name + ":" + parameters[i]->name;
+		parameters[i]->SetTreeRoot(name);
 	}
 	fullTreeName = name;
 }
@@ -702,7 +716,8 @@ Node::updateInputParameters()
 	{
 		if (parameters[i]->type & EagleLib::Parameter::Input)
 		{
-			parameters[i]->setSource("");
+			// TODO
+			//parameters[i]->setSource("");
 		}
 	}
 }

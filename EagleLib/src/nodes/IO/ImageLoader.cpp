@@ -7,7 +7,7 @@ using namespace EagleLib;
 void ImageLoader::Init(bool firstInit)
 {
     Node::Init(firstInit);
-    updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/oimg.jpeg"), Parameter::Control, "Path to image file");
+    updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/oimg.jpeg"), Parameters::Parameter::Control, "Path to image file");
     parameters[0]->changed = true;
 	nodeType = eSource;
 }
@@ -16,9 +16,9 @@ void ImageLoader::load()
     auto path = getParameter<boost::filesystem::path>(0);
     if(path)
     {
-        if(boost::filesystem::exists(path->data))
+		if (boost::filesystem::exists(*path->Data()))
         {
-            cv::Mat h_img = cv::imread(path->data.string()); 
+			cv::Mat h_img = cv::imread(path->Data()->string());
             d_img.upload(h_img); 
         }else
         {
@@ -55,7 +55,7 @@ bool DirectoryLoader::SkipEmpty() const
 }
 void DirectoryLoader::Init(bool firstInit)
 {
-    updateParameter<ReadDirectory>("Directory", boost::filesystem::path("/home/dan/build/EagleEye/bin"), Parameter::Control, "Path to directory");
+    updateParameter<ReadDirectory>("Directory", boost::filesystem::path("/home/dan/build/EagleEye/bin"), Parameters::Parameter::Control, "Path to directory");
     updateParameter<bool>("Repeat", true);
     updateParameter<boost::function<void(void)>>("Restart", boost::bind(&DirectoryLoader::restart, this));
 	nodeType = eSource;
@@ -71,7 +71,7 @@ cv::cuda::GpuMat DirectoryLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 {
     if(parameters[0]->changed)
     {
-        boost::filesystem::path& path = getParameter<ReadDirectory>(0)->data;
+		boost::filesystem::path& path = *getParameter<ReadDirectory>(0)->Data();
         files.clear();
         if(boost::filesystem::is_directory(path))
         {
@@ -91,7 +91,7 @@ cv::cuda::GpuMat DirectoryLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
             img.upload(h_img, stream);
             ++fileIdx;
         }
-        if(getParameter<bool>(1)->data)
+		if (*getParameter<bool>(1)->Data())
             if(fileIdx == files.size())
                 fileIdx = 0;
     }

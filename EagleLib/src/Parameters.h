@@ -88,7 +88,7 @@ namespace EagleLib
         std::string inputName;
         Loki::TypeInfo typeInfo;
         ParamType	type;
-        bool		changed;
+		bool		changed;
         // Used with input / output parameters to list the number of subscribers to an output
         unsigned int subscribers;
         boost::recursive_mutex mtx;

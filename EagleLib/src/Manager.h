@@ -20,6 +20,7 @@
 #include "nodes/Node.h"
 #include "CudaUtils.hpp"
 #include "plotters/Plotter.h"
+#include "Parameters.hpp"
 
 
 namespace EagleLib
@@ -120,7 +121,7 @@ namespace EagleLib
 
 		void updateTreeName(Node* node, const std::string& prevTreeName);
 		void addParameters(Node* node);
-		boost::shared_ptr< Parameter > getParameter(const std::string& name);
+		Parameters::Parameter::Ptr getParameter(const std::string& name);
         void setCompileCallback(boost::function<void(const std::string&, int)> & f);
 
 		void getSiblingNodes(const std::string& sourceNode, std::vector<Node*>& output);

@@ -27,9 +27,9 @@ void SparsePyrLKOpticalFlow::Init(bool firstInit)
         addInputParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>>("Display function");
     }
     updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::Stream)>>(
-        "Set Reference", boost::bind(&SparsePyrLKOpticalFlow::setReferenceImage, this, _1, _2, _3), Parameter::Output);
+        "Set Reference", boost::bind(&SparsePyrLKOpticalFlow::setReferenceImage, this, _1, _2, _3), Parameters::Parameter::Output);
 
-    updateParameter<TrackSparseFunctor>("Sparse Track Functor", boost::bind(&SparsePyrLKOpticalFlow::trackSparse, this, _1,_2,_3, _4, _5, _6, _7), Parameter::Output);
+	updateParameter<TrackSparseFunctor>("Sparse Track Functor", boost::bind(&SparsePyrLKOpticalFlow::trackSparse, this, _1, _2, _3, _4, _5, _6, _7), Parameters::Parameter::Output);
 }
 void SparsePyrLKOpticalFlow::Serialize(ISimpleSerializer *pSerializer)
 {
@@ -44,10 +44,10 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
        parameters[3]->changed ||
        parameters[4]->changed)
     {
-        int winSize = getParameter<int>(1)->data;
-        int levels = getParameter<int>(2)->data;
-        int iters = getParameter<int>(3)->data;
-        bool useInital = getParameter<bool>(4)->data;
+		int winSize = *getParameter<int>(1)->Data();
+		int levels = *getParameter<int>(2)->Data();
+		int iters = *getParameter<int>(3)->Data();
+		bool useInital = *getParameter<bool>(4)->Data();
         optFlow = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(winSize,winSize),levels,iters,useInital);
         parameters[1]->changed = false;
         parameters[2]->changed = false;
@@ -65,7 +65,7 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
         return img;
     }else
     {
-        cv::cuda::GpuMat* inputPts = getParameter<cv::cuda::GpuMat*>(0)->data;
+		cv::cuda::GpuMat* inputPts = getParameter<cv::cuda::GpuMat>(0)->Data();
         if(!inputPts)
             return img;
         if(!inputPts->empty())
@@ -103,7 +103,7 @@ void SparsePyrLKOpticalFlow::trackSparse(
         refPts.copyTo(trackedPts,stream);
     }
     boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>* display =
-            getParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>*>("Display function")->data;
+            getParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>>("Display function")->Data();
 
 
     optFlow->calc(refImg, curImg, refPts, trackedPts, status, err, stream);
@@ -111,9 +111,9 @@ void SparsePyrLKOpticalFlow::trackSparse(
     {
         (*display)(curImg, refPts, trackedPts, status, fullTreeName, stream);
     }
-    updateParameter("Tracked points", trackedPts, Parameter::Output);
-    updateParameter("Status", status, Parameter::Output);
-    updateParameter("Error", err, Parameter::Output);
+    updateParameter("Tracked points", trackedPts, Parameters::Parameter::Output);
+	updateParameter("Status", status, Parameters::Parameter::Output);
+	updateParameter("Error", err, Parameters::Parameter::Output);
 
 }
 

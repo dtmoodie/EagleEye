@@ -44,14 +44,14 @@ void ImageWriter::Init(bool firstInit)
     updateParameter<std::string>("Base name", "Image");
     updateParameter("Extension", param);
     updateParameter("Frequency", -1);
-    updateParameter<boost::function<void(void)>>("Save image", boost::bind(&ImageWriter::requestWrite, this), Parameter::Output);
+    updateParameter<boost::function<void(void)>>("Save image", boost::bind(&ImageWriter::requestWrite, this), Parameters::Parameter::Output);
 }
 
 cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
     if(parameters[0]->changed)
     {
-        std::string tmp = getParameter<std::string>(0)->data;
+		std::string& tmp = *getParameter<std::string>(0)->Data();
         if(tmp.size())
             baseName = tmp;
         else
@@ -59,7 +59,7 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     }
     if(parameters[1]->changed || extension.size() == 0)
     {
-        Extensions ext = (Extensions)getParameter<EnumParameter>(1)->data.getValue();
+		Extensions ext = (Extensions)getParameter<EnumParameter>(1)->Data()->getValue();
         switch (ext)
         {
         case jpg:
@@ -79,7 +79,7 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
             break;
         }
     }
-    int freq = getParameter<int>(2)->data;
+	int freq = *getParameter<int>(2)->Data();
     if((writeRequested || (frameSkip >= freq && freq != -1)) && baseName.size() && extension.size())
     {
         img.download(h_buf, stream);

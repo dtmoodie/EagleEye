@@ -18,7 +18,7 @@ ENDIF(WIN32)
 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
-
+FIND_PACKAGE(Qt5 COMPONENTS Gui Widgets)
 
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
@@ -33,6 +33,8 @@ INCLUDE_DIRECTORIES(
     ${Qt5Core_INCLUDE_DIRS}
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 	${Parameters_INCLUDE}
+	${Qt5Gui_INCLUDE_DIRS} 
+	${Qt5Widgets_INCLUDE_DIRS} 
 	)
 
 

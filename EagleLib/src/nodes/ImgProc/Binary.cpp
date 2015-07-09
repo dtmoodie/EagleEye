@@ -41,9 +41,9 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     bool updateFilter = parameters.size() != 7;
     if(parameters[0]->changed || parameters[2]->changed)
     {
-        int size = getParameter<int>(2)->data;
-        cv::Point anchor = getParameter<cv::Point>(3)->data;
-        updateParameter(4, cv::getStructuringElement(getParameter<EnumParameter>(0)->data.currentSelection,
+        int size = *getParameter<int>(2)->Data();
+        cv::Point anchor = *getParameter<cv::Point>(3)->Data();
+        updateParameter(4, cv::getStructuringElement(getParameter<EnumParameter>(0)->Data()->currentSelection,
                                   cv::Size(size,size),anchor));
 
         updateFilter = true;
@@ -55,14 +55,14 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     {
         updateParameter("Filter",
             cv::cuda::createMorphologyFilter(
-                getParameter<EnumParameter>(1)->data.currentSelection,img.type(),
-                getParameter<cv::Mat>(4)->data,
-                getParameter<cv::Point>(3)->data,
-                getParameter<int>(5)->data));
+                getParameter<EnumParameter>(1)->Data()->currentSelection,img.type(),
+                *getParameter<cv::Mat>(4)->Data(),
+                *getParameter<cv::Point>(3)->Data(),
+                *getParameter<int>(5)->Data()));
         log(Status, "Filter updated");
         parameters[1]->changed = false;
     }
-    getParameter<cv::Ptr<cv::cuda::Filter>>(6)->data->apply(img,img,stream);
+    (*getParameter<cv::Ptr<cv::cuda::Filter>>(6)->Data())->apply(img,img,stream);
     return img;
 }
 void FindContours::Init(bool firstInit)
@@ -83,7 +83,7 @@ void FindContours::Init(bool firstInit)
         method.addEnum(ENUM(cv::CHAIN_APPROX_TC89_KCOS));
         updateParameter("Mode", mode);      // 0
         updateParameter("Method", method);  // 1
-        updateParameter<std::vector<std::vector<cv::Point>>>("Contours", std::vector<std::vector<cv::Point>>(), Parameter::Output); // 2
+        updateParameter<std::vector<std::vector<cv::Point>>>("Contours", std::vector<std::vector<cv::Point>>(), Parameters::Parameter::Output); // 2
         updateParameter<std::vector<cv::Vec4i>>("Hierarchy", std::vector<cv::Vec4i>()); // 3
         updateParameter<bool>("Calculate contour Area", false); // 4
         updateParameter<bool>("Calculate Moments", false);  // 5
@@ -96,43 +96,43 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     cv::Mat h_img;
     img.download(h_img, stream);
     stream.waitForCompletion();
-    std::vector<std::vector<cv::Point> >* ptr = getParameterPtr<std::vector<std::vector<cv::Point>>>(parameters[2]);
+    std::vector<std::vector<cv::Point> >* ptr = getParameter<std::vector<std::vector<cv::Point>>>(2)->Data();
     cv::findContours(h_img,
         *ptr,
-        getParameter<std::vector<cv::Vec4i>>(3)->data,
-        getParameter<EnumParameter>(0)->data.currentSelection,
-        getParameter<EnumParameter>(1)->data.currentSelection);
-    updateParameter<int>("Contours found",ptr->size(), Parameter::State);
+        *getParameter<std::vector<cv::Vec4i>>(3)->Data(),
+        getParameter<EnumParameter>(0)->Data()->currentSelection,
+        getParameter<EnumParameter>(1)->Data()->currentSelection);
+    updateParameter<int>("Contours found",ptr->size(), Parameters::Parameter::State);
     parameters[2]->changed = true;
     parameters[3]->changed = true;
-    if(getParameter<bool>(4)->data)
+    if(*getParameter<bool>(4)->Data())
     {
         if(parameters[4]->changed)
         {
-            updateParameter<std::vector<std::pair<int,double>>>("Contour Area",std::vector<std::pair<int,double>>(), Parameter::Output);
+            updateParameter<std::vector<std::pair<int,double>>>("Contour Area",std::vector<std::pair<int,double>>(), Parameters::Parameter::Output);
             updateParameter<bool>("Oriented Area",false);
             updateParameter<bool>("Filter area", false);
             parameters[4]->changed = false;
         }
-        boost::shared_ptr<TypedParameter<bool>> areaParam = getParameter<bool>("Filter area");
-        if(areaParam != nullptr && areaParam->data && areaParam->changed)
+        auto areaParam = getParameter<bool>("Filter area");
+        if(areaParam != nullptr && *areaParam->Data() && areaParam->changed)
         {
             updateParameter<double>("Filter threshold", 0.0);
             updateParameter<double>("Filter sigma", 0.0);
             areaParam->changed = false;
         }
-        std::vector<std::pair<int,double>>* areaPtr = getParameterPtr<std::vector<std::pair<int,double>>>(getParameter("Contour Area"));
-        bool oriented = getParameter<bool>("Oriented Area")->data;
+        auto areaPtr = getParameter<std::vector<std::pair<int,double>>>("Contour Area")->Data();
+        bool oriented = getParameter<bool>("Oriented Area")->Data();
         areaPtr->resize(ptr->size());
         for(size_t i = 0; i < ptr->size(); ++i)
         {
             (*areaPtr)[i] = std::pair<int,double>(i,cv::contourArea((*ptr)[i], oriented));
         }
-        TypedParameter<double>::Ptr thresholdParam = getParameter<double>("Filter threshold");
-        if(thresholdParam != nullptr && thresholdParam->data != 0)
+        auto thresholdParam = getParameter<double>("Filter threshold");
+        if(thresholdParam != nullptr && thresholdParam->Data() != nullptr)
         {
             areaPtr->erase(std::remove_if(areaPtr->begin(), areaPtr->end(),
-                            [thresholdParam](std::pair<int,double> x){return x.second < thresholdParam->data;}), areaPtr->end());
+                            [thresholdParam](std::pair<int,double> x){return x.second < *thresholdParam->Data();}), areaPtr->end());
             // This should be more efficient, needs to be tested though
             /*for(auto it = areaPtr->begin(); it != areaPtr->end(); ++it)
             {
@@ -143,8 +143,8 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
                 }
             }*/
         }
-        TypedParameter<double>::Ptr sigmaParam = getParameter<double>("Filter sigma");
-        if(sigmaParam != nullptr && sigmaParam->data != 0.0)
+        auto sigmaParam = getParameter<double>("Filter sigma");
+        if(sigmaParam != nullptr && *sigmaParam->Data() != 0.0)
         {
             // Calculate mean and sigma
             double sum = 0;
@@ -178,7 +178,7 @@ void ContourBoundingBox::Init(bool firstInit)
 
 cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    auto contourPtr = getParameter<std::vector<std::vector<cv::Point>>*>(0)->data;
+    auto contourPtr = getParameter<std::vector<std::vector<cv::Point>>>(0)->Data();
     if(!contourPtr)
         return img;
     std::vector<cv::Rect> boxes;
@@ -189,9 +189,9 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     auto mergeParam = getParameter<bool>("Merge contours");
     if(mergeParam && mergeParam->changed)
     {
-        updateParameter<int>("Separation distance", 5,Parameter::Control, "Max distance between contours to still merge contours");
+        updateParameter<int>("Separation distance", 5, Parameters::Parameter::Control, "Max distance between contours to still merge contours");
     }
-    if(mergeParam && mergeParam->data)
+    if(mergeParam && *mergeParam->Data())
     {
         //int distance = getParameter<int>("Separation distance")->data;
         for(size_t i = 0; i < boxes.size() - 1; ++i)
@@ -219,17 +219,17 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     stream.waitForCompletion();
     cv::Scalar replace;
     if(img.channels() == 3)
-        replace = getParameter<cv::Scalar>(2)->data;
+        replace = *getParameter<cv::Scalar>(2)->Data();
     else
         replace = cv::Scalar(128,0,0);
     auto useArea = getParameter<bool>("Use filtered area");
-    int lineWidth = getParameter<int>(3)->data;
-    auto areaParam = getParameter<std::vector<std::pair<int,double>>*>("Contour Area");
-    if(useArea && useArea->data && areaParam && areaParam->data)
+    int lineWidth = *getParameter<int>(3)->Data();
+    auto areaParam = getParameter<std::vector<std::pair<int,double>>>("Contour Area");
+    if(useArea && *useArea->Data() && areaParam && areaParam->Data())
     {
-        for(size_t i = 0; i < areaParam->data->size(); ++i)
+        for(size_t i = 0; i < areaParam->Data()->size(); ++i)
         {
-            cv::rectangle(h_img, boxes[(*areaParam->data)[i].first], replace, lineWidth);
+            cv::rectangle(h_img, boxes[(*areaParam->Data())[i].first], replace, lineWidth);
         }
     }else
     {
@@ -250,7 +250,7 @@ void HistogramThreshold::Init(bool firstInit)
         param.addEnum(ENUM(KeepCenter));
         param.addEnum(ENUM(SuppressCenter));
         updateParameter("Threshold type", param);
-        updateParameter("Threshold width", 0.5, Parameter::Control, "Percent of histogram to threshold");
+        updateParameter("Threshold width", 0.5, Parameters::Parameter::Control, "Percent of histogram to threshold");
         addInputParameter<cv::cuda::GpuMat>("Input histogram");
         addInputParameter<cv::cuda::GpuMat>("Input image", "Optional");
         addInputParameter<cv::cuda::GpuMat>("Input mask", "Optional");
@@ -283,11 +283,11 @@ void HistogramThreshold::runFilter()
 
 cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    inputHistogram = getParameter<cv::cuda::GpuMat*>(2)->data;
-    inputImage = getParameter<cv::cuda::GpuMat*>(3)->data;
-    inputMask = getParameter<cv::cuda::GpuMat*>(4)->data;
-    type = (ThresholdType)getParameter<EnumParameter>(0)->data.getValue();
-    cv::Mat* bins = getParameter<cv::Mat*>("Histogram bins")->data;
+    inputHistogram = getParameter<cv::cuda::GpuMat>(2)->Data();
+    inputImage = getParameter<cv::cuda::GpuMat>(3)->Data();
+    inputMask = getParameter<cv::cuda::GpuMat>(4)->Data();
+    type = (ThresholdType)getParameter<EnumParameter>(0)->Data()->getValue();
+    cv::Mat* bins = getParameter<cv::Mat>("Histogram bins")->Data();
     _stream = stream;
     if(bins == nullptr)
         return img;
@@ -317,15 +317,15 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
         }
     }
     int numBins = hist.cols;
-    int thresholdWidth = numBins * getParameter<double>(1)->data*0.5;
+    int thresholdWidth = numBins * (*getParameter<double>(1)->Data())*0.5;
     int minBin = maxIdx - thresholdWidth;
     int maxBin = maxIdx + thresholdWidth;
     minBin = std::max(minBin, 0);
     maxBin = std::min(maxBin, hist.cols - 1);
     float thresholdMin = bins->at<float>(minBin);
     float thresholdMax = bins->at<float>(maxBin);
-    updateParameter("Threshold min value", thresholdMin, Parameter::Output);
-    updateParameter("Threshold max value", thresholdMax, Parameter::Output);
+    updateParameter("Threshold min value", thresholdMin, Parameters::Parameter::Output);
+	updateParameter("Threshold max value", thresholdMax, Parameters::Parameter::Output);
     updateParameter("Max Idx", maxIdx);
     switch(type)
     {
@@ -342,7 +342,7 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
         cv::cuda::threshold(img, upperMask, thresholdMin, 255, cv::THRESH_BINARY_INV, stream);
         cv::cuda::bitwise_or(lowerMask, upperMask, img, cv::noArray(), stream);
     }
-    updateParameter("Image mask", img, Parameter::Output);
+	updateParameter("Image mask", img, Parameters::Parameter::Output);
 
     return img;
 }

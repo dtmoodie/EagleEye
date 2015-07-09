@@ -86,14 +86,14 @@ VideoWriter::startWrite()
     auto param = getParameter<boost::filesystem::path>(1);
     if(param == nullptr)
         return;
-    if(boost::filesystem::exists(param->data))
+    if(boost::filesystem::exists(*param->Data()))
         log(Warning, "File exists, overwriting");
     if(h_writer == nullptr)
     {
         try
         {
             cv::cudacodec::EncoderParams params;
-            d_writer = cv::cudacodec::createVideoWriter(param->data.string(), size, 30, params);
+            d_writer = cv::cudacodec::createVideoWriter(param->Data()->string(), size, 30, params);
             log(Status, "Using GPU encoder");
         }catch(cv::Exception &e)
         {
@@ -102,10 +102,10 @@ VideoWriter::startWrite()
             bool success;
             if(codec)
             {
-                success = h_writer->open(param->data.string(),codec->data.currentSelection,30,size);
+                success = h_writer->open(param->Data()->string(),codec->Data()->currentSelection,30,size);
             }else
             {
-                success = h_writer->open(param->data.string(), -1, 30, size);
+                success = h_writer->open(param->Data()->string(), -1, 30, size);
             }
             if(success)
                 log(Status, "Using CPU encoder");
@@ -120,10 +120,10 @@ VideoWriter::startWrite()
         bool success;
         if(codec)
         {
-            success = h_writer->open(param->data.string(),codec->data.currentSelection,30,size);
+            success = h_writer->open(param->Data()->string(),codec->Data()->currentSelection,30,size);
         }else
         {
-            success = h_writer->open(param->data.string(), -1, 30, size);
+            success = h_writer->open(param->Data()->string(), -1, 30, size);
         }
         if(success)
             log(Status, "Using CPU encoder");
