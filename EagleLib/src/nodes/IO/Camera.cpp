@@ -102,9 +102,9 @@ void GStreamerCamera::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-        EnumParameter param;
+        Parameters::Parameter::EnumParameter param;
         param.addEnum(ENUM(v4l2src));
-        EnumParameter type;
+		Parameters::Parameter::EnumParameter type;
         type.addEnum(ENUM(h264));
         updateParameter("Source type", param);
         updateParameter("Source encoding", type);
@@ -122,8 +122,8 @@ void GStreamerCamera::Init(bool firstInit)
 void GStreamerCamera::setString()
 {
     std::stringstream str;
-    SourceType src = (SourceType)getParameter<EnumParameter>(0)->Data()->getValue();
-    VideoType encoding = (VideoType)getParameter<EnumParameter>(1)->Data()->getValue();
+    SourceType src = (SourceType)getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->getValue();
+    VideoType encoding = (VideoType)getParameter<Parameters::Parameter::EnumParameter>(1)->Data()->getValue();
 
     switch(src)
     {
@@ -239,9 +239,9 @@ void RTSPCamera::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-        EnumParameter param;
+		Parameters::Parameter::EnumParameter param;
         param.addEnum(ENUM(rtspsrc));
-        EnumParameter type;
+		Parameters::Parameter::EnumParameter type;
         type.addEnum(ENUM(h264));
         updateParameter("Source type", param);
         updateParameter("Source encoding", type);
@@ -255,8 +255,8 @@ void RTSPCamera::Init(bool firstInit)
 void RTSPCamera::setString()
 {
     std::stringstream str;
-    SourceType src = (SourceType)getParameter<EnumParameter>(0)->Data()->getValue();
-    VideoType encoding = (VideoType)getParameter<EnumParameter>(1)->Data()->getValue();
+    SourceType src = (SourceType)getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->getValue();
+    VideoType encoding = (VideoType)getParameter<Parameters::Parameter::EnumParameter>(1)->Data()->getValue();
     std::string result;
     if(src == rtspsrc)
     {

@@ -294,10 +294,10 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                     // Do I lock each parameters mutex or do I just lock each node?
                     // I should only lock each node, but then I need to make sure the UI keeps track of the node
                     // to access the node's mutex while accessing a parameter, for now this works though.
-                    std::vector<std::lock_guard<std::recursive_mutex>> locks;
+                    std::vector<boost::recursive_mutex::scoped_lock> locks;
                     for(size_t i = 0; i < parameters.size(); ++i)
                     {
-						locks.push_back(std::lock_guard<std::recursive_mutex>(parameters[i]->mtx));
+						locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
                     }
                     if(profile)
                     {
@@ -621,7 +621,7 @@ Node::findCompatibleInputs()
 	std::vector<std::vector<std::string>> output;
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
-		if (parameters[i]->type & Parameter::Input)
+		if (parameters[i]->type & Parameters::Parameter::Input)
             output.push_back(findType(parameters[i]->GetTypeInfo()));
 	}
 	return output;
@@ -714,7 +714,7 @@ Node::updateInputParameters()
 {
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
-		if (parameters[i]->type & EagleLib::Parameter::Input)
+		if (parameters[i]->type & Parameters::Parameter::Input)
 		{
 			// TODO
 			//parameters[i]->setSource("");

@@ -25,7 +25,10 @@ file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
 FILE(GLOB_RECURSE ext_inc "include/external_includes")
 ADD_SUBDIRECTORY("Parameters")
+IF(${Parameters_USEQT})
+message(STATUS "Parameters build with QT support, so linking into EagleLib")
 
+ENDIF()
 INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
@@ -143,6 +146,7 @@ TARGET_LINK_LIBRARIES(EagleLib
         RuntimeCompiler
         RuntimeObjectSystem
 		libParameter
+		${Parameters_LIBRARIES}
 )
 ADD_DEPENDENCIES(EagleLib
 	RuntimeCompiler

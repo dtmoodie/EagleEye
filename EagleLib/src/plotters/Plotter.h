@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Parameters.h"
+#include "Parameters.hpp"
 
 
 #include "RuntimeLinkLibrary.h"
@@ -23,7 +23,7 @@ namespace EagleLib
 
     protected:
         boost::signals2::connection bc;
-        EagleLib::Parameter::Ptr param;
+        Parameters::Parameter::Ptr param;
         boost::function<void(void)> f;
     public:
         enum PlotterType
@@ -36,15 +36,16 @@ namespace EagleLib
             SERIALIZE(param);
         }
 
-        virtual void setInput(EagleLib::Parameter::Ptr param_ = EagleLib::Parameter::Ptr())
+        virtual void setInput(Parameters::Parameter::Ptr param_ = Parameters::Parameter::Ptr())
         {
             bc.disconnect();
             param = param_;
+			
             if(param)
-                bc = param->onUpdate.connect(boost::bind(&Plotter::onUpdate, this));
+                bc = param->RegisterNotifier(boost::bind(&Plotter::onUpdate, this));
         }
 
-        virtual bool acceptsType(EagleLib::Parameter::Ptr param) const = 0;
+        virtual bool acceptsType(Parameters::Parameter::Ptr param) const = 0;
         virtual void doUpdate() = 0;
 
         virtual void onUpdate()
@@ -95,7 +96,7 @@ namespace EagleLib
          * @param param
          * @return
          */
-        virtual bool acceptsType(EagleLib::Parameter::Ptr param) const = 0;
+        virtual bool acceptsType(Parameters::Parameter::Ptr param) const = 0;
 
         /**
          * @brief plotName is the name of this specific plotting implementation

@@ -1,5 +1,4 @@
 #include "nodes/IO/ImageWriter.h"
-//#include <opencv2/imgcodecs.hpp>
 #include <external_includes/cv_imgcodec.hpp>
 
 using namespace EagleLib;
@@ -35,7 +34,7 @@ void ImageWriter::Init(bool firstInit)
     frameCount = 0;
     frameSkip = 0;
     baseName = "Image";
-    EnumParameter param;
+	Parameters::Parameter::EnumParameter param;
     param.addEnum(ENUM(jpg));
     param.addEnum(ENUM(png));
     param.addEnum(ENUM(tiff));
@@ -59,7 +58,7 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     }
     if(parameters[1]->changed || extension.size() == 0)
     {
-		Extensions ext = (Extensions)getParameter<EnumParameter>(1)->Data()->getValue();
+		Extensions ext = (Extensions)getParameter<Parameters::Parameter::EnumParameter>(1)->Data()->getValue();
         switch (ext)
         {
         case jpg:

@@ -283,7 +283,7 @@ cv::cuda::GpuMat QtColormapDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 void Normalize::Init(bool firstInit)
 {
     Node::Init(firstInit);
-    EnumParameter param;
+	Parameters::Parameter::EnumParameter param;
     param.addEnum(ENUM(CV_MINMAX));
     param.addEnum(ENUM(cv::NORM_L2));
     param.addEnum(ENUM(cv::NORM_L1));
@@ -305,7 +305,7 @@ cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     cv::cuda::normalize(img,normalized,
             *getParameter<double>(1)->Data(),
             *getParameter<double>(2)->Data(),
-            getParameter<EnumParameter>(0)->Data()->getValue(), img.type(),
+            getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->getValue(), img.type(),
             mask == nullptr ? cv::noArray(): *mask,
             stream);
     return normalized;

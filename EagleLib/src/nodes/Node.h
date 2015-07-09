@@ -47,7 +47,7 @@
 #include <list>
 #include <map>
 #include <type_traits>
-
+#include "type.h" // for demangle on linux
 #include "../LokiTypeInfo.h"
 #include <boost/thread.hpp>
 #include <Qualifiers.hpp>
@@ -55,6 +55,7 @@
 #include <external_includes/cv_core.hpp>
 #include <external_includes/cv_highgui.hpp>
 #include <external_includes/cv_videoio.hpp>
+#include "CudaUtils.hpp"
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 
 #include "RuntimeLinkLibrary.h"
@@ -453,7 +454,7 @@ namespace EagleLib
           * @return the index of the parameter
           */
          template<typename T> size_t
-			 addInputParameter(const std::string& name, const std::string& toolTip_ = std::string(), const boost::function<bool(const Parameter*)>& qualifier_ = boost::function<bool(const Parameter*)>())
+			 addInputParameter(const std::string& name, const std::string& toolTip_ = std::string(), const boost::function<bool(Parameters::Parameter*)>& qualifier_ = boost::function<bool(Parameters::Parameter*)>())
 		{
 				parameters.push_back(Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
 				parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
@@ -463,32 +464,30 @@ namespace EagleLib
 		}
 
         template<typename T> bool
-            updateInputQualifier(const std::string& name, const boost::function<bool(const EagleLib::Parameter::Ptr&)>& qualifier_)
+            updateInputQualifier(const std::string& name, const boost::function<bool(Parameters::Parameter::Ptr&)>& qualifier_)
         {
-            Parameter::Ptr param = getParameter(name);
-            if(param)
-            {
-                typename EagleLib::InputParameter<T>::Ptr inputParam = boost::dynamic_pointer_cast<typename EagleLib::InputParameter<T>, typename EagleLib::Parameter>(param);
-                if(inputParam)
-                {
-                    inputParam->qualifier = qualifier_;
-                    inputParam->onUpdate();
-                    return true;
-                }
-            }
-            return false;
+            auto param = getParameter(name);
+			if (param && param->type & Parameters::Parameter::Input)
+			{
+				Parameters::InputParameter* inputParam = dynamic_cast<Parameters::InputParameter*>(param.get());
+				if (inputParam)
+				{
+					inputParam->SetQualifier(qualifier_);
+					return true;
+				}
+			}
+			return false;
         }
         template<typename T> bool
-            updateInputQualifier(int idx, const boost::function<bool(const EagleLib::Parameter::Ptr&)>& qualifier_)
+            updateInputQualifier(int idx, const boost::function<bool(Parameters::Parameter*)>& qualifier_)
         {
-            Parameter::Ptr param = getParameter(idx);
-            if(param)
+            auto param = getParameter<T>(idx);
+            if(param && param->type & Parameters::Parameter::Input)
             {
-                typename EagleLib::InputParameter<T>::Ptr inputParam = boost::dynamic_pointer_cast<typename EagleLib::InputParameter<T>, typename EagleLib::Parameter>(param);
+				Parameters::InputParameter* inputParam = dynamic_cast<Parameters::InputParameter*>(param.get());
                 if(inputParam)
                 {
-                    inputParam->qualifier = qualifier_;
-                    inputParam->onUpdate();
+					inputParam->SetQualifier(qualifier_);
                     return true;
                 }
             }
@@ -510,7 +509,7 @@ namespace EagleLib
         template<typename T> bool
         updateParameter(const std::string& name,
                         const T& data,
-                        Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+                        Parameters::Parameter::ParameterType type_ = Parameters::Parameter::None,
                         const std::string& toolTip_ = std::string(),
                         const bool& ownsData_ = false)
 		{
@@ -522,7 +521,7 @@ namespace EagleLib
             {
                 return addParameter(name, data, type_, toolTip_, ownsData_);
             }
-			if (type_ != Parameter::None)
+			if (type_ != Parameters::Parameter::None)
 				param->type = type_;
 			if (toolTip_.size() > 0)
 				param->SetTooltip(toolTip_);
@@ -620,17 +619,17 @@ namespace EagleLib
 		*  \param output is a vector of the output parameters including a list of the names of where they are from
 		*/
 		template<typename T> void
-			findInputs(std::vector<std::string>& nodeNames, std::vector< boost::shared_ptr< TypedParameter<T> > >& parameterPtrs, int hops = 10000)
+			findInputs(std::vector<std::string>& nodeNames, std::vector< typename Parameters::ITypedParameter<T>::Ptr>& parameterPtrs, int hops = 10000)
 		{
 			if (hops < 0)
 				return;
 			for (int i = 0; i < parameters.size(); ++i)
 			{
 				if (parameters[i]->type & Parameter::Output) // Can't use someone's input or control parameter, that would be naughty
-					if (boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[i]))
+					if (std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(parameters[i]))
 					{
 						nodeNames.push_back(treeName);
-						parameterPtrs.push_back(boost::dynamic_pointer_cast<TypedParameter<T>, Parameter>(parameters[i]));
+						parameterPtrs.push_back(std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(parameters[i]));
 					}
 			}
 			// Recursively check children for any available output parameters that match the input signature

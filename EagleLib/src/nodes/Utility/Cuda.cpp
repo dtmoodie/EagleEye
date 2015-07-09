@@ -11,7 +11,7 @@ void SetDevice::Init(bool firstInit)
 	if (firstInit)
 	{
 		updateParameter<unsigned int>("Device Number", 0);
-		updateParameter<std::string>("Device name", "", Parameter::State);
+		updateParameter<std::string>("Device name", "", Parameters::Parameter::State);
 		firstRun = true;
 	}    
 }

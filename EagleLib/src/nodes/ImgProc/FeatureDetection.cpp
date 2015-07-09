@@ -137,7 +137,7 @@ void FastFeatureDetector::Init(bool firstInit)
         updateParameter("Detector object", cv::cuda::FastFeatureDetector::create());
         updateParameter("Threshold", int(10));
         updateParameter("Use nonmax suppression", true);
-        EnumParameter param;
+		Parameters::Parameter::EnumParameter param;
         param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_5_8));
         param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_7_12));
         param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_9_16));
@@ -163,7 +163,7 @@ cv::cuda::GpuMat FastFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda:
         updateParameter(0, cv::cuda::FastFeatureDetector::create(
                             *getParameter<int>(1)->Data(),
                             *getParameter<bool>(2)->Data(),
-                            getParameter<EnumParameter>(3)->Data()->getValue(),
+                            getParameter<Parameters::Parameter::EnumParameter>(3)->Data()->getValue(),
                             *getParameter<int>(4)->Data()));
         parameters[1]->changed = false;
         parameters[2]->changed = false;
@@ -207,7 +207,7 @@ void ORBFeatureDetector::Init(bool firstInit)
         updateParameter("Edge Threshold", int(31));         //4
         updateParameter("First Level", int(0));             //5
         updateParameter("WTA_K", int(2));                   //6
-        EnumParameter param;
+		Parameters::Parameter::EnumParameter param;
         param.addEnum(ENUM(cv::ORB::kBytes));
         param.addEnum(ENUM(cv::ORB::HARRIS_SCORE));
         param.addEnum(ENUM(cv::ORB::FAST_SCORE));
@@ -243,7 +243,7 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
 					*getParameter<int>(4)->Data(),
 					*getParameter<int>(5)->Data(),
 					*getParameter<int>(6)->Data(),
-					getParameter<EnumParameter>(7)->Data()->getValue(),
+					getParameter<Parameters::Parameter::EnumParameter>(7)->Data()->getValue(),
 					*getParameter<int>(8)->Data(),
 					*getParameter<int>(9)->Data(),
 					*getParameter<bool>(10)->Data()));

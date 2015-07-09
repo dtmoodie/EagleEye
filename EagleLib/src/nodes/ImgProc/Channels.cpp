@@ -36,7 +36,7 @@ cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
 }
 void ConvertColorspace::Init(bool firstInit)
 {
-	EagleLib::EnumParameter param;
+	Parameters::Parameter::EnumParameter param;
 	param.addEnum(ENUM(cv::COLOR_BGR2BGRA));
 	param.addEnum(ENUM(cv::COLOR_RGB2RGBA));
 	param.addEnum(ENUM(cv::COLOR_BGRA2BGR));
@@ -115,7 +115,7 @@ void ConvertColorspace::Init(bool firstInit)
 cv::cuda::GpuMat ConvertColorspace::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
 	auto buf =  resultBuffer.getFront();
-	cv::cuda::cvtColor(img, buf->data, getParameter<EnumParameter>(0)->Data()->getValue(), 0, stream);
+	cv::cuda::cvtColor(img, buf->data, getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->getValue(), 0, stream);
 	return buf->data;
 }
 
@@ -160,7 +160,7 @@ void ConvertDataType::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-        EnumParameter dataType;
+		Parameters::Parameter::EnumParameter dataType;
         dataType.addEnum(ENUM(CV_8U));
         dataType.addEnum(ENUM(CV_8S));
         dataType.addEnum(ENUM(CV_16U));
@@ -177,7 +177,7 @@ void ConvertDataType::Init(bool firstInit)
 cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat output;
-    img.convertTo(output, getParameter<EnumParameter>(0)->Data()->currentSelection, *getParameter<double>(1)->Data(), *getParameter<double>(2)->Data(),stream);
+    img.convertTo(output, getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->currentSelection, *getParameter<double>(1)->Data(), *getParameter<double>(2)->Data(),stream);
     return output;
 }
 

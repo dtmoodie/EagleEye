@@ -13,7 +13,7 @@ cv::cuda::GpuMat FrameRate::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta = currentTime - prevTime;
     prevTime = currentTime;
-    updateParameter<double>("Framerate", 1000.0/delta.total_milliseconds(), Parameter::State);
+    updateParameter<double>("Framerate", 1000.0/delta.total_milliseconds(), Parameters::Parameter::State);
     return img;
 }
 
@@ -30,7 +30,7 @@ void CreateMat::Init(bool firstInit)
 {
     if(firstInit)
     {
-        EnumParameter dataType;
+		Parameters::Parameter::EnumParameter dataType;
         dataType.addEnum(ENUM(CV_8U));
         dataType.addEnum(ENUM(CV_8S));
         dataType.addEnum(ENUM(CV_16U));
@@ -55,7 +55,7 @@ cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
        parameters[3]->changed ||
        parameters[4]->changed )
     {
-        auto typeParam = getParameter<EnumParameter>(0);
+        auto typeParam = getParameter<Parameters::Parameter::EnumParameter>(0);
 		int selection = typeParam->Data()->currentSelection;
 		int dtype = typeParam->Data()->values[selection];
 		createdMat = cv::cuda::GpuMat(*getParameter<int>(3)->Data(),
@@ -90,7 +90,7 @@ cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     TIME
     if(parameters[0]->changed || qualifiersSetup == false)
     {
-        boost::function<bool(const Parameter::Ptr&)> f = GpuMatQualifier::get(input->cols, input->rows, 1, CV_8U);
+        boost::function<bool(Parameters::Parameter*)> f = GpuMatQualifier::get(input->cols, input->rows, 1, CV_8U);
         updateInputQualifier<cv::cuda::GpuMat>(1, f);
     }
 	cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>(1)->Data();
