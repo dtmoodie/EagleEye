@@ -414,33 +414,31 @@ namespace EagleLib
          * @param ownsData_
          * @return
          */
-		template<typename T, typename Enable = void> size_t addParameter(const std::string& name,
+		/*template<typename T, typename Enable = void> size_t addParameter(const std::string& name,
 			const T& data, Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control, const std::string& toolTip_ = std::string(), bool ownsData = false)
 		{
 			return 0;
-		}
+		}*/
 
-		template<typename T, typename std::enable_if<std::is_pointer<T>::value, void>::type> size_t
-			addParameter(const std::string& name,
-			const T& data,
-			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-			const std::string& toolTip_ = std::string(), bool ownsData = false)
+		template<typename T> size_t addParameter(const std::string& name,
+										const T& data,
+										Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+										const std::string& toolTip_ = std::string(), bool ownsData = false, typename std::enable_if<std::is_pointer<T>::value,void>::type* dummy_enable = nullptr)
 		{
-			parameters.push_back(Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data, type_, toolTip_)));
-			parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+			parameters.push_back(Parameters::TypedParameterPtr<std::remove_pointer<T>::type>::Ptr(new Parameters::TypedParameterPtr<std::remove_pointer<T>::type>(name, data, type_, toolTip_)));
+			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
 			if (onParameterAdded)
 				(*onParameterAdded)();
 			return parameters.size() - 1;
 		}
 
-		template<typename T, typename std::enable_if<!std::is_pointer<T>::value, void>::type> size_t
-			addParameter(const std::string& name,
-			const T& data,
-			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-			const std::string& toolTip_ = std::string(), bool ownsData = false)
+		template<typename T> size_t	addParameter(const std::string& name,
+										const T& data,
+										Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+										const std::string& toolTip_ = std::string(), bool ownsData = false, typename std::enable_if<!std::is_pointer<T>::value, void>::type* dummy_enable = nullptr)
 		{
 			parameters.push_back(Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
-			parameters[parameters.size() - 1]->treeName = fullTreeName + ":" + parameters[parameters.size() - 1]->name;
+			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
 			if (onParameterAdded)
 				(*onParameterAdded)();
 			return parameters.size() - 1;

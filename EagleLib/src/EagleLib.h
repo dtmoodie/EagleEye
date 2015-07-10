@@ -3,7 +3,9 @@
 #ifndef RCC_ENABLED
 #define RCC_ENABLED
 #endif
+#ifndef CVAPI_EXPORTS
 #define CVAPI_EXPORTS
+#endif
 #ifdef _WIN32
 //#undef RCC_ENABLED
 #else

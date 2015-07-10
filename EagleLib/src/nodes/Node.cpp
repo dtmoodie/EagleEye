@@ -194,7 +194,10 @@ Node::getNodesInScope(std::vector<Node *> &nodes)
 
 Parameters::Parameter::Ptr Node::getParameter(int idx)
 {
-	return parameters[idx];
+	if (idx < parameters.size())
+		return parameters[idx];
+	else
+		return Parameters::Parameter::Ptr();
 }
 
 Parameters::Parameter::Ptr Node::getParameter(const std::string& name)
