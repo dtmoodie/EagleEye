@@ -27,16 +27,16 @@ signals:
     void stopThread();
     void startThread();
     void widgetDeleted(QNodeWidget*);
-    void plotData(EagleLib::Parameter::Ptr param);
-    void displayImage(EagleLib::Parameter::Ptr param);
+    void plotData(Parameters::Parameter::Ptr param);
+    void displayImage(Parameters::Parameter::Ptr param);
 private slots:
-    void on_parameter_clicked(EagleLib::Parameter::Ptr param);
+    void on_parameter_clicked(Parameters::Parameter::Ptr param);
     void on_deleteNode();
     void on_displayImage();
     void on_plotData();
     bool eventFilter(QObject *object, QEvent *event);
 private:
-    EagleLib::Parameter::Ptr currentParam;
+    Parameters::Parameter::Ptr currentParam;
 	QGraphicsProxyWidget* currentWidget;
 	QPoint mousePressPosition;
 	std::map<ObjectId, QGraphicsProxyWidget*> widgetMap;

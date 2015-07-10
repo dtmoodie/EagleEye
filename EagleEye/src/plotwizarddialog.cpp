@@ -101,11 +101,11 @@ void PlotWizardDialog::handleUpdate(int idx)
     previewPlotters[idx]->doUpdate();
 }
 
-void PlotWizardDialog::plotParameter(EagleLib::Parameter::Ptr param)
+void PlotWizardDialog::plotParameter(Parameters::Parameter::Ptr param)
 {
     this->show();
     ui->tabWidget->setCurrentIndex(0);
-    ui->inputDataType->setText(QString::fromStdString(TypeInfo::demangle(param->typeInfo.name())));
+	ui->inputDataType->setText(QString::fromStdString(TypeInfo::demangle(param->GetTypeInfo().name())));
     for(int i = 0; i < previewPlotters.size(); ++i)
     {
         if(previewPlotters[i]->acceptsType(param))

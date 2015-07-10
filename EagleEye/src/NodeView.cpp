@@ -37,7 +37,7 @@ QGraphicsProxyWidget* NodeView::getWidget(ObjectId id)
         return itr->second;
     else return nullptr;
 }
-void NodeView::on_parameter_clicked(EagleLib::Parameter::Ptr param)
+void NodeView::on_parameter_clicked(Parameters::Parameter::Ptr param)
 {
     currentParam = param;
 }
@@ -155,26 +155,26 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                     // Spawn the right click dialog
                     if(currentParam!= nullptr)
                     {
-                        if(currentParam->typeInfo == Loki::TypeInfo(typeid(cv::cuda::GpuMat))           ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(cv::cuda::GpuMat*))         ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(cv::cuda::GpuMat&))         ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(cv::Mat))                   ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(cv::Mat*))                  ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(cv::Mat&))                  ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<int>))          ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<float>))        ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<double>))       ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec2b>))    ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec2f>))    ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec2d>))    ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec3b>))    ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec3f>))    ||
-                            currentParam->typeInfo == Loki::TypeInfo(typeid(std::vector<cv::Vec3d>)))
+                        if(currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat))           ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat*)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat&)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat*)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat&)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<int>)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<float>)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<double>)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2b>)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2f>)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2d>)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3b>)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3f>)) ||
+							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3d>)))
                         {
                             actions[1]->setEnabled(true);
                             actions[2]->setEnabled(true);
-                            actions[1]->setText("Display as image (" + QString::fromStdString(currentParam->name) + ")");
-                            actions[2]->setText("Plot (" + QString::fromStdString(currentParam->name) + ")");
+                            actions[1]->setText("Display as image (" + QString::fromStdString(currentParam->GetName()) + ")");
+                            actions[2]->setText("Plot (" + QString::fromStdString(currentParam->GetName()) + ")");
                         }
                     }else
                     {

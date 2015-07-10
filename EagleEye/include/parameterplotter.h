@@ -11,14 +11,14 @@
 //{
 //    Q_OBJECT
 //protected:
-//    EagleLib::Parameter::Ptr param;
+//    Parameters::Parameter::Ptr param;
 //    QCustomPlot* plot;
 //public:
-//    static QList<ParameterPlotterFactory*> getPlotters(EagleLib::Parameter::Ptr param);
-//    static bool acceptsType(EagleLib::Parameter::Ptr param);
-//    static ParameterPlotter* getPlot(EagleLib::Parameter::Ptr param);
+//    static QList<ParameterPlotterFactory*> getPlotters(Parameters::Parameter::Ptr param);
+//    static bool acceptsType(Parameters::Parameter::Ptr param);
+//    static ParameterPlotter* getPlot(Parameters::Parameter::Ptr param);
 
-//    ParameterPlotter(EagleLib::Parameter::Ptr param, QCustomPlot* plot_ = nullptr);
+//    ParameterPlotter(Parameters::Parameter::Ptr param, QCustomPlot* plot_ = nullptr);
 //    ~ParameterPlotter();
 
 //    virtual void setPlot(QCustomPlot* plot_);
@@ -42,8 +42,8 @@
 //    Q_OBJECT
 //    QVector<double> scale;
 //public:
-//    static bool acceptsType(EagleLib::Parameter::Ptr param);
-//    HistogramPlotter(EagleLib::Parameter::Ptr param, QCustomPlot* plot_);
+//    static bool acceptsType(Parameters::Parameter::Ptr param);
+//    HistogramPlotter(Parameters::Parameter::Ptr param, QCustomPlot* plot_);
 //    ~HistogramPlotter();
 
 //    virtual void setPlot(QCustomPlot* plot_);

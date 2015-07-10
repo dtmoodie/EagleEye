@@ -8,15 +8,15 @@
 //class ParameterPlotterFactory
 //{
 //public:
-//    virtual ParameterPlotter* create(EagleLib::Parameter::Ptr param, QCustomPlot* plot_ = nullptr) = 0;
-//    virtual bool acceptsType(EagleLib::Parameter::Ptr param) = 0;
+//    virtual ParameterPlotter* create(Parameters::Parameter::Ptr param, QCustomPlot* plot_ = nullptr) = 0;
+//    virtual bool acceptsType(Parameters::Parameter::Ptr param) = 0;
 //    virtual QString plotName() = 0;
 //};
 
 //static QList<ParameterPlotterFactory*> g_factories;
 
 
-//cv::Size inline getSize(EagleLib::Parameter::Ptr param)
+//cv::Size inline getSize(Parameters::Parameter::Ptr param)
 //{
 //    auto gpuParam = EagleLib::getParameterPtr<cv::cuda::GpuMat>(param);
 //    if(gpuParam)
@@ -30,7 +30,7 @@
 
 //    return cv::Size(0,0);
 //}
-//int inline getChannels(EagleLib::Parameter::Ptr param)
+//int inline getChannels(Parameters::Parameter::Ptr param)
 //{
 //    auto gpuParam = EagleLib::getParameterPtr<cv::cuda::GpuMat>(param);
 //    if(gpuParam)
@@ -80,7 +80,7 @@
 //    return output;
 //}
 
-//QVector<double> inline getParamArrayData(EagleLib::Parameter::Ptr param, int channel)
+//QVector<double> inline getParamArrayData(Parameters::Parameter::Ptr param, int channel)
 //{
 //    auto gpuParam = EagleLib::getParameterPtr<cv::cuda::GpuMat>(param);
 //    if(gpuParam)
@@ -96,7 +96,7 @@
 //        return getParamArrayDataHelper(cv::Mat(*vecParam), 0);
 //    return QVector<double>();
 //}
-//template<typename T> bool inline getData(EagleLib::Parameter::Ptr param, double& data)
+//template<typename T> bool inline getData(Parameters::Parameter::Ptr param, double& data)
 //{
 //    auto ptr = EagleLib::getParameterPtr<T>(param);
 //    if(ptr)
@@ -106,7 +106,7 @@
 //    }
 //    return false;
 //}
-//template<typename T> bool inline getDataVec(EagleLib::Parameter::Ptr param, int channel, double& data)
+//template<typename T> bool inline getDataVec(Parameters::Parameter::Ptr param, int channel, double& data)
 //{
 //    auto ptr = EagleLib::getParameterPtr<T>(param);
 //    if(ptr)
@@ -117,7 +117,7 @@
 //    return false;
 //}
 
-//double inline getParamData(EagleLib::Parameter::Ptr data, int channel)
+//double inline getParamData(Parameters::Parameter::Ptr data, int channel)
 //{
 //    double output;
 //    if(getData<double>(data, output))
@@ -204,7 +204,7 @@
 
 //struct DefaultTypePolicy
 //{
-//    static bool acceptsType(EagleLib::Parameter::Ptr param)
+//    static bool acceptsType(Parameters::Parameter::Ptr param)
 //    {
 //        return true;
 //    }
@@ -212,7 +212,7 @@
 
 //template<typename T> struct TypePolicy
 //{
-//    static bool acceptsType(EagleLib::Parameter::Ptr param)
+//    static bool acceptsType(Parameters::Parameter::Ptr param)
 //    {
 //        return EagleLib::acceptsType<T>(param->typeInfo);
 //    }
@@ -222,7 +222,7 @@
 //    int size;
 //    int channel;
 //    QVector<double> data;
-//    void addPlotData(EagleLib::Parameter::Ptr param)
+//    void addPlotData(Parameters::Parameter::Ptr param)
 //    {
 //        data = getParamArrayData(param, channel);
 //    }
@@ -243,7 +243,7 @@
 //    int channel;
 
 //    boost::circular_buffer<double> plotData;
-//    void addPlotData(EagleLib::Parameter::Ptr param)
+//    void addPlotData(Parameters::Parameter::Ptr param)
 //    {
 //        plotData.push_back(getParamData(param, channel));
 //    }
@@ -278,11 +278,11 @@
 //    {
 //        g_factories.push_back(this);
 //    }
-//    virtual ParameterPlotter* create(EagleLib::Parameter::Ptr param, QCustomPlot* plot_ = nullptr)
+//    virtual ParameterPlotter* create(Parameters::Parameter::Ptr param, QCustomPlot* plot_ = nullptr)
 //    {
 //        return new Plotter(param, plot_);
 //    }
-//    virtual bool acceptsType(EagleLib::Parameter::Ptr param)
+//    virtual bool acceptsType(Parameters::Parameter::Ptr param)
 //    {
 //        bool b1 = SizePolicy_::acceptsSize(getSize(param));
 //        bool b2 = ChannelPolicy_::acceptsChannels(getChannels(param));

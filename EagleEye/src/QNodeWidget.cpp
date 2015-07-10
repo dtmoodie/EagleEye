@@ -6,16 +6,16 @@
 #include <QDateTime>
 
 
-IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QNodeWidget* parent, EagleLib::Node::Ptr node_) :
+IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Node::Ptr node_) :
     QWidget(parent),
     parameter(parameter_),
     node(node_)
 {
     layout = new QGridLayout(this);
     layout->setVerticalSpacing(0);
-    nameElement = new QLabel(QString::fromStdString(parameter_->name), parent);
+    nameElement = new QLabel(QString::fromStdString(parameter_->GetName()), parent);
     nameElement->setSizePolicy(QSizePolicy::Policy::MinimumExpanding, QSizePolicy::Policy::Fixed);
-    proxy = dispatchParameter(this, parameter_, node_);
+    //proxy = dispatchParameter(this, parameter_, node_);
     int pos = 1;
     if (proxy)
     {
@@ -27,11 +27,12 @@ IQNodeInterop::IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, 
     }
     layout->addWidget(nameElement, 0, 0);
     nameElement->installEventFilter(parent);
-    nameElement->setToolTip(QString::fromStdString(parameter_->toolTip));
+    nameElement->setToolTip(QString::fromStdString(parameter_->GetTooltip()));
     connect(this, SIGNAL(updateNeeded()), this, SLOT(updateUi()), Qt::QueuedConnection);
-    bc = parameter->onUpdate.connect(boost::bind(&IQNodeInterop::onParameterUpdate, this));
+    //bc = parameter->onUpdate.connect(boost::bind(&IQNodeInterop::onParameterUpdate, this));
+	bc = parameter->RegisterNotifier(boost::bind(&IQNodeInterop::onParameterUpdate, this));
 
-	QLabel* typeElement = new QLabel(QString::fromStdString(TypeInfo::demangle(parameter_->typeInfo.name())));
+	QLabel* typeElement = new QLabel(QString::fromStdString(TypeInfo::demangle(parameter_->GetTypeInfo().name())));
 
     typeElement->installEventFilter(parent);
     parent->addParameterWidgetMap(typeElement, parameter_);
@@ -88,11 +89,11 @@ void IQNodeInterop::on_valueChanged()
     if (proxy)
         proxy->onUiUpdated(static_cast<QWidget*>(sender()));
 }
-void IQNodeInterop::onParameterUpdate(boost::shared_ptr<EagleLib::Parameter> parameter)
+void IQNodeInterop::onParameterUpdate(Parameters::Parameter::Ptr parameter)
 {
     updateUi();
 }
-DraggableLabel::DraggableLabel(QString name, EagleLib::Parameter::Ptr param_):
+DraggableLabel::DraggableLabel(QString name, Parameters::Parameter::Ptr param_):
     QLabel(name), param(param_)
 {
     setAcceptDrops(true);
@@ -154,10 +155,9 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
         ui->verticalLayout->setSpacing(0);
         for (size_t i = 0; i < node->parameters.size(); ++i)
 		{
-            auto interop = new IQNodeInterop(node->parameters[i], this, node);
-            interops.push_back(boost::shared_ptr<IQNodeInterop>(interop));
-            //interop->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
-            ui->verticalLayout->addWidget(interop);
+			auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
+			parameterProxies.push_back(interop);
+			ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
 		}
         node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true);
         node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2, _3);
@@ -178,10 +178,9 @@ bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
-void QNodeWidget::addParameterWidgetMap(QWidget* widget, EagleLib::Parameter::Ptr param)
+void QNodeWidget::addParameterWidgetMap(QWidget* widget, Parameters::Parameter::Ptr param)
 {
-    if(widgetParamMap.find(widget) == widgetParamMap.end())
-        widgetParamMap[widget] = param;
+    
 }
 
 void QNodeWidget::updateUi(bool parameterUpdate)
@@ -191,28 +190,28 @@ void QNodeWidget::updateUi(bool parameterUpdate)
     ui->processingTime->setText(QString::number(node->processingTime));
     if(parameterUpdate)
     {
-        if(node->parameters.size() != interops.size())
+		if (node->parameters.size() != parameterProxies.size())
         {
             for(size_t i = 0; i < node->parameters.size(); ++i)
             {
                 bool found = false;
-                for(size_t j = 0; j < interops.size(); ++j)
+				for (size_t j = 0; j < parameterProxies.size(); ++j)
                 {
-                    if(node->parameters[i] == interops[j]->parameter)
+					if (parameterProxies[j]->CheckParameter(node->parameters[i].get()))
                         found = true;
                 }
                 if(found == false)
                 {
                     // Need to add a new interop for this node
-                    auto interop = new IQNodeInterop(node->parameters[i], this, node);
-                    interops.push_back(boost::shared_ptr<IQNodeInterop>(interop));
-                    ui->verticalLayout->addWidget(interop);
+					auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
+					parameterProxies.push_back(interop);
+					ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
                 }
             }
         }
-        for(size_t i = 0; i < interops.size(); ++i)
+		for (size_t i = 0; i < parameterProxies.size(); ++i)
         {
-            interops[i]->updateUi();
+            //interops[i]->updateUi();
         }
     }
 }
@@ -309,7 +308,7 @@ void QNodeWidget::setSelected(bool state)
     setAutoFillBackground(true);
     setPalette(pal);
 }
-QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_, EagleLib::Node::Ptr node_):
+/*QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_, EagleLib::Node::Ptr node_):
     node(node_)
 {
     box = new QComboBox(parent);
@@ -372,9 +371,9 @@ template<typename T> bool acceptsType(Loki::TypeInfo& type)
 #define MAKE_TYPE_(type) if(acceptsType<type>(parameter->typeInfo)) return new QNodeProxy<type, true>(parent, parameter);
 
 
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node::Ptr node)
+IQNodeProxy* dispatchParameter(IQNodeInterop* parent, Parameters::Parameter::Ptr parameter, EagleLib::Node::Ptr node)
 {
-    if(parameter->type & EagleLib::Parameter::Input)
+    if(parameter->type & Parameters::Parameters::ParameterInput)
     {
         // Create a ui for finding relavent inputs
         return new QInputProxy(parent, parameter, node);
@@ -383,7 +382,7 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
     typedef std::vector<std::pair<double,double>> vec_DD;
     typedef std::vector<std::pair<double,int>> vec_DI;
     typedef std::vector<std::pair<int, int>> vec_II;
-    if(parameter->type & EagleLib::Parameter::Control)
+    if(parameter->type & Parameters::Parameters::ParameterControl)
     {
         MAKE_TYPE(double);
         MAKE_TYPE(float);
@@ -409,7 +408,7 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
         MAKE_TYPE(EagleLib::ReadDirectory);
     }
 
-    if(parameter->type & EagleLib::Parameter::Output || parameter->type & EagleLib::Parameter::State)
+    if(parameter->type & Parameters::Parameters::ParameterOutput || parameter->type & Parameters::Parameters::ParameterState)
     {
         MAKE_TYPE_(double);
         MAKE_TYPE_(float);
@@ -435,5 +434,5 @@ IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib
     }
 	return nullptr;
 }
-
+*/
 

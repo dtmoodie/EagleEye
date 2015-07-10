@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<EagleLib::Node::Ptr>("EagleLib::Node::Ptr");
     qRegisterMetaType<EagleLib::Verbosity>("EagleLib::Verbosity");
     qRegisterMetaType<boost::function<cv::Mat(void)>>("boost::function<cv::Mat(void)>");
-    qRegisterMetaType<EagleLib::Parameter::Ptr>("EagleLib::Parameter::Ptr");
+    qRegisterMetaType<Parameters::Parameter::Ptr>("Parameters::Parameter::Ptr");
     qRegisterMetaType<size_t>("size_t");
 
     ui->setupUi(this);
@@ -66,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     cv::redirectError(&static_errorHandler);
 
-    connect(nodeGraphView, SIGNAL(plotData(EagleLib::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(EagleLib::Parameter::Ptr)));
+    connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
     connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
     connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
@@ -384,7 +384,7 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     }
     node->onParameterAdded->connect(boost::bind(&MainWindow::newParameter,this));
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
-    connect(nodeWidget, SIGNAL(parameterClicked(EagleLib::Parameter::Ptr)), nodeGraphView, SLOT(on_parameter_clicked(EagleLib::Parameter::Ptr)));
+    connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
 
     auto itr = positionMap.find(node->fullTreeName);

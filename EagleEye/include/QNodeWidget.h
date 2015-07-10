@@ -18,6 +18,8 @@
 #include <QComboBox>
 #include <type.h>
 #include <boost/thread/recursive_mutex.hpp>
+#include <UI/Qt.hpp>
+
 namespace Ui {
 	class QNodeWidget;
 }
@@ -39,7 +41,7 @@ public:
     void on_nodeUpdate();
     void on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
     bool eventFilter(QObject *object, QEvent *event);
-    void addParameterWidgetMap(QWidget* widget, EagleLib::Parameter::Ptr param);
+    void addParameterWidgetMap(QWidget* widget, Parameters::Parameter::Ptr param);
     QWidget* mainWindow;
 private slots:
     void on_enableClicked(bool state);
@@ -53,9 +55,9 @@ private slots:
     void log(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
 signals:
     void eLog(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
-    void parameterClicked(EagleLib::Parameter::Ptr param);
+	void parameterClicked(Parameters::Parameter::Ptr param);
 private:
-    std::map<QWidget*, EagleLib::Parameter::Ptr> widgetParamMap;
+	std::map<QWidget*, Parameters::Parameter::Ptr> widgetParamMap;
 	Ui::QNodeWidget* ui;
     EagleLib::Node::Ptr node;
     QLineEdit* profileDisplay;
@@ -63,16 +65,17 @@ private:
     QLineEdit* warningDisplay;
     QLineEdit* errorDisplay;
     QLineEdit* criticalDisplay;
-    std::vector<boost::shared_ptr<IQNodeInterop>> interops;
+	std::vector<Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
+    //std::vector<boost::shared_ptr<IQNodeInterop>> interops;
     QNodeWidget* parentWidget;
     std::vector<QNodeWidget*> childWidgets;
 };
 
 class DraggableLabel: public QLabel
 {
-    EagleLib::Parameter::Ptr param;
+    Parameters::Parameter::Ptr param;
 public:
-    DraggableLabel(QString name, EagleLib::Parameter::Ptr param_);
+    DraggableLabel(QString name, Parameters::Parameter::Ptr param_);
     void dropEvent(QDropEvent* event);
     void dragLeaveEvent(QDragLeaveEvent* event);
     void dragMoveEvent(QDragMoveEvent* event);
@@ -88,16 +91,10 @@ public:
     virtual QWidget* getWidget(int num = 0) = 0;
     virtual int getNumWidgets(){return 1;}
     virtual QWidget* getTypename()
-#ifdef _MSC_VER
-	{
-		return new QLabel(QString::fromStdString(parameter->typeInfo.name()));
-	}
-#else
-    {        return new QLabel(QString::fromStdString(TypeInfo::demangle(parameter->typeInfo.name())));    }
-#endif
-	boost::shared_ptr<EagleLib::Parameter> parameter;
+    {        return new QLabel(QString::fromStdString(TypeInfo::demangle(parameter->GetTypeInfo().name())));    }
+	boost::shared_ptr<Parameters::Parameter> parameter;
 };
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node::Ptr node);
+IQNodeProxy* dispatchParameter(IQNodeInterop* parent, Parameters::Parameter::Ptr parameter, EagleLib::Node::Ptr node);
 
 
 // Interface class for the interop class
@@ -105,11 +102,11 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 {
 	Q_OBJECT
 public:
-    IQNodeInterop(boost::shared_ptr<EagleLib::Parameter> parameter_, QNodeWidget* parent = nullptr, EagleLib::Node::Ptr node_= EagleLib::Node::Ptr());
+    IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent = nullptr, EagleLib::Node::Ptr node_= EagleLib::Node::Ptr());
     virtual ~IQNodeInterop();
 
     IQNodeProxy* proxy;
-    boost::shared_ptr<EagleLib::Parameter> parameter;
+	Parameters::Parameter::Ptr parameter;
     boost::signals2::connection bc;
     boost::posix_time::ptime previousUpdateTime;
 public slots:
@@ -120,7 +117,7 @@ private slots:
     void on_valueChanged(bool value);
     void on_valueChanged(QString value);
     void on_valueChanged();
-    void onParameterUpdate(boost::shared_ptr<EagleLib::Parameter> parameter);
+	void onParameterUpdate(Parameters::Parameter::Ptr parameter);
     void onParameterUpdate();
 signals:
     void updateNeeded();
@@ -130,12 +127,12 @@ protected:
     EagleLib::Node::Ptr node;
 };
 
-
+/*
 // Class for UI elements relavent to finding valid input parameters
 class QInputProxy: public IQNodeProxy
 {
 public:
-    QInputProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter, EagleLib::Node::Ptr node_);
+    QInputProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter, EagleLib::Node::Ptr node_);
     virtual void onUiUpdated(QWidget* widget);
     virtual void updateUi(bool init = false);
     virtual QWidget* getWidget(int num = 0);
@@ -159,7 +156,7 @@ template<typename T>
 class QNodeProxy<T, false, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public IQNodeProxy
 {
 public:
-	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
 	{
 		parameter = parameter_;
 		box = new QDoubleSpinBox(parent);
@@ -196,7 +193,7 @@ template<typename T>
 class QNodeProxy<T, true, typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value, void>::type> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parameter = parameter_;
         box = new QLabel(parent);
@@ -222,7 +219,7 @@ template<typename T>
 class QNodeProxy<T, false, typename std::enable_if<std::is_integral<T>::value, void>::type> : public IQNodeProxy
 {
 public:
-	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
 	{
 		parameter = parameter_;
         box = new QSpinBox(parent);
@@ -260,7 +257,7 @@ template<>
 class QNodeProxy<bool, false, void>: public IQNodeProxy
 {
 public:
-	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)	
+	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)	
 	{
         box = new QCheckBox(parent);
 		parameter=parameter_;
@@ -292,7 +289,7 @@ template<>
 class QNodeProxy<bool, true, void>: public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         box = new QCheckBox(parent);
         box->setCheckable(false);
@@ -318,7 +315,7 @@ template<>
 class QNodeProxy<std::string, false, void> : public IQNodeProxy
 {
 public:
-	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
 	{
 		box = new QLineEdit(parent);
         parameter = parameter_;
@@ -352,7 +349,7 @@ template<>
 class QNodeProxy<std::string, true, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         box = new QLineEdit(parent);
         parameter = parameter_;
@@ -379,7 +376,7 @@ template<>
 class QNodeProxy<boost::filesystem::path, false, void> : public IQNodeProxy
 {
 public:
-	QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+	QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
 	{
         parent = parent_;
 		button = new QPushButton(parent);
@@ -431,7 +428,7 @@ template<>
 class QNodeProxy<boost::filesystem::path, true, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parameter = parameter_;
         box = new QLineEdit(parent);
@@ -457,7 +454,7 @@ template<>
 class QNodeProxy<EagleLib::ReadDirectory, false, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parent = parent_;
         button = new QPushButton(parent);
@@ -510,7 +507,7 @@ template<>
 class QNodeProxy<EagleLib::ReadDirectory, true, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parameter = parameter_;
         box = new QLineEdit(parent);
@@ -538,7 +535,7 @@ template<>
 class QNodeProxy<boost::function<void(void)>, false, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parent = parent_;
         parameter = parameter_;
@@ -576,7 +573,7 @@ template<>
 class QNodeProxy<EagleLib::EnumParameter, false, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parent = parent_;
         parameter = parameter_;
@@ -617,7 +614,7 @@ template<>
 class QNodeProxy<EagleLib::EnumParameter, true, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parent = parent_;
         parameter = parameter_;
@@ -657,7 +654,7 @@ template<>
 class QNodeProxy<cv::Scalar, false, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parent = parent_;
         parameter = parameter_;
@@ -718,7 +715,7 @@ template<>
 class QNodeProxy<cv::Scalar, true, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parent = parent_;
         parameter = parameter_;
@@ -757,7 +754,7 @@ template<typename T>
 class QNodeProxy<std::vector<T>, false, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parent = parent_;
         parameter = parameter_;
@@ -838,7 +835,7 @@ template<typename T>
 class QNodeProxy<std::vector<T>, true, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parent = parent_;
         parameter = parameter_;
@@ -895,7 +892,7 @@ template<typename T1, typename T2>
 class QNodeProxy<std::vector<std::pair<T1, T2>>, false, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parent = parent_;
         parameter = parameter_;
@@ -997,7 +994,7 @@ template<typename T1, typename T2>
 class QNodeProxy<std::vector<std::pair<T1, T2>>, true, void> : public IQNodeProxy
 {
 public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<EagleLib::Parameter> parameter_)
+    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
     {
         parent = parent_;
         parameter = parameter_;
@@ -1071,3 +1068,4 @@ private:
     QLabel* value2;
     int prevIndex;
 };
+*/
