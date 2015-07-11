@@ -19,7 +19,7 @@
 
 #include "nodes/Node.h"
 #include "CudaUtils.hpp"
-#include "plotters/Plotter.h"
+
 #include "Parameters.hpp"
 
 

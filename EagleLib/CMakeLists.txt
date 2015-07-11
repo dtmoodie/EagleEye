@@ -37,7 +37,7 @@ INCLUDE_DIRECTORIES(
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 	${Parameters_INCLUDE}
 	${Qt5Gui_INCLUDE_DIRS} 
-	${Qt5Widgets_INCLUDE_DIRS} 
+	${Qt5Widgets_INCLUDE_DIRS}
 	)
 
 
@@ -52,7 +52,7 @@ endif()
 
 #
 SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-SET(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIR};${CUDA_INCLUDE_DIRS};${CMAKE_CURRENT_SOURCE_DIR}/src")
+SET(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIR};${CUDA_INCLUDE_DIRS};${CMAKE_CURRENT_SOURCE_DIR}/src;${Parameters_INCLUDE}")
 
 IF(WIN32)
 	SET(RCC_LIBRARY_DIRS "${Boost_LIBRARY_DIRS};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64")
@@ -79,6 +79,11 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 
 SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+set(EagleLib_INCLUDE_DIRECTORIES "${Parameters_INCLUDE};${CMAKE_CURRENT_SOURCE_DIR}/src;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
+
+if(WIN32)
+	set(EagleLib_LIBRARIES "EagleLib;${Boost_LIBRARIES};${OpenCV_LIBS}" PARENT_SCOPE)
+endif(WIN32)
 
 # Reporting section
 message(STATUS
@@ -87,6 +92,10 @@ message(STATUS
     OpenCV found at: ${OpenCV_CONFIG_PATH}
     NVCC Flags: ${CUDA_NVCC_FLAGS}
     Bulid Type: ${CMAKE_BUILD_TYPE}
+
+	Includes: ${EagleLib_INCLUDE_DIRECTORIES}
+
+	Libs: ${EagleLib_LIBRARIES}
 
 ++++++++++ RCC++ Defines ++++++++++++++++++
     OpenCV include dir: ${OpenCV_INCLUDE_DIR}
@@ -104,19 +113,12 @@ message(STATUS
     PCL_found: ${PCL_FOUND}
     PCL_LIB_DIR: ${PCL_LIBRARY_DIRS}
     Eigen inc: ${EIGEN3_INCLUDE_DIR}
-
+++++++++++++ Parameters ++++++++++++++++++++
+	Includes: ${Parameters_INCLUDE}
 ")
 
 
-set(EagleLib_INCLUDE_DIRECTORIES "${Parameters_INCLUDE};${CMAKE_CURRENT_SOURCE_DIR}/src;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
 
-if(WIN32)
-    if(CMAKE_BUILD_TYPE EQUAL "Debug")
-        set(EagleLib_LIBRARIES "EagleLib;${Boost_LIBRARIES}" PARENT_SCOPE)
-    else()
-        set(EagleLib_LIBRARIES "EagleLib;${Boost_LIBRARIES}" PARENT_SCOPE)
-    endif(CMAKE_BUILD_TYPE EQUAL "Debug")
-endif(WIN32)
 
 macro(GroupSources curdir)
 file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)

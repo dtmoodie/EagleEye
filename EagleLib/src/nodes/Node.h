@@ -70,8 +70,10 @@ RUNTIME_MODIFIABLE_INCLUDE
 #ifdef _MSC_VER
 #ifdef _DEBUG
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLibd.lib")
+	RUNTIME_COMPILER_LINKLIBRARY("libParameterd.lib")
 #else
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
+	RUNTIME_COMPILER_LINKLIBRARY("libParameter.lib")
 #endif
 
 #else
@@ -523,29 +525,10 @@ namespace EagleLib
 				param->type = type_;
 			if (toolTip_.size() > 0)
 				param->SetTooltip(toolTip_);
+
 			param->UpdateData(data);
 			return true;
-		}
-//        // Is this needed?  Will the above suffice?
-//        template<typename T> bool
-//            updateParameter(const std::string& name,
-//                            T& data,
-//                            Parameter::ParamType type_ = Parameter::Control,
-//                            const std::string& toolTip_ = std::string(),
-//                            const bool& ownsData_ = false)
-//        {
-//            auto param = getParameter<T>(name);
-//            if (param == NULL)
-//                return addParameter(name, data, type_, toolTip_, ownsData_);
-//            param->data = data;
-//            if (type_ != Parameter::None)
-//                param->type = type_;
-//            if (toolTip_.size() > 0)
-//                param->toolTip = toolTip_;
-//            param->changed = true;
-//            param->onUpdate();
-//            return true;
-//        }
+        }
         /**
          * @brief updateParameter overload of the above accept accessing a paramter via index instead of name
          * @param idx index of parameter
@@ -560,7 +543,7 @@ namespace EagleLib
 							T data,
 							const std::string& name = std::string(),
 							const std::string quickHelp = std::string(),
-							Parameters::Parameter::ParameterType type_ = Parameters::Parameter::None)
+                            Parameters::Parameter::ParameterType type_ = Parameters::Parameter::None)
 		{
 			if (idx > parameters.size() || idx < 0)
 				return false;

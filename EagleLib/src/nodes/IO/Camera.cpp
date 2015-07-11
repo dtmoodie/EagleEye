@@ -44,7 +44,7 @@ void Camera::Init(bool firstInit)
     if(firstInit)
     {
         updateParameter<int>("Camera Number", 0);
-        updateParameter<std::string>("Gstreamer stream ", "");
+        updateParameter<std::string>("Gstreamer stream ", "rtsp://root:12369pp@192.168.0.6/axis-media/media.amp");
         parameters[0]->changed = false;
         parameters[1]->changed = false;
     }
@@ -54,24 +54,6 @@ void Camera::Serialize(ISimpleSerializer *pSerializer)
     Node::Serialize(pSerializer);
     SERIALIZE(cam);
 }
-//void Camera::acquisitionLoop()
-//{
-//    cv::cuda::HostMem buffer;
-//    Buffer<cv::cuda::GpuMat, EventPolicy, LockedPolicy>* d_buf;
-//    while(!boost::this_thread::interruption_requested())
-//    {
-//        d_buf = imageBuffer.waitFront();
-//        if(d_buf)
-//        {
-//            boost::recursive_mutex::scoped_lock lock(d_buf->mtx);
-//            if(cam.isOpened())
-//            {
-//                cam.read(buffer);
-//                d_buf->data.upload(buffer);
-//            }
-//        }
-//    }
-//}
 
 cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
@@ -87,6 +69,7 @@ cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stre
     }
     if(cam.isOpened())
     {
+		cam.set(cv::CAP_PROP_ZOOM, 20); 
         cam.read(hostBuf);
         img.upload(hostBuf,stream);
     }
