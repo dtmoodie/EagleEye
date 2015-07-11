@@ -87,12 +87,13 @@ MainWindow::MainWindow(QWidget *parent) :
     EagleLib::NodeManager::getInstance().setCompileCallback(f);
     QDir dir(QDir::currentPath());
 #ifdef BUILD_DIR
-#ifdef _DEBUG
-	EagleLib::NodeManager::getInstance().addLinkDir(BUILD_DIR "/Debug");
-#else
-	EagleLib::NodeManager::getInstance().addLinkDir(BUILD_DIR "/Release");
+	#ifdef _DEBUG
+		EagleLib::NodeManager::getInstance().addLinkDir(BUILD_DIR "/Debug");
+	#else
+		EagleLib::NodeManager::getInstance().addLinkDir(BUILD_DIR "/Release");
+	#endif
 #endif
-#endif
+	EagleLib::NodeManager::getInstance().addLinkDir("C:/Qt/Qt5.3.1/5.3/msvc2013_64_opengl/lib");
 #ifdef _MSC_VER
 	std::string str = dir.absolutePath().toStdString();
 #ifdef _DEBUG

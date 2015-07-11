@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>	 	
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">	 	
  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">	 	
- <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\bin\Debug;@OpenCV_BIN_DIR@;@Qt5_BIN_DIR@;@CAFFE_RELEASE@;@CAFFE_DEBUG@;%PATH%</LocalDebuggerEnvironment>	 	
+ <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\bin\Debug;@OpenCV_BIN_DIR@;@Boost_LIBRARY_DIR@;@Qt5_BIN_DIR@;@CAFFE_RELEASE@;@CAFFE_DEBUG@;%PATH%</LocalDebuggerEnvironment>	 	
+ <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+ </PropertyGroup>	 	
+ <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">	 	
+ <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\bin\Debug;@Boost_LIBRARY_DIR@;@OpenCV_BIN_DIR@;@Qt5_BIN_DIR@;@CAFFE_RELEASE@;@CAFFE_DEBUG@;%PATH%</LocalDebuggerEnvironment>	 	
+ <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+ </PropertyGroup>	 	
+ <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">	 	
+ <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\bin\Debug;@Boost_LIBRARY)DIR@;@OpenCV_BIN_DIR@;@Qt5_BIN_DIR@;@CAFFE_RELEASE@;@CAFFE_DEBUG@;%PATH%</LocalDebuggerEnvironment>	 	
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
  </PropertyGroup>	 	
 </Project>

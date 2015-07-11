@@ -1,10 +1,35 @@
 PROJECT(Vclick3d)
 
+FIND_PACKAGE(Qt5 REQUIRED COMPONENTS Core Network Gui Widgets)
+FIND_PACKAGE(OpenCV REQUIRED COMPONENTS core videoio highgui)
+set(Boost_USE_STATIC_LIBS        OFF)
+set(Boost_USE_MULTITHREADED      ON)
+set(Boost_USE_STATIC_RUNTIME     OFF)
+ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS system)
 
-FILE(GLOB_RECURSE hdrs "include/*.h")
+INCLUDE_DIRECTORIES(
+	${EagleLib_INCLUDE_DIRECTORIES}
+	${Qt5Core_INCLUDE_DIRECTORIES}
+	${Qt5Network_INCLUDE_DIRECTORIES}
+)
+
+
+FILE(GLOB_RECURSE hdrs "src/*.h")
 FILE(GLOB_RECURSE src "src/*.cpp")
 
+QT5_WRAP_CPP(MOC ${src} ${hdrs})
 
 
 
-ADD_LIBRARY(Vclick3d SHARED ${hdrs} ${src})
+
+ADD_LIBRARY(Vclick3d SHARED ${hdrs} ${src} ${MOC})
+TARGET_LINK_LIBRARIES(Vclick3d 
+	${Boost_LIBRARIES}
+	${OpenCV_LIBS}
+	Qt5::Network
+	Qt5::Core
+	Qt5::Gui
+	Qt5::Widgets
+	${EagleLib_LIBRARIES} 
+	)

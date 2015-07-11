@@ -16,11 +16,11 @@ INCLUDE_DIRECTORIES(
 	${OpenCV_INCLUDE_DIRS}
 	${Parameters_INCLUDE}
 	${Boost_INCLUDE_DIRS}
-	"EagleEye/include"
+	"EagleEye/include" 
 	${Qt5Gui_INCLUDE_DIRS}
 	${Qt5Core_INCLUDE_DIRS}
 	${Qt5PrintSupport_INCLUDE_DIRS}
-	${Qt5Widgets_INCLUDE_DIRS}
+	${Qt5Widgets_INCLUDE_DIRS} 
 	${Qt5OpenGL_INCLUDE_DIRS}
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${CMAKE_CURRENT_BINARY_DIR}
