@@ -8,7 +8,7 @@ void FFT::Init(bool firstInit)
 {
     if(firstInit)
     {
-        Parameters::Parameter::EnumParameter param;
+        Parameters::EnumParameter param;
         param.addEnum(ENUM(Coefficients));
         param.addEnum(ENUM(Magnitude));
         param.addEnum(ENUM(Phase));
@@ -70,7 +70,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     cv::cuda::dft(*floatImg,*destPtr,img.size(),flags, stream);
     cv::cuda::GpuMat dest = *destPtr; // This is done to make sure the destBuf gets allocated correctly and doesn't get de-allocated.
     TIME
-    int channel = getParameter<Parameters::Parameter::EnumParameter>(4)->Data()->getValue();
+    int channel = getParameter<Parameters::EnumParameter>(4)->Data()->getValue();
 	updateParameter("Coefficients", dest, Parameters::Parameter::Output);
     TIME
     if(parameters[4]->changed)

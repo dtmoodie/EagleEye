@@ -52,6 +52,7 @@
 #include <boost/thread.hpp>
 #include <Qualifiers.hpp>
 #include <parameters.hpp>
+#include <Types.hpp>
 #include <external_includes/cv_core.hpp>
 #include <external_includes/cv_highgui.hpp>
 #include <external_includes/cv_videoio.hpp>
@@ -67,13 +68,23 @@
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
+
+
 #ifdef _MSC_VER
 #ifdef _DEBUG
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLibd.lib")
 	RUNTIME_COMPILER_LINKLIBRARY("libParameterd.lib")
+	RUNTIME_COMPILER_LINKLIBRARY("Qt5Cored.lib");
+	RUNTIME_COMPILER_LINKLIBRARY("Qt5Networkd.lib");
+	RUNTIME_COMPILER_LINKLIBRARY("Qt5Guid.lib");
+	RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgetsd.lib");
 #else
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
 	RUNTIME_COMPILER_LINKLIBRARY("libParameter.lib")
+	RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Network.lib");
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Gui.lib");
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
 #endif
 
 #else

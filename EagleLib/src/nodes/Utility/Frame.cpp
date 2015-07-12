@@ -30,7 +30,7 @@ void CreateMat::Init(bool firstInit)
 {
     if(firstInit)
     {
-		Parameters::Parameter::EnumParameter dataType;
+		Parameters::EnumParameter dataType;
         dataType.addEnum(ENUM(CV_8U));
         dataType.addEnum(ENUM(CV_8S));
         dataType.addEnum(ENUM(CV_16U));
@@ -55,7 +55,7 @@ cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
        parameters[3]->changed ||
        parameters[4]->changed )
     {
-        auto typeParam = getParameter<Parameters::Parameter::EnumParameter>(0);
+        auto typeParam = getParameter<Parameters::EnumParameter>(0);
 		int selection = typeParam->Data()->currentSelection;
 		int dtype = typeParam->Data()->values[selection];
 		createdMat = cv::cuda::GpuMat(*getParameter<int>(3)->Data(),

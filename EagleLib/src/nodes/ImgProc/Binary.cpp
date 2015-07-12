@@ -15,12 +15,12 @@ void MorphologyFilter::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-		Parameters::Parameter::EnumParameter structuringElement;
+		Parameters::EnumParameter structuringElement;
         structuringElement.addEnum(ENUM(cv::MORPH_RECT));
         structuringElement.addEnum(ENUM(cv::MORPH_CROSS));
         structuringElement.addEnum(ENUM(cv::MORPH_ELLIPSE));
         updateParameter("Structuring Element Type", structuringElement);    // 0
-		Parameters::Parameter::EnumParameter morphType;
+		Parameters::EnumParameter morphType;
         morphType.addEnum(ENUM(cv::MORPH_ERODE));
         morphType.addEnum(ENUM(cv::MORPH_DILATE));
         morphType.addEnum(ENUM(cv::MORPH_OPEN));
@@ -43,7 +43,7 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     {
         int size = *getParameter<int>(2)->Data();
         cv::Point anchor = *getParameter<cv::Point>(3)->Data();
-        updateParameter(4, cv::getStructuringElement(getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->currentSelection,
+        updateParameter(4, cv::getStructuringElement(getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
                                   cv::Size(size,size),anchor));
 
         updateFilter = true;
@@ -55,7 +55,7 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     {
         updateParameter("Filter",
             cv::cuda::createMorphologyFilter(
-                getParameter<Parameters::Parameter::EnumParameter>(1)->Data()->currentSelection,img.type(),
+                getParameter<Parameters::EnumParameter>(1)->Data()->currentSelection,img.type(),
                 *getParameter<cv::Mat>(4)->Data(),
                 *getParameter<cv::Point>(3)->Data(),
                 *getParameter<int>(5)->Data()));
@@ -70,13 +70,13 @@ void FindContours::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-		Parameters::Parameter::EnumParameter mode;
+		Parameters::EnumParameter mode;
         mode.addEnum(ENUM(cv::RETR_EXTERNAL));
         mode.addEnum(ENUM(cv::RETR_LIST));
         mode.addEnum(ENUM(cv::RETR_CCOMP));
         mode.addEnum(ENUM(cv::RETR_TREE));
         mode.addEnum(ENUM(cv::RETR_FLOODFILL));
-		Parameters::Parameter::EnumParameter method;
+		Parameters::EnumParameter method;
         method.addEnum(ENUM(cv::CHAIN_APPROX_NONE));
         method.addEnum(ENUM(cv::CHAIN_APPROX_SIMPLE));
         method.addEnum(ENUM(cv::CHAIN_APPROX_TC89_L1));
@@ -100,8 +100,8 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     cv::findContours(h_img,
         *ptr,
         *getParameter<std::vector<cv::Vec4i>>(3)->Data(),
-        getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->currentSelection,
-        getParameter<Parameters::Parameter::EnumParameter>(1)->Data()->currentSelection);
+        getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
+        getParameter<Parameters::EnumParameter>(1)->Data()->currentSelection);
     updateParameter<int>("Contours found",ptr->size(), Parameters::Parameter::State);
     parameters[2]->changed = true;
     parameters[3]->changed = true;
@@ -246,7 +246,7 @@ void HistogramThreshold::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-		Parameters::Parameter::EnumParameter param;
+		Parameters::EnumParameter param;
         param.addEnum(ENUM(KeepCenter));
         param.addEnum(ENUM(SuppressCenter));
         updateParameter("Threshold type", param);
@@ -286,7 +286,7 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     inputHistogram = getParameter<cv::cuda::GpuMat>(2)->Data();
     inputImage = getParameter<cv::cuda::GpuMat>(3)->Data();
     inputMask = getParameter<cv::cuda::GpuMat>(4)->Data();
-    type = (ThresholdType)getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->getValue();
+    type = (ThresholdType)getParameter<Parameters::EnumParameter>(0)->Data()->getValue();
     cv::Mat* bins = getParameter<cv::Mat>("Histogram bins")->Data();
     _stream = stream;
     if(bins == nullptr)

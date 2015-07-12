@@ -156,8 +156,11 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
         for (size_t i = 0; i < node->parameters.size(); ++i)
 		{
 			auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
-			parameterProxies.push_back(interop);
-			ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
+			if (interop)
+			{
+				parameterProxies.push_back(interop);
+				ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
+			}			
 		}
         node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true);
         node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2, _3);
@@ -204,8 +207,12 @@ void QNodeWidget::updateUi(bool parameterUpdate)
                 {
                     // Need to add a new interop for this node
 					auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
-					parameterProxies.push_back(interop);
-					ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
+					if (interop)
+					{
+						parameterProxies.push_back(interop);
+						ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
+					}
+					
                 }
             }
         }

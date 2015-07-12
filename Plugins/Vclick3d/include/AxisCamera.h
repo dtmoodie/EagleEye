@@ -17,6 +17,15 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Gui.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
 #endif
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+	CV_EXPORTS void SetupIncludes();
+#ifdef __cplusplus
+}
+#endif
+
+
 namespace EagleLib
 {
 	class AxisSocket: public QObject
@@ -24,7 +33,11 @@ namespace EagleLib
 		Q_OBJECT
 		QNetworkAccessManager* network_manager;
         QNetworkReply* network_request;
+		
 	public:
+		Parameters::ITypedParameter<int>::Ptr zoom;
+		Parameters::ITypedParameter<int>::Ptr focus;
+
 		AxisSocket();
 		void request(QUrl url);
 		QString username;
@@ -37,6 +50,8 @@ namespace EagleLib
 		
 
 	};
+
+
 	class AxisCamera : public Node
 	{
         boost::signals2::connection zoomConnection;
@@ -46,14 +61,19 @@ namespace EagleLib
 		boost::signals2::connection usernameConnection;
 		boost::signals2::connection passwordConnection;
         boost::shared_ptr<AxisSocket> socket;
+		
         void on_zoomRequest();
         void on_panRequest();
         void on_tiltRequest();
 		void on_addressChange();
 		void on_credentialChange();
+		void get_position();
+		Parameters::TypedParameter<int>::Ptr currentZoom;
+		Parameters::TypedParameter<int>::Ptr currentFocus;
 
 	public:
 		AxisCamera();
+		~AxisCamera();
 		virtual void Init(bool firstInit);
 		virtual void Serialize(ISimpleSerializer* pSerializer);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());

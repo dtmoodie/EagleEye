@@ -35,17 +35,17 @@ namespace EagleLib
         //typedef boost::property_tree::basic_ptree<std::string, EagleLib::Parameter::Ptr> ParameterTree;
 
         //ParameterTree KeyFrameParameters;
-        std::map<int, std::map<KeyFrameParameter, EagleLib::Parameter::Ptr> > KeyFrameParameters;
+        std::map<int, std::map<KeyFrameParameter, Parameters::Parameter::Ptr> > KeyFrameParameters;
 
         typedef boost::function<bool(int, KeyFrameParameter, const cv::cuda::GpuMat&)>              d_ParameterSetFunctor;
         typedef boost::function<bool(int, KeyFrameParameter, const cv::Mat&)>                       h_ParameterSetFunctor;
         typedef boost::function<bool(int, KeyFrameParameter, const std::vector<cv::KeyPoint>&)>     h_KeyPointSetFunctor;
 
-        typedef boost::function<bool(int, KeyFrameParameter, cv::cuda::GpuMat&)>              d_ParameterGetFunctor;
-        typedef boost::function<bool(int, KeyFrameParameter, cv::Mat&)>                       h_ParameterGetFunctor;
-        typedef boost::function<bool(int, KeyFrameParameter, std::vector<cv::KeyPoint>&)>     h_KeyPointGetFunctor;
+        typedef boost::function<bool(int, KeyFrameParameter, cv::cuda::GpuMat*)>              d_ParameterGetFunctor;
+        typedef boost::function<bool(int, KeyFrameParameter, cv::Mat*)>                       h_ParameterGetFunctor;
+        typedef boost::function<bool(int, KeyFrameParameter, std::vector<cv::KeyPoint>*)>     h_KeyPointGetFunctor;
 
-        template<typename T> bool getParameter(int frameIndex, KeyFrameParameter param, T& data);
+        template<typename T> bool getParameter(int frameIndex, KeyFrameParameter param, T* data);
         template<typename T> bool setParameter(int frameIndex, KeyFrameParameter param, const T& data);
 
 

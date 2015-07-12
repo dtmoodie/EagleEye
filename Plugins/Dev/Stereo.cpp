@@ -24,17 +24,17 @@ void StereoBM::Init(bool firstInit)
         addInputParameter<cv::cuda::GpuMat>("Left image");
         addInputParameter<cv::cuda::GpuMat>("Right image");
     }
-    stereoBM = cv::cuda::createStereoBM(getParameter<int>(0)->data, getParameter<int>(1)->data);
+    stereoBM = cv::cuda::createStereoBM(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
 }
 
 cv::cuda::GpuMat StereoBM::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
     if(parameters[0]->changed || parameters[1]->changed)
     {
-        stereoBM = cv::cuda::createStereoBM(getParameter<int>(0)->data, getParameter<int>(1)->data);
+        stereoBM = cv::cuda::createStereoBM(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
     }
-    cv::cuda::GpuMat* left = getParameter<cv::cuda::GpuMat*>(2)->data;
-    cv::cuda::GpuMat* right = getParameter<cv::cuda::GpuMat*>(3)->data;
+    cv::cuda::GpuMat* left = *getParameter<cv::cuda::GpuMat*>(2)->Data();
+    cv::cuda::GpuMat* right = *getParameter<cv::cuda::GpuMat*>(3)->Data();
     if(left == nullptr)
     {
         left = &img;

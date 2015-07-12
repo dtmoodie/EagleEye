@@ -82,6 +82,20 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(plotWizardDialog, SIGNAL(on_plotAdded(PlotWindow*)), this, SLOT(onPlotAdd(PlotWindow*)));
     connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
 
+	/* Instantiate several useful types since compilation is currently setup to not compile against the types used in eagle lib */
+	Parameters::TypedParameter<float>("Instantiation");
+	Parameters::TypedParameter<double>("Instantiation");
+	Parameters::TypedParameter<char>("Instantiation");
+	Parameters::TypedParameter<uchar>("Instantiation");
+	Parameters::TypedParameter<short>("Instantiation");
+	Parameters::TypedParameter<ushort>("Instantiation");
+	Parameters::TypedParameter<int>("Instantiation");
+	Parameters::TypedParameter<unsigned int>("Instantiation");
+	Parameters::TypedParameter<bool>("Instantiation");
+	Parameters::TypedParameter<std::string>("Instantiation");
+	Parameters::TypedParameter<boost::function<void(void)>>("Instantiation");
+
+
     EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
     EagleLib::NodeManager::getInstance().setCompileCallback(f);

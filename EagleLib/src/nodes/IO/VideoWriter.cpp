@@ -17,7 +17,7 @@ void VideoWriter::Init(bool firstInit)
     Node::Init(firstInit);
 	if (firstInit)
 	{
-		Parameters::Parameter::EnumParameter param;
+		Parameters::EnumParameter param;
         param.addEnum(cv::VideoWriter::fourcc('X','2','6','4'), "X264");
         param.addEnum(cv::VideoWriter::fourcc('Y','U','V','9'), "YUV9");
         param.addEnum(cv::VideoWriter::fourcc('Y','U','Y','V'), "YUYV");
@@ -98,7 +98,7 @@ VideoWriter::startWrite()
         }catch(cv::Exception &e)
         {
             h_writer = cv::Ptr<cv::VideoWriter>(new cv::VideoWriter);
-            auto codec = getParameter<Parameters::Parameter::EnumParameter>(0);
+            auto codec = getParameter<Parameters::EnumParameter>(0);
             bool success;
             if(codec)
             {
@@ -116,7 +116,7 @@ VideoWriter::startWrite()
     }else
     {
         h_writer = cv::Ptr<cv::VideoWriter>(new cv::VideoWriter);
-        auto codec = getParameter<Parameters::Parameter::EnumParameter>(0);
+        auto codec = getParameter<Parameters::EnumParameter>(0);
         bool success;
         if(codec)
         {

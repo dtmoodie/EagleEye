@@ -227,6 +227,7 @@ NodeManager::Init()
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddListener(this);
     boost::filesystem::path workingDir(__FILE__);
     std::string includePath = workingDir.parent_path().parent_path().string();
+	m_pRuntimeObjectSystem->SetAdditionalLinkOptions(" -DPARAMETERS_NO_UI ");
 #ifdef _MSC_VER
 	
 #else

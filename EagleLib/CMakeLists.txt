@@ -25,9 +25,9 @@ file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
 FILE(GLOB_RECURSE ext_inc "include/external_includes")
 ADD_SUBDIRECTORY("Parameters")
-IF(${Parameters_USEQT})
-message(STATUS "Parameters build with QT support, so linking into EagleLib")
 
+IF(${Parameters_USEQT})
+	message(STATUS "Parameters build with QT support, so linking into EagleLib")
 ENDIF()
 INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
@@ -49,8 +49,6 @@ if(${CV_LIB_DIR} MATCHES NOTFOUND)
  message("OpenCV_LIB_DIR not set, attempting to find library dir")
 endif()
 
-
-#
 SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 SET(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIR};${CUDA_INCLUDE_DIRS};${CMAKE_CURRENT_SOURCE_DIR}/src;${Parameters_INCLUDE}")
 
@@ -74,6 +72,7 @@ ELSE(WIN32)
  SET(CUDA_DEVRT ${CUDA_TOOLKIT_ROOT_DIR}/lib64/cudadevrt)
 ENDIF(WIN32)
 ADD_DEFINITIONS(-DCVAPI_EXPORTS)
+#ADD_DEFINITIONS(-DPARAMTERS_NO_UI)
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")

@@ -60,7 +60,7 @@ cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stre
     if(parameters[0]->changed)
     {
         parameters[0]->changed = false;
-        changeStream(*getParameter<int>(0)->Data());
+        changeStream(*getParameter<int>(0)->Data()); 
     }
     if(parameters[1]->changed)
     {
@@ -71,7 +71,8 @@ cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stre
     {
 		cam.set(cv::CAP_PROP_ZOOM, 20); 
         cam.read(hostBuf);
-        img.upload(hostBuf,stream);
+		if (!hostBuf.empty())
+			img.upload(hostBuf,stream);
     }
     updateParameter("Output", img, Parameters::Parameter::Output);
     return img;
@@ -85,9 +86,9 @@ void GStreamerCamera::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-        Parameters::Parameter::EnumParameter param;
+        Parameters::EnumParameter param;
         param.addEnum(ENUM(v4l2src));
-		Parameters::Parameter::EnumParameter type;
+		Parameters::EnumParameter type;
         type.addEnum(ENUM(h264));
         updateParameter("Source type", param);
         updateParameter("Source encoding", type);
@@ -105,8 +106,8 @@ void GStreamerCamera::Init(bool firstInit)
 void GStreamerCamera::setString()
 {
     std::stringstream str;
-    SourceType src = (SourceType)getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->getValue();
-    VideoType encoding = (VideoType)getParameter<Parameters::Parameter::EnumParameter>(1)->Data()->getValue();
+    SourceType src = (SourceType)getParameter<Parameters::EnumParameter>(0)->Data()->getValue();
+    VideoType encoding = (VideoType)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
 
     switch(src)
     {
@@ -222,9 +223,9 @@ void RTSPCamera::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-		Parameters::Parameter::EnumParameter param;
+		Parameters::EnumParameter param;
         param.addEnum(ENUM(rtspsrc));
-		Parameters::Parameter::EnumParameter type;
+		Parameters::EnumParameter type;
         type.addEnum(ENUM(h264));
         updateParameter("Source type", param);
         updateParameter("Source encoding", type);
@@ -238,8 +239,8 @@ void RTSPCamera::Init(bool firstInit)
 void RTSPCamera::setString()
 {
     std::stringstream str;
-    SourceType src = (SourceType)getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->getValue();
-    VideoType encoding = (VideoType)getParameter<Parameters::Parameter::EnumParameter>(1)->Data()->getValue();
+    SourceType src = (SourceType)getParameter<Parameters::EnumParameter>(0)->Data()->getValue();
+    VideoType encoding = (VideoType)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
     std::string result;
     if(src == rtspsrc)
     {

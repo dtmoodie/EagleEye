@@ -21,10 +21,10 @@ void CalibrateCamera::Init(bool firstInit)
     {
         updateParameter("Num corners X", 6);																			// 3
         updateParameter("Num corners Y", 9);																			// 4
-        updateParameter("Corner distance", double(18.75), Parameter::Control, "Distance between corners in mm");		// 5
+        updateParameter("Corner distance", double(18.75), Parameters::Parameter::Control, "Distance between corners in mm");		// 5
         updateParameter("Min pixel distance", float(10.0));																// 6
         addInputParameter<TrackSparseFunctor>("Sparse tracking functor");
-		updateParameter<EagleLib::WriteFile>("Save file", EagleLib::WriteFile("Camera Matrix.yml"));
+		updateParameter<Parameters::WriteFile>("Save file", Parameters::WriteFile("Camera Matrix.yml"));
     }
 
     lastCalibration = 0;
@@ -32,16 +32,16 @@ void CalibrateCamera::Init(bool firstInit)
 void CalibrateCamera::save()
 {
 	auto K = getParameter<cv::Mat>("Camera matrix");
-	auto file = getParameter<EagleLib::WriteFile>("Save file");
+	auto file = getParameter<Parameters::WriteFile>("Save file");
 	auto dist = getParameter<cv::Mat>("Distortion matrix");
 	if (K && file && dist)
 	{
 		cv::FileStorage fs;
-		fs.open(file->data.string(), cv::FileStorage::WRITE);
+		fs.open(file->Data()->string(), cv::FileStorage::WRITE);
 		if (fs.isOpened())
 		{
-			fs << "Camera Matrix" << K->data;
-			fs << "Distortion Matrix" << dist->data;
+			fs << "Camera Matrix" << *K->Data();
+			fs << "Distortion Matrix" << *dist->Data();
 		}
 	}
 }
@@ -58,17 +58,17 @@ void callibrateCameraThread(std::vector<cv::Mat>& imagePointCollection, std::vec
 
 cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    int numX = getParameter<int>(3)->data;
-    int numY = getParameter<int>(4)->data;
+    int numX = *getParameter<int>(3)->Data(); 
+	int numY = *getParameter<int>(4)->Data();
 
     cv::Mat h_corners;
     bool found = false;
-    TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor*>(7)->data;
+	TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor>("Sparse tracking functor")->Data();
 
     if(parameters[3]->changed || parameters[4]->changed || parameters[5]->changed || objectPoints3d.size() == 0)
     {
         imgSize = img.size();
-        double dx = getParameter<double>(5)->data;
+        double dx = *getParameter<double>(5)->Data();
         clear();
         objectPoints3d.clear();
         for(int i = 0; i < numY; ++i)
@@ -173,7 +173,7 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
                 minDist = dist;
         }
         TIME
-        if(minDist > getParameter<float>("Min pixel distance")->data)
+        if(minDist > *getParameter<float>("Min pixel distance")->Data())
         {
             imagePointCollection.push_back(h_corners);
             objectPointCollection.push_back(objectPoints3d);
@@ -199,9 +199,9 @@ void CalibrateCamera::calibrate()
     double quality = cv::calibrateCamera(objectPointCollection, imagePointCollection,
                         imgSize, K, distortionCoeffs,rvecs,tvecs);
 
-    updateParameter("Camera matrix", K, Parameter::State);
-    updateParameter("Distortion matrix", distortionCoeffs, Parameter::State);
-    updateParameter("Reprojection error", quality, Parameter::State);
+	updateParameter("Camera matrix", K, Parameters::Parameter::State);
+    updateParameter("Distortion matrix", distortionCoeffs, Parameters::Parameter::State);
+	updateParameter("Reprojection error", quality, Parameters::Parameter::State);
     lastCalibration = objectPointCollection.size();
 }
 

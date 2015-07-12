@@ -55,7 +55,7 @@ bool DirectoryLoader::SkipEmpty() const
 }
 void DirectoryLoader::Init(bool firstInit)
 {
-    updateParameter<Parameters::Parameter::ReadDirectory>("Directory", boost::filesystem::path("/home/dan/build/EagleEye/bin"), Parameters::Parameter::Control, "Path to directory");
+    updateParameter<Parameters::ReadDirectory>("Directory", boost::filesystem::path("/home/dan/build/EagleEye/bin"), Parameters::Parameter::Control, "Path to directory");
     updateParameter<bool>("Repeat", true);
     updateParameter<boost::function<void(void)>>("Restart", boost::bind(&DirectoryLoader::restart, this));
 	nodeType = eSource;
@@ -71,7 +71,7 @@ cv::cuda::GpuMat DirectoryLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 {
     if(parameters[0]->changed)
     {
-		boost::filesystem::path& path = *getParameter<Parameters::Parameter::ReadDirectory>(0)->Data();
+		boost::filesystem::path& path = *getParameter<Parameters::ReadDirectory>(0)->Data();
         files.clear();
         if(boost::filesystem::is_directory(path))
         {

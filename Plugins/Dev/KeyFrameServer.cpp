@@ -3,7 +3,7 @@
 using namespace EagleLib;
 
 
-template<typename T> bool KeyFrameServer::getParameter(int frameIndex, KeyFrameParameter param, T& data)
+template<typename T> bool KeyFrameServer::getParameter(int frameIndex, KeyFrameParameter param, T* data)
 {
     auto itr = KeyFrameParameters.find(frameIndex);
     if(itr == KeyFrameParameters.end())
@@ -14,18 +14,18 @@ template<typename T> bool KeyFrameServer::getParameter(int frameIndex, KeyFrameP
         return false;
 
     // Now attempt to cast to the appropriate type
-    typename TypedParameter<T>::Ptr paramPtr = boost::dynamic_pointer_cast<typename EagleLib::TypedParameter<T>, typename EagleLib::Parameter>(itr2->second);
+	typename Parameters::ITypedParameter<T>::Ptr paramPtr = std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(itr2->second);
     if(paramPtr == nullptr)
         return false;
 
-    data = paramPtr->data;
+    data = paramPtr->Data();
     return true;
 }
 #define logParam( param ) case param: logMsg << #param; break;
 template<typename T> bool KeyFrameServer::setParameter(int frameIndex, KeyFrameParameter param, const T& data)
 {
-    std::map<KeyFrameParameter, EagleLib::Parameter::Ptr>& keyFrame = KeyFrameParameters[frameIndex];
-    keyFrame[param] = typename TypedParameter<T>::Ptr(new TypedParameter<T>("", data));
+	std::map<KeyFrameParameter, Parameters::Parameter::Ptr>& keyFrame = KeyFrameParameters[frameIndex];
+	keyFrame[param] = typename Parameters::ITypedParameter<T>::Ptr(new Parameters::TypedParameter<T>("", data));
     std::stringstream logMsg;
     switch(param)
     {
@@ -49,13 +49,13 @@ template<typename T> bool KeyFrameServer::setParameter(int frameIndex, KeyFrameP
 
 void KeyFrameServer::Init(bool firstInit)
 {
-    updateParameter<d_ParameterSetFunctor>("Update Device Parameter",       boost::bind(&KeyFrameServer::setParameter<cv::cuda::GpuMat>,this,_1,_2,_3));
+    /*updateParameter<d_ParameterSetFunctor>("Update Device Parameter",       boost::bind(&KeyFrameServer::setParameter<cv::cuda::GpuMat>,this,_1,_2,_3));
     updateParameter<h_ParameterSetFunctor>("Update Host Parameter",         boost::bind(&KeyFrameServer::setParameter<cv::Mat>,this,_1,_2,_3));
     updateParameter<h_KeyPointSetFunctor>("Update KeyPoint Parameter",      boost::bind(&KeyFrameServer::setParameter<std::vector<cv::KeyPoint>>,this,_1,_2,_3));
 
     updateParameter<d_ParameterGetFunctor>("Get Device Parameter",          boost::bind(&KeyFrameServer::getParameter<cv::cuda::GpuMat>,this,_1,_2,_3));
     updateParameter<h_ParameterGetFunctor>("Get Host Parameter",            boost::bind(&KeyFrameServer::getParameter<cv::Mat>,this,_1,_2,_3));
-    updateParameter<h_KeyPointGetFunctor>("Get Keypoint Parameter",         boost::bind(&KeyFrameServer::getParameter<std::vector<cv::KeyPoint>>,this,_1,_2,_3));
+    updateParameter<h_KeyPointGetFunctor>("Get Keypoint Parameter",         boost::bind(&KeyFrameServer::getParameter<std::vector<cv::KeyPoint>>,this,_1,_2,_3));*/
 
 }
 

@@ -36,7 +36,7 @@ void ExportInputImage::Init(bool firstInit)
 
 void ImageInfo::Init(bool firstInit)
 {
-	Parameters::Parameter::EnumParameter dataType;
+	Parameters::EnumParameter dataType;
     dataType.addEnum(ENUM(CV_8U));
     dataType.addEnum(ENUM(CV_8S));
     dataType.addEnum(ENUM(CV_16U));
@@ -44,12 +44,12 @@ void ImageInfo::Init(bool firstInit)
     dataType.addEnum(ENUM(CV_32S));
     dataType.addEnum(ENUM(CV_32F));
     dataType.addEnum(ENUM(CV_64F));
-    updateParameter<Parameters::Parameter::EnumParameter>("Type",dataType, Parameters::Parameter::State);
+    updateParameter<Parameters::EnumParameter>("Type",dataType, Parameters::Parameter::State);
 }
 cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 
-    auto param = getParameter<Parameters::Parameter::EnumParameter>(0);
+    auto param = getParameter<Parameters::EnumParameter>(0);
     if(param->Data()->currentSelection != img.type())
     {
         param->Data()->currentSelection = img.type();
@@ -66,7 +66,7 @@ cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 }
 void Mat2Tensor::Init(bool firstInit)
 {
-	Parameters::Parameter::EnumParameter dataType;
+	Parameters::EnumParameter dataType;
     dataType.addEnum(ENUM(CV_8U));
     dataType.addEnum(ENUM(CV_8S));
     dataType.addEnum(ENUM(CV_16U));
@@ -74,12 +74,12 @@ void Mat2Tensor::Init(bool firstInit)
     dataType.addEnum(ENUM(CV_32S));
     dataType.addEnum(ENUM(CV_32F));
     dataType.addEnum(ENUM(CV_64F));
-    updateParameter<Parameters::Parameter::EnumParameter>("Tensor Type",dataType);
+    updateParameter<Parameters::EnumParameter>("Tensor Type",dataType);
     updateParameter("Include Position", true);
 }
 cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    int type = getParameter<Parameters::Parameter::EnumParameter>(0)->Data()->currentSelection;
+    int type = getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection;
     bool position = *getParameter<bool>(1)->Data();
     int newCols = img.channels();
     if(position)
