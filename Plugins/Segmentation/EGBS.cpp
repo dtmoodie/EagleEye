@@ -186,14 +186,14 @@ void SegmentEGBS::Init(bool firstInit)
 }
 cv::cuda::GpuMat SegmentEGBS::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-	float sigma = getParameter<float>(0)->data;
-	float thresh = getParameter<float>(1)->data;
-    int minSize = getParameter<int>(2)->data;
+	float sigma = *getParameter<float>(0)->Data();
+	float thresh = *getParameter<float>(1)->Data();
+    int minSize = *getParameter<int>(2)->Data();
 	img.download(h_buf, stream);
 	stream.waitForCompletion();
     cv::Mat mat = h_buf.createMatHeader();
     egbs.applySegmentation(mat, sigma, thresh, minSize);
-	cv::Mat result = egbs.recolor(getParameter<bool>(3)->data);
+	cv::Mat result = egbs.recolor(*getParameter<bool>(3)->Data());
 	img.upload(result, stream);
 	return img;
 }

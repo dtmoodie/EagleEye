@@ -26,14 +26,14 @@ namespace EagleLib
             typedef std::vector<std::pair<int, int>> vec_II;
             updateParameter<int>("int",0);
             updateParameter<short>("short",0);
-            updateParameter<char>("char",0);
+            //updateParameter<char>("char",0);
             updateParameter<unsigned int>("unsigned int",0);
             updateParameter<unsigned short>("unsigned short",0);
             updateParameter<unsigned char>("unsigned char",0);
 
             updateParameter<int*>("int*",0);
             updateParameter<short*>("short*",0);
-            updateParameter<char*>("char*",0);
+            //updateParameter<char*>("char*",0);
             updateParameter<unsigned int*>("unsigned int*",0);
             updateParameter<unsigned short*>("unsigned short*",0);
             updateParameter<unsigned char*>("unsigned char*",0);
@@ -86,17 +86,17 @@ namespace EagleLib
 
 			updateParameter<int>("int state", 0, Parameters::Parameter::State);
 			updateParameter<short>("short state", 0, Parameters::Parameter::State);
-			updateParameter<char>("char state", 0, Parameters::Parameter::State);
+			//updateParameter<char>("char state", 0, Parameters::Parameter::State);
 			updateParameter<unsigned int>("unsigned int state", 0, Parameters::Parameter::State);
 			updateParameter<unsigned short>("unsigned short state", 0, Parameters::Parameter::State);
 			updateParameter<unsigned char>("unsigned char state", 0, Parameters::Parameter::State);
 
 			updateParameter<int*>("int* state", 0, Parameters::Parameter::State);
 			updateParameter<short*>("short* state", 0, Parameters::Parameter::State);
-			updateParameter<char*>("char* state", 0, Parameters::Parameter::State);
+			//updateParameter<char*>("char* state", 0, Parameters::Parameter::State);
 			updateParameter<unsigned int*>("unsigned int* state", 0, Parameters::Parameter::State);
 			updateParameter<unsigned short*>("unsigned short* state", 0, Parameters::Parameter::State);
-			updateParameter<unsigned char*>("unsigned char* state", 0, Parameters::Parameter::State);
+			//updateParameter<unsigned char*>("unsigned char* state", 0, Parameters::Parameter::State);
 
 			updateParameter<float>("float state", 0, Parameters::Parameter::State);
 			updateParameter<double>("double state", 0, Parameters::Parameter::State);
@@ -116,17 +116,17 @@ namespace EagleLib
             getParameter<std::vector<double>>("std::vector<double> state")->Data()->push_back(12.5);
 			updateParameter<int>("int output", 0, Parameters::Parameter::Output);
 			updateParameter<short>("short output", 0, Parameters::Parameter::Output);
-			updateParameter<char>("char output", 0, Parameters::Parameter::Output);
+			//updateParameter<char>("char output", 0, Parameters::Parameter::Output);
 			updateParameter<unsigned int>("unsigned int output", 0, Parameters::Parameter::Output);
 			updateParameter<unsigned short>("unsigned short output", 0, Parameters::Parameter::Output);
-			updateParameter<unsigned char>("unsigned char output", 0, Parameters::Parameter::Output);
+			//updateParameter<unsigned char>("unsigned char output", 0, Parameters::Parameter::Output);
 
 			updateParameter<int*>("int* output", 0, Parameters::Parameter::Output);
 			updateParameter<short*>("short* output", 0, Parameters::Parameter::Output);
-			updateParameter<char*>("char* output", 0, Parameters::Parameter::Output);
+			//updateParameter<char*>("char* output", 0, Parameters::Parameter::Output);
 			updateParameter<unsigned int*>("unsigned int* output", 0, Parameters::Parameter::Output);
 			updateParameter<unsigned short*>("unsigned short* output", 0, Parameters::Parameter::Output);
-			updateParameter<unsigned char*>("unsigned char* output", 0, Parameters::Parameter::Output);
+			//updateParameter<unsigned char*>("unsigned char* output", 0, Parameters::Parameter::Output);
 
 			updateParameter<float>("float output", 0, Parameters::Parameter::Output);
 			updateParameter<double>("double output", 0, Parameters::Parameter::Output);
@@ -140,17 +140,17 @@ namespace EagleLib
 
 			updateParameter<int>("int input", 0, Parameters::Parameter::Input);
 			updateParameter<short>("short input", 0, Parameters::Parameter::Input);
-			updateParameter<char>("char input", 0, Parameters::Parameter::Input);
+			//updateParameter<char>("char input", 0, Parameters::Parameter::Input);
 			updateParameter<unsigned int>("unsigned int input", 0, Parameters::Parameter::Input);
 			updateParameter<unsigned short>("unsigned short input", 0, Parameters::Parameter::Input);
-			updateParameter<unsigned char>("unsigned char input", 0, Parameters::Parameter::Input);
+			//updateParameter<unsigned char>("unsigned char input", 0, Parameters::Parameter::Input);
 
 			updateParameter<int*>("int* input", 0, Parameters::Parameter::Input);
 			updateParameter<short*>("short* input", 0, Parameters::Parameter::Input);
-			updateParameter<char*>("char* input", 0, Parameters::Parameter::Input);
+			//updateParameter<char*>("char* input", 0, Parameters::Parameter::Input);
 			updateParameter<unsigned int*>("unsigned int* input", 0, Parameters::Parameter::Input);
 			updateParameter<unsigned short*>("unsigned short* input", 0, Parameters::Parameter::Input);
-			updateParameter<unsigned char*>("unsigned char* input", 0, Parameters::Parameter::Input);
+			//updateParameter<unsigned char*>("unsigned char* input", 0, Parameters::Parameter::Input);
 
 			updateParameter<float>("float input", 0, Parameters::Parameter::Input);
 			updateParameter<double>("double input", 0, Parameters::Parameter::Input);
@@ -160,6 +160,7 @@ namespace EagleLib
 			updateParameter<std::string>("std::string input", "test string", Parameters::Parameter::Input);
 			updateParameter<std::string*>("std::string* input", nullptr, Parameters::Parameter::Input);
         }
+		
 
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)
         {

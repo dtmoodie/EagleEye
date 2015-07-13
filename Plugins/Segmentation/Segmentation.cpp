@@ -25,8 +25,8 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
         return img;
     }
     cv::cuda::GpuMat hist;
-    cv::cuda::GpuMat* histogram = getParameter<cv::cuda::GpuMat*>(0)->data;
-    cv::Mat* bins = getParameter<cv::Mat*>(1)->data;
+    cv::cuda::GpuMat* histogram = getParameter<cv::cuda::GpuMat>(0)->Data();
+    cv::Mat* bins = getParameter<cv::Mat>(1)->Data();
     if(!histogram)
     {
         cv::Mat h_levels(1,200,CV_32F);
@@ -152,7 +152,7 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     }
     for(int i = 0; i < optValue.size(); ++i)
     {
-        updateParameter("Optimal threshold " + boost::lexical_cast<std::string>(i), optValue[i], Parameter::Output);
+        updateParameter("Optimal threshold " + boost::lexical_cast<std::string>(i), optValue[i], Parameters::Parameter::Output);
     }
     return img;
 }
@@ -182,13 +182,13 @@ cv::cuda::GpuMat SegmentMOG2::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
         parameters[1]->changed ||
         parameters[2]->changed)
     {
-        mog2 = cv::cuda::createBackgroundSubtractorMOG2(getParameter<int>(0)->data,getParameter<double>(1)->data, getParameter<bool>(2)->data);
+        mog2 = cv::cuda::createBackgroundSubtractorMOG2(*getParameter<int>(0)->Data(),*getParameter<double>(1)->Data(), *getParameter<bool>(2)->Data());
     }
     if(mog2 != nullptr)
     {
         cv::cuda::GpuMat mask;
-        mog2->apply(img, mask, getParameter<double>(3)->data, stream);
-        updateParameter("Foreground mask", mask, Parameter::Output);
+        mog2->apply(img, mask, *getParameter<double>(3)->Data(), stream);
+        updateParameter("Foreground mask", mask, Parameters::Parameter::Output);
     }
     return img;
 }
@@ -205,7 +205,7 @@ cv::cuda::GpuMat SegmentWatershed::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 {
     cv::Mat h_img;
     img.download(h_img,stream);
-    cv::Mat* h_markerMask = getParameter<cv::Mat*>(0)->data;
+    cv::Mat* h_markerMask = getParameter<cv::Mat>(0)->Data();
     if(h_markerMask)
     {
         cv::watershed(h_img, *h_markerMask);
@@ -233,7 +233,7 @@ void SegmentGrabCut::Init(bool firstInit)
         addInputParameter<cv::Mat>("Initial mask", "Optional");
         addInputParameter<cv::Rect>("ROI", "Optional");
         addInputParameter<cv::cuda::GpuMat>("Gpu initial mask");
-        EnumParameter param;
+        Parameters::EnumParameter param;
         param.addEnum(ENUM(cv::GC_INIT_WITH_RECT));
         param.addEnum(ENUM(cv::GC_INIT_WITH_MASK));
         param.addEnum(ENUM(cv::GC_EVAL));
@@ -250,9 +250,9 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     cv::Mat h_img, mask;
     img.download(h_img, stream);
     stream.waitForCompletion();
-    cv::cuda::GpuMat* d_mask = getParameter<cv::cuda::GpuMat*>("Gpu initial mask")->data;
-    cv::Mat* maskPtr = getParameter<cv::Mat*>(0)->data;
-    int mode = getParameter<EnumParameter>(2)->data.getValue();
+    cv::cuda::GpuMat* d_mask = getParameter<cv::cuda::GpuMat>("Gpu initial mask")->Data();
+    cv::Mat* maskPtr = getParameter<cv::Mat>(0)->Data();
+    int mode = getParameter<Parameters::EnumParameter>(2)->Data()->getValue();
     bool maskExists = true;
     if(!maskPtr && !d_mask)
     {
@@ -279,7 +279,7 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
         return img;
     }
 
-    cv::Rect* roi = getParameter<cv::Rect*>(1)->data;
+    cv::Rect* roi = getParameter<cv::Rect>(1)->Data();
     if(!roi && mode == cv::GC_INIT_WITH_RECT)
     {
         log(Error, "Mode set to initialize with rect, but no rect provided");
@@ -289,7 +289,7 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     if(roi == nullptr)
         roi = & rect;
 
-    cv::grabCut(h_img, mask, *roi, bgdModel, fgdModel, getParameter<int>(3)->data, mode);
+    cv::grabCut(h_img, mask, *roi, bgdModel, fgdModel, *getParameter<int>(3)->Data(), mode);
     if(!maskExists)
     {
         updateParameter("Grab Cut results", mask);
@@ -311,7 +311,7 @@ cv::cuda::GpuMat KMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stre
 
 void SegmentKMeans::Init(bool firstInit)
 {
-    EnumParameter flags;
+    Parameters::EnumParameter flags;
     flags.addEnum(ENUM(cv::KMEANS_PP_CENTERS));
     flags.addEnum(ENUM(cv::KMEANS_RANDOM_CENTERS));
     flags.addEnum(ENUM(cv::KMEANS_USE_INITIAL_LABELS));
@@ -326,7 +326,7 @@ void SegmentKMeans::Init(bool firstInit)
 
 cv::cuda::GpuMat SegmentKMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    int k = getParameter<int>(0)->data;
+    int k = *getParameter<int>(0)->Data();
 
     img.download(hostBuf, stream);
     stream.waitForCompletion();
@@ -334,14 +334,14 @@ cv::cuda::GpuMat SegmentKMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
 
     cv::Mat labels;
     cv::Mat clusters;
-    cv::TermCriteria termCrit( cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS, getParameter<int>(1)->data, getParameter<double>(2)->data);
-    double ret = cv::kmeans(samples, k, labels, termCrit, getParameter<int>(3)->data, getParameter<EnumParameter>(4)->data.getValue(), clusters);
+    cv::TermCriteria termCrit( cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS, *getParameter<int>(1)->Data(), *getParameter<double>(2)->Data());
+    double ret = cv::kmeans(samples, k, labels, termCrit, *getParameter<int>(3)->Data(), getParameter<Parameters::EnumParameter>(4)->Data()->getValue(), clusters);
     cv::cuda::GpuMat d_clusters, d_labels;
     d_clusters.upload(clusters, stream);
     d_labels.upload(labels, stream);
-    updateParameter("Clusters", d_clusters, Parameter::Output);
-    updateParameter("Labels", d_labels, Parameter::Output);
-    updateParameter("Compactedness", ret, Parameter::Output);
+    updateParameter("Clusters", d_clusters, Parameters::Parameter::Output);
+    updateParameter("Labels", d_labels, Parameters::Parameter::Output);
+    updateParameter("Compactedness", ret, Parameters::Parameter::Output);
     return img;
 }
 void
@@ -378,11 +378,11 @@ cv::cuda::GpuMat SegmentMeanShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
         cv::cuda::merge(channels, img, stream);
     }
     cv::cuda::meanShiftSegmentation(img, dest,
-        getParameter<int>(0)->data,
-        getParameter<int>(1)->data,
-        getParameter<int>(2)->data,
-        cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, getParameter<int>(3)->data,
-        getParameter<double>(4)->data), stream);
+        *getParameter<int>(0)->Data(),
+        *getParameter<int>(1)->Data(),
+        *getParameter<int>(2)->Data(),
+        cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, *getParameter<int>(3)->Data(),
+        *getParameter<double>(4)->Data()), stream);
     img.upload(dest,stream);
     return img;
 }
@@ -394,7 +394,7 @@ void ManualMask::Init(bool firstInit)
 
     if(firstInit)
     {
-        EnumParameter param;
+        Parameters::EnumParameter param;
         param.addEnum(ENUM(Circular));
         param.addEnum(ENUM(Rectangular));
         updateParameter("Type", param);
@@ -413,32 +413,32 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
        parameters[2]->changed ||
        parameters[3]->changed || parameters.size() == 4)
     {
-        bool inverted = getParameter<bool>(4)->data;
-        cv::Scalar origin = getParameter<cv::Scalar>(1)->data;
+        bool inverted = *getParameter<bool>(4)->Data();
+        cv::Scalar origin = *getParameter<cv::Scalar>(1)->Data();
         cv::Mat h_mask;
         if(inverted)
             h_mask = cv::Mat(img.size(), CV_8U, cv::Scalar(0));
         else
             h_mask = cv::Mat(img.size(), CV_8U, cv::Scalar(255));
 
-        switch(getParameter<EnumParameter>(0)->data.getValue())
+        switch(getParameter<Parameters::EnumParameter>(0)->Data()->getValue())
         {
 
         case Circular:
 
             if(inverted)
-                cv::circle(h_mask, cv::Point(origin.val[0], origin.val[1]), getParameter<int>(3)->data, cv::Scalar(255), -1);
+                cv::circle(h_mask, cv::Point(origin.val[0], origin.val[1]), *getParameter<int>(3)->Data(), cv::Scalar(255), -1);
             else
-                cv::circle(h_mask, cv::Point(origin.val[0], origin.val[1]), getParameter<int>(3)->data, cv::Scalar(0), -1);
+                cv::circle(h_mask, cv::Point(origin.val[0], origin.val[1]), *getParameter<int>(3)->Data(), cv::Scalar(0), -1);
             break;
         case Rectangular:
-            cv::Scalar size = getParameter<cv::Scalar>(2)->data;
+            cv::Scalar size = *getParameter<cv::Scalar>(2)->Data();
             if(inverted)
                 cv::rectangle(h_mask, cv::Rect(origin.val[0], origin.val[1], size.val[0], size.val[1]), cv::Scalar(255),-1);
             else
                 cv::rectangle(h_mask, cv::Rect(origin.val[0], origin.val[1], size.val[0], size.val[1]), cv::Scalar(0),-1);
         }
-        updateParameter("Manually defined mask", cv::cuda::GpuMat(h_mask), Parameter::Output);
+        updateParameter("Manually defined mask", cv::cuda::GpuMat(h_mask), Parameters::Parameter::Output);
         parameters[0]->changed = false;
         parameters[1]->changed = false;
         parameters[2]->changed = false;
@@ -450,14 +450,14 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
 void SLaT::Init(bool firstInit)
 {
 	Node::Init(firstInit);
-	updateParameter("Lambda", double(0.1), Parameter::Control, "For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities");
-	updateParameter("Alpha", double(20.0), Parameter::Control, "For bigger values, solution will be more flat, for smaller values, solution will be more rough.");
-	updateParameter("Temporal", double(0.0), Parameter::Control, "For bigger values, solution will be driven to be similar to the previous frame, smaller values will allow for more interframe independence");
-	updateParameter("Iterations", int(10000), Parameter::Control, "Max number of iterations to perform");
+	updateParameter("Lambda", double(0.1), Parameters::Parameter::Control, "For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities");
+	updateParameter("Alpha", double(20.0), Parameters::Parameter::Control, "For bigger values, solution will be more flat, for smaller values, solution will be more rough.");
+	updateParameter("Temporal", double(0.0), Parameters::Parameter::Control, "For bigger values, solution will be driven to be similar to the previous frame, smaller values will allow for more interframe independence");
+	updateParameter("Iterations", int(10000), Parameters::Parameter::Control, "Max number of iterations to perform");
 	updateParameter("Epsilon", double(5e-5));
-	updateParameter("Stop K", int(10), Parameter::Control, "How often epsilon should be evaluated and checked");
-	updateParameter("Adapt Params", false, Parameter::Control, "If true: lambda and alpha will be adapted so that the solution will look more or less the same, for one and the same input image and for different scalings.");
-	updateParameter("Weight", false, Parameter::Control, "If true: The regularizer will be adjust to smooth less at pixels with high edge probability");
+	updateParameter("Stop K", int(10), Parameters::Parameter::Control, "How often epsilon should be evaluated and checked");
+	updateParameter("Adapt Params", false, Parameters::Parameter::Control, "If true: lambda and alpha will be adapted so that the solution will look more or less the same, for one and the same input image and for different scalings.");
+	updateParameter("Weight", false, Parameters::Parameter::Control, "If true: The regularizer will be adjust to smooth less at pixels with high edge probability");
 	updateParameter("Overlay edges", false);
 	updateParameter("K segments", int(10));
 	updateParameter("KMeans iterations", int(5));
@@ -470,15 +470,15 @@ cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream
 	img.download(imageBuffer, stream);
 	
 	Par param;
-	param.lambda = getParameter<double>(0)->data;
-	param.alpha = getParameter<double>(1)->data;
-	param.temporal = getParameter<double>(2)->data;
-	param.iterations = getParameter<int>(3)->data;
-	param.stop_eps = getParameter<double>(4)->data;
-	param.stop_k = getParameter<int>(5)->data;
-	param.adapt_params = getParameter<bool>(6)->data;
-	param.weight = getParameter<bool>(7)->data;
-	param.edges = getParameter<bool>(8)->data;
+	param.lambda = *getParameter<double>(0)->Data();
+	param.alpha = *getParameter<double>(1)->Data();
+	param.temporal = *getParameter<double>(2)->Data();
+	param.iterations = *getParameter<int>(3)->Data();
+	param.stop_eps = *getParameter<double>(4)->Data();
+	param.stop_k = *getParameter<int>(5)->Data();
+	param.adapt_params = *getParameter<bool>(6)->Data();
+	param.weight = *getParameter<bool>(7)->Data();
+	param.edges = *getParameter<bool>(8)->Data();
 	stream.waitForCompletion();
 	cv::Mat result = solver->run(imageBuffer.createMatHeader(), param);
 
@@ -490,8 +490,8 @@ cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream
 	smoothed_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(0, 3)));
 	lab_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(3, 6)));
 	
-    cv::kmeans(tensor, getParameter<int>(9)->data, labels,
-		cv::TermCriteria(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, getParameter<int>(10)->data, getParameter<double>(11)->data),
+    cv::kmeans(tensor, *getParameter<int>(9)->Data(), labels,
+		cv::TermCriteria(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, *getParameter<int>(10)->Data(), *getParameter<double>(11)->Data()),
 		1, cv::KMEANS_RANDOM_CENTERS, centers);
 
 	labels = labels.reshape(1, img.rows);

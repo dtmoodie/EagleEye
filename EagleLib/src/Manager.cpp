@@ -688,8 +688,15 @@ NodeManager::getConstructableNodes()
     std::vector<std::string> output;
     for(size_t i = 0; i < constructors.Size(); ++i)
     {
-        if(constructors[i]->GetInterfaceId() == IID_NodeObject)
-            output.push_back(constructors[i]->GetName());
+		if (constructors[i])
+		{
+			if (constructors[i]->GetInterfaceId() == IID_NodeObject)
+				output.push_back(constructors[i]->GetName());
+		}
+		else
+		{
+			std::cout << "Null constructor idx " << i << std::endl;
+		}
     }
     return output;
 }

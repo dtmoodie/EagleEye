@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 
         std::vector<cv::cuda::GpuMat> images(nodes.size());
         std::vector<cv::cuda::Stream> streams(nodes.size());
-        while(!playbackNode->getParameter<bool>("End of video")->data)
+        while(!(*playbackNode->getParameter<bool>("End of video")->Data()))
         {
             for(size_t i = 0; i < nodes.size(); ++i)
             {
