@@ -78,9 +78,9 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
                 objectPoints3d.push_back(cv::Point3f(dx*j, dx*i, 0));
             }
         }
-        parameters[2]->changed = false;
         parameters[3]->changed = false;
         parameters[4]->changed = false;
+        parameters[5]->changed = false;
     }
 
     if(img.channels() == 3)
@@ -155,37 +155,50 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     TIME
     boost::recursive_mutex::scoped_lock lock(pointCollectionMtx);
 
-    if(h_corners.rows == objectPoints3d.size() && found)
-    {
-        TIME
-        cv::Vec2f centroid(0,0);
-        for(int i = 0; i < h_corners.rows; ++i)
-        {
-            centroid += h_corners.at<cv::Vec2f>(i);
-        }
-        centroid /= float(corners.cols);
+	if (h_corners.rows == objectPoints3d.size() && found)
+	{
+		TIME
+			cv::Vec2f centroid(0, 0);
+		for (int i = 0; i < h_corners.rows; ++i)
+		{
+			centroid += h_corners.at<cv::Vec2f>(i);
+		}
+		centroid /= float(corners.cols);
 
-        float minDist = std::numeric_limits<float>::max();
-        for(cv::Vec2f& other: imagePointCentroids)
-        {
-            float dist = cv::norm(other - centroid);
-            if(dist < minDist)
-                minDist = dist;
-        }
-        TIME
-        if(minDist > *getParameter<float>("Min pixel distance")->Data())
-        {
-            imagePointCollection.push_back(h_corners);
-            objectPointCollection.push_back(objectPoints3d);
-            imagePointCentroids.push_back(centroid);
-            if(objectPointCollection.size() > lastCalibration + 10)
-            {
-                TIME
-                calibrate();
-                TIME
-            }
-        }
-    }
+		float minDist = std::numeric_limits<float>::max();
+		for (cv::Vec2f& other : imagePointCentroids)
+		{
+			float dist = cv::norm(other - centroid);
+			if (dist < minDist)
+				minDist = dist;
+		}
+		TIME
+			if (minDist > *getParameter<float>("Min pixel distance")->Data())
+			{
+				imagePointCollection.push_back(h_corners);
+				objectPointCollection.push_back(objectPoints3d);
+				imagePointCentroids.push_back(centroid);
+
+				if (objectPointCollection.size() > lastCalibration + 10)
+				{
+					TIME
+						calibrate();
+					TIME
+				}
+				else
+				{
+					log(Status, "Waiting for more images before calibration");
+				}
+			}
+	}
+	else
+	{
+		if (!found)
+			log(Status, "Chessboard not found");
+		else
+			log(Status, "Didn't find matching number of points");
+	}
+
 
     return img;
 }

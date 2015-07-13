@@ -44,6 +44,7 @@ void ImageWriter::Init(bool firstInit)
     updateParameter("Extension", param);
     updateParameter("Frequency", -1);
     updateParameter<boost::function<void(void)>>("Save image", boost::bind(&ImageWriter::requestWrite, this), Parameters::Parameter::Output);
+	updateParameter<Parameters::WriteDirectory>("Save Diretory", Parameters::WriteDirectory(""));
 }
 
 cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)

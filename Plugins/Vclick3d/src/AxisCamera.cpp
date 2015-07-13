@@ -156,7 +156,8 @@ void AxisCamera::on_tiltRequest()
 }
 void AxisCamera::get_position()
 {
-	socket->request(QUrl("http://192.168.0.6/axis-cgi/com/ptz.cgi?query=position"));
+	QString url = "http://" + QString::fromStdString(*getParameter<std::string>("Camera address")->Data()) + "/axis-cgi/com/ptz.cgi?query=position";
+	socket->request(QUrl(url));
 }
 void AxisCamera::on_addressChange()
 {
@@ -178,7 +179,7 @@ void AxisCamera::Init(bool firstInit)
 	{
 		socket.reset(new AxisSocket());
 
-        updateParameter<std::string>("Camera address", "192.168.0.6");
+        updateParameter<std::string>("Camera address", "192.168.1.152");
 		updateParameter("Camera port", int(-1));
         updateParameter<std::string>("Camera username", "root"); 
         updateParameter<std::string>("Camera password", "12369pp"); // TODO change to password string

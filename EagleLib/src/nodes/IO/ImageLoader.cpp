@@ -91,9 +91,15 @@ cv::cuda::GpuMat DirectoryLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
             img.upload(h_img, stream);
             ++fileIdx;
         }
-		if (*getParameter<bool>(1)->Data())
-            if(fileIdx == files.size())
-                fileIdx = 0;
+		
+			if (fileIdx == files.size())
+			{
+				log(Status, "End of directory reached");
+				if (*getParameter<bool>(1)->Data())
+					fileIdx = 0;
+
+			}
+                
     }
     return img;
 }
