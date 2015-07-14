@@ -162,6 +162,7 @@ namespace EagleLib
         Error = 3,
         Critical = 4
     };
+	
 
     class CV_EXPORTS Node: public TInterface<IID_NodeObject, IObject>, public IObjectNotifiable
     {
