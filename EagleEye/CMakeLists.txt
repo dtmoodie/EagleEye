@@ -58,11 +58,11 @@ SOURCE_GROUP("UIs" FILES ${forms})
 
 message(STATUS
 "======== EagleEye Reporting =======
-  Qt bin dir: ${Qt5_DIR}
+  Qt bin dir: ${Qt5_DIR} 
 
   
 ")
-
+ 
 TARGET_LINK_LIBRARIES(EagleEye
         Qt5::Gui
         Qt5::Widgets

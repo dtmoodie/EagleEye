@@ -520,7 +520,7 @@ namespace EagleLib
         template<typename T> bool
         updateParameter(const std::string& name,
                         const T& data,
-                        Parameters::Parameter::ParameterType type_ = Parameters::Parameter::None,
+                        Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
                         const std::string& toolTip_ = std::string(),
                         const bool& ownsData_ = false)
 		{
@@ -554,7 +554,7 @@ namespace EagleLib
 							T data,
 							const std::string& name = std::string(),
 							const std::string quickHelp = std::string(),
-                            Parameters::Parameter::ParameterType type_ = Parameters::Parameter::None)
+                            Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control)
 		{
 			if (idx > parameters.size() || idx < 0)
 				return false;

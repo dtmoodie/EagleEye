@@ -44,7 +44,7 @@ void Camera::Init(bool firstInit)
     if(firstInit)
     {
         updateParameter<int>("Camera Number", 0);
-        updateParameter<std::string>("Gstreamer stream ", "rtsp://root:12369pp@192.168.0.6/axis-media/media.amp");
+        updateParameter<std::string>("Gstreamer stream", "rtsp://root:12369pp@192.168.0.6/axis-media/media.amp");
         parameters[0]->changed = false;
         parameters[1]->changed = false;
     }

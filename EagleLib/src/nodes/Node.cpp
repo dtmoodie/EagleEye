@@ -312,13 +312,16 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                     {
                         TIME
                         std::stringstream time;
-                        time << "Start: " << timings[1].first - timings[0].first << " ";
-                        for(size_t i = 2; i < timings.size()-1; ++i)
-                        {
-                            time << "(" << timings[i-1].second << "," << timings[i].second << "," << timings[i].first - timings[i-1].first << ")";
-                        }
-                        time << "End: " << timings[timings.size() - 1].first - timings[timings.size() - 2].first;
-                        log(Profiling, time.str());
+						if (timings.size() > 2)
+						{
+							time << "Start: " << timings[1].first - timings[0].first << " ";
+							for (size_t i = 2; i < timings.size() - 1; ++i)
+							{
+								time << "(" << timings[i - 1].second << "," << timings[i].second << "," << timings[i].first - timings[i - 1].first << ")";
+							}
+							time << "End: " << timings[timings.size() - 1].first - timings[timings.size() - 2].first;
+							log(Profiling, time.str());
+						}
                     }
                 }
                 end = boost::posix_time::microsec_clock::universal_time();
@@ -491,6 +494,8 @@ Node::Init(const cv::FileNode& configNode)
     for(size_t i = 0; i < parameters.size(); ++i)
     {
 		// TODO
+		if (parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::Input)
+			Parameters::Persistence::cv::DeSerialize(&paramNode, parameters[i].get());
         //parameters[i]->Init(paramNode);
         //parameters[i]->update();
     }
@@ -543,6 +548,7 @@ Node::Serialize(cv::FileStorage& fs)
             if(parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::Input)
             {
 				// TODO
+				Parameters::Persistence::cv::Serialize(&fs, parameters[i].get());
                 //parameters[i]->Serialize(fs);
             }
         }

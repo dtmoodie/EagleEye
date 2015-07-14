@@ -139,7 +139,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-
+	stopProcessingThread();
+	cv::destroyAllWindows();
     delete ui;
 }
 void MainWindow::closeEvent(QCloseEvent *event)

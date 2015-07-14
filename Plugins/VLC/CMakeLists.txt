@@ -1,0 +1,23 @@
+PROJECT(VLC)
+FIND_PACKAGE(LibVLC)
+INCLUDE_DIRECTORIES(
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+	${EagleLib_INCLUDE_DIRECTORIES}
+	${LIBVLC_INCLUDE_DIR}
+)
+
+
+FILE(GLOB_RECURSE src "src/*.cpp")
+FILE(GLOB_RECURSE hdr "include/*.h")
+
+MESSAGE(STATUS
+" ============== VLC ==================
+	${src}
+
+	${hdr}
+"
+)
+
+ADD_LIBRARY(VLC SHARED ${src} ${hdr})
+
+TARGET_LINK_LIBRARIES(VLC ${LIBVLC_LIBRARY} ${LIBVLCCORE_LIBRARY})
