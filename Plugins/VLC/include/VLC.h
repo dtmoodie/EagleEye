@@ -2,21 +2,50 @@
 
 #include "vlc/vlc.h"
 #include "nodes/node.h"
-#include "nodes/IO/Camera.h"
 #include <mutex>
+#include "ObjectInterfacePerModule.h"
+
+#ifdef _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Cored.lib");
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Networkd.lib");
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Guid.lib");
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgetsd.lib");
+#else
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Network.lib");
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Gui.lib");
+RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
+#endif
+RUNTIME_COMPILER_LINKLIBRARY("libvlccore.lib");
+RUNTIME_COMPILER_LINKLIBRARY("libvlc.lib");
+#ifdef __cplusplus
+extern "C" {
+#endif
+	CV_EXPORTS void SetupIncludes();
+
+	CV_EXPORTS IPerModuleInterface* GetModule();
+#ifdef __cplusplus
+}
+#endif
+
 namespace EagleLib
 {
-	class vlcCamera : public RTSPCamera
+	class vlcCamera : public Node
 	{
+		
 		libvlc_instance_t* vlcInstance;
 		libvlc_media_player_t* mp;
 		libvlc_media_t* media;
 	public:
+		vlcCamera();
 		~vlcCamera();
 		void onSourceChange();
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-		
+		virtual bool SkipEmpty() const;
+		ConstBuffer<cv::cuda::HostMem> h_dest;
+		ConstBuffer<cv::cuda::GpuMat> d_dest;
+		concurrent_queue<cv::cuda::HostMem*> imgQueue;
 	};
 }
 /*

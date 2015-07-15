@@ -45,22 +45,22 @@ find_path(LIBVLC_INCLUDE_DIR PATHS "${CMAKE_INCLUDE_PATH}/vlc" NAMES vlc.h
 
 #Put here path to custom location
 #example: /home/user/vlc/lib etc..
-find_library(LIBVLC_LIBRARY NAMES vlc libvlc
+find_library(LIBVLC_LIBRARY NAMES  libvlc
 HINTS "$ENV{LIBVLC_LIBRARY_PATH}" ${PC_LIBVLC_LIBDIR} ${PC_LIBVLC_LIBRARY_DIRS}
 PATHS
     "$ENV{LIB_DIR}/lib"
     "C:/Program Files/VideoLAN/VLC/SDK/lib"
     c:/msys/local/lib
 )
-find_library(LIBVLC_LIBRARY NAMES vlc libvlc)
-find_library(LIBVLCCORE_LIBRARY NAMES vlccore libvlccore
+find_library(LIBVLC_LIBRARY NAMES libvlc)
+find_library(LIBVLCCORE_LIBRARY NAMES libvlccore
 HINTS "$ENV{LIBVLC_LIBRARY_PATH}" ${PC_LIBVLC_LIBDIR} ${PC_LIBVLC_LIBRARY_DIRS}
 PATHS
     "$ENV{LIB_DIR}/lib"
     "C:/Program Files/VideoLAN/VLC/SDK/lib"
     c:/msys/local/lib
 )
-find_library(LIBVLCCORE_LIBRARY NAMES vlccore libvlccore)
+find_library(LIBVLCCORE_LIBRARY NAMES  libvlccore)
 
 set(LIBVLC_VERSION ${PC_LIBVLC_VERSION})
 if (NOT LIBVLC_VERSION)

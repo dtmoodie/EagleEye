@@ -434,6 +434,8 @@ namespace EagleLib
 			return 0;
 		}*/
 
+		void RegisterParameterCallback(int idx, boost::function<void(void)> callback);
+		void RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback);
 		template<typename T> size_t addParameter(const std::string& name,
 										const T& data,
 										Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
@@ -745,6 +747,7 @@ namespace EagleLib
         ConstBuffer<cv::cuda::GpuMat>                                       childResults;
 		
 		boost::signals2::connection											resetConnection;
+		std::vector<boost::signals2::connection>							callbackConnections;
     };
 
 }

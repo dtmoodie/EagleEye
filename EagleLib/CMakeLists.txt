@@ -7,7 +7,7 @@ find_package(CUDA REQUIRED)
 find_package(Qt5 REQUIRED Core)
 cmake_policy(SET CMP0012 NEW)
 IF(WIN32)
-	set(Boost_USE_STATIC_LIBS        ON)
+	set(Boost_USE_STATIC_LIBS        OFF)
 	set(Boost_USE_MULTITHREADED      ON)
 	set(Boost_USE_STATIC_RUNTIME     OFF)
 ELSE(WIN32)
@@ -80,10 +80,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 
 SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 set(EagleLib_INCLUDE_DIRECTORIES "${Parameters_INCLUDE};${CMAKE_CURRENT_SOURCE_DIR}/src;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
-
-if(WIN32)
-	set(EagleLib_LIBRARIES "EagleLib;${Boost_LIBRARIES};${OpenCV_LIBS}" PARENT_SCOPE)
-endif(WIN32)
+set(EagleLib_LIBRARIES "EagleLib;${Boost_LIBRARIES};${OpenCV_LIBS};${Parameters_LIBS}" PARENT_SCOPE)
 
 # Reporting section
 message(STATUS

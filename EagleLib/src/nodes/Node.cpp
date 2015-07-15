@@ -46,6 +46,10 @@ Node::~Node()
 {
     if(parent)
         parent->deregisterNotifier(this);
+	for (int i = 0; i < callbackConnections.size(); ++i)
+	{
+		callbackConnections[i].disconnect();
+	}
 }
 void Node::reset()
 {
@@ -469,6 +473,22 @@ void
 Node::Init(const std::string &configFile)
 {
 
+}
+void Node::RegisterParameterCallback(int idx, boost::function<void(void)> callback)
+{
+	auto param = getParameter(idx);
+	if (param)
+	{
+		callbackConnections.push_back(param->RegisterNotifier(callback));
+	}
+}
+void Node::RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback)
+{
+	auto param = getParameter(name);
+	if (param)
+	{
+		callbackConnections.push_back(param->RegisterNotifier(callback));
+	}
 }
 
 void

@@ -49,7 +49,7 @@ namespace EagleLib
         virtual bool SkipEmpty() const;
     };
 
-    class RTSPCamera: public Node
+    class CV_EXPORTS RTSPCamera: public Node
     {
         cv::VideoCapture cam;
         cv::cuda::HostMem hostBuf;
