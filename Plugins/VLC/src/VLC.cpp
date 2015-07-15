@@ -4,35 +4,8 @@
 using namespace EagleLib;
 // callbacks for vlc
 
-void SetupIncludes()
-{
-#ifdef PROJECT_INCLUDES
-{
-	std::string str(PROJECT_INCLUDES);
-	std::string::size_type pos = str.find_first_of('+');
-	std::string::size_type prevPos = 0;
-	while (pos != std::string::npos)
-	{
-		EagleLib::NodeManager::getInstance().addIncludeDir(str.substr(prevPos, pos - prevPos).c_str());
-		prevPos = pos + 1;
-		pos = str.find_first_of('+', pos + 1);
-	}
-}
-#endif 
-#ifdef PROJECT_LIB_DIRS
-{
-	std::string str(PROJECT_LIB_DIRS);
-	std::string::size_type pos = str.find_first_of('+');
-	std::string::size_type prevPos = 0;
-	while (pos != std::string::npos)
-	{
-		EagleLib::NodeManager::getInstance().addLinkDir(str.substr(prevPos, pos - prevPos).c_str());
-		prevPos = pos + 1;
-		pos = str.find_first_of('+', pos + 1);
-	}
-}
-#endif
-}
+SETUP_PROJECT_IMPL
+
 IPerModuleInterface* GetModule()
 {
 	return PerModuleInterface::GetInstance();

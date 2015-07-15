@@ -3,6 +3,9 @@
 
 using namespace EagleLib;
 
+SETUP_PROJECT_IMPL
+
+/*
 void SetupIncludes()
 {
 #ifdef PROJECT_INCLUDES
@@ -31,7 +34,7 @@ void SetupIncludes()
 		}
 	}
 #endif
-}
+}*/
 
 
 

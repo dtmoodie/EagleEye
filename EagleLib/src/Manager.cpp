@@ -8,7 +8,10 @@
 #include <assert.h>
 #include <iostream>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/foreach.hpp>
 #include "plotters/Plotter.h"
+
 //#include <IObjectUtils.h>
 using namespace EagleLib;
 
@@ -206,11 +209,28 @@ void NodeManager::addIncludeDir(const std::string& dir)
     m_pRuntimeObjectSystem->AddIncludeDir(dir.c_str());
 
 }
+void NodeManager::addIncludeDirs(const std::string& dirs)
+{
+	boost::char_separator<char> sep("+");
+	boost::tokenizer<boost::char_separator<char>> tokens(dirs, sep);
+	BOOST_FOREACH(const std::string& t, tokens)
+	{
+		addIncludeDir(t);
+	}
+}
 void NodeManager::addLinkDir(const std::string& dir)
 {
 	m_pRuntimeObjectSystem->AddLibraryDir(dir.c_str());
 }
-
+void NodeManager::addLinkDirs(const std::string& dirs)
+{
+	boost::char_separator<char> sep("+");
+	boost::tokenizer<boost::char_separator<char>> tokens(dirs, sep);
+	BOOST_FOREACH(const std::string& t, tokens)
+	{
+		addLinkDir(t);
+	}
+}
 void NodeManager::addSourceFile(const std::string &file)
 {
     m_pRuntimeObjectSystem->AddToRuntimeFileList(file.c_str());

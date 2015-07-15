@@ -21,12 +21,12 @@ RUNTIME_COMPILER_LINKLIBRARY("libvlc.lib");
 #ifdef __cplusplus
 extern "C" {
 #endif
-	CV_EXPORTS void SetupIncludes();
 
 	CV_EXPORTS IPerModuleInterface* GetModule();
 #ifdef __cplusplus
 }
 #endif
+SETUP_PROJECT_DEF
 
 namespace EagleLib
 {

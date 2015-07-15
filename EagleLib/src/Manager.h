@@ -22,6 +22,36 @@
 
 #include "Parameters.hpp"
 
+#ifdef __cplusplus
+#define SETUP_PROJECT_DEF extern "C"{ RCC_EXPORTS void SetupIncludes(); }
+#else
+#define SETUP_PROJECT_DEF RCC_EXPORTS void SetupIncludes();
+#endif
+
+
+#ifdef PROJECT_INCLUDES && !def(PROJECT_LIB_DIRS)
+#define SETUP_PROJECT_IMPL void SetupIncludes(){EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES);}
+
+#endif
+
+#ifdef PROJECT_INCLUDES && def(PROJECT_LIB_DIRS)
+
+#define SETUP_PROJECT_IMPL void SetupIncludes(){ 																	\
+		EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES);										\
+		EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);}
+
+#endif
+
+#ifdef PROJECT_LIB_DIRS && !def(PROJECT_INCLUDES)
+
+#define SETUP_PROJECT_IMPL void SetupIncludes()	{EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);}
+#endif
+
+#ifndef PROJECT_LIB_DIRS
+	#ifndef PROJECT_INCLUDES
+		#define SETUP_PROJECT_IMPL void SetupIncludes() {}
+	#endif
+#endif
 
 namespace EagleLib
 {
@@ -132,7 +162,9 @@ namespace EagleLib
         std::vector<std::string> getParametersOfType(boost::function<bool(Loki::TypeInfo&)> selector);
         void addIncludeDir(const std::string& dir);
         void addSourceFile(const std::string& file);
+		void addIncludeDirs(const std::string& dirs);
 		void addLinkDir(const std::string& dir);
+		void addLinkDirs(const std::string& dirs);
 
 
 	private:

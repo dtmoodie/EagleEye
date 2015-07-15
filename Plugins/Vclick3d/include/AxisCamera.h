@@ -1,5 +1,6 @@
 #pragma once
 #include "nodes/Node.h"
+#include "Manager.h"
 #include "QtNetwork/qnetworkaccessmanager.h"
 #include "QtNetwork/QNetworkReply.h"
 #include "QtNetwork/qtcpsocket.h"
@@ -17,13 +18,7 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Gui.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
 #endif
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-	CV_EXPORTS void SetupIncludes();
-#ifdef __cplusplus
-}
-#endif
+SETUP_PROJECT_DEF
 
 
 namespace EagleLib
