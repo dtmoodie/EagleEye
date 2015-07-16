@@ -1,7 +1,8 @@
 #ifndef PLOTWINDOW_H
 #define PLOTWINDOW_H
-#include "qcustomplot.h"
 #include "plotters/Plotter.h"
+#include "qcustomplot.h"
+
 #include <boost/shared_ptr.hpp>
 
 /* The plot window class used used to create a widget that looks as follows

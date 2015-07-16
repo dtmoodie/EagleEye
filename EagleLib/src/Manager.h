@@ -1,4 +1,30 @@
-#pragma once
+
+#ifdef __cplusplus
+#define SETUP_PROJECT_DEF extern "C"{ CV_EXPORTS void SetupIncludes(); }
+#else
+#define SETUP_PROJECT_DEF RCC_EXPORTS void SetupIncludes();
+#endif
+
+#ifdef PROJECT_INCLUDES
+	#ifdef PROJECT_LIB_DIRS
+		#define SETUP_PROJECT_IMPL void SetupIncludes(){ 																	\
+				EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES);										\
+				EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);}		
+	#else
+		#define SETUP_PROJECT_IMPL void SetupIncludes(){EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES);}		
+	#endif
+#else
+	#ifdef PROJECT_LIB_DIRS
+		#define SETUP_PROJECT_IMPL void SetupIncludes()	{EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);}
+	#else
+		#pragma message( "Neither PROJECT_LIB_DIRS nor PROJECT_INCLUDES defined" )
+		#define SETUP_PROJECT_IMPL void SetupIncludes() {}
+	#endif
+#endif
+
+
+#ifndef FILE_MANAGER_H
+#define FILE_MANAGER_H
 #define CVAPI_EXPORTS
 
 #include <map>
@@ -22,36 +48,7 @@
 
 #include "Parameters.hpp"
 
-#ifdef __cplusplus
-#define SETUP_PROJECT_DEF extern "C"{ RCC_EXPORTS void SetupIncludes(); }
-#else
-#define SETUP_PROJECT_DEF RCC_EXPORTS void SetupIncludes();
-#endif
 
-
-#ifdef PROJECT_INCLUDES && !def(PROJECT_LIB_DIRS)
-#define SETUP_PROJECT_IMPL void SetupIncludes(){EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES);}
-
-#endif
-
-#ifdef PROJECT_INCLUDES && def(PROJECT_LIB_DIRS)
-
-#define SETUP_PROJECT_IMPL void SetupIncludes(){ 																	\
-		EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES);										\
-		EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);}
-
-#endif
-
-#ifdef PROJECT_LIB_DIRS && !def(PROJECT_INCLUDES)
-
-#define SETUP_PROJECT_IMPL void SetupIncludes()	{EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);}
-#endif
-
-#ifndef PROJECT_LIB_DIRS
-	#ifndef PROJECT_INCLUDES
-		#define SETUP_PROJECT_IMPL void SetupIncludes() {}
-	#endif
-#endif
 
 namespace EagleLib
 {
@@ -178,3 +175,4 @@ namespace EagleLib
 		
     }; // class NodeManager
 } // namespace EagleLib
+#endif /*FILE_MANAGER_H*/

@@ -36,8 +36,11 @@ ELSE(WIN32)
 	ENDIF()
 ENDIF(WIN32)
 
-
 add_subdirectory(EagleLib)
+SET(LINK_DIRS "${EagleLib_LIB_DIRS_DEBUG};${EagleLib_LIB_DIRS_RELASE}")
+SET(INCLUDE_DIRS ${EagleLib_INCLUDE_DIRECTORIES})
+SET(LINK_LIBS ${EagleLib_LIBRARIES})
+MESSAGE(${LINK_DIRS})
 add_subdirectory(EagleEye)
 add_subdirectory(Plugins)
 add_subdirectory(samples)

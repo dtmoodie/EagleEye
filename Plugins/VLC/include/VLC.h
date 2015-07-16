@@ -1,6 +1,15 @@
 #pragma once
 
+
 #include "vlc/vlc.h"
+#ifdef PROJECT_INCLUDES_
+#define PROJECT_INCLUDES PROJECT_INCLUDES_
+#endif
+#ifdef PROJECT_LIB_DIRS_
+#define PROJECT_LIB_DIRS PROJECT_LIB_DIRS_
+#endif
+
+
 #include "nodes/node.h"
 #include <mutex>
 #include "ObjectInterfacePerModule.h"
@@ -23,6 +32,7 @@ extern "C" {
 #endif
 
 	CV_EXPORTS IPerModuleInterface* GetModule();
+	
 #ifdef __cplusplus
 }
 #endif

@@ -39,6 +39,8 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 	includeFunctor functor = (includeFunctor)GetProcAddress(handle, "SetupIncludes");
 	if (functor)
 		functor();
+	else
+		std::cout << "Setup Includes not found in plugin " << fullPluginPath << std::endl;
     return true;
 }
 

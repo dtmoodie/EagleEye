@@ -3,14 +3,18 @@
 
 using namespace EagleLib;
 // callbacks for vlc
-
+/*
+void SetupIncludes(){	
+	EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES);								
+	EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);
+}*/
 SETUP_PROJECT_IMPL
 
 IPerModuleInterface* GetModule()
 {
 	return PerModuleInterface::GetInstance();
-}
-
+} 
+ 
 
 
 void* lock(void* data, void**p_pixels)
@@ -73,8 +77,6 @@ void vlcCamera::onSourceChange()
 	log(Status, "Source setup correctly");
 	int height = libvlc_video_get_height(mp);
 	int width = libvlc_video_get_width(mp);
-
-
 }
 
 cv::cuda::GpuMat vlcCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
