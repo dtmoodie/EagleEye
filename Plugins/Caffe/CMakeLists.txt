@@ -23,6 +23,8 @@ message(STATUS
 
   EagleLib Includes: ${EagleLib_INCLUDE_DIRECTORIES}
 
+	${LINK_DIRS}
+
   Cuda libs:
     ${CUDA_LIBRARIES}
 
@@ -48,8 +50,10 @@ message(STATUS
 
 if(${Caffe_FOUND})
 
+LINK_DIRECTORIES(${LINK_DIRS})
 add_library(Caffe SHARED Caffe.h Caffe.cpp)
 add_dependencies(Caffe EagleLib)
+
 
 IF(WIN32)
 target_link_libraries(Caffe
@@ -57,7 +61,7 @@ target_link_libraries(Caffe
     debug;E:/libsrc/caffe/build_dev/lib/Debug/libcaffe-d.lib;optimized;E:/libsrc/caffe/build_dev/lib/Release/libcaffe.lib
     debug;E:/libsrc/caffe/build_dev/lib/Debug/proto-d.lib;optimized;E:/libsrc/caffe/build_dev/lib/Release/proto.lib
     "E:/code/caffe/3rdparty/lib/gflags.lib"
-    "C:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/lib/x64/v120/libglog.lib"
+    "D:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/lib/x64/v120/libglog.lib"
     debug;E:/libsrc/protobuf/vsprojects/x64/debug/libprotobufd.lib;optimized;E:/libsrc/protobuf/vsprojects/x64/release/libprotobuf.lib
     ${CUDA_LIBRARIES}
     ${CUDA_CUFFT_LIBRARIES}

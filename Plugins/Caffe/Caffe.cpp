@@ -189,7 +189,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 {
     if(parameters[0]->changed)
     {
-        boost::filesystem::path& path = getParameter<boost::filesystem::path>(0)->data;
+        boost::filesystem::path& path = *getParameter<boost::filesystem::path>(0)->Data();
         if(boost::filesystem::exists(path))
         {
             NN.reset(new caffe::Net<float>(path.string(), caffe::TEST));
@@ -202,7 +202,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     }
     if(parameters[1]->changed && NN)
     {
-        boost::filesystem::path path = getParameter<boost::filesystem::path>(1)->data;
+        boost::filesystem::path path = *getParameter<boost::filesystem::path>(1)->Data();
         if(boost::filesystem::exists(path))
         {
             NN->CopyTrainedLayersFrom(path.string());
@@ -225,7 +225,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     if(parameters[2]->changed)
     {
         // Handle loading of the label file
-        boost::filesystem::path& path = getParameter<boost::filesystem::path>(2)->data;
+        boost::filesystem::path& path = *getParameter<boost::filesystem::path>(2)->Data();
         if(boost::filesystem::exists(path))
         {
             if(boost::filesystem::is_regular_file(path))
@@ -248,7 +248,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     }
     if(parameters[3]->changed)
     {
-        boost::filesystem::path& path = getParameter<boost::filesystem::path>(3)->data;
+        boost::filesystem::path& path = *getParameter<boost::filesystem::path>(3)->Data();
         if(boost::filesystem::exists(path))
         {
             if(boost::filesystem::is_regular_file(path))
@@ -311,13 +311,13 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     {
         img.convertTo(img, CV_32F,stream);
     }
-    if(getParameter<bool>("Subtraction required")->data)
+    if(*getParameter<bool>("Subtraction required")->Data())
     {
         cv::cuda::subtract(img, channel_mean, img, cv::noArray(), -1, stream);
     }
     std::vector<cv::Rect> defaultROI;
     defaultROI.push_back(cv::Rect(cv::Point(), img.size()));
-    std::vector<cv::Rect>* inputROIs = getParameter<std::vector<cv::Rect>*>("Bounding boxes")->data;
+    std::vector<cv::Rect>* inputROIs = getParameter<std::vector<cv::Rect>>("Bounding boxes")->Data();
     if(inputROIs == nullptr)
     {
         inputROIs = &defaultROI;
@@ -350,7 +350,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 
     const float* begin = output_layer->cpu_data();
     const float* end = begin + output_layer->channels()*output_layer->num();
-    int numClassifications = getParameter<int>("Num classifications")->data;
+    int numClassifications = *getParameter<int>("Num classifications")->Data();
     std::vector<DetectedObject> objects(std::min(inputROIs->size(), wrappedInputs.size()));
     for(int i = 0; i < inputROIs->size() && i < wrappedInputs.size(); ++i)
     {
@@ -367,7 +367,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         }
         objects[i].boundingBox = (*inputROIs)[i];
     }
-    updateParameter("Detections", objects, Parameter::Output);
+    updateParameter("Detections", objects, Parameters::Parameter::Output);
     auto maxvalue = std::max_element(begin, end);
     TIME
     int idx = maxvalue - begin;
