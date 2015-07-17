@@ -24,7 +24,7 @@ file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
 FILE(GLOB_RECURSE ext_inc "include/external_includes")
-ADD_SUBDIRECTORY("Parameters")
+ADD_SUBDIRECTORY("parameters")
 
 IF(${Parameters_USEQT})
 	message(STATUS "Parameters build with QT support, so linking into EagleLib")
