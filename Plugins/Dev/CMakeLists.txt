@@ -15,7 +15,7 @@ find_package(CUDA REQUIRED)
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
 
-
+LINK_DIRECTORIES(${LINK_DIRS})
 INCLUDE_DIRECTORIES(
 
         ${EagleLib_INCLUDE_DIRECTORIES}

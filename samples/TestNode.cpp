@@ -61,7 +61,7 @@ namespace EagleLib
 			{
                 addParameter("OutputString", std::string("Default!!!!!!!"));
 			}
-			updateParameter("Output", &testVector, Parameter::Output, "Test output vector", false);
+			updateParameter("Output", &testVector, Parameters::Parameter::Output, "Test output vector", false);
                 
         }
         virtual void Serialize(ISimpleSerializer *pSerializer)
@@ -95,7 +95,7 @@ namespace EagleLib
         {
 			cv::cuda::resize(img, img, cv::Size(1000, 1000));
            // std::cout << getParameter<std::string>("Output")->data << std::endl;
-			auto ptr = getParameter<std::vector<int>*>("Test input Vector")->data;
+			auto ptr = getParameter<std::vector<int>>("Test input Vector")->Data();
 			if (ptr)
 				std::cout << "Successfully accessing input vector of size: " << ptr->size() << std::endl;
 
