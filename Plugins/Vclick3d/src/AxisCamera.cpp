@@ -62,7 +62,7 @@ void AxisSocket::requestReadyRead()
 	
 	while (line.size())
 	{
-		std::string str = line.toStdString();
+		std::string str = QString(line).toStdString();
 		int idx = str.find('=');
 		std::string first = str.substr(0, idx);
 		std::string second = str.substr(idx + 1, str.size() - 3 - first.size());

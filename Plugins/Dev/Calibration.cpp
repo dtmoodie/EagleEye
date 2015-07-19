@@ -25,7 +25,10 @@ void CalibrateCamera::Init(bool firstInit)
         updateParameter("Min pixel distance", float(10.0));																// 6
         addInputParameter<TrackSparseFunctor>("Sparse tracking functor");
 		updateParameter<Parameters::WriteFile>("Save file", Parameters::WriteFile("Camera Matrix.yml"));
+		updateParameter("Enabled", true);
     }
+	updateParameter("Image points 2d", &imagePointCollection, Parameters::Parameter::Output);
+	updateParameter("Object points 3d", &objectPointCollection, Parameters::Parameter::Output);
 
     lastCalibration = 0;
 }
@@ -179,7 +182,7 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 				objectPointCollection.push_back(objectPoints3d);
 				imagePointCentroids.push_back(centroid);
 
-				if (objectPointCollection.size() > lastCalibration + 10)
+				if (objectPointCollection.size() > lastCalibration + 10 && *getParameter<bool>("Enabled")->Data())
 				{
 					TIME
 						calibrate();
@@ -221,10 +224,17 @@ void CalibrateCamera::calibrate()
 void CalibrateStereoPair::Init(bool firstInit)
 {
 	updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateStereoPair::clear, this));
-    updateParameter("Num corners X", 6);
-    updateParameter("Num corners Y", 9);
-    updateParameter("Corner distance (mm)", double(18.75));
-    updateParameter("Min pixel distance", 10.0);
+	if (firstInit)
+	{
+		addInputParameter<std::vector<cv::Mat>>("Camera 1 points");
+		addInputParameter<std::vector<cv::Mat>>("Camera 2 points");
+		addInputParameter<std::vector<std::vector<cv::Point3f>>>("Object poinst 3d");
+		addInputParameter<cv::Mat>("Camera 1 Matrix");
+		addInputParameter<cv::Mat>("Camera 2 matrix");
+		addInputParameter<cv::Mat>("Distortion matrix 1");
+		addInputParameter<cv::Mat>("Distortion matrix 2");
+
+	}
     lastCalibration = 0;
 }
 void CalibrateStereoPair::clear()
@@ -234,6 +244,17 @@ void CalibrateStereoPair::clear()
 
 cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
+	auto pts1 = getParameter<std::vector<cv::Mat>>(0)->Data();
+	auto pts2 = getParameter<std::vector<cv::Mat>>(1)->Data();
+	auto objPts = getParameter<std::vector<std::vector<cv::Point3f>>>(2)->Data();
+	if (pts1 && pts2 && objPts)
+	{
+		if (pts1->size() > 10 && pts1->size() == pts2->size() == objPts->size())
+		{
+			cv::Mat K1, K2, dist1, dist2, R, T, E, F;
+			cv::stereoCalibrate(*objPts, *pts1, *pts2, K1, K2, dist1, dist2, img.size(), R, T, E, F);
+		}
+	}
     return img;
 }
 

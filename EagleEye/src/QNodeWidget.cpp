@@ -29,7 +29,6 @@ IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget*
     nameElement->installEventFilter(parent);
     nameElement->setToolTip(QString::fromStdString(parameter_->GetTooltip()));
     connect(this, SIGNAL(updateNeeded()), this, SLOT(updateUi()), Qt::QueuedConnection);
-    //bc = parameter->onUpdate.connect(boost::bind(&IQNodeInterop::onParameterUpdate, this));
 	bc = parameter->RegisterNotifier(boost::bind(&IQNodeInterop::onParameterUpdate, this));
 
 	QLabel* typeElement = new QLabel(QString::fromStdString(TypeInfo::demangle(parameter_->GetTypeInfo().name())));
@@ -155,12 +154,22 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
         ui->verticalLayout->setSpacing(0);
         for (size_t i = 0; i < node->parameters.size(); ++i)
 		{
-			auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
-			if (interop)
+			if (node->parameters[i]->type & Parameters::Parameter::Input)
 			{
-				parameterProxies.push_back(interop);
-				ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
-			}			
+				QInputProxy* proxy = new QInputProxy(node->parameters[i], node, this);
+				ui->verticalLayout->addWidget(proxy->getWidget(0));
+				inputProxies.push_back(proxy);
+			}
+			else
+			{
+				auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
+				if (interop)
+				{
+					parameterProxies.push_back(interop);
+					ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
+				}
+			}
+			
 		}
         node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true);
         node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2, _3);
@@ -315,29 +324,27 @@ void QNodeWidget::setSelected(bool state)
     setAutoFillBackground(true);
     setPalette(pal);
 }
-/*QInputProxy::QInputProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_, EagleLib::Node::Ptr node_):
-    node(node_)
+QInputProxy::QInputProxy(std::shared_ptr<Parameters::Parameter> parameter_, EagleLib::Node::Ptr node_, QWidget* parent):
+	node(node_), QWidget(parent)
 {
-    box = new QComboBox(parent);
-    //box->setMaximumWidth(200);
+    box = new QComboBox(this);
 	box->setMinimumWidth(200);
 	box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    parameter = parameter_;
+    inputParameter = std::dynamic_pointer_cast<Parameters::InputParameter>(parameter_);
     updateUi();
-    parent->connect(box, SIGNAL(currentIndexChanged(int)), parent, SLOT(on_valueChanged(int)));
+    connect(box, SIGNAL(currentIndexChanged(int)), this, SLOT(on_valueChanged(int)));
 }
 
-void QInputProxy::onUiUpdated(QWidget* sender)
+void QInputProxy::on_valueChanged(int idx)
 {
     QString inputName = box->currentText();
-    //auto tokens = inputName.split(":");
-    //auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
-    //if(sourceNode == nullptr)
-      //  return;
-    //auto param = sourceNode->getParameter(tokens[1].toStdString());
-    //if(param)
-    parameter->setSource(inputName.toStdString());
-    parameter->changed = true;
+    auto tokens = inputName.split(":");
+    auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
+    if(sourceNode == nullptr)
+        return;
+    auto param = sourceNode->getParameter(tokens[1].toStdString());
+    if(param)
+    inputParameter->SetInput(param);
 
 }
 QWidget* QInputProxy::getWidget(int num)
@@ -350,8 +357,8 @@ QWidget* QInputProxy::getWidget(int num)
 void QInputProxy::updateUi(bool init)
 {
     QString currentItem = box->currentText();
-    parameter->update();
-    auto inputs = node->findCompatibleInputs(parameter);
+    
+    auto inputs = node->findCompatibleInputs(inputParameter->GetTypeInfo());
     box->clear();
     box->addItem("");
     for(size_t i = 0; i < inputs.size(); ++i)
@@ -359,18 +366,24 @@ void QInputProxy::updateUi(bool init)
         QString text = QString::fromStdString(inputs[i]);
         box->addItem(text);
     }
-    if(parameter->inputName.size())
-    {
-        QString inputName = QString::fromStdString(parameter->inputName);
-        if(box->currentText() != inputName)
-            box->setCurrentText(inputName);
-        return;
-    }
+	auto input = inputParameter->GetInput();
+	if (input)
+	{
+		auto currentInputName = input->GetName();
+		if (currentInputName.size())
+		{
+			QString inputName = QString::fromStdString(currentInputName);
+			if (box->currentText() != inputName)
+				box->setCurrentText(inputName);
+			return;
+		}
+	}
+	
     if(currentItem.size())
         box->setCurrentText(currentItem);
 }
 
-template<typename T> bool acceptsType(Loki::TypeInfo& type)
+/*template<typename T> bool acceptsType(Loki::TypeInfo& type)
 {
     return Loki::TypeInfo(typeid(T)) == type || Loki::TypeInfo(typeid(T*)) == type || Loki::TypeInfo(typeid(T&)) == type;
 }

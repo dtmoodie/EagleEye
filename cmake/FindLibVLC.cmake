@@ -45,6 +45,8 @@ find_path(LIBVLC_INCLUDE_DIR PATHS "${CMAKE_INCLUDE_PATH}/vlc" NAMES vlc.h
 
 #Put here path to custom location
 #example: /home/user/vlc/lib etc..
+SET(libvlc)
+SET(libvlccore)
 IF(WIN32)
 SET(libvlc libvlc)
 SET(libvlccore libvlccore)

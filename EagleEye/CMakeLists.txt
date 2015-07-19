@@ -51,6 +51,7 @@ IF(WIN32)
 	SET(CAFFE_RELEASE "${Caffe_DIR}/bin/Release")
 	SET(CAFFE_DEBUG "${Caffe_DIR}/bin/Debug")
 	SET(CUDA_BIN_DIR "${CUDA_TOOLKIT_ROOT_DIR}/bin")
+	SET(Boost_BIN_DIR ${Boost_LIBRARY_DIR})
 	CONFIGURE_FILE(EagleEye.vcxproj.user.in ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
 ENDIF(WIN32)
 ADD_DEFINITIONS(-DBUILD_DIR="${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
@@ -64,7 +65,7 @@ SOURCE_GROUP("UIs" FILES ${forms})
 message(STATUS
 "======== EagleEye Reporting =======
   Qt bin dir: ${Qt5_DIR} 
-
+  Boost bin dir: ${Boost_BIN_DIR}
   
 ")
  

@@ -28,6 +28,25 @@ class QNodeWidget;
 class IQNodeProxy;
 class QInputProxy;
 
+// Class for UI elements relavent to finding valid input parameters
+class QInputProxy : public QWidget
+{
+	Q_OBJECT
+
+	std::shared_ptr<Parameters::InputParameter> inputParameter;
+public:
+	QInputProxy(std::shared_ptr<Parameters::Parameter> parameter, EagleLib::Node::Ptr node_, QWidget* parent);
+	//virtual void onUiUpdated(QWidget* widget);
+	virtual void updateUi(bool init = false);
+	virtual QWidget* getWidget(int num = 0);
+private slots:
+	void on_valueChanged(int);
+private:
+	boost::signals2::connection bc;
+	EagleLib::Node::Ptr node;
+	QComboBox* box;
+};
+
 class CV_EXPORTS QNodeWidget : public QWidget
 {
 	Q_OBJECT
@@ -66,6 +85,7 @@ private:
     QLineEdit* errorDisplay;
     QLineEdit* criticalDisplay;
 	std::vector<Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
+	std::vector<QInputProxy*> inputProxies;
     //std::vector<boost::shared_ptr<IQNodeInterop>> interops;
     QNodeWidget* parentWidget;
     std::vector<QNodeWidget*> childWidgets;
@@ -127,23 +147,9 @@ protected:
     EagleLib::Node::Ptr node;
 };
 
-/*
-// Class for UI elements relavent to finding valid input parameters
-class QInputProxy: public IQNodeProxy
-{
-public:
-    QInputProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter, EagleLib::Node::Ptr node_);
-    virtual void onUiUpdated(QWidget* widget);
-    virtual void updateUi(bool init = false);
-    virtual QWidget* getWidget(int num = 0);
 
-private:
-    boost::signals2::connection bc;
-    EagleLib::Node::Ptr node;
-    QComboBox* box;
-};
 
-// Proxy class for handling
+/*// Proxy class for handling
 template<typename T, bool display, typename Enable = void> class QNodeProxy : public IQNodeProxy
 {
 

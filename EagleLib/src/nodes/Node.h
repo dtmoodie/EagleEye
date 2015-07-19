@@ -393,6 +393,7 @@ namespace EagleLib
          * @param sourceName
          * @param inputName
          */
+		std::vector<std::string> findCompatibleInputs(Loki::TypeInfo& type);
         virtual void setInputParameter(const std::string& sourceName, const std::string& inputName);
         /**
          * @brief setInputParameter
@@ -436,24 +437,77 @@ namespace EagleLib
 
 		void RegisterParameterCallback(int idx, boost::function<void(void)> callback);
 		void RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback);
-		template<typename T> size_t addParameter(const std::string& name,
-										const T& data,
-										Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-										const std::string& toolTip_ = std::string(), bool ownsData = false, typename std::enable_if<std::is_pointer<T>::value,void>::type* dummy_enable = nullptr)
+
+		template<typename T> size_t addParameter(
+					const std::string& name,
+					const T& data,
+					Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+					const std::string& toolTip_ = std::string(), 
+					bool ownsData = false, 
+					typename std::enable_if<std::is_pointer<T>::value,void>::type* dummy_enable = nullptr)
 		{
-			parameters.push_back(Parameters::TypedParameterPtr<std::remove_pointer<T>::type>::Ptr(new Parameters::TypedParameterPtr<std::remove_pointer<T>::type>(name, data, type_, toolTip_)));
+			parameters.push_back(Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>::Ptr(
+				new Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
+			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
+			if (onParameterAdded)
+				(*onParameterAdded)();
+			return parameters.size() - 1;
+		}
+		
+		template<typename T> size_t addParameter(
+			const std::string& name,
+			T& data,
+			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+			const std::string& toolTip_ = std::string(),
+			bool ownsData = false ,
+			typename std::enable_if<std::is_pointer<T>::value, void>::type* dummy_enable = nullptr)
+		{
+			parameters.push_back(Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>::Ptr(
+				new Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
 			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
 			if (onParameterAdded)
 				(*onParameterAdded)();
 			return parameters.size() - 1;
 		}
 
-		template<typename T> size_t	addParameter(const std::string& name,
-										const T& data,
-										Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-										const std::string& toolTip_ = std::string(), bool ownsData = false, typename std::enable_if<!std::is_pointer<T>::value, void>::type* dummy_enable = nullptr)
+		/*template<typename T> size_t addParameter(
+			const std::string& name,
+			T* data,
+			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+			const std::string& toolTip_ = std::string(), 
+			bool ownsData = false,
+			)
 		{
-			parameters.push_back(Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
+			parameters.push_back(Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>::Ptr(
+				new Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
+			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
+			if (onParameterAdded)
+				(*onParameterAdded)();
+			return parameters.size() - 1;
+		}
+		
+		template<typename T> size_t addParameter(
+			const std::string& name,
+			const T* data,
+			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+			const std::string& toolTip_ = std::string(), 
+			bool ownsData = false)
+		{
+			parameters.push_back(Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>::Ptr(
+				new Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
+			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
+			if (onParameterAdded)
+				(*onParameterAdded)();
+			return parameters.size() - 1;
+		}*/
+		
+		template<typename T> size_t	addParameter(const std::string& name,
+				const T& data,
+				Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+				const std::string& toolTip_ = std::string(), 
+				bool ownsData = false/*, typename std::enable_if<!std::is_pointer<T>::value, void>::type* dummy_enable = nullptr*/)
+		{
+			parameters.push_back(Parameters::TypedParameter<std::remove_cv<T>::type>::Ptr(new Parameters::TypedParameter<std::remove_cv<T>::type>(name, data, type_, toolTip_)));
 			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
 			if (onParameterAdded)
 				(*onParameterAdded)();
@@ -519,13 +573,38 @@ namespace EagleLib
           * @param deleted.
           * @return true on success, false on failure to add parameter.
           */
+		template<typename T> bool updateParameter(
+			const std::string& name, 
+			T* data, 
+			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+			const std::string& toolTip_ = std::string(), 
+			const bool ownsData_ = false)
+		{
+			typename Parameters::ITypedParameter<T>::Ptr param;
+			try
+			{
+				param = getParameter<T>(name);
+			}
+			catch (cv::Exception &e)
+			{
+				return addParameter(name, data, type_, toolTip_, ownsData_);
+			}
+			if (type_ != Parameters::Parameter::None)
+				param->type = type_;
+			if (toolTip_.size())
+				param->SetTooltip(toolTip_);
+			param->UpdateData(*data);
+			return true;
+		}
+
 
         template<typename T> bool
-        updateParameter(const std::string& name,
-                        const T& data,
-                        Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-                        const std::string& toolTip_ = std::string(),
-                        const bool& ownsData_ = false)
+        updateParameter(
+			const std::string& name,
+            const T& data,
+            Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+            const std::string& toolTip_ = std::string(),
+            const bool& ownsData_ = false)
 		{
             typename Parameters::ITypedParameter<T>::Ptr param;
             try
@@ -533,7 +612,7 @@ namespace EagleLib
                 param = getParameter<T>(name);
             }catch(cv::Exception &e)
             {
-                return addParameter(name, data, type_, toolTip_, ownsData_);
+				return addParameter<std::remove_cv<T>::type>(name, data, type_, toolTip_, ownsData_);
             }
 			if (type_ != Parameters::Parameter::None)
 				param->type = type_;
@@ -554,7 +633,7 @@ namespace EagleLib
          */
         template<typename T> bool
             updateParameter(size_t idx,
-							T data,
+							const T data,
 							const std::string& name = std::string(),
 							const std::string quickHelp = std::string(),
                             Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control)

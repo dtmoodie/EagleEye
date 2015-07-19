@@ -568,7 +568,14 @@ Node::Serialize(cv::FileStorage& fs)
             if(parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::Input)
             {
 				// TODO
-				Parameters::Persistence::cv::Serialize(&fs, parameters[i].get());
+				try
+				{
+					Parameters::Persistence::cv::Serialize(&fs, parameters[i].get());
+				}
+				catch (cv::Exception &e)
+				{
+					continue;
+				}
                 //parameters[i]->Serialize(fs);
             }
         }
@@ -673,6 +680,10 @@ std::vector<std::string> Node::findCompatibleInputs(int paramIdx)
 std::vector<std::string> Node::findCompatibleInputs(Parameters::Parameter::Ptr param)
 {
     return findType(param);
+}
+std::vector<std::string> Node::findCompatibleInputs(Loki::TypeInfo& type)
+{
+	return findType(type);
 }
 
 
