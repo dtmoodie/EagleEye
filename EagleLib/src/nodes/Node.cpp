@@ -509,8 +509,8 @@ Node::Init(const cv::FileNode& configNode)
         auto node = NodeManager::getInstance().addNode(name);
 		if (node != nullptr)
 		{
-			node->Init(childNode);
 			addChild(node);
+			node->Init(childNode);
 		}
 		else
 		{
@@ -523,9 +523,33 @@ Node::Init(const cv::FileNode& configNode)
 		// TODO
 		try
 		{
+			if (parameters[i]->type & Parameters::Parameter::Input)
+			{
+				auto node = paramNode[parameters[i]->GetName()];
+				auto inputName = (std::string)node["InputParameter"];
+				if (inputName.size())
+				{
+					auto idx = inputName.find(':');
+					auto nodeName = inputName.substr(0, idx);
+					auto paramName = inputName.substr(idx + 1);
+					auto nodes = getNodesInScope();
+					auto node = getNodeInScope(nodeName);
+					if (node)
+					{
+						auto param = node->getParameter(paramName);
+						if (param)
+						{
+							auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(parameters[i]);
+							inputParam->SetInput(param);
+						}
+					}
+				}
 
-			if (parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::Input)
-				Parameters::Persistence::cv::DeSerialize(&paramNode, parameters[i].get());
+			}else
+			{
+				if (parameters[i]->type & Parameters::Parameter::Control)
+					Parameters::Persistence::cv::DeSerialize(&paramNode, parameters[i].get());
+			}
 		}
 		catch (cv::Exception &e)
 		{
@@ -580,19 +604,40 @@ Node::Serialize(cv::FileStorage& fs)
         fs << "Parameters" << "{";
         for(size_t i = 0; i < parameters.size(); ++i)
         {
-            if(parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::Input)
-            {
-				// TODO
-				try
+			if (parameters[i]->type & Parameters::Parameter::Input)
+			{
+				auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(parameters[i]);
+				if (inputParam)
 				{
-					Parameters::Persistence::cv::Serialize(&fs, parameters[i].get());
+					auto input = inputParam->GetInput();
+					if (input)
+					{
+						fs << parameters[i]->GetName().c_str() << "{";
+						fs << "TreeName" << parameters[i]->GetTreeName();
+						fs << "InputParameter" << input->GetTreeName();
+						fs << "Type" << parameters[i]->GetTypeInfo().name();
+						auto toolTip = parameters[i]->GetTooltip();
+						if (toolTip.size())
+							fs << "ToolTip" << toolTip;
+						fs << "}";
+					}
 				}
-				catch (cv::Exception &e)
+			}
+			else
+			{
+				if (parameters[i]->type & Parameters::Parameter::Control)
 				{
-					continue;
+					// TODO
+					try
+					{
+						Parameters::Persistence::cv::Serialize(&fs, parameters[i].get());
+					}
+					catch (cv::Exception &e)
+					{
+						continue;
+					}
 				}
-                //parameters[i]->Serialize(fs);
-            }
+			}            
         }
         fs << "}"; // end parameters
 

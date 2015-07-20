@@ -1,4 +1,5 @@
 #pragma once
+/*
 #include "opencv2/hal.hpp"
 #include "RuntimeLinkLibrary.h"
 #ifdef _MSC_VER // Windows
@@ -13,3 +14,4 @@ RUNTIME_COMPILER_LINKLIBRARY("opencv_hal300.lib")
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_hal")
 #define CALL
 #endif
+*/
