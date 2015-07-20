@@ -394,6 +394,9 @@ namespace EagleLib
          * @param inputName
          */
 		std::vector<std::string> findCompatibleInputs(Loki::TypeInfo& type);
+
+		std::vector<std::string> findCompatibleInputs(Parameters::InputParameter::Ptr param);
+
         virtual void setInputParameter(const std::string& sourceName, const std::string& inputName);
         /**
          * @brief setInputParameter

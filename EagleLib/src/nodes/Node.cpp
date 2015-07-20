@@ -507,15 +507,30 @@ Node::Init(const cv::FileNode& configNode)
         cv::FileNode childNode = childrenFS["Node-" + boost::lexical_cast<std::string>(i)];
         std::string name = (std::string)childNode["NodeName"];
         auto node = NodeManager::getInstance().addNode(name);
-        node->Init(childNode);
-        addChild(node);
+		if (node != nullptr)
+		{
+			node->Init(childNode);
+			addChild(node);
+		}
+		else
+		{
+			log(Error, "No node found with the name " + name);
+		}
     }
     cv::FileNode paramNode =  configNode["Parameters"];
     for(size_t i = 0; i < parameters.size(); ++i)
     {
 		// TODO
-		if (parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::Input)
-			Parameters::Persistence::cv::DeSerialize(&paramNode, parameters[i].get());
+		try
+		{
+
+			if (parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::Input)
+				Parameters::Persistence::cv::DeSerialize(&paramNode, parameters[i].get());
+		}
+		catch (cv::Exception &e)
+		{
+			std::cout << "Deserialization failed for " << parameters[i]->GetName() << " with type " << parameters[i]->GetTypeInfo().name() << std::endl;
+		}
         //parameters[i]->Init(paramNode);
         //parameters[i]->update();
     }
@@ -684,6 +699,22 @@ std::vector<std::string> Node::findCompatibleInputs(Parameters::Parameter::Ptr p
 std::vector<std::string> Node::findCompatibleInputs(Loki::TypeInfo& type)
 {
 	return findType(type);
+}
+std::vector<std::string> Node::findCompatibleInputs(Parameters::InputParameter::Ptr param)
+{
+	std::vector<Node*> nodes;
+	std::vector<std::string> output;
+	getNodesInScope(nodes);
+	for (int i = 0; i < nodes.size(); ++i)
+	{
+		for (int j = 0; j < nodes[i]->parameters.size(); ++j)
+		{
+			if (!(nodes[i]->parameters[j]->type & Parameters::Parameter::Input))
+				if (param->AcceptsInput(nodes[i]->parameters[j]))
+					output.push_back(nodes[i]->parameters[j]->GetTreeName());
+		}
+	}
+	return output;
 }
 
 

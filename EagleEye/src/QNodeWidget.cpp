@@ -212,16 +212,32 @@ void QNodeWidget::updateUi(bool parameterUpdate)
 					if (parameterProxies[j]->CheckParameter(node->parameters[i].get()))
                         found = true;
                 }
+				for (size_t j = 0; j < inputProxies.size(); ++j)
+				{
+					
+					if (node->parameters[i]->type & Parameters::Parameter::Input && 
+						inputProxies[j]->inputParameter == std::dynamic_pointer_cast<Parameters::InputParameter>(node->parameters[i]))
+					{
+						found = true;
+					}
+				}
                 if(found == false)
                 {
-                    // Need to add a new interop for this node
-					auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
-					if (interop)
+					if (node->parameters[i]->type & Parameters::Parameter::Input)
 					{
-						parameterProxies.push_back(interop);
-						ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
+						QInputProxy* proxy = new QInputProxy(node->parameters[i], node, this);
+						ui->verticalLayout->addWidget(proxy->getWidget(0));
+						inputProxies.push_back(proxy);
 					}
-					
+					else
+					{
+						auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
+						if (interop)
+						{
+							parameterProxies.push_back(interop);
+							ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
+						}
+					}
                 }
             }
         }
@@ -358,7 +374,8 @@ void QInputProxy::updateUi(bool init)
 {
     QString currentItem = box->currentText();
     
-    auto inputs = node->findCompatibleInputs(inputParameter->GetTypeInfo());
+    //auto inputs = node->findCompatibleInputs(inputParameter->GetTypeInfo());
+	auto inputs = node->findCompatibleInputs(inputParameter);
     box->clear();
     box->addItem("");
     for(size_t i = 0; i < inputs.size(); ++i)

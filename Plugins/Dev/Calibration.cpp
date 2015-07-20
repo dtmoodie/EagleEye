@@ -11,6 +11,129 @@ IPerModuleInterface* GetModule()
 {
     return PerModuleInterface::GetInstance();
 }
+
+void FindCheckerboard::Init(bool firstInit)
+{
+	
+	if (firstInit)
+	{
+		updateParameter("Num corners X", int(6));
+		updateParameter("Num corners Y", int(9));
+		updateParameter("Corner distance", double(18.75), Parameters::Parameter::Control, "Distance between corners in mm");
+		addInputParameter<TrackSparseFunctor>("Sparse tracking functor");
+	}
+	
+	updateParameter("Image points 2d", &imagePoints);
+	updateParameter("Object points 3d", &objectPoints); 
+}
+cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+	int numY = *getParameter<int>(1)->Data();
+	int numX = *getParameter<int>(0)->Data();
+	double dx = *getParameter<double>(2)->Data();
+	if (parameters[0]->changed || parameters[1]->changed || parameters[2]->changed)
+	{
+		
+		objectPoints.reserve(numY * numX);
+		for (int i = 0; i < numY; ++i)
+		{
+			for (int j = 0; j < numX; ++j)
+			{
+				//objectPoints.push_back(cv::Vec3f(dx*j, dx*i, 0));
+				objectPoints.push_back(cv::Point3f(dx*j, dx*i, 0));
+			}
+		}
+		parameters[0]->changed = false;
+		parameters[1]->changed = false;
+		parameters[2]->changed = false;
+	}
+	TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor>("Sparse tracking functor")->Data();
+	bool found = false;
+	cv::Mat h_corners;
+
+	if (img.channels() == 3)
+		cv::cuda::cvtColor(img, currentGreyFrame, cv::COLOR_BGR2GRAY, 0, stream);
+	else
+		currentGreyFrame = img;
+
+	if (tracker)
+	{
+		if (prevFramePoints.empty())
+		{
+			log(Status, "Initializing with CPU corner finder routine");
+			currentGreyFrame.download(h_img, stream);
+			stream.waitForCompletion();
+
+			found = cv::findChessboardCorners(h_img, cv::Size(numX, numY), imagePoints);
+			if (found)
+			{
+				TIME
+				prevFramePoints.upload(imagePoints, stream);
+				prevFramePoints = prevFramePoints.reshape(2, 1);
+				prevFramePoints.copyTo(currentFramePoints, stream);
+				cv::drawChessboardCorners(h_img, cv::Size(numX, numY), imagePoints, found);
+				UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
+				prevGreyFrame = currentGreyFrame;
+				TIME
+			}
+		}
+		else
+		{
+			TIME
+				// Track points with GPU tracker
+				(*tracker)(prevGreyFrame, currentGreyFrame, prevFramePoints, currentFramePoints, status, error, stream);
+			// Find the centroid of the new points
+			int goodPoints = cv::cuda::countNonZero(status);
+			if (goodPoints == numX*numY)
+			{
+				log(Status, "Tracking successful with tracker");
+				prevGreyFrame = currentGreyFrame;
+				prevFramePoints = currentFramePoints;
+				currentFramePoints.download(imagePoints, stream);
+				stream.waitForCompletion();
+				h_corners = cv::Mat(imagePoints);
+				found = true;
+			}
+			else
+			{
+				prevFramePoints.release();
+			}
+			TIME
+		}
+	}
+	else
+	{
+		log(Status, "Relying on CPU corner finder routine");
+		currentGreyFrame.download(h_img, stream);
+		stream.waitForCompletion();
+
+		found = cv::findChessboardCorners(h_img, cv::Size(numX, numY), imagePoints);
+		if (found)
+		{
+			h_corners = cv::Mat(imagePoints);
+			cv::drawChessboardCorners(h_img, cv::Size(numX, numY), imagePoints, found);
+			UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
+		}
+		else
+		{
+			
+			log(Warning, "Could not find checkerboard pattern");
+		}
+	}
+	if (!found)
+		imagePoints.clear();
+	return img;
+}
+void LoadCameraCalibration::Init(bool firstInit)
+{
+
+}
+cv::cuda::GpuMat LoadCameraCalibration::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+	return img;
+}
+
+
 void CalibrateCamera::Init(bool firstInit)
 {
     updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateCamera::clear, this));					// 0
@@ -19,17 +142,17 @@ void CalibrateCamera::Init(bool firstInit)
 
     if(firstInit)
     {
-        updateParameter("Num corners X", 6);																			// 3
-        updateParameter("Num corners Y", 9);																			// 4
-        updateParameter("Corner distance", double(18.75), Parameters::Parameter::Control, "Distance between corners in mm");		// 5
-        updateParameter("Min pixel distance", float(10.0));																// 6
-        addInputParameter<TrackSparseFunctor>("Sparse tracking functor");
+		addInputParameter<ImagePoints>("Image points");					//3 
+		addInputParameter<ObjectPoints>("Object points");					// 4
+		updateParameter("Min pixel distance", float(10.0));																// 5
+		
 		updateParameter<Parameters::WriteFile>("Save file", Parameters::WriteFile("Camera Matrix.yml"));
 		updateParameter("Enabled", true);
     }
 	updateParameter("Image points 2d", &imagePointCollection, Parameters::Parameter::Output);
 	updateParameter("Object points 3d", &objectPointCollection, Parameters::Parameter::Output);
-
+	updateParameter("Camera matrix", K, Parameters::Parameter::State);
+	updateParameter("Distortion matrix", distortionCoeffs, Parameters::Parameter::State);
     lastCalibration = 0;
 }
 void CalibrateCamera::save()
@@ -61,112 +184,21 @@ void callibrateCameraThread(std::vector<cv::Mat>& imagePointCollection, std::vec
 
 cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    int numX = *getParameter<int>(3)->Data(); 
-	int numY = *getParameter<int>(4)->Data();
-
-    cv::Mat h_corners;
+	auto imagePoints = getParameter<ImagePoints>(3)->Data();
+	auto objPoints = getParameter<ObjectPoints>(4)->Data();
     bool found = false;
-	TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor>("Sparse tracking functor")->Data();
-
-    if(parameters[3]->changed || parameters[4]->changed || parameters[5]->changed || objectPoints3d.size() == 0)
-    {
-        imgSize = img.size();
-        double dx = *getParameter<double>(5)->Data();
-        clear();
-        objectPoints3d.clear();
-        for(int i = 0; i < numY; ++i)
-        {
-            for(int j = 0; j < numX; ++j)
-            {
-                objectPoints3d.push_back(cv::Point3f(dx*j, dx*i, 0));
-            }
-        }
-        parameters[3]->changed = false;
-        parameters[4]->changed = false;
-        parameters[5]->changed = false;
-    }
-
-    if(img.channels() == 3)
-        cv::cuda::cvtColor(img, currentGreyFrame, cv::COLOR_BGR2GRAY, 0, stream);
-    else
-        currentGreyFrame = img;
-
-    if(tracker)
-    {
-        if(prevFramePoints.empty())
-        {
-            log(Status, "Initializing with CPU corner finder routine");
-            currentGreyFrame.download(h_img, stream);
-            stream.waitForCompletion();
-
-            found = cv::findChessboardCorners(h_img, cv::Size(numX, numY), corners);
-            if(found)
-            {
-                TIME
-                prevFramePoints.upload(corners, stream);
-                prevFramePoints = prevFramePoints.reshape(2,1);
-                prevFramePoints.copyTo(currentFramePoints, stream);
-                cv::drawChessboardCorners(h_img, cv::Size(numX,numY), corners, found);
-                UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow),fullTreeName, h_img));
-                prevGreyFrame = currentGreyFrame;
-                TIME
-            }
-        }else
-        {
-            TIME
-            // Track points with GPU tracker
-            (*tracker)(prevGreyFrame, currentGreyFrame, prevFramePoints, currentFramePoints, status, error, stream);
-            // Find the centroid of the new points
-            int goodPoints = cv::cuda::countNonZero(status);
-            if(goodPoints == numX*numY)
-            {
-                log(Status, "Tracking successful with tracker");
-                prevGreyFrame = currentGreyFrame;
-                prevFramePoints = currentFramePoints;
-                currentFramePoints.download(corners, stream);
-                stream.waitForCompletion();
-                h_corners = corners.createMatHeader().clone();
-                found = true;
-            }else
-            {
-                prevFramePoints.release();
-            }
-            TIME
-        }
-    }else
-    {
-        log(Status, "Relying on CPU corner finder routine");
-        currentGreyFrame.download(h_img, stream);
-        stream.waitForCompletion();
-
-        found = cv::findChessboardCorners(h_img, cv::Size(numX, numY), corners);
-        if(found)
-        {
-            h_corners = corners.createMatHeader();
-            cv::drawChessboardCorners(h_img, cv::Size(numX,numY), corners, found);
-            UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow),fullTreeName, h_img));
-        }
-        else
-        {
-            log(Warning, "Could not find checkerboard pattern");
-        }
-    }
-
-
-    //UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow),fullTreeName, h_mat));
-
-    TIME
-    boost::recursive_mutex::scoped_lock lock(pointCollectionMtx);
-
-	if (h_corners.rows == objectPoints3d.size() && found)
+	if (imagePoints == nullptr || objPoints == nullptr)
+		return img;
+	if (imagePoints->size() == objPoints->size())
 	{
+		imgSize = img.size(); 
 		TIME
 			cv::Vec2f centroid(0, 0);
-		for (int i = 0; i < h_corners.rows; ++i)
+		for (int i = 0; i < imagePoints->size(); ++i)
 		{
-			centroid += h_corners.at<cv::Vec2f>(i);
+			centroid += cv::Vec2f((*imagePoints)[i].x, (*imagePoints)[i].y);
 		}
-		centroid /= float(corners.cols);
+		centroid /= float(imagePoints->size());
 
 		float minDist = std::numeric_limits<float>::max();
 		for (cv::Vec2f& other : imagePointCentroids)
@@ -176,40 +208,29 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 				minDist = dist;
 		}
 		TIME
-			if (minDist > *getParameter<float>("Min pixel distance")->Data())
+		if (minDist > *getParameter<float>("Min pixel distance")->Data())
+		{
+			imagePointCollection.push_back(*imagePoints);
+			objectPointCollection.push_back(*objPoints);
+			imagePointCentroids.push_back(centroid);
+
+			if (objectPointCollection.size() > lastCalibration + 10 && *getParameter<bool>("Enabled")->Data())
 			{
-				imagePointCollection.push_back(h_corners);
-				objectPointCollection.push_back(objectPoints3d);
-				imagePointCentroids.push_back(centroid);
-
-				if (objectPointCollection.size() > lastCalibration + 10 && *getParameter<bool>("Enabled")->Data())
-				{
-					TIME
-						calibrate();
-					TIME
-				}
-				else
-				{
-					log(Status, "Waiting for more images before calibration");
-				}
+				TIME
+					calibrate();
+				TIME
 			}
+			else
+			{
+				log(Status, "Waiting for more images before calibration");
+			}
+		}
 	}
-	else
-	{
-		if (!found)
-			log(Status, "Chessboard not found");
-		else
-			log(Status, "Didn't find matching number of points");
-	}
-
-
     return img;
 }
 void CalibrateCamera::calibrate()
 {
     log(Status, "Calibrating camera with " + boost::lexical_cast<std::string>(imagePointCollection.size()) + " images");
-    cv::Mat K;
-    cv::Mat distortionCoeffs;
     std::vector<cv::Mat> rvecs;
     std::vector<cv::Mat> tvecs;
     double quality = cv::calibrateCamera(objectPointCollection, imagePointCollection,
@@ -226,15 +247,20 @@ void CalibrateStereoPair::Init(bool firstInit)
 	updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateStereoPair::clear, this));
 	if (firstInit)
 	{
-		addInputParameter<std::vector<cv::Mat>>("Camera 1 points");
-		addInputParameter<std::vector<cv::Mat>>("Camera 2 points");
-		addInputParameter<std::vector<std::vector<cv::Point3f>>>("Object poinst 3d");
+		addInputParameter<ImagePoints>("Camera 1 points");
+		addInputParameter<ImagePoints>("Camera 2 points");
+		addInputParameter<ObjectPoints>("Object points 3d");
+
 		addInputParameter<cv::Mat>("Camera 1 Matrix");
 		addInputParameter<cv::Mat>("Camera 2 matrix");
+
 		addInputParameter<cv::Mat>("Distortion matrix 1");
 		addInputParameter<cv::Mat>("Distortion matrix 2");
-
 	}
+	updateParameter("Rotation matrix", &Rot);
+	updateParameter("Translation matrix", &Trans);
+	updateParameter("Essential matrix", &Ess);
+	updateParameter("Fundamental matrix", &Fun);
     lastCalibration = 0;
 }
 void CalibrateStereoPair::clear()
@@ -244,19 +270,48 @@ void CalibrateStereoPair::clear()
 
 cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-	auto pts1 = getParameter<std::vector<cv::Mat>>(0)->Data();
-	auto pts2 = getParameter<std::vector<cv::Mat>>(1)->Data();
-	auto objPts = getParameter<std::vector<std::vector<cv::Point3f>>>(2)->Data();
-	if (pts1 && pts2 && objPts)
+	auto pts1 = getParameter<ImagePoints>("Camera 1 points")->Data();
+	auto pts2 = getParameter<ImagePoints>("Camera 2 points")->Data();
+	auto objPts = getParameter<ObjectPoints>("Object points 3d")->Data();
+
+	if (!pts1 || !pts2 || !objPts)
+		return img;
+	if (pts1->size() != pts2->size() || pts1->size() != objPts->size() || objPts->empty())
+		return img;
+	
+	imagePointCollection1.push_back(*pts1);
+	imagePointCollection2.push_back(*pts2);
+	objectPointCollection.push_back(*objPts);
+
+
+	auto K1_ = getParameter<cv::Mat>("Camera 1 Matrix")->Data();
+	auto K2_ = getParameter<cv::Mat>("Camera 2 matrix")->Data();
+	auto d1_ = getParameter<cv::Mat>("Distortion matrix 1")->Data();
+	auto d2_ = getParameter<cv::Mat>("Distortion matrix 2")->Data();
+
+	if (K1_ == nullptr)
+		K1_ = &K1;
+	if (K2_ == nullptr)
+		K2_ = &K2;
+	if (d1_ == nullptr)
+		d1_ = &dist1;
+	if (d2_ == nullptr)
+		d2_ = &dist2;
+
+
+	if (imagePointCollection1.size() > lastCalibration + 10 && 
+		imagePointCollection2.size() == imagePointCollection1.size() && 
+		imagePointCollection1.size() == objectPointCollection.size())
 	{
-		if (pts1->size() > 10 && pts1->size() == pts2->size() == objPts->size())
-		{
-			cv::Mat K1, K2, dist1, dist2, R, T, E, F;
-			cv::stereoCalibrate(*objPts, *pts1, *pts2, K1, K2, dist1, dist2, img.size(), R, T, E, F);
-		}
+		double reprojError = cv::stereoCalibrate(objectPointCollection, imagePointCollection1, imagePointCollection2, *K1_, *d1_, *K2_, *d2_, img.size(), Rot, Trans, Ess, Fun);
+		lastCalibration = imagePointCollection1.size();
+		updateParameter("Reprojection error", reprojError);
 	}
+
     return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateCamera)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateStereoPair)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateCamera);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateStereoPair);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FindCheckerboard);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(LoadCameraCalibration);

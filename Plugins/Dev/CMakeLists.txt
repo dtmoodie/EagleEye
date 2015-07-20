@@ -27,8 +27,10 @@ INCLUDE_DIRECTORIES(
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
 #file(GLOB_RECURSE knl "*.cu")
-
+IF(WIN32)
+ELSE()
 SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
+ENDIF()
 
 cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})
 add_dependencies(Dev EagleLib)

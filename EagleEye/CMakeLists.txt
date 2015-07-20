@@ -66,6 +66,12 @@ message(STATUS
 "======== EagleEye Reporting =======
   Qt bin dir: ${Qt5_DIR} 
   Boost bin dir: ${Boost_BIN_DIR}
+
+  CXX Flags: ${CMAKE_CXX_FLAGS}
+
+  Debug flags: ${CMAKE_CXX_FLAGS_DEBUG}
+
+  Release flags: ${CMAKE_CXX_FLAGS_RELEASE}
   
 ")
  

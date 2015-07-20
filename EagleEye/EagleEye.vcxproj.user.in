@@ -8,7 +8,7 @@
  <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\bin\Debug;@OpenCV_BIN_DIR@;@Qt5_BIN_DIR@;@CAFFE_RELEASE@;@CAFFE_DEBUG@;@CUDA_BIN_DIR@;@BOOST_LIBRARYDIR@;@Boost_LIBRARY_DIR@;%PATH%</LocalDebuggerEnvironment>	 	
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
  </PropertyGroup>	 	
- <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DelWithDebInfo|x64'">	 	
+ <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">	 	
  <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\bin\Debug;@OpenCV_BIN_DIR@;@Qt5_BIN_DIR@;@CAFFE_RELEASE@;@CAFFE_DEBUG@;@CUDA_BIN_DIR@;@BOOST_LIBRARYDIR@;@Boost_LIBRARY_DIR@;%PATH%</LocalDebuggerEnvironment>	 	
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
  </PropertyGroup>	 	

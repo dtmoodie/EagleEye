@@ -33,8 +33,9 @@ class QInputProxy : public QWidget
 {
 	Q_OBJECT
 
-	std::shared_ptr<Parameters::InputParameter> inputParameter;
+	
 public:
+	std::shared_ptr<Parameters::InputParameter> inputParameter;
 	QInputProxy(std::shared_ptr<Parameters::Parameter> parameter, EagleLib::Node::Ptr node_, QWidget* parent);
 	//virtual void onUiUpdated(QWidget* widget);
 	virtual void updateUi(bool init = false);

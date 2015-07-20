@@ -1,9 +1,9 @@
 #include "QVector"
-#include "Parameters.h"
+#include "Parameters.hpp"
 #include "opencv2/core.hpp"
 #include "boost/circular_buffer.hpp"
 
-cv::Size inline getSize(EagleLib::Parameter::Ptr param)
+cv::Size inline getSize(Parameters::Parameter::Ptr param)
 {
     auto gpuParam = EagleLib::getParameterPtr<cv::cuda::GpuMat>(param);
     if(gpuParam)
