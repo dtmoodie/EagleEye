@@ -4,7 +4,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(OPENCV_STATIC OFF)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
 find_package(CUDA REQUIRED)
-find_package(Qt5 REQUIRED Core)
+find_package(Qt5 COMPONENTS Core Gui Widgets)
 cmake_policy(SET CMP0012 NEW)
 IF(WIN32)
 	set(Boost_USE_STATIC_LIBS        OFF)
@@ -18,17 +18,14 @@ ENDIF(WIN32)
 ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB) 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
-FIND_PACKAGE(Qt5 COMPONENTS Gui Widgets)
 
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp")
-#file(GLOB_RECURSE knl "src/*.cu")
 FILE(GLOB_RECURSE ext_inc "include/external_includes")
 ADD_SUBDIRECTORY("parameters")
 
-IF(${Parameters_USEQT})
-	message(STATUS "Parameters build with QT support, so linking into EagleLib")
-ENDIF()
+
+
 INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
@@ -86,6 +83,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 
 SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 ENDIF()
+
+
 #
 #				Export variables for other projects to use
 #
@@ -99,6 +98,9 @@ LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
 
 # Reporting section
+IF(Parameters_UI_qt)
+	message(STATUS "Parameters built with QT support, so linking into EagleLib")
+ENDIF()
 message(STATUS
 "================ EagleLib ===============
     Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}
@@ -110,9 +112,10 @@ message(STATUS
 
 	Libs: ${EagleLib_LIBRARIES}
 
+	Lib dirs:
 	${EagleLib_LIB_DIRS_DEBUG}
 
-        ${EagleLib_LIB_DIRS_RELEASE}
+    ${EagleLib_LIB_DIRS_RELEASE}
 
 ++++++++++ RCC++ Defines ++++++++++++++++++
     OpenCV include dir: ${OpenCV_INCLUDE_DIR}
@@ -132,6 +135,7 @@ message(STATUS
     Eigen inc: ${EIGEN3_INCLUDE_DIR}
 ++++++++++++ Parameters ++++++++++++++++++++
 	Includes: ${Parameters_INCLUDE}
+	UI: ${Parameters_UI_qt}
 ")
 
 
