@@ -109,7 +109,7 @@ cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     {
         if(parameters[4]->changed)
         {
-            updateParameter<std::vector<std::pair<int,double>>>("Contour Area",std::vector<std::pair<int,double>>(), Parameters::Parameter::Output);
+            //updateParameter<std::vector<std::pair<int,double>>>("Contour Area",std::vector<std::pair<int,double>>(), Parameters::Parameter::Output);
             updateParameter<bool>("Oriented Area",false);
             updateParameter<bool>("Filter area", false);
             parameters[4]->changed = false;

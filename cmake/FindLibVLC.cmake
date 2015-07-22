@@ -51,8 +51,8 @@ IF(WIN32)
 SET(libvlc libvlc)
 SET(libvlccore libvlccore)
 ELSE()
-SET(libvcl "libvlc vlc")
-SET(libvlccore "libvlccore vlccore")
+SET(libvcl vlc)
+SET(libvlccore vlccore)
 ENDIF()
 
 find_library(LIBVLC_LIBRARY NAMES  ${libvlc}
@@ -60,6 +60,7 @@ HINTS "$ENV{LIBVLC_LIBRARY_PATH}" ${PC_LIBVLC_LIBDIR} ${PC_LIBVLC_LIBRARY_DIRS}
 PATHS
     "$ENV{LIB_DIR}/lib"
     "C:/Program Files/VideoLAN/VLC/SDK/lib"
+    "/usr/lib"
     c:/msys/local/lib
 )
 find_library(LIBVLC_LIBRARY NAMES ${libvlc})
@@ -67,6 +68,7 @@ find_library(LIBVLCCORE_LIBRARY NAMES ${libvlccore}
 HINTS "$ENV{LIBVLC_LIBRARY_PATH}" ${PC_LIBVLC_LIBDIR} ${PC_LIBVLC_LIBRARY_DIRS}
 PATHS
     "$ENV{LIB_DIR}/lib"
+    "/usr/lib"
     "C:/Program Files/VideoLAN/VLC/SDK/lib"
     c:/msys/local/lib
 )

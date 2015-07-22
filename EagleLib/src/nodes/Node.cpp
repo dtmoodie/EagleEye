@@ -653,7 +653,7 @@ Node::findType(Parameters::Parameter::Ptr param)
 }
 
 std::vector<std::string>
-Node::findType(Loki::TypeInfo &typeInfo)
+Node::findType(Loki::TypeInfo typeInfo)
 {
     std::vector<Node*> nodes;
     getNodesInScope(nodes);

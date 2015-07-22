@@ -26,10 +26,10 @@ void SparsePyrLKOpticalFlow::Init(bool firstInit)
         parameters[1]->changed = true;
         addInputParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>>("Display function");
     }
-    updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::Stream)>>(
+    /*updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::Stream)>>(
         "Set Reference", boost::bind(&SparsePyrLKOpticalFlow::setReferenceImage, this, _1, _2, _3), Parameters::Parameter::Output);
 
-	updateParameter<TrackSparseFunctor>("Sparse Track Functor", boost::bind(&SparsePyrLKOpticalFlow::trackSparse, this, _1, _2, _3, _4, _5, _6, _7), Parameters::Parameter::Output);
+    updateParameter<TrackSparseFunctor>("Sparse Track Functor", boost::bind(&SparsePyrLKOpticalFlow::trackSparse, this, _1, _2, _3, _4, _5, _6, _7), Parameters::Parameter::Output);*/
 }
 void SparsePyrLKOpticalFlow::Serialize(ISimpleSerializer *pSerializer)
 {

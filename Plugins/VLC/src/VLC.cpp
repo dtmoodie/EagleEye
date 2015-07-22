@@ -1,5 +1,5 @@
-#include "vlc.h"
-
+#include "VLC.h"
+#include "nodes/Node.h"
 
 using namespace EagleLib;
 // callbacks for vlc

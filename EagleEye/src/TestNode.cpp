@@ -57,7 +57,7 @@ namespace EagleLib
             getParameter<std::vector<double>>("std::vector<double>")->Data()->push_back(10.5);
             getParameter<std::vector<double>>("std::vector<double>")->Data()->push_back(15.5);
 
-            vec_ID vecID;
+            /*vec_ID vecID;
             vecID.push_back(std::pair<int,double>(0, 0.5));
             vecID.push_back(std::pair<int,double>(1, 0.6));
             vecID.push_back(std::pair<int,double>(2, 0.7));
@@ -82,7 +82,7 @@ namespace EagleLib
             vecDI.push_back(std::pair<double, int>(1.2, 2));
             vecDI.push_back(std::pair<double, int>(2.3, 1));
 			updateParameter<vec_DI>("std::vector<std::pair<double,int>> control", vecDI, Parameters::Parameter::State);
-			updateParameter<vec_DI>("std::vector<std::pair<double,int>> state", vecDI, Parameters::Parameter::State);
+            updateParameter<vec_DI>("std::vector<std::pair<double,int>> state", vecDI, Parameters::Parameter::State);*/
 
 			updateParameter<int>("int state", 0, Parameters::Parameter::State);
 			updateParameter<short>("short state", 0, Parameters::Parameter::State);

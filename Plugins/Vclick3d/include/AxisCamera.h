@@ -1,11 +1,13 @@
 #pragma once
 #include "nodes/Node.h"
 #include "Manager.h"
-#include "QtNetwork/qnetworkaccessmanager.h"
-#include "QtNetwork/QNetworkReply.h"
-#include "QtNetwork/qtcpsocket.h"
+#include "qnetworkaccessmanager.h"
+#include "qnetworkreply.h"
+#include "qtcpsocket.h"
 #include "ObjectInterfacePerModule.h"
 
+
+#ifdef _MSC_VER
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Cored.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Networkd.lib");
@@ -16,6 +18,9 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Network.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Gui.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
+#endif
+#else
+
 #endif
 
 SETUP_PROJECT_DEF

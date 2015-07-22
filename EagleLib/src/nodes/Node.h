@@ -51,7 +51,7 @@
 #include "../LokiTypeInfo.h"
 #include <boost/thread.hpp>
 #include <Qualifiers.hpp>
-#include <parameters.hpp>
+#include <Parameters.hpp>
 #include <Types.hpp>
 #include <external_includes/cv_core.hpp>
 #include <external_includes/cv_highgui.hpp>
@@ -350,7 +350,7 @@ namespace EagleLib
          * @param typeInfo
          * @return
          */
-        virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo);
+        virtual std::vector<std::string> findType(Loki::TypeInfo typeInfo);
         /**
          * @brief findType
          * @param typeInfo
@@ -449,8 +449,8 @@ namespace EagleLib
 					bool ownsData = false, 
 					typename std::enable_if<std::is_pointer<T>::value,void>::type* dummy_enable = nullptr)
 		{
-			parameters.push_back(Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>::Ptr(
-				new Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
+            parameters.push_back(Parameters::TypedParameterPtr<typename std::remove_cv<typename std::remove_pointer<typename std::remove_cv<T>::type>::type>::type>::Ptr(
+                new Parameters::TypedParameterPtr<typename std::remove_cv<typename std::remove_pointer<typename std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
 			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
 			if (onParameterAdded)
 				(*onParameterAdded)();
@@ -465,8 +465,8 @@ namespace EagleLib
 			bool ownsData = false ,
 			typename std::enable_if<std::is_pointer<T>::value, void>::type* dummy_enable = nullptr)
 		{
-			parameters.push_back(Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>::Ptr(
-				new Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
+            parameters.push_back(typename Parameters::TypedParameterPtr<typename std::remove_cv<typename std::remove_pointer<typename std::remove_cv<T>::type>::type>::type>::Ptr(
+                new typename Parameters::TypedParameterPtr<typename std::remove_cv<typename std::remove_pointer<typename std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
 			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
 			if (onParameterAdded)
 				(*onParameterAdded)();
@@ -510,7 +510,7 @@ namespace EagleLib
 				const std::string& toolTip_ = std::string(), 
 				bool ownsData = false/*, typename std::enable_if<!std::is_pointer<T>::value, void>::type* dummy_enable = nullptr*/)
 		{
-			parameters.push_back(Parameters::TypedParameter<std::remove_cv<T>::type>::Ptr(new Parameters::TypedParameter<std::remove_cv<T>::type>(name, data, type_, toolTip_)));
+            parameters.push_back(typename Parameters::TypedParameter<typename std::remove_cv<T>::type>::Ptr(new Parameters::TypedParameter<typename std::remove_cv<T>::type>(name, data, type_, toolTip_)));
 			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
 			if (onParameterAdded)
 				(*onParameterAdded)();
@@ -527,7 +527,7 @@ namespace EagleLib
          template<typename T> size_t
 			 addInputParameter(const std::string& name, const std::string& toolTip_ = std::string(), const boost::function<bool(Parameters::Parameter*)>& qualifier_ = boost::function<bool(Parameters::Parameter*)>())
 		{
-				parameters.push_back(Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
+                parameters.push_back(typename Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
 				parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
             if(onParameterAdded)
                 (*onParameterAdded)();
@@ -615,7 +615,7 @@ namespace EagleLib
                 param = getParameter<T>(name);
             }catch(cv::Exception &e)
             {
-				return addParameter<std::remove_cv<T>::type>(name, data, type_, toolTip_, ownsData_);
+                return addParameter<typename std::remove_cv<T>::type>(name, data, type_, toolTip_, ownsData_);
             }
 			if (type_ != Parameters::Parameter::None)
 				param->type = type_;
@@ -666,7 +666,7 @@ namespace EagleLib
 			if (param == nullptr)
             {
                 throw cv::Exception(0, "Failed to get parameter by name " + name, __FUNCTION__, __FILE__, __LINE__);
-				return Parameters::ITypedParameter<T>::Ptr();
+                return typename Parameters::ITypedParameter<T>::Ptr();
             }
 			auto typedParam = std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(param);
             if(typedParam == nullptr)
@@ -702,7 +702,7 @@ namespace EagleLib
 				return;
 			for (int i = 0; i < parameters.size(); ++i)
 			{
-				if (parameters[i]->type & Parameter::Output) // Can't use someone's input or control parameter, that would be naughty
+				if (parameters[i]->type & Parameters::Parameter::Output) // Can't use someone's input or control parameter, that would be naughty
 					if (std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(parameters[i]))
 					{
 						nodeNames.push_back(treeName);

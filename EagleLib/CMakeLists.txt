@@ -77,6 +77,7 @@ ELSE(WIN32)
 ENDIF(WIN32)
 ADD_DEFINITIONS(-DCVAPI_EXPORTS)
 ADD_DEFINITIONS(-DOPENCV_FOUND)
+ADD_DEFINITIONS(-DEagleLIB_EXPORTS)
 #ADD_DEFINITIONS(-DPARAMTERS_NO_UI)
 
 IF(NOT WIN32)
@@ -89,7 +90,7 @@ ENDIF()
 #				Export variables for other projects to use
 #
 set(EagleLib_INCLUDE_DIRECTORIES "${Parameters_INCLUDE};${CMAKE_CURRENT_SOURCE_DIR}/src;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
-set(EagleLib_LIBRARIES "EagleLib;${Boost_LIBRARIES};${OpenCV_LIBS};${Parameters_LIBS}" PARENT_SCOPE)
+set(EagleLib_LIBRARIES "EagleLib;${Boost_LIBRARIES};${OpenCV_LIBS};${Parameters_LIBRARIES}" PARENT_SCOPE)
 SET(EagleLib_LIB_DIRS_DEBUG "${Parameters_LIB_DIRS_DEBUG}" PARENT_SCOPE)
 SET(EagleLib_LIB_DIRS_RELEASE "${Parameters_LIB_DIRS_RELEASE}" PARENT_SCOPE)
 
@@ -111,7 +112,7 @@ message(STATUS
 
 	${EagleLib_LIB_DIRS_DEBUG}
 
-	${EagleLib_LIB_DIRS_RELEASE}
+        ${EagleLib_LIB_DIRS_RELEASE}
 
 ++++++++++ RCC++ Defines ++++++++++++++++++
     OpenCV include dir: ${OpenCV_INCLUDE_DIR}
@@ -164,7 +165,7 @@ TARGET_LINK_LIBRARIES(EagleLib
         RuntimeCompiler
         RuntimeObjectSystem
 		libParameter
-		${Parameters_LIBRARIES}
+                ${Parameters_LIBRARIES}
 )
 ADD_DEPENDENCIES(EagleLib
 	RuntimeCompiler

@@ -3,7 +3,7 @@
 
 int main()
 {
-    {
+    /*{
         shared_ptr<EagleLib::Node> nullPtr;
         {
             shared_ptr<EagleLib::Node> ptr(EagleLib::NodeManager::getInstance().addNode("VideoLoader"));
@@ -31,6 +31,6 @@ int main()
             nullPtr = ptr;
             nullPtr->enabled;
         }
-    }
+    }*/
     return 0;
 }

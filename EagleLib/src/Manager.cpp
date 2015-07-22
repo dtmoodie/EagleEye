@@ -135,7 +135,7 @@ void UIThreadCallback::setUINotifier(boost::function<void(void)> f)
 {
     notifier = f;
 }
-boost::asio::io_service ProcessingThreadCallback::service = boost::asio::io_service();
+boost::asio::io_service ProcessingThreadCallback::service;
 
 boost::asio::io_service& ProcessingThreadCallback::Instance()
 {
@@ -733,7 +733,7 @@ int NodeManager::getNumLoadedModules()
 {
     return m_pRuntimeObjectSystem->GetNumberLoadedModules();
 }
-std::vector<std::string> NodeManager::getParametersOfType(boost::function<bool(Loki::TypeInfo&)> selector)
+std::vector<std::string> NodeManager::getParametersOfType(boost::function<bool(Loki::TypeInfo)> selector)
 {
     std::vector<std::string> parameters;
     for(size_t i = 0; i < nodes.size(); ++i)

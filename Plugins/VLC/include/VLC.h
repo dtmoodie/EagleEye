@@ -2,6 +2,7 @@
 
 
 #include "vlc/vlc.h"
+#include <nodes/Node.h>
 #ifdef PROJECT_INCLUDES_
 #define PROJECT_INCLUDES PROJECT_INCLUDES_
 #endif
@@ -10,7 +11,7 @@
 #endif
 
 
-#include "nodes/node.h"
+
 #include <mutex>
 #include "ObjectInterfacePerModule.h"
 

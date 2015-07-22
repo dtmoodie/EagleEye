@@ -1,6 +1,6 @@
 #ifndef TYPE_HPP
 #define TYPE_HPP
-#define CVAPI_EXPORTS
+//#define CVAPI_EXPORTS
 #include "opencv2/core/cvdef.h"
 #include <string>
 #include <typeinfo>

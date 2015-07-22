@@ -15,7 +15,10 @@ ENDMACRO()
 project(Plugins)
 SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
 FOREACH(subdir ${SUBDIRS})
-    ADD_SUBDIRECTORY(${subdir})
+    SET(Plugin_${subdir} true CACHE BOOL "")
+    IF(Plugin_${subdir})
+        ADD_SUBDIRECTORY(${subdir})
+    ENDIF()
 ENDFOREACH()
 
 

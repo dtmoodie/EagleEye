@@ -17,7 +17,9 @@
 	#ifdef PROJECT_LIB_DIRS
 		#define SETUP_PROJECT_IMPL void SetupIncludes()	{EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);}
 	#else
+#ifndef EagleLIB_EXPORTS
 		#pragma message( "Neither PROJECT_LIB_DIRS nor PROJECT_INCLUDES defined" )
+#endif
 		#define SETUP_PROJECT_IMPL void SetupIncludes() {}
 	#endif
 #endif
@@ -25,7 +27,7 @@
 
 #ifndef FILE_MANAGER_H
 #define FILE_MANAGER_H
-#define CVAPI_EXPORTS
+
 
 #include <map>
 #include <list>
@@ -156,7 +158,7 @@ namespace EagleLib
 		void getAccessibleNodes(const std::string& sourceNode, std::vector<Node*>& output);
 		Node* getParent(const std::string& sourceNode);
         std::vector<std::string> getConstructableNodes();
-        std::vector<std::string> getParametersOfType(boost::function<bool(Loki::TypeInfo&)> selector);
+        std::vector<std::string> getParametersOfType(boost::function<bool(Loki::TypeInfo)> selector);
         void addIncludeDir(const std::string& dir);
         void addSourceFile(const std::string& file);
 		void addIncludeDirs(const std::string& dirs);
