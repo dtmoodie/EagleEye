@@ -5,8 +5,8 @@ file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB forms "*UIs/*.ui")
 CMAKE_POLICY(SET CMP0020 NEW)
-find_package(Qt5 REQUIRED Core Widgets PrintSupport OpenGL)
-
+find_package(Qt5 COMPONENTS Core Widgets PrintSupport OpenGL)
+IF(Qt5_FOUND)
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
 set(BOOST_REQUIRED_MODULES system chrono thread date_time)
@@ -54,3 +54,4 @@ target_link_libraries(Plotting
 	Qt5::PrintSupport
 	)
 
+ENDIF(Qt5_FOUND)

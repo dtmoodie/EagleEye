@@ -1,10 +1,10 @@
 
 CMAKE_POLICY(SET CMP0020 NEW)
+find_package(Caffe QUIET)
+if(Caffe_FOUND)
+
 find_package(CUDA REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(Caffe)
-
-
 include_directories(
  ${Caffe_INCLUDE_DIRS}
  ${EagleLib_INCLUDE_DIRECTORIES}
@@ -95,3 +95,4 @@ add_definitions(-DCAFFE_INCLUDES="${Caffe_INCLUDE_DIRS_}")
 ENDIF(WIN32)
 #SET_TARGET_PROPERTIES(Caffe PROPERTIES LOCATION "${CMAKE_BINARY_DIR}/$(Configuration)/Plugins/libCaffed.lib")
 endif()
+ENDIF(Caffe_FOUND)

@@ -1,5 +1,6 @@
 PROJECT(Gstreamer)
-include(cmake)
+SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake")
+include(CMake)
 
 FIND_PACKAGE(GStreamer_0_10)
 
