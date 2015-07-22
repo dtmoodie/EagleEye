@@ -20,7 +20,7 @@ INCLUDE_DIRECTORIES(
         ${Boost_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
 )
-
+LINK_DIRECTORIES(${LINK_DIRS})
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
 file(GLOB_RECURSE knl "*.cu")

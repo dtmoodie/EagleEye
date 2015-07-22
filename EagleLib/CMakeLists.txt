@@ -15,7 +15,7 @@ ELSE(WIN32)
 	set(Boost_USE_MULTITHREADED      ON)
 	set(Boost_USE_STATIC_RUNTIME     OFF)
 ENDIF(WIN32)
-
+ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB) 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 FIND_PACKAGE(Qt5 COMPONENTS Gui Widgets)

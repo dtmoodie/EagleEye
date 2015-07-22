@@ -15,7 +15,7 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
-
+LINK_DIRECTORIES(${LINK_DIRS})
 
 INCLUDE_DIRECTORIES(
 	${EagleLib_INCLUDE_DIRECTORIES}

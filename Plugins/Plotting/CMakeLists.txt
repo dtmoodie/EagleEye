@@ -14,7 +14,7 @@ set(BOOST_REQUIRED_MODULES system chrono thread date_time)
 ADD_DEFINITIONS( -DHAVE_QT5 )
 QT5_WRAP_UI(UIS ${forms})
 QT5_WRAP_CPP(MOC ${src} ${hdr})
-
+LINK_DIRECTORIES(${LINK_DIRS})
 
 INCLUDE_DIRECTORIES(
     ${INCLUDE_DIRS}
@@ -45,10 +45,7 @@ message(STATUS
 
 add_library(Plotting SHARED ${src} ${hdr} ${knl} ${UIS} ${MOC})
 add_dependencies(Plotting EagleLib)
-#set_target_properties(Plotting PROPERTIES
-            #RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-            #ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-            #LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+
 target_link_libraries(Plotting 
 	EagleLib 
 	Qt5::Core 
@@ -57,5 +54,3 @@ target_link_libraries(Plotting
 	Qt5::PrintSupport
 	)
 
-#add_custom_command(TARGET Plotting POST_BUILD COMMAND ${CMAKE_COMMAND} -E COPY_FILE)
-#target_link_libraries(Plotting EagleLib)

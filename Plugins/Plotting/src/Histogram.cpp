@@ -15,12 +15,12 @@ namespace EagleLib
         HistogramPlotter();
         virtual QWidget* getPlot(QWidget* parent);
         virtual bool acceptsWidget(QWidget *widget);
-        virtual bool acceptsType(EagleLib::Parameter::Ptr param) const;
+        virtual bool acceptsType(Parameters::Parameter::Ptr param) const;
         virtual std::string plotName() const;
         virtual QWidget* getSettingsWidget() const;
         virtual void addPlot(QWidget *plot_);
         virtual void doUpdate();
-        virtual void setInput(Parameter::Ptr param_);
+        virtual void setInput(Parameters::Parameter::Ptr param_);
 
     };
 }
@@ -41,7 +41,7 @@ bool HistogramPlotter::acceptsWidget(QWidget *widget)
     return dynamic_cast<QCustomPlot*>(widget) != nullptr;
 }
 
-bool HistogramPlotter::acceptsType(EagleLib::Parameter::Ptr param) const
+bool HistogramPlotter::acceptsType(Parameters::Parameter::Ptr param) const
 {
     return VectorSizePolicy::acceptsSize(getSize(param));
 }
@@ -98,7 +98,7 @@ void HistogramPlotter::addPlot(QWidget *plot_)
     }
     hists.push_back(hist);
 }
-void HistogramPlotter::setInput(Parameter::Ptr param_)
+void HistogramPlotter::setInput(Parameters::Parameter::Ptr param_)
 {
     Plotter::setInput(param_);
     doUpdate();

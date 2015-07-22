@@ -19,7 +19,7 @@ set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono r
 set(CUDA_VERBOSE_BUILD ON)
 set(CMAKE_VERBOSE_BUILD ON)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
-
+LINK_DIRECTORIES(${LINK_DIRS})
 IF(WIN32)
 
 ELSE()

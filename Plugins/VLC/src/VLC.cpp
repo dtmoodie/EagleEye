@@ -19,7 +19,7 @@ IPerModuleInterface* GetModule()
 
 void* lock(void* data, void**p_pixels)
 {
-	std::cout << "lock called" << std::endl;
+	//std::cout << "lock called" << std::endl;
 	vlcCamera* node = static_cast<vlcCamera*>(data);
 	cv::cuda::HostMem* dest = node->h_dest.getFront();
 	dest->create(1080,1920, CV_8UC3);
@@ -29,11 +29,11 @@ void* lock(void* data, void**p_pixels)
 }
 void display(void* data, void* id)
 {
-	std::cout << "display called" << std::endl;
+	//std::cout << "display called" << std::endl;
 }
 void unlock(void* data, void* id, void* const* p_pixels)
 {
-	std::cout << "unlock called" << std::endl;
+	//std::cout << "unlock called" << std::endl;
 }
 void vlcCamera::Init(bool firstInit)
 {

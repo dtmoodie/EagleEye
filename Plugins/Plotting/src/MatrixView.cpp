@@ -25,9 +25,10 @@ namespace EagleLib
             return dynamic_cast<QTableWidget*>(widget) != nullptr;
         }
 
-        virtual bool acceptsType(EagleLib::Parameter::Ptr param) const
+        virtual bool acceptsType(Parameters::Parameter::Ptr param) const
         {
-            return EagleLib::acceptsType<cv::Mat>(param->typeInfo);
+            //return EagleLib::acceptsType<cv::Mat>(param->typeInfo);
+			return Loki::TypeInfo(typeid(cv::Mat)) == param->GetTypeInfo();
 
         }
         virtual std::string plotName() const
@@ -49,7 +50,7 @@ namespace EagleLib
 
         virtual void doUpdate()
         {
-            cv::Mat* mat = EagleLib::getParameterPtr<cv::Mat>(param);
+            cv::Mat* mat = getParameterPtr<cv::Mat>(param);
             if(mat == nullptr)
                 return;
             std::vector<QTableWidgetItem*> items;
@@ -88,7 +89,7 @@ namespace EagleLib
             }
         }
 
-        virtual void setInput(Parameter::Ptr param_)
+        virtual void setInput(Parameters::Parameter::Ptr param_)
         {
             Plotter::setInput(param_);
             doUpdate();
