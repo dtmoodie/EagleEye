@@ -27,7 +27,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 
 #endif
 Verbosity Node::debug_verbosity = Error;
-boost::signals2::signal<void(void)> Node::resetSignal = boost::signals2::signal<void(void)>();
+boost::signals2::signal<void(void)> Node::resetSignal;
 Node::Node():
     averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
 {

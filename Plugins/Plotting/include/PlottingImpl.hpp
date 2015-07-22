@@ -214,7 +214,8 @@ template<typename T> struct TypePolicy
 {
     static bool acceptsType(Parameters::Parameter::Ptr param)
     {
-        return EagleLib::acceptsType<T>(param->typeInfo);
+        //return EagleLib::acceptsType<T>(param->typeInfo);
+	return Loki::TypeInfo(typeid(T)) == param->GetTypeInfo();
     }
 };
 struct StaticPlotPolicy
