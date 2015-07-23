@@ -5,9 +5,7 @@
 #include "Plugins.h"
 #include <boost/program_options.hpp>
 #include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 
 void PrintNodeTree(EagleLib::Node::Ptr node, int depth)
@@ -22,7 +20,7 @@ void PrintNodeTree(EagleLib::Node::Ptr node, int depth)
         PrintNodeTree(node->children[i], depth + 1);
     }
 }
-bool quit;
+static volatile bool quit;
 void sig_handler(int s)
 {
     std::cout << "Cought signal " << s << std::endl;
@@ -31,13 +29,14 @@ void sig_handler(int s)
 
 int main(int argc, char* argv[])
 {
-
+	signal(SIGINT, sig_handler);
+	/*
     struct sigaction sigIntHandler;
     sigIntHandler.sa_handler = sig_handler;
     sigemptyset(&sigIntHandler.sa_mask);
     sigIntHandler.sa_flags = 0;
     sigaction(SIGINT, &sigIntHandler, NULL);
-
+	*/
 
     EagleLib::NodeManager& manager = EagleLib::NodeManager::getInstance();
 

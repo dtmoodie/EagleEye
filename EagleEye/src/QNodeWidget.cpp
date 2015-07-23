@@ -128,11 +128,11 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
     errorDisplay = new QLineEdit();
     criticalDisplay = new QLineEdit();
     profileDisplay = new QLineEdit();
-    ui->verticalLayout->addWidget(profileDisplay);
-    ui->verticalLayout->addWidget(statusDisplay);
-    ui->verticalLayout->addWidget(warningDisplay);
-    ui->verticalLayout->addWidget(errorDisplay);
-    ui->verticalLayout->addWidget(criticalDisplay);
+    ui->gridLayout->addWidget(profileDisplay, 0, 0, 1,2);
+    ui->gridLayout->addWidget(statusDisplay, 1, 0, 1, 2);
+    ui->gridLayout->addWidget(warningDisplay, 2, 0, 1, 2);
+    ui->gridLayout->addWidget(errorDisplay, 3, 0, 1, 2);
+    ui->gridLayout->addWidget(criticalDisplay, 4, 0, 1, 2);
     profileDisplay->hide();
     statusDisplay->hide();
     warningDisplay->hide();
@@ -151,22 +151,27 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
         ui->nodeName->setText(QString::fromStdString(node->nodeName));
         ui->nodeName->setToolTip(QString::fromStdString(node->fullTreeName));
         ui->nodeName->setMaximumWidth(200);
-        ui->verticalLayout->setSpacing(0);
+        ui->gridLayout->setSpacing(0);
+		int row = 5;
+		
         for (size_t i = 0; i < node->parameters.size(); ++i)
 		{
+			int col = 0;
 			if (node->parameters[i]->type & Parameters::Parameter::Input)
 			{
 				QInputProxy* proxy = new QInputProxy(node->parameters[i], node, this);
-				ui->verticalLayout->addWidget(proxy->getWidget(0));
+				ui->gridLayout->addWidget(proxy->getWidget(0), i+5, col, 1,1);
 				inputProxies.push_back(proxy);
+				++col;
 			}
-			else
+			
+			if(node->parameters[i]->type & Parameters::Parameter::Control || node->parameters[i]->type & Parameters::Parameter::State)
 			{
 				auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
 				if (interop)
 				{
 					parameterProxies.push_back(interop);
-					ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
+					ui->gridLayout->addWidget(interop->GetParameterWidget(this), i + 5, col, 1,1);
 				}
 			}
 			
@@ -223,19 +228,22 @@ void QNodeWidget::updateUi(bool parameterUpdate)
 				}
                 if(found == false)
                 {
+					int col = 0;
 					if (node->parameters[i]->type & Parameters::Parameter::Input)
 					{
 						QInputProxy* proxy = new QInputProxy(node->parameters[i], node, this);
-						ui->verticalLayout->addWidget(proxy->getWidget(0));
+						ui->gridLayout->addWidget(proxy->getWidget(0), i + 5, col, 1, 1);
 						inputProxies.push_back(proxy);
+						++col;
 					}
-					else
+
+					if (node->parameters[i]->type & Parameters::Parameter::Control || node->parameters[i]->type & Parameters::Parameter::State)
 					{
 						auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
 						if (interop)
 						{
 							parameterProxies.push_back(interop);
-							ui->verticalLayout->addWidget(interop->GetParameterWidget(this));
+							ui->gridLayout->addWidget(interop->GetParameterWidget(this), i + 5, col, 1, 1);
 						}
 					}
                 }

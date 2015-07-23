@@ -211,6 +211,86 @@ void ConcatTensor::Init(bool firstInit)
 {
     updateParameter("Include Input", true);
     addInputParameter<cv::cuda::GpuMat>("Input 0");
+	
+}
+cv::cuda::GpuMat LagBuffer::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+{
+	if (parameters[0]->changed)
+	{
+		putItr = 0;
+		getItr = 0;
+		imageBuffer.resize(lagFrames);
+		parameters[0]->changed = false;
+	}
+	if (lagFrames == 0)
+		return img;
+	imageBuffer[putItr % lagFrames] = img;
+	++putItr;
+	{
+		if (putItr > 1000 && getItr > 1000)
+		{
+			putItr -= 1000;
+			getItr -= 1000;
+		}
+	}
+	if ((putItr - getItr) == lagFrames)
+	{
+		cv::cuda::GpuMat out = imageBuffer[getItr % lagFrames];
+		++getItr;
+		return out;
+	}
+	return cv::cuda::GpuMat();
+}
+void LagBuffer::Init(bool firstInit)
+{
+	imageBuffer.resize(20);
+	putItr = 0;
+	getItr = 0;
+	lagFrames = 20;
+	parameters.push_back(Parameters::TypedInputParameterCopy<unsigned int>::Ptr(
+							new Parameters::TypedInputParameterCopy<unsigned int>("Lag frames", 
+								&lagFrames, Parameters::Parameter::ParameterType(Parameters::Parameter::Input | Parameters::Parameter::Control), 
+								"Number of frames for this video stream to lag behind")));
+
+	//	updateParameter<unsigned int>("Lag frames", &lagFrames, Parameters::Parameter::Control, "Number of frames for this video stream to lag behind");
+}
+cv::cuda::GpuMat CameraSync::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+{
+	if (parameters[0]->changed)
+	{
+		int offset = *getParameter<int>(0)->Data();
+		if (offset == 0)
+		{
+			updateParameter<unsigned int>("Camera 1 offset", uint32_t(0), Parameters::Parameter::Output);
+			updateParameter<unsigned int>("Camera 2 offset", uint32_t(0), Parameters::Parameter::Output);
+		}
+		else
+		{
+			if (offset < 0)
+			{
+				updateParameter<unsigned int>("Camera 1 offset", uint32_t(abs(offset)), Parameters::Parameter::Output);
+				updateParameter<unsigned int>("Camera 2 offset", uint32_t(0), Parameters::Parameter::Output);
+			}
+			else
+			{
+				updateParameter<unsigned int>("Camera 1 offset", uint32_t(0), Parameters::Parameter::Output);
+				updateParameter<unsigned int>("Camera 2 offset", uint32_t(abs(offset)), Parameters::Parameter::Output);
+			}
+		}	
+		parameters[0]->changed = false;
+	}
+	return img;
+}
+bool CameraSync::SkipEmpty() const
+{
+	return false;
+}
+void CameraSync::Init(bool firstInit)
+{
+	updateParameter<int>("Camera offset", 0);
+	updateParameter<unsigned int>("Camera 1 offset", uint32_t(0), Parameters::Parameter::Output);
+	updateParameter<unsigned int>("Camera 2 offset", uint32_t(0), Parameters::Parameter::Output);
+	
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(GetOutputImage)
@@ -218,3 +298,5 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(ImageInfo)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ExportInputImage)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Mat2Tensor)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConcatTensor)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(LagBuffer)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CameraSync)

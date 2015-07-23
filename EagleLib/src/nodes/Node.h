@@ -441,7 +441,7 @@ namespace EagleLib
 		void RegisterParameterCallback(int idx, boost::function<void(void)> callback);
 		void RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback);
 
-		template<typename T> size_t addParameter(
+		/*template<typename T> size_t addParameter(
 					const std::string& name,
 					const T& data,
 					Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
@@ -471,38 +471,22 @@ namespace EagleLib
 			if (onParameterAdded)
 				(*onParameterAdded)();
 			return parameters.size() - 1;
-		}
+		}*/
 
-		/*template<typename T> size_t addParameter(
+		template<typename T> size_t addParameter(
 			const std::string& name,
 			T* data,
 			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-			const std::string& toolTip_ = std::string(), 
-			bool ownsData = false,
-			)
+			const std::string& toolTip_ = std::string(),
+			bool ownsData = false)
 		{
-			parameters.push_back(Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>::Ptr(
-				new Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
+			parameters.push_back(typename Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data, type_, toolTip_)));
 			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
 			if (onParameterAdded)
 				(*onParameterAdded)();
 			return parameters.size() - 1;
 		}
-		
-		template<typename T> size_t addParameter(
-			const std::string& name,
-			const T* data,
-			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-			const std::string& toolTip_ = std::string(), 
-			bool ownsData = false)
-		{
-			parameters.push_back(Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>::Ptr(
-				new Parameters::TypedParameterPtr<std::remove_cv<std::remove_pointer<std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
-			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-			if (onParameterAdded)
-				(*onParameterAdded)();
-			return parameters.size() - 1;
-		}*/
+
 		
 		template<typename T> size_t	addParameter(const std::string& name,
 				const T& data,
@@ -510,7 +494,7 @@ namespace EagleLib
 				const std::string& toolTip_ = std::string(), 
 				bool ownsData = false/*, typename std::enable_if<!std::is_pointer<T>::value, void>::type* dummy_enable = nullptr*/)
 		{
-            parameters.push_back(typename Parameters::TypedParameter<typename std::remove_cv<T>::type>::Ptr(new Parameters::TypedParameter<typename std::remove_cv<T>::type>(name, data, type_, toolTip_)));
+            parameters.push_back(typename Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
 			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
 			if (onParameterAdded)
 				(*onParameterAdded)();
@@ -565,23 +549,12 @@ namespace EagleLib
             return false;
         }
 
-        /**
-          * @brief updateParameter is frequently used in nodes to add or update a parameter's value
-          * @param name is the name of the parameter
-          * @param data is the data that the parameter stores
-          * @param type_ is the parameter type, ie Control, Status, Input, Output
-          * @param toolTip_ is the tooltip to be displayed on the user interface for this parameter, IE units, ranges, etc
-          * @param ownsData_ is used to flag if this parameter object owns the data being passed into it.
-          * @param this is used if the parameter is a raw pointer, in which case on destruction of the parameter, it needs to be
-          * @param deleted.
-          * @return true on success, false on failure to add parameter.
-          */
 		template<typename T> bool updateParameter(
-			const std::string& name, 
-			T* data, 
-			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-			const std::string& toolTip_ = std::string(), 
-			const bool ownsData_ = false)
+												const std::string& name, 
+												T* data, 
+												Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+												const std::string& toolTip_ = std::string(), 
+												const bool ownsData_ = false)
 		{
 			typename Parameters::ITypedParameter<T>::Ptr param;
 			try
@@ -590,7 +563,7 @@ namespace EagleLib
 			}
 			catch (cv::Exception &e)
 			{
-				return addParameter(name, data, type_, toolTip_, ownsData_);
+				return addParameter<T>(name, data, type_, toolTip_, ownsData_);
 			}
 			if (type_ != Parameters::Parameter::None)
 				param->type = type_;
@@ -601,13 +574,11 @@ namespace EagleLib
 		}
 
 
-        template<typename T> bool
-        updateParameter(
-			const std::string& name,
-            const T& data,
-            Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-            const std::string& toolTip_ = std::string(),
-            const bool& ownsData_ = false)
+        template<typename T> bool updateParameter(const std::string& name,
+												  const T& data,
+												  Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
+												  const std::string& toolTip_ = std::string(),
+												  const bool& ownsData_ = false)
 		{
             typename Parameters::ITypedParameter<T>::Ptr param;
             try
@@ -615,7 +586,7 @@ namespace EagleLib
                 param = getParameter<T>(name);
             }catch(cv::Exception &e)
             {
-                return addParameter<typename std::remove_cv<T>::type>(name, data, type_, toolTip_, ownsData_);
+                return addParameter<T>(name, data, type_, toolTip_, ownsData_);
             }
 			if (type_ != Parameters::Parameter::None)
 				param->type = type_;
@@ -625,21 +596,17 @@ namespace EagleLib
 			param->UpdateData(data);
 			return true;
         }
-        /**
-         * @brief updateParameter overload of the above accept accessing a paramter via index instead of name
-         * @param idx index of parameter
-         * @param data see above
-         * @param name see above
-         * @param quickHelp see above
-         * @param type_ see above
-         * @return see above
-         */
-        template<typename T> bool
-            updateParameter(size_t idx,
-							const T data,
-							const std::string& name = std::string(),
-							const std::string quickHelp = std::string(),
-                            Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control)
+
+
+
+
+
+
+        template<typename T> bool updateParameter(size_t idx,
+												  const T data,
+												  const std::string& name = std::string(),
+												  const std::string quickHelp = std::string(),
+												  Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control)
 		{
 			if (idx > parameters.size() || idx < 0)
 				return false;
@@ -656,7 +623,7 @@ namespace EagleLib
 			param->UpdateData(data);
 			return true;
 		}
-
+		
 
 
 		template<typename T> typename Parameters::ITypedParameter<T>::Ptr
