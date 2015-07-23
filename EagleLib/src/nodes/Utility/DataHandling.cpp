@@ -261,20 +261,20 @@ cv::cuda::GpuMat CameraSync::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
 		int offset = *getParameter<int>(0)->Data();
 		if (offset == 0)
 		{
-			updateParameter<unsigned int>("Camera 1 offset", uint32_t(0), Parameters::Parameter::Output);
-			updateParameter<unsigned int>("Camera 2 offset", uint32_t(0), Parameters::Parameter::Output);
+			updateParameter<unsigned int>("Camera 1 offset", 0, Parameters::Parameter::Output);
+			updateParameter<unsigned int>("Camera 2 offset", 0, Parameters::Parameter::Output);
 		}
 		else
 		{
 			if (offset < 0)
 			{
-				updateParameter<unsigned int>("Camera 1 offset", uint32_t(abs(offset)), Parameters::Parameter::Output);
-				updateParameter<unsigned int>("Camera 2 offset", uint32_t(0), Parameters::Parameter::Output);
+				updateParameter<unsigned int>("Camera 1 offset", abs(offset), Parameters::Parameter::Output);
+				updateParameter<unsigned int>("Camera 2 offset", 0, Parameters::Parameter::Output);
 			}
 			else
 			{
-				updateParameter<unsigned int>("Camera 1 offset", uint32_t(0), Parameters::Parameter::Output);
-				updateParameter<unsigned int>("Camera 2 offset", uint32_t(abs(offset)), Parameters::Parameter::Output);
+				updateParameter<unsigned int>("Camera 1 offset", 0, Parameters::Parameter::Output);
+				updateParameter<unsigned int>("Camera 2 offset", abs(offset), Parameters::Parameter::Output);
 			}
 		}	
 		parameters[0]->changed = false;
@@ -288,8 +288,8 @@ bool CameraSync::SkipEmpty() const
 void CameraSync::Init(bool firstInit)
 {
 	updateParameter<int>("Camera offset", 0);
-	updateParameter<unsigned int>("Camera 1 offset", uint32_t(0), Parameters::Parameter::Output);
-	updateParameter<unsigned int>("Camera 2 offset", uint32_t(0), Parameters::Parameter::Output);
+	updateParameter<unsigned int>("Camera 1 offset", 0, Parameters::Parameter::Output);
+	updateParameter<unsigned int>("Camera 2 offset", 0, Parameters::Parameter::Output);
 	
 }
 

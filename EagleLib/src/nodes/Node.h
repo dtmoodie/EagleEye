@@ -441,39 +441,7 @@ namespace EagleLib
 		void RegisterParameterCallback(int idx, boost::function<void(void)> callback);
 		void RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback);
 
-		/*template<typename T> size_t addParameter(
-					const std::string& name,
-					const T& data,
-					Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-					const std::string& toolTip_ = std::string(), 
-					bool ownsData = false, 
-					typename std::enable_if<std::is_pointer<T>::value,void>::type* dummy_enable = nullptr)
-		{
-            parameters.push_back(Parameters::TypedParameterPtr<typename std::remove_cv<typename std::remove_pointer<typename std::remove_cv<T>::type>::type>::type>::Ptr(
-                new Parameters::TypedParameterPtr<typename std::remove_cv<typename std::remove_pointer<typename std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
-			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-			if (onParameterAdded)
-				(*onParameterAdded)();
-			return parameters.size() - 1;
-		}
-		
-		template<typename T> size_t addParameter(
-			const std::string& name,
-			T& data,
-			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
-			const std::string& toolTip_ = std::string(),
-			bool ownsData = false ,
-			typename std::enable_if<std::is_pointer<T>::value, void>::type* dummy_enable = nullptr)
-		{
-            parameters.push_back(typename Parameters::TypedParameterPtr<typename std::remove_cv<typename std::remove_pointer<typename std::remove_cv<T>::type>::type>::type>::Ptr(
-                new typename Parameters::TypedParameterPtr<typename std::remove_cv<typename std::remove_pointer<typename std::remove_cv<T>::type>::type>::type>(name, data, type_, toolTip_)));
-			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-			if (onParameterAdded)
-				(*onParameterAdded)();
-			return parameters.size() - 1;
-		}*/
-
-		template<typename T> size_t addParameter(
+		template<typename T> size_t registerParameter(
 			const std::string& name,
 			T* data,
 			Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
@@ -488,7 +456,7 @@ namespace EagleLib
 		}
 
 		
-		template<typename T> size_t	addParameter(const std::string& name,
+		template<typename T> size_t addParameter(const std::string& name,
 				const T& data,
 				Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
 				const std::string& toolTip_ = std::string(), 
@@ -500,7 +468,6 @@ namespace EagleLib
 				(*onParameterAdded)();
 			return parameters.size() - 1;
 		}
-
 
         /**
           * @brief addInputParameter is used to define an input parameter for a node
@@ -549,7 +516,7 @@ namespace EagleLib
             return false;
         }
 
-		template<typename T> bool updateParameter(
+		template<typename T> bool updateParameterPtr(
 												const std::string& name, 
 												T* data, 
 												Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
@@ -563,14 +530,10 @@ namespace EagleLib
 			}
 			catch (cv::Exception &e)
 			{
-				return addParameter<T>(name, data, type_, toolTip_, ownsData_);
+				return registerParameter<T>(name, data, type_, toolTip_, ownsData_);
 			}
-			if (type_ != Parameters::Parameter::None)
-				param->type = type_;
-			if (toolTip_.size())
-				param->SetTooltip(toolTip_);
-			param->UpdateData(*data);
-			return true;
+			param->UpdateData(data);
+			
 		}
 
 
@@ -596,11 +559,6 @@ namespace EagleLib
 			param->UpdateData(data);
 			return true;
         }
-
-
-
-
-
 
         template<typename T> bool updateParameter(size_t idx,
 												  const T data,
