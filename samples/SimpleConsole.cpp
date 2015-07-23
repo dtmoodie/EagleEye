@@ -4,6 +4,10 @@
 #include "nodes/Node.h"
 #include "Plugins.h"
 #include <boost/program_options.hpp>
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 
 
 void PrintNodeTree(EagleLib::Node::Ptr node, int depth)
@@ -18,11 +22,23 @@ void PrintNodeTree(EagleLib::Node::Ptr node, int depth)
         PrintNodeTree(node->children[i], depth + 1);
     }
 }
-
-
+bool quit;
+void sig_handler(int s)
+{
+    std::cout << "Cought signal " << s << std::endl;
+    quit = true;
+}
 
 int main(int argc, char* argv[])
 {
+
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = sig_handler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, NULL);
+
+
     EagleLib::NodeManager& manager = EagleLib::NodeManager::getInstance();
 
     boost::program_options::options_description desc("Allowed options");
@@ -62,7 +78,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-
+    quit = false;
     std::string configFile = vm["config"].as<std::string>();
     std::cout << "Loading config file " << configFile << std::endl;
     auto nodes = EagleLib::NodeManager::getInstance().loadNodes(configFile);
@@ -76,7 +92,7 @@ int main(int argc, char* argv[])
     std::vector<cv::cuda::Stream> streams;
     images.resize(nodes.size());
     streams.resize(nodes.size());
-    while(true && nodes.size())
+    while(!quit && nodes.size())
     {
         EagleLib::ProcessingThreadCallback::Run();
         for(int i = 0; i < nodes.size(); ++i)

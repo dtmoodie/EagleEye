@@ -109,6 +109,7 @@ message(STATUS
     Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}
     OpenCV found at: ${OpenCV_CONFIG_PATH}
     NVCC Flags: ${CUDA_NVCC_FLAGS}
+    Jetson: ${EAGLE_LIB_JETSON}
     Bulid Type: ${CMAKE_BUILD_TYPE}
 
 	Includes: ${EagleLib_INCLUDE_DIRECTORIES}
