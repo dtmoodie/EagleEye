@@ -56,6 +56,9 @@ cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
         parameters[0]->changed = true;
         
     }
+    std::stringstream str;
+    str << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
+    log(Status, str.str());
 	updateParameter<int>("Depth", img.depth(), Parameters::Parameter::State);
 	updateParameter<int>("Rows", img.rows, Parameters::Parameter::State);
 	updateParameter<int>("Cols", img.cols, Parameters::Parameter::State);

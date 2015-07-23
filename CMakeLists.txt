@@ -34,7 +34,7 @@ ELSE(WIN32)
                 SET(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/Bin/Release" CACHE PATH "Executable output path" FORCE)
 	ENDIF()
 ENDIF(WIN32)
-
+SET(EAGLE_LIB_JETSON FALSE CACHE BOOL "True if building for jetson platform")
 add_subdirectory(EagleLib)
 SET(LINK_DIRS "${EagleLib_LIB_DIRS_DEBUG};${EagleLib_LIB_DIRS_RELASE}")
 SET(INCLUDE_DIRS ${EagleLib_INCLUDE_DIRECTORIES})
