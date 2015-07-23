@@ -17,32 +17,27 @@ find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cu
 
 LINK_DIRECTORIES(${LINK_DIRS})
 INCLUDE_DIRECTORIES(
-
-        ${EagleLib_INCLUDE_DIRECTORIES}
-        ${OpenCV_INCLUDE_DIRS}
-        ${Boost_INCLUDE_DIRS}
-        ${CUDA_INCLUDE_DIRS}
+    ${EagleLib_INCLUDE_DIRECTORIES}
+    ${OpenCV_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
 ) 
 
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
-#file(GLOB_RECURSE knl "*.cu")
+
 IF(WIN32)
+
 ELSE()
-SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
+    SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
 ENDIF()
 
 cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})
+
 add_dependencies(Dev EagleLib)
 target_link_libraries(Dev 
     EagleLib
     ${OpenCV_LIBS}
     ${CUDA_CUBLAS_LIBRARIES}
 )
-
-#set_target_properties(Dev PROPERTIES
-    #RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-    #ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-    #LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-
 

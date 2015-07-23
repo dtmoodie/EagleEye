@@ -17,11 +17,6 @@ INCLUDE_DIRECTORIES(
 	${Qt5Core_INCLUDE_DIRS}
 )
 
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /d2Zi+ /Z7")
-#STRING(REGEX REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-
-
-
 FILE(GLOB_RECURSE hdrs "include/*.h")
 FILE(GLOB_RECURSE src "src/*.cpp")
 
@@ -35,9 +30,7 @@ TARGET_LINK_LIBRARIES(Vclick3d
 	${Boost_LIBRARIES}
 	${OpenCV_LIBS}
 	Qt5::Network
-	Qt5::Core
-	Qt5::Gui
-	Qt5::Widgets
+        Qt5::Core
 	${EagleLib_LIBRARIES} 
 	EagleLib
 	)

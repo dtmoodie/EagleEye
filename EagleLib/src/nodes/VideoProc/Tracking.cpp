@@ -41,7 +41,7 @@ bool KeyFrame::getHomography(int otherIdx, cv::Mat& homography)
     auto itr = correspondences.find(otherIdx);
     if(itr == correspondences.end())
         return false;
-
+    return false;
 }
 
 bool KeyFrame::hasCorrespondence(int otherIdx)

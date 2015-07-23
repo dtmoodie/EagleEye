@@ -365,6 +365,11 @@ shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
 }
 std::vector<shared_ptr<Node>> NodeManager::loadNodes(const std::string& saveFile)
 {
+    boost::filesystem::path path(saveFile);
+    if(!boost::filesystem::is_regular_file(path))
+    {
+        std::cout << "Unable to load " << saveFile << " doesn't exist, or is not a regular file" << std::endl;
+    }
     cv::FileStorage fs;
     try
     {

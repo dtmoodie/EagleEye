@@ -10,7 +10,7 @@ set(Boost_USE_STATIC @Boost_USE_STATIC@)
 set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)
 set(BOOST_INCLUDEDIR "@Boost_INCLUDE_DIR@")
 set(Boost_NO_BOOST_CMAKE ON)
-set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
+set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono program_options)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 
@@ -26,4 +26,4 @@ INCLUDE_DIRECTORIES(
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_executable(SimpleConsole SimpleConsole.cpp TestNode.cpp)
 add_dependencies(SimpleConsole EagleLib)
-target_link_libraries(SimpleConsole EagleLib)
+target_link_libraries(SimpleConsole EagleLib ${Boost_LIBRARIES})

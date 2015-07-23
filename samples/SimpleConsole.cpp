@@ -2,36 +2,86 @@
 #include "EagleLib.h"
 #include "Manager.h"
 #include "nodes/Node.h"
+#include "Plugins.h"
+#include <boost/program_options.hpp>
 
-int main()
+
+void PrintNodeTree(EagleLib::Node::Ptr node, int depth)
+{
+    for(int i = 0; i < depth; ++i)
+    {
+        std::cout << "=";
+    }
+    std::cout << node->fullTreeName << std::endl;
+    for(int i = 0; i < node->children.size(); ++i)
+    {
+        PrintNodeTree(node->children[i], depth + 1);
+    }
+}
+
+
+
+int main(int argc, char* argv[])
 {
     EagleLib::NodeManager& manager = EagleLib::NodeManager::getInstance();
-    //std::vector<EagleLib::Node::Ptr> nodes;
-	
-	// Since manager might have been compiled in debug or release as opposed to this executable, we need to use the AUDynArray object
-	// to pass the constructors into the manager, instead of the returned std::vector.
-	manager.setupModule(PerModuleInterface::GetInstance());
 
-    auto rootNode = manager.addNode("SerialStack");
-	auto child = rootNode->addChild(manager.addNode("TestNode"));
-    auto inputNode = rootNode->addChild(manager.addNode("TestChildNode"));
-//	auto list = child->listParameters();
-//	auto test = manager.getNode(child->fullTreeName);
-	auto inputs = inputNode->findCompatibleInputs();
-    for (size_t i = 0; i < inputs.size(); ++i)
-	{
-		if (inputs[i].size())
-			inputNode->setInputParameter(inputs[i][0], i);
-	}
-    cv::cuda::GpuMat img;
-    while(1)
+    boost::program_options::options_description desc("Allowed options");
+
+    desc.add_options()
+        ("config", boost::program_options::value<std::string>(), "File containing node structure")
+        ("plugins", boost::program_options::value<std::string>(), "Path to additional plugins to load")
+        ;
+
+    boost::program_options::variables_map vm;
+    boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
+
+    if(!vm.count("config"))
     {
-        manager.CheckRecompile();
-        img = rootNode->process(img);
-#if _WIN32
-		boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+        std::cout << desc << std::endl;
+        return 1;
+    }
+
+    boost::filesystem::path currentDir(".");
+    boost::filesystem::directory_iterator end_itr;
+
+    for(boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr)
+    {
+        if(boost::filesystem::is_regular_file(itr->path()))
+        {
+#ifdef _MSC_VER
+            if(itr->path().extension() == ".dll")
 #else
-        usleep(1000*1000);
+            if(itr->path().extension() == ".so")
 #endif
+            {
+                std::string file = itr->path().string();
+                EagleLib::loadPlugin(file);
+            }else
+            {
+                std::cout << itr->path().extension() << std::endl;
+            }
+        }
+    }
+
+    std::string configFile = vm["config"].as<std::string>();
+    std::cout << "Loading config file " << configFile << std::endl;
+    auto nodes = EagleLib::NodeManager::getInstance().loadNodes(configFile);
+    std::cout << "Loaded " << nodes.size() << " top level nodes" << std::endl;
+    for(int i = 0; i < nodes.size(); ++i)
+    {
+        PrintNodeTree(nodes[i], 1);
+    }
+    // Start processing loop
+    std::vector<cv::cuda::GpuMat> images;
+    std::vector<cv::cuda::Stream> streams;
+    images.resize(nodes.size());
+    streams.resize(nodes.size());
+    while(true && nodes.size())
+    {
+        EagleLib::ProcessingThreadCallback::Run();
+        for(int i = 0; i < nodes.size(); ++i)
+        {
+            nodes[i]->process(images[i], streams[i]);
+        }
     }
 }
