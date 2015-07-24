@@ -23,8 +23,8 @@ void FindCheckerboard::Init(bool firstInit)
 		addInputParameter<TrackSparseFunctor>("Sparse tracking functor");
 	}
 	
-	updateParameter("Image points 2d", &imagePoints);
-	updateParameter("Object points 3d", &objectPoints); 
+    updateParameterPtr("Image points 2d", &imagePoints);
+    updateParameterPtr("Object points 3d", &objectPoints);
 }
 cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
@@ -149,8 +149,8 @@ void CalibrateCamera::Init(bool firstInit)
 		updateParameter<Parameters::WriteFile>("Save file", Parameters::WriteFile("Camera Matrix.yml"));
 		updateParameter("Enabled", true);
     }
-	updateParameter("Image points 2d", &imagePointCollection, Parameters::Parameter::Output);
-	updateParameter("Object points 3d", &objectPointCollection, Parameters::Parameter::Output);
+    updateParameterPtr("Image points 2d", &imagePointCollection, Parameters::Parameter::Output);
+    updateParameterPtr("Object points 3d", &objectPointCollection, Parameters::Parameter::Output);
 	updateParameter("Camera matrix", K, Parameters::Parameter::State);
 	updateParameter("Distortion matrix", distortionCoeffs, Parameters::Parameter::State);
     lastCalibration = 0;
@@ -257,10 +257,10 @@ void CalibrateStereoPair::Init(bool firstInit)
 		addInputParameter<cv::Mat>("Distortion matrix 1");
 		addInputParameter<cv::Mat>("Distortion matrix 2");
 	}
-	updateParameter("Rotation matrix", &Rot);
-	updateParameter("Translation matrix", &Trans);
-	updateParameter("Essential matrix", &Ess);
-	updateParameter("Fundamental matrix", &Fun);
+    updateParameterPtr("Rotation matrix", &Rot);
+    updateParameterPtr("Translation matrix", &Trans);
+    updateParameterPtr("Essential matrix", &Ess);
+    updateParameterPtr("Fundamental matrix", &Fun);
     lastCalibration = 0;
 }
 void CalibrateStereoPair::clear()

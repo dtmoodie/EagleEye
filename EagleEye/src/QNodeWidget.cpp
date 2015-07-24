@@ -356,12 +356,16 @@ QInputProxy::QInputProxy(std::shared_ptr<Parameters::Parameter> parameter_, Eagl
 	box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 	bc = parameter_->RegisterNotifier(boost::bind(&QInputProxy::updateUi, this, false));
     inputParameter = std::dynamic_pointer_cast<Parameters::InputParameter>(parameter_);
-    updateUi();
+    updateUi(true);
     connect(box, SIGNAL(currentIndexChanged(int)), this, SLOT(on_valueChanged(int)));
+    prevIdx = 0;
 }
 
 void QInputProxy::on_valueChanged(int idx)
 {
+    if(idx == prevIdx)
+        return;
+    prevIdx = idx;
     QString inputName = box->currentText();
     auto tokens = inputName.split(":");
     auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
@@ -381,16 +385,16 @@ QWidget* QInputProxy::getWidget(int num)
 // to the environment, this signal is then caught and used to update all input proxies.
 void QInputProxy::updateUi(bool init)
 {
-    QString currentItem = box->currentText();
-    
-    
-	auto inputs = node->findCompatibleInputs(inputParameter);
-    box->clear();
-    box->addItem("");
-    for(size_t i = 0; i < inputs.size(); ++i)
+    if(init)
     {
-        QString text = QString::fromStdString(inputs[i]);
-        box->addItem(text);
+        auto inputs = node->findCompatibleInputs(inputParameter);
+        box->clear();
+        box->addItem("");
+        for(size_t i = 0; i < inputs.size(); ++i)
+        {
+            QString text = QString::fromStdString(inputs[i]);
+            box->addItem(text);
+        }
     }
 	auto input = inputParameter->GetInput();
 	if (input)
@@ -403,10 +407,7 @@ void QInputProxy::updateUi(bool init)
 				box->setCurrentText(inputName);
 			return;
 		}
-	}
-	
-    if(currentItem.size())
-        box->setCurrentText(currentItem);
+    }
 }
 
 /*template<typename T> bool acceptsType(Loki::TypeInfo& type)

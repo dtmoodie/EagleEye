@@ -32,7 +32,7 @@ class QInputProxy;
 class QInputProxy : public QWidget
 {
 	Q_OBJECT
-
+    int prevIdx;
 	
 public:
 	std::shared_ptr<Parameters::InputParameter> inputParameter;
