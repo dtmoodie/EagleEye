@@ -18,7 +18,7 @@
 		#define SETUP_PROJECT_IMPL void SetupIncludes()	{EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);}
 	#else
 #ifndef EagleLIB_EXPORTS
-		#pragma message( "Neither PROJECT_LIB_DIRS nor PROJECT_INCLUDES defined" )
+        //#pragma message( "Neither PROJECT_LIB_DIRS nor PROJECT_INCLUDES defined" )
 #endif
 		#define SETUP_PROJECT_IMPL void SetupIncludes() {}
 	#endif

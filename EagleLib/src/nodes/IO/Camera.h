@@ -2,6 +2,7 @@
 #include "nodes/Node.h"
 #include "external_includes/cv_videoio.hpp"
 #include <CudaUtils.hpp>
+
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -52,10 +53,18 @@ namespace EagleLib
     class CV_EXPORTS RTSPCamera: public Node
     {
         cv::VideoCapture cam;
-        cv::cuda::HostMem hostBuf;
+        int putItr;
+        int bufferSize;
+        std::vector<cv::cuda::HostMem> hostBuffer;
+        cv::cuda::HostMem* currentNewestFrame;
+        boost::mutex mtx;
+        boost::thread processingThread;
+
         void setString();
+        void readImage_thread();
     public:
         RTSPCamera();
+        ~RTSPCamera();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
         virtual bool SkipEmpty() const;
