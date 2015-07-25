@@ -853,16 +853,36 @@ void Node::log(Verbosity level, const std::string &msg)
     case Profiling:
 
     case Status:
-        std::cout << "[ " << fullTreeName << " - STATUS ]" << msg << std::endl;
+        if(msg == lastStatusMsg &&
+          boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastStatusTime).total_milliseconds() < 1000)
+            break;
+        lastStatusTime = boost::posix_time::microsec_clock::universal_time();
+        lastStatusMsg = msg;
+        std::cout << "[ " << fullTreeName << " - STATUS ] " << msg << std::endl;
         break;
     case Warning:
-        std::cout << "[ " << fullTreeName << " - WARNING ]" << msg << std::endl;
+        if(msg == lastWarningMsg &&
+          boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastWarningTime).total_milliseconds() < 1000)
+            break;
+        lastWarningTime = boost::posix_time::microsec_clock::universal_time();
+        lastWarningMsg = msg;
+        std::cout << "[ " << fullTreeName << " - WARNING ] " << msg << std::endl;
         break;
     case Error:
-        std::cout << "[ " << fullTreeName << " - ERROR ]" << msg << std::endl;
+        if(msg == lastErrorMsg &&
+          boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastErrorTime).total_milliseconds() < 1000)
+            break;
+        lastErrorTime = boost::posix_time::microsec_clock::universal_time();
+        lastErrorMsg = msg;
+        std::cout << "[ " << fullTreeName << " - ERROR ] " << msg << std::endl;
         break;
     case Critical:
-        std::cout << "[ " << fullTreeName << " - CRITICAL ]" << msg << std::endl;
+        if(msg == lastCriticalMsg &&
+          boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastCriticalTime).total_milliseconds() < 1000)
+            break;
+        lastCriticalTime = boost::posix_time::microsec_clock::universal_time();
+        lastCriticalMsg = msg;
+        std::cout << "[ " << fullTreeName << " - CRITICAL ] " << msg << std::endl;
         break;
     }
 }

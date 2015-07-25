@@ -755,6 +755,14 @@ namespace EagleLib
 		
 		boost::signals2::connection											resetConnection;
 		std::vector<boost::signals2::connection>							callbackConnections;
+        boost::posix_time::ptime lastStatusTime;
+        boost::posix_time::ptime lastWarningTime;
+        boost::posix_time::ptime lastErrorTime;
+        boost::posix_time::ptime lastCriticalTime;
+        std::string lastStatusMsg;
+        std::string lastWarningMsg;
+        std::string lastErrorMsg;
+        std::string lastCriticalMsg;
     };
 
 }

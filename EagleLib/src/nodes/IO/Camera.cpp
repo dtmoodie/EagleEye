@@ -265,6 +265,7 @@ RTSPCamera::~RTSPCamera()
 
 void RTSPCamera::setString()
 {
+    log(Status, "Setting up RTSP Camera");
     std::stringstream str;
     SourceType src = (SourceType)getParameter<Parameters::EnumParameter>(0)->Data()->getValue();
     VideoType encoding = (VideoType)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
