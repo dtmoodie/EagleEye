@@ -533,6 +533,7 @@ namespace EagleLib
 				return registerParameter<T>(name, data, type_, toolTip_, ownsData_);
 			}
 			param->UpdateData(data);
+            return true;
 			
 		}
 

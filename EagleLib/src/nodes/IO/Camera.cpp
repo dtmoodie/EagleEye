@@ -250,11 +250,16 @@ void RTSPCamera::readImage_thread()
     while(!boost::this_thread::interruption_requested())
     if(cam.isOpened())
     {
+        try
+        {
+            cam.read(hostBuffer[putItr % bufferSize]);
+            boost::mutex::scoped_lock lock(mtx);
+            currentNewestFrame = &hostBuffer[putItr % bufferSize];
+            ++putItr;
+        }catch(...)
+        {
 
-        cam.read(hostBuffer[putItr % bufferSize]);
-        boost::mutex::scoped_lock lock(mtx);
-        currentNewestFrame = &hostBuffer[putItr % bufferSize];
-        ++putItr;
+        }
     }
 }
 RTSPCamera::~RTSPCamera()
@@ -265,12 +270,13 @@ RTSPCamera::~RTSPCamera()
 
 void RTSPCamera::setString()
 {
+    processingThread.interrupt();
     log(Status, "Setting up RTSP Camera");
     std::stringstream str;
     SourceType src = (SourceType)getParameter<Parameters::EnumParameter>(0)->Data()->getValue();
     VideoType encoding = (VideoType)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
     std::string result;
-    processingThread.interrupt();
+
     if(src == rtspsrc)
     {
         if(encoding == h264)

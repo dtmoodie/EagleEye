@@ -208,6 +208,7 @@ void NodeManager::addIncludeDir(const std::string& dir)
 {
     m_pRuntimeObjectSystem->AddIncludeDir(dir.c_str());
 
+
 }
 void NodeManager::addIncludeDirs(const std::string& dirs)
 {
@@ -222,6 +223,28 @@ void NodeManager::addLinkDir(const std::string& dir)
 {
 	m_pRuntimeObjectSystem->AddLibraryDir(dir.c_str());
 }
+std::vector<std::string> NodeManager::getLinkDirs()
+{
+    std::vector<std::string> output;
+    auto inc = m_pRuntimeObjectSystem->GetLinkDirList(0);
+    for(int i = 0; i < inc.size(); ++i)
+    {
+        output.push_back(inc[i].m_string);
+    }
+    return output;
+}
+
+std::vector<std::string> NodeManager::getIncludeDirs()
+{
+    std::vector<std::string> output;
+    auto inc = m_pRuntimeObjectSystem->GetIncludeDirList(0);
+    for(int i = 0; i < inc.size(); ++i)
+    {
+        output.push_back(inc[i].m_string);
+    }
+    return output;
+}
+
 void NodeManager::addLinkDirs(const std::string& dirs)
 {
 	boost::char_separator<char> sep("+");
@@ -265,26 +288,6 @@ NodeManager::Init()
 	includePath += "/include";
 #endif
     m_pRuntimeObjectSystem->AddIncludeDir(includePath.c_str());
-	/*m_pRuntimeObjectSystem->AddIncludeDir(BOOST_INCLUDES);
-	m_pRuntimeObjectSystem->AddIncludeDir(OPENCV_INCLUDES);
-    m_pRuntimeObjectSystem->AddIncludeDir(CUDA_INCLUDES);
-
-	m_pRuntimeObjectSystem->AddLibraryDir(BOOST_LIB_DIR);
-	m_pRuntimeObjectSystem->AddLibraryDir(OPENCV_LIB_DIR);
-    m_pRuntimeObjectSystem->AddLibraryDir(CUDA_LIB_DIR);
-#ifdef BINARY_DIR
-	m_pRuntimeObjectSystem->AddLibraryDir(BINARY_DIR);
-#endif
-#ifdef HAVE_PCL
-    //m_pRuntimeObjectSystem->AddLibraryDir(PCL_LIB_DIR);
-    m_pRuntimeObjectSystem->AddIncludeDir(PCL_INCLUDES);
-#endif*/
-//#ifdef _MSC_VER
-//	m_pRuntimeObjectSystem->SetCompilerLocation("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v7.0/bin/nvcc.exe");
-//	m_pRuntimeObjectSystem->SetAdditionalCompileOptions("-ccbin \"C:/Program Files(x86)/Microsoft Visual Studio 12.0/VC/bin\"");
-//#else
-//    m_pRuntimeObjectSystem->SetCompilerLocation("/usr/local/cuda/bin/nvcc");
-//#endif
 #ifdef NVCC_PATH
 	m_pRuntimeObjectSystem->SetCompilerLocation( NVCC_PATH );
 #endif

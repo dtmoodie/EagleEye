@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     sigaction(SIGINT, &sigIntHandler, NULL);
 	*/
 
-    EagleLib::NodeManager& manager = EagleLib::NodeManager::getInstance();
+
 
     boost::program_options::options_description desc("Allowed options");
 

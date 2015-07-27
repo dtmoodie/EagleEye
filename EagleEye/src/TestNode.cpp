@@ -20,10 +20,7 @@ namespace EagleLib
         void Init(bool firstInit)
         {
             Node::Init(firstInit);
-            typedef std::vector<std::pair<int,double>> vec_ID;
-            typedef std::vector<std::pair<double,double>> vec_DD;
-            typedef std::vector<std::pair<double,int>> vec_DI;
-            typedef std::vector<std::pair<int, int>> vec_II;
+
             updateParameter<int>("int",0);
             updateParameter<short>("short",0);
             //updateParameter<char>("char",0);

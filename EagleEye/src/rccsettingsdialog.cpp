@@ -19,6 +19,17 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
     ui->comboBox->addItem(RCppOptimizationLevelStrings[3]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[4]);
     ui->comboBox->setCurrentIndex(EagleLib::NodeManager::getInstance().getOptimizationLevel());
+    auto inc = EagleLib::NodeManager::getInstance().getIncludeDirs();
+    auto lib = EagleLib::NodeManager::getInstance().getLinkDirs();
+    for(auto dir: inc)
+    {
+        ui->incDirs->appendPlainText(QString::fromStdString(dir));
+    }
+    for(auto dir: lib)
+    {
+        ui->linkDirs->appendPlainText(QString::fromStdString(dir));
+    }
+
 }
 
 RCCSettingsDialog::~RCCSettingsDialog()
@@ -44,4 +55,9 @@ void RCCSettingsDialog::on_comboBox_currentIndexChanged(int index)
 void RCCSettingsDialog::on_btnAddIncludeDir_clicked()
 {
     EagleLib::NodeManager::getInstance().addIncludeDir(ui->includeDir->text().toStdString());
+}
+
+void RCCSettingsDialog::on_btnAddLinkDir_clicked()
+{
+    EagleLib::NodeManager::getInstance().addLinkDir(ui->linkDir->text().toStdString());
 }

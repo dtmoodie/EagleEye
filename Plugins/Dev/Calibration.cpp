@@ -185,10 +185,13 @@ void callibrateCameraThread(std::vector<cv::Mat>& imagePointCollection, std::vec
 cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
 	auto imagePoints = getParameter<ImagePoints>(3)->Data();
-	auto objPoints = getParameter<ObjectPoints>(4)->Data();
-    bool found = false;
+    auto objPoints = getParameter<ObjectPoints>(4)->Data();
 	if (imagePoints == nullptr || objPoints == nullptr)
+    {
+        log(Warning, "Image points or object points not defined");
 		return img;
+    }
+
 	if (imagePoints->size() == objPoints->size())
 	{
 		imgSize = img.size(); 
@@ -210,6 +213,7 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 		TIME
 		if (minDist > *getParameter<float>("Min pixel distance")->Data())
 		{
+            log(Status, "Adding frame to collection");
 			imagePointCollection.push_back(*imagePoints);
 			objectPointCollection.push_back(*objPoints);
 			imagePointCentroids.push_back(centroid);
@@ -219,13 +223,16 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 				TIME
 					calibrate();
 				TIME
-			}
+            }
 			else
 			{
 				log(Status, "Waiting for more images before calibration");
 			}
 		}
-	}
+    }else
+    {
+        log(Warning, "# image points doesn't match # object points");
+    }
     return img;
 }
 void CalibrateCamera::calibrate()
@@ -257,6 +264,9 @@ void CalibrateStereoPair::Init(bool firstInit)
 		addInputParameter<cv::Mat>("Distortion matrix 1");
 		addInputParameter<cv::Mat>("Distortion matrix 2");
 	}
+    //updateParameter<Parameters::WriteFile>("Save file", Parameters::WriteFile("Stereo_calibration.yml"));
+    //RegisterParameterCallback("Save file", boost::bind(&CalibrateStereoPair::save, this));
+    updateParameter<boost::function<void(void)>>("Save calibration", boost::bind(&CalibrateStereoPair::save, this));
     updateParameterPtr("Rotation matrix", &Rot);
     updateParameterPtr("Translation matrix", &Trans);
     updateParameterPtr("Essential matrix", &Ess);
@@ -267,6 +277,37 @@ void CalibrateStereoPair::clear()
 {
 
 }
+void CalibrateStereoPair::save()
+{
+    auto K1_ = getParameter<cv::Mat>("Camera 1 Matrix")->Data();
+    auto K2_ = getParameter<cv::Mat>("Camera 2 matrix")->Data();
+    auto d1_ = getParameter<cv::Mat>("Distortion matrix 1")->Data();
+    auto d2_ = getParameter<cv::Mat>("Distortion matrix 2")->Data();
+
+    if (K1_ == nullptr)
+        K1_ = &K1;
+    if (K2_ == nullptr)
+        K2_ = &K2;
+    if (d1_ == nullptr)
+        d1_ = &dist1;
+    if (d2_ == nullptr)
+        d2_ = &dist2;
+    //Parameters::WriteFile* saveFile = getParameter<Parameters::WriteFile>("Save file")->Data();
+    cv::FileStorage fs("StereoCalibration.yml", cv::FileStorage::WRITE);
+    fs << "K1" << *K1_;
+    fs << "D1" << *d1_;
+    fs << "K2" << *K2_;
+    fs << "D2" << *d2_;
+    fs << "Rotation" << Rot;
+    fs << "Translation" << Trans;
+    fs << "Essential" << Ess;
+    fs << "Fundamental" << Fun;
+    fs << "R1" << R1;
+    fs << "R2" << R2;
+    fs << "P1" << P1;
+    fs << "P2" << P2;
+    fs << "Q" << Q;
+}
 
 cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
@@ -275,14 +316,20 @@ cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda:
 	auto objPts = getParameter<ObjectPoints>("Object points 3d")->Data();
 
 	if (!pts1 || !pts2 || !objPts)
+    {
+        log(Warning, "Image points or object points not selected");
 		return img;
+    }
 	if (pts1->size() != pts2->size() || pts1->size() != objPts->size() || objPts->empty())
+    {
+        log(Warning, "Image points not found or not equal to object point size");
 		return img;
+    }
 	
 	imagePointCollection1.push_back(*pts1);
 	imagePointCollection2.push_back(*pts2);
 	objectPointCollection.push_back(*objPts);
-
+    log(Status, "Image pairs: " + boost::lexical_cast<std::string>(imagePointCollection1.size()));
 
 	auto K1_ = getParameter<cv::Mat>("Camera 1 Matrix")->Data();
 	auto K2_ = getParameter<cv::Mat>("Camera 2 matrix")->Data();
@@ -296,16 +343,21 @@ cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda:
 	if (d1_ == nullptr)
 		d1_ = &dist1;
 	if (d2_ == nullptr)
-		d2_ = &dist2;
+        d2_ = &dist2;
 
 
-	if (imagePointCollection1.size() > lastCalibration + 10 && 
+    if (imagePointCollection1.size() > lastCalibration + 20 &&
 		imagePointCollection2.size() == imagePointCollection1.size() && 
 		imagePointCollection1.size() == objectPointCollection.size())
 	{
+        log(Status, "Running calibration with " + boost::lexical_cast<std::string>(objectPointCollection.size()) + " image pairs");
 		double reprojError = cv::stereoCalibrate(objectPointCollection, imagePointCollection1, imagePointCollection2, *K1_, *d1_, *K2_, *d2_, img.size(), Rot, Trans, Ess, Fun);
+
+        cv::stereoRectify(*K1_, *d1_, *K2_, *d2_, img.size(), Rot,Trans, R1,R2, P1, P2, Q);
+        log(Status, "Calibration complete");
 		lastCalibration = imagePointCollection1.size();
 		updateParameter("Reprojection error", reprojError);
+        save();
 	}
 
     return img;

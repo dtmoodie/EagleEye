@@ -164,6 +164,8 @@ namespace EagleLib
 		void addIncludeDirs(const std::string& dirs);
 		void addLinkDir(const std::string& dir);
 		void addLinkDirs(const std::string& dirs);
+        std::vector<std::string> getLinkDirs();
+        std::vector<std::string> getIncludeDirs();
 
 
 	private:

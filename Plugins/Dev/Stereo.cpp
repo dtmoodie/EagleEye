@@ -92,8 +92,18 @@ cv::cuda::GpuMat StereoConstantSpaceBP::doProcess(cv::cuda::GpuMat &img, cv::cud
 {
     return img;
 }
+void UndistortStereo::Init(bool firstInit)
+{
+
+}
+
+cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+    return img;
+}
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBM)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBilateralFilter)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBeliefPropagation)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoConstantSpaceBP)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(UndistortStereo)

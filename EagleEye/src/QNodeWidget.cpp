@@ -152,7 +152,6 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
         ui->nodeName->setToolTip(QString::fromStdString(node->fullTreeName));
         ui->nodeName->setMaximumWidth(200);
         ui->gridLayout->setSpacing(0);
-		int row = 5;
 		
         for (size_t i = 0; i < node->parameters.size(); ++i)
 		{
