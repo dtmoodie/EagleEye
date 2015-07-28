@@ -372,8 +372,10 @@ void QInputProxy::on_valueChanged(int idx)
         return;
     auto param = sourceNode->getParameter(tokens[1].toStdString());
     if(param)
-		inputParameter->SetInput(param);
-
+    {
+        inputParameter->SetInput(param);
+        std::dynamic_pointer_cast<Parameters::Parameter>(param)->changed = true;
+    }
 }
 QWidget* QInputProxy::getWidget(int num)
 {

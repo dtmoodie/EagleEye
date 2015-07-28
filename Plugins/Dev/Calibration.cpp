@@ -370,6 +370,19 @@ cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda:
 void ReadStereoCalibration::Init(bool firstInit)
 {
     updateParameter("Calibration file", Parameters::ReadFile("StereoCalibration.yml"));
+    updateParameter("K1", K1);
+    updateParameter("K2", K2);
+    updateParameter("dist1", dist1);
+    updateParameter("dist2", dist2);
+    updateParameter("Rotation", Rot);
+    updateParameter("Translation", Trans);
+    updateParameter("Essential", Ess);
+    updateParameter("Fundamental", Fun);
+    updateParameter("R1", R1);
+    updateParameter("R2", R2);
+    updateParameter("P1", P1);
+    updateParameter("P2", P2);
+    updateParameter("Q", Q);
 }
 
 cv::cuda::GpuMat ReadStereoCalibration::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
@@ -401,7 +414,7 @@ cv::cuda::GpuMat ReadStereoCalibration::doProcess(cv::cuda::GpuMat &img, cv::cud
         updateParameter("Fundamental", Fun);
         updateParameter("R1", R1);
         updateParameter("R2", R2);
-        updateParameter("P2", P1);
+        updateParameter("P1", P1);
         updateParameter("P2", P2);
         updateParameter("Q", Q);
     }
@@ -411,6 +424,8 @@ cv::cuda::GpuMat ReadStereoCalibration::doProcess(cv::cuda::GpuMat &img, cv::cud
 void ReadCameraCalibration::Init(bool firstInit)
 {
     updateParameter("Calibration file", Parameters::ReadFile("CameraCalibration.yml"));
+    updateParameter("Camera Matrix", K);
+    updateParameter("Distortion Matrix", dist);
 }
 
 cv::cuda::GpuMat ReadCameraCalibration::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)

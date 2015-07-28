@@ -112,15 +112,20 @@ cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         cv::Mat* D = getParameter<cv::Mat>(1)->Data();
         cv::Mat* R = getParameter<cv::Mat>(2)->Data();
         cv::Mat* P = getParameter<cv::Mat>(3)->Data();
-        cv::cuda::HostMem X, Y;
-        if(K && D && R && P)
+
+        if(K && D && R && P && !K->empty() && !D->empty() && !P->empty() && !R->empty())
         {
             cv::initUndistortRectifyMap(*K,*D, *R, *P, img.size(), CV_32FC1, X, Y);
             mapX.upload(X, stream);
             mapY.upload(Y,stream);
+            log(Status, "Undistortion maps calculated");
+            parameters[0]->changed = false;
+            parameters[1]->changed = false;
+            parameters[2]->changed = false;
+            parameters[3]->changed = false;
         }
     }
-    if(!mapX.empty() && ! mapY.empty())
+    if(!mapX.empty() && !mapY.empty())
     {
         cv::cuda::remap(img,img,mapX,mapY, CV_INTER_CUBIC, cv::BORDER_REPLICATE, cv::Scalar(), stream);
     }

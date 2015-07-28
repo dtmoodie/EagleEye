@@ -38,6 +38,7 @@ namespace EagleLib
     class UndistortStereo: public Node
     {
         cv::cuda::GpuMat mapY, mapX;
+        cv::cuda::HostMem X, Y;
 
     public:
         UndistortStereo();
