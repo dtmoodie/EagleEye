@@ -242,7 +242,11 @@ void CalibrateCamera::calibrate()
     std::vector<cv::Mat> tvecs;
     double quality = cv::calibrateCamera(objectPointCollection, imagePointCollection,
                         imgSize, K, distortionCoeffs,rvecs,tvecs);
-
+    if(quality < 1)
+    {
+        log(Status, "Sufficient calibration achieved, turning off calibration routine");
+        enabled = false;
+    }
 	updateParameter("Camera matrix", K, Parameters::Parameter::State);
     updateParameter("Distortion matrix", distortionCoeffs, Parameters::Parameter::State);
 	updateParameter("Reprojection error", quality, Parameters::Parameter::State);
@@ -363,7 +367,71 @@ cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda:
     return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateCamera);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateStereoPair);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FindCheckerboard);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(LoadCameraCalibration);
+void ReadStereoCalibration::Init(bool firstInit)
+{
+    updateParameter("Calibration file", Parameters::ReadFile("StereoCalibration.yml"));
+}
+
+cv::cuda::GpuMat ReadStereoCalibration::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+    if(parameters[0]->changed)
+    {
+        std::string path = getParameter<Parameters::ReadFile>(0)->Data()->string();
+        cv::FileStorage fs(path, cv::FileStorage::READ);
+        fs["K1"] >> K1;
+        fs["K2"] >> K2;
+        fs["D1"] >> dist1;
+        fs["D2"] >> dist2;
+        fs["Rotation"] >> Rot;
+        fs["Translation"] >> Trans;
+        fs["Essential"] >> Ess;
+        fs["Fundamental"] >> Fun;
+        fs["R1"] >> R1;
+        fs["R2"] >> R2;
+        fs["P1"] >> P1;
+        fs["P2"] >> P2;
+        fs["Q"] >> Q;
+        updateParameter("K1", K1);
+        updateParameter("K2", K2);
+        updateParameter("dist1", dist1);
+        updateParameter("dist2", dist2);
+        updateParameter("Rotation", Rot);
+        updateParameter("Translation", Trans);
+        updateParameter("Essential", Ess);
+        updateParameter("Fundamental", Fun);
+        updateParameter("R1", R1);
+        updateParameter("R2", R2);
+        updateParameter("P2", P1);
+        updateParameter("P2", P2);
+        updateParameter("Q", Q);
+    }
+    return img;
+}
+
+void ReadCameraCalibration::Init(bool firstInit)
+{
+    updateParameter("Calibration file", Parameters::ReadFile("CameraCalibration.yml"));
+}
+
+cv::cuda::GpuMat ReadCameraCalibration::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+    if(parameters[0]->changed)
+    {
+        std::string path = getParameter<Parameters::ReadFile>(0)->Data()->string();
+        cv::FileStorage fs(path, cv::FileStorage::READ);
+        fs["Camera Matrix"] >> K;
+        fs["Distortion Matrix"] >> dist;
+
+        updateParameter("Camera Matrix", K);
+        updateParameter("Distortion Matrix", dist);
+
+    }
+    return img;
+}
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateCamera)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateStereoPair)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FindCheckerboard)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(LoadCameraCalibration)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ReadStereoCalibration)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ReadCameraCalibration)

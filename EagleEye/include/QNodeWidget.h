@@ -112,7 +112,7 @@ public:
     virtual QWidget* getWidget(int num = 0) = 0;
     virtual int getNumWidgets(){return 1;}
     virtual QWidget* getTypename()
-    {        return new QLabel(QString::fromStdString(TypeInfo::demangle(parameter->GetTypeInfo().name())));    }
+    {        return new QLabel(QString::fromStdString(parameter->GetTypeInfo().name()));    }
 	boost::shared_ptr<Parameters::Parameter> parameter;
 };
 IQNodeProxy* dispatchParameter(IQNodeInterop* parent, Parameters::Parameter::Ptr parameter, EagleLib::Node::Ptr node);

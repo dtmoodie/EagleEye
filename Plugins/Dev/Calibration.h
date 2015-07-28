@@ -83,4 +83,21 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+    class ReadStereoCalibration: public Node
+    {
+        cv::Mat K1, K2, dist1, dist2, Rot, Trans, Ess, Fun;
+        cv::Mat R1, R2, P1, P2, Q;
+    public:
+        ReadStereoCalibration();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
+    class ReadCameraCalibration: public Node
+    {
+        cv::Mat K, dist;
+    public:
+        ReadCameraCalibration();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
 }

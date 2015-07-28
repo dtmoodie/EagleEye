@@ -98,6 +98,7 @@ MainWindow::MainWindow(QWidget *parent) :
     Parameters::TypedParameter<Parameters::WriteFile>("Instantiation");
     Parameters::TypedParameter<Parameters::ReadDirectory>("Instantiation");
     Parameters::TypedParameter<Parameters::ReadFile>("Instantiation");
+    Parameters::TypedParameter<Parameters::EnumParameter>("Instantiation");
 
     EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);

@@ -31,7 +31,7 @@ IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget*
     connect(this, SIGNAL(updateNeeded()), this, SLOT(updateUi()), Qt::QueuedConnection);
 	bc = parameter->RegisterNotifier(boost::bind(&IQNodeInterop::onParameterUpdate, this));
 
-	QLabel* typeElement = new QLabel(QString::fromStdString(TypeInfo::demangle(parameter_->GetTypeInfo().name())));
+    QLabel* typeElement = new QLabel(QString::fromStdString(parameter_->GetTypeInfo().name()));
 
     typeElement->installEventFilter(parent);
     parent->addParameterWidgetMap(typeElement, parameter_);

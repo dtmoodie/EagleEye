@@ -1,7 +1,32 @@
 #pragma once
 #include "nodes/Node.h"
+#include <gst/gst.h>
+#include <gst/gstelement.h>
+#include <gst/gstelementfactory.h>
+#include <gst/gstutils.h>
+#include <gst/gstpipeline.h>
+#include <gst/app/gstappsrc.h>
 
 
+
+
+namespace EagleLib
+{
+    class RTSP_server: public Node
+    {
+        GstElement* source_OpenCV;
+        GstElement *pipeline;
+        GstElement *converter_FFMpegColorSpace;
+        GstElement *converter_VP8_Encoder;
+        GstElement *muxer_WebM;
+        GstElement *sink_TCPServer;
+    public:
+        void setup();
+        RTSP_server();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
+}
 /*
 References
 https://www.youtube.com/watch?v=7Xdry76ek5E

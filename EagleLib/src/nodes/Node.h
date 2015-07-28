@@ -48,7 +48,7 @@
 #include <map>
 #include <type_traits>
 #include "type.h" // for demangle on linux
-#include "../LokiTypeInfo.h"
+#include "LokiTypeInfo.h"
 #include <boost/thread.hpp>
 #include <Qualifiers.hpp>
 #include <Parameters.hpp>
@@ -597,7 +597,7 @@ namespace EagleLib
 			auto typedParam = std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(param);
             if(typedParam == nullptr)
                 throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
-                    TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + TypeInfo::demangle(param->GetTypeInfo().name()), __FUNCTION__, __FILE__, __LINE__);
+                    TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + param->GetTypeInfo().name(), __FUNCTION__, __FILE__, __LINE__);
 			
             return typedParam;
 		}
@@ -611,7 +611,7 @@ namespace EagleLib
             auto typedParam = std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(param);
             if(typedParam == nullptr)
                 throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
-                    TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + TypeInfo::demangle(param->GetTypeInfo().name()), __FUNCTION__, __FILE__, __LINE__);
+                    TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + param->GetTypeInfo().name(), __FUNCTION__, __FILE__, __LINE__);
             return typedParam;
 		}
 

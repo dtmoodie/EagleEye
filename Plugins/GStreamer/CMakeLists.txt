@@ -1,20 +1,45 @@
+IF(NOT WIN32)
+
 PROJECT(Gstreamer)
 SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 include(CMake)
 
-FIND_PACKAGE(GStreamer_0_10 QUIET)
-
-
+FIND_PACKAGE(Gstreamer)
+FIND_PACKAGE(PkgConfig)
+pkg_check_modules(GLIB2 glib-2.0)
 
 FILE(GLOB_RECURSE src "src/*.cpp")
 FILE(GLOB_RECURSE hdr "src/*.hpp")
 
 INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
 LINK_DIRECTORIES(${LINK_DIRS})
+INCLUDE_DIRECTORIES(${GSTREAMER_gst_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${GSTREAMER_gstconfig_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${Glib_INCLUDE_DIR})
+INCLUDE_DIRECTORIES("/usr/lib/x86_64-linux-gnu/glib-2.0/include")
 
 
 ADD_LIBRARY(Gstreamer SHARED ${src} ${hdr})
-TARGET_LINK_LIBRARIES(Gstreamer EagleLib ${LINK_LIBS})
+TARGET_LINK_LIBRARIES(Gstreamer
+    EagleLib
+    ${LINK_LIBS}
+    ${GSTREAMER_gstapp_LIBRARY}
+    ${GSTREAMER_gstaudio_LIBRARY}
+    ${GSTREAMER_gstbase_LIBRARY}
+    ${GSTREAMER_gstcontroller_LIBRARY}
+    ${GSTREAMER_gstnet_LIBRARY}
+    ${GSTREAMER_gstpbutils_LIBRARY}
+    ${GSTREAMER_gstreamer_LIBRARY}
+    ${GSTREAMER_gstriff_LIBRARY}
+    ${GSTREAMER_gstrtp_LIBRARY}
+    ${GSTREAMER_gstrtsp_LIBRARY}
+    ${GSTREAMER_gstsdp_LIBRARY}
+    ${GSTREAMER_gsttag_LIBRARY}
+    ${GSTREAMER_gstvideo_LIBRARY}
+    ${Glib_LIBRARY}
+
+)
 ADD_DEPENDENCIES(Gstreamer EagleLib)
 
 
+ENDIF(NOT WIN32)

@@ -105,7 +105,7 @@ void PlotWizardDialog::plotParameter(Parameters::Parameter::Ptr param)
 {
     this->show();
     ui->tabWidget->setCurrentIndex(0);
-	ui->inputDataType->setText(QString::fromStdString(TypeInfo::demangle(param->GetTypeInfo().name())));
+    ui->inputDataType->setText(QString::fromStdString(param->GetTypeInfo().name()));
     for(int i = 0; i < previewPlotters.size(); ++i)
     {
         if(previewPlotters[i]->acceptsType(param))

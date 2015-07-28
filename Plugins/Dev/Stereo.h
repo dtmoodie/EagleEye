@@ -37,6 +37,8 @@ namespace EagleLib
     };
     class UndistortStereo: public Node
     {
+        cv::cuda::GpuMat mapY, mapX;
+
     public:
         UndistortStereo();
         virtual void Init(bool firstInit);

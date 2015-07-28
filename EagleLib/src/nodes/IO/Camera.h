@@ -52,10 +52,12 @@ namespace EagleLib
 
     class CV_EXPORTS RTSPCamera: public Node
     {
+        cv::cuda::GpuMat output;
         cv::VideoCapture cam;
         int putItr;
         int bufferSize;
         std::vector<cv::cuda::HostMem> hostBuffer;
+        concurrent_notifier<cv::cuda::HostMem*> notifier;
         cv::cuda::HostMem* currentNewestFrame;
         boost::mutex mtx;
         boost::thread processingThread;

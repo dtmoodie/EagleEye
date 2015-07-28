@@ -224,6 +224,7 @@ void RTSPCamera::Init(bool firstInit)
     currentNewestFrame = nullptr;
     hostBuffer.resize(5);
     bufferSize = 5;
+    putItr = 0;
     if(firstInit)
     {
 		Parameters::EnumParameter param;
@@ -239,6 +240,7 @@ void RTSPCamera::Init(bool firstInit)
         updateParameter<std::string>("Password", "12369pp");
         updateParameter<unsigned short>("Width", 1920);
         updateParameter<unsigned short>("Height", 1080);
+        updateParameter("Output", cv::cuda::GpuMat(), Parameters::Parameter::Output);
 
 
         //setString();
@@ -254,8 +256,10 @@ void RTSPCamera::readImage_thread()
         {
             cam.read(hostBuffer[putItr % bufferSize]);
             boost::mutex::scoped_lock lock(mtx);
-            currentNewestFrame = &hostBuffer[putItr % bufferSize];
+            notifier.push(&hostBuffer[putItr % bufferSize]);
             ++putItr;
+            if(putItr == 1000)
+                putItr = 0;
         }catch(...)
         {
 
@@ -350,17 +354,15 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
     {
         setString();
     }
-    if(currentNewestFrame)
+    cv::cuda::HostMem* data;
+    notifier.wait_and_pop(data);
+    if(data && !data->empty())
     {
-        boost::mutex::scoped_lock lock(mtx);
-        img.upload(*currentNewestFrame, stream);
-    }else
-    {
-        log(Warning, "Camera not opened");
+        output.upload(*data, stream);
+        updateParameter("Output", output, Parameters::Parameter::Output);
+        return output;
     }
-    updateParameter("Output", img, Parameters::Parameter::Output);
     return img;
-
 }
 
 bool RTSPCamera::SkipEmpty() const

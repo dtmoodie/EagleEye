@@ -1,5 +1,6 @@
 #include "Stereo.h"
-
+#include "external_includes/cv_imgproc.hpp"
+#include "external_includes/cv_cudawarping.hpp"
 
 #if _WIN32
     #if _DEBUG
@@ -94,11 +95,35 @@ cv::cuda::GpuMat StereoConstantSpaceBP::doProcess(cv::cuda::GpuMat &img, cv::cud
 }
 void UndistortStereo::Init(bool firstInit)
 {
-
+    if(firstInit)
+    {
+        addInputParameter<cv::Mat>("Camera Matrix");
+        addInputParameter<cv::Mat>("Distortion Matrix");
+        addInputParameter<cv::Mat>("Rotation Matrix");
+        addInputParameter<cv::Mat>("Projection Matrix");
+    }
 }
 
 cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
+    if(parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed)
+    {
+        cv::Mat* K = getParameter<cv::Mat>(0)->Data();
+        cv::Mat* D = getParameter<cv::Mat>(1)->Data();
+        cv::Mat* R = getParameter<cv::Mat>(2)->Data();
+        cv::Mat* P = getParameter<cv::Mat>(3)->Data();
+        cv::cuda::HostMem X, Y;
+        if(K && D && R && P)
+        {
+            cv::initUndistortRectifyMap(*K,*D, *R, *P, img.size(), CV_32FC1, X, Y);
+            mapX.upload(X, stream);
+            mapY.upload(Y,stream);
+        }
+    }
+    if(!mapX.empty() && ! mapY.empty())
+    {
+        cv::cuda::remap(img,img,mapX,mapY, CV_INTER_CUBIC, cv::BORDER_REPLICATE, cv::Scalar(), stream);
+    }
     return img;
 }
 
