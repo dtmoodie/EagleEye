@@ -64,6 +64,12 @@ namespace EagleLib
                     case CV_8U:
                         items.push_back(new QTableWidgetItem(QString::number(mat->at<uchar>(i,j))));
                         break;
+					case CV_16U:
+						items.push_back(new QTableWidgetItem(QString::number(mat->at<ushort>(i, j))));
+						break;
+					case CV_16S:
+						items.push_back(new QTableWidgetItem(QString::number(mat->at<short>(i, j))));
+						break;
                     case CV_32F:
                         items.push_back(new QTableWidgetItem(QString::number(mat->at<float>(i,j))));
                         break;
@@ -73,12 +79,14 @@ namespace EagleLib
                     case CV_32S:
                         items.push_back(new QTableWidgetItem(QString::number(mat->at<int>(i,j))));
                         break;
+					default: break;
                     }
                 }
             }
             for(QTableWidget* widget: plots)
             {
                 int count = 0;
+				widget->clearContents();
                 for(int i = 0; i < mat->rows; ++i)
                 {
                     for(int j = 0; j < mat->cols; ++j, ++count)

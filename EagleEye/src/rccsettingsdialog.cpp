@@ -19,19 +19,24 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
     ui->comboBox->addItem(RCppOptimizationLevelStrings[3]);
     //ui->comboBox->addItem(RCppOptimizationLevelStrings[4]);
     ui->comboBox->setCurrentIndex(EagleLib::NodeManager::getInstance().getOptimizationLevel());
-    auto inc = EagleLib::NodeManager::getInstance().getIncludeDirs();
-    auto lib = EagleLib::NodeManager::getInstance().getLinkDirs();
-    for(auto dir: inc)
-    {
-        if(dir.size())
-            ui->incDirs->appendPlainText(QString::fromStdString(dir));
-    }
-    for(auto dir: lib)
-    {
-        if(dir.size())
-            ui->linkDirs->appendPlainText(QString::fromStdString(dir));
-    }
-
+	updateDisplay();
+}
+void RCCSettingsDialog::updateDisplay()
+{
+	ui->incDirs->setPlainText("");
+	ui->linkDirs->setPlainText("");
+	auto inc = EagleLib::NodeManager::getInstance().getIncludeDirs();
+	auto lib = EagleLib::NodeManager::getInstance().getLinkDirs();
+	for (auto dir : inc)
+	{
+		if (dir.size())
+			ui->incDirs->appendPlainText(QString::fromStdString(dir));
+	}
+	for (auto dir : lib)
+	{
+		if (dir.size())
+			ui->linkDirs->appendPlainText(QString::fromStdString(dir));
+	}
 }
 
 RCCSettingsDialog::~RCCSettingsDialog()
@@ -56,10 +61,28 @@ void RCCSettingsDialog::on_comboBox_currentIndexChanged(int index)
 }
 void RCCSettingsDialog::on_btnAddIncludeDir_clicked()
 {
-    EagleLib::NodeManager::getInstance().addIncludeDir(ui->includeDir->text().toStdString());
+	QString dir = ui->includeDir->text();
+	if (dir.size() == 0)
+	{
+		dir = QFileDialog::getExistingDirectory(this, "Select include directory");
+	}
+	if (dir.size() == 0)
+		return;
+	EagleLib::NodeManager::getInstance().addIncludeDir(dir.toStdString());
+	ui->includeDir->clear();
+	updateDisplay();
 }
 
 void RCCSettingsDialog::on_btnAddLinkDir_clicked()
 {
-    EagleLib::NodeManager::getInstance().addLinkDir(ui->linkDir->text().toStdString());
+	QString dir = ui->linkDir->text();
+	if (dir.size() == 0)
+	{
+		dir = QFileDialog::getExistingDirectory(this, "Select link directory");
+	}
+	if (dir.size() == 0)
+		return;
+	EagleLib::NodeManager::getInstance().addLinkDir(dir.toStdString());
+	ui->linkDir->clear();
+	updateDisplay();
 }

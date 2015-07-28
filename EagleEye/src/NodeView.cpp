@@ -182,6 +182,9 @@ void NodeView::mousePressEvent(QMouseEvent* event)
             {
                 if(event->button() == Qt::RightButton)
                 {
+					actions[1]->setEnabled(false);
+					actions[2]->setEnabled(false);			
+					rightClickMenu->popup(mapToGlobal(event->pos()));
                     QGraphicsView::mousePressEvent(event);
 
                 }

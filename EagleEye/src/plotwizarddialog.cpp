@@ -104,16 +104,19 @@ void PlotWizardDialog::handleUpdate(int idx)
 void PlotWizardDialog::plotParameter(Parameters::Parameter::Ptr param)
 {
     this->show();
-    ui->tabWidget->setCurrentIndex(0);
+    //ui->tabWidget->setCurrentIndex(0);
     ui->inputDataType->setText(QString::fromStdString(param->GetTypeInfo().name()));
     for(int i = 0; i < previewPlotters.size(); ++i)
     {
         if(previewPlotters[i]->acceptsType(param))
         {
             previewPlotters[i]->setInput(param);
+			previewPlots[i]->show();
+			previewPlots[i]->setMinimumHeight(200);
         }else
         {
             previewPlotters[i]->setInput();
+			previewPlots[i]->hide();
         }
     }
 }
