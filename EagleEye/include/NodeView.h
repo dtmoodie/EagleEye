@@ -30,7 +30,7 @@ signals:
     void plotData(Parameters::Parameter::Ptr param);
     void displayImage(Parameters::Parameter::Ptr param);
 private slots:
-    void on_parameter_clicked(Parameters::Parameter::Ptr param);
+    void on_parameter_clicked(Parameters::Parameter::Ptr param, QPoint pos);
     void on_deleteNode();
     void on_displayImage();
     void on_plotData();

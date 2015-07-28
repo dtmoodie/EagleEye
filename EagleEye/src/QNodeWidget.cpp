@@ -4,6 +4,7 @@
 #include <boost/bind.hpp>
 #include <QPalette>
 #include <QDateTime>
+#include "qevent.h"
 
 
 IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Node::Ptr node_) :
@@ -170,7 +171,10 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
 				if (interop)
 				{
 					parameterProxies.push_back(interop);
-					ui->gridLayout->addWidget(interop->GetParameterWidget(this), i + 5, col, 1,1);
+					auto widget = interop->GetParameterWidget(this);
+					widget->installEventFilter(this);
+					widgetParamMap[widget] = node->parameters[i];
+					ui->gridLayout->addWidget(widget, i + 5, col, 1,1);
 				}
 			}
 			
@@ -183,13 +187,17 @@ bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
 {
     if(event->type() == QEvent::MouseButtonPress)
     {
-        auto itr = widgetParamMap.find(static_cast<QWidget*>(object));
-        if(itr != widgetParamMap.end())
-        {
-            emit parameterClicked(itr->second);
-            return true;
-        }
-        return false;
+		QMouseEvent* mev = dynamic_cast<QMouseEvent*>(event);
+		if (mev->button() == Qt::RightButton)
+		{
+			
+			auto itr = widgetParamMap.find(static_cast<QWidget*>(object));
+			if (itr != widgetParamMap.end())
+			{
+				emit parameterClicked(itr->second, mev->pos());
+				return true;
+			}
+		}
     }
     return false;
 }

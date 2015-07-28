@@ -398,7 +398,7 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     }
     node->onParameterAdded->connect(boost::bind(&MainWindow::newParameter,this));
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
-    connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr)));
+    connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
 
     auto itr = positionMap.find(node->fullTreeName);

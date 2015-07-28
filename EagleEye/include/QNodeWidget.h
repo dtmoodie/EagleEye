@@ -75,7 +75,7 @@ private slots:
     void log(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
 signals:
     void eLog(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
-	void parameterClicked(Parameters::Parameter::Ptr param);
+	void parameterClicked(Parameters::Parameter::Ptr param, QPoint pos);
 private:
 	std::map<QWidget*, Parameters::Parameter::Ptr> widgetParamMap;
 	Ui::QNodeWidget* ui;

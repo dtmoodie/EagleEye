@@ -28,6 +28,7 @@
  *      developer should just update functors accordingly in the init(bool) function.
  *
 */
+#define PARAMETERS_USE_UI
 
 #include "../EagleLib.h"
 #include "../Manager.h"

@@ -31,7 +31,6 @@ LIST(APPEND defs_ -DOPENCV_FOUND)
 LIST(APPEND defs_ -DEagleLIB_EXPORTS)
 LIST(APPEND defs_ ${Parameters_DEFS})
 IF(EAGLE_LIB_JETSON)
-ADD_DEFINITIONS(-DJETSON)
 LIST(APPEND defs_ "-DJETSON")
 ENDIF()
 
@@ -150,7 +149,7 @@ message(STATUS
 	UI: ${Parameters_UI_qt}
 ")
 
-
+ADD_DEFINITIONS(${defs_})
 
 
 macro(GroupSources curdir)

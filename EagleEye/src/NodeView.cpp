@@ -37,9 +37,40 @@ QGraphicsProxyWidget* NodeView::getWidget(ObjectId id)
         return itr->second;
     else return nullptr;
 }
-void NodeView::on_parameter_clicked(Parameters::Parameter::Ptr param)
+void NodeView::on_parameter_clicked(Parameters::Parameter::Ptr param, QPoint pos)
 {
-    currentParam = param;
+	// Spawn the right click dialog
+	if (param != nullptr)
+	{
+		if (param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat*)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat&)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat*)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat&)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<int>)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<float>)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<double>)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2b>)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2f>)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2d>)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3b>)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3f>)) ||
+			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3d>)))
+		{
+			actions[1]->setEnabled(true);
+			actions[2]->setEnabled(true);
+			actions[1]->setText("Display as image (" + QString::fromStdString(param->GetName()) + ")");
+			actions[2]->setText("Plot (" + QString::fromStdString(param->GetName()) + ")");
+			currentParam = param;
+		}
+	}
+	else
+	{
+		actions[1]->setEnabled(false);
+		actions[2]->setEnabled(false);
+	}
+	rightClickMenu->popup(mapToGlobal(pos));
 }
 
 void NodeView::on_deleteNode()
@@ -152,37 +183,7 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                 if(event->button() == Qt::RightButton)
                 {
                     QGraphicsView::mousePressEvent(event);
-                    // Spawn the right click dialog
-                    if(currentParam!= nullptr)
-                    {
-                        if(currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat))           ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat*)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat&)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat*)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat&)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<int>)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<float>)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<double>)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2b>)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2f>)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2d>)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3b>)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3f>)) ||
-							currentParam->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3d>)))
-                        {
-                            actions[1]->setEnabled(true);
-                            actions[2]->setEnabled(true);
-                            actions[1]->setText("Display as image (" + QString::fromStdString(currentParam->GetName()) + ")");
-                            actions[2]->setText("Plot (" + QString::fromStdString(currentParam->GetName()) + ")");
-                        }
-                    }else
-                    {
-                        actions[1]->setEnabled(false);
-                        actions[2]->setEnabled(false);
-                    }
-                    QPoint pos = mapToGlobal(mousePressPosition);
-                    rightClickMenu->popup(pos);
+
                 }
             }
         }
