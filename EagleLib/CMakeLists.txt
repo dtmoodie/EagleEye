@@ -16,7 +16,8 @@ ELSE(WIN32)
 	set(Boost_USE_STATIC_RUNTIME     OFF)
 ENDIF(WIN32)
 SET(defs_)
-ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
+#ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
+ADD_DEFINITIONS(-DBOOST_ALL_DYN_LIB)
 IF(WIN32)
     SET(CUDA_DEVRT ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/cudadevrt.lib)
 ELSE(WIN32)
@@ -34,7 +35,7 @@ IF(EAGLE_LIB_JETSON)
 LIST(APPEND defs_ "-DJETSON")
 ENDIF()
 
-set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex)
+set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex log)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 
 file(GLOB_RECURSE src "src/*.cpp")
@@ -103,7 +104,7 @@ SET(EagleLib_DEFS "${defs_}" PARENT_SCOPE)
 # Link directories
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
-
+LINK_DIRECTORIES(${Boost_LIBRARY_DIR})
 # Reporting section
 IF(Parameters_UI_qt)
 	message(STATUS "Parameters built with QT support, so linking into EagleLib")

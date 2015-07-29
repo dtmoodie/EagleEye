@@ -6,6 +6,7 @@
 #include "Manager.h"
 #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
+#include <boost/log/trivial.hpp>
 using namespace EagleLib;
 #ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
@@ -40,6 +41,7 @@ Node::Node():
 	nodeType = eVirtual;
     onParameterAdded.reset(new boost::signals2::signal<void(void)>);
 	resetConnection = resetSignal.connect(boost::bind(&Node::reset, this));
+	BOOST_LOG_TRIVIAL(trace) << "[ " << treeName << " ]" << " Constructor";
 }
 
 Node::~Node()
@@ -50,6 +52,7 @@ Node::~Node()
 	{
 		callbackConnections[i].disconnect();
 	}
+	BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Destructor";
 }
 void Node::reset()
 {
@@ -90,6 +93,7 @@ Node::addChild(Node::Ptr child)
     child->setParent(this);
     child->setTreeName(child->nodeName + "-" + boost::lexical_cast<std::string>(count));
     children.push_back(child);
+	BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Adding child " << child->treeName;
     return child;
 }
 
@@ -281,7 +285,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         return img;
     if(img.empty() && SkipEmpty())
     {
-
+		BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Skipped due to empty input";
     }else
     {
         try
@@ -291,13 +295,11 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                 //boost::recursive_mutex::scoped_lock lock(mtx);
                 start = boost::posix_time::microsec_clock::universal_time();
                 // Used for debugging which nodes have started, thus if a segfault occurs you can know which node caused it
-                if(debug_verbosity <= Status)
-                {
-                    log(Status, "Start: " + fullTreeName);
-                }
+				BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " process enabled: " << enabled;
                 if(enabled)
                 {
                     boost::recursive_mutex::scoped_lock lock(mtx);
+					
                     // Do I lock each parameters mutex or do I just lock each node?
                     // I should only lock each node, but then I need to make sure the UI keeps track of the node
                     // to access the node's mutex while accessing a parameter, for now this works though.
@@ -347,7 +349,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         cv::cuda::GpuMat* childResult = childResults.getFront();
         if(!img.empty())
             img.copyTo(*childResult,stream);
-
+		BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Executing " << children.size() << " child nodes";
         std::vector<Node::Ptr>  children_;
         children_.reserve(children.size());
         {
@@ -494,6 +496,7 @@ void Node::RegisterParameterCallback(const std::string& name, boost::function<vo
 void
 Node::Init(const cv::FileNode& configNode)
 {
+	BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Initializing from file";
     configNode["NodeName"] >> nodeName;
     configNode["NodeTreeName"] >> treeName;
     configNode["FullTreeName"] >> fullTreeName;
@@ -564,6 +567,7 @@ Node::Init(const cv::FileNode& configNode)
 void
 Node::Serialize(ISimpleSerializer *pSerializer)
 {
+	BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Serializing";
     IObject::Serialize(pSerializer);
     SERIALIZE(parameters);
     SERIALIZE(children);
@@ -583,6 +587,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
 void
 Node::Serialize(cv::FileStorage& fs)
 {
+	BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Serializing to file";
     if(fs.isOpened())
     {
         fs << "NodeName" << nodeName;
@@ -858,7 +863,8 @@ void Node::log(Verbosity level, const std::string &msg)
             break;
         lastStatusTime = boost::posix_time::microsec_clock::universal_time();
         lastStatusMsg = msg;
-        std::cout << "[ " << fullTreeName << " - STATUS ] " << msg << std::endl;
+		BOOST_LOG_TRIVIAL(info) << "[ " << fullTreeName << " ]" << msg;
+        //std::cout << "[ " << fullTreeName << " - STATUS ] " << msg << std::endl;
         break;
     case Warning:
         if(msg == lastWarningMsg &&
@@ -866,7 +872,7 @@ void Node::log(Verbosity level, const std::string &msg)
             break;
         lastWarningTime = boost::posix_time::microsec_clock::universal_time();
         lastWarningMsg = msg;
-        std::cout << "[ " << fullTreeName << " - WARNING ] " << msg << std::endl;
+		BOOST_LOG_TRIVIAL(warning) << "[ " << fullTreeName << " ]" << msg;
         break;
     case Error:
         if(msg == lastErrorMsg &&
@@ -874,7 +880,7 @@ void Node::log(Verbosity level, const std::string &msg)
             break;
         lastErrorTime = boost::posix_time::microsec_clock::universal_time();
         lastErrorMsg = msg;
-        std::cout << "[ " << fullTreeName << " - ERROR ] " << msg << std::endl;
+		BOOST_LOG_TRIVIAL(error) << "[ " << fullTreeName << " ]" << msg;
         break;
     case Critical:
         if(msg == lastCriticalMsg &&
@@ -882,7 +888,7 @@ void Node::log(Verbosity level, const std::string &msg)
             break;
         lastCriticalTime = boost::posix_time::microsec_clock::universal_time();
         lastCriticalMsg = msg;
-        std::cout << "[ " << fullTreeName << " - CRITICAL ] " << msg << std::endl;
+		BOOST_LOG_TRIVIAL(fatal) << "[ " << fullTreeName << " ]" << msg;
         break;
     }
 }
