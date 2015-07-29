@@ -11,7 +11,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/foreach.hpp>
 #include "plotters/Plotter.h"
-
+#include <boost/log/trivial.hpp>
 //#include <IObjectUtils.h>
 using namespace EagleLib;
 
@@ -123,16 +123,20 @@ void UIThreadCallback::processAllCallbacks()
     boost::function<void(void)> f;
     while(queue.try_pop(f))
     {
+		BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Processing callback";
         f();
     }
 }
 void UIThreadCallback::clearCallbacks()
 {
+	BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Clearing callbacks";
+	
     queue.clear();
 }
 
 void UIThreadCallback::setUINotifier(boost::function<void(void)> f)
 {
+	BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Setting UI notifier";
     notifier = f;
 }
 boost::asio::io_service ProcessingThreadCallback::service;
@@ -144,6 +148,7 @@ boost::asio::io_service& ProcessingThreadCallback::Instance()
 
 void ProcessingThreadCallback::Run()
 {
+	BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Running service";
 	service.run();
 }
 
@@ -155,6 +160,7 @@ PlotManager& PlotManager::getInstance()
 
 shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
 {
+	BOOST_LOG_TRIVIAL(trace) << "[ PlotManager ] getPlot";
     IObjectConstructor* pConstructor = NodeManager::getInstance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(plotName.c_str());
     if(pConstructor && pConstructor->GetInterfaceId() == IID_Plotter)
     {
@@ -167,16 +173,22 @@ shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
                 Plotter* plotter = static_cast<Plotter*>(obj);
 				if (plotter)
 				{
+					BOOST_LOG_TRIVIAL(info) << "[ PlotManager ] successfully generating plot " << plotName;
 					return shared_ptr<Plotter>(plotter);
-				}
-            }
-        }
-    }
+				}else
+					BOOST_LOG_TRIVIAL(warning) << "[ PlotManager ] failed to cast to plotter object " << plotName;
+            }else
+				BOOST_LOG_TRIVIAL(warning) << "[ PlotManager ] incorrect interface " << plotName;
+        }else
+			BOOST_LOG_TRIVIAL(warning) << "[ PlotManager ] failed to construct plot " << plotName;
+    }else
+		BOOST_LOG_TRIVIAL(warning) << "[ PlotManager ] failed to get constructor " << plotName;
 	return shared_ptr<Plotter>();
 }
 
 std::vector<std::string> PlotManager::getAvailablePlots()
 {
+	BOOST_LOG_TRIVIAL(trace) << "[ PlotManager ] getting all plots";
     AUDynArray<IObjectConstructor*> constructors;
     NodeManager::getInstance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
     std::vector<std::string> output;
@@ -197,7 +209,6 @@ NodeManager& NodeManager::getInstance()
 NodeManager::NodeManager()
 {
     Init();
-
 }
 
 NodeManager::~NodeManager()
@@ -206,9 +217,8 @@ NodeManager::~NodeManager()
 }
 void NodeManager::addIncludeDir(const std::string& dir)
 {
+	BOOST_LOG_TRIVIAL(info) << "[ NodeManager ] adding include dir " << dir;
     m_pRuntimeObjectSystem->AddIncludeDir(dir.c_str());
-
-
 }
 void NodeManager::addIncludeDirs(const std::string& dirs)
 {
@@ -221,6 +231,7 @@ void NodeManager::addIncludeDirs(const std::string& dirs)
 }
 void NodeManager::addLinkDir(const std::string& dir)
 {
+	BOOST_LOG_TRIVIAL(info) << "[ NodeManager ] adding link dir " << dir;
 	m_pRuntimeObjectSystem->AddLibraryDir(dir.c_str());
 }
 std::vector<std::string> NodeManager::getLinkDirs()
@@ -256,8 +267,8 @@ void NodeManager::addLinkDirs(const std::string& dirs)
 }
 void NodeManager::addSourceFile(const std::string &file)
 {
+	BOOST_LOG_TRIVIAL(info) << "[ NodeManager ] adding source file " << file;
     m_pRuntimeObjectSystem->AddToRuntimeFileList(file.c_str());
-
 }
 
 bool
@@ -303,6 +314,7 @@ NodeManager::MainLoop()
 void
 NodeManager::OnConstructorsAdded()
 {
+	BOOST_LOG_TRIVIAL(trace) << "[ NodeManager ] OnConstructorsAdded";
 	AUDynArray<IObjectConstructor*> constructors;
 	m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
 	std::vector<Node*> newNodes;
@@ -318,7 +330,6 @@ NodeManager::OnConstructorsAdded()
                 if (ptr)
                 {
                     auto nodePtr = static_cast<Node*>(ptr);
-                    //m_nodeTree.put(t_nodeTree::path_type{nodePtr->fullTreeName,'.'}, nodePtr);
                     newNodes.push_back(nodePtr);
                 }
             }
@@ -340,6 +351,7 @@ NodeManager::OnConstructorsAdded()
 
 shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
 {
+	BOOST_LOG_TRIVIAL(trace) << "[ NodeManager ] addNode " << nodeName;
     IObjectConstructor* pConstructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
 
     if(pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
@@ -355,12 +367,13 @@ shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
             return Node::Ptr(node);
         }else
         {
+			BOOST_LOG_TRIVIAL(warning) << "[ NodeManager ] " << nodeName << " not a node";
             // Input nodename is a compatible object but it is not a node
             return shared_ptr<Node>();
         }
     }else
     {
-        // Invalid nodeName
+		BOOST_LOG_TRIVIAL(warning) << "[ NodeManager ] " << nodeName << " not a valid node name";
         return shared_ptr<Node>();
     }
 
@@ -371,7 +384,8 @@ std::vector<shared_ptr<Node>> NodeManager::loadNodes(const std::string& saveFile
     boost::filesystem::path path(saveFile);
     if(!boost::filesystem::is_regular_file(path))
     {
-        std::cout << "Unable to load " << saveFile << " doesn't exist, or is not a regular file" << std::endl;
+        //std::cout << "Unable to load " << saveFile << " doesn't exist, or is not a regular file" << std::endl;
+		BOOST_LOG_TRIVIAL(warning) << "[ NodeManager ] " << saveFile << " doesn't exist or not a regular file";
     }
     cv::FileStorage fs;
     try
@@ -379,13 +393,15 @@ std::vector<shared_ptr<Node>> NodeManager::loadNodes(const std::string& saveFile
         fs.open(saveFile, cv::FileStorage::READ);
     }catch(cv::Exception &e)
     {
-        std::cout << e.what() << std::endl;
+        //std::cout << e.what() << std::endl;
+		BOOST_LOG_TRIVIAL(error) << "[ NodeManager ] " << e.what();
     }
 
     int nodeCount = (int)fs["TopLevelNodeCount"];
+	BOOST_LOG_TRIVIAL(info) << "[ NodeManager ] " << "Loading " << nodeCount << " nodes";
     std::vector<shared_ptr<Node>> nodes;
     nodes.reserve(nodeCount);
-    for(int i = 0;i < nodeCount; ++i)
+    for(int i = 0; i < nodeCount; ++i)
     {
         auto nodeFS = fs["Node-" + boost::lexical_cast<std::string>(i)];
         std::string name = (std::string)nodeFS["NodeName"];
@@ -433,27 +449,7 @@ std::string NodeManager::getNodeFile(const ObjectId& id)
 
 bool NodeManager::removeNode(ObjectId oid)
 {
- /*   Node* node =getNode(oid);
-    if(node == nullptr)
-        return false;
-    auto path = node->fullTreeName;
-    // First we need to get the parent property tree node.
-    /////// GRRRRR I've tried everything but I can't get the property tree to delete the node.
-    saveTree("test.xml");
-    auto idx = path.find_last_of(".");
-    auto parentPath = path.substr(0, idx);
-    auto parentNode = m_nodeTree.get_child(parentPath);
-    for(auto it = parentNode.begin(); it != parentNode.end(); ++it)
-    {
-        if(it->second.get_value<Node*>() == node)
-        {
-            parentNode.erase(it);
-            break;
-        }
-    }
-    saveTree("test.xml");
-    delete m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(oid.m_ConstructorId)->GetConstructedObject(oid.m_PerTypeId);
-    return true;*/
+
 	return false;
 }
 

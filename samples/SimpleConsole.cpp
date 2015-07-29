@@ -5,7 +5,14 @@
 #include "Plugins.h"
 #include <boost/program_options.hpp>
 #include <signal.h>
-//#include <unistd.h>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sinks.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/common.hpp>
+#include <boost/log/exceptions.hpp>
+#include <boost/log/utility/setup/file.hpp>
 
 
 void PrintNodeTree(EagleLib::Node::Ptr node, int depth)
@@ -30,21 +37,12 @@ void sig_handler(int s)
 int main(int argc, char* argv[])
 {
 	signal(SIGINT, sig_handler);
-	/*
-    struct sigaction sigIntHandler;
-    sigIntHandler.sa_handler = sig_handler;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-    sigaction(SIGINT, &sigIntHandler, NULL);
-	*/
-
-
-
     boost::program_options::options_description desc("Allowed options");
-
+	boost::log::add_file_log(boost::log::keywords::file_name = "SimpleConsole%N.log", boost::log::keywords::rotation_size = 10 * 1024 * 1024);
     desc.add_options()
         ("config", boost::program_options::value<std::string>(), "File containing node structure")
         ("plugins", boost::program_options::value<std::string>(), "Path to additional plugins to load")
+		("log", boost::program_options::value<std::string>(), "Logging verbosity. trace, debug, info, warning, error, fatal")
         ;
 
     boost::program_options::variables_map vm;
@@ -55,7 +53,23 @@ int main(int argc, char* argv[])
         std::cout << desc << std::endl;
         return 1;
     }
-
+	if (vm.count("log"))
+	{
+		std::string verbosity = vm["log"].as<std::string>();
+		if (verbosity == "trace")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+		if (verbosity == "debug")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
+		if (verbosity == "info")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+		if (verbosity == "warning")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning);
+		if (verbosity == "error")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error);
+		if (verbosity == "fatal")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
+	}else
+		boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
     boost::filesystem::path currentDir(".");
     boost::filesystem::directory_iterator end_itr;
 
