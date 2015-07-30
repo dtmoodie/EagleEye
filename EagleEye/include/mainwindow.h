@@ -49,13 +49,13 @@ private slots:
     void updateLines();
     void uiNotifier();
     void onUiUpdate();
-    void on_NewParameter();
-    void newParameter();
+    void on_NewParameter(EagleLib::Node* node);
+    void newParameter(EagleLib::Node* node);
     void displayRCCSettings();
     void onPlotAdd(PlotWindow* plot);
     void onPlotRemove(PlotWindow* plot);
 signals:
-    void onNewParameter();
+    void onNewParameter(EagleLib::Node* node);
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);

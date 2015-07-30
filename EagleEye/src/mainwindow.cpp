@@ -77,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
     connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
     connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
-    connect(this, SIGNAL(onNewParameter()), this, SLOT(on_NewParameter()), Qt::QueuedConnection);
+    connect(this, SIGNAL(onNewParameter(EagleLib::Node* node)), this, SLOT(on_NewParameter(EagleLib::Node* node)), Qt::QueuedConnection);
     connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
     connect(plotWizardDialog, SIGNAL(on_plotAdded(PlotWindow*)), this, SLOT(onPlotAdd(PlotWindow*)));
     connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
@@ -294,7 +294,7 @@ void MainWindow::onLoadPluginClicked()
         emit pluginLoaded();
     }
 }
-void MainWindow::on_NewParameter()
+void MainWindow::on_NewParameter(EagleLib::Node* node)
 {
     for(size_t i = 0; i < widgets.size(); ++i)
     {
@@ -302,9 +302,9 @@ void MainWindow::on_NewParameter()
     }
 }
 // Called from the processing thread, that's why we need a queued connection here.
-void MainWindow::newParameter()
+void MainWindow::newParameter(EagleLib::Node* node)
 {
-    emit onNewParameter();
+    emit onNewParameter(node);
 }
 
 void
@@ -313,7 +313,7 @@ MainWindow::onTimeout()
     static bool swapRequired = false;
     static bool joined = false;
     EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
-	Parameters::UI::UiCallbackService::Instance().run();
+    Parameters::UI::UiCallbackService::Instance()->run();
     for(size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi(false);
@@ -396,7 +396,7 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     {
         node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
     }
-    node->onParameterAdded->connect(boost::bind(&MainWindow::newParameter,this));
+    EagleLib::Node::onParameterAdded.connect(boost::bind(&MainWindow::newParameter,this, _1));
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);

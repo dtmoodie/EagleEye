@@ -29,6 +29,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 #endif
 Verbosity Node::debug_verbosity = Error;
 boost::signals2::signal<void(void)> Node::resetSignal;
+boost::signals2::signal<void(Node*)> Node::onParameterAdded;
 Node::Node():
     averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
 {
@@ -39,7 +40,7 @@ Node::Node():
 	drawResults = false;
     parent = nullptr;
 	nodeType = eVirtual;
-    onParameterAdded.reset(new boost::signals2::signal<void(void)>);
+
 	resetConnection = resetSignal.connect(boost::bind(&Node::reset, this));
 	BOOST_LOG_TRIVIAL(trace) << "[ " << treeName << " ]" << " Constructor";
 }
@@ -582,7 +583,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(drawResults);
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);
-    SERIALIZE(onParameterAdded);
+
 }
 void
 Node::Serialize(cv::FileStorage& fs)

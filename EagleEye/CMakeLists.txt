@@ -8,7 +8,18 @@ find_package(Qt5 COMPONENTS Gui Widgets Core OpenGL PrintSupport)
 IF(Qt5_FOUND)
 	find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
 	find_package(CUDA REQUIRED)
-	set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
+#IF(WIN32)
+#        set(Boost_USE_STATIC_LIBS        ON)
+#        set(Boost_USE_MULTITHREADED      ON)
+#        set(Boost_USE_STATIC_RUNTIME     OFF)
+#ELSE(WIN32)
+#        set(Boost_USE_STATIC_LIBS        ON)
+#        set(Boost_USE_MULTITHREADED      ON)
+#        set(Boost_USE_STATIC_RUNTIME     OFF)
+#ENDIF(WIN32)
+#ADD_DEFINITIONS(-DBOOST_ALL_NO_LINK)
+#ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
+        set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono log log_setup)
 
 	find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
@@ -67,6 +78,7 @@ IF(Qt5_FOUND)
 	"======== EagleEye Reporting =======
 	  Qt bin dir: ${Qt5_DIR} 
 	  Boost bin dir: ${Boost_BIN_DIR}
+          Bost libs: ${Boost_LIBRARIES}
 
 	  CXX Flags: ${CMAKE_CXX_FLAGS}
 

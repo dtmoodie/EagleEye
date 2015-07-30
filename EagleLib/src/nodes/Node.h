@@ -28,7 +28,6 @@
  *      developer should just update functors accordingly in the init(bool) function.
  *
 */
-#define PARAMETERS_USE_UI
 
 #include "../EagleLib.h"
 #include "../Manager.h"
@@ -451,8 +450,7 @@ namespace EagleLib
 		{
 			parameters.push_back(typename Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data, type_, toolTip_)));
 			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-			if (onParameterAdded)
-				(*onParameterAdded)();
+            onParameterAdded(this);
 			return parameters.size() - 1;
 		}
 
@@ -465,8 +463,7 @@ namespace EagleLib
 		{
             parameters.push_back(typename Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
 			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-			if (onParameterAdded)
-				(*onParameterAdded)();
+            onParameterAdded(this);
 			return parameters.size() - 1;
 		}
 
@@ -481,8 +478,7 @@ namespace EagleLib
 		{
                 parameters.push_back(typename Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
 				parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-            if(onParameterAdded)
-                (*onParameterAdded)();
+            onParameterAdded(this);
 			return parameters.size() - 1;
 		}
 
@@ -741,7 +737,7 @@ namespace EagleLib
         double                                                              processingTime;
         // Mutex for blocking processing of a node during parameter update
         boost::recursive_mutex                                              mtx;
-        boost::shared_ptr<boost::signals2::signal<void(void)>>              onParameterAdded;
+        static boost::signals2::signal<void(Node*)>                         onParameterAdded;
         std::vector<std::pair<clock_t, int>> timings;
 		NodeType															nodeType;
 	protected:
