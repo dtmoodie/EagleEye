@@ -18,7 +18,14 @@
 #include <QGraphicsSceneMouseEvent>
 #include <Manager.h>
 #include "settingdialog.h"
-
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sinks.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/common.hpp>
+#include <boost/log/exceptions.hpp>
+#include <boost/log/utility/setup/file.hpp>
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
 	return 0;
@@ -32,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
     rccSettings(new RCCSettingsDialog(this)),
     plotWizardDialog(new PlotWizardDialog(this))
 {
+boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
     qRegisterMetaType<cv::Mat>("cv::Mat");
