@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 	{
 		std::string verbosity = vm["log"].as<std::string>();
 		if (verbosity == "trace")
-			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
 		if (verbosity == "debug")
 			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
 		if (verbosity == "info")

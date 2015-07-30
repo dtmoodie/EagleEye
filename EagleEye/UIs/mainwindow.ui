@@ -56,7 +56,7 @@
      <x>0</x>
      <y>0</y>
      <width>873</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -72,6 +72,7 @@
      <string>Settings</string>
     </property>
     <addaction name="actionRCC_settings"/>
+    <addaction name="actionLog_settings"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSettings"/>
@@ -113,10 +114,18 @@
    <property name="text">
     <string>Load Plugin</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
   </action>
   <action name="actionRCC_settings">
    <property name="text">
     <string>RCC settings</string>
+   </property>
+  </action>
+  <action name="actionLog_settings">
+   <property name="text">
+    <string>Log settings</string>
    </property>
   </action>
  </widget>

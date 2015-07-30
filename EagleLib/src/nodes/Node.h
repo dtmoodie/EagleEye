@@ -737,7 +737,8 @@ namespace EagleLib
         double                                                              processingTime;
         // Mutex for blocking processing of a node during parameter update
         boost::recursive_mutex                                              mtx;
-        static boost::signals2::signal<void(Node*)>                         onParameterAdded;
+        boost::signals2::signal<void(Node*)>								onParameterAdded;
+		
         std::vector<std::pair<clock_t, int>> timings;
 		NodeType															nodeType;
 	protected:

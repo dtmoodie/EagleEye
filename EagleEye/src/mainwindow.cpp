@@ -17,6 +17,7 @@
 #include "QGLWidget"
 #include <QGraphicsSceneMouseEvent>
 #include <Manager.h>
+#include "settingdialog.h"
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
@@ -396,7 +397,7 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     {
         node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
     }
-    EagleLib::Node::onParameterAdded.connect(boost::bind(&MainWindow::newParameter,this, _1));
+    node->onParameterAdded.connect(boost::bind(&MainWindow::newParameter,this, _1));
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
@@ -594,4 +595,11 @@ void MainWindow::stopProcessingThread()
 {
     processingThread.interrupt();
     processingThread.join();
+}
+
+void MainWindow::on_actionLog_settings_triggered()
+{
+    SettingDialog dlg;
+    dlg.show();
+    dlg.exec();
 }

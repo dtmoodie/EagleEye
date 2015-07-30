@@ -8,14 +8,13 @@ set(Boost_USE_MULTITHREAD @Boost_USE_MULTITHREAD@)
 set(BOOST_INCLUDEDIR "@Boost_INCLUDE_DIR@")
 set(Boost_NO_BOOST_CMAKE ON)
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 find_package(CUDA REQUIRED)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 FIND_PACKAGE(libusb-1.0 REQUIRED)
-
-
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
+IF(libusb-1.0_FOUND)
 ADD_DEFINITIONS(${DEFS})
 LINK_DIRECTORIES(${LINK_DIRS})
 INCLUDE_DIRECTORIES(
@@ -50,4 +49,4 @@ target_link_libraries(freenect
     ${LINK_LIBS}
     ${LIBUSB_1_LIBRARY}
 )
-
+ENDIF(libusb-1.0_FOUND)

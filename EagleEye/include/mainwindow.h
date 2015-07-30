@@ -54,6 +54,8 @@ private slots:
     void displayRCCSettings();
     void onPlotAdd(PlotWindow* plot);
     void onPlotRemove(PlotWindow* plot);
+    void on_actionLog_settings_triggered();
+
 signals:
     void onNewParameter(EagleLib::Node* node);
     void eLog(QString message);
