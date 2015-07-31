@@ -278,6 +278,8 @@ void CalibrateStereoPair::Init(bool firstInit)
     updateParameterPtr("Essential matrix", &Ess);
     updateParameterPtr("Fundamental matrix", &Fun);
     lastCalibration = 0;
+    centroidHistory1.set_capacity(20);
+    centroidHistory2.set_capacity(20);
 }
 void CalibrateStereoPair::clear()
 {
@@ -331,7 +333,63 @@ cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda:
         log(Warning, "Image points not found or not equal to object point size");
 		return img;
     }
-	
+
+    // Calculate centroid for each image
+    cv::Vec2f centroid1(0,0);
+    cv::Vec2f centroid2(0,0);
+    for(int i = 0; i < pts1->size(); ++i)
+    {
+        centroid1 += cv::Vec2f((*pts1)[i].x, (*pts1)[i].y);
+        centroid2 += cv::Vec2f((*pts2)[i].x, (*pts2)[i].y);
+    }
+    centroid1.val[0] /= pts1->size();
+    centroid1.val[1] /= pts1->size();
+    centroid2.val[0] /= pts2->size();
+    centroid2.val[1] /= pts2->size();
+    centroidHistory1.push_back(centroid1);
+    centroidHistory2.push_back(centroid2);
+    float minDist1 = std::numeric_limits<float>::max();
+    float minDist2 = std::numeric_limits<float>::max();
+
+    for (cv::Vec2f& other : imagePointCentroids1)
+    {
+        float dist = cv::norm(other - centroid1);
+        if (dist < minDist1)
+            minDist1 = dist;
+    }
+    for (cv::Vec2f& other : imagePointCentroids2)
+    {
+        float dist = cv::norm(other - centroid2);
+        if (dist < minDist2)
+            minDist2 = dist;
+    }
+    if(minDist1 < 100 || minDist2 < 100)
+    {
+        log(Status, "Insufficient movement to add points");
+        return img;
+    }
+    // Check if there is little motion in the image
+    cv::Vec2f motionSum1(0,0);
+    cv::Vec2f motionSum2(0,0);
+
+    for(int i = 1; i < centroidHistory1.size(); ++i)
+    {
+        motionSum1 += centroidHistory1[i] - centroidHistory1[i-1];
+    }
+
+    for(int i = 1; i < centroidHistory2.size(); ++i)
+    {
+        motionSum2 += centroidHistory2[i] - centroidHistory2[i-1];
+    }
+    updateParameter("Motion vector 1", motionSum1);
+    updateParameter("Motion vector 2", motionSum2);
+    if(cv::norm(motionSum1) > 20 || cv::norm(motionSum2) > 20)
+    {
+        log(Status, "Too much movement to record image");
+        return img;
+    }
+
+    log(Status, "Adding image to collection");
 	imagePointCollection1.push_back(*pts1);
 	imagePointCollection2.push_back(*pts2);
 	objectPointCollection.push_back(*objPts);

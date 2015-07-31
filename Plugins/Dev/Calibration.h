@@ -64,6 +64,9 @@ namespace EagleLib
 
     class CalibrateStereoPair: public Node
     {
+        boost::circular_buffer<cv::Vec2f> centroidHistory1;
+        boost::circular_buffer<cv::Vec2f> centroidHistory2;
+
 		std::vector<ObjectPoints> objectPointCollection;
 
         std::vector<ImagePoints> imagePointCollection1;
@@ -71,6 +74,8 @@ namespace EagleLib
         
 		std::vector<cv::Vec2f> imagePointCentroids1;
 		std::vector<cv::Vec2f> imagePointCentroids2;
+
+        std::vector<cv::Vec2f> imagePointCentroids;
 
 		cv::Mat K1, K2, dist1, dist2, Rot, Trans, Ess, Fun;
         cv::Mat R1, R2, P1, P2, Q;
