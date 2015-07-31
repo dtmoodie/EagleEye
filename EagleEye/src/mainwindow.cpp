@@ -44,6 +44,7 @@ boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log:
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
     qRegisterMetaType<cv::Mat>("cv::Mat");
     qRegisterMetaType<EagleLib::Node::Ptr>("EagleLib::Node::Ptr");
+    qRegisterMetaType<EagleLib::Node*>("EagleLib::Node*");
     qRegisterMetaType<EagleLib::Verbosity>("EagleLib::Verbosity");
     qRegisterMetaType<boost::function<cv::Mat(void)>>("boost::function<cv::Mat(void)>");
     qRegisterMetaType<Parameters::Parameter::Ptr>("Parameters::Parameter::Ptr");
@@ -66,7 +67,7 @@ boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log:
 	nodeGraphView->setInteractive(true);
     nodeGraphView->setViewport(new QGLWidget());
     nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
-    ui->gridLayout->addWidget(nodeGraphView, 2, 0);
+    ui->gridLayout->addWidget(nodeGraphView, 2, 0, 1,2);
 	currentSelectedNodeWidget = nullptr;
 
     rccSettings->hide();
@@ -86,23 +87,14 @@ boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log:
     connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
     connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
     connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
-    connect(this, SIGNAL(onNewParameter(EagleLib::Node* node)), this, SLOT(on_NewParameter(EagleLib::Node* node)), Qt::QueuedConnection);
+
+    connect(this, SIGNAL(onNewParameter(EagleLib::Node*)), this, SLOT(on_NewParameter(EagleLib::Node*)), Qt::QueuedConnection);
+
     connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
     connect(plotWizardDialog, SIGNAL(on_plotAdded(PlotWindow*)), this, SLOT(onPlotAdd(PlotWindow*)));
     connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
 
 	/* Instantiate several useful types since compilation is currently setup to not compile against the types used in eagle lib */
-    /*Parameters::TypedParameter<float>("Instantiation");
-	Parameters::TypedParameter<double>("Instantiation");
-	Parameters::TypedParameter<char>("Instantiation");
-	Parameters::TypedParameter<uchar>("Instantiation");
-	Parameters::TypedParameter<short>("Instantiation");
-	Parameters::TypedParameter<ushort>("Instantiation");
-	Parameters::TypedParameter<int>("Instantiation");
-	Parameters::TypedParameter<unsigned int>("Instantiation");
-	Parameters::TypedParameter<bool>("Instantiation");
-	Parameters::TypedParameter<std::string>("Instantiation");
-    Parameters::TypedParameter<boost::function<void(void)>>("Instantiation");*/
     Parameters::TypedParameter<Parameters::WriteDirectory>("Instantiation");
     Parameters::TypedParameter<Parameters::WriteFile>("Instantiation");
     Parameters::TypedParameter<Parameters::ReadDirectory>("Instantiation");
@@ -307,7 +299,7 @@ void MainWindow::on_NewParameter(EagleLib::Node* node)
 {
     for(size_t i = 0; i < widgets.size(); ++i)
     {
-        widgets[i]->updateUi(true);
+        widgets[i]->updateUi(true, node);
     }
 }
 // Called from the processing thread, that's why we need a queued connection here.
@@ -610,4 +602,11 @@ void MainWindow::on_actionLog_settings_triggered()
     SettingDialog dlg;
     dlg.show();
     dlg.exec();
+}
+void MainWindow::on_btnClear_clicked()
+{
+    stopProcessingThread();
+
+    parentList.clear();
+    startProcessingThread();
 }

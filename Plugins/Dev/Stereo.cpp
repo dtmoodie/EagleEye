@@ -34,8 +34,8 @@ cv::cuda::GpuMat StereoBM::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &st
     {
         stereoBM = cv::cuda::createStereoBM(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
     }
-    cv::cuda::GpuMat* left = *getParameter<cv::cuda::GpuMat*>(2)->Data();
-    cv::cuda::GpuMat* right = *getParameter<cv::cuda::GpuMat*>(3)->Data();
+    cv::cuda::GpuMat* left = getParameter<cv::cuda::GpuMat>(2)->Data();
+    cv::cuda::GpuMat* right = getParameter<cv::cuda::GpuMat>(3)->Data();
     if(left == nullptr)
     {
         left = &img;

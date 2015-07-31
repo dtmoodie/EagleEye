@@ -31,7 +31,7 @@ cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 
 void ExportInputImage::Init(bool firstInit)
 {
-
+    updateParameter("Output image", cv::cuda::GpuMat(), Parameters::Parameter::Output);
 }
 
 void ImageInfo::Init(bool firstInit)

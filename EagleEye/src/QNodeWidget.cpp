@@ -165,7 +165,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
 				++col;
 			}
 			
-			if(node->parameters[i]->type & Parameters::Parameter::Control || node->parameters[i]->type & Parameters::Parameter::State)
+            if(node->parameters[i]->type & Parameters::Parameter::Control || node->parameters[i]->type & Parameters::Parameter::State || node->parameters[i]->type & Parameters::Parameter::Output)
 			{
 				auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
 				if (interop)
@@ -179,7 +179,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
 			}
 			
 		}
-        node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true);
+        node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true, _1);
         node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2, _3);
 	}
 }
@@ -207,12 +207,12 @@ void QNodeWidget::addParameterWidgetMap(QWidget* widget, Parameters::Parameter::
     
 }
 
-void QNodeWidget::updateUi(bool parameterUpdate)
+void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Node *node_)
 {
     if(node == nullptr)
         return;
     ui->processingTime->setText(QString::number(node->processingTime));
-    if(parameterUpdate)
+    if(parameterUpdate && node_ == node.get())
     {
 		if (node->parameters.size() != parameterProxies.size())
         {
@@ -244,7 +244,7 @@ void QNodeWidget::updateUi(bool parameterUpdate)
 						++col;
 					}
 
-					if (node->parameters[i]->type & Parameters::Parameter::Control || node->parameters[i]->type & Parameters::Parameter::State)
+                    if (node->parameters[i]->type & Parameters::Parameter::Control || node->parameters[i]->type & Parameters::Parameter::State  || node->parameters[i]->type & Parameters::Parameter::Output)
 					{
 						auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
 						if (interop)
@@ -256,9 +256,13 @@ void QNodeWidget::updateUi(bool parameterUpdate)
                 }
             }
         }
-		for (size_t i = 0; i < parameterProxies.size(); ++i)
+
+    }
+    if(parameterUpdate && node_ != node.get())
+    {
+        for (size_t i = 0; i < inputProxies.size(); ++i)
         {
-            //interops[i]->updateUi();
+            inputProxies[i]->updateUi(true);
         }
     }
 }

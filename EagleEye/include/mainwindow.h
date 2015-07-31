@@ -56,6 +56,8 @@ private slots:
     void onPlotRemove(PlotWindow* plot);
     void on_actionLog_settings_triggered();
 
+    void on_btnClear_clicked();
+
 signals:
     void onNewParameter(EagleLib::Node* node);
     void eLog(QString message);

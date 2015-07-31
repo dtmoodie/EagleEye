@@ -14,47 +14,53 @@ LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 find_package(CUDA REQUIRED)
+
 FIND_PACKAGE(libusb-1.0 REQUIRED)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping
 	cudafeatures2d cudaoptflow cudacodec cudastereo)
 find_package(libfreenect REQUIRED)
+
 IF(LIBUSB_1_FOUND)
-ADD_DEFINITIONS(${DEFS})
-LINK_DIRECTORIES(${LINK_DIRS})
-LINK_DIRECTORIES(${FREENECT_LIBRARY_DIRS})
+    ADD_DEFINITIONS(${DEFS})
+    LINK_DIRECTORIES(${LINK_DIRS})
+    LINK_DIRECTORIES("/usr/local/lib")
+    #LINK_DIRECTORIES(${FREENECT_LIBRARY_DIRS})
 
-INCLUDE_DIRECTORIES(
-    ${EagleLib_INCLUDE_DIRECTORIES}
-    ${OpenCV_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
-    ${CUDA_INCLUDE_DIRS}
-    ${LIBUSB_1_INCLUDE_DIR}
+    INCLUDE_DIRECTORIES(
+        ${EagleLib_INCLUDE_DIRECTORIES}
+        ${OpenCV_INCLUDE_DIRS}
+        ${Boost_INCLUDE_DIRS}
+        ${CUDA_INCLUDE_DIRS}
+        ${LIBUSB_1_INCLUDE_DIR}
 	${FREENECT_INCLUDE_DIRS}
-)
+    )
 
-file(GLOB_RECURSE src "*.cpp")
-file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
+    file(GLOB_RECURSE src "*.cpp")
+    file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
 
-IF(WIN32)
+    IF(WIN32)
 
-ELSE()
-    SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
-ENDIF()
+    ELSE()
+        SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
+    ENDIF()
 
-cuda_add_library(freenect SHARED ${src} ${hdr} ${knl})
-MESSAGE(STATUS
-"=========== freenect ============
+    cuda_add_library(freenect SHARED ${src} ${hdr} ${knl})
+    MESSAGE(STATUS
+    "=========== freenect ============
 
-")
-add_dependencies(freenect EagleLib)
-target_link_libraries(freenect
-    EagleLib
-    ${FREENECT_LIBRARIES}
-    ${OpenCV_LIBS}
-    ${CUDA_CUBLAS_LIBRARIES}
-    ${LINK_LIBS}
-    ${LIBUSB_1_LIBRARY}
-)
+    ")
+    add_dependencies(freenect EagleLib)
+    target_link_libraries(freenect
+        EagleLib
+        #${FREENECT_LIBRARIES}
+        freenect
+        freenect_sync
+        ${OpenCV_LIBS}
+        ${CUDA_CUBLAS_LIBRARIES}
+        ${LINK_LIBS}
+        ${LIBUSB_1_LIBRARY}
+    )
+
 ELSE(LIBUSB_1_FOUND)
-message("LIBUSB not found, not building freenect lib")
+    message("LIBUSB not found, not building freenect lib")
 ENDIF(LIBUSB_1_FOUND)

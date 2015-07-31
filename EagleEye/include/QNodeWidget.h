@@ -56,7 +56,7 @@ public:
 	~QNodeWidget();
     EagleLib::Node::Ptr getNode();
     void setSelected(bool state);
-    void updateUi(bool parameterUpdate = false);
+    void updateUi(bool parameterUpdate = false, EagleLib::Node* node = nullptr);
     // Used for thread safety
     void on_nodeUpdate();
     void on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
