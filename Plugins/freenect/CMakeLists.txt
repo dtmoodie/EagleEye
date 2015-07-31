@@ -15,12 +15,11 @@ LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 find_package(CUDA REQUIRED)
 
-FIND_PACKAGE(libusb-1.0 REQUIRED)
-find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping
-	cudafeatures2d cudaoptflow cudacodec cudastereo)
-find_package(libfreenect REQUIRED)
+FIND_PACKAGE(libusb-1.0)
+find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
+find_package(libfreenect)
 
-IF(LIBUSB_1_FOUND)
+IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
     ADD_DEFINITIONS(${DEFS})
     LINK_DIRECTORIES(${LINK_DIRS})
     LINK_DIRECTORIES("/usr/local/lib")
@@ -61,6 +60,6 @@ IF(LIBUSB_1_FOUND)
         ${LIBUSB_1_LIBRARY}
     )
 
-ELSE(LIBUSB_1_FOUND)
+ELSE(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
     message("LIBUSB not found, not building freenect lib")
-ENDIF(LIBUSB_1_FOUND)
+ENDIF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
