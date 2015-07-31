@@ -1,6 +1,10 @@
 #include "Freenect.h"
 #include "libfreenect/libfreenect.hpp"
 
+IPerModuleInterface* GetModule()
+{
+    return PerModuleInterface::GetInstance();
+}
 
 class MyFreenectDevice : public Freenect::FreenectDevice
 {
