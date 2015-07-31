@@ -150,26 +150,62 @@ cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     if(parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed)
     {
         cv::Mat* K = getParameter<cv::Mat>(0)->Data();
-        cv::Mat* D = getParameter<cv::Mat>(1)->Data();
-        cv::Mat* R = getParameter<cv::Mat>(2)->Data();
-        cv::Mat* P = getParameter<cv::Mat>(3)->Data();
-        log(Status, "Input parameters changed");
-        if(K && D && R && P && !K->empty() && !D->empty() && !P->empty() && !R->empty())
+        if(K == nullptr)
         {
-            cv::initUndistortRectifyMap(*K,*D, *R, *P, img.size(), CV_32FC1, X, Y);
-            mapX.upload(X, stream);
-            mapY.upload(Y,stream);
-            log(Status, "Undistortion maps calculated");
-            parameters[0]->changed = false;
-            parameters[1]->changed = false;
-            parameters[2]->changed = false;
-            parameters[3]->changed = false;
-            updateParameter("mapX", X);
-            updateParameter("mapY", Y);
-        }else
-        {
-            log(Warning, "Empty input matrix");
+            log(Warning, "Camera matrix undefined");
+            return img;
         }
+        cv::Mat* D = getParameter<cv::Mat>(1)->Data();
+        if(D == nullptr)
+        {
+            log(Warning, "Distortion matrix undefined");
+            return img;
+        }
+        cv::Mat* R = getParameter<cv::Mat>(2)->Data();
+        if(R == nullptr)
+        {
+            log(Warning, "Rotation matrix undefined");
+            return img;
+        }
+        cv::Mat* P = getParameter<cv::Mat>(3)->Data();
+        if(P == nullptr)
+        {
+            log(Warning, "Projection matrix undefined");
+            return img;
+        }
+        if(K->empty())
+        {
+            log(Warning, "Camera matrix empty");
+            return img;
+        }
+        if(D->empty())
+        {
+            log(Warning, "Distortion matrix empty");
+            return img;
+        }
+        if(R->empty())
+        {
+            log(Warning, "Rotation matrix empty");
+            return img;
+        }
+        if(P->empty())
+        {
+            log(Warning, "Projection matrix empty");
+            return img;
+        }
+
+        log(Status, "Calculating image rectification");
+        cv::initUndistortRectifyMap(*K,*D, *R, *P, img.size(), CV_32FC1, X, Y);
+        mapX.upload(X, stream);
+        mapY.upload(Y,stream);
+        log(Status, "Undistortion maps calculated");
+        parameters[0]->changed = false;
+        parameters[1]->changed = false;
+        parameters[2]->changed = false;
+        parameters[3]->changed = false;
+        updateParameter("mapX", mapX);
+        updateParameter("mapY", mapY);
+
     }
     if(!mapX.empty() && !mapY.empty())
     {

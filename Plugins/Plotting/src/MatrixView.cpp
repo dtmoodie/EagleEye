@@ -55,6 +55,8 @@ namespace EagleLib
             cv::Mat* mat;
             if(d_mat)
             {
+                if(d_mat->empty())
+                    return;
                 d_mat->download(h_mat);
                 mat = &h_mat;
             }else
@@ -108,7 +110,14 @@ namespace EagleLib
         virtual void setInput(Parameters::Parameter::Ptr param_)
         {
             Plotter::setInput(param_);
-            doUpdate();
+            try
+            {
+                doUpdate();
+            }catch(cv::Exception &e)
+            {
+                std::cout << e.what() << std::endl;
+            }
+
         }
 
     };

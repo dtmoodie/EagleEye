@@ -60,6 +60,10 @@ private slots:
     void on_btnClear_clicked();
     void on_uiCallback(boost::function<void(void)> f);
 
+    void on_btnStart_clicked();
+
+    void on_btnStop_clicked();
+
 signals:
     void onNewParameter(EagleLib::Node* node);
     void eLog(QString message);

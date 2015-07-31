@@ -68,7 +68,7 @@ boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log:
 	nodeGraphView->setInteractive(true);
     nodeGraphView->setViewport(new QGLWidget());
     nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
-    ui->gridLayout->addWidget(nodeGraphView, 2, 0, 1,2);
+    ui->gridLayout->addWidget(nodeGraphView, 2, 0, 1,4);
 	currentSelectedNodeWidget = nullptr;
     Parameters::UI::UiCallbackService::Instance()->setCallback(boost::bind(&MainWindow::processingThread_uiCallback, this, _1));
     rccSettings->hide();
@@ -626,4 +626,14 @@ void MainWindow::on_btnClear_clicked()
 
     parentList.clear();
     startProcessingThread();
+}
+
+void MainWindow::on_btnStart_clicked()
+{
+    startProcessingThread();
+}
+
+void MainWindow::on_btnStop_clicked()
+{
+    stopProcessingThread();
 }
