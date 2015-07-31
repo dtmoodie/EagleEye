@@ -47,6 +47,7 @@ boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log:
     qRegisterMetaType<EagleLib::Node*>("EagleLib::Node*");
     qRegisterMetaType<EagleLib::Verbosity>("EagleLib::Verbosity");
     qRegisterMetaType<boost::function<cv::Mat(void)>>("boost::function<cv::Mat(void)>");
+    qRegisterMetaType<boost::function<void(void)>>("boost::function<void(void)>");
     qRegisterMetaType<Parameters::Parameter::Ptr>("Parameters::Parameter::Ptr");
     qRegisterMetaType<size_t>("size_t");
 
@@ -69,13 +70,13 @@ boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log:
     nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->gridLayout->addWidget(nodeGraphView, 2, 0, 1,2);
 	currentSelectedNodeWidget = nullptr;
-
+    Parameters::UI::UiCallbackService::Instance()->setCallback(boost::bind(&MainWindow::processingThread_uiCallback, this, _1));
     rccSettings->hide();
     plotWizardDialog->hide();
 
 
     cv::redirectError(&static_errorHandler);
-
+    connect(this, SIGNAL(uiCallback(boost::function<void(void)>)), this, SLOT(on_uiCallback(boost::function<void(void)>)), Qt::QueuedConnection);
     connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
     connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
@@ -220,6 +221,16 @@ MainWindow::onSaveClicked()
     fs.release();
     startProcessingThread();
 }
+void MainWindow::on_uiCallback(boost::function<void(void)> f)
+{
+    if(f)
+        f();
+}
+
+void MainWindow::processingThread_uiCallback(boost::function<void ()> f)
+{
+    emit uiCallback(f);
+}
 
 void
 MainWindow::onLoadClicked()
@@ -314,13 +325,13 @@ MainWindow::onTimeout()
     static bool swapRequired = false;
     static bool joined = false;
     auto start = boost::posix_time::microsec_clock::universal_time();
-    EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
+    //EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
     auto ms = boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - start).total_milliseconds();
     if(ms > 30)
     {
         BOOST_LOG_TRIVIAL(warning) << "UI callbacks taking " << ms << " milliseconds to complete";
     }
-    Parameters::UI::UiCallbackService::Instance()->run();
+    //Parameters::UI::UiCallbackService::Instance()->run();
     for(size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi(false);

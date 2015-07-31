@@ -147,7 +147,6 @@ void UndistortStereo::Init(bool firstInit)
 
 cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    log(Status, "Test");
     if(parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed)
     {
         cv::Mat* K = getParameter<cv::Mat>(0)->Data();

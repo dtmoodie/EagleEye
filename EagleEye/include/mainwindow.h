@@ -30,6 +30,7 @@ public:
     void qtDisplay(cv::Mat img, EagleLib::Node *node);
     void onCompileLog(const std::string& msg, int level);
     virtual void closeEvent(QCloseEvent *event);
+    void processingThread_uiCallback(boost::function<void(void)> f);
 private slots:
     void on_pushButton_clicked();
     void onTimeout();
@@ -57,6 +58,7 @@ private slots:
     void on_actionLog_settings_triggered();
 
     void on_btnClear_clicked();
+    void on_uiCallback(boost::function<void(void)> f);
 
 signals:
     void onNewParameter(EagleLib::Node* node);
@@ -64,6 +66,7 @@ signals:
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);
     void qtDisplayImage(boost::function<cv::Mat(void)> function, EagleLib::Node* node);
+    void uiCallback(boost::function<void(void)> f);
     void uiNeedsUpdate();
     void pluginLoaded();
 

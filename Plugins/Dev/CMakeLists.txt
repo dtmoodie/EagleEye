@@ -25,7 +25,7 @@ file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
 IF(WIN32)
 
 ELSE()
-    SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
+    #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
 ENDIF()
 
 cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})

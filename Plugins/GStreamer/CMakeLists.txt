@@ -6,8 +6,8 @@ include(CMake)
 
 FIND_PACKAGE(Gstreamer)
 FIND_PACKAGE(PkgConfig)
-pkg_check_modules(GLIB2 glib-2.0)
-
+pkg_search_module(GLIB2 glib-2.0)
+if(GLIB2_FOUND)
 FILE(GLOB_RECURSE src "src/*.cpp")
 FILE(GLOB_RECURSE hdr "src/*.hpp")
 
@@ -37,9 +37,9 @@ TARGET_LINK_LIBRARIES(Gstreamer
     ${GSTREAMER_gsttag_LIBRARY}
     ${GSTREAMER_gstvideo_LIBRARY}
     ${Glib_LIBRARY}
-
 )
 ADD_DEPENDENCIES(Gstreamer EagleLib)
 
-
+ENDIF(GLIB2_FOUND)
 ENDIF(NOT WIN32)
+
