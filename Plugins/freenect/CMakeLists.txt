@@ -44,13 +44,13 @@ IF(LIBUSB_1_FOUND)
         SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
     ENDIF()
 
-    cuda_add_library(freenect SHARED ${src} ${hdr} ${knl})
+    cuda_add_library(freenect_node SHARED ${src} ${hdr} ${knl})
     MESSAGE(STATUS
     "=========== freenect ============
 
     ")
-    add_dependencies(freenect EagleLib)
-    target_link_libraries(freenect
+    add_dependencies(freenect_node EagleLib)
+    target_link_libraries(freenect_node
         EagleLib
         #${FREENECT_LIBRARIES}
         freenect

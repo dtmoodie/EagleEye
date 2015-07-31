@@ -60,14 +60,15 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
     moduleFunctor module = (moduleFunctor)dlsym(handle, "GetPerModuleInterface");
     const char *dlsym_error = dlerror();
     if (dlsym_error) {
-           std::cerr << "Cannot load symbol 'GetPerModuleInterface': " << dlsym_error << '\n';
+           std::cerr << dlsym_error << '\n';
            module = (moduleFunctor)dlsym(handle, "GetModule");
            dlsym_error = dlerror();
            if(dlsym_error)
            {
-                std::cerr << "Cannot load symbol 'GetModule': " << dlsym_error << '\n';
+                std::cerr << dlsym_error << '\n';
                 return false;
            }
+           std::cout << "Found symbol 'GetModule'" << std::endl;
 
        }
     if(module == nullptr)
