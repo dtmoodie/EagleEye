@@ -304,11 +304,45 @@ NodeManager::Init()
 #endif
 	return true;
 }
+void NodeManager::RegisterConstructorAddedCallback(boost::function<void(void)> f)
+{
+    if(f)
+        onConstructorsAddedCallbacks.push_back(f);
+}
 
 bool
 NodeManager::MainLoop()
 {
 	return true;
+}
+std::vector<std::string> NodeManager::getObjectList()
+{
+    std::vector<std::string> output;
+    AUDynArray<IObjectConstructor*> constructors;
+    m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+    for(int i = 0; i < constructors.Size(); ++i)
+    {
+        output.push_back(std::string(constructors[i]->GetName()));
+    }
+    return output;
+}
+
+std::vector<std::string> NodeManager::getLinkDependencies(const std::string& objectName)
+{
+    IObjectConstructor* constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(objectName.c_str());
+    std::vector<std::string> linkDependency;
+    if(constructor)
+    {
+        int linkLibCount = constructor->GetMaxNumLinkLibraries();
+        linkDependency.reserve(linkLibCount);
+        for(int i = 0; i < linkLibCount; ++i)
+        {
+            const char* lib = constructor->GetLinkLibrary(i);
+            if(lib)
+                linkDependency.push_back(std::string(lib));
+        }
+    }
+    return linkDependency;
 }
 
 void
@@ -347,6 +381,10 @@ NodeManager::OnConstructorsAdded()
 			}
 		}		
 	}
+    for(int i = 0; i < onConstructorsAddedCallbacks.size(); ++i)
+    {
+        onConstructorsAddedCallbacks[i]();
+    }
 }
 
 shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)

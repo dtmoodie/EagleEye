@@ -14,7 +14,7 @@ class RCCSettingsDialog : public QDialog
 public:
     explicit RCCSettingsDialog(QWidget *parent = 0);
     ~RCCSettingsDialog();
-	void updateDisplay();
+    void updateDisplay();
 private slots:
     void on_buttonBox_accepted();
 

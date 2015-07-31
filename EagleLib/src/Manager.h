@@ -167,6 +167,10 @@ namespace EagleLib
         std::vector<std::string> getLinkDirs();
         std::vector<std::string> getIncludeDirs();
 
+        std::vector<std::string> getObjectList();
+        std::vector<std::string> getLinkDependencies(const std::string& objectName);
+
+        void RegisterConstructorAddedCallback(boost::function<void(void)> f);
 
 	private:
         friend class PlotManager;
@@ -176,6 +180,7 @@ namespace EagleLib
         boost::shared_ptr<CompileLogger>                    m_pCompileLogger;
         TestCallback*                                       testCallback;
         std::vector<weak_ptr<Node>>                         nodes;
+        std::vector<boost::function<void(void)>>             onConstructorsAddedCallbacks;
 		
     }; // class NodeManager
 } // namespace EagleLib

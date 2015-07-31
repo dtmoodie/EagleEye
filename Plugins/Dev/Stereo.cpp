@@ -75,7 +75,7 @@ cv::cuda::GpuMat StereoBilateralFilter::doProcess(cv::cuda::GpuMat &img, cv::cud
 
 void StereoBeliefPropagation::Init(bool firstInit)
 {
-
+    bp = cv::cuda::createStereoBeliefPropagation();
 }
 
 cv::cuda::GpuMat StereoBeliefPropagation::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
@@ -86,12 +86,51 @@ cv::cuda::GpuMat StereoBeliefPropagation::doProcess(cv::cuda::GpuMat &img, cv::c
 
 void StereoConstantSpaceBP::Init(bool firstInit)
 {
+    if(firstInit)
+    {
+        updateParameter<int>("Num disparities", 128);
+        updateParameter<int>("Num iterations", 8);
+        updateParameter<int>("Num levels", 4);
+        updateParameter<int>("NR plane", 4);
+        Parameters::EnumParameter param;
+        param.addEnum(ENUM(CV_16SC1));
+        param.addEnum(ENUM(CV_32FC1));
+        updateParameter("Message type", param);
+        //createStereoConstantSpaceBP(int ndisp = 128, int iters = 8, int levels = 4, int nr_plane = 4, int msg_type = CV_32F);
+        addInputParameter<cv::cuda::GpuMat>("Left image");
+        addInputParameter<cv::cuda::GpuMat>("Right image");
+        csbp = cv::cuda::createStereoConstantSpaceBP();
+    }else
+    {
+        parameters[0]->changed = true;
+    }
 
 }
 
 cv::cuda::GpuMat StereoConstantSpaceBP::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    return img;
+    if(parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed || parameters[4]->changed)
+    {
+        csbp = cv::cuda::createStereoConstantSpaceBP(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data(), *getParameter<int>(2)->Data(), *getParameter<int>(3)->Data(), getParameter<Parameters::EnumParameter>(4)->Data()->getValue());
+    }
+    if(csbp == nullptr)
+    {
+        log(Error, "Stereo constant space bp == nullptr");
+        return img;
+    }
+    cv::cuda::GpuMat* left, *right;
+    left = getParameter<cv::cuda::GpuMat>("Left image")->Data();
+    right = getParameter<cv::cuda::GpuMat>("Right image")->Data();
+    if(left == nullptr)
+        left = & img;
+    if(right == nullptr)
+    {
+        log(Error, "Right image input not defined");
+        return img;
+    }
+    cv::cuda::GpuMat disp;
+    csbp->compute(*left, *right,disp);
+    return disp;
 }
 void UndistortStereo::Init(bool firstInit)
 {
@@ -101,18 +140,21 @@ void UndistortStereo::Init(bool firstInit)
         addInputParameter<cv::Mat>("Distortion Matrix");
         addInputParameter<cv::Mat>("Rotation Matrix");
         addInputParameter<cv::Mat>("Projection Matrix");
+        updateParameter<cv::cuda::GpuMat>("mapX", cv::cuda::GpuMat());
+        updateParameter<cv::cuda::GpuMat>("mapY", cv::cuda::GpuMat());
     }
 }
 
 cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
+    log(Status, "Test");
     if(parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed)
     {
         cv::Mat* K = getParameter<cv::Mat>(0)->Data();
         cv::Mat* D = getParameter<cv::Mat>(1)->Data();
         cv::Mat* R = getParameter<cv::Mat>(2)->Data();
         cv::Mat* P = getParameter<cv::Mat>(3)->Data();
-
+        log(Status, "Input parameters changed");
         if(K && D && R && P && !K->empty() && !D->empty() && !P->empty() && !R->empty())
         {
             cv::initUndistortRectifyMap(*K,*D, *R, *P, img.size(), CV_32FC1, X, Y);
@@ -123,6 +165,11 @@ cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
             parameters[1]->changed = false;
             parameters[2]->changed = false;
             parameters[3]->changed = false;
+            updateParameter("mapX", X);
+            updateParameter("mapY", Y);
+        }else
+        {
+            log(Warning, "Empty input matrix");
         }
     }
     if(!mapX.empty() && !mapY.empty())

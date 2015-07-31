@@ -16,13 +16,6 @@
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
-     <item row="5" column="1">
-      <widget class="QPushButton" name="btnAddLinkDir">
-       <property name="text">
-        <string>Add link dir</string>
-       </property>
-      </widget>
-     </item>
      <item row="4" column="0">
       <widget class="QPlainTextEdit" name="incDirs"/>
      </item>
@@ -43,10 +36,10 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_4">
+     <item row="3" column="1">
+      <widget class="QPushButton" name="btnAddIncludeDir">
        <property name="text">
-        <string>Num modules</string>
+        <string>Add include dir</string>
        </property>
       </widget>
      </item>
@@ -57,10 +50,10 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
-      <widget class="QPushButton" name="btnAddIncludeDir">
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>Add include dir</string>
+        <string>Num modules</string>
        </property>
       </widget>
      </item>
@@ -72,6 +65,22 @@
      </item>
      <item row="6" column="0">
       <widget class="QPlainTextEdit" name="linkDirs"/>
+     </item>
+     <item row="5" column="1">
+      <widget class="QPushButton" name="btnAddLinkDir">
+       <property name="text">
+        <string>Add link dir</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QTreeWidget" name="linkTree">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
      </item>
     </layout>
    </item>

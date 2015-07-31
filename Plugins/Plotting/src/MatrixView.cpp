@@ -28,7 +28,7 @@ namespace EagleLib
         virtual bool acceptsType(Parameters::Parameter::Ptr param) const
         {
             //return EagleLib::acceptsType<cv::Mat>(param->typeInfo);
-			return Loki::TypeInfo(typeid(cv::Mat)) == param->GetTypeInfo();
+            return Loki::TypeInfo(typeid(cv::Mat)) == param->GetTypeInfo() || Loki::TypeInfo(typeid(cv::cuda::GpuMat)) == param->GetTypeInfo();
 
         }
         virtual std::string plotName() const
@@ -50,7 +50,15 @@ namespace EagleLib
 
         virtual void doUpdate()
         {
-            cv::Mat* mat = getParameterPtr<cv::Mat>(param);
+            cv::cuda::GpuMat* d_mat = getParameterPtr<cv::cuda::GpuMat>(param);
+            cv::Mat h_mat;
+            cv::Mat* mat;
+            if(d_mat)
+            {
+                d_mat->download(h_mat);
+                mat = &h_mat;
+            }else
+                mat = getParameterPtr<cv::Mat>(param);
             if(mat == nullptr)
                 return;
             std::vector<QTableWidgetItem*> items;

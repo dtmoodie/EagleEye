@@ -22,6 +22,7 @@ namespace EagleLib
 
     class StereoBeliefPropagation: public Node
     {
+        cv::Ptr<cv::cuda::StereoBeliefPropagation> bp;
     public:
         StereoBeliefPropagation();
         virtual void Init(bool firstInit);
@@ -30,6 +31,7 @@ namespace EagleLib
 
     class StereoConstantSpaceBP: public Node
     {
+        cv::Ptr<cv::cuda::StereoConstantSpaceBP> csbp;
     public:
         StereoConstantSpaceBP();
         virtual void Init(bool firstInit);

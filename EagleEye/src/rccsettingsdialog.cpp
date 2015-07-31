@@ -7,12 +7,7 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->numModules->setText(QString::number(EagleLib::NodeManager::getInstance().getNumLoadedModules()));
-//    RCCPPOPTIMIZATIONLEVEL_DEFAULT = 0,		// RCCPPOPTIMIZATIONLEVEL_DEBUG in DEBUG, RCCPPOPTIMIZATIONLEVEL_PERF in release. This is the default state.
-//    RCCPPOPTIMIZATIONLEVEL_DEBUG,			// Low optimization, improve debug experiece. Default in DEBUG
-//    RCCPPOPTIMIZATIONLEVEL_PERF,			// Optimization for performance, debug experience may suffer. Default in RELEASE
-//    RCCPPOPTIMIZATIONLEVEL_NOT_SET,			// No optimization set in compile, so either underlying compiler default or set through SetAdditionalCompileOptions
-//    RCCPPOPTIMIZATIONLEVEL_SIZE
-
+    EagleLib::NodeManager::getInstance().RegisterConstructorAddedCallback(boost::bind(&RCCSettingsDialog::updateDisplay, this));
     ui->comboBox->addItem(RCppOptimizationLevelStrings[0]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[1]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[2]);
@@ -37,6 +32,21 @@ void RCCSettingsDialog::updateDisplay()
 		if (dir.size())
 			ui->linkDirs->appendPlainText(QString::fromStdString(dir));
 	}
+    auto objects = EagleLib::NodeManager::getInstance().getObjectList();
+    ui->linkTree->clear();
+    for(auto obj : objects)
+    {
+        QTreeWidgetItem* objItem = new QTreeWidgetItem(ui->linkTree);
+        objItem->setText(0,QString::fromStdString(obj));
+        ui->linkTree->addTopLevelItem(objItem);
+        auto linkDependencies = EagleLib::NodeManager::getInstance().getLinkDependencies(obj);
+        for(auto link : linkDependencies)
+        {
+            QTreeWidgetItem* dependency = new QTreeWidgetItem(objItem);
+            dependency->setText(0,QString::fromStdString(link));
+            objItem->addChild(dependency);
+        }
+    }
 }
 
 RCCSettingsDialog::~RCCSettingsDialog()
