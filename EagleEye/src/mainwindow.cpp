@@ -39,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
     rccSettings(new RCCSettingsDialog(this)),
     plotWizardDialog(new PlotWizardDialog(this))
 {
-boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
     qRegisterMetaType<cv::Mat>("cv::Mat");
