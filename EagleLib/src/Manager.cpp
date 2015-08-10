@@ -12,6 +12,7 @@
 #include <boost/foreach.hpp>
 #include "plotters/Plotter.h"
 #include <boost/log/trivial.hpp>
+#include <boost/log/attributes/named_scope.hpp>
 //#include <IObjectUtils.h>
 using namespace EagleLib;
 
@@ -120,6 +121,7 @@ void UIThreadCallback::processCallback()
 }
 void UIThreadCallback::processAllCallbacks()
 {
+	BOOST_LOG_NAMED_SCOPE("UIThreadCallback::processAllCallbacks")
     boost::function<void(void)> f;
     while(queue.try_pop(f))
     {
@@ -148,6 +150,7 @@ boost::asio::io_service& ProcessingThreadCallback::Instance()
 
 void ProcessingThreadCallback::Run()
 {
+	BOOST_LOG_NAMED_SCOPE("ProcessingThreadCallback::Run");
 	BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Running service";
 	service.run();
 }

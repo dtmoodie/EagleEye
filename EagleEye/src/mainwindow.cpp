@@ -26,6 +26,25 @@
 #include <boost/log/common.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/expressions/attr.hpp>
+#include <boost/log/attributes/time_traits.hpp>
+#include <boost/log/expressions/formatters.hpp>
+#include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/attributes/named_scope.hpp>
+#include <boost/log/expressions/formatters/named_scope.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/support/date_time.hpp>
+
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
 	return 0;
@@ -41,6 +60,47 @@ MainWindow::MainWindow(QWidget *parent) :
 	settingsDialog(new SettingDialog(this))
 {
 	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+	boost::log::add_common_attributes();
+	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
+    // https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
+	/*boost::log::add_console_log(std::cout, boost::log::keywords::format = (
+		boost::log::expressions::stream
+		<< boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "[%H:%M:%S") << " "
+		<< boost::log::expressions::attr< boost::thread::id >("ThreadID") << "]"
+		<< boost::log::trivial::severity << " "
+		<< boost::log::expressions::smessage));
+	boost::log::add_common_attributes();
+	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
+	boost::log::core::get()->add_global_attribute("ThreadID", boost::log::attributes::current_thread_id());*/
+	//boost::log::add_console_log(std::cout, boost::log::keywords::format = "%TimeStamp% - %LineID% %Severity% %ThreadID% - %Message%");
+	auto fmtTimeStamp = boost::log::expressions::
+		format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
+	auto fmtThreadId = boost::log::expressions::
+		attr<boost::log::attributes::current_thread_id::value_type>("ThreadID");
+	auto fmtSeverity = boost::log::expressions::
+		attr<boost::log::trivial::severity_level>("Severity");
+
+	auto fmtScope = boost::log::expressions::format_named_scope("Scope",
+		boost::log::keywords::format = "%n(%f:%l)",
+		boost::log::keywords::iteration = boost::log::expressions::reverse,
+		boost::log::keywords::depth = 2);
+
+	boost::log::formatter logFmt =
+		boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%] %5%")
+		% fmtTimeStamp % fmtThreadId % fmtSeverity % fmtScope
+		% boost::log::expressions::smessage;
+	auto consoleSink = boost::log::add_console_log(std::clog);
+	consoleSink->set_formatter(logFmt);
+
+	auto fsSink = boost::log::add_file_log(
+		boost::log::keywords::file_name = "test_%Y-%m-%d_%H-%M-%S.%N.log",
+		boost::log::keywords::rotation_size = 10 * 1024 * 1024,
+		boost::log::keywords::min_free_space = 30 * 1024 * 1024,
+		boost::log::keywords::open_mode = std::ios_base::app);
+	fsSink->set_formatter(logFmt);
+	fsSink->locked_backend()->auto_flush(true);
+
+
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
     qRegisterMetaType<cv::Mat>("cv::Mat");
