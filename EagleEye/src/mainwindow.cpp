@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	boost::log::add_common_attributes();
 	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
     // https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
-	/*boost::log::add_console_log(std::cout, boost::log::keywords::format = (
+	/*boost::log::add_console_LOG_TRIVIAL(std::cout, boost::log::keywords::format = (
 		boost::log::expressions::stream
 		<< boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "[%H:%M:%S") << " "
 		<< boost::log::expressions::attr< boost::thread::id >("ThreadID") << "]"
@@ -72,7 +72,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	boost::log::add_common_attributes();
 	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
 	boost::log::core::get()->add_global_attribute("ThreadID", boost::log::attributes::current_thread_id());*/
-	//boost::log::add_console_log(std::cout, boost::log::keywords::format = "%TimeStamp% - %LineID% %Severity% %ThreadID% - %Message%");
+	//boost::log::add_console_LOG_TRIVIAL(std::cout, boost::log::keywords::format = "%TimeStamp% - %LineID% %Severity% %ThreadID% - %Message%");
 	auto fmtTimeStamp = boost::log::expressions::
 		format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
 	auto fmtThreadId = boost::log::expressions::
@@ -139,7 +139,7 @@ MainWindow::MainWindow(QWidget *parent) :
     cv::redirectError(&static_errorHandler);
     connect(this, SIGNAL(uiCallback(boost::function<void(void)>)), this, SLOT(on_uiCallback(boost::function<void(void)>)), Qt::QueuedConnection);
     connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
-    connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
+    connect(this, SIGNAL(eLOG_TRIVIAL(QString)), this, SLOT(LOG_TRIVIAL(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
     connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
     connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
@@ -390,7 +390,7 @@ MainWindow::onTimeout()
     auto ms = boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - start).total_milliseconds();
     if(ms > 30)
     {
-        BOOST_LOG_TRIVIAL(warning) << "UI callbacks taking " << ms << " milliseconds to complete";
+        LOG_TRIVIAL(warning) << "UI callbacks taking " << ms << " milliseconds to complete";
     }
     //Parameters::UI::UiCallbackService::Instance()->run();
     for(size_t i = 0; i < widgets.size(); ++i)
@@ -402,20 +402,20 @@ MainWindow::onTimeout()
     {
         if(!processingThread.try_join_for(boost::chrono::milliseconds(200)) && !joined)
         {
-            log("Processing thread not joined, cannot perform object swap");
+            LOG_TRIVIAL(info) <<"Processing thread not joined, cannot perform object swap";
             return;
         }else
         {
-            log("Processing thread joined");
+			LOG_TRIVIAL(info) << "Processing thread joined";
             joined = true;
         }
         if(EagleLib::NodeManager::getInstance().CheckRecompile(true))
         {
            // Still compiling
-            log("Still compiling");
+			LOG_TRIVIAL(info) << "Still compiling";
         }else
         {
-            log("Recompile complete");
+			LOG_TRIVIAL(info) << "Recompile complete";
             processingThread = boost::thread(boost::bind(&processThread, &parentList, &parentMtx));
             swapRequired = false;
         }
@@ -423,7 +423,7 @@ MainWindow::onTimeout()
     }
     if(EagleLib::NodeManager::getInstance().CheckRecompile(false))
     {
-        log("Recompiling.....");
+		LOG_TRIVIAL(info) << "Recompiling.....";
         swapRequired = true;
         joined = false;
         processingThread.interrupt();

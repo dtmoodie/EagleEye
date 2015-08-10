@@ -121,24 +121,23 @@ void UIThreadCallback::processCallback()
 }
 void UIThreadCallback::processAllCallbacks()
 {
-	BOOST_LOG_NAMED_SCOPE("UIThreadCallback::processAllCallbacks")
+	LOG_TRACE;
     boost::function<void(void)> f;
     while(queue.try_pop(f))
     {
-		BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Processing callback";
         f();
     }
 }
 void UIThreadCallback::clearCallbacks()
 {
-	BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Clearing callbacks";
+	LOG_TRACE;
 	
     queue.clear();
 }
 
 void UIThreadCallback::setUINotifier(boost::function<void(void)> f)
 {
-	BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Setting UI notifier";
+	LOG_TRACE;
     notifier = f;
 }
 boost::asio::io_service ProcessingThreadCallback::service;
@@ -150,8 +149,9 @@ boost::asio::io_service& ProcessingThreadCallback::Instance()
 
 void ProcessingThreadCallback::Run()
 {
-	BOOST_LOG_NAMED_SCOPE("ProcessingThreadCallback::Run");
-	BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Running service";
+	//BOOST_LOG_NAMED_SCOPE("ProcessingThreadCallback::Run");
+	//BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Running service";
+	LOG_TRACE;
 	service.run();
 }
 
@@ -163,7 +163,7 @@ PlotManager& PlotManager::getInstance()
 
 shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
 {
-	BOOST_LOG_TRIVIAL(trace) << "[ PlotManager ] getPlot";
+	LOG_TRACE;
     IObjectConstructor* pConstructor = NodeManager::getInstance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(plotName.c_str());
     if(pConstructor && pConstructor->GetInterfaceId() == IID_Plotter)
     {
@@ -176,22 +176,34 @@ shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
                 Plotter* plotter = static_cast<Plotter*>(obj);
 				if (plotter)
 				{
-					BOOST_LOG_TRIVIAL(info) << "[ PlotManager ] successfully generating plot " << plotName;
+					LOG_TRIVIAL(info) << "[ PlotManager ] successfully generating plot " << plotName;
 					return shared_ptr<Plotter>(plotter);
-				}else
-					BOOST_LOG_TRIVIAL(warning) << "[ PlotManager ] failed to cast to plotter object " << plotName;
-            }else
-				BOOST_LOG_TRIVIAL(warning) << "[ PlotManager ] incorrect interface " << plotName;
-        }else
-			BOOST_LOG_TRIVIAL(warning) << "[ PlotManager ] failed to construct plot " << plotName;
-    }else
-		BOOST_LOG_TRIVIAL(warning) << "[ PlotManager ] failed to get constructor " << plotName;
+				}
+				else
+				{
+					LOG_TRIVIAL(warning) << "[ PlotManager ] failed to cast to plotter object " << plotName;
+				}
+			}
+			else
+			{
+				LOG_TRIVIAL(warning) << "[ PlotManager ] incorrect interface " << plotName;
+			}
+		}
+		else
+		{
+			LOG_TRIVIAL(warning) << "[ PlotManager ] failed to construct plot " << plotName;
+		}
+	}
+	else
+	{
+		LOG_TRIVIAL(warning) << "[ PlotManager ] failed to get constructor " << plotName;
+	}
 	return shared_ptr<Plotter>();
 }
 
 std::vector<std::string> PlotManager::getAvailablePlots()
 {
-	BOOST_LOG_TRIVIAL(trace) << "[ PlotManager ] getting all plots";
+	LOG_TRACE;
     AUDynArray<IObjectConstructor*> constructors;
     NodeManager::getInstance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
     std::vector<std::string> output;
@@ -220,7 +232,7 @@ NodeManager::~NodeManager()
 }
 void NodeManager::addIncludeDir(const std::string& dir)
 {
-	BOOST_LOG_TRIVIAL(info) << "[ NodeManager ] adding include dir " << dir;
+	LOG_TRACE << " " << dir;
     m_pRuntimeObjectSystem->AddIncludeDir(dir.c_str());
 }
 void NodeManager::addIncludeDirs(const std::string& dirs)
@@ -234,7 +246,7 @@ void NodeManager::addIncludeDirs(const std::string& dirs)
 }
 void NodeManager::addLinkDir(const std::string& dir)
 {
-	BOOST_LOG_TRIVIAL(info) << "[ NodeManager ] adding link dir " << dir;
+	LOG_TRACE << dir;
 	m_pRuntimeObjectSystem->AddLibraryDir(dir.c_str());
 }
 std::vector<std::string> NodeManager::getLinkDirs()
@@ -250,6 +262,7 @@ std::vector<std::string> NodeManager::getLinkDirs()
 
 std::vector<std::string> NodeManager::getIncludeDirs()
 {
+	LOG_TRACE;
     std::vector<std::string> output;
     auto inc = m_pRuntimeObjectSystem->GetIncludeDirList(0);
     for(int i = 0; i < inc.size(); ++i)
@@ -261,6 +274,7 @@ std::vector<std::string> NodeManager::getIncludeDirs()
 
 void NodeManager::addLinkDirs(const std::string& dirs)
 {
+	LOG_TRACE;
 	boost::char_separator<char> sep("+");
 	boost::tokenizer<boost::char_separator<char>> tokens(dirs, sep);
 	BOOST_FOREACH(const std::string& t, tokens)
@@ -270,7 +284,7 @@ void NodeManager::addLinkDirs(const std::string& dirs)
 }
 void NodeManager::addSourceFile(const std::string &file)
 {
-	BOOST_LOG_TRIVIAL(info) << "[ NodeManager ] adding source file " << file;
+	LOG_TRACE << " " << file;
     m_pRuntimeObjectSystem->AddToRuntimeFileList(file.c_str());
 }
 
@@ -316,10 +330,12 @@ void NodeManager::RegisterConstructorAddedCallback(boost::function<void(void)> f
 bool
 NodeManager::MainLoop()
 {
+	LOG_TRACE;
 	return true;
 }
 std::vector<std::string> NodeManager::getObjectList()
 {
+	LOG_TRACE;
     std::vector<std::string> output;
     AUDynArray<IObjectConstructor*> constructors;
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
@@ -332,6 +348,7 @@ std::vector<std::string> NodeManager::getObjectList()
 
 std::vector<std::string> NodeManager::getLinkDependencies(const std::string& objectName)
 {
+	LOG_TRACE;
     IObjectConstructor* constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(objectName.c_str());
     std::vector<std::string> linkDependency;
     if(constructor)
@@ -351,7 +368,7 @@ std::vector<std::string> NodeManager::getLinkDependencies(const std::string& obj
 void
 NodeManager::OnConstructorsAdded()
 {
-	BOOST_LOG_TRIVIAL(trace) << "[ NodeManager ] OnConstructorsAdded";
+	LOG_TRACE;
 	AUDynArray<IObjectConstructor*> constructors;
 	m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
 	std::vector<Node*> newNodes;
@@ -392,7 +409,7 @@ NodeManager::OnConstructorsAdded()
 
 shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
 {
-	BOOST_LOG_TRIVIAL(trace) << "[ NodeManager ] addNode " << nodeName;
+	LOG_TRACE << nodeName;
     IObjectConstructor* pConstructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
 
     if(pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
@@ -422,11 +439,12 @@ shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
 }
 std::vector<shared_ptr<Node>> NodeManager::loadNodes(const std::string& saveFile)
 {
+	LOG_TRACE;
     boost::filesystem::path path(saveFile);
     if(!boost::filesystem::is_regular_file(path))
     {
         //std::cout << "Unable to load " << saveFile << " doesn't exist, or is not a regular file" << std::endl;
-		BOOST_LOG_TRIVIAL(warning) << "[ NodeManager ] " << saveFile << " doesn't exist or not a regular file";
+		LOG_TRIVIAL(warning) << "[ NodeManager ] " << saveFile << " doesn't exist or not a regular file";
     }
     cv::FileStorage fs;
     try
@@ -435,11 +453,11 @@ std::vector<shared_ptr<Node>> NodeManager::loadNodes(const std::string& saveFile
     }catch(cv::Exception &e)
     {
         //std::cout << e.what() << std::endl;
-		BOOST_LOG_TRIVIAL(error) << "[ NodeManager ] " << e.what();
+		LOG_TRIVIAL(error) << "[ NodeManager ] " << e.what();
     }
 
     int nodeCount = (int)fs["TopLevelNodeCount"];
-	BOOST_LOG_TRIVIAL(info) << "[ NodeManager ] " << "Loading " << nodeCount << " nodes";
+	LOG_TRIVIAL(info) << "[ NodeManager ] " << "Loading " << nodeCount << " nodes";
     std::vector<shared_ptr<Node>> nodes;
     nodes.reserve(nodeCount);
     for(int i = 0; i < nodeCount; ++i)
@@ -462,6 +480,7 @@ void NodeManager::saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, const 
 }
 void NodeManager::saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, cv::FileStorage fs)
 {
+	LOG_TRACE;
     fs << "TopLevelNodeCount" << (int)topLevelNodes.size();
 
     for(size_t i = 0; i < topLevelNodes.size(); ++i)
@@ -474,11 +493,12 @@ void NodeManager::saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, cv::Fi
 
 bool NodeManager::removeNode(const std::string& nodeName)
 {
-
+	LOG_TRACE;
     return false;
 }
 std::string NodeManager::getNodeFile(const ObjectId& id)
 {
+	LOG_TRACE;
     AUDynArray<IObjectConstructor*> constructors;
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
     if(constructors.Size() > id.m_ConstructorId)
@@ -490,18 +510,20 @@ std::string NodeManager::getNodeFile(const ObjectId& id)
 
 bool NodeManager::removeNode(ObjectId oid)
 {
-
+	LOG_TRACE;
 	return false;
 }
 
 void 
 NodeManager::addConstructors(IAUDynArray<IObjectConstructor*> & constructors)
 {
+	LOG_TRACE;
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddConstructors(constructors);
 }
 void 
 NodeManager::setupModule(IPerModuleInterface* pPerModuleInterface)
 {
+	LOG_TRACE;
 	m_pRuntimeObjectSystem->SetupObjectConstructors(pPerModuleInterface);
 }
 #ifdef _MSC_VER
@@ -551,6 +573,7 @@ NodeManager::loadModule(const std::string &filePath)
 bool 
 NodeManager::CheckRecompile()
 {
+	LOG_TRACE;
 	static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
 	boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
 	boost::posix_time::time_duration delta = currentTime - prevTime;
@@ -575,12 +598,13 @@ NodeManager::CheckRecompile()
 
 void NodeManager::saveTree(const std::string &fileName)
 {
-
+	LOG_TRACE;
 }
 
 bool
 NodeManager::CheckRecompile(bool swapAllowed)
 {
+	LOG_TRACE;
     static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta = currentTime - prevTime;
@@ -603,6 +627,7 @@ NodeManager::CheckRecompile(bool swapAllowed)
 }
 bool NodeManager::TestRuntimeCompilation()
 {
+	LOG_TRACE;
     if(testCallback == nullptr)
         testCallback = new TestCallback();
     m_pRuntimeObjectSystem->TestBuildAllRuntimeHeaders(testCallback,true);
@@ -618,6 +643,7 @@ NodeManager::onNodeRecompile(Node *node)
 Node*
 NodeManager::getNode(const ObjectId& id)
 {
+	LOG_TRACE;
     AUDynArray<IObjectConstructor*> constructors;
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
     if(!id.IsValid())
@@ -638,6 +664,7 @@ NodeManager::getNode(const ObjectId& id)
 Node*
 NodeManager::getNode(const std::string &treeName)
 {
+	LOG_TRACE;
     for(size_t i = 0; i < nodes.size(); ++i)
     {
         if(nodes[i] != nullptr)
@@ -654,6 +681,7 @@ NodeManager::getNode(const std::string &treeName)
 void 
 NodeManager::updateTreeName(Node* node, const std::string& prevTreeName)
 {
+	LOG_TRACE;
     /*m_nodeTree.put(t_nodeTree::path_type{ node->fullTreeName, '.' }, node);
     m_nodeTree.erase(prevTreeName);*/
 }
@@ -661,6 +689,7 @@ NodeManager::updateTreeName(Node* node, const std::string& prevTreeName)
 void 
 NodeManager::addParameters(Node* node)
 {
+	LOG_TRACE;
     for (size_t i = 0; i < node->parameters.size(); ++i)
 	{
 		
@@ -670,6 +699,7 @@ NodeManager::addParameters(Node* node)
 Parameters::Parameter::Ptr
 NodeManager::getParameter(const std::string& name)
 {
+	LOG_TRACE;
 	// Strip off the path for the node
 	auto idx = name.find(':');
 	std::string parameterName = name.substr(idx+1);
@@ -682,14 +712,16 @@ NodeManager::getParameter(const std::string& name)
 void
 NodeManager::getSiblingNodes(const std::string& sourceNode, std::vector<Node*>& output)
 {
-
+	LOG_TRACE;
 }
 void NodeManager::setCompileCallback(boost::function<void (const std::string &, int)> &f)
 {
+	LOG_TRACE;
     m_pCompileLogger->callback = f;
 }
 void printTreeHelper(std::stringstream& tree, int level, Node* node)
 {
+	LOG_TRACE;
     for(int i = 0; i < level; ++i)
     {
         tree << "+";
@@ -703,6 +735,7 @@ void printTreeHelper(std::stringstream& tree, int level, Node* node)
 
 void NodeManager::printNodeTree(boost::function<void(std::string)> f)
 {
+	LOG_TRACE;
     std::stringstream tree;
     std::vector<weak_ptr<Node>> parentNodes;
     // First get the top level nodes for the tree
@@ -732,22 +765,24 @@ void NodeManager::printNodeTree(boost::function<void(std::string)> f)
 Node*
 NodeManager::getParent(const std::string& sourceNode)
 {
-
+	LOG_TRACE;
     return nullptr;
 }
 void NodeManager::getParentNodes(const std::string& sourceNode, std::vector<Node*>& output)
 {
-
+	LOG_TRACE;
 }
 
 void NodeManager::getAccessibleNodes(const std::string& sourceNode, std::vector<Node*>& output)
 {
+	LOG_TRACE;
 	getSiblingNodes(sourceNode, output);
 	getParentNodes(sourceNode, output);
 }
 std::vector<std::string>
 NodeManager::getConstructableNodes()
 {
+	LOG_TRACE;
     AUDynArray<IObjectConstructor*> constructors;
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
     std::vector<std::string> output;
@@ -767,11 +802,13 @@ NodeManager::getConstructableNodes()
 }
 RCppOptimizationLevel NodeManager::getOptimizationLevel()
 {
+	LOG_TRACE;
     return m_pRuntimeObjectSystem->GetOptimizationLevel();
 }
 
 void NodeManager::setOptimizationLevel(RCppOptimizationLevel level)
 {
+	LOG_TRACE;
     m_pRuntimeObjectSystem->SetOptimizationLevel(level);
 }
 int NodeManager::getNumLoadedModules()
@@ -780,6 +817,7 @@ int NodeManager::getNumLoadedModules()
 }
 std::vector<std::string> NodeManager::getParametersOfType(boost::function<bool(Loki::TypeInfo)> selector)
 {
+	LOG_TRACE;
     std::vector<std::string> parameters;
     for(size_t i = 0; i < nodes.size(); ++i)
     {
