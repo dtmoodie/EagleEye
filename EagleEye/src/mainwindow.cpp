@@ -34,10 +34,11 @@ int static_errorHandler( int status, const char* func_name,const char* err_msg, 
 static void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mutex *mtx);
 static void process(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mutex *mtx);
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    rccSettings(new RCCSettingsDialog(this)),
-    plotWizardDialog(new PlotWizardDialog(this))
+	QMainWindow(parent),
+	ui(new Ui::MainWindow),
+	rccSettings(new RCCSettingsDialog(this)),
+	plotWizardDialog(new PlotWizardDialog(this)),
+	settingsDialog(new SettingDialog(this))
 {
 	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
     qRegisterMetaType<std::string>("std::string");
@@ -616,9 +617,7 @@ void MainWindow::stopProcessingThread()
 
 void MainWindow::on_actionLog_settings_triggered()
 {
-    SettingDialog dlg;
-    dlg.show();
-    dlg.exec();
+    settingsDialog->show();   
 }
 void MainWindow::on_btnClear_clicked()
 {

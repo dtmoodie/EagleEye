@@ -17,7 +17,7 @@
 namespace Ui {
 class MainWindow;
 }
-
+class SettingDialog;
 
 class MainWindow : public QMainWindow
 {
@@ -92,6 +92,7 @@ private:
     RCCSettingsDialog* rccSettings;
     std::map<std::string, cv::Vec2f> positionMap;
     PlotWizardDialog* plotWizardDialog;
+	SettingDialog*  settingsDialog;
 };
 
 

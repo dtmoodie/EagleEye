@@ -24,6 +24,7 @@ SettingDialog::~SettingDialog()
 
 void SettingDialog::on_debugLevel_indexChanged(int value)
 {
+	
     switch(value)
     {
     case 0:
