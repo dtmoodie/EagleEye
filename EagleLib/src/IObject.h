@@ -81,8 +81,7 @@ template<typename T> class weak_ptr : public IObjectNotifiable
     friend class shared_ptr<T>;
     virtual void updateObject(IObject *ptr)
     {
-        //m_object = dynamic_cast<T*>(ptr);
-		m_object = (T*)ptr;
+		m_object = static_cast<T*>(ptr);
     }
 
 
