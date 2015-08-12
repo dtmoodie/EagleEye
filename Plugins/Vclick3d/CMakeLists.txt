@@ -1,5 +1,5 @@
 PROJECT(Vclick3d)
-
+CMAKE_POLICY(SET CMP0020 NEW)
 FIND_PACKAGE(Qt5Network)
 IF(Qt5Network_FOUND)
 FIND_PACKAGE(OpenCV REQUIRED COMPONENTS core videoio highgui)
@@ -16,7 +16,7 @@ INCLUDE_DIRECTORIES(
 FILE(GLOB_RECURSE hdrs "include/*.h")
 FILE(GLOB_RECURSE src "src/*.cpp")
 
-QT5_WRAP_CPP(MOC ${src} ${hdrs})
+QT5_WRAP_CPP(MOC ${hdrs})
 LINK_DIRECTORIES(${LINK_DIRS})
 CUDA_ADD_LIBRARY(Vclick3d SHARED ${hdrs} ${src} ${MOC})
 ADD_DEPENDENCIES(Vclick3d EagleLib)

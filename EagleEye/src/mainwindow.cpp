@@ -308,6 +308,7 @@ MainWindow::onLoadClicked()
 	}
 	catch (cv::Exception &e)
 	{
+		BOOST_LOG_TRIVIAL(error) << "Failed to load file " << file.toStdString() << " " << e.what();
 		return;
 	}
     
@@ -639,7 +640,7 @@ void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::timed_mutex* mtx)
 
 void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mutex *mtx)
 {
-    std::cout << "Processing thread started" << std::endl;
+	BOOST_LOG_TRIVIAL(info) << "Processing thread started" << std::endl;
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta;
@@ -656,11 +657,13 @@ void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mu
 				boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
         }catch(boost::thread_interrupted& err)
         {
+			err;
+			BOOST_LOG_TRIVIAL(info) << "Processing thread interrupted";
             break;
         }
         
     }
-    std::cout << "Interrupt requested, processing thread ended" << std::endl;
+    BOOST_LOG_TRIVIAL(info) << "Interrupt requested, processing thread ended";
 }
 void MainWindow::startProcessingThread()
 {

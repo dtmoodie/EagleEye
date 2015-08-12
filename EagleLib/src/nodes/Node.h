@@ -68,7 +68,7 @@
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
-
+#define NODE_LOG(severity) LOG_TRIVIAL(severity) << "[" << fullTreeName << "]"
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
@@ -98,30 +98,30 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
 #define CATCH_MACRO                                                         \
 }catch (boost::thread_resource_error& err)                                  \
 {                                                                           \
-    log(Error, err.what());                                                 \
+    NODE_LOG(error)<< err.what();                                           \
 }catch (boost::thread_interrupted& err)                                     \
 {                                                                           \
-    log(Error, "Thread interrupted");                                       \
-    /* Needs to pass this back up to the chain to the processing thread.*/    \
-    /* That way it knowns it needs to exit this thread */                     \
+    NODE_LOG(error)<<"Thread interrupted";                                  \
+    /* Needs to pass this back up to the chain to the processing thread.*/  \
+    /* That way it knowns it needs to exit this thread */                   \
     throw err;                                                              \
 }catch (boost::thread_exception& err)                                       \
 {                                                                           \
-    log(Error, err.what());                                                 \
+    NODE_LOG(error)<< err.what();                                           \
 }                                                                           \
 catch (cv::Exception &err)                                                  \
 {                                                                           \
-    log(Error, err.what());                                                 \
+    NODE_LOG(error)<< err.what();                                           \
 }                                                                           \
 catch (boost::exception &err)                                               \
 {                                                                           \
-    log(Error, "Boost error");                                              \
+    NODE_LOG(error)<<"Boost error";                                         \
 }catch(std::exception &err)                                                 \
 {                                                                           \
-    log(Error, err.what());                                                 \
+    NODE_LOG(error)<<err.what();										    \
 }catch(...)                                                                 \
 {                                                                           \
-    log(Error, "Unknown exception");                                        \
+    NODE_LOG(error)<<"Unknown exception";                                   \
 }
 
 
@@ -527,6 +527,8 @@ namespace EagleLib
 			}
 			catch (cv::Exception &e)
 			{
+				e.what();
+				NODE_LOG(debug) << name << " doesn't exist, adding";
 				return registerParameter<T>(name, data, type_, toolTip_, ownsData_);
 			}
 			param->UpdateData(data);
@@ -547,6 +549,8 @@ namespace EagleLib
                 param = getParameter<T>(name);
             }catch(cv::Exception &e)
             {
+				e.what();
+				NODE_LOG(debug) << name << " doesn't exist, adding";
                 return addParameter<T>(name, data, type_, toolTip_, ownsData_);
             }
 			if (type_ != Parameters::Parameter::None)

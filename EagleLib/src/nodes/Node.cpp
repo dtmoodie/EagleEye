@@ -43,7 +43,7 @@ Node::Node():
 	nodeType = eVirtual;
 
 	resetConnection = resetSignal.connect(boost::bind(&Node::reset, this));
-	BOOST_LOG_TRIVIAL(trace) << "[ " << treeName << " ]" << " Constructor";
+	NODE_LOG(trace) << " Constructor";
 }
 
 Node::~Node()
@@ -54,15 +54,17 @@ Node::~Node()
 	{
 		callbackConnections[i].disconnect();
 	}
-	BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Destructor";
+	NODE_LOG(trace) << " Destructor";
 }
 void Node::reset()
 {
+	NODE_LOG(trace);
 	Init(false);
 }
 
 void Node::updateParent()
 {
+	NODE_LOG(trace);
     if(parent)
         parent->registerNotifier(this);
 }
@@ -70,16 +72,18 @@ void Node::updateParent()
 void
 Node::getInputs()
 {
-
+	NODE_LOG(trace);
 }
 Node::Ptr
 Node::addChild(Node* child)
 {
+	NODE_LOG(trace);
     return addChild(Node::Ptr(child));
 }
 Node::Ptr
 Node::addChild(Node::Ptr child)
 {
+	NODE_LOG(trace);
     if (child == nullptr)
         return child;
     if(std::find(children.begin(), children.end(), child) != children.end())
@@ -102,6 +106,7 @@ Node::addChild(Node::Ptr child)
 Node::Ptr
 Node::getChild(const std::string& treeName)
 {
+	NODE_LOG(trace);
     for(size_t i = 0; i < children.size(); ++i)
     {
         if(children[i]->treeName == treeName)
@@ -114,17 +119,20 @@ Node::getChild(const std::string& treeName)
 Node::Ptr
 Node::getChild(const int& index)
 {
+	NODE_LOG(trace);
     return children[index];
 }
 void
 Node::swapChildren(int idx1, int idx2)
 {
+	NODE_LOG(trace);
     std::iter_swap(children.begin() + idx1, children.begin() + idx2);
 }
 
 void
 Node::swapChildren(const std::string& name1, const std::string& name2)
 {
+	NODE_LOG(trace);
     auto itr1 = children.begin();
     auto itr2 = children.begin();
     for(; itr1 != children.begin(); ++itr1)
@@ -143,6 +151,7 @@ Node::swapChildren(const std::string& name1, const std::string& name2)
 void
 Node::swapChildren(Node::Ptr child1, Node::Ptr child2)
 {
+	NODE_LOG(trace);
     auto itr1 = std::find(children.begin(),children.end(), child1);
     if(itr1 == children.end())
         return;
@@ -153,6 +162,7 @@ Node::swapChildren(Node::Ptr child1, Node::Ptr child2)
 }
 std::vector<Node *> Node::getNodesInScope()
 {
+	NODE_LOG(trace);
     std::vector<Node*> nodes;
     if(parent)
         parent->getNodesInScope(nodes);
@@ -161,6 +171,7 @@ std::vector<Node *> Node::getNodesInScope()
 Node*
 Node::getNodeInScope(const std::string& name)
 {
+	NODE_LOG(trace);
     // Check if this is a child node of mine, if not go up
     int ret = name.compare(0, fullTreeName.length(), fullTreeName);
     if(ret == 0)
@@ -181,6 +192,7 @@ Node::getNodeInScope(const std::string& name)
 void
 Node::getNodesInScope(std::vector<Node *> &nodes)
 {
+	NODE_LOG(trace);
     // First travel to the root node
 
     if(nodes.size() == 0)
@@ -204,6 +216,7 @@ Node::getNodesInScope(std::vector<Node *> &nodes)
 
 Parameters::Parameter::Ptr Node::getParameter(int idx)
 {
+	NODE_LOG(trace);
 	if (idx < parameters.size())
 		return parameters[idx];
 	else
@@ -212,6 +225,7 @@ Parameters::Parameter::Ptr Node::getParameter(int idx)
 
 Parameters::Parameter::Ptr Node::getParameter(const std::string& name)
 {
+	NODE_LOG(trace);
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->GetName() == name)
@@ -221,6 +235,7 @@ Parameters::Parameter::Ptr Node::getParameter(const std::string& name)
 }
 std::vector<std::string> Node::listParameters()
 {
+	NODE_LOG(trace);
 	std::vector<std::string> paramList;
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
@@ -230,6 +245,7 @@ std::vector<std::string> Node::listParameters()
 }
 std::vector<std::string> Node::listInputs()
 {
+	NODE_LOG(trace);
 	std::vector<std::string> paramList;
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
@@ -241,6 +257,7 @@ std::vector<std::string> Node::listInputs()
 Node*
 Node::getChildRecursive(std::string treeName_)
 {
+	NODE_LOG(trace);
 
     // TODO tree structure parsing and correct directing of the search
     // Find the common base between this node and treeName
@@ -252,6 +269,7 @@ Node::getChildRecursive(std::string treeName_)
 void
 Node::removeChild(Node::Ptr node)
 {
+	NODE_LOG(trace);
     for(auto itr = children.begin(); itr != children.end(); ++itr)
     {
         if(*itr == node)
@@ -264,12 +282,14 @@ Node::removeChild(Node::Ptr node)
 void
 Node::removeChild(int idx)
 {
+	NODE_LOG(trace);
     children.erase(children.begin() + idx);
 }
 
 void
 Node::removeChild(const std::string &name)
 {
+	NODE_LOG(trace);
     for(auto itr = children.begin(); itr != children.end(); ++itr)
     {
         if((*itr)->treeName == name)
@@ -287,7 +307,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         return img;
     if(img.empty() && SkipEmpty())
     {
-		BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Skipped due to empty input";
+		NODE_LOG(trace) << " Skipped due to empty input";
     }else
     {
         try
@@ -297,7 +317,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                 //boost::recursive_mutex::scoped_lock lock(mtx);
                 start = boost::posix_time::microsec_clock::universal_time();
                 // Used for debugging which nodes have started, thus if a segfault occurs you can know which node caused it
-				BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " process enabled: " << enabled;
+				NODE_LOG(trace) << " process enabled: " << enabled;
                 if(enabled)
                 {
                     boost::recursive_mutex::scoped_lock lock(mtx);
@@ -351,7 +371,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         cv::cuda::GpuMat* childResult = childResults.getFront();
         if(!img.empty())
             img.copyTo(*childResult,stream);
-		BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Executing " << children.size() << " child nodes";
+		NODE_LOG(trace) << " Executing " << children.size() << " child nodes";
         std::vector<Node::Ptr>  children_;
         children_.reserve(children.size());
         {
@@ -372,7 +392,8 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
                 CATCH_MACRO
             }else
             {
-                log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(i));
+                //log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(i));
+				NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
             }
         }
         // So here is the debate of is a node's output the output of it, or the output of its children....
@@ -385,7 +406,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 void					
 Node::process(cv::InputArray in, cv::OutputArray out)
 {
-
+	NODE_LOG(trace);
 	try
 	{
 		return doProcess(in, out);
@@ -399,63 +420,72 @@ Node::process(cv::InputArray in, cv::OutputArray out)
 cv::cuda::GpuMat
 Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )
 {
+	NODE_LOG(trace);
     return img;
 }
 void					
 Node::doProcess(cv::InputArray, cv::OutputArray)
 {
-
+	NODE_LOG(trace);
 }
 
 void
 Node::doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat> &retVal)
 {
+	NODE_LOG(trace);
     retVal.set_value(process(img));
 }
 void
 Node::doProcess(cv::InputArray in, boost::promise<cv::OutputArray> &retVal)
 {
 	// Figure this out later :(
-
+	NODE_LOG(trace);
 	
 }
 void
 Node::registerDisplayCallback(boost::function<void(cv::Mat, Node*)>& f)
 {
+	NODE_LOG(trace);
     cpuDisplayCallback = f;
 }
 
 void
 Node::registerDisplayCallback(boost::function<void(cv::cuda::GpuMat, Node*)>& f)
 {
+	NODE_LOG(trace);
 	gpuDisplayCallback = f;
 }
 
 void
 Node::spawnDisplay()
 {
+	NODE_LOG(trace);
 	cv::namedWindow(treeName);
 	externalDisplay = true;
 }
 void
 Node::killDisplay()
 {
+	NODE_LOG(trace);
 	if (externalDisplay)
 		cv::destroyWindow(treeName);
 }
 std::string
 Node::getName() const
 {
+	NODE_LOG(trace);
     return nodeName;
 }
 std::string
 Node::getTreeName() const
 {
+	NODE_LOG(trace);
     return treeName;
 }
 Node*
 Node::getParent()
 {
+	NODE_LOG(trace);
     return parent;
 }
 
@@ -464,22 +494,24 @@ Node*
 Node::swap(Node* other)
 {
     // By moving ownership of all parameters to the new node, all
-
+	NODE_LOG(trace);
     return other;
 }
 void
 Node::Init(bool firstInit)
 {
+	NODE_LOG(trace);
     IObject::Init(firstInit);
 }
 
 void
 Node::Init(const std::string &configFile)
 {
-
+	NODE_LOG(trace);
 }
 void Node::RegisterParameterCallback(int idx, boost::function<void(void)> callback)
 {
+	NODE_LOG(trace);
 	auto param = getParameter(idx);
 	if (param)
 	{
@@ -488,6 +520,7 @@ void Node::RegisterParameterCallback(int idx, boost::function<void(void)> callba
 }
 void Node::RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback)
 {
+	NODE_LOG(trace);
 	auto param = getParameter(name);
 	if (param)
 	{
@@ -498,7 +531,7 @@ void Node::RegisterParameterCallback(const std::string& name, boost::function<vo
 void
 Node::Init(const cv::FileNode& configNode)
 {
-	BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Initializing from file";
+	NODE_LOG(trace) << " Initializing from file";
     configNode["NodeName"] >> nodeName;
     configNode["NodeTreeName"] >> treeName;
     configNode["FullTreeName"] >> fullTreeName;
@@ -519,7 +552,8 @@ Node::Init(const cv::FileNode& configNode)
 		}
 		else
 		{
-			log(Error, "No node found with the name " + name);
+			//log(Error, "No node found with the name " + name);
+			NODE_LOG(error) << "No node found with the name " << name;
 		}
     }
     cv::FileNode paramNode =  configNode["Parameters"];
@@ -558,7 +592,7 @@ Node::Init(const cv::FileNode& configNode)
 		}
 		catch (cv::Exception &e)
 		{
-			std::cout << "Deserialization failed for " << parameters[i]->GetName() << " with type " << parameters[i]->GetTypeInfo().name() << std::endl;
+			NODE_LOG(error) << "Deserialization failed for " << parameters[i]->GetName() << " with type " << parameters[i]->GetTypeInfo().name() << std::endl;
 		}
         //parameters[i]->Init(paramNode);
         //parameters[i]->update();
@@ -569,7 +603,7 @@ Node::Init(const cv::FileNode& configNode)
 void
 Node::Serialize(ISimpleSerializer *pSerializer)
 {
-	BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Serializing";
+	NODE_LOG(trace) << " Serializing";
     IObject::Serialize(pSerializer);
     SERIALIZE(parameters);
     SERIALIZE(children);
@@ -589,7 +623,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
 void
 Node::Serialize(cv::FileStorage& fs)
 {
-	BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Serializing to file";
+	NODE_LOG(trace) << " Serializing to file";
     if(fs.isOpened())
     {
         fs << "NodeName" << nodeName;
@@ -641,6 +675,7 @@ Node::Serialize(cv::FileStorage& fs)
 					}
 					catch (cv::Exception &e)
 					{
+						NODE_LOG(warning) << e.what();
 						continue;
 					}
 				}
@@ -654,6 +689,7 @@ Node::Serialize(cv::FileStorage& fs)
 std::vector<std::string>
 Node::findType(Parameters::Parameter::Ptr param)
 {
+	NODE_LOG(trace);
     std::vector<Node*> nodes;
     getNodesInScope(nodes);
     return findType(param, nodes);
@@ -662,6 +698,7 @@ Node::findType(Parameters::Parameter::Ptr param)
 std::vector<std::string>
 Node::findType(Loki::TypeInfo typeInfo)
 {
+	NODE_LOG(trace);
     std::vector<Node*> nodes;
     getNodesInScope(nodes);
     return findType(typeInfo, nodes);
@@ -669,6 +706,7 @@ Node::findType(Loki::TypeInfo typeInfo)
 std::vector<std::string>
 Node::findType(Parameters::Parameter::Ptr param, std::vector<Node*>& nodes)
 {
+	NODE_LOG(trace);
     std::vector<std::string> output;
 	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
 	if (inputParam)
@@ -698,6 +736,7 @@ Node::findType(Parameters::Parameter::Ptr param, std::vector<Node*>& nodes)
 std::vector<std::string> 
 Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*> &nodes)
 {
+	NODE_LOG(trace);
 	std::vector<std::string> output;
 
     for (size_t i = 0; i < nodes.size(); ++i)
@@ -713,7 +752,6 @@ Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*> &nodes)
 					output.push_back(nodes[i]->parameters[j]->GetTreeName());
 				}
 			}
-			
 		}
 	}
 	return output;
@@ -721,6 +759,7 @@ Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*> &nodes)
 std::vector<std::vector<std::string>> 
 Node::findCompatibleInputs()
 {
+	NODE_LOG(trace);
 	std::vector<std::vector<std::string>> output;
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
@@ -731,6 +770,7 @@ Node::findCompatibleInputs()
 }
 std::vector<std::string> Node::findCompatibleInputs(const std::string& paramName)
 {
+	NODE_LOG(trace);
     std::vector<std::string> output;
     {
         auto param = Node::getParameter(paramName);
@@ -741,19 +781,23 @@ std::vector<std::string> Node::findCompatibleInputs(const std::string& paramName
 }
 std::vector<std::string> Node::findCompatibleInputs(int paramIdx)
 {
+	NODE_LOG(trace);
     return findCompatibleInputs(parameters[paramIdx]);
 }
 
 std::vector<std::string> Node::findCompatibleInputs(Parameters::Parameter::Ptr param)
 {
+	NODE_LOG(trace);
     return findType(param);
 }
 std::vector<std::string> Node::findCompatibleInputs(Loki::TypeInfo& type)
 {
+	NODE_LOG(trace);
 	return findType(type);
 }
 std::vector<std::string> Node::findCompatibleInputs(Parameters::InputParameter::Ptr param)
 {
+	NODE_LOG(trace);
 	std::vector<Node*> nodes;
 	std::vector<std::string> output;
 	getNodesInScope(nodes);
@@ -773,6 +817,7 @@ std::vector<std::string> Node::findCompatibleInputs(Parameters::InputParameter::
 void
 Node::setInputParameter(const std::string& sourceName, const std::string& inputName)
 {
+	NODE_LOG(trace);
 	auto param = getParameter(inputName);
 	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
 	if (inputParam)
@@ -784,6 +829,7 @@ Node::setInputParameter(const std::string& sourceName, const std::string& inputN
 void
 Node::setInputParameter(const std::string& sourceName, int inputIdx)
 {
+	NODE_LOG(trace);
 	auto param = getParameter(inputIdx);
 	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
 	if (inputParam)
@@ -794,6 +840,7 @@ Node::setInputParameter(const std::string& sourceName, int inputIdx)
 void
 Node::setTreeName(const std::string& name)
 {
+	NODE_LOG(trace);
     treeName = name;
 	std::string fullTreeName_;
     if (parent == nullptr)
@@ -809,6 +856,7 @@ Node::setTreeName(const std::string& name)
 void
 Node::setFullTreeName(const std::string& name)
 {
+	NODE_LOG(trace);
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		parameters[i]->SetTreeRoot(name);
@@ -819,6 +867,7 @@ Node::setFullTreeName(const std::string& name)
 void
 Node::setParent(Node* parent_)
 {
+	NODE_LOG(trace);
     if(parent)
     {
         parent->deregisterNotifier(this);
@@ -829,12 +878,14 @@ Node::setParent(Node* parent_)
 void
 Node::updateObject(IObject* ptr)
 {
+	NODE_LOG(trace);
     parent = static_cast<Node*>(ptr);
 }
 
 void 
 Node::updateInputParameters()
 {
+	NODE_LOG(trace);
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->type & Parameters::Parameter::Input)
@@ -850,7 +901,6 @@ bool Node::SkipEmpty() const
 }
 void Node::log(Verbosity level, const std::string &msg)
 {
-
     if(messageCallback)
         messageCallback(level, msg, this);
     if(debug_verbosity > level && messageCallback)
@@ -859,39 +909,47 @@ void Node::log(Verbosity level, const std::string &msg)
     {
     case Profiling:
 
-    case Status:
-        if(msg == lastStatusMsg &&
-          boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastStatusTime).total_milliseconds() < 1000)
-            break;
-        lastStatusTime = boost::posix_time::microsec_clock::universal_time();
-        lastStatusMsg = msg;
-		BOOST_LOG_TRIVIAL(info) << "[ " << fullTreeName << " ]" << msg;
-        //std::cout << "[ " << fullTreeName << " - STATUS ] " << msg << std::endl;
-        break;
-    case Warning:
-        if(msg == lastWarningMsg &&
-          boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastWarningTime).total_milliseconds() < 1000)
-            break;
-        lastWarningTime = boost::posix_time::microsec_clock::universal_time();
-        lastWarningMsg = msg;
-		BOOST_LOG_TRIVIAL(warning) << "[ " << fullTreeName << " ]" << msg;
-        break;
-    case Error:
-        if(msg == lastErrorMsg &&
-          boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastErrorTime).total_milliseconds() < 1000)
-            break;
-        lastErrorTime = boost::posix_time::microsec_clock::universal_time();
-        lastErrorMsg = msg;
-		BOOST_LOG_TRIVIAL(error) << "[ " << fullTreeName << " ]" << msg;
-        break;
-    case Critical:
-        if(msg == lastCriticalMsg &&
-          boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastCriticalTime).total_milliseconds() < 1000)
-            break;
-        lastCriticalTime = boost::posix_time::microsec_clock::universal_time();
-        lastCriticalMsg = msg;
-		BOOST_LOG_TRIVIAL(fatal) << "[ " << fullTreeName << " ]" << msg;
-        break;
+	case Status:
+	{
+		if (msg == lastStatusMsg &&
+			boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastStatusTime).total_milliseconds() < 1000)
+			break;
+		lastStatusTime = boost::posix_time::microsec_clock::universal_time();
+		lastStatusMsg = msg;
+		NODE_LOG(info) << msg;
+		//std::cout << "[ " << fullTreeName << " - STATUS ] " << msg << std::endl;
+		break;
+	}
+	case Warning:
+	{
+		if (msg == lastWarningMsg &&
+			boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastWarningTime).total_milliseconds() < 1000)
+			break;
+		lastWarningTime = boost::posix_time::microsec_clock::universal_time();
+		lastWarningMsg = msg;
+		NODE_LOG(info) << msg;
+		break;
+	}
+	case Error:
+	{
+		if (msg == lastErrorMsg &&
+			boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastErrorTime).total_milliseconds() < 1000)
+			break;
+		lastErrorTime = boost::posix_time::microsec_clock::universal_time();
+		lastErrorMsg = msg;
+		NODE_LOG(info) << msg;
+		break;
+	}
+	case Critical:
+	{
+		if (msg == lastCriticalMsg &&
+			boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastCriticalTime).total_milliseconds() < 1000)
+			break;
+		lastCriticalTime = boost::posix_time::microsec_clock::universal_time();
+		lastCriticalMsg = msg;
+		NODE_LOG(info) << msg;
+		break;
+	}
     }
 }
 
