@@ -348,16 +348,15 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 								time << "(" << timings[i - 1].second << "," << timings[i].second << "," << timings[i].first - timings[i - 1].first << ")";
 							}
 							time << "End: " << timings[timings.size() - 1].first - timings[timings.size() - 2].first;
-							log(Profiling, time.str());
+							//log(Profiling, time.str());
+							NODE_LOG(trace) << time.str();
 						}
                     }
                 }
                 end = boost::posix_time::microsec_clock::universal_time();
             }
-            if(debug_verbosity <= Status)
-            {
-                log(Status, "End:   " + fullTreeName);
-            }
+			NODE_LOG(debug) << "End:   " << fullTreeName;
+            
             auto delta =  end - start;
             averageFrameTime(delta.total_milliseconds());
             processingTime = boost::accumulators::rolling_mean(averageFrameTime);
@@ -413,7 +412,8 @@ Node::process(cv::InputArray in, cv::OutputArray out)
 	}
     catch (cv::Exception &err)
 	{
-        log(Error, err.what());
+        //log(Error, err.what());
+		NODE_LOG(error) << err.what();
 	}
 }
 
@@ -603,6 +603,7 @@ Node::Init(const cv::FileNode& configNode)
 void
 Node::Serialize(ISimpleSerializer *pSerializer)
 {
+	
 	NODE_LOG(trace) << " Serializing";
     IObject::Serialize(pSerializer);
     SERIALIZE(parameters);
@@ -899,58 +900,10 @@ bool Node::SkipEmpty() const
 {
     return true;
 }
-void Node::log(Verbosity level, const std::string &msg)
+void Node::log(boost::log::trivial::severity_level level, const std::string &msg)
 {
     if(messageCallback)
         messageCallback(level, msg, this);
-    if(debug_verbosity > level && messageCallback)
-        return;
-    switch(level)
-    {
-    case Profiling:
-
-	case Status:
-	{
-		if (msg == lastStatusMsg &&
-			boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastStatusTime).total_milliseconds() < 1000)
-			break;
-		lastStatusTime = boost::posix_time::microsec_clock::universal_time();
-		lastStatusMsg = msg;
-		NODE_LOG(info) << msg;
-		//std::cout << "[ " << fullTreeName << " - STATUS ] " << msg << std::endl;
-		break;
-	}
-	case Warning:
-	{
-		if (msg == lastWarningMsg &&
-			boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastWarningTime).total_milliseconds() < 1000)
-			break;
-		lastWarningTime = boost::posix_time::microsec_clock::universal_time();
-		lastWarningMsg = msg;
-		NODE_LOG(info) << msg;
-		break;
-	}
-	case Error:
-	{
-		if (msg == lastErrorMsg &&
-			boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastErrorTime).total_milliseconds() < 1000)
-			break;
-		lastErrorTime = boost::posix_time::microsec_clock::universal_time();
-		lastErrorMsg = msg;
-		NODE_LOG(info) << msg;
-		break;
-	}
-	case Critical:
-	{
-		if (msg == lastCriticalMsg &&
-			boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - lastCriticalTime).total_milliseconds() < 1000)
-			break;
-		lastCriticalTime = boost::posix_time::microsec_clock::universal_time();
-		lastCriticalMsg = msg;
-		NODE_LOG(info) << msg;
-		break;
-	}
-    }
 }
 
 

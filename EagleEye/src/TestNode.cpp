@@ -167,7 +167,8 @@ namespace EagleLib
         }
         void testFunction()
         {
-            log(Status, "Test function called");
+            //log(Status, "Test function called");
+			NODE_LOG(info) << "Test function called";
         }
         //boost::function<void(void)> function;
 

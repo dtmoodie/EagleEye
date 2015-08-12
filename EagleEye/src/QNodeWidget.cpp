@@ -140,8 +140,8 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
     errorDisplay->hide();
     criticalDisplay->hide();
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    connect(this, SIGNAL(eLog(EagleLib::Verbosity,std::string,EagleLib::Node*)),
-            this, SLOT(log(EagleLib::Verbosity,std::string,EagleLib::Node*)));
+	connect(this, SIGNAL(eLog(boost::log::trivial::severity_level, std::string, EagleLib::Node*)),
+		this, SLOT(log(boost::log::trivial::severity_level, std::string, EagleLib::Node*)));
 
     if (node != nullptr)
 	{
@@ -270,29 +270,29 @@ void QNodeWidget::on_nodeUpdate()
 {
 
 }
-void QNodeWidget::log(EagleLib::Verbosity verb, const std::string &msg, EagleLib::Node* node)
+void QNodeWidget::log(boost::log::trivial::severity_level verb, const std::string &msg, EagleLib::Node* node)
 {
     switch(verb)
     {
-    case EagleLib::Profiling:
+	case boost::log::trivial::trace:
         on_profile(msg, node);
-    case EagleLib::Status:
+	case boost::log::trivial::info:
         on_status(msg,node);
         return;
-    case EagleLib::Warning:
+	case boost::log::trivial::warning:
         on_warning(msg,node);
         return;
-    case EagleLib::Error:
+	case boost::log::trivial::error:
         on_error(msg,node);
         return;
-    case EagleLib::Critical:
+	case boost::log::trivial::fatal:
         on_critical(msg,node);
         return;
     }
 }
 
 
-void QNodeWidget::on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node)
+void QNodeWidget::on_logReceive(boost::log::trivial::severity_level verb, const std::string& msg, EagleLib::Node* node)
 {
     emit eLog(verb, msg, node);
 }

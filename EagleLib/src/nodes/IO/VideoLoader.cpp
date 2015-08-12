@@ -61,7 +61,8 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
         if(!h_videoReader->read(*buffer))
         {
             updateParameter<bool>(5, true);
-            log(Status, "End of video reached");
+            //log(Status, "End of video reached");
+			NODE_LOG(info) << "End of video reached";
             auto reload = getParameter<bool>("Loop");
 			TIME
             if(reload && *reload->Data())	
@@ -82,7 +83,8 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 		   TIME
        }catch(cv::Exception &err)
        {
-           log(Error, err.what());
+           //log(Error, err.what());
+		   NODE_LOG(error) << err.what();
            return img;
        }
 		   updateParameter<double>("Timestamp", h_videoReader->get(cv::CAP_PROP_POS_MSEC), Parameters::Parameter::State);
@@ -93,9 +95,10 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
     }
     if(firstLoad && !img.empty())
     {
-        std::stringstream ss;
-        ss << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
-        log(Status,  ss.str());
+        //std::stringstream ss;
+        //ss << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
+        //log(Status,  ss.str());
+		NODE_LOG(info) << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
     }
     return img;
 }
@@ -107,11 +110,13 @@ VideoLoader::loadFile()
     auto fileName = getParameter<boost::filesystem::path>("Filename");
     if(fileName == nullptr)
         return;
-    log(Status, "Loading file: " + fileName->Data()->string());
+    //log(Status, "Loading file: " + fileName->Data()->string());
+	NODE_LOG(info) << "Loading file: " + fileName->Data()->string();
 
 	if (!boost::filesystem::exists(*fileName->Data()))
     {
-		log(Warning, fileName->Data()->string() + " doesn't exist");
+		//log(Warning, fileName->Data()->string() + " doesn't exist");
+		NODE_LOG(warning) << fileName->Data()->string() + " doesn't exist";
         return;
     }
 #ifdef GPU_DECODE_ENABLED
@@ -122,14 +127,15 @@ VideoLoader::loadFile()
 #endif
     {
         // no luck with the GPU decoder, try CPU decoder
-        log(Error, "Failed to create GPU decoder, falling back to CPU decoder");
+        //log(Error, "Failed to create GPU decoder, falling back to CPU decoder");
+		NODE_LOG(error) << "Failed to create GPU decoder, falling back to CPU decoder";
         h_videoReader.reset(new cv::VideoCapture);
         try
         {
 			h_videoReader->open(fileName->Data()->string());
         }catch(cv::Exception &e)
         {
-            log(Error, "Failed to fallback on CPU decoder");
+			NODE_LOG(error) << "Failed to fallback on CPU decoder";
         }
 
         /*

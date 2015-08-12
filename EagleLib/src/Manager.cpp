@@ -28,7 +28,26 @@ void CompileLogger::log(int level, const char *format, va_list args)
     m_buff[LOGSYSTEM_MAX_BUFFER-1] = '\0';
     if(callback)
         callback(std::string(m_buff), level);
-    std::cout << m_buff;
+	switch (level)
+	{
+	case 0:
+	{
+		LOG_TRIVIAL(info) << m_buff;
+		break;
+	}
+	case 1:
+	{
+		LOG_TRIVIAL(warning) << m_buff;
+		break;
+	}
+	case 2:
+	{
+		LOG_TRIVIAL(error) << m_buff;
+		break;
+	}
+	}
+
+	
 #ifdef _WIN32
     OutputDebugStringA( m_buff );
 #endif
@@ -46,6 +65,7 @@ void CompileLogger::LogWarning(const char * format, ...)
     va_list args;
     va_start(args, format);
     log(1, format, args);
+	
 }
 
 void CompileLogger::LogInfo(const char * format, ...)

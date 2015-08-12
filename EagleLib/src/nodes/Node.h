@@ -43,6 +43,8 @@
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/rolling_mean.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
+#include <boost/log/expressions/keyword.hpp>
 #include <vector>
 #include <list>
 #include <map>
@@ -68,7 +70,18 @@
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
-#define NODE_LOG(severity) LOG_TRIVIAL(severity) << "[" << fullTreeName << "]"
+#define NODE_LOG(severity) BOOST_LOG_SCOPED_THREAD_ATTR("NodeName", boost::log::attributes::constant<std::string>(fullTreeName));			\
+	BOOST_LOG_SCOPED_THREAD_ATTR("Node", boost::log::attributes::constant<const Node*>(this));													\
+	LOG_TRIVIAL(severity)
+
+namespace EagleLib
+{
+	class Node;
+}
+
+BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName, "NodeName",const std::string);
+BOOST_LOG_ATTRIBUTE_KEYWORD(NodePtr, "Node", const EagleLib::Node*);
+
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
@@ -218,7 +231,7 @@ namespace EagleLib
          * @param level
          * @param msg
          */
-        virtual void                    log(Verbosity level, const std::string& msg);
+		virtual void                    log(boost::log::trivial::severity_level level, const std::string& msg);
         /**
          * @brief The NodeInfo struct [DEPRICATED]
          */
@@ -703,7 +716,7 @@ namespace EagleLib
         // ****************************************************************************************************************
 
         // Used for logging / UI updating when an error occurs.
-        boost::function<void(Verbosity, const std::string&, Node*)>         messageCallback;
+		boost::function<void(boost::log::trivial::severity_level, const std::string&, Node*)>         messageCallback;
         // Depricated
         boost::function<int(std::vector<std::string>)>						inputSelector;
         // Used to signal if an update is required.  IE if performing static image analysis, if no parameters of a node

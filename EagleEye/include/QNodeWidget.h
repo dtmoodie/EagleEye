@@ -59,7 +59,7 @@ public:
     void updateUi(bool parameterUpdate = false, EagleLib::Node* node = nullptr);
     // Used for thread safety
     void on_nodeUpdate();
-    void on_logReceive(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
+    void on_logReceive(boost::log::trivial::severity_level verb, const std::string& msg, EagleLib::Node* node);
     bool eventFilter(QObject *object, QEvent *event);
     void addParameterWidgetMap(QWidget* widget, Parameters::Parameter::Ptr param);
     QWidget* mainWindow;
@@ -72,9 +72,9 @@ private slots:
     void on_critical(const std::string& msg, EagleLib::Node* node);
     void on_profile(const std::string& msg, EagleLib::Node* node);
 
-    void log(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
+	void log(boost::log::trivial::severity_level verb, const std::string& msg, EagleLib::Node* node);
 signals:
-    void eLog(EagleLib::Verbosity verb, const std::string& msg, EagleLib::Node* node);
+	void eLog(boost::log::trivial::severity_level verb, const std::string& msg, EagleLib::Node* node);
 	void parameterClicked(Parameters::Parameter::Ptr param, QPoint pos);
 private:
 	std::map<QWidget*, Parameters::Parameter::Ptr> widgetParamMap;

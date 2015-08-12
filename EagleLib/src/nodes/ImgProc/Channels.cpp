@@ -18,7 +18,8 @@ cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
         cv::cuda::cvtColor(img, grey, cv::COLOR_BGR2GRAY, 0, stream);
     }catch(cv::Exception &err)
     {
-        log(Error, err.what());
+		// log(Error, err.what());
+		NODE_LOG(error) << err.what();
         return img;
     }
     TIME

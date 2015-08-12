@@ -13,12 +13,14 @@ cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat>("Input")->Data();
     if(input == nullptr)
     {
-        log(Status, "Input not defined");
+        //log(Status, "Input not defined");
+		NODE_LOG(info) << "Input not defined";
         return img;
     }
     if(input->empty())
     {
-        log(Status, "Input is empty");
+        //log(Status, "Input is empty");
+		NODE_LOG(info) << "Input is empty";
         return img;
     }
     return *input;
@@ -56,9 +58,10 @@ cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
         parameters[0]->changed = true;
         
     }
-    std::stringstream str;
-    str << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
-    log(Status, str.str());
+    //std::stringstream str;
+    //str << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
+    //log(Status, str.str());
+	NODE_LOG(info) << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
 	updateParameter<int>("Depth", img.depth(), Parameters::Parameter::State);
 	updateParameter<int>("Rows", img.rows, Parameters::Parameter::State);
 	updateParameter<int>("Cols", img.cols, Parameters::Parameter::State);

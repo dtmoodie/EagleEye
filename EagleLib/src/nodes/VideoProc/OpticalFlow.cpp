@@ -94,7 +94,8 @@ void SparsePyrLKOpticalFlow::trackSparse(
 {
     if(optFlow == nullptr)
     {
-        log(Error, "Optical flow not initialized correctly");
+        //log(Error, "Optical flow not initialized correctly");
+		NODE_LOG(error) << "Optical flow not initialized correctly";
         return;
     }
     if(trackedPts.empty())

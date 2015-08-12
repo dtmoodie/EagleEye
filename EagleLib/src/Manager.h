@@ -57,7 +57,7 @@ namespace EagleLib
     class Node;
 	class Parameter;
     class Plotter;
-    const size_t LOGSYSTEM_MAX_BUFFER = 4096;
+    const size_t LOGSYSTEM_MAX_BUFFER = 20000;
 
 
     class CompileLogger: public ICompilerLogger

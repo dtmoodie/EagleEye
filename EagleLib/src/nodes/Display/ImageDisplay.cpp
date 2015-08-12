@@ -58,7 +58,8 @@ void QtImageDisplay::displayImage(cv::cuda::HostMem image)
         cv::imshow(name, image.createMatHeader());
     }catch(cv::Exception &err)
     {
-        log(Warning, err.what());
+        //log(Warning, err.what());
+		NODE_LOG(warning) << err.what();
     }
     parameters[0]->changed = false;
 }
@@ -68,7 +69,8 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     if(img.channels() != 1 && img.channels() != 3)
     {
-        log(Warning, "Image has " + boost::lexical_cast<std::string>(img.channels()) + " channels! Cannot display!");
+        //log(Warning, "Image has " + boost::lexical_cast<std::string>(img.channels()) + " channels! Cannot display!");
+		NODE_LOG(warning) << "Image has " << img.channels() << " channels! Cannot display!";
         return img;
     }
     if(img.empty())
@@ -118,7 +120,8 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         cv::imshow(prevName, img);
     }catch(cv::Exception &e)
     {
-        log(Error, "This node needs to be run from the UI / main thread. ");
+        //log(Error, "This node needs to be run from the UI / main thread. ");
+		NODE_LOG(error) << "This node needs to be run from the UI / main thread. ";
     }
 
     return img;
@@ -303,7 +306,8 @@ void HistogramDisplay::displayHistogram()
     cv::Mat data = dataPtr->createMatHeader();
     if(data.channels() != 1)
     {
-        log(Error, "Currently only supports 1 channel histograms, input has " + boost::lexical_cast<std::string>(data.channels()) + " channels");
+        //log(Error, "Currently only supports 1 channel histograms, input has " + boost::lexical_cast<std::string>(data.channels()) + " channels");
+		NODE_LOG(error) << "Currently only supports 1 channel histograms, input has " << data.channels() << " channels";
         return;
     }
     double minVal, maxVal;

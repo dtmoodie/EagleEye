@@ -82,19 +82,24 @@ VideoWriter::writeImg(cv::cuda::GpuMat& img)
 void
 VideoWriter::startWrite()
 {
-    log(Status, "Starting write");
+    //log(Status, "Starting write");
+	NODE_LOG(info) << "Starting write";
     auto param = getParameter<boost::filesystem::path>(1);
     if(param == nullptr)
         return;
-    if(boost::filesystem::exists(*param->Data()))
-        log(Warning, "File exists, overwriting");
+	if (boost::filesystem::exists(*param->Data()))
+	{
+		NODE_LOG(info) << "File exists, overwriting";
+	}
+		
     if(h_writer == nullptr)
     {
         try
         {
             cv::cudacodec::EncoderParams params;
             d_writer = cv::cudacodec::createVideoWriter(param->Data()->string(), size, 30, params);
-            log(Status, "Using GPU encoder");
+            //log(Status, "Using GPU encoder");
+			NODE_LOG(info) << "Using GPU encoder";
         }catch(cv::Exception &e)
         {
             h_writer = cv::Ptr<cv::VideoWriter>(new cv::VideoWriter);
@@ -107,10 +112,14 @@ VideoWriter::startWrite()
             {
                 success = h_writer->open(param->Data()->string(), -1, 30, size);
             }
-            if(success)
-                log(Status, "Using CPU encoder");
-            else
-                log(Status, "Unable to open file");
+			if (success)
+			{
+				NODE_LOG(info) << "Using CPU encoder";
+			}
+			else
+			{
+				NODE_LOG(info) << "Unable to open file";
+			}
 
         }
     }else
@@ -125,10 +134,15 @@ VideoWriter::startWrite()
         {
             success = h_writer->open(param->Data()->string(), -1, 30, size);
         }
-        if(success)
-            log(Status, "Using CPU encoder");
-        else
-            log(Status, "Unable to open file");
+		if (success)
+		{
+			NODE_LOG(info) << "Using CPU encoder";
+		}			
+		else
+		{
+			NODE_LOG(info) << "Unable to open file";
+		}
+			
     }
     parameters[0]->changed = false;
     parameters[1]->changed = false;

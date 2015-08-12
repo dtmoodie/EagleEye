@@ -23,12 +23,12 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     unsigned int maxDevice = cv::cuda::getCudaEnabledDeviceCount();
     if(firstRun)
     {
-        std::stringstream ss;
+        //std::stringstream ss;
 		auto deviceInfo = cv::cuda::DeviceInfo(currentDevice);
-		
-		ss << "Current device: " << currentDevice << " " << deviceInfo.name() << " Async engines: " << deviceInfo.asyncEngineCount();
-        ss << " - Num available devices: " << maxDevice;
-        log(Status, ss.str());
+		NODE_LOG(info) << "Current device: " << currentDevice << " " << deviceInfo.name() << " Async engines: " << deviceInfo.asyncEngineCount() << " - Num available devices: " << maxDevice;
+		//ss << "Current device: " << currentDevice << " " << deviceInfo.name() << " Async engines: " << deviceInfo.asyncEngineCount();
+        //ss << " - Num available devices: " << maxDevice;
+        //log(info, ss.str());
         updateParameter<std::string>("Device name", deviceInfo.name());
         firstRun = false;
     }
@@ -36,14 +36,16 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     unsigned int device = *getParameter<unsigned int>(0)->Data();
     if(device >= maxDevice)
     {
-        log(Status, "Desired device greater than max allowed device index, max index: " + boost::lexical_cast<std::string>(maxDevice - 1));
+        //log(Status, "Desired device greater than max allowed device index, max index: " + boost::lexical_cast<std::string>(maxDevice - 1));
+		NODE_LOG(info) << "Desired device greater than max allowed device index, max index: "  << maxDevice - 1;
         return cv::cuda::GpuMat();
     }
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop,device);
     if(currentDevice != device)
     {
-        log(Status, "Switching device from " + boost::lexical_cast<std::string>(currentDevice) + " to " + boost::lexical_cast<std::string>(device) + " " + prop.name + " async engines: " + boost::lexical_cast<std::string>(prop.asyncEngineCount));
+        //log(Status, "Switching device from " + boost::lexical_cast<std::string>(currentDevice) + " to " + boost::lexical_cast<std::string>(device) + " " + prop.name + " async engines: " + boost::lexical_cast<std::string>(prop.asyncEngineCount));
+		NODE_LOG(info) << "Switching device from " << currentDevice << " to " << device << " " << prop.name << " async engines: " << prop.asyncEngineCount;
         updateParameter<std::string>("Device name", cv::cuda::DeviceInfo(device).name());
         if(onUpdate)
             onUpdate(this);

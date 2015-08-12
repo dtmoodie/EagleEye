@@ -6,13 +6,15 @@ bool Camera::changeStream(int device)
 {
     try
     {
-        log(Status, "Setting camera to device: " + boost::lexical_cast<std::string>(device));
+        //log(Status, "Setting camera to device: " + boost::lexical_cast<std::string>(device));
+		NODE_LOG(info) << "Setting camera to device: " << device;
         cam.release();
         cam = cv::VideoCapture(device);
         return cam.isOpened();
     }catch(cv::Exception &e)
     {
-        log(Error, e.what());
+        //log(Error, e.what());
+		NODE_LOG(error) << e.what();
         return false;
     }
 
@@ -21,13 +23,15 @@ bool Camera::changeStream(const std::string &gstreamParams)
 {
     try
     {
-        log(Status, "Setting camera with gstreamer settings: " + gstreamParams);
+        //log(Status, "Setting camera with gstreamer settings: " + gstreamParams);
+		NODE_LOG(info) << "Setting camera with gstreamer settings: " << gstreamParams;
         cam.release();
         cam = cv::VideoCapture(gstreamParams);
         return cam.isOpened(); 
     }catch(cv::Exception &e)
     {
-        log(Error, e.what());
+        //log(Error, e.what());
+		NODE_LOG(error) << e.what();
         return false;
     }
 
@@ -172,14 +176,20 @@ void GStreamerCamera::setString()
         cam.open(result);
     }catch(cv::Exception &e)
     {
-        log(Error, e.what());
+        //log(Error, e.what());
+		NODE_LOG(error) << e.what();
         return;
     }
 
-    if(cam.isOpened())
-        log(Status, "Successfully opened camera");
-    else
-        log(Error, "Failed to open camera");
+	if (cam.isOpened())
+	{
+		NODE_LOG(info) << "Successfully opened camera";
+	}
+	else
+	{
+		NODE_LOG(error) << "Failed to open camera";
+	}
+		
 
     for(size_t i = 0; i < parameters.size(); ++i)
     {
@@ -275,7 +285,8 @@ RTSPCamera::~RTSPCamera()
 void RTSPCamera::setString()
 {
     processingThread.interrupt();
-    log(Status, "Setting up RTSP Camera");
+//    log(Status, "Setting up RTSP Camera");
+	NODE_LOG(info) << "Setting up RTSP camera";
     std::stringstream str;
     SourceType src = (SourceType)getParameter<Parameters::EnumParameter>(0)->Data()->getValue();
     VideoType encoding = (VideoType)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
@@ -326,17 +337,22 @@ void RTSPCamera::setString()
         cam.open(result);
     }catch(cv::Exception &e)
     {
-        log(Error, e.what());
+        //log(Error, e.what());
+		NODE_LOG(error) << e.what();
         return;
     }
 
     if(cam.isOpened())
     {
-        log(Status, "Successfully opened camera");
+        //log(Status, "Successfully opened camera");
+		NODE_LOG(info) << "Successfully opened camera";
         processingThread = boost::thread(boost::bind(&RTSPCamera::readImage_thread, this));
     }
-    else
-        log(Error, "Failed to open camera");
+	else
+	{
+		NODE_LOG(error) << "Failed to open camera";
+	}
+        //log(Error, "Failed to open camera");
 
     for(size_t i = 0; i < parameters.size(); ++i)
     {

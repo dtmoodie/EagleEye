@@ -49,7 +49,8 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
         updateFilter = true;
         parameters[0]->changed = false;
         parameters[2]->changed = false;
-        log(Status,"Structuring element updated");
+        //log(Status,"Structuring element updated");
+		NODE_LOG(info) << "Structuring element updated";
     }
     if(parameters[1]->changed || updateFilter)
     {
@@ -59,7 +60,8 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                 *getParameter<cv::Mat>(4)->Data(),
                 *getParameter<cv::Point>(3)->Data(),
                 *getParameter<int>(5)->Data()));
-        log(Status, "Filter updated");
+        //log(Status, "Filter updated");
+		NODE_LOG(info) << "Filter updated";
         parameters[1]->changed = false;
     }
     (*getParameter<cv::Ptr<cv::cuda::Filter>>(6)->Data())->apply(img,img,stream);
@@ -297,7 +299,8 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
         return img;
     if(img.channels() != 1)
     {
-        log(Error, "Image to threshold needs to be a single channel image");
+//        log(Error, "Image to threshold needs to be a single channel image");
+		NODE_LOG(error) << "Image to threshold needs to be a single channel image";
         return img;
     }
     cv::cuda::HostMem histogram;

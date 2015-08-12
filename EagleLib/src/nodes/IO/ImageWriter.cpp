@@ -21,7 +21,8 @@ void ImageWriter::writeImage()
         cv::imwrite(baseName +"-"+ boost::lexical_cast<std::string>(frameCount) + extension, h_buf);
     }catch(cv::Exception &e)
     {
-        log(Error, e.what());
+        //log(Error, e.what());
+		NODE_LOG(error) << e.what();
         return;
     }
     ++frameCount;
@@ -52,10 +53,12 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     if(parameters[0]->changed)
     {
 		std::string& tmp = *getParameter<std::string>(0)->Data();
-        if(tmp.size())
-            baseName = tmp;
-        else
-            log(Warning, "Empty base name passed in");
+		if (tmp.size())
+			baseName = tmp;
+		else
+		{
+			NODE_LOG(warning) << "Empty base name passed in";
+		}
     }
     if(parameters[1]->changed || extension.size() == 0)
     {

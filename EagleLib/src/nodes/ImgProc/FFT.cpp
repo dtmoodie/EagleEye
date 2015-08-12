@@ -43,10 +43,11 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     img = padded;
     if(img.channels() > 2)
     {
-        std::stringstream ss;
+/*        std::stringstream ss;
         ss << "Too many channels, can only handle 1 or 2 channel input. Input has ";
         ss << img.channels() << " channels.";
-        log(Warning, ss.str());
+        log(Warning, ss.str());*/
+		NODE_LOG(warning) << "Too many channels, can only handle 1 or 2 channel input. Input has " << img.channels() << " channels.";
         return img;
     }
     TIME
@@ -75,7 +76,16 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     TIME
     if(parameters[4]->changed)
     {
-        log(Status, channel == 0 ? "Magnitude" : "Phase");
+        //log(Status, channel == 0 ? "Magnitude" : "Phase");
+		if (channel == 0)
+		{
+			NODE_LOG(info) <<"Magnitude";
+		}
+		else
+		{
+			NODE_LOG(info) <<"Phase";
+		}
+		
         parameters[4]->changed = false;
     }
     TIME

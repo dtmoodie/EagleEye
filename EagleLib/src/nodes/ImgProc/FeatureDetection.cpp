@@ -54,10 +54,12 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         updateParameter(0,
             cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1,
             numCorners,qualityLevel,minDistance,blockSize,useHarris,harrisK));
-        std::stringstream ss;
+        /*std::stringstream ss;
         ss << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
            << " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
-        log(Status, ss.str());
+        log(Status, ss.str());*/
+		NODE_LOG(info) << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
+			<< " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
         parameters[1]->changed = false;
         parameters[2]->changed = false;
         parameters[3]->changed = false;
@@ -96,13 +98,15 @@ void GoodFeaturesToTrackDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat 
     auto detectorParam = getParameter<cv::Ptr<cv::cuda::CornersDetector>>(0);
     if(detectorParam == nullptr)
     {
-        log(Error, "Detector not built");
+        //log(Error, "Detector not built");
+		NODE_LOG(error) << "Detector not built";
         return;
     }
     cv::Ptr<cv::cuda::CornersDetector> detector = *detectorParam->Data();
     if(detector == nullptr)
     {
-        log(Error, "Detector not built");
+        //log(Error, "Detector not built");
+		NODE_LOG(error) << "Detector not built";
         return;
     }
     detector->detect(*greyImg, keyPoints, mask, stream);
@@ -312,7 +316,8 @@ cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
         return hist;
     }else
     {
-        log(Warning, "Multi channel histograms not supported for " + boost::lexical_cast<std::string>(img.channels()) + " channels");
+//        log(Warning, "Multi channel histograms not supported for " + boost::lexical_cast<std::string>(img.channels()) + " channels");
+		NODE_LOG(warning) << "Multi channel histograms not supported for " + boost::lexical_cast<std::string>(img.channels()) + " channels";
     }
     return img;
 }

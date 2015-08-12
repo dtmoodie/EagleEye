@@ -22,7 +22,8 @@ void ImageLoader::load()
             d_img.upload(h_img); 
         }else
         {
-            log(Status, "File doesn't exist");
+            //log(Status, "File doesn't exist");
+			NODE_LOG(warning) << "File doesn't exist";
         }
     }
 }
@@ -94,7 +95,8 @@ cv::cuda::GpuMat DirectoryLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 		
 			if (fileIdx == files.size())
 			{
-				log(Status, "End of directory reached");
+				//log(Status, "End of directory reached");
+				NODE_LOG(info) << "End of directory reached";
 				if (*getParameter<bool>(1)->Data())
 					fileIdx = 0;
 

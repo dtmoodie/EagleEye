@@ -47,7 +47,8 @@ Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(img.channels() != 1)
     {
-        log(Warning, "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels");
+        //log(Warning, "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels");
+		NODE_LOG(warning) << "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels";
         return img;
     }
     if(LUT.size() != resolution)
@@ -255,7 +256,8 @@ cv::cuda::GpuMat QtColormapDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 {
     if(img.channels() != 1)
     {
-        log(Warning, "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels");
+//        log(Warning, "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels");
+		NODE_LOG(warning) << "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels";
         return img;
     }
     if(LUT.size() != resolution)

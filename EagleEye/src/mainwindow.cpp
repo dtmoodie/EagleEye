@@ -106,7 +106,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<cv::Mat>("cv::Mat");
     qRegisterMetaType<EagleLib::Node::Ptr>("EagleLib::Node::Ptr");
     qRegisterMetaType<EagleLib::Node*>("EagleLib::Node*");
-    qRegisterMetaType<EagleLib::Verbosity>("EagleLib::Verbosity");
+	qRegisterMetaType<boost::log::trivial::severity_level>("boost::log::trivial::severity_level");
     qRegisterMetaType<boost::function<cv::Mat(void)>>("boost::function<cv::Mat(void)>");
     qRegisterMetaType<boost::function<void(void)>>("boost::function<void(void)>");
     qRegisterMetaType<Parameters::Parameter::Ptr>("Parameters::Parameter::Ptr");
