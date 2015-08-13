@@ -21,7 +21,8 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
 {
     if(img.channels() != 1)
     {
-        log(Error, "Currently only support single channel images!");
+        //log(Error, "Currently only support single channel images!");
+		NODE_LOG(warning) << "Currently only support single channel images!";
         return img;
     }
     cv::cuda::GpuMat hist;
@@ -46,12 +47,14 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     {
         if(bins == nullptr)
         {
-            log(Error, "Histogram provided but range not provided");
+            //log(Error, "Histogram provided but range not provided");
+			NODE_LOG(error) << "Histogram provided but range not provided";
             return img;
         }
         if(bins->channels() != 1)
         {
-            log(Error, "Currently only support equal bins accross all histograms");
+            //log(Error, "Currently only support equal bins accross all histograms");
+			NODE_LOG(error) << "Currently only support equal bins accross all histograms";
             return img;
         }
         hist = *histogram;
@@ -147,7 +150,8 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
             }
         }else
         {
-            log(Error, "Incompatible channel count");
+            //log(Error, "Incompatible channel count");
+			NODE_LOG(error) << "Incompatible channel count";
         }
     }
     for(int i = 0; i < optValue.size(); ++i)
@@ -258,7 +262,8 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     {
         if(mode == cv::GC_INIT_WITH_MASK)
         {
-            log(Error, "Mode set to initialize with mask, but no mask provided");
+            //log(Error, "Mode set to initialize with mask, but no mask provided");
+			NODE_LOG(error) << "Mode set to initialize with mask, but no mask provided";
             return img;
         }
         maskExists = false;
@@ -275,14 +280,16 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
 
     if(mode == cv::GC_INIT_WITH_MASK && mask.size() != h_img.size())
     {
-        log(Error, "Mask size does not match image size");
+        //log(Error, "Mask size does not match image size");
+		NODE_LOG(error) << "Mask size does not match image size";
         return img;
     }
 
     cv::Rect* roi = getParameter<cv::Rect>(1)->Data();
     if(!roi && mode == cv::GC_INIT_WITH_RECT)
     {
-        log(Error, "Mode set to initialize with rect, but no rect provided");
+        //log(Error, "Mode set to initialize with rect, but no rect provided");
+		NODE_LOG(error) << "Mode set to initialize with rect, but no rect provided";
         return img;
     }
     cv::Rect rect;
@@ -361,12 +368,14 @@ cv::cuda::GpuMat SegmentMeanShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 {
     if(img.depth() != CV_8U)
     {
-        log(Error, "Image not CV_8U type");
+        //log(Error, "Image not CV_8U type");
+		NODE_LOG(error) << "Image not CV_8U type";
         return img;
     }
     if(img.channels() != 4)
     {
-        log(Warning, "Image doesn't have 4 channels, appending blank image");
+        //log(Warning, "Image doesn't have 4 channels, appending blank image");
+		NODE_LOG(warning) << "Image doesn't have 4 channels, appending blank image";
         if(blank.size() != img.size())
         {
             blank.create(img.size(), CV_8U);

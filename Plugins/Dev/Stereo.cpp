@@ -42,17 +42,20 @@ cv::cuda::GpuMat StereoBM::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &st
     }
     if(right == nullptr)
     {
-        log(Error, "No input selected for right image");
+        //log(Error, "No input selected for right image");
+		NODE_LOG(error) << "No input selected for right image";
         return img;
     }
     if(left->size() != right->size())
     {
-        log(Error, "Images are of mismatched size");
+        //log(Error, "Images are of mismatched size");
+		NODE_LOG(error) << "Images are of mismatched size";
         return img;
     }
     if(left->channels() != right->channels())
     {
-        log(Error, "Images are of mismatched channels");
+        //log(Error, "Images are of mismatched channels");
+		NODE_LOG(error) << "Images are of mismatched channels";
         return img;
     }
     auto buf = disparityBuf.getFront();
@@ -115,7 +118,8 @@ cv::cuda::GpuMat StereoConstantSpaceBP::doProcess(cv::cuda::GpuMat &img, cv::cud
     }
     if(csbp == nullptr)
     {
-        log(Error, "Stereo constant space bp == nullptr");
+        //log(Error, "Stereo constant space bp == nullptr");
+		NODE_LOG(error) << "Stereo constant space bp == nullptr";
         return img;
     }
     cv::cuda::GpuMat* left, *right;
@@ -125,7 +129,8 @@ cv::cuda::GpuMat StereoConstantSpaceBP::doProcess(cv::cuda::GpuMat &img, cv::cud
         left = & img;
     if(right == nullptr)
     {
-        log(Error, "Right image input not defined");
+        //log(Error, "Right image input not defined");
+		NODE_LOG(error) << "Right image input not defined";
         return img;
     }
     cv::cuda::GpuMat disp;
@@ -152,45 +157,53 @@ cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         cv::Mat* K = getParameter<cv::Mat>(0)->Data();
         if(K == nullptr)
         {
-            log(Warning, "Camera matrix undefined");
+            //log(Warning, "Camera matrix undefined");
+			NODE_LOG(warning) << "Camera matrix undefined";
             return img;
         }
         cv::Mat* D = getParameter<cv::Mat>(1)->Data();
         if(D == nullptr)
         {
-            log(Warning, "Distortion matrix undefined");
+            //log(Warning, "Distortion matrix undefined");
+			NODE_LOG(warning) << "Distortion matrix undefined";
             return img;
         }
         cv::Mat* R = getParameter<cv::Mat>(2)->Data();
         if(R == nullptr)
         {
-            log(Warning, "Rotation matrix undefined");
+            //log(Warning, "Rotation matrix undefined");
+			NODE_LOG(warning) << "Rotation matrix undefined";
             return img;
         }
         cv::Mat* P = getParameter<cv::Mat>(3)->Data();
         if(P == nullptr)
         {
-            log(Warning, "Projection matrix undefined");
+            //log(Warning, "Projection matrix undefined");
+			NODE_LOG(warning) << "Projection matrix undefined";
             return img;
         }
         if(K->empty())
         {
-            log(Warning, "Camera matrix empty");
+            //log(Warning, "Camera matrix empty");
+			NODE_LOG(warning) << "Camera matrix empty";
             return img;
         }
         if(D->empty())
         {
-            log(Warning, "Distortion matrix empty");
+            //log(Warning, "Distortion matrix empty");
+			NODE_LOG(warning) << "Distortion matrix empty";
             return img;
         }
         if(R->empty())
         {
-            log(Warning, "Rotation matrix empty");
+            //log(Warning, "Rotation matrix empty");
+			NODE_LOG(warning) << "Rotation matrix empty";
             return img;
         }
         if(P->empty())
         {
-            log(Warning, "Projection matrix empty");
+            //log(Warning, "Projection matrix empty");
+			NODE_LOG(warning) << "Projection matrix empty";
             return img;
         }
 
@@ -198,7 +211,8 @@ cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         cv::initUndistortRectifyMap(*K,*D, *R, *P, img.size(), CV_32FC1, X, Y);
         mapX.upload(X, stream);
         mapY.upload(Y,stream);
-        log(Status, "Undistortion maps calculated");
+        //log(Status, "Undistortion maps calculated");
+		NODE_LOG(info) << "Undistortion maps calculated";
         parameters[0]->changed = false;
         parameters[1]->changed = false;
         parameters[2]->changed = false;
