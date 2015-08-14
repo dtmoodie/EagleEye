@@ -15,11 +15,11 @@ namespace EagleLib
     class RTSP_server: public Node
     {
         GstElement* source_OpenCV;
-        GstElement *pipeline;
-        GstElement *converter_FFMpegColorSpace;
-        GstElement *converter_VP8_Encoder;
-        GstElement *muxer_WebM;
-        GstElement *sink_TCPServer;
+        GstElement* pipeline;
+		GstElement* encoder;
+		GstElement* payloader;
+		GstElement* udpSink;
+
     public:
         void setup();
         RTSP_server();
