@@ -19,6 +19,7 @@ namespace EagleLib
 		GstElement* encoder;
 		GstElement* payloader;
 		GstElement* udpSink;
+		cv::Size imgSize;
 
     public:
         void setup();
