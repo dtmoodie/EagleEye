@@ -38,6 +38,10 @@ void RTSP_server::Init(bool firstInit)
 
 cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
+	if (imgSize != img.size())
+	{
+		GstCaps* caps = gst_caps_new_simple("video/x-raw-rgb", "width", G_TYPE_INT, img.cols, "height", G_TYPE_INT, img.rows, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+	}
     return img;
 }
 
