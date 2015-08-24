@@ -62,7 +62,8 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 	{
 		if (prevFramePoints.empty())
 		{
-			log(Status, "Initializing with CPU corner finder routine");
+			//log(Status, "Initializing with CPU corner finder routine");
+			NODE_LOG(info) << "Initializing with CPU corner finder routine";
 			currentGreyFrame.download(h_img, stream);
 			stream.waitForCompletion();
 
@@ -88,7 +89,8 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 			int goodPoints = cv::cuda::countNonZero(status);
 			if (goodPoints == numX*numY)
 			{
-				log(Status, "Tracking successful with tracker");
+				//log(Status, "Tracking successful with tracker");
+				NODE_LOG(info) << "Tracking successful with tracker";
 				prevGreyFrame = currentGreyFrame;
 				prevFramePoints = currentFramePoints;
 				currentFramePoints.download(imagePoints, stream);
@@ -105,7 +107,8 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 	}
 	else
 	{
-		log(Status, "Relying on CPU corner finder routine");
+		//log(Status, "Relying on CPU corner finder routine");
+		NODE_LOG(info) << "Relying on CPU corner finder routine";
 		currentGreyFrame.download(h_img, stream);
 		stream.waitForCompletion();
 
@@ -119,7 +122,8 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 		else
 		{
 			
-			log(Warning, "Could not find checkerboard pattern");
+			//log(Warning, "Could not find checkerboard pattern");
+			NODE_LOG(warning) << "Could not find checkerboard pattern";
 		}
 	}
 	if (!found)
@@ -190,7 +194,8 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     auto objPoints = getParameter<ObjectPoints>(4)->Data();
 	if (imagePoints == nullptr || objPoints == nullptr)
     {
-        log(Warning, "Image points or object points not defined");
+        //log(Warning, "Image points or object points not defined");
+		NODE_LOG(info) << "Image points or object points not defined";
 		return img;
     }
 
@@ -215,7 +220,8 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 		TIME
 		if (minDist > *getParameter<float>("Min pixel distance")->Data())
 		{
-            log(Status, "Adding frame to collection");
+            //log(Status, "Adding frame to collection");
+			NODE_LOG(info) << "Adding frame to collection";
 			imagePointCollection.push_back(*imagePoints);
 			objectPointCollection.push_back(*objPoints);
 			imagePointCentroids.push_back(centroid);
@@ -228,12 +234,14 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
             }
 			else
 			{
-				log(Status, "Waiting for more images before calibration");
+				//log(Status, "Waiting for more images before calibration");
+				NODE_LOG(info) << "Waiting for more images before calibration";
 			}
 		}
     }else
     {
-        log(Warning, "# image points doesn't match # object points");
+        //log(Warning, "# image points doesn't match # object points");
+		NODE_LOG(warning) << "# image points doesn't match # object points";
     }
     return img;
 }

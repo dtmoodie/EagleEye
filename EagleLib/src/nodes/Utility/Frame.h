@@ -19,6 +19,7 @@ namespace EagleLib
 	
 	class FrameLimiter : public Node
 	{
+		boost::posix_time::ptime lastTime;
 	public:
 		FrameLimiter();
 		virtual void Init(bool firstInit);

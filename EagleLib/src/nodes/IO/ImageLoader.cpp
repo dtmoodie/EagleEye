@@ -7,13 +7,13 @@ using namespace EagleLib;
 void ImageLoader::Init(bool firstInit)
 {
     Node::Init(firstInit);
-    updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/oimg.jpeg"), Parameters::Parameter::Control, "Path to image file");
+    updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/oimg.jpeg"), Parameters::Parameter::Control, "Path to image file");
     parameters[0]->changed = true;
 	nodeType = eSource;
 }
 void ImageLoader::load()
 {
-    auto path = getParameter<boost::filesystem::path>(0);
+	auto path = getParameter<Parameters::ReadFile>(0);
     if(path)
     {
 		if (boost::filesystem::exists(*path->Data()))

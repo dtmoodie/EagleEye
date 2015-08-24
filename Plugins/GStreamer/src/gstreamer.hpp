@@ -1,4 +1,6 @@
 #pragma once
+#define PARAMETERS_USE_UI
+
 #include "nodes/Node.h"
 #include <gst/gst.h>
 #include <gst/gstelement.h>
@@ -7,23 +9,49 @@
 #include <gst/gstpipeline.h>
 #include <gst/app/gstappsrc.h>
 
-
-
+SETUP_PROJECT_DEF
+#ifdef _MSC_VER
+RUNTIME_COMPILER_LINKLIBRARY("gstapp-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstaudio-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstbase-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstcontroller-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstnet-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstpbutils-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstreamer-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstriff-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstrtp-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstrtsp-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstsdp-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gsttag-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstvideo-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("glib-2.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gobject-2.0.lib");
+#endif
 
 namespace EagleLib
 {
     class RTSP_server: public Node
     {
-        GstElement* source_OpenCV;
-        GstElement* pipeline;
+        
+    public:
+		GstElement* source_OpenCV;
+		GstElement* pipeline;
 		GstElement* encoder;
 		GstElement* payloader;
 		GstElement* udpSink;
+		//GstBufferPool* bufferPool;
+		GMainLoop* glib_MainLoop;
 		cv::Size imgSize;
+		boost::thread glibThread;
+		ConstBuffer<cv::cuda::HostMem> bufferPool;
+		guint sourceid;
 
-    public:
+		void gst_loop();
+		void Serialize(ISimpleSerializer* pSerializer);
+		void push_image();
         void setup();
         RTSP_server();
+		~RTSP_server();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
@@ -33,7 +61,7 @@ References
 https://www.youtube.com/watch?v=7Xdry76ek5E
 http://www.imgportal.net/home/wp-content/uploads/maris-script1.cpp
 http://stackoverflow.com/questions/20219401/how-to-push-opencv-images-into-gstreamer-pipeline-to-stream-it-over-the-tcpserve
-
+http://gstreamer.freedesktop.org/data/doc/gstreamer/head/manual/html/section-data-spoof.html
 
 // GStreamer
 #include <gstreamer-0.10/gst/gst.h>
