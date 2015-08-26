@@ -64,17 +64,29 @@ void vlcCamera::onSourceChange()
 	const char* const vlc_args[] = { "-I", "dummy", "--ignore-config", "--extraintf=logger", "--verbose=2" };
 	vlcInstance = libvlc_new(sizeof(vlc_args) / sizeof(vlc_args[0]), vlc_args);
 	if (vlcInstance == nullptr)
-		return log(Error, "vlcInstance == nullptr");
+	{
+		NODE_LOG(error) << "vlcInstance == nullptr";
+		return;
+	}
+		
 	media = libvlc_media_new_location(vlcInstance, getParameter<std::string>("Source")->Data()->c_str());
 	if (media == nullptr)
-		return log(Error, "media == nullptr");
+	{
+		NODE_LOG(error) << "media == nullptr";
+		return;
+	}
+		
 	mp = libvlc_media_player_new_from_media(media);
 	if (mp == nullptr)
-		return log(Error, "mp == nullptr");
+	{
+		NODE_LOG(error) << "mp == nullptr";
+		return;
+	}
 	libvlc_media_release(media);
 	libvlc_video_set_callbacks(mp, lock, unlock, display, this);
 	libvlc_video_set_format(mp, "RV24", 1920, 1080, 1920 * 3);
-	log(Status, "Source setup correctly");
+	NODE_LOG(info) << "Source setup correctly";
+
 	int height = libvlc_video_get_height(mp);
 	int width = libvlc_video_get_width(mp);
 }

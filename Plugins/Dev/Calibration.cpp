@@ -247,14 +247,16 @@ cv::cuda::GpuMat CalibrateCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 }
 void CalibrateCamera::calibrate()
 {
-    log(Status, "Calibrating camera with " + boost::lexical_cast<std::string>(imagePointCollection.size()) + " images");
+    //log(Status, "Calibrating camera with " + boost::lexical_cast<std::string>(imagePointCollection.size()) + " images");
+	NODE_LOG(info) << "Calibrating camera with " << imagePointCollection.size() << " images";
     std::vector<cv::Mat> rvecs;
     std::vector<cv::Mat> tvecs;
     double quality = cv::calibrateCamera(objectPointCollection, imagePointCollection,
                         imgSize, K, distortionCoeffs,rvecs,tvecs);
     if(quality < 1)
     {
-        log(Status, "Sufficient calibration achieved, turning off calibration routine");
+        //log(Status, "Sufficient calibration achieved, turning off calibration routine");
+		NODE_LOG(info) << "Sufficient calibration achieved, turning off calibration routine";
         enabled = false;
     }
 	updateParameter("Camera matrix", K, Parameters::Parameter::State);
@@ -333,12 +335,14 @@ cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda:
 
 	if (!pts1 || !pts2 || !objPts)
     {
-        log(Warning, "Image points or object points not selected");
+        //log(Warning, "Image points or object points not selected");
+		NODE_LOG(warning) << "Image points or object points not selected";
 		return img;
     }
 	if (pts1->size() != pts2->size() || pts1->size() != objPts->size() || objPts->empty())
     {
-        log(Warning, "Image points not found or not equal to object point size");
+        //log(Warning, );
+		NODE_LOG(warning) << "Image points not found or not equal to object point size";
 		return img;
     }
 
@@ -373,7 +377,8 @@ cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda:
     }
     if(minDist1 < 100 || minDist2 < 100)
     {
-        log(Status, "Insufficient movement to add points");
+        //log(Status, "Insufficient movement to add points");
+		NODE_LOG(info) << "Insufficient movement to add points";
         return img;
     }
     // Check if there is little motion in the image
@@ -393,15 +398,17 @@ cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda:
     updateParameter("Motion vector 2", motionSum2);
     if(cv::norm(motionSum1) > 20 || cv::norm(motionSum2) > 20)
     {
-        log(Status, "Too much movement to record image");
+        //log(Status, "Too much movement to record image");
+		NODE_LOG(info) << "Too much movement to record image";
         return img;
     }
 
-    log(Status, "Adding image to collection");
+    //log(Status, "Adding image to collection");
+	NODE_LOG(info) << "Adding image to collection";
 	imagePointCollection1.push_back(*pts1);
 	imagePointCollection2.push_back(*pts2);
 	objectPointCollection.push_back(*objPts);
-    log(Status, "Image pairs: " + boost::lexical_cast<std::string>(imagePointCollection1.size()));
+    NODE_LOG(info) << "Image pairs: " << imagePointCollection1.size();
 
 	auto K1_ = getParameter<cv::Mat>("Camera 1 Matrix")->Data();
 	auto K2_ = getParameter<cv::Mat>("Camera 2 matrix")->Data();
@@ -422,11 +429,11 @@ cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda:
 		imagePointCollection2.size() == imagePointCollection1.size() && 
 		imagePointCollection1.size() == objectPointCollection.size())
 	{
-        log(Status, "Running calibration with " + boost::lexical_cast<std::string>(objectPointCollection.size()) + " image pairs");
+        NODE_LOG(info) << "Running calibration with " << objectPointCollection.size() << " image pairs";
 		double reprojError = cv::stereoCalibrate(objectPointCollection, imagePointCollection1, imagePointCollection2, *K1_, *d1_, *K2_, *d2_, img.size(), Rot, Trans, Ess, Fun);
 
         cv::stereoRectify(*K1_, *d1_, *K2_, *d2_, img.size(), Rot,Trans, R1,R2, P1, P2, Q);
-        log(Status, "Calibration complete");
+        NODE_LOG(info) << "Calibration complete";
 		lastCalibration = imagePointCollection1.size();
 		updateParameter("Reprojection error", reprojError);
         save();

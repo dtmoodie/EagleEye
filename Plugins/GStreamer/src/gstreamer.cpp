@@ -32,7 +32,7 @@ bus_message(GstBus * bus, GstMessage * message, App * app)
 	}
 	case GST_MESSAGE_EOS:
 		g_main_loop_quit(app->glib_MainLoop);
-		break;
+		break; 
 	default:
 		break;
 	}
@@ -84,7 +84,7 @@ static gboolean read_data(App *app)
 
 static void cb_need_data(GstElement *appsrc,
 						guint  unused_size,
-						App    user_data)
+						App*    user_data)
 {
 	
 }
@@ -100,7 +100,8 @@ static void stop_feed(GstElement * pipeline, App *app)
 RTSP_server::~RTSP_server()
 {
 	g_main_loop_quit(glib_MainLoop);
-	glibThread.join();
+	g_main_loop_unref(glib_MainLoop);
+	glibThread.join(); 
 }
 
 void RTSP_server::gst_loop()
@@ -109,7 +110,6 @@ void RTSP_server::gst_loop()
 	{
 		g_main_loop_run(glib_MainLoop);
 	}
-	
 }
 void
 Create_PipelineGraph(GstElement *pipeline) {
@@ -147,7 +147,7 @@ void RTSP_server::setup()
 	gst_object_unref(bus);
 	CV_Assert(bus);
 
-	g_signal_connect(source_OpenCV, "need-data", G_CALLBACK(start_feed), this);
+	g_signal_connect(source_OpenCV, "need-data", G_CALLBACK(cb_need_data), this);
 	g_signal_connect(source_OpenCV, "enough-data", G_CALLBACK(stop_feed), this);
 
 	/* add watch for messages */
@@ -205,6 +205,7 @@ void RTSP_server::Init(bool firstInit)
 	updateParameter<std::string>("Address", "127.0.0.1");
 	updateParameter<unsigned short>("Port", 8004);
 	sourceid = 0;
+	glib_MainLoop = nullptr;
 	if (firstInit)
 	{
 		source_OpenCV = nullptr;
@@ -212,7 +213,7 @@ void RTSP_server::Init(bool firstInit)
 		encoder = nullptr;
 		payloader = nullptr;
 		udpSink = nullptr;
-		glib_MainLoop = nullptr;
+		
 		bufferPool.resize(5);
 	}
 	setup();
@@ -291,8 +292,8 @@ void RTSP_server::Serialize(ISimpleSerializer* pSerializer)
 	SERIALIZE(encoder);
 	SERIALIZE(payloader);
 	SERIALIZE(udpSink);
-	SERIALIZE(glib_MainLoop);
-	SERIALIZE(imgSize);
+	//SERIALIZE(glib_MainLoop);
+	//SERIALIZE(imgSize);
 	//SERIALIZE(h_buffer);
 }
 void RTSP_serverCallback(int status, void* userData)
@@ -304,12 +305,14 @@ cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 	if (!g_main_loop_is_running(glib_MainLoop))
 	{
 		NODE_LOG(error) << "Main glib loop not running";
+		return img;
 	}
 	if (imgSize != img.size())
 	{
-		gst_video_format_new_caps(GST_VIDEO_FORMAT_RGB, 640, 480, 0, 1, 4, 3);
+		//gst_caps_new_simple
+		//gst_video_format_new_caps(GST_VIDEO_FORMAT_RGB, 640, 480, 0, 1, 4, 3);
 		//GstCaps* caps = gst_caps_new_simple("video/x-raw-rgb", "width", G_TYPE_INT, img.cols, "height", G_TYPE_INT, img.rows, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
-		GstCaps* caps = gst_caps_new_simple("video/x-raw",
+		GstCaps* caps = gst_caps_new_simple("video/x-raw", 
 			"format", G_TYPE_STRING, "RGB",
 			"width", G_TYPE_INT, img.cols,
 			"height", G_TYPE_INT, img.rows,

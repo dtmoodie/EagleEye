@@ -21,6 +21,8 @@ bool Camera::changeStream(int device)
 }
 bool Camera::changeStream(const std::string &gstreamParams)
 {
+	if (!gstreamParams.size())
+		return false;
     try
     {
         //log(Status, "Setting camera with gstreamer settings: " + gstreamParams);
