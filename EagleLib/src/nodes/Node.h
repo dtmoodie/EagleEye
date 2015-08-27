@@ -232,16 +232,6 @@ namespace EagleLib
          * @param msg
          */
 		virtual void                    log(boost::log::trivial::severity_level level, const std::string& msg);
-        /**
-         * @brief The NodeInfo struct [DEPRICATED]
-         */
-        struct NodeInfo
-        {
-            int index;
-            std::string treeName;
-            std::string nodeName;
-            ObjectId id;
-        };
 
         virtual void updateParent();
 
