@@ -385,12 +385,20 @@ struct IObject
 
     void deregisterNotifier(IObjectNotifiable* notifier)
     {
-		std::lock_guard<std::recursive_mutex> lock(notifierMutex);
-        auto itr = std::find(notifiers.begin(), notifiers.end(), notifier);
-        if(itr != notifiers.end())
-            notifiers.erase(itr);
-        else
-            return;
+		try
+		{
+			std::lock_guard<std::recursive_mutex> lock(notifierMutex);
+			auto itr = std::find(notifiers.begin(), notifiers.end(), notifier);
+			if (itr != notifiers.end())
+				notifiers.erase(itr);
+			else
+				return;
+		}
+		catch (...)
+		{
+			return;
+		}
+		
     }
     void updateNotifiers()
     {

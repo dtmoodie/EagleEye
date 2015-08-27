@@ -160,8 +160,13 @@ void KeyPointDisplay_callback(int status, void* userData)
     cv::Mat img = node->uicallback();
     try
     {
-        if(!img.empty())
-            cv::imshow(node->fullTreeName, img);
+		if (!img.empty())
+		{
+			Parameters::UI::UiCallbackService::Instance()->post(
+				boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), node->fullTreeName, img));
+			//UIThreadCallback::getInstance().addCallback(;
+		}
+            
     }catch(cv::Exception &e)
     {
         std::cout << e.what() << std::endl;

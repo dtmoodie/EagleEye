@@ -156,48 +156,6 @@ void RTSP_server::setup()
 	GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
 	CV_Assert(ret != GST_STATE_CHANGE_FAILURE);
 	Create_PipelineGraph(pipeline);
-
-	/*
-
-
-	if (!pipeline)
-		pipeline = gst_pipeline_new("RTSP server");
-
-	CV_Assert(pipeline);
-    
-	if (!source_OpenCV)
-		source_OpenCV = gst_element_factory_make("appsrc", "Source_OpenCV");
-
-    gst_bin_add(GST_BIN(pipeline), source_OpenCV);
-
-	if (!encoder)
-		encoder = gst_element_factory_make("openh264enc", "openh264enc0");
-	CV_Assert(encoder);
-	gst_bin_add(GST_BIN(pipeline), encoder);
-
-	if (!payloader)
-		payloader = gst_element_factory_make("rtph264pay", "rtph264pay0");
-	CV_Assert(encoder);
-	// http://lists.freedesktop.org/archives/gstreamer-devel/2011-July/032472.html
-	g_object_set(payloader, "config-interval", 1, nullptr);
-	g_object_set(payloader, "pt", 96, nullptr);
-
-	gst_bin_add(GST_BIN(pipeline), payloader);
-
-	if (!udpSink)
-		udpSink = gst_element_factory_make("udpsink", "udpsink0");
-	CV_Assert(udpSink);
-	g_object_set(udpSink, "host", "127.0.0.1", "port", 8004, nullptr);
-
-	gst_bin_add(GST_BIN(pipeline), udpSink);
-	
-	CV_Assert(gst_element_link(source_OpenCV, encoder));
-	CV_Assert(gst_element_link(encoder, payloader));
-	CV_Assert(gst_element_link(payloader, udpSink));
-
-	GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
-	CV_Assert(ret != GST_STATE_CHANGE_FAILURE);
-	Create_PipelineGraph(pipeline);*/
 }
 
 void RTSP_server::Init(bool firstInit)
@@ -220,6 +178,8 @@ void RTSP_server::Init(bool firstInit)
 }
 void RTSP_server::push_image()
 {
+	static GstClockTime timestamp = 0;
+
 	GstBuffer* buffer;
 	auto h_buffer = bufferPool.getBack();
 	if (h_buffer)
@@ -235,16 +195,13 @@ void RTSP_server::push_image()
 		memcpy(map.data, h_buffer->data, map.size);
 		gst_buffer_unmap(buffer, &map);
 
-		
-		//GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale(bufferlength, GST_SECOND, 1);
-		
+		GST_BUFFER_PTS(buffer) = timestamp;
+
+		GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(1, GST_SECOND, 2);
+		timestamp += GST_BUFFER_DURATION(buffer);
+
+
 		GstCaps *caps_Source = NULL;
-
-		/*std::stringstream video_caps_text;
-		video_caps_text << "video/x-raw-rgb,width=(int)" << h_buffer->data.cols << 
-			",height=(int)" << h_buffer->data.rows << ",framerate=(fraction)0/1";*/
-
-		//caps_Source = gst_caps_from_string(video_caps_text.str().c_str());
 
 		caps_Source = gst_caps_new_simple("video/x-raw",
 			"format", G_TYPE_STRING, "RGB",
@@ -280,7 +237,7 @@ void RTSP_server::push_image()
 		{
 			NODE_LOG(error) << "Error pushing buffer into appsrc " << rw;
 		}
-		gst_buffer_unref(buffer);
+		//gst_buffer_unref(buffer);
 	}
 }
 

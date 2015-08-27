@@ -70,7 +70,7 @@ void NodeView::on_parameter_clicked(Parameters::Parameter::Ptr param, QPoint pos
 		actions[1]->setEnabled(false);
 		actions[2]->setEnabled(false);
 	}
-	rightClickMenu->popup(mapToGlobal(pos));
+	//rightClickMenu->popup(mapToGlobal(pos));
 }
 
 void NodeView::on_deleteNode()
@@ -183,8 +183,9 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                 if(event->button() == Qt::RightButton)
                 {
 					actions[1]->setEnabled(false);
-					actions[2]->setEnabled(false);			
-					rightClickMenu->popup(mapToGlobal(event->pos()));
+					actions[2]->setEnabled(false);	
+					auto pos = event->pos();
+					rightClickMenu->popup(mapToGlobal(pos));
                     QGraphicsView::mousePressEvent(event);
 
                 }
