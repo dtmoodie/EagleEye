@@ -73,8 +73,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
 	boost::log::core::get()->add_global_attribute("ThreadID", boost::log::attributes::current_thread_id());*/
 	//boost::log::add_console_LOG_TRIVIAL(std::cout, boost::log::keywords::format = "%TimeStamp% - %LineID% %Severity% %ThreadID% - %Message%");
-	auto fmtTimeStamp = boost::log::expressions::
-		format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
+
+	auto consoleFmtTimeStamp = boost::log::expressions::
+		format_date_time<boost::posix_time::ptime>("TimeStamp", "%M:%S.%f");
 	auto fmtThreadId = boost::log::expressions::
 		attr<boost::log::attributes::current_thread_id::value_type>("ThreadID");
 	auto fmtSeverity = boost::log::expressions::
@@ -85,12 +86,27 @@ MainWindow::MainWindow(QWidget *parent) :
 		boost::log::keywords::iteration = boost::log::expressions::reverse,
 		boost::log::keywords::depth = 2);
 
+	boost::log::formatter consoleFmt =
+		boost::log::expressions::format("%1%<%2%,%3%> %4%")
+		% consoleFmtTimeStamp					// 1
+		% fmtThreadId							// 2
+		% fmtSeverity							// 3
+		% boost::log::expressions::smessage;	// 4
+
+	auto consoleSink = boost::log::add_console_log(std::clog);
+	consoleSink->set_formatter(consoleFmt);
+
+
+	auto fmtTimeStamp = boost::log::expressions::
+		format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
 	boost::log::formatter logFmt =
 		boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%] %5%")
-		% fmtTimeStamp % fmtThreadId % fmtSeverity % fmtScope
+		% fmtTimeStamp 
+		% fmtThreadId 
+		% fmtSeverity
+		% fmtScope
 		% boost::log::expressions::smessage;
-	auto consoleSink = boost::log::add_console_log(std::clog);
-	consoleSink->set_formatter(logFmt);
+	
 
 	auto fsSink = boost::log::add_file_log(
 		boost::log::keywords::file_name = "test_%Y-%m-%d_%H-%M-%S.%N.log",
@@ -194,7 +210,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     startProcessingThread();
-
+	rccSettings->updateDisplay();
 }
 
 MainWindow::~MainWindow()

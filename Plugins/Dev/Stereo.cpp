@@ -207,7 +207,8 @@ cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
             return img;
         }
 
-        log(Status, "Calculating image rectification");
+        //log(Status, "Calculating image rectification");
+		NODE_LOG(info) << "Calculating image rectification";
         cv::initUndistortRectifyMap(*K,*D, *R, *P, img.size(), CV_32FC1, X, Y);
         mapX.upload(X, stream);
         mapY.upload(Y,stream);

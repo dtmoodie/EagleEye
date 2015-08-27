@@ -365,6 +365,8 @@ QInputProxy::QInputProxy(std::shared_ptr<Parameters::Parameter> parameter_, Eagl
     box = new QComboBox(this);
 	box->setMinimumWidth(200);
 	box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+	//box->setToolTip(QString::fromStdString(parameter_->GetTooltip()));
+
 	bc = parameter_->RegisterNotifier(boost::bind(&QInputProxy::updateUi, this, false));
     inputParameter = std::dynamic_pointer_cast<Parameters::InputParameter>(parameter_);
     updateUi(true);
@@ -376,6 +378,12 @@ void QInputProxy::on_valueChanged(int idx)
 {
     if(idx == prevIdx)
         return;
+	if (idx == 0)
+	{
+		inputParameter->SetInput(Parameters::Parameter::Ptr());
+		return;
+	}
+		
     prevIdx = idx;
     QString inputName = box->currentText();
     auto tokens = inputName.split(":");
@@ -402,7 +410,7 @@ void QInputProxy::updateUi(bool init)
     {
         auto inputs = node->findCompatibleInputs(inputParameter);
         box->clear();
-        box->addItem("");
+        box->addItem(QString::fromStdString(std::dynamic_pointer_cast<Parameters::Parameter>(inputParameter)->GetTreeName()));
         for(size_t i = 0; i < inputs.size(); ++i)
         {
             QString text = QString::fromStdString(inputs[i]);

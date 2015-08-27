@@ -440,7 +440,21 @@ shared_ptr<Node> NodeManager::addNode(const std::string &nodeName)
         if(interface)
         {
             Node* node = static_cast<Node*>(interface);
-            node->Init(true);
+			try
+			{
+				node->Init(true);
+			}
+			catch (cv::Exception &e)
+			{
+				BOOST_LOG_TRIVIAL(error) << "Failed to initialize node " << nodeName << " due to: " << e.what();
+				return shared_ptr<Node>();
+			}
+			catch (...)
+			{
+				BOOST_LOG_TRIVIAL(error) << "Failed to initialize node " << nodeName;
+				return shared_ptr<Node>();
+			}
+            
             nodes.push_back(weak_ptr<Node>(node));
             return Node::Ptr(node);
         }else

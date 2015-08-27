@@ -553,7 +553,7 @@ namespace EagleLib
             }catch(cv::Exception &e)
             {
 				e.what();
-				NODE_LOG(debug) << name << " doesn't exist, adding";
+				NODE_LOG(debug) << "Parameter named \"" << name << "\" with type " << Loki::TypeInfo(typeid(T)).name() << " doesn't exist, adding";
                 return addParameter<T>(name, data, type_, toolTip_, ownsData_);
             }
 			if (type_ != Parameters::Parameter::None)

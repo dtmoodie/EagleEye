@@ -116,7 +116,7 @@ void AxisCamera::on_panRequest()
 		tiltStr + boost::lexical_cast<std::string>(abs(tilt)) +
 		"&camera=" + boost::lexical_cast<std::string>(cameraNum);
 
-    log(Status, "Pan request: " + requestStr);
+    NODE_LOG(info) << "Pan request: " << requestStr;
     socket->request(QUrl(QString::fromStdString(requestStr)));
     updateParameter("Camera moving", true);
 }
@@ -134,7 +134,7 @@ void AxisCamera::on_zoomRequest()
 		tiltStr + boost::lexical_cast<std::string>(abs(tilt)) +
 		"&camera=" + boost::lexical_cast<std::string>(cameraNum);
 
-    log(Status, "Zoom request: " + requestStr);
+    NODE_LOG(info) << "Zoom request: " << requestStr;
     socket->request(QUrl(QString::fromStdString(requestStr)));
     updateParameter("Camera moving", true);
 }
@@ -152,7 +152,7 @@ void AxisCamera::on_tiltRequest()
             tiltStr + boost::lexical_cast<std::string>(abs(tilt)) + 
 			"&camera=" + boost::lexical_cast<std::string>(cameraNum);
 
-    log(Status, "Tilt request: " + requestStr);
+    NODE_LOG(info) << "Tilt request: " << requestStr;
     socket->request(QUrl(QString::fromStdString(requestStr)));
     updateParameter("Camera moving", true);
 	on_credentialChange();

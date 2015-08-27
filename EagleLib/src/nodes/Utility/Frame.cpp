@@ -19,11 +19,20 @@ cv::cuda::GpuMat FrameRate::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 
 void FrameLimiter::Init(bool firstInit)
 {
-
+	updateParameter<double>("Framerate", 60.0);
 }
 
 cv::cuda::GpuMat FrameLimiter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
+	auto currentTime = boost::posix_time::microsec_clock::universal_time();
+	boost::posix_time::time_duration delta(currentTime - lastTime);
+	lastTime = currentTime;
+	int goalTime = 1000.0 / *getParameter<double>(0)->Data();
+	if (delta.total_milliseconds() < goalTime)
+	{
+		//boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(goalTime - delta.total_milliseconds()));
+	}
 	return img;
 }
 void CreateMat::Init(bool firstInit)

@@ -269,6 +269,8 @@ template<typename Data>
             boost::recursive_mutex::scoped_lock lock(mtx);
             if(!buffer[getItr%size].ready())
                 return nullptr;
+			if (getItr == putItr)
+				return nullptr;
             return &buffer[getItr++%size];
         }
         Buffer<T>* waitBack()
