@@ -13,6 +13,7 @@ namespace EagleLib
 {
     class camera_freenect: public Node
     {
+		cv::cuda::GpuMat XYZ;
         MyFreenectDevice* myDevice;
         std::vector<uint16_t> depthBuffer;
     public:

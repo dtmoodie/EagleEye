@@ -20,9 +20,21 @@ find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cu
 find_package(libfreenect)
 
 IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
+	IF(WIN32)
+		set(THREADS_USE_PTHREADS_WIN32 true)
+		find_package(Threads REQUIRED)
+		INCLUDE_DIRECTORIES(${THREADS_PTHREADS_INCLUDE_DIR})
+		SET(PTHREADS_INCLUDE_DIR "" CACHE PATH "${THREADS_PTHREADS_INCLUDE_DIR}")
+		SET(PTHREADS_LIBRARY "" CACHE FILE "${PTHREADS_INCLUDE_DIR}/../lib/x64/pthreadVC2.lib")
+		INCLUDE_DIRECTORIES(${PTHREADS_INCLUDE_DIR})
+		
+	ELSE(WIN32)
+		LINK_DIRECTORIES("/usr/local/lib")
+	ENDIF(WIN32)
+
     ADD_DEFINITIONS(${DEFS})
     LINK_DIRECTORIES(${LINK_DIRS})
-    LINK_DIRECTORIES("/usr/local/lib")
+    
     #LINK_DIRECTORIES(${FREENECT_LIBRARY_DIRS})
 
     INCLUDE_DIRECTORIES(
@@ -31,10 +43,12 @@ IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
         ${Boost_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
         ${LIBUSB_1_INCLUDE_DIR}
-	${FREENECT_INCLUDE_DIRS}
+		${FREENECT_INCLUDE_DIRS}
+		${LIBFREENECT_INCLUDE_DIR}
     )
 
     file(GLOB_RECURSE src "*.cpp")
+	file(GLOB_RECURSE knl "*.cu")
     file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
 
     IF(WIN32)
@@ -51,14 +65,15 @@ IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
     add_dependencies(freenect_node EagleLib)
     target_link_libraries(freenect_node
         EagleLib
-        #${FREENECT_LIBRARIES}
-        freenect
-        freenect_sync
+        ${LIBFREENECT_LIBRARY}
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}
         ${LINK_LIBS}
         ${LIBUSB_1_LIBRARY}
     )
+	IF(WIN32)
+		TARGET_LINK_LIBRARIES(freenect_node ${PTHREADS_LIBRARY})
+	ENDIF(WIN32)
 
 ELSE(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
     message("LIBUSB not found, not building freenect lib")

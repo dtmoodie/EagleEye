@@ -1,5 +1,6 @@
 #include "Freenect.h"
 #include "libfreenect/libfreenect.hpp"
+#include "freenect.cuh"
 
 IPerModuleInterface* GetModule()
 {
@@ -71,23 +72,48 @@ private:
     bool m_new_depth_frame;
 };
 
-Freenect::Freenect freenect;
+static Freenect::Freenect* freenect = nullptr;
 using namespace EagleLib;
 void camera_freenect::Init(bool firstInit)
 {
-    myDevice = &freenect.createDevice<MyFreenectDevice>(0);
+	if (freenect == nullptr)
+	{
+		freenect = new Freenect::Freenect();
+	}
+	try
+	{
+		myDevice = &freenect->createDevice<MyFreenectDevice>(0);
+	}
+	catch (std::runtime_error & e)
+	{
+		NODE_LOG(error) << e.what();
+		myDevice = nullptr;
+		return;
+	}
+    
     myDevice->startVideo();
     myDevice->startDepth();
     depthBuffer.resize(640*480);
 }
 
+
+
+
 cv::cuda::GpuMat camera_freenect::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(myDevice->getDepth(depthBuffer))
-    {
-        cv::Mat h_depth(640,480, CV_16U, (void*)&depthBuffer[0]);
-        img.upload(h_depth, stream);
-    }
+	if (myDevice)
+	{
+		if (myDevice->getDepth(depthBuffer))
+		{
+			cv::Mat h_depth(480, 640, CV_16U, (void*)&depthBuffer[0]);
+			img.upload(h_depth, stream);
+			Depth2XYZ(img, XYZ, stream);
+			updateParameter("PointCloud", XYZ);
+			cv::Mat h_xyz(XYZ);
+			return img;
+		}
+	}
+    
     return cv::cuda::GpuMat();
 }
 
