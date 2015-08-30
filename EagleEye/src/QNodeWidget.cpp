@@ -250,7 +250,11 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Node *node_)
 						if (interop)
 						{
 							parameterProxies.push_back(interop);
-							ui->gridLayout->addWidget(interop->GetParameterWidget(this), i + 5, col, 1, 1);
+							auto widget = interop->GetParameterWidget(this);
+							widget->installEventFilter(this);
+							widgetParamMap[widget] = node->parameters[i];
+							ui->gridLayout->addWidget(widget, i + 5, col, 1, 1);
+							//ui->gridLayout->addWidget(interop->GetParameterWidget(this), i + 5, col, 1, 1);
 						}
 					}
                 }
