@@ -1,6 +1,19 @@
 #include "Plotting.h"
 #include "PlottingImpl.hpp"
 
+
+template<typename T> QTableWidgetItem* readItems(T* data, const int channels)
+{
+	QString str;
+	for (int i = 0; i < channels; ++i)
+	{
+		if (i != 0)
+			str += ",";
+		str += QString::number(data[i]);
+	}
+	return new QTableWidgetItem(str);
+}
+
 namespace EagleLib
 {
     class MatrixView: public QtPlotter, public StaticPlotPolicy
@@ -28,8 +41,13 @@ namespace EagleLib
         virtual bool acceptsType(Parameters::Parameter::Ptr param) const
         {
             //return EagleLib::acceptsType<cv::Mat>(param->typeInfo);
-            return Loki::TypeInfo(typeid(cv::Mat)) == param->GetTypeInfo() || Loki::TypeInfo(typeid(cv::cuda::GpuMat)) == param->GetTypeInfo();
-
+			if (Loki::TypeInfo(typeid(cv::Mat)) == param->GetTypeInfo() || Loki::TypeInfo(typeid(cv::cuda::GpuMat)) == param->GetTypeInfo())
+			{
+				auto size = getSize(param);
+				if (size.width < 10 && size.height < 10)
+					return true;
+			}
+			return false;
         }
         virtual std::string plotName() const
         {
@@ -65,29 +83,30 @@ namespace EagleLib
                 return;
             std::vector<QTableWidgetItem*> items;
             items.reserve(mat->size().area());
+			const int channels = mat->channels();
             for(int i = 0; i < mat->rows; ++i)
             {
                 for(int j = 0; j < mat->cols; ++j)
                 {
-                    switch(mat->type())
+                    switch(mat->depth())
                     {
                     case CV_8U:
-                        items.push_back(new QTableWidgetItem(QString::number(mat->at<uchar>(i,j))));
+						items.push_back(readItems(mat->ptr<uchar>(i, j), channels));
                         break;
 					case CV_16U:
-						items.push_back(new QTableWidgetItem(QString::number(mat->at<ushort>(i, j))));
+						items.push_back(readItems(mat->ptr<ushort>(i, j), channels));
 						break;
 					case CV_16S:
-						items.push_back(new QTableWidgetItem(QString::number(mat->at<short>(i, j))));
+						items.push_back(readItems(mat->ptr<short>(i, j), channels));
 						break;
                     case CV_32F:
-                        items.push_back(new QTableWidgetItem(QString::number(mat->at<float>(i,j))));
+						items.push_back(readItems(mat->ptr<float>(i, j), channels));
                         break;
                     case CV_64F:
-                        items.push_back(new QTableWidgetItem(QString::number(mat->at<double>(i,j))));
+						items.push_back(readItems(mat->ptr<double>(i, j), channels));
                         break;
                     case CV_32S:
-                        items.push_back(new QTableWidgetItem(QString::number(mat->at<int>(i,j))));
+						items.push_back(readItems(mat->ptr<int>(i, j), channels));
                         break;
 					default: break;
                     }
@@ -99,7 +118,7 @@ namespace EagleLib
 				widget->clearContents();
                 for(int i = 0; i < mat->rows; ++i)
                 {
-                    for(int j = 0; j < mat->cols; ++j, ++count)
+                    for(int j = 0; j < mat->cols && count < items.size(); ++j, ++count)
                     {
                         widget->setItem(i,j,items[count]);
                     }

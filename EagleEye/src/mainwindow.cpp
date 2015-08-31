@@ -45,6 +45,8 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/support/date_time.hpp>
 
+#include <UI/InterThread.hpp>
+
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
 	return 0;
@@ -178,6 +180,7 @@ MainWindow::MainWindow(QWidget *parent) :
     Parameters::TypedParameter<Parameters::ReadDirectory>("Instantiation");
     Parameters::TypedParameter<Parameters::ReadFile>("Instantiation");
     Parameters::TypedParameter<Parameters::EnumParameter>("Instantiation");
+	Parameters::TypedParameter<boost::function<void(void)>>("Instantiation");
 
     EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
@@ -665,6 +668,7 @@ void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mu
         try
         {
 			EagleLib::ProcessingThreadCallback::Run();
+			Parameters::UI::ProcessingThreadCallbackService::run();
             process(parentList, mtx);
 			end = boost::posix_time::microsec_clock::universal_time();
 			delta = end - start;

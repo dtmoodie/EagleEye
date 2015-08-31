@@ -72,33 +72,41 @@ private:
     bool m_new_depth_frame;
 };
 
-static Freenect::Freenect* freenect = nullptr;
+//static Freenect::Freenect* freenect = nullptr;
 using namespace EagleLib;
+
+camera_freenect::~camera_freenect()
+{
+	//freenect->deleteDevice(0);
+	//delete freenect;
+	//myDevice = nullptr;
+}
+
 void camera_freenect::Init(bool firstInit)
 {
-	if (freenect == nullptr)
+	if (firstInit)
 	{
 		freenect = new Freenect::Freenect();
+		try
+		{
+			myDevice = &freenect->createDevice<MyFreenectDevice>(0); 
+		}
+		catch (std::runtime_error & e)
+		{
+			NODE_LOG(error) << e.what();
+			myDevice = nullptr;
+			return;
+		}
 	}
-	try
-	{
-		myDevice = &freenect->createDevice<MyFreenectDevice>(0);
-	}
-	catch (std::runtime_error & e)
-	{
-		NODE_LOG(error) << e.what();
-		myDevice = nullptr;
-		return;
-	}
-    
     myDevice->startVideo();
     myDevice->startDepth();
     depthBuffer.resize(640*480);
 }
-
-
-
-
+void camera_freenect::Serialize(ISimpleSerializer* pSerializer)
+{
+	SERIALIZE(myDevice);
+	SERIALIZE(freenect);
+}
 cv::cuda::GpuMat camera_freenect::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
 	if (myDevice)

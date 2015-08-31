@@ -9,15 +9,23 @@ extern "C"{
 }
 #endif
 class MyFreenectDevice;
+namespace Freenect
+{
+	class Freenect;
+}
+
 namespace EagleLib
 {
     class camera_freenect: public Node
     {
+		Freenect::Freenect* freenect;
 		cv::cuda::GpuMat XYZ;
         MyFreenectDevice* myDevice;
         std::vector<uint16_t> depthBuffer;
     public:
         camera_freenect();
+		~camera_freenect();
+		virtual void Serialize(ISimpleSerializer* pSerializer);
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
         virtual bool SkipEmpty() const;

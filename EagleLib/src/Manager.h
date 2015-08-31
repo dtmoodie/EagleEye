@@ -1,8 +1,18 @@
+#pragma once
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
+#  define EAGLE_EXPORTS __declspec(dllexport)
+#elif defined __GNUC__ && __GNUC__ >= 4
+#  define EAGLE_EXPORTS __attribute__ ((visibility ("default")))
+#else
+#  define EAGLE_EXPORTS
+#endif
+
+
 
 #ifdef __cplusplus
-#define SETUP_PROJECT_DEF extern "C"{ CV_EXPORTS void SetupIncludes(); }
+#define SETUP_PROJECT_DEF extern "C"{ EAGLE_EXPORTS void SetupIncludes(); }
 #else
-#define SETUP_PROJECT_DEF RCC_EXPORTS void SetupIncludes();
+#define SETUP_PROJECT_DEF EAGLE_EXPORTS void SetupIncludes();
 #endif
 
 #ifdef PROJECT_INCLUDES

@@ -20,7 +20,6 @@ __global__ void depth2XYZ_kernel(cv::cuda::PtrStepSz<unsigned short> depth, cv::
 	XYZ.ptr(y)[x].val[1] = y_ * depth_ / f;
 	XYZ.ptr(y)[x].val[2] = depth_;
 	XYZ.ptr(y)[x].val[3] = 0;
-
 }
 
 

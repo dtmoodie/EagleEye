@@ -21,7 +21,6 @@ using namespace EagleLib;
 		RUNTIME_COMPILER_LINKLIBRARY("opencv_cuda300.lib")
 	#endif
 #else
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 #endif
 
 
