@@ -6,7 +6,8 @@
 #define FLANN_USE_CUDA
 #include "flann/flann.hpp"
 SETUP_PROJECT_DEF
-
+RUNTIME_COMPILER_LINKLIBRARY("cudart_static.lib")
+RUNTIME_COMPILER_LINKLIBRARY("cublas.lib")
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("flann_cpp_sd.lib")
 RUNTIME_COMPILER_LINKLIBRARY("flann_cuda_sd.lib")

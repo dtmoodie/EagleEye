@@ -89,13 +89,18 @@ cv::cuda::GpuMat PtCloud_backgroundSubtract_flann::doProcess(cv::cuda::GpuMat& i
 	{
 		flann::Matrix<float> input_ = flann::Matrix<float>((float*)input.data, input.rows, 3, input.step);
 		nnIndex->radiusSearch(input_, d_idx, d_dist, *getParameter<float>(1)->Data(), searchParams, cv::cuda::StreamAccessor::getStream(stream));
-		cv::cuda::threshold(idxBuffer_->data, idxBuffer_->data, -1, 255, cv::THRESH_BINARY_INV, stream);
-		cv::cuda::countNonZero(idxBuffer_->data, count, stream);
+		//cv::cuda::threshold(idxBuffer_->data, idxBuffer_->data, -1, 255, cv::THRESH_BINARY_INV, stream);
+		//cv::cuda::countNonZero(idxBuffer_->data, count, stream);
 		auto output = outputBuffer.getFront();
 		filterPointCloud(input, output->data, idxBuffer_->data, result, -1, stream);
 		updateParameter("Neighbor index", idxBuffer_->data);
 		updateParameter("Neighbor dist", distBuffer_->data);
-		updateParameter("Num -1 idx", count);
+		//updateParameter("Num -1 idx", count);
+		updateParameter("Resulting point cloud", output->data);
+		updateParameter("Resulting point cloud size", result);
+		//cv::Mat test(output->data);
+		//cv::Mat size(result);
+		//test = test.rowRange(cv::Range(0, size.at<int>(0)));
 	}
 	else
 	{

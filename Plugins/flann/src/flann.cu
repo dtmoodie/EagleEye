@@ -36,7 +36,7 @@ __global__ void filterPointCloud(cv::cuda::PtrStepSz<T1> inputPointCloud,
 }
 
 
-void filterPointCloud(cv::cuda::GpuMat inputPointCloud, cv::cuda::GpuMat& outputPointCloud, cv::cuda::GpuMat mask, cv::cuda::GpuMat resultSize, int flagValue, cv::cuda::Stream stream)
+void filterPointCloud(cv::cuda::GpuMat inputPointCloud, cv::cuda::GpuMat& outputPointCloud, cv::cuda::GpuMat mask, cv::cuda::GpuMat& resultSize, int flagValue, cv::cuda::Stream stream)
 {
 	CV_Assert(inputPointCloud.type() == CV_32F &&
 			  inputPointCloud.channels() == 1 && 
