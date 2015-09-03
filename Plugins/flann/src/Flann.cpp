@@ -95,12 +95,8 @@ cv::cuda::GpuMat PtCloud_backgroundSubtract_flann::doProcess(cv::cuda::GpuMat& i
 		filterPointCloud(input, output->data, idxBuffer_->data, result, -1, stream);
 		updateParameter("Neighbor index", idxBuffer_->data);
 		updateParameter("Neighbor dist", distBuffer_->data);
-		//updateParameter("Num -1 idx", count);
 		updateParameter("Resulting point cloud", output->data);
 		updateParameter("Resulting point cloud size", result);
-		//cv::Mat test(output->data);
-		//cv::Mat size(result);
-		//test = test.rowRange(cv::Range(0, size.at<int>(0)));
 	}
 	else
 	{

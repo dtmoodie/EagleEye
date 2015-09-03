@@ -3,6 +3,7 @@
 #include "nodes/Node.h"
 #include <CudaUtils.hpp>
 
+
 #define FLANN_USE_CUDA
 #include "flann/flann.hpp"
 SETUP_PROJECT_DEF
@@ -26,7 +27,7 @@ namespace EagleLib
 		BufferPool<cv::cuda::GpuMat> inputBuffer;
 		BufferPool<cv::cuda::GpuMat> idxBuffer;
 		BufferPool<cv::cuda::GpuMat> distBuffer;
-		BufferPool<cv::cuda::GpuMat> outputBuffer;
+		BufferPool<GpuResized<cv::cuda::GpuMat>> outputBuffer;
 		cv::cuda::GpuMat count;
 		void BuildModel();
 		bool MapInput(cv::cuda::GpuMat& img = cv::cuda::GpuMat());

@@ -6,6 +6,34 @@
 #include <boost/thread.hpp>
 namespace EagleLib
 {
+
+template<typename T>
+struct GpuResized
+{
+	GpuResized()
+	{
+		cudaMalloc(&GpuSetSize, sizeof(int));
+		cudaMemset(GpuSetSize, 0x00, sizeof(int));
+	}
+	GpuResized(GpuResized<T>& other)
+	{
+		GpuSetSize = other.GpuSetSize;
+		data = other.data;
+	}
+	GpuResized& operator=(GpuResized<T>& other)
+	{
+		GpuSetSize = other.GpuSetSize;
+		data = other.data;
+	}
+	~GpuResized()
+	{
+
+	}
+	T data;
+	// This is the size that is set from the gpu
+	int* GpuSetSize;
+};
+
 template<typename T> void cleanup(T& ptr, typename std::enable_if< std::is_array<T>::value>::type* = 0) { /*delete[] ptr;*/ }
 template<typename T> void cleanup(T& ptr, typename std::enable_if< std::is_pointer<T>::value && !std::is_array<T>::value>::type* = 0) { delete ptr; }
 template<typename T> void cleanup(T& ptr, typename std::enable_if<!std::is_pointer<T>::value && !std::is_array<T>::value>::type* = 0) { return; }

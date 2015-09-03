@@ -180,6 +180,7 @@ MainWindow::MainWindow(QWidget *parent) :
     Parameters::TypedParameter<Parameters::ReadDirectory>("Instantiation");
     Parameters::TypedParameter<Parameters::ReadFile>("Instantiation");
     Parameters::TypedParameter<Parameters::EnumParameter>("Instantiation");
+	Parameters::TypedParameter<boost::filesystem::path>("Instantiation");
 	Parameters::TypedParameter<boost::function<void(void)>>("Instantiation");
 
     EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));

@@ -36,7 +36,7 @@ __global__ void filterPointCloud(cv::cuda::PtrStepSz<T1> inputPointCloud,
 }
 
 
-void filterPointCloud(cv::cuda::GpuMat inputPointCloud, cv::cuda::GpuMat& outputPointCloud, cv::cuda::GpuMat mask, cv::cuda::GpuMat& resultSize, int flagValue, cv::cuda::Stream stream)
+void filterPointCloud(cv::cuda::GpuMat inputPointCloud, EagleLib::GpuResized<cv::cuda::GpuMat>& outputPointCloud, cv::cuda::GpuMat mask, cv::cuda::GpuMat& resultSize, int flagValue, cv::cuda::Stream stream)
 {
 	CV_Assert(inputPointCloud.type() == CV_32F &&
 			  inputPointCloud.channels() == 1 && 
@@ -45,16 +45,16 @@ void filterPointCloud(cv::cuda::GpuMat inputPointCloud, cv::cuda::GpuMat& output
 			  "Only accepts tensor format with XYZ1");
 	CV_Assert(mask.isContinuous());
 
-	outputPointCloud.create(inputPointCloud.size(), inputPointCloud.type());
+	outputPointCloud.data.create(inputPointCloud.size(), inputPointCloud.type());
 	resultSize.create(1, 1, CV_32S);
 
 	int step = inputPointCloud.rows / 1024;
 	
 	filterPointCloud<float, int> <<<1, 1024, sizeof(int), cv::cuda::StreamAccessor::getStream(stream) >>>(
 			cv::cuda::PtrStepSz<float>(inputPointCloud),
-			cv::cuda::PtrStepSz<float>(outputPointCloud),
+			cv::cuda::PtrStepSz<float>(outputPointCloud.data),
 			(int*)mask.data,
-			(int*)resultSize.data,
+			(int*)outputPointCloud.GpuSetSize,
 			step, flagValue);
 
 }

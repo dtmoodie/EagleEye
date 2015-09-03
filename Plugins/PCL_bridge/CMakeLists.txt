@@ -11,7 +11,8 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
-FIND_PACKAGE(PCL REQUIRED COMPONENTS common visualization)
+FIND_PACKAGE(PCL COMPONENTS common visualization)
+IF(PCL_FOUND)
 LINK_DIRECTORIES(${LINK_DIRS})
 
 include_directories(${PCL_INCLUDE_DIRS})
@@ -40,3 +41,4 @@ target_link_libraries(PCL_bridge
 	${PCL_COMMON_LIBRARIES} ${PCL_VISUALIZATION_LIBRARIES}
 	)
 
+ENDIF(PCL_FOUND)
