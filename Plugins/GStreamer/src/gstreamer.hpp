@@ -34,18 +34,15 @@ namespace EagleLib
     {
         
     public:
+		bool feed_enabled;
 		GstElement* source_OpenCV;
 		GstElement* pipeline;
-		GstElement* encoder;
-		GstElement* payloader;
-		GstElement* udpSink;
-		//GstBufferPool* bufferPool;
 		GMainLoop* glib_MainLoop;
 		cv::Size imgSize;
 		boost::thread glibThread;
 		ConstBuffer<cv::cuda::HostMem> bufferPool;
-		guint sourceid;
-
+		guint need_data_id;
+		guint enough_data_id;
 		void gst_loop();
 		void Serialize(ISimpleSerializer* pSerializer);
 		void push_image();

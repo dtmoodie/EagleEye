@@ -34,58 +34,27 @@ bus_message(GstBus * bus, GstMessage * message, App * app)
 	return TRUE;
 }
 
-static gboolean cb_need_data(GstElement *appsrc,
-						guint  unused_size,
-						App*    user_data)
+
+static void start_feed(GstElement * pipeline, guint size, App * app)
 {
-	static int count = 0;
-	if (count == 0)
-	{
-		cv::Mat frameimage(user_data->imgSize, CV_8UC3);
-		static GstClockTime timestamp = 0;
-		GstBuffer *buffer;
-		guint buffersize;
-		GstFlowReturn ret;
-		GstMapInfo info;
-		buffersize = frameimage.cols * frameimage.rows * frameimage.channels();
-		buffer = gst_buffer_new_and_alloc(buffersize);
-		if (gst_buffer_map(buffer, &info, (GstMapFlags)GST_MAP_WRITE)) {
-			memcpy(info.data, frameimage.data, buffersize);
-			gst_buffer_unmap(buffer, &info);
-		}
-		else
-		{
-			BOOST_LOG_TRIVIAL(error) << "Unable to map image data to buffer";
-		}
-		ret = gst_app_src_push_buffer((GstAppSrc*)user_data->source_OpenCV, buffer);
-		if (ret != GST_FLOW_OK) {
-			BOOST_LOG_TRIVIAL(error) << "something wrong in cb_need_data";
-			g_main_loop_quit(user_data->glib_MainLoop);
-		}
-		//gst_buffer_unref(buffer);
-		++count;
-	}
-	return TRUE;
-	
-}
-static void start_feed(GstElement * pipeline, guint size, App * app){
-	if (app->sourceid == 0){
-		app->sourceid = g_timeout_add(67, (GSourceFunc)cb_need_data, app);
-	}
+	app->feed_enabled = true;
 }
 static void stop_feed(GstElement * pipeline, App *app)
 {
-	if (app->sourceid != 0) {
-		GST_DEBUG("stop feeding");
-		g_source_remove(app->sourceid);
-		app->sourceid = 0;
-	}
+	app->feed_enabled = false;
 }
 RTSP_server::~RTSP_server()
 {
 	g_main_loop_quit(glib_MainLoop);
-	g_main_loop_unref(glib_MainLoop);
 	glibThread.join(); 
+	g_main_loop_unref(glib_MainLoop);
+	g_signal_handler_disconnect(source_OpenCV, need_data_id);
+	g_signal_handler_disconnect(source_OpenCV, enough_data_id);
+	gst_object_unref(pipeline);
+	gst_object_unref(source_OpenCV);
+
+
+
 }
 
 void RTSP_server::gst_loop()
@@ -115,7 +84,7 @@ void RTSP_server::setup()
 
 	glibThread = boost::thread(boost::bind(&RTSP_server::gst_loop, this));
 	GError* error = nullptr;
-	pipeline = gst_parse_launch("appsrc name=mysource ! openh264enc ! rtph264pay config-interval=1 pt=96 ! udpsink host=127.0.0.1 port=8004", &error);
+	pipeline = gst_parse_launch("appsrc name=mysource ! videoconvert ! openh264enc ! rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=192.168.1.208 port=8004", &error);
 	if (error != nullptr)
 	{
 		NODE_LOG(error) << "Error parsing pipeline " << error->message;
@@ -123,7 +92,7 @@ void RTSP_server::setup()
 	source_OpenCV = gst_bin_get_by_name(GST_BIN(pipeline), "mysource");
 	
 	GstCaps* caps = gst_caps_new_simple("video/x-raw",
-		"format", G_TYPE_STRING, "RGB24",
+		"format", G_TYPE_STRING, "BGR",
 		"width", G_TYPE_INT, imgSize.width,
 		"height", G_TYPE_INT, imgSize.height,
 		"framerate", GST_TYPE_FRACTION, 15, 1,
@@ -141,9 +110,9 @@ void RTSP_server::setup()
 		"format", GST_FORMAT_TIME, 
 		NULL);
 	
-	g_signal_connect(source_OpenCV, "need-data", G_CALLBACK(start_feed), this);
-	g_signal_connect(source_OpenCV, "enough-data", G_CALLBACK(stop_feed), this);
-
+	need_data_id = g_signal_connect(source_OpenCV, "need-data", G_CALLBACK(start_feed), this);
+	enough_data_id = g_signal_connect(source_OpenCV, "enough-data", G_CALLBACK(stop_feed), this);
+	
 	// Error callback
 	auto bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
 	CV_Assert(bus);
@@ -152,25 +121,16 @@ void RTSP_server::setup()
 
 	GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
 	CV_Assert(ret != GST_STATE_CHANGE_FAILURE);
-	//Create_PipelineGraph(pipeline);
 }
 
 void RTSP_server::Init(bool firstInit)
 {
-	updateParameter<std::string>("Address", "127.0.0.1");
 	updateParameter<unsigned short>("Port", 8004);
-	sourceid = 0;
 	glib_MainLoop = nullptr;
-	if (firstInit)
-	{
-		source_OpenCV = nullptr;
-		pipeline = nullptr;
-		encoder = nullptr;
-		payloader = nullptr;
-		udpSink = nullptr;
-		
-		bufferPool.resize(5);
-	}
+	feed_enabled = false;
+	source_OpenCV = nullptr;
+	pipeline = nullptr;
+	bufferPool.resize(5);
 }
 void RTSP_server::push_image()
 {
@@ -182,16 +142,16 @@ void RTSP_server::push_image()
 	{
 		int bufferlength = h_buffer->cols * h_buffer->rows * h_buffer->channels();
 		buffer = gst_buffer_new_and_alloc(bufferlength);
-		
+		cv::Mat img = h_buffer->createMatHeader();
 		GstMapInfo map;
 		gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
 		memcpy(map.data, h_buffer->data, map.size);
 		gst_buffer_unmap(buffer, &map);
 
-		/*GST_BUFFER_PTS(buffer) = timestamp;
+		GST_BUFFER_PTS(buffer) = timestamp;
 
-		GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(1, GST_SECOND, 2);
-		timestamp += GST_BUFFER_DURATION(buffer);*/
+		GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(1, GST_SECOND, 30);
+		timestamp += GST_BUFFER_DURATION(buffer);
 
 		
 		GstFlowReturn rw;
@@ -201,17 +161,13 @@ void RTSP_server::push_image()
 		{
 			NODE_LOG(error) << "Error pushing buffer into appsrc " << rw;
 		}
+		gst_buffer_unref(buffer);
 	}
 }
 
 void RTSP_server::Serialize(ISimpleSerializer* pSerializer)
 {
 	Node::Serialize(pSerializer);
-	SERIALIZE(source_OpenCV);
-	SERIALIZE(pipeline);
-	SERIALIZE(encoder);
-	SERIALIZE(payloader);
-	SERIALIZE(udpSink);
 }
 void RTSP_serverCallback(int status, void* userData)
 {
@@ -229,9 +185,13 @@ cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 		NODE_LOG(error) << "Main glib loop not running";
 		return img;
 	}
-	/*auto buffer = bufferPool.getFront();
-	img.download(*buffer, stream);
-	stream.enqueueHostCallback(RTSP_serverCallback, this);*/
+	if (feed_enabled)
+	{
+		auto buffer = bufferPool.getFront();
+		img.download(*buffer, stream);
+		stream.enqueueHostCallback(RTSP_serverCallback, this);
+	}
+	
     return img;
 }
 
