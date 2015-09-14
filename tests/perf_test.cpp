@@ -1,5 +1,5 @@
 #include "Manager.h"
-#include "EagleLib.h"
+#include "Nodes/node.h"
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;

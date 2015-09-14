@@ -114,7 +114,8 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
 {
     std::pair<cv::cuda::GpuMat*, std::string>* data = (std::pair<cv::cuda::GpuMat*, std::string>*)userData;
     boost::function<void(void)> f = boost::bind(displayCallback, *data->first, data->second);
-    UIThreadCallback::getInstance().addCallback(f);
+	Parameters::UI::UiCallbackService::Instance()->post(f);
+    //UIThreadCallback::getInstance().addCallback(f);
     delete data;
 }
 

@@ -217,7 +217,8 @@ QtColormapDisplay::QtColormapDisplay():
 void QtColormapDisplayCallback(int status, void* data)
 {
     QtColormapDisplay* node = static_cast<QtColormapDisplay*>(data);
-    UIThreadCallback::getInstance().addCallback(boost::bind(&QtColormapDisplay::display, node));
+	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtColormapDisplay::display, node));
+    //UIThreadCallback::getInstance().addCallback(boost::bind(&QtColormapDisplay::display, node));
 }
 
 void QtColormapDisplay::display()

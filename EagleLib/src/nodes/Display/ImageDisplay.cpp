@@ -37,7 +37,8 @@ void QtImageDisplay_cpuCallback(int status, void* userData)
 {
     UserData* tmp = (UserData*)userData;
     //tmp->node->displayImage(tmp->displayImage);
-    EagleLib::UIThreadCallback::getInstance().addCallback(boost::bind(&QtImageDisplay::displayImage, tmp->node, tmp->displayImage));
+    //EagleLib::UIThreadCallback::getInstance().addCallback(boost::bind(&QtImageDisplay::displayImage, tmp->node, tmp->displayImage));
+	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtImageDisplay::displayImage, tmp->node, tmp->displayImage));
     delete tmp;
 }
 
@@ -216,7 +217,8 @@ cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 void FlowVectorDisplay_callback(int status, void* userData)
 {
     FlowVectorDisplay* node = (FlowVectorDisplay*)userData;
-    UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow),node->displayName, node->uicallback()));
+	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), node->displayName, node->uicallback()));
+    //UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow),node->displayName, node->uicallback()));
 //    if(node)
 //    {
 //        if(node->uiThreadCallback)
@@ -302,7 +304,8 @@ cv::Mat FlowVectorDisplay::uicallback()
 void histogramDisplayCallback(int status, void* userData)
 {
     HistogramDisplay* node = (HistogramDisplay*)userData;
-    UIThreadCallback::getInstance().addCallback(boost::bind(&HistogramDisplay::displayHistogram, node));
+    //UIThreadCallback::getInstance().addCallback(boost::bind(&HistogramDisplay::displayHistogram, node));
+	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&HistogramDisplay::displayHistogram, node));
 
 }
 void HistogramDisplay::displayHistogram()
@@ -392,7 +395,8 @@ void DetectionDisplay::displayCallback()
                 pos.y = h_img.rows - 100;
         }
     }
-    UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
+    //UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
+	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
 }
 
 void DetectionDisplay::Init(bool firstInit)

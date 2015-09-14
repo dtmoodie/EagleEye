@@ -4,7 +4,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(OPENCV_STATIC OFF)
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
 find_package(CUDA REQUIRED)
-find_package(Qt5 COMPONENTS Core Gui Widgets)
+find_package(Qt5 COMPONENTS Core Gui Widgets Network)
 cmake_policy(SET CMP0012 NEW)
 
 IF(WIN32)
@@ -46,6 +46,7 @@ INCLUDE_DIRECTORIES(
 	${Parameters_INCLUDE}
 	${Qt5Gui_INCLUDE_DIRS} 
 	${Qt5Widgets_INCLUDE_DIRS}
+	${Qt5Network_INCLUDE_DIRS}
 	)
 
 
@@ -87,14 +88,14 @@ ENDIF()
 #
 #				Export variables for other projects to use
 #
-set(EagleLib_INCLUDE_DIRECTORIES "${Parameters_INCLUDE};${CMAKE_CURRENT_SOURCE_DIR}/src;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}")
+set(EagleLib_INCLUDE_DIRECTORIES "${Parameters_INCLUDE};${CMAKE_CURRENT_SOURCE_DIR}/src;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS};${Qt5Gui_INCLUDE_DIRS};${Qt5Widgets_INCLUDE_DIRS};${Qt5Network_INCLUDE_DIRS}")
 set(EagleLib_LIBRARIES "optimized;EagleLib;debug;EagleLibd;${Boost_LIBRARIES};${OpenCV_LIBS};${Parameters_LIBRARIES}")
 SET(EagleLib_LIB_DIRS_DEBUG "${Parameters_LIB_DIRS_DEBUG};${CMAKE_BINARY_DIR}/Bin//Debug/Plugins")
 SET(EagleLib_LIB_DIRS_RELEASE "${Parameters_LIB_DIRS_RELEASE};${CMAKE_BINARY_DIR}/Bin/Release/Plugins")
 SET(EagleLib_DEFS "${defs_}")
 CONFIGURE_FILE(EagleLibConfig.cmake.in ${CMAKE_BINARY_DIR}/EagleLibConfig.cmake @ONLY)
 
-set(EagleLib_INCLUDE_DIRECTORIES "${Parameters_INCLUDE};${CMAKE_CURRENT_SOURCE_DIR}/src;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
+set(EagleLib_INCLUDE_DIRECTORIES "${Parameters_INCLUDE};${CMAKE_CURRENT_SOURCE_DIR}/src;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS};${Qt5Gui_INCLUDE_DIRS};${Qt5Widgets_INCLUDE_DIRS};${Qt5Network_INCLUDE_DIRS}" PARENT_SCOPE)
 set(EagleLib_LIBRARIES "${Boost_LIBRARIES};${OpenCV_LIBS};${Parameters_LIBRARIES}" PARENT_SCOPE)
 SET(EagleLib_LIB_DIRS_DEBUG "${Parameters_LIB_DIRS_DEBUG};${CUDA_LIB_DIR}" PARENT_SCOPE)
 SET(EagleLib_LIB_DIRS_RELEASE "${Parameters_LIB_DIRS_RELEASE};${CUDA_LIB_DIR}" PARENT_SCOPE)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "nodes/Node.h"
+#include <EagleLib/Defs.hpp>
 #include <CudaUtils.hpp>
 
 

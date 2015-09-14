@@ -30,7 +30,7 @@
 */
 
 //#include "../EagleLib.h"
-#include "../Manager.h"
+//#include "../Manager.h"
 
 
 #include <opencv2/core/cuda.hpp>
@@ -38,7 +38,7 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/signals2.hpp>
-#include <boost/lexical_cast.hpp>
+//#include <boost/lexical_cast.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/rolling_mean.hpp>
@@ -46,29 +46,26 @@
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/expressions/keyword.hpp>
 #include <vector>
-#include <list>
-#include <map>
 #include <type_traits>
 #include "type.h" // for demangle on linux
 #include "LokiTypeInfo.h"
 #include <boost/thread.hpp>
-#include <Qualifiers.hpp>
 #include <Parameters.hpp>
 #include <Types.hpp>
 #include <external_includes/cv_core.hpp>
-#include <external_includes/cv_highgui.hpp>
-#include <external_includes/cv_videoio.hpp>
 #include "CudaUtils.hpp"
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 
 #include "RuntimeLinkLibrary.h"
-#include "ObjectInterface.h"
+//#include "ObjectInterface.h"
 #include "ObjectInterfacePerModule.h"
 #include "IObject.h"
+
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
+
 
 #define NODE_LOG(severity) BOOST_LOG_SCOPED_THREAD_ATTR("NodeName", boost::log::attributes::constant<std::string>(fullTreeName));			\
 	BOOST_LOG_SCOPED_THREAD_ATTR("Node", boost::log::attributes::constant<const Node*>(this));													\

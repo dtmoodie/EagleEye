@@ -1,7 +1,12 @@
 #include "gstreamer.hpp"
 #include <gst/video/video.h>
 #include <gst/app/gstappsrc.h>
+
+#include <QtNetwork/qnetworkinterface.h>
+#include <Manager.h>
+
 using namespace EagleLib;
+
 
 SETUP_PROJECT_IMPL
 
@@ -78,13 +83,40 @@ void RTSP_server::setup()
 		int argc = 1;
 		gst_init(&argc, &argv);
 	}
-		
+
 	if (!glib_MainLoop)
 		glib_MainLoop = g_main_loop_new(NULL, 0);
 
 	glibThread = boost::thread(boost::bind(&RTSP_server::gst_loop, this));
 	GError* error = nullptr;
-	pipeline = gst_parse_launch("appsrc name=mysource ! videoconvert ! openh264enc ! rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=192.168.1.208 port=8004", &error);
+	std::stringstream ss;
+	ss << "appsrc name=mysource ! videoconvert ! ";
+#ifdef JETSON 
+	ss << "omxh264enc ! ";
+#else
+	ss << "openh264enc ! ";
+#endif
+	ss << "rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=";
+
+	foreach(auto inter, QNetworkInterface::allInterfaces())
+	{
+		if (inter.flags().testFlag(QNetworkInterface::IsUp) && 
+		   !inter.flags().testFlag(QNetworkInterface::IsLoopBack))
+		{
+			foreach(auto entry, inter.addressEntries())
+			{
+				if (inter.hardwareAddress() != "00:00:00:00:00:00" && entry.ip().toString().contains("."))
+				{
+					NODE_LOG(info) << "Setting interface to " << inter.name().toStdString() << " " << 
+						entry.ip().toString().toStdString() << " " << inter.hardwareAddress().toStdString();
+					ss << entry.ip().toString().toStdString();
+					break;
+				}
+			}
+		}
+	}
+	ss << " port=8004";
+	pipeline = gst_parse_launch(ss.str().c_str(), &error);
 	if (error != nullptr)
 	{
 		NODE_LOG(error) << "Error parsing pipeline " << error->message;
@@ -195,5 +227,5 @@ cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(RTSP_server)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(RTSP_server);
 

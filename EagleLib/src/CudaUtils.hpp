@@ -15,7 +15,7 @@ struct GpuResized
 		cudaMalloc(&GpuSetSize, sizeof(int));
 		cudaMemset(GpuSetSize, 0x00, sizeof(int));
 	}
-	GpuResized(GpuResized<T>& other)
+	/*GpuResized(GpuResized<T>& other)
 	{
 		GpuSetSize = other.GpuSetSize;
 		data = other.data;
@@ -24,7 +24,7 @@ struct GpuResized
 	{
 		GpuSetSize = other.GpuSetSize;
 		data = other.data;
-	}
+	}*/
 	~GpuResized()
 	{
 

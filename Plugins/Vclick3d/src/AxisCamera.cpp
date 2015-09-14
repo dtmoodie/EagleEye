@@ -1,42 +1,14 @@
 #include "AxisCamera.h"
 #include "QtNetwork/qauthenticator.h"
-
+#include "qxmpp/QXmppClient.h"
+#include "qxmpp/QXmppMessage.h"
+#include "UI/InterThread.hpp"
+#include "gloox/disco.h"
+#include "gloox/message.h"
+#include "gloox/gloox.h"
 using namespace EagleLib;
 
 SETUP_PROJECT_IMPL
-
-/*
-void SetupIncludes()
-{
-#ifdef PROJECT_INCLUDES
-	{
-		std::string str(PROJECT_INCLUDES);
-		std::string::size_type pos = str.find_first_of('+');
-		std::string::size_type prevPos = 0;
-		while (pos != std::string::npos)
-		{
-			EagleLib::NodeManager::getInstance().addIncludeDir(str.substr(prevPos, pos - prevPos).c_str());
-			prevPos = pos + 1;
-			pos = str.find_first_of('+', pos + 1);
-		}
-	}
-#endif 
-#ifdef PROJECT_LIB_DIRS
-	{
-		std::string str(PROJECT_LIB_DIRS);
-		std::string::size_type pos = str.find_first_of('+');
-		std::string::size_type prevPos = 0;
-		while (pos != std::string::npos)
-		{
-			EagleLib::NodeManager::getInstance().addLinkDir(str.substr(prevPos, pos - prevPos).c_str());
-			prevPos = pos + 1;
-			pos = str.find_first_of('+', pos + 1);  
-		}
-	}
-#endif
-}*/
-
-
 
  
 AxisSocket::AxisSocket() 
@@ -239,6 +211,318 @@ bool AxisCamera::SkipEmpty() const
 {
 	return false;
 }
-ADD_RUNTIME_SOURCE_DEPENDENCY_ABS("E:/build/EagleEye/Plugins/Vclick3d/src/moc_AxisCamera.cpp")
-ADD_RUNTIME_SOURCE_DEPENDENCY_ABS("E:/build/EagleEye/Plugins/Vclick3d/include/moc_AxisCamera.cpp")
+
+
+using namespace gloox;
+
+void XmppClient::onConnect()
+{
+	LOG_TRACE;
+}
+void XmppClient::onDisconnect(ConnectionError e)
+{
+	LOG_TRACE;
+}
+bool XmppClient::onTLSConnect(const CertInfo& info)
+{
+	LOG_TRACE;
+	return true;
+}
+void XmppClient::handleMessage(const Message& msg, MessageSession * session)
+{
+	LOG_TRACE;
+	auto body = msg.body();
+	NODE_LOG(debug) << "Received message " << body;
+	updateParameter<std::string>("Message", body);
+
+}
+void XmppClient::handleMessageEvent(const JID& from, MessageEventType messageEvent)
+{
+	LOG_TRACE;
+}
+void XmppClient::handleChatState(const JID& from, ChatStateType state)
+{
+	LOG_TRACE;
+}
+void XmppClient::handleMessageSession(MessageSession *session)
+{
+	LOG_TRACE;
+	xmpp_client->disposeMessageSession(m_session);
+	m_session = session;
+	m_session->registerMessageHandler(this);
+	m_messageEventFilter = new MessageEventFilter(m_session);
+	m_messageEventFilter->registerMessageEventHandler(this);
+	m_chatStateFilter = new ChatStateFilter(m_session);
+	m_chatStateFilter->registerChatStateHandler(this);
+}
+void XmppClient::handleLog(LogLevel level, LogArea area, const std::string& message)
+{
+	LOG_TRACE;
+	switch (level)
+	{
+	case LogLevelDebug:
+	{
+		NODE_LOG(debug) << message;
+	}
+	case LogLevelError:
+	{
+		NODE_LOG(error) << message;
+	}
+	case LogLevelWarning:
+	{
+		NODE_LOG(warning) << message;
+	}
+		
+	}
+}
+
+void XmppClient::on_msgReceived(std::string& msg)
+{
+	
+}
+
+void XmppClient::Init(bool firstInit)
+{
+	if (firstInit)
+	{
+		m_session = nullptr;
+		updateParameter<std::string>("Jabber id", "dtmoodie");
+		updateParameter<std::string>("Password", "12369pp");
+		updateParameter<std::string>("Jabber server", "jabber.iitsp.com");
+		updateParameter<unsigned short>("Server port", 5222);
+	}
+}
+cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+{
+	if (parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed)
+	{
+		gloox::JID jid(*getParameter<std::string>(0)->Data() + "@" + *getParameter<std::string>(2)->Data());;
+		xmpp_client.reset(new gloox::Client(jid, *getParameter<std::string>(1)->Data(), *getParameter<unsigned short>(3)->Data()));
+		xmpp_client->registerConnectionListener(this);
+		xmpp_client->registerMessageSessionHandler(this, 0);
+		xmpp_client->disco()->setVersion("messageTest", GLOOX_VERSION, "Linux");
+		xmpp_client->disco()->setIdentity("client", "bot");
+		xmpp_client->disco()->addFeature(XMLNS_CHAT_STATES);
+		xmpp_client->logInstance().registerLogHandler(LogLevelDebug, LogAreaAll, this);
+		if (!xmpp_client->connect(false))
+		{
+			NODE_LOG(error) << "Unable to connect";
+		}
+		parameters[0]->changed = false;
+		parameters[1]->changed = false;
+		parameters[2]->changed = false;
+		parameters[3]->changed = false;
+	}
+	if (xmpp_client)
+	{
+		xmpp_client->recv(1);
+	}
+	return img;
+}
+
 NODE_DEFAULT_CONSTRUCTOR_IMPL(AxisCamera)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(XmppClient)
+
+/*
+
+
+*  Copyright (c) 2004-2015 by Jakob Schröter <js@camaya.net>
+*  This file is part of the gloox library. http://camaya.net/gloox
+*
+*  This software is distributed under a license. The full license
+*  agreement can be found in the file LICENSE in this distribution.
+*  This software may not be copied, modified, sold or distributed
+*  other than expressed in the named license agreement.
+*
+*  This software is distributed without any warranty.
+
+
+#include "../client.h"
+#include "../messagesessionhandler.h"
+#include "../messageeventhandler.h"
+#include "../messageeventfilter.h"
+#include "../chatstatehandler.h"
+#include "../chatstatefilter.h"
+#include "../connectionlistener.h"
+#include "../disco.h"
+#include "../message.h"
+#include "../gloox.h"
+#include "../lastactivity.h"
+#include "../loghandler.h"
+#include "../logsink.h"
+#include "../connectiontcpclient.h"
+#include "../connectionsocks5proxy.h"
+#include "../connectionhttpproxy.h"
+#include "../messagehandler.h"
+using namespace gloox;
+
+#ifndef _WIN32
+# include <unistd.h>
+#endif
+
+#include <stdio.h>
+#include <string>
+
+#include <cstdio> // [s]print[f]
+
+#if defined( WIN32 ) || defined( _WIN32 )
+# include <windows.h>
+#endif
+
+class MessageTest : public MessageSessionHandler, ConnectionListener, LogHandler,
+	MessageEventHandler, MessageHandler, ChatStateHandler
+{
+public:
+	MessageTest() : m_session(0), m_messageEventFilter(0), m_chatStateFilter(0) {}
+
+	virtual ~MessageTest() {}
+
+	void start()
+	{
+
+		JID jid("hurkhurk@example.net/gloox");
+		j = new Client(jid, "hurkhurks");
+		j->registerConnectionListener(this);
+		j->registerMessageSessionHandler(this, 0);
+		j->disco()->setVersion("messageTest", GLOOX_VERSION, "Linux");
+		j->disco()->setIdentity("client", "bot");
+		j->disco()->addFeature(XMLNS_CHAT_STATES);
+		StringList ca;
+		ca.push_back("/path/to/cacert.crt");
+		j->setCACerts(ca);
+
+		j->logInstance().registerLogHandler(LogLevelDebug, LogAreaAll, this);
+
+		//
+		// this code connects to a jabber server through a SOCKS5 proxy
+		//
+		//       ConnectionSOCKS5Proxy* conn = new ConnectionSOCKS5Proxy( j,
+		//                                   new ConnectionTCP( j->logInstance(),
+		//                                                      "sockshost", 1080 ),
+		//                                   j->logInstance(), "example.net" );
+		//       conn->setProxyAuth( "socksuser", "sockspwd" );
+		//       j->setConnectionImpl( conn );
+
+		//
+		// this code connects to a jabber server through a HTTP proxy through a SOCKS5 proxy
+		//
+		//       ConnectionTCP* conn0 = new ConnectionTCP( j->logInstance(), "old", 1080 );
+		//       ConnectionSOCKS5Proxy* conn1 = new ConnectionSOCKS5Proxy( conn0, j->logInstance(), "old", 8080 );
+		//       conn1->setProxyAuth( "socksuser", "sockspwd" );
+		//       ConnectionHTTPProxy* conn2 = new ConnectionHTTPProxy( j, conn1, j->logInstance(), "jabber.cc" );
+		//       conn2->setProxyAuth( "httpuser", "httppwd" );
+		//       j->setConnectionImpl( conn2 );
+
+
+		if (j->connect(false))
+		{
+			ConnectionError ce = ConnNoError;
+			while (ce == ConnNoError)
+			{
+				ce = j->recv();
+			}
+			printf("ce: %d\n", ce);
+		}
+
+		delete(j);
+	}
+
+	virtual void onConnect()
+	{
+		printf("connected!!!\n");
+	}
+
+	virtual void onDisconnect(ConnectionError e)
+	{
+		printf("message_test: disconnected: %d\n", e);
+		if (e == ConnAuthenticationFailed)
+			printf("auth failed. reason: %d\n", j->authError());
+	}
+
+	virtual bool onTLSConnect(const CertInfo& info)
+	{
+		time_t from(info.date_from);
+		time_t to(info.date_to);
+
+		printf("status: %d\nissuer: %s\npeer: %s\nprotocol: %s\nmac: %s\ncipher: %s\ncompression: %s\n"
+			"from: %s\nto: %s\n",
+			info.status, info.issuer.c_str(), info.server.c_str(),
+			info.protocol.c_str(), info.mac.c_str(), info.cipher.c_str(),
+			info.compression.c_str(), ctime(&from), ctime(&to));
+		return true;
+	}
+
+	virtual void handleMessage(const Message& msg, MessageSession * session)
+	{
+		printf("type: %d, subject: %s, message: %s, thread id: %s\n", msg.subtype(),
+			msg.subject().c_str(), msg.body().c_str(), msg.thread().c_str());
+
+		std::string re = "You said:\n> " + msg.body() + "\nI like that statement.";
+		std::string sub;
+		if (!msg.subject().empty())
+			sub = "Re: " + msg.subject();
+
+		m_messageEventFilter->raiseMessageEvent(MessageEventDisplayed);
+#if defined( WIN32 ) || defined( _WIN32 )
+		Sleep(1000);
+#else
+		sleep(1);
+#endif
+		m_messageEventFilter->raiseMessageEvent(MessageEventComposing);
+		m_chatStateFilter->setChatState(ChatStateComposing);
+#if defined( WIN32 ) || defined( _WIN32 )
+		Sleep(2000);
+#else
+		sleep(2);
+#endif
+		m_session->send(re, sub);
+
+		if (msg.body() == "quit")
+			j->disconnect();
+	}
+
+	virtual void handleMessageEvent(const JID& from, MessageEventType event)
+	{
+		printf("received event: %d from: %s\n", event, from.full().c_str());
+	}
+
+	virtual void handleChatState(const JID& from, ChatStateType state)
+	{
+		printf("received state: %d from: %s\n", state, from.full().c_str());
+	}
+
+	virtual void handleMessageSession(MessageSession *session)
+	{
+		printf("got new session\n");
+		// this example can handle only one session. so we get rid of the old session
+		j->disposeMessageSession(m_session);
+		m_session = session;
+		m_session->registerMessageHandler(this);
+		m_messageEventFilter = new MessageEventFilter(m_session);
+		m_messageEventFilter->registerMessageEventHandler(this);
+		m_chatStateFilter = new ChatStateFilter(m_session);
+		m_chatStateFilter->registerChatStateHandler(this);
+	}
+
+	virtual void handleLog(LogLevel level, LogArea area, const std::string& message)
+	{
+		printf("log: level: %d, area: %d, %s\n", level, area, message.c_str());
+	}
+
+private:
+	Client *j;
+	MessageSession *m_session;
+	MessageEventFilter *m_messageEventFilter;
+	ChatStateFilter *m_chatStateFilter;
+};
+
+int main(int argc, char** argv)
+{
+	MessageTest *r = new MessageTest();
+	r->start();
+	delete(r);
+	return 0;
+}
+
+
+*/

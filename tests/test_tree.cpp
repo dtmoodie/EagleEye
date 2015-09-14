@@ -1,4 +1,5 @@
-#include "EagleLib.h"
+#include "Manager.h"
+#include "Nodes/Node.h"
 
 int main()
 {

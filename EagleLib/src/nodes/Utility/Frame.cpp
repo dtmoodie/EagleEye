@@ -1,6 +1,7 @@
 #include "nodes/Utility/Frame.h"
 #include "external_includes/cv_cudawarping.hpp"
 #include "external_includes/cv_cudaarithm.hpp"
+#include <Qualifiers.hpp>
 
 using namespace EagleLib;
 void FrameRate::Init(bool firstInit)

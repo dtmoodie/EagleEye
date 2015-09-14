@@ -7,8 +7,9 @@
 #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
 #include <boost/log/trivial.hpp>
+#include <external_includes/cv_highgui.hpp>
+#include <external_includes/cv_videoio.hpp>
 using namespace EagleLib;
-#ifdef RCC_ENABLED
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 
@@ -25,10 +26,9 @@ using namespace EagleLib;
 
 
 
-#endif
 Verbosity Node::debug_verbosity = Error;
 boost::signals2::signal<void(void)> Node::resetSignal;
-//boost::signals2::signal<void(Node*)> Node::onParameterAdded;
+
 
 Node::Node():
     averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)

@@ -6,7 +6,7 @@
 #include <external_includes/cv_cudaarithm.hpp>
 #include <external_includes/cv_imgproc.hpp>
 #include "flann.cuh"
-
+#include <Manager.h>
 SETUP_PROJECT_IMPL
 
 

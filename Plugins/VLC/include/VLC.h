@@ -3,6 +3,7 @@
 
 #include "vlc/vlc.h"
 #include <nodes/Node.h>
+#include <Manager.h>
 #ifdef PROJECT_INCLUDES_
 #define PROJECT_INCLUDES PROJECT_INCLUDES_
 #endif

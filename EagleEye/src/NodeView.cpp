@@ -2,6 +2,7 @@
 #include "qapplication.h"
 #include "qdrag.h"
 #include <qmimedata.h>
+#include <Manager.h>
 NodeView::NodeView(QWidget* parent) :
     QGraphicsView(parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
 {}
@@ -89,7 +90,7 @@ void NodeView::on_deleteNode()
         boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
         emit stopThread();
         boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
-        EagleLib::UIThreadCallback::getInstance().clearCallbacks();
+        //EagleLib::UIThreadCallback::getInstance().clearCallbacks();
         auto parent = node->getParent();
         if(parent != nullptr)
             parent->removeChild(node);

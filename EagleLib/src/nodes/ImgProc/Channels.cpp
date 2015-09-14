@@ -1,7 +1,7 @@
 #include "nodes/ImgProc/Channels.h"
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudaarithm.hpp>
-
+#include <Qualifiers.hpp>
 using namespace EagleLib;
 
 void ConvertToGrey::Init(bool firstInit)

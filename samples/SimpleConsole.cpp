@@ -1,5 +1,5 @@
 
-#include "EagleLib.h"
+
 #include "Manager.h"
 #include "nodes/Node.h"
 #include "Plugins.h"
