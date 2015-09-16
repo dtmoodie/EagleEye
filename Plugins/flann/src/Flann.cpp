@@ -63,7 +63,7 @@ bool PtCloud_backgroundSubtract_flann::MapInput(cv::cuda::GpuMat& img)
 		auto buffer = inputBuffer.getFront();
 	}
 	// Input is 4 channel and continuous... woot
-	input = pInput->reshape(1, pInput->rows*pInput->cols); 
+	input = pInput->reshape(1, pInput->rows*pInput->cols);  
 	// Input is now a tensor row major matrix
 	//input = flann::Matrix<float>((float*)reshaped.data, reshaped.rows, 3, reshaped.step);
 	return true;

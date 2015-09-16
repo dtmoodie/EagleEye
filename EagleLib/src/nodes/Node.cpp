@@ -7,22 +7,15 @@
 #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
 #include <boost/log/trivial.hpp>
-#include <external_includes/cv_highgui.hpp>
+
 #include <external_includes/cv_videoio.hpp>
 using namespace EagleLib;
-#include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
-#include "../RuntimeObjectSystem/ISimpleSerializer.h"
 
-#if _WIN32
-	#if _DEBUG
-		RUNTIME_COMPILER_LINKLIBRARY("opencv_core300d.lib")
-		RUNTIME_COMPILER_LINKLIBRARY("opencv_cuda300d.lib")
-	#else
-		RUNTIME_COMPILER_LINKLIBRARY("opencv_core300.lib")
-		RUNTIME_COMPILER_LINKLIBRARY("opencv_cuda300.lib")
-	#endif
-#else
-#endif
+#include "../RuntimeObjectSystem/ISimpleSerializer.h"
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
 
 
 
@@ -899,11 +892,16 @@ bool Node::SkipEmpty() const
 {
     return true;
 }
+/*
 void Node::log(boost::log::trivial::severity_level level, const std::string &msg)
 {
     if(messageCallback)
         messageCallback(level, msg, this);
+}*/
+void blah()
+{
+	int x1 = __COUNTER__;
+	int x2 = __COUNTER__;
 }
-
 
 REGISTERCLASS(Node)

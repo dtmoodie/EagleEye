@@ -29,45 +29,41 @@
  *
 */
 
-//#include "../EagleLib.h"
-//#include "../Manager.h"
 
-
-#include <opencv2/core/cuda.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/signals2.hpp>
-//#include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/rolling_mean.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/expressions/keyword.hpp>
+
 #include <vector>
 #include <type_traits>
 #include "type.h" // for demangle on linux
 #include "LokiTypeInfo.h"
-#include <boost/thread.hpp>
+
 #include <Parameters.hpp>
 #include <Types.hpp>
+
+#include <opencv2/core/cuda.hpp>
 #include <external_includes/cv_core.hpp>
 #include <external_includes/cv_highgui.hpp>
+
 #include "CudaUtils.hpp"
-#define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 
 #include "RuntimeLinkLibrary.h"
-//#include "ObjectInterface.h"
 #include "ObjectInterfacePerModule.h"
 #include "IObject.h"
 
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
-RUNTIME_COMPILER_SOURCEDEPENDENCY
-RUNTIME_MODIFIABLE_INCLUDE
+/*
 
-
+*/
+#define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 #define NODE_LOG(severity) BOOST_LOG_SCOPED_THREAD_ATTR("NodeName", boost::log::attributes::constant<std::string>(fullTreeName));			\
 	BOOST_LOG_SCOPED_THREAD_ATTR("Node", boost::log::attributes::constant<const Node*>(this));													\
 	LOG_TRIVIAL(severity)
@@ -93,9 +89,9 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(NodePtr, "Node", const EagleLib::Node*);
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
 	RUNTIME_COMPILER_LINKLIBRARY("libParameter.lib")
 	RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
-RUNTIME_COMPILER_LINKLIBRARY("Qt5Network.lib");
-RUNTIME_COMPILER_LINKLIBRARY("Qt5Gui.lib");
-RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
+	RUNTIME_COMPILER_LINKLIBRARY("Qt5Network.lib");
+	RUNTIME_COMPILER_LINKLIBRARY("Qt5Gui.lib");
+	RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
 #endif
 
 #else
@@ -229,7 +225,7 @@ namespace EagleLib
          * @param level
          * @param msg
          */
-		virtual void                    log(boost::log::trivial::severity_level level, const std::string& msg);
+		//virtual void                    log(boost::log::trivial::severity_level level, const std::string& msg);
 
         virtual void updateParent();
 

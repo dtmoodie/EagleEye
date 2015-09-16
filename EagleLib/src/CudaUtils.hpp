@@ -586,6 +586,7 @@ template<typename Data>
             putItr = rhs.putItr;
             size = rhs.size;
             buffer = rhs.buffer;
+			return *this;
         }
     };
 
