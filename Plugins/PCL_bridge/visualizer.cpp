@@ -130,7 +130,8 @@ void PtCloudDisplay::setInput(Parameters::Parameter::Ptr param_)
 	if (param_)
 	{
 		gpuParam = std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(param_);
-		param_->RegisterNotifier(boost::bind(&PtCloudDisplay::doUpdate, this));
+		
+		param_->RegisterNotifier(boost::bind(&Parameters::UI::UiCallbackService::post, Parameters::UI::UiCallbackService::Instance(), boost::function<void(void)>(boost::bind(&PtCloudDisplay::doUpdate, this))));
 		doUpdate();
 	}
 	else

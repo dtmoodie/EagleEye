@@ -111,7 +111,6 @@ namespace EagleLib
 		virtual void handleMessageSession(MessageSession *session);
 		virtual void handleLog(LogLevel level, LogArea area, const std::string& message);
 
-
 		void on_msgReceived(std::string& msg);
 		XmppClient();
 		virtual void Init(bool firstInit);

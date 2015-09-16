@@ -1,6 +1,7 @@
 #include "Freenect.h"
 #include "libfreenect/libfreenect.hpp"
 #include "freenect.cuh"
+#include "SystemTable.hpp"
 
 IPerModuleInterface* GetModule()
 {
@@ -84,19 +85,19 @@ camera_freenect::~camera_freenect()
 
 void camera_freenect::Init(bool firstInit)
 {
-	if (firstInit)
+	auto systemTable = PerModuleInterface::GetInstance()->GetSystemTable();
+	if (systemTable->freenect == nullptr)
+		systemTable->freenect = new Freenect::Freenect();
+	freenect = systemTable->freenect;
+	try
 	{
-		freenect = new Freenect::Freenect();
-		try
-		{
-			myDevice = &freenect->createDevice<MyFreenectDevice>(0); 
-		}
-		catch (std::runtime_error & e)
-		{
-			NODE_LOG(error) << e.what();
-			myDevice = nullptr;
-			return;
-		}
+		myDevice = &freenect->createDevice<MyFreenectDevice>(0);
+	}
+	catch (std::runtime_error & e)
+	{
+		NODE_LOG(error) << e.what();
+		myDevice = nullptr;
+		return;
 	}
     myDevice->startVideo();
     myDevice->startDepth();

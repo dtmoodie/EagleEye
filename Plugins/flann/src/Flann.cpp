@@ -7,6 +7,7 @@
 #include <external_includes/cv_imgproc.hpp>
 #include "flann.cuh"
 #include <Manager.h>
+#include "RuntimeSourceDependency.h"
 SETUP_PROJECT_IMPL
 
 
@@ -23,7 +24,7 @@ void PtCloud_backgroundSubtract_flann::Init(bool firstInit)
 
 void PtCloud_backgroundSubtract_flann::BuildModel()
 {
-	MapInput();
+	MapInput(); 
 	if (input.cols && input.rows)
 	{
 		flann::KDTreeCuda3dIndexParams params;
@@ -62,10 +63,21 @@ bool PtCloud_backgroundSubtract_flann::MapInput(cv::cuda::GpuMat& img)
 		auto buffer = inputBuffer.getFront();
 	}
 	// Input is 4 channel and continuous... woot
-	input = pInput->reshape(1, pInput->rows*pInput->cols);
+	input = pInput->reshape(1, pInput->rows*pInput->cols); 
 	// Input is now a tensor row major matrix
 	//input = flann::Matrix<float>((float*)reshaped.data, reshaped.rows, 3, reshaped.step);
 	return true;
+}
+void PtCloud_backgroundSubtract_flann_callback(int status, void* userData)
+{
+	static_cast<PtCloud_backgroundSubtract_flann*>(userData)->updateOutput();
+}
+void PtCloud_backgroundSubtract_flann::updateOutput()
+{
+	auto output = outputBuffer.getBack();
+	
+	cv::cuda::GpuMat filteredCloud = output->data.first.rowRange(0,	output->data.second.createMatHeader().at<int>(0));
+	updateParameter("Resulting point cloud", filteredCloud);
 }
 
 cv::cuda::GpuMat PtCloud_backgroundSubtract_flann::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
@@ -80,23 +92,25 @@ cv::cuda::GpuMat PtCloud_backgroundSubtract_flann::doProcess(cv::cuda::GpuMat& i
 	distBuffer_->data.create(1, input.rows*input.cols, CV_32F);
 
 	flann::Matrix<int> d_idx((int*)idxBuffer_->data.data, input.rows*input.cols, 1, sizeof(int));
-	flann::Matrix<float> d_dist((float*)distBuffer_->data.data, input.rows*input.cols, 1, sizeof(int));
+	flann::Matrix<float> d_dist((float*)distBuffer_->data.data, input.rows*input.cols, 1, sizeof(int)); 
 
 	flann::SearchParams searchParams;
 	searchParams.matrices_in_gpu_ram = true;
+	 
 
-	if (nnIndex)
+	if (nnIndex) 
 	{
+		auto size = sizeBuffer.getFront();
 		flann::Matrix<float> input_ = flann::Matrix<float>((float*)input.data, input.rows, 3, input.step);
 		nnIndex->radiusSearch(input_, d_idx, d_dist, *getParameter<float>(1)->Data(), searchParams, cv::cuda::StreamAccessor::getStream(stream));
-		//cv::cuda::threshold(idxBuffer_->data, idxBuffer_->data, -1, 255, cv::THRESH_BINARY_INV, stream);
-		//cv::cuda::countNonZero(idxBuffer_->data, count, stream);
 		auto output = outputBuffer.getFront();
-		filterPointCloud(input, output->data, idxBuffer_->data, result, -1, stream);
+		filterPointCloud(input, output->data.first, idxBuffer_->data, size->data, -1, stream);
+		size->data.download(output->data.second); 
+		stream.enqueueHostCallback(PtCloud_backgroundSubtract_flann_callback, this); 
 		updateParameter("Neighbor index", idxBuffer_->data);
 		updateParameter("Neighbor dist", distBuffer_->data);
-		updateParameter("Resulting point cloud", output->data);
-		updateParameter("Resulting point cloud size", result);
+		//updateParameter("Resulting point cloud", output->data);
+		//updateParameter("Resulting point cloud size", result);
 	}
 	else
 	{
@@ -104,4 +118,6 @@ cv::cuda::GpuMat PtCloud_backgroundSubtract_flann::doProcess(cv::cuda::GpuMat& i
 	}
 	return img;
 }
+RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("flann_knl", ".cu")
 NODE_DEFAULT_CONSTRUCTOR_IMPL(PtCloud_backgroundSubtract_flann);
+

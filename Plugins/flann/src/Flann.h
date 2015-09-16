@@ -22,19 +22,19 @@ namespace EagleLib
 {
 	class PtCloud_backgroundSubtract_flann : public Node
 	{
-		//flann::Matrix<float> input;
 		cv::cuda::GpuMat input;
-		cv::cuda::GpuMat result;
 		BufferPool<cv::cuda::GpuMat> inputBuffer;
 		BufferPool<cv::cuda::GpuMat> idxBuffer;
 		BufferPool<cv::cuda::GpuMat> distBuffer;
-		BufferPool<GpuResized<cv::cuda::GpuMat>> outputBuffer;
+		BufferPool<cv::cuda::GpuMat> sizeBuffer;
+		BufferPool<std::pair<cv::cuda::GpuMat, cv::cuda::HostMem>> outputBuffer;
 		cv::cuda::GpuMat count;
 		void BuildModel();
 		bool MapInput(cv::cuda::GpuMat& img = cv::cuda::GpuMat());
 
 		std::shared_ptr<flann::GpuIndex<flann::L2<float>>> nnIndex;
 	public:
+		void updateOutput();
 		PtCloud_backgroundSubtract_flann();
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);

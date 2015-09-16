@@ -19,5 +19,11 @@ namespace EagleLib
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream = cv::cuda::Stream::Null());
         virtual void Init(bool firstInit);
     };
-
+	class HuMoments : public Node
+	{
+	public: 
+		HuMoments();
+		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream = cv::cuda::Stream::Null());
+		virtual void Init(bool firstInit);
+	};
 }

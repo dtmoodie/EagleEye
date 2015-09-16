@@ -2,22 +2,26 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
+#include <thrust/transform.h>
+#include "Thrust_interop.hpp"
+#include "thrust/system/cuda/execution_policy.h"
 
 template<typename T1, typename T2>
 __global__ void filterPointCloud(cv::cuda::PtrStepSz<T1> inputPointCloud,
 								 cv::cuda::PtrStepSz<T1> outputPointCloud,
 								 T2* pMask,
 								 T2* resultSize,
-								 T2 step,
 								 T2 flag)
 {
 	__shared__ T2 insertionItr;
 	T2 tid = threadIdx.x;
 	if (tid == 0)
-		insertionItr = 0;
+		insertionItr = *resultSize;
 	__syncthreads();
 
-	for (T2 i = 0; i < inputPointCloud.rows; i += step)
+	for (int i = blockIdx.x * blockDim.x + threadIdx.x;
+		i < inputPointCloud.rows;
+		i += blockDim.x * gridDim.x)
 	{
 		if (pMask[i] == flag)
 		{
@@ -32,11 +36,11 @@ __global__ void filterPointCloud(cv::cuda::PtrStepSz<T1> inputPointCloud,
 	}
 	__syncthreads();
 	if (tid == 0)
-		*resultSize = insertionItr;
+		atomicAdd(resultSize, insertionItr);
 }
 
 
-void filterPointCloud(cv::cuda::GpuMat inputPointCloud, EagleLib::GpuResized<cv::cuda::GpuMat>& outputPointCloud, cv::cuda::GpuMat mask, cv::cuda::GpuMat& resultSize, int flagValue, cv::cuda::Stream stream)
+void filterPointCloud(cv::cuda::GpuMat inputPointCloud, cv::cuda::GpuMat& outputPointCloud, cv::cuda::GpuMat mask, cv::cuda::GpuMat& resultSize, int flagValue, cv::cuda::Stream stream)
 {
 	CV_Assert(inputPointCloud.type() == CV_32F &&
 			  inputPointCloud.channels() == 1 && 
@@ -45,16 +49,20 @@ void filterPointCloud(cv::cuda::GpuMat inputPointCloud, EagleLib::GpuResized<cv:
 			  "Only accepts tensor format with XYZ1");
 	CV_Assert(mask.isContinuous());
 
-	outputPointCloud.data.create(inputPointCloud.size(), inputPointCloud.type());
+	outputPointCloud.create(inputPointCloud.size(), inputPointCloud.type());
 	resultSize.create(1, 1, CV_32S);
+	resultSize.setTo(cv::Scalar(0), stream);
 
-	int step = inputPointCloud.rows / 1024;
-	
-	filterPointCloud<float, int> <<<1, 1024, sizeof(int), cv::cuda::StreamAccessor::getStream(stream) >>>(
+	int numSMs;
+	int devId;
+	cudaGetDevice(&devId);
+	cudaDeviceGetAttribute(&numSMs, cudaDevAttrMultiProcessorCount, devId);
+	filterPointCloud<float, int> <<<numSMs*32, 256, sizeof(int), cv::cuda::StreamAccessor::getStream(stream) >>>(
 			cv::cuda::PtrStepSz<float>(inputPointCloud),
-			cv::cuda::PtrStepSz<float>(outputPointCloud.data),
+			cv::cuda::PtrStepSz<float>(outputPointCloud),
 			(int*)mask.data,
-			(int*)outputPointCloud.GpuSetSize,
-			step, flagValue);
+			(int*)resultSize.data,
+			flagValue);
 
 }
+

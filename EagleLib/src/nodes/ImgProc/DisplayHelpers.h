@@ -8,24 +8,16 @@
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
+
+#include "DisplayHelpers.cuh"
+
 namespace EagleLib
 {
-    struct ColorScale
-    {
-        ColorScale(double start_ = 0, double slope_ = 1, bool symmetric_ = false);
-        // Defines where this color starts to take effect, between zero and 1000
-        double start;
-        // Defines the slope of increase / decrease for this color between 1 and 255
-        double slope;
-        // Defines if the slope decreases after it peaks
-        bool	symmetric;
-        // Defines if this color starts high then goes low
-        bool	inverted;
-        bool flipped;
-        uchar operator ()(double location);
-        uchar getValue(double location_);
+    
+	
+	
 
-    };
+
     class AutoScale: public Node
     {
     public:
@@ -52,8 +44,6 @@ namespace EagleLib
     class QtColormapDisplay: public Colormap
     {
 
-//        Buffer<cv::cuda::HostMem, EventPolicy>* h_buffer;
-//        Buffer<cv::cuda::GpuMat, EventPolicy>* d_buffer;
         BufferPool<cv::cuda::HostMem, EventPolicy> h_bufferPool;
         BufferPool<cv::cuda::GpuMat, EventPolicy> d_scaledBufferPool;
     public:

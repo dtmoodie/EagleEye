@@ -53,6 +53,7 @@
 #include <Parameters.hpp>
 #include <Types.hpp>
 #include <external_includes/cv_core.hpp>
+#include <external_includes/cv_highgui.hpp>
 #include "CudaUtils.hpp"
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 

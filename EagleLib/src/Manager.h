@@ -23,12 +23,13 @@
 #include "Parameters.hpp"
 #include <EagleLib/Defs.hpp>
 
-
+struct SystemTable;
 namespace EagleLib
 {
     class Node;
 	class Parameter;
     class Plotter;
+	
     const size_t LOGSYSTEM_MAX_BUFFER = 20000;
 
 
@@ -153,6 +154,7 @@ namespace EagleLib
         TestCallback*                                       testCallback;
         std::vector<weak_ptr<Node>>                         nodes;
         std::vector<boost::function<void(void)>>             onConstructorsAddedCallbacks;
+		std::shared_ptr<SystemTable>						m_systemTable;
 		
     }; // class NodeManager
 } // namespace EagleLib

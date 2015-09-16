@@ -13,6 +13,7 @@
 #include "plotters/Plotter.h"
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include "SystemTable.hpp"
 //#include <IObjectUtils.h>
 using namespace EagleLib;
 
@@ -314,7 +315,8 @@ NodeManager::Init()
     testCallback = nullptr;
     m_pRuntimeObjectSystem.reset(new RuntimeObjectSystem);
     m_pCompileLogger.reset(new CompileLogger());
-    m_pRuntimeObjectSystem->Initialise(m_pCompileLogger.get(), nullptr);
+	m_systemTable.reset(new SystemTable());
+    m_pRuntimeObjectSystem->Initialise(m_pCompileLogger.get(), m_systemTable.get());
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddListener(this);
     boost::filesystem::path workingDir(__FILE__);
     std::string includePath = workingDir.parent_path().parent_path().string();

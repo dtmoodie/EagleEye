@@ -1,4 +1,5 @@
 #include "nodes/ImgProc/DisplayHelpers.h"
+#include "DisplayHelpers.cuh"
 using namespace EagleLib;
 #include <opencv2/cudaarithm.hpp>
 #include <opencv2/highgui.hpp>
@@ -106,39 +107,7 @@ Colormap::buildLUT()
 
 
 
-ColorScale::ColorScale(double start_, double slope_, bool symmetric_)
-{
-    start = start_;
-    slope = slope_;
-    symmetric = symmetric_;
-    flipped = false;
-    inverted = false;
-}
-uchar ColorScale::operator ()(double location)
-{
-    return getValue(location);
-}
 
-uchar ColorScale::getValue(double location_)
-{
-    double value = 0;
-    if (location_ > start)
-    {
-        value = (location_ - start)*slope;
-    }
-    else
-    {
-        value = 0;
-    }
-    if (value > 255)
-    {
-        if (symmetric) value = 512 - value;
-        else value = 255;
-    }
-    if (value < 0) value = 0;
-    if (inverted) value = 255 - value;
-    return (uchar)value;
-}
 ///////////
 /// \brief QtColormapDisplay::Init
 /// \param firstInit

@@ -33,6 +33,7 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp")
 FILE(GLOB_RECURSE ext_inc "include/external_includes")
+FILE(GLOB_RECURSE knl "src/*.cu")
 ADD_SUBDIRECTORY("parameters")
 
 
