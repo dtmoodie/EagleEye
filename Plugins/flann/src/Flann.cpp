@@ -109,7 +109,7 @@ cv::cuda::GpuMat PtCloud_backgroundSubtract_flann::doProcess(cv::cuda::GpuMat& i
 		stream.enqueueHostCallback(PtCloud_backgroundSubtract_flann_callback, this); 
 		updateParameter("Neighbor index", idxBuffer_->data);
 		updateParameter("Neighbor dist", distBuffer_->data);
-		//updateParameter("Resulting point cloud", output->data);
+		//updateParameter("Resulting point cloud", output->data.first);
 		//updateParameter("Resulting point cloud size", result);
 	}
 	else

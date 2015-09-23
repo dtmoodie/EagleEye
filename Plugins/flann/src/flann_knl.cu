@@ -13,11 +13,8 @@ __global__ void filterPointCloud(cv::cuda::PtrStepSz<T1> inputPointCloud,
 								 T2* resultSize,
 								 T2 flag)
 {
-	__shared__ T2 insertionItr;
-	T2 tid = threadIdx.x;
-	if (tid == 0)
-		insertionItr = *resultSize;
-	__syncthreads();
+	//__shared__ T2 insertionItr;
+	T2 tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	for (int i = blockIdx.x * blockDim.x + threadIdx.x;
 		i < inputPointCloud.rows;
@@ -25,7 +22,7 @@ __global__ void filterPointCloud(cv::cuda::PtrStepSz<T1> inputPointCloud,
 	{
 		if (pMask[i] == flag)
 		{
-			T2 insertion = atomicAdd(&insertionItr, 1);
+			T2 insertion = atomicAdd(resultSize, 1);
 			auto dest = outputPointCloud.ptr(insertion);
 			auto src = inputPointCloud.ptr(i);
 			dest[0] = src[0];
@@ -34,9 +31,6 @@ __global__ void filterPointCloud(cv::cuda::PtrStepSz<T1> inputPointCloud,
 			dest[3] = src[3];
 		}
 	}
-	__syncthreads();
-	if (tid == 0)
-		atomicAdd(resultSize, insertionItr);
 }
 
 
@@ -57,12 +51,14 @@ void filterPointCloud(cv::cuda::GpuMat inputPointCloud, cv::cuda::GpuMat& output
 	int devId;
 	cudaGetDevice(&devId);
 	cudaDeviceGetAttribute(&numSMs, cudaDevAttrMultiProcessorCount, devId);
-	filterPointCloud<float, int> <<<numSMs*32, 256, sizeof(int), cv::cuda::StreamAccessor::getStream(stream) >>>(
+	filterPointCloud<float, int> <<<numSMs*32, 256, 0, cv::cuda::StreamAccessor::getStream(stream) >>>(
 			cv::cuda::PtrStepSz<float>(inputPointCloud),
 			cv::cuda::PtrStepSz<float>(outputPointCloud),
 			(int*)mask.data,
 			(int*)resultSize.data,
 			flagValue);
-
+#if _DEBUG
+	//stream.waitForCompletion();
+#endif
 }
 
