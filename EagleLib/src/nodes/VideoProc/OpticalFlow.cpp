@@ -80,8 +80,7 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
 }
 void SparsePyrLKOpticalFlow::setReferenceImage(cv::cuda::GpuMat img, cv::cuda::GpuMat keyPoints, cv::cuda::Stream& stream)
 {
-    if(img.channels() != 1)
-        cv::cuda::cvtColor(img, refImg, cv::COLOR_BGR2GRAY,0, stream);
+	refImg = img;
     refPts  = keyPoints;
     keyPoints.copyTo(trackedKeyPoints,stream);
 
