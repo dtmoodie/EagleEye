@@ -346,7 +346,7 @@ template<typename Data>
 			if (size == 0)
 				return nullptr;
 			auto itr = putItr++%size;
-			if (!buffer[itr]->ready())
+			if (!buffer[itr].ready())
 			{
 				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
 				resize(buffer.size() + 1);
@@ -412,7 +412,7 @@ template<typename Data>
 			if (size == 0)
 				return nullptr;
 			auto itr = putItr++%size;
-			if (!buffer[itr]->ready())
+			if (!buffer[itr].ready())
 			{
 				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
 				resize(buffer.size() + 1);
