@@ -1,7 +1,6 @@
 #pragma once
 #include "nodes/Node.h"
 
-#include "nodes/Node.h"
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -14,6 +13,7 @@ namespace EagleLib
 {
 	typedef std::vector<cv::Point2f> ImagePoints;
 	typedef std::vector<cv::Point3f> ObjectPoints;
+
 	class FindCheckerboard : public Node
 	{
 		ImagePoints imagePoints;
@@ -43,7 +43,6 @@ namespace EagleLib
 
     class CalibrateCamera: public Node
     {
-
         std::vector<ImagePoints> imagePointCollection;
         std::vector<ObjectPoints> objectPointCollection;
         std::vector<cv::Vec2f> imagePointCentroids;
@@ -88,6 +87,7 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+
     class ReadStereoCalibration: public Node
     {
         cv::Mat K1, K2, dist1, dist2, Rot, Trans, Ess, Fun;
@@ -97,6 +97,7 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+
     class ReadCameraCalibration: public Node
     {
         cv::Mat K, dist;

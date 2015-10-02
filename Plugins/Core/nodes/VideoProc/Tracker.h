@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nodes/Node.h>
-#include "Tracking.hpp"
+#include <nodes/VideoProc/Tracking.hpp>
 #include <boost/circular_buffer.hpp>
 #include "CudaUtils.hpp"
 #include "RuntimeInclude.h"

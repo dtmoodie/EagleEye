@@ -13,6 +13,7 @@
 #include <vector>
 #include <boost/thread.hpp>
 #include "rccsettingsdialog.h"
+#include <logger.hpp>
 #include "plotwizarddialog.h"
 namespace Ui {
 class MainWindow;
@@ -93,9 +94,7 @@ private:
     std::map<std::string, cv::Vec2f> positionMap;
     PlotWizardDialog* plotWizardDialog;
 	SettingDialog*  settingsDialog;
+	boost::shared_ptr< boost::log::v2_mt_nt5::sinks::sink> log_sink;
 };
-
-
-
 
 #endif // MAINWINDOW_H

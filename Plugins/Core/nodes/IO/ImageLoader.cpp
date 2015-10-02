@@ -19,7 +19,15 @@ void ImageLoader::load()
 		if (boost::filesystem::exists(*path->Data()))
         {
 			cv::Mat h_img = cv::imread(path->Data()->string());
-            d_img.upload(h_img); 
+			if (!h_img.empty())
+			{
+				d_img.upload(h_img);
+			}
+			else
+			{
+				NODE_LOG(error) << "Loaded empty image";
+			}
+            
         }else
         {
             //log(Status, "File doesn't exist");
@@ -89,8 +97,11 @@ cv::cuda::GpuMat DirectoryLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         {
             cv::Mat h_img = cv::imread(files[fileIdx]);
             updateParameter("Current file", files[fileIdx]);
-            img.upload(h_img, stream);
-            ++fileIdx;
+			if (!h_img.empty())
+			{
+				img.upload(h_img, stream);
+				++fileIdx;
+			}				
         }
 		
 			if (fileIdx == files.size())
