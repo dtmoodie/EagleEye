@@ -22,7 +22,7 @@ VideoLoader::Init(bool firstInit)
 	nodeType = eSource;
     if(firstInit)
     {
-		updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path("/home/dmoodie/Downloads/trailer.mp4"), Parameters::Parameter::Control, "Path to video file");
+		updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/trailer.mp4"), Parameters::Parameter::Control, "Path to video file");
 		updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader, Parameters::Parameter::Output);
 		updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader, Parameters::Parameter::Output);
         
@@ -67,7 +67,7 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 			TIME
             if(reload && *reload->Data())	
 			{
-				resetSignal();
+				//resetSignal();
 				loadFile();
 			}
                     
@@ -107,7 +107,7 @@ void
 VideoLoader::loadFile()
 {
 
-    auto fileName = getParameter<boost::filesystem::path>("Filename");
+    auto fileName = getParameter<Parameters::ReadFile>("Filename");
     if(fileName == nullptr)
         return;
     //log(Status, "Loading file: " + fileName->Data()->string());

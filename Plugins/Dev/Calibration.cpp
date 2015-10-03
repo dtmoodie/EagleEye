@@ -7,6 +7,7 @@
 
 
 using namespace EagleLib;
+
 IPerModuleInterface* GetModule()
 {
     return PerModuleInterface::GetInstance();
@@ -33,15 +34,12 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 	double dx = *getParameter<double>(2)->Data();
 	if (parameters[0]->changed || parameters[1]->changed || parameters[2]->changed)
 	{
-		
-        //objectPoints.reserve(numY * numX);
         objectPoints.resize(numY * numX);
         int count = 0;
 		for (int i = 0; i < numY; ++i)
 		{
             for (int j = 0; j < numX; ++j, ++count)
 			{
-
                 objectPoints[count] = cv::Point3f(dx*j, dx*i, 0);
 			}
 		}

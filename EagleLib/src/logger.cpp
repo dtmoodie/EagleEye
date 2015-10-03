@@ -27,7 +27,6 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
 	{
 		if (node_callback)
 		{
-			
 			Node* node;
 			boost::log::visit(NodePtr, rec, boost::phoenix::ref(node) == boost::phoenix::placeholders::_1);
 			//node_callback(node, command_line);

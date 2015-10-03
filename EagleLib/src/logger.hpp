@@ -8,12 +8,8 @@ namespace EagleLib
 {
 	class Node;
 
-
-	class ui_collector : public boost::log::sinks::basic_formatted_sink_backend<char,
-		boost::log::sinks::combine_requirements<
-		boost::log::sinks::concurrent_feeding
-		>::type
-	>
+	
+	class ui_collector : public boost::log::sinks::basic_formatted_sink_backend<char, boost::log::sinks::concurrent_feeding>
 	{
 		boost::function<void(Node*, const std::string&)> node_callback;
 		boost::function<void(const std::string&)> generic_callback;

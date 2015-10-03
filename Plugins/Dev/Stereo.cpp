@@ -11,7 +11,7 @@
 #else
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudastereo")
 #endif
-
+ 
 
 
 using namespace EagleLib;

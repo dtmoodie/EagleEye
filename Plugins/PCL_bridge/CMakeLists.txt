@@ -8,7 +8,7 @@ ENDIF()
 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
-
+FIND_PACKAGE(Qt5 REQUIRED Core Widgets)
 FIND_PACKAGE(CUDA REQUIRED)
 SET(CUDA_VERBOSE_BUILD ON)
 SET(CUDA_SEPARABLE_COMPILATION ON)
@@ -24,7 +24,6 @@ IF(PCL_FOUND)
 
 	include_directories(${PCL_INCLUDE_DIRS})
 	link_directories(${PCL_LIBRARY_DIRS})
-	#add_definitions(${PCL_DEFINITIONS})
 	message(${PCL_DEFINITIONS})
 	INCLUDE_DIRECTORIES(
 			${EagleLib_INCLUDE_DIRECTORIES}
@@ -45,16 +44,16 @@ IF(PCL_FOUND)
 
 	cuda_add_library(PCL_bridge SHARED ${SRC} ${HDR} ${knl})
 	add_dependencies(PCL_bridge EagleLib)
-	target_link_libraries(PCL_bridge 
-		EagleLib 
+	target_link_libraries(PCL_bridge
+		EagleLib
 		${EagleLib_LIBRARIES}
-		${PCL_COMMON_LIBRARIES} 
+		${PCL_COMMON_LIBRARIES}
 		${PCL_VISUALIZATION_LIBRARIES}
 		${CUDA_LIBRARIES}
-		)
-		FILE(READ ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.obj.cmake config_file)
-		STRING(REPLACE "(vtkRenderingContextOpenGL)" "" config_file "${config_file}")
-		STRING(REPLACE "(vtkRenderingVolumeOpenGL)" "" config_file "${config_file}")
-		FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.obj.cmake "${config_file}")
+	)
+	FILE(READ ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.obj.cmake config_file)
+	STRING(REPLACE "(vtkRenderingContextOpenGL)" "" config_file "${config_file}")
+	STRING(REPLACE "(vtkRenderingVolumeOpenGL)" "" config_file "${config_file}")
+	FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.obj.cmake "${config_file}")
 ENDIF(PCL_FOUND)
 

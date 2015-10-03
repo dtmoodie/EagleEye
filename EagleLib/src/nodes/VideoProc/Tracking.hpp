@@ -29,14 +29,14 @@ namespace EagleLib
         cv::cuda::Stream&)>          // Stream
             DetectAndComputeFunctor;
 
-    class Correspondence
+	class CV_EXPORTS Correspondence
     {
         int frameIndex;
         int keyFrameIndex;
 
     };
 
-    class KeyFrame
+	class CV_EXPORTS KeyFrame
     {
         enum VariableType
         {
@@ -66,7 +66,7 @@ namespace EagleLib
         bool hasCorrespondence(int otherIdx);
     };
 
-    struct TrackedFrame
+	struct CV_EXPORTS TrackedFrame
     {
         TrackedFrame(cv::cuda::GpuMat img_, int idx_): keyFrame(img_, idx_){}
         KeyFrame keyFrame;
@@ -75,7 +75,7 @@ namespace EagleLib
         cv::cuda::GpuMat error;
         float trackingQuality;
     };
-    struct TrackingResults
+	struct CV_EXPORTS TrackingResults
     {
         int KeyFrameIdx;
         int TrackedFrameIdx;
