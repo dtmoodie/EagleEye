@@ -194,7 +194,7 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifdef _DEBUG
 	dir.cd("../Debug");
 #else
-	dir.cd("../RelWithDebInfo");
+	dir.cd("../Release");
 #endif
 	str = dir.absolutePath().toStdString();
 	QFileInfoList files = dir.entryInfoList(QStringList("*.dll"));

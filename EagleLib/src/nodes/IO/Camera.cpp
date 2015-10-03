@@ -253,11 +253,11 @@ void RTSPCamera::Init(bool firstInit)
         updateParameter<unsigned short>("Width", 1920);
         updateParameter<unsigned short>("Height", 1080);
         updateParameter("Output", cv::cuda::GpuMat(), Parameters::Parameter::Output);
-
-
-        //setString();
-        //updateParameter("Gstreamer string", "v4l2src device=/dev/video0 ! video/x-h264, width=1920, height=1080, framerate=30/1 ! queue ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink");
     }
+	for (auto itr = parameters.begin(); itr != parameters.end(); ++itr)
+	{
+		(*itr)->changed = false;
+	}
 }
 void RTSPCamera::readImage_thread()
 {
@@ -293,7 +293,7 @@ void RTSPCamera::setString()
     SourceType src = (SourceType)getParameter<Parameters::EnumParameter>(0)->Data()->getValue();
     VideoType encoding = (VideoType)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
     std::string result;
-
+	//rtspsrc location=rtsp://root:12369pp@192.168.1.52:554/axis-media/media.amp ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink
     if(src == rtspsrc)
     {
         if(encoding == h264)

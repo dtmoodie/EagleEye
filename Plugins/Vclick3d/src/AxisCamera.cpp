@@ -1,11 +1,13 @@
 #include "AxisCamera.h"
 #include "QtNetwork/qauthenticator.h"
-#include "qxmpp/QXmppClient.h"
-#include "qxmpp/QXmppMessage.h"
 #include "UI/InterThread.hpp"
 #include "gloox/disco.h"
 #include "gloox/message.h"
 #include "gloox/gloox.h"
+#include "gloox/siprofileft.h"
+#include "gloox/siprofilefthandler.h"
+#include "gloox/bytestreamdatahandler.h"
+#include "gloox/socks5bytestreamserver.h"
 using namespace EagleLib;
 
 SETUP_PROJECT_IMPL
@@ -254,6 +256,7 @@ void XmppClient::handleMessageSession(MessageSession *session)
 	m_messageEventFilter->registerMessageEventHandler(this);
 	m_chatStateFilter = new ChatStateFilter(m_session);
 	m_chatStateFilter->registerChatStateHandler(this);
+	m_session->send("IP:68.100.56.64");
 }
 void XmppClient::handleLog(LogLevel level, LogArea area, const std::string& message)
 {
@@ -290,6 +293,25 @@ void XmppClient::Init(bool firstInit)
 		updateParameter<std::string>("Password", "12369pp");
 		updateParameter<std::string>("Jabber server", "jabber.iitsp.com");
 		updateParameter<unsigned short>("Server port", 5222);
+		addInputParameter<cv::cuda::GpuMat>("Input point cloud");
+		RegisterParameterCallback("Input point cloud", boost::bind(&XmppClient::_sendPointCloud, this));
+	}
+}
+void XmppClient::_sendPointCloud()
+{
+	Parameters::UI::ProcessingThreadCallbackService::Instance()->post(boost::bind(&XmppClient::sendPointCloud, this));
+}
+void XmppClient::sendPointCloud()
+{
+	auto gpuMat = getParameter<cv::cuda::GpuMat>("Input point cloud")->Data();
+	if (gpuMat && m_session && gpuMat->rows)
+	{
+/*		std::string message;
+		message.resize(4 + gpuMat->rows * sizeof(float) * 3);
+		cv::Mat h_mat(gpuMat->rows, gpuMat->cols, CV_32F, (void*)(message.data() + 4));
+		gpuMat->download(h_mat);
+		memcpy((void*)message.data(), (void*)&gpuMat->rows, sizeof(int));
+		m_session->send(message);*/
 	}
 }
 cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
@@ -315,7 +337,7 @@ cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
 	}
 	if (xmpp_client)
 	{
-		xmpp_client->recv(1);
+		xmpp_client->recv(0);
 	}
 	return img;
 }

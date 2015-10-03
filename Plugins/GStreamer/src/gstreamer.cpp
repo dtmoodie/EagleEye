@@ -116,7 +116,9 @@ void RTSP_server::setup()
 		}
 	}
 	ss << " port=8004";
-	pipeline = gst_parse_launch(ss.str().c_str(), &error);
+	std::string pipestr = ss.str();
+	NODE_LOG(info) << pipestr;
+	pipeline = gst_parse_launch(pipestr.c_str(), &error);
 	if (error != nullptr)
 	{
 		NODE_LOG(error) << "Error parsing pipeline " << error->message;

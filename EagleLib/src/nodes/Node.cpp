@@ -184,6 +184,7 @@ Node::getNodeInScope(const std::string& name)
 void
 Node::getNodesInScope(std::vector<Node *> &nodes)
 {
+	// Perhaps not thread safe?
 	NODE_LOG(trace);
     // First travel to the root node
 
