@@ -261,22 +261,25 @@ void RTSPCamera::Init(bool firstInit)
 }
 void RTSPCamera::readImage_thread()
 {
-    while(!boost::this_thread::interruption_requested())
-    if(cam.isOpened())
-    {
-        try
-        {
-            cam.read(hostBuffer[putItr % bufferSize]);
-            boost::mutex::scoped_lock lock(mtx);
-            notifier.push(&hostBuffer[putItr % bufferSize]);
-            ++putItr;
-            if(putItr == 1000)
-                putItr = 0;
-        }catch(...)
-        {
-
-        }
-    }
+	while (!boost::this_thread::interruption_requested())
+	{
+		if (cam.isOpened())
+		{
+			try
+			{
+				cam.read(hostBuffer[putItr % bufferSize]);
+				boost::mutex::scoped_lock lock(mtx);
+				notifier.push(&hostBuffer[putItr % bufferSize]);
+				++putItr;
+				if (putItr == 1000)
+					putItr = 0;
+			}
+			catch (...)
+			{
+				NODE_LOG(error) << "Error in reading image";
+			}
+		}
+	}    
 }
 RTSPCamera::~RTSPCamera()
 {
@@ -336,7 +339,8 @@ void RTSPCamera::setString()
     cam.release();
     try
     {
-        cam.open(result);
+//        cam.open(result);
+		cam = cv::VideoCapture(result, CV_CAP_GSTREAMER);
     }catch(cv::Exception &e)
     {
         //log(Error, e.what());
@@ -372,15 +376,16 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
     {
         setString();
     }
-    cv::cuda::HostMem* data;
-    notifier.wait_and_pop(data);
-    if(data && !data->empty())
+    cv::cuda::HostMem* data = nullptr;
+    //notifier.wait_and_pop(data);
+	
+	if (notifier.try_pop(data) &&data && !data->empty())
     {
         output.upload(*data, stream);
         updateParameter("Output", output, Parameters::Parameter::Output);
         return output;
     }
-    return img;
+    return cv::cuda::GpuMat();
 }
 
 bool RTSPCamera::SkipEmpty() const

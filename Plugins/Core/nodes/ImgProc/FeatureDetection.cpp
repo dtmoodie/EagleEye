@@ -109,7 +109,7 @@ void GoodFeaturesToTrackDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat 
 		NODE_LOG(error) << "Detector not built";
         return;
     }
-    detector->detect(*greyImg, keyPoints, mask, cv::noArray(), stream);
+    detector->detect(*greyImg, keyPoints, mask, stream);
 	updateParameter("Detected Corners", keyPoints, Parameters::Parameter::Output);
 	updateParameter("Num corners", keyPoints.cols, Parameters::Parameter::State);
 }

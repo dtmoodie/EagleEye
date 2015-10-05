@@ -303,36 +303,36 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 		NODE_LOG(trace) << " Skipped due to empty input";
     }else
     {
-        try
-        {
-            boost::posix_time::ptime start, end;
-            {
-                //boost::recursive_mutex::scoped_lock lock(mtx);
-                start = boost::posix_time::microsec_clock::universal_time();
-                // Used for debugging which nodes have started, thus if a segfault occurs you can know which node caused it
+		try
+		{
+			boost::posix_time::ptime start, end;
+			{
+				//boost::recursive_mutex::scoped_lock lock(mtx);
+				start = boost::posix_time::microsec_clock::universal_time();
+				// Used for debugging which nodes have started, thus if a segfault occurs you can know which node caused it
 				NODE_LOG(trace) << " process enabled: " << enabled;
-                if(enabled)
-                {
-                    boost::recursive_mutex::scoped_lock lock(mtx);
-					
-                    // Do I lock each parameters mutex or do I just lock each node?
-                    // I should only lock each node, but then I need to make sure the UI keeps track of the node
-                    // to access the node's mutex while accessing a parameter, for now this works though.
-                    std::vector<boost::recursive_mutex::scoped_lock> locks;
-                    for(size_t i = 0; i < parameters.size(); ++i)
-                    {
+				if (enabled)
+				{
+					boost::recursive_mutex::scoped_lock lock(mtx);
+
+					// Do I lock each parameters mutex or do I just lock each node?
+					// I should only lock each node, but then I need to make sure the UI keeps track of the node
+					// to access the node's mutex while accessing a parameter, for now this works though.
+					std::vector<boost::recursive_mutex::scoped_lock> locks;
+					for (size_t i = 0; i < parameters.size(); ++i)
+					{
 						locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
-                    }
-                    if(profile)
-                    {
-                        timings.clear();
-                        TIME
-                    }
-                    img = doProcess(img, stream);
-                    if(profile)
-                    {
-                        TIME
-                        std::stringstream time;
+					}
+					if (profile)
+					{
+						timings.clear();
+						TIME
+					}
+					img = doProcess(img, stream);
+					if (profile)
+					{
+						TIME
+							std::stringstream time;
 						if (timings.size() > 2)
 						{
 							time << "Start: " << timings[1].first - timings[0].first << " ";
@@ -344,53 +344,54 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 							//log(Profiling, time.str());
 							NODE_LOG(trace) << time.str();
 						}
-                    }
-                }
-                end = boost::posix_time::microsec_clock::universal_time();
-            }
+					}
+				}
+				end = boost::posix_time::microsec_clock::universal_time();
+			}
 			NODE_LOG(debug) << "End:   " << fullTreeName;
-            
-            auto delta =  end - start;
-            averageFrameTime(delta.total_milliseconds());
-            processingTime = boost::accumulators::rolling_mean(averageFrameTime);
-        CATCH_MACRO
-    }
-    try
-    {
-        if(children.size() == 0)
-            return img;
 
-        cv::cuda::GpuMat* childResult = childResults.getFront();
-        if(!img.empty())
-            img.copyTo(*childResult,stream);
+			auto delta = end - start;
+			averageFrameTime(delta.total_milliseconds());
+			processingTime = boost::accumulators::rolling_mean(averageFrameTime);
+		}CATCH_MACRO
+    }
+	try
+	{
+		if (children.size() == 0)
+			return img;
+
+		cv::cuda::GpuMat* childResult = childResults.getFront();
+		if (!img.empty())
+			img.copyTo(*childResult, stream);
 		NODE_LOG(trace) << " Executing " << children.size() << " child nodes";
-        std::vector<Node::Ptr>  children_;
-        children_.reserve(children.size());
-        {
-            // Prevents adding of children while running, debatable how much this is needed
-            boost::recursive_mutex::scoped_lock lock(mtx);
-            for(int i = 0; i < children.size(); ++i)
-            {
-                children_.push_back(children[i]);
-            }
-        }
-        for(size_t i = 0; i < children_.size(); ++i)
-        {
-            if(children_[i] != nullptr)
-            {
-                try
-                {
-                *childResult = children_[i]->process(*childResult, stream);
-                CATCH_MACRO
-            }else
-            {
-                //log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(i));
+		std::vector<Node::Ptr>  children_;
+		children_.reserve(children.size());
+		{
+			// Prevents adding of children while running, debatable how much this is needed
+			boost::recursive_mutex::scoped_lock lock(mtx);
+			for (int i = 0; i < children.size(); ++i)
+			{
+				children_.push_back(children[i]);
+			}
+		}
+		for (size_t i = 0; i < children_.size(); ++i)
+		{
+			if (children_[i] != nullptr)
+			{
+				try
+				{
+					*childResult = children_[i]->process(*childResult, stream);
+				}CATCH_MACRO
+			}
+			else
+			{
+				//log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(i));
 				NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
-            }
-        }
-        // So here is the debate of is a node's output the output of it, or the output of its children....
-        // img = childResults;
-    CATCH_MACRO
+			}
+		}
+		// So here is the debate of is a node's output the output of it, or the output of its children....
+		// img = childResults;
+	}CATCH_MACRO
     return img;
 }
 

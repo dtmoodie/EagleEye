@@ -257,6 +257,17 @@ void XmppClient::handleMessageSession(MessageSession *session)
 	m_chatStateFilter = new ChatStateFilter(m_session);
 	m_chatStateFilter->registerChatStateHandler(this);
 	m_session->send("IP:68.100.56.64");
+	std::stringstream ss;
+	auto nodes = getNodesInScope();
+	for (auto node : nodes)
+	{
+		for (auto param : node->parameters)
+		{
+            Parameters::Persistence::Text::Serialize(&ss, param.get());
+			//ss << param->GetTreeName() << ":" << param->GetTypeInfo().name() << "\n";
+		}
+	}
+	m_session->send(ss.str());
 }
 void XmppClient::handleLog(LogLevel level, LogArea area, const std::string& message)
 {
@@ -296,6 +307,7 @@ void XmppClient::Init(bool firstInit)
 		addInputParameter<cv::cuda::GpuMat>("Input point cloud");
 		RegisterParameterCallback("Input point cloud", boost::bind(&XmppClient::_sendPointCloud, this));
 	}
+	
 }
 void XmppClient::_sendPointCloud()
 {

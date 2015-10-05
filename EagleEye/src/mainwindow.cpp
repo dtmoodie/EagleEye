@@ -5,13 +5,8 @@
 #include "Nodes/node.h"
 #include <qfiledialog.h>
 #include <nodes/Node.h>
-#include <nodes/Display/ImageDisplay.h>
 #include <QNodeWidget.h>
 
-#include <nodes/ImgProc/FeatureDetection.h>
-#include <nodes/SerialStack.h>
-#include <nodes/VideoProc/OpticalFlow.h>
-#include <nodes/IO/VideoLoader.h>
 #include "Plugins.h"
 #include <opencv2/calib3d.hpp>
 #include <qgraphicsproxywidget.h>
