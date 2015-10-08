@@ -64,9 +64,13 @@
 
 */
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
+#ifdef _MSC_VER
 #define NODE_LOG(severity) BOOST_LOG_SCOPED_THREAD_ATTR("NodeName", boost::log::attributes::constant<std::string>(fullTreeName));			\
 	BOOST_LOG_SCOPED_THREAD_ATTR("Node", boost::log::attributes::constant<const Node*>(this));													\
 	LOG_TRIVIAL(severity)
+#else
+#define NODE_LOG(severity) 	LOG_TRIVIAL(severity)
+#endif
 
 namespace EagleLib
 {

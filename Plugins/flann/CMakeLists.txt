@@ -11,7 +11,7 @@ find_package(CUDA REQUIRED)
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
 
-FIND_PACKAGE(FLANN REQUIRED)
+FIND_PACKAGE(Flann REQUIRED)
 
 IF(EAGLELIB_FLANN_LIBRARY_DEBUG AND EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG)
 	FILE(GLOB_RECURSE src "src/*.cpp")
