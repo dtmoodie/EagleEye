@@ -8,6 +8,8 @@
 #include "gloox/siprofilefthandler.h"
 #include "gloox/bytestreamdatahandler.h"
 #include "gloox/socks5bytestreamserver.h"
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 
 SETUP_PROJECT_IMPL
@@ -236,7 +238,40 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
 	auto body = msg.body();
 	NODE_LOG(debug) << "Received message " << body;
 	updateParameter<std::string>("Message", body);
+	auto nodes = getNodesInScope();
+	
+    if (boost::starts_with(body, "SetParameter\n"))
+    {
+        std::stringstream ss(body);
+		std::string line;
+		std::getline(ss, line);
+		while (ss.good())
+		{
+			try
+			{
+				auto inputParam = Parameters::Persistence::Text::DeSerialize(&ss);
+				for (auto node : nodes)
+				{
+					if (node->fullTreeName == inputParam->GetTreeRoot())
+					{
+						for (auto param : node->parameters)
+						{
+							if (param->GetName() == inputParam->GetName())
+							{
+								param->Update(inputParam);
+							}
 
+						}
+					}
+					
+				}
+			}
+			catch (...)
+			{
+
+			}			
+		}
+    }
 }
 void XmppClient::handleMessageEvent(const JID& from, MessageEventType messageEvent)
 {
