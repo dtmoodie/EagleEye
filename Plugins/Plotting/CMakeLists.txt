@@ -9,6 +9,7 @@ find_package(Qt5 COMPONENTS Core Widgets PrintSupport OpenGL)
 IF(Qt5_FOUND)
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
+set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 set(BOOST_REQUIRED_MODULES system chrono thread date_time)
  find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 ADD_DEFINITIONS( -DHAVE_QT5 )

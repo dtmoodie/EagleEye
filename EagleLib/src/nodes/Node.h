@@ -107,7 +107,7 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(NodePtr, "Node", const EagleLib::Node*);
 #endif
 
 #define CATCH_MACRO                                                         \
-}catch (boost::thread_resource_error& err)                                  \
+catch (boost::thread_resource_error& err)                                   \
 {                                                                           \
     NODE_LOG(error)<< err.what();                                           \
 }catch (boost::thread_interrupted& err)                                     \

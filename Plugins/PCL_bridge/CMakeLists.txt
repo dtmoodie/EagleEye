@@ -15,8 +15,9 @@ SET(CUDA_SEPARABLE_COMPILATION ON)
 INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
+set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 FIND_PACKAGE(PCL COMPONENTS common visualization)
-
+MESSAGE(${PCL_INCLUDE_DIRS})
 IF(PCL_FOUND)
 	LINK_DIRECTORIES(${LINK_DIRS})
 

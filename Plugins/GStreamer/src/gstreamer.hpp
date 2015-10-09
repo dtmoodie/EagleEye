@@ -33,7 +33,9 @@ namespace EagleLib
 {
     class RTSP_server: public Node
     {
-        
+		GstClockTime timestamp;
+		time_t prevTime;
+		time_t delta;
     public:
 		bool feed_enabled;
 		GstElement* source_OpenCV;

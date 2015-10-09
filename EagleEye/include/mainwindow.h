@@ -15,6 +15,9 @@
 #include "rccsettingsdialog.h"
 #include <logger.hpp>
 #include "plotwizarddialog.h"
+#include <boost/log/sinks/async_frontend.hpp>
+#include <boost/log/sinks/basic_sink_backend.hpp>
+
 namespace Ui {
 class MainWindow;
 }
@@ -94,7 +97,7 @@ private:
     std::map<std::string, cv::Vec2f> positionMap;
     PlotWizardDialog* plotWizardDialog;
 	SettingDialog*  settingsDialog;
-	boost::shared_ptr< boost::log::v2_mt_nt5::sinks::sink> log_sink;
+    boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>> log_sink;
 };
 
 #endif // MAINWINDOW_H

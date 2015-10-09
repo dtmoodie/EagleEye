@@ -253,30 +253,33 @@ void RTSPCamera::Init(bool firstInit)
         updateParameter<unsigned short>("Width", 1920);
         updateParameter<unsigned short>("Height", 1080);
         updateParameter("Output", cv::cuda::GpuMat(), Parameters::Parameter::Output);
-
-
-        //setString();
-        //updateParameter("Gstreamer string", "v4l2src device=/dev/video0 ! video/x-h264, width=1920, height=1080, framerate=30/1 ! queue ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink");
     }
+	for (auto itr = parameters.begin(); itr != parameters.end(); ++itr)
+	{
+		(*itr)->changed = false;
+	}
 }
 void RTSPCamera::readImage_thread()
 {
-    while(!boost::this_thread::interruption_requested())
-    if(cam.isOpened())
-    {
-        try
-        {
-            cam.read(hostBuffer[putItr % bufferSize]);
-            boost::mutex::scoped_lock lock(mtx);
-            notifier.push(&hostBuffer[putItr % bufferSize]);
-            ++putItr;
-            if(putItr == 1000)
-                putItr = 0;
-        }catch(...)
-        {
-
-        }
-    }
+	while (!boost::this_thread::interruption_requested())
+	{
+		if (cam.isOpened())
+		{
+			try
+			{
+				cam.read(hostBuffer[putItr % bufferSize]);
+				boost::mutex::scoped_lock lock(mtx);
+				notifier.push(&hostBuffer[putItr % bufferSize]);
+				++putItr;
+				if (putItr == 1000)
+					putItr = 0;
+			}
+			catch (...)
+			{
+				NODE_LOG(error) << "Error in reading image";
+			}
+		}
+	}    
 }
 RTSPCamera::~RTSPCamera()
 {
@@ -293,7 +296,7 @@ void RTSPCamera::setString()
     SourceType src = (SourceType)getParameter<Parameters::EnumParameter>(0)->Data()->getValue();
     VideoType encoding = (VideoType)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
     std::string result;
-
+	//rtspsrc location=rtsp://root:12369pp@192.168.1.52:554/axis-media/media.amp ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink
     if(src == rtspsrc)
     {
         if(encoding == h264)
@@ -336,7 +339,8 @@ void RTSPCamera::setString()
     cam.release();
     try
     {
-        cam.open(result);
+//        cam.open(result);
+		cam = cv::VideoCapture(result, CV_CAP_GSTREAMER);
     }catch(cv::Exception &e)
     {
         //log(Error, e.what());
@@ -372,15 +376,16 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
     {
         setString();
     }
-    cv::cuda::HostMem* data;
-    notifier.wait_and_pop(data);
-    if(data && !data->empty())
+    cv::cuda::HostMem* data = nullptr;
+    //notifier.wait_and_pop(data);
+	
+	if (notifier.try_pop(data) &&data && !data->empty())
     {
         output.upload(*data, stream);
         updateParameter("Output", output, Parameters::Parameter::Output);
         return output;
     }
-    return img;
+    return cv::cuda::GpuMat();
 }
 
 bool RTSPCamera::SkipEmpty() const

@@ -1,11 +1,15 @@
 #include "AxisCamera.h"
 #include "QtNetwork/qauthenticator.h"
-#include "qxmpp/QXmppClient.h"
-#include "qxmpp/QXmppMessage.h"
 #include "UI/InterThread.hpp"
 #include "gloox/disco.h"
 #include "gloox/message.h"
 #include "gloox/gloox.h"
+#include "gloox/siprofileft.h"
+#include "gloox/siprofilefthandler.h"
+#include "gloox/bytestreamdatahandler.h"
+#include "gloox/socks5bytestreamserver.h"
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 
 SETUP_PROJECT_IMPL
@@ -234,7 +238,40 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
 	auto body = msg.body();
 	NODE_LOG(debug) << "Received message " << body;
 	updateParameter<std::string>("Message", body);
+	auto nodes = getNodesInScope();
+	
+    if (boost::starts_with(body, "SetParameter\n"))
+    {
+        std::stringstream ss(body);
+		std::string line;
+		std::getline(ss, line);
+		while (ss.good())
+		{
+			try
+			{
+				auto inputParam = Parameters::Persistence::Text::DeSerialize(&ss);
+				for (auto node : nodes)
+				{
+					if (node->fullTreeName == inputParam->GetTreeRoot())
+					{
+						for (auto param : node->parameters)
+						{
+							if (param->GetName() == inputParam->GetName())
+							{
+								param->Update(inputParam);
+							}
 
+						}
+					}
+					
+				}
+			}
+			catch (...)
+			{
+
+			}			
+		}
+    }
 }
 void XmppClient::handleMessageEvent(const JID& from, MessageEventType messageEvent)
 {
@@ -254,6 +291,18 @@ void XmppClient::handleMessageSession(MessageSession *session)
 	m_messageEventFilter->registerMessageEventHandler(this);
 	m_chatStateFilter = new ChatStateFilter(m_session);
 	m_chatStateFilter->registerChatStateHandler(this);
+	m_session->send("IP:68.100.56.64");
+	std::stringstream ss;
+	auto nodes = getNodesInScope();
+	for (auto node : nodes)
+	{
+		for (auto param : node->parameters)
+		{
+            Parameters::Persistence::Text::Serialize(&ss, param.get());
+			//ss << param->GetTreeName() << ":" << param->GetTypeInfo().name() << "\n";
+		}
+	}
+	m_session->send(ss.str());
 }
 void XmppClient::handleLog(LogLevel level, LogArea area, const std::string& message)
 {
@@ -290,6 +339,26 @@ void XmppClient::Init(bool firstInit)
 		updateParameter<std::string>("Password", "12369pp");
 		updateParameter<std::string>("Jabber server", "jabber.iitsp.com");
 		updateParameter<unsigned short>("Server port", 5222);
+		addInputParameter<cv::cuda::GpuMat>("Input point cloud");
+		RegisterParameterCallback("Input point cloud", boost::bind(&XmppClient::_sendPointCloud, this));
+	}
+	
+}
+void XmppClient::_sendPointCloud()
+{
+	Parameters::UI::ProcessingThreadCallbackService::Instance()->post(boost::bind(&XmppClient::sendPointCloud, this));
+}
+void XmppClient::sendPointCloud()
+{
+	auto gpuMat = getParameter<cv::cuda::GpuMat>("Input point cloud")->Data();
+	if (gpuMat && m_session && gpuMat->rows)
+	{
+/*		std::string message;
+		message.resize(4 + gpuMat->rows * sizeof(float) * 3);
+		cv::Mat h_mat(gpuMat->rows, gpuMat->cols, CV_32F, (void*)(message.data() + 4));
+		gpuMat->download(h_mat);
+		memcpy((void*)message.data(), (void*)&gpuMat->rows, sizeof(int));
+		m_session->send(message);*/
 	}
 }
 cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
@@ -315,7 +384,7 @@ cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
 	}
 	if (xmpp_client)
 	{
-		xmpp_client->recv(1);
+		xmpp_client->recv(0);
 	}
 	return img;
 }

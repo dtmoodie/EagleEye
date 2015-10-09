@@ -4,6 +4,7 @@
 
 #include <QtNetwork/qnetworkinterface.h>
 #include <Manager.h>
+#include <SystemTable.hpp>
 
 using namespace EagleLib;
 
@@ -57,9 +58,6 @@ RTSP_server::~RTSP_server()
 	g_signal_handler_disconnect(source_OpenCV, enough_data_id);
 	gst_object_unref(pipeline);
 	gst_object_unref(source_OpenCV);
-
-
-
 }
 
 void RTSP_server::gst_loop()
@@ -85,7 +83,14 @@ void RTSP_server::setup()
 	}
 
 	if (!glib_MainLoop)
+	{
 		glib_MainLoop = g_main_loop_new(NULL, 0);
+		if (PerModuleInterface::GetInstance()->GetSystemTable())
+		{
+			PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton(glib_MainLoop);
+		}
+	}
+		
 
 	glibThread = boost::thread(boost::bind(&RTSP_server::gst_loop, this));
 	GError* error = nullptr;
@@ -116,7 +121,9 @@ void RTSP_server::setup()
 		}
 	}
 	ss << " port=8004";
-	pipeline = gst_parse_launch(ss.str().c_str(), &error);
+	std::string pipestr = ss.str();
+	NODE_LOG(info) << pipestr;
+	pipeline = gst_parse_launch(pipestr.c_str(), &error);
 	if (error != nullptr)
 	{
 		NODE_LOG(error) << "Error parsing pipeline " << error->message;
@@ -157,8 +164,21 @@ void RTSP_server::setup()
 
 void RTSP_server::Init(bool firstInit)
 {
+	if (firstInit)
+	{
+		timestamp = 0;
+		prevTime = clock();
+	}
 	updateParameter<unsigned short>("Port", 8004);
-	glib_MainLoop = nullptr;
+	if (PerModuleInterface::GetInstance()->GetSystemTable())
+	{
+		glib_MainLoop = PerModuleInterface::GetInstance()->GetSystemTable()->GetSingleton<GMainLoop>();
+	}
+	else
+	{
+		glib_MainLoop = nullptr;
+	}
+	
 	feed_enabled = false;
 	source_OpenCV = nullptr;
 	pipeline = nullptr;
@@ -166,7 +186,7 @@ void RTSP_server::Init(bool firstInit)
 }
 void RTSP_server::push_image()
 {
-	static GstClockTime timestamp = 0;
+	//static GstClockTime timestamp = 0;
 
 	GstBuffer* buffer;
 	auto h_buffer = bufferPool.getBack();
@@ -181,8 +201,9 @@ void RTSP_server::push_image()
 		gst_buffer_unmap(buffer, &map);
 
 		GST_BUFFER_PTS(buffer) = timestamp;
-
-		GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(1, GST_SECOND, 30);
+		
+		//auto fps = 1000 / delta;
+		GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(delta, GST_SECOND, 1000);
 		timestamp += GST_BUFFER_DURATION(buffer);
 
 		
@@ -212,6 +233,9 @@ cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 		imgSize = img.size();
 		setup();
 	}
+	auto curTime = clock();
+	delta = curTime - prevTime;
+	prevTime = curTime;
 	if (!g_main_loop_is_running(glib_MainLoop))
 	{
 		NODE_LOG(error) << "Main glib loop not running";

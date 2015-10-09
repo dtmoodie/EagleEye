@@ -13,6 +13,7 @@
 #include <boost/log/common.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/setup/file.hpp>
+#include <boost/version.hpp>
 
 
 void PrintNodeTree(EagleLib::Node::Ptr node, int depth)

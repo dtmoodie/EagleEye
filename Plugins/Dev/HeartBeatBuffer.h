@@ -1,0 +1,17 @@
+#pragma once
+#include "nodes/Node.h"
+
+namespace EagleLib
+{
+	class HeartBeatBuffer : public Node
+	{
+		boost::circular_buffer<cv::cuda::GpuMat> image_buffer;
+		time_t lastTime;
+		bool activated;
+		void onActivation();
+	public:
+		HeartBeatBuffer();
+		virtual void Init(bool firstInit);
+		virtual cv::cuda::GpuMat process(cv::cuda::GpuMat& img, cv::cuda::Stream& steam );
+	};
+}

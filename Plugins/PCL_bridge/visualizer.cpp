@@ -101,6 +101,8 @@ void PtCloudDisplay::doUpdate()
 					numPoints = gpuMat->rows * gpuMat->cols;
 				}
 			}
+			if (numPoints == 0)
+				return;
 			if (inputCloud == nullptr)
 			{
 				inputCloud.reset(new pcl::PointCloud<pcl::PointXYZ>());
