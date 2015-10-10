@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include "qpluginloader.h"
 #include "Manager.h"
-#include "Nodes/node.h"
 #include <qfiledialog.h>
 #include <nodes/Node.h>
 #include <QNodeWidget.h>

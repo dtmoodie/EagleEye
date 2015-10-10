@@ -21,8 +21,8 @@ INCLUDE_DIRECTORIES(
 	${CMAKE_CURRENT_SOURCE_DIR}
 ) 
 
-file(GLOB_RECURSE src "*.cpp" "*.cu")
-file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
+file(GLOB_RECURSE src "*.cpp" ".cu")
+file(GLOB_RECURSE hdr "*.h" "*.hpp")
 
 IF(WIN32)
 
@@ -30,7 +30,7 @@ ELSE()
     #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
 ENDIF()
 
-cuda_add_library(Core SHARED ${src} ${hdr} ${knl})
+cuda_add_library(Core SHARED ${src} ${hdr})
 MESSAGE(STATUS
 "=========== Core ============
     Defs: ${DEFS}

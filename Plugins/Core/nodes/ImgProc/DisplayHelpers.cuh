@@ -26,5 +26,5 @@ struct color_mapper
 	// if resolution == -1, calculate the exact mapping every time
 	void setMapping(ColorScale& red, ColorScale& green, ColorScale& blue, double min, double max, int resolution);
 	void colormap_image(cv::cuda::GpuMat& img, cv::cuda::GpuMat rgb_out);
-	mapper* mapper;
+	mapper* mapper_;
 };

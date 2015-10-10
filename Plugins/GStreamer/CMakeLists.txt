@@ -27,6 +27,8 @@ ELSE(WIN32)
 		INCLUDE_DIRECTORIES(${GSTREAMER_gstconfig_INCLUDE_DIR})
 		INCLUDE_DIRECTORIES(${Glib_INCLUDE_DIR})
 		INCLUDE_DIRECTORIES("/usr/lib/x86_64-linux-gnu/glib-2.0/include")
+                INCLUDE_DIRECTORIES("/usr/lib/arm-linux-gnueabihf/glib-2.0/include")
+                INCLUDE_DIRECTORIES("/usr/include/glib-2.0")
 	ENDIF(GLIB2_FOUND)
 ENDIF(WIN32)
 
