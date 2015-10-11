@@ -21,7 +21,7 @@ INCLUDE_DIRECTORIES(
 	${CMAKE_CURRENT_SOURCE_DIR}
 ) 
 
-file(GLOB_RECURSE src "*.cpp" ".cu")
+file(GLOB_RECURSE src "*.cpp" "*.cu")
 file(GLOB_RECURSE hdr "*.h" "*.hpp")
 
 IF(WIN32)

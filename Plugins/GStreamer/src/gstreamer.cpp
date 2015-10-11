@@ -85,10 +85,12 @@ void RTSP_server::setup()
 	if (!glib_MainLoop)
 	{
 		glib_MainLoop = g_main_loop_new(NULL, 0);
+#if _MSC_VER
 		if (PerModuleInterface::GetInstance()->GetSystemTable())
 		{
 			PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton(glib_MainLoop);
 		}
+#endif
 	}
 		
 
@@ -172,7 +174,11 @@ void RTSP_server::Init(bool firstInit)
 	updateParameter<unsigned short>("Port", 8004);
 	if (PerModuleInterface::GetInstance()->GetSystemTable())
 	{
+#ifdef _MSC_VER
 		glib_MainLoop = PerModuleInterface::GetInstance()->GetSystemTable()->GetSingleton<GMainLoop>();
+#else
+        glib_MainLoop = nullptr;
+#endif
 	}
 	else
 	{
