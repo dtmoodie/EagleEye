@@ -1,7 +1,7 @@
 PROJECT(Gstreamer)
 SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 include(CMake)
-
+FIND_PACKAGE(CUDA REQUIRED)
 SET(PROJECT_INCLUDES)
 IF(WIN32)
 	FIND_PACKAGE(GStreamerWindows)
@@ -30,6 +30,7 @@ ELSE(WIN32)
                 INCLUDE_DIRECTORIES("/usr/lib/arm-linux-gnueabihf/glib-2.0/include")
                 INCLUDE_DIRECTORIES("/usr/include/glib-2.0")
 	ENDIF(GLIB2_FOUND)
+        LINK_DIRECTORIES(${CUDA_TOOLKIT_ROOT_DIR}/lib)
 ENDIF(WIN32)
 
 IF(GSTREAMER_gst_INCLUDE_DIR)

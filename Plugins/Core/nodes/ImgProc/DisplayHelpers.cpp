@@ -278,7 +278,7 @@ cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
             *getParameter<double>(1)->Data(),
             *getParameter<double>(2)->Data(),
             getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.type(),
-            mask == nullptr ? cv::noArray(): *mask,
+            mask == NULL ? cv::noArray(): *mask,
             stream);
     return normalized;
 }
