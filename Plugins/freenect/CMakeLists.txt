@@ -43,6 +43,7 @@ IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
         ${Boost_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
         ${LIBUSB_1_INCLUDE_DIR}
+        /usr/include/libusb-1.0
 		${FREENECT_INCLUDE_DIRS}
 		${LIBFREENECT_INCLUDE_DIR}
     )

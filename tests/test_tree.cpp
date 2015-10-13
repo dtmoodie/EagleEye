@@ -1,5 +1,5 @@
 #include "Manager.h"
-#include "Nodes/Node.h"
+#include "nodes/Node.h"
 
 int main()
 {
