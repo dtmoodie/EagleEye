@@ -110,6 +110,7 @@ namespace EagleLib
 		virtual void handleChatState(const JID& from, ChatStateType state);
 		virtual void handleMessageSession(MessageSession *session);
 		virtual void handleLog(LogLevel level, LogArea area, const std::string& message);
+        virtual void sendParameters(MessageSession* session);
 		virtual void sendPointCloud();
 		virtual void _sendPointCloud();
 		void on_msgReceived(std::string& msg);

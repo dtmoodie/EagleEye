@@ -272,7 +272,25 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
 			}			
 		}
     }
+    if(boost::starts_with(body, "ListParameters\n"))
+    {
+        sendParameters(session);
+    }
 }
+void XmppClient::sendParameters(MessageSession* session)
+{
+	std::stringstream ss;
+	auto nodes = getNodesInScope();
+	for (auto node : nodes)
+	{
+		for (auto param : node->parameters)
+		{
+            Parameters::Persistence::Text::Serialize(&ss, param.get());
+		}
+	}
+	session->send(ss.str());
+}
+
 void XmppClient::handleMessageEvent(const JID& from, MessageEventType messageEvent)
 {
 	LOG_TRACE;
@@ -291,18 +309,9 @@ void XmppClient::handleMessageSession(MessageSession *session)
 	m_messageEventFilter->registerMessageEventHandler(this);
 	m_chatStateFilter = new ChatStateFilter(m_session);
 	m_chatStateFilter->registerChatStateHandler(this);
-	m_session->send("IP:68.100.56.64");
-	std::stringstream ss;
-	auto nodes = getNodesInScope();
-	for (auto node : nodes)
-	{
-		for (auto param : node->parameters)
-		{
-            Parameters::Persistence::Text::Serialize(&ss, param.get());
-			//ss << param->GetTreeName() << ":" << param->GetTypeInfo().name() << "\n";
-		}
-	}
-	m_session->send(ss.str());
+	m_session->send(*getParameter<std::string>("Public IP")->Data());
+        sendParameters(m_session);
+
 }
 void XmppClient::handleLog(LogLevel level, LogArea area, const std::string& message)
 {
@@ -341,6 +350,7 @@ void XmppClient::Init(bool firstInit)
 		updateParameter<unsigned short>("Server port", 5222);
 		addInputParameter<cv::cuda::GpuMat>("Input point cloud");
 		RegisterParameterCallback("Input point cloud", boost::bind(&XmppClient::_sendPointCloud, this));
+                updateParameter<std::string>("Public IP", "68.100.56.64");
 	}
 	
 }
@@ -395,7 +405,7 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(XmppClient)
 /*
 
 
-*  Copyright (c) 2004-2015 by Jakob Schröter <js@camaya.net>
+*  Copyright (c) 2004-2015 by Jakob Schr\F6ter <js@camaya.net>
 *  This file is part of the gloox library. http://camaya.net/gloox
 *
 *  This software is distributed under a license. The full license

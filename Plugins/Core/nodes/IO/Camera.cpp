@@ -317,7 +317,7 @@ void RTSPCamera::setString()
             str << " ! ";
             str << "rtph264depay ! h264parse ! ";
 #ifdef JETSON
-			str << "nv_omx_h264dec ! ";
+            str << "omxh264dec ! ";
 #else
             str << "avdec_h264 ! ";
 #endif

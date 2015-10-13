@@ -125,6 +125,7 @@ void RTSP_server::setup()
 	ss << " port=8004";
 	std::string pipestr = ss.str();
 	NODE_LOG(info) << pipestr;
+    updateParameter<std::string>("gst pipeline", pipestr);
 	pipeline = gst_parse_launch(pipestr.c_str(), &error);
 	if (error != nullptr)
 	{
