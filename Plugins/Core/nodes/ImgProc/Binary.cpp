@@ -43,8 +43,9 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     {
         int size = *getParameter<int>(2)->Data();
         cv::Point anchor = *getParameter<cv::Point>(3)->Data();
-        updateParameter(4, cv::getStructuringElement(getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
-                                  cv::Size(size,size),anchor));
+        updateParameter(4, cv::getStructuringElement(
+							getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
+							cv::Size(size,size),anchor));
 
         updateFilter = true;
         parameters[0]->changed = false;

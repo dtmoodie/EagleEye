@@ -136,7 +136,7 @@ MainWindow::MainWindow(QWidget *parent) :
         this, SLOT(onNodeAdd(EagleLib::Node::Ptr)));
 	
 	nodeGraph = new QGraphicsScene(this);
-    connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
+    //connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
 	nodeGraphView = new NodeView(nodeGraph);
 	connect(nodeGraphView, SIGNAL(selectionChanged(QGraphicsProxyWidget*)), this, SLOT(onSelectionChanged(QGraphicsProxyWidget*)));
 	nodeGraphView->setInteractive(true);

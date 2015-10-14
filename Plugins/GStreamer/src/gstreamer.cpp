@@ -71,7 +71,7 @@ void RTSP_server::gst_loop()
 
 void RTSP_server::setup()
 {
-	// gst-launch-1.0 -v videotestsrc ! openh264enc ! rtph264pay config-interval=1 pt=96 ! udpsink host=127.0.0.1 port=8004
+	// gst-launch-1.0 -v videotestsrc ! videoconvert ! openh264enc ! rtph264pay config-interval=1 pt=96 ! tcpserversink host=192.168.1.208 port=8004
 	gst_debug_set_active(1);
 
 	if (!gst_is_initialized())

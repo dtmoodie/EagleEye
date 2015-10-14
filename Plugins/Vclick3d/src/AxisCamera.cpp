@@ -240,7 +240,7 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
 	updateParameter<std::string>("Message", body);
 	auto nodes = getNodesInScope();
 	
-    if (boost::starts_with(body, "SetParameter\n"))
+    if (boost::starts_with(body, "SetParameter"))
     {
         std::stringstream ss(body);
 		std::string line;
@@ -272,7 +272,7 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
 			}			
 		}
     }
-    if(boost::starts_with(body, "ListParameters\n"))
+    if(boost::starts_with(body, "ListParameters"))
     {
         sendParameters(session);
     }
@@ -310,7 +310,7 @@ void XmppClient::handleMessageSession(MessageSession *session)
 	m_chatStateFilter = new ChatStateFilter(m_session);
 	m_chatStateFilter->registerChatStateHandler(this);
 	m_session->send(*getParameter<std::string>("Public IP")->Data());
-        sendParameters(m_session);
+    sendParameters(m_session);
 
 }
 void XmppClient::handleLog(LogLevel level, LogArea area, const std::string& message)
