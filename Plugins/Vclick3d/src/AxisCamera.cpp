@@ -249,7 +249,7 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
 		{
 			try
 			{
-				auto inputParam = Parameters::Persistence::Text::DeSerialize(&ss);
+                auto inputParam = Parameters::Persistence::Text::DeSerialize(&ss);
 				for (auto node : nodes)
 				{
 					if (node->fullTreeName == inputParam->GetTreeRoot())

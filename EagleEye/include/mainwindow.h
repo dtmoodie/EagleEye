@@ -62,7 +62,7 @@ private slots:
     void on_actionLog_settings_triggered();
 
     void on_btnClear_clicked();
-    void on_uiCallback(boost::function<void(void)> f);
+    void on_uiCallback(boost::function<void()> f);
 
     void on_btnStart_clicked();
 
@@ -74,7 +74,7 @@ signals:
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);
     void qtDisplayImage(boost::function<cv::Mat(void)> function, EagleLib::Node* node);
-    void uiCallback(boost::function<void(void)> f);
+    void uiCallback(boost::function<void()> f);
     void uiNeedsUpdate();
     void pluginLoaded();
 
