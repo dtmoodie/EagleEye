@@ -80,6 +80,7 @@ signals:
 
 
 private:
+    
     void onError(const std::string& error);
     void onStatus(const std::string& status);
     Ui::MainWindow *ui;

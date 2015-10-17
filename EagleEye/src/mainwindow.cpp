@@ -7,12 +7,14 @@
 #include <QNodeWidget.h>
 
 #include "Plugins.h"
-#include <opencv2/calib3d.hpp>
+//#include <opencv2/calib3d.hpp>
 #include <qgraphicsproxywidget.h>
 #include "QGLWidget"
 #include <QGraphicsSceneMouseEvent>
 #include <Manager.h>
 #include "settingdialog.h"
+#include "logger.hpp"
+
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
@@ -58,23 +60,16 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
 	boost::log::add_common_attributes();
+
 	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
     // https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
-	/*boost::log::add_console_LOG_TRIVIAL(std::cout, boost::log::keywords::format = (
-		boost::log::expressions::stream
-		<< boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "[%H:%M:%S") << " "
-		<< boost::log::expressions::attr< boost::thread::id >("ThreadID") << "]"
-		<< boost::log::trivial::severity << " "
-		<< boost::log::expressions::smessage));
-	boost::log::add_common_attributes();
-	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
-	boost::log::core::get()->add_global_attribute("ThreadID", boost::log::attributes::current_thread_id());*/
-	//boost::log::add_console_LOG_TRIVIAL(std::cout, boost::log::keywords::format = "%TimeStamp% - %LineID% %Severity% %ThreadID% - %Message%");
 
 	auto consoleFmtTimeStamp = boost::log::expressions::
 		format_date_time<boost::posix_time::ptime>("TimeStamp", "%M:%S.%f");
+
 	auto fmtThreadId = boost::log::expressions::
 		attr<boost::log::attributes::current_thread_id::value_type>("ThreadID");
+
 	auto fmtSeverity = boost::log::expressions::
 		attr<boost::log::trivial::severity_level>("Severity");
 
@@ -89,14 +84,16 @@ MainWindow::MainWindow(QWidget *parent) :
 		% fmtThreadId							// 2
 		% fmtSeverity							// 3
 		% boost::log::expressions::smessage;	// 4
-
+    
 	auto consoleSink = boost::log::add_console_log(std::clog);
 	consoleSink->set_formatter(consoleFmt);
 
 
 	auto fmtTimeStamp = boost::log::expressions::
 		format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
-	boost::log::formatter logFmt =
+
+	// File sink 
+    boost::log::formatter logFmt =
 		boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%] %5%")
 		% fmtTimeStamp 
 		% fmtThreadId 
@@ -113,6 +110,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	fsSink->set_formatter(logFmt);
 	fsSink->locked_backend()->auto_flush(true);
 
+
+    log_sink.reset(new boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>());
+    //EagleLib::ui_collector::addGenericCallbackHandler(boost::bind(&MainWindow::genericHandlers))
+
+    boost::log::core::get()->add_sink(log_sink);
 
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
