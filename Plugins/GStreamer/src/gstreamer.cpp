@@ -49,17 +49,22 @@ static void stop_feed(GstElement * pipeline, App *app)
 {
 	app->feed_enabled = false;
 }
+// This only actually gets called when gstreamer.cpp gets recompiled
 RTSP_server::~RTSP_server()
 {
-    GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_NULL);
+    NODE_LOG(info) << "RTSP server destructor";
+    GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PAUSED);
     CV_Assert(ret != GST_STATE_CHANGE_FAILURE);
+#ifdef _MSC_VER
+    PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton<GMainLoop>(nullptr);
+#endif
 	g_main_loop_quit(glib_MainLoop);
 	glibThread.join(); 
-	g_main_loop_unref(glib_MainLoop);
+	//g_main_loop_unref(glib_MainLoop);
 	g_signal_handler_disconnect(source_OpenCV, need_data_id);
 	g_signal_handler_disconnect(source_OpenCV, enough_data_id);
-	gst_object_unref(pipeline);
-	gst_object_unref(source_OpenCV);
+	//gst_object_unref(pipeline);
+	//gst_object_unref(source_OpenCV);
 }
 
 void RTSP_server::gst_loop()
@@ -87,15 +92,7 @@ void RTSP_server::setup()
 	if (!glib_MainLoop)
 	{
 		glib_MainLoop = g_main_loop_new(NULL, 0);
-#if _MSC_VER
-		if (PerModuleInterface::GetInstance()->GetSystemTable())
-		{
-//			PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton(glib_MainLoop);
-		}
-#endif
 	}
-		
-
 	glibThread = boost::thread(boost::bind(&RTSP_server::gst_loop, this));
 	GError* error = nullptr;
 	std::stringstream ss;
@@ -129,12 +126,14 @@ void RTSP_server::setup()
 	std::string pipestr = ss.str();
 	NODE_LOG(info) << pipestr;
     updateParameter<std::string>("gst pipeline", pipestr);
-	pipeline = gst_parse_launch(pipestr.c_str(), &error);
+    if (!pipeline)
+	    pipeline = gst_parse_launch(pipestr.c_str(), &error);
 	if (error != nullptr)
 	{
 		NODE_LOG(error) << "Error parsing pipeline " << error->message;
 	}
-	source_OpenCV = gst_bin_get_by_name(GST_BIN(pipeline), "mysource");
+    if (!source_OpenCV)
+	    source_OpenCV = gst_bin_get_by_name(GST_BIN(pipeline), "mysource");
 	
 	GstCaps* caps = gst_caps_new_simple(
         "video/x-raw",
@@ -167,7 +166,7 @@ void RTSP_server::setup()
 	gst_object_unref(bus);
 
 	GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
-	CV_Assert(ret != GST_STATE_CHANGE_FAILURE);
+	CV_Assert(ret != GST_STATE_CHANGE_FAILURE); 
 }
 
 void RTSP_server::Init(bool firstInit)
@@ -176,25 +175,12 @@ void RTSP_server::Init(bool firstInit)
 	{
 		timestamp = 0;
 		prevTime = clock();
-	}
-	updateParameter<unsigned short>("Port", 8004);
-	if (PerModuleInterface::GetInstance()->GetSystemTable())
-	{
-#ifdef _MSC_VER
-		//glib_MainLoop = PerModuleInterface::GetInstance()->GetSystemTable()->GetSingleton<GMainLoop>();
-        glib_MainLoop = nullptr; 
-#else
         glib_MainLoop = nullptr;
-#endif
+        updateParameter<unsigned short>("Port", 8004);
+        feed_enabled = false;
+        source_OpenCV = nullptr;
+        pipeline = nullptr;
 	}
-	else
-	{
-		glib_MainLoop = nullptr;
-	}
-	
-	feed_enabled = false;
-	source_OpenCV = nullptr;
-	pipeline = nullptr;
 	bufferPool.resize(5);
 }
 void RTSP_server::push_image()
@@ -231,18 +217,27 @@ void RTSP_server::push_image()
 void RTSP_server::Serialize(ISimpleSerializer* pSerializer)
 {
 	Node::Serialize(pSerializer);
+    SERIALIZE(glib_MainLoop);
+    SERIALIZE(source_OpenCV);
+    SERIALIZE(pipeline);
+    SERIALIZE(need_data_id);
+    SERIALIZE(enough_data_id);
+    SERIALIZE(feed_enabled);
+    SERIALIZE(delta);
+    SERIALIZE(timestamp);
+    SERIALIZE(prevTime);
 }
 
-void RTSP_serverCallback(int status, void* userData)
+void RTSP_serverCallback(int status, void* userData) 
 {
 	static_cast<RTSP_server*>(userData)->push_image();
 }
 
-cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream) 
 {
-	if (imgSize != img.size())
+	if (imgSize != img.size()) 
 	{
-		imgSize = img.size();
+		imgSize = img.size(); 
 		setup();
 	}
 	auto curTime = clock();

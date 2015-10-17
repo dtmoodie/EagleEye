@@ -46,6 +46,7 @@ namespace EagleLib
 		ConstBuffer<cv::cuda::HostMem> bufferPool;
 		guint need_data_id;
 		guint enough_data_id;
+
 		void gst_loop();
 		void Serialize(ISimpleSerializer* pSerializer);
 		void push_image();
