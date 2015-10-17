@@ -38,14 +38,14 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
         auto& handlers = nodeHandlers[node];
         for (auto handler : handlers)
         {
-            handler(severity, message);
+            handler(severity.get(), message);
         }
 	}
 	else
 	{
         for (auto handler : genericHandlers)
         {
-            handler(severity, message);
+            handler(severity.get(), message);
         }
 	}
 }
