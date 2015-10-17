@@ -1,8 +1,8 @@
 #include "nodes/ImgProc/DisplayHelpers.h"
 //#include "DisplayHelpers.cuh"
 using namespace EagleLib;
-#include <opencv2/cudaarithm.hpp>
-#include <opencv2/highgui.hpp>
+#include <external_includes/cv_cudaarithm.hpp>
+#include <external_includes/cv_highgui.hpp>
 
 #ifdef _MSC_VER
 

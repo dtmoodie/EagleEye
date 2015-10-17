@@ -12,7 +12,6 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
     ui->comboBox->addItem(RCppOptimizationLevelStrings[1]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[2]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[3]);
-    //ui->comboBox->addItem(RCppOptimizationLevelStrings[4]);
     ui->comboBox->setCurrentIndex(EagleLib::NodeManager::getInstance().getOptimizationLevel());
 	updateDisplay();
 }
@@ -95,4 +94,8 @@ void RCCSettingsDialog::on_btnAddLinkDir_clicked()
 	EagleLib::NodeManager::getInstance().addLinkDir(dir.toStdString());
 	ui->linkDir->clear();
 	updateDisplay();
+}
+void RCCSettingsDialog::on_btnTestRcc_clicked()
+{
+    EagleLib::NodeManager::getInstance().TestRuntimeCompilation();
 }

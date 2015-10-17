@@ -1,6 +1,6 @@
 #include "nodes/Node.h"
 
-#include <opencv2/highgui.hpp>
+#include <external_includes/cv_highgui.hpp>
 #include <CudaUtils.hpp>
 #include <ObjectDetection.hpp>
 

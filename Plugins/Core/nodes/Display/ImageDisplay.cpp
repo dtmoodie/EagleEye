@@ -1,6 +1,6 @@
 #include "nodes/Display/ImageDisplay.h"
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
+#include <external_includes/cv_core.hpp>
+#include <external_includes/cv_imgproc.hpp>
 using namespace EagleLib;
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay)

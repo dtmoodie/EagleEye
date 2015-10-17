@@ -1,5 +1,5 @@
 #include "nodes/ImgProc/FFT.h"
-#include <opencv2/cudaarithm.hpp>
+#include <external_includes/cv_cudaarithm.hpp>
 
 using namespace EagleLib;
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaarithm")

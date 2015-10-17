@@ -1,8 +1,8 @@
 #include "nodes/IO/VideoLoader.h"
 #if _WIN32
-#include <opencv2/cudacodec.hpp>
+#include <external_includes/cv_cudacodec.hpp>
 #else
-#include <opencv2/videoio.hpp>
+#include <external_includes/cv_videoio.hpp>
 #endif
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>

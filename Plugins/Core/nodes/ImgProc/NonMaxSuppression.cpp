@@ -1,5 +1,5 @@
 #include "nodes/ImgProc/NonMaxSuppression.h"
-#include <opencv2/cudaarithm.hpp>
+#include <external_includes/cv_cudaarithm.hpp>
 
 using namespace EagleLib;
 

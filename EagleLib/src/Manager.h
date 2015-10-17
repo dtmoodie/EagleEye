@@ -8,6 +8,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/asio/io_service.hpp>
+
 #include "ObjectInterface.h"
 #include "IObjectFactorySystem.h"
 #include "IObject.h"

@@ -1,10 +1,10 @@
 #include "nodes/VideoProc/Tracker.h"
 #include "nodes/VideoProc/Tracking.hpp"
-#include "opencv2/imgproc.hpp"
-#include <opencv2/highgui.hpp>
-#include <opencv2/calib3d.hpp>
-#include <opencv2/cudawarping.hpp>
-#include <opencv2/cudaimgproc.hpp>
+#include "external_includes/cv_imgproc.hpp"
+#include <external_includes/cv_highgui.hpp>
+#include <external_includes/cv_calib3d.hpp>
+#include <external_includes/cv_cudawarping.hpp>
+#include <external_includes/cv_cudaimgproc.hpp>
 using namespace EagleLib;
 NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyFrameTracker)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(CMTTracker)

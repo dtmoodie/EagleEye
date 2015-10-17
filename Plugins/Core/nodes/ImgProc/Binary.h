@@ -1,8 +1,14 @@
 #include "nodes/Node.h"
+#include "EagleLib/Defs.hpp"
+
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
+
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
+
+SETUP_PROJECT_DEF
+
 namespace EagleLib
 {
     class MorphologyFilter: public Node

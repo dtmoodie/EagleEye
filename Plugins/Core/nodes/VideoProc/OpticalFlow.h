@@ -1,7 +1,7 @@
 #pragma once
 #include <nodes/Node.h>
 #include <Manager.h>
-#include <opencv2/cudaoptflow.hpp>
+#include <external_includes/cv_cudaoptflow.hpp>
 #include "CudaUtils.hpp"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"

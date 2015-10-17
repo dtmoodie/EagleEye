@@ -1,8 +1,7 @@
 #include "nodes/VideoProc/OpticalFlow.h"
 #include "nodes/VideoProc/Tracking.hpp"
-#include <opencv2/cudaoptflow.hpp>
-#include <opencv2/cudaarithm.hpp>
-#include <opencv2/cudaimgproc.hpp>
+#include <external_includes/cv_cudaarithm.hpp>
+#include <external_includes/cv_cudaimgproc.hpp>
 using namespace EagleLib;
 
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"

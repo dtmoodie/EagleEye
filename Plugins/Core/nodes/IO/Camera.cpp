@@ -4,6 +4,7 @@ using namespace EagleLib;
 
 bool Camera::changeStream(int device)
 {
+    getParameter<std::string>("Gstreamer stream")->Data()->clear();
     try
     {
         //log(Status, "Setting camera to device: " + boost::lexical_cast<std::string>(device));

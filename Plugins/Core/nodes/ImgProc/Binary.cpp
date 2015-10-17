@@ -1,14 +1,21 @@
 #include "nodes/ImgProc/Binary.h"
-#include <opencv2/cudaarithm.hpp>
-#include <opencv2/cudafilters.hpp>
-#include <opencv2/cudabgsegm.hpp>
-#include <opencv2/cudafeatures2d.hpp>
-#include <opencv2/cudaimgproc.hpp>
-#include <opencv2/cudalegacy.hpp>
-#include <opencv2/cudaobjdetect.hpp>
+
+#include <external_includes/cv_cudaarithm.hpp>
+#include <external_includes/cv_cudafilters.hpp>
+#include <external_includes/cv_cudabgsegm.hpp>
+#include <external_includes/cv_cudafeatures2d.hpp>
+#include <external_includes/cv_cudaimgproc.hpp>
+#include <external_includes/cv_cudalegacy.hpp>
+#include <external_includes/cv_cudaobjdetect.hpp>
+
 #include <algorithm>
 #include <utility>
+#include "Manager.h"
+
 using namespace EagleLib;
+
+
+SETUP_PROJECT_IMPL
 
 void MorphologyFilter::Init(bool firstInit)
 {
@@ -19,7 +26,7 @@ void MorphologyFilter::Init(bool firstInit)
         structuringElement.addEnum(ENUM(cv::MORPH_RECT));
         structuringElement.addEnum(ENUM(cv::MORPH_CROSS));
         structuringElement.addEnum(ENUM(cv::MORPH_ELLIPSE));
-        updateParameter("Structuring Element Type", structuringElement);    // 0
+        updateParameter("Structuring Element Type", structuringElement);
 		Parameters::EnumParameter morphType;
         morphType.addEnum(ENUM(cv::MORPH_ERODE));
         morphType.addEnum(ENUM(cv::MORPH_DILATE));
@@ -28,9 +35,9 @@ void MorphologyFilter::Init(bool firstInit)
         morphType.addEnum(ENUM(cv::MORPH_GRADIENT));
         morphType.addEnum(ENUM(cv::MORPH_TOPHAT));
         morphType.addEnum(ENUM(cv::MORPH_BLACKHAT));
-        updateParameter("Morphology type", morphType);  //1
-        updateParameter("Structuring Element Size", int(5)); // 2
-        updateParameter("Anchor Point", cv::Point(-1,-1));  // 3
+        updateParameter("Morphology type", morphType);
+        updateParameter("Structuring Element Size", int(5));
+        updateParameter("Anchor Point", cv::Point(-1,-1));
         updateParameter("Structuring Element", cv::getStructuringElement(0,cv::Size(5,5))); // 4
         updateParameter("Iterations", int(1));
     }
@@ -47,7 +54,7 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                                   cv::Size(size,size),anchor));
 
         updateFilter = true;
-        parameters[0]->changed = false;
+        parameters[0]->changed = false; 
         parameters[2]->changed = false;
         //log(Status,"Structuring element updated");
 		NODE_LOG(info) << "Structuring element updated";

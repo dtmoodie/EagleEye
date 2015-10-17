@@ -1,6 +1,6 @@
 #include "nodes/ImgProc/Channels.h"
-#include <opencv2/cudaimgproc.hpp>
-#include <opencv2/cudaarithm.hpp>
+#include <external_includes/cv_cudaimgproc.hpp>
+#include <external_includes/cv_cudaarithm.hpp>
 #include <Qualifiers.hpp>
 using namespace EagleLib;
 

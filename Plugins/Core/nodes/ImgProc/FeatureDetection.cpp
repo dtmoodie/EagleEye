@@ -1,10 +1,9 @@
 #include "nodes/ImgProc/FeatureDetection.h"
-#include <opencv2/cudafeatures2d.hpp>
-#include <opencv2/cudafilters.hpp>
-//#include <opencv2/cudaobjdetect.hpp>
-#include <opencv2/cudaoptflow.hpp>
-#include <opencv2/cudafeatures2d.hpp>
-#include <opencv2/cudaimgproc.hpp>
+#include <external_includes/cv_cudafeatures2d.hpp>
+#include <external_includes/cv_cudafilters.hpp>
+#include <external_includes/cv_cudaoptflow.hpp>
+#include <external_includes/cv_cudafeatures2d.hpp>
+#include <external_includes/cv_cudaimgproc.hpp>
 #include "nodes/VideoProc/Tracking.hpp"
 using namespace EagleLib;
 

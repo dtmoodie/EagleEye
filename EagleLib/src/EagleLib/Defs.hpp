@@ -9,13 +9,15 @@
 #endif
 
 
-
+// *************** SETUP_PROJECT_DEF ********************
 #ifdef __cplusplus
 #define SETUP_PROJECT_DEF extern "C"{ EAGLE_EXPORTS void SetupIncludes(); }
 #else
 #define SETUP_PROJECT_DEF EAGLE_EXPORTS void SetupIncludes();
 #endif
 
+
+// *************** SETUP_PROJECT_IMPL ********************
 #ifdef PROJECT_INCLUDES
 #ifdef PROJECT_LIB_DIRS
 #define SETUP_PROJECT_IMPL void SetupIncludes(){ 																	\

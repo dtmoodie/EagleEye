@@ -51,6 +51,8 @@ static void stop_feed(GstElement * pipeline, App *app)
 }
 RTSP_server::~RTSP_server()
 {
+    GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_NULL);
+    CV_Assert(ret != GST_STATE_CHANGE_FAILURE);
 	g_main_loop_quit(glib_MainLoop);
 	glibThread.join(); 
 	g_main_loop_unref(glib_MainLoop);
@@ -88,7 +90,7 @@ void RTSP_server::setup()
 #if _MSC_VER
 		if (PerModuleInterface::GetInstance()->GetSystemTable())
 		{
-			PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton(glib_MainLoop);
+//			PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton(glib_MainLoop);
 		}
 #endif
 	}
@@ -166,7 +168,7 @@ void RTSP_server::setup()
 
 void RTSP_server::Init(bool firstInit)
 {
-	if (firstInit)
+	if (firstInit) 
 	{
 		timestamp = 0;
 		prevTime = clock();
@@ -175,7 +177,8 @@ void RTSP_server::Init(bool firstInit)
 	if (PerModuleInterface::GetInstance()->GetSystemTable())
 	{
 #ifdef _MSC_VER
-		glib_MainLoop = PerModuleInterface::GetInstance()->GetSystemTable()->GetSingleton<GMainLoop>();
+		//glib_MainLoop = PerModuleInterface::GetInstance()->GetSystemTable()->GetSingleton<GMainLoop>();
+        glib_MainLoop = nullptr; 
 #else
         glib_MainLoop = nullptr;
 #endif

@@ -7,6 +7,7 @@
 
 bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
+    static int projectCount = 0;
 	std::cout << "Loading plugin " << fullPluginPath << std::endl;
 	HMODULE handle = LoadLibrary(fullPluginPath.c_str());
 	if (handle == nullptr)
@@ -18,15 +19,22 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
         
 	typedef IPerModuleInterface* (*moduleFunctor)();
 	moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetPerModuleInterface");
-	if (module)
-		NodeManager::getInstance().setupModule(module());
+    if (module)
+    {
+        auto moduleInterface = module();
+        //moduleInterface->SetProjectIdForAllConstructors(++projectCount);
+        NodeManager::getInstance().setupModule(moduleInterface);
+    }
+		
 	else
 	{
 		std::cout << "GetPerModuleInterface not found in plugin " << fullPluginPath << std::endl;
 		module = (moduleFunctor)GetProcAddress(handle, "GetModule");
 		if (module)
 		{
-			NodeManager::getInstance().setupModule(module());
+            auto moduleInterface = module();
+            //moduleInterface->SetProjectIdForAllConstructors(++projectCount);
+            NodeManager::getInstance().setupModule(moduleInterface);
 		}
 		else
 		{
