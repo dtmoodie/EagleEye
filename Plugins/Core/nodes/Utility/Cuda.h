@@ -10,6 +10,8 @@ namespace EagleLib
 {
     class SetDevice: public Node
     {
+        int currentDevice;
+        unsigned int maxDevice;
         bool firstRun;
     public:
         SetDevice();

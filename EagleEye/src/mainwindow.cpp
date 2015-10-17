@@ -122,6 +122,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	qRegisterMetaType<boost::log::trivial::severity_level>("boost::log::trivial::severity_level");
     qRegisterMetaType<boost::function<cv::Mat(void)>>("boost::function<cv::Mat(void)>");
     qRegisterMetaType<boost::function<void(void)>>("boost::function<void(void)>");
+    qRegisterMetaType<boost::function<void()>>("boost::function<void()>");
     qRegisterMetaType<Parameters::Parameter::Ptr>("Parameters::Parameter::Ptr");
     qRegisterMetaType<size_t>("size_t");
 
@@ -136,23 +137,33 @@ MainWindow::MainWindow(QWidget *parent) :
         this, SLOT(onNodeAdd(EagleLib::Node::Ptr)));
 	
 	nodeGraph = new QGraphicsScene(this);
-    connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
+    //connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
 	nodeGraphView = new NodeView(nodeGraph);
 	connect(nodeGraphView, SIGNAL(selectionChanged(QGraphicsProxyWidget*)), this, SLOT(onSelectionChanged(QGraphicsProxyWidget*)));
 	nodeGraphView->setInteractive(true);
     nodeGraphView->setViewport(new QGLWidget());
     nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->gridLayout->addWidget(nodeGraphView, 2, 0, 1,4);
-	currentSelectedNodeWidget = nullptr;
+    currentSelectedNodeWidget = nullptr;
     Parameters::UI::UiCallbackService::Instance()->setCallback(boost::bind(&MainWindow::processingThread_uiCallback, this, _1));
     rccSettings->hide();
     plotWizardDialog->hide();
 
 
     cv::redirectError(&static_errorHandler);
-    connect(this, SIGNAL(uiCallback(boost::function<void(void)>)), this, SLOT(on_uiCallback(boost::function<void(void)>)), Qt::QueuedConnection);
+
+
+
+    // For some reason this doesn't work on linux :/
+
+    //connect(this, SIGNAL(uiCallback(boost::function<void()>)),
+    //        this, SLOT(on_uiCallback(boost::function<void()>)), Qt::QueuedConnection);
+    connect(this, &MainWindow::uiCallback, this, &MainWindow::on_uiCallback, Qt::QueuedConnection);
+
+    //connect(this, SIGNAL(uiCallback()), this, SLOT(on_uiCallback()), Qt::QueuedConnection);
+
     connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
-    connect(this, SIGNAL(eLOG_TRIVIAL(QString)), this, SLOT(LOG_TRIVIAL(QString)), Qt::QueuedConnection);
+    //connect(this, SIGNAL(eLOG_TRIVIAL(QString)), this, SLOT(LOG_TRIVIAL(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
     connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
     connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
@@ -166,7 +177,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(onNewParameter(EagleLib::Node*)), this, SLOT(on_NewParameter(EagleLib::Node*)), Qt::QueuedConnection);
 
     connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
-    connect(plotWizardDialog, SIGNAL(on_plotAdded(PlotWindow*)), this, SLOT(onPlotAdd(PlotWindow*)));
+    //connect(plotWizardDialog, SIGNAL(on_plotAdded(PlotWindow*)), this, SLOT(onPlotAdd(PlotWindow*)));
     connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
 
 	/* Instantiate several useful types since compilation is currently setup to not compile against the types used in eagle lib */
@@ -297,11 +308,13 @@ MainWindow::onSaveClicked()
     fs.release();
     startProcessingThread();
 }
-void MainWindow::on_uiCallback(boost::function<void(void)> f)
+
+void MainWindow::on_uiCallback(boost::function<void()> f)
 {
     if(f)
         f();
 }
+
 
 void MainWindow::processingThread_uiCallback(boost::function<void ()> f)
 {

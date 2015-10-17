@@ -1,5 +1,5 @@
 #include "Manager.h"
-#include "Nodes/node.h"
+#include "nodes/Node.h"
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;

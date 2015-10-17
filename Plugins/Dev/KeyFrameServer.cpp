@@ -42,7 +42,7 @@ template<typename T> bool KeyFrameServer::setParameter(int frameIndex, KeyFrameP
             logMsg << "Parameter idx: " << param;
     }
     logMsg << " updated for keyframe " << frameIndex;
-    log(Status, logMsg.str());
+    NODE_LOG(info) << logMsg.str();
     return true;
 }
 

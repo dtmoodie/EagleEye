@@ -73,7 +73,7 @@ void RTSP_server::gst_loop()
 
 void RTSP_server::setup()
 {
-	// gst-launch-1.0 -v videotestsrc ! openh264enc ! rtph264pay config-interval=1 pt=96 ! udpsink host=127.0.0.1 port=8004
+	// gst-launch-1.0 -v videotestsrc ! videoconvert ! openh264enc ! rtph264pay config-interval=1 pt=96 ! tcpserversink host=192.168.1.208 port=8004
 	gst_debug_set_active(1);
 
 	if (!gst_is_initialized())
@@ -124,9 +124,11 @@ void RTSP_server::setup()
 			}
 		}
 	}
-	ss << " port=8004";
+	ss << " port=";
+    ss << *getParameter<unsigned short>("Port")->Data();
 	std::string pipestr = ss.str();
 	NODE_LOG(info) << pipestr;
+    updateParameter<std::string>("gst pipeline", pipestr);
 	pipeline = gst_parse_launch(pipestr.c_str(), &error);
 	if (error != nullptr)
 	{
@@ -134,7 +136,8 @@ void RTSP_server::setup()
 	}
 	source_OpenCV = gst_bin_get_by_name(GST_BIN(pipeline), "mysource");
 	
-	GstCaps* caps = gst_caps_new_simple("video/x-raw",
+	GstCaps* caps = gst_caps_new_simple(
+        "video/x-raw",
 		"format", G_TYPE_STRING, "BGR",
 		"width", G_TYPE_INT, imgSize.width,
 		"height", G_TYPE_INT, imgSize.height,
@@ -148,7 +151,8 @@ void RTSP_server::setup()
 	}
 
 	gst_app_src_set_caps(GST_APP_SRC(source_OpenCV), caps);
-	g_object_set(G_OBJECT(source_OpenCV), 
+	g_object_set(
+        G_OBJECT(source_OpenCV), 
 		"stream-type", GST_APP_STREAM_TYPE_STREAM, 
 		"format", GST_FORMAT_TIME, 
 		NULL);
@@ -195,8 +199,6 @@ void RTSP_server::Init(bool firstInit)
 }
 void RTSP_server::push_image()
 {
-	//static GstClockTime timestamp = 0;
-
 	GstBuffer* buffer;
 	auto h_buffer = bufferPool.getBack();
 	if (h_buffer)
@@ -211,7 +213,6 @@ void RTSP_server::push_image()
 
 		GST_BUFFER_PTS(buffer) = timestamp;
 		
-		//auto fps = 1000 / delta;
 		GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(delta, GST_SECOND, 1000);
 		timestamp += GST_BUFFER_DURATION(buffer);
 
@@ -231,10 +232,12 @@ void RTSP_server::Serialize(ISimpleSerializer* pSerializer)
 {
 	Node::Serialize(pSerializer);
 }
+
 void RTSP_serverCallback(int status, void* userData)
 {
 	static_cast<RTSP_server*>(userData)->push_image();
 }
+
 cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
 	if (imgSize != img.size())
@@ -256,7 +259,6 @@ cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 		img.download(*buffer, stream);
 		stream.enqueueHostCallback(RTSP_serverCallback, this);
 	}
-	
     return img;
 }
 

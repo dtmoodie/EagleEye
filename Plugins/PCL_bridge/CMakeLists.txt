@@ -39,7 +39,7 @@ IF(PCL_FOUND)
 	
 	FILE(GLOB_RECURSE SRC "*.cpp")
 	FILE(GLOB_RECURSE HDR "*.h")
-	FILE(GLOB_RECURSE knl "*.cu")
+	#FILE(GLOB_RECURSE knl "*.cu")
 
 	cuda_add_library(PCL_bridge SHARED ${SRC} ${HDR} ${knl})
 	add_dependencies(PCL_bridge EagleLib)
