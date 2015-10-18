@@ -1,5 +1,6 @@
 #pragma once
 #include "nodes/Node.h"
+#include <boost/circular_buffer.hpp>
 
 namespace EagleLib
 {

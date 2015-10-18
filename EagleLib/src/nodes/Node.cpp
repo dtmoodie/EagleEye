@@ -9,6 +9,9 @@
 #include <boost/log/trivial.hpp>
 #include "logger.hpp"
 #include <external_includes/cv_videoio.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/rolling_mean.hpp>
 using namespace EagleLib;
 
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
@@ -27,14 +30,16 @@ namespace EagleLib
 {
     struct NodeImpl
     {
+        NodeImpl() :averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
+        {
+        }
+
         boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
         std::vector<std::pair<time_t, int>> timings;
-        boost::signals2::signal<void(Node*)> onParameterAdded;
     };
 }
 
 Node::Node():
-    averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10),
     pImpl_(new NodeImpl())
 {
 	treeName = nodeName;
@@ -66,20 +71,17 @@ void Node::ClearProcessingTime()
 
 void Node::EndProcessingTime()
 {
+    TIME;
     std::stringstream ss;
     for(int i = 1; pImpl_->timings.size(); ++i)
     {
-        ss << pImpl_->timings[i-1] << "," << pImpl->timings[i] << "(" << pImpl_->timings[i] - pImpl_->timings[i-1] << ")";
+        ss << pImpl_->timings[i-1].second << "," << pImpl_->timings[i].second << "(" << pImpl_->timings[i].first - pImpl_->timings[i-1].first << ")";
     }
-    double total = pImpl_->timings[pImpl_->timings_.size() - 1] - pImpl_->timings[0];
+    double total = pImpl_->timings[pImpl_->timings.size() - 1].first - pImpl_->timings[0].first;
     ss << " Total: " << total;
     pImpl_->timings.clear();
     pImpl_->averageFrameTime(total);
-    NODE_LOG(trace) << ss;
-}
-void Node::onParameterAdded()
-{
-    pImpl_->onParameterAdded(this);
+    NODE_LOG(trace) << ss.str();
 }
 
 void Node::Clock(int line_num)
@@ -349,54 +351,32 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     {
 		try
 		{
-			boost::posix_time::ptime start, end;
+			// Used for debugging which nodes have started, thus if a segfault occurs you can know which node caused it
+			NODE_LOG(trace) << " process enabled: " << enabled;
+			if (enabled)
 			{
-				//boost::recursive_mutex::scoped_lock lock(mtx);
-				start = boost::posix_time::microsec_clock::universal_time();
-				// Used for debugging which nodes have started, thus if a segfault occurs you can know which node caused it
-				NODE_LOG(trace) << " process enabled: " << enabled;
-				if (enabled)
-				{
-					boost::recursive_mutex::scoped_lock lock(mtx);
+				boost::recursive_mutex::scoped_lock lock(mtx);
 
-					// Do I lock each parameters mutex or do I just lock each node?
-					// I should only lock each node, but then I need to make sure the UI keeps track of the node
-					// to access the node's mutex while accessing a parameter, for now this works though.
-					std::vector<boost::recursive_mutex::scoped_lock> locks;
-					for (size_t i = 0; i < parameters.size(); ++i)
-					{
-						locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
-					}
-					if (profile)
-					{
-						timings.clear();
-						TIME
-					}
-					img = doProcess(img, stream);
-					if (profile)
-					{
-						TIME
-							std::stringstream time;
-						if (timings.size() > 2)
-						{
-							time << "Start: " << timings[1].first - timings[0].first << " ";
-							for (size_t i = 2; i < timings.size() - 1; ++i)
-							{
-								time << "(" << timings[i - 1].second << "," << timings[i].second << "," << timings[i].first - timings[i - 1].first << ")";
-							}
-							time << "End: " << timings[timings.size() - 1].first - timings[timings.size() - 2].first;
-							//log(Profiling, time.str());
-							NODE_LOG(trace) << time.str();
-						}
-					}
+				// Do I lock each parameters mutex or do I just lock each node?
+				// I should only lock each node, but then I need to make sure the UI keeps track of the node
+				// to access the node's mutex while accessing a parameter, for now this works though.
+				std::vector<boost::recursive_mutex::scoped_lock> locks;
+				for (size_t i = 0; i < parameters.size(); ++i)
+				{
+					locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
 				}
-				end = boost::posix_time::microsec_clock::universal_time();
+				if (profile)
+				{
+                    pImpl_->timings.clear();
+					TIME
+				}
+				img = doProcess(img, stream);
+				if (profile)
+				{
+                    EndProcessingTime();
+				}
 			}
 			NODE_LOG(debug) << "End:   " << fullTreeName;
-
-			auto delta = end - start;
-			averageFrameTime(delta.total_milliseconds());
-			processingTime = boost::accumulators::rolling_mean(averageFrameTime);
 		}CATCH_MACRO
     }
 	try

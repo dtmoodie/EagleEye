@@ -35,9 +35,7 @@
 #include <boost/bind.hpp>
 #include <boost/signals2.hpp>
 #include <boost/thread.hpp>
-#include <boost/accumulators/statistics.hpp>
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/rolling_mean.hpp>
+
 #include <boost/filesystem.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/expressions/keyword.hpp>
@@ -265,14 +263,6 @@ namespace EagleLib
         virtual Node::Ptr               addChild(Node::Ptr child);
         virtual Node::Ptr               getChild(const std::string& treeName);
         virtual Node::Ptr               getChild(const int& index);
-        template<typename T> T* getChild(int index)
-        {
-            return dynamic_cast<T*>(index);
-        }
-        template<typename T> T* getChild(const std::string& name)
-        {
-            return dynamic_cast<T*>(name);
-		}
         virtual Node*					getChildRecursive(std::string treeName_);
         virtual void					removeChild(const std::string& name);
         virtual void					removeChild(EagleLib::Node::Ptr node);
@@ -746,15 +736,15 @@ namespace EagleLib
 
         bool                                                                profile;
 
-        double                                                              processingTime;
+        //double                                                              processingTime;
         // Mutex for blocking processing of a node during parameter update
         boost::recursive_mutex                                              mtx;
         //boost::signals2::signal<void(Node*)>								onParameterAdded;
 		
         //std::vector<std::pair<clock_t, int>> timings;
 		NodeType															nodeType;
-
-        void onParameterAdded();
+        boost::signals2::signal<void(Node*)>                                onParameterAdded;
+        
         double GetProcessingTime() const;
         void Clock(int line_num);
 
@@ -772,18 +762,10 @@ namespace EagleLib
         ObjectId                                                            m_OID;
         // Pointer to parent node
         Node*                                                               parent;
-        boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
+        //boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
         ConstBuffer<cv::cuda::GpuMat>                                       childResults;
 		
 		boost::signals2::connection											resetConnection;
         std::vector<boost::signals2::connection>							callbackConnections;
-        boost::posix_time::ptime lastStatusTime;
-        boost::posix_time::ptime lastWarningTime;
-        boost::posix_time::ptime lastErrorTime;
-        boost::posix_time::ptime lastCriticalTime;
-        std::string lastStatusMsg;
-        std::string lastWarningMsg;
-        std::string lastErrorMsg;
-        std::string lastCriticalMsg;
     };
 }

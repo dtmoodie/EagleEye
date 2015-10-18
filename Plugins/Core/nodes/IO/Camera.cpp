@@ -7,14 +7,12 @@ bool Camera::changeStream(int device)
     getParameter<std::string>("Gstreamer stream")->Data()->clear();
     try
     {
-        //log(Status, "Setting camera to device: " + boost::lexical_cast<std::string>(device));
 		NODE_LOG(info) << "Setting camera to device: " << device;
         cam.release();
         cam = cv::VideoCapture(device);
         return cam.isOpened();
     }catch(cv::Exception &e)
     {
-        //log(Error, e.what());
 		NODE_LOG(error) << e.what();
         return false;
     }

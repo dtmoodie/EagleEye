@@ -212,7 +212,7 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Node *node_)
 {
     if(node == nullptr)
         return;
-    ui->processingTime->setText(QString::number(node->processingTime));
+    ui->processingTime->setText(QString::number(node->GetProcessingTime()));
     if(parameterUpdate && node_ == node.get())
     {
 		if (node->parameters.size() != parameterProxies.size())
