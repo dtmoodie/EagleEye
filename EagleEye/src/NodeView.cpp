@@ -90,7 +90,7 @@ void NodeView::on_deleteNode()
         boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
         emit stopThread();
         boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
-        //EagleLib::UIThreadCallback::getInstance().clearCallbacks();
+        Parameters::UI::ProcessingThreadCallbackService::run();
         auto parent = node->getParent();
         if(parent != nullptr)
             parent->removeChild(node);
@@ -139,7 +139,8 @@ void NodeView::mousePressEvent(QMouseEvent* event)
 				urls << QUrl::fromLocalFile(QString::fromStdString(fileName));
                 mimeData->setUrls(urls);
 				mimeData->setData("application/x-qt-windows-mime;value=\"FileName\"",QByteArray(fileName.c_str()));
-                drag->setMimeData(mimeData);				
+
+                drag->setMimeData(mimeData);
                 drag->exec();
                 return QGraphicsView::mousePressEvent(event);
             }

@@ -23,5 +23,6 @@ namespace EagleLib
         void setGenericCallback(boost::function<void(const std::string&)> gc);
         static void addNodeCallbackHandler(Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler);
         static void addGenericCallbackHandler(const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler);
+        static void setNode(EagleLib::Node* node);
 	};
 }

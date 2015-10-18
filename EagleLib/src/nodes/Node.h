@@ -41,6 +41,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/expressions/keyword.hpp>
+#include <boost/log/attributes/mutable_constant.hpp>
 
 #include <vector>
 #include <type_traits>
@@ -65,9 +66,12 @@
 */
 #define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 #ifdef _MSC_VER
-#define NODE_LOG(severity) BOOST_LOG_SCOPED_THREAD_ATTR("NodeName", boost::log::attributes::constant<std::string>(fullTreeName));			\
-	BOOST_LOG_SCOPED_THREAD_ATTR("Node", boost::log::attributes::constant<const Node*>(this));													\
+
+#define NODE_LOG(severity)                                                                                                                              \
+    /*BOOST_LOG_SCOPED_THREAD_ATTR("NodeName", boost::log::attributes::mutable_constant<std::string>(fullTreeName));*/			                            \
+    /*BOOST_LOG_SCOPED_THREAD_ATTR("Node", boost::log::attributes::mutable_constant<const Node*>(this));*/													\
 	LOG_TRIVIAL(severity)
+
 #else
 #define NODE_LOG(severity) 	LOG_TRIVIAL(severity)
 #endif
@@ -78,7 +82,7 @@ namespace EagleLib
 }
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName, "NodeName",const std::string);
-BOOST_LOG_ATTRIBUTE_KEYWORD(NodePtr, "Node", const EagleLib::Node*);
+//BOOST_LOG_ATTRIBUTE_KEYWORD(NodePtr, "Node", const EagleLib::Node*);
 
 
 #ifdef _MSC_VER

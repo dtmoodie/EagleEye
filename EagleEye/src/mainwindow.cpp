@@ -64,14 +64,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
     // https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
 
-	auto consoleFmtTimeStamp = boost::log::expressions::
-		format_date_time<boost::posix_time::ptime>("TimeStamp", "%M:%S.%f");
+	auto consoleFmtTimeStamp = boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%M:%S.%f");
 
-	auto fmtThreadId = boost::log::expressions::
-		attr<boost::log::attributes::current_thread_id::value_type>("ThreadID");
+	auto fmtThreadId = boost::log::expressions::attr<boost::log::attributes::current_thread_id::value_type>("ThreadID");
 
-	auto fmtSeverity = boost::log::expressions::
-		attr<boost::log::trivial::severity_level>("Severity");
+	auto fmtSeverity = boost::log::expressions::attr<boost::log::trivial::severity_level>("Severity");
 
 	auto fmtScope = boost::log::expressions::format_named_scope("Scope",
 		boost::log::keywords::format = "%n(%f:%l)",
@@ -109,11 +106,9 @@ MainWindow::MainWindow(QWidget *parent) :
 		boost::log::keywords::open_mode = std::ios_base::app);
 	fsSink->set_formatter(logFmt);
 	fsSink->locked_backend()->auto_flush(true);
-
-
+    
     log_sink.reset(new boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>());
-    //EagleLib::ui_collector::addGenericCallbackHandler(boost::bind(&MainWindow::genericHandlers))
-
+    
     boost::log::core::get()->add_sink(log_sink);
 
     qRegisterMetaType<std::string>("std::string");
@@ -423,7 +418,6 @@ MainWindow::onTimeout()
     {
         LOG_TRIVIAL(warning) << "UI callbacks taking " << ms << " milliseconds to complete";
     }
-    //Parameters::UI::UiCallbackService::Instance()->run();
     for(size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi(false);

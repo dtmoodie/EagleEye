@@ -14,6 +14,7 @@
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
+#include <boost/log/attributes/mutable_constant.hpp>
 
 
 using namespace EagleLib;
@@ -21,24 +22,30 @@ using namespace EagleLib;
 std::map < const EagleLib::Node*, std::vector < boost::function<void(boost::log::trivial::severity_level, const std::string&)>>> nodeHandlers;
 std::vector<boost::function<void(boost::log::trivial::severity_level, const std::string&)>> genericHandlers;
 
+boost::log::attributes::mutable_constant<EagleLib::Node*> attr(nullptr);
+BOOST_LOG_ATTRIBUTE_KEYWORD(NodePtr, "NodePtr", EagleLib::Node*);
 
 ui_collector::ui_collector(boost::function<void(Node*, const std::string&)> nc, boost::function<void(const std::string&)> gc)
 {
     node_callback = nc;
     generic_callback = gc;
+    boost::log::core::get()->add_thread_attribute("NodePtr", attr);
 }
 void ui_collector::consume(boost::log::record_view const& rec, string_type const& message)
 {
     auto severity = rec.attribute_values()[boost::log::aux::default_attribute_names::severity()].extract<boost::log::trivial::severity_level>();
-    
-	if (rec.attribute_values().count("Node"))
+    int count = rec.attribute_values().count("NodePtr");
+	if (count)
 	{
-        const EagleLib::Node* node = rec.attribute_values()[NodePtr].get();
-        boost::log::visit(NodePtr, rec, boost::phoenix::ref(node) == boost::phoenix::placeholders::_1);
-        auto& handlers = nodeHandlers[node];
-        for (auto handler : handlers)
+        //auto node = rec.attribute_values()[NodePtr].get();
+        auto node = rec.attribute_values()[NodePtr].get();
+        if (node != nullptr)
         {
-            handler(severity.get(), message);
+            auto& handlers = nodeHandlers[node];
+            for (auto handler : handlers)
+            {
+                handler(severity.get(), message);
+            }
         }
 	}
 	else
@@ -56,4 +63,8 @@ void ui_collector::addNodeCallbackHandler(Node* node, const boost::function<void
 void ui_collector::addGenericCallbackHandler(const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
 {
     genericHandlers.push_back(handler);
+}
+void ui_collector::setNode(EagleLib::Node* node)
+{
+    attr.set(node);
 }

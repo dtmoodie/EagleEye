@@ -5,7 +5,7 @@
 #include <QPalette>
 #include <QDateTime>
 #include "qevent.h"
-
+#include "logger.hpp"
 
 IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Node::Ptr node_) :
     QWidget(parent),
@@ -124,24 +124,24 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
     node(node_)
 {
 	ui->setupUi(this);
-    statusDisplay = new QLineEdit();
+    traceDisplay = new QLineEdit();
+    debugDisplay = new QLineEdit();
+    infoDisplay = new QLineEdit();
     warningDisplay = new QLineEdit();
     errorDisplay = new QLineEdit();
-    criticalDisplay = new QLineEdit();
-    profileDisplay = new QLineEdit();
-    ui->gridLayout->addWidget(profileDisplay, 0, 0, 1,2);
-    ui->gridLayout->addWidget(statusDisplay, 1, 0, 1, 2);
-    ui->gridLayout->addWidget(warningDisplay, 2, 0, 1, 2);
-    ui->gridLayout->addWidget(errorDisplay, 3, 0, 1, 2);
-    ui->gridLayout->addWidget(criticalDisplay, 4, 0, 1, 2);
-    profileDisplay->hide();
-    statusDisplay->hide();
+    ui->gridLayout->addWidget(traceDisplay, 1, 0, 1, 2);
+    ui->gridLayout->addWidget(debugDisplay, 2, 0, 1, 2);
+    ui->gridLayout->addWidget(infoDisplay, 3, 0, 1, 2);
+    ui->gridLayout->addWidget(warningDisplay, 4, 0, 1, 2);
+    ui->gridLayout->addWidget(errorDisplay, 5, 0, 1, 2);
+    traceDisplay->hide();
+    debugDisplay->hide();
+    infoDisplay->hide();
     warningDisplay->hide();
     errorDisplay->hide();
-    criticalDisplay->hide();
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-	connect(this, SIGNAL(eLog(boost::log::trivial::severity_level, std::string, EagleLib::Node*)),
-		this, SLOT(log(boost::log::trivial::severity_level, std::string, EagleLib::Node*)));
+	connect(this, SIGNAL(eLog(boost::log::trivial::severity_level, std::string)),
+		this, SLOT(log(boost::log::trivial::severity_level, std::string)));
 
     if (node != nullptr)
 	{
@@ -180,7 +180,8 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
 			
 		}
         node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true, _1);
-        node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2, _3);
+        //node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2);
+        EagleLib::ui_collector::addNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
 	}
 }
 bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
@@ -274,31 +275,48 @@ void QNodeWidget::on_nodeUpdate()
 {
 
 }
-void QNodeWidget::log(boost::log::trivial::severity_level verb, const std::string &msg, EagleLib::Node* node)
+void QNodeWidget::log(boost::log::trivial::severity_level verb, const std::string& msg)
 {
     switch(verb)
     {
-	case boost::log::trivial::trace:
-        on_profile(msg, node);
-	case boost::log::trivial::info:
-        on_status(msg,node);
-        return;
-	case boost::log::trivial::warning:
-        on_warning(msg,node);
-        return;
-	case boost::log::trivial::error:
-        on_error(msg,node);
-        return;
-	case boost::log::trivial::fatal:
-        on_critical(msg,node);
-        return;
+    case(boost::log::trivial::trace):
+    {
+        traceDisplay->setText(QString::fromStdString(msg));
+        traceDisplay->show();
+        break;
+    }
+    case(boost::log::trivial::debug) :
+    {
+        debugDisplay->setText(QString::fromStdString(msg));
+        debugDisplay->show();
+        break;
+    }
+    case(boost::log::trivial::info) :
+    {
+        infoDisplay->setText(QString::fromStdString(msg));
+        infoDisplay->show();
+        break;
+    }
+    case(boost::log::trivial::warning) :
+    {
+        warningDisplay->setText(QString::fromStdString(msg));
+        warningDisplay->show();
+        break;
+    }
+    case(boost::log::trivial::error) :
+    {
+        errorDisplay->setText(QString::fromStdString(msg));
+        errorDisplay->show();
+        break;
+    }
     }
 }
 
 
-void QNodeWidget::on_logReceive(boost::log::trivial::severity_level verb, const std::string& msg, EagleLib::Node* node)
+
+void QNodeWidget::on_logReceive(boost::log::trivial::severity_level verb, const std::string& msg)
 {
-    emit eLog(verb, msg, node);
+    emit eLog(verb, msg);
 }
 
 
@@ -321,38 +339,7 @@ EagleLib::Node::Ptr QNodeWidget::getNode()
     return node;
 }
 
-void QNodeWidget::on_profile(const std::string &msg, EagleLib::Node *node)
-{
 
-}
-
-void QNodeWidget::on_status(const std::string& msg, EagleLib::Node* node)
-{
-    statusDisplay->show();
-    statusDisplay->setText(QDateTime::currentDateTime().toString("[hh:mm.ss.zzz] ") + " Status: " + QString::fromStdString(msg));
-    update();
-}
-
-void QNodeWidget::on_warning(const std::string& msg, EagleLib::Node* node)
-{
-    warningDisplay->show();
-    warningDisplay->setText(QDateTime::currentDateTime().toString("[hh:mm.ss.zzz] ") + "Warning: " + QString::fromStdString(msg));
-    update();
-}
-
-void QNodeWidget::on_error(const std::string& msg, EagleLib::Node* node)
-{
-    errorDisplay->show();
-    errorDisplay->setText(QDateTime::currentDateTime().toString("[hh:mm.ss.zzz] ") + "Error: " + QString::fromStdString(msg));
-    update();
-}
-
-void QNodeWidget::on_critical(const std::string& msg, EagleLib::Node* node)
-{
-    criticalDisplay->show();
-    criticalDisplay->setText("Critical: " + QString::fromStdString(msg));
-    update();
-}
 void QNodeWidget::setSelected(bool state)
 {
     QPalette pal(palette());

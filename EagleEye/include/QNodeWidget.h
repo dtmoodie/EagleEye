@@ -59,32 +59,31 @@ public:
     void updateUi(bool parameterUpdate = false, EagleLib::Node* node = nullptr);
     // Used for thread safety
     void on_nodeUpdate();
-    void on_logReceive(boost::log::trivial::severity_level verb, const std::string& msg, EagleLib::Node* node);
+    void on_logReceive(boost::log::trivial::severity_level verb, const std::string& msg);
     bool eventFilter(QObject *object, QEvent *event);
     void addParameterWidgetMap(QWidget* widget, Parameters::Parameter::Ptr param);
     QWidget* mainWindow;
 private slots:
     void on_enableClicked(bool state);
     void on_profileClicked(bool state);
-    void on_status(const std::string& msg, EagleLib::Node* node);
-    void on_warning(const std::string& msg, EagleLib::Node* node);
-    void on_error(const std::string& msg, EagleLib::Node* node);
-    void on_critical(const std::string& msg, EagleLib::Node* node);
-    void on_profile(const std::string& msg, EagleLib::Node* node);
 
-	void log(boost::log::trivial::severity_level verb, const std::string& msg, EagleLib::Node* node);
+
+	void log(boost::log::trivial::severity_level verb, const std::string& msg);
 signals:
-	void eLog(boost::log::trivial::severity_level verb, const std::string& msg, EagleLib::Node* node);
+	void eLog(boost::log::trivial::severity_level verb, const std::string& msg);
 	void parameterClicked(Parameters::Parameter::Ptr param, QPoint pos);
 private:
+    QLineEdit* traceDisplay;
+    QLineEdit* debugDisplay;
+    QLineEdit* infoDisplay;
+    QLineEdit* warningDisplay;
+    QLineEdit* errorDisplay;
+
+
+
 	std::map<QWidget*, Parameters::Parameter::Ptr> widgetParamMap;
 	Ui::QNodeWidget* ui;
     EagleLib::Node::Ptr node;
-    QLineEdit* profileDisplay;
-    QLineEdit* statusDisplay;
-    QLineEdit* warningDisplay;
-    QLineEdit* errorDisplay;
-    QLineEdit* criticalDisplay;
 	std::vector<Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
 	std::vector<QInputProxy*> inputProxies;
     //std::vector<boost::shared_ptr<IQNodeInterop>> interops;

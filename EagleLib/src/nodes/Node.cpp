@@ -7,13 +7,14 @@
 #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
 #include <boost/log/trivial.hpp>
-
+#include "logger.hpp"
 #include <external_includes/cv_videoio.hpp>
 using namespace EagleLib;
 
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
+
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
@@ -298,6 +299,8 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(boost::this_thread::interruption_requested())
         return img;
+    ui_collector::setNode(this);
+    
     if(img.empty() && SkipEmpty())
     {
 		NODE_LOG(trace) << " Skipped due to empty input";
@@ -385,13 +388,16 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 			}
 			else
 			{
+                ui_collector::setNode(this);
 				//log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(i));
 				NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
 			}
 		}
+        ui_collector::setNode(this);
 		// So here is the debate of is a node's output the output of it, or the output of its children....
 		// img = childResults;
-	}CATCH_MACRO
+    }CATCH_MACRO;
+    ui_collector::setNode(nullptr);
     return img;
 }
 
@@ -494,6 +500,7 @@ Node::swap(Node* other)
 void
 Node::Init(bool firstInit)
 {
+    ui_collector::setNode(this);
 	NODE_LOG(trace);
     IObject::Init(firstInit);
 }
@@ -501,6 +508,7 @@ Node::Init(bool firstInit)
 void
 Node::Init(const std::string &configFile)
 {
+    ui_collector::setNode(this);
 	NODE_LOG(trace);
 }
 void Node::RegisterParameterCallback(int idx, boost::function<void(void)> callback)
@@ -525,6 +533,7 @@ void Node::RegisterParameterCallback(const std::string& name, boost::function<vo
 void
 Node::Init(const cv::FileNode& configNode)
 {
+    ui_collector::setNode(this);
 	NODE_LOG(trace) << " Initializing from file";
     configNode["NodeName"] >> nodeName;
     configNode["NodeTreeName"] >> treeName;
@@ -543,6 +552,7 @@ Node::Init(const cv::FileNode& configNode)
 		{
 			addChild(node);
 			node->Init(childNode);
+            ui_collector::setNode(this);
 		}
 		else
 		{
@@ -553,7 +563,6 @@ Node::Init(const cv::FileNode& configNode)
     cv::FileNode paramNode =  configNode["Parameters"];
     for(size_t i = 0; i < parameters.size(); ++i)
     {
-		// TODO
 		try
 		{
 			if (parameters[i]->type & Parameters::Parameter::Input)
@@ -588,8 +597,6 @@ Node::Init(const cv::FileNode& configNode)
 		{
 			NODE_LOG(error) << "Deserialization failed for " << parameters[i]->GetName() << " with type " << parameters[i]->GetTypeInfo().name() << std::endl;
 		}
-        //parameters[i]->Init(paramNode);
-        //parameters[i]->update();
     }
     // Figure out parameter loading :/  Need some kind of factory for all of the parameter types
 }
