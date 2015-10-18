@@ -64,7 +64,9 @@
 /*
 
 */
-#define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
+//#define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
+#define TIME Clock(__LINE__);
+
 #ifdef _MSC_VER
 
 #define NODE_LOG(severity)                                                                                                                              \
@@ -79,6 +81,7 @@
 namespace EagleLib
 {
 	class Node;
+    class NodeImpl;
 }
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName, "NodeName",const std::string);
@@ -746,14 +749,25 @@ namespace EagleLib
         double                                                              processingTime;
         // Mutex for blocking processing of a node during parameter update
         boost::recursive_mutex                                              mtx;
-        boost::signals2::signal<void(Node*)>								onParameterAdded;
+        //boost::signals2::signal<void(Node*)>								onParameterAdded;
 		
-        std::vector<std::pair<clock_t, int>> timings;
+        //std::vector<std::pair<clock_t, int>> timings;
 		NodeType															nodeType;
+
+        void onParameterAdded();
+        double GetProcessingTime() const;
+        void Clock(int line_num);
+
+
 	protected:
 		static boost::signals2::signal<void(void)>							resetSignal;
     private:
+
+        void ClearProcessingTime();
+        void EndProcessingTime();
+
         friend class NodeManager;
+        std::shared_ptr<NodeImpl> pImpl_;
         // Depricated, I think
         ObjectId                                                            m_OID;
         // Pointer to parent node
@@ -762,7 +776,7 @@ namespace EagleLib
         ConstBuffer<cv::cuda::GpuMat>                                       childResults;
 		
 		boost::signals2::connection											resetConnection;
-		std::vector<boost::signals2::connection>							callbackConnections;
+        std::vector<boost::signals2::connection>							callbackConnections;
         boost::posix_time::ptime lastStatusTime;
         boost::posix_time::ptime lastWarningTime;
         boost::posix_time::ptime lastErrorTime;
@@ -772,5 +786,4 @@ namespace EagleLib
         std::string lastErrorMsg;
         std::string lastCriticalMsg;
     };
-
 }

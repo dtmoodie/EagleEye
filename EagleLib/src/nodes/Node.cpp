@@ -23,9 +23,19 @@ RUNTIME_MODIFIABLE_INCLUDE
 Verbosity Node::debug_verbosity = Error;
 boost::signals2::signal<void(void)> Node::resetSignal;
 
+namespace EagleLib
+{
+    struct NodeImpl
+    {
+        boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
+        std::vector<std::pair<time_t, int>> timings;
+        boost::signals2::signal<void(Node*)> onParameterAdded;
+    };
+}
 
 Node::Node():
-    averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
+    averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10),
+    pImpl_(new NodeImpl())
 {
 	treeName = nodeName;
 	profile = false;
@@ -48,6 +58,37 @@ Node::~Node()
 		callbackConnections[i].disconnect();
 	}
 	NODE_LOG(trace) << " Destructor";
+}
+void Node::ClearProcessingTime()
+{
+    pImpl_->timings.clear();
+}
+
+void Node::EndProcessingTime()
+{
+    std::stringstream ss;
+    for(int i = 1; pImpl_->timings.size(); ++i)
+    {
+        ss << pImpl_->timings[i-1] << "," << pImpl->timings[i] << "(" << pImpl_->timings[i] - pImpl_->timings[i-1] << ")";
+    }
+    double total = pImpl_->timings[pImpl_->timings_.size() - 1] - pImpl_->timings[0];
+    ss << " Total: " << total;
+    pImpl_->timings.clear();
+    pImpl_->averageFrameTime(total);
+    NODE_LOG(trace) << ss;
+}
+void Node::onParameterAdded()
+{
+    pImpl_->onParameterAdded(this);
+}
+
+void Node::Clock(int line_num)
+{
+    pImpl_->timings.push_back(std::make_pair(clock(), line_num));
+}
+double Node::GetProcessingTime() const
+{
+    return boost::accumulators::rolling_mean(pImpl_->averageFrameTime);
 }
 void Node::reset()
 {
@@ -604,7 +645,6 @@ Node::Init(const cv::FileNode& configNode)
 void
 Node::Serialize(ISimpleSerializer *pSerializer)
 {
-	
 	NODE_LOG(trace) << " Serializing";
     IObject::Serialize(pSerializer);
     SERIALIZE(parameters);
@@ -620,6 +660,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(drawResults);
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);
+    SERIALIZE(pImpl_);
 
 }
 void
