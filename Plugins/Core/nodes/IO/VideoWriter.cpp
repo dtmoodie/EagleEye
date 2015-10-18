@@ -1,4 +1,5 @@
 #include <nodes/IO/VideoWriter.h>
+#include <boost/filesystem.hpp>
 using namespace EagleLib;
 
 

@@ -12,6 +12,8 @@
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/rolling_mean.hpp>
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 using namespace EagleLib;
 
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
@@ -21,7 +23,38 @@ using namespace EagleLib;
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
-
+#define CATCH_MACRO                                                         \
+    catch (boost::thread_resource_error& err)                               \
+{                                                                           \
+    NODE_LOG(error) << err.what();                                          \
+}                                                                           \
+catch (boost::thread_interrupted& err)                                      \
+{                                                                           \
+    NODE_LOG(error) << "Thread interrupted";                                \
+    /* Needs to pass this back up to the chain to the processing thread.*/  \
+    /* That way it knowns it needs to exit this thread */                   \
+    throw err;                                                              \
+}                                                                           \
+catch (boost::thread_exception& err)                                        \
+{                                                                           \
+    NODE_LOG(error) << err.what();                                          \
+}                                                                           \
+    catch (cv::Exception &err)                                              \
+{                                                                           \
+    NODE_LOG(error) << err.what();                                          \
+}                                                                           \
+    catch (boost::exception &err)                                           \
+{                                                                           \
+    NODE_LOG(error) << "Boost error";                                       \
+}                                                                           \
+catch (std::exception &err)                                                 \
+{                                                                           \
+    NODE_LOG(error) << err.what();										    \
+}                                                                           \
+catch (...)                                                                 \
+{                                                                           \
+    NODE_LOG(error) << "Unknown exception";                                 \
+}
 
 Verbosity Node::debug_verbosity = Error;
 boost::signals2::signal<void(void)> Node::resetSignal;
@@ -360,11 +393,11 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 				// Do I lock each parameters mutex or do I just lock each node?
 				// I should only lock each node, but then I need to make sure the UI keeps track of the node
 				// to access the node's mutex while accessing a parameter, for now this works though.
-				std::vector<boost::recursive_mutex::scoped_lock> locks;
+			    /*std::vector<boost::recursive_mutex::scoped_lock> locks;
 				for (size_t i = 0; i < parameters.size(); ++i)
 				{
 					locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
-				}
+				}*/
 				if (profile)
 				{
                     pImpl_->timings.clear();
@@ -421,7 +454,6 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     ui_collector::setNode(nullptr);
     return img;
 }
-
 
 void					
 Node::process(cv::InputArray in, cv::OutputArray out)

@@ -1,5 +1,6 @@
 #include "nodes/IO/ImageLoader.h"
 #include <external_includes/cv_imgcodec.hpp>
+#include <boost/filesystem.hpp>
 using namespace EagleLib;
 
 

@@ -13,6 +13,7 @@
 #include <boost/log/common.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/setup/file.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 
 

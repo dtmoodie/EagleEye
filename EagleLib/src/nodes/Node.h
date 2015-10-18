@@ -30,13 +30,11 @@
 */
 
 
-#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
-#include <boost/bind.hpp>
 #include <boost/signals2.hpp>
-#include <boost/thread.hpp>
 
-#include <boost/filesystem.hpp>
+
+//#include <boost/filesystem.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/expressions/keyword.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
@@ -59,10 +57,6 @@
 #include "ObjectInterfacePerModule.h"
 #include "IObject.h"
 
-/*
-
-*/
-//#define TIME if(profile) timings.push_back(std::pair<clock_t, int>(clock(), __LINE__));
 #define TIME Clock(__LINE__);
 
 #ifdef _MSC_VER
@@ -111,34 +105,7 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName, "NodeName",const std::string);
 #endif
 #endif
 
-#define CATCH_MACRO                                                         \
-catch (boost::thread_resource_error& err)                                   \
-{                                                                           \
-    NODE_LOG(error)<< err.what();                                           \
-}catch (boost::thread_interrupted& err)                                     \
-{                                                                           \
-    NODE_LOG(error)<<"Thread interrupted";                                  \
-    /* Needs to pass this back up to the chain to the processing thread.*/  \
-    /* That way it knowns it needs to exit this thread */                   \
-    throw err;                                                              \
-}catch (boost::thread_exception& err)                                       \
-{                                                                           \
-    NODE_LOG(error)<< err.what();                                           \
-}                                                                           \
-catch (cv::Exception &err)                                                  \
-{                                                                           \
-    NODE_LOG(error)<< err.what();                                           \
-}                                                                           \
-catch (boost::exception &err)                                               \
-{                                                                           \
-    NODE_LOG(error)<<"Boost error";                                         \
-}catch(std::exception &err)                                                 \
-{                                                                           \
-    NODE_LOG(error)<<err.what();										    \
-}catch(...)                                                                 \
-{                                                                           \
-    NODE_LOG(error)<<"Unknown exception";                                   \
-}
+
 
 
 
