@@ -4,14 +4,26 @@
 #include "SystemTable.hpp"
 
 using namespace EagleLib;
-
-EventHandler::EventHandler()
+SignalHandler::SignalHandler()
 {
-	PerModuleInterface::GetInstance()->GetSystemTable()->eventHandler = this;
-}
-EventHandler* EventHandler::instance()
-{
-	return PerModuleInterface::GetInstance()->GetSystemTable()->eventHandler;
+    auto systemTable = PerModuleInterface::GetInstance()->GetSystemTable();
+    if (systemTable)
+    {
+        systemTable->SetSingleton<ISignalHandler>(this);
+    }
 }
 
-REGISTERSINGLETON(EventHandler, true);
+ISignalManager* SignalHandler::GetSignalManager(Loki::TypeInfo& type)
+{
+    auto itr = signalManagers.find(type);
+    if (itr == signalManagers.end())
+        return nullptr;
+    return itr->second;
+}
+ISignalManager* SignalHandler::AddSignalManager(ISignalManager* manager)
+{
+    signalManagers[manager->GetType()] = manager;
+    return manager;
+}
+
+REGISTERSINGLETON(SignalHandler, true);

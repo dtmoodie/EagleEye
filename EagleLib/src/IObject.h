@@ -47,7 +47,7 @@ enum InterfaceIDEnum
 	IID_IOBJECT,
     IID_NodeObject,
     IID_Plotter,
-	IID_EventHandler,
+	IID_SignalHandler,
 	IID_ENDInterfaceID
 };
 

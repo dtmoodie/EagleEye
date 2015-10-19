@@ -14,6 +14,8 @@
 #include <boost/accumulators/statistics/rolling_mean.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include <SystemTable.hpp>
+#include <Events.h>
 using namespace EagleLib;
 
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
@@ -82,8 +84,13 @@ Node::Node():
 	drawResults = false;
     parent = nullptr;
 	nodeType = eVirtual;
-
-	resetConnection = resetSignal.connect(boost::bind(&Node::reset, this));
+    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    if (table)
+    {
+        auto signalHandler = table->GetSingleton<ISignalHandler>();
+        auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(void)>>("ResetSignal");
+        resetConnection = signal->connect(boost::bind(&Node::reset, this));
+    }
 	NODE_LOG(trace) << " Constructor";
 }
 

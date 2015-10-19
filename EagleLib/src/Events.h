@@ -4,53 +4,77 @@
 #include <memory>
 #include "IObject.h"
 #include "IRuntimeObjectSystem.h"
+#include "LokiTypeInfo.h"
+#include <opencv2/core/base.hpp>
+
 namespace EagleLib
 {
-	struct EventBase
-	{
-		enum EventType
-		{
-			standard = 0, // Standard message
-			image_object = 1,
-			video_action = 2
-		};
-		virtual std::string& name() const;
-		virtual std::string& message() const;
-		virtual EventType type() const;
-	};
 
-	struct standardEvent : public EventBase
-	{
+    class ISignalManager
+    {
+    public:
+        virtual Loki::TypeInfo GetType() = 0;
+    };
 
-	};
-	struct ImageEvent : public EventBase
-	{
+    template<typename T> class SignalManager: public ISignalManager
+    {
+        std::map<std::string, T> sig;
+    public:
+        T* GetSignal(const std::string& sigName)
+        {
+            return &sig[sigName];
+        }
+        virtual Loki::TypeInfo GetType()
+        {
+            return Loki::TypeInfo(typeid(T));
+        }
+    };
+    class ISignalHandler : public TInterface<IID_SignalHandler, IObject>
+    {
+    public:
+        virtual ISignalManager* GetSignalManager(Loki::TypeInfo& type) = 0;
+        virtual ISignalManager* AddSignalManager(ISignalManager* manager) = 0;
 
-	};
+        template<typename T> T* GetSignal(const std::string& name)
+        {
+            auto manager = GetSignalManager(Loki::TypeInfo(typeid(T)));
+            if (manager)
+            {
+                auto typedManager = dynamic_cast<SignalManager<T>*>(manager);
+                if (typedManager)
+                {
+                    return typedManager->GetSignal(name);
+                }
+            }
+            return nullptr;
+        }
+        template<typename T> T* GetSignalSafe(const std::string& name)
+        {
+            auto manager = GetSignalManager(Loki::TypeInfo(typeid(T)));
+            if (!manager)
+            {
+                manager = AddSignalManager(new SignalManager<T>());
+            }
+            CV_Assert(manager);
+            if (manager)
+            {
+                auto typedManager = dynamic_cast<SignalManager<T>*>(manager);
+                if (typedManager)
+                {
+                    return typedManager->GetSignal(name);
+                }
+            }
+        }
+    };
 
-	struct VideoEvent : public EventBase
-	{
-		
-	};
+    class SignalHandler: public ISignalHandler
+    {
+    public:
+        SignalHandler();
+        virtual ISignalManager* GetSignalManager(Loki::TypeInfo& type);
+        virtual ISignalManager* AddSignalManager(ISignalManager* manager);
 
-	class EventFilter
-	{
-	public:
-		EventFilter();
-		~EventFilter();
-		bool acceptsEvent(EventBase* ev);
-		bool handleEvent(EventBase* ev);
-	};
-
-	class EventHandler : public TInterface<IID_EventHandler, IObject>
-	{
-	public:
-		EventHandler();
-		static EventHandler* instance();
-		void post_event(std::shared_ptr<EventBase>& ev);
-		void register_filter(EventFilter* filter);
-		void deregister_filter(EventFilter* filter);
-	private:
-		std::vector<EventFilter*> filters;
-	};
+    private:
+        std::map<Loki::TypeInfo, ISignalManager*> signalManagers;
+    };
 }
