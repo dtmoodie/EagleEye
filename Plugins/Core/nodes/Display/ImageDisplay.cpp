@@ -12,11 +12,9 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(DetectionDisplay)
 
 QtImageDisplay::QtImageDisplay(boost::function<void(cv::Mat, Node*)> cpuCallback_)
 {
-    cpuDisplayCallback = cpuCallback_;
 }
 QtImageDisplay::QtImageDisplay(boost::function<void (cv::cuda::GpuMat, Node*)> gpuCallback_)
 {
-    gpuDisplayCallback = gpuCallback_;
 }
 void QtImageDisplay::Init(bool firstInit)
 {
@@ -36,19 +34,12 @@ struct UserData
 void QtImageDisplay_cpuCallback(int status, void* userData)
 {
     UserData* tmp = (UserData*)userData;
-    //tmp->node->displayImage(tmp->displayImage);
-    //EagleLib::UIThreadCallback::getInstance().addCallback(boost::bind(&QtImageDisplay::displayImage, tmp->node, tmp->displayImage));
 	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtImageDisplay::displayImage, tmp->node, tmp->displayImage));
     delete tmp;
 }
 
 void QtImageDisplay::displayImage(cv::cuda::HostMem image)
 {
-//    if(cpuDisplayCallback)
-//    {
-//        cpuDisplayCallback(image.createMatHeader(), this);
-//        return;
-//    }
     std::string name = *getParameter<std::string>(0)->Data();
     if(name.size() == 0)
     {
@@ -59,7 +50,6 @@ void QtImageDisplay::displayImage(cv::cuda::HostMem image)
         cv::imshow(name, image.createMatHeader());
     }catch(cv::Exception &err)
     {
-        //log(Warning, err.what());
 		NODE_LOG(warning) << err.what();
     }
     parameters[0]->changed = false;
@@ -70,15 +60,7 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     if(img.channels() != 1 && img.channels() != 3)
     {
-        //log(Warning, "Image has " + boost::lexical_cast<std::string>(img.channels()) + " channels! Cannot display!");
 		NODE_LOG(warning) << "Image has " << img.channels() << " channels! Cannot display!";
-        return img;
-    }
-    if(img.empty())
-        return img;
-    if(gpuDisplayCallback)
-    {
-        gpuDisplayCallback(img, this);
         return img;
     }
 
@@ -89,7 +71,6 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 
 OGLImageDisplay::OGLImageDisplay(boost::function<void(cv::cuda::GpuMat,Node*)> gpuCallback_)
 {
-    gpuDisplayCallback = gpuCallback_;
 }
 
 void OGLImageDisplay::Init(bool firstInit)
@@ -109,11 +90,6 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         prevName = *getParameter<std::string>(0)->Data();
         parameters[0]->changed = false;
         cv::namedWindow(prevName, cv::WINDOW_OPENGL);
-    }
-    if(gpuDisplayCallback)
-    {
-        gpuDisplayCallback(img, this);
-        return img;
     }
     cv::namedWindow(prevName, cv::WINDOW_OPENGL);
     try
@@ -156,8 +132,6 @@ cv::Mat KeyPointDisplay::uicallback()
 void KeyPointDisplay_callback(int status, void* userData)
 {
     KeyPointDisplay* node = (KeyPointDisplay*)userData;
-    if(node->uiThreadCallback)
-        return node->uiThreadCallback(boost::bind(&KeyPointDisplay::uicallback,node), node);
     cv::Mat img = node->uicallback();
     try
     {
@@ -165,7 +139,6 @@ void KeyPointDisplay_callback(int status, void* userData)
 		{
 			Parameters::UI::UiCallbackService::Instance()->post(
 				boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), node->fullTreeName, img));
-			//UIThreadCallback::getInstance().addCallback(;
 		}
             
     }catch(cv::Exception &e)
@@ -218,18 +191,6 @@ void FlowVectorDisplay_callback(int status, void* userData)
 {
     FlowVectorDisplay* node = (FlowVectorDisplay*)userData;
 	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), node->displayName, node->uicallback()));
-    //UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow),node->displayName, node->uicallback()));
-//    if(node)
-//    {
-//        if(node->uiThreadCallback)
-//        {
-//            //node->uiThreadCallback(boost::bind(&FlowVectorDisplay::uicallback, node), node);
-//            return;
-//        }
-//        cv::Mat img = node->uicallback();
-//        if(!img.empty())
-//            cv::imshow(node->displayName, img);
-//    }
 }
 
 void FlowVectorDisplay::Serialize(ISimpleSerializer *pSerializer)
@@ -304,7 +265,6 @@ cv::Mat FlowVectorDisplay::uicallback()
 void histogramDisplayCallback(int status, void* userData)
 {
     HistogramDisplay* node = (HistogramDisplay*)userData;
-    //UIThreadCallback::getInstance().addCallback(boost::bind(&HistogramDisplay::displayHistogram, node));
 	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&HistogramDisplay::displayHistogram, node));
 
 }
@@ -395,7 +355,6 @@ void DetectionDisplay::displayCallback()
                 pos.y = h_img.rows - 100;
         }
     }
-    //UIThreadCallback::getInstance().addCallback(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
 	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
 }
 

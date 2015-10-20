@@ -58,8 +58,7 @@ catch (...)                                                                 \
     NODE_LOG(error) << "Unknown exception";                                 \
 }
 
-Verbosity Node::debug_verbosity = Error;
-boost::signals2::signal<void(void)> Node::resetSignal;
+
 
 namespace EagleLib
 {
@@ -71,6 +70,8 @@ namespace EagleLib
 
         boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
         std::vector<std::pair<time_t, int>> timings;
+		boost::signals2::connection											resetConnection;
+		std::vector<boost::signals2::connection>							callbackConnections;
     };
 }
 
@@ -89,7 +90,7 @@ Node::Node():
     {
         auto signalHandler = table->GetSingleton<ISignalHandler>();
         auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(void)>>("ResetSignal");
-        resetConnection = signal->connect(boost::bind(&Node::reset, this));
+        pImpl_->resetConnection = signal->connect(boost::bind(&Node::reset, this));
     }
 	NODE_LOG(trace) << " Constructor";
 }
@@ -98,9 +99,9 @@ Node::~Node()
 {
     if(parent)
         parent->deregisterNotifier(this);
-	for (int i = 0; i < callbackConnections.size(); ++i)
+	for (int i = 0; i < pImpl_->callbackConnections.size(); ++i)
 	{
-		callbackConnections[i].disconnect();
+		pImpl_->callbackConnections[i].disconnect();
 	}
 	NODE_LOG(trace) << " Destructor";
 }
@@ -112,16 +113,20 @@ void Node::ClearProcessingTime()
 void Node::EndProcessingTime()
 {
     TIME;
-    std::stringstream ss;
-    for(int i = 1; pImpl_->timings.size(); ++i)
-    {
-        ss << pImpl_->timings[i-1].second << "," << pImpl_->timings[i].second << "(" << pImpl_->timings[i].first - pImpl_->timings[i-1].first << ")";
-    }
-    double total = pImpl_->timings[pImpl_->timings.size() - 1].first - pImpl_->timings[0].first;
-    ss << " Total: " << total;
+	double total = pImpl_->timings[pImpl_->timings.size() - 1].first - pImpl_->timings[0].first;
+	if (profile)
+	{
+		std::stringstream ss;
+		for (int i = 1; i < pImpl_->timings.size(); ++i)
+		{
+			ss << pImpl_->timings[i - 1].second << "," << pImpl_->timings[i].second << "(" << pImpl_->timings[i].first - pImpl_->timings[i - 1].first << ")";
+		}
+		ss << " Total: " << total;
+		NODE_LOG(trace) << ss.str();
+	}
     pImpl_->timings.clear();
     pImpl_->averageFrameTime(total);
-    NODE_LOG(trace) << ss.str();
+    
 }
 
 void Node::Clock(int line_num)
@@ -405,16 +410,9 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 				{
 					locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
 				}*/
-				if (profile)
-				{
-                    pImpl_->timings.clear();
-					TIME
-				}
+				TIME
 				img = doProcess(img, stream);
-				if (profile)
-				{
-                    EndProcessingTime();
-				}
+                EndProcessingTime();
 			}
 			NODE_LOG(debug) << "End:   " << fullTreeName;
 		}CATCH_MACRO
@@ -506,14 +504,14 @@ void
 Node::registerDisplayCallback(boost::function<void(cv::Mat, Node*)>& f)
 {
 	NODE_LOG(trace);
-    cpuDisplayCallback = f;
+    //cpuDisplayCallback = f;
 }
 
 void
 Node::registerDisplayCallback(boost::function<void(cv::cuda::GpuMat, Node*)>& f)
 {
 	NODE_LOG(trace);
-	gpuDisplayCallback = f;
+	//gpuDisplayCallback = f;
 }
 
 void
@@ -577,7 +575,7 @@ void Node::RegisterParameterCallback(int idx, boost::function<void(void)> callba
 	auto param = getParameter(idx);
 	if (param)
 	{
-		callbackConnections.push_back(param->RegisterNotifier(callback));
+		pImpl_->callbackConnections.push_back(param->RegisterNotifier(callback));
 	}
 }
 void Node::RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback)
@@ -586,7 +584,7 @@ void Node::RegisterParameterCallback(const std::string& name, boost::function<vo
 	auto param = getParameter(name);
 	if (param)
 	{
-		callbackConnections.push_back(param->RegisterNotifier(callback));
+		pImpl_->callbackConnections.push_back(param->RegisterNotifier(callback));
 	}
 }
 
@@ -674,8 +672,8 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(messageCallback);
     SERIALIZE(onUpdate);
     SERIALIZE(parent);
-    SERIALIZE(cpuDisplayCallback);
-    SERIALIZE(gpuDisplayCallback);
+    //SERIALIZE(cpuDisplayCallback);
+    //SERIALIZE(gpuDisplayCallback);
     SERIALIZE(drawResults);
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);

@@ -31,7 +31,8 @@
 
 
 #include <boost/function.hpp>
-#include <boost/signals2.hpp>
+//#include <boost/signals2.hpp>
+#include <boost/signals2/signal.hpp>
 
 
 //#include <boost/filesystem.hpp>
@@ -137,20 +138,11 @@ namespace EagleLib
 		eSource         = 256,  /* this node generates data*/
 		eSink           = 512   /* This node accepts and saves data */
     };
-    enum Verbosity
-    {
-        Profiling = 0,
-        Status = 1,
-        Warning = 2,
-        Error = 3,
-        Critical = 4
-    };
 	
 
     class CV_EXPORTS Node: public TInterface<IID_NodeObject, IObject>, public IObjectNotifiable
     {
     public:
-        static Verbosity  debug_verbosity;
         typedef shared_ptr<Node> Ptr;
 		Node();
 		virtual ~Node();
@@ -688,11 +680,11 @@ namespace EagleLib
         std::vector< Parameters::Parameter::Ptr >							parameters;
         // These can be used to for user defined UI displaying of images.  IE if you havea  custom widget for displaying
         // nodes, you can plug that in here.
-        boost::function<void(cv::Mat, Node*)>								cpuDisplayCallback;
-        boost::function<void(cv::cuda::GpuMat, Node*)>						gpuDisplayCallback;
+        //boost::function<void(cv::Mat, Node*)>								cpuDisplayCallback;
+        //boost::function<void(cv::cuda::GpuMat, Node*)>						gpuDisplayCallback;
         // This is depricated since we now use the UIThreadCallback singleton for posting functions to a queue for processing
-        boost::function<void(boost::function<cv::Mat()>, Node*)>            uiThreadCallback;
-        boost::function<void(boost::function<void()>, Node*)>               d_uiThreadCallback;
+        //boost::function<void(boost::function<cv::Mat()>, Node*)>            uiThreadCallback;
+        //boost::function<void(boost::function<void()>, Node*)>               d_uiThreadCallback;
 
         /* If true, draw results onto the image being processed, hardly ever used */
         bool																drawResults;
@@ -703,21 +695,14 @@ namespace EagleLib
 
         bool                                                                profile;
 
-        //double                                                              processingTime;
         // Mutex for blocking processing of a node during parameter update
         boost::recursive_mutex                                              mtx;
-        //boost::signals2::signal<void(Node*)>								onParameterAdded;
-		
-        //std::vector<std::pair<clock_t, int>> timings;
 		NodeType															nodeType;
         boost::signals2::signal<void(Node*)>                                onParameterAdded;
         
         double GetProcessingTime() const;
         void Clock(int line_num);
 
-
-	protected:
-		static boost::signals2::signal<void(void)>							resetSignal;
     private:
 
         void ClearProcessingTime();
@@ -725,14 +710,9 @@ namespace EagleLib
 
         friend class NodeManager;
         std::shared_ptr<NodeImpl> pImpl_;
-        // Depricated, I think
-        ObjectId                                                            m_OID;
-        // Pointer to parent node
         Node*                                                               parent;
-        //boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
         ConstBuffer<cv::cuda::GpuMat>                                       childResults;
 		
-		boost::signals2::connection											resetConnection;
-        std::vector<boost::signals2::connection>							callbackConnections;
+		
     };
 }

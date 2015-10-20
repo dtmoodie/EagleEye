@@ -1,5 +1,14 @@
 #include "xmpp.h"
-
+#include "gloox/disco.h"
+#include "gloox/message.h"
+#include "gloox/gloox.h"
+#include "gloox/siprofileft.h"
+#include "gloox/siprofilefthandler.h"
+#include "gloox/bytestreamdatahandler.h"
+#include "gloox/chatstatefilter.h"
+#include "gloox/socks5bytestreamserver.h"
+#include "gloox/messageeventfilter.h"
+#include <boost/algorithm/string/predicate.hpp>
 using namespace gloox;
 using namespace EagleLib;
 
@@ -70,10 +79,10 @@ void XmppClient::handleMessageSession(MessageSession *session)
     LOG_TRACE;
     m_session.push_back(session);
     session->registerMessageHandler(this);
-    messageEventFilter = new MessageEventFilter(session);
-    messageEventFilter->registerMessageEventHandler(this);
-    chatStateFilter = new ChatStateFilter(session);
-    chatStateFilter->registerChatStateHandler(this);
+    m_messageEventFilter = new MessageEventFilter(session);
+    m_messageEventFilter->registerMessageEventHandler(this);
+    m_chatStateFilter = new ChatStateFilter(session);
+    m_chatStateFilter->registerChatStateHandler(this);
     session->send("IP:68.100.56.64");
     std::stringstream ss;
     auto nodes = getNodesInScope();
@@ -128,7 +137,7 @@ void XmppClient::Init(bool firstInit)
 }
 void XmppClient::_sendPointCloud()
 {
-    Parameters::UI::ProcessingThreadCallbackService::Instance()->post(boost::bind(&XmppClient::sendPointCloud, this));
+    //Parameters::UI::ProcessingThreadCallbackService::Instance()->post(boost::bind(&XmppClient::sendPointCloud, this));
 }
 void XmppClient::sendPointCloud()
 {

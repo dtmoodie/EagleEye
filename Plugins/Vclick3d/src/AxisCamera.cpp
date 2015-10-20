@@ -1,13 +1,7 @@
 #include "AxisCamera.h"
 #include "QtNetwork/qauthenticator.h"
 #include "UI/InterThread.hpp"
-#include "gloox/disco.h"
-#include "gloox/message.h"
-#include "gloox/gloox.h"
-#include "gloox/siprofileft.h"
-#include "gloox/siprofilefthandler.h"
-#include "gloox/bytestreamdatahandler.h"
-#include "gloox/socks5bytestreamserver.h"
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
 using namespace EagleLib;

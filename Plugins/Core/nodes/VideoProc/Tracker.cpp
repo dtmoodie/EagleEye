@@ -115,7 +115,6 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
     std::pair<cv::cuda::GpuMat*, std::string>* data = (std::pair<cv::cuda::GpuMat*, std::string>*)userData;
     boost::function<void(void)> f = boost::bind(displayCallback, *data->first, data->second);
 	Parameters::UI::UiCallbackService::Instance()->post(f);
-    //UIThreadCallback::getInstance().addCallback(f);
     delete data;
 }
 
@@ -130,12 +129,6 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     DetectAndComputeFunctor* detector = getParameter<DetectAndComputeFunctor>("Detector")->Data();
     TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor>("Tracker")->Data();
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
-//    boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
-//                         cv::cuda::GpuMat, cv::cuda::GpuMat,
-//                         std::string&, cv::cuda::Stream)>*
-//        display = getParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
-//                                                    cv::cuda::GpuMat, cv::cuda::GpuMat,
-//                                                    std::string&, cv::cuda::Stream)>*>("Display functor")->data;
     if(*getParameter<bool>("Display")->Data())
     {
         if(nonWarpedMask.size() != img.size())

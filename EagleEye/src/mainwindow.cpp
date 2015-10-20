@@ -196,7 +196,7 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifdef _DEBUG
 	dir.cd("../Debug");
 #else
-	dir.cd("../Release");
+	dir.cd("../RelWithDebInfo");
 #endif
 	str = dir.absolutePath().toStdString();
 	QFileInfoList files = dir.entryInfoList(QStringList("*.dll"));
@@ -490,15 +490,15 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
 {
     if(node->nodeName == "OGLImageDisplay")
     {
-        node->gpuDisplayCallback = boost::bind(&MainWindow::oglDisplay, this, _1, _2);
+        //node->gpuDisplayCallback = boost::bind(&MainWindow::oglDisplay, this, _1, _2);
     }
     if(node->nodeName == "QtImageDisplay")
     {
-        node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
+        //node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
     }
     if(node->nodeName == "KeyPointDisplay")
     {
-        node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
+        //node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
     }
     node->onParameterAdded.connect(boost::bind(&MainWindow::newParameter,this, _1));
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);

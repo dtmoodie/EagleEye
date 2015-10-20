@@ -48,6 +48,9 @@ enum InterfaceIDEnum
     IID_NodeObject,
     IID_Plotter,
 	IID_SignalHandler,
+	IID_RenderEngine,
+	IID_RenderScene,
+	IID_RenderObject,
 	IID_ENDInterfaceID
 };
 

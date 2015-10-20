@@ -11,6 +11,7 @@
 #include "gloox/chatstatehandler.h"
 #include "gloox/chatstatefilter.h"
 
+
 #ifdef _MSC_VER
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("G:\libs\gloox\libs\gloox-1.0d.lib");
