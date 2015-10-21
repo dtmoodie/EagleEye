@@ -34,6 +34,21 @@ namespace EagleLib
         virtual void Serialize(ISimpleSerializer *pSerializer);
     };
 
+	class DensePyrLKOpticalFlow : public Node
+	{
+		cv::Ptr<cv::cuda::DensePyrLKOpticalFlow> opt_flow;
+		cv::cuda::GpuMat prevGreyImg;
+		cv::cuda::GpuMat greyImg;
+		cv::cuda::GpuMat flow;
+	public:
+
+		DensePyrLKOpticalFlow();
+		virtual void Init(bool firstInit);
+		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+	};
+
+
+
     class BroxOpticalFlow: public Node
     {
     public:

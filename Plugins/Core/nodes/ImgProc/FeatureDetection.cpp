@@ -144,9 +144,6 @@ void FastFeatureDetector::Init(bool firstInit)
         param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_5_8));
         param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_7_12));
         param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_9_16));
-        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::THRESHOLD));
-        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::NONMAX_SUPPRESSION));
-        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::FAST_N));
         param.currentSelection = 2;
         updateParameter("Type", param);
         updateParameter("Max detected points", int(5000));

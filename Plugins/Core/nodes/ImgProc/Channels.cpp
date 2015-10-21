@@ -121,6 +121,15 @@ cv::cuda::GpuMat ConvertColorspace::doProcess(cv::cuda::GpuMat& img, cv::cuda::S
 }
 
 
+void Magnitude::Init(bool firstInit)
+{
+
+}
+cv::cuda::GpuMat Magnitude::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+	cv::cuda::magnitude(img, magnitude, stream);
+	return magnitude;
+}
 
 void ExtractChannels::Init(bool firstInit)
 {
@@ -258,3 +267,4 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(ExtractChannels)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertDataType)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Merge)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Reshape)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Magnitude)

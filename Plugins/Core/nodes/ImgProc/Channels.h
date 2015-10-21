@@ -37,7 +37,14 @@ namespace EagleLib
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
 	};
-
+	class Magnitude : public Node
+	{
+		cv::cuda::GpuMat magnitude;
+	public:
+		Magnitude();
+		virtual void Init(bool firstInit);
+		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+	};
     class ExtractChannels: public Node
     {
         int channelNum;

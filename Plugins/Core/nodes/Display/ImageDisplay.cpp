@@ -1,6 +1,7 @@
 #include "nodes/Display/ImageDisplay.h"
 #include <external_includes/cv_core.hpp>
 #include <external_includes/cv_imgproc.hpp>
+#include <UI/InterThread.hpp>
 using namespace EagleLib;
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay)
@@ -69,9 +70,7 @@ QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
     return img;
 }
 
-OGLImageDisplay::OGLImageDisplay(boost::function<void(cv::cuda::GpuMat,Node*)> gpuCallback_)
-{
-}
+
 
 void OGLImageDisplay::Init(bool firstInit)
 {
@@ -80,6 +79,34 @@ void OGLImageDisplay::Init(bool firstInit)
     {
 		updateParameter("Default Name", std::string("Default Name"), Parameters::Parameter::Control, "Set name for window");
     }
+	prevName = *getParameter<std::string>(0)->Data();
+	cv::namedWindow("Default Name", cv::WINDOW_OPENGL);
+}
+struct oglData
+{
+	std::string name;
+	Buffer<cv::cuda::GpuMat, EventPolicy>* data;
+};
+void oglDisplay(std::string name, cv::cuda::GpuMat data)
+{
+	cv::namedWindow(name, cv::WINDOW_OPENGL);
+	cv::imshow(name, data);
+
+}
+void oglCallback(int status, void* user_data)
+{
+	oglData* data = static_cast<oglData*>(user_data);
+	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&oglDisplay,data->name, data->data->data));
+	delete data;
+}
+
+
+
+void OGLImageDisplay::display()
+{
+	cv::namedWindow(prevName, cv::WINDOW_OPENGL);
+	auto buffer = bufferPool.getFront();
+	cv::imshow(prevName, buffer->data);
 }
 
 cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -91,16 +118,12 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         parameters[0]->changed = false;
         cv::namedWindow(prevName, cv::WINDOW_OPENGL);
     }
-    cv::namedWindow(prevName, cv::WINDOW_OPENGL);
-    try
-    {
-        cv::imshow(prevName, img);
-    }catch(cv::Exception &e)
-    {
-        //log(Error, "This node needs to be run from the UI / main thread. ");
-		NODE_LOG(error) << "This node needs to be run from the UI / main thread. ";
-    }
-
+	auto buffer = bufferPool.getFront();
+	auto userData = new oglData;
+	userData->data = buffer;
+	userData->name = prevName;
+	img.copyTo(userData->data->data, stream);
+	stream.enqueueHostCallback(oglCallback, userData);
     return img;
 }
 

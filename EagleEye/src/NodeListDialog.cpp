@@ -7,6 +7,7 @@ NodeListDialog::NodeListDialog(QWidget *parent) :
     ui(new Ui::NodeListDialog)
 {
     ui->setupUi(this);
+	EagleLib::NodeManager::getInstance().RegisterConstructorAddedCallback(boost::bind(&NodeListDialog::update, this));
     update();
 }
 

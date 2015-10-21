@@ -2,6 +2,7 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include <opencv2/core/cuda.hpp>
+
 struct mapper;
 
 struct ColorScale
@@ -16,15 +17,18 @@ struct ColorScale
 	// Defines if this color starts high then goes low
 	bool	inverted;
 	bool flipped;
-	__host__ __device__ unsigned char operator ()(double location);
-	__host__ __device__ unsigned char getValue(double location_);
+	__host__ __device__ unsigned char operator ()(float location);
+	__host__ __device__ unsigned char getValue(float location_);
 
 };
 
 struct color_mapper
 {
 	// if resolution == -1, calculate the exact mapping every time
-	void setMapping(ColorScale& red, ColorScale& green, ColorScale& blue, double min, double max, int resolution);
-	void colormap_image(cv::cuda::GpuMat& img, cv::cuda::GpuMat rgb_out);
-	mapper* mapper_;
+	void setMapping(ColorScale& red, ColorScale& green, ColorScale& blue, double min, double max);
+	void colormap_image(cv::cuda::GpuMat& img, cv::cuda::GpuMat& rgb_out, cv::cuda::Stream& stream);
+
+private:
+	ColorScale red_, green_, blue_;
+	double alpha, beta;
 };

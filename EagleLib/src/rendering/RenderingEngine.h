@@ -1,6 +1,6 @@
 #pragma once
-#include "IObject.h"
 #include <memory>
+#include "IObject.h"
 
 namespace EagleLib
 {

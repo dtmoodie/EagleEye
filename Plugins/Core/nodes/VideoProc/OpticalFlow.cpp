@@ -10,8 +10,52 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cudaoptflow")
 #endif
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SparsePyrLKOpticalFlow)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(BroxOpticalFlow)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(DensePyrLKOpticalFlow)
+
+void DensePyrLKOpticalFlow::Init(bool firstInit)
+{
+	opt_flow = cv::cuda::DensePyrLKOpticalFlow::create(cv::Size(13, 13), 3, 30, false);
+	updateParameter<int>("Window Size", 13);
+	updateParameter<int>("Pyramid levels", 3);
+	updateParameter<int>("Iterations", 30);
+	updateParameter<bool>("Use initial flow", false);
+}
+cv::cuda::GpuMat DensePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+	if (parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed)
+	{
+		int size = *getParameter<int>("Window Size")->Data();
+		int levels = *getParameter<int>("Pyramid levels")->Data();
+		int iters = *getParameter<int>("Iterations")->Data();
+		opt_flow = cv::cuda::DensePyrLKOpticalFlow::create(cv::Size(size, size), levels, iters, false);
+		parameters[0]->changed = false;
+		parameters[1]->changed = false; 
+		parameters[2]->changed = false;
+		parameters[3]->changed = false;
+	}
 
 
+	if (img.channels() != 1)
+	{
+		cv::cuda::cvtColor(img, greyImg, cv::COLOR_BGR2GRAY, 0, stream);
+	}
+	else
+	{
+		greyImg = img;
+	}
+	if (prevGreyImg.empty())
+	{
+		greyImg.copyTo(prevGreyImg, stream);
+		return img;
+	}
+	opt_flow->calc(prevGreyImg, greyImg, flow, stream);
+	//cv::Mat field(flow);
+	//cv::Mat prev(prevGreyImg);
+	//cv::Mat curr(greyImg);
+	greyImg.copyTo(prevGreyImg, stream);
+	updateParameter("FlowField", flow);
+	return img;
+}
 void SparsePyrLKOpticalFlow::Init(bool firstInit)
 {
     if(firstInit)

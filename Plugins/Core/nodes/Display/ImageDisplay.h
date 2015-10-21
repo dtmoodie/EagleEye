@@ -1,6 +1,8 @@
 #include "nodes/Node.h"
 
 #include <external_includes/cv_highgui.hpp>
+#include <external_includes/cv_core.hpp>
+#include <opencv2/core/opengl.hpp>
 #include <CudaUtils.hpp>
 #include <ObjectDetection.hpp>
 
@@ -22,11 +24,12 @@ namespace EagleLib
     class OGLImageDisplay: public Node
     {
         std::string prevName;
-
+		BufferPool<cv::cuda::GpuMat, EventPolicy> bufferPool;
+		
     public:
         OGLImageDisplay();
 
-        OGLImageDisplay(boost::function<void(cv::cuda::GpuMat, Node*)> gpuCallback_);
+		void display();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 

@@ -38,9 +38,9 @@ void
 Colormap::Init(bool firstInit)
 {
     Node::Init(firstInit);
-    resolution = 5000;
+	rescale = true;
     updateParameter("Colormapping scheme", int(0));
-    updateParameter("Colormap resolution", &resolution);
+	updateParameter<bool>("Rescale", &rescale);
 }
 
 cv::cuda::GpuMat
@@ -48,133 +48,21 @@ Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(img.channels() != 1)
     {
-        //log(Warning, "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels");
 		NODE_LOG(warning) << "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels";
         return img;
     }
-    if(LUT.size() != resolution)
-    {
-        double minVal, maxVal;
-        cv::cuda::minMax(img, &minVal,&maxVal);
-        scale = double(resolution - 1) / (maxVal - minVal);
-        shift = minVal * scale;
-		updateParameter<double>("Min", minVal, Parameters::Parameter::State);
-		updateParameter<double>("Max", maxVal, Parameters::Parameter::State);
-		updateParameter<double>("Scale", scale, Parameters::Parameter::State);
-		updateParameter<double>("Shift", shift, Parameters::Parameter::State);
-        buildLUT();
-    }
-    cv::cuda::GpuMat scaledImg;
-    img.convertTo(scaledImg, CV_16U, scale,shift, stream);
-    cv::Mat h_img;
-    scaledImg.download(h_img);
-    cv::Mat colorScaledImage(h_img.size(),CV_8UC3);
-    cv::Vec3b* putPtr = colorScaledImage.ptr<cv::Vec3b>(0);
-    unsigned short* getPtr = h_img.ptr<unsigned short>(0);
-    for(int i = 0; i < h_img.rows*h_img.cols; ++i, ++putPtr, ++ getPtr)
-    {
-        *putPtr = LUT[*getPtr];
-    }
-    return cv::cuda::GpuMat(colorScaledImage);
+	if (rescale)
+	{
+		double min, max;
+		cv::cuda::minMax(img, &min, &max);
+		mapper.setMapping(ColorScale(50, 255 / 25, true), ColorScale(50 / 3, 255 / 25, true), ColorScale(0, 255 / 25, true), min, max);
+		rescale = false;
+	}
+	mapper.colormap_image(img, color_mapped_image, stream); 
+	return color_mapped_image;
 }
 
 
-void
-Colormap::buildLUT()
-{
-    //thrust::host_vector<cv::Vec3b> h_LUT;
-    int scalingScheme = *getParameter<int>(0)->Data();
-    switch(scalingScheme)
-    {
-    case 0:
-    default:
-        red     = ColorScale(50, 255/25, true);
-        green   = ColorScale(50 / 3, 255/25, true);
-        blue    = ColorScale(0, 255/25, true);
-        break;
-    }
-    LUT.resize(resolution);
-    blue.inverted = true;
-    // color scales are defined between 0 and 100
-    double step = 100.0 / double(resolution);
-    double location = 0.0;
-    for(size_t i = 0; i < resolution; ++i, location += step)
-    {
-        LUT[i] = cv::Vec3b(blue(location), green(location), red(location));
-    }
-    //d_LUT = h_LUT;
-}
-
-
-
-
-///////////
-/// \brief QtColormapDisplay::Init
-/// \param firstInit
-
-//void ColormapCallback(int status, void* node)
-//{
-//    Colormap* ptr = static_cast<Colormap*>(node);
-//    ptr->applyColormap();
-//}
-//void Colormap::applyColormap()
-//{
-//    cv::Mat h_img = h_buffer->data.createMatHeader();
-
-//}
-
-//void
-//Colormap::Init(bool firstInit)
-//{
-//    Node::Init(firstInit);
-//    resolution = 5000;
-//    updateParameter("Colormapping scheme", int(0));
-//    updateParameter("Colormap resolution", &resolution);
-//    h_buffer = nullptr;
-//    d_buffer = nullptr;
-//}
-
-//cv::cuda::GpuMat
-//Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-//{
-//    if(img.channels() != 1)
-//    {
-//        log(Warning, "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels");
-//        return img;
-//    }
-//    if(LUT.size() != resolution)
-//    {
-//        double minVal, maxVal;
-
-//        cv::cuda::minMax(img, &minVal,&maxVal);
-//        scale = double(resolution - 1) / (maxVal - minVal);
-//        shift = minVal * scale;
-//        updateParameter<double>("Min", minVal,  Parameter::State);
-//        updateParameter<double>("Max", maxVal,  Parameter::State);
-//        updateParameter<double>("Scale", scale, Parameter::State);
-//        updateParameter<double>("Shift", shift, Parameter::State);
-//        buildLUT();
-//    }
-//    auto scaledImg = d_scaledBufferPool.getFront();
-//    d_buffer = d_bufferPool.getFront();
-//    d_buffer->data.create(img.size(), CV_8UC3);
-//    img.convertTo(scaledImg->data, CV_16U, scale,shift, stream);
-//    h_buffer = h_bufferPool.getFront();
-//    scaledImg->data.download(h_buffer->data, stream);
-//    stream.enqueueHostCallback(ColormapCallback, this);
-
-
-//    cv::Mat h_img;
-//    scaledImg.download(h_img);
-//    cv::Mat colorScaledImage(h_img.size(),CV_8UC3);
-//    cv::Vec3b* putPtr = colorScaledImage.ptr<cv::Vec3b>(0);
-//    unsigned short* getPtr = h_img.ptr<unsigned short>(0);
-//    for(int i = 0; i < h_img.rows*h_img.cols; ++i, ++putPtr, ++ getPtr)
-//    {
-//        *putPtr = LUT[*getPtr];
-//    }
-//    return d_buffer->data;
-//}
 QtColormapDisplay::QtColormapDisplay():
     Colormap()
 {
@@ -191,30 +79,7 @@ void QtColormapDisplayCallback(int status, void* data)
 
 void QtColormapDisplay::display()
 {
-    Buffer<cv::cuda::HostMem, EventPolicy>* h_buffer = h_bufferPool.getBack();
-    // h_buffer contains the 16bit scaled image
-    try
-    {
-        if(!h_buffer->data.empty())
-        {
-            cv::Mat h_img = h_buffer->data.createMatHeader();
-            cv::Mat colorScaledImage(h_img.size(),CV_8UC3);
-            cv::Vec3b* putPtr = colorScaledImage.ptr<cv::Vec3b>(0);
-            unsigned short* getPtr = h_img.ptr<unsigned short>(0);
-            for(int i = 0; i < h_img.rows*h_img.cols; ++i, ++putPtr, ++ getPtr)
-            {
-				if (*getPtr >= LUT.size())
-					*putPtr = LUT[LUT.size() - 1];
-				else
-					*putPtr = LUT[*getPtr];
-            }
-            cv::imshow(fullTreeName, colorScaledImage);
-        }
 
-    }catch(...)
-    {
-
-    }
 }
 
 void QtColormapDisplay::Init(bool firstInit)
@@ -225,29 +90,12 @@ cv::cuda::GpuMat QtColormapDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 {
     if(img.channels() != 1)
     {
-//        log(Warning, "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels");
 		NODE_LOG(warning) << "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels";
         return img;
     }
-    if(LUT.size() != resolution)
-    {
-        double minVal, maxVal;
+	Colormap::doProcess(img, stream);
+	//color_mapped_image.download()
 
-        cv::cuda::minMax(img, &minVal,&maxVal);
-        scale = double(resolution - 1) / (maxVal - minVal);
-        shift = minVal * scale;
-		updateParameter<double>("Min", minVal, Parameters::Parameter::State);
-		updateParameter<double>("Max", maxVal, Parameters::Parameter::State);
-		updateParameter<double>("Scale", scale, Parameters::Parameter::State);
-		updateParameter<double>("Shift", shift, Parameters::Parameter::State);
-        buildLUT();
-    }
-    auto scaledImg = d_scaledBufferPool.getFront();
-
-    img.convertTo(scaledImg->data, CV_16U, scale,shift, stream);
-    auto h_buffer = h_bufferPool.getFront();
-    scaledImg->data.download(h_buffer->data, stream);
-    stream.enqueueHostCallback(QtColormapDisplayCallback, this);
     return img;
 }
 

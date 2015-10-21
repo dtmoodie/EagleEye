@@ -308,8 +308,20 @@ MainWindow::onSaveClicked()
 
 void MainWindow::on_uiCallback(boost::function<void()> f)
 {
-    if(f)
-        f();
+	try
+	{
+		if (f)
+			f();
+	}
+	catch (cv::Exception &e)
+	{
+		BOOST_LOG_TRIVIAL(error) << e.what();
+	}
+	catch (...)
+	{
+
+	}
+    
 }
 
 
