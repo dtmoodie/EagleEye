@@ -94,7 +94,34 @@ Node::Node():
     }
 	NODE_LOG(trace) << " Constructor";
 }
-
+void Node::onParameterAdded()
+{
+    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    if (table)
+    {
+        auto signalHandler = table->GetSingleton<ISignalHandler>();
+        auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(Node*)>>("ParameterAdded");
+        (*signal)(this);
+    }
+}
+void Node::onUpdate()
+{
+    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    if (table)
+    {
+        auto signalHandler = table->GetSingleton<ISignalHandler>();
+        auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(Node*)>>("NodeUpdated");
+        (*signal)(this);
+    }
+}
+size_t Node::addParameter(Parameters::Parameter::Ptr param)
+{
+    parameters.push_back(param);
+    parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
+    onParameterAdded();
+    pImpl_->callbackConnections.push_back(param->RegisterNotifier(boost::bind(&Node::onUpdate, this)));
+    return parameters.size() - 1;
+}
 Node::~Node()
 {
     if(parent)
@@ -169,8 +196,8 @@ Node::addChild(Node::Ptr child)
         return child;
     if(std::find(children.begin(), children.end(), child) != children.end())
         return child;
-    if(messageCallback)
-        child->messageCallback = messageCallback;
+    //if(messageCallback)
+      //  child->messageCallback = messageCallback;
     int count = 0;
     for(size_t i = 0; i < children.size(); ++i)
     {
@@ -669,8 +696,8 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(treeName);
     SERIALIZE(nodeName);
 	SERIALIZE(fullTreeName);
-    SERIALIZE(messageCallback);
-    SERIALIZE(onUpdate);
+    //SERIALIZE(messageCallback);
+    //SERIALIZE(onUpdate);
     SERIALIZE(parent);
     //SERIALIZE(cpuDisplayCallback);
     //SERIALIZE(gpuDisplayCallback);
@@ -680,6 +707,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(pImpl_);
 
 }
+
 void
 Node::Serialize(cv::FileStorage& fs)
 {

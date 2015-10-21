@@ -64,6 +64,7 @@ namespace EagleLib
                     return typedManager->GetSignal(name);
                 }
             }
+            return nullptr;
         }
     };
 

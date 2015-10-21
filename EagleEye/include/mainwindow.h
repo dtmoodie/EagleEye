@@ -67,6 +67,7 @@ private slots:
     void on_btnStart_clicked();
 
     void on_btnStop_clicked();
+    void on_nodeUpdate(EagleLib::Node* node);
 
 signals:
     void onNewParameter(EagleLib::Node* node);
@@ -83,6 +84,7 @@ private:
     
     void onError(const std::string& error);
     void onStatus(const std::string& status);
+    bool dirty;
     Ui::MainWindow *ui;
     QTimer* fileMonitorTimer;
     NodeListDialog* nodeListDialog;
@@ -99,6 +101,7 @@ private:
     PlotWizardDialog* plotWizardDialog;
 	SettingDialog*  settingsDialog;
     boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>> log_sink;
+    void processThread();
 };
 
 #endif // MAINWINDOW_H

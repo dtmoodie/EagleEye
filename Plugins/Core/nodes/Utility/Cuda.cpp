@@ -39,8 +39,8 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
             //log(Status, "Switching device from " + boost::lexical_cast<std::string>(currentDevice) + " to " + boost::lexical_cast<std::string>(device) + " " + prop.name + " async engines: " + boost::lexical_cast<std::string>(prop.asyncEngineCount));
             NODE_LOG(info) << "Switching device from " << currentDevice << " to " << device << " " << prop.name << " async engines: " << prop.asyncEngineCount;
             updateParameter<std::string>("Device name", cv::cuda::DeviceInfo(device).name());
-            if(onUpdate)
-                onUpdate(this);
+            //if(onUpdate)
+            //    onUpdate(this);
             cv::cuda::setDevice(device);
             stream = cv::cuda::Stream();
             return cv::cuda::GpuMat();

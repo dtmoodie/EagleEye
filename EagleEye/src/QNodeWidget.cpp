@@ -179,7 +179,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
 			}
 			
 		}
-        node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true, _1);
+        //node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true, _1);
         //node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2);
         EagleLib::ui_collector::addNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
 	}

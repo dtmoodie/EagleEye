@@ -41,7 +41,8 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/support/date_time.hpp>
-
+#include <SystemTable.hpp>
+#include <Events.h>
 #include <UI/InterThread.hpp>
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
@@ -214,10 +215,19 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     nodeListDialog->update();
     emit pluginLoaded();
-
+    EagleLib::NodeManager::getInstance().setupModule(PerModuleInterface::GetInstance());
 
     startProcessingThread();
 	rccSettings->updateDisplay();
+    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    if (table)
+    {
+        auto signalHandler = table->GetSingleton<EagleLib::ISignalHandler>();
+        auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(EagleLib::Node*)>>("ParameterAdded");
+        signal->connect(boost::bind(&MainWindow::newParameter, this, _1));
+        auto dirtySignal = signalHandler->GetSignalSafe<boost::signals2::signal<void(EagleLib::Node*)>>("NodeUpdated");
+        dirtySignal->connect(boost::bind(&MainWindow::on_nodeUpdate, this, _1));
+    }
 }
 
 MainWindow::~MainWindow()
@@ -453,7 +463,7 @@ MainWindow::onTimeout()
         }else
         {
 			LOG_TRIVIAL(info) << "Recompile complete";
-            processingThread = boost::thread(boost::bind(&processThread, &parentList, &parentMtx));
+            processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
             swapRequired = false;
         }
         return;
@@ -512,7 +522,9 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
     {
         //node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
     }
-    node->onParameterAdded.connect(boost::bind(&MainWindow::newParameter,this, _1));
+
+    
+    //node->onParameterAdded.connect(boost::bind(&MainWindow::newParameter,this, _1));
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
@@ -613,6 +625,7 @@ MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
     {
         currentNode = prevNode;
     }
+    dirty = true;
 }
 void MainWindow::onWidgetDeleted(QNodeWidget* widget)
 {
@@ -671,10 +684,9 @@ void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::timed_mutex* mtx)
     {
         (*nodes)[i]->process(images[i], streams[i]);
     }
-
 }
 
-void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mutex *mtx)
+void MainWindow::processThread()
 {
 	BOOST_LOG_TRIVIAL(info) << "Processing thread started" << std::endl;
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
@@ -686,11 +698,16 @@ void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mu
         {
 			EagleLib::ProcessingThreadCallback::Run();
 			Parameters::UI::ProcessingThreadCallbackService::run();
-            process(parentList, mtx);
+            if (dirty)
+            {
+                dirty = false;
+                process(&parentList, &parentMtx);
+                
+            }            
 			end = boost::posix_time::microsec_clock::universal_time();
 			delta = end - start;
 			start = end;
-			if (delta.total_milliseconds() < 15 || parentList->size() == 0)
+			if (delta.total_milliseconds() < 15 || parentList.size() == 0)
 				boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
         }catch(boost::thread_interrupted& err)
         {
@@ -704,7 +721,7 @@ void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mu
 }
 void MainWindow::startProcessingThread()
 {
-    processingThread = boost::thread(boost::bind(&processThread, &parentList, &parentMtx));
+    processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
 }
 // So the problem here is that cv::imshow operates on the main thread, thus if the main thread blocks
 // because it's waiting for processingThread to join, then cv::imshow will block, thus causing deadlock.
@@ -735,4 +752,8 @@ void MainWindow::on_btnStart_clicked()
 void MainWindow::on_btnStop_clicked()
 {
     stopProcessingThread();
+}
+void MainWindow::on_nodeUpdate(EagleLib::Node* node)
+{
+    dirty = true;
 }

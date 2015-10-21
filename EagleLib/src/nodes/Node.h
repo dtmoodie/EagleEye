@@ -32,7 +32,7 @@
 
 #include <boost/function.hpp>
 //#include <boost/signals2.hpp>
-#include <boost/signals2/signal.hpp>
+//#include <boost/signals2/signal.hpp>
 
 
 //#include <boost/filesystem.hpp>
@@ -78,7 +78,6 @@ namespace EagleLib
 }
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName, "NodeName",const std::string);
-//BOOST_LOG_ATTRIBUTE_KEYWORD(NodePtr, "Node", const EagleLib::Node*);
 
 
 #ifdef _MSC_VER
@@ -405,23 +404,25 @@ namespace EagleLib
 			const std::string& toolTip_ = std::string(),
 			bool ownsData = false)
 		{
-			parameters.push_back(typename Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data, type_, toolTip_)));
-			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-            onParameterAdded(this);
-			return parameters.size() - 1;
+			//parameters.push_back(typename Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data, type_, toolTip_)));
+			//parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
+            //onParameterAdded();
+			//return parameters.size() - 1;
+            return addParameter(typename Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data, type_, toolTip_)));
 		}
 
-		
+        size_t addParameter(Parameters::Parameter::Ptr param);
 		template<typename T> size_t addParameter(const std::string& name,
 				const T& data,
 				Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
 				const std::string& toolTip_ = std::string(), 
 				bool ownsData = false/*, typename std::enable_if<!std::is_pointer<T>::value, void>::type* dummy_enable = nullptr*/)
 		{
-            parameters.push_back(typename Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
-			parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-            onParameterAdded(this);
-			return parameters.size() - 1;
+            //parameters.push_back(typename Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
+			//parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
+            //onParameterAdded();
+			//return parameters.size() - 1;
+            return addParameter(typename Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
 		}
 
         /**
@@ -433,10 +434,11 @@ namespace EagleLib
          template<typename T> size_t
 			 addInputParameter(const std::string& name, const std::string& toolTip_ = std::string(), const boost::function<bool(Parameters::Parameter*)>& qualifier_ = boost::function<bool(Parameters::Parameter*)>())
 		{
-                parameters.push_back(typename Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
-				parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-            onParameterAdded(this);
-			return parameters.size() - 1;
+            //parameters.push_back(typename Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
+			//parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
+            //onParameterAdded();
+			//return parameters.size() - 1;
+            return addParameter(typename Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
 		}
 
         template<typename T> bool
@@ -489,6 +491,7 @@ namespace EagleLib
 				return registerParameter<T>(name, data, type_, toolTip_, ownsData_);
 			}
 			param->UpdateData(data);
+            onUpdate();
             return true;
 			
 		}
@@ -516,6 +519,7 @@ namespace EagleLib
 				param->SetTooltip(toolTip_);
 
 			param->UpdateData(data);
+            onUpdate();
 			return true;
         }
 
@@ -538,6 +542,7 @@ namespace EagleLib
 			if (quickHelp.size() > 0)
 				param->SetTooltip(quickHelp);
 			param->UpdateData(data);
+            onUpdate();
 			return true;
 		}
 		
@@ -658,15 +663,6 @@ namespace EagleLib
         //									Members
         //
         // ****************************************************************************************************************
-
-        // Used for logging / UI updating when an error occurs.
-		boost::function<void(boost::log::trivial::severity_level, const std::string&, Node*)>         messageCallback;
-        // Depricated
-        boost::function<int(std::vector<std::string>)>						inputSelector;
-        // Used to signal if an update is required.  IE if performing static image analysis, if no parameters of a node
-        // are updated, there is no reason to re-process the image with the same parameters.
-        // Just need to figure out the best way of implementing it.
-        boost::function<void(Node*)>                                        onUpdate;
         // Vector of child nodes
         std::vector<Node::Ptr>                                              children;
 
@@ -678,13 +674,6 @@ namespace EagleLib
         std::string															treeName;
         // Vector of parameters for this node
         std::vector< Parameters::Parameter::Ptr >							parameters;
-        // These can be used to for user defined UI displaying of images.  IE if you havea  custom widget for displaying
-        // nodes, you can plug that in here.
-        //boost::function<void(cv::Mat, Node*)>								cpuDisplayCallback;
-        //boost::function<void(cv::cuda::GpuMat, Node*)>						gpuDisplayCallback;
-        // This is depricated since we now use the UIThreadCallback singleton for posting functions to a queue for processing
-        //boost::function<void(boost::function<cv::Mat()>, Node*)>            uiThreadCallback;
-        //boost::function<void(boost::function<void()>, Node*)>               d_uiThreadCallback;
 
         /* If true, draw results onto the image being processed, hardly ever used */
         bool																drawResults;
@@ -698,8 +687,8 @@ namespace EagleLib
         // Mutex for blocking processing of a node during parameter update
         boost::recursive_mutex                                              mtx;
 		NodeType															nodeType;
-        boost::signals2::signal<void(Node*)>                                onParameterAdded;
-        
+        void onParameterAdded();
+        void onUpdate();
         double GetProcessingTime() const;
         void Clock(int line_num);
 
