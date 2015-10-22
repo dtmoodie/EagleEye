@@ -433,13 +433,6 @@ MainWindow::onTimeout()
 {
     static bool swapRequired = false;
     static bool joined = false;
-    auto start = boost::posix_time::microsec_clock::universal_time();
-    //EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
-    auto ms = boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - start).total_milliseconds();
-    if(ms > 30)
-    {
-        LOG_TRIVIAL(warning) << "UI callbacks taking " << ms << " milliseconds to complete";
-    }
     for(size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi(false);
