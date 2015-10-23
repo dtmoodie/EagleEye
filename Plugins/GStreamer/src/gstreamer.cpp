@@ -49,22 +49,22 @@ static void stop_feed(GstElement * pipeline, App *app)
 {
 	app->feed_enabled = false;
 }
-// This only actually gets called when gstreamer.cpp gets recompiled
+// This only actually gets called when gstreamer.cpp gets recompiled or the node is deleted
 RTSP_server::~RTSP_server()
 {
     NODE_LOG(info) << "RTSP server destructor";
-    GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PAUSED);
+    GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_NULL);
     CV_Assert(ret != GST_STATE_CHANGE_FAILURE);
 #ifdef _MSC_VER
     PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton<GMainLoop>(nullptr);
 #endif
 	g_main_loop_quit(glib_MainLoop);
 	glibThread.join(); 
-	//g_main_loop_unref(glib_MainLoop);
+	g_main_loop_unref(glib_MainLoop);
 	g_signal_handler_disconnect(source_OpenCV, need_data_id);
 	g_signal_handler_disconnect(source_OpenCV, enough_data_id);
-	//gst_object_unref(pipeline);
-	//gst_object_unref(source_OpenCV);
+	gst_object_unref(pipeline);
+	gst_object_unref(source_OpenCV);
 }
 
 void RTSP_server::gst_loop()
@@ -88,7 +88,7 @@ void RTSP_server::setup()
 		int argc = 1;
 		gst_init(&argc, &argv);
 	}
-
+	
 	if (!glib_MainLoop)
 	{
 		glib_MainLoop = g_main_loop_new(NULL, 0);
@@ -97,7 +97,7 @@ void RTSP_server::setup()
 	GError* error = nullptr;
 	std::stringstream ss;
 	ss << "appsrc name=mysource ! videoconvert ! ";
-#ifdef JETSON 
+#ifdef JETSON
 	ss << "omxh264enc ! ";
 #else
 	ss << "openh264enc ! ";
@@ -217,12 +217,12 @@ void RTSP_server::push_image()
 void RTSP_server::Serialize(ISimpleSerializer* pSerializer)
 {
 	Node::Serialize(pSerializer);
-    SERIALIZE(glib_MainLoop);
-    SERIALIZE(source_OpenCV);
-    SERIALIZE(pipeline);
-    SERIALIZE(need_data_id);
-    SERIALIZE(enough_data_id);
-    SERIALIZE(feed_enabled);
+    //SERIALIZE(glib_MainLoop);
+    //SERIALIZE(source_OpenCV);
+    //SERIALIZE(pipeline);
+    //SERIALIZE(need_data_id);
+    //SERIALIZE(enough_data_id);
+    //SERIALIZE(feed_enabled);
     SERIALIZE(delta);
     SERIALIZE(timestamp);
     SERIALIZE(prevTime);
@@ -245,6 +245,7 @@ cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 	prevTime = curTime;
 	if (!g_main_loop_is_running(glib_MainLoop))
 	{
+		glibThread = boost::thread(boost::bind(&RTSP_server::gst_loop, this));
 		NODE_LOG(error) << "Main glib loop not running";
 		return img;
 	}
