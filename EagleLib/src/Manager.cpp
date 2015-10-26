@@ -14,6 +14,11 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include "SystemTable.hpp"
+#include "remotery\lib\Remotery.h"
+#include "cuda.h"
+#include "cuda_runtime.h"
+#include "cuda_runtime_api.h"
+
 //#include <IObjectUtils.h>
 using namespace EagleLib;
 
@@ -33,17 +38,17 @@ void CompileLogger::log(int level, const char *format, va_list args)
 	{
 	case 0:
 	{
-		LOG_TRIVIAL(info) << m_buff;
+		LOG_TRIVIAL(info) << "[RCC] " << m_buff;
 		break;
 	}
 	case 1:
 	{
-		LOG_TRIVIAL(warning) << m_buff;
+		LOG_TRIVIAL(warning) << "[RCC] " << m_buff;
 		break;
 	}
 	case 2:
 	{
-		LOG_TRIVIAL(error) << m_buff;
+		LOG_TRIVIAL(error) << "[RCC] " << m_buff;
 		break;
 	}
 	}
@@ -170,8 +175,6 @@ boost::asio::io_service& ProcessingThreadCallback::Instance()
 
 void ProcessingThreadCallback::Run()
 {
-	//BOOST_LOG_NAMED_SCOPE("ProcessingThreadCallback::Run");
-	//BOOST_LOG_TRIVIAL(trace) << "[ UIThreadCallback ] Running service";
 	LOG_TRACE;
 	service.run();
 }
@@ -341,6 +344,27 @@ NodeManager::Init()
 #ifdef NVCC_PATH
 	m_pRuntimeObjectSystem->SetCompilerLocation( NVCC_PATH );
 #endif
+	cv::cuda::GpuMat mat(10, 10, CV_32F);
+
+	Remotery* rmt;
+	rmt_CreateGlobalInstance(&rmt);
+
+	CUcontext ctx;
+	cuCtxGetCurrent(&ctx);
+
+	rmtCUDABind bind;
+	bind.context = ctx;
+	bind.CtxSetCurrent = &cuCtxSetCurrent;
+	bind.CtxGetCurrent = &cuCtxGetCurrent;
+	bind.EventCreate = &cuEventCreate;
+	bind.EventDestroy = &cuEventDestroy;
+	bind.EventRecord = &cuEventRecord;
+	bind.EventQuery = &cuEventQuery;
+	bind.EventElapsedTime = &cuEventElapsedTime;
+	rmt_BindCUDA(&bind);
+
+
+
 	return true;
 }
 void NodeManager::RegisterConstructorAddedCallback(boost::function<void(void)> f)

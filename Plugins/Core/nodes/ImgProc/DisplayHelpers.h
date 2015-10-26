@@ -1,16 +1,10 @@
 #pragma once
 
 #include "nodes/Node.h"
-#include <thrust/device_vector.h>
-#include <thrust/host_vector.h>
 #include <CudaUtils.hpp>
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
+#include "DisplayHelpers.cuh"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-
-#include "DisplayHelpers.cuh"
-
 namespace EagleLib
 {
     class AutoScale: public Node
@@ -27,6 +21,7 @@ namespace EagleLib
 		cv::cuda::GpuMat color_mapped_image;
 		color_mapper mapper;
     public:
+		void Rescale();
 		bool rescale;
         Colormap();
         virtual void Init(bool firstInit);

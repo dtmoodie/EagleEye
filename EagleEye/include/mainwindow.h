@@ -35,6 +35,7 @@ public:
     void onCompileLog(const std::string& msg, int level);
     virtual void closeEvent(QCloseEvent *event);
     void processingThread_uiCallback(boost::function<void(void)> f);
+	void process_log_message(boost::log::trivial::severity_level severity, const std::string& message);
 private slots:
     void on_pushButton_clicked();
     void onTimeout();
@@ -102,6 +103,7 @@ private:
 	SettingDialog*  settingsDialog;
     boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>> log_sink;
     void processThread();
+	bool processingThreadActive;
 };
 
 #endif // MAINWINDOW_H

@@ -46,25 +46,34 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
             {
                 handler(severity.get(), message);
             }
-        }
-	}
-	else
-	{
-        for (auto handler : genericHandlers)
-        {
-            handler(severity.get(), message);
-        }
+		}
+		else
+		{
+			for (auto handler : genericHandlers)
+			{
+				handler(severity.get(), message);
+			}
+		}
 	}
 }
 void ui_collector::addNodeCallbackHandler(Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
 {
     nodeHandlers[node].push_back(handler);
 }
-void ui_collector::addGenericCallbackHandler(const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
+size_t ui_collector::addGenericCallbackHandler(const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
 {
     genericHandlers.push_back(handler);
+	return genericHandlers.size() - 1;
+}
+void ui_collector::clearGenericCallbackHandlers()
+{
+	genericHandlers.clear();
 }
 void ui_collector::setNode(EagleLib::Node* node)
 {
     attr.set(node);
+}
+EagleLib::Node* ui_collector::getNode()
+{
+	return attr.get();
 }

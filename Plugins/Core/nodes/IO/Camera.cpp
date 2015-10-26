@@ -1,4 +1,5 @@
 #include "nodes/IO/Camera.h"
+#include "../remotery/lib/Remotery.h"
 
 using namespace EagleLib;
 
@@ -16,7 +17,6 @@ bool Camera::changeStream(int device)
 		NODE_LOG(error) << e.what();
         return false;
     }
-
 }
 bool Camera::changeStream(const std::string &gstreamParams)
 {
@@ -24,7 +24,6 @@ bool Camera::changeStream(const std::string &gstreamParams)
 		return false;
     try
     {
-        //log(Status, "Setting camera with gstreamer settings: " + gstreamParams);
 		NODE_LOG(info) << "Setting camera with gstreamer settings: " << gstreamParams;
         cam.release();
         cam = cv::VideoCapture(gstreamParams);
@@ -203,14 +202,14 @@ void GStreamerCamera::setString()
 cv::cuda::GpuMat GStreamerCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
     if(parameters[0]->changed ||
-        parameters[1]->changed ||
-        parameters[2]->changed ||
-        parameters[3]->changed ||
-        parameters[4]->changed ||
-        parameters[5]->changed ||
-        parameters[6]->changed ||
-        parameters[7]->changed ||
-        parameters[8]->changed)
+       parameters[1]->changed ||
+       parameters[2]->changed ||
+       parameters[3]->changed ||
+       parameters[4]->changed ||
+       parameters[5]->changed ||
+       parameters[6]->changed ||
+       parameters[7]->changed ||
+       parameters[8]->changed)
     {
         setString();
     }
@@ -264,6 +263,7 @@ void RTSPCamera::readImage_thread()
 	{
 		if (cam.isOpened())
 		{
+			rmt_ScopedCPUSample(RTSPCamera_readImage);
 			try
 			{
 				cam.read(hostBuffer[putItr % bufferSize]);
@@ -338,18 +338,15 @@ void RTSPCamera::setString()
     cam.release();
     try
     {
-//        cam.open(result);
 		cam = cv::VideoCapture(result, CV_CAP_GSTREAMER);
     }catch(cv::Exception &e)
     {
-        //log(Error, e.what());
 		NODE_LOG(error) << e.what();
         return;
     }
 
     if(cam.isOpened())
     {
-        //log(Status, "Successfully opened camera");
 		NODE_LOG(info) << "Successfully opened camera";
         processingThread = boost::thread(boost::bind(&RTSPCamera::readImage_thread, this));
     }
@@ -357,7 +354,6 @@ void RTSPCamera::setString()
 	{
 		NODE_LOG(error) << "Failed to open camera";
 	}
-        //log(Error, "Failed to open camera");
 
     for(size_t i = 0; i < parameters.size(); ++i)
     {
@@ -376,7 +372,6 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         setString();
     }
     cv::cuda::HostMem* data = nullptr;
-    //notifier.wait_and_pop(data);
 	
 	if (notifier.try_pop(data) &&data && !data->empty())
     {
@@ -384,6 +379,7 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         updateParameter("Output", output, Parameters::Parameter::Output);
         return output;
     }
+	onUpdate();
     return cv::cuda::GpuMat();
 }
 

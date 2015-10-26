@@ -128,7 +128,7 @@ void Magnitude::Init(bool firstInit)
 cv::cuda::GpuMat Magnitude::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 	cv::cuda::magnitude(img, magnitude, stream);
-	return magnitude;
+	return magnitude; 
 }
 
 void ExtractChannels::Init(bool firstInit)

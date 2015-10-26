@@ -44,6 +44,8 @@
 #include <SystemTable.hpp>
 #include <Events.h>
 #include <UI/InterThread.hpp>
+#include "../remotery\lib\Remotery.h"
+//#include <MemoryPoolAllocator.h>
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
@@ -59,6 +61,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	plotWizardDialog(new PlotWizardDialog(this)),
 	settingsDialog(new SettingDialog(this))
 {
+	//cv::cuda::GpuMat::setDefaultAllocator(LazyDeallocator::instance());
+	//LazyDeallocator::instance()->dealloc_time = 500;
 	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
 	boost::log::add_common_attributes();
 
@@ -111,6 +115,8 @@ MainWindow::MainWindow(QWidget *parent) :
     log_sink.reset(new boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>());
     
     boost::log::core::get()->add_sink(log_sink);
+	EagleLib::ui_collector::addGenericCallbackHandler(boost::bind(&MainWindow::process_log_message, this, _1, _2));
+
 
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
@@ -209,7 +215,6 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         if(files[i].isFile())
         {
-            //EagleLib::NodeManager::getInstance().loadModule(files[i].absoluteFilePath().toStdString());
             EagleLib::loadPlugin(files[i].absoluteFilePath().toStdString());
         }
     }
@@ -228,12 +233,14 @@ MainWindow::MainWindow(QWidget *parent) :
         auto dirtySignal = signalHandler->GetSignalSafe<boost::signals2::signal<void(EagleLib::Node*)>>("NodeUpdated");
         dirtySignal->connect(boost::bind(&MainWindow::on_nodeUpdate, this, _1));
     }
+
 }
 
 MainWindow::~MainWindow()
 {
 	stopProcessingThread();
 	cv::destroyAllWindows();
+	EagleLib::ui_collector::clearGenericCallbackHandlers();
     delete ui;
 }
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -320,8 +327,15 @@ void MainWindow::on_uiCallback(boost::function<void()> f)
 {
 	try
 	{
-		if (f)
-			f();
+		// If the processing thread has been deactivated, it's usually because we're deleting a node, etc.
+		// Sometimes there are queued function calls that are no longer valid because the object it is referring to has been deleted.
+		// In these situations we need to not call f.... Sooo we just ignore everything for a bit until the processing thread is relaunched.
+		rmt_ScopedCPUSample(on_uiCallback);
+		if (processingThreadActive)
+		{
+			if (f)
+				f();
+		}		
 	}
 	catch (cv::Exception &e)
 	{
@@ -431,15 +445,10 @@ void MainWindow::newParameter(EagleLib::Node* node)
 void
 MainWindow::onTimeout()
 {
+	rmt_ScopedCPUSample(onTimeout);
     static bool swapRequired = false;
     static bool joined = false;
-    auto start = boost::posix_time::microsec_clock::universal_time();
-    //EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
-    auto ms = boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - start).total_milliseconds();
-    if(ms > 30)
-    {
-        LOG_TRIVIAL(warning) << "UI callbacks taking " << ms << " milliseconds to complete";
-    }
+	
     for(size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi(false);
@@ -589,6 +598,7 @@ void MainWindow::updateLines()
 void 
 MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
 {	
+	rmt_ScopedCPUSample(onNodeAdd);
     EagleLib::Node::Ptr prevNode = currentNode;
     if(currentNode != nullptr)
     {
@@ -707,6 +717,7 @@ void MainWindow::processThread()
 			end = boost::posix_time::microsec_clock::universal_time();
 			delta = end - start;
 			start = end;
+			rmt_ScopedCPUSample(Idle);
 			if (delta.total_milliseconds() < 15 || parentList.size() == 0)
 				boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
         }catch(boost::thread_interrupted& err)
@@ -719,8 +730,13 @@ void MainWindow::processThread()
     }
     BOOST_LOG_TRIVIAL(info) << "Interrupt requested, processing thread ended";
 }
+void MainWindow::process_log_message(boost::log::trivial::severity_level severity, const std::string& message)
+{
+	ui->console->appendPlainText(QString::fromStdString(message));
+}
 void MainWindow::startProcessingThread()
 {
+	processingThreadActive = true;
     processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
 }
 // So the problem here is that cv::imshow operates on the main thread, thus if the main thread blocks
@@ -728,6 +744,7 @@ void MainWindow::startProcessingThread()
 // What we need is a signal beforehand that will disable all imshow's before a delete.
 void MainWindow::stopProcessingThread()
 {
+	processingThreadActive = false;
     processingThread.interrupt();
     processingThread.join();
 }

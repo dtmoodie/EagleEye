@@ -1,9 +1,12 @@
 #pragma once
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include <opencv2/core/cuda.hpp>
 
-struct mapper;
+RUNTIME_MODIFIABLE_INCLUDE
+RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("DisplayHelpers", ".cu");
 
 struct ColorScale
 {

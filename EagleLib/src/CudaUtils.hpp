@@ -43,6 +43,16 @@ template<typename Data>
                 the_condition_variable.wait(lock);
             }
         }
+		void wait_push(Data const& data)
+		{
+			boost::mutex::scoped_lock lock(the_mutex);
+			while (!the_data.empty()) // Wait till the consumer pulls data from the queue
+			{
+				the_condition_variable.wait(lock);
+			}
+			the_data.push_back(data);
+		}
+
         void push(Data const& data)
         {
             boost::mutex::scoped_lock lock(the_mutex);
@@ -108,6 +118,15 @@ template<typename Data>
                 the_condition_variable.wait(lock);
             }
         }
+		void wait_push(Data const& data)
+		{
+			boost::mutex::scoped_lock lock(the_mutex);
+			while (!the_queue.empty()) // Wait till the consumer pulls data from the queue
+			{
+				the_condition_variable.wait(lock);
+			}
+			the_queue.push_back(data);
+		}
         void push(Data const& data)
         {
             boost::mutex::scoped_lock lock(the_mutex);

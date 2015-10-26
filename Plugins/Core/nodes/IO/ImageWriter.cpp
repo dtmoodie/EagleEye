@@ -1,5 +1,6 @@
 #include "nodes/IO/ImageWriter.h"
 #include <external_includes/cv_imgcodec.hpp>
+#include "../remotery/lib/Remotery.h"
 
 using namespace EagleLib;
 
@@ -16,6 +17,7 @@ void ImageWriter::requestWrite()
 
 void ImageWriter::writeImage()
 {
+	rmt_ScopedCPUSample(ImageWriter_writeImage);
     try
     {
         cv::imwrite(baseName +"-"+ boost::lexical_cast<std::string>(frameCount) + extension, h_buf);

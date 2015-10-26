@@ -28,7 +28,6 @@ void ImageLoader::load()
 			{
 				NODE_LOG(error) << "Loaded empty image";
 			}
-            
         }else
         {
             //log(Status, "File doesn't exist");

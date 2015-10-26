@@ -1,9 +1,10 @@
 #include "nodes/ImgProc/DisplayHelpers.h"
-//#include "DisplayHelpers.cuh"
+#include "DisplayHelpers.cuh"
 using namespace EagleLib;
 #include <external_includes/cv_cudaarithm.hpp>
 #include <external_includes/cv_highgui.hpp>
-
+#include <Parameters.hpp>
+#include <UI/InterThread.hpp>
 #ifdef _MSC_VER
 
 #else
@@ -40,7 +41,11 @@ Colormap::Init(bool firstInit)
     Node::Init(firstInit);
 	rescale = true;
     updateParameter("Colormapping scheme", int(0));
-	updateParameter<bool>("Rescale", &rescale);
+	updateParameter<boost::function<void(void)>>("Rescale colormap", boost::bind(&Colormap::Rescale, this));
+}
+void Colormap::Rescale()
+{
+	rescale = true;
 }
 
 cv::cuda::GpuMat
@@ -127,7 +132,7 @@ cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
             getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.type(),
             mask == NULL ? cv::noArray(): *mask,
             stream);
-    return normalized;
+    return normalized; 
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(AutoScale)

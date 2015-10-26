@@ -18,11 +18,13 @@ ENDIF(WIN32)
 ADD_DEFINITIONS(-DCVAPI_EXPORTS)
 ADD_DEFINITIONS(-DOPENCV_FOUND)
 ADD_DEFINITIONS(-DEagleLIB_EXPORTS)
+ADD_DEFINITIONS(-DRMT_DLL)
 ADD_DEFINITIONS(${Parameters_DEFS})
 LIST(APPEND defs_ -DCVAPI_EXPORTS)
 LIST(APPEND defs_ -DOPENCV_FOUND)
 LIST(APPEND defs_ -DEagleLIB_EXPORTS)
 LIST(APPEND defs_ ${Parameters_DEFS})
+LIST(APPEND defs_ -DRMT_USE_CUDA)
 IF(EAGLE_LIB_JETSON)
 LIST(APPEND defs_ "-DJETSON")
 ENDIF()
@@ -31,8 +33,8 @@ set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono r
 ENDIF(NOT WIN32)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 
-file(GLOB_RECURSE src "src/*.cpp")
-file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp")
+FILE(GLOB_RECURSE src "src/*.cpp" "remotery/lib/*.c")
+FILE(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "remotery/lib/*.h")
 FILE(GLOB_RECURSE ext_inc "include/external_includes")
 FILE(GLOB_RECURSE knl "src/*.cu")
 ADD_SUBDIRECTORY("parameters")
@@ -184,6 +186,8 @@ TARGET_LINK_LIBRARIES(EagleLib
         RuntimeObjectSystem
         libParameter
         ${Parameters_LIBRARIES}
+		${CUDA_CUDA_LIBRARY}
+		${CUDA_CUDART_LIBRARY}
 )
 ADD_DEPENDENCIES(EagleLib
 	RuntimeCompiler

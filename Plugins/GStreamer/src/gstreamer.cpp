@@ -1,7 +1,7 @@
 #include "gstreamer.hpp"
 #include <gst/video/video.h>
 #include <gst/app/gstappsrc.h>
-
+#include "../remotery/lib/Remotery.h"
 #include <QtNetwork/qnetworkinterface.h>
 #include <Manager.h>
 #include <SystemTable.hpp>
@@ -17,7 +17,8 @@ bus_message(GstBus * bus, GstMessage * message, App * app)
 {
 	BOOST_LOG_TRIVIAL(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
 
-	switch (GST_MESSAGE_TYPE(message)) {
+	switch (GST_MESSAGE_TYPE(message)) 
+	{
 	case GST_MESSAGE_ERROR: 
 	{
 		GError *err = NULL;
@@ -59,11 +60,11 @@ RTSP_server::~RTSP_server()
     PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton<GMainLoop>(nullptr);
 #endif
 	g_main_loop_quit(glib_MainLoop);
-	glibThread.join(); 
+	glibThread.join();
 	g_main_loop_unref(glib_MainLoop);
+	gst_object_unref(pipeline);
 	g_signal_handler_disconnect(source_OpenCV, need_data_id);
 	g_signal_handler_disconnect(source_OpenCV, enough_data_id);
-	gst_object_unref(pipeline);
 	gst_object_unref(source_OpenCV);
 }
 
@@ -74,21 +75,28 @@ void RTSP_server::gst_loop()
 		g_main_loop_run(glib_MainLoop);
 	}
 }
-
-
-void RTSP_server::setup()
+void RTSP_server::onPipeChange()
 {
-	// gst-launch-1.0 -v videotestsrc ! videoconvert ! openh264enc ! rtph264pay config-interval=1 pt=96 ! tcpserversink host=192.168.1.208 port=8004
+	std::string* str = getParameter<std::string>("gst pipeline")->Data();
+	if (str->size())
+	{
+		setup(*str);
+	}
+}
+
+void RTSP_server::setup(std::string& pipeOverride)
+{
+	rmt_ScopedCPUSample(RTSP_server_setup);
 	gst_debug_set_active(1);
 
 	if (!gst_is_initialized())
 	{
-		char** argv; // = { "-vvv" };
+		char** argv;
 		argv = new char*{ "-vvv" };
 		int argc = 1;
 		gst_init(&argc, &argv);
 	}
-	
+
 	if (!glib_MainLoop)
 	{
 		glib_MainLoop = g_main_loop_new(NULL, 0);
@@ -96,44 +104,97 @@ void RTSP_server::setup()
 	glibThread = boost::thread(boost::bind(&RTSP_server::gst_loop, this));
 	GError* error = nullptr;
 	std::stringstream ss;
-	ss << "appsrc name=mysource ! videoconvert ! ";
-#ifdef JETSON
-	ss << "omxh264enc ! ";
-#else
-	ss << "openh264enc ! ";
-#endif
-	ss << "rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=";
-
-	foreach(auto inter, QNetworkInterface::allInterfaces())
+	if (pipeOverride.size() == 0)
 	{
-		if (inter.flags().testFlag(QNetworkInterface::IsUp) && 
-		   !inter.flags().testFlag(QNetworkInterface::IsLoopBack))
+		ss << "appsrc name=mysource ! videoconvert ! ";
+#ifdef JETSON
+		ss << "omxh264enc ! ";
+#else
+		ss << "openh264enc ! ";
+#endif
+		ss << "rtph264pay config-interval=1 pt=96 ! gdppay ! ";
+
+		switch (getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection)
 		{
-			foreach(auto entry, inter.addressEntries())
+			case TCP:
 			{
-				if (inter.hardwareAddress() != "00:00:00:00:00:00" && entry.ip().toString().contains("."))
+				ss << "tcpserversink host=";
+
+				foreach(auto inter, QNetworkInterface::allInterfaces())
 				{
-					NODE_LOG(info) << "Setting interface to " << inter.name().toStdString() << " " << 
-						entry.ip().toString().toStdString() << " " << inter.hardwareAddress().toStdString();
-					ss << entry.ip().toString().toStdString();
-					break;
+					if (inter.flags().testFlag(QNetworkInterface::IsUp) &&
+						!inter.flags().testFlag(QNetworkInterface::IsLoopBack))
+					{
+						foreach(auto entry, inter.addressEntries())
+						{
+							if (inter.hardwareAddress() != "00:00:00:00:00:00" && entry.ip().toString().contains("."))
+							{
+								NODE_LOG(info) << "Setting interface to " << inter.name().toStdString() << " " <<
+									entry.ip().toString().toStdString() << " " << inter.hardwareAddress().toStdString();
+								updateParameter<std::string>("Host", entry.ip().toString().toStdString());
+								ss << entry.ip().toString().toStdString();
+								break;
+							}
+						}
+					}
 				}
+				break;
+			}
+			case UDP:
+			{
+				ss << "udpsink host=";
+				std::string* host = getParameter<std::string>("Host")->Data();
+				if (host->size())
+				{
+					ss << *host;
+				}
+				else
+				{
+					NODE_LOG(warning) << "host not set, setting to localhost";
+					updateParameter<std::string>("Host", "127.0.0.1");
+					ss << "127.0.0.1";
+				}
+				break;
 			}
 		}
+		ss << " port=";
+		ss << *getParameter<unsigned short>("Port")->Data();
+		pipeOverride = ss.str();
 	}
-	ss << " port=";
-    ss << *getParameter<unsigned short>("Port")->Data();
-	std::string pipestr = ss.str();
-	NODE_LOG(info) << pipestr;
-    updateParameter<std::string>("gst pipeline", pipestr);
-    if (!pipeline)
-	    pipeline = gst_parse_launch(pipestr.c_str(), &error);
+	else
+	{
+		updateParameter<std::string>("gst pipeline", pipeOverride);
+	}
+	
+	NODE_LOG(info) << pipeOverride;
+
+    
+	if (pipeline)
+	{
+		GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_NULL);
+		gst_object_unref(pipeline);
+		g_signal_handler_disconnect(source_OpenCV, need_data_id);
+		g_signal_handler_disconnect(source_OpenCV, enough_data_id);
+		gst_object_unref(source_OpenCV);
+	}
+
+
+    
+	pipeline = gst_parse_launch(pipeOverride.c_str(), &error);
+	
+	if (pipeline == nullptr)
+	{
+		NODE_LOG(error) << "Error parsing pipeline";
+		feed_enabled = false;
+		return;
+	}
+	
 	if (error != nullptr)
 	{
 		NODE_LOG(error) << "Error parsing pipeline " << error->message;
 	}
-    if (!source_OpenCV)
-	    source_OpenCV = gst_bin_get_by_name(GST_BIN(pipeline), "mysource");
+    
+	source_OpenCV = gst_bin_get_by_name(GST_BIN(pipeline), "mysource");
 	
 	GstCaps* caps = gst_caps_new_simple(
         "video/x-raw",
@@ -171,20 +232,28 @@ void RTSP_server::setup()
 
 void RTSP_server::Init(bool firstInit)
 {
-	if (firstInit) 
+	if (!firstInit)
+	{
+
+	}
+	if (firstInit)
 	{
 		timestamp = 0;
 		prevTime = clock();
-        glib_MainLoop = nullptr;
-        updateParameter<unsigned short>("Port", 8004);
-        feed_enabled = false;
-        source_OpenCV = nullptr;
-        pipeline = nullptr;
+        
+		Parameters::EnumParameter server_type;
+		server_type.addEnum(ENUM(TCP));
+		server_type.addEnum(ENUM(UDP));
+		updateParameter("Server type", server_type);
+		updateParameter<unsigned short>("Port", 8004);
+		updateParameter<std::string>("Host", "", Parameters::Parameter::Control, "When TCP is selected, this is the address of the device to bind to, when UDP is selected this is the address of the device to receive the video stream");
+		updateParameter<std::string>("gst pipeline", "");
 	}
 	bufferPool.resize(5);
 }
 void RTSP_server::push_image()
 {
+	rmt_ScopedCPUSample(RTSP_server_push_image);
 	GstBuffer* buffer;
 	auto h_buffer = bufferPool.getBack();
 	if (h_buffer)
@@ -197,7 +266,7 @@ void RTSP_server::push_image()
 		memcpy(map.data, h_buffer->data, map.size);
 		gst_buffer_unmap(buffer, &map);
 
-		GST_BUFFER_PTS(buffer) = timestamp;
+		GST_BUFFER_PTS(buffer) = timestamp; 
 		
 		GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(delta, GST_SECOND, 1000);
 		timestamp += GST_BUFFER_DURATION(buffer);
@@ -217,12 +286,6 @@ void RTSP_server::push_image()
 void RTSP_server::Serialize(ISimpleSerializer* pSerializer)
 {
 	Node::Serialize(pSerializer);
-    //SERIALIZE(glib_MainLoop);
-    //SERIALIZE(source_OpenCV);
-    //SERIALIZE(pipeline);
-    //SERIALIZE(need_data_id);
-    //SERIALIZE(enough_data_id);
-    //SERIALIZE(feed_enabled);
     SERIALIZE(delta);
     SERIALIZE(timestamp);
     SERIALIZE(prevTime);
@@ -258,5 +321,18 @@ cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(RTSP_server);
+RTSP_server::RTSP_server():
+	Node()
+{
+	nodeName = "RTSP_server";
+	treeName = nodeName;
+	fullTreeName = treeName;
+	source_OpenCV = nullptr;
+	pipeline = nullptr;
+	glib_MainLoop = nullptr;
+	feed_enabled = false;
+	need_data_id = 0; 
+	enough_data_id = 0;
+}					
+REGISTERCLASS(RTSP_server)
 

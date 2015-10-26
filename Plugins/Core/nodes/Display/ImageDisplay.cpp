@@ -2,6 +2,7 @@
 #include <external_includes/cv_core.hpp>
 #include <external_includes/cv_imgproc.hpp>
 #include <UI/InterThread.hpp>
+#include "../remotery/lib/Remotery.h"
 using namespace EagleLib;
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay)
@@ -41,6 +42,7 @@ void QtImageDisplay_cpuCallback(int status, void* userData)
 
 void QtImageDisplay::displayImage(cv::cuda::HostMem image)
 {
+	rmt_ScopedCPUSample(QtImageDisplay_displayImage);
     std::string name = *getParameter<std::string>(0)->Data();
     if(name.size() == 0)
     {
@@ -91,7 +93,6 @@ void oglDisplay(std::string name, cv::cuda::GpuMat data)
 {
 	cv::namedWindow(name, cv::WINDOW_OPENGL);
 	cv::imshow(name, data);
-
 }
 void oglCallback(int status, void* user_data)
 {
@@ -99,8 +100,6 @@ void oglCallback(int status, void* user_data)
 	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&oglDisplay,data->name, data->data->data));
 	delete data;
 }
-
-
 
 void OGLImageDisplay::display()
 {

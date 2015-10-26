@@ -1,7 +1,7 @@
 #include "DisplayHelpers.cuh"
 
 #include <opencv2/core/cuda/vec_traits.hpp>
-#include <opencv2/core/cuda_stream_accessor.hpp>
+#include <opencv2/core/cuda_stream_accessor.hpp> 
 
 template<typename T> 
 __global__ void colormap_image(cv::cuda::PtrStepSz<T> image, double alpha, double beta, 
@@ -19,7 +19,6 @@ __global__ void colormap_image(cv::cuda::PtrStepSz<T> image, double alpha, doubl
 		result.z = blue(location);
 		output(y, x) = result;
 	}
-	
 }
 
 
@@ -44,7 +43,7 @@ unsigned char __host__ __device__  ColorScale::getValue(float location_)
 		value = (location_ - start)*slope;
 	}
 	else
-	{
+	{ 
 		value = 0;
 	}
 	if (value > 255)
@@ -72,7 +71,7 @@ void color_mapper::setMapping(ColorScale& red, ColorScale& green, ColorScale& bl
 	green_ = green;
 	blue_ = blue;
 	beta = min;
-	alpha = 10/(max - min);
+	alpha = 100/(max - min); 
 }
 
 void color_mapper::colormap_image(cv::cuda::GpuMat& img, cv::cuda::GpuMat& rgb_out, cv::cuda::Stream& stream)

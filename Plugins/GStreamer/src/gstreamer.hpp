@@ -37,6 +37,11 @@ namespace EagleLib
 		time_t prevTime;
 		time_t delta;
     public:
+		enum ServerType
+		{
+			TCP = 0,
+			UDP = 1
+		};
 		bool feed_enabled;
 		GstElement* source_OpenCV;
 		GstElement* pipeline;
@@ -50,7 +55,8 @@ namespace EagleLib
 		void gst_loop();
 		void Serialize(ISimpleSerializer* pSerializer);
 		void push_image();
-        void setup();
+		void onPipeChange();
+        void setup(std::string& pipeOverride = std::string());
         RTSP_server();
 		~RTSP_server();
         virtual void Init(bool firstInit);

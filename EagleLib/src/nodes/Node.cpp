@@ -21,6 +21,8 @@ using namespace EagleLib;
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
+#include "remotery\lib\Remotery.h"
+#include <opencv2/core/cuda_stream_accessor.hpp>
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
@@ -67,6 +69,14 @@ namespace EagleLib
         NodeImpl() :averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
         {
         }
+		~NodeImpl()
+		{
+			for (auto itr : callbackConnections)
+			{
+				itr.disconnect();
+			}
+			resetConnection.disconnect();
+		}
 
         boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
         std::vector<std::pair<time_t, int>> timings;
@@ -92,6 +102,7 @@ Node::Node():
         auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(void)>>("ResetSignal");
         pImpl_->resetConnection = signal->connect(boost::bind(&Node::reset, this));
     }
+	rmt_hash = 0;
 	NODE_LOG(trace) << " Constructor";
 }
 void Node::onParameterAdded()
@@ -412,6 +423,8 @@ Node::removeChild(const std::string &name)
 cv::cuda::GpuMat
 Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
+	//rmt_ScopedCPUSample(process);
+	
     if(boost::this_thread::interruption_requested())
         return img;
     ui_collector::setNode(this);
@@ -438,7 +451,11 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 					locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
 				}*/
 				TIME
+				_rmt_BeginCPUSample(fullTreeName.c_str(), &rmt_hash);
+				_rmt_BeginCUDASample(fullTreeName.c_str(), &rmt_cuda_hash, cv::cuda::StreamAccessor::getStream(stream));
 				img = doProcess(img, stream);
+				rmt_EndCPUSample();
+				rmt_EndCUDASample(cv::cuda::StreamAccessor::getStream(stream));
                 EndProcessingTime();
 			}
 			NODE_LOG(debug) << "End:   " << fullTreeName;
@@ -484,6 +501,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 		// img = childResults;
     }CATCH_MACRO;
     ui_collector::setNode(nullptr);
+	
     return img;
 }
 
@@ -696,16 +714,11 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(treeName);
     SERIALIZE(nodeName);
 	SERIALIZE(fullTreeName);
-    //SERIALIZE(messageCallback);
-    //SERIALIZE(onUpdate);
     SERIALIZE(parent);
-    //SERIALIZE(cpuDisplayCallback);
-    //SERIALIZE(gpuDisplayCallback);
     SERIALIZE(drawResults);
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);
     SERIALIZE(pImpl_);
-
 }
 
 void
