@@ -45,6 +45,7 @@
 #include <Events.h>
 #include <UI/InterThread.hpp>
 #include "../remotery\lib\Remotery.h"
+#include <GpuMatAllocators.h>
 //#include <MemoryPoolAllocator.h>
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
@@ -61,7 +62,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	plotWizardDialog(new PlotWizardDialog(this)),
 	settingsDialog(new SettingDialog(this))
 {
-	//cv::cuda::GpuMat::setDefaultAllocator(LazyDeallocator::instance());
+	auto allocator = new EagleLib::DelayedDeallocator();
+	cv::cuda::GpuMat::setDefaultAllocator(allocator);
+	allocator->deallocateDelay = 1000;
 	//LazyDeallocator::instance()->dealloc_time = 500;
 	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
 	boost::log::add_common_attributes();

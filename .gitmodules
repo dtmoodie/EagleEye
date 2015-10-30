@@ -13,3 +13,6 @@
 [submodule "EagleLib/remotery"]
 	path = EagleLib/remotery
 	url = http://github.com/dtmoodie/remotery
+[submodule "EagleLib/casablanca"]
+	path = EagleLib/casablanca
+	url = https://github.com/dtmoodie/cpprestsdk
