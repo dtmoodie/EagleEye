@@ -13,7 +13,7 @@ SignalHandler::SignalHandler()
     }
 }
 
-ISignalManager* SignalHandler::GetSignalManager(Loki::TypeInfo& type)
+ISignalManager* SignalHandler::GetSignalManager(Loki::TypeInfo type)
 {
     auto itr = signalManagers.find(type);
     if (itr == signalManagers.end())

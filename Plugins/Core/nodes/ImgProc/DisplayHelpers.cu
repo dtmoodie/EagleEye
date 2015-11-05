@@ -65,7 +65,7 @@ template<typename T> void dispatcher(cv::cuda::GpuMat& img, double alpha, double
 }
 
 
-void color_mapper::setMapping(ColorScale& red, ColorScale& green, ColorScale& blue, double min, double max)
+void color_mapper::setMapping(ColorScale red, ColorScale green, ColorScale blue, double min, double max)
 {
 	red_ = red;
 	green_ = green;

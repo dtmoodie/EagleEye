@@ -14,7 +14,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include "SystemTable.hpp"
-#include "remotery\lib\Remotery.h"
+#include "remotery/lib/Remotery.h"
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include "cuda_runtime_api.h"
@@ -384,13 +384,13 @@ NodeManager::Init()
 
 	rmtCUDABind bind;
 	bind.context = ctx;
-	bind.CtxSetCurrent = &cuCtxSetCurrent;
-	bind.CtxGetCurrent = &cuCtxGetCurrent;
-	bind.EventCreate = &cuEventCreate;
-	bind.EventDestroy = &cuEventDestroy;
-	bind.EventRecord = &cuEventRecord;
-	bind.EventQuery = &cuEventQuery;
-	bind.EventElapsedTime = &cuEventElapsedTime;
+    bind.CtxSetCurrent = (void*)&cuCtxSetCurrent;
+    bind.CtxGetCurrent = (void*)&cuCtxGetCurrent;
+    bind.EventCreate = (void*)&cuEventCreate;
+    bind.EventDestroy = (void*)&cuEventDestroy;
+    bind.EventRecord = (void*)&cuEventRecord;
+    bind.EventQuery = (void*)&cuEventQuery;
+    bind.EventElapsedTime = (void*)&cuEventElapsedTime;
 	rmt_BindCUDA(&bind);
 	return true;
 }

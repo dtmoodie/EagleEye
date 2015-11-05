@@ -21,7 +21,7 @@ using namespace EagleLib;
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
-#include "remotery\lib\Remotery.h"
+#include "remotery/lib/Remotery.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY

@@ -99,7 +99,7 @@ void RTSP_server::onPipeChange()
 	}
 }
 
-void RTSP_server::setup(std::string& pipeOverride)
+void RTSP_server::setup(std::string pipeOverride)
 {
 	rmt_ScopedCPUSample(RTSP_server_setup);
 	gst_debug_set_active(1);

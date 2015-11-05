@@ -44,7 +44,7 @@
 #include <SystemTable.hpp>
 #include <Events.h>
 #include <UI/InterThread.hpp>
-#include "../remotery\lib\Remotery.h"
+#include <../remotery/lib/Remotery.h>
 #include <GpuMatAllocators.h>
 //#include <MemoryPoolAllocator.h>
 

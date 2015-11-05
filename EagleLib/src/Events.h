@@ -32,7 +32,7 @@ namespace EagleLib
     class ISignalHandler : public TInterface<IID_SignalHandler, IObject>
     {
     public:
-        virtual ISignalManager* GetSignalManager(Loki::TypeInfo& type) = 0;
+        virtual ISignalManager* GetSignalManager(Loki::TypeInfo type) = 0;
         virtual ISignalManager* AddSignalManager(ISignalManager* manager) = 0;
 
         template<typename T> T* GetSignal(const std::string& name)
@@ -72,7 +72,7 @@ namespace EagleLib
     {
     public:
         SignalHandler();
-        virtual ISignalManager* GetSignalManager(Loki::TypeInfo& type);
+        virtual ISignalManager* GetSignalManager(Loki::TypeInfo type);
         virtual ISignalManager* AddSignalManager(ISignalManager* manager);
 
     private:

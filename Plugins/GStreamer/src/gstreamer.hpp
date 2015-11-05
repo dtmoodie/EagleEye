@@ -56,7 +56,7 @@ namespace EagleLib
 		void Serialize(ISimpleSerializer* pSerializer);
 		void push_image();
 		void onPipeChange();
-        void setup(std::string& pipeOverride = std::string());
+        void setup(std::string pipeOverride = std::string());
         RTSP_server();
 		~RTSP_server();
         virtual void Init(bool firstInit);
