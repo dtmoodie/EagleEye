@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-
+PROJECT(PCL_bridge)
 CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 CMAKE_POLICY(SET CMP0053 OLD)
@@ -57,12 +57,13 @@ IF(PCL_FOUND)
           SET(pcl_bridge_file "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.o.cmake")
         ENDIF(WIN32)
         MESSAGE("Correcting file ${pcl_bridge_file}")
-	#FILE(READ ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.obj.cmake config_file)
-        FILE(READ ${pcl_bridge_file} config_file)
+	INCLUDE(../PluginTemplate.cmake)
+    FILE(READ ${pcl_bridge_file} config_file)
 	STRING(REPLACE "(vtkRenderingContextOpenGL)" "" config_file "${config_file}")
 	STRING(REPLACE "(vtkRenderingVolumeOpenGL)" "" config_file "${config_file}")
-        STRING(REPLACE "(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL)" "" config_file "${config_file}")
-	#FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.obj.cmake "${config_file}")
-        FILE(WRITE ${pcl_bridge_file} "${config_file}")
+    STRING(REPLACE "(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL)" "" config_file "${config_file}")
+	
+    FILE(WRITE ${pcl_bridge_file} "${config_file}")
+
 ENDIF(PCL_FOUND)
 

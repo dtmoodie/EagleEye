@@ -68,5 +68,6 @@ IF(GSTREAMER_gst_INCLUDE_DIR)
 		${GLIB_LIBRARY}
 		${GOBJECT_LIBRARY}
 	)
+	INCLUDE(../PluginTemplate.cmake)
 	ADD_DEPENDENCIES(Gstreamer EagleLib)
 ENDIF()

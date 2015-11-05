@@ -1,0 +1,45 @@
+
+GET_PROPERTY(dirs TARGET ${PROJECT_NAME} PROPERTY INCLUDE_DIRECTORIES)
+
+FILE(READ "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_config.txt" temp 1)
+SET(PROJECT_ID)
+IF(temp)
+SET(PROJECT_ID ${temp})
+ELSE(temp)
+SET(PROJECT_ID "1")
+ENDIF(temp)
+FILE(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_config.txt" "${PROJECT_ID}\n${dirs}\n${LINK_DIRS}\n-DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\"")
+
+ADD_DEFINITIONS(-DPROJECT_BUILD_DIR="${CMAKE_CURRENT_BINARY_DIR}")
+ADD_DEFINITIONS(-DPROJECT_CONFIG_FILE=\"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_config.txt\")
+
+MESSAGE(STATUS 
+"====== ${PROJECT_NAME} ======
+ Project ID: ${PROJECT_ID}
+ 
+ Config file: ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_config.txt
+ 
+ Headers: 
+ ${hdr}
+ 
+ Source: 
+ ${src}
+ 
+ Cuda kernels: 
+ ${knl}
+ 
+ QT MOC: 
+ ${MOC}
+ 
+ Definitions:
+ ${DEFS}
+ 
+ C++ flags:
+  ${CMAKE_CXX_FLAGS}
+ Debug:
+  ${CMAKE_CXX_FLAGS_DEBUG}
+ Release:
+  ${CMAKE_CXX_FLAGS_RELEASE}
+ C Flags
+  ${CMAKE_C_FLAGS}
+ ")

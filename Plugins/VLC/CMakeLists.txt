@@ -23,19 +23,6 @@ IF(LIBVLC_FOUND)
 	FILE(GLOB_RECURSE src "src/*.cpp")
 	FILE(GLOB_RECURSE hdr "include/*.h")
 
-	MESSAGE(STATUS
-	" ============== VLC ==================
-		${src}
-
-		${hdr}
-
-		${LIBVLC_LIBRARY}
-
-		${INCLUDE_DIRS}
-
-		${Boost_LIBRARIES}
-	"
-	)
 	IF(NOT ${LIBVLC_LIBRARY} MATCHES "NOTFOUND")
 		CUDA_ADD_LIBRARY(VLC SHARED ${src} ${hdr})
 		ADD_DEPENDENCIES(VLC EagleLib)
@@ -49,13 +36,13 @@ IF(LIBVLC_FOUND)
 			${Boost_LIBRARIES}
 			${LINK_LIBS}
 			) 
-
+		
 		SET(LIB_DIRS "C:/Program Files/VideoLan/vlc/sdk/lib")
 		GET_PROPERTY(dirs TARGET VLC PROPERTY INCLUDE_DIRECTORIES)
 		FOREACH(dir ${INCLUDE_DIRS})
 		LIST(REMOVE_ITEM dirs ${dir})
 		ENDFOREACH()
-
+		INCLUDE(../PluginTemplate.cmake)
 
 
 		LIST(REMOVE_DUPLICATES dirs)

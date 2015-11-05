@@ -1,4 +1,4 @@
-
+PROJECT(Segmentation)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 	CMAKE_POLICY(SET CMP0053 OLD)
 ENDIF()
@@ -37,6 +37,7 @@ target_link_libraries(Segmentation
     ${OpenCV_LIBS}
 	${Boost_LIBRARIES}
 )
+INCLUDE(../PluginTemplate.cmake)
 
 IF(TARGET fastms)
     

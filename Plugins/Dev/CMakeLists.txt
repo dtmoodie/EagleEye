@@ -1,4 +1,4 @@
-
+PROJECT(Dev)
 CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 CMAKE_POLICY(SET CMP0053 OLD)
@@ -29,14 +29,12 @@ ELSE()
 ENDIF()
 
 cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})
-MESSAGE(STATUS
-"=========== Dev ============
-    Defs: ${DEFS}
-")
+
 add_dependencies(Dev EagleLib)
 target_link_libraries(Dev 
     EagleLib
     ${OpenCV_LIBS}
     ${CUDA_CUBLAS_LIBRARIES}
 )
+INCLUDE(../PluginTemplate.cmake)
 

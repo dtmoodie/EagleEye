@@ -1,4 +1,4 @@
-
+PROJECT(vtkRendering)
 find_package(VTK REQUIRED)
   include(${VTK_USE_FILE})
   GET_TARGET_PROPERTY(vtk_core vtkCommonCore IMPORTED_IMPLIB_RELEASE)
@@ -41,9 +41,9 @@ MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
     LIST(APPEND ${SourcesVar} ${PrecompiledSource})
   ENDIF(MSVC)
 ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
-ADD_MSVC_PRECOMPILED_HEADER("precomp.hpp" "precomp.cpp" src)
+#ADD_MSVC_PRECOMPILED_HEADER("precomp.hpp" "precomp.cpp" src)
 CUDA_ADD_LIBRARY(vtkRendering SHARED ${src} ${hdr} ${knl})
-
+INCLUDE(../PluginTemplate.cmake)
 ADD_DEPENDENCIES(vtkRendering EagleLib)
 TARGET_LINK_LIBRARIES(vtkRendering
   EagleLib

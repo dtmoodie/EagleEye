@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-
+PROJECT(Plotting)
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
@@ -33,16 +33,8 @@ INCLUDE_DIRECTORIES(
 #add_definitions(-DQT_INCLUDE_DIR=${Qt5Core_INCLUDE_DIRS})
 add_definitions(-DPROJECT_INCLUDE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/include")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-message(STATUS
-"
-==============================================
-            Plotting
-    Qt core include dir: ${Qt5Core_INCLUDE_DIRS}
 
 
-	 
-
-")
 
 add_library(Plotting SHARED ${src} ${hdr} ${knl} ${UIS} ${MOC})
 add_dependencies(Plotting EagleLib)
@@ -54,5 +46,5 @@ target_link_libraries(Plotting
 	Qt5::OpenGL
 	Qt5::PrintSupport
 	)
-
+INCLUDE(../PluginTemplate.cmake)
 ENDIF(Qt5_FOUND)

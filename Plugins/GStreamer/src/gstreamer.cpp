@@ -54,18 +54,33 @@ static void stop_feed(GstElement * pipeline, App *app)
 RTSP_server::~RTSP_server()
 {
     NODE_LOG(info) << "RTSP server destructor";
-    GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_NULL);
-    CV_Assert(ret != GST_STATE_CHANGE_FAILURE);
+	if (pipeline)
+	{
+		GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_NULL);
+	}
+    
 #ifdef _MSC_VER
     PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton<GMainLoop>(nullptr);
 #endif
-	g_main_loop_quit(glib_MainLoop);
-	glibThread.join();
-	g_main_loop_unref(glib_MainLoop);
-	gst_object_unref(pipeline);
-	g_signal_handler_disconnect(source_OpenCV, need_data_id);
-	g_signal_handler_disconnect(source_OpenCV, enough_data_id);
-	gst_object_unref(source_OpenCV);
+	if (glib_MainLoop)
+	{
+		g_main_loop_quit(glib_MainLoop);
+		glibThread.join();
+		g_main_loop_unref(glib_MainLoop);
+		
+	}
+	if (pipeline)
+	{
+		gst_object_unref(pipeline);
+	}
+	if (source_OpenCV)
+	{
+		g_signal_handler_disconnect(source_OpenCV, need_data_id);
+		g_signal_handler_disconnect(source_OpenCV, enough_data_id);
+		gst_object_unref(source_OpenCV);
+	}
+	
+	
 }
 
 void RTSP_server::gst_loop()

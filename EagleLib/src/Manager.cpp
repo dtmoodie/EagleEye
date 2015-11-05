@@ -254,25 +254,63 @@ NodeManager::~NodeManager()
 {
 
 }
-void NodeManager::addIncludeDir(const std::string& dir)
+void NodeManager::addIncludeDir(const std::string& dir, unsigned short projId)
 {
 	LOG_TRACE << " " << dir;
-    m_pRuntimeObjectSystem->AddIncludeDir(dir.c_str());
+    m_pRuntimeObjectSystem->AddIncludeDir(dir.c_str(), projId);
 }
-void NodeManager::addIncludeDirs(const std::string& dirs)
+void NodeManager::addIncludeDirs(const std::string& dirs, unsigned short projId)
 {
+	if (!dirs.size())
+		return;
 	boost::char_separator<char> sep("+");
 	boost::tokenizer<boost::char_separator<char>> tokens(dirs, sep);
 	BOOST_FOREACH(const std::string& t, tokens)
 	{
-		addIncludeDir(t);
+		addIncludeDir(t, projId);
 	}
 }
-void NodeManager::addLinkDir(const std::string& dir)
+void NodeManager::addLinkDirs(const std::string& dirs, unsigned short projId)
+{
+	LOG_TRACE;
+	if (!dirs.size())
+		return;
+	boost::char_separator<char> sep("+");
+	boost::tokenizer<boost::char_separator<char>> tokens(dirs, sep);
+	BOOST_FOREACH(const std::string& t, tokens)
+	{
+		addLinkDir(t, projId);
+	}
+}
+void NodeManager::addLinkDir(const std::string& dir, unsigned short projId)
 {
 	LOG_TRACE << dir;
-	m_pRuntimeObjectSystem->AddLibraryDir(dir.c_str());
+	m_pRuntimeObjectSystem->AddLibraryDir(dir.c_str(), projId);
 }
+void NodeManager::addDefinitions(const std::string& defs, unsigned short projId)
+{
+	LOG_TRACE;
+	if (!defs.size())
+		return;
+	boost::char_separator<char> sep("+");
+	boost::tokenizer<boost::char_separator<char>> tokens(defs, sep);
+	BOOST_FOREACH(const std::string& t, tokens)
+	{
+		m_pRuntimeObjectSystem->SetAdditionalCompileOptions(t.c_str(), projId);
+	}
+}
+int NodeManager::parseProjectConfig(const std::string& file)
+{
+	if (file.size())
+	{
+		int id = m_pRuntimeObjectSystem->ParseConfigFile(file.c_str());
+		if (id != -1)
+			return id;
+	}
+	return 0;
+}
+
+
 std::vector<std::string> NodeManager::getLinkDirs()
 {
     std::vector<std::string> output;
@@ -296,16 +334,7 @@ std::vector<std::string> NodeManager::getIncludeDirs()
     return output;
 }
 
-void NodeManager::addLinkDirs(const std::string& dirs)
-{
-	LOG_TRACE;
-	boost::char_separator<char> sep("+");
-	boost::tokenizer<boost::char_separator<char>> tokens(dirs, sep);
-	BOOST_FOREACH(const std::string& t, tokens)
-	{
-		addLinkDir(t);
-	}
-}
+
 void NodeManager::addSourceFile(const std::string &file)
 {
 	LOG_TRACE << " " << file;
@@ -323,7 +352,8 @@ NodeManager::Init()
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddListener(this);
     boost::filesystem::path workingDir(__FILE__);
     std::string includePath = workingDir.parent_path().parent_path().string();
-	m_pRuntimeObjectSystem->SetAdditionalLinkOptions(" -DPARAMETERS_NO_UI ");
+	//m_pRuntimeObjectSystem->SetAdditionalLinkOptions(" -DPARAMETERS_NO_UI ");
+	m_pRuntimeObjectSystem->SetAdditionalCompileOptions(" -DPARAMTERS_NO_UI ");
 #ifdef _MSC_VER
 	
 #else
@@ -362,9 +392,6 @@ NodeManager::Init()
 	bind.EventQuery = &cuEventQuery;
 	bind.EventElapsedTime = &cuEventElapsedTime;
 	rmt_BindCUDA(&bind);
-
-
-
 	return true;
 }
 void NodeManager::RegisterConstructorAddedCallback(boost::function<void(void)> f)

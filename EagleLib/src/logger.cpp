@@ -46,14 +46,12 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
             {
                 handler(severity.get(), message);
             }
+			return;
 		}
-		else
-		{
-			for (auto handler : genericHandlers)
-			{
-				handler(severity.get(), message);
-			}
-		}
+	}
+	for (auto handler : genericHandlers)
+	{
+		handler(severity.get(), message);
 	}
 }
 void ui_collector::addNodeCallbackHandler(Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)

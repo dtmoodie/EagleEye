@@ -18,21 +18,33 @@
 
 
 // *************** SETUP_PROJECT_IMPL ********************
-#ifdef PROJECT_INCLUDES
-#ifdef PROJECT_LIB_DIRS
-#define SETUP_PROJECT_IMPL void SetupIncludes(){ 																	\
-				EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES);										\
-				EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);}		
-#else
-#define SETUP_PROJECT_IMPL void SetupIncludes(){EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES);}		
+#ifndef PROJECT_ID
+#define PROJECT_ID 0
 #endif
-#else
-#ifdef PROJECT_LIB_DIRS
-#define SETUP_PROJECT_IMPL void SetupIncludes()	{EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS);}
-#else
-#ifndef EagleLIB_EXPORTS
-//#pragma message( "Neither PROJECT_LIB_DIRS nor PROJECT_INCLUDES defined" )
+#ifndef PROJECT_INCLUDES
+#define PROJECT_INCLUDES ""
 #endif
-#define SETUP_PROJECT_IMPL void SetupIncludes() {}
+#ifndef PROJECT_LIB_DIRS
+#define PROJECT_LIB_DIRS ""
 #endif
+#ifndef PROJECT_DEFINITIONS
+#define PROJECT_DEFINITIONS ""
 #endif
+#ifndef PROJECT_CONFIG_FILE
+#define PROJECT_CONFIG_FILE ""
+#endif
+/*#define SETUP_PROJECT_IMPL void SetupIncludes(){ 														\
+		EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES, PROJECT_ID);				\
+		EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS, PROJECT_ID);					\
+		EagleLib::NodeManager::getInstance().addDefinitions(PROJECT_DEFINITIONS, PROJECT_ID);			\
+}*/
+#define SETUP_PROJECT_IMPL void SetupIncludes(){														\
+		int id = EagleLib::NodeManager::getInstance().parseProjectConfig(PROJECT_CONFIG_FILE);			\
+		PerModuleInterface::GetInstance()->SetProjectIdForAllConstructors(id);							\
+		EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES, id);						\
+		EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS, id);							\
+		EagleLib::NodeManager::getInstance().addDefinitions(PROJECT_DEFINITIONS, id);					\
+}																										
+
+
+

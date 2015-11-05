@@ -70,7 +70,7 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                 *getParameter<int>(5)->Data()));
         //log(Status, "Filter updated");
 		NODE_LOG(info) << "Filter updated";
-        parameters[1]->changed = false;
+        parameters[1]->changed = false; 
     }
     (*getParameter<cv::Ptr<cv::cuda::Filter>>(6)->Data())->apply(img,img,stream);
     return img;
