@@ -5,15 +5,21 @@
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-
+#include "CudaUtils.hpp"
+#include <boost/thread.hpp>
 namespace EagleLib
 {
 
     class  VideoLoader: public Node
     {
+
+        concurrent_notifier<cv::cuda::GpuMat> notifier;
+
         ConstBuffer<cv::cuda::HostMem> h_img;
         bool load;
+        boost::thread readThread;
     public:
+        void ReadThread();
         VideoLoader();
         ~VideoLoader();
         void Init(bool firstInit);

@@ -40,6 +40,49 @@ void VideoLoader::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(h_videoReader);
 }
 
+void VideoLoader::ReadThread()
+{
+    cv::cuda::HostMem _h_img;
+    cv::cuda::GpuMat d_img;
+    cv::cuda::Stream uploadStream;
+    while (1)
+    {
+        if (d_videoReader)
+        {
+            d_videoReader->nextFrame(d_img);
+        }
+        else if (h_videoReader)
+        {
+            if (!h_videoReader->read(_h_img))
+            {
+                updateParameter<bool>(5, true);
+                NODE_LOG(info) << "End of video reached";
+                auto reload = getParameter<bool>("Loop");
+                if (reload && *reload->Data())
+                {
+                    loadFile();
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else
+            {
+                updateParameter<double>("Timestamp", h_videoReader->get(cv::CAP_PROP_POS_MSEC), Parameters::Parameter::State);
+                updateParameter<int>("Frame index", (int)h_videoReader->get(cv::CAP_PROP_POS_FRAMES), Parameters::Parameter::Output);
+                updateParameter<int>("Total num frames", (int)h_videoReader->get(cv::CAP_PROP_FRAME_COUNT), Parameters::Parameter::Output); 
+                updateParameter<double>("% Complete", h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO), Parameters::Parameter::State);
+            }
+            d_img.upload(_h_img, uploadStream);
+        }
+        cv::cuda::GpuMat output(d_img.size(), d_img.type());
+        d_img.copyTo(output, uploadStream);
+        uploadStream.waitForCompletion();
+        notifier.wait_push(output);
+    }
+}
+
 cv::cuda::GpuMat 
 VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
@@ -47,9 +90,13 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
     if (parameters[0]->changed || load)
     {
 		loadFile();
+        readThread = boost::thread(boost::bind(&VideoLoader::ReadThread, this));
         firstLoad = true;
         load = false;
     }
+    notifier.wait_and_pop(img);
+    return img;
+
 	TIME
     if(d_videoReader)
     {
@@ -95,9 +142,6 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
     }
     if(firstLoad && !img.empty())
     {
-        //std::stringstream ss;
-        //ss << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
-        //log(Status,  ss.str());
 		NODE_LOG(info) << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
     }
     return img;
