@@ -1,4 +1,4 @@
-
+PROJECT(nvcc_test)
 find_package(CUDA REQUIRED)
 cmake_policy(SET CMP0020 NEW)
 cmake_policy(SET CMP0012 NEW)
@@ -43,4 +43,4 @@ ENDIF(WIN32)
 
 cuda_add_library(nvcc_test SHARED nvcc_test.cu nvcc_test.h nvcc_test.cpp nvcc_test.cuh)
 target_link_libraries(nvcc_test EagleLib ${Boost_LIBRARIES} ${CUDA_LIBRARIES})
-
+INCLUDE(../PluginTemplate.cmake)

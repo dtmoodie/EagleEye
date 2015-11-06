@@ -17,29 +17,56 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
 }
 void RCCSettingsDialog::updateDisplay()
 {
-	ui->incDirs->setPlainText("");
-	ui->linkDirs->setPlainText("");
-	auto inc = EagleLib::NodeManager::getInstance().getIncludeDirs();
-	auto lib = EagleLib::NodeManager::getInstance().getLinkDirs();
-	for (auto dir : inc)
-	{
-		if (dir.size())
-			ui->incDirs->appendPlainText(QString::fromStdString(dir));
-	}
-	for (auto dir : lib)
-	{
-		if (dir.size())
-			ui->linkDirs->appendPlainText(QString::fromStdString(dir));
-	}
+    
+    ui->linkDirs->clear();
+    ui->incDirs->clear();
+    int projectCount = EagleLib::NodeManager::getInstance().getProjectCount();
+    std::map<int, QTreeWidgetItem*> libDirItems;
+    std::map<int, QTreeWidgetItem*> incDirItems;
+    for (int i = 0; i < projectCount; ++i)
+    {
+        auto libItem = new QTreeWidgetItem(ui->linkDirs);
+        auto incItem = new QTreeWidgetItem(ui->incDirs);
+        libItem->setText(0,QString::fromStdString(EagleLib::NodeManager::getInstance().getProjectName(i)));
+        incItem->setText(0,QString::fromStdString(EagleLib::NodeManager::getInstance().getProjectName(i)));
+        auto inc = EagleLib::NodeManager::getInstance().getIncludeDirs();
+        auto lib = EagleLib::NodeManager::getInstance().getLinkDirs();
+        for (auto dir : inc)
+        {
+            if (dir.size())
+            {
+                QTreeWidgetItem* dependency = new QTreeWidgetItem(incItem);
+                dependency->setText(0, QString::fromStdString(dir));
+                incItem->addChild(dependency);
+            }
+                
+        }
+        for (auto dir : lib)
+        {
+            if (dir.size())
+            {
+                QTreeWidgetItem* dependency = new QTreeWidgetItem(libItem);
+                dependency->setText(0, QString::fromStdString(dir));
+                libItem->addChild(dependency);
+            }
+        }
+
+    }
+
+
+
+	
     auto objects = EagleLib::NodeManager::getInstance().getObjectList();
     ui->linkTree->clear();
-    for(auto obj : objects)
+    ui->linkTree->setColumnCount(2);
+    for(auto& obj : objects)
     {
         QTreeWidgetItem* objItem = new QTreeWidgetItem(ui->linkTree);
-        objItem->setText(0,QString::fromStdString(obj));
+        objItem->setText(0,QString::fromStdString(obj.first));
+        objItem->setText(1, QString::number(obj.second));
         ui->linkTree->addTopLevelItem(objItem);
-        auto linkDependencies = EagleLib::NodeManager::getInstance().getLinkDependencies(obj);
-        for(auto link : linkDependencies)
+        auto linkDependencies = EagleLib::NodeManager::getInstance().getLinkDependencies(obj.first);
+        for(auto& link : linkDependencies)
         {
             QTreeWidgetItem* dependency = new QTreeWidgetItem(objItem);
             dependency->setText(0,QString::fromStdString(link));

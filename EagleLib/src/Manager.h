@@ -140,11 +140,13 @@ namespace EagleLib
 		void addLinkDir(const std::string& dir, unsigned short projId = 0);
 		void addLinkDirs(const std::string& dirs, unsigned short projId = 0);
 		int parseProjectConfig(const std::string& file);
-        std::vector<std::string> getLinkDirs();
-        std::vector<std::string> getIncludeDirs();
+        std::vector<std::string> getLinkDirs(unsigned short projId = 0);
+        std::vector<std::string> getIncludeDirs(unsigned short projId = 0);
 
-        std::vector<std::string> getObjectList();
+        std::vector<std::pair<std::string, int>> getObjectList();
         std::vector<std::string> getLinkDependencies(const std::string& objectName);
+        int getProjectCount();
+        std::string getProjectName(int idx);
 
         void RegisterConstructorAddedCallback(boost::function<void(void)> f);
 
@@ -158,6 +160,7 @@ namespace EagleLib
         std::vector<weak_ptr<Node>>                         nodes;
         std::vector<boost::function<void(void)>>             onConstructorsAddedCallbacks;
 		std::shared_ptr<SystemTable>						m_systemTable;
+        std::map<int, std::string>                          m_projectNames;
 		
     }; // class NodeManager
 } // namespace EagleLib

@@ -1,6 +1,7 @@
 #pragma once
 #include "nodes/Node.h"
 #include <boost/circular_buffer.hpp>
+#include "EagleLib/Defs.hpp"
 
 #ifdef __cplusplus
 extern "C"{
@@ -10,6 +11,10 @@ extern "C"{
 #ifdef __cplusplus
 }
 #endif
+
+SETUP_PROJECT_DEF
+
+
 namespace EagleLib
 {
 	typedef std::vector<cv::Point2f> ImagePoints;
