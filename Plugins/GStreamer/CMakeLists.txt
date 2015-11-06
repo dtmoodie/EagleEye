@@ -67,6 +67,7 @@ IF(GSTREAMER_gst_INCLUDE_DIR)
 		${Glib_LIBRARY}
 		${GLIB_LIBRARY}
 		${GOBJECT_LIBRARY}
+		${GSTREAMER_gstrtspserver_LIBRARY}
 	)
 	INCLUDE(../PluginTemplate.cmake)
 	ADD_DEPENDENCIES(Gstreamer EagleLib)

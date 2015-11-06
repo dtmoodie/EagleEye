@@ -6,6 +6,7 @@
 #include <Manager.h>
 #include <SystemTable.hpp>
 
+
 using namespace EagleLib;
 
 
@@ -116,7 +117,7 @@ void RTSP_server::setup(std::string pipeOverride)
 	{
 		glib_MainLoop = g_main_loop_new(NULL, 0);
 	}
-	glibThread = boost::thread(boost::bind(&RTSP_server::gst_loop, this));
+	glibThread = boost::thread(std::bind(&RTSP_server::gst_loop, this));
 	GError* error = nullptr;
 	std::stringstream ss;
 	if (pipeOverride.size() == 0)
@@ -323,7 +324,7 @@ cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 	prevTime = curTime;
 	if (!g_main_loop_is_running(glib_MainLoop))
 	{
-		glibThread = boost::thread(boost::bind(&RTSP_server::gst_loop, this));
+		glibThread = boost::thread(std::bind(&RTSP_server::gst_loop, this));
 		NODE_LOG(error) << "Main glib loop not running";
 		return img;
 	}
@@ -351,3 +352,192 @@ RTSP_server::RTSP_server():
 }					
 REGISTERCLASS(RTSP_server)
 
+// http://cgit.freedesktop.org/gstreamer/gst-rtsp-server/tree/examples/test-appsrc.c
+
+RTSP_server_new::RTSP_server_new()
+{
+	loop = nullptr;
+	server = nullptr;
+	mounts = nullptr;
+	factory = nullptr;
+}
+RTSP_server_new::~RTSP_server_new()
+{
+	
+}
+void RTSP_server_new::push_image()
+{
+
+}
+void RTSP_server_new::onPipeChange()
+{
+
+}
+void RTSP_server_new::glibThread()
+{
+	if (!g_main_loop_is_running(loop))
+	{
+		g_main_loop_run(loop);
+	}
+}
+void RTSP_server_new::setup(std::string pipeOverride)
+{
+	
+}
+void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpointer user_data)
+{
+	auto node = static_cast<EagleLib::RTSP_server_new*>(user_data);
+	cv::cuda::HostMem* h_buffer = nullptr;
+	node->notifier.wait_and_pop(h_buffer);
+	if (h_buffer)
+	{
+		int bufferlength = h_buffer->cols * h_buffer->rows * h_buffer->channels();
+		auto buffer = gst_buffer_new_and_alloc(bufferlength);
+		cv::Mat img = h_buffer->createMatHeader();
+		GstMapInfo map;
+		gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
+		memcpy(map.data, h_buffer->data, map.size);
+		gst_buffer_unmap(buffer, &map);
+
+		GST_BUFFER_PTS(buffer) = node->timestamp;
+
+		GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(node->delta, GST_SECOND, 1000);
+		node->timestamp += GST_BUFFER_DURATION(buffer);
+
+
+		GstFlowReturn rw;
+		g_signal_emit_by_name(appsrc, "push-buffer", buffer, &rw);
+
+		if (rw != GST_FLOW_OK)
+		{
+			NODE_LOG(error) << "Error pushing buffer into appsrc " << rw;
+		}
+		gst_buffer_unref(buffer);
+	}
+
+
+}
+void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, gpointer user_data)
+{
+	auto node = static_cast<EagleLib::RTSP_server_new*>(user_data);
+	GstElement *element, *appsrc;
+	if (node->imgSize.area() == 0)
+	{
+		return;
+	}
+	
+
+	// get the element used for providing the streams of the media 
+	element = gst_rtsp_media_get_element(media);
+
+	// get our appsrc, we named it 'mysrc' with the name property 
+	appsrc = gst_bin_get_by_name_recurse_up(GST_BIN(element), "mysrc");
+
+	auto bus = gst_pipeline_get_bus(GST_PIPELINE(element));
+	CV_Assert(bus);
+	gst_bus_add_watch(bus, (GstBusFunc)bus_message, this);
+	gst_object_unref(bus);
+
+	// this instructs appsrc that we will be dealing with timed buffer 
+	gst_util_set_object_arg(G_OBJECT(appsrc), "format", "time");
+
+	// configure the caps of the video 
+	g_object_set(G_OBJECT(appsrc), "caps",
+		gst_caps_new_simple("video/x-raw",
+			"format", G_TYPE_STRING, "BGR",
+			"width", G_TYPE_INT, node->imgSize.width,
+			"height", G_TYPE_INT, node->imgSize.height,
+			"framerate", GST_TYPE_FRACTION, 0, 1, NULL), NULL);
+
+	
+	// make sure ther data is freed when the media is gone 
+	//g_object_set_data_full(G_OBJECT(media), "my-extra-data", ctx,
+	//	(GDestroyNotify)g_free);
+
+	// install the callback that will be called when a buffer is needed 
+	g_signal_connect(appsrc, "need-data", (GCallback)rtsp_server_new_need_data_callback, node);
+	gst_object_unref(appsrc);
+	gst_object_unref(element);
+
+
+}
+void RTSP_server_new::Init(bool firstInit)
+{
+	gst_debug_set_active(1);
+	if (firstInit)
+	{
+		timestamp = 0;
+		prevTime = clock();
+	}
+	if (!gst_is_initialized())
+	{
+		char** argv;
+		argv = new char*{ "-vvv" };
+		int argc = 1;
+		gst_init(&argc, &argv);
+	}
+	if(!loop)
+		loop = g_main_loop_new(NULL, FALSE);
+
+	// create a server instance 
+	if(!server)
+		server = gst_rtsp_server_new();
+	// get the mount points for this server, every server has a default object
+	// that be used to map uri mount points to media factories 
+	if(!mounts)
+		mounts = gst_rtsp_server_get_mount_points(server);
+
+	// make a media factory for a test stream. The default media factory can use
+	// gst-launch syntax to create pipelines.
+	// any launch line works as long as it contains elements named pay%d. Each
+	// element with pay%d names will be a stream 
+	if (!factory)
+	{
+		factory = gst_rtsp_media_factory_new();
+	}
+		
+
+	gst_rtsp_media_factory_set_launch(factory,
+		"( appsrc name=mysrc ! videoconvert ! openh264enc ! rtph264pay name=pay0 pt=96 )");
+
+	// notify when our media is ready, This is called whenever someone asks for
+	// the media and a new pipeline with our appsrc is created 
+	g_signal_connect(factory, "media-configure", G_CALLBACK(media_configure), this);
+	
+	// attach the test factory to the /test url 
+	gst_rtsp_mount_points_add_factory(mounts, "/test", factory);
+	
+	// don't need the ref to the mounts anymore 
+	g_object_unref(mounts);
+
+	// attach the server to the default maincontext 
+	gst_rtsp_server_attach(server, NULL);
+
+	glib_thread = boost::thread(std::bind(&RTSP_server_new::glibThread, this));
+
+}
+void RTSP_server_download_callback(int status, void* user_data)
+{
+	auto node = static_cast<RTSP_server_new*>(user_data);
+	auto buf = node->hostBuffer.getBack();
+	if (buf)
+	{
+		if (!buf->empty())
+		{
+			node->notifier.push(buf);
+		}
+	}
+}
+cv::cuda::GpuMat RTSP_server_new::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+	imgSize = img.size();
+	auto curTime = clock();
+	delta = curTime - prevTime;
+	prevTime = curTime;
+	auto buf = hostBuffer.getFront();
+	img.download(*buf, stream);
+	stream.enqueueHostCallback(RTSP_server_download_callback, this);
+	return img;
+}
+
+REGISTERCLASS(RTSP_server_new);

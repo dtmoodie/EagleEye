@@ -267,6 +267,10 @@ void RTSPCamera::readImage_thread()
 			try
 			{
 				cam.read(hostBuffer[putItr % bufferSize]);
+				if (hostBuffer[putItr % bufferSize].empty())
+				{
+					NODE_LOG(warning) << "Read empty image";
+				}
 				boost::mutex::scoped_lock lock(mtx);
 				notifier.push(&hostBuffer[putItr % bufferSize]);
 				++putItr;

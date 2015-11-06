@@ -1,14 +1,19 @@
 #pragma once
+#ifndef PARAMETERS_USE_UI
 #define PARAMETERS_USE_UI
-
+#endif
+#include <gst/rtsp-server/rtsp-server.h>
 #include "nodes/Node.h"
 #include <EagleLib/Defs.hpp>
+#include <CudaUtils.hpp>
 #include <gst/gst.h>
 #include <gst/gstelement.h>
 #include <gst/gstelementfactory.h>
 #include <gst/gstutils.h>
 #include <gst/gstpipeline.h>
 #include <gst/app/gstappsrc.h>
+
+#include <boost/thread.hpp>
 
 SETUP_PROJECT_DEF
 #ifdef _MSC_VER
@@ -49,6 +54,7 @@ namespace EagleLib
 		cv::Size imgSize;
 		boost::thread glibThread;
 		ConstBuffer<cv::cuda::HostMem> bufferPool;
+		
 		guint need_data_id;
 		guint enough_data_id;
 
@@ -62,6 +68,35 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+	
+	class RTSP_server_new : public Node
+	{
+		
+		
+		
+	public:
+		GstClockTime timestamp;
+		time_t prevTime;
+		time_t delta;
+		GMainLoop *loop;
+		GstRTSPServer *server;
+		GstRTSPMountPoints *mounts;
+		GstRTSPMediaFactory *factory;
+
+		boost::thread glib_thread;
+		void glibThread();
+		ConstBuffer<cv::cuda::HostMem> hostBuffer;
+		concurrent_notifier<cv::cuda::HostMem*> notifier;
+		cv::cuda::HostMem* currentNewestFrame;
+		RTSP_server_new();
+		void push_image();
+		void onPipeChange();
+		void setup(std::string pipeOverride = std::string());
+		~RTSP_server_new();
+		virtual void Init(bool firstInit);
+		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+		cv::Size imgSize;
+	};
 }
 /*
 References
