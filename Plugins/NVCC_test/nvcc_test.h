@@ -1,12 +1,6 @@
 #include <nodes/Node.h>
-
-#ifdef __cplusplus
-extern "C"{
-#endif
-    CV_EXPORTS void SetupIncludes();
-#ifdef __cplusplus
-}
-#endif
+#include "EagleLib/Defs.hpp"
+SETUP_PROJECT_DEF
 
 namespace EagleLib
 {

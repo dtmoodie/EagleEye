@@ -3,9 +3,10 @@
 #include <external_includes/cv_cudaimgproc.hpp>
 #include <external_includes/cv_cudaarithm.hpp>
 #include <external_includes/cv_cudalegacy.hpp>
-
+#include "Manager.h"
 using namespace EagleLib;
 
+SETUP_PROJECT_IMPL
 
 void OtsuThreshold::Init(bool firstInit)
 {

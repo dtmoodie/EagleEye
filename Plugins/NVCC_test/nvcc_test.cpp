@@ -5,13 +5,7 @@
 #include "Manager.h"
 
 using namespace EagleLib;
-
-void SetupIncludes()  
-{
-#ifdef NVCC_TEST_INCLUDE
-	EagleLib::NodeManager::getInstance().addIncludeDir(NVCC_TEST_INCLUDE);
-#endif
-}
+SETUP_PROJECT_IMPL
 
 void nvcc_test::init(bool firstInit)  
 {

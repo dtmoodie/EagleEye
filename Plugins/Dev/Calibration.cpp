@@ -5,14 +5,14 @@
 #include <external_includes/cv_cudaarithm.hpp>
 #include <external_includes/cv_cudaimgproc.hpp>
 
-
+#include "Manager.h"
 using namespace EagleLib;
 
 IPerModuleInterface* GetModule()
 {
     return PerModuleInterface::GetInstance();
 }
-
+SETUP_PROJECT_IMPL
 void FindCheckerboard::Init(bool firstInit)
 {
 	

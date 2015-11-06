@@ -303,18 +303,25 @@ int NodeManager::parseProjectConfig(const std::string& file)
 {
 	if (file.size())
 	{
+        boost::filesystem::path pfile(file);
+        std::string root = pfile.filename().string();
+        std::string projectName = root.substr(0, root.size() - 11);
+
 		int id = m_pRuntimeObjectSystem->ParseConfigFile(file.c_str());
-		if (id != -1)
-			return id;
+        if (id != -1)
+        {
+            m_projectNames[id] = projectName;
+            return id;
+        }
 	}
 	return 0;
 }
 
 
-std::vector<std::string> NodeManager::getLinkDirs()
+std::vector<std::string> NodeManager::getLinkDirs(unsigned short projId)
 {
     std::vector<std::string> output;
-    auto inc = m_pRuntimeObjectSystem->GetLinkDirList(0);
+    auto inc = m_pRuntimeObjectSystem->GetLinkDirList(projId);
     for(int i = 0; i < inc.size(); ++i)
     {
         output.push_back(inc[i].m_string);
@@ -322,11 +329,11 @@ std::vector<std::string> NodeManager::getLinkDirs()
     return output;
 }
 
-std::vector<std::string> NodeManager::getIncludeDirs()
+std::vector<std::string> NodeManager::getIncludeDirs(unsigned short projId)
 {
 	LOG_TRACE;
     std::vector<std::string> output;
-    auto inc = m_pRuntimeObjectSystem->GetIncludeDirList(0);
+    auto inc = m_pRuntimeObjectSystem->GetIncludeDirList(projId);
     for(int i = 0; i < inc.size(); ++i)
     {
         output.push_back(inc[i].m_string);
@@ -406,17 +413,30 @@ NodeManager::MainLoop()
 	LOG_TRACE;
 	return true;
 }
-std::vector<std::string> NodeManager::getObjectList()
+std::vector<std::pair<std::string, int>> NodeManager::getObjectList()
 {
 	LOG_TRACE;
-    std::vector<std::string> output;
+    std::vector<std::pair<std::string, int>> output;
     AUDynArray<IObjectConstructor*> constructors;
     m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
     for(int i = 0; i < constructors.Size(); ++i)
     {
-        output.push_back(std::string(constructors[i]->GetName()));
+        output.push_back(std::make_pair(std::string(constructors[i]->GetName()), int(constructors[i]->GetProjectId())));
     }
     return output;
+}
+int NodeManager::getProjectCount()
+{
+    return    m_pRuntimeObjectSystem->GetProjectCount();
+}
+std::string NodeManager::getProjectName(int idx)
+{
+    auto itr = m_projectNames.find(idx);
+    if (itr != m_projectNames.end())
+    {
+        return itr->second;
+    }
+    return boost::lexical_cast<std::string>(idx);
 }
 
 std::vector<std::string> NodeManager::getLinkDependencies(const std::string& objectName)

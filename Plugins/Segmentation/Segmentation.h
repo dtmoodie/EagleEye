@@ -3,6 +3,9 @@
 #include "CudaUtils.hpp"
 #include "Segmentation_impl.h"
 #include "libfastms/solver/solver.h"
+#include "EagleLib/Defs.hpp"
+
+SETUP_PROJECT_DEF
 
 namespace EagleLib
 {

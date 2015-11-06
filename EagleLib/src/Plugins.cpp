@@ -1,6 +1,6 @@
 #include "Plugins.h"
 #include "Manager.h"
-
+#include <boost/log/trivial.hpp>
 
 #ifdef _MSC_VER
 #include "Windows.h"
@@ -8,12 +8,14 @@
 bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
     static int projectCount = 0;
-	std::cout << "Loading plugin " << fullPluginPath << std::endl;
+	//std::cout << "Loading plugin " << fullPluginPath << std::endl;
+    BOOST_LOG_TRIVIAL(info) << "Loading plugin " << fullPluginPath;
 	HMODULE handle = LoadLibrary(fullPluginPath.c_str());
 	if (handle == nullptr)
 	{
 		auto err = GetLastError();
-		std::cout << "Failed to load library due to: " << err << std::endl;
+		//std::cout << "Failed to load library due to: " << err << std::endl;
+        BOOST_LOG_TRIVIAL(error) << "Failed to load library due to: " << err;
 		return false;
 	}
         
@@ -22,23 +24,21 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
     if (module)
     {
         auto moduleInterface = module();
-        //moduleInterface->SetProjectIdForAllConstructors(++projectCount);
         NodeManager::getInstance().setupModule(moduleInterface);
     }
 		
 	else
 	{
-		std::cout << "GetPerModuleInterface not found in plugin " << fullPluginPath << std::endl;
+		BOOST_LOG_TRIVIAL(warning) << "GetPerModuleInterface not found in plugin " << fullPluginPath;
 		module = (moduleFunctor)GetProcAddress(handle, "GetModule");
 		if (module)
 		{
             auto moduleInterface = module();
-            //moduleInterface->SetProjectIdForAllConstructors(++projectCount);
             NodeManager::getInstance().setupModule(moduleInterface);
 		}
 		else
 		{
-			std::cout << "GetModule not found in plugin " << fullPluginPath << std::endl;
+			BOOST_LOG_TRIVIAL(warning) << "GetModule not found in plugin " << fullPluginPath;
 			FreeLibrary(handle);
 		}
 		
@@ -48,7 +48,7 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 	if (functor)
 		functor();
 	else
-		std::cout << "Setup Includes not found in plugin " << fullPluginPath << std::endl;
+		BOOST_LOG_TRIVIAL(warning) << "Setup Includes not found in plugin " << fullPluginPath;
     return true;
 }
 
