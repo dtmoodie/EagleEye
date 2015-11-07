@@ -29,8 +29,8 @@ void RCCSettingsDialog::updateDisplay()
         auto incItem = new QTreeWidgetItem(ui->incDirs);
         libItem->setText(0,QString::fromStdString(EagleLib::NodeManager::getInstance().getProjectName(i)));
         incItem->setText(0,QString::fromStdString(EagleLib::NodeManager::getInstance().getProjectName(i)));
-        auto inc = EagleLib::NodeManager::getInstance().getIncludeDirs();
-        auto lib = EagleLib::NodeManager::getInstance().getLinkDirs();
+        auto inc = EagleLib::NodeManager::getInstance().getIncludeDirs(i);
+        auto lib = EagleLib::NodeManager::getInstance().getLinkDirs(i);
         for (auto dir : inc)
         {
             if (dir.size())
@@ -104,7 +104,19 @@ void RCCSettingsDialog::on_btnAddIncludeDir_clicked()
 	}
 	if (dir.size() == 0)
 		return;
-	EagleLib::NodeManager::getInstance().addIncludeDir(dir.toStdString());
+
+	auto item = ui->incDirs->currentItem();
+	int projectId = 0;
+	if (item)
+	{
+		if (item->parent() != nullptr)
+		{
+			item = item->parent();
+		}
+		projectId = ui->incDirs->indexOfTopLevelItem(item);
+	}
+		
+	EagleLib::NodeManager::getInstance().addIncludeDir(dir.toStdString(), projectId);
 	ui->includeDir->clear();
 	updateDisplay();
 }
@@ -118,7 +130,22 @@ void RCCSettingsDialog::on_btnAddLinkDir_clicked()
 	}
 	if (dir.size() == 0)
 		return;
-	EagleLib::NodeManager::getInstance().addLinkDir(dir.toStdString());
+	auto item = ui->linkDirs->currentItem();
+	int projectId = 0;
+	if (item)
+	{
+		while (item->parent() != nullptr)
+		{
+			item = item->parent();
+		}
+		projectId = ui->linkDirs->indexOfTopLevelItem(item);
+	}
+	if (projectId == -1)
+	{
+		BOOST_LOG_TRIVIAL(warning) << "Unable to determine correct project";
+		return;
+	}
+	EagleLib::NodeManager::getInstance().addLinkDir(dir.toStdString(), projectId);
 	ui->linkDir->clear();
 	updateDisplay();
 }

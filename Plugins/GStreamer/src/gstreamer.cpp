@@ -358,12 +358,15 @@ RTSP_server_new::RTSP_server_new()
 {
 	loop = nullptr;
 	server = nullptr;
-	mounts = nullptr;
 	factory = nullptr;
 }
 RTSP_server_new::~RTSP_server_new()
 {
-	
+	g_main_loop_quit(loop);
+	g_object_unref(factory);
+	g_object_unref(server);
+	glib_thread.join();
+
 }
 void RTSP_server_new::push_image()
 {
@@ -417,6 +420,35 @@ void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpoin
 
 
 }
+
+static gboolean
+bus_message_new(GstBus * bus, GstMessage * message, RTSP_server_new * app)
+{
+	BOOST_LOG_TRIVIAL(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
+
+	switch (GST_MESSAGE_TYPE(message))
+	{
+	case GST_MESSAGE_ERROR:
+	{
+		GError *err = NULL;
+		gchar *dbg_info = NULL;
+
+		gst_message_parse_error(message, &err, &dbg_info);
+		BOOST_LOG_TRIVIAL(error) << "Error from element " << GST_OBJECT_NAME(message->src) << ": " << err->message;
+		BOOST_LOG_TRIVIAL(error) << "Debugging info: " << (dbg_info) ? dbg_info : "none";
+		g_error_free(err);
+		g_free(dbg_info);
+		g_main_loop_quit(app->loop);
+		break;
+	}
+	case GST_MESSAGE_EOS:
+		g_main_loop_quit(app->loop); 
+		break;
+	default:
+		break;
+	}
+	return TRUE;
+}
 void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, gpointer user_data)
 {
 	auto node = static_cast<EagleLib::RTSP_server_new*>(user_data);
@@ -425,7 +457,7 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, gpoint
 	{
 		return;
 	}
-	
+	BOOST_LOG_TRIVIAL(info) << "RTSP client connected";
 
 	// get the element used for providing the streams of the media 
 	element = gst_rtsp_media_get_element(media);
@@ -433,10 +465,6 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, gpoint
 	// get our appsrc, we named it 'mysrc' with the name property 
 	appsrc = gst_bin_get_by_name_recurse_up(GST_BIN(element), "mysrc");
 
-	auto bus = gst_pipeline_get_bus(GST_PIPELINE(element));
-	CV_Assert(bus);
-	gst_bus_add_watch(bus, (GstBusFunc)bus_message, this);
-	gst_object_unref(bus);
 
 	// this instructs appsrc that we will be dealing with timed buffer 
 	gst_util_set_object_arg(G_OBJECT(appsrc), "format", "time");
@@ -447,7 +475,7 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, gpoint
 			"format", G_TYPE_STRING, "BGR",
 			"width", G_TYPE_INT, node->imgSize.width,
 			"height", G_TYPE_INT, node->imgSize.height,
-			"framerate", GST_TYPE_FRACTION, 0, 1, NULL), NULL);
+			"framerate", GST_TYPE_FRACTION, 30, 1, NULL), NULL);
 
 	
 	// make sure ther data is freed when the media is gone 
@@ -458,63 +486,63 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, gpoint
 	g_signal_connect(appsrc, "need-data", (GCallback)rtsp_server_new_need_data_callback, node);
 	gst_object_unref(appsrc);
 	gst_object_unref(element);
-
-
 }
 void RTSP_server_new::Init(bool firstInit)
 {
-	gst_debug_set_active(1);
 	if (firstInit)
 	{
-		timestamp = 0;
-		prevTime = clock();
+		GstRTSPMountPoints *mounts = nullptr;
+		gst_debug_set_active(1);
+		if (firstInit)
+		{
+			timestamp = 0;
+			prevTime = clock();
+		}
+		if (!gst_is_initialized())
+		{
+			char** argv;
+			argv = new char*{ "-vvv" };
+			int argc = 1;
+			gst_init(&argc, &argv);
+		}
+		if (!loop)
+			loop = g_main_loop_new(NULL, FALSE);
+
+		// create a server instance 
+		if (!server)
+			server = gst_rtsp_server_new();
+		// get the mount points for this server, every server has a default object
+		// that be used to map uri mount points to media factories 
+		if (!mounts)
+			mounts = gst_rtsp_server_get_mount_points(server);
+
+		// make a media factory for a test stream. The default media factory can use
+		// gst-launch syntax to create pipelines.
+		// any launch line works as long as it contains elements named pay%d. Each
+		// element with pay%d names will be a stream 
+		if (!factory)
+		{
+			factory = gst_rtsp_media_factory_new();
+		}
+
+		gst_rtsp_media_factory_set_launch(factory,
+			"( appsrc name=mysrc ! videoconvert ! openh264enc ! rtph264pay name=pay0 pt=96 )");
+
+		// notify when our media is ready, This is called whenever someone asks for
+		// the media and a new pipeline with our appsrc is created 
+		g_signal_connect(factory, "media-configure", G_CALLBACK(media_configure), this);
+
+		// attach the test factory to the /test url 
+		gst_rtsp_mount_points_add_factory(mounts, "/test", factory);
+
+		// don't need the ref to the mounts anymore 
+		g_object_unref(mounts);
+
+		// attach the server to the default maincontext 
+		gst_rtsp_server_attach(server, NULL);
+
+		glib_thread = boost::thread(std::bind(&RTSP_server_new::glibThread, this));
 	}
-	if (!gst_is_initialized())
-	{
-		char** argv;
-		argv = new char*{ "-vvv" };
-		int argc = 1;
-		gst_init(&argc, &argv);
-	}
-	if(!loop)
-		loop = g_main_loop_new(NULL, FALSE);
-
-	// create a server instance 
-	if(!server)
-		server = gst_rtsp_server_new();
-	// get the mount points for this server, every server has a default object
-	// that be used to map uri mount points to media factories 
-	if(!mounts)
-		mounts = gst_rtsp_server_get_mount_points(server);
-
-	// make a media factory for a test stream. The default media factory can use
-	// gst-launch syntax to create pipelines.
-	// any launch line works as long as it contains elements named pay%d. Each
-	// element with pay%d names will be a stream 
-	if (!factory)
-	{
-		factory = gst_rtsp_media_factory_new();
-	}
-		
-
-	gst_rtsp_media_factory_set_launch(factory,
-		"( appsrc name=mysrc ! videoconvert ! openh264enc ! rtph264pay name=pay0 pt=96 )");
-
-	// notify when our media is ready, This is called whenever someone asks for
-	// the media and a new pipeline with our appsrc is created 
-	g_signal_connect(factory, "media-configure", G_CALLBACK(media_configure), this);
-	
-	// attach the test factory to the /test url 
-	gst_rtsp_mount_points_add_factory(mounts, "/test", factory);
-	
-	// don't need the ref to the mounts anymore 
-	g_object_unref(mounts);
-
-	// attach the server to the default maincontext 
-	gst_rtsp_server_attach(server, NULL);
-
-	glib_thread = boost::thread(std::bind(&RTSP_server_new::glibThread, this));
-
 }
 void RTSP_server_download_callback(int status, void* user_data)
 {

@@ -631,6 +631,17 @@ void
 NodeManager::setupModule(IPerModuleInterface* pPerModuleInterface)
 {
 	LOG_TRACE;
+	auto constructors = pPerModuleInterface->GetConstructors();
+	int projectId = 0;
+	if (constructors.size())
+	{
+		projectId = constructors[0]->GetProjectId();
+#ifdef _DEBUG
+		addLinkDir(BUILD_DIR "/Debug", projectId);
+#else
+		addLinkDir(BUILD_DIR "/RelWithDebInfo", projectId);
+#endif
+	}
 	m_pRuntimeObjectSystem->SetupObjectConstructors(pPerModuleInterface);
 }
 #ifdef _MSC_VER

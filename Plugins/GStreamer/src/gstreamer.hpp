@@ -27,11 +27,13 @@ RUNTIME_COMPILER_LINKLIBRARY("gstreamer-1.0.lib");
 RUNTIME_COMPILER_LINKLIBRARY("gstriff-1.0.lib");
 RUNTIME_COMPILER_LINKLIBRARY("gstrtp-1.0.lib");
 RUNTIME_COMPILER_LINKLIBRARY("gstrtsp-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("gstrtspserver-1.0.lib");
 RUNTIME_COMPILER_LINKLIBRARY("gstsdp-1.0.lib");
 RUNTIME_COMPILER_LINKLIBRARY("gsttag-1.0.lib");
 RUNTIME_COMPILER_LINKLIBRARY("gstvideo-1.0.lib");
 RUNTIME_COMPILER_LINKLIBRARY("glib-2.0.lib");
 RUNTIME_COMPILER_LINKLIBRARY("gobject-2.0.lib");
+
 #endif
 
 namespace EagleLib
@@ -80,7 +82,7 @@ namespace EagleLib
 		time_t delta;
 		GMainLoop *loop;
 		GstRTSPServer *server;
-		GstRTSPMountPoints *mounts;
+		
 		GstRTSPMediaFactory *factory;
 
 		boost::thread glib_thread;

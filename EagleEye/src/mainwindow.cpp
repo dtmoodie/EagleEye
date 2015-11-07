@@ -68,7 +68,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	//LazyDeallocator::instance()->dealloc_time = 500;
 	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
 	boost::log::add_common_attributes();
-
+	if (!boost::filesystem::exists("./logs") || !boost::filesystem::is_directory("./logs"))
+	{
+		boost::filesystem::create_directory("./logs");
+	}
 	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
     // https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
 
@@ -108,7 +111,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 
 	auto fsSink = boost::log::add_file_log(
-		boost::log::keywords::file_name = "test_%Y-%m-%d_%H-%M-%S.%N.log",
+		boost::log::keywords::file_name = "./logs/%Y-%m-%d_%H-%M-%S.%N.log",
 		boost::log::keywords::rotation_size = 10 * 1024 * 1024,
 		boost::log::keywords::min_free_space = 30 * 1024 * 1024,
 		boost::log::keywords::open_mode = std::ios_base::app);
@@ -186,7 +189,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
     //connect(plotWizardDialog, SIGNAL(on_plotAdded(PlotWindow*)), this, SLOT(onPlotAdd(PlotWindow*)));
     connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
+#ifdef _MSC_VER
+#ifdef _DEBUG
+	BOOST_LOG_TRIVIAL(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Debug mode.";
+#else
+	BOOST_LOG_TRIVIAL(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Release mode.";
+#endif
+#else
 
+#endif
 	/* Instantiate several useful types since compilation is currently setup to not compile against the types used in eagle lib */
     Parameters::TypedParameter<Parameters::WriteDirectory>("Instantiation");
     Parameters::TypedParameter<Parameters::WriteFile>("Instantiation");
@@ -237,6 +248,7 @@ MainWindow::MainWindow(QWidget *parent) :
         dirtySignal->connect(boost::bind(&MainWindow::on_nodeUpdate, this, _1));
     }
 
+
 }
 
 MainWindow::~MainWindow()
@@ -244,6 +256,9 @@ MainWindow::~MainWindow()
 	stopProcessingThread();
 	cv::destroyAllWindows();
 	EagleLib::ui_collector::clearGenericCallbackHandlers();
+	log_sink->flush();
+	log_sink->stop();
+	log_sink.reset();
     delete ui;
 }
 void MainWindow::closeEvent(QCloseEvent *event)

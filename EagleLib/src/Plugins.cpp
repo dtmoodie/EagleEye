@@ -1,7 +1,7 @@
 #include "Plugins.h"
 #include "Manager.h"
 #include <boost/log/trivial.hpp>
-
+#include <EagleLib/Defs.hpp>
 #ifdef _MSC_VER
 #include "Windows.h"
 
@@ -18,6 +18,27 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
         BOOST_LOG_TRIVIAL(error) << "Failed to load library due to: " << err;
 		return false;
 	}
+	typedef int(*BuildLevelFunctor)();
+	BuildLevelFunctor buildLevel = (BuildLevelFunctor)GetProcAddress(handle, "GetBuildType");
+	if (buildLevel)
+	{
+		if (buildLevel() != BUILD_TYPE)
+		{
+			BOOST_LOG_TRIVIAL(info) << "Library debug level does not match";
+			return false;
+		}
+	}
+	else
+	{
+		BOOST_LOG_TRIVIAL(warning) << "Build level not defined in library, attempting to load anyways";
+	}
+
+	typedef void(*includeFunctor)();
+	includeFunctor functor = (includeFunctor)GetProcAddress(handle, "SetupIncludes");
+	if (functor)
+		functor();
+	else
+		BOOST_LOG_TRIVIAL(warning) << "Setup Includes not found in plugin " << fullPluginPath;
         
 	typedef IPerModuleInterface* (*moduleFunctor)();
 	moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetPerModuleInterface");
@@ -40,15 +61,9 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 		{
 			BOOST_LOG_TRIVIAL(warning) << "GetModule not found in plugin " << fullPluginPath;
 			FreeLibrary(handle);
-		}
-		
+		}	
 	}
-	typedef void(*includeFunctor)();
-	includeFunctor functor = (includeFunctor)GetProcAddress(handle, "SetupIncludes");
-	if (functor)
-		functor();
-	else
-		BOOST_LOG_TRIVIAL(warning) << "Setup Includes not found in plugin " << fullPluginPath;
+	
     return true;
 }
 
