@@ -37,7 +37,7 @@ target_link_libraries(Segmentation
     ${OpenCV_LIBS}
 	${Boost_LIBRARIES}
 )
-INCLUDE(../PluginTemplate.cmake)
+
 
 IF(TARGET fastms)
     
@@ -45,7 +45,9 @@ IF(TARGET fastms)
     target_link_libraries(Segmentation fastms ${fastms_LIBS})
     add_definitions(-DFASTMS_FOUND)
     add_definitions(-DFASTMS_INCLUDE=${fastms_INCLUDE_DIRECTORIES})
+	LIST(APPEND DEFS -DFASTMS_FOUND)
     INCLUDE_DIRECTORIES(${fastms_INCLUDE_DIRECTORIES})
 	message(STATUS "FastMS include: ${fastms_INCLUDE_DIRECTORIES}") 
 
 ENDIF()
+INCLUDE(../PluginTemplate.cmake)

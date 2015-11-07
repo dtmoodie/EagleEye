@@ -457,7 +457,8 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, gpoint
 	{
 		return;
 	}
-	BOOST_LOG_TRIVIAL(info) << "RTSP client connected";
+	
+	BOOST_LOG_TRIVIAL(info) << "RTSP client connected"; 
 
 	// get the element used for providing the streams of the media 
 	element = gst_rtsp_media_get_element(media);
