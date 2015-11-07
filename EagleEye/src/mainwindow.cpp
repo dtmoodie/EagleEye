@@ -173,6 +173,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //connect(this, SIGNAL(uiCallback()), this, SLOT(on_uiCallback()), Qt::QueuedConnection);
 
     connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
+	connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
     //connect(this, SIGNAL(eLOG_TRIVIAL(QString)), this, SLOT(LOG_TRIVIAL(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
     connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
@@ -247,8 +248,6 @@ MainWindow::MainWindow(QWidget *parent) :
         auto dirtySignal = signalHandler->GetSignalSafe<boost::signals2::signal<void(EagleLib::Node*)>>("NodeUpdated");
         dirtySignal->connect(boost::bind(&MainWindow::on_nodeUpdate, this, _1));
     }
-
-
 }
 
 MainWindow::~MainWindow()
@@ -750,7 +749,8 @@ void MainWindow::processThread()
 }
 void MainWindow::process_log_message(boost::log::trivial::severity_level severity, const std::string& message)
 {
-	ui->console->appendPlainText(QString::fromStdString(message));
+	emit eLog(QString::fromStdString(message));
+	//ui->console->appendPlainText();
 }
 void MainWindow::startProcessingThread()
 {
