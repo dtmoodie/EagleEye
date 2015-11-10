@@ -6,6 +6,7 @@
 #include <external_includes/cv_cudaimgproc.hpp>
 
 #include "Manager.h"
+#include <UI/InterThread.hpp>
 using namespace EagleLib;
 
 IPerModuleInterface* GetModule()

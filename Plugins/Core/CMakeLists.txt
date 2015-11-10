@@ -15,7 +15,7 @@ find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cu
 ADD_DEFINITIONS(${DEFS})
 LINK_DIRECTORIES(${LINK_DIRS})
 INCLUDE_DIRECTORIES(
-    ${EagleLib_INCLUDE_DIRECTORIES}
+    ${INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
@@ -41,10 +41,10 @@ ENDIF()
 cuda_add_library(Core SHARED ${src} ${hdr} ${knl})
 
 add_dependencies(Core EagleLib)
-target_link_libraries(Core 
-    EagleLib
-    ${OpenCV_LIBS}
-    ${CUDA_CUBLAS_LIBRARIES}
-)
+RCC_LINK_LIB(Core EagleLib ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES})
+#RCC_LINK_LIB(Core EagleLib)
+#RCC_LINK_LIB(Core ${OpenCV_LIBS})
+#RCC_LINK_LIB(Core ${CUDA_CUBLAS_LIBRARIES})
+
 INCLUDE(../PluginTemplate.cmake)
 

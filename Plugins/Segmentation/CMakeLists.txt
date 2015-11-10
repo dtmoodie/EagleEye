@@ -17,7 +17,7 @@ set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBIN
 ADD_SUBDIRECTORY(fastms)
 
 INCLUDE_DIRECTORIES(
-        ${EagleLib_INCLUDE_DIRECTORIES}
+        ${INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
@@ -32,7 +32,7 @@ cuda_add_library(Segmentation SHARED ${src} ${hdr})
 
 add_dependencies(Segmentation EagleLib)
 
-target_link_libraries(Segmentation
+RCC_LINK_LIB(Segmentation
     EagleLib
     ${OpenCV_LIBS}
 	${Boost_LIBRARIES}
@@ -42,7 +42,7 @@ target_link_libraries(Segmentation
 IF(TARGET fastms)
     
 	add_dependencies(Segmentation fastms)
-    target_link_libraries(Segmentation fastms ${fastms_LIBS})
+    RCC_LINK_LIB(Segmentation fastms ${fastms_LIBS})
     add_definitions(-DFASTMS_FOUND)
     add_definitions(-DFASTMS_INCLUDE=${fastms_INCLUDE_DIRECTORIES})
 	LIST(APPEND DEFS -DFASTMS_FOUND)

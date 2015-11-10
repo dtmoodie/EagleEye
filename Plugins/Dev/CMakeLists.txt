@@ -11,12 +11,13 @@ find_package(CUDA REQUIRED)
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
 ADD_DEFINITIONS(${DEFS})
-LINK_DIRECTORIES(${LINK_DIRS})
+
 INCLUDE_DIRECTORIES(
-    ${EagleLib_INCLUDE_DIRECTORIES}
+    ${INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
+	
 )
 
 file(GLOB_RECURSE src "*.cpp")
@@ -31,10 +32,11 @@ ENDIF()
 cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})
 
 add_dependencies(Dev EagleLib)
-target_link_libraries(Dev 
-    EagleLib
-    ${OpenCV_LIBS}
-    ${CUDA_CUBLAS_LIBRARIES}
+RCC_LINK_LIB(Dev 
+	${OpenCV_LIBS}
+	${CUDA_CUBLAS_LIBRARIES} 
+	EagleLib
 )
+
 INCLUDE(../PluginTemplate.cmake)
 

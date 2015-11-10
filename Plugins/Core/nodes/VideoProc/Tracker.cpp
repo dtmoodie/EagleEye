@@ -5,6 +5,7 @@
 #include <external_includes/cv_calib3d.hpp>
 #include <external_includes/cv_cudawarping.hpp>
 #include <external_includes/cv_cudaimgproc.hpp>
+#include <UI/InterThread.hpp>
 using namespace EagleLib;
 NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyFrameTracker)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(CMTTracker)

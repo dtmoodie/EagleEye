@@ -2,6 +2,56 @@ cmake_minimum_required(VERSION 2.8)
 
 project(EagleEye)
 
+
+# This macro is used for linking libs to a target, but also adding the correct directories to the RCC config
+MACRO(RCC_LINK_LIB TARGET)
+	SET(PREFIX "")
+	
+    FOREACH(lib ${ARGN})
+		SET(SKIP "0")
+		IF(${lib} STREQUAL "optimized")
+		SET(PREFIX "optimized;")
+		SET(SKIP "1")
+		ENDIF(${lib} STREQUAL "optimized")
+		IF(${lib} STREQUAL "debug")
+		SET(PREFIX "debug;")
+		SET(SKIP "1")
+		ENDIF(${lib} STREQUAL "debug")
+
+		IF(${SKIP} STREQUAL "0")
+			IF(EXISTS ${lib})
+				TARGET_LINK_LIBRARIES(${TARGET} ${lib})
+				GET_FILENAME_COMPONENT(DIR ${lib} DIRECTORY)
+				SET(LINK_DIRS_DEBUG "${LINK_DIRS_DEBUG};${DIR}")
+				SET(LINK_DIRS_RELEASE "${LINK_DIRS_RELEASE};${DIR}")
+				
+			ELSE(EXISTS ${lib})
+				GET_TARGET_PROPERTY(rel ${lib} IMPORTED_IMPLIB_RELEASE)
+				GET_TARGET_PROPERTY(deb ${lib} IMPORTED_IMPLIB_DEBUG)
+				IF(NOT rel)
+					SET(rel ${deb})
+				endif(NOT rel)
+				IF(NOT deb)
+					SET(deb ${rel})
+				ENDIF(NOT deb)
+				GET_FILENAME_COMPONENT(rel_ ${rel} DIRECTORY)
+				GET_FILENAME_COMPONENT(deb_ ${deb} DIRECTORY)
+				SET(LINK_DIRS_DEBUG "${LINK_DIRS_DEBUG};${deb_}")
+				SET(LINK_DIRS_RELEASE "${LINK_DIRS_RELEASE};${rel_}")
+				
+				
+			ENDIF(EXISTS ${lib})
+			TARGET_LINK_LIBRARIES(${TARGET} ${PREFIX}${lib})
+			MESSAGE("Linking ${PREFIX}${lib} to ${TARGET}")
+		ENDIF(${SKIP} STREQUAL "0")
+	ENDFOREACH(lib)
+	LIST(REMOVE_DUPLICATES LINK_DIRS_DEBUG)
+	LIST(REMOVE_DUPLICATES LINK_DIRS_RELEASE)
+ENDMACRO(RCC_LINK_LIB TARGET)
+
+
+
+
 set(BUILD_TYPE STATIC)
 CMAKE_POLICY(SET CMP0020 NEW)
 SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -21,6 +71,9 @@ ELSE(WIN32)
   set(Boost_USE_STATIC_RUNTIME     OFF)
   ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
 ENDIF(WIN32)
+
+
+
 
 
 IF(WIN32)
@@ -45,14 +98,19 @@ ELSE(WIN32)
   SET(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Executable output path" FORCE)
 ENDIF(WIN32)
 
-SET(EAGLE_LIB_JETSON FALSE CACHE BOOL "True if building for jetson platform")
+SET(EagleLib_JETSON FALSE CACHE BOOL "True if building for jetson platform")
 add_subdirectory(EagleLib)
 
-SET(LINK_DIRS "${EagleLib_LIB_DIRS_DEBUG};${EagleLib_LIB_DIRS_RELASE}")
+SET(LINK_DIRS_RELEASE ${EagleLib_LIB_DIRS_RELEASE})
+SET(LINK_DIRS_DEBUG ${EagleLib_LIB_DIRS_DEBUG})
+
 SET(INCLUDE_DIRS ${EagleLib_INCLUDE_DIRECTORIES})
 SET(LINK_LIBS ${EagleLib_LIBRARIES})
 SET(DEFS ${EagleLib_DEFS})
 
+LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
+LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
+INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
 add_subdirectory(EagleEye)
 add_subdirectory(Plugins)
 add_subdirectory(samples)

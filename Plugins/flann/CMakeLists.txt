@@ -11,7 +11,7 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 find_package(CUDA REQUIRED)
  SET(CUDA_VERBOSE_BUILD ON)
 
-find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
+find_package(OpenCV 3.0 REQUIRED core)
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 FIND_PACKAGE(Flann REQUIRED)
@@ -20,10 +20,13 @@ IF(EAGLELIB_FLANN_LIBRARY_DEBUG AND EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG)
 	FILE(GLOB_RECURSE src "src/*.cpp")
 	FILE(GLOB_RECURSE hdr "src/*.hpp" "src/*.h")
 	FILE(GLOB_RECURSE knl "src/*.cu")
-        LIST(APPEND CUDA_NVCC_FLAGS_DEBUG "-g;-G;-lineinfo")
+	
+	LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
+	LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
+
+    LIST(APPEND CUDA_NVCC_FLAGS_DEBUG "-g;-G;-lineinfo")
 	INCLUDE_DIRECTORIES(
 		${CMAKE_CURRENT_SOURCE_DIR}
-		${EagleLib_INCLUDE_DIRECTORIES}
         ${OpenCV_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
@@ -33,19 +36,18 @@ IF(EAGLELIB_FLANN_LIBRARY_DEBUG AND EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG)
 	ADD_DEFINITIONS(-DPROJECT_INCLUDES="${EAGLELIB_FLANN_INCLUDE_DIR}")
 	ADD_DEFINITIONS(-DPROJECT_LIB_DIRS="${FLANN_LIB_DIR}")
 	ADD_DEFINITIONS(-DPARAMETERS_USE_UI)
-	LINK_DIRECTORIES(${LINK_DIRS})
+
 	CUDA_ADD_LIBRARY(Flann SHARED ${src} ${hdr} ${knl})
 	add_dependencies(Flann EagleLib)
-	target_link_libraries(Flann
-        EagleLib
-        ${OpenCV_LIBS}
+
+	RCC_LINK_LIB(Flann EagleLib
+		${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}
-        ${LINK_LIBS}
         debug;${EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG}
         optimized;${EAGLELIB_FLANN_CUDA_LIBRARY_RELEASE}
         debug;${EAGLELIB_FLANN_LIBRARY_DEBUG}
-        optimized;${EAGLELIB_FLANN_LIBRARY_RELEASE}
-    )
+        optimized;${EAGLELIB_FLANN_LIBRARY_RELEASE})
+	
 	INCLUDE(../PluginTemplate.cmake)
 
 ELSE()

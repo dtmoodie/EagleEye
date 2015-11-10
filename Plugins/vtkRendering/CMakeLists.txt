@@ -45,7 +45,7 @@ ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
 CUDA_ADD_LIBRARY(vtkRendering SHARED ${src} ${hdr} ${knl})
 INCLUDE(../PluginTemplate.cmake)
 ADD_DEPENDENCIES(vtkRendering EagleLib)
-TARGET_LINK_LIBRARIES(vtkRendering
+RCC_LINK_LIB(vtkRendering
   EagleLib
   ${OpenCV_LIBS}
   ${VTK_LIBRARIES}

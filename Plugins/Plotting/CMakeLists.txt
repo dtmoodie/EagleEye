@@ -39,7 +39,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_library(Plotting SHARED ${src} ${hdr} ${knl} ${UIS} ${MOC})
 add_dependencies(Plotting EagleLib)
 
-target_link_libraries(Plotting 
+RCC_LINK_LIB(Plotting 
 	EagleLib 
 	Qt5::Core 
 	Qt5::Widgets 

@@ -47,7 +47,7 @@ IF(GSTREAMER_gst_INCLUDE_DIR)
 
 	ADD_DEFINITIONS(-DPROJECT_LIB_DIRS="${LIB_DIR}")
 	ADD_LIBRARY(Gstreamer SHARED ${src} ${hdr})
-	TARGET_LINK_LIBRARIES(Gstreamer
+	RCC_LINK_LIB(Gstreamer 
 		EagleLib
 		Qt5::Network
 		#${LINK_LIBS}
