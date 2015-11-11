@@ -359,14 +359,33 @@ RTSP_server_new::RTSP_server_new()
 	loop = nullptr;
 	server = nullptr;
 	factory = nullptr;
+	pipeline = nullptr;
+	appsrc = nullptr;
+	clientCount = 0;
+	connected = false;
+	first_run = true;
 }
 RTSP_server_new::~RTSP_server_new()
 {
+	NODE_LOG(info) << "Shutting down rtsp server";
+	if(pipeline)
+		gst_element_set_state(pipeline, GST_STATE_NULL);
 	g_main_loop_quit(loop);
-	g_object_unref(factory);
-	g_object_unref(server);
+	if(factory)
+		gst_object_unref(factory);
+	if (server)
+	{
+		g_source_remove(server_id);
+		gst_object_unref(server);
+	}
+		
 	glib_thread.join();
-
+	if(loop)
+		g_main_loop_unref(loop);
+	if(pipeline)
+		gst_object_unref(pipeline);
+	if(appsrc)
+		gst_object_unref(appsrc);
 }
 void RTSP_server_new::push_image()
 {
@@ -382,6 +401,7 @@ void RTSP_server_new::glibThread()
 	{
 		g_main_loop_run(loop);
 	}
+	BOOST_LOG_TRIVIAL(info) << "[RTSP Server] Gmain loop quitting";
 }
 void RTSP_server_new::setup(std::string pipeOverride)
 {
@@ -392,7 +412,7 @@ void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpoin
 	auto node = static_cast<EagleLib::RTSP_server_new*>(user_data);
 	cv::cuda::HostMem* h_buffer = nullptr;
 	node->notifier.wait_and_pop(h_buffer);
-	if (h_buffer)
+	if (h_buffer && node->connected)
 	{
 		int bufferlength = h_buffer->cols * h_buffer->rows * h_buffer->channels();
 		auto buffer = gst_buffer_new_and_alloc(bufferlength);
@@ -449,45 +469,68 @@ bus_message_new(GstBus * bus, GstMessage * message, RTSP_server_new * app)
 	}
 	return TRUE;
 }
-void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, gpointer user_data)
+void client_close_handler(GstRTSPClient *client, EagleLib::RTSP_server_new* node)
 {
-	auto node = static_cast<EagleLib::RTSP_server_new*>(user_data);
-	GstElement *element, *appsrc;
+	node->clientCount--;
+	BOOST_LOG_TRIVIAL(info) << "[RTSP Server] Client Disconnected " << node->clientCount << " " << client;
+	if (node->clientCount == 0)
+	{
+		BOOST_LOG_TRIVIAL(info) << "[RTSP Server] Setting pipeline state to GST_STATE_NULL and unreffing old pipeline";
+		gst_element_set_state(node->pipeline,GST_STATE_NULL);
+		gst_object_unref(node->pipeline);
+		gst_object_unref(node->appsrc);
+		node->appsrc = nullptr;
+		node->pipeline = nullptr;
+		node->connected = false;
+	}
+}
+void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, EagleLib::RTSP_server_new* node)
+{
 	if (node->imgSize.area() == 0)
 	{
 		return;
 	}
-	
-	BOOST_LOG_TRIVIAL(info) << "RTSP client connected"; 
 
 	// get the element used for providing the streams of the media 
-	element = gst_rtsp_media_get_element(media);
+	node->pipeline = gst_rtsp_media_get_element(media);
 
 	// get our appsrc, we named it 'mysrc' with the name property 
-	appsrc = gst_bin_get_by_name_recurse_up(GST_BIN(element), "mysrc");
+	node->appsrc = gst_bin_get_by_name_recurse_up(GST_BIN(node->pipeline), "mysrc");
 
+	BOOST_LOG_TRIVIAL(info) << "[RTSP Server] Configuring pipeline " << node->clientCount << " " << node->pipeline << " " << node->appsrc;
 
 	// this instructs appsrc that we will be dealing with timed buffer 
-	gst_util_set_object_arg(G_OBJECT(appsrc), "format", "time");
+	gst_util_set_object_arg(G_OBJECT(node->appsrc), "format", "time");
 
 	// configure the caps of the video 
-	g_object_set(G_OBJECT(appsrc), "caps",
+	g_object_set(G_OBJECT(node->appsrc), "caps",
 		gst_caps_new_simple("video/x-raw",
 			"format", G_TYPE_STRING, "BGR",
 			"width", G_TYPE_INT, node->imgSize.width,
 			"height", G_TYPE_INT, node->imgSize.height,
 			"framerate", GST_TYPE_FRACTION, 30, 1, NULL), NULL);
 
-	
-	// make sure ther data is freed when the media is gone 
-	//g_object_set_data_full(G_OBJECT(media), "my-extra-data", ctx,
-	//	(GDestroyNotify)g_free);
 
 	// install the callback that will be called when a buffer is needed 
-	g_signal_connect(appsrc, "need-data", (GCallback)rtsp_server_new_need_data_callback, node);
-	gst_object_unref(appsrc);
-	gst_object_unref(element);
+	g_signal_connect(node->appsrc, "need-data", (GCallback)rtsp_server_new_need_data_callback, node);
+	//gst_object_unref(appsrc);
+	//gst_object_unref(element);
 }
+void new_client_handler(GstRTSPServer *server, GstRTSPClient *client, EagleLib::RTSP_server_new* node)
+{
+	
+	node->clientCount++;
+	node->connected = true;
+	BOOST_LOG_TRIVIAL(info) << "New client connected " << node->clientCount << " " << client;
+	if (node->first_run)
+	{
+		g_signal_connect(node->factory, "media-configure", G_CALLBACK(media_configure), node);
+	}
+	g_signal_connect(client, "closed", G_CALLBACK(client_close_handler), node);
+	node->first_run = false;
+}
+
+
 void RTSP_server_new::Init(bool firstInit)
 {
 	if (firstInit)
@@ -525,13 +568,14 @@ void RTSP_server_new::Init(bool firstInit)
 		{
 			factory = gst_rtsp_media_factory_new();
 		}
+		gst_rtsp_media_factory_set_shared(factory, true);
 
 		gst_rtsp_media_factory_set_launch(factory,
 			"( appsrc name=mysrc ! videoconvert ! openh264enc ! rtph264pay name=pay0 pt=96 )");
 
 		// notify when our media is ready, This is called whenever someone asks for
 		// the media and a new pipeline with our appsrc is created 
-		g_signal_connect(factory, "media-configure", G_CALLBACK(media_configure), this);
+		//g_signal_connect(factory, "media-configure", G_CALLBACK(media_configure), this);
 
 		// attach the test factory to the /test url 
 		gst_rtsp_mount_points_add_factory(mounts, "/test", factory);
@@ -540,7 +584,8 @@ void RTSP_server_new::Init(bool firstInit)
 		g_object_unref(mounts);
 
 		// attach the server to the default maincontext 
-		gst_rtsp_server_attach(server, NULL);
+		server_id = gst_rtsp_server_attach(server, NULL);
+		g_signal_connect(server, "client-connected",G_CALLBACK(new_client_handler), this);
 
 		glib_thread = boost::thread(std::bind(&RTSP_server_new::glibThread, this));
 	}

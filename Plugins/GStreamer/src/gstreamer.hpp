@@ -82,8 +82,12 @@ namespace EagleLib
 		time_t delta;
 		GMainLoop *loop;
 		GstRTSPServer *server;
-		
+		int clientCount;
+		bool connected;
+		bool first_run;
+		guint server_id;
 		GstRTSPMediaFactory *factory;
+		GstElement *pipeline, *appsrc;
 
 		boost::thread glib_thread;
 		void glibThread();
