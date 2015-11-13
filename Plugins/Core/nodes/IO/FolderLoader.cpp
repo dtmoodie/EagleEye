@@ -51,5 +51,5 @@ cv::cuda::GpuMat FolderLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
 	imageNotifier.wait_and_pop(img);
 	return img;
 }
-
+REGISTER_NODE_HIERARCHY(FolderLoader, "Image", "Source");
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FolderLoader);

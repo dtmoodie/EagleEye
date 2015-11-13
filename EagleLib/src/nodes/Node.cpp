@@ -84,7 +84,19 @@ namespace EagleLib
 		std::vector<boost::signals2::connection>							callbackConnections;
     };
 }
-
+NodeInfoRegisterer::NodeInfoRegisterer(const char* name, const char** hierarchy)
+{
+	
+}
+NodeInfoRegisterer::NodeInfoRegisterer(const char* nodeName, std::initializer_list<char*> nodeInfo)
+{
+	std::vector<std::string> nodeInfoHierarchy;
+	for (auto itr = nodeInfo.begin(); itr != nodeInfo.end(); ++itr)
+	{
+		nodeInfoHierarchy.push_back(std::string(*itr));
+	}
+	EagleLib::NodeManager::getInstance().RegisterNodeInfo(nodeName, nodeInfoHierarchy);
+}
 Node::Node():
     pImpl_(new NodeImpl())
 {
@@ -94,7 +106,6 @@ Node::Node():
 	externalDisplay = false;
 	drawResults = false;
     parent = nullptr;
-	nodeType = eVirtual;
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {

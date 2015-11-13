@@ -31,11 +31,6 @@
 
 
 #include <boost/function.hpp>
-//#include <boost/signals2.hpp>
-//#include <boost/signals2/signal.hpp>
-
-
-//#include <boost/filesystem.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/expressions/keyword.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
@@ -57,6 +52,7 @@
 #include "RuntimeLinkLibrary.h"
 #include "ObjectInterfacePerModule.h"
 #include "IObject.h"
+#include "EagleLib/Defs.hpp"
 
 #define TIME Clock(__LINE__);
 
@@ -77,36 +73,32 @@ namespace EagleLib
     class NodeImpl;
 }
 
-BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName, "NodeName",const std::string);
-
+//BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName, "NodeName",const std::string);
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLibd.lib")
 	RUNTIME_COMPILER_LINKLIBRARY("libParameterd.lib")
-	RUNTIME_COMPILER_LINKLIBRARY("Qt5Cored.lib");
-	RUNTIME_COMPILER_LINKLIBRARY("Qt5Networkd.lib");
-	RUNTIME_COMPILER_LINKLIBRARY("Qt5Guid.lib");
-	RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgetsd.lib");
+	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Cored.lib");
+	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Networkd.lib");
+	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Guid.lib");
+	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgetsd.lib");
 #else
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
 	RUNTIME_COMPILER_LINKLIBRARY("libParameter.lib")
-	RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
-	RUNTIME_COMPILER_LINKLIBRARY("Qt5Network.lib");
-	RUNTIME_COMPILER_LINKLIBRARY("Qt5Gui.lib");
-	RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
+	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
+	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Network.lib");
+	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Gui.lib");
+	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
 #endif
 
 #else
 #ifdef _DEBUG
     RUNTIME_COMPILER_LINKLIBRARY("-lEagleLibd")
 #else
-	RUNTIME_COMPILER_LINKLIBRARY("-lEagleLib")
+RUNTIME_COMPILER_LINKLIBRARY("-lEagleLib")
 #endif
 #endif
-
-
-
 
 
 #define NODE_DEFAULT_CONSTRUCTOR_IMPL(NodeName) \
@@ -119,27 +111,19 @@ NodeName::NodeName():Node()                     \
 REGISTERCLASS(NodeName)
 
 
+#define REGISTER_NODE_HIERARCHY(name, ...) static EagleLib::NodeInfoRegisterer g_registerer_##name = EagleLib::NodeInfoRegisterer(#name, {__VA_ARGS__});
+
 namespace EagleLib
 {
-    class NodeManager;
-    class Node;
-
-	enum NodeType
-	{
-		eVirtual		= 1,	/* This is a virtual node, it should only be inherited */
-		eGPU			= 2,	/* This node processes on the GPU, if this flag isn't set it processes on the CPU*/
-		eImg			= 4,	/* This node processes images */
-		ePtCloud		= 8,	/* This node processes point cloud data */
-		eProcessing		= 16,	/* Calling the doProcess function actually does something */
-		eFunctor		= 32,   /* Calling doProcess doesn't do anything, instead this node presents a function to be used in another node */
-		eObj			= 64,	/* Calling doProcess doesn't do anything, instead this node presents a object that can be used in another node */
-		eOneShot		= 128,	/* Calling doProcess does something, but should only be called once.  Maybe as a setup? */
-		eSource         = 256,  /* this node generates data*/
-		eSink           = 512   /* This node accepts and saves data */
-    };
 	
+	struct EAGLE_EXPORTS NodeInfoRegisterer
+	{
+		NodeInfoRegisterer(const char* nodeName, const char** nodeInfo);
+		NodeInfoRegisterer(const char* nodeName, std::initializer_list<char*> nodeInfo);
+	};
 
-    class CV_EXPORTS Node: public TInterface<IID_NodeObject, IObject>, public IObjectNotifiable
+
+    class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, IObject>, public IObjectNotifiable
     {
     public:
         typedef shared_ptr<Node> Ptr;
@@ -686,7 +670,7 @@ namespace EagleLib
 
         // Mutex for blocking processing of a node during parameter update
         boost::recursive_mutex                                              mtx;
-		NodeType															nodeType;
+		//NodeType															nodeType;
         void onParameterAdded();
         void onUpdate();
         double GetProcessingTime() const;

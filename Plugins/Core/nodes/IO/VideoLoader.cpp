@@ -19,7 +19,6 @@ void
 VideoLoader::Init(bool firstInit)
 {
     Node::Init(firstInit);
-	nodeType = eSource;
     if(firstInit)
     {
 		updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/trailer.mp4"), Parameters::Parameter::Control, "Path to video file");

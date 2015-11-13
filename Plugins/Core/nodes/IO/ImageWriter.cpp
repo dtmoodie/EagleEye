@@ -32,7 +32,6 @@ void ImageWriter::writeImage()
 
 void ImageWriter::Init(bool firstInit)
 {
-	nodeType = eSink;
     writeRequested = false;
     frameCount = 0;
     frameSkip = 0;

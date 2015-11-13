@@ -10,7 +10,6 @@ void ImageLoader::Init(bool firstInit)
     Node::Init(firstInit);
     updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/oimg.jpeg"), Parameters::Parameter::Control, "Path to image file");
     parameters[0]->changed = true;
-	nodeType = eSource;
 }
 void ImageLoader::load()
 {
@@ -67,7 +66,6 @@ void DirectoryLoader::Init(bool firstInit)
     updateParameter<Parameters::ReadDirectory>("Directory", boost::filesystem::path("/home/dan/build/EagleEye/bin"), Parameters::Parameter::Control, "Path to directory");
     updateParameter<bool>("Repeat", true);
     updateParameter<boost::function<void(void)>>("Restart", boost::bind(&DirectoryLoader::restart, this));
-	nodeType = eSource;
     fileIdx = 0;
 }
 

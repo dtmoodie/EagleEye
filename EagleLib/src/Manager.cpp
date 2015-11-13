@@ -620,7 +620,14 @@ bool NodeManager::removeNode(ObjectId oid)
 	LOG_TRACE;
 	return false;
 }
-
+void NodeManager::RegisterNodeInfo(const char* nodeName, std::vector<std::string>& nodeInfo)
+{
+	m_nodeInfoMap[nodeName] = nodeInfo;
+}
+std::vector<std::string>& NodeManager::GetNodeInfo(std::string& nodeName)
+{
+	return m_nodeInfoMap[nodeName];
+}
 void 
 NodeManager::addConstructors(IAUDynArray<IObjectConstructor*> & constructors)
 {
