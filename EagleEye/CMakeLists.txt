@@ -13,8 +13,8 @@ IF(Qt5_FOUND)
     set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono log log_setup)
 
 	find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
-
-
+	ADD_DEFINITIONS("-DQt5_FOUND")
+	ADD_DEFINITIONS("-DPARAMETERS_USE_UI")
 	INCLUDE_DIRECTORIES(
 		${OpenCV_INCLUDE_DIRS}
 		${Parameters_INCLUDE}
