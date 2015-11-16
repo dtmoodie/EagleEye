@@ -43,6 +43,7 @@ IF(TARGET fastms)
     
 	add_dependencies(Segmentation fastms)
     RCC_LINK_LIB(Segmentation fastms ${fastms_LIBS})
+	TARGET_LINK_LIBRARIES(Segmentation fastms)
     add_definitions(-DFASTMS_FOUND)
     add_definitions(-DFASTMS_INCLUDE=${fastms_INCLUDE_DIRECTORIES})
 	LIST(APPEND DEFS -DFASTMS_FOUND)

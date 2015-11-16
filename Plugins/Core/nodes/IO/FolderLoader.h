@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nodes/Node.h>
-#include <CudaUtils.hpp>
+#include <EagleLib/utilities/CudaUtils.hpp>
 
 namespace EagleLib
 {

@@ -3,7 +3,7 @@
 #include <external_includes/cv_highgui.hpp>
 #include <external_includes/cv_core.hpp>
 #include <opencv2/core/opengl.hpp>
-#include <CudaUtils.hpp>
+#include <EagleLib/utilities/CudaUtils.hpp>
 #include <ObjectDetection.hpp>
 
 namespace EagleLib

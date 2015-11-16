@@ -40,6 +40,8 @@ FILE(GLOB_RECURSE ext_inc "include/external_includes")
 FILE(GLOB_RECURSE knl "src/*.cu")
 ADD_SUBDIRECTORY("parameters")
 
+#ADD_SUBDIRECTORY("enkiTS")
+#ADD_SUBDIRECTORY("casablanca/Release")
 
 
 INCLUDE_DIRECTORIES(
@@ -192,6 +194,7 @@ TARGET_LINK_LIBRARIES(EagleLib
         ${OpenCV_LIBS}
         RuntimeCompiler
         RuntimeObjectSystem
+		#enkiTS
         libParameter
         ${Parameters_LIBRARIES}
 		${CUDA_CUDA_LIBRARY}
@@ -201,6 +204,7 @@ ADD_DEPENDENCIES(EagleLib
 	RuntimeCompiler
 	RuntimeObjectSystem
 	libParameter
+	enkiTS
 	)
 
 

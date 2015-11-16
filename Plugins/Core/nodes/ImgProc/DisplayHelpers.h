@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nodes/Node.h"
-#include <CudaUtils.hpp>
+#include <EagleLib/utilities/CudaUtils.hpp>
 #include "DisplayHelpers.cuh"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE

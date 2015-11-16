@@ -39,7 +39,7 @@
 #include <type_traits>
 #include "type.h" // for demangle on linux
 #include "LokiTypeInfo.h"
-
+#include "EagleLib/Defs.hpp"
 #include <Parameters.hpp>
 #include <Types.hpp>
 
@@ -47,7 +47,7 @@
 #include <external_includes/cv_core.hpp>
 #include <external_includes/cv_highgui.hpp>
 
-#include "CudaUtils.hpp"
+#include "EagleLib/utilities/CudaUtils.hpp"
 
 #include "RuntimeLinkLibrary.h"
 #include "ObjectInterfacePerModule.h"
@@ -73,23 +73,14 @@ namespace EagleLib
     class NodeImpl;
 }
 
-//BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName, "NodeName",const std::string);
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLibd.lib")
 	RUNTIME_COMPILER_LINKLIBRARY("libParameterd.lib")
-	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Cored.lib");
-	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Networkd.lib");
-	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Guid.lib");
-	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgetsd.lib");
 #else
 	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
 	RUNTIME_COMPILER_LINKLIBRARY("libParameter.lib")
-	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
-	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Network.lib");
-	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Gui.lib");
-	//RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
 #endif
 
 #else
@@ -115,18 +106,17 @@ REGISTERCLASS(NodeName)
 
 namespace EagleLib
 {
-	
 	struct EAGLE_EXPORTS NodeInfoRegisterer
 	{
 		NodeInfoRegisterer(const char* nodeName, const char** nodeInfo);
-		NodeInfoRegisterer(const char* nodeName, std::initializer_list<char*> nodeInfo);
+		NodeInfoRegisterer(const char* nodeName, std::initializer_list<NodeType> nodeInfo);
 	};
-
 
     class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, IObject>, public IObjectNotifiable
     {
     public:
         typedef shared_ptr<Node> Ptr;
+		
 		Node();
 		virtual ~Node();
         /**
@@ -137,7 +127,7 @@ namespace EagleLib
          * @return output image
          */
         virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img, cv::cuda::Stream& steam = cv::cuda::Stream::Null());
-		virtual void					process(cv::InputArray in, cv::OutputArray out);
+		
         /**
          * @brief doProcess this is the most used node and where the bulk of the work is performed.
          * @param img input image
@@ -145,11 +135,10 @@ namespace EagleLib
          * @return output image
          */
         virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-		virtual void					doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat>& retVal);
-		virtual void					doProcess(cv::InputArray in, boost::promise<cv::OutputArray>& retVal);
-		virtual void					doProcess(cv::InputArray in, cv::OutputArray out);
-
+		
 		virtual void					reset();
+
+		virtual NodeType GetType() const;
 
         /**
          * @brief getName depricated?  Idea was to recursively go through parent nodes and rebuild my tree name, useful I guess once
@@ -659,8 +648,6 @@ namespace EagleLib
         // Vector of parameters for this node
         std::vector< Parameters::Parameter::Ptr >							parameters;
 
-        /* If true, draw results onto the image being processed, hardly ever used */
-        bool																drawResults;
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
 		bool																externalDisplay;
         // Toggling this disables a node's doProcess code from ever being called

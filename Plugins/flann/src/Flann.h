@@ -2,7 +2,7 @@
 
 #include "nodes/Node.h"
 #include <EagleLib/Defs.hpp>
-#include <CudaUtils.hpp>
+#include <EagleLib/utilities/CudaUtils.hpp>
 
 
 #define FLANN_USE_CUDA

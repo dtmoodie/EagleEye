@@ -14,6 +14,7 @@
 #include <Manager.h>
 #include "settingdialog.h"
 #include "logger.hpp"
+#include "EagleLib/utilities/BufferPool.hpp"
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
@@ -45,8 +46,7 @@
 #include <Events.h>
 #include <UI/InterThread.hpp>
 #include <../remotery/lib/Remotery.h>
-#include <GpuMatAllocators.h>
-//#include <MemoryPoolAllocator.h>
+#include <EagleLib/utilities/GpuMatAllocators.h>
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
@@ -736,6 +736,7 @@ void MainWindow::processThread()
 			delta = end - start;
 			start = end;
 			rmt_ScopedCPUSample(Idle);
+			EagleLib::scoped_buffer::GarbageCollector::Run();
 			if (delta.total_milliseconds() < 15 || parentList.size() == 0)
 				boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
         }catch(boost::thread_interrupted& err)

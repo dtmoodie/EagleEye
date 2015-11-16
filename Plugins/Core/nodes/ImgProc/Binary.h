@@ -25,6 +25,7 @@ namespace EagleLib
     public:
         FindContours();
         virtual void Init(bool firstInit);
+		virtual void findContours(cv::cuda::HostMem img);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
 

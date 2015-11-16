@@ -68,13 +68,15 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                 *getParameter<cv::Mat>(4)->Data(),
                 *getParameter<cv::Point>(3)->Data(),
                 *getParameter<int>(5)->Data()));
-        //log(Status, "Filter updated");
 		NODE_LOG(info) << "Filter updated";
         parameters[1]->changed = false; 
     }
-    (*getParameter<cv::Ptr<cv::cuda::Filter>>(6)->Data())->apply(img,img,stream);
-    return img;
+	cv::cuda::GpuMat output;
+    (*getParameter<cv::Ptr<cv::cuda::Filter>>(6)->Data())->apply(img,output,stream);
+    return output;
 }
+
+
 void FindContours::Init(bool firstInit)
 {
     Node::Init(firstInit);
@@ -97,79 +99,91 @@ void FindContours::Init(bool firstInit)
         updateParameter<std::vector<cv::Vec4i>>("Hierarchy", std::vector<cv::Vec4i>()); // 3
         updateParameter<bool>("Calculate contour Area", false); // 4
         updateParameter<bool>("Calculate Moments", false);  // 5
+		updateParameter<bool>("Async", false);
     }
-
 }
+struct FindContoursCallbackData
+{
+	FindContours* node;
+	cv::cuda::HostMem data;
+};
+void FindContoursCallback(int status, void* user_data)
+{
+	auto data = static_cast<FindContoursCallbackData*>(user_data);
 
+	data->node->findContours(data->data);
+	delete data;
+}
+void FindContours::findContours(cv::cuda::HostMem h_img)
+{
+	std::vector<std::vector<cv::Point> >* ptr = getParameter<std::vector<std::vector<cv::Point>>>(2)->Data();
+	cv::findContours(h_img,
+		*ptr,
+		*getParameter<std::vector<cv::Vec4i>>(3)->Data(),
+		getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
+		getParameter<Parameters::EnumParameter>(1)->Data()->currentSelection);
+	updateParameter<int>("Contours found", ptr->size(), Parameters::Parameter::State);
+	parameters[2]->changed = true;
+	parameters[3]->changed = true;
+	if (*getParameter<bool>(4)->Data())
+	{
+		if (parameters[4]->changed)
+		{
+			updateParameter<bool>("Oriented Area", false);
+			updateParameter<bool>("Filter area", false);
+			parameters[4]->changed = false;
+		}
+		auto areaParam = getParameter<bool>("Filter area");
+		if (areaParam != nullptr && *areaParam->Data() && areaParam->changed)
+		{
+			updateParameter<double>("Filter threshold", 0.0);
+			updateParameter<double>("Filter sigma", 0.0);
+			areaParam->changed = false;
+		}
+		auto areaPtr = getParameter<std::vector<std::pair<int, double>>>("Contour Area")->Data();
+		bool oriented = *getParameter<bool>("Oriented Area")->Data();
+		areaPtr->resize(ptr->size());
+		for (size_t i = 0; i < ptr->size(); ++i)
+		{
+			(*areaPtr)[i] = std::pair<int, double>(int(i), cv::contourArea((*ptr)[i], oriented));
+		}
+		auto thresholdParam = getParameter<double>("Filter threshold");
+		if (thresholdParam != nullptr && thresholdParam->Data() != nullptr)
+		{
+			areaPtr->erase(std::remove_if(areaPtr->begin(), areaPtr->end(),
+				[thresholdParam](std::pair<int, double> x) {return x.second < *thresholdParam->Data(); }), areaPtr->end());
+		}
+		auto sigmaParam = getParameter<double>("Filter sigma");
+		if (sigmaParam != nullptr && *sigmaParam->Data() != 0.0)
+		{
+			// Calculate mean and sigma
+			double sum = 0;
+			double sumSq = 0;
+			for (size_t i = 0; i < areaPtr->size(); ++i)
+			{
+				sum += (*areaPtr)[i].second;
+				sumSq += (*areaPtr)[i].second*(*areaPtr)[i].second;
+			}
+		}
+	}
+}
 cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    cv::Mat h_img;
+    cv::cuda::HostMem h_img;
     img.download(h_img, stream);
-    stream.waitForCompletion();
-    std::vector<std::vector<cv::Point> >* ptr = getParameter<std::vector<std::vector<cv::Point>>>(2)->Data();
-    cv::findContours(h_img,
-        *ptr,
-        *getParameter<std::vector<cv::Vec4i>>(3)->Data(),
-        getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
-        getParameter<Parameters::EnumParameter>(1)->Data()->currentSelection);
-    updateParameter<int>("Contours found",ptr->size(), Parameters::Parameter::State);
-    parameters[2]->changed = true;
-    parameters[3]->changed = true;
-    if(*getParameter<bool>(4)->Data())
-    {
-        if(parameters[4]->changed)
-        {
-            //updateParameter<std::vector<std::pair<int,double>>>("Contour Area",std::vector<std::pair<int,double>>(), Parameters::Parameter::Output);
-            updateParameter<bool>("Oriented Area",false);
-            updateParameter<bool>("Filter area", false);
-            parameters[4]->changed = false;
-        }
-        auto areaParam = getParameter<bool>("Filter area");
-        if(areaParam != nullptr && *areaParam->Data() && areaParam->changed)
-        {
-            updateParameter<double>("Filter threshold", 0.0);
-            updateParameter<double>("Filter sigma", 0.0);
-            areaParam->changed = false;
-        }
-        auto areaPtr = getParameter<std::vector<std::pair<int,double>>>("Contour Area")->Data();
-        bool oriented = *getParameter<bool>("Oriented Area")->Data();
-        areaPtr->resize(ptr->size());
-        for(size_t i = 0; i < ptr->size(); ++i)
-        {
-            (*areaPtr)[i] = std::pair<int,double>(int(i),cv::contourArea((*ptr)[i], oriented));
-        }
-        auto thresholdParam = getParameter<double>("Filter threshold");
-        if(thresholdParam != nullptr && thresholdParam->Data() != nullptr)
-        {
-            areaPtr->erase(std::remove_if(areaPtr->begin(), areaPtr->end(),
-                            [thresholdParam](std::pair<int,double> x){return x.second < *thresholdParam->Data();}), areaPtr->end());
-            // This should be more efficient, needs to be tested though
-            /*for(auto it = areaPtr->begin(); it != areaPtr->end(); ++it)
-            {
-                if(it->second < thresholdParam->data)
-                {
-                    std::swap(*it, areaPtr->back());
-                    areaPtr->pop_back();
-                }
-            }*/
-        }
-        auto sigmaParam = getParameter<double>("Filter sigma");
-        if(sigmaParam != nullptr && *sigmaParam->Data() != 0.0)
-        {
-            // Calculate mean and sigma
-            double sum = 0;
-            double sumSq = 0;
-            for(size_t i = 0; i < areaPtr->size(); ++i)
-            {
-                sum += (*areaPtr)[i].second;
-                sumSq += (*areaPtr)[i].second*(*areaPtr)[i].second;
-            }
+	if (*getParameter<bool>("Async")->Data())
+	{
 
-        }
-    }
-
+	}
+	else
+	{
+		stream.waitForCompletion();
+		findContours(h_img);
+	}
+    
     return img;
 }
+
 void ContourBoundingBox::Init(bool firstInit)
 {
     Node::Init(firstInit);
@@ -224,7 +238,7 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
         }
     }
 
-    cv::Mat h_img;
+    cv::cuda::HostMem h_img;
     img.download(h_img,stream);
     stream.waitForCompletion();
     cv::Scalar replace;
@@ -239,18 +253,20 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     {
         for(size_t i = 0; i < areaParam->Data()->size(); ++i)
         {
-            cv::rectangle(h_img, boxes[(*areaParam->Data())[i].first], replace, lineWidth);
+            cv::rectangle(h_img, boxes[(*areaParam->Data())[i].first].tl(), boxes[(*areaParam->Data())[i].first].br(), replace, lineWidth);
         }
     }else
     {
         for(size_t i = 0; i < boxes.size(); ++i)
         {
-            cv::rectangle(h_img, boxes[i],replace, lineWidth);
+            cv::rectangle(h_img, boxes[i].tl(), boxes[i].br(),replace, lineWidth);
         }
     }
     img.upload(h_img,stream);
     return img;
 }
+
+
 void HistogramThreshold::Init(bool firstInit)
 {
     Node::Init(firstInit);
@@ -307,15 +323,12 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
         return img;
     if(img.channels() != 1)
     {
-//        log(Error, "Image to threshold needs to be a single channel image");
 		NODE_LOG(error) << "Image to threshold needs to be a single channel image";
         return img;
     }
     cv::cuda::HostMem histogram;
     inputHistogram->download(histogram, stream);
-    //cv::cuda::findMinMaxLoc(*inputHistogram, values, location, inputMask == nullptr ? cv::noArray(): *inputMask, stream);
     stream.waitForCompletion();
-    //ss << values.createMatHeader().row(0) << " " << location.createMatHeader().row(0) << " " << histogram.createMatHeader().row(0) << std::endl;
     cv::Mat hist = histogram.createMatHeader();
     int maxVal = 0;
     int maxIdx = 0;
@@ -338,6 +351,7 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     updateParameter("Threshold min value", thresholdMin, Parameters::Parameter::Output);
 	updateParameter("Threshold max value", thresholdMax, Parameters::Parameter::Output);
     updateParameter("Max Idx", maxIdx);
+	cv::cuda::GpuMat output;
     switch(type)
     {
     case KeepCenter:
@@ -346,19 +360,24 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
         // As well as for all values below the max, then we AND them together.
         cv::cuda::threshold(img, lowerMask, thresholdMin, 255, cv::THRESH_BINARY, stream);
         cv::cuda::threshold(img, upperMask, thresholdMax, 255, cv::THRESH_BINARY_INV, stream);
-        cv::cuda::bitwise_and(lowerMask, upperMask, img, cv::noArray(), stream);
-        break;
+		
+        cv::cuda::bitwise_and(lowerMask, upperMask, output, cv::noArray(), stream);
+		return output;
     case SuppressCenter:
         cv::cuda::threshold(img, lowerMask, thresholdMax, 255, cv::THRESH_BINARY, stream);
         cv::cuda::threshold(img, upperMask, thresholdMin, 255, cv::THRESH_BINARY_INV, stream);
-        cv::cuda::bitwise_or(lowerMask, upperMask, img, cv::noArray(), stream);
+        cv::cuda::bitwise_or(lowerMask, upperMask, output, cv::noArray(), stream);
     }
-	updateParameter("Image mask", img, Parameters::Parameter::Output);
-
-    return img;
+	updateParameter("Image mask", output, Parameters::Parameter::Output);
+    return output;
 }
+
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(MorphologyFilter)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FindContours)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ContourBoundingBox)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramThreshold)
+REGISTER_NODE_HIERARCHY(MorphologyFilter, Image, Processing);
+REGISTER_NODE_HIERARCHY(FindContours, Image, Extractor)
+REGISTER_NODE_HIERARCHY(ContourBoundingBox, Image, Processing)
+REGISTER_NODE_HIERARCHY(HistogramThreshold, Image, Processing)

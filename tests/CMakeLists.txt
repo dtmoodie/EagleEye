@@ -12,11 +12,13 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
 
+find_package(CUDA REQUIRED)
 
 INCLUDE_DIRECTORIES(
 	${EagleLib_INCLUDE_DIRECTORIES}
 	${OpenCV_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
+	${CUDA_INCLUDE_DIRS}
 )
 LINK_DIRECTORIES(${LINK_DIRS})
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -38,3 +40,6 @@ target_link_libraries(perf_test EagleLib ${LINK_LIBS} ${Boost_LIBRARIES})
 
 add_executable(bind_test bind_test.cpp)
 target_link_libraries(perf_test EagleLib ${LINK_LIBS} ${Boost_LIBRARIES})
+
+cuda_add_executable(test_scoped_buffer test_scoped_buffer.cu)
+target_link_libraries(test_scoped_buffer  EagleLib ${LINK_LIBS} ${Boost_LIBRARIES})

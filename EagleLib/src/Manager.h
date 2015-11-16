@@ -19,7 +19,7 @@
 #include "LokiTypeInfo.h"
 
 //#include "nodes/Node.h"
-#include "CudaUtils.hpp"
+#include "EagleLib/utilities/CudaUtils.hpp""
 
 #include "Parameters.hpp"
 #include <EagleLib/Defs.hpp>
@@ -91,8 +91,8 @@ namespace EagleLib
 
 	public:
 		static NodeManager& getInstance();
-		void RegisterNodeInfo(const char* nodeName, std::vector<std::string>& nodeInfo);
-		std::vector<std::string>& GetNodeInfo(std::string& nodeName);
+		void RegisterNodeInfo(const char* nodeName, std::vector<NodeType>& nodeInfo);
+		std::vector<NodeType>& GetNodeInfo(std::string& nodeName);
         shared_ptr<Node> addNode(const std::string& nodeName);
         std::vector<shared_ptr<Node>> loadNodes(const std::string& saveFile);
         void saveNodes(std::vector<shared_ptr<Node>>& topLevelNodes, const std::string& fileName);
@@ -162,7 +162,7 @@ namespace EagleLib
         std::vector<boost::function<void(void)>>             onConstructorsAddedCallbacks;
 		std::shared_ptr<SystemTable>						m_systemTable;
         std::map<int, std::string>                          m_projectNames;
-		std::map<std::string,std::vector<std::string>>					m_nodeInfoMap;
+		std::map<std::string,std::vector<NodeType>>					m_nodeInfoMap;
 		
     }; // class NodeManager
 } // namespace EagleLib

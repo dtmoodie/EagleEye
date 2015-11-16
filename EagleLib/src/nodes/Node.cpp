@@ -88,23 +88,17 @@ NodeInfoRegisterer::NodeInfoRegisterer(const char* name, const char** hierarchy)
 {
 	
 }
-NodeInfoRegisterer::NodeInfoRegisterer(const char* nodeName, std::initializer_list<char*> nodeInfo)
+NodeInfoRegisterer::NodeInfoRegisterer(const char* nodeName, std::initializer_list<NodeType> nodeInfo)
 {
-	std::vector<std::string> nodeInfoHierarchy;
-	for (auto itr = nodeInfo.begin(); itr != nodeInfo.end(); ++itr)
-	{
-		nodeInfoHierarchy.push_back(std::string(*itr));
-	}
+	std::vector<NodeType> nodeInfoHierarchy(nodeInfo.begin(), nodeInfo.end());
 	EagleLib::NodeManager::getInstance().RegisterNodeInfo(nodeName, nodeInfoHierarchy);
 }
 Node::Node():
     pImpl_(new NodeImpl())
 {
-	treeName = nodeName;
 	profile = false;
     enabled = true;
 	externalDisplay = false;
-	drawResults = false;
     parent = nullptr;
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
@@ -115,6 +109,10 @@ Node::Node():
     }
 	rmt_hash = 0;
 	NODE_LOG(trace) << " Constructor";
+}
+NodeType Node::GetType() const
+{
+	return Processing;
 }
 void Node::onParameterAdded()
 {
@@ -516,20 +514,6 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     return img;
 }
 
-void					
-Node::process(cv::InputArray in, cv::OutputArray out)
-{
-	NODE_LOG(trace);
-	try
-	{
-		return doProcess(in, out);
-	}
-    catch (cv::Exception &err)
-	{
-        //log(Error, err.what());
-		NODE_LOG(error) << err.what();
-	}
-}
 
 cv::cuda::GpuMat
 Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )
@@ -537,25 +521,9 @@ Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )
 	NODE_LOG(trace);
     return img;
 }
-void					
-Node::doProcess(cv::InputArray, cv::OutputArray)
-{
-	NODE_LOG(trace);
-}
 
-void
-Node::doProcess(cv::cuda::GpuMat& img, boost::promise<cv::cuda::GpuMat> &retVal)
-{
-	NODE_LOG(trace);
-    retVal.set_value(process(img));
-}
-void
-Node::doProcess(cv::InputArray in, boost::promise<cv::OutputArray> &retVal)
-{
-	// Figure this out later :(
-	NODE_LOG(trace);
-	
-}
+
+
 void
 Node::registerDisplayCallback(boost::function<void(cv::Mat, Node*)>& f)
 {
@@ -652,7 +620,6 @@ Node::Init(const cv::FileNode& configNode)
     configNode["NodeName"] >> nodeName;
     configNode["NodeTreeName"] >> treeName;
     configNode["FullTreeName"] >> fullTreeName;
-    configNode["DrawResults"] >> drawResults;
     configNode["Enabled"] >> enabled;
     configNode["ExternalDisplay"] >> externalDisplay;
     cv::FileNode childrenFS = configNode["Children"];
@@ -726,7 +693,6 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(nodeName);
 	SERIALIZE(fullTreeName);
     SERIALIZE(parent);
-    SERIALIZE(drawResults);
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);
     SERIALIZE(pImpl_);
@@ -741,7 +707,6 @@ Node::Serialize(cv::FileStorage& fs)
         fs << "NodeName" << nodeName;
         fs << "NodeTreeName" << treeName;
         fs << "FullTreeName" << fullTreeName;
-        fs << "DrawResults" << drawResults;
         fs << "Enabled" << enabled;
         fs << "ExternalDisplay" << externalDisplay;
         fs << "Children" << "{";

@@ -53,5 +53,20 @@ void SetupIncludes(){																					\
 		EagleLib::NodeManager::getInstance().addDefinitions(PROJECT_DEFINITIONS, id);					\
 }																										
 
+namespace EagleLib
+{
+	enum NodeType
+	{
+		Source			= 1 << 1,
+		Sink			= 1 << 2,
+		Processing		= 1 << 3,
+		Extractor		= 1 << 4,
 
+
+		// Datatypes that nodes operate on
+		Image			= 1 << 16,
+		PtCloud         = 1 << 17,
+		Tensor          = 1 << 18
+	};
+}
 

@@ -16,3 +16,6 @@
 [submodule "EagleLib/casablanca"]
 	path = EagleLib/casablanca
 	url = https://github.com/dtmoodie/cpprestsdk
+[submodule "EagleLib/enkiTS"]
+	path = EagleLib/enkiTS
+	url = https://github.com/dtmoodie/enkiTS
