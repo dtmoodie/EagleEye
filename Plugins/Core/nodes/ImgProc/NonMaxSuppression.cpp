@@ -175,3 +175,6 @@ cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 NODE_DEFAULT_CONSTRUCTOR_IMPL(NonMaxSuppression)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(MinMax)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Threshold)
+REGISTER_NODE_HIERARCHY(NonMaxSuppression, Image, Processing)
+REGISTER_NODE_HIERARCHY(MinMax, Image, Processing)
+REGISTER_NODE_HIERARCHY(Threshold, Image, Processing)

@@ -118,3 +118,5 @@ cv::cuda::GpuMat DirectoryLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ImageLoader)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(DirectoryLoader)
+REGISTER_NODE_HIERARCHY(ImageLoader, Image, Source)
+REGISTER_NODE_HIERARCHY(DirectoryLoader, Image, Source)

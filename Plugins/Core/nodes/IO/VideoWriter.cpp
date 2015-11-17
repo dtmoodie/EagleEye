@@ -152,3 +152,4 @@ VideoWriter::startWrite()
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoWriter);
+REGISTER_NODE_HIERARCHY(VideoWriter, Image, Sink)

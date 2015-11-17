@@ -347,3 +347,7 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(ORBFeatureDetector)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FastFeatureDetector)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramRange)
 
+REGISTER_NODE_HIERARCHY(GoodFeaturesToTrackDetector, Image, Extractor)
+REGISTER_NODE_HIERARCHY(ORBFeatureDetector, Image, Extractor)
+REGISTER_NODE_HIERARCHY(FastFeatureDetector, Image, Extractor)
+REGISTER_NODE_HIERARCHY(HistogramRange, Image, Extractor)

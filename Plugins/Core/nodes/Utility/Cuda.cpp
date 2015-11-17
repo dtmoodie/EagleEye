@@ -80,3 +80,4 @@ cv::cuda::GpuMat StreamDispatcher::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SetDevice)
+REGISTER_NODE_HIERARCHY(SetDevice, Utility)

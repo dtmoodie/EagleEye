@@ -86,4 +86,9 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(MeanShiftFilter)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(MeanShiftProc)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(MeanShiftSegmentation)
 
-
+REGISTER_NODE_HIERARCHY(Sobel, Image, Processing)
+REGISTER_NODE_HIERARCHY(Canny, Image, Processing)
+REGISTER_NODE_HIERARCHY(Laplacian, Image, Processing)
+REGISTER_NODE_HIERARCHY(MeanShiftFilter, Image, Processing)
+REGISTER_NODE_HIERARCHY(MeanShiftProc, Image, Processing)
+REGISTER_NODE_HIERARCHY(MeanShiftSegmentation, Image, Processing)

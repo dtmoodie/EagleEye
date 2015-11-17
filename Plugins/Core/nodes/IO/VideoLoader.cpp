@@ -297,3 +297,4 @@ VideoLoader::restartVideo()
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoLoader)
+REGISTER_NODE_HIERARCHY(VideoLoader, Image, Source)

@@ -1,4 +1,28 @@
 #pragma once
+#include <boost/preprocessor.hpp>
+
+#define X_DEFINE_ENUM_WITH_STRING_CONVERSIONS_TOSTRING_CASE(r, data, elem)    \
+    case elem : return BOOST_PP_STRINGIZE(elem);
+
+#define DEFINE_ENUM_WITH_STRING_CONVERSIONS(name, enumerators)                \
+    enum name {                                                               \
+        BOOST_PP_SEQ_ENUM(enumerators)                                        \
+    };                                                                        \
+                                                                              \
+    inline const char* ToString(name v)                                       \
+    {                                                                         \
+        switch (v)                                                            \
+        {                                                                     \
+            BOOST_PP_SEQ_FOR_EACH(                                            \
+                X_DEFINE_ENUM_WITH_STRING_CONVERSIONS_TOSTRING_CASE,          \
+                name,                                                         \
+                enumerators                                                   \
+            )                                                                 \
+            default: return "[Unknown " BOOST_PP_STRINGIZE(name) "]";         \
+        }                                                                     \
+    }
+
+
 
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
 #  define EAGLE_EXPORTS __declspec(dllexport)
@@ -55,6 +79,18 @@ void SetupIncludes(){																					\
 
 namespace EagleLib
 {
+
+	/*DEFINE_ENUM_WITH_STRING_CONVERSIONS(NodeType,
+		((Source,			1 << 1))
+		((Sink,				1 << 2))
+		((Processing,		1 << 3))
+		((Extractor,		1 << 4))
+		((Image,			1 << 16))
+		((PtCloud,			1 << 17))
+		((Tensor,			1 << 18)))*/
+	DEFINE_ENUM_WITH_STRING_CONVERSIONS(NodeType, (Source)(Sink)(Processing)(Extractor)(Converter)(Utility)(Image)(PtCloud)(Tensor));
+
+/*
 	enum NodeType
 	{
 		Source			= 1 << 1,
@@ -68,5 +104,6 @@ namespace EagleLib
 		PtCloud         = 1 << 17,
 		Tensor          = 1 << 18
 	};
+	*/
 }
 

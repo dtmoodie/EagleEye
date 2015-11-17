@@ -25,6 +25,7 @@ private slots:
 
 private:
     Ui::NodeListDialog *ui;
+	
 };
 
 #endif // NODELISTDIALOG_H

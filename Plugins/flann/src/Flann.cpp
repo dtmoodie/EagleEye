@@ -12,17 +12,17 @@ SETUP_PROJECT_IMPL
 
 
 using namespace EagleLib;
-void PtCloud_backgroundSubtract_flann::Init(bool firstInit)
+void ForegroundEstimate::Init(bool firstInit)
 {
 	if (firstInit)
 	{
 		addInputParameter<cv::cuda::GpuMat>("Input point cloud");
 		updateParameter<float>("Radius", 5.0);
 	}
-	updateParameter<boost::function<void(void)>>("Build index", boost::bind(&PtCloud_backgroundSubtract_flann::BuildModel, this));
+	updateParameter<boost::function<void(void)>>("Build index", boost::bind(&ForegroundEstimate::BuildModel, this));
 }
 
-void PtCloud_backgroundSubtract_flann::BuildModel()
+void ForegroundEstimate::BuildModel()
 {
 	MapInput(); 
 	if (input.cols && input.rows)
@@ -34,7 +34,7 @@ void PtCloud_backgroundSubtract_flann::BuildModel()
 		nnIndex->buildIndex();
 	}
 }
-bool PtCloud_backgroundSubtract_flann::MapInput(cv::cuda::GpuMat& img)
+bool ForegroundEstimate::MapInput(cv::cuda::GpuMat& img)
 {
 	auto pInput = getParameter<cv::cuda::GpuMat>(0)->Data();
 	if (!pInput)
@@ -68,11 +68,11 @@ bool PtCloud_backgroundSubtract_flann::MapInput(cv::cuda::GpuMat& img)
 	//input = flann::Matrix<float>((float*)reshaped.data, reshaped.rows, 3, reshaped.step);
 	return true;
 }
-void PtCloud_backgroundSubtract_flann_callback(int status, void* userData)
+void ForegroundEstimateCallback(int status, void* userData)
 {
-	static_cast<PtCloud_backgroundSubtract_flann*>(userData)->updateOutput();
+	static_cast<EagleLib::ForegroundEstimate*>(userData)->updateOutput();
 }
-void PtCloud_backgroundSubtract_flann::updateOutput()
+void ForegroundEstimate::updateOutput()
 {
 	auto output = outputBuffer.getBack();
 	
@@ -80,7 +80,7 @@ void PtCloud_backgroundSubtract_flann::updateOutput()
 	updateParameter("Resulting point cloud", filteredCloud);
 }
 
-cv::cuda::GpuMat PtCloud_backgroundSubtract_flann::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+cv::cuda::GpuMat ForegroundEstimate::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
 	if (!MapInput(img))
 		return img;
@@ -106,7 +106,7 @@ cv::cuda::GpuMat PtCloud_backgroundSubtract_flann::doProcess(cv::cuda::GpuMat& i
 		auto output = outputBuffer.getFront();
 		filterPointCloud(input, output->data.first, idxBuffer_->data, size->data, -1, stream);
 		size->data.download(output->data.second); 
-		stream.enqueueHostCallback(PtCloud_backgroundSubtract_flann_callback, this); 
+		stream.enqueueHostCallback(ForegroundEstimateCallback, this);
 		updateParameter("Neighbor index", idxBuffer_->data);
 		updateParameter("Neighbor dist", distBuffer_->data);
 		//updateParameter("Resulting point cloud", output->data.first);
@@ -118,6 +118,7 @@ cv::cuda::GpuMat PtCloud_backgroundSubtract_flann::doProcess(cv::cuda::GpuMat& i
 	}
 	return img;
 }
+REGISTER_NODE_HIERARCHY(ForegroundEstimate, PtCloud, Extractor)
 RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("flann_knl", ".cu")
-NODE_DEFAULT_CONSTRUCTOR_IMPL(PtCloud_backgroundSubtract_flann);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ForegroundEstimate);
 

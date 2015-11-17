@@ -20,7 +20,7 @@ RUNTIME_COMPILER_LINKLIBRARY("flann_cuda_s.lib")
 
 namespace EagleLib
 {
-	class PtCloud_backgroundSubtract_flann : public Node
+	class ForegroundEstimate : public Node
 	{
 		cv::cuda::GpuMat input;
 		BufferPool<cv::cuda::GpuMat> inputBuffer;
@@ -35,7 +35,7 @@ namespace EagleLib
 		std::shared_ptr<flann::GpuIndex<flann::L2<float>>> nnIndex;
 	public:
 		void updateOutput();
-		PtCloud_backgroundSubtract_flann();
+		ForegroundEstimate();
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
 	};

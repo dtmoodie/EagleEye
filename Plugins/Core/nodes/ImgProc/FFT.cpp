@@ -172,3 +172,6 @@ cv::cuda::GpuMat FFTPostShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FFT);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FFTPreShiftImage);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FFTPostShift);
+REGISTER_NODE_HIERARCHY(FFT, Image, Processing)
+REGISTER_NODE_HIERARCHY(FFTPreShiftImage, Image, Processing)
+REGISTER_NODE_HIERARCHY(FFTPostShift, Image, Processing)

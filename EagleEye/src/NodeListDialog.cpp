@@ -19,14 +19,60 @@ NodeListDialog::~NodeListDialog()
 void
 NodeListDialog::update()
 {
-
     ui->NodeList->clear();
     auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
     for(size_t i = 0; i < nodes.size(); ++i)
     {
-        ui->NodeList->addItem(QString::fromStdString(nodes[i]));
+        //ui->NodeList->addItem(QString::fromStdString(nodes[i]));
+		auto info  = EagleLib::NodeManager::getInstance().GetNodeInfo(nodes[i]);
+		QTreeWidgetItem* parent = nullptr;
+		if (info.size())
+		{
+			for (int j = 0; j < ui->NodeList->topLevelItemCount(); ++j)
+			{
+				if (ui->NodeList->topLevelItem(j)->text(0) == QString(EagleLib::ToString(info[0])))
+				{
+					parent = ui->NodeList->topLevelItem(j);
+				}
+			}
+			if (!parent)
+			{
+				parent = new QTreeWidgetItem(ui->NodeList);
+				ui->NodeList->addTopLevelItem(parent);
+				parent->setText(0, QString(EagleLib::ToString(info[0])));
+			}
+			for (int k = 1; k < info.size(); ++k)
+			{
+				bool found = false;
+				for (int j = 0; j < parent->childCount(); ++j)
+				{
+					if (parent->child(j)->text(0) == QString(EagleLib::ToString(info[k])))
+					{
+						found = true;
+						parent = parent->child(j);
+						break;
+					}
+				}
+				if (!found)
+				{
+					auto newParent = new QTreeWidgetItem(parent);
+					newParent->setText(0, QString(EagleLib::ToString(info[k])));
+					parent->addChild(newParent);
+					parent = newParent;
+				}
+			}
+			auto node = new QTreeWidgetItem(parent);
+			node->setText(0, QString::fromStdString((nodes[i])));
+			parent->addChild(node);
+		}
+		else
+		{
+			QTreeWidgetItem* item = new QTreeWidgetItem(ui->NodeList);
+			item->setText(0, QString::fromStdString(nodes[i]));
+			ui->NodeList->addTopLevelItem(item);
+		}
     }
-    ui->NodeList->sortItems();
+    //ui->NodeList->sortItems();
 
 }
 
@@ -43,8 +89,13 @@ void NodeListDialog::on_pushButton_clicked()
 {
     if(ui->NodeList->currentItem())
     {
-        EagleLib::Node::Ptr node = EagleLib::NodeManager::getInstance().addNode(ui->NodeList->currentItem()->text().toStdString());
-        emit nodeConstructed(node);
+		
+        EagleLib::Node::Ptr node = EagleLib::NodeManager::getInstance().addNode(ui->NodeList->currentItem()->text(0).toStdString());
+		if (node != nullptr)
+		{
+			emit nodeConstructed(node);
+		}
+        
     }
 }
 

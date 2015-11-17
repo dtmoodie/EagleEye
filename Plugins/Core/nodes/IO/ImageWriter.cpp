@@ -95,3 +95,4 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ImageWriter)
+REGISTER_NODE_HIERARCHY(ImageWriter, Image, Sink)

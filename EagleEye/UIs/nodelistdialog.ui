@@ -31,7 +31,13 @@
       </widget>
      </item>
      <item row="0" column="0" colspan="2">
-      <widget class="QListWidget" name="NodeList"/>
+      <widget class="QTreeWidget" name="NodeList">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
      </item>
     </layout>
    </item>

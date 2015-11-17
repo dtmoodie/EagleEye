@@ -12,6 +12,13 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(FlowVectorDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramDisplay)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(DetectionDisplay)
 
+REGISTER_NODE_HIERARCHY(QtImageDisplay, Image, Sink)
+REGISTER_NODE_HIERARCHY(OGLImageDisplay, Image, Sink)
+REGISTER_NODE_HIERARCHY(KeyPointDisplay, Image, Sink)
+REGISTER_NODE_HIERARCHY(FlowVectorDisplay, Image, Sink)
+REGISTER_NODE_HIERARCHY(HistogramDisplay, Image, Sink)
+REGISTER_NODE_HIERARCHY(DetectionDisplay, Image, Sink)
+
 QtImageDisplay::QtImageDisplay(boost::function<void(cv::Mat, Node*)> cpuCallback_)
 {
 }

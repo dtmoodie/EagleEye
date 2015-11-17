@@ -2,6 +2,7 @@
 using namespace EagleLib;
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SerialStack);
+REGISTER_NODE_HIERARCHY(SerialStack, Utility)
 
 SerialStack::~SerialStack()
 {

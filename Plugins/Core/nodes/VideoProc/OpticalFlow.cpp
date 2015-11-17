@@ -11,6 +11,9 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cudaoptflow")
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SparsePyrLKOpticalFlow)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(BroxOpticalFlow)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(DensePyrLKOpticalFlow)
+REGISTER_NODE_HIERARCHY(SParsePyrLKOpticalFlow, Image, Extractor)
+REGISTER_NODE_HIERARCHY(BroxOpticalFlow, Image, Extractor)
+REGISTER_NODE_HIERARCHY(DensePyrLKOpticalFlow, Image, Extractor)
 
 void DensePyrLKOpticalFlow::Init(bool firstInit)
 {
