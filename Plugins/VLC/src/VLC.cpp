@@ -111,3 +111,4 @@ bool vlcCamera::SkipEmpty() const
 
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(vlcCamera);
+REGISTER_NODE_HIERARCHY(vlcCamera, Image, Source);

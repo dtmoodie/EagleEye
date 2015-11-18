@@ -195,7 +195,8 @@ cv::cuda::GpuMat SegmentEGBS::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     egbs.applySegmentation(mat, sigma, thresh, minSize);
 	cv::Mat result = egbs.recolor(*getParameter<bool>(3)->Data());
 	img.upload(result, stream);
-	return img;
+	return img; 
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentEGBS)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentEGBS) 
+REGISTER_NODE_HIERARCHY(SegmentEGBS, Image, Processing, Segmentation)

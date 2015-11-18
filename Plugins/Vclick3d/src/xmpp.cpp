@@ -172,3 +172,4 @@ cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
     return img;
 }
 NODE_DEFAULT_CONSTRUCTOR_IMPL(XmppClient)
+REGISTER_NODE_HIERARCHY(XmppClient, Utility)

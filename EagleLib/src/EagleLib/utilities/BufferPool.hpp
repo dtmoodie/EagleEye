@@ -24,10 +24,9 @@ namespace EagleLib
 		cv::cuda::GpuMat& GetMat();
 	private:
 		friend void scoped_buffer_dallocator_callback(int status, void* user_data);
-		friend class Launcher;
 		cv::cuda::GpuMat* data;
 		cv::cuda::Stream stream;
 		static boost::lockfree::queue<cv::cuda::GpuMat*> deallocateQueue;
-		static Launcher launcher;
+		
 	};
 }

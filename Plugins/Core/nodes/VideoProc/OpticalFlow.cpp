@@ -11,13 +11,13 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cudaoptflow")
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SparsePyrLKOpticalFlow)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(BroxOpticalFlow)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(DensePyrLKOpticalFlow)
-REGISTER_NODE_HIERARCHY(SParsePyrLKOpticalFlow, Image, Extractor)
+REGISTER_NODE_HIERARCHY(SparsePyrLKOpticalFlow, Image, Extractor)
 REGISTER_NODE_HIERARCHY(BroxOpticalFlow, Image, Extractor)
 REGISTER_NODE_HIERARCHY(DensePyrLKOpticalFlow, Image, Extractor)
 
 void DensePyrLKOpticalFlow::Init(bool firstInit)
 {
-	opt_flow = cv::cuda::DensePyrLKOpticalFlow::create(cv::Size(13, 13), 3, 30, false);
+	opt_flow = cv::cuda::DensePyrLKOpticalFlow::create(cv::Size(13, 13), 3, 30, false); 
 	updateParameter<int>("Window Size", 13);
 	updateParameter<int>("Pyramid levels", 3);
 	updateParameter<int>("Iterations", 30);

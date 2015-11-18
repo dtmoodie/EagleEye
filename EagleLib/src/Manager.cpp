@@ -620,11 +620,11 @@ bool NodeManager::removeNode(ObjectId oid)
 	LOG_TRACE;
 	return false;
 }
-void NodeManager::RegisterNodeInfo(const char* nodeName, std::vector<NodeType>& nodeInfo)
+void NodeManager::RegisterNodeInfo(const char* nodeName, std::vector<char const*>& nodeInfo)
 {
 	m_nodeInfoMap[nodeName] = nodeInfo;
 }
-std::vector<NodeType>& NodeManager::GetNodeInfo(std::string& nodeName)
+std::vector<const char*>& NodeManager::GetNodeInfo(std::string& nodeName)
 {
 	return m_nodeInfoMap[nodeName];
 }

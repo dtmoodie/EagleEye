@@ -4,6 +4,12 @@
 #include <external_includes/cv_cudaarithm.hpp>
 #include <external_includes/cv_cudalegacy.hpp>
 #include "Manager.h"
+#include "RuntimeLinkLibrary.h"
+#ifdef _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
+#else
+RUNTIME_COMPILER_LINKLIBRARY("fastms.lib")
+#endif
 using namespace EagleLib;
 
 SETUP_PROJECT_IMPL
@@ -506,9 +512,7 @@ cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream
 
 	labels = labels.reshape(1, img.rows);
 	updateParameter("Labels", labels);
-	updateParameter("Centers", centers);
-
-	 
+	updateParameter("Centers", centers); 
 	return img;
 }
 
@@ -522,12 +526,12 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentMeanShift)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentCPMC)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SLaT)
 
-REGISTER_NODE_HIERARCHY(OtsuThreshold, Image, Processing)
-REGISTER_NODE_HIERARCHY(SegmentMOG2, Image, Processing)
-REGISTER_NODE_HIERARCHY(SegmentGrabCut, Image, Processing)
-REGISTER_NODE_HIERARCHY(SegmentWatershed, Image, Processing)
-REGISTER_NODE_HIERARCHY(SegmentKMeans, Image, Processing)
-REGISTER_NODE_HIERARCHY(ManualMask, Image, Processing)
-REGISTER_NODE_HIERARCHY(SegmentMeanShift, Image, Processing)
-REGISTER_NODE_HIERARCHY(SegmentCPMC, Image, Processing)
-REGISTER_NODE_HIERARCHY(SLaT, Image, Processing)
+REGISTER_NODE_HIERARCHY(OtsuThreshold, Image, Processing, Segmentation)
+REGISTER_NODE_HIERARCHY(SegmentMOG2, Image, Processing, Segmentation)
+REGISTER_NODE_HIERARCHY(SegmentGrabCut, Image, Processing, Segmentation)
+REGISTER_NODE_HIERARCHY(SegmentWatershed, Image, Processing, Segmentation)
+REGISTER_NODE_HIERARCHY(SegmentKMeans, Image, Processing, Segmentation)
+REGISTER_NODE_HIERARCHY(ManualMask, Image, Processing, Segmentation)
+REGISTER_NODE_HIERARCHY(SegmentMeanShift, Image, Processing, Segmentation)
+REGISTER_NODE_HIERARCHY(SegmentCPMC, Image, Processing, Segmentation)
+REGISTER_NODE_HIERARCHY(SLaT, Image, Processing, Segmentation)

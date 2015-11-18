@@ -88,9 +88,9 @@ NodeInfoRegisterer::NodeInfoRegisterer(const char* name, const char** hierarchy)
 {
 	
 }
-NodeInfoRegisterer::NodeInfoRegisterer(const char* nodeName, std::initializer_list<NodeType> nodeInfo)
+NodeInfoRegisterer::NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo)
 {
-	std::vector<NodeType> nodeInfoHierarchy(nodeInfo.begin(), nodeInfo.end());
+	std::vector<char const*> nodeInfoHierarchy(nodeInfo.begin(), nodeInfo.end());
 	EagleLib::NodeManager::getInstance().RegisterNodeInfo(nodeName, nodeInfoHierarchy);
 }
 Node::Node():
@@ -110,10 +110,7 @@ Node::Node():
 	rmt_hash = 0;
 	NODE_LOG(trace) << " Constructor";
 }
-NodeType Node::GetType() const
-{
-	return Processing;
-}
+
 void Node::onParameterAdded()
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
@@ -976,16 +973,4 @@ bool Node::SkipEmpty() const
 {
     return true;
 }
-/*
-void Node::log(boost::log::trivial::severity_level level, const std::string &msg)
-{
-    if(messageCallback)
-        messageCallback(level, msg, this);
-}*/
-void blah()
-{
-	int x1 = __COUNTER__;
-	int x2 = __COUNTER__;
-}
 
-REGISTERCLASS(Node)

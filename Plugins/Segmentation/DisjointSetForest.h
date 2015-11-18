@@ -29,6 +29,10 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+RUNTIME_MODIFIABLE_INCLUDE;
+RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("DisjointSetForest", ".cpp");
 
 
 /**

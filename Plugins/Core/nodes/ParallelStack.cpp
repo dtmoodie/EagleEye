@@ -32,3 +32,4 @@ ParallelStack::process(cv::cuda::GpuMat img, cv::cuda::Stream& stream)
 }
 
 REGISTERCLASS(ParallelStack)
+REGISTER_NODE_HIERARCHY(ParallelStack, Utility)

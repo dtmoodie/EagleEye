@@ -34,12 +34,12 @@ void ServerHandler::send()
 		connections[i]->write(buffer); 
 	}
 }
-void PtCloudStreamer::Init(bool firstInit)
+void Server::Init(bool firstInit)
 {
 	handler.reset(new ServerHandler); 
 }
 
-cv::cuda::GpuMat PtCloudStreamer::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+cv::cuda::GpuMat Server::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
 	
 	if (handler)
@@ -49,4 +49,5 @@ cv::cuda::GpuMat PtCloudStreamer::doProcess(cv::cuda::GpuMat& img, cv::cuda::Str
 	return img; 
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(PtCloudStreamer);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Server);
+REGISTER_NODE_HIERARCHY(Server,PtCloud, Sink)

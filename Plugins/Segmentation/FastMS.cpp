@@ -4,7 +4,7 @@
 
 #ifdef FASTMS_FOUND
 using namespace EagleLib;
-void SegmentFastMumfordShah::Init(bool firstInit)
+void FastMumfordShah::Init(bool firstInit)
 {
 	Node::Init(firstInit);
 	if (firstInit)
@@ -22,7 +22,7 @@ void SegmentFastMumfordShah::Init(bool firstInit)
 	}	
 }
 
-cv::cuda::GpuMat SegmentFastMumfordShah::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+cv::cuda::GpuMat FastMumfordShah::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     img.download(h_img, stream);
     Par param;
@@ -40,11 +40,12 @@ cv::cuda::GpuMat SegmentFastMumfordShah::doProcess(cv::cuda::GpuMat& img, cv::cu
 	img.upload(result, stream);
 	return img;
 }
-void SegmentFastMumfordShah::Serialize(ISimpleSerializer* pSerializer)
+void FastMumfordShah::Serialize(ISimpleSerializer* pSerializer)
 {
 	Node::Serialize(pSerializer);
 	SERIALIZE(solver);
 	SERIALIZE(h_img);
 }
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentFastMumfordShah);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FastMumfordShah);
+REGISTER_NODE_HIERARCHY(FastMumfordShah, Image, Processing, Segmentation);
 #endif

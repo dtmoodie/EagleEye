@@ -102,14 +102,15 @@ NodeName::NodeName():Node()                     \
 REGISTERCLASS(NodeName)
 
 
-#define REGISTER_NODE_HIERARCHY(name, ...) static EagleLib::NodeInfoRegisterer g_registerer_##name = EagleLib::NodeInfoRegisterer(#name, {__VA_ARGS__});
+
+#define REGISTER_NODE_HIERARCHY(name, ...) static EagleLib::NodeInfoRegisterer g_registerer_##name = EagleLib::NodeInfoRegisterer(#name, { STRINGIFY(__VA_ARGS__) });
 
 namespace EagleLib
 {
 	struct EAGLE_EXPORTS NodeInfoRegisterer
 	{
 		NodeInfoRegisterer(const char* nodeName, const char** nodeInfo);
-		NodeInfoRegisterer(const char* nodeName, std::initializer_list<NodeType> nodeInfo);
+		NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo);
 	};
 
     class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, IObject>, public IObjectNotifiable
@@ -138,7 +139,7 @@ namespace EagleLib
 		
 		virtual void					reset();
 
-		virtual NodeType GetType() const;
+		
 
         /**
          * @brief getName depricated?  Idea was to recursively go through parent nodes and rebuild my tree name, useful I guess once
@@ -657,7 +658,7 @@ namespace EagleLib
 
         // Mutex for blocking processing of a node during parameter update
         boost::recursive_mutex                                              mtx;
-		//NodeType															nodeType;
+		
         void onParameterAdded();
         void onUpdate();
         double GetProcessingTime() const;

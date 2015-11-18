@@ -30,7 +30,7 @@ NodeListDialog::update()
 		{
 			for (int j = 0; j < ui->NodeList->topLevelItemCount(); ++j)
 			{
-				if (ui->NodeList->topLevelItem(j)->text(0) == QString(EagleLib::ToString(info[0])))
+				if (ui->NodeList->topLevelItem(j)->text(0) == QString(info[0]))
 				{
 					parent = ui->NodeList->topLevelItem(j);
 				}
@@ -39,14 +39,14 @@ NodeListDialog::update()
 			{
 				parent = new QTreeWidgetItem(ui->NodeList);
 				ui->NodeList->addTopLevelItem(parent);
-				parent->setText(0, QString(EagleLib::ToString(info[0])));
+				parent->setText(0, QString(info[0]));
 			}
 			for (int k = 1; k < info.size(); ++k)
 			{
 				bool found = false;
 				for (int j = 0; j < parent->childCount(); ++j)
 				{
-					if (parent->child(j)->text(0) == QString(EagleLib::ToString(info[k])))
+					if (parent->child(j)->text(0) == QString(info[k]))
 					{
 						found = true;
 						parent = parent->child(j);
@@ -56,7 +56,7 @@ NodeListDialog::update()
 				if (!found)
 				{
 					auto newParent = new QTreeWidgetItem(parent);
-					newParent->setText(0, QString(EagleLib::ToString(info[k])));
+					newParent->setText(0, QString(info[k]));
 					parent->addChild(newParent);
 					parent = newParent;
 				}
