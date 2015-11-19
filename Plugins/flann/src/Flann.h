@@ -30,7 +30,7 @@ namespace EagleLib
 		BufferPool<std::pair<cv::cuda::GpuMat, cv::cuda::HostMem>> outputBuffer;
 		cv::cuda::GpuMat count;
 		void BuildModel();
-		bool MapInput(cv::cuda::GpuMat& img = cv::cuda::GpuMat());
+        bool MapInput(cv::cuda::GpuMat img = cv::cuda::GpuMat());
 
 		std::shared_ptr<flann::GpuIndex<flann::L2<float>>> nnIndex;
 	public:

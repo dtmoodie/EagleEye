@@ -34,7 +34,7 @@ void ForegroundEstimate::BuildModel()
 		nnIndex->buildIndex();
 	}
 }
-bool ForegroundEstimate::MapInput(cv::cuda::GpuMat& img)
+bool ForegroundEstimate::MapInput(cv::cuda::GpuMat img)
 {
 	auto pInput = getParameter<cv::cuda::GpuMat>(0)->Data();
 	if (!pInput)

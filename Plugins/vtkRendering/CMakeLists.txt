@@ -14,6 +14,8 @@ find_package(VTK REQUIRED)
   ${vtk_core}
   ${vtk_lib_dir}")
 
+FIND_PACKAGE(CUDA REQUIRED)
+
 ADD_DEFINITIONS(${DEFS})
 LINK_DIRECTORIES(${LINK_DIRS})
 INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
@@ -39,10 +41,12 @@ MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
                                            OBJECT_DEPENDS "${PrecompiledBinary}")  
     # Add precompiled header to SourcesVar
     LIST(APPEND ${SourcesVar} ${PrecompiledSource})
+  ELSE(MSVC)
   ENDIF(MSVC)
 ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
-#ADD_MSVC_PRECOMPILED_HEADER("precomp.hpp" "precomp.cpp" src)
-CUDA_ADD_LIBRARY(vtkRendering SHARED ${src} ${hdr} ${knl})
+#SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-std=c++11")
+
+ADD_LIBRARY(vtkRendering SHARED ${src} ${hdr} ${knl})
 INCLUDE(../PluginTemplate.cmake)
 ADD_DEPENDENCIES(vtkRendering EagleLib)
 RCC_LINK_LIB(vtkRendering

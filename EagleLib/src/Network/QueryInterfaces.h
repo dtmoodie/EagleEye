@@ -5,5 +5,5 @@
 
 namespace EagleLib
 {
-	static std::vector<std::string> QueryInterfaces();
+    //static std::vector<std::string> QueryInterfaces();
 }

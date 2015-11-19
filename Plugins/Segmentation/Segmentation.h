@@ -1,6 +1,6 @@
 #include "nodes/Node.h"
 #include <external_includes/cv_cudabgsegm.hpp>
-#include "EagleLib/utilities/CudaUtils.hpp""
+#include "EagleLib/utilities/CudaUtils.hpp"
 #include "Segmentation_impl.h"
 #include "libfastms/solver/solver.h"
 #include "EagleLib/Defs.hpp"

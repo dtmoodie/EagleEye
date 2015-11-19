@@ -153,7 +153,7 @@ namespace EagleLib
 			{
 				mat->data = ptr;
 				mat->step = stride;
-				mat->refcount = mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+                mat->refcount = (int*)cv::fastMalloc(sizeof(int));
 				memoryUsage += mat->step*rows;
 				BOOST_LOG_TRIVIAL(debug) << "Allocating block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. total usage: " << memoryUsage / (1024 * 1024) << " MB";
 				Increment(ptr, mat->step*rows);
@@ -167,7 +167,7 @@ namespace EagleLib
 		{
 			mat->data = ptr;
 			mat->step = stride;
-			mat->refcount = mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+            mat->refcount = (int*)cv::fastMalloc(sizeof(int));
 			memoryUsage += mat->step*rows;
 			Increment(ptr, mat->step*rows);
 			BOOST_LOG_TRIVIAL(debug) << "Allocating block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. total usage: " << memoryUsage / (1024 * 1024) << " MB";
@@ -205,7 +205,7 @@ namespace EagleLib
 			{
 				mat->data = itr->first;
 				mat->step = stride;
-				mat->refcount = mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+                mat->refcount = (int*)cv::fastMalloc(sizeof(int));
 				deallocateList.erase(itr);
 				memoryUsage += mat->step*rows;
 				Increment(mat->data, mat->step*rows);
