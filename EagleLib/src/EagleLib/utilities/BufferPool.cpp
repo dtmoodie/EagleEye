@@ -10,9 +10,6 @@ void EagleLib::scoped_buffer_dallocator_callback(int status, void* user_data)
 {
 	auto mat_ptr = static_cast<cv::cuda::GpuMat*>(user_data);
 	scoped_buffer::deallocateQueue.push(mat_ptr);
-
-	//delete mat_ptr;
-	std::cout << "1 " << clock() << std::endl;
 }
 scoped_buffer::scoped_buffer(cv::cuda::Stream stream)
 {
@@ -22,20 +19,17 @@ scoped_buffer::scoped_buffer(cv::cuda::Stream stream)
 scoped_buffer::~scoped_buffer()
 {
 	stream.enqueueHostCallback(EagleLib::scoped_buffer_dallocator_callback, data);
-	/*cv::cuda::Event ev;
-	ev.record(stream);
-	allocator->deallocateAfterEvent(data, ev);*/
 }
 cv::cuda::GpuMat& scoped_buffer::GetMat()
 {
 	return *data;
 }
 
-boost::lockfree::queue<cv::cuda::GpuMat*> scoped_buffer::deallocateQueue(120);
+boost::lockfree::queue<cv::cuda::GpuMat*> scoped_buffer::deallocateQueue(500);
 
 scoped_buffer::GarbageCollector::GarbageCollector()
 {
-	//Parameters::UI::ProcessingThreadCallbackService::post(boost::bind(&Launcher::Run));
+	
 }
 void scoped_buffer::GarbageCollector::Run()
 {
@@ -44,6 +38,4 @@ void scoped_buffer::GarbageCollector::Run()
 	{
 		delete mat;
 	}
-	
-	//Parameters::UI::ProcessingThreadCallbackService::post(boost::bind(&Launcher::Run));
 }
