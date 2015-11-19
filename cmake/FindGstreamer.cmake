@@ -94,6 +94,12 @@ FIND_LIBRARY(GSTREAMER_gstrtsp_LIBRARY NAMES gstrtsp-1.0 libgstrtsp-1.0
                                        DOC "gstrtsp library to link with"
                                        NO_SYSTEM_ENVIRONMENT_PATH)
 
+FIND_LIBRARY(GSTREAMER_gstrtspserver_LIBRARY NAMES gstrtspserver-1.0 libgstrtspserver-1.0
+                                       PATHS ${GSTREAMER_DIR}/bin ${GSTREAMER_DIR}/win32/bin ${GSTREAMER_DIR}/bin/bin C:/gstreamer/bin ${GSTREAMER_DIR}/lib ${GSTREAMER_DIR}/win32/lib /usr/local/lib /usr/lib
+                                       ENV LIB
+                                       DOC "gstrtsp library to link with"
+                                       NO_SYSTEM_ENVIRONMENT_PATH)
+
 FIND_LIBRARY(GSTREAMER_gstsdp_LIBRARY NAMES gstsdp-1.0 libgstsdp-1.0
                                       PATHS ${GSTREAMER_DIR}/bin ${GSTREAMER_DIR}/win32/bin ${GSTREAMER_DIR}/bin/bin C:/gstreamer/bin ${GSTREAMER_DIR}/lib ${GSTREAMER_DIR}/win32/lib /usr/local/lib /usr/lib
                                       ENV LIB
