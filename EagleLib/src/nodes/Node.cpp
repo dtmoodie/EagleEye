@@ -73,7 +73,10 @@ namespace EagleLib
 		{
 			for (auto itr : callbackConnections)
 			{
-				itr.disconnect();
+				for (auto itr2 : itr.second)
+				{
+					itr2.disconnect();
+				}
 			}
 			resetConnection.disconnect();
 		}
@@ -81,7 +84,7 @@ namespace EagleLib
         boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
         std::vector<std::pair<time_t, int>> timings;
 		boost::signals2::connection											resetConnection;
-		std::vector<boost::signals2::connection>							callbackConnections;
+		std::map<EagleLib::Node*,std::vector<boost::signals2::connection>>							callbackConnections;
     };
 }
 NodeInfoRegisterer::NodeInfoRegisterer(const char* name, const char** hierarchy)
@@ -136,18 +139,20 @@ size_t Node::addParameter(Parameters::Parameter::Ptr param)
     parameters.push_back(param);
     parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
     onParameterAdded();
-    pImpl_->callbackConnections.push_back(param->RegisterNotifier(boost::bind(&Node::onUpdate, this)));
+    pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&Node::onUpdate, this)));
+
     return parameters.size() - 1;
 }
 Node::~Node()
 {
     if(parent)
         parent->deregisterNotifier(this);
-	for (int i = 0; i < pImpl_->callbackConnections.size(); ++i)
+	auto& connections = pImpl_->callbackConnections[this];
+	for (auto itr : connections)
 	{
-		pImpl_->callbackConnections[i].disconnect();
+		itr.disconnect();
 	}
-	NODE_LOG(trace) << " Destructor";
+	NODE_LOG(trace) << "Disconnected " <<connections.size() << " boost signals";
 }
 void Node::ClearProcessingTime()
 {
@@ -596,7 +601,7 @@ void Node::RegisterParameterCallback(int idx, boost::function<void(void)> callba
 	auto param = getParameter(idx);
 	if (param)
 	{
-		pImpl_->callbackConnections.push_back(param->RegisterNotifier(callback));
+		pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(callback));
 	}
 }
 void Node::RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback)
@@ -605,7 +610,7 @@ void Node::RegisterParameterCallback(const std::string& name, boost::function<vo
 	auto param = getParameter(name);
 	if (param)
 	{
-		pImpl_->callbackConnections.push_back(param->RegisterNotifier(callback));
+		pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(callback));
 	}
 }
 
