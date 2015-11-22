@@ -85,6 +85,7 @@ namespace EagleLib
         std::vector<std::pair<time_t, int>> timings;
 		boost::signals2::connection											resetConnection;
 		std::map<EagleLib::Node*,std::vector<boost::signals2::connection>>							callbackConnections;
+        boost::recursive_mutex mtx;
     };
 }
 NodeInfoRegisterer::NodeInfoRegisterer(const char* name, const char** hierarchy)
@@ -108,6 +109,7 @@ Node::Node():
     {
         auto signalHandler = table->GetSingleton<ISignalHandler>();
         auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(void)>>("ResetSignal");
+        boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
         pImpl_->resetConnection = signal->connect(boost::bind(&Node::reset, this));
     }
 	rmt_hash = 0;
@@ -139,6 +141,7 @@ size_t Node::addParameter(Parameters::Parameter::Ptr param)
     parameters.push_back(param);
     parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
     onParameterAdded();
+    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
     pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&Node::onUpdate, this)));
 
     return parameters.size() - 1;
@@ -147,6 +150,7 @@ Node::~Node()
 {
     if(parent)
         parent->deregisterNotifier(this);
+    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
 	auto& connections = pImpl_->callbackConnections[this];
 	for (auto itr : connections)
 	{
@@ -156,12 +160,14 @@ Node::~Node()
 }
 void Node::ClearProcessingTime()
 {
+    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
     pImpl_->timings.clear();
 }
 
 void Node::EndProcessingTime()
 {
     TIME;
+    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
 	double total = pImpl_->timings[pImpl_->timings.size() - 1].first - pImpl_->timings[0].first;
 	if (profile)
 	{
@@ -180,10 +186,12 @@ void Node::EndProcessingTime()
 
 void Node::Clock(int line_num)
 {
+    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
     pImpl_->timings.push_back(std::make_pair(clock(), line_num));
 }
 double Node::GetProcessingTime() const
 {
+    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
     return boost::accumulators::rolling_mean(pImpl_->averageFrameTime);
 }
 void Node::reset()
@@ -218,8 +226,6 @@ Node::addChild(Node::Ptr child)
         return child;
     if(std::find(children.begin(), children.end(), child) != children.end())
         return child;
-    //if(messageCallback)
-      //  child->messageCallback = messageCallback;
     int count = 0;
     for(size_t i = 0; i < children.size(); ++i)
     {
@@ -601,6 +607,7 @@ void Node::RegisterParameterCallback(int idx, boost::function<void(void)> callba
 	auto param = getParameter(idx);
 	if (param)
 	{
+        boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
 		pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(callback));
 	}
 }
@@ -610,6 +617,7 @@ void Node::RegisterParameterCallback(const std::string& name, boost::function<vo
 	auto param = getParameter(name);
 	if (param)
 	{
+        boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
 		pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(callback));
 	}
 }
