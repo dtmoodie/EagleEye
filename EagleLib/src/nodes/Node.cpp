@@ -621,6 +621,11 @@ void Node::RegisterParameterCallback(const std::string& name, boost::function<vo
 		pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(callback));
 	}
 }
+void Node::RegisterSignalConnection(boost::signals2::connection& connection)
+{
+	boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
+	pImpl_->callbackConnections[this].push_back(connection);
+}
 
 void
 Node::Init(const cv::FileNode& configNode)

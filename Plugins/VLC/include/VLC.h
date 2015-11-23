@@ -4,10 +4,10 @@
 #include "vlc/vlc.h"
 #include <nodes/Node.h>
 #include <Manager.h>
-#ifdef PROJECT_INCLUDES_
+#ifdef PROJECT_INCLUDES_ && !defined(PROJECT_INCLUDES)
 #define PROJECT_INCLUDES PROJECT_INCLUDES_
 #endif
-#ifdef PROJECT_LIB_DIRS_
+#ifdef PROJECT_LIB_DIRS_ && !defined(PROJECT_LIB_DIRS)
 #define PROJECT_LIB_DIRS PROJECT_LIB_DIRS_
 #endif
 

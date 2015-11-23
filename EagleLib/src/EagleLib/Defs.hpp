@@ -66,3 +66,14 @@ void SetupIncludes(){																					\
 		EagleLib::NodeManager::getInstance().addDefinitions(PROJECT_DEFINITIONS, id);					\
 }																										
 
+namespace EagleLib
+{
+	enum PlaybackState
+	{
+		PLAYING,
+		PAUSED,
+		FAST_FORWARD,
+		FAST_BACKWARD,
+		STOP
+	};
+}

@@ -370,6 +370,7 @@ namespace EagleLib
 
 		void RegisterParameterCallback(int idx, boost::function<void(void)> callback);
 		void RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback);
+		void RegisterSignalConnection(boost::signals2::connection& connection);
 
 		template<typename T> size_t registerParameter(
 			const std::string& name,
