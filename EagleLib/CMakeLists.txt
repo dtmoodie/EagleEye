@@ -42,7 +42,7 @@ ADD_SUBDIRECTORY("parameters")
 
 #ADD_SUBDIRECTORY("enkiTS")
 #ADD_SUBDIRECTORY("casablanca/Release")
-
+ADD_SUBDIRECTORY("pplx")
 
 INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
@@ -54,6 +54,7 @@ INCLUDE_DIRECTORIES(
 	${Qt5Gui_INCLUDE_DIRS} 
 	${Qt5Widgets_INCLUDE_DIRS}
 	${Qt5Network_INCLUDE_DIRS}
+	${PPLX_INCLUDE_DIRS}
 	)
 
 
@@ -194,7 +195,7 @@ TARGET_LINK_LIBRARIES(EagleLib
         ${OpenCV_LIBS}
         RuntimeCompiler
         RuntimeObjectSystem
-		#enkiTS
+		pplx
         libParameter
         ${Parameters_LIBRARIES}
 		${CUDA_CUDA_LIBRARY}
@@ -204,7 +205,7 @@ ADD_DEPENDENCIES(EagleLib
 	RuntimeCompiler
 	RuntimeObjectSystem
 	libParameter
-	enkiTS
+	pplx
 	)
 
 

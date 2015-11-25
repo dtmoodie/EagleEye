@@ -1,9 +1,6 @@
 [submodule "EagleLib/RCC"]
 	path = EagleLib/RCC
 	url = https://dtmoodie@github.com/dtmoodie/RuntimeCompiledCPlusPlus
-[submodule "Plugins/fastms"]
-	path = Plugins/fastms
-	url = https://dtmoodie@github.com/dtmoodie/fastms
 [submodule "EagleLib/parameters"]
 	path = EagleLib/parameters
 	url = https://github.com/dtmoodie/parameters
@@ -13,9 +10,9 @@
 [submodule "EagleLib/remotery"]
 	path = EagleLib/remotery
 	url = http://github.com/dtmoodie/remotery
-[submodule "EagleLib/casablanca"]
-	path = EagleLib/casablanca
-	url = https://github.com/dtmoodie/cpprestsdk
 [submodule "EagleLib/enkiTS"]
 	path = EagleLib/enkiTS
 	url = https://github.com/dtmoodie/enkiTS
+[submodule "EagleLib/pplx"]
+	path = EagleLib/pplx
+	url = https://github.com/dtmoodie/pplx
