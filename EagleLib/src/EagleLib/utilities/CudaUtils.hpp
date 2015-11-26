@@ -19,7 +19,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include <boost/thread/recursive_mutex.hpp>
 #include <queue>
 #include <boost/thread.hpp>
+#ifndef __NVCC__
 #include <boost/log/trivial.hpp>
+#endif
 namespace EagleLib
 {
 
@@ -301,7 +303,9 @@ template<typename Data>
 			auto itr = putItr++%size;
 			if (!buffer[itr].ready())
 			{
+#ifndef __NVCC__
 				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+#endif
 				resize(buffer.size() + 1);
 			}
             return &buffer[itr];
@@ -312,7 +316,9 @@ template<typename Data>
 			auto itr = getItr++%size;
 			if (!buffer[itr].ready())
 			{
+#ifndef __NVCC__
 				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+#endif
 				resize(buffer.size() + 1);
 			}
 			return &buffer[itr];
@@ -367,7 +373,9 @@ template<typename Data>
 			auto itr = putItr++%size;
 			if (!buffer[itr].ready())
 			{
+#ifndef __NVCC__
 				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+#endif
 				resize(buffer.size() + 1);
 			}
 			return &buffer[itr];
@@ -378,7 +386,9 @@ template<typename Data>
 			auto itr = getItr++%size;
 			if (!buffer[itr].ready())
 			{
+#ifndef __NVCC__
 				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+#endif
 				resize(buffer.size() + 1);
 			}			
 			return &buffer[itr];
@@ -433,7 +443,9 @@ template<typename Data>
 			auto itr = putItr++%size;
 			if (!buffer[itr].ready())
 			{
+#ifndef __NVCC__
 				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+#endif
 				resize(buffer.size() + 1);
 			}
 			return &buffer[itr];
@@ -444,7 +456,9 @@ template<typename Data>
 			auto itr = getItr++%size;
 			if (!buffer[itr].ready())
 			{
+#ifndef __NVCC__
 				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+#endif
 				resize(buffer.size() + 1);
 			}
 			return &buffer[itr];
