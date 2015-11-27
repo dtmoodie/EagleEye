@@ -3,23 +3,41 @@
 #include <opencv2/core/cuda.hpp>
 #include <functional>
 #include <future>
-
+#include "ObjectPool.hpp"
 #include <pplx/pplxtasks.h>
 #include <boost/log/trivial.hpp>
 #include <iostream>
+namespace boost
+{
+    namespace posix_time
+    {
+        class ptime;
+    }
+}
 namespace EagleLib
 {
 	namespace cuda
 	{
 
-		struct EAGLE_EXPORTS scoped_event_timer
+		struct EAGLE_EXPORTS scoped_stream_timer
 		{
 			std::string _scope_name;
 			cv::cuda::Stream _stream;
-			clock_t start;
-			scoped_event_timer(cv::cuda::Stream& stream, const std::string& scope_name = "");
-			~scoped_event_timer();
+            boost::posix_time::ptime* start_time;
+            scoped_stream_timer(cv::cuda::Stream& stream, const std::string& scope_name = "");
+            ~scoped_stream_timer();
 		};
+        struct EAGLE_EXPORTS scoped_event_stream_timer
+        {
+            static EagleLib::pool::ObjectPool<cv::cuda::Event> eventPool;
+            EagleLib::pool::Ptr<cv::cuda::Event> startEvent;
+            EagleLib::pool::Ptr<cv::cuda::Event> endEvent;
+            std::string _scope_name;
+            cv::cuda::Stream _stream;
+            scoped_event_stream_timer(cv::cuda::Stream& stream, const std::string& scope_name = "");
+            ~scoped_event_stream_timer();
+        };
+
 		struct EAGLE_EXPORTS ICallback
 		{
 			static void cb_func_async(int status, void* user_data);
@@ -57,7 +75,15 @@ namespace EagleLib
 			virtual ~FunctionCallback() {}
 			virtual void run();
 		};
-		
+		template<typename T> struct FunctionCallback<T, void>: public ICallback
+        {
+            std::function<void(T)> func;
+            std::promise<void> promise;
+            T data;
+            FunctionCallback(const T& d, const std::function<void(T)> f) : func(f), data(d) {}
+            virtual ~FunctionCallback() {}
+            virtual void run();
+        };
 		template<typename _return_type> 
 		struct LambdaCallback: public ICallback
 		{
@@ -119,7 +145,12 @@ namespace EagleLib
 		{
 			promise.set_value(func(data));
 		}
-
+        template<typename T> void FunctionCallback<T, void>::run()
+        {
+            func(data);
+            promise.set_value();
+            //promise.set_value(func(data));
+        }
 		template<typename T> void Callback<T>::run()
 		{
 
