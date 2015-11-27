@@ -6,6 +6,7 @@
 #include <opencv2/highgui.hpp>
 
 #include "Thrust_interop.hpp"
+#include "EagleLib/utilities/CudaCallbacks.hpp"
 
 #include <thrust/transform.h>
 #include <thrust/random.h>
@@ -67,10 +68,19 @@ int main()
 
 	thrust::transform(thrust::make_counting_iterator(0), thrust::make_counting_iterator(bigTestMat.size().area()), valueBegin, prg(-1, 1));
 
-	cv::cuda::HostMem* user_data = new cv::cuda::HostMem();
-	bigTestMat.download(*user_data, stream);
-	std::cout << "Enqueuing data on thread " << boost::this_thread::get_id() << " at time " << clock() << std::endl;
-	stream.enqueueHostCallback(cuda_callback<cv::cuda::HostMem, disp_operator>, user_data);
+	cv::cuda::HostMem user_data;
+	bigTestMat.download(user_data, stream);
+    std::cout << "Enqueuing data on thread " << boost::this_thread::get_id() << " at time " << clock() << std::endl;
+    {
+        EagleLib::cuda::scoped_event_stream_timer timer(stream, "Display callback");
+        
+        EagleLib::cuda::enqueue_callback_async<cv::cuda::HostMem, void>(user_data,
+            [](cv::cuda::HostMem img)->void
+        {
+            cv::imshow("Display", img);
+        }, stream);
+    }
+    
 
 
 	while (1)
