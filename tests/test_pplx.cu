@@ -7,7 +7,7 @@
 
 #include "Thrust_interop.hpp"
 #include "EagleLib/utilities/CudaCallbacks.hpp"
-
+#include "EagleLib/utilities/CpuMatAllocators.h"
 #include <thrust/transform.h>
 #include <thrust/random.h>
 #include <thrust/sort.h>
@@ -61,6 +61,8 @@ int main()
 	
 	cv::cuda::Stream stream;
 	cv::cuda::GpuMat bigTestMat;
+	EagleLib::CpuPinnedAllocator allocator;
+	cv::Mat::setDefaultAllocator(&allocator);
 	bigTestMat.create(10000, 10000, CV_32F);
 
 	auto valueBegin = GpuMatBeginItr<float>(bigTestMat);
@@ -68,24 +70,18 @@ int main()
 
 	thrust::transform(thrust::make_counting_iterator(0), thrust::make_counting_iterator(bigTestMat.size().area()), valueBegin, prg(-1, 1));
 
-	cv::cuda::HostMem user_data;
+	//cv::cuda::HostMem user_data;
+	cv::Mat user_data;
 	bigTestMat.download(user_data, stream);
     std::cout << "Enqueuing data on thread " << boost::this_thread::get_id() << " at time " << clock() << std::endl;
     {
         EagleLib::cuda::scoped_event_stream_timer timer(stream, "Display callback");
         
-        EagleLib::cuda::enqueue_callback_async<cv::cuda::HostMem, void>(user_data,
-            [](cv::cuda::HostMem img)->void
+        EagleLib::cuda::enqueue_callback_async<cv::Mat, void>(user_data,
+            [](cv::Mat img)->void
         {
             cv::imshow("Display", img);
         }, stream);
     }
-    
-
-
-	while (1)
-	{
-
-	}
 	return 0;
 }
