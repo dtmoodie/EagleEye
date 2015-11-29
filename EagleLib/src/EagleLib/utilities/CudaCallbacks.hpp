@@ -85,7 +85,7 @@ namespace EagleLib
             virtual void run();
         };
 		template<typename _return_type> 
-		struct LambdaCallback: public ICallback
+		struct EAGLE_EXPORTS LambdaCallback: public ICallback
 		{
 			std::function<_return_type()> func;
 			std::promise<_return_type> promise;
@@ -94,9 +94,17 @@ namespace EagleLib
 			~LambdaCallback() {}
 			virtual void run();
 		};
+		template<> struct EAGLE_EXPORTS LambdaCallback<void> : public ICallback
+		{
+			std::function<void()> func;
+			std::promise<void> promise;
 
-		// While this does technically work, for some reason it takes significantly more
-		// Gpu time to execute given the same callback.
+			LambdaCallback(const std::function<void()>& f);
+			~LambdaCallback();
+			virtual void run();
+		};
+
+		// Lambda functions
 		template<typename _Ty> auto
 			enqueue_callback_async(_Ty function,cv::cuda::Stream& stream)->std::future<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>
 		{

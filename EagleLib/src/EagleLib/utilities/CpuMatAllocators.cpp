@@ -2,8 +2,17 @@
 #include <cuda_runtime_api.h>
 #include <opencv2/core/cuda/common.hpp>
 #include <opencv2/core/core_c.h>
-
+#include <boost/log/trivial.hpp>
 using namespace EagleLib;
+CpuDelayedDeallocationPool::CpuDelayedDeallocationPool()
+{
+    deallocation_delay = 100;
+	total_usage = 0;
+}
+CpuDelayedDeallocationPool::~CpuDelayedDeallocationPool()
+{
+	cleanup(true);
+}
 
 CpuDelayedDeallocationPool* CpuDelayedDeallocationPool::instance()
 {
@@ -21,28 +30,44 @@ void CpuDelayedDeallocationPool::allocate(void** ptr, size_t total)
 		{
 			*ptr = itr->first;
 			inst->deallocate_pool.erase(itr);
+            BOOST_LOG_TRIVIAL(trace) << "Reusing memory block of size " << total / (1024 * 1024) << " MB. Total usage: " << inst->total_usage /(1024*1024) << " MB";
 			return;
 		}
 	}
+	inst->total_usage += total;
+    BOOST_LOG_TRIVIAL(debug) << "Allocating block of size " << total / (1024 * 1024) << " MB. Total usage: " << inst->total_usage / (1024 * 1024) << " MB";
 	cudaSafeCall(cudaMallocHost(ptr, total));
 }
 
 void CpuDelayedDeallocationPool::deallocate(void* ptr, size_t total)
 {
 	auto inst = instance();
+    std::lock_guard<std::mutex> lock(inst->deallocate_pool_mutex);
 	inst->deallocate_pool[(unsigned char*)ptr] = std::make_pair(clock(), total);
+    inst->cleanup();
 }
-void CpuDelayedDeallocationPool::cleanup()
+void CpuDelayedDeallocationPool::cleanup(bool force)
 {
 	auto time = clock();
+	if (force)
+		time = 0;
 	for (auto itr = deallocate_pool.begin(); itr != deallocate_pool.end(); ++itr)
 	{
 		if ((time - itr->second.first) > deallocation_delay)
 		{
+			total_usage -= itr->second.second;
+            BOOST_LOG_TRIVIAL(debug) << "DeAllocating block of size " << itr->second.second / (1024 * 1024) 
+				<< " MB. Which was stale for " << time - itr->second.first 
+				<< " ms. Total usage: " << total_usage / (1024 * 1024) << " MB";
 			cudaFreeHost((void*)itr->first);
 			itr = deallocate_pool.erase(itr);
 		}
 	}
+}
+EagleLib::CpuPinnedAllocator* EagleLib::CpuPinnedAllocator::instance()
+{
+	static EagleLib::CpuPinnedAllocator inst;
+	return &inst;
 }
 cv::UMatData* EagleLib::CpuPinnedAllocator::allocate(int dims, const int* sizes, int type,
 	void* data0, size_t* step,

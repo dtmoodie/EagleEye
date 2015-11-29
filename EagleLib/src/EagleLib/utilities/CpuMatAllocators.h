@@ -9,12 +9,15 @@ namespace EagleLib
 	class EAGLE_EXPORTS CpuDelayedDeallocationPool
 	{
 	public:
+        CpuDelayedDeallocationPool();
+		~CpuDelayedDeallocationPool();
 		static CpuDelayedDeallocationPool* instance();
 		static void allocate(void** ptr, size_t total);
 		static void deallocate(void* ptr, size_t total);
+        size_t deallocation_delay;
+		size_t total_usage;
 	private:
-		size_t deallocation_delay;
-		void cleanup();
+		void cleanup(bool force = false);
 		std::map<unsigned char*, std::pair<clock_t, size_t>> deallocate_pool;
 		std::mutex deallocate_pool_mutex;
 	};
@@ -22,6 +25,7 @@ namespace EagleLib
 	class EAGLE_EXPORTS CpuPinnedAllocator : public cv::MatAllocator
 	{
 	public:
+		static CpuPinnedAllocator* instance();
 		virtual cv::UMatData* allocate(int dims, const int* sizes, int type,
 			void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
 		virtual bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;

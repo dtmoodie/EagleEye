@@ -85,3 +85,18 @@ scoped_event_stream_timer::~scoped_event_stream_timer()
         BOOST_LOG_TRIVIAL(info) << "[" << data._scope_name << "] executed in " << cv::cuda::Event::elapsedTime((*data.startEvent.get()), (*data.endEvent.get())) << " ms";
     }, _stream);
 }
+
+LambdaCallback<void>::LambdaCallback(const std::function<void()>& f): 
+	func(f) 
+{
+
+}
+LambdaCallback<void>::~LambdaCallback()
+{
+
+}
+void LambdaCallback<void>::run()
+{
+	func();
+	promise.set_value();
+}

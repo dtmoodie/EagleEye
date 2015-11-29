@@ -15,6 +15,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
+#include <boost/log/trivial.hpp>
 #include <time.h>
 struct prg
 {
@@ -58,30 +59,59 @@ template<typename T, template<typename> class OP> void cuda_callback(int status,
 
 int main()
 {
-	
 	cv::cuda::Stream stream;
-	cv::cuda::GpuMat bigTestMat;
-	EagleLib::CpuPinnedAllocator allocator;
-	cv::Mat::setDefaultAllocator(&allocator);
-	bigTestMat.create(10000, 10000, CV_32F);
+	cv::cuda::Stream downloadStream;
+	cv::cuda::Event downloadReadyEvent;
+	cv::cuda::GpuMat bigTestMat[2];
+	cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
+	bigTestMat[0].create(10000, 10000, CV_32F);
+	bigTestMat[1].create(10000, 10000, CV_32F);
 
-	auto valueBegin = GpuMatBeginItr<float>(bigTestMat);
-	auto valueEnd = GpuMatEndItr<float>(bigTestMat);
+	
 
-	thrust::transform(thrust::make_counting_iterator(0), thrust::make_counting_iterator(bigTestMat.size().area()), valueBegin, prg(-1, 1));
-
-	//cv::cuda::HostMem user_data;
-	cv::Mat user_data;
-	bigTestMat.download(user_data, stream);
-    std::cout << "Enqueuing data on thread " << boost::this_thread::get_id() << " at time " << clock() << std::endl;
+	
+	auto start = clock();
+    for (int i = 0; i < 50; ++i)
     {
-        EagleLib::cuda::scoped_event_stream_timer timer(stream, "Display callback");
-        
-        EagleLib::cuda::enqueue_callback_async<cv::Mat, void>(user_data,
-            [](cv::Mat img)->void
+        cv::Mat user_data;
         {
-            cv::imshow("Display", img);
-        }, stream);
+			auto valueBegin = GpuMatBeginItr<float>(bigTestMat[i % 2]);
+			auto valueEnd = GpuMatEndItr<float>(bigTestMat[i%2]);
+            EagleLib::cuda::scoped_event_stream_timer timer(stream, "Transform time");
+
+            thrust::transform(thrust::system::cuda::par.on(cv::cuda::StreamAccessor::getStream(stream)), 
+				thrust::make_counting_iterator(0), 
+				thrust::make_counting_iterator(bigTestMat[i%2].size().area()), 
+				valueBegin, 
+				prg(-1, 1));
+
+			downloadReadyEvent.record(stream);
+        }
+        
+        
+        {
+            EagleLib::cuda::scoped_event_stream_timer timer(downloadStream, "Download time");
+			downloadStream.waitEvent(downloadReadyEvent);
+            bigTestMat[i%2].download(user_data, downloadStream);
+        }
+        
+        {
+            EagleLib::cuda::scoped_event_stream_timer timer(downloadStream, "Display callback");
+            /*EagleLib::cuda::enqueue_callback_async<cv::Mat, void>(
+				user_data,
+                [](cv::Mat img)->void
+            {
+                //cv::imshow("Display", img);
+            }, downloadStream);*/
+
+			EagleLib::cuda::enqueue_callback_async(
+			[user_data]()->void
+			{
+
+			}, downloadStream);
+        }
+		std::cout << "Loop time " << clock() - start << " ms\n";
+		start = clock();
     }
 	return 0;
 }
