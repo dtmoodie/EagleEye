@@ -36,7 +36,7 @@ namespace EagleLib
                 _pool.erase(itr);
                 return ret;
             }
-
+            
         private:
             std::list<T*> _pool;
             std::mutex mtx;
@@ -85,11 +85,12 @@ namespace EagleLib
                 assert(_ptr != nullptr);
                 return _ptr;
             }
-            T* get()
+            T* get() const
             {
                 assert(_ptr != nullptr);
                 return _ptr;
             }
+            operator T*() const {return get();}
             
             void decrement()
             {
