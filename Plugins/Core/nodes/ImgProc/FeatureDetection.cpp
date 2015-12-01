@@ -53,12 +53,11 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         updateParameter(0,
             cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1,
             numCorners,qualityLevel,minDistance,blockSize,useHarris,harrisK));
-        /*std::stringstream ss;
-        ss << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
-           << " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
-        log(Status, ss.str());*/
+
+
 		NODE_LOG(info) << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
 			<< " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
+
         parameters[1]->changed = false;
         parameters[2]->changed = false;
         parameters[3]->changed = false;
@@ -69,6 +68,7 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
     if(!*getParameter<bool>(7)->Data())
         return img;
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
+
     auto keyPoints = detectedPoints.getFront();
     if(mask)
     {

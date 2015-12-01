@@ -21,8 +21,9 @@ namespace EagleLib
 		void consume(boost::log::record_view const& rec, string_type const& command_line);
         void setNodeCallback(boost::function<void(Node*, const std::string&)> nc);
         void setGenericCallback(boost::function<void(const std::string&)> gc);
-        static void addNodeCallbackHandler(Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler);
+        static size_t addNodeCallbackHandler(Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler);
         static size_t addGenericCallbackHandler(const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler);
+		static void removeNodeCallbackHandler(EagleLib::Node* node, size_t id);
 		static void clearGenericCallbackHandlers();
         static void setNode(EagleLib::Node* node);
 		static EagleLib::Node* getNode();

@@ -209,7 +209,7 @@ cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         displayType = 0;
         return img;
     }
-    auto h_mat = getParameter<cv::Mat*>(1)->Data();
+    auto h_mat = getParameter<cv::Mat>(1)->Data();
     if(h_mat)
     {
 

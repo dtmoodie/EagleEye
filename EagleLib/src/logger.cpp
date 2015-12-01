@@ -19,7 +19,7 @@
 
 using namespace EagleLib;
 
-std::map < const EagleLib::Node*, std::vector < boost::function<void(boost::log::trivial::severity_level, const std::string&)>>> nodeHandlers;
+std::map < ObjectId, std::vector < boost::function<void(boost::log::trivial::severity_level, const std::string&)>>> nodeHandlers;
 std::vector<boost::function<void(boost::log::trivial::severity_level, const std::string&)>> genericHandlers;
 
 boost::log::attributes::mutable_constant<EagleLib::Node*> attr(nullptr);
@@ -41,7 +41,7 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
         auto node = rec.attribute_values()[NodePtr].get();
         if (node != nullptr)
         {
-            auto& handlers = nodeHandlers[node];
+            auto& handlers = nodeHandlers[node->GetObjectId()];
             for (auto handler : handlers)
             {
                 handler(severity.get(), message);
@@ -54,9 +54,20 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
 		handler(severity.get(), message);
 	}
 }
-void ui_collector::addNodeCallbackHandler(Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
+size_t ui_collector::addNodeCallbackHandler(Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
 {
-    nodeHandlers[node].push_back(handler);
+    nodeHandlers[node->GetObjectId()].push_back(handler);
+	return nodeHandlers[node->GetObjectId()].size() - 1;
+}
+void ui_collector::removeNodeCallbackHandler(Node* node, size_t id)
+{
+	auto& handlers = nodeHandlers[node->GetObjectId()];
+	handlers.erase(handlers.begin() + id);
+	if (handlers.empty())
+	{
+		auto itr = nodeHandlers.find(node->GetObjectId());
+		nodeHandlers.erase(itr);
+	}
 }
 size_t ui_collector::addGenericCallbackHandler(const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
 {

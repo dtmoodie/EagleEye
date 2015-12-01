@@ -181,7 +181,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
 		}
         //node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true, _1);
         //node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2);
-        EagleLib::ui_collector::addNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
+		node_log_handler_id = EagleLib::ui_collector::addNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
 	}
 }
 bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
@@ -323,7 +323,7 @@ void QNodeWidget::on_logReceive(boost::log::trivial::severity_level verb, const 
 
 QNodeWidget::~QNodeWidget()
 {
-
+	EagleLib::ui_collector::removeNodeCallbackHandler(node.get(), node_log_handler_id);
 }
 
 void QNodeWidget::on_enableClicked(bool state)
