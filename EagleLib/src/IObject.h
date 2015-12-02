@@ -51,6 +51,9 @@ enum InterfaceIDEnum
 	IID_RenderEngine,
 	IID_RenderScene,
 	IID_RenderObject,
+	IID_RenderObjectConstructor,
+	IID_RenderInteractor,
+	IID_RenderObjectFactory,
 	IID_ENDInterfaceID
 };
 

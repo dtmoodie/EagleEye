@@ -118,6 +118,7 @@ bool TestCallback::TestBuildWaitAndUpdate()
     boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
     return true;
 }
+/*
 UIThreadCallback::UIThreadCallback()
 {
 
@@ -177,7 +178,7 @@ void ProcessingThreadCallback::Run()
 {
 	LOG_TRACE;
 	service.run();
-}
+}*/
 
 PlotManager& PlotManager::getInstance()
 {

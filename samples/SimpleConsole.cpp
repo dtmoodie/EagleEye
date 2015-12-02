@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
     streams.resize(nodes.size());
     while(!quit && nodes.size())
     {
-        EagleLib::ProcessingThreadCallback::Run();
+        //EagleLib::ProcessingThreadCallback::Run();
         for(int i = 0; i < nodes.size(); ++i)
         {
             nodes[i]->process(images[i], streams[i]);

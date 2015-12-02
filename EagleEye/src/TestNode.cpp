@@ -4,6 +4,7 @@
 //#include <opencv2/highgui.hpp>
 //RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_highgui")
 #define PARAMTESTMACRO(type) updateParameter< type >(##type,0)
+#if 0
 namespace EagleLib
 {
     class TestNode: public Node
@@ -178,5 +179,5 @@ namespace EagleLib
 }
 using namespace EagleLib;
 REGISTERCLASS(TestNode)
-
+#endif
 

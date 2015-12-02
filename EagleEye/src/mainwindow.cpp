@@ -209,7 +209,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	Parameters::TypedParameter<boost::function<void(void)>>("Instantiation");
 	Parameters::TypedParameter<bool>("Instantiation");
 
-    EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
+    //EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
     boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
     EagleLib::NodeManager::getInstance().setCompileCallback(f);
     QDir dir(QDir::currentPath());
@@ -672,7 +672,7 @@ MainWindow::uiNotifier()
 }
 void MainWindow::onUiUpdate()
 {
-    EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
+    //EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
 }
 
 void
@@ -724,7 +724,7 @@ void MainWindow::processThread()
     {
         try
         {
-			EagleLib::ProcessingThreadCallback::Run();
+			//EagleLib::ProcessingThreadCallback::Run();
 			Parameters::UI::ProcessingThreadCallbackService::run();
             if (dirty)
             {

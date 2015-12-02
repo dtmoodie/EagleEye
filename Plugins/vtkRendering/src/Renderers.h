@@ -2,6 +2,10 @@
 #include "RuntimeLinkLibrary.h"
 #include <EagleLib/Defs.hpp>
 #include <rendering/RenderingEngine.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderer.h>
+#include <vtkSmartPointer.h>
+
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
@@ -250,5 +254,15 @@ SETUP_PROJECT_DEF
 
 namespace EagleLib
 {
-	
+	class vtkRenderEngine: public IRenderEngine
+	{
+	public:
+		vtkRenderEngine();
+		virtual void Render();
+		virtual void AddRenderScene(std::shared_ptr<IRenderScene> scene);
+
+	private:
+		vtkSmartPointer<vtkRenderer> renderer;
+		vtkSmartPointer<vtkRenderWindow> renderWindow;
+	};
 }

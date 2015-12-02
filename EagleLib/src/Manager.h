@@ -52,7 +52,7 @@ namespace EagleLib
         virtual bool TestBuildCallback(const char* file, TestBuildResult type);
         virtual bool TestBuildWaitAndUpdate();
     };
-	class CV_EXPORTS UIThreadCallback
+	/*class CV_EXPORTS UIThreadCallback
     {
     private:
         concurrent_queue<boost::function<void(void)>> queue;
@@ -76,7 +76,7 @@ namespace EagleLib
 		static boost::asio::io_service& Instance();
 		static void Run();
 
-	};
+	};*/
 
     class CV_EXPORTS PlotManager
     {
