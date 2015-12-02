@@ -16,14 +16,15 @@
 #include <boost/bind.hpp>
 #include <SystemTable.hpp>
 #include <Events.h>
-using namespace EagleLib;
 
+#include <EagleLib/NodeManager.h>
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 #include "remotery/lib/Remotery.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
 
+using namespace EagleLib;
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 

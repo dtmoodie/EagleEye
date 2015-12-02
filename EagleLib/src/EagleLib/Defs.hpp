@@ -22,49 +22,7 @@
 #endif
 
 
-// *************** SETUP_PROJECT_DEF ********************
-#ifdef __cplusplus
-#define SETUP_PROJECT_DEF extern "C"{	\
-EAGLE_EXPORTS void SetupIncludes();		\
-EAGLE_EXPORTS int GetBuildType();		\
-}
-#else
-#define SETUP_PROJECT_DEF EAGLE_EXPORTS void SetupIncludes();
-#endif
-
-
-// *************** SETUP_PROJECT_IMPL ********************
-#ifndef PROJECT_ID
-#define PROJECT_ID 0
-#endif
-#ifndef PROJECT_INCLUDES
-#define PROJECT_INCLUDES ""
-#endif
-#ifndef PROJECT_LIB_DIRS
-#define PROJECT_LIB_DIRS ""
-#endif
-#ifndef PROJECT_DEFINITIONS
-#define PROJECT_DEFINITIONS ""
-#endif
-#ifndef PROJECT_CONFIG_FILE
-#define PROJECT_CONFIG_FILE ""
-#endif
-#ifndef BUILD_TYPE
-	#ifdef _DEBUG
-		#define BUILD_TYPE 0
-	#else
-		#define BUILD_TYPE 1
-	#endif
-#endif
-
-#define SETUP_PROJECT_IMPL	int GetBuildType() {return BUILD_TYPE; }									\
-void SetupIncludes(){																					\
-		int id = EagleLib::NodeManager::getInstance().parseProjectConfig(PROJECT_CONFIG_FILE);			\
-		PerModuleInterface::GetInstance()->SetProjectIdForAllConstructors(id);							\
-		EagleLib::NodeManager::getInstance().addIncludeDirs(PROJECT_INCLUDES, id);						\
-		EagleLib::NodeManager::getInstance().addLinkDirs(PROJECT_LIB_DIRS, id);							\
-		EagleLib::NodeManager::getInstance().addDefinitions(PROJECT_DEFINITIONS, id);					\
-}																										
+																									
 
 namespace EagleLib
 {

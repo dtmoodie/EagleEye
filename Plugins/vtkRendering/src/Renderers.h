@@ -1,6 +1,7 @@
 #pragma once
 #include "RuntimeLinkLibrary.h"
 #include <EagleLib/Defs.hpp>
+#include <EagleLib/Project_defs.hpp>
 #include <rendering/RenderingEngine.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>

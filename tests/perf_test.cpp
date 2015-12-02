@@ -1,4 +1,4 @@
-#include "Manager.h"
+#include <EagleLib/NodeManager.h>
 #include "nodes/Node.h"
 #include <boost/program_options.hpp>
 

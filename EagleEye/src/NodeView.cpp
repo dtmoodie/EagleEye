@@ -2,7 +2,8 @@
 #include "qapplication.h"
 #include "qdrag.h"
 #include <qmimedata.h>
-#include <Manager.h>
+#include <EagleLib/NodeManager.h>
+
 NodeView::NodeView(QWidget* parent) :
     QGraphicsView(parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
 {}

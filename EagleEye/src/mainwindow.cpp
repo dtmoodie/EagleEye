@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "qpluginloader.h"
-#include "Manager.h"
+
 #include <qfiledialog.h>
 #include <nodes/Node.h>
 #include <QNodeWidget.h>
@@ -11,42 +11,23 @@
 #include <qgraphicsproxywidget.h>
 #include "QGLWidget"
 #include <QGraphicsSceneMouseEvent>
-#include <Manager.h>
+
 #include "settingdialog.h"
 #include "logger.hpp"
-#include "EagleLib/utilities/BufferPool.hpp"
 
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks.hpp>
-#include <boost/log/attributes.hpp>
-#include <boost/log/common.hpp>
-#include <boost/log/exceptions.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/log/expressions/attr.hpp>
-#include <boost/log/attributes/time_traits.hpp>
-#include <boost/log/expressions/formatters.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/attributes/named_scope.hpp>
-#include <boost/log/expressions/formatters/named_scope.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/support/date_time.hpp>
+
+
 #include <SystemTable.hpp>
 #include <Events.h>
 #include <UI/InterThread.hpp>
 #include <../remotery/lib/Remotery.h>
+
 #include <EagleLib/utilities/GpuMatAllocators.h>
+#include <EagleLib/Logging.h>
+#include <EagleLib/shared_ptr.hpp>
+#include "EagleLib/utilities/BufferPool.hpp"
+#include <EagleLib/NodeManager.h>
+#include <EagleLib/ObjectManager.h>
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
@@ -65,64 +46,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	auto allocator = new EagleLib::DelayedDeallocator();
 	cv::cuda::GpuMat::setDefaultAllocator(allocator);
 	allocator->deallocateDelay = 1000;
-	//LazyDeallocator::instance()->dealloc_time = 500;
-	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
-	boost::log::add_common_attributes();
-	if (!boost::filesystem::exists("./logs") || !boost::filesystem::is_directory("./logs"))
-	{
-		boost::filesystem::create_directory("./logs");
-	}
-	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
-    // https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
-
-	auto consoleFmtTimeStamp = boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%M:%S.%f");
-
-	auto fmtThreadId = boost::log::expressions::attr<boost::log::attributes::current_thread_id::value_type>("ThreadID");
-
-	auto fmtSeverity = boost::log::expressions::attr<boost::log::trivial::severity_level>("Severity");
-
-	auto fmtScope = boost::log::expressions::format_named_scope("Scope",
-		boost::log::keywords::format = "%n(%f:%l)",
-		boost::log::keywords::iteration = boost::log::expressions::reverse,
-		boost::log::keywords::depth = 2);
-
-	boost::log::formatter consoleFmt =
-		boost::log::expressions::format("%1%<%2%,%3%> %4%")
-		% consoleFmtTimeStamp					// 1
-		% fmtThreadId							// 2
-		% fmtSeverity							// 3
-		% boost::log::expressions::smessage;	// 4
-    
-	auto consoleSink = boost::log::add_console_log(std::clog);
-	consoleSink->set_formatter(consoleFmt);
-
-
-	auto fmtTimeStamp = boost::log::expressions::
-		format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
-
-	// File sink 
-    boost::log::formatter logFmt =
-		boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%] %5%")
-		% fmtTimeStamp 
-		% fmtThreadId 
-		% fmtSeverity
-		% fmtScope
-		% boost::log::expressions::smessage;
 	
-
-	auto fsSink = boost::log::add_file_log(
-		boost::log::keywords::file_name = "./logs/%Y-%m-%d_%H-%M-%S.%N.log",
-		boost::log::keywords::rotation_size = 10 * 1024 * 1024,
-		boost::log::keywords::min_free_space = 30 * 1024 * 1024,
-		boost::log::keywords::open_mode = std::ios_base::app);
-	fsSink->set_formatter(logFmt);
-	fsSink->locked_backend()->auto_flush(true);
-    
-    log_sink.reset(new boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>());
-    
-    boost::log::core::get()->add_sink(log_sink);
+	EagleLib::SetupLogging();
 	EagleLib::ui_collector::addGenericCallbackHandler(boost::bind(&MainWindow::process_log_message, this, _1, _2));
-
+	
 
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
@@ -210,8 +137,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	Parameters::TypedParameter<bool>("Instantiation");
 
     //EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
-    boost::function<void(const std::string&, int)> f = boost::bind(&MainWindow::onCompileLog, this, _1, _2);
-    EagleLib::NodeManager::getInstance().setCompileCallback(f);
+    std::function<void(const std::string&, int)> f = std::bind(&MainWindow::onCompileLog, this, std::placeholders::_1, std::placeholders::_2);
+    EagleLib::ObjectManager::Instance().setCompileCallback(f);
     QDir dir(QDir::currentPath());
 
 #ifdef _MSC_VER
@@ -236,7 +163,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     nodeListDialog->update();
     emit pluginLoaded();
-    EagleLib::NodeManager::getInstance().setupModule(PerModuleInterface::GetInstance());
+    EagleLib::ObjectManager::Instance().setupModule(PerModuleInterface::GetInstance());
 
     startProcessingThread();
 	rccSettings->updateDisplay();
@@ -256,9 +183,10 @@ MainWindow::~MainWindow()
 	stopProcessingThread();
 	cv::destroyAllWindows();
 	EagleLib::ui_collector::clearGenericCallbackHandlers();
-	log_sink->flush();
-	log_sink->stop();
-	log_sink.reset();
+
+	//log_sink->flush();
+	//log_sink->stop();
+	//log_sink.reset();
     delete ui;
 }
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -483,7 +411,7 @@ MainWindow::onTimeout()
 			LOG_TRIVIAL(info) << "Processing thread joined";
             joined = true;
         }
-        if(EagleLib::NodeManager::getInstance().CheckRecompile(true))
+        if(EagleLib::ObjectManager::Instance().CheckRecompile(true))
         {
            // Still compiling
 			LOG_TRIVIAL(info) << "Still compiling";
@@ -495,7 +423,7 @@ MainWindow::onTimeout()
         }
         return;
     }
-    if(EagleLib::NodeManager::getInstance().CheckRecompile(false))
+    if(EagleLib::ObjectManager::Instance().CheckRecompile(false))
     {
 		LOG_TRIVIAL(info) << "Recompiling.....";
         swapRequired = true;

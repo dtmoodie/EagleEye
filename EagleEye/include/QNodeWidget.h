@@ -19,6 +19,8 @@
 #include <type.h>
 #include <boost/thread/recursive_mutex.hpp>
 #include <UI/Qt.hpp>
+#include <EagleLib/shared_ptr.hpp>
+
 
 namespace Ui {
 	class QNodeWidget;

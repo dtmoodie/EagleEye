@@ -2,7 +2,7 @@
 #include "nvcc_test.cuh"
 #include "RuntimeSourceDependency.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
-#include "Manager.h"
+
 
 using namespace EagleLib;
 SETUP_PROJECT_IMPL

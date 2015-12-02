@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "nodes/Node.h"
+#include <EagleLib/shared_ptr.hpp>
 namespace Ui {
 class NodeListDialog;
 }

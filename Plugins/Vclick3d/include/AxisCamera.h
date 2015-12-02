@@ -5,7 +5,7 @@
 #include "qnetworkreply.h"
 #include "qtcpsocket.h"
 #include "ObjectInterfacePerModule.h"
-
+#include <EagleLib/Project_defs.hpp>
 
 
 #ifdef _MSC_VER

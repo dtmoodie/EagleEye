@@ -2,7 +2,7 @@
 #include "nodes/Node.h"
 #include <boost/circular_buffer.hpp>
 #include "EagleLib/Defs.hpp"
-
+#include <EagleLib/Project_defs.hpp>
 #ifdef __cplusplus
 extern "C"{
 #endif

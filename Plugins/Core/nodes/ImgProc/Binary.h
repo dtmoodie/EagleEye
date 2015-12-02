@@ -1,6 +1,6 @@
 #include "nodes/Node.h"
 #include "EagleLib/Defs.hpp"
-
+#include <EagleLib/Project_defs.hpp>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 

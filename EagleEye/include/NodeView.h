@@ -5,6 +5,7 @@
 #include <nodes/Node.h>
 #include <QNodeWidget.h>
 #include <QMenu>
+#include <EagleLib/shared_ptr.hpp>
 class NodeView : public QGraphicsView
 {
 	Q_OBJECT

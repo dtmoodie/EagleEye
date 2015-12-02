@@ -4,6 +4,7 @@
 #include "qcustomplot.h"
 
 #include <boost/shared_ptr.hpp>
+#include <EagleLib/shared_ptr.hpp>
 
 /* The plot window class used used to create a widget that looks as follows
  *

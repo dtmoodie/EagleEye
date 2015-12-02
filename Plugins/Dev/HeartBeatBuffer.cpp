@@ -1,4 +1,5 @@
 #include "HeartBeatBuffer.h"
+#include "EagleLib/shared_ptr.hpp"
 
 using namespace EagleLib;
 #define CATCH_MACRO                                                         \

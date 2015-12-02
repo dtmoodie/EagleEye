@@ -1,10 +1,10 @@
-#include "Manager.h"
+#include "EagleLib/ObjectManager.h"
 
 
 
 int main()
 {
-    EagleLib::NodeManager::getInstance().TestRuntimeCompilation();
+    EagleLib::ObjectManager::Instance().TestRuntimeCompilation();
     return 0;
 }
 

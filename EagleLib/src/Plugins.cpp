@@ -1,7 +1,8 @@
 #include "Plugins.h"
-#include "Manager.h"
+#include <EagleLib/ObjectManager.h>
 #include <boost/log/trivial.hpp>
 #include <EagleLib/Defs.hpp>
+#include <EagleLib/Project_defs.hpp>
 #ifdef _MSC_VER
 #include "Windows.h"
 
@@ -45,7 +46,7 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
     if (module)
     {
         auto moduleInterface = module();
-        NodeManager::getInstance().setupModule(moduleInterface);
+        ObjectManager::Instance().setupModule(moduleInterface);
     }
 		
 	else
@@ -55,7 +56,7 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 		if (module)
 		{
             auto moduleInterface = module();
-            NodeManager::getInstance().setupModule(moduleInterface);
+			ObjectManager::Instance().setupModule(moduleInterface);
 		}
 		else
 		{

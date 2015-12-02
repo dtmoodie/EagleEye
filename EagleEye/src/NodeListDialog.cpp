@@ -1,13 +1,14 @@
 #include "NodeListDialog.h"
 #include "ui_nodelistdialog.h"
-#include "Manager.h"
+#include <EagleLib/ObjectManager.h>
+#include <EagleLib/NodeManager.h>
 #include "QListWidgetItem"
 NodeListDialog::NodeListDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NodeListDialog)
 {
     ui->setupUi(this);
-	EagleLib::NodeManager::getInstance().RegisterConstructorAddedCallback(boost::bind(&NodeListDialog::update, this));
+	EagleLib::ObjectManager::Instance().RegisterConstructorAddedCallback(boost::bind(&NodeListDialog::update, this));
     update();
 }
 

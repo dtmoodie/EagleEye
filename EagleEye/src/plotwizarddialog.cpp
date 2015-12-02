@@ -1,4 +1,4 @@
-#include "Manager.h"
+#include <EagleLib/PlotManager.h>
 #include "plotters/Plotter.h"
 
 #include "plotwizarddialog.h"

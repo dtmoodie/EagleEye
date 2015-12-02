@@ -1,5 +1,6 @@
 #include <nodes/Node.h>
 #include "EagleLib/Defs.hpp"
+#include <EagleLib/Project_defs.hpp>
 SETUP_PROJECT_DEF
 
 namespace EagleLib

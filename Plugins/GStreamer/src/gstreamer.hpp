@@ -4,8 +4,11 @@
 #endif
 #include <gst/rtsp-server/rtsp-server.h>
 #include "nodes/Node.h"
+
 #include <EagleLib/Defs.hpp>
+#include <EagleLib/Project_defs.hpp>
 #include <EagleLib/utilities/CudaUtils.hpp>
+
 #include <gst/gst.h>
 #include <gst/gstelement.h>
 #include <gst/gstelementfactory.h>

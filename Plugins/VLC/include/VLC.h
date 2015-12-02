@@ -4,6 +4,7 @@
 #include "vlc/vlc.h"
 #include <nodes/Node.h>
 #include <Manager.h>
+#include <EagleLib/Project_defs.hpp>
 #ifdef PROJECT_INCLUDES_ && !defined(PROJECT_INCLUDES)
 #define PROJECT_INCLUDES PROJECT_INCLUDES_
 #endif
