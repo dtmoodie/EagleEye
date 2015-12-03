@@ -23,6 +23,7 @@
 #include <../remotery/lib/Remotery.h>
 
 #include <EagleLib/utilities/GpuMatAllocators.h>
+#include "EagleLib/utilities/CpuMatAllocators.h"
 #include <EagleLib/Logging.h>
 #include <EagleLib/shared_ptr.hpp>
 #include "EagleLib/utilities/BufferPool.hpp"
@@ -45,6 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	auto allocator = new EagleLib::DelayedDeallocator();
 	cv::cuda::GpuMat::setDefaultAllocator(allocator);
+	cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
+	EagleLib::CpuDelayedDeallocationPool::instance()->deallocation_delay = 1000;
 	allocator->deallocateDelay = 1000;
 	
 	EagleLib::SetupLogging();
@@ -183,10 +186,8 @@ MainWindow::~MainWindow()
 	stopProcessingThread();
 	cv::destroyAllWindows();
 	EagleLib::ui_collector::clearGenericCallbackHandlers();
+	EagleLib::ShutdownLogging();
 
-	//log_sink->flush();
-	//log_sink->stop();
-	//log_sink.reset();
     delete ui;
 }
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -402,9 +403,10 @@ MainWindow::onTimeout()
 
     if(swapRequired)
     {
-        if(!processingThread.try_join_for(boost::chrono::milliseconds(200)) && !joined)
+        if(processingThread.joinable() && !processingThread.try_join_for(boost::chrono::milliseconds(200)) && !joined)
         {
             LOG_TRIVIAL(info) <<"Processing thread not joined, cannot perform object swap";
+			processingThread.interrupt();
             return;
         }else
         {

@@ -1,6 +1,6 @@
 
 
-#include "Manager.h"
+#include <EagleLib/NodeManager.h>
 #include "nodes/Node.h"
 #include "Plugins.h"
 #include <boost/program_options.hpp>
@@ -15,6 +15,7 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
+#include <EagleLib/shared_ptr.hpp>
 
 
 void PrintNodeTree(EagleLib::Node::Ptr node, int depth)

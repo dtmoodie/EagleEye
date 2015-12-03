@@ -23,27 +23,29 @@ CpuDelayedDeallocationPool* CpuDelayedDeallocationPool::instance()
 void CpuDelayedDeallocationPool::allocate(void** ptr, size_t total)
 {
 	auto inst = instance();
-	std::lock_guard<std::mutex> lock(inst->deallocate_pool_mutex);
+	std::lock_guard<std::recursive_timed_mutex> lock(inst->deallocate_pool_mutex);
 	for (auto itr = inst->deallocate_pool.begin(); itr != inst->deallocate_pool.end(); ++itr)
 	{
-		if (itr->second.second == total)
+		//if (itr->second.second == total)
+		if(std::get<2>(*itr) == total)
 		{
-			*ptr = itr->first;
+			*ptr = std::get<0>(*itr);
 			inst->deallocate_pool.erase(itr);
-            BOOST_LOG_TRIVIAL(trace) << "Reusing memory block of size " << total / (1024 * 1024) << " MB. Total usage: " << inst->total_usage /(1024*1024) << " MB";
+            BOOST_LOG_TRIVIAL(trace) << "[CPU] Reusing memory block of size " << total / (1024 * 1024) << " MB. Total usage: " << inst->total_usage /(1024*1024) << " MB";
 			return;
 		}
 	}
 	inst->total_usage += total;
-    BOOST_LOG_TRIVIAL(debug) << "Allocating block of size " << total / (1024 * 1024) << " MB. Total usage: " << inst->total_usage / (1024 * 1024) << " MB";
+    BOOST_LOG_TRIVIAL(info) << "[CPU] Allocating block of size " << total / (1024 * 1024) << " MB. Total usage: " << inst->total_usage / (1024 * 1024) << " MB";
 	cudaSafeCall(cudaMallocHost(ptr, total));
 }
 
 void CpuDelayedDeallocationPool::deallocate(void* ptr, size_t total)
 {
 	auto inst = instance();
-    std::lock_guard<std::mutex> lock(inst->deallocate_pool_mutex);
-	inst->deallocate_pool[(unsigned char*)ptr] = std::make_pair(clock(), total);
+    std::lock_guard<std::recursive_timed_mutex> lock(inst->deallocate_pool_mutex);
+	//inst->deallocate_pool[(unsigned char*)ptr] = std::make_pair(clock(), total);
+	inst->deallocate_pool.push_back(std::make_tuple((unsigned char*)ptr, clock(), total));
     inst->cleanup();
 }
 void CpuDelayedDeallocationPool::cleanup(bool force)
@@ -53,13 +55,15 @@ void CpuDelayedDeallocationPool::cleanup(bool force)
 		time = 0;
 	for (auto itr = deallocate_pool.begin(); itr != deallocate_pool.end(); ++itr)
 	{
-		if ((time - itr->second.first) > deallocation_delay)
+		//if ((time - itr->second.first) > deallocation_delay)
+		if((time - std::get<1>(*itr)) > deallocation_delay)
 		{
-			total_usage -= itr->second.second;
-            BOOST_LOG_TRIVIAL(debug) << "DeAllocating block of size " << itr->second.second / (1024 * 1024) 
-				<< " MB. Which was stale for " << time - itr->second.first 
+			//total_usage -= itr->second.second;
+			total_usage -= std::get<2>(*itr);
+            BOOST_LOG_TRIVIAL(info) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
+				<< " MB. Which was stale for " << time - std::get<1>(*itr)
 				<< " ms. Total usage: " << total_usage / (1024 * 1024) << " MB";
-			cudaFreeHost((void*)itr->first);
+			cudaFreeHost((void*)std::get<0>(*itr));
 			itr = deallocate_pool.erase(itr);
 		}
 	}

@@ -124,16 +124,19 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
     node(node_)
 {
 	ui->setupUi(this);
+	profileDisplay = new QLineEdit();
     traceDisplay = new QLineEdit();
     debugDisplay = new QLineEdit();
     infoDisplay = new QLineEdit();
     warningDisplay = new QLineEdit();
     errorDisplay = new QLineEdit();
-    ui->gridLayout->addWidget(traceDisplay, 1, 0, 1, 2);
-    ui->gridLayout->addWidget(debugDisplay, 2, 0, 1, 2);
-    ui->gridLayout->addWidget(infoDisplay, 3, 0, 1, 2);
-    ui->gridLayout->addWidget(warningDisplay, 4, 0, 1, 2);
-    ui->gridLayout->addWidget(errorDisplay, 5, 0, 1, 2);
+	ui->gridLayout->addWidget(profileDisplay, 1, 0, 1, 2);
+    ui->gridLayout->addWidget(traceDisplay, 2, 0, 1, 2);
+    ui->gridLayout->addWidget(debugDisplay, 3, 0, 1, 2);
+    ui->gridLayout->addWidget(infoDisplay, 4, 0, 1, 2);
+    ui->gridLayout->addWidget(warningDisplay, 5, 0, 1, 2);
+    ui->gridLayout->addWidget(errorDisplay, 6, 0, 1, 2);
+	profileDisplay->hide();
     traceDisplay->hide();
     debugDisplay->hide();
     infoDisplay->hide();
@@ -179,8 +182,6 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
 			}
 			
 		}
-        //node->onUpdate = boost::bind(&QNodeWidget::updateUi, this, true, _1);
-        //node->messageCallback = boost::bind(&QNodeWidget::on_logReceive,this, _1, _2);
 		node_log_handler_id = EagleLib::ui_collector::addNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
 	}
 }
@@ -213,6 +214,24 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Node *node_)
     if(node == nullptr)
         return;
     ui->processingTime->setText(QString::number(node->GetProcessingTime()));
+	if (node->profile)
+	{
+		auto timings = node->GetProfileTimings();
+		if (timings.size() > 1)
+		{
+			profileDisplay->show();
+			std::stringstream text;
+			for (int i = 1; i < timings.size(); ++i)
+			{
+				text << "(" << timings[i - 1].second << "," << timings[i].second << ")-" << timings[i].first - timings[i - 1].first << " ";
+			}
+			profileDisplay->setText(QString::fromStdString(text.str()));
+		}
+	}
+	else
+	{
+		profileDisplay->hide();
+	}
     if(parameterUpdate && node_ == node.get())
     {
 		if (node->parameters.size() != parameterProxies.size())
@@ -332,6 +351,7 @@ void QNodeWidget::on_profileClicked(bool state)
 {
     if(node != nullptr)
         node->profile = state;
+	
 }
 
 EagleLib::Node::Ptr QNodeWidget::getNode()

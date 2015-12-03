@@ -29,6 +29,7 @@
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/filesystem.hpp>
 #include <logger.hpp>
+boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>> log_sink;
 void EagleLib::SetupLogging()
 {
 	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
@@ -82,8 +83,14 @@ void EagleLib::SetupLogging()
 		boost::log::keywords::open_mode = std::ios_base::app);
 	fsSink->set_formatter(logFmt);
 	fsSink->locked_backend()->auto_flush(true);
-	boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>> log_sink;
+	
 	log_sink.reset(new boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>());
 
 	boost::log::core::get()->add_sink(log_sink);
+}
+void EagleLib::ShutdownLogging()
+{
+	log_sink->flush();
+	log_sink->stop();
+	log_sink.reset();
 }

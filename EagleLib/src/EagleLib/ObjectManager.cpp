@@ -379,6 +379,7 @@ std::vector<std::string> ObjectManager::getLinkDependencies(const std::string& o
 {
 	LOG_TRACE;
 	IObjectConstructor* constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(objectName.c_str());
+	
 	std::vector<std::string> linkDependency;
 	if (constructor)
 	{

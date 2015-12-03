@@ -75,6 +75,7 @@ signals:
 	void eLog(boost::log::trivial::severity_level verb, const std::string& msg);
 	void parameterClicked(Parameters::Parameter::Ptr param, QPoint pos);
 private:
+	QLineEdit* profileDisplay;
     QLineEdit* traceDisplay;
     QLineEdit* debugDisplay;
     QLineEdit* infoDisplay;

@@ -633,6 +633,8 @@ namespace EagleLib
          */
         virtual bool SkipEmpty() const;
 
+		std::vector<std::pair<time_t, int>> GetProfileTimings() const;
+
         // ****************************************************************************************************************
         //
         //									Members
@@ -664,6 +666,7 @@ namespace EagleLib
         void onUpdate();
         double GetProcessingTime() const;
         void Clock(int line_num);
+		
 
     private:
 

@@ -4,4 +4,5 @@
 namespace EagleLib
 {
 	void EAGLE_EXPORTS SetupLogging();
+	void EAGLE_EXPORTS ShutdownLogging();
 }

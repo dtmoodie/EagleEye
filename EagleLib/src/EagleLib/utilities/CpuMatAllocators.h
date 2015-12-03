@@ -2,6 +2,8 @@
 #include <opencv2/core/mat.hpp>
 #include "../Defs.hpp"
 #include <map>
+#include <list>
+#include <tuple>
 #include <mutex>
 #include <time.h>
 namespace EagleLib
@@ -18,8 +20,9 @@ namespace EagleLib
 		size_t total_usage;
 	private:
 		void cleanup(bool force = false);
-		std::map<unsigned char*, std::pair<clock_t, size_t>> deallocate_pool;
-		std::mutex deallocate_pool_mutex;
+		//std::map<unsigned char*, std::pair<clock_t, size_t>> deallocate_pool;
+		std::list<std::tuple<unsigned char*, clock_t, size_t>> deallocate_pool;
+		std::recursive_timed_mutex deallocate_pool_mutex;
 	};
 
 	class EAGLE_EXPORTS CpuPinnedAllocator : public cv::MatAllocator

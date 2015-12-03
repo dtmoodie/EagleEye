@@ -37,6 +37,7 @@
 #include <assert.h>
 #include <mutex>
 #include "IObjectNotifiable.h"
+#include <list>
 
 struct ISimpleSerializer;
 class ObjectFactorySystem;
@@ -107,10 +108,11 @@ struct IObject
     IObject() : _isRuntimeDelete(false) {}
     virtual ~IObject()
     {
-        for(size_t i = 0; i < notifiers.size(); ++i)
-        {
-            notifiers[i]->updateObject(nullptr);
-        }
+		std::lock_guard<std::recursive_mutex> lock(notifierMutex);
+		for (auto itr = notifiers.begin(); itr != notifiers.end(); ++itr)
+		{
+			(*itr)->updateObject(nullptr);
+		}
     }
 
     // Perform any object initialization
@@ -164,33 +166,30 @@ struct IObject
 
     void deregisterNotifier(IObjectNotifiable* notifier)
     {
-		try
-		{
-			std::lock_guard<std::recursive_mutex> lock(notifierMutex);
-			auto itr = std::find(notifiers.begin(), notifiers.end(), notifier);
-			if (itr != notifiers.end())
-				notifiers.erase(itr);
-			else
-				return;
-		}
-		catch (...)
-		{
-			return;
-		}
-		
+		std::lock_guard<std::recursive_mutex> lock(notifierMutex);
+		auto itr = std::find(notifiers.begin(), notifiers.end(), notifier);
+
+		if (itr != notifiers.end())
+			notifiers.erase(itr);
+		return;
     }
     void updateNotifiers()
     {
 		std::lock_guard<std::recursive_mutex> lock(notifierMutex);
-        for(size_t i = 0; i < notifiers.size(); ++i)
+        /*for(size_t i = 0; i < notifiers.size(); ++i)
         {
             if(notifiers[i] != nullptr)
                 notifiers[i]->updateObject(this);
-        }
+        }*/
+		for (auto itr = notifiers.begin(); itr != notifiers.end(); ++itr)
+		{
+			if (*itr != nullptr)
+				(*itr)->updateObject(this);
+		}
     }
     virtual void updateParent(){}
 
-    std::vector<IObjectNotifiable*> notifiers;
+    std::list<IObjectNotifiable*> notifiers;
 protected:
     bool IsRuntimeDelete() { return _isRuntimeDelete; }
 

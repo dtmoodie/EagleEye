@@ -2,8 +2,9 @@
 #include <EagleLib/Defs.hpp>
 #include <opencv2/core/cuda.hpp>
 #include <mutex>
-#include <map>
+#include <tuple>
 #include <list>
+#include <map>
 #include <memory>
 
 
@@ -52,6 +53,7 @@ namespace EagleLib
 		
 	protected:
 		virtual void clear();
-		std::map<unsigned char*, std::pair<clock_t, size_t>> deallocateList; // list of all the different memory blocks to be deallocated
+		//std::map<unsigned char*, std::pair<clock_t, size_t>> deallocateList; // list of all the different memory blocks to be deallocated
+		std::list<std::tuple<unsigned char*, clock_t, size_t>> deallocateList;
 	};	
 }

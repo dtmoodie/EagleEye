@@ -3,6 +3,7 @@
 #include <external_includes/cv_imgproc.hpp>
 #include <UI/InterThread.hpp>
 #include "../remotery/lib/Remotery.h"
+#include <EagleLib/utilities/CudaCallbacks.hpp>
 using namespace EagleLib;
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay)
@@ -136,7 +137,7 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 // This gets called in the user interface thread for drawing and displaying, after data is downloaded from the gpu
 cv::Mat KeyPointDisplay::uicallback()
 {
-    if(displayType == 0)
+    /*if(displayType == 0)
     {
         EventBuffer<std::pair<cv::cuda::HostMem,cv::cuda::HostMem>>* buffer = hostData.waitBack();
         cv::Scalar color = *getParameter<cv::Scalar>(3)->Data();
@@ -153,11 +154,11 @@ cv::Mat KeyPointDisplay::uicallback()
             return hostImage;
         }
         return cv::Mat();
-    }
+    }*/
     return cv::Mat();
 }
 
-
+/*
 void KeyPointDisplay_callback(int status, void* userData)
 {
     KeyPointDisplay* node = (KeyPointDisplay*)userData;
@@ -175,7 +176,7 @@ void KeyPointDisplay_callback(int status, void* userData)
         std::cout << e.what() << std::endl;
     }
 
-}
+}*/
 
 void KeyPointDisplay::Init(bool firstInit)
 {
@@ -186,27 +187,48 @@ void KeyPointDisplay::Init(bool firstInit)
         addInputParameter<cv::Mat>("Host keypoints");
         updateParameter("Radius", int(5));
         updateParameter("Color", cv::Scalar(255,0,0));
-        hostData.resize(20);
+        //hostData.resize(20);
         displayType = -1;
     }
 }
 void KeyPointDisplay::Serialize(ISimpleSerializer *pSerializer)
 {
     Node::Serialize(pSerializer);
-    SERIALIZE(hostData);
+    //SERIALIZE(hostData);
 }
 cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat* d_mat = getParameter<cv::cuda::GpuMat>(0)->Data();
-
-    if(d_mat)
+	TIME
+    if(d_mat && !d_mat->empty())
     {
-        auto buffer = hostData.getFront();
-        d_mat->download(buffer->data.first, stream);
-        img.download(buffer->data.second, stream);
-        buffer->fillEvent.record(stream);
-        stream.enqueueHostCallback(KeyPointDisplay_callback, this);
-        displayType = 0;
+		cv::Scalar color = *getParameter<cv::Scalar>(3)->Data();
+		int radius = *getParameter<int>(2)->Data();
+		std::string displayName = fullTreeName;
+		cv::Mat h_img, pts;
+		TIME
+		img.download(h_img, stream);
+		d_mat->download(pts, stream);
+		TIME
+		EagleLib::cuda::enqueue_callback_async(
+			[h_img, pts, radius, color, displayName]()->void
+		{
+			//cv::Mat pts = h_points.createMatHeader();
+			const cv::Vec2f* ptr = pts.ptr<cv::Vec2f>(0);
+			for (int i = 0; i < pts.cols; ++i, ++ptr)
+			{
+				cv::circle(h_img, cv::Point(ptr->val[0], ptr->val[1]), radius, color, 1);
+			}
+			Parameters::UI::UiCallbackService::Instance()->post(
+				boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), displayName, h_img));
+		}, stream);
+		TIME
+        //auto buffer = hostData.getFront();
+        //d_mat->download(buffer->data.first, stream);
+        //img.download(buffer->data.second, stream);
+        //buffer->fillEvent.record(stream);
+        //stream.enqueueHostCallback(KeyPointDisplay_callback, this);
+        //displayType = 0;
         return img;
     }
     auto h_mat = getParameter<cv::Mat>(1)->Data();
@@ -216,16 +238,16 @@ cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     }
     return img;
 }
-void FlowVectorDisplay_callback(int status, void* userData)
+/*void FlowVectorDisplay_callback(int status, void* userData)
 {
     FlowVectorDisplay* node = (FlowVectorDisplay*)userData;
 	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), node->displayName, node->uicallback()));
-}
+}*/
 
 void FlowVectorDisplay::Serialize(ISimpleSerializer *pSerializer)
 {
     Node::Serialize(pSerializer);
-    SERIALIZE(hostData);
+    //SERIALIZE(hostData);
 }
 
 void FlowVectorDisplay::Init(bool firstInit)
@@ -238,11 +260,9 @@ void FlowVectorDisplay::Init(bool firstInit)
         addInputParameter<cv::cuda::GpuMat>("Point mask");
         updateParameter("Good Color", cv::Scalar(0,255,0));
         updateParameter("Bad Color", cv::Scalar(0,0,255));
-        updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>>
-			("Display functor", boost::bind(&FlowVectorDisplay::display, this, _1, _2, _3, _4, _5, _6), Parameters::Parameter::Output);
     }
 }
-void FlowVectorDisplay::display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial,
+/*void FlowVectorDisplay::display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial,
                                 cv::cuda::GpuMat final, cv::cuda::GpuMat mask,
                                 std::string &name, cv::cuda::Stream stream)
 {
@@ -255,21 +275,58 @@ void FlowVectorDisplay::display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial,
     final.download(buffer->data[3], stream);
     buffer->fillEvent.record(stream);
     stream.enqueueHostCallback(FlowVectorDisplay_callback, this);
-}
+}*/
 
 cv::cuda::GpuMat FlowVectorDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat* d_initial = getParameter<cv::cuda::GpuMat>(0)->Data();
     cv::cuda::GpuMat* d_final = getParameter<cv::cuda::GpuMat>(1)->Data();
     cv::cuda::GpuMat* d_mask = getParameter<cv::cuda::GpuMat>(2)->Data();
-    if(d_initial && d_final)
+    if(d_initial && !d_initial->empty() && d_final && !d_final->empty())
     {
-        display(img, *d_initial, *d_final, d_mask ? *d_mask : cv::cuda::GpuMat(), fullTreeName, stream);
+		cv::Scalar goodColor = *getParameter<cv::Scalar>(3)->Data();
+		cv::Scalar badColor = *getParameter<cv::Scalar>(4)->Data();
+		cv::Mat h_img;
+		img.download(h_img, stream);
+		std::string displayName = fullTreeName;
+		if (d_mask)
+		{
+			cv::Mat h_initial, h_final, h_mask;
+			EagleLib::cuda::enqueue_callback_async(
+				[h_img, h_initial, h_final, h_mask, goodColor, badColor, displayName]()->void
+			{
+				const cv::Vec2f* p1 = h_initial.ptr<cv::Vec2f>();
+				const cv::Vec2f* p2 = h_final.ptr<cv::Vec2f>();
+				const uchar* mask = h_mask.ptr<uchar>();
+				for (int i = 0; i < h_initial.cols; ++i)
+				{
+					cv::line(h_img, cv::Point(p1[i].val[0], p1[i].val[1]), cv::Point(p2[i].val[0], p2[i].val[1]), mask[i] ? goodColor : badColor);
+				}
+				cv::imshow(displayName, h_img);
+			}, stream);
+		}
+		else
+		{
+			cv::Mat h_initial, h_final;
+			EagleLib::cuda::enqueue_callback_async(
+				[h_img, h_initial, h_final, goodColor, displayName]()->void
+			{
+				const cv::Vec2f* p1 = h_initial.ptr<cv::Vec2f>();
+				const cv::Vec2f* p2 = h_final.ptr<cv::Vec2f>();
+				for (int i = 0; i < h_initial.cols; ++i)
+				{
+					cv::line(h_img, cv::Point(p1[i].val[0], p1[i].val[1]), cv::Point(p2[i].val[0], p2[i].val[1]), goodColor);
+				}
+				cv::imshow(displayName, h_img);
+			}, stream);
+		}
+
+        //display(img, *d_initial, *d_final, d_mask ? *d_mask : cv::cuda::GpuMat(), fullTreeName, stream);
     }
     return img;
 }
 
-cv::Mat FlowVectorDisplay::uicallback()
+/*cv::Mat FlowVectorDisplay::uicallback()
 {
     EventBuffer<cv::cuda::HostMem[4]>* buffer = hostData.waitBack();
     if(buffer)
@@ -290,7 +347,7 @@ cv::Mat FlowVectorDisplay::uicallback()
         return img;
     }
     return cv::Mat();
-}
+}*/
 void histogramDisplayCallback(int status, void* userData)
 {
     HistogramDisplay* node = (HistogramDisplay*)userData;

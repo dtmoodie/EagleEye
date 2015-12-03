@@ -36,7 +36,7 @@ namespace EagleLib
     };
     class KeyPointDisplay: public Node
     {
-        ConstEventBuffer<std::pair<cv::cuda::HostMem, cv::cuda::HostMem>> hostData;
+        //ConstEventBuffer<std::pair<cv::cuda::HostMem, cv::cuda::HostMem>> hostData;
         int displayType;
     public:
 
@@ -49,14 +49,14 @@ namespace EagleLib
     class FlowVectorDisplay: public Node
     {
         // First buffer is the image, second is a pair of the points to be used
-        ConstEventBuffer<cv::cuda::HostMem[4]> hostData;
-        void display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial, cv::cuda::GpuMat final, cv::cuda::GpuMat mask, std::string& name, cv::cuda::Stream);
+        //ConstEventBuffer<cv::cuda::HostMem[4]> hostData;
+        //void display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial, cv::cuda::GpuMat final, cv::cuda::GpuMat mask, std::string& name, cv::cuda::Stream);
     public:
         std::string displayName;
         FlowVectorDisplay();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-        cv::Mat uicallback();
+        //cv::Mat uicallback();
         virtual void Serialize(ISimpleSerializer *pSerializer);
     };
 

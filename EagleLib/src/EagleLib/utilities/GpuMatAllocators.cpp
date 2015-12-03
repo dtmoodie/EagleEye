@@ -155,14 +155,14 @@ namespace EagleLib
 				mat->step = stride;
                 mat->refcount = (int*)cv::fastMalloc(sizeof(int));
 				memoryUsage += mat->step*rows;
-				BOOST_LOG_TRIVIAL(debug) << "Allocating block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. total usage: " << memoryUsage / (1024 * 1024) << " MB";
+				BOOST_LOG_TRIVIAL(debug) << "[GPU] Allocating block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. total usage: " << memoryUsage / (1024 * 1024) << " MB";
 				Increment(ptr, mat->step*rows);
 				return true;
 			}
 		}
 		// If we get to this point, then no memory was found, need to allocate new memory
 		blocks.push_back(std::shared_ptr<MemoryBlock>(new MemoryBlock(std::max(initialBlockSize_ / 2, sizeNeeded))));
-		BOOST_LOG_TRIVIAL(warning) << "Expanding memory pool by " <<  std::max(initialBlockSize_ / 2, sizeNeeded) / (1024 * 1024) << " MB";
+		BOOST_LOG_TRIVIAL(warning) << "[GPU] Expanding memory pool by " <<  std::max(initialBlockSize_ / 2, sizeNeeded) / (1024 * 1024) << " MB";
 		if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, elemSize))
 		{
 			mat->data = ptr;
@@ -170,7 +170,7 @@ namespace EagleLib
             mat->refcount = (int*)cv::fastMalloc(sizeof(int));
 			memoryUsage += mat->step*rows;
 			Increment(ptr, mat->step*rows);
-			BOOST_LOG_TRIVIAL(debug) << "Allocating block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. total usage: " << memoryUsage / (1024 * 1024) << " MB";
+			BOOST_LOG_TRIVIAL(debug) << "[GPU] Allocating block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. total usage: " << memoryUsage / (1024 * 1024) << " MB";
 			return true;
 		}
 		return false;
@@ -186,7 +186,7 @@ namespace EagleLib
 				return;
 			}
 		}
-		throw cv::Exception(0, "Unable to find memory to deallocate", __FUNCTION__, __FILE__, __LINE__);
+		throw cv::Exception(0, "[GPU] Unable to find memory to deallocate", __FUNCTION__, __FILE__, __LINE__);
 	}
 	DelayedDeallocator::DelayedDeallocator() :PitchedAllocator()
 	{
@@ -201,15 +201,15 @@ namespace EagleLib
 		SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
 		for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
 		{
-			if (itr->second.second == sizeNeeded)
+			if(std::get<2>(*itr) == sizeNeeded)
 			{
-				mat->data = itr->first;
+				mat->data = std::get<0>(*itr);
 				mat->step = stride;
                 mat->refcount = (int*)cv::fastMalloc(sizeof(int));
 				deallocateList.erase(itr);
 				memoryUsage += mat->step*rows;
 				Increment(mat->data, mat->step*rows);
-				BOOST_LOG_TRIVIAL(debug) << "Reusing block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. total usage: " << memoryUsage / (1024 * 1024) << " MB";
+				BOOST_LOG_TRIVIAL(debug) << "[GPU] Reusing block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. total usage: " << memoryUsage / (1024 * 1024) << " MB";
 				return true;
 			}
 		}
@@ -218,14 +218,14 @@ namespace EagleLib
 			CV_CUDEV_SAFE_CALL(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows));
 			memoryUsage += mat->step*rows;
 			Increment(mat->data, mat->step*rows);
-			BOOST_LOG_TRIVIAL(info) << "Allocating block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
+			BOOST_LOG_TRIVIAL(info) << "[GPU] Allocating block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
 		}
 		else
 		{
 			CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
 			memoryUsage += elemSize*cols*rows;
 			Increment(mat->data, elemSize*cols*rows);
-			BOOST_LOG_TRIVIAL(info) << "Allocating block of size (" << rows << "," << cols << ") " << cols * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
+			BOOST_LOG_TRIVIAL(info) << "[GPU] Allocating block of size (" << rows << "," << cols << ") " << cols * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
 			mat->step = elemSize * cols;
 		}
 		mat->refcount = (int*)cv::fastMalloc(sizeof(int));
@@ -236,8 +236,9 @@ namespace EagleLib
 		std::lock_guard<std::recursive_mutex> lock(mtx);
 		Decrement(mat->data, mat->step*mat->rows);
 		scopedAllocationSize[scopeOwnership[mat->data]] -= mat->rows*mat->step;
-		BOOST_LOG_TRIVIAL(debug) << "Releasing mat of size (" << mat->rows << "," << mat->cols << ") " << (mat->dataend - mat->datastart)/(1024*1024) << " MB to the memory pool";
-		deallocateList[mat->data] = std::pair<clock_t, size_t>(clock(), mat->rows*mat->step);
+		BOOST_LOG_TRIVIAL(debug) << "[GPU] Releasing mat of size (" << mat->rows << "," << mat->cols << ") " << (mat->dataend - mat->datastart)/(1024*1024) << " MB to the memory pool";
+		//deallocateList[mat->data] = std::pair<clock_t, size_t>(clock(), mat->rows*mat->step);
+		deallocateList.push_back(std::make_tuple(mat->data, clock(), size_t(mat->rows*mat->step)));
 		cv::fastFree(mat->refcount);
 		clear();
 	}
@@ -246,11 +247,11 @@ namespace EagleLib
 		auto time = clock();
 		for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
 		{
-			if ((time - itr->second.first) > deallocateDelay)
+			if((time - std::get<1>(*itr)) > deallocateDelay)
 			{
-				memoryUsage -= itr->second.second;
-				BOOST_LOG_TRIVIAL(info) << "Deallocating block of size " << itr->second.second/(1024*1024) << "MB. Which was stale for " << time - itr->second.first << " ms";
-				CV_CUDEV_SAFE_CALL(cudaFree(itr->first));
+				memoryUsage -= std::get<2>(*itr);
+				BOOST_LOG_TRIVIAL(info) << "[GPU] Deallocating block of size " << std::get<2>(*itr) /(1024*1024) << "MB. Which was stale for " << time - std::get<1>(*itr) << " ms";
+				CV_CUDEV_SAFE_CALL(cudaFree(std::get<0>(*itr)));
 				itr = deallocateList.erase(itr);
 			}
 		}

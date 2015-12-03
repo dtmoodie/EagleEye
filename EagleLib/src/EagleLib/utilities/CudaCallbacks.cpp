@@ -12,10 +12,9 @@ void EagleLib::cuda::ICallback::cb_func_async(int status, void* user_data)
 		auto cb = static_cast<ICallback*>(user_data);
 		auto start = clock();
 		cb->run();
-        BOOST_LOG_TRIVIAL(info) << "Callback execution time: " << clock() - start << " ms";
+        BOOST_LOG_TRIVIAL(trace) << "Callback execution time: " << clock() - start << " ms";
 		delete cb;
 	});
-    //BOOST_LOG_TRIVIAL(trace) << "Callback launch time: " << clock() - _start << " ms";
 }
 void EagleLib::cuda::ICallback::cb_func(int status, void* user_data)
 {
@@ -50,7 +49,7 @@ scoped_stream_timer::~scoped_stream_timer()
 	data.start_time = start_time;
     EagleLib::cuda::enqueue_callback<scoped_event_timer_data, void>(data, [](scoped_event_timer_data data)
     {
-            BOOST_LOG_TRIVIAL(info) << "[" << data.scope_name << "] executed in " << 
+            BOOST_LOG_TRIVIAL(trace) << "[" << data.scope_name << "] executed in " << 
             boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - *data.start_time).total_microseconds() << " us";
         delete data.start_time;
     }, _stream);
@@ -82,7 +81,7 @@ scoped_event_stream_timer::~scoped_event_stream_timer()
     EagleLib::cuda::enqueue_callback_async<scoped_event_data, void>(data, 
         [](scoped_event_data data)->void
     {
-        BOOST_LOG_TRIVIAL(info) << "[" << data._scope_name << "] executed in " << cv::cuda::Event::elapsedTime((*data.startEvent.get()), (*data.endEvent.get())) << " ms";
+        BOOST_LOG_TRIVIAL(trace) << "[" << data._scope_name << "] executed in " << cv::cuda::Event::elapsedTime((*data.startEvent.get()), (*data.endEvent.get())) << " ms";
     }, _stream);
 }
 

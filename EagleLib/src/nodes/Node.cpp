@@ -180,9 +180,7 @@ void Node::EndProcessingTime()
 		ss << " Total: " << total;
 		NODE_LOG(trace) << ss.str();
 	}
-    pImpl_->timings.clear();
     pImpl_->averageFrameTime(total);
-    
 }
 
 void Node::Clock(int line_num)
@@ -194,6 +192,11 @@ double Node::GetProcessingTime() const
 {
     boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
     return boost::accumulators::rolling_mean(pImpl_->averageFrameTime);
+}
+std::vector<std::pair<time_t, int>> Node::GetProfileTimings() const
+{
+	boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
+	return pImpl_->timings;
 }
 void Node::reset()
 {
@@ -458,6 +461,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 			NODE_LOG(trace) << " process enabled: " << enabled;
 			if (enabled)
 			{
+				ClearProcessingTime();
 				boost::recursive_mutex::scoped_lock lock(mtx);
 
 				// Do I lock each parameters mutex or do I just lock each node?
