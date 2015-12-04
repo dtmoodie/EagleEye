@@ -368,8 +368,8 @@ namespace EagleLib
 			return 0;
 		}*/
 
-		void RegisterParameterCallback(int idx, boost::function<void(void)> callback);
-		void RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback);
+		void RegisterParameterCallback(int idx, boost::function<void(cv::cuda::Stream*)> callback);
+		void RegisterParameterCallback(const std::string& name, boost::function<void(cv::cuda::Stream*)> callback);
 		void RegisterSignalConnection(boost::signals2::connection& connection);
 
 		template<typename T> size_t registerParameter(
@@ -379,10 +379,6 @@ namespace EagleLib
 			const std::string& toolTip_ = std::string(),
 			bool ownsData = false)
 		{
-			//parameters.push_back(typename Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data, type_, toolTip_)));
-			//parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-            //onParameterAdded();
-			//return parameters.size() - 1;
             return addParameter(typename Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data, type_, toolTip_)));
 		}
 
@@ -393,10 +389,6 @@ namespace EagleLib
 				const std::string& toolTip_ = std::string(), 
 				bool ownsData = false/*, typename std::enable_if<!std::is_pointer<T>::value, void>::type* dummy_enable = nullptr*/)
 		{
-            //parameters.push_back(typename Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
-			//parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-            //onParameterAdded();
-			//return parameters.size() - 1;
             return addParameter(typename Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
 		}
 
@@ -409,10 +401,6 @@ namespace EagleLib
          template<typename T> size_t
 			 addInputParameter(const std::string& name, const std::string& toolTip_ = std::string(), const boost::function<bool(Parameters::Parameter*)>& qualifier_ = boost::function<bool(Parameters::Parameter*)>())
 		{
-            //parameters.push_back(typename Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
-			//parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-            //onParameterAdded();
-			//return parameters.size() - 1;
             return addParameter(typename Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
 		}
 
@@ -452,7 +440,7 @@ namespace EagleLib
 												T* data, 
 												Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
 												const std::string& toolTip_ = std::string(), 
-												const bool ownsData_ = false)
+												const bool ownsData_ = false, cv::cuda::Stream* stream = nullptr)
 		{
 			typename Parameters::ITypedParameter<T>::Ptr param;
 			try
@@ -466,7 +454,7 @@ namespace EagleLib
 				return registerParameter<T>(name, data, type_, toolTip_, ownsData_);
 			}
 			param->UpdateData(data);
-            onUpdate();
+            onUpdate(stream);
             return true;
 			
 		}
@@ -476,25 +464,23 @@ namespace EagleLib
 												  const T& data,
 												  Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
 												  const std::string& toolTip_ = std::string(),
-												  const bool& ownsData_ = false)
+												  const bool& ownsData_ = false, cv::cuda::Stream* stream = nullptr)
 		{
             typename Parameters::ITypedParameter<T>::Ptr param;
-            try
-            {
-                param = getParameter<T>(name);
-            }catch(cv::Exception &e)
-            {
-				e.what();
+            param = getParameterOptional<T>(name);
+			if (param == nullptr)
+			{
 				NODE_LOG(debug) << "Parameter named \"" << name << "\" with type " << Loki::TypeInfo(typeid(T)).name() << " doesn't exist, adding";
-                return addParameter<T>(name, data, type_, toolTip_, ownsData_);
-            }
+				return addParameter<T>(name, data, type_, toolTip_, ownsData_);
+			}
+            
 			if (type_ != Parameters::Parameter::None)
 				param->type = type_;
 			if (toolTip_.size() > 0)
 				param->SetTooltip(toolTip_);
 
-			param->UpdateData(data);
-            onUpdate();
+			param->UpdateData(data, stream);
+            onUpdate(stream);
 			return true;
         }
 
@@ -502,7 +488,7 @@ namespace EagleLib
 												  const T data,
 												  const std::string& name = std::string(),
 												  const std::string quickHelp = std::string(),
-												  Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control)
+												  Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control, cv::cuda::Stream* stream = nullptr)
 		{
 			if (idx > parameters.size() || idx < 0)
 				return false;
@@ -516,20 +502,19 @@ namespace EagleLib
 				param->type = type_;
 			if (quickHelp.size() > 0)
 				param->SetTooltip(quickHelp);
-			param->UpdateData(data);
-            onUpdate();
+			param->UpdateData(data,stream);
+            onUpdate(stream);
 			return true;
 		}
 		
 
 
-		template<typename T> typename Parameters::ITypedParameter<T>::Ptr
-			getParameter(std::string name)
+		template<typename T> typename Parameters::ITypedParameter<T>::Ptr 	getParameterOptional(std::string name)
 		{
 			auto param =  getParameter(name);
 			if (param == nullptr)
             {
-                throw cv::Exception(0, "Failed to get parameter by name " + name, __FUNCTION__, __FILE__, __LINE__);
+                
                 return typename Parameters::ITypedParameter<T>::Ptr();
             }
 			auto typedParam = std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(param);
@@ -538,6 +523,22 @@ namespace EagleLib
                     TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + param->GetTypeInfo().name(), __FUNCTION__, __FILE__, __LINE__);
 			
             return typedParam;
+		}
+
+		template<typename T> typename Parameters::ITypedParameter<T>::Ptr 	getParameter(std::string name)
+		{
+			auto param = getParameter(name);
+			if (param == nullptr)
+			{
+				throw cv::Exception(0, "Failed to get parameter by name " + name, __FUNCTION__, __FILE__, __LINE__);
+				return typename Parameters::ITypedParameter<T>::Ptr();
+			}
+			auto typedParam = std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(param);
+			if (typedParam == nullptr)
+				throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
+					TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + param->GetTypeInfo().name(), __FUNCTION__, __FILE__, __LINE__);
+
+			return typedParam;
 		}
 
 		template<typename T> typename Parameters::ITypedParameter<T>::Ptr getParameter(int idx)
@@ -553,6 +554,18 @@ namespace EagleLib
             return typedParam;
 		}
 
+		template<typename T> typename Parameters::ITypedParameter<T>::Ptr getParameterOptional(int idx)
+		{
+			auto param = getParameter(idx);
+			if (param == nullptr)
+				return typename Parameters::ITypedParameter<T>::Ptr(); // Return a nullptr
+
+			return std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(param);
+			if (typedParam == nullptr)
+				throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
+					TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + param->GetTypeInfo().name(), __FUNCTION__, __FILE__, __LINE__);
+			return typedParam;
+		}
 
 		/*!
 		*  \brief findInputs recursively finds any compatible inputs wrt the templated desired type.
@@ -663,7 +676,7 @@ namespace EagleLib
         boost::recursive_mutex                                              mtx;
 		
         void onParameterAdded();
-        void onUpdate();
+        void onUpdate(cv::cuda::Stream* stream);
         double GetProcessingTime() const;
         void Clock(int line_num);
 		

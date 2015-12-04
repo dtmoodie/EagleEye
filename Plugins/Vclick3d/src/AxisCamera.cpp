@@ -182,12 +182,14 @@ void AxisCamera::Init(bool firstInit)
 		currentFocus = std::dynamic_pointer_cast<Parameters::TypedParameter<int>>(getParameter<int>("Current Focus"));
 	}
 	updateParameter<boost::function<void(void)>>("Get position", boost::bind(&AxisCamera::get_position, this));
+
     zoomConnection = getParameter("Camera zoom")->RegisterNotifier(boost::bind(&AxisCamera::on_zoomRequest, this));
     panConnection = getParameter("Camera pan")->RegisterNotifier(boost::bind(&AxisCamera::on_panRequest, this));
     tiltConnection = getParameter("Camera tilt")->RegisterNotifier(boost::bind(&AxisCamera::on_tiltRequest, this));
 	ipConnection = getParameter("Camera address")->RegisterNotifier(boost::bind(&AxisCamera::on_addressChange, this));
 	usernameConnection = getParameter("Camera username")->RegisterNotifier(boost::bind(&AxisCamera::on_credentialChange, this));
 	passwordConnection = getParameter("Camera password")->RegisterNotifier(boost::bind(&AxisCamera::on_credentialChange, this));
+
 	on_credentialChange();
 }
 

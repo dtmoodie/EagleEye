@@ -127,7 +127,7 @@ void Node::onParameterAdded()
         (*signal)(this);
     }
 }
-void Node::onUpdate()
+void Node::onUpdate(cv::cuda::Stream* stream)
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
@@ -143,7 +143,7 @@ size_t Node::addParameter(Parameters::Parameter::Ptr param)
     parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
     onParameterAdded();
     boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-    pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&Node::onUpdate, this)));
+    pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&Node::onUpdate, this, _1)));
 
     return parameters.size() - 1;
 }
@@ -606,7 +606,7 @@ Node::Init(const std::string &configFile)
     ui_collector::setNode(this);
 	NODE_LOG(trace);
 }
-void Node::RegisterParameterCallback(int idx, boost::function<void(void)> callback)
+void Node::RegisterParameterCallback(int idx, boost::function<void(cv::cuda::Stream*)> callback)
 {
 	NODE_LOG(trace);
 	auto param = getParameter(idx);
@@ -616,7 +616,7 @@ void Node::RegisterParameterCallback(int idx, boost::function<void(void)> callba
 		pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(callback));
 	}
 }
-void Node::RegisterParameterCallback(const std::string& name, boost::function<void(void)> callback)
+void Node::RegisterParameterCallback(const std::string& name, boost::function<void(cv::cuda::Stream*)> callback)
 {
 	NODE_LOG(trace);
 	auto param = getParameter(name);

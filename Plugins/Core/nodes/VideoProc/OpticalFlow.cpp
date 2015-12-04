@@ -70,19 +70,18 @@ void SparsePyrLKOpticalFlow::Init(bool firstInit)
         updateParameter("Use initial flow", true);
         updateParameter("Enabled", false);
         parameters[1]->changed = true;
-        addInputParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>>("Display function");
     }
-    /*updateParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::Stream)>>(
-        "Set Reference", boost::bind(&SparsePyrLKOpticalFlow::setReferenceImage, this, _1, _2, _3), Parameters::Parameter::Output);
-
-    updateParameter<TrackSparseFunctor>("Sparse Track Functor", boost::bind(&SparsePyrLKOpticalFlow::trackSparse, this, _1, _2, _3, _4, _5, _6, _7), Parameters::Parameter::Output);*/
+	updateParameter<boost::function<void(cv::cuda::GpuMat&, cv::cuda::GpuMat&, size_t, cv::cuda::Stream&)>>("Set reference callback", boost::bind(&SparsePyrLKOpticalFlow::set_reference, this, _1,_2,_3,_4));
 }
 void SparsePyrLKOpticalFlow::Serialize(ISimpleSerializer *pSerializer)
 {
     Node::Serialize(pSerializer);
     SERIALIZE(optFlow);
 }
+void SparsePyrLKOpticalFlow::set_reference(cv::cuda::GpuMat& ref_image, cv::cuda::GpuMat& ref_points, size_t frame_number, cv::cuda::Stream& stream)
+{
 
+}
 cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(parameters[1]->changed ||
@@ -100,68 +99,49 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
         parameters[3]->changed = false;
         parameters[4]->changed = false;
     }
-
+	cv::cuda::GpuMat grey_img;
     if(img.channels() != 1)
-        cv::cuda::cvtColor(img,greyImg, cv::COLOR_BGR2GRAY,0, stream);
+        cv::cuda::cvtColor(img, grey_img, cv::COLOR_BGR2GRAY,0, stream);
     else
-        greyImg = img;
-    if(refImg.empty())
+		grey_img = img;
+    if(prev_grey.empty())
     {
-        refImg = greyImg;
+		prev_grey = grey_img;
+		cv::cuda::GpuMat* inputPts = getParameter<cv::cuda::GpuMat>(0)->Data();
+		if (inputPts && prev_key_points.empty())
+		{
+			inputPts->copyTo(prev_key_points, stream);
+		}
         return img;
     }else
     {
 		cv::cuda::GpuMat* inputPts = getParameter<cv::cuda::GpuMat>(0)->Data();
-        if(!inputPts)
+        if(!inputPts && prev_key_points.empty())
             return img;
-        if(!inputPts->empty())
+
+        if(!inputPts->empty() || !prev_key_points.empty())
         {
-            if(prevKeyPoints.size() != inputPts->size())
-                inputPts->copyTo(prevKeyPoints, stream);
-            cv::cuda::GpuMat status, error;
-            trackSparse(refImg, greyImg,*inputPts, prevKeyPoints,status, error, stream);
+            if(prev_key_points.empty())
+                inputPts->copyTo(prev_key_points, stream);
+
+			cv::cuda::GpuMat status, error, tracked_points;
+
+			if (*getParameter<bool>(4)->Data() && tracked_points.empty())
+				prev_key_points.copyTo(tracked_points, stream);
+
+			optFlow->calc(prev_grey, grey_img, prev_key_points, tracked_points, status, error, stream);
+
+			updateParameter("Tracked points", tracked_points, Parameters::Parameter::Output);
+			updateParameter("Status", status, Parameters::Parameter::Output);
+			updateParameter("Error", error, Parameters::Parameter::Output);
+			
+			prev_key_points = tracked_points;
+			prev_grey = grey_img;
         }
     }
     return img;
 }
-void SparsePyrLKOpticalFlow::setReferenceImage(cv::cuda::GpuMat img, cv::cuda::GpuMat keyPoints, cv::cuda::Stream& stream)
-{
-	refImg = img;
-    refPts  = keyPoints;
-    keyPoints.copyTo(trackedKeyPoints,stream);
 
-}
-void SparsePyrLKOpticalFlow::trackSparse(
-        cv::cuda::GpuMat refImg, cv::cuda::GpuMat curImg,
-        cv::cuda::GpuMat refPts, cv::cuda::GpuMat &trackedPts,
-        cv::cuda::GpuMat& status, cv::cuda::GpuMat& err,
-        cv::cuda::Stream stream)
-{
-    if(optFlow == nullptr)
-    {
-        //log(Error, "Optical flow not initialized correctly");
-		NODE_LOG(error) << "Optical flow not initialized correctly";
-        return;
-    }
-    if(trackedPts.empty())
-    {
-        trackedPts = cv::cuda::GpuMat(refPts.size(), refPts.type());
-        refPts.copyTo(trackedPts,stream);
-    }
-    boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>* display =
-            getParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, cv::cuda::GpuMat, std::string&, cv::cuda::Stream)>>("Display function")->Data();
-
-
-    optFlow->calc(refImg, curImg, refPts, trackedPts, status, err, stream);
-    if(display)
-    {
-        (*display)(curImg, refPts, trackedPts, status, fullTreeName, stream);
-    }
-    updateParameter("Tracked points", trackedPts, Parameters::Parameter::Output);
-	updateParameter("Status", status, Parameters::Parameter::Output);
-	updateParameter("Error", err, Parameters::Parameter::Output);
-
-}
 
 void BroxOpticalFlow::Init(bool firstInit)
 {

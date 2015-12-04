@@ -292,6 +292,9 @@ cv::cuda::GpuMat FlowVectorDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 		if (d_mask)
 		{
 			cv::Mat h_initial, h_final, h_mask;
+			d_initial->download(h_initial, stream);
+			d_final->download(h_final, stream);
+			d_mask->download(h_mask, stream);
 			EagleLib::cuda::enqueue_callback_async(
 				[h_img, h_initial, h_final, h_mask, goodColor, badColor, displayName]()->void
 			{
@@ -308,6 +311,8 @@ cv::cuda::GpuMat FlowVectorDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 		else
 		{
 			cv::Mat h_initial, h_final;
+			d_initial->download(h_initial, stream);
+			d_final->download(h_final, stream);
 			EagleLib::cuda::enqueue_callback_async(
 				[h_img, h_initial, h_final, goodColor, displayName]()->void
 			{

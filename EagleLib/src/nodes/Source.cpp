@@ -31,7 +31,7 @@ cv::cuda::GpuMat SourceNodeBase::doProcess(cv::cuda::GpuMat& input, cv::cuda::St
 	{
 		if (get_next_frame(output_image, stream))
 		{
-			onUpdate();
+			onUpdate(&stream);
 			return output_image;
 		}
 	}

@@ -383,7 +383,7 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         updateParameter("Output", output, Parameters::Parameter::Output);
         return output;
     }
-	onUpdate();
+	onUpdate(&stream);
     return cv::cuda::GpuMat();
 }
 
