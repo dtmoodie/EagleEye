@@ -9,7 +9,6 @@ find_package(Qt5 COMPONENTS Core Widgets PrintSupport OpenGL)
 IF(Qt5_FOUND)
 set(CMAKE_AUTOMOC ON)
 ADD_DEFINITIONS( -DHAVE_QT5 )
-#QT5_WRAP_CPP(MOC ${qcustomplot})
 
 
 INCLUDE_DIRECTORIES(

@@ -29,14 +29,14 @@ void PlotWizardDialog::setup()
         shared_ptr<EagleLib::Plotter> plotter = EagleLib::PlotManager::getInstance().getPlot(plotters[i]);
         if(plotter != nullptr)
         {
-            if(plotter->type() == EagleLib::Plotter::QT_Plotter)
+            if(plotter->Type() == EagleLib::Plotter::QT_Plotter)
             {
                 shared_ptr<EagleLib::QtPlotter> qtPlotter(plotter);
-                plotter->setCallback(boost::bind(&PlotWizardDialog::onUpdate, this, (int)previewPlots.size()));
+                //plotter->setCallback(boost::bind(&PlotWizardDialog::onUpdate, this, (int)previewPlots.size()));
 
-                QWidget* plot = qtPlotter->getPlot(this);
+                QWidget* plot = qtPlotter->CreatePlot(this);
                 plot->installEventFilter(this);
-                qtPlotter->addPlot(plot);
+                qtPlotter->AddPlot(plot);
                 ui->plotPreviewLayout->addWidget(plot);
 
                 previewPlots.push_back(plot);
@@ -98,7 +98,7 @@ void PlotWizardDialog::onUpdate(int idx)
 }
 void PlotWizardDialog::handleUpdate(int idx)
 {
-    previewPlotters[idx]->doUpdate();
+    //previewPlotters[idx]->doUpdate();
 }
 
 void PlotWizardDialog::plotParameter(Parameters::Parameter::Ptr param)
@@ -108,14 +108,14 @@ void PlotWizardDialog::plotParameter(Parameters::Parameter::Ptr param)
     ui->inputDataType->setText(QString::fromStdString(param->GetTypeInfo().name()));
     for(int i = 0; i < previewPlotters.size(); ++i)
     {
-        if(previewPlotters[i]->acceptsType(param))
+        if(previewPlotters[i]->AcceptsParameter(param))
         {
-            previewPlotters[i]->setInput(param);
+            previewPlotters[i]->SetInput(param);
 			previewPlots[i]->show();
 			previewPlots[i]->setMinimumHeight(200);
         }else
         {
-            previewPlotters[i]->setInput();
+            previewPlotters[i]->SetInput();
 			previewPlots[i]->hide();
         }
     }

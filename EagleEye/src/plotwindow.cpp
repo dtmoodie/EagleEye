@@ -27,11 +27,8 @@ PlotWindow::~PlotWindow()
 }
 void PlotWindow::addPlotter(shared_ptr<EagleLib::QtPlotter> plotter)
 {
-    if(plotter->acceptsWidget(plot))
-    {
-        plotter->addPlot(plot);
-        plots.push_back(plotter);
-    }
+	plotter->AddPlot(plot);
+	plots.push_back(plotter);
 }
 void PlotWindow::on_resizePlot_activated()
 {

@@ -8,6 +8,8 @@
 #include "ObjectInterfacePerModule.h"
 #include "IObject.h"
 
+#include <opencv2/core/cuda.hpp>
+
 // EagleLib only contains the interface for the plotting mechanisms, actual implementations will be handled inside of
 // the plotting plugin
 
@@ -20,99 +22,40 @@ namespace EagleLib
 
 	class CV_EXPORTS Plotter : public TInterface<IID_Plotter, IObject>
     {
-
-    protected:
-        boost::signals2::connection bc;
-        Parameters::Parameter::Ptr param;
-        boost::function<void(void)> f;
     public:
+		Plotter();
+		virtual ~Plotter();
         enum PlotterType
         {
             QT_Plotter = 0
         };
-        virtual void Serialize(ISimpleSerializer *pSerializer)
-        {
-            SERIALIZE(bc);
-            SERIALIZE(param);
-        }
-
-        virtual void setInput(Parameters::Parameter::Ptr param_ = Parameters::Parameter::Ptr())
-        {
-            bc.disconnect();
-            param = param_;
-			
-            if(param)
-                bc = param->RegisterNotifier(boost::bind(&Plotter::onUpdate, this));
-        }
-
-        virtual bool acceptsType(Parameters::Parameter::Ptr param) const = 0;
-        virtual void doUpdate() = 0;
-
-        virtual void onUpdate()
-        {
-            if(f)
-                f();
-        }
-        virtual std::string plotName() const = 0;
-        virtual PlotterType type() const = 0;
-        /**
-         * @brief setCallback sets a callback that is called inside the UI code
-         * @brief this can be used for example with QT to call a function to signal that the
-         * @brief UI needs to be updated on the main thread's event loop
-         * @param f_ is the function that is called from the thread that updates a parameter
-         */
-
-        virtual void setCallback(boost::function<void(void)> f_)
-            {f = f_;}
+		virtual void Serialize(ISimpleSerializer *pSerializer);
+		virtual void SetInput(Parameters::Parameter::Ptr param_ = Parameters::Parameter::Ptr());
+        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param) const = 0;
+		virtual void OnParameterUpdate(cv::cuda::Stream* stream) = 0;
+		virtual void Init(bool firstInit);
+        virtual std::string PlotName() const = 0;
+        virtual PlotterType Type() const = 0;
+	protected:
+		boost::signals2::connection bc;
+		Parameters::Parameter::Ptr param;
+		cv::cuda::Stream plottingStream;
+		cv::cuda::Event plottingEvent;
     };
-
-    // The workflow for Qt visualization objects is as follows:
-    // 1) Check if a parameter can be plotted by a certain plotter via the acceptsType parameter
-    // 2) A parameter is set to monitor via setInput
-    // 3) A plot is set via the addPlot method
-    // 3)
 
 	class CV_EXPORTS QtPlotter : public Plotter
     {
     protected:
-        std::vector<QWidget*> plots;
+        std::list<QWidget*> plots;
     public:
 
-        virtual QWidget* getPlot(QWidget* parent) = 0;
+		virtual void AddPlot(QWidget* plot_);
+		virtual void Serialize(ISimpleSerializer *pSerializer);
+		virtual PlotterType Type() const;
 
-        virtual void addPlot(QWidget* plot_);
-
-
-        virtual void Serialize(ISimpleSerializer *pSerializer);
-        /**
-         * @brief acceptsWidget determines if this plotter can be dropped into a particular widget
-         * @param widget widget is the end point of the drop
-         * @return true if it can go into that widget, false otehrwise
-         */
-        virtual bool acceptsWidget(QWidget* widget) = 0;
-
-        /**
-         * @brief acceptsType
-         * @param param
-         * @return
-         */
-        virtual bool acceptsType(Parameters::Parameter::Ptr param) const = 0;
-
-        /**
-         * @brief plotName is the name of this specific plotting implementation
-         * @return
-         */
-        virtual std::string plotName() const = 0;
-
-        /**
-         * @brief type returns the type of plotter
-         */
-        virtual PlotterType type() const
-        {
-            return QT_Plotter;
-        }
-
-        virtual QWidget* getSettingsWidget() const = 0;
+		virtual QWidget* CreatePlot(QWidget* parent) = 0;
+        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param) const = 0;
+        virtual QWidget* GetControlWidget(QWidget* parent) = 0;
     };
 
 

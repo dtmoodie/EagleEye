@@ -305,14 +305,13 @@ cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
         cv::cuda::GpuMat hist;
         cv::cuda::histRange(img, hist, levels, stream);
         TIME
-        updateParameter(3, hist);
+        updateParameter(3, hist, &stream);
         TIME
         if(parameters[3]->subscribers > 0)
             return img;
         return hist;
     }else
     {
-//        log(Warning, "Multi channel histograms not supported for " + boost::lexical_cast<std::string>(img.channels()) + " channels");
 		NODE_LOG(warning) << "Multi channel histograms not supported for " + boost::lexical_cast<std::string>(img.channels()) + " channels";
     }
     return img;

@@ -4,7 +4,7 @@ file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "include/*.cuh")
 file(GLOB_RECURSE knl "src/*.cu")
 ADD_SUBDIRECTORY(qcustomplot)
-
+find_package(Qt5 COMPONENTS Core Widgets PrintSupport OpenGL)
 LINK_DIRECTORIES(${LINK_DIRS})
 
 INCLUDE_DIRECTORIES(

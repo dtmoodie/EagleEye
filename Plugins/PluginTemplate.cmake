@@ -51,6 +51,7 @@ MESSAGE(STATUS
   ${CMAKE_CXX_FLAGS_RELEASE}
  C Flags
   ${CMAKE_C_FLAGS}
+  Include Dirs: ${dirs}
   
   Link Dirs Debug: ${LINK_DIRS_DEBUG}
   

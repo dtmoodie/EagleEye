@@ -483,6 +483,21 @@ namespace EagleLib
             onUpdate(stream);
 			return true;
         }
+		template<typename T> bool updateParameter(const std::string& name,
+			const T& data,
+			cv::cuda::Stream* stream)
+		{
+			typename Parameters::ITypedParameter<T>::Ptr param;
+			param = getParameterOptional<T>(name);
+			if (param == nullptr)
+			{
+				NODE_LOG(debug) << "Parameter named \"" << name << "\" with type " << Loki::TypeInfo(typeid(T)).name() << " doesn't exist, adding";
+				return addParameter<T>(name, data);
+			}
+			param->UpdateData(data, stream);
+			onUpdate(stream);
+			return true;
+		}
 
         template<typename T> bool updateParameter(size_t idx,
 												  const T data,
@@ -506,7 +521,19 @@ namespace EagleLib
             onUpdate(stream);
 			return true;
 		}
-		
+		template<typename T> bool updateParameter(size_t idx,
+			const T data,
+			cv::cuda::Stream* stream)
+		{
+			if (idx > parameters.size() || idx < 0)
+				return false;
+			auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(parameters[idx]);
+			if (param == NULL)
+				return false;
+			param->UpdateData(data, stream);
+			onUpdate(stream);
+			return true;
+		}
 
 
 		template<typename T> typename Parameters::ITypedParameter<T>::Ptr 	getParameterOptional(std::string name)
@@ -572,7 +599,7 @@ namespace EagleLib
 		*  \brief usage includes finding all output images
 		*  \param output is a vector of the output parameters including a list of the names of where they are from
 		*/
-		template<typename T> void
+		/*template<typename T> void
 			findInputs(std::vector<std::string>& nodeNames, std::vector< typename Parameters::ITypedParameter<T>::Ptr>& parameterPtrs, int hops = 10000)
 		{
 			if (hops < 0)
@@ -587,13 +614,13 @@ namespace EagleLib
 					}
 			}
 			// Recursively check children for any available output parameters that match the input signature
-			/*for(int i = 0; i < children.size(); ++i)
-			children[i]->findInputs<T>(nodeNames, parameterPtrs, hops - 1);*/
+			//for(int i = 0; i < children.size(); ++i)
+			//children[i]->findInputs<T>(nodeNames, parameterPtrs, hops - 1);
 			for (auto itr = children.begin(); itr != children.end(); ++itr)
 				itr->findInputs<T>(nodeNames, parameterPtrs, hops - 1);
 
 			return;
-		}
+		}*/
 
 
        

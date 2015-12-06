@@ -1,8 +1,110 @@
-#include "QVector"
+#pragma once
 #include "Parameters.hpp"
+#include "QVector"
+
 #include "opencv2/core.hpp"
 #include <opencv2/core/cuda.hpp>
 #include "boost/circular_buffer.hpp"
+#include <mutex>
+#include "EagleLib/Defs.hpp"
+#include "Plotting.h"
+#include <memory>
+namespace Parameters
+{
+	namespace UI
+	{
+		namespace qt
+		{
+			class IParameterProxy;
+		}
+	}
+}
+
+class QWidget;
+
+
+namespace EagleLib
+{
+	class EAGLE_EXPORTS QtPlotterImpl : public QtPlotter
+	{
+	protected:
+		int channels;
+		cv::Size size;
+		std::shared_ptr<QWidget> controlWidget;
+		std::vector<boost::signals2::connection> connections;
+		std::mutex mtx;
+		
+		std::vector<std::shared_ptr<Parameters::UI::qt::IParameterProxy>> parameterProxies;
+		std::vector<std::shared_ptr<Parameters::Parameter>> parameters;
+
+	public:
+		QtPlotterImpl();
+		~QtPlotterImpl();
+		virtual QWidget* GetControlWidget(QWidget* parent);
+		virtual void Serialize(ISimpleSerializer *pSerializer);
+		//virtual void Init(bool firstInit);
+		template<typename T> typename Parameters::ITypedParameter<T>::Ptr GetParameter(const std::string& name)
+		{
+			for (auto& itr : parameters)
+			{
+				if (itr->GetName() == name)
+				{
+					return std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(itr);
+				}
+			}
+			return Parameters::ITypedParameter<T>::Ptr();
+		}
+		template<typename T> typename Parameters::ITypedParameter<T>::Ptr GetParameter(size_t index)
+		{
+			if(index < parameters.size())
+				return std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(parameters[index]);
+			return ITypedParameter<T>::Ptr();
+		}
+
+		virtual void HandleData(double data, int row, int col, int channel) = 0;
+
+		virtual void OnParameterUpdate(cv::cuda::Stream* stream);
+	};
+
+	class EAGLE_EXPORTS HistoryPlotter : public QtPlotterImpl
+	{
+	protected:
+		std::vector<boost::circular_buffer<double>> channelData;
+		HistoryPlotter();
+		void on_history_size_change();
+
+	public:
+		virtual void Init(bool firstInit);
+	};
+	class EAGLE_EXPORTS StaticPlotter : public QtPlotterImpl
+	{
+	protected:
+		QVector<QVector<double>> channelData;
+
+
+	public:
+	};
+
+	template<typename T> class EAGLE_EXPORTS VectorPlotter : public T
+	{
+		virtual void OnParameterUpdate(cv::cuda::Stream* stream)
+		{
+
+		}
+	};
+	template<typename T> class EAGLE_EXPORTS MatrixPlotter : public T
+	{
+
+	};
+
+	template<typename T> class EAGLE_EXPORTS ScalarPlotter : public T
+	{
+
+	};
+
+
+}
+
 
 
 
@@ -214,7 +316,6 @@ template<typename T> struct TypePolicy
 {
     static bool acceptsType(Parameters::Parameter::Ptr param)
     {
-        //return EagleLib::acceptsType<T>(param->typeInfo);
 	return Loki::TypeInfo(typeid(T)) == param->GetTypeInfo();
     }
 };
@@ -223,7 +324,7 @@ struct StaticPlotPolicy
     int size;
     int channel;
     QVector<double> data;
-    void addPlotData(Parameters::Parameter::Ptr param)
+    void addPlotData(Parameters::Parameter::Ptr param, cv::cuda::Stream* stream)
     {
         data = getParamArrayData(param, channel);
     }

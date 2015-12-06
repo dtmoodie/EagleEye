@@ -272,17 +272,22 @@ MainWindow::onSaveClicked()
 
 void MainWindow::on_uiCallback(boost::function<void()> f)
 {
+	static boost::posix_time::ptime last_end;
 	try
 	{
 		// If the processing thread has been deactivated, it's usually because we're deleting a node, etc.
 		// Sometimes there are queued function calls that are no longer valid because the object it is referring to has been deleted.
 		// In these situations we need to not call f.... Sooo we just ignore everything for a bit until the processing thread is relaunched.
-		rmt_ScopedCPUSample(on_uiCallback);
-		if (processingThreadActive)
+		if (boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - last_end).total_milliseconds() > 10)
 		{
-			if (f)
-				f();
+			rmt_ScopedCPUSample(on_uiCallback);
+			if (processingThreadActive)
+			{
+				if (f)
+					f();
+			}
 		}		
+		last_end = boost::posix_time::microsec_clock::universal_time();
 	}
 	catch (cv::Exception &e)
 	{
