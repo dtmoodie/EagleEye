@@ -7,7 +7,7 @@ using namespace EagleLib;
 
 namespace EagleLib
 {
-    class HistogramPlotter: public QtPlotter, public StaticPlotPolicy
+    class HistogramPlotter: public QtPlotterImpl, public StaticPlotPolicy
     {
         QVector<QCPBars*> hists;
         QVector<double> bins;
@@ -29,13 +29,14 @@ namespace EagleLib
 		virtual void OnParameterUpdate(cv::cuda::Stream* stream);
 		virtual void Serialize(ISimpleSerializer *pSerializer)
 		{
-			QtPlotter::Serialize(pSerializer);
+			QtPlotterImpl::Serialize(pSerializer);
 			SERIALIZE(hists);
 			SERIALIZE(bins);
 		}
     };
 }
-HistogramPlotter::HistogramPlotter()
+HistogramPlotter::HistogramPlotter() :
+	QtPlotterImpl()
 {
 
 }
@@ -103,6 +104,11 @@ void HistogramPlotter::UpdatePlots()
 {
 	{
 		rmt_ScopedCPUSample(HistogramPlotter_UpdatePlots_setData);
+		data.resize(converter->NumCols());
+		for (int i = 0; i < converter->NumCols(); ++i)
+		{
+			data[i] = converter->GetValue(0, i);
+		}
 		for (auto hist : hists)
 		{
 			hist->setData(bins, data);
@@ -116,23 +122,16 @@ void HistogramPlotter::UpdatePlots()
 			if (plot->isVisible())
 			{
 				auto qcp = dynamic_cast<QCustomPlot*>(plot);
-				//qcp->rescaleAxes();
 				qcp->replot();
 			}
-			//dynamic_cast<QCustomPlot*>(plot)->replot();
 		}
 	}
 }
 void HistogramPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
 {
+	if (param == nullptr)
+		return;
 	bool shown = false;
-	if (stream == nullptr)
-	{
-		stream = &plottingStream;
-		shown = true;
-	}
-		
-	
 	for (auto itr : plots)
 	{
 		if (itr->isVisible())
@@ -143,35 +142,22 @@ void HistogramPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
 	}
 	if (shown)
 	{
-		if (param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat)))
+		QtPlotterImpl::OnParameterUpdate(stream);
+		if (bins.size() != converter->NumCols())
 		{
-			cv::cuda::GpuMat mat_64f;
-			auto typedParam = std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(param);
-			if (typedParam->Data()->depth() != CV_64F)
-				typedParam->Data()->convertTo(mat_64f, CV_64F, *stream);
-			else
-				mat_64f = *typedParam->Data();
-			data.resize(mat_64f.cols);
-			cv::Mat dest(1, mat_64f.cols, CV_64F, data.data());
-			mat_64f.download(dest, *stream);
-			
-
-			if (bins.size() != data.size())
+			bins.resize(converter->NumCols());
+			for (int i = 0; i < converter->NumCols(); ++i)
 			{
-				bins.resize(data.size());
-				for (int i = 0; i < bins.size(); ++i)
-				{
-					bins[i] = i;
-				}
+				bins[i] = i;
 			}
-			HistogramPlotter* This = this;
-			EagleLib::cuda::enqueue_callback_async(
-				[This, this]()->void
-			{
-				Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&HistogramPlotter::UpdatePlots, This));
-			}, *stream);
-			
 		}
+		HistogramPlotter* This = this;
+		EagleLib::cuda::enqueue_callback_async(
+			[This, this]()->void
+		{
+			Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&HistogramPlotter::UpdatePlots, This));
+		}, *stream);
+			
 	}
 }
 REGISTERCLASS(HistogramPlotter)

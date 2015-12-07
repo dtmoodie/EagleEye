@@ -36,7 +36,7 @@ namespace EagleLib
 		
 		std::vector<std::shared_ptr<Parameters::UI::qt::IParameterProxy>> parameterProxies;
 		std::vector<std::shared_ptr<Parameters::Parameter>> parameters;
-
+		Parameters::Converters::Double::IConverter* converter;
 	public:
 		QtPlotterImpl();
 		~QtPlotterImpl();
@@ -61,7 +61,7 @@ namespace EagleLib
 			return ITypedParameter<T>::Ptr();
 		}
 
-		virtual void HandleData(double data, int row, int col, int channel) = 0;
+		//virtual void HandleData(double data, int row, int col, int channel) = 0;
 
 		virtual void OnParameterUpdate(cv::cuda::Stream* stream);
 	};

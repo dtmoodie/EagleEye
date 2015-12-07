@@ -16,17 +16,17 @@ template<typename T> QTableWidgetItem* readItems(T* data, const int channels)
 
 namespace EagleLib
 {
-    class MatrixView: public QtPlotter, public StaticPlotPolicy
+    class MatrixView: public QtPlotterImpl, public StaticPlotPolicy
     {
         QVector<QTableWidget*> plots;
     public:
-        MatrixView()
+        MatrixView():QtPlotterImpl()
         {
 
         }
 		void Serialize(ISimpleSerializer *pSerializer)
 		{
-			QtPlotter::Serialize(pSerializer);
+			QtPlotterImpl::Serialize(pSerializer);
 			SERIALIZE(plots);
 		}
         virtual QWidget* CreatePlot(QWidget* parent)
@@ -97,11 +97,14 @@ namespace EagleLib
 
         virtual void SetInput(Parameters::Parameter::Ptr param_)
         {
-            Plotter::SetInput(param_);
+			QtPlotterImpl::SetInput(param_);
 			OnParameterUpdate(nullptr);
         }
+
 		virtual void OnParameterUpdate(cv::cuda::Stream* stream)
 		{
+			if (param == nullptr)
+				return;
 			bool shown = false;
 			for (auto plot : plots)
 			{
@@ -119,61 +122,29 @@ namespace EagleLib
 			}
 			if (!shown)
 				return;
-			cv::Mat mat_data;
-			if (param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat)))
-			{
-				auto typedParam = std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(param);
-				auto mat = typedParam->Data();
-				if (mat->empty())
-					return;
-				mat->download(mat_data, *stream);
-			}
-			if (param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat)))
-			{
-				auto typedParam = std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::Mat>>(param);
-				mat_data = *typedParam->Data();
-			}
-			if (param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::HostMem)))
-			{
-				auto typedParam = std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::HostMem>>(param);
-				mat_data = typedParam->Data()->createMatHeader();
-			}
+			QtPlotterImpl::OnParameterUpdate(stream);
 			auto This = this;
+			auto _converter = converter;
 			EagleLib::cuda::enqueue_callback_async(
-				[mat_data, This]()->void
+				[_converter, This]()->void
 			{
 				std::vector<QTableWidgetItem*> items;
-				items.reserve(mat_data.size().area());
-				const int channels = mat_data.channels();
-				for (int i = 0; i < mat_data.rows; ++i)
+				items.reserve(_converter->NumRows() * _converter->NumCols());
+				const int channels = _converter->NumChan();
+				for (int i = 0; i < _converter->NumRows(); ++i)
 				{
-					for (int j = 0; j < mat_data.cols; ++j)
+					for (int j = 0; j < _converter->NumCols(); ++j)
 					{
-						switch (mat_data.depth())
+						QString text;
+						for (int c = 0; c < channels; ++c)
 						{
-						case CV_8U:
-							items.push_back(readItems(mat_data.ptr<uchar>(i, j), channels));
-							break;
-						case CV_16U:
-							items.push_back(readItems(mat_data.ptr<ushort>(i, j), channels));
-							break;
-						case CV_16S:
-							items.push_back(readItems(mat_data.ptr<short>(i, j), channels));
-							break;
-						case CV_32F:
-							items.push_back(readItems(mat_data.ptr<float>(i, j), channels));
-							break;
-						case CV_64F:
-							items.push_back(readItems(mat_data.ptr<double>(i, j), channels));
-							break;
-						case CV_32S:
-							items.push_back(readItems(mat_data.ptr<int>(i, j), channels));
-							break;
-						default: break;
+							if (c != 0)
+								text += ",";
+							text += QString::number(_converter->GetValue(i, j, c));
 						}
 					}
 				}
-				Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&MatrixView::UpdateUi, This, items, mat_data.size()));
+				Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&MatrixView::UpdateUi, This, items, cv::Size(_converter->NumCols(), _converter->NumRows())));
 			}, *stream);
 		}
     };
