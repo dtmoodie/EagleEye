@@ -31,7 +31,7 @@ namespace EagleLib
         };
 		virtual void Serialize(ISimpleSerializer *pSerializer);
 		virtual void SetInput(Parameters::Parameter::Ptr param_ = Parameters::Parameter::Ptr());
-        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param) const = 0;
+        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param) = 0;
 		virtual void OnParameterUpdate(cv::cuda::Stream* stream) = 0;
 		virtual void Init(bool firstInit);
         virtual std::string PlotName() const = 0;
@@ -46,7 +46,7 @@ namespace EagleLib
 	class CV_EXPORTS QtPlotter : public Plotter
     {
     protected:
-        std::list<QWidget*> plots;
+        std::list<QWidget*> plot_widgets;
     public:
 
 		virtual void AddPlot(QWidget* plot_);
@@ -54,7 +54,7 @@ namespace EagleLib
 		virtual PlotterType Type() const;
 
 		virtual QWidget* CreatePlot(QWidget* parent) = 0;
-        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param) const = 0;
+        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param) = 0;
         virtual QWidget* GetControlWidget(QWidget* parent) = 0;
     };
 

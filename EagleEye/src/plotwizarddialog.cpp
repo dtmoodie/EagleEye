@@ -37,10 +37,18 @@ void PlotWizardDialog::setup()
                 QWidget* plot = qtPlotter->CreatePlot(this);
                 plot->installEventFilter(this);
                 qtPlotter->AddPlot(plot);
-                ui->plotPreviewLayout->addWidget(plot);
+				auto control_widget = qtPlotter->GetControlWidget(this);
+				ui->plotPreviewLayout->addWidget(plot, i, 0);
+				if (control_widget)
+				{
+					ui->plotPreviewLayout->addWidget(control_widget, i, 1);
+					previewPlotControllers[plot] = control_widget;
+				}
+					
 
                 previewPlots.push_back(plot);
                 previewPlotters.push_back(qtPlotter);
+
             }
         }
     }
@@ -113,10 +121,20 @@ void PlotWizardDialog::plotParameter(Parameters::Parameter::Ptr param)
             previewPlotters[i]->SetInput(param);
 			previewPlots[i]->show();
 			previewPlots[i]->setMinimumHeight(200);
+			auto itr = previewPlotControllers.find(previewPlots[i]);
+			if (itr != previewPlotControllers.end())
+			{
+				itr->second->show();
+			}
         }else
         {
             previewPlotters[i]->SetInput();
 			previewPlots[i]->hide();
+			auto itr = previewPlotControllers.find(previewPlots[i]);
+			if (itr != previewPlotControllers.end())
+			{
+				itr->second->hide();
+			}
         }
     }
 }

@@ -25,6 +25,7 @@ shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
 				Plotter* plotter = static_cast<Plotter*>(obj);
 				if (plotter)
 				{
+					plotter->Init(true);
 					LOG_TRIVIAL(info) << "[ PlotManager ] successfully generating plot " << plotName;
 					return shared_ptr<Plotter>(plotter);
 				}

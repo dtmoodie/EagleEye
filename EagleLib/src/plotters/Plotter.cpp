@@ -9,6 +9,7 @@ Plotter::~Plotter()
 {
 	bc.disconnect();
 }
+
 void Plotter::Init(bool firstInit)
 {
 	if (!firstInit)
@@ -19,8 +20,10 @@ void Plotter::Init(bool firstInit)
 		}
 	}
 }
+
 void Plotter::Serialize(ISimpleSerializer *pSerializer)
 {
+	IObject::Serialize(pSerializer);
 	SERIALIZE(param);
 }
 
@@ -33,17 +36,17 @@ void Plotter::SetInput(Parameters::Parameter::Ptr param_)
 		bc = param->RegisterNotifier(boost::bind(&Plotter::OnParameterUpdate, this, _1));
 }
 
-
 void QtPlotter::Serialize(ISimpleSerializer *pSerializer)
 {
     Plotter::Serialize(pSerializer);
-    SERIALIZE(plots);
+    SERIALIZE(plot_widgets);
 }
 
 void QtPlotter::AddPlot(QWidget *plot_)
 {
-    plots.push_back(plot_);
+	plot_widgets.push_back(plot_);
 }
+
 QtPlotter::PlotterType QtPlotter::Type() const
 {
 	return QT_Plotter;

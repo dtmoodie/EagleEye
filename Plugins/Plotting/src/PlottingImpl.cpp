@@ -36,6 +36,7 @@ QWidget* QtPlotterImpl::GetControlWidget(QWidget* parent)
 				++row;
 			}
 		}
+		controlWidget->setLayout(layout);
 	}
 	return controlWidget.get();
 }
@@ -47,6 +48,7 @@ void QtPlotterImpl::Serialize(ISimpleSerializer *pSerializer)
 	SERIALIZE(size);
 	SERIALIZE(parameterProxies);
 	SERIALIZE(parameters);
+	SERIALIZE(controlWidget);
 }
 void QtPlotterImpl::OnParameterUpdate(cv::cuda::Stream* stream)
 {

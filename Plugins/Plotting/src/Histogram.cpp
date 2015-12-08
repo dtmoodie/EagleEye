@@ -15,14 +15,14 @@ namespace EagleLib
         HistogramPlotter();
         virtual QWidget* CreatePlot(QWidget* parent);
         
-        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param) const;
+        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param);
         virtual std::string PlotName() const;
 
         virtual QWidget* GetControlWidget(QWidget* parent);
 
         virtual void AddPlot(QWidget *plot_);
 
-		virtual void UpdatePlots(); // called from ui thread
+		virtual void UpdatePlots(bool rescale = false); // called from ui thread
 
         virtual void SetInput(Parameters::Parameter::Ptr param_);
 
@@ -32,6 +32,10 @@ namespace EagleLib
 			QtPlotterImpl::Serialize(pSerializer);
 			SERIALIZE(hists);
 			SERIALIZE(bins);
+		}
+		virtual void RescalePlots()
+		{
+
 		}
     };
 }
@@ -52,7 +56,7 @@ QWidget* HistogramPlotter::CreatePlot(QWidget* parent)
 }
 
 
-bool HistogramPlotter::AcceptsParameter(Parameters::Parameter::Ptr param) const
+bool HistogramPlotter::AcceptsParameter(Parameters::Parameter::Ptr param)
 {
     return VectorSizePolicy::acceptsSize(getSize(param));
 }
@@ -89,18 +93,9 @@ void HistogramPlotter::SetInput(Parameters::Parameter::Ptr param_)
 {
     Plotter::SetInput(param_);
 	OnParameterUpdate(nullptr);
-	for (auto hist : hists)
-	{
-		hist->setData(bins, data);
-	}
-    for(auto itr : plots)
-    {
-        QCustomPlot* plot = dynamic_cast<QCustomPlot*>(itr);
-        plot->rescaleAxes();
-        plot->replot();
-    }
 }
-void HistogramPlotter::UpdatePlots()
+
+void HistogramPlotter::UpdatePlots(bool rescale)
 {
 	{
 		rmt_ScopedCPUSample(HistogramPlotter_UpdatePlots_setData);
@@ -117,22 +112,28 @@ void HistogramPlotter::UpdatePlots()
 	{
 		rmt_ScopedCPUSample(HistogramPlotter_UpdatePlots_replot);
 
-		for (auto plot : plots)
+		for (auto plot : plot_widgets)
 		{
-			if (plot->isVisible())
+			if (plot->isVisible() || rescale)
 			{
 				auto qcp = dynamic_cast<QCustomPlot*>(plot);
 				qcp->replot();
+				if (rescale)
+					qcp->rescaleAxes();
+				
 			}
 		}
 	}
 }
 void HistogramPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
 {
+	bool rescale = stream == nullptr;
+	if (rescale)
+		stream = &plottingStream;
 	if (param == nullptr)
 		return;
 	bool shown = false;
-	for (auto itr : plots)
+	for (auto itr : plot_widgets)
 	{
 		if (itr->isVisible())
 		{
@@ -140,7 +141,7 @@ void HistogramPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
 			break;
 		}
 	}
-	if (shown)
+	if (shown || rescale)
 	{
 		QtPlotterImpl::OnParameterUpdate(stream);
 		if (bins.size() != converter->NumCols())
@@ -151,11 +152,10 @@ void HistogramPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
 				bins[i] = i;
 			}
 		}
-		HistogramPlotter* This = this;
 		EagleLib::cuda::enqueue_callback_async(
-			[This, this]()->void
+			[this, rescale]()->void
 		{
-			Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&HistogramPlotter::UpdatePlots, This));
+			Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&HistogramPlotter::UpdatePlots, this, rescale));
 		}, *stream);
 			
 	}

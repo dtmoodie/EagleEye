@@ -275,19 +275,12 @@ void MainWindow::on_uiCallback(boost::function<void()> f)
 	static boost::posix_time::ptime last_end;
 	try
 	{
-		// If the processing thread has been deactivated, it's usually because we're deleting a node, etc.
-		// Sometimes there are queued function calls that are no longer valid because the object it is referring to has been deleted.
-		// In these situations we need to not call f.... Sooo we just ignore everything for a bit until the processing thread is relaunched.
-		if (boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - last_end).total_milliseconds() > 10)
+		rmt_ScopedCPUSample(on_uiCallback);
+		if (processingThreadActive)
 		{
-			rmt_ScopedCPUSample(on_uiCallback);
-			if (processingThreadActive)
-			{
-				if (f)
-					f();
-			}
-		}		
-		last_end = boost::posix_time::microsec_clock::universal_time();
+			if (f)
+				f();
+		}
 	}
 	catch (cv::Exception &e)
 	{
@@ -309,7 +302,7 @@ void MainWindow::processingThread_uiCallback(boost::function<void ()> f)
 void
 MainWindow::onLoadClicked()
 {
-    auto file = QFileDialog::getOpenFileName(this, "Load file");
+    auto file = QFileDialog::getOpenFileName(this, "Load file", "", "*.yml");
     if(file.size() == 0)
         return;
     stopProcessingThread();

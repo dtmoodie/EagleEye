@@ -7,7 +7,38 @@ ENDIF()
 find_package(Qt5 COMPONENTS Gui Widgets Core OpenGL PrintSupport)
 IF(Qt5_FOUND)
 	find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
-	set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+
+	set_target_properties(
+		opencv_core 
+		opencv_calib3d 
+		opencv_cudaarithm 
+		opencv_cudabgsegm 
+		opencv_cudacodec 
+		opencv_cudafeatures2d 
+		opencv_cudafilters 
+		opencv_cudaobjdetect 
+		opencv_cudaoptflow 
+		opencv_cudastereo 
+		opencv_cudawarping 
+		opencv_cudev 
+		opencv_features2d 
+		opencv_flann 
+		opencv_hal 
+		opencv_highgui 
+		opencv_imgcodecs 
+		opencv_imgproc 
+		opencv_ml 
+		opencv_objdetect 
+		opencv_photo 
+		opencv_shape 
+		opencv_stitching 
+		opencv_superres 
+		opencv_ts 
+		opencv_video 
+		opencv_videoio 
+		opencv_videostab 
+		opencv_viz 
+		PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 	find_package(CUDA REQUIRED)
 
     set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono log log_setup)

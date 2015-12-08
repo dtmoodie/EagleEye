@@ -24,7 +24,7 @@ void VideoWriter::Init(bool firstInit)
         param.addEnum(cv::VideoWriter::fourcc('Y','U','Y','V'), "YUYV");
         param.addEnum(cv::VideoWriter::fourcc('M','J','P','G'), "MPJG");
         updateParameter("Codec", param);
-        updateParameter("Filename", boost::filesystem::path(""));
+		updateParameter("Filename", Parameters::WriteFile(""));
 		writeOut = false;
 	}
     updateParameter<boost::function<void(void)>>("Restart Functor", boost::bind(&VideoWriter::restartFunc, this));
@@ -85,10 +85,10 @@ VideoWriter::startWrite()
 {
     //log(Status, "Starting write");
 	NODE_LOG(info) << "Starting write";
-    auto param = getParameter<boost::filesystem::path>(1);
+    auto param = getParameter<Parameters::WriteFile>(1);
     if(param == nullptr)
         return;
-	if (boost::filesystem::exists(*param->Data()))
+	if (boost::filesystem::exists(param->Data()->string()))
 	{
 		NODE_LOG(info) << "File exists, overwriting";
 	}

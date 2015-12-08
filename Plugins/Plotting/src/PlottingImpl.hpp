@@ -9,6 +9,12 @@
 #include "EagleLib/Defs.hpp"
 #include "Plotting.h"
 #include <memory>
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+
+RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_MODIFIABLE_INCLUDE
+
 namespace Parameters
 {
 	namespace UI
