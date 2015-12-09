@@ -488,9 +488,9 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 		if (children.size() == 0)
 			return img;
 
-		cv::cuda::GpuMat* childResult = childResults.getFront();
+		cv::cuda::GpuMat childResult;
 		if (!img.empty())
-			img.copyTo(*childResult, stream);
+			img.copyTo(childResult, stream);
 		NODE_LOG(trace) << " Executing " << children.size() << " child nodes";
 		std::vector<Node::Ptr>  children_;
 		children_.reserve(children.size());
@@ -508,13 +508,12 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 			{
 				try
 				{
-					*childResult = children_[i]->process(*childResult, stream);
+					childResult = children_[i]->process(childResult, stream);
 				}CATCH_MACRO
 			}
 			else
 			{
                 ui_collector::setNode(this);
-				//log(Error, "Null child with idx: " + boost::lexical_cast<std::string>(i));
 				NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
 			}
 		}

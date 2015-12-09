@@ -64,7 +64,6 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 			FreeLibrary(handle);
 		}	
 	}
-	
     return true;
 }
 

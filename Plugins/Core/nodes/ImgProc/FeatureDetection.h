@@ -1,4 +1,5 @@
 #include <nodes/Node.h>
+#include <external_includes/cv_cudafeatures2d.hpp>
 #include "EagleLib/utilities/CudaUtils.hpp""
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
@@ -22,27 +23,24 @@ namespace EagleLib
     };
     class FastFeatureDetector: public Node
     {
-        ConstBuffer<std::pair<cv::cuda::GpuMat, cv::cuda::GpuMat>> detectedPoints;
-        virtual void detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
-                    cv::cuda::GpuMat& keyPoints,
-                    cv::cuda::GpuMat& descriptors,
-                    cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+		cv::Ptr<cv::cuda::Feature2DAsync> detector;
+        
     public:
         FastFeatureDetector();
         virtual void Init(bool firstInit);
+		virtual void Serialize(ISimpleSerializer *pSerializer);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 
     class ORBFeatureDetector: public Node
     {
-        ConstBuffer<std::pair<cv::cuda::GpuMat, cv::cuda::GpuMat>> detectedPoints;
-        virtual void detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
-                    cv::cuda::GpuMat& keyPoints,
-                    cv::cuda::GpuMat& descriptors,
-                    cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+		cv::Ptr<cv::cuda::ORB> detector;
+		
+        
     public:
         ORBFeatureDetector();
         virtual void Init(bool firstInit);
+		virtual void Serialize(ISimpleSerializer *pSerializer);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 

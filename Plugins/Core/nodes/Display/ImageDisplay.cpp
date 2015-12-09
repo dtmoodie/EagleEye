@@ -20,63 +20,35 @@ REGISTER_NODE_HIERARCHY(FlowVectorDisplay, Image, Sink, Display)
 REGISTER_NODE_HIERARCHY(HistogramDisplay, Image, Sink, Display)
 REGISTER_NODE_HIERARCHY(DetectionDisplay, Image, Sink, Display)
 
-QtImageDisplay::QtImageDisplay(boost::function<void(cv::Mat, Node*)> cpuCallback_)
-{
-}
-QtImageDisplay::QtImageDisplay(boost::function<void (cv::cuda::GpuMat, Node*)> gpuCallback_)
-{
-}
 void QtImageDisplay::Init(bool firstInit)
 {
-    Node::Init(firstInit);
-    if(firstInit)
-    {
-		updateParameter("Name", std::string(), Parameters::Parameter::Control, "Set name for window");
-    }
-}
-struct UserData
-{
-    UserData(cv::cuda::HostMem img, QtImageDisplay* node_): displayImage(img), node(node_){}
-    cv::cuda::HostMem displayImage;
-    QtImageDisplay* node;
-};
 
-void QtImageDisplay_cpuCallback(int status, void* userData)
-{
-    UserData* tmp = (UserData*)userData;
-	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtImageDisplay::displayImage, tmp->node, tmp->displayImage));
-    delete tmp;
 }
 
-void QtImageDisplay::displayImage(cv::cuda::HostMem image)
-{
-	rmt_ScopedCPUSample(QtImageDisplay_displayImage);
-    std::string name = *getParameter<std::string>(0)->Data();
-    if(name.size() == 0)
-    {
-        name = fullTreeName;
-    }
-    try
-    {
-        cv::imshow(name, image.createMatHeader());
-    }catch(cv::Exception &err)
-    {
-		NODE_LOG(warning) << err.what();
-    }
-    parameters[0]->changed = false;
-}
-
-cv::cuda::GpuMat
-QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     if(img.channels() != 1 && img.channels() != 3)
     {
 		NODE_LOG(warning) << "Image has " << img.channels() << " channels! Cannot display!";
         return img;
     }
+	cv::Mat host_mat;
+	std::string* set_name = getParameter<std::string>(0)->Data();
+	std::string display_name;
+	if (set_name->size())
+		display_name = *set_name;
+	else
+		display_name = fullTreeName;
 
-    img.download(hostImage, stream);
-    stream.enqueueHostCallback(QtImageDisplay_cpuCallback, new UserData(hostImage,this));
+    img.download(host_mat, stream);
+	cuda::enqueue_callback_async(
+		[display_name, host_mat]()->void
+	{
+		rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+		cv::imshow(display_name, host_mat);
+
+	}, stream);
+    
     return img;
 }
 
@@ -92,11 +64,7 @@ void OGLImageDisplay::Init(bool firstInit)
 	prevName = *getParameter<std::string>(0)->Data();
 	cv::namedWindow("Default Name", cv::WINDOW_OPENGL);
 }
-struct oglData
-{
-	std::string name;
-	Buffer<cv::cuda::GpuMat, EventPolicy>* data;
-};
+/*
 void oglDisplay(std::string name, cv::cuda::GpuMat data)
 {
 	cv::namedWindow(name, cv::WINDOW_OPENGL);
@@ -108,13 +76,8 @@ void oglCallback(int status, void* user_data)
 	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&oglDisplay,data->name, data->data->data));
 	delete data;
 }
+*/
 
-void OGLImageDisplay::display()
-{
-	cv::namedWindow(prevName, cv::WINDOW_OPENGL);
-	auto buffer = bufferPool.getFront();
-	cv::imshow(prevName, buffer->data);
-}
 
 cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
@@ -125,12 +88,18 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         parameters[0]->changed = false;
         cv::namedWindow(prevName, cv::WINDOW_OPENGL);
     }
-	auto buffer = bufferPool.getFront();
-	auto userData = new oglData;
-	userData->data = buffer;
-	userData->name = prevName;
-	img.copyTo(userData->data->data, stream);
-	stream.enqueueHostCallback(oglCallback, userData);
+	std::string display_name = *getParameter<std::string>(0)->Data();
+	cv::cuda::GpuMat display_buffer;
+	img.copyTo(display_buffer, stream);
+	cuda::enqueue_callback_async(
+		[display_buffer, display_name]()->void
+	{
+		cv::namedWindow(display_name, cv::WINDOW_OPENGL);
+		Parameters::UI::UiCallbackService::Instance()->post(
+			boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), 
+					display_name, display_buffer));
+
+	}, stream);
     return img;
 }
 

@@ -1,10 +1,10 @@
 #include "nodes/ImgProc/FeatureDetection.h"
-#include <external_includes/cv_cudafeatures2d.hpp>
+
 #include <external_includes/cv_cudafilters.hpp>
 #include <external_includes/cv_cudaoptflow.hpp>
-#include <external_includes/cv_cudafeatures2d.hpp>
 #include <external_includes/cv_cudaimgproc.hpp>
 #include "nodes/VideoProc/Tracking.hpp"
+#include "EagleLib/utilities/GpuMatAllocators.h"
 using namespace EagleLib;
 
 void GoodFeaturesToTrackDetector::Init(bool firstInit)
@@ -113,31 +113,11 @@ void GoodFeaturesToTrackDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat 
 	updateParameter("Num corners", keyPoints.cols, Parameters::Parameter::State);
 }
 
-/// *****************************************************************************************
-/// *****************************************************************************************
-/// *****************************************************************************************
-/// // See if fast can use color images, probably not but worth a shot
-void FastFeatureDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
-            cv::cuda::GpuMat& keyPoints,
-            cv::cuda::GpuMat& descriptors,
-            cv::cuda::Stream& stream)
-{
-
-    cv::Ptr<cv::cuda::FastFeatureDetector> detector = *getParameter<cv::Ptr<cv::cuda::FastFeatureDetector>>(0)->Data();
-    if(detector)
-    {
-        detector->detectAndComputeAsync(img,mask,keyPoints,descriptors,false, stream);
-        updateParameter("KeyPoints", keyPoints);
-        updateParameter("Descriptors", descriptors);
-    }
-
-}
 
 void FastFeatureDetector::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter("Detector object", cv::cuda::FastFeatureDetector::create());
         updateParameter("Threshold", int(10));
         updateParameter("Use nonmax suppression", true);
 		Parameters::EnumParameter param;
@@ -149,58 +129,52 @@ void FastFeatureDetector::Init(bool firstInit)
         updateParameter("Max detected points", int(5000));
         addInputParameter<cv::cuda::GpuMat>("Mask");
     }
-    detectedPoints.resize(5);
-    updateParameter<DetectAndComputeFunctor>("Detection Functor", boost::bind(&FastFeatureDetector::detect, this, _1, _2, _3, _4, _5));
 }
-
+void FastFeatureDetector::Serialize(ISimpleSerializer *pSerializer)
+{
+	Node::Serialize(pSerializer);
+	SERIALIZE(detector);
+}
 cv::cuda::GpuMat FastFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-    if(parameters[1]->changed ||
+    if(parameters[0]->changed ||
+       parameters[1]->changed ||
        parameters[2]->changed ||
-       parameters[3]->changed ||
-       parameters[4]->changed)
+       parameters[3]->changed)
     {
-        updateParameter(0, cv::cuda::FastFeatureDetector::create(
-                            *getParameter<int>(1)->Data(),
-                            *getParameter<bool>(2)->Data(),
-                            getParameter<Parameters::EnumParameter>(3)->Data()->getValue(),
-                            *getParameter<int>(4)->Data()));
+		detector = cv::cuda::FastFeatureDetector::create(
+			*getParameter<int>(1)->Data(),
+			*getParameter<bool>(2)->Data(),
+			getParameter<Parameters::EnumParameter>(3)->Data()->getValue(),
+			*getParameter<int>(4)->Data());
+        parameters[0]->changed = false;
         parameters[1]->changed = false;
         parameters[2]->changed = false;
         parameters[3]->changed = false;
-        parameters[4]->changed = false;
     }
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
-    auto keyPoints = detectedPoints.getFront();
+	cv::cuda::GpuMat key_points(BlockMemoryAllocator::Instance());
     if(mask)
     {
-        detect(img, *mask, keyPoints->first, keyPoints->second, stream);
+		detector->detectAsync(img, key_points, *mask, stream);
     }else
     {
-        detect(img, cv::cuda::GpuMat(), keyPoints->first, keyPoints->second, stream);
+		detector->detectAsync(img, key_points, cv::cuda::GpuMat(), stream);
     }
+	if (!key_points.empty())
+		updateParameter("Detected Key Points", key_points);
     return img;
 }
 /// *****************************************************************************************
 /// *****************************************************************************************
 /// *****************************************************************************************
-void ORBFeatureDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
-            cv::cuda::GpuMat& keyPoints,
-            cv::cuda::GpuMat& descriptors,
-            cv::cuda::Stream& stream)
-{
-    cv::Ptr<cv::cuda::ORB> detector = *getParameter<cv::Ptr<cv::cuda::ORB>>(0)->Data();
-    if(detector)
-    {
-        detector->detectAndComputeAsync(img,mask,keyPoints,descriptors,false, stream);
-    }
-}
+
 
 void ORBFeatureDetector::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter("Detector", cv::cuda::ORB::create(500,1.5,8,31,0,2,cv::ORB::HARRIS_SCORE, 31,20,true));
+		detector = cv::cuda::ORB::create();
         updateParameter("Number of features", int(500));    //1
         updateParameter("Scale Factor", float(1.2));        //2
         updateParameter("Num Levels", int(8));              //3
@@ -218,10 +192,13 @@ void ORBFeatureDetector::Init(bool firstInit)
         updateParameter("Blur for Descriptors", true);      //10
         addInputParameter<cv::cuda::GpuMat>("Mask");
     }
-    updateParameter<DetectAndComputeFunctor>("Detection Functor", boost::bind(&ORBFeatureDetector::detect, this, _1, _2, _3, _4, _5));
-
+    
 }
-
+void ORBFeatureDetector::Serialize(ISimpleSerializer* pSerializer)
+{
+	Node::Serialize(pSerializer);
+	SERIALIZE(detector);
+}
 cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     if(parameters[1]->changed ||
@@ -233,20 +210,19 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
        parameters[7]->changed ||
        parameters[8]->changed ||
        parameters[9]->changed ||
-       parameters[10]->changed)
+       parameters[0]->changed || detector == nullptr)
     {
-        updateParameter(0,
-            cv::cuda::ORB::create(
-			*getParameter<int>(1)->Data(),
-					*getParameter<float>(2)->Data(),
+        detector = cv::cuda::ORB::create(
+					*getParameter<int>(0)->Data(),
+					*getParameter<float>(1)->Data(),
+					*getParameter<int>(2)->Data(),
 					*getParameter<int>(3)->Data(),
 					*getParameter<int>(4)->Data(),
 					*getParameter<int>(5)->Data(),
-					*getParameter<int>(6)->Data(),
-					getParameter<Parameters::EnumParameter>(7)->Data()->getValue(),
+					getParameter<Parameters::EnumParameter>(6)->Data()->getValue(),
+					*getParameter<int>(7)->Data(),
 					*getParameter<int>(8)->Data(),
-					*getParameter<int>(9)->Data(),
-					*getParameter<bool>(10)->Data()));
+					*getParameter<bool>(9)->Data());
 
        parameters[1]->changed = false;
        parameters[2]->changed = false;
@@ -257,17 +233,22 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
        parameters[7]->changed = false;
        parameters[8]->changed = false;
        parameters[9]->changed = false;
-       parameters[10]->changed = false;
+       parameters[0]->changed = false;
     }
 	cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
-    auto keyPoints = detectedPoints.getFront();
+	
+	cv::cuda::GpuMat key_points(BlockMemoryAllocator::Instance()), point_descriptors(BlockMemoryAllocator::Instance());
+	if (detector == nullptr)
+		return img;
     if(mask)
     {
-        detect(img, *mask, keyPoints->first, keyPoints->second, stream);
+		detector->detectAndComputeAsync(img, *mask, key_points, point_descriptors, false, stream);
     }else
     {
-        detect(img, cv::cuda::GpuMat(), keyPoints->first, keyPoints->second, stream);
+		detector->detectAndComputeAsync(img, cv::cuda::GpuMat(), key_points, point_descriptors, false, stream);
     }
+	updateParameter("Detected Points", key_points);
+	updateParameter("Point Descriptors", point_descriptors);
     return img;
 }
 void HistogramRange::Serialize(ISimpleSerializer *pSerializer)

@@ -12,7 +12,10 @@ void MinMax::Init(bool firstInit)
 cv::cuda::GpuMat MinMax::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     stream.waitForCompletion();
-    cv::cuda::minMax(img, getParameter<double>(0)->Data(), getParameter<double>(1)->Data());
+	double minValue, maxValue;
+    cv::cuda::minMax(img, &minValue, &maxValue);
+	updateParameter(0, minValue);
+	updateParameter(1, maxValue);
     return img;
 }
 void Threshold::Init(bool firstInit)

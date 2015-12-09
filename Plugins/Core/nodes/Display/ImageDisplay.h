@@ -11,25 +11,19 @@ namespace EagleLib
     class QtImageDisplay: public Node
     {
         std::string prevName;
-        cv::cuda::HostMem hostImage;
     public:
         QtImageDisplay();
-        QtImageDisplay(boost::function<void(cv::Mat, Node*)> cpuCallback_);
-        QtImageDisplay(boost::function<void(cv::cuda::GpuMat, Node*)> gpuCallback_);
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-        void displayImage(cv::cuda::HostMem image);
 
     };
     class OGLImageDisplay: public Node
     {
         std::string prevName;
-		BufferPool<cv::cuda::GpuMat, EventPolicy> bufferPool;
-		
     public:
         OGLImageDisplay();
 
-		void display();
+		
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 

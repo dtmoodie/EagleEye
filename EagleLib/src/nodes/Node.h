@@ -716,7 +716,7 @@ namespace EagleLib
         friend class NodeManager;
         std::shared_ptr<NodeImpl> pImpl_;
         Node*                                                               parent;
-        ConstBuffer<cv::cuda::GpuMat>                                       childResults;
+        //ConstBuffer<cv::cuda::GpuMat>                                       childResults;
 		unsigned int rmt_hash;
 		unsigned int rmt_cuda_hash;
 		

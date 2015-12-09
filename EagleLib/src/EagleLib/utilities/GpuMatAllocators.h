@@ -13,7 +13,7 @@ namespace EagleLib
 	cv::cuda::GpuMat::Allocator* GetDefaultBlockMemoryAllocator();
 	cv::cuda::GpuMat::Allocator* GetDefaultDelayedDeallocator();
 	cv::cuda::GpuMat::Allocator* CreateBlockMemoryAllocator();
-	cv::cuda::GpuMat::Allocator* CreateBlockMemoryAllocator();
+	
 	class EAGLE_EXPORTS PitchedAllocator : public cv::cuda::GpuMat::Allocator
 	{
 	public:
@@ -35,12 +35,15 @@ namespace EagleLib
 
 	class EAGLE_EXPORTS BlockMemoryAllocator: public PitchedAllocator
 	{
-		std::list<std::shared_ptr<MemoryBlock>> blocks;
+	
 	public:
+		static BlockMemoryAllocator* Instance(size_t initial_size = 10000000);
 		BlockMemoryAllocator(size_t initialBlockSize);
 		virtual bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
 		virtual void free(cv::cuda::GpuMat* mat);
 		size_t initialBlockSize_;
+	protected:
+		std::list<std::shared_ptr<MemoryBlock>> blocks;
 	};
 
 	class EAGLE_EXPORTS DelayedDeallocator : public PitchedAllocator
@@ -53,7 +56,21 @@ namespace EagleLib
 		
 	protected:
 		virtual void clear();
-		//std::map<unsigned char*, std::pair<clock_t, size_t>> deallocateList; // list of all the different memory blocks to be deallocated
 		std::list<std::tuple<unsigned char*, clock_t, size_t>> deallocateList;
-	};	
+	};
+
+	class EAGLE_EXPORTS CombinedAllocator : public DelayedDeallocator //, private BlockMemoryAllocator
+	{
+	public:
+		/* Initial memory pool of 10MB */
+		/* Anything over 1MB is allocated by DelayedDeallocator */
+		static CombinedAllocator* Instance(size_t initial_pool_size = 10000000, size_t threshold_level = 1000000);
+		CombinedAllocator(size_t initial_pool_size = 10000000 , size_t threshold_level = 1000000);
+		virtual bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
+		virtual void free(cv::cuda::GpuMat* mat);
+	protected:
+		size_t _threshold_level;
+		size_t initialBlockSize_;
+		std::list<std::shared_ptr<MemoryBlock>> blocks;
+	};
 }
