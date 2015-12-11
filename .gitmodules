@@ -16,3 +16,9 @@
 [submodule "EagleLib/pplx"]
 	path = EagleLib/pplx
 	url = https://github.com/dtmoodie/pplx
+[submodule "Plugins/SLAM/dtam"]
+	path = Plugins/SLAM/dtam
+	url = https://github.com/dtmoodie/opendtam
+[submodule "Plugins/SLAM/lsd_slam"]
+	path = Plugins/SLAM/lsd_slam
+	url = https://github.com/dtmoodie/lsd_slam

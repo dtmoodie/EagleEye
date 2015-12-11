@@ -33,13 +33,16 @@ void PrintNodeTree(EagleLib::Node::Ptr node, int depth)
 static volatile bool quit;
 void sig_handler(int s)
 {
-    std::cout << "Cought signal " << s << std::endl;
+    //std::cout << "Caught signal " << s << std::endl;
+	BOOST_LOG_TRIVIAL(error) << "Caught signal " << s;
     quit = true;
 }
 
 int main(int argc, char* argv[])
 {
 	signal(SIGINT, sig_handler);
+	signal(SIGILL, sig_handler);
+	signal(SIGTERM, sig_handler);
     boost::program_options::options_description desc("Allowed options");
 	boost::log::add_file_log(boost::log::keywords::file_name = "SimpleConsole%N.log", boost::log::keywords::rotation_size = 10 * 1024 * 1024);
     desc.add_options()
