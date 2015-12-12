@@ -1,4 +1,6 @@
-#include "Caffe.h"
+#include "caffe/caffe.hpp"
+
+#include "nodes/Node.h"
 
 #include <external_includes/cv_cudaimgproc.hpp>
 #include <external_includes/cv_cudaarithm.hpp>
@@ -11,16 +13,19 @@
 #ifdef _MSC_VER // Windows
 
 #ifdef _DEBUG
+/*
 RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/lib/Debug/libcaffe-d.lib")
 RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/lib/Debug/proto-d.lib")
 RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/protobuf/vsprojects/x64/Debug/libprotobufd.lib")
 RUNTIME_COMPILER_LINKLIBRARY("C:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/lib/x64/v120/libglog.lib")
+*/
 #else
+/*
 RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/bin/Release/libcaffe.lib")
 RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/lib/Release/proto.lib")
 RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/protobuf/vsprojects/x64/Release/libprotobuf.lib")
 RUNTIME_COMPILER_LINKLIBRARY("C:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/lib/x64/v120/libglog.lib")
-
+*/
 #endif
 #define CALL
   
@@ -31,7 +36,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 
 
 using namespace EagleLib;
-
+/*
 IPerModuleInterface* CALL GetModule()
 {
     return PerModuleInterface::GetInstance();
@@ -69,6 +74,7 @@ void CALL SetupIncludes()
 #endif
 
 }
+*/
 template <typename T>
 std::vector<size_t> sort_indexes(const std::vector<T> &v) {
 

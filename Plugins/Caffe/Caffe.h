@@ -1,13 +1,20 @@
-#include "caffe/caffe.hpp"
+#pragma once
 
-#include "nodes/Node.h"
+#include "EagleLib/Project_defs.hpp"
 
-#ifdef __cplusplus
-extern "C"{
+SETUP_PROJECT_DEF
+#include "RuntimeLinkLibrary.h"
+
+#ifdef _MSC_VER
+#  ifdef _DEBUG
+    RUNTIME_COMPILER_LINKLIBRARY("libcaffed.lib")
+#  else
+    RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib")
+#  endif
+#else
+
+
+
 #endif
-    CV_EXPORTS IPerModuleInterface* GetModule();
-    CV_EXPORTS void SetupIncludes();
 
-#ifdef __cplusplus
-}
-#endif
+
