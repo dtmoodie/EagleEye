@@ -24,11 +24,14 @@ namespace EagleLib
         virtual bool changeStream(const std::string& gstreamParams);
         virtual bool changeStream(int device);
         cv::VideoCapture cam;
-        cv::cuda::HostMem hostBuf;
+        //cv::cuda::HostMem hostBuf;
         //BufferPool<cv::cuda::GpuMat, EventPolicy, LockedPolicy> imageBuffer;
 
 //        boost::thread acquisitionThread;
 //        void acquisitionLoop();
+		virtual void read_image();
+		boost::thread read_thread;
+		EagleLib::concurrent_notifier<cv::cuda::GpuMat> notifier;
     public:
         Camera();
         ~Camera();

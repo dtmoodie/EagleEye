@@ -18,6 +18,7 @@
 #include <Events.h>
 
 #include <EagleLib/NodeManager.h>
+#include <EagleLib/DataStreamManager.h>
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
@@ -236,6 +237,8 @@ Node::addChild(Node::Ptr child)
         if(children[i]->nodeName == child->nodeName)
             ++count;
     }
+	
+	child->SetStreamManager(GetStreamManager());
     child->setParent(this);
     child->setTreeName(child->nodeName + "-" + boost::lexical_cast<std::string>(count));
     children.push_back(child);
@@ -525,8 +528,34 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 	
     return img;
 }
-
-
+void Node::SetStreamManager(std::shared_ptr<DataStreamManager> manager_)
+{
+	if (_dataStreamManager)
+	{
+		NODE_LOG(debug) << "Updating stream manager to a new manager";
+	}	
+	else
+	{
+		NODE_LOG(debug) << "Setting stream manager";
+	}
+	_dataStreamManager = manager_;
+	for (auto& child : children)
+	{
+		child->SetStreamManager(manager_);
+	}
+}
+std::shared_ptr<DataStreamManager> Node::GetStreamManager()
+{
+	if (parent && _dataStreamManager == nullptr)
+	{
+		SetStreamManager(parent->GetStreamManager());
+	}
+	if (parent == nullptr && _dataStreamManager == nullptr)
+	{
+		_dataStreamManager.reset(new DataStreamManager());
+	}	
+	return _dataStreamManager;
+}
 cv::cuda::GpuMat
 Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )
 {
@@ -597,6 +626,13 @@ Node::Init(bool firstInit)
     ui_collector::setNode(this);
 	NODE_LOG(trace);
     IObject::Init(firstInit);
+	if (!firstInit)
+	{
+		for (auto& param : parameters)
+		{
+			pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&Node::onUpdate, this, _1)));
+		}
+	}
 }
 
 void

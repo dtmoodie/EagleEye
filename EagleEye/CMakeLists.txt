@@ -37,7 +37,6 @@ IF(Qt5_FOUND)
 		opencv_video 
 		opencv_videoio 
 		opencv_videostab 
-		opencv_viz 
 		PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 	find_package(CUDA REQUIRED)
 

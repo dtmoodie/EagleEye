@@ -71,6 +71,7 @@ namespace EagleLib
 {
 	class Node;
     class NodeImpl;
+	class DataStreamManager;
 }
 
 
@@ -202,9 +203,11 @@ namespace EagleLib
         virtual void                    swapChildren(int idx1, int idx2);
         virtual void                    swapChildren(const std::string& name1, const std::string& name2);
         virtual void                    swapChildren(Node::Ptr child1, Node::Ptr child2);
-        virtual std::vector<Node*>  getNodesInScope();
-        virtual Node *getNodeInScope(const std::string& name);
-        virtual void getNodesInScope(std::vector<Node*>& nodes);
+        virtual std::vector<Node*>		getNodesInScope();
+        virtual Node *					getNodeInScope(const std::string& name);
+        virtual void					getNodesInScope(std::vector<Node*>& nodes);
+		virtual void					SetStreamManager(std::shared_ptr<DataStreamManager> manager_);
+		virtual std::shared_ptr<DataStreamManager> GetStreamManager();
 		
 		// ****************************************************************************************************************
 		//
@@ -594,37 +597,6 @@ namespace EagleLib
 			return typedParam;
 		}
 
-		/*!
-		*  \brief findInputs recursively finds any compatible inputs wrt the templated desired type.
-		*  \brief usage includes finding all output images
-		*  \param output is a vector of the output parameters including a list of the names of where they are from
-		*/
-		/*template<typename T> void
-			findInputs(std::vector<std::string>& nodeNames, std::vector< typename Parameters::ITypedParameter<T>::Ptr>& parameterPtrs, int hops = 10000)
-		{
-			if (hops < 0)
-				return;
-			for (int i = 0; i < parameters.size(); ++i)
-			{
-				if (parameters[i]->type & Parameters::Parameter::Output) // Can't use someone's input or control parameter, that would be naughty
-					if (std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(parameters[i]))
-					{
-						nodeNames.push_back(treeName);
-						parameterPtrs.push_back(std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(parameters[i]));
-					}
-			}
-			// Recursively check children for any available output parameters that match the input signature
-			//for(int i = 0; i < children.size(); ++i)
-			//children[i]->findInputs<T>(nodeNames, parameterPtrs, hops - 1);
-			for (auto itr = children.begin(); itr != children.end(); ++itr)
-				itr->findInputs<T>(nodeNames, parameterPtrs, hops - 1);
-
-			return;
-		}*/
-
-
-       
-
         // ****************************************************************************************************************
         //
         //									Dynamic reloading and persistence
@@ -719,6 +691,6 @@ namespace EagleLib
         //ConstBuffer<cv::cuda::GpuMat>                                       childResults;
 		unsigned int rmt_hash;
 		unsigned int rmt_cuda_hash;
-		
+		std::shared_ptr<DataStreamManager>									_dataStreamManager;
     };
 }

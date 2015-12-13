@@ -33,12 +33,8 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
         return img;
     }
 	cv::Mat host_mat;
-	std::string* set_name = getParameter<std::string>(0)->Data();
 	std::string display_name;
-	if (set_name->size())
-		display_name = *set_name;
-	else
-		display_name = fullTreeName;
+	display_name = fullTreeName;
 
     img.download(host_mat, stream);
 	cuda::enqueue_callback_async(
@@ -46,7 +42,7 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
 	{
 		rmt_ScopedCPUSample(QtImageDisplay_displayImage);
 		cv::imshow(display_name, host_mat);
-
+		cv::waitKey(1);
 	}, stream);
     
     return img;

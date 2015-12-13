@@ -11,6 +11,7 @@ bool Camera::changeStream(int device)
 		NODE_LOG(info) << "Setting camera to device: " << device;
         cam.release();
         cam = cv::VideoCapture(device);
+		read_thread = boost::thread(boost::bind(&Camera::read_image, this));
         return cam.isOpened();
     }catch(cv::Exception &e)
     {
@@ -27,6 +28,7 @@ bool Camera::changeStream(const std::string &gstreamParams)
 		NODE_LOG(info) << "Setting camera with gstreamer settings: " << gstreamParams;
         cam.release();
         cam = cv::VideoCapture(gstreamParams);
+		read_thread = boost::thread(boost::bind(&Camera::read_image, this));
         return cam.isOpened(); 
     }catch(cv::Exception &e)
     {
@@ -58,7 +60,23 @@ void Camera::Serialize(ISimpleSerializer *pSerializer)
     Node::Serialize(pSerializer);
     SERIALIZE(cam);
 }
-
+void Camera::read_image()
+{
+	cv::cuda::Stream upload_stream;
+	while (!boost::this_thread::interruption_requested())
+	{
+		cv::Mat img;
+		if (cam.isOpened())
+		{
+			cam.read(img);
+			cv::cuda::GpuMat d_img;
+			d_img.upload(img, upload_stream);
+			upload_stream.waitForCompletion();
+			notifier.push(d_img);
+			onUpdate(nullptr);
+		}
+	}
+}
 cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(parameters[0]->changed)
@@ -71,15 +89,13 @@ cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stre
         parameters[1]->changed = false;
         changeStream(*getParameter<std::string>(1)->Data());
     }
-    if(cam.isOpened())
-    {
-		cam.set(cv::CAP_PROP_ZOOM, 20); 
-        cam.read(hostBuf);
-		if (!hostBuf.empty())
-			img.upload(hostBuf,stream);
-    }
-    updateParameter("Output", img, Parameters::Parameter::Output);
-    return img;
+	cv::cuda::GpuMat popped_image;
+	if (notifier.try_pop(popped_image))
+	{
+		updateParameter("Output", popped_image, Parameters::Parameter::Output);
+		return popped_image;
+	}
+    return cv::cuda::GpuMat();
 }
 bool Camera::SkipEmpty() const
 {
@@ -218,10 +234,10 @@ cv::cuda::GpuMat GStreamerCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         if(cam.read(hostBuf))
         {
             img.upload(hostBuf,stream);
+			updateParameter("Output", img, Parameters::Parameter::Output);
         }
-
     }
-    updateParameter("Output", img, Parameters::Parameter::Output);
+    
     return img;
 }
 bool GStreamerCamera::SkipEmpty() const
@@ -273,6 +289,7 @@ void RTSPCamera::readImage_thread()
 				}
 				boost::mutex::scoped_lock lock(mtx);
 				notifier.push(&hostBuffer[putItr % bufferSize]);
+				onUpdate(nullptr);
 				++putItr;
 				if (putItr == 1000)
 					putItr = 0;
@@ -383,7 +400,7 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         updateParameter("Output", output, Parameters::Parameter::Output);
         return output;
     }
-	onUpdate(&stream);
+	//onUpdate(&stream);
     return cv::cuda::GpuMat();
 }
 
