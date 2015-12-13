@@ -3,9 +3,15 @@
 #include <opencv2/core/cuda/common.hpp>
 #include <opencv2/core/core_c.h>
 #include <boost/log/trivial.hpp>
+#include "MemoryBlock.h"
 using namespace EagleLib;
-CpuDelayedDeallocationPool::CpuDelayedDeallocationPool()
+
+
+
+CpuDelayedDeallocationPool::CpuDelayedDeallocationPool(size_t initial_pool_size, size_t threshold_level):
+	_threshold_level(threshold_level), _initial_block_size(initial_pool_size)
 {
+	blocks.push_back(std::shared_ptr<CpuMemoryBlock>(new CpuMemoryBlock(initial_pool_size)));
     deallocation_delay = 100;
 	total_usage = 0;
 }
@@ -14,9 +20,13 @@ CpuDelayedDeallocationPool::~CpuDelayedDeallocationPool()
 	cleanup(true);
 }
 
-CpuDelayedDeallocationPool* CpuDelayedDeallocationPool::instance()
+CpuDelayedDeallocationPool* CpuDelayedDeallocationPool::instance(size_t initial_pool_size, size_t threshold_level)
 {
-	static CpuDelayedDeallocationPool* g_instance = new CpuDelayedDeallocationPool();
+	static CpuDelayedDeallocationPool* g_instance = nullptr;
+	if (g_instance == nullptr)
+	{
+		g_instance = new CpuDelayedDeallocationPool(initial_pool_size, threshold_level);
+	}
 	return g_instance;
 }
 
@@ -24,9 +34,30 @@ void CpuDelayedDeallocationPool::allocate(void** ptr, size_t total)
 {
 	auto inst = instance();
 	std::lock_guard<std::recursive_timed_mutex> lock(inst->deallocate_pool_mutex);
+	if (total < inst->_threshold_level)
+	{
+		unsigned char* _ptr;
+		for (auto& block : inst->blocks)
+		{
+			_ptr = block->allocate(total, 1);
+			if (_ptr)
+			{
+				*ptr = _ptr;
+				return;
+			}
+		}
+		inst->blocks.push_back(
+			std::shared_ptr<CpuMemoryBlock>(
+				new CpuMemoryBlock(std::max(inst->_initial_block_size / 2, total))));
+
+		if (_ptr = (*inst->blocks.rbegin())->allocate(total, 1))
+		{
+			return;
+		}
+		throw cv::Exception(-1, "Failed to allocate sufficient page locked memory", __FUNCTION__, __FILE__, __LINE__);
+	}
 	for (auto itr = inst->deallocate_pool.begin(); itr != inst->deallocate_pool.end(); ++itr)
 	{
-		//if (itr->second.second == total)
 		if(std::get<2>(*itr) == total)
 		{
 			*ptr = std::get<0>(*itr);
@@ -44,7 +75,17 @@ void CpuDelayedDeallocationPool::deallocate(void* ptr, size_t total)
 {
 	auto inst = instance();
     std::lock_guard<std::recursive_timed_mutex> lock(inst->deallocate_pool_mutex);
-	//inst->deallocate_pool[(unsigned char*)ptr] = std::make_pair(clock(), total);
+	for (auto itr : inst->blocks)
+	{
+		if (ptr > itr->begin && ptr < itr->end)
+		{
+			if (itr->deAllocate((unsigned char*)ptr))
+			{
+				return;
+			}
+
+		}
+	}
 	inst->deallocate_pool.push_back(std::make_tuple((unsigned char*)ptr, clock(), total));
     inst->cleanup();
 }

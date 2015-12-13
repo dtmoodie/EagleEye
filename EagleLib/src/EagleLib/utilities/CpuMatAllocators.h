@@ -6,23 +6,27 @@
 #include <tuple>
 #include <mutex>
 #include <time.h>
+#include <memory>
 namespace EagleLib
 {
+	class CpuMemoryBlock;
 	class EAGLE_EXPORTS CpuDelayedDeallocationPool
 	{
 	public:
-        CpuDelayedDeallocationPool();
+        CpuDelayedDeallocationPool(size_t initial_pool_size, size_t threshold_level);
 		~CpuDelayedDeallocationPool();
-		static CpuDelayedDeallocationPool* instance();
+		static CpuDelayedDeallocationPool* instance(size_t initial_pool_size = 10000000, size_t threshold_level = 1000000);
 		static void allocate(void** ptr, size_t total);
 		static void deallocate(void* ptr, size_t total);
         size_t deallocation_delay;
 		size_t total_usage;
-	private:
+	protected:
 		void cleanup(bool force = false);
-		//std::map<unsigned char*, std::pair<clock_t, size_t>> deallocate_pool;
 		std::list<std::tuple<unsigned char*, clock_t, size_t>> deallocate_pool;
 		std::recursive_timed_mutex deallocate_pool_mutex;
+		size_t _threshold_level;
+		size_t _initial_block_size;
+		std::list<std::shared_ptr<CpuMemoryBlock>> blocks;
 	};
 
 	class EAGLE_EXPORTS CpuPinnedAllocator : public cv::MatAllocator
@@ -34,4 +38,5 @@ namespace EagleLib
 		virtual bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
 		virtual void deallocate(cv::UMatData* data) const;
 	};
+
 }

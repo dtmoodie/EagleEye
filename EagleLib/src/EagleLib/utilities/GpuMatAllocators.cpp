@@ -1,9 +1,9 @@
 #include "GpuMatAllocators.h"
-#include <cuda_runtime.h>
-#include <opencv2/cudev/common.hpp>
 #include <boost/log/trivial.hpp>
 #include <logger.hpp>
-
+#include "MemoryBlock.h"
+#include <opencv2/cudev/common.hpp>
+#include <cuda_runtime.h>
 namespace EagleLib
 {
 	unsigned char* alignMemory(unsigned char* ptr, int elemSize)
@@ -71,72 +71,11 @@ namespace EagleLib
 			scopedAllocationSize[itr->second] -= size;
 		}		
 	}
-	struct MemoryBlock
-	{
-		MemoryBlock(size_t size_):size(size_)
-		{
-			CV_CUDEV_SAFE_CALL(cudaMalloc(&begin, size)); end = begin + size;		
-		}
-		unsigned char* allocate(size_t size_, size_t elemSize_)
-		{
-			if (size_ > size)
-				return nullptr;
-			std::vector<std::pair<size_t, unsigned char*>> candidates;
-			unsigned char* prevEnd = begin;
-			if (allocatedBlocks.size())
-			{
-				for (auto itr : allocatedBlocks)
-				{
-					if (static_cast<size_t>(itr.first - prevEnd) > size_)
-					{
-						auto alignment = alignmentOffset(prevEnd, elemSize_);
-						if (static_cast<size_t>(itr.first - prevEnd + alignment) > size_)
-						{
-							candidates.push_back(std::make_pair(size_t(itr.first - prevEnd + alignment), prevEnd + alignment));
-						}
-					}
-					prevEnd = itr.second;
-				}
-			}
-			if (static_cast<size_t>(end - prevEnd) > size_)
-			{
-				auto alignment = alignmentOffset(prevEnd, elemSize_);
-				if (static_cast<size_t>(end - prevEnd + alignment) > size_)
-				{
-					candidates.push_back(std::make_pair(size_t(end - prevEnd + alignment), prevEnd + alignment));
-				}
-			}
-			// Find the smallest chunk of memory that fits our requirement, helps reduce fragmentation.
-			auto min = std::min_element(candidates.begin(), candidates.end(), [](const std::pair<size_t, unsigned char*>& first, const std::pair<size_t, unsigned char*>& second) {return first.first < second.first; });
-			if (min != candidates.end() && min->first > size_)
-			{
-				allocatedBlocks[min->second] = (unsigned char*)(min->second + size_);
-				return min->second;
-			}
-			return nullptr;
-
-		}
-		bool deAllocate(unsigned char* ptr)
-		{
-			if(ptr < begin || ptr > end)
-				return false;
-			auto itr = allocatedBlocks.find(ptr);
-			if (itr != allocatedBlocks.end())
-			{
-				allocatedBlocks.erase(itr);
-				return true;
-			}
-			return true;
-		}
-		unsigned char* begin;
-		unsigned char* end;
-		size_t size;
-		std::map<unsigned char*, unsigned char*> allocatedBlocks;
-	};
+	
 
 	BlockMemoryAllocator::BlockMemoryAllocator(size_t initialSize)
 	{
-		blocks.push_back(std::shared_ptr<MemoryBlock>(new MemoryBlock(initialSize)));
+		blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(initialSize)));
 		initialBlockSize_ = initialSize;
 	}
 	BlockMemoryAllocator* BlockMemoryAllocator::Instance(size_t initial_size)
@@ -169,7 +108,7 @@ namespace EagleLib
 			}
 		}
 		// If we get to this point, then no memory was found, need to allocate new memory
-		blocks.push_back(std::shared_ptr<MemoryBlock>(new MemoryBlock(std::max(initialBlockSize_ / 2, sizeNeeded))));
+		blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(std::max(initialBlockSize_ / 2, sizeNeeded))));
 		BOOST_LOG_TRIVIAL(warning) << "[GPU] Expanding memory pool by " <<  std::max(initialBlockSize_ / 2, sizeNeeded) / (1024 * 1024) << " MB";
 		if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, elemSize))
 		{
@@ -276,7 +215,7 @@ namespace EagleLib
 	CombinedAllocator::CombinedAllocator(size_t initial_pool_size, size_t threshold_level) :
 		initialBlockSize_(initial_pool_size), DelayedDeallocator(), _threshold_level(threshold_level)
 	{
-		blocks.push_back(std::shared_ptr<MemoryBlock>(new MemoryBlock(initialBlockSize_)));
+		blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(initialBlockSize_)));
 	}
 	bool CombinedAllocator::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
 	{
@@ -301,7 +240,7 @@ namespace EagleLib
 				}
 			}
 			// If we get to this point, then no memory was found, need to allocate new memory
-			blocks.push_back(std::shared_ptr<MemoryBlock>(new MemoryBlock(std::max(initialBlockSize_ / 2, sizeNeeded))));
+			blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(std::max(initialBlockSize_ / 2, sizeNeeded))));
 			BOOST_LOG_TRIVIAL(warning) << "[GPU] Expanding memory pool by " << std::max(initialBlockSize_ / 2, sizeNeeded) / (1024 * 1024) << " MB";
 			if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, elemSize))
 			{
@@ -318,18 +257,15 @@ namespace EagleLib
 	}
 	void CombinedAllocator::free(cv::cuda::GpuMat* mat)
 	{
+		std::lock_guard<std::recursive_mutex> lock(mtx);
 		for (auto itr : blocks)
 		{
 			if (mat->data > itr->begin && mat->data < itr->end)
 			{
-				std::lock_guard<std::recursive_mutex> lock(mtx);
-				for (auto itr : blocks)
+				if (itr->deAllocate(mat->data))
 				{
-					if (itr->deAllocate(mat->data))
-					{
-						cv::fastFree(mat->refcount);
-						return;
-					}
+					cv::fastFree(mat->refcount);
+					return;
 				}
 			}
 		}

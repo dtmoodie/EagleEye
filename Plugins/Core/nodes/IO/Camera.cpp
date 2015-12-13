@@ -1,6 +1,6 @@
 #include "nodes/IO/Camera.h"
 #include "../remotery/lib/Remotery.h"
-
+#include "EagleLib/utilities/GpuMatAllocators.h"
 using namespace EagleLib;
 
 bool Camera::changeStream(int device)
@@ -63,12 +63,18 @@ void Camera::Serialize(ISimpleSerializer *pSerializer)
 void Camera::read_image()
 {
 	cv::cuda::Stream upload_stream;
-	while (!boost::this_thread::interruption_requested())
+	bool firstRun = true;
+	while (!boost::this_thread::interruption_requested() && cam.isOpened())
 	{
 		cv::Mat img;
-		if (cam.isOpened())
+		if (cam.read(img))
 		{
-			cam.read(img);
+			if (firstRun)
+			{
+				size_t total = cv::getElemSize(img.depth())*size_t(img.size().area());
+				EagleLib::CombinedAllocator::Instance()->_threshold_level = total / 2;
+				firstRun = false;
+			}
 			cv::cuda::GpuMat d_img;
 			d_img.upload(img, upload_stream);
 			upload_stream.waitForCompletion();

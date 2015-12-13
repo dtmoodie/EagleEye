@@ -31,7 +31,7 @@ namespace EagleLib
 		std::map<unsigned char*, std::string> scopeOwnership;
 	};
 
-	class MemoryBlock;
+	class GpuMemoryBlock;
 
 	class EAGLE_EXPORTS BlockMemoryAllocator: public PitchedAllocator
 	{
@@ -43,7 +43,7 @@ namespace EagleLib
 		virtual void free(cv::cuda::GpuMat* mat);
 		size_t initialBlockSize_;
 	protected:
-		std::list<std::shared_ptr<MemoryBlock>> blocks;
+		std::list<std::shared_ptr<GpuMemoryBlock>> blocks;
 	};
 
 	class EAGLE_EXPORTS DelayedDeallocator : public PitchedAllocator
@@ -68,9 +68,10 @@ namespace EagleLib
 		CombinedAllocator(size_t initial_pool_size = 10000000 , size_t threshold_level = 1000000);
 		virtual bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
 		virtual void free(cv::cuda::GpuMat* mat);
-	protected:
 		size_t _threshold_level;
 		size_t initialBlockSize_;
-		std::list<std::shared_ptr<MemoryBlock>> blocks;
+	protected:
+		
+		std::list<std::shared_ptr<GpuMemoryBlock>> blocks;
 	};
 }
