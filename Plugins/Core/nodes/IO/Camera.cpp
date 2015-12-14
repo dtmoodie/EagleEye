@@ -1,6 +1,7 @@
 #include "nodes/IO/Camera.h"
 #include "../remotery/lib/Remotery.h"
 #include "EagleLib/utilities/GpuMatAllocators.h"
+#include "EagleLib/utilities/CpuMatAllocators.h"
 using namespace EagleLib;
 
 bool Camera::changeStream(int device)
@@ -71,8 +72,9 @@ void Camera::read_image()
 		{
 			if (firstRun)
 			{
-				size_t total = cv::getElemSize(img.depth())*size_t(img.size().area());
-				EagleLib::CombinedAllocator::Instance()->_threshold_level = total / 2;
+				size_t total = cv::getElemSize(img.depth())*size_t(img.size().area()) / 2;
+				EagleLib::CombinedAllocator::Instance()->_threshold_level = total;
+				EagleLib::CpuDelayedDeallocationPool::instance()->_threshold_level = total;
 				firstRun = false;
 			}
 			cv::cuda::GpuMat d_img;

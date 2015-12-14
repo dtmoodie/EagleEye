@@ -20,11 +20,12 @@ namespace EagleLib
 		static void deallocate(void* ptr, size_t total);
         size_t deallocation_delay;
 		size_t total_usage;
+		size_t _threshold_level;
 	protected:
 		void cleanup(bool force = false);
 		std::list<std::tuple<unsigned char*, clock_t, size_t>> deallocate_pool;
 		std::recursive_timed_mutex deallocate_pool_mutex;
-		size_t _threshold_level;
+		
 		size_t _initial_block_size;
 		std::list<std::shared_ptr<CpuMemoryBlock>> blocks;
 	};
