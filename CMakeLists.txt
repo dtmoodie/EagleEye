@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(EagleEye)
-
+SET(BIN_DIRS "" CACHE STRING "" FORCE)
 
 # This macro is used for linking libs to a target, but also adding the correct directories to the RCC config
 MACRO(RCC_LINK_LIB TARGET)
@@ -111,7 +111,8 @@ SET(DEFS ${EagleLib_DEFS};-DBOOST_ALL_DYN_LINK)
 LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
 LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
 INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
-add_subdirectory(EagleEye)
+
 add_subdirectory(Plugins)
 add_subdirectory(samples)
 add_subdirectory(tests)
+add_subdirectory(EagleEye)

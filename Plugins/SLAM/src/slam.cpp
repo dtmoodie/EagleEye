@@ -15,13 +15,25 @@ SETUP_PROJECT_IMPL
 #include "Track/Track.hpp"
 
 #include "utils/utils.hpp"
+
+#include "RuntimeLinkLibrary.h"
+
+#ifdef _MSC_VER
+#ifdef _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY("OpenDTAMd.lib")
+#else
+RUNTIME_COMPILER_LINKLIBRARY("OpenDTAM.lib")
+#endif
+#else
+#endif
+
 namespace EagleLib
 {
 	class DTAM : public Node
 	{
-		cv::Mat cameraMatrix, R, T;
+		cv::Mat cameraMatrix, R, T_;
 		std::shared_ptr<CostVolume> cost_volume;
-		std::shared_ptr<cv::cuda::DepthmapDenoiseWeightedHuber> dp;
+		cv::Ptr<cv::cuda::DepthmapDenoiseWeightedHuber> dp;
 		std::shared_ptr<Optimizer> optimizer;
 		size_t image_index;
 
@@ -56,7 +68,7 @@ namespace EagleLib
 			CV_Assert(cost_volume);
 			if (cost_volume->count < *getParameter<int>(1)->Data())
 			{
-				cost_volume->updateCost(h_img, R, T);
+				cost_volume->updateCost(h_img, R, T_);
 				return img;
 			}
 
@@ -65,14 +77,15 @@ namespace EagleLib
 				optimizer.reset(new Optimizer(*cost_volume));
 			}
 			CV_Assert(optimizer);
-			if (depth_optimizer == nullptr)
+			if (dp == nullptr)
 			{
-				depth_optimizer = cv::cuda::createDepthmapDenoiseWeightedHuber()
+                dp = cv::cuda::createDepthmapDenoiseWeightedHuber();
 			}
 			return img;
 		}
 
 	};
+    
 }
 using namespace EagleLib;
 NODE_DEFAULT_CONSTRUCTOR_IMPL(DTAM);

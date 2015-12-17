@@ -1,3 +1,4 @@
+#include "Caffe.h"
 #include "caffe/caffe.hpp"
 
 #include "nodes/Node.h"
@@ -11,70 +12,20 @@
 #include <ObjectDetection.hpp>
 #include <string>
 #ifdef _MSC_VER // Windows
-
-#ifdef _DEBUG
-/*
-RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/lib/Debug/libcaffe-d.lib")
-RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/lib/Debug/proto-d.lib")
-RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/protobuf/vsprojects/x64/Debug/libprotobufd.lib")
-RUNTIME_COMPILER_LINKLIBRARY("C:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/lib/x64/v120/libglog.lib")
-*/
-#else
-/*
-RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/bin/Release/libcaffe.lib")
-RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/caffe/build_dev/lib/Release/proto.lib")
-RUNTIME_COMPILER_LINKLIBRARY("E:/libsrc/protobuf/vsprojects/x64/Release/libprotobuf.lib")
-RUNTIME_COMPILER_LINKLIBRARY("C:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/lib/x64/v120/libglog.lib")
-*/
-#endif
-#define CALL
-  
+    #ifdef _DEBUG
+    
+    #else
+    RUNTIME_COMPILER_LINKLIBRARY("libglog.lib")
+    RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib")
+    #endif
 #else // Linux
 RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
-#define CALL
 #endif
 
+SETUP_PROJECT_IMPL;
 
 using namespace EagleLib;
-/*
-IPerModuleInterface* CALL GetModule()
-{
-    return PerModuleInterface::GetInstance();
-}
-void CALL SetupIncludes()
-{
-#ifdef _MSC_VER
-    EagleLib::NodeManager::getInstance().addIncludeDir("C:/code/EagleEye/EagleLib/include");
-    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/caffe/include");
-    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libs/OpenBLAS/include");
-    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libs/opencv/include");
-    EagleLib::NodeManager::getInstance().addIncludeDir("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v6.5/include");
-    EagleLib::NodeManager::getInstance().addIncludeDir("E:/code/caffe/3rdparty/include/Snappy");
-	EagleLib::NodeManager::getInstance().addIncludeDir("E:/code/caffe/3rdparty/include");
-    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/leveldb/include");
-    EagleLib::NodeManager::getInstance().addIncludeDir("E:/code/caffe/3rdparty/include/lmdb");
-    EagleLib::NodeManager::getInstance().addIncludeDir("E:/code/caffe/3rdparty/include/hdf5");
-    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/caffe/build/include");
-    EagleLib::NodeManager::getInstance().addIncludeDir("C:/Repo/Raven/packages/ceres-glog.1.10.0/build/native/include");
-    EagleLib::NodeManager::getInstance().addIncludeDir("C:/libs/boost_1_57_0");
-    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/caffe/src");
-    EagleLib::NodeManager::getInstance().addIncludeDir("E:/libsrc/protobuf/src/");
-#else
-#ifdef CAFFE_INCLUDES
-    std::string text(CAFFE_INCLUDES);
-    boost::char_separator<char> sep(",");
-    boost::tokenizer< boost::char_separator<char> > tokens(text, sep);
 
-    for(auto itr = tokens.begin();itr != tokens.end(); ++itr)
-    {
-        EagleLib::NodeManager::getInstance().addIncludeDir(*itr);
-    }
-#endif // CAFFE_INCLUDES
-
-#endif
-
-}
-*/
 template <typename T>
 std::vector<size_t> sort_indexes(const std::vector<T> &v) {
 
@@ -179,10 +130,10 @@ void CaffeImageClassifier::Init(bool firstInit)
     caffe::Caffe::set_mode(caffe::Caffe::GPU);
     if(firstInit)
     {
-        updateParameter("NN model file", boost::filesystem::path());
-        updateParameter("NN weights file", boost::filesystem::path());
-        updateParameter("Label file", boost::filesystem::path());
-        updateParameter("Mean file", boost::filesystem::path());
+        updateParameter("NN model file", Parameters::ReadFile());
+        updateParameter("NN weights file", Parameters::ReadFile());
+        updateParameter("Label file", Parameters::ReadFile());
+        updateParameter("Mean file", Parameters::ReadFile());
 		updateParameter("Subtraction required", false);
         updateParameter("Num classifications", 5);
         addInputParameter<std::vector<cv::Rect>>("Bounding boxes");
@@ -195,23 +146,23 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 {
     if(parameters[0]->changed)
     {
-        boost::filesystem::path& path = *getParameter<boost::filesystem::path>(0)->Data();
-        if(boost::filesystem::exists(path))
+        Parameters::ReadFile* path = getParameter<Parameters::ReadFile>(0)->Data();
+        if(boost::filesystem::exists(*path))
         {
-            NN.reset(new caffe::Net<float>(path.string(), caffe::TEST));
+            NN.reset(new caffe::Net<float>(path->string(), caffe::TEST));
             WrapInput();
             parameters[0]->changed = false;
         }else
         {
-            NODE_LOG(warning) << "Architecture file does not exist";
+            NODE_LOG(debug) << "Architecture file does not exist";
         }
     }
     if(parameters[1]->changed && NN)
     {
-        boost::filesystem::path path = *getParameter<boost::filesystem::path>(1)->Data();
-        if(boost::filesystem::exists(path))
+        Parameters::ReadFile* path = getParameter<Parameters::ReadFile>(1)->Data();
+        if(boost::filesystem::exists(*path))
         {
-            NN->CopyTrainedLayersFrom(path.string());
+            NN->CopyTrainedLayersFrom(path->string());
             const std::vector<boost::shared_ptr<caffe::Layer<float>>>& layers = NN->layers();
             std::vector<std::string> layerNames;
             layerNames.reserve(layers.size());
@@ -225,18 +176,18 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
             updateParameter("Loaded layers", layerNames);
         }else
         {
-			NODE_LOG(warning) << "Weight file does not exist";
+			NODE_LOG(debug) << "Weight file does not exist";
         }
     }
     if(parameters[2]->changed)
     {
         // Handle loading of the label file
-        boost::filesystem::path& path = *getParameter<boost::filesystem::path>(2)->Data();
-        if(boost::filesystem::exists(path))
+        Parameters::ReadFile* path = getParameter<Parameters::ReadFile>(2)->Data();
+        if(boost::filesystem::exists(*path))
         {
-            if(boost::filesystem::is_regular_file(path))
+            if(boost::filesystem::is_regular_file(*path))
             {
-                std::ifstream ifs(path.string().c_str());
+                std::ifstream ifs(path->string().c_str());
                 if(!ifs)
                 {
                     NODE_LOG(error) << "Unable to load label file";
@@ -254,13 +205,13 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     }
     if(parameters[3]->changed)
     {
-        boost::filesystem::path& path = *getParameter<boost::filesystem::path>(3)->Data();
-        if(boost::filesystem::exists(path))
+        Parameters::ReadFile* path = getParameter<Parameters::ReadFile>(3)->Data();
+        if(boost::filesystem::exists(*path))
         {
-            if(boost::filesystem::is_regular_file(path))
+            if(boost::filesystem::is_regular_file(*path))
             {
                 caffe::BlobProto blob_proto;
-                if(caffe::ReadProtoFromBinaryFile(path.string().c_str(), &blob_proto))
+                if(caffe::ReadProtoFromBinaryFile(path->string().c_str(), &blob_proto))
                 {
                     caffe::Blob<float> mean_blob;
                     mean_blob.FromProto(blob_proto);
@@ -305,7 +256,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     }
     if(NN == nullptr || weightsLoaded == false)
     {
-        NODE_LOG(error) << "Model not loaded";
+        NODE_LOG(trace) << "Model not loaded";
         return img;
     }
     if(img.size() != cv::Size(input_layer->width(), input_layer->height()))

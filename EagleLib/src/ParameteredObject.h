@@ -42,8 +42,6 @@ namespace EagleLib
 
         template<typename T> bool updateParameter(size_t idx, const T data, cv::cuda::Stream* stream);
 
-        
-
         template<typename T> typename Parameters::ITypedParameter<T>::Ptr getParameter(std::string name);
 
         template<typename T> typename Parameters::ITypedParameter<T>::Ptr getParameterOptional(std::string name);
