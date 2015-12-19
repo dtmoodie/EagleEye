@@ -28,8 +28,8 @@ AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         cv::cuda::minMax(channels[i], &minVal, &maxVal);
         double scaleFactor = 255.0 / (maxVal - minVal);
         channels[i].convertTo(channels[0], CV_8U, scaleFactor, minVal*scaleFactor);
-        updateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal, Parameters::Parameter::State);
-		updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal, Parameters::Parameter::State);
+        updateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal)->type =  Parameters::Parameter::State;
+		updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->type =  Parameters::Parameter::State;
     }
     cv::cuda::merge(channels,img);
     return img;
@@ -79,7 +79,8 @@ QtColormapDisplay::QtColormapDisplay():
 void QtColormapDisplayCallback(int status, void* data)
 {
     QtColormapDisplay* node = static_cast<QtColormapDisplay*>(data);
-	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtColormapDisplay::display, node));
+	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtColormapDisplay::display, node),
+        std::make_pair(data, Loki::TypeInfo(typeid(EagleLib::Node))));
 }
 
 void QtColormapDisplay::display()

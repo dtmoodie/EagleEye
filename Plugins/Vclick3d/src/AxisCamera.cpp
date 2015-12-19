@@ -164,7 +164,7 @@ void AxisCamera::Init(bool firstInit)
 		updateParameter("Camera tilt", int(0));
         updateParameter("Camera number", int(1));
 
-        updateParameter("Camera moving", false, Parameters::Parameter::State);
+        updateParameter("Camera moving", false)->type = Parameters::Parameter::State;
 
 		currentZoom.reset(new Parameters::TypedParameter<int>("Current Zoom", 0, Parameters::Parameter::State));
 		currentFocus.reset(new Parameters::TypedParameter<int>("Current Focus", 0, Parameters::Parameter::State));
@@ -173,8 +173,8 @@ void AxisCamera::Init(bool firstInit)
 		parameters.push_back(currentZoom);
 		parameters.push_back(currentFocus);
 
-		updateParameter("Camera matrix", cv::Mat(), Parameters::Parameter::Output);
-		updateParameter("Camera pose", cv::Mat(), Parameters::Parameter::Output);
+		updateParameter("Camera matrix", cv::Mat())->type = Parameters::Parameter::Output;
+		updateParameter("Camera pose", cv::Mat())->type =  Parameters::Parameter::Output;
 	}
 	else
 	{

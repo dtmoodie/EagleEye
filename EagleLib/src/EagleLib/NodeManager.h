@@ -41,8 +41,8 @@ namespace EagleLib
 		bool removeNode(ObjectId oid);
 
 		void updateTreeName(Node* node, const std::string& prevTreeName);
-		void addParameters(Node* node);
-		Parameters::Parameter::Ptr getParameter(const std::string& name);
+		
+		
 		void getSiblingNodes(const std::string& sourceNode, std::vector<Node*>& output);
 
 		void getParentNodes(const std::string& sourceNode, std::vector<Node*>& output);

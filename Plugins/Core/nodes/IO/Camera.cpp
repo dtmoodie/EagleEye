@@ -100,7 +100,7 @@ cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stre
 	cv::cuda::GpuMat popped_image;
 	if (notifier.try_pop(popped_image))
 	{
-		updateParameter("Output", popped_image, Parameters::Parameter::Output);
+		updateParameter("Output", popped_image)->type =  Parameters::Parameter::Output;
 		return popped_image;
 	}
     return cv::cuda::GpuMat();
@@ -128,7 +128,10 @@ void GStreamerCamera::Init(bool firstInit)
         updateParameter<std::string>("Username", "");
         updateParameter<std::string>("Password", "");
         setString();
-        //updateParameter("Gstreamer string", "v4l2src device=/dev/video0 ! video/x-h264, width=1920, height=1080, framerate=30/1 ! queue ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink");
+    }
+    else
+    {
+        setString();
     }
 }
 void GStreamerCamera::setString()
@@ -242,7 +245,7 @@ cv::cuda::GpuMat GStreamerCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         if(cam.read(hostBuf))
         {
             img.upload(hostBuf,stream);
-			updateParameter("Output", img, Parameters::Parameter::Output);
+			updateParameter("Output", img)->type =  Parameters::Parameter::Output;
         }
     }
     
@@ -256,7 +259,6 @@ void RTSPCamera::Init(bool firstInit)
 {
     Node::Init(firstInit);
     currentNewestFrame = nullptr;
-    hostBuffer.resize(5);
     bufferSize = 5;
     putItr = 0;
     if(firstInit)
@@ -274,7 +276,7 @@ void RTSPCamera::Init(bool firstInit)
         updateParameter<std::string>("Password", "12369pp");
         updateParameter<unsigned short>("Width", 1920);
         updateParameter<unsigned short>("Height", 1080);
-        updateParameter("Output", cv::cuda::GpuMat(), Parameters::Parameter::Output);
+        updateParameter("Output", cv::cuda::GpuMat())->type =  Parameters::Parameter::Output;
     }
 	for (auto itr = parameters.begin(); itr != parameters.end(); ++itr)
 	{
@@ -290,18 +292,21 @@ void RTSPCamera::readImage_thread()
 			rmt_ScopedCPUSample(RTSPCamera_readImage);
 			try
 			{
-				cam.read(hostBuffer[putItr % bufferSize]);
-				if (hostBuffer[putItr % bufferSize].empty())
+                cv::Mat h_img;
+				cam.read(h_img);
+				if (h_img.empty())
 				{
 					NODE_LOG(debug) << "Read empty image";
+                    continue;
 				}
-				boost::mutex::scoped_lock lock(mtx);
-				notifier.push(&hostBuffer[putItr % bufferSize]);
+				//boost::mutex::scoped_lock lock(mtx);
+				notifier.push(h_img);
 				onUpdate(nullptr);
-				++putItr;
-				if (putItr == 1000)
-					putItr = 0;
-			}
+            }
+            catch (cv::Exception &e)
+            {
+                BOOST_LOG_TRIVIAL(error) << "Error in reading image " << e.what();
+            }
 			catch (...)
 			{
 				NODE_LOG(error) << "Error in reading image";
@@ -400,12 +405,12 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
     {
         setString();
     }
-    cv::cuda::HostMem* data = nullptr;
+    cv::Mat h_img;
 	
-	if (notifier.try_pop(data) &&data && !data->empty())
+	if (notifier.try_pop(h_img) && !h_img.empty())
     {
-        output.upload(*data, stream);
-        updateParameter("Output", output, Parameters::Parameter::Output);
+        output.upload(h_img, stream);
+        updateParameter("Output", output)->type =  Parameters::Parameter::Output;
         return output;
     }
 	//onUpdate(&stream);

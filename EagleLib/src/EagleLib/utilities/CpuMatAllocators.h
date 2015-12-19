@@ -16,8 +16,8 @@ namespace EagleLib
         CpuDelayedDeallocationPool(size_t initial_pool_size, size_t threshold_level);
 		~CpuDelayedDeallocationPool();
 		static CpuDelayedDeallocationPool* instance(size_t initial_pool_size = 10000000, size_t threshold_level = 1000000);
-		static void allocate(void** ptr, size_t total);
-		static void deallocate(void* ptr, size_t total);
+		void allocate(void** ptr, size_t total, size_t elemSize);
+		void deallocate(void* ptr, size_t total);
         size_t deallocation_delay;
 		size_t total_usage;
 		size_t _threshold_level;

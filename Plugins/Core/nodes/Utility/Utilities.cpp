@@ -21,7 +21,7 @@ void SyncFunctionCall::Init(bool firstInit)
     updateParameter<boost::function<void(void)>>("Call all input functions", boost::bind(&SyncFunctionCall::call, this));
     if(firstInit)
     {
-		addInputParameter<boost::function<void(void)>>("Input 1", "", boost::bind(&functionQualifier, _1));
+		addInputParameter<boost::function<void(void)>>("Input 1")->SetQualifier(boost::bind(&functionQualifier, _1));
     }
 }
 
@@ -53,7 +53,7 @@ cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     }
     if(full == true)
     {
-		addInputParameter<boost::function<void(void)>>("Input " + boost::lexical_cast<std::string>(parameters.size()), "", boost::bind(&functionQualifier, _1));
+		addInputParameter<boost::function<void(void)>>("Input " + boost::lexical_cast<std::string>(parameters.size()))->SetQualifier(boost::bind(&functionQualifier, _1));
     }
     return img;
 }

@@ -59,9 +59,9 @@ namespace EagleLib
             Node::Init(firstInit);
 			if (firstInit)
 			{
-                addParameter("OutputString", std::string("Default!!!!!!!"));
+                ParameteredObject::addParameter<std::string>("OutputString","Default!!!!!!!");
 			}
-			updateParameter("Output", &testVector, Parameters::Parameter::Output, "Test output vector", false);
+			updateParameter("Output", &testVector)->SetTooltip("Test output vector")->type = Parameters::Parameter::Output;
                 
         }
         virtual void Serialize(ISimpleSerializer *pSerializer)
@@ -88,7 +88,7 @@ namespace EagleLib
 			Node::Init(firstInit);
 			if (firstInit)
 			{
-				addInputParameter<std::vector<int>>("Test input Vector", "Test  input Vector");
+				addInputParameter<std::vector<int>>("Test input Vector")->SetTooltip("Test input Vector");
 			}
 		}
         cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img)

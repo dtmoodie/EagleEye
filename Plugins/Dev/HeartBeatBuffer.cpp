@@ -40,7 +40,7 @@ void HeartBeatBuffer::Init(bool firstInit)
 	if (firstInit)
 	{
 		updateParameter<int>("Buffer size", 30);
-		updateParameter<double>("Heartbeat frequency", 1.0,Parameters::Parameter::Control, "Seconds between heartbeat images");
+		updateParameter<double>("Heartbeat frequency", 1.0)->SetTooltip("Seconds between heartbeat images");
 		updateParameter<bool>("Active", false);
 		RegisterParameterCallback(2, boost::bind(&HeartBeatBuffer::onActivation, this));
 		lastTime = clock();

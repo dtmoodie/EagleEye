@@ -5,8 +5,8 @@ using namespace EagleLib;
 
 void MinMax::Init(bool firstInit)
 {
-    updateParameter<double>("Min value", 0.0, Parameters::Parameter::Output);
-	updateParameter<double>("Max value", 0.0, Parameters::Parameter::Output);
+    updateParameter<double>("Min value", 0.0)->type = Parameters::Parameter::Output;
+	updateParameter<double>("Max value", 0.0)->type = Parameters::Parameter::Output;
 }
 
 cv::cuda::GpuMat MinMax::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -25,14 +25,14 @@ void Threshold::Init(bool firstInit)
         addInputParameter<double>("Input max"); // 0
         addInputParameter<double>("Input min"); // 1
         updateParameter<double>("Replace Value", 255.0); // 2
-		updateParameter<double>("Max", 0.0, Parameters::Parameter::Control); // 3
-		updateParameter<double>("Min", 0.0, Parameters::Parameter::Control); // 4
-		updateParameter<bool>("Two sided", false, Parameters::Parameter::Control, "If true, min and max are used to define a threshold range");
-		updateParameter<bool>("Truncate", false, Parameters::Parameter::Control, "If true, threshold to threshold value instead of replace value or src value");
-		updateParameter<bool>("Inverse", false, Parameters::Parameter::Control, "If true, inverse threshold is applied, ie values greater than max and less than min pass");
-		updateParameter<bool>("Source value", true, Parameters::Parameter::Control, "If true, threshold to original source value");
-		updateParameter<cv::cuda::GpuMat>("Mask", cv::cuda::GpuMat(), Parameters::Parameter::Output);
-		updateParameter<double>("Input %", 0.9, Parameters::Parameter::Control);
+		updateParameter<double>("Max", 0.0)->type =  Parameters::Parameter::Control; // 3
+		updateParameter<double>("Min", 0.0)->type =  Parameters::Parameter::Control; // 4
+		updateParameter<bool>("Two sided", false)->SetTooltip("If true, min and max are used to define a threshold range")->type = Parameters::Parameter::Control;
+		updateParameter<bool>("Truncate", false)->SetTooltip("If true, threshold to threshold value instead of replace value or src value")->type = Parameters::Parameter::Control;
+		updateParameter<bool>("Inverse", false)->SetTooltip("If true, inverse threshold is applied, ie values greater than max and less than min pass")->type = Parameters::Parameter::Control;
+		updateParameter<bool>("Source value", true)->SetTooltip("If true, threshold to original source value")->type = Parameters::Parameter::Control;
+		updateParameter<cv::cuda::GpuMat>("Mask", cv::cuda::GpuMat())->type = Parameters::Parameter::Output;
+		updateParameter<double>("Input %", 0.9)->type = Parameters::Parameter::Control;
         updateParameter<bool>("Output mask", false);
     }
 
@@ -97,12 +97,8 @@ cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
         // Hopefully this preserves values instead of railing it to 255, but I can't be sure.
         cv::cuda::bitwise_and(upperMask, lowerMask, mask, cv::noArray(), stream);
     }
-
-//    if(!sourceValue)
-//        mask.convertTo(mask, CV_8U, stream);
-//    else
-        mask.convertTo(mask, img.type(), stream);
-    updateParameter<cv::cuda::GpuMat>("Mask", mask, Parameters::Parameter::Output);
+    mask.convertTo(mask, img.type(), stream);
+    updateParameter<cv::cuda::GpuMat>("Mask", mask)->type = Parameters::Parameter::Output;
     if(*getParameter<bool>("Output mask")->Data())
         return mask;
 	return img;

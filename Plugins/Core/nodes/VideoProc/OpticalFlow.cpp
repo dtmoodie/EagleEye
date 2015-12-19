@@ -131,9 +131,9 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
 
 			optFlow->calc(prev_grey, grey_img, prev_key_points, tracked_points, status, error, stream);
 
-			updateParameter("Tracked points", tracked_points, Parameters::Parameter::Output);
-			updateParameter("Status", status, Parameters::Parameter::Output);
-			updateParameter("Error", error, Parameters::Parameter::Output);
+			updateParameter("Tracked points", tracked_points)->type = Parameters::Parameter::Output;
+			updateParameter("Status", status)->type = Parameters::Parameter::Output;
+			updateParameter("Error", error)->type = Parameters::Parameter::Output;
 			
 			prev_key_points = tracked_points;
 			prev_grey = grey_img;

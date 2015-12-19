@@ -52,7 +52,7 @@ unsigned char* MemoryBlock::allocate(size_t size_, size_t elemSize_)
 			if (static_cast<size_t>(itr.first - prevEnd) > size_)
 			{
 				auto alignment = alignmentOffset(prevEnd, elemSize_);
-				if (static_cast<size_t>(itr.first - prevEnd + alignment) > size_)
+				if (static_cast<size_t>(itr.first - prevEnd + alignment) >= size_)
 				{
 					candidates.push_back(std::make_pair(size_t(itr.first - prevEnd + alignment), prevEnd + alignment));
 				}
@@ -63,7 +63,7 @@ unsigned char* MemoryBlock::allocate(size_t size_, size_t elemSize_)
 	if (static_cast<size_t>(end - prevEnd) > size_)
 	{
 		auto alignment = alignmentOffset(prevEnd, elemSize_);
-		if (static_cast<size_t>(end - prevEnd + alignment) > size_)
+		if (static_cast<size_t>(end - prevEnd + alignment) >= size_)
 		{
 			candidates.push_back(std::make_pair(size_t(end - prevEnd + alignment), prevEnd + alignment));
 		}

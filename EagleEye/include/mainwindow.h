@@ -33,7 +33,7 @@ public:
     void qtDisplay(cv::Mat img, EagleLib::Node *node);
     void onCompileLog(const std::string& msg, int level);
     virtual void closeEvent(QCloseEvent *event);
-    void processingThread_uiCallback(boost::function<void(void)> f);
+    void processingThread_uiCallback(boost::function<void(void)> f, std::pair<void*, Loki::TypeInfo> source);
 	void process_log_message(boost::log::trivial::severity_level severity, const std::string& message);
 private slots:
     void on_pushButton_clicked();
@@ -62,7 +62,8 @@ private slots:
     void on_actionLog_settings_triggered();
 
     void on_btnClear_clicked();
-    void on_uiCallback(boost::function<void()> f);
+    void on_uiCallback(boost::function<void()> f, std::pair<void*, Loki::TypeInfo> source);
+    
 
     void on_btnStart_clicked();
 
@@ -75,7 +76,7 @@ signals:
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);
     void qtDisplayImage(boost::function<cv::Mat(void)> function, EagleLib::Node* node);
-    void uiCallback(boost::function<void()> f);
+    void uiCallback(boost::function<void()> f, std::pair<void*, Loki::TypeInfo> source);
     void uiNeedsUpdate();
     void pluginLoaded();
 

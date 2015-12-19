@@ -14,7 +14,7 @@ cv::cuda::GpuMat FrameRate::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta = currentTime - prevTime;
     prevTime = currentTime;
-    updateParameter<double>("Framerate", 1000.0/delta.total_milliseconds(), Parameters::Parameter::State);
+    updateParameter<double>("Framerate", 1000.0/delta.total_milliseconds())->type =  Parameters::Parameter::State;
     return img;
 }
 
@@ -71,7 +71,7 @@ cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 		createdMat = cv::cuda::GpuMat(*getParameter<int>(3)->Data(),
 					*getParameter<int>(2)->Data(),
 					dtype, *getParameter<cv::Scalar>(4)->Data());
-        updateParameter("Output", createdMat, Parameters::Parameter::Output);
+        updateParameter("Output", createdMat)->type = Parameters::Parameter::Output;
         parameters[0]->changed = false;
         parameters[1]->changed = false;
         parameters[2]->changed = false;

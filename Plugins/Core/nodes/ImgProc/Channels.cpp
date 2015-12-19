@@ -152,7 +152,7 @@ cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     TIME
     for(size_t i = 0; i < channels->size(); ++i)
     {
-        updateParameter("Channel " + std::to_string(i), (*channels)[i], Parameters::Parameter::Output);
+        updateParameter("Channel " + std::to_string(i), (*channels)[i])->type = Parameters::Parameter::Output;
     }
     TIME
     if(parameters[0]->changed)
@@ -196,10 +196,10 @@ void Merge::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-        addInputParameter<cv::cuda::GpuMat>("Channel1", "", MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
-        addInputParameter<cv::cuda::GpuMat>("Channel2", "", MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
-        addInputParameter<cv::cuda::GpuMat>("Channel3", "", MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
-        addInputParameter<cv::cuda::GpuMat>("Channel4", "", MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
+        addInputParameter<cv::cuda::GpuMat>("Channel1")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
+        addInputParameter<cv::cuda::GpuMat>("Channel2")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
+        addInputParameter<cv::cuda::GpuMat>("Channel3")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
+        addInputParameter<cv::cuda::GpuMat>("Channel4")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
     }
     qualifiersSet = false;
 }

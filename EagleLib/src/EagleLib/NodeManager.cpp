@@ -248,32 +248,9 @@ void
 NodeManager::updateTreeName(Node* node, const std::string& prevTreeName)
 {
 	LOG_TRACE;
-	/*m_nodeTree.put(t_nodeTree::path_type{ node->fullTreeName, '.' }, node);
-	m_nodeTree.erase(prevTreeName);*/
+	
 }
 
-void
-NodeManager::addParameters(Node* node)
-{
-	LOG_TRACE;
-	for (size_t i = 0; i < node->parameters.size(); ++i)
-	{
-
-	}
-}
-
-Parameters::Parameter::Ptr
-NodeManager::getParameter(const std::string& name)
-{
-	LOG_TRACE;
-	// Strip off the path for the node
-	auto idx = name.find(':');
-	std::string parameterName = name.substr(idx + 1);
-	auto node = getNode(name.substr(0, idx));
-	if (node == nullptr)
-		return Parameters::Parameter::Ptr();
-	return node->getParameter(parameterName);
-}
 
 void
 NodeManager::getSiblingNodes(const std::string& sourceNode, std::vector<Node*>& output)

@@ -66,6 +66,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<boost::function<void()>>("boost::function<void()>");
     qRegisterMetaType<Parameters::Parameter::Ptr>("Parameters::Parameter::Ptr");
     qRegisterMetaType<size_t>("size_t");
+    qRegisterMetaType<std::pair<void*,Loki::TypeInfo>>("std::pair<void*,Loki::TypeInfo>");
 
     ui->setupUi(this);
 
@@ -86,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->gridLayout->addWidget(nodeGraphView, 2, 0, 1,4);
     currentSelectedNodeWidget = nullptr;
-    Parameters::UI::UiCallbackService::Instance()->setCallback(boost::bind(&MainWindow::processingThread_uiCallback, this, _1));
+    Parameters::UI::UiCallbackService::Instance()->setCallback(boost::bind(&MainWindow::processingThread_uiCallback, this, _1, _2));
     rccSettings->hide();
     plotWizardDialog->hide();
 
@@ -271,7 +272,7 @@ MainWindow::onSaveClicked()
     startProcessingThread();
 }
 
-void MainWindow::on_uiCallback(boost::function<void()> f)
+void MainWindow::on_uiCallback(boost::function<void()> f, std::pair<void*, Loki::TypeInfo> source)
 {
 	static boost::posix_time::ptime last_end;
 	try
@@ -279,8 +280,12 @@ void MainWindow::on_uiCallback(boost::function<void()> f)
 		rmt_ScopedCPUSample(on_uiCallback);
 		if (processingThreadActive)
 		{
-			if (f)
-				f();
+            if (f)
+            {
+                if(Parameters::UI::InvalidCallbacks::check_valid(source.first))
+                    f();
+            }
+				
 		}
 	}
 	catch (cv::Exception &e)
@@ -295,9 +300,9 @@ void MainWindow::on_uiCallback(boost::function<void()> f)
 }
 
 
-void MainWindow::processingThread_uiCallback(boost::function<void ()> f)
+void MainWindow::processingThread_uiCallback(boost::function<void ()> f, std::pair<void*, Loki::TypeInfo> source)
 {
-    emit uiCallback(f);
+    emit uiCallback(f, source);
 }
 
 void
@@ -466,21 +471,6 @@ void MainWindow::onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::
 
 void MainWindow::addNode(EagleLib::Node::Ptr node)
 {
-    if(node->nodeName == "OGLImageDisplay")
-    {
-        //node->gpuDisplayCallback = boost::bind(&MainWindow::oglDisplay, this, _1, _2);
-    }
-    if(node->nodeName == "QtImageDisplay")
-    {
-        //node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
-    }
-    if(node->nodeName == "KeyPointDisplay")
-    {
-        //node->cpuDisplayCallback = boost::bind(&MainWindow::qtDisplay, this, _1, _2);
-    }
-
-    
-    //node->onParameterAdded.connect(boost::bind(&MainWindow::newParameter,this, _1));
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);

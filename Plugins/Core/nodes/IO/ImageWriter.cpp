@@ -45,7 +45,7 @@ void ImageWriter::Init(bool firstInit)
     updateParameter<std::string>("Base name", "Image");
     updateParameter("Extension", param);
     updateParameter("Frequency", -1);
-    updateParameter<boost::function<void(void)>>("Save image", boost::bind(&ImageWriter::requestWrite, this), Parameters::Parameter::Output);
+    updateParameter<boost::function<void(void)>>("Save image", boost::bind(&ImageWriter::requestWrite, this))->type = Parameters::Parameter::Output;
 	updateParameter<Parameters::WriteDirectory>("Save Diretory", Parameters::WriteDirectory(""));
 }
 

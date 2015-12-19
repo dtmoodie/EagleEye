@@ -128,26 +128,25 @@ void Node::onParameterAdded()
         (*signal)(this);
     }
 }
+
+Parameters::Parameter* Node::addParameter(Parameters::Parameter::Ptr param)
+{
+    ParameteredObject::addParameter(param);
+    param->SetTreeRoot(fullTreeName);
+    onParameterAdded();
+    return param.get();
+}
 void Node::onUpdate(cv::cuda::Stream* stream)
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {
         auto signalHandler = table->GetSingleton<ISignalHandler>();
-        auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(Node*)>>("NodeUpdated");
+        auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(EagleLib::Node*)>>("NodeUpdated");
         (*signal)(this);
     }
 }
-size_t Node::addParameter(Parameters::Parameter::Ptr param)
-{
-    parameters.push_back(param);
-    parameters[parameters.size() - 1]->SetTreeRoot(fullTreeName);
-    onParameterAdded();
-    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-    pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&Node::onUpdate, this, _1)));
 
-    return parameters.size() - 1;
-}
 Node::~Node()
 {
     if(parent)
@@ -358,7 +357,7 @@ Node::getNodesInScope(std::vector<Node *> &nodes)
     }
 }
 
-Parameters::Parameter::Ptr Node::getParameter(int idx)
+/*Parameters::Parameter::Ptr Node::getParameter(int idx)
 {
 	NODE_LOG(trace);
 	if (idx < parameters.size())
@@ -377,6 +376,7 @@ Parameters::Parameter::Ptr Node::getParameter(const std::string& name)
 	}
 	return Parameters::Parameter::Ptr();
 }
+*/
 std::vector<std::string> Node::listParameters()
 {
 	NODE_LOG(trace);
@@ -630,7 +630,8 @@ Node::Init(bool firstInit)
 	{
 		for (auto& param : parameters)
 		{
-			pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&Node::onUpdate, this, _1)));
+			//pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&Node::onUpdate, this, _1)));
+            RegisterParameterCallback(param.get(), boost::bind(&Node::onUpdate, this, _1));
 		}
 	}
 }
@@ -641,7 +642,7 @@ Node::Init(const std::string &configFile)
     ui_collector::setNode(this);
 	NODE_LOG(trace);
 }
-void Node::RegisterParameterCallback(int idx, boost::function<void(cv::cuda::Stream*)> callback)
+/*void Node::RegisterParameterCallback(int idx, boost::function<void(cv::cuda::Stream*)> callback)
 {
 	NODE_LOG(trace);
 	auto param = getParameter(idx);
@@ -660,7 +661,7 @@ void Node::RegisterParameterCallback(const std::string& name, boost::function<vo
         boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
 		pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(callback));
 	}
-}
+}*/
 void Node::RegisterSignalConnection(boost::signals2::connection& connection)
 {
 	boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
@@ -692,57 +693,55 @@ Node::Init(const cv::FileNode& configNode)
 		}
 		else
 		{
-			//log(Error, "No node found with the name " + name);
 			NODE_LOG(error) << "No node found with the name " << name;
 		}
     }
-    cv::FileNode paramNode =  configNode["Parameters"];
-    for(size_t i = 0; i < parameters.size(); ++i)
+    cv::FileNode paramNode = configNode["Parameters"];
+    for (size_t i = 0; i < parameters.size(); ++i)
     {
-		try
-		{
-			if (parameters[i]->type & Parameters::Parameter::Input)
-			{
-				auto node = paramNode[parameters[i]->GetName()];
-				auto inputName = (std::string)node["InputParameter"];
-				if (inputName.size())
-				{
-					auto idx = inputName.find(':');
-					auto nodeName = inputName.substr(0, idx);
-					auto paramName = inputName.substr(idx + 1);
-					auto nodes = getNodesInScope();
-					auto node = getNodeInScope(nodeName);
-					if (node)
-					{
-						auto param = node->getParameter(paramName);
-						if (param)
-						{
-							auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(parameters[i]);
-							inputParam->SetInput(param);
-						}
-					}
-				}
+        try
+        {
+            if (parameters[i]->type & Parameters::Parameter::Input)
+            {
+                auto node = paramNode[parameters[i]->GetName()];
+                auto inputName = (std::string)node["InputParameter"];
+                if (inputName.size())
+                {
+                    auto idx = inputName.find(':');
+                    auto nodeName = inputName.substr(0, idx);
+                    auto paramName = inputName.substr(idx + 1);
+                    auto nodes = getNodesInScope();
+                    auto node = getNodeInScope(nodeName);
+                    if (node)
+                    {
+                        auto param = node->getParameter(paramName);
+                        if (param)
+                        {
+                            auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(parameters[i]);
+                            inputParam->SetInput(param);
+                        }
+                    }
+                }
 
-			}else
-			{
-				if (parameters[i]->type & Parameters::Parameter::Control)
-					Parameters::Persistence::cv::DeSerialize(&paramNode, parameters[i].get());
-			}
-		}
-		catch (cv::Exception &e)
-		{
-			NODE_LOG(error) << "Deserialization failed for " << parameters[i]->GetName() << " with type " << parameters[i]->GetTypeInfo().name() << std::endl;
-		}
+            }
+            else
+            {
+                if (parameters[i]->type & Parameters::Parameter::Control)
+                    Parameters::Persistence::cv::DeSerialize(&paramNode, parameters[i].get());
+            }
+        }
+        catch (cv::Exception &e)
+        {
+            BOOST_LOG_TRIVIAL(error) << "Deserialization failed for " << parameters[i]->GetName() << " with type " << parameters[i]->GetTypeInfo().name() << std::endl;
+        }
     }
-    // Figure out parameter loading :/  Need some kind of factory for all of the parameter types
 }
 
 void
 Node::Serialize(ISimpleSerializer *pSerializer)
 {
 	NODE_LOG(trace) << " Serializing";
-    IObject::Serialize(pSerializer);
-    SERIALIZE(parameters);
+    ParameteredObject::Serialize(pSerializer);
     SERIALIZE(children);
     SERIALIZE(treeName);
     SERIALIZE(nodeName);

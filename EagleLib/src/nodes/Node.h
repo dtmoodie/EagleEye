@@ -53,6 +53,9 @@
 #include "ObjectInterfacePerModule.h"
 #include "IObject.h"
 #include "EagleLib/Defs.hpp"
+#include "ParameteredObject.h"
+
+
 
 #define TIME Clock(__LINE__);
 
@@ -114,7 +117,7 @@ namespace EagleLib
 		NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo);
 	};
 
-    class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, IObject>, public IObjectNotifiable
+    class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, ParameteredObject>, public IObjectNotifiable
     {
     public:
         typedef shared_ptr<Node> Ptr;
@@ -140,7 +143,7 @@ namespace EagleLib
 		
 		virtual void					reset();
 
-		
+        virtual Parameters::Parameter* addParameter(Parameters::Parameter::Ptr param);
 
         /**
          * @brief getName depricated?  Idea was to recursively go through parent nodes and rebuild my tree name, useful I guess once
@@ -347,14 +350,14 @@ namespace EagleLib
          * @param idx
          * @return
          */
-		virtual Parameters::Parameter::Ptr getParameter(int idx);
+		//virtual Parameters::Parameter::Ptr getParameter(int idx);
 
         /**
          * @brief getParameter
          * @param name
          * @return
          */
-		virtual Parameters::Parameter::Ptr getParameter(const std::string& name);
+		//virtual Parameters::Parameter::Ptr getParameter(const std::string& name);
 		
         /**
          * @brief addParameter
@@ -370,10 +373,11 @@ namespace EagleLib
 		{
 			return 0;
 		}*/
-
-		void RegisterParameterCallback(int idx, boost::function<void(cv::cuda::Stream*)> callback);
+        void RegisterSignalConnection(boost::signals2::connection& connection);
+        virtual void onUpdate(cv::cuda::Stream* stream);
+		/*void RegisterParameterCallback(int idx, boost::function<void(cv::cuda::Stream*)> callback);
 		void RegisterParameterCallback(const std::string& name, boost::function<void(cv::cuda::Stream*)> callback);
-		void RegisterSignalConnection(boost::signals2::connection& connection);
+		
 
 		template<typename T> size_t registerParameter(
 			const std::string& name,
@@ -390,18 +394,18 @@ namespace EagleLib
 				const T& data,
 				Parameters::Parameter::ParameterType type_ = Parameters::Parameter::Control,
 				const std::string& toolTip_ = std::string(), 
-				bool ownsData = false/*, typename std::enable_if<!std::is_pointer<T>::value, void>::type* dummy_enable = nullptr*/)
+				bool ownsData = false)
 		{
             return addParameter(typename Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data, type_, toolTip_)));
 		}
-
+        */
         /**
           * @brief addInputParameter is used to define an input parameter for a node
           * @param name is the internal name of the input parameter
           * @param toolTip_ is the tooltip to be displayed on the UI
           * @return the index of the parameter
           */
-         template<typename T> size_t
+        /* template<typename T> size_t
 			 addInputParameter(const std::string& name, const std::string& toolTip_ = std::string(), const boost::function<bool(Parameters::Parameter*)>& qualifier_ = boost::function<bool(Parameters::Parameter*)>())
 		{
             return addParameter(typename Parameters::TypedInputParameter<T>::Ptr(new Parameters::TypedInputParameter<T>(name, toolTip_, qualifier_)));
@@ -596,7 +600,7 @@ namespace EagleLib
 					TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + param->GetTypeInfo().name(), __FUNCTION__, __FILE__, __LINE__);
 			return typedParam;
 		}
-
+        */
         // ****************************************************************************************************************
         //
         //									Dynamic reloading and persistence
@@ -662,7 +666,7 @@ namespace EagleLib
 		// Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
         std::string															treeName;
         // Vector of parameters for this node
-        std::vector< Parameters::Parameter::Ptr >							parameters;
+        //std::vector< Parameters::Parameter::Ptr >							parameters;
 
 		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
 		bool																externalDisplay;
@@ -675,7 +679,6 @@ namespace EagleLib
         boost::recursive_mutex                                              mtx;
 		
         void onParameterAdded();
-        void onUpdate(cv::cuda::Stream* stream);
         double GetProcessingTime() const;
         void Clock(int line_num);
 		

@@ -8,7 +8,7 @@ using namespace EagleLib;
 void ImageLoader::Init(bool firstInit)
 {
     Node::Init(firstInit);
-    updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/oimg.jpeg"), Parameters::Parameter::Control, "Path to image file");
+    updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/oimg.jpeg"))->SetTooltip("Path to image file");
     parameters[0]->changed = true;
 }
 void ImageLoader::load()
@@ -63,7 +63,7 @@ bool DirectoryLoader::SkipEmpty() const
 }
 void DirectoryLoader::Init(bool firstInit)
 {
-    updateParameter<Parameters::ReadDirectory>("Directory", boost::filesystem::path("/home/dan/build/EagleEye/bin"), Parameters::Parameter::Control, "Path to directory");
+    updateParameter<Parameters::ReadDirectory>("Directory", boost::filesystem::path("/home/dan/build/EagleEye/bin"))->SetTooltip( "Path to directory");
     updateParameter<bool>("Repeat", true);
     updateParameter<boost::function<void(void)>>("Restart", boost::bind(&DirectoryLoader::restart, this));
     fileIdx = 0;

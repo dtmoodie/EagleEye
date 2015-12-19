@@ -27,13 +27,13 @@ cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
 }
 cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    updateParameter("Output image", img, Parameters::Parameter::Output);
+    updateParameter("Output image", img)->type = Parameters::Parameter::Output;
     return img;
 }
 
 void ExportInputImage::Init(bool firstInit)
 {
-    updateParameter("Output image", cv::cuda::GpuMat(), Parameters::Parameter::Output);
+    updateParameter("Output image", cv::cuda::GpuMat())->type = Parameters::Parameter::Output;
 }
 
 void ImageInfo::Init(bool firstInit)
@@ -46,7 +46,7 @@ void ImageInfo::Init(bool firstInit)
     dataType.addEnum(ENUM(CV_32S));
     dataType.addEnum(ENUM(CV_32F));
     dataType.addEnum(ENUM(CV_64F));
-    updateParameter<Parameters::EnumParameter>("Type",dataType, Parameters::Parameter::State);
+    updateParameter<Parameters::EnumParameter>("Type",dataType)->type = Parameters::Parameter::State;
 }
 cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
@@ -62,12 +62,12 @@ cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     //str << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
     //log(Status, str.str());
 	NODE_LOG(info) << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
-	updateParameter<int>("Depth", img.depth(), Parameters::Parameter::State);
-	updateParameter<int>("Rows", img.rows, Parameters::Parameter::State);
-	updateParameter<int>("Cols", img.cols, Parameters::Parameter::State);
-	updateParameter<int>("Channels", img.channels(), Parameters::Parameter::State);
-	updateParameter<int>("Step", img.step, Parameters::Parameter::State);
-	updateParameter<int>("Ref count", *img.refcount, Parameters::Parameter::State);
+	updateParameter<int>("Depth", img.depth())->type = Parameters::Parameter::State;
+	updateParameter<int>("Rows", img.rows)->type = Parameters::Parameter::State;
+	updateParameter<int>("Cols", img.cols)->type = Parameters::Parameter::State;
+	updateParameter<int>("Channels", img.channels())->type = Parameters::Parameter::State;
+	updateParameter<int>("Step", img.step)->type = Parameters::Parameter::State;
+	updateParameter<int>("Ref count", *img.refcount)->type = Parameters::Parameter::State;
     return img;
 }
 void Mat2Tensor::Init(bool firstInit)
@@ -264,20 +264,20 @@ cv::cuda::GpuMat CameraSync::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
 		int offset = *getParameter<int>(0)->Data();
 		if (offset == 0)
 		{
-			updateParameter<unsigned int>("Camera 1 offset", 0, Parameters::Parameter::Output);
-			updateParameter<unsigned int>("Camera 2 offset", 0, Parameters::Parameter::Output);
+			updateParameter<unsigned int>("Camera 1 offset", 0)->type =  Parameters::Parameter::Output;
+			updateParameter<unsigned int>("Camera 2 offset", 0)->type =  Parameters::Parameter::Output;
 		}
 		else
 		{
 			if (offset < 0)
 			{
-				updateParameter<unsigned int>("Camera 1 offset", abs(offset), Parameters::Parameter::Output);
-				updateParameter<unsigned int>("Camera 2 offset", 0, Parameters::Parameter::Output);
+				updateParameter<unsigned int>("Camera 1 offset", abs(offset))->type =  Parameters::Parameter::Output;
+				updateParameter<unsigned int>("Camera 2 offset", 0)->type =  Parameters::Parameter::Output;
 			}
 			else
 			{
-				updateParameter<unsigned int>("Camera 1 offset", 0, Parameters::Parameter::Output);
-				updateParameter<unsigned int>("Camera 2 offset", abs(offset), Parameters::Parameter::Output);
+				updateParameter<unsigned int>("Camera 1 offset", 0)->type = Parameters::Parameter::Output;
+				updateParameter<unsigned int>("Camera 2 offset", abs(offset))->type =  Parameters::Parameter::Output;
 			}
 		}	
 		parameters[0]->changed = false;
@@ -291,8 +291,8 @@ bool CameraSync::SkipEmpty() const
 void CameraSync::Init(bool firstInit)
 {
 	updateParameter<int>("Camera offset", 0);
-	updateParameter<unsigned int>("Camera 1 offset", 0, Parameters::Parameter::Output);
-	updateParameter<unsigned int>("Camera 2 offset", 0, Parameters::Parameter::Output);
+	updateParameter<unsigned int>("Camera 1 offset", 0)->type =  Parameters::Parameter::Output;
+	updateParameter<unsigned int>("Camera 2 offset", 0)->type = Parameters::Parameter::Output;
 	
 }
 

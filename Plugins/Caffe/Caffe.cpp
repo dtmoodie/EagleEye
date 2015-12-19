@@ -324,7 +324,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         }
         objects[i].boundingBox = (*inputROIs)[i];
     }
-    updateParameter("Detections", objects, Parameters::Parameter::Output);
+    updateParameter("Detections", objects)->type =  Parameters::Parameter::Output;
     auto maxvalue = std::max_element(begin, end);
     TIME
     int idx = maxvalue - begin;

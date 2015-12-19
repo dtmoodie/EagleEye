@@ -18,8 +18,8 @@ void OtsuThreshold::Init(bool firstInit)
 {
     if(firstInit)
     {
-        addInputParameter<cv::cuda::GpuMat>("Input Histogram", "Optional");
-        addInputParameter<cv::Mat>("Input range", "Required if input histogram is provided");
+        addInputParameter<cv::cuda::GpuMat>("Input Histogram")->SetTooltip("Optional");
+        addInputParameter<cv::Mat>("Input range")->SetTooltip("Required if input histogram is provided");
     }
 
 }
@@ -163,7 +163,7 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     }
     for(int i = 0; i < optValue.size(); ++i)
     {
-        updateParameter("Optimal threshold " + boost::lexical_cast<std::string>(i), optValue[i], Parameters::Parameter::Output);
+        updateParameter("Optimal threshold " + boost::lexical_cast<std::string>(i), optValue[i])->type =  Parameters::Parameter::Output;
     }
     return img;
 }
@@ -199,7 +199,7 @@ cv::cuda::GpuMat SegmentMOG2::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     {
         cv::cuda::GpuMat mask;
         mog2->apply(img, mask, *getParameter<double>(3)->Data(), stream);
-        updateParameter("Foreground mask", mask, Parameters::Parameter::Output);
+        updateParameter("Foreground mask", mask)->type =  Parameters::Parameter::Output;
     }
     return img;
 }
@@ -241,8 +241,8 @@ void SegmentGrabCut::Init(bool firstInit)
 {
     if(firstInit)
     {
-        addInputParameter<cv::Mat>("Initial mask", "Optional");
-        addInputParameter<cv::Rect>("ROI", "Optional");
+        addInputParameter<cv::Mat>("Initial mask")->SetTooltip("Optional");
+        addInputParameter<cv::Rect>("ROI")->SetTooltip("Optional");
         addInputParameter<cv::cuda::GpuMat>("Gpu initial mask");
         Parameters::EnumParameter param;
         param.addEnum(ENUM(cv::GC_INIT_WITH_RECT));
@@ -353,9 +353,9 @@ cv::cuda::GpuMat SegmentKMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     cv::cuda::GpuMat d_clusters, d_labels;
     d_clusters.upload(clusters, stream);
     d_labels.upload(labels, stream);
-    updateParameter("Clusters", d_clusters, Parameters::Parameter::Output);
-    updateParameter("Labels", d_labels, Parameters::Parameter::Output);
-    updateParameter("Compactedness", ret, Parameters::Parameter::Output);
+    updateParameter("Clusters", d_clusters)->type = Parameters::Parameter::Output;
+    updateParameter("Labels", d_labels)->type = Parameters::Parameter::Output;
+    updateParameter("Compactedness", ret)->type =  Parameters::Parameter::Output;
     return img;
 }
 void
@@ -454,7 +454,7 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
             else
                 cv::rectangle(h_mask, cv::Rect(origin.val[0], origin.val[1], size.val[0], size.val[1]), cv::Scalar(0),-1);
         }
-        updateParameter("Manually defined mask", cv::cuda::GpuMat(h_mask), Parameters::Parameter::Output);
+        updateParameter("Manually defined mask", cv::cuda::GpuMat(h_mask))->type = Parameters::Parameter::Output;
         parameters[0]->changed = false;
         parameters[1]->changed = false;
         parameters[2]->changed = false;
@@ -466,14 +466,14 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
 void SLaT::Init(bool firstInit)
 {
 	Node::Init(firstInit);
-	updateParameter("Lambda", double(0.1), Parameters::Parameter::Control, "For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities");
-	updateParameter("Alpha", double(20.0), Parameters::Parameter::Control, "For bigger values, solution will be more flat, for smaller values, solution will be more rough.");
-	updateParameter("Temporal", double(0.0), Parameters::Parameter::Control, "For bigger values, solution will be driven to be similar to the previous frame, smaller values will allow for more interframe independence");
-	updateParameter("Iterations", int(10000), Parameters::Parameter::Control, "Max number of iterations to perform");
+	updateParameter("Lambda", double(0.1))->SetTooltip( "For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities");
+	updateParameter("Alpha", double(20.0))->SetTooltip("For bigger values, solution will be more flat, for smaller values, solution will be more rough.");
+	updateParameter("Temporal", double(0.0))->SetTooltip("For bigger values, solution will be driven to be similar to the previous frame, smaller values will allow for more interframe independence");
+	updateParameter("Iterations", int(10000))->SetTooltip("Max number of iterations to perform");
 	updateParameter("Epsilon", double(5e-5));
-	updateParameter("Stop K", int(10), Parameters::Parameter::Control, "How often epsilon should be evaluated and checked");
-	updateParameter("Adapt Params", false, Parameters::Parameter::Control, "If true: lambda and alpha will be adapted so that the solution will look more or less the same, for one and the same input image and for different scalings.");
-	updateParameter("Weight", false, Parameters::Parameter::Control, "If true: The regularizer will be adjust to smooth less at pixels with high edge probability");
+	updateParameter("Stop K", int(10))->SetTooltip("How often epsilon should be evaluated and checked");
+	updateParameter("Adapt Params", false)->SetTooltip("If true: lambda and alpha will be adapted so that the solution will look more or less the same, for one and the same input image and for different scalings.");
+	updateParameter("Weight", false)->SetTooltip("If true: The regularizer will be adjust to smooth less at pixels with high edge probability");
 	updateParameter("Overlay edges", false);
 	updateParameter("K segments", int(10));
 	updateParameter("KMeans iterations", int(5));

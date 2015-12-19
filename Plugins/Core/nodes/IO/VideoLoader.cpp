@@ -21,15 +21,15 @@ VideoLoader::Init(bool firstInit)
     Node::Init(firstInit);
     if(firstInit)
     {
-		updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/trailer.mp4"), Parameters::Parameter::Control, "Path to video file");
-		updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader, Parameters::Parameter::Output);
-		updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader, Parameters::Parameter::Output);
+		updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/trailer.mp4"))->SetTooltip("Path to video file");
+		updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader)->type = Parameters::Parameter::Output;
+		updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader)->type =  Parameters::Parameter::Output;
         
         updateParameter<bool>("Loop",true);
-		updateParameter<bool>("End of video", false, Parameters::Parameter::Output);
+		updateParameter<bool>("End of video", false)->type = Parameters::Parameter::Output;
         load = false;
     }
-	updateParameter<boost::function<void(void)>>("Restart Video", boost::bind(&VideoLoader::restartVideo, this), Parameters::Parameter::Control);
+	updateParameter<boost::function<void(void)>>("Restart Video", boost::bind(&VideoLoader::restartVideo, this));
     h_img.resize(20);
 }
 void VideoLoader::Serialize(ISimpleSerializer *pSerializer)
@@ -68,10 +68,10 @@ void VideoLoader::ReadThread()
             }
             else
             {
-                updateParameter<double>("Timestamp", h_videoReader->get(cv::CAP_PROP_POS_MSEC), Parameters::Parameter::State);
-                updateParameter<int>("Frame index", (int)h_videoReader->get(cv::CAP_PROP_POS_FRAMES), Parameters::Parameter::Output);
-                updateParameter<int>("Total num frames", (int)h_videoReader->get(cv::CAP_PROP_FRAME_COUNT), Parameters::Parameter::Output); 
-                updateParameter<double>("% Complete", h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO), Parameters::Parameter::State);
+                updateParameter<double>("Timestamp", h_videoReader->get(cv::CAP_PROP_POS_MSEC))->type = Parameters::Parameter::State;
+                updateParameter<int>("Frame index", (int)h_videoReader->get(cv::CAP_PROP_POS_FRAMES))->type =  Parameters::Parameter::Output;
+                updateParameter<int>("Total num frames", (int)h_videoReader->get(cv::CAP_PROP_FRAME_COUNT))->type =  Parameters::Parameter::Output; 
+                updateParameter<double>("% Complete", h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO))->type =  Parameters::Parameter::State;
             }
             d_img.upload(_h_img, uploadStream);
         }
@@ -133,10 +133,10 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 		   NODE_LOG(error) << err.what();
            return img;
        }
-		   updateParameter<double>("Timestamp", h_videoReader->get(cv::CAP_PROP_POS_MSEC), Parameters::Parameter::State);
-		   updateParameter<int>("Frame index", (int)h_videoReader->get(cv::CAP_PROP_POS_FRAMES), Parameters::Parameter::Output);
-		   updateParameter<double>("% Complete", h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO), Parameters::Parameter::State);
-		   updateParameter("Source Image", img, Parameters::Parameter::Output);
+		   updateParameter<double>("Timestamp", h_videoReader->get(cv::CAP_PROP_POS_MSEC))->type = Parameters::Parameter::State;
+		   updateParameter<int>("Frame index", (int)h_videoReader->get(cv::CAP_PROP_POS_FRAMES))->type = Parameters::Parameter::Output;
+		   updateParameter<double>("% Complete", h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO))->type =  Parameters::Parameter::State;
+		   updateParameter("Source Image", img)->type = Parameters::Parameter::Output;
 	   TIME
     }
     if(firstLoad && !img.empty())
@@ -206,9 +206,9 @@ VideoLoader::loadFile()
         -   **CV_CAP_PROP_RECTIFICATION** Rectification flag for stereo cameras (note: only supported
             by DC1394 v 2.x backend currently)*/
         updateParameter<double>("Timestamp",h_videoReader->get(cv::CAP_PROP_POS_MSEC));
-        updateParameter<int>("Frame index",(int)h_videoReader->get(cv::CAP_PROP_POS_FRAMES), Parameters::Parameter::Output);
+        updateParameter<int>("Frame index",(int)h_videoReader->get(cv::CAP_PROP_POS_FRAMES))->type =  Parameters::Parameter::Output;
         updateParameter<double>("% Complete",h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO));
-        updateParameter<double>("Frame count",h_videoReader->get(cv::CAP_PROP_FRAME_COUNT), Parameters::Parameter::Output);
+        updateParameter<double>("Frame count",h_videoReader->get(cv::CAP_PROP_FRAME_COUNT))->type =  Parameters::Parameter::Output;
 
     }
 
@@ -278,9 +278,9 @@ VideoLoader::loadFile()
 			break;
 		}
 		
-		updateParameter<std::string>("Codec", codec);
-		updateParameter<std::string>("Video Chroma Format", chromaFormat, Parameters::Parameter::State);
-		updateParameter<std::string>("Resolution", resolution, Parameters::Parameter::State);
+		updateParameter<std::string>("Codec", codec)->type = Parameters::Parameter::State;
+		updateParameter<std::string>("Video Chroma Format", chromaFormat)->type =  Parameters::Parameter::State;
+		updateParameter<std::string>("Resolution", resolution)->type =  Parameters::Parameter::State;
 	}
     fileName->changed = false;
     updateParameter<bool>(5, false);

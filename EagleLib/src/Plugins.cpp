@@ -9,13 +9,11 @@
 bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
     static int projectCount = 0;
-	//std::cout << "Loading plugin " << fullPluginPath << std::endl;
     BOOST_LOG_TRIVIAL(info) << "Loading plugin " << fullPluginPath;
 	HMODULE handle = LoadLibrary(fullPluginPath.c_str());
 	if (handle == nullptr)
 	{
 		auto err = GetLastError();
-		//std::cout << "Failed to load library due to: " << err << std::endl;
         BOOST_LOG_TRIVIAL(error) << "Failed to load library due to: " << err;
 		return false;
 	}

@@ -7,6 +7,7 @@
 #include "LokiTypeInfo.h"
 #include <opencv2/core/base.hpp>
 
+
 namespace EagleLib
 {
 

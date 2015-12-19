@@ -12,13 +12,13 @@ void GoodFeaturesToTrackDetector::Init(bool firstInit)
     if(firstInit)
     {
         updateParameter("Feature Detector",
-			cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1), Parameters::Parameter::Output);
+			cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1))->type = Parameters::Parameter::Output;
         updateParameter("Max corners",
-			int(1000), Parameters::Parameter::Control);
+			int(1000));
         updateParameter("Quality Level",
             double(0.01));
         updateParameter("Min Distance",
-			double(0.0), Parameters::Parameter::Control, "The minimum distance between detected points");
+			double(0.0))->SetTooltip("The minimum distance between detected points");
         updateParameter("Block Size",
             int(3));
         updateParameter("Use harris",
@@ -28,7 +28,7 @@ void GoodFeaturesToTrackDetector::Init(bool firstInit)
         updateParameter("Enabled",
             false);
         updateParameter<DetectAndComputeFunctor>("Detection functor",
-			boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2, _3, _4, _5), Parameters::Parameter::Output);
+			boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2, _3, _4, _5))->type = Parameters::Parameter::Output;
         greyImgs.resize(5);
         addInputParameter<cv::cuda::GpuMat>("Mask");
     }
@@ -69,13 +69,14 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         return img;
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
 
-    auto keyPoints = detectedPoints.getFront();
+    //auto keyPoints = detectedPoints.getFront();
+    cv::cuda::GpuMat key_points;
     if(mask)
     {
-        detect(img, *mask, keyPoints->first, keyPoints->second, stream);
+        detect(img, *mask, key_points, cv::cuda::GpuMat(), stream);
     }else
     {
-        detect(img, cv::cuda::GpuMat(), keyPoints->first, keyPoints->second, stream);
+        detect(img, cv::cuda::GpuMat(), key_points, cv::cuda::GpuMat(), stream);
     }
     return img;
 }
@@ -109,8 +110,8 @@ void GoodFeaturesToTrackDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat 
         return;
     }
     detector->detect(*greyImg, keyPoints, mask, stream);
-	updateParameter("Detected Corners", keyPoints, Parameters::Parameter::Output);
-	updateParameter("Num corners", keyPoints.cols, Parameters::Parameter::State);
+	updateParameter("Detected Corners", keyPoints)->type =  Parameters::Parameter::Output;
+	updateParameter("Num corners", keyPoints.cols)->type = Parameters::Parameter::State;
 }
 
 
@@ -264,7 +265,7 @@ void HistogramRange::Init(bool firstInit)
         updateParameter<double>("Lower bound", 0.0);
         updateParameter<double>("Upper bound", 1.0);
         updateParameter<int>("Bins", 100);
-        updateParameter<cv::cuda::GpuMat>("Histogram", cv::cuda::GpuMat(), Parameters::Parameter::Output);
+        updateParameter<cv::cuda::GpuMat>("Histogram", cv::cuda::GpuMat())->type =  Parameters::Parameter::Output;
         updateLevels(CV_8U);
     }
 }
@@ -319,7 +320,7 @@ void HistogramRange::updateLevels(int type)
             h_mat.at<int>(i) = val;
     }
     levels.upload(h_mat);
-    updateParameter("Histogram bins", h_mat, Parameters::Parameter::Output);
+    updateParameter("Histogram bins", h_mat)->type =  Parameters::Parameter::Output;
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrackDetector)

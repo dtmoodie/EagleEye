@@ -19,8 +19,8 @@ void FFT::Init(bool firstInit)
         updateParameter("Desired output", param);
         //updateParameter("Desired output", int(-1));     // 4
         updateParameter("Log scale", true);             // 5
-		updateParameter<cv::cuda::GpuMat>("Magnitude", cv::cuda::GpuMat(), Parameters::Parameter::Output);  // 6
-		updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat(), Parameters::Parameter::Output);      // 7
+		updateParameter<cv::cuda::GpuMat>("Magnitude", cv::cuda::GpuMat())->type =Parameters::Parameter::Output;  // 6
+		updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat())->type =  Parameters::Parameter::Output;      // 7
     }
     updateParameter("Use optimized size",false);
     destBuf.resize(5);
@@ -72,7 +72,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     cv::cuda::GpuMat dest = *destPtr; // This is done to make sure the destBuf gets allocated correctly and doesn't get de-allocated.
     TIME
     int channel = getParameter<Parameters::EnumParameter>(4)->Data()->getValue();
-	updateParameter("Coefficients", dest, Parameters::Parameter::Output);
+	updateParameter("Coefficients", dest)->type =  Parameters::Parameter::Output;
     TIME
     if(parameters[4]->changed)
     {

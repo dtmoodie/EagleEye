@@ -21,7 +21,7 @@ void FindCheckerboard::Init(bool firstInit)
 	{
 		updateParameter("Num corners X", int(6));
 		updateParameter("Num corners Y", int(9));
-		updateParameter("Corner distance", double(18.75), Parameters::Parameter::Control, "Distance between corners in mm");
+		updateParameter("Corner distance", double(18.75))->SetTooltip( "Distance between corners in mm");
 		addInputParameter<TrackSparseFunctor>("Sparse tracking functor");
 	}
 	
@@ -74,7 +74,8 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 				prevFramePoints = prevFramePoints.reshape(2, 1);
 				prevFramePoints.copyTo(currentFramePoints, stream);
 				cv::drawChessboardCorners(h_img, cv::Size(numX, numY), imagePoints, found);
-				Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
+				Parameters::UI::UiCallbackService::Instance()->post(
+                    boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img), std::make_pair((void*)this, Loki::TypeInfo(typeid(EagleLib::Node))));
 				prevGreyFrame = currentGreyFrame;
 				TIME
 			}
@@ -154,10 +155,10 @@ void CalibrateCamera::Init(bool firstInit)
 		updateParameter<Parameters::WriteFile>("Save file", Parameters::WriteFile("Camera Matrix.yml"));
 		updateParameter("Enabled", true);
     }
-    updateParameterPtr("Image points 2d", &imagePointCollection, Parameters::Parameter::Output);
-    updateParameterPtr("Object points 3d", &objectPointCollection, Parameters::Parameter::Output);
-	updateParameter("Camera matrix", K, Parameters::Parameter::State);
-	updateParameter("Distortion matrix", distortionCoeffs, Parameters::Parameter::State);
+    updateParameterPtr("Image points 2d", &imagePointCollection)->type = Parameters::Parameter::Output;
+    updateParameterPtr("Object points 3d", &objectPointCollection)->type = Parameters::Parameter::Output;
+	updateParameter("Camera matrix", K)->type = Parameters::Parameter::State;
+	updateParameter("Distortion matrix", distortionCoeffs)->type = Parameters::Parameter::State;
     lastCalibration = 0;
 }
 void CalibrateCamera::save()
@@ -258,9 +259,9 @@ void CalibrateCamera::calibrate()
 		NODE_LOG(info) << "Sufficient calibration achieved, turning off calibration routine";
         enabled = false;
     }
-	updateParameter("Camera matrix", K, Parameters::Parameter::State);
-    updateParameter("Distortion matrix", distortionCoeffs, Parameters::Parameter::State);
-	updateParameter("Reprojection error", quality, Parameters::Parameter::State);
+	updateParameter("Camera matrix", K)->type =Parameters::Parameter::State;
+    updateParameter("Distortion matrix", distortionCoeffs)->type = Parameters::Parameter::State;
+	updateParameter("Reprojection error", quality)->type = Parameters::Parameter::State;
     lastCalibration = objectPointCollection.size();
 }
 

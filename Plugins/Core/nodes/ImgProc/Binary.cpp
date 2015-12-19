@@ -95,7 +95,7 @@ void FindContours::Init(bool firstInit)
         method.addEnum(ENUM(cv::CHAIN_APPROX_TC89_KCOS));
         updateParameter("Mode", mode);      // 0
         updateParameter("Method", method);  // 1
-        updateParameter<std::vector<std::vector<cv::Point>>>("Contours", std::vector<std::vector<cv::Point>>(), Parameters::Parameter::Output); // 2
+        updateParameter<std::vector<std::vector<cv::Point>>>("Contours", std::vector<std::vector<cv::Point>>())->type = Parameters::Parameter::Output; // 2
         updateParameter<std::vector<cv::Vec4i>>("Hierarchy", std::vector<cv::Vec4i>()); // 3
         updateParameter<bool>("Calculate contour Area", false); // 4
         updateParameter<bool>("Calculate Moments", false);  // 5
@@ -122,7 +122,7 @@ void FindContours::findContours(cv::cuda::HostMem h_img)
 		*getParameter<std::vector<cv::Vec4i>>(3)->Data(),
 		getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
 		getParameter<Parameters::EnumParameter>(1)->Data()->currentSelection);
-	updateParameter<int>("Contours found", ptr->size(), Parameters::Parameter::State);
+	updateParameter<int>("Contours found", ptr->size())->type =  Parameters::Parameter::State;
 	parameters[2]->changed = true;
 	parameters[3]->changed = true;
 	if (*getParameter<bool>(4)->Data())
@@ -191,8 +191,8 @@ void ContourBoundingBox::Init(bool firstInit)
     {
         addInputParameter<std::vector<std::vector<cv::Point>>>("Contours");
         addInputParameter<std::vector<cv::Vec4i>>("Hierarchy");
-        addParameter<cv::Scalar>("Box color", cv::Scalar(0,0,255));
-        addParameter<int>("Line thickness", 2);
+        ParameteredObject::addParameter<cv::Scalar>("Box color", cv::Scalar(0,0,255));
+        ParameteredObject::addParameter<int>("Line thickness", 2);
         addInputParameter<std::vector<std::pair<int,double>>>("Contour Area");
         updateParameter<bool>("Use filtered area", false);
     }
@@ -213,7 +213,7 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     auto mergeParam = getParameter<bool>("Merge contours");
     if(mergeParam && mergeParam->changed)
     {
-        updateParameter<int>("Separation distance", 5, Parameters::Parameter::Control, "Max distance between contours to still merge contours");
+        updateParameter<int>("Separation distance", 5)->SetTooltip("Max distance between contours to still merge contours");
     }
     if(mergeParam && *mergeParam->Data())
     {
@@ -276,10 +276,10 @@ void HistogramThreshold::Init(bool firstInit)
         param.addEnum(ENUM(KeepCenter));
         param.addEnum(ENUM(SuppressCenter));
         updateParameter("Threshold type", param);
-        updateParameter("Threshold width", 0.5, Parameters::Parameter::Control, "Percent of histogram to threshold");
+        updateParameter("Threshold width", 0.5)->SetTooltip("Percent of histogram to threshold");
         addInputParameter<cv::cuda::GpuMat>("Input histogram");
-        addInputParameter<cv::cuda::GpuMat>("Input image", "Optional");
-        addInputParameter<cv::cuda::GpuMat>("Input mask", "Optional");
+        addInputParameter<cv::cuda::GpuMat>("Input image");
+        addInputParameter<cv::cuda::GpuMat>("Input mask");
         addInputParameter<cv::Mat>("Histogram bins");
     }
 }
@@ -348,8 +348,8 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     maxBin = std::min(maxBin, hist.cols - 1);
     float thresholdMin = bins->at<float>(minBin);
     float thresholdMax = bins->at<float>(maxBin);
-    updateParameter("Threshold min value", thresholdMin, Parameters::Parameter::Output);
-	updateParameter("Threshold max value", thresholdMax, Parameters::Parameter::Output);
+    updateParameter("Threshold min value", thresholdMin)->type = Parameters::Parameter::Output;
+	updateParameter("Threshold max value", thresholdMax)->type =  Parameters::Parameter::Output;
     updateParameter("Max Idx", maxIdx);
 	cv::cuda::GpuMat output;
     switch(type)
@@ -368,7 +368,7 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
         cv::cuda::threshold(img, upperMask, thresholdMin, 255, cv::THRESH_BINARY_INV, stream);
         cv::cuda::bitwise_or(lowerMask, upperMask, output, cv::noArray(), stream);
     }
-	updateParameter("Image mask", output, Parameters::Parameter::Output);
+	updateParameter("Image mask", output)->type =  Parameters::Parameter::Output;
     return output;
 }
 

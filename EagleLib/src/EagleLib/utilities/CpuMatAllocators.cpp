@@ -30,64 +30,75 @@ CpuDelayedDeallocationPool* CpuDelayedDeallocationPool::instance(size_t initial_
 	return g_instance;
 }
 
-void CpuDelayedDeallocationPool::allocate(void** ptr, size_t total)
+void CpuDelayedDeallocationPool::allocate(void** ptr, size_t total, size_t elemSize)
 {
-	auto inst = instance();
-	std::lock_guard<std::recursive_timed_mutex> lock(inst->deallocate_pool_mutex);
-	if (total < inst->_threshold_level)
+    BOOST_LOG_TRIVIAL(trace) << "Requesting allocation of " << total << " bytes";
+	std::lock_guard<std::recursive_timed_mutex> lock(deallocate_pool_mutex);
+    *ptr = nullptr;
+	if (total < _threshold_level && false)
 	{
+        BOOST_LOG_TRIVIAL(trace) << "Requesting allocation is less than threshold, using block memory allocation";
+        int index = 0;
 		unsigned char* _ptr;
-		for (auto& block : inst->blocks)
+		for (auto& block : blocks)
 		{
-			_ptr = block->allocate(total, 1);
+			_ptr = block->allocate(total, elemSize);
 			if (_ptr)
 			{
 				*ptr = _ptr;
+                BOOST_LOG_TRIVIAL(trace) << "Allocating " << total << " bytes from pre-allocated memory block number " << index << " at address: " << (void*)_ptr;
 				return;
 			}
+            ++index;
 		}
-		inst->blocks.push_back(
+        BOOST_LOG_TRIVIAL(debug) << "Creating new block of page locked memory for allocation.";
+		blocks.push_back(
 			std::shared_ptr<CpuMemoryBlock>(
-				new CpuMemoryBlock(std::max(inst->_initial_block_size / 2, total))));
-
-		if (_ptr = (*inst->blocks.rbegin())->allocate(total, 1))
+				new CpuMemoryBlock(std::max(_initial_block_size / 2, total))));
+        _ptr = (*blocks.rbegin())->allocate(total, elemSize);
+		if (_ptr)
 		{
+            BOOST_LOG_TRIVIAL(debug) << "Allocating " << total << " bytes from newly created memory block at address: " << (void*)_ptr;
+            *ptr = _ptr;
 			return;
 		}
 		throw cv::Exception(-1, "Failed to allocate sufficient page locked memory", __FUNCTION__, __FILE__, __LINE__);
 	}
-	for (auto itr = inst->deallocate_pool.begin(); itr != inst->deallocate_pool.end(); ++itr)
+    BOOST_LOG_TRIVIAL(trace) << "Requested allocation is greater than threshold, using lazy deallocation pool";
+	for (auto itr = deallocate_pool.begin(); itr != deallocate_pool.end(); ++itr)
 	{
 		if(std::get<2>(*itr) == total)
 		{
 			*ptr = std::get<0>(*itr);
-			inst->deallocate_pool.erase(itr);
-            BOOST_LOG_TRIVIAL(trace) << "[CPU] Reusing memory block of size " << total / (1024 * 1024) << " MB. Total usage: " << inst->total_usage /(1024*1024) << " MB";
+			deallocate_pool.erase(itr);
+            BOOST_LOG_TRIVIAL(trace) << "[CPU] Reusing memory block of size " << total / (1024 * 1024) << " MB. Total usage: " << total_usage /(1024*1024) << " MB";
 			return;
 		}
 	}
-	inst->total_usage += total;
-    BOOST_LOG_TRIVIAL(info) << "[CPU] Allocating block of size " << total / (1024 * 1024) << " MB. Total usage: " << inst->total_usage / (1024 * 1024) << " MB";
+	total_usage += total;
+    BOOST_LOG_TRIVIAL(info) << "[CPU] Allocating block of size " << total / (1024 * 1024) << " MB. Total usage: " << total_usage / (1024 * 1024) << " MB";
 	cudaSafeCall(cudaMallocHost(ptr, total));
 }
 
 void CpuDelayedDeallocationPool::deallocate(void* ptr, size_t total)
 {
 	auto inst = instance();
-    std::lock_guard<std::recursive_timed_mutex> lock(inst->deallocate_pool_mutex);
-	for (auto itr : inst->blocks)
+    std::lock_guard<std::recursive_timed_mutex> lock(deallocate_pool_mutex);
+    /*
+	for (auto itr : blocks)
 	{
 		if (ptr > itr->begin && ptr < itr->end)
 		{
+            BOOST_LOG_TRIVIAL(trace) << "Releasing memory block of size " << total << " at address: " << ptr;
 			if (itr->deAllocate((unsigned char*)ptr))
 			{
 				return;
 			}
-
 		}
 	}
-	inst->deallocate_pool.push_back(std::make_tuple((unsigned char*)ptr, clock(), total));
-    inst->cleanup();
+    */
+	deallocate_pool.push_back(std::make_tuple((unsigned char*)ptr, clock(), total));
+    cleanup();
 }
 void CpuDelayedDeallocationPool::cleanup(bool force)
 {
@@ -148,9 +159,7 @@ cv::UMatData* EagleLib::CpuPinnedAllocator::allocate(int dims, const int* sizes,
 	else
 	{
 		void* ptr = 0;
-		CpuDelayedDeallocationPool::allocate(&ptr, total);
-		//cudaSafeCall(cudaMallocHost(&ptr, total));
-		//cudaSafeCall(cudaHostAlloc(&ptr, total));
+		CpuDelayedDeallocationPool::instance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
 
 		u->data = u->origdata = static_cast<uchar*>(ptr);
 	}
@@ -176,7 +185,7 @@ void EagleLib::CpuPinnedAllocator::deallocate(cv::UMatData* u) const
 		if (!(u->flags & cv::UMatData::USER_ALLOCATED))
 		{
 			//cudaFreeHost(u->origdata);
-			CpuDelayedDeallocationPool::deallocate(u->origdata, u->size);
+			CpuDelayedDeallocationPool::instance()->deallocate(u->origdata, u->size);
 			u->origdata = 0;
 		}
 

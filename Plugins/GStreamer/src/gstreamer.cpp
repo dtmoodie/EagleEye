@@ -262,7 +262,7 @@ void RTSP_server::Init(bool firstInit)
 		server_type.addEnum(ENUM(UDP));
 		updateParameter("Server type", server_type);
 		updateParameter<unsigned short>("Port", 8004);
-		updateParameter<std::string>("Host", "", Parameters::Parameter::Control, "When TCP is selected, this is the address of the device to bind to, when UDP is selected this is the address of the device to receive the video stream");
+		updateParameter<std::string>("Host", "")->SetTooltip("When TCP is selected, this is the address of the device to bind to, when UDP is selected this is the address of the device to receive the video stream")->type = Parameters::Parameter::Control;
 		updateParameter<std::string>("gst pipeline", "");
 	}
 	bufferPool.resize(5);

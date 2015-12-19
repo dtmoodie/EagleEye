@@ -11,7 +11,7 @@ void SetDevice::Init(bool firstInit)
 	if (firstInit)
 	{
         updateParameter<unsigned int>("Device Number", uint32_t(0));
-		updateParameter<std::string>("Device name", "", Parameters::Parameter::State);
+		updateParameter<std::string>("Device name", "")->type = Parameters::Parameter::State;
 		firstRun = true;
         currentDevice = cv::cuda::getDevice();
         maxDevice = cv::cuda::getCudaEnabledDeviceCount();
