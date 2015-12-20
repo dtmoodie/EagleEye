@@ -237,7 +237,7 @@ Node::addChild(Node::Ptr child)
             ++count;
     }
 	
-	child->SetStreamManager(GetStreamManager());
+	child->SetDataStream(GetDataStream());
     child->setParent(this);
     child->setTreeName(child->nodeName + "-" + boost::lexical_cast<std::string>(count));
     children.push_back(child);
@@ -528,9 +528,9 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 	
     return img;
 }
-void Node::SetStreamManager(std::shared_ptr<DataStreamManager> manager_)
+void Node::SetDataStream(std::shared_ptr<DataStream> stream_)
 {
-	if (_dataStreamManager)
+	if (_dataStream)
 	{
 		NODE_LOG(debug) << "Updating stream manager to a new manager";
 	}	
@@ -538,23 +538,23 @@ void Node::SetStreamManager(std::shared_ptr<DataStreamManager> manager_)
 	{
 		NODE_LOG(debug) << "Setting stream manager";
 	}
-	_dataStreamManager = manager_;
+    _dataStream = stream_;
 	for (auto& child : children)
 	{
-		child->SetStreamManager(manager_);
+		child->SetDataStream(_dataStream);
 	}
 }
-std::shared_ptr<DataStreamManager> Node::GetStreamManager()
+std::shared_ptr<DataStream> Node::GetDataStream()
 {
-	if (parent && _dataStreamManager == nullptr)
+	if (parent && _dataStream == nullptr)
 	{
-		SetStreamManager(parent->GetStreamManager());
+		SetDataStream(parent->GetDataStream());
 	}
-	if (parent == nullptr && _dataStreamManager == nullptr)
+	if (parent == nullptr && _dataStream == nullptr)
 	{
-		_dataStreamManager.reset(new DataStreamManager());
+        _dataStream = DataStreamManager::instance()->create_stream();
 	}	
-	return _dataStreamManager;
+	return _dataStream;
 }
 cv::cuda::GpuMat
 Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )

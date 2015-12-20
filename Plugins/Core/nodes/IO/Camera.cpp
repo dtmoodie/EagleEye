@@ -299,7 +299,6 @@ void RTSPCamera::readImage_thread()
 					NODE_LOG(debug) << "Read empty image";
                     continue;
 				}
-				//boost::mutex::scoped_lock lock(mtx);
 				notifier.push(h_img);
 				onUpdate(nullptr);
             }

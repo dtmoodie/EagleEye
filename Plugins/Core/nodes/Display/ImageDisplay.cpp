@@ -4,6 +4,8 @@
 #include <UI/InterThread.hpp>
 #include "../remotery/lib/Remotery.h"
 #include <EagleLib/utilities/CudaCallbacks.hpp>
+#include <EagleLib/utilities/UiCallbackHandlers.h>
+
 using namespace EagleLib;
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay)
@@ -41,7 +43,8 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
 		[display_name, host_mat]()->void
 	{
 		rmt_ScopedCPUSample(QtImageDisplay_displayImage);
-		cv::imshow(display_name, host_mat);
+        WindowCallbackHandler::instance()->imshow(display_name, host_mat);
+		//cv::imshow(display_name, host_mat);
 		cv::waitKey(1);
 	}, stream);
     

@@ -34,7 +34,7 @@ template<typename T> class shared_ptr : public IObjectNotifiable
 		if (refCount)
 			++(*refCount);
 	}
-
+    
 
 public:
 	shared_ptr() : m_object(nullptr), refCount(nullptr)
@@ -59,12 +59,12 @@ public:
 	{
 		swap(ptr);
 	}
+
 	template<typename V> shared_ptr(shared_ptr<V> const& ptr) :
 		shared_ptr()
 	{
 		swap(ptr);
 	}
-
 
 	~shared_ptr()
 	{
@@ -72,11 +72,23 @@ public:
 			m_object->deregisterNotifier(this);
 		decrement();
 	}
+
 	T* operator->()
 	{
 		assert(m_object != nullptr);
 		return m_object;
 	}
+
+    template<typename U> U* staticCast()
+    {
+        return static_cast<U*>(m_object);
+    }
+
+    template<typename U> U* dynamicCast()
+    {
+        return dynamic_cast<U*>(m_object);
+    }
+
 	shared_ptr& operator=(shared_ptr const & r)
 	{
 		swap(r);
@@ -121,6 +133,7 @@ public:
 		if (m_object)
 			m_object->deregisterNotifier(this);
 		m_object = dynamic_cast<T*>(r.m_object);
+        assert(m_object != nullptr);
 		if (m_object == nullptr)
 			return;
 		refCount = r.refCount;

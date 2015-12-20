@@ -44,12 +44,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	plotWizardDialog(new PlotWizardDialog(this)),
 	settingsDialog(new SettingDialog(this))
 {
-	//auto allocator = new EagleLib::DelayedDeallocator();
-
 	cv::cuda::GpuMat::setDefaultAllocator(EagleLib::CombinedAllocator::Instance(100000000, 500000));
 	cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
 	EagleLib::CpuDelayedDeallocationPool::instance()->deallocation_delay = 1000;
-	//allocator->deallocateDelay = 1000;
 	
 	EagleLib::SetupLogging();
 	EagleLib::ui_collector::addGenericCallbackHandler(boost::bind(&MainWindow::process_log_message, this, _1, _2));
