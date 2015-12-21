@@ -45,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	settingsDialog(new SettingDialog(this))
 {
 	cv::cuda::GpuMat::setDefaultAllocator(EagleLib::CombinedAllocator::Instance(100000000, 500000));
-	cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
+    //cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
 	EagleLib::CpuDelayedDeallocationPool::instance()->deallocation_delay = 1000;
 	
 	EagleLib::SetupLogging();

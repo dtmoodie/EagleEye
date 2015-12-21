@@ -63,7 +63,7 @@ int main()
 	cv::cuda::Stream downloadStream;
 	cv::cuda::Event downloadReadyEvent;
 	cv::cuda::GpuMat bigTestMat[2];
-	cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
+    //cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
 	bigTestMat[0].create(10000, 10000, CV_32F);
 	bigTestMat[1].create(10000, 10000, CV_32F);
 

@@ -3,7 +3,7 @@
 #include <nodes/Node.h>
 #include <nodes/VideoProc/Tracking.hpp>
 #include <boost/circular_buffer.hpp>
-#include "EagleLib/utilities/CudaUtils.hpp""
+#include "EagleLib/utilities/CudaUtils.hpp"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
