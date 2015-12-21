@@ -7,6 +7,7 @@
 #include "TypedInputParameter.hpp"
 #include <opencv2/core/persistence.hpp>
 #include "type.h"
+#include <boost/thread/recursive_mutex.hpp>
 namespace EagleLib
 {
     struct ParameteredObjectImpl; // Private implementation stuffs
@@ -29,12 +30,11 @@ namespace EagleLib
         Parameters::Parameter::Ptr getParameterOptional(int idx);
         Parameters::Parameter::Ptr getParameterOptional(const std::string& name);
 
-        void RegisterParameterCallback(int idx, const boost::function<void(cv::cuda::Stream*)>& callback);
-        void RegisterParameterCallback(const std::string& name, const boost::function<void(cv::cuda::Stream*)>& callback);
-        void RegisterParameterCallback(Parameters::Parameter* param, const boost::function<void(cv::cuda::Stream*)>& callback);
         
+        void RegisterParameterCallback(int idx, const boost::function<void(cv::cuda::Stream*)>& callback, bool lock_param = false, bool lock_object = false);
+        void RegisterParameterCallback(const std::string& name, const boost::function<void(cv::cuda::Stream*)>& callback, bool lock_param = false, bool lock_object = false);
+        void RegisterParameterCallback(Parameters::Parameter* param, const boost::function<void(cv::cuda::Stream*)>& callback, bool lock_param = false, bool lock_object = false);
         
-
         template<typename T> 
         Parameters::Parameter* registerParameter(const std::string& name, T* data);
         
@@ -71,13 +71,18 @@ namespace EagleLib
         template<typename T> 
         typename Parameters::ITypedParameter<T>::Ptr getParameterOptional(int idx);
 
-        
-
         std::vector<Parameters::Parameter::Ptr> parameters;
+        // Mutex for blocking processing of a node during parameter update
+        boost::recursive_mutex                                              mtx;
     protected:
         
         struct Impl;
         std::shared_ptr<ParameteredObjectImpl> _impl;
+
+    private:
+        void RunCallbackLockObject(cv::cuda::Stream* stream, const boost::function<void(cv::cuda::Stream*)>& callback);
+        void RunCallbackLockParameter(cv::cuda::Stream* stream, const boost::function<void(cv::cuda::Stream*)>& callback, boost::recursive_mutex* paramMtx);
+        void RunCallbackLockBoth(cv::cuda::Stream* stream, const boost::function<void(cv::cuda::Stream*)>& callback, boost::recursive_mutex* paramMtx);
     };
 
 

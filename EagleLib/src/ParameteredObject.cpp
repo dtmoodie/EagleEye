@@ -99,17 +99,36 @@ Parameter::Ptr ParameteredObject::getParameterOptional(const std::string& name)
     BOOST_LOG_TRIVIAL(debug) << "Unable to find parameter by name: " << name;
     return Parameter::Ptr();
 }
-void ParameteredObject::RegisterParameterCallback(int idx, const boost::function<void(cv::cuda::Stream*)>& callback)
+void ParameteredObject::RegisterParameterCallback(int idx, const boost::function<void(cv::cuda::Stream*)>& callback, bool lock_param, bool lock_object)
 {
-    _impl->callbackConnections[this].push_back(getParameter(idx)->RegisterNotifier(callback));
+    RegisterParameterCallback(getParameter(idx).get(), callback, lock_param, lock_object);
 }
-void ParameteredObject::RegisterParameterCallback(const std::string& name, const boost::function<void(cv::cuda::Stream*)>& callback)
+
+void ParameteredObject::RegisterParameterCallback(const std::string& name, const boost::function<void(cv::cuda::Stream*)>& callback, bool lock_param, bool lock_object)
 {
-    _impl->callbackConnections[this].push_back(getParameter(name)->RegisterNotifier(callback));
+    RegisterParameterCallback(getParameter(name).get(), callback, lock_param, lock_object);
 }
-void ParameteredObject::RegisterParameterCallback(Parameter* param, const boost::function<void(cv::cuda::Stream*)>& callback)
+
+void ParameteredObject::RegisterParameterCallback(Parameter* param, const boost::function<void(cv::cuda::Stream*)>& callback, bool lock_param, bool lock_object)
 {
+    if (lock_param && !lock_object)
+    {
+        _impl->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&ParameteredObject::RunCallbackLockParameter, this, _1, callback, &param->mtx)));
+        return;
+    }
+    if (lock_object && !lock_param)
+    {
+        _impl->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&ParameteredObject::RunCallbackLockObject, this, _1, callback)));
+        return;
+    }
+    if (lock_object && lock_param)
+    {
+
+        _impl->callbackConnections[this].push_back(param->RegisterNotifier(boost::bind(&ParameteredObject::RunCallbackLockBoth, this, _1, callback, &param->mtx)));
+        return;
+    }
     _impl->callbackConnections[this].push_back(param->RegisterNotifier(callback));
+    
 }
 void ParameteredObject::onUpdate(cv::cuda::Stream* stream)
 {
@@ -120,4 +139,20 @@ void ParameteredObject::onUpdate(cv::cuda::Stream* stream)
         auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(IObject*)>>("ObjectUpdated");
         (*signal)(this);
     }
+}
+void ParameteredObject::RunCallbackLockObject(cv::cuda::Stream* stream, const boost::function<void(cv::cuda::Stream*)>& callback)
+{
+    boost::recursive_mutex::scoped_lock lock(mtx);
+    callback(stream);
+}
+void ParameteredObject::RunCallbackLockParameter(cv::cuda::Stream* stream, const boost::function<void(cv::cuda::Stream*)>& callback, boost::recursive_mutex* paramMtx)
+{
+    boost::recursive_mutex::scoped_lock lock(*paramMtx);
+    callback(stream);
+}
+void ParameteredObject::RunCallbackLockBoth(cv::cuda::Stream* stream, const boost::function<void(cv::cuda::Stream*)>& callback, boost::recursive_mutex* paramMtx)
+{
+    boost::recursive_mutex::scoped_lock lock(mtx);
+    boost::recursive_mutex::scoped_lock param_lock(*paramMtx);
+    callback(stream);
 }

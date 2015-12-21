@@ -14,6 +14,5 @@ namespace EagleLib
 		DataType GetDataType() const = 0;
 		int GetNumSamples() const = 0;
 		cv::cuda::GpuMat& GetSample(int idx = 0) = 0;
-		
 	};
 }

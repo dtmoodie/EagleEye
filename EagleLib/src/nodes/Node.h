@@ -74,7 +74,7 @@ namespace EagleLib
 {
 	class Node;
     class NodeImpl;
-	class DataStreamManager;
+	class DataStream;
 }
 
 
@@ -209,8 +209,8 @@ namespace EagleLib
         virtual std::vector<Node*>		getNodesInScope();
         virtual Node *					getNodeInScope(const std::string& name);
         virtual void					getNodesInScope(std::vector<Node*>& nodes);
-		virtual void					SetStreamManager(std::shared_ptr<DataStreamManager> manager_);
-		virtual std::shared_ptr<DataStreamManager> GetStreamManager();
+		virtual void					SetDataStream(std::shared_ptr<DataStream> manager_);
+		virtual std::shared_ptr<DataStream> GetDataStream();
 		
 		// ****************************************************************************************************************
 		//
@@ -675,8 +675,7 @@ namespace EagleLib
 
         bool                                                                profile;
 
-        // Mutex for blocking processing of a node during parameter update
-        boost::recursive_mutex                                              mtx;
+        
 		
         void onParameterAdded();
         double GetProcessingTime() const;
@@ -694,6 +693,6 @@ namespace EagleLib
         //ConstBuffer<cv::cuda::GpuMat>                                       childResults;
 		unsigned int rmt_hash;
 		unsigned int rmt_cuda_hash;
-		std::shared_ptr<DataStreamManager>									_dataStreamManager;
+		std::shared_ptr<DataStream>									_dataStream;
     };
 }
