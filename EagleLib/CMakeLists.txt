@@ -32,7 +32,7 @@ IF(EAGLE_LIB_JETSON)
 	LIST(APPEND defs_ "-DJETSON")
 ENDIF(EAGLE_LIB_JETSON)
 IF(NOT WIN32)
-	set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex log log_setup)
+        set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex log log_setup atomic)
 ENDIF(NOT WIN32)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 

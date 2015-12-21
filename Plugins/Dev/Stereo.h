@@ -1,6 +1,6 @@
 #include "nodes/Node.h"
 #include "opencv2/cudastereo.hpp"
-#include "EagleLib/utilities/CudaUtils.hpp""
+#include "EagleLib/utilities/CudaUtils.hpp"
 namespace EagleLib
 {
     class StereoBM: public Node
