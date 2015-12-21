@@ -29,13 +29,17 @@ namespace EagleLib
         {
             QT_Plotter = 0
         };
+
 		virtual void Serialize(ISimpleSerializer *pSerializer);
+        virtual void Init(bool firstInit);
+
 		virtual void SetInput(Parameters::Parameter::Ptr param_ = Parameters::Parameter::Ptr());
+
         virtual bool AcceptsParameter(Parameters::Parameter::Ptr param) = 0;
 		virtual void OnParameterUpdate(cv::cuda::Stream* stream) = 0;
-		virtual void Init(bool firstInit);
         virtual std::string PlotName() const = 0;
         virtual PlotterType Type() const = 0;
+
 	protected:
 		boost::signals2::connection bc;
 		Parameters::Parameter::Ptr param;
@@ -53,8 +57,8 @@ namespace EagleLib
 		virtual void Serialize(ISimpleSerializer *pSerializer);
 		virtual PlotterType Type() const;
 
+
 		virtual QWidget* CreatePlot(QWidget* parent) = 0;
-        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param) = 0;
         virtual QWidget* GetControlWidget(QWidget* parent) = 0;
     };
 
