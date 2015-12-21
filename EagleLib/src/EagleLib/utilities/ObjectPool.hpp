@@ -40,7 +40,7 @@ namespace EagleLib
         private:
             std::list<T*> _pool;
             std::mutex mtx;
-            template<typename T> friend class Ptr;
+            template<typename U> friend class Ptr;
         };
 
         template<typename T> class Ptr

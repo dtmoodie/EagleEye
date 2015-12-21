@@ -20,6 +20,7 @@
 #include "Parameter_def.hpp"
 
 #include <SystemTable.hpp>
+#include <stdarg.h>
 using namespace EagleLib;
 
 #ifdef _WIN32

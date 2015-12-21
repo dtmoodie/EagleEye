@@ -27,8 +27,8 @@ void GoodFeaturesToTrackDetector::Init(bool firstInit)
             double(0.04));
         updateParameter("Enabled",
             false);
-        updateParameter<DetectAndComputeFunctor>("Detection functor",
-			boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2, _3, _4, _5))->type = Parameters::Parameter::Output;
+        //updateParameter<DetectAndComputeFunctor>("Detection functor",
+        //	boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2, _3, _4, _5))->type = Parameters::Parameter::Output;
         greyImgs.resize(5);
         addInputParameter<cv::cuda::GpuMat>("Mask");
     }
@@ -69,51 +69,28 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         return img;
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
 
-    //auto keyPoints = detectedPoints.getFront();
+    cv::cuda::GpuMat grey_img;
+    if(img.channels() != 1)
+    {
+        cv::cuda::cvtColor(img, grey_img, cv::COLOR_BGR2GRAY, 0, stream);
+
+    }else
+    {
+        grey_img = img;
+    }
     cv::cuda::GpuMat key_points;
     if(mask)
     {
-        detect(img, *mask, key_points, cv::cuda::GpuMat(), stream);
+
+        detector->detect(grey_img, key_points, *mask, stream);
     }else
     {
-        detect(img, cv::cuda::GpuMat(), key_points, cv::cuda::GpuMat(), stream);
+        detector->detect(grey_img, key_points, cv::cuda::GpuMat(), stream);
     }
+    updateParameter("Detected Corners", key_points)->type =  Parameters::Parameter::Output;
+    updateParameter("Num corners", key_points.cols)->type = Parameters::Parameter::State;
     return img;
 }
-
-void GoodFeaturesToTrackDetector::detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
-                    cv::cuda::GpuMat& keyPoints,
-                    cv::cuda::GpuMat& descriptors,
-                    cv::cuda::Stream& stream)
-{
-    cv::cuda::GpuMat* greyImg = greyImgs.getFront();
-    if(img.channels() != 1)
-    {
-        // Internal greyscale conversion
-        cv::cuda::cvtColor(img, *greyImg, CV_BGR2GRAY,0, stream);
-    }else
-    {
-        *greyImg = img;
-    }
-    auto detectorParam = getParameter<cv::Ptr<cv::cuda::CornersDetector>>(0);
-    if(detectorParam == nullptr)
-    {
-        //log(Error, "Detector not built");
-		NODE_LOG(error) << "Detector not built";
-        return;
-    }
-    cv::Ptr<cv::cuda::CornersDetector> detector = *detectorParam->Data();
-    if(detector == nullptr)
-    {
-        //log(Error, "Detector not built");
-		NODE_LOG(error) << "Detector not built";
-        return;
-    }
-    detector->detect(*greyImg, keyPoints, mask, stream);
-	updateParameter("Detected Corners", keyPoints)->type =  Parameters::Parameter::Output;
-	updateParameter("Num corners", keyPoints.cols)->type = Parameters::Parameter::State;
-}
-
 
 void FastFeatureDetector::Init(bool firstInit)
 {

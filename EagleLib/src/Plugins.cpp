@@ -64,9 +64,6 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 	}
     return true;
 }
-
-
-
 #else
 #include "dlfcn.h"
 
@@ -97,7 +94,7 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
         std::cout << "module == nullptr" << std::endl;
         return false;
     }
-    NodeManager::getInstance().setupModule(module());
+    ObjectManager::Instance().setupModule(module());
     typedef void(*includeFunctor)();
     includeFunctor functor = (includeFunctor)dlsym(handle, "SetupIncludes");
     if(functor)

@@ -6,7 +6,7 @@
 #include "TypedParameter.hpp"
 #include "TypedInputParameter.hpp"
 #include <opencv2/core/persistence.hpp>
-
+#include "type.h"
 namespace EagleLib
 {
     struct ParameteredObjectImpl; // Private implementation stuffs
@@ -108,7 +108,7 @@ namespace EagleLib
     }
 
     template<typename T>
-    bool ParameteredObject::updateInputQualifier(const std::string& name, const boost::function<bool(Parameters::Parameter*)>& qualifier)
+    bool ParameteredObject::updateInputQualifier(const std::string& name, const boost::function<bool(Parameters::Parameter*)>& qualifier_)
     {
         auto param = getParameter(name);
         if (param && param->type & Parameters::Parameter::Input)
@@ -238,9 +238,5 @@ namespace EagleLib
             return typename Parameters::ITypedParameter<T>::Ptr(); // Return a nullptr
 
         return std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(param);
-        if (typedParam == nullptr)
-            BOOST_LOG_TRIVIAL(debug) << "Failed to cast parameter to the appropriate type, requested type: " <<
-                TypeInfo::demangle(typeid(T).name()) << " parameter actual type: " << param->GetTypeInfo().name();
-        return typedParam;
     }
 }

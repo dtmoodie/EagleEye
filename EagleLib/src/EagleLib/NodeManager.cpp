@@ -1,6 +1,6 @@
 #include "NodeManager.h"
 #include "ObjectManager.h"
-#include "Nodes/Node.h"
+#include "nodes/Node.h"
 #include <boost/filesystem.hpp>
 
 using namespace EagleLib;

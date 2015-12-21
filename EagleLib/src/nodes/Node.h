@@ -373,7 +373,7 @@ namespace EagleLib
 		{
 			return 0;
 		}*/
-        void RegisterSignalConnection(boost::signals2::connection& connection);
+        void RegisterSignalConnection(boost::signals2::connection connection);
         virtual void onUpdate(cv::cuda::Stream* stream);
 		/*void RegisterParameterCallback(int idx, boost::function<void(cv::cuda::Stream*)> callback);
 		void RegisterParameterCallback(const std::string& name, boost::function<void(cv::cuda::Stream*)> callback);

@@ -1,4 +1,4 @@
-#include "Renderers.h"
+/*#include "Renderers.h"
 #include "nodes/Node.h"
 #include "Manager.h"
 
@@ -23,3 +23,4 @@ void vtkRenderEngine::AddRenderScene(std::shared_ptr<IRenderScene> scene)
 }
 
 REGISTERCLASS(vtkRenderEngine);
+*/

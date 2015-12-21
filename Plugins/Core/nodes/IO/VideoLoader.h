@@ -5,7 +5,7 @@
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-#include "EagleLib/utilities/CudaUtils.hpp""
+#include "EagleLib/utilities/CudaUtils.hpp"
 #include <boost/thread.hpp>
 namespace EagleLib
 {

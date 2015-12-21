@@ -3,7 +3,7 @@
 #include "UI/InterThread.hpp"
 #include "plotters/Plotter.h"
 #include "qcustomplot.h"
-#include "remotery.h"
+#include "Remotery.h"
 #include <EagleLib/Project_defs.hpp>
 #include "RuntimeLinkLibrary.h"
 #ifdef _DEBUG

@@ -255,7 +255,7 @@ SETUP_PROJECT_DEF
 
 namespace EagleLib
 {
-	class vtkRenderEngine: public IRenderEngine
+    /*class vtkRenderEngine: public IRenderEngine
 	{
 	public:
 		vtkRenderEngine();
@@ -265,5 +265,5 @@ namespace EagleLib
 	private:
 		vtkSmartPointer<vtkRenderer> renderer;
 		vtkSmartPointer<vtkRenderWindow> renderWindow;
-	};
+    };*/
 }

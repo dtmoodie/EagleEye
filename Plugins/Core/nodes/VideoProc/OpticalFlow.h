@@ -2,7 +2,7 @@
 #include <nodes/Node.h>
 #include <Manager.h>
 #include <external_includes/cv_cudaoptflow.hpp>
-#include "EagleLib/utilities/CudaUtils.hpp""
+#include "EagleLib/utilities/CudaUtils.hpp"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY

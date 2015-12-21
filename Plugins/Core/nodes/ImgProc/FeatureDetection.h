@@ -1,6 +1,9 @@
 #include <nodes/Node.h>
 #include <external_includes/cv_cudafeatures2d.hpp>
-#include "EagleLib/utilities/CudaUtils.hpp""
+#include "EagleLib/utilities/CudaUtils.hpp"
+#include <external_includes/cv_cudafilters.hpp>
+#include <external_includes/cv_cudaoptflow.hpp>
+#include <external_includes/cv_cudaimgproc.hpp>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -12,10 +15,7 @@ namespace EagleLib
         ConstBuffer<cv::cuda::GpuMat> greyImgs;
         ConstBuffer<std::pair<cv::cuda::GpuMat, cv::cuda::GpuMat>> detectedPoints;
         cv::cuda::GpuMat detectedCorners;
-        virtual void detect(cv::cuda::GpuMat img, cv::cuda::GpuMat mask,
-                    cv::cuda::GpuMat& keyPoints,
-                    cv::cuda::GpuMat& descriptors,
-                    cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        cv::Ptr<cv::cuda::CornersDetector> detector;
     public:
         GoodFeaturesToTrackDetector();
         virtual void Init(bool firstInit);

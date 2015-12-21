@@ -43,4 +43,4 @@ void SetupIncludes(){																					\
 		EagleLib::ObjectManager::Instance().addIncludeDirs(PROJECT_INCLUDES, id);						\
 		EagleLib::ObjectManager::Instance().addLinkDirs(PROJECT_LIB_DIRS, id);							\
 		EagleLib::ObjectManager::Instance().addDefinitions(PROJECT_DEFINITIONS, id);					\
-}	
+}

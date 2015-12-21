@@ -10,7 +10,7 @@
 #include <UI/InterThread.hpp>
 
 using namespace EagleLib;
-
+/*
 PtCloudDisplay::PtCloudDisplay()
 {
 	frameNum = 0;
@@ -77,11 +77,7 @@ void PtCloudDisplay::addPlot(QWidget *plot_)
 
 }
 
-/*
-TODO
-THe update of the point cloud needs to be done on the UI thread.  Not sure how much needs to be there, likely just renderWidget::update.
 
-*/
 void PtCloudDisplay::doUpdate()
 {
 	if (gpuParam)
@@ -143,3 +139,4 @@ void PtCloudDisplay::setInput(Parameters::Parameter::Ptr param_)
 	
 }
 REGISTERCLASS(PtCloudDisplay)
+*/

@@ -14,7 +14,7 @@ namespace pcl
 }
 namespace EagleLib
 {
-	class PtCloudDisplay : public QtPlotter
+    /*class PtCloudDisplay : public QtPlotter
 	{
 		size_t frameNum;
 		std::shared_ptr<Parameters::ITypedParameter<cv::cuda::GpuMat>> gpuParam;
@@ -31,5 +31,5 @@ namespace EagleLib
 		virtual void addPlot(QWidget *plot_);
 		virtual void doUpdate();
 		virtual void setInput(Parameters::Parameter::Ptr param_);
-	};
+    };*/
 }

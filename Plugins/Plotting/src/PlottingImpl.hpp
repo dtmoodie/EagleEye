@@ -58,13 +58,13 @@ namespace EagleLib
 					return std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(itr);
 				}
 			}
-			return Parameters::ITypedParameter<T>::Ptr();
+            return typename Parameters::ITypedParameter<T>::Ptr();
 		}
 		template<typename T> typename Parameters::ITypedParameter<T>::Ptr GetParameter(size_t index)
 		{
 			if(index < parameters.size())
 				return std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(parameters[index]);
-			return ITypedParameter<T>::Ptr();
+            return typename Parameters::ITypedParameter<T>::Ptr();
 		}
 
 		//virtual void HandleData(double data, int row, int col, int channel) = 0;
