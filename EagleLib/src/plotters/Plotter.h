@@ -1,4 +1,5 @@
 #pragma once
+#include "ParameteredObject.h"
 
 #include "Parameters.hpp"
 
@@ -20,7 +21,7 @@ class QWidget;
 namespace EagleLib
 {
 
-	class CV_EXPORTS Plotter : public TInterface<IID_Plotter, IObject>
+	class CV_EXPORTS Plotter : public TInterface<IID_Plotter, ParameteredObject>
     {
     public:
 		Plotter();
@@ -53,7 +54,7 @@ namespace EagleLib
         std::list<QWidget*> plot_widgets;
     public:
 
-		virtual void AddPlot(QWidget* plot_);
+		virtual void AddPlot(QWidget* plot_) = 0;
 		virtual void Serialize(ISimpleSerializer *pSerializer);
 		virtual PlotterType Type() const;
 

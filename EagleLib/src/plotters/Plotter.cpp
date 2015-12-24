@@ -42,7 +42,7 @@ void QtPlotter::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(plot_widgets);
 }
 
-void QtPlotter::AddPlot(QWidget *plot_)
+void QtPlotter::AddPlot(QWidget* plot_)
 {
 	plot_widgets.push_back(plot_);
 }

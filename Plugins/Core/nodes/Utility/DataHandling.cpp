@@ -27,7 +27,7 @@ cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
 }
 cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    updateParameter("Output image", img)->type = Parameters::Parameter::Output;
+    updateParameter("Output image", img,&stream)->type = Parameters::Parameter::Output;
     return img;
 }
 

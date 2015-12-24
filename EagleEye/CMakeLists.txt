@@ -22,8 +22,7 @@ IF(Qt5_FOUND)
 		opencv_cudawarping 
 		opencv_cudev 
 		opencv_features2d 
-		opencv_flann 
-		opencv_hal 
+		opencv_flann
 		opencv_highgui 
 		opencv_imgcodecs 
 		opencv_imgproc 
