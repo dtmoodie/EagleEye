@@ -1,7 +1,10 @@
 #include "Renderers.h"
 #include "nodes/Node.h"
 #include "Manager.h"
-#include "QVTKWidget.h"
+//#include "QVTKWidget.h"
+#include <QVTKWidget2.h>
+#include <qopengl.h>
+#include "QtOpenGL/QGLContext"
 #include "vtkTexture.h"
 #include "vtkPointData.h"
 #include <vtkPolyDataMapper.h>
@@ -19,7 +22,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkFloatArray.h>
 #include <vtkPolygon.h>
-
+#include <vtkGenericOpenGLRenderWindow.h>
 
 SETUP_PROJECT_IMPL
 using namespace EagleLib;
@@ -71,7 +74,7 @@ void vtkPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
 
 void vtkPlotter::AddPlot(QWidget* plot_)
 {
-	auto widget = dynamic_cast<QVTKWidget*>(plot_);
+	auto widget = dynamic_cast<QVTKWidget2*>(plot_);
 	if (widget)
 	{
 		widget->GetRenderWindow()->AddRenderer(renderer);
@@ -80,9 +83,17 @@ void vtkPlotter::AddPlot(QWidget* plot_)
 
 QWidget* vtkPlotter::CreatePlot(QWidget* parent)
 {
-	auto widget = new QVTKWidget(parent);
+	auto context = new QGLContext(QGLFormat());
+	//auto widget = new QVTKWidget2(new QGLContext(QGLFormat()), parent);
+	auto widget = new QVTKWidget2(context, parent);
+	//widget->GetRenderWindow()->OpenGLInit();
+	//widget->GetRenderWindow()->InitializeTextureInternalFormats();
+	widget->show();
+	widget->setMinimumWidth(100);
+	widget->setMinimumHeight(100);
 	render_widgets.push_back(widget);
 	widget->GetRenderWindow()->AddRenderer(renderer);
+	
 	return widget;
 }
 
@@ -108,7 +119,7 @@ REGISTERCLASS(vtkPlotter);
 vtkOpenGLCudaImage::vtkOpenGLCudaImage():
 	vtkTextureObject()
 {
-
+	
 }
 vtkOpenGLCudaImage* vtkOpenGLCudaImage::New()
 {
@@ -117,13 +128,47 @@ vtkOpenGLCudaImage* vtkOpenGLCudaImage::New()
 
 void vtkOpenGLCudaImage::map_gpu_mat(cv::cuda::GpuMat image)
 {
-	boost::mutex::scoped_lock lock(mtx);
+	//boost::mutex::scoped_lock lock(mtx);
 	try
 	{
+		CV_Assert(image.depth() == CV_8U);
+		image_buffer.bind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+		if (this->Width != image.cols || this->Height != image.rows || this->Components != image.channels() && Context)
+		{
+			InternalFormat = GL_RGB8;
+			Allocate2D(image.cols, image.rows, image.channels(), VTK_UNSIGNED_CHAR);
+		}
+		else
+		{
+			this->Activate();
+			glTexImage2D(this->Target, 0, static_cast<GLint>(this->InternalFormat),
+				static_cast<GLsizei>(this->Width),
+				static_cast<GLsizei>(this->Height),
+				0, this->Format, this->Type, 0);
+			
+			//vtkOpenGLCheckErrorMacro("failed at glTexImage2D");
+			this->Deactivate();
+		}
+		image_buffer.unbind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+		/*
 		image_buffer.copyFrom(image);
 		//this->Index = image_buffer.texId();
 		//this->LoadTime.Modified();
+		this->Width = image.cols;
+		this->Height = image.rows;
+		this->Components = image.channels();
+		this->Depth = 1;
+		this->NumberOfDimensions = 2;
+		this->Target = GL_TEXTURE_2D;
+		if (Context)
+		{
+			this->GetDataType(VTK_UNSIGNED_CHAR);
+			this->GetInternalFormat(VTK_UNSIGNED_CHAR, Components, false);
+			this->GetFormat(VTK_UNSIGNED_CHAR, Components, false);
+		}		
 		Modified();
+		*/
+
 	}
 	catch (cv::Exception& e)
 	{
@@ -134,22 +179,27 @@ void vtkOpenGLCudaImage::map_gpu_mat(cv::cuda::GpuMat image)
 
 	}
 }
-void vtkOpenGLCudaImage::Bind()
-{
-	image_buffer.bind();
-}
-void vtkOpenGLCudaImage::UnBind()
-{
-	
-}
+//void vtkOpenGLCudaImage::Bind()
+//{
+	//image_buffer.bind();
+	//if (this->AutoParameters && (this->GetMTime() > this->SendParametersTime))
+	//{
+//		this->SendParameters();
+	//}
+//}
 
 
 vtkImageViewer::vtkImageViewer():
 	vtkPlotter()
 {
 	texture = vtkSmartPointer<vtkOpenGLTexture>::New();
-	textureObject = vtkSmartPointer<vtkOpenGLCudaImage>::New();
-	texture->SetTextureObject(textureObject);
+	//textureObject = vtkSmartPointer<vtkOpenGLCudaImage>::New();
+	//texture->SetTextureObject(textureObject);
+	//vtkSmartPointer<vtkJPEGReader> jPEGReader =	vtkSmartPointer<vtkJPEGReader>::New();
+	//jPEGReader->SetFileName("C:/Users/Public/Pictures/Sample Pictures/Koala.jpg");
+	//texture = vtkSmartPointer<vtkTexture>::New();
+	//texture->SetInputConnection(jPEGReader->GetOutputPort());
+
 	// Create a plane
 	vtkSmartPointer<vtkPoints> points =	vtkSmartPointer<vtkPoints>::New();
 	points->InsertNextPoint(0.0, 0.0, 0.0);
@@ -179,7 +229,7 @@ vtkImageViewer::vtkImageViewer():
 		textureCoordinates->InsertNextTuple(tuple);
 		tuple[0] = 1.0; tuple[1] = 1.0; tuple[2] = 0.0;
 		textureCoordinates->InsertNextTuple(tuple);
-		tuple[0] = 0.0; tuple[1] = 2.0; tuple[2] = 0.0;
+		tuple[0] = 0.0; tuple[1] = 1.0; tuple[2] = 0.0;
 		textureCoordinates->InsertNextTuple(tuple);
 
 	quad->GetPointData()->SetTCoords(textureCoordinates);
@@ -192,6 +242,7 @@ vtkImageViewer::vtkImageViewer():
 		texturedQuad->SetTexture(texture);
 
 	this->renderer->AddActor(texturedQuad);
+	this->renderer->ResetCamera();
 }
 
 bool vtkImageViewer::AcceptsParameter(Parameters::Parameter::Ptr param)
@@ -234,12 +285,25 @@ void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
 	if (stream)
 	{
 		cv::cuda::GpuMat d_mat = *std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(param)->Data();
-		
-		EagleLib::cuda::enqueue_callback_async(
-			[this, d_mat]()->void
+		if (textureObject == nullptr)
 		{
-			boost::recursive_mutex::scoped_lock lock(this->mtx);
-			Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&vtkOpenGLCudaImage::map_gpu_mat, textureObject.GetPointer(), d_mat));
+			//texture = vtkSmartPointer<vtkOpenGLTexture>::New();
+			textureObject = vtkSmartPointer<vtkOpenGLCudaImage>::New();
+			
+			textureObject->SetContext((*render_widgets.begin())->GetRenderWindow());
+			//texture->SetTextureObject(textureObject);
+		}
+		EagleLib::cuda::enqueue_callback_async(
+			[this, d_mat, stream]()->void
+		{
+			//boost::recursive_mutex::scoped_lock lock(this->mtx);
+			Parameters::UI::UiCallbackService::Instance()->post(
+				boost::bind<void>([d_mat, this, stream]()->void
+			{
+				textureObject->image_buffer.copyFrom(d_mat, *stream, cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+				textureObject->map_gpu_mat(d_mat);
+				texture->SetTextureObject(textureObject);
+			}));
 			
 		}, *stream);
 	}

@@ -266,7 +266,7 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib")
 
 #endif
 SETUP_PROJECT_DEF
-class QVTKWidget;
+class QVTKWidget2;
 namespace EagleLib
 {
 	class vtkOpenGLCudaImage : public vtkTextureObject
@@ -275,20 +275,22 @@ namespace EagleLib
 		static vtkOpenGLCudaImage* New();
 		vtkTypeMacro(vtkOpenGLCudaImage, vtkTextureObject);
 		void map_gpu_mat(cv::cuda::GpuMat image);
-		virtual void Bind();
-		virtual void UnBind();
+		cv::ogl::Buffer image_buffer;
+		//virtual void Bind();
+		//virtual void UnBind();
+		//virtual bool IsBound();
 	private:
 		//virtual long GetIndex();
 		vtkOpenGLCudaImage();
 		// Only holds the binding of the memory
-		cv::ogl::Texture2D image_buffer;
+		//cv::ogl::Texture2D image_buffer;
 		boost::mutex mtx;
 	};
 
 	class vtkPlotter : public QtPlotter
 	{
 	protected:
-		std::list<QVTKWidget*> render_widgets;
+		std::list<QVTKWidget2*> render_widgets;
 		vtkSmartPointer<vtkRenderer> renderer;
 	public:
 		vtkPlotter();

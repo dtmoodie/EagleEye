@@ -15,7 +15,8 @@
 #include "settingdialog.h"
 #include "logger.hpp"
 
-
+#include <gl/GL.h>
+#include <gl/GLU.h>
 
 #include <SystemTable.hpp>
 #include <Events.h>
@@ -632,6 +633,8 @@ void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::timed_mutex* mtx)
 
 void MainWindow::processThread()
 {
+	//auto handle = GetDC(0);
+	//wglCreateContext(handle);
 	BOOST_LOG_TRIVIAL(info) << "Processing thread started" << std::endl;
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
