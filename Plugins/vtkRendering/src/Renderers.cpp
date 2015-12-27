@@ -23,7 +23,8 @@
 #include <vtkFloatArray.h>
 #include <vtkPolygon.h>
 #include <vtkGenericOpenGLRenderWindow.h>
-
+#include "Remotery.h"
+#include "EagleLib/utilities/ObjectPool.hpp"
 SETUP_PROJECT_IMPL
 using namespace EagleLib;
 
@@ -128,7 +129,6 @@ vtkOpenGLCudaImage* vtkOpenGLCudaImage::New()
 
 void vtkOpenGLCudaImage::map_gpu_mat(cv::cuda::GpuMat image)
 {
-	//boost::mutex::scoped_lock lock(mtx);
 	try
 	{
 		CV_Assert(image.depth() == CV_8U);
@@ -141,34 +141,15 @@ void vtkOpenGLCudaImage::map_gpu_mat(cv::cuda::GpuMat image)
 		else
 		{
 			this->Activate();
-			glTexImage2D(this->Target, 0, static_cast<GLint>(this->InternalFormat),
-				static_cast<GLsizei>(this->Width),
-				static_cast<GLsizei>(this->Height),
-				0, this->Format, this->Type, 0);
-			
-			//vtkOpenGLCheckErrorMacro("failed at glTexImage2D");
-			this->Deactivate();
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->Width, this->Height, GL_BGR, GL_UNSIGNED_BYTE, NULL);
+			//glTexImage2D(this->Target, 0, static_cast<GLint>(this->InternalFormat),
+			//	static_cast<GLsizei>(this->Width),
+			//	static_cast<GLsizei>(this->Height),
+			//	0, this->Format, this->Type, 0);
 		}
+		//glFinish();
 		image_buffer.unbind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
-		/*
-		image_buffer.copyFrom(image);
-		//this->Index = image_buffer.texId();
-		//this->LoadTime.Modified();
-		this->Width = image.cols;
-		this->Height = image.rows;
-		this->Components = image.channels();
-		this->Depth = 1;
-		this->NumberOfDimensions = 2;
-		this->Target = GL_TEXTURE_2D;
-		if (Context)
-		{
-			this->GetDataType(VTK_UNSIGNED_CHAR);
-			this->GetInternalFormat(VTK_UNSIGNED_CHAR, Components, false);
-			this->GetFormat(VTK_UNSIGNED_CHAR, Components, false);
-		}		
 		Modified();
-		*/
-
 	}
 	catch (cv::Exception& e)
 	{
@@ -179,36 +160,38 @@ void vtkOpenGLCudaImage::map_gpu_mat(cv::cuda::GpuMat image)
 
 	}
 }
-//void vtkOpenGLCudaImage::Bind()
-//{
-	//image_buffer.bind();
-	//if (this->AutoParameters && (this->GetMTime() > this->SendParametersTime))
-	//{
-//		this->SendParameters();
-	//}
-//}
+void vtkOpenGLCudaImage::Bind()
+{
+	vtkTextureObject::Bind();
+}
 
 
 vtkImageViewer::vtkImageViewer():
 	vtkPlotter()
 {
-	texture = vtkSmartPointer<vtkOpenGLTexture>::New();
-	//textureObject = vtkSmartPointer<vtkOpenGLCudaImage>::New();
-	//texture->SetTextureObject(textureObject);
-	//vtkSmartPointer<vtkJPEGReader> jPEGReader =	vtkSmartPointer<vtkJPEGReader>::New();
-	//jPEGReader->SetFileName("C:/Users/Public/Pictures/Sample Pictures/Koala.jpg");
-	//texture = vtkSmartPointer<vtkTexture>::New();
-	//texture->SetInputConnection(jPEGReader->GetOutputPort());
+	
+}
+void vtkImageViewer::Serialize(ISimpleSerializer *pSerializer)
+{
+	vtkPlotter::Serialize(pSerializer);
+	SERIALIZE(texture);
+	SERIALIZE(textureObject);
+}
+void vtkImageViewer::Init(bool firstInit)
+{
+	vtkPlotter::Init(firstInit);
+	if (firstInit)
+	{
+		texture = vtkSmartPointer<vtkOpenGLTexture>::New();
+		// Create a plane
+		vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+		points->InsertNextPoint(0.0, 0.0, 0.0);
+		points->InsertNextPoint(1.0, 0.0, 0.0);
+		points->InsertNextPoint(1.0, 1.0, 0.0);
+		points->InsertNextPoint(0.0, 1.0, 0.0);
+		vtkSmartPointer<vtkCellArray> polygons = vtkSmartPointer<vtkCellArray>::New();
 
-	// Create a plane
-	vtkSmartPointer<vtkPoints> points =	vtkSmartPointer<vtkPoints>::New();
-	points->InsertNextPoint(0.0, 0.0, 0.0);
-	points->InsertNextPoint(1.0, 0.0, 0.0);
-	points->InsertNextPoint(1.0, 1.0, 0.0);
-	points->InsertNextPoint(0.0, 1.0, 0.0);
-	vtkSmartPointer<vtkCellArray> polygons = vtkSmartPointer<vtkCellArray>::New();
-
-	vtkSmartPointer<vtkPolygon> polygon = vtkSmartPointer<vtkPolygon>::New();
+		vtkSmartPointer<vtkPolygon> polygon = vtkSmartPointer<vtkPolygon>::New();
 		polygon->GetPointIds()->SetNumberOfIds(4); //make a quad
 		polygon->GetPointIds()->SetId(0, 0);
 		polygon->GetPointIds()->SetId(1, 1);
@@ -216,35 +199,36 @@ vtkImageViewer::vtkImageViewer():
 		polygon->GetPointIds()->SetId(3, 3);
 		polygons->InsertNextCell(polygon);
 
-	vtkSmartPointer<vtkPolyData> quad =	vtkSmartPointer<vtkPolyData>::New();
+		vtkSmartPointer<vtkPolyData> quad = vtkSmartPointer<vtkPolyData>::New();
 		quad->SetPoints(points);
 		quad->SetPolys(polygons);
 
-	vtkSmartPointer<vtkFloatArray> textureCoordinates =	vtkSmartPointer<vtkFloatArray>::New();
+		vtkSmartPointer<vtkFloatArray> textureCoordinates = vtkSmartPointer<vtkFloatArray>::New();
 		textureCoordinates->SetNumberOfComponents(3);
 		textureCoordinates->SetName("TextureCoordinates");
-		float tuple[3] = { 0.0, 0.0, 0.0 };
-		textureCoordinates->InsertNextTuple(tuple);
-		tuple[0] = 1.0; tuple[1] = 0.0; tuple[2] = 0.0;
+		float tuple[3] = { 0.0, 1.0, 0.0 };
 		textureCoordinates->InsertNextTuple(tuple);
 		tuple[0] = 1.0; tuple[1] = 1.0; tuple[2] = 0.0;
 		textureCoordinates->InsertNextTuple(tuple);
-		tuple[0] = 0.0; tuple[1] = 1.0; tuple[2] = 0.0;
+		tuple[0] = 1.0; tuple[1] = 0.0; tuple[2] = 0.0;
+		textureCoordinates->InsertNextTuple(tuple);
+		tuple[0] = 0.0; tuple[1] = 0.0; tuple[2] = 0.0;
 		textureCoordinates->InsertNextTuple(tuple);
 
-	quad->GetPointData()->SetTCoords(textureCoordinates);
+		quad->GetPointData()->SetTCoords(textureCoordinates);
 
-	vtkSmartPointer<vtkPolyDataMapper> mapper =	vtkSmartPointer<vtkPolyDataMapper>::New();
+		vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 		mapper->SetInputData(quad);
 
-	vtkSmartPointer<vtkActor> texturedQuad = vtkSmartPointer<vtkActor>::New();
+		vtkSmartPointer<vtkActor> texturedQuad = vtkSmartPointer<vtkActor>::New();
 		texturedQuad->SetMapper(mapper);
 		texturedQuad->SetTexture(texture);
 
-	this->renderer->AddActor(texturedQuad);
-	this->renderer->ResetCamera();
+		this->renderer->AddActor(texturedQuad);
+		this->renderer->ResetCamera();
+	}
+	texture_stream_index = 0;
 }
-
 bool vtkImageViewer::AcceptsParameter(Parameters::Parameter::Ptr param)
 {
 	if (param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat)))
@@ -267,8 +251,7 @@ void vtkImageViewer::SetInput(Parameters::Parameter::Ptr param_)
 	if (param_->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat)))
 	{
 		param = param_;
-		RegisterParameterCallback(param.get(), boost::bind(&vtkImageViewer::OnParameterUpdate, this, _1), true, true);
-		//param->RegisterNotifier(boost::bind(&vtkImageViewer::OnParameterUpdate, this, _1));
+		RegisterParameterCallback(param.get(), boost::bind(&vtkImageViewer::OnParameterUpdate, this, _1), false, false);
 	}
 	if (param_->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat)))
 	{
@@ -282,30 +265,57 @@ void vtkImageViewer::SetInput(Parameters::Parameter::Ptr param_)
 
 void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
 {
+	rmt_ScopedCPUSample(vtkImageViewer_OnParameterUpdate);
 	if (stream)
 	{
 		cv::cuda::GpuMat d_mat = *std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(param)->Data();
-		if (textureObject == nullptr)
+		//texture_stream_index = (texture_stream_index + 1) % 2;
+		//auto& current_texture = textureObject[texture_stream_index];
+		auto& current_texture = textureObject;
+		if (current_texture == nullptr)
 		{
-			//texture = vtkSmartPointer<vtkOpenGLTexture>::New();
-			textureObject = vtkSmartPointer<vtkOpenGLCudaImage>::New();
-			
-			textureObject->SetContext((*render_widgets.begin())->GetRenderWindow());
-			//texture->SetTextureObject(textureObject);
+			boost::recursive_mutex::scoped_lock lock(this->mtx);
+			current_texture = vtkSmartPointer<vtkOpenGLCudaImage>::New();
+			current_texture->SetContext((*render_widgets.begin())->GetRenderWindow());
 		}
-		EagleLib::cuda::enqueue_callback_async(
-			[this, d_mat, stream]()->void
+		
+		auto future = EagleLib::cuda::enqueue_callback_async(
+			[this, d_mat, stream, current_texture]()->void
 		{
-			//boost::recursive_mutex::scoped_lock lock(this->mtx);
 			Parameters::UI::UiCallbackService::Instance()->post(
-				boost::bind<void>([d_mat, this, stream]()->void
+				boost::bind<void>([d_mat, this, stream, current_texture]()->void
 			{
-				textureObject->image_buffer.copyFrom(d_mat, *stream, cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
-				textureObject->map_gpu_mat(d_mat);
-				texture->SetTextureObject(textureObject);
+				{
+					boost::mutex::scoped_lock lock(current_texture->mtx);
+					rmt_ScopedCPUSample(Gpu_to_ogl_buffer);
+
+					// Needs to be done on the UI thread because I can't bind a buffer without a valid opengl context which only exists on the UI thread.
+					current_texture->image_buffer.copyFrom(d_mat, *stream, cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+
+					EagleLib::cuda::enqueue_callback_async([this, stream, d_mat, current_texture]()->void
+					{
+						Parameters::UI::UiCallbackService::Instance()->post(boost::bind<void>([this, d_mat, current_texture]()->void
+						{
+							boost::recursive_mutex::scoped_lock lock(this->mtx);
+							{
+								rmt_ScopedCPUSample(texture_creation);
+								current_texture->map_gpu_mat(d_mat);
+								texture->SetTextureObject(current_texture);
+							}
+							{
+								rmt_ScopedCPUSample(Rendering);
+								for (auto itr : this->render_widgets)
+								{
+									itr->GetRenderWindow()->Render();
+								}
+							}
+						}));
+					}, *stream);
+				}
 			}));
 			
 		}, *stream);
+		
 	}
 	
 }

@@ -1,5 +1,5 @@
 #include "nodes/Utility/DataHandling.h"
-
+#include "Remotery.h"
 using namespace EagleLib;
 
 void GetOutputImage::Init(bool firstInit)
@@ -27,7 +27,11 @@ cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
 }
 cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    updateParameter("Output image", img,&stream)->type = Parameters::Parameter::Output;
+	{
+		rmt_ScopedCPUSample(ExportInputImage_updateParameter);
+		updateParameter("Output image", img, &stream);
+	}
+    
     return img;
 }
 

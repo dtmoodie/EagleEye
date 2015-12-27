@@ -2,6 +2,7 @@
 #include <SystemTable.hpp>
 #include "ObjectInterfacePerModule.h"
 #include "Events.h"
+#include "remotery/lib/Remotery.h"
 using namespace EagleLib;
 using namespace Parameters;
 namespace EagleLib
@@ -142,16 +143,19 @@ void ParameteredObject::onUpdate(cv::cuda::Stream* stream)
 }
 void ParameteredObject::RunCallbackLockObject(cv::cuda::Stream* stream, const boost::function<void(cv::cuda::Stream*)>& callback)
 {
+	rmt_ScopedCPUSample(ParameteredObject_RunCallbackLockObject);
     boost::recursive_mutex::scoped_lock lock(mtx);
     callback(stream);
 }
 void ParameteredObject::RunCallbackLockParameter(cv::cuda::Stream* stream, const boost::function<void(cv::cuda::Stream*)>& callback, boost::recursive_mutex* paramMtx)
 {
+	rmt_ScopedCPUSample(ParameteredObject_RunCallbackLockParameter);
     boost::recursive_mutex::scoped_lock lock(*paramMtx);
     callback(stream);
 }
 void ParameteredObject::RunCallbackLockBoth(cv::cuda::Stream* stream, const boost::function<void(cv::cuda::Stream*)>& callback, boost::recursive_mutex* paramMtx)
 {
+	rmt_ScopedCPUSample(ParameteredObject_RunCallbackLockBoth);
     boost::recursive_mutex::scoped_lock lock(mtx);
     boost::recursive_mutex::scoped_lock param_lock(*paramMtx);
     callback(stream);

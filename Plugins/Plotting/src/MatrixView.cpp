@@ -1,6 +1,6 @@
 #include "Plotting.h"
 #include "PlottingImpl.hpp"
-
+#include "Remotery.h"
 
 template<typename T> QTableWidgetItem* readItems(T* data, const int channels)
 {
@@ -115,6 +115,7 @@ namespace EagleLib
 
 		virtual void OnParameterUpdate(cv::cuda::Stream* stream)
 		{
+			rmt_ScopedCPUSample(MatrixView_OnParameterUpdate);
 			if (param == nullptr)
 				return;
 			bool shown = false;
@@ -136,32 +137,32 @@ namespace EagleLib
 			if (!shown)
 				return;
 			QtPlotterImpl::OnParameterUpdate(stream);
-			auto This = this;
-			auto _converter = converter;
+			
 			int row = *GetParameter<unsigned int>("Row")->Data();
 			int col = *GetParameter<unsigned int>("Col")->Data();
+			converter->roi = cv::Rect(col, row, 10, 10);
 			EagleLib::cuda::enqueue_callback_async(
-				[_converter, this, row, col]()->void
+				[this, row, col]()->void
 			{
 				std::vector<QTableWidgetItem*> items;
-				items.reserve(_converter->NumRows() * _converter->NumCols());
-				const int channels = _converter->NumChan();
+				items.reserve(converter->NumRows() * converter->NumCols());
+				const int channels = converter->NumChan();
 
-				for (int i = row; i < _converter->NumRows() && i < row + 10; ++i)
+				for (int i = row; i < converter->NumRows() && i < row + 10; ++i)
 				{
-					for (int j = col; j < _converter->NumCols() && j < col + 10; ++j)
+					for (int j = col; j < converter->NumCols() && j < col + 10; ++j)
 					{
 						QString text;
 						for (int c = 0; c < channels; ++c)
 						{
 							if (c != 0)
 								text += ",";
-							text += QString::number(_converter->GetValue(i, j, c));
+							text += QString::number(converter->GetValue(i, j, c));
 						}
 						items.push_back(new QTableWidgetItem(text));
 					}
 				}
-				Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&MatrixView::UpdateUi, this, items, cv::Size(_converter->NumCols(), _converter->NumRows())));
+				Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&MatrixView::UpdateUi, this, items, cv::Size(converter->NumCols(), converter->NumRows())));
 			}, *stream);
 		}
     };

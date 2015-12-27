@@ -276,15 +276,11 @@ namespace EagleLib
 		vtkTypeMacro(vtkOpenGLCudaImage, vtkTextureObject);
 		void map_gpu_mat(cv::cuda::GpuMat image);
 		cv::ogl::Buffer image_buffer;
-		//virtual void Bind();
-		//virtual void UnBind();
-		//virtual bool IsBound();
-	private:
-		//virtual long GetIndex();
-		vtkOpenGLCudaImage();
-		// Only holds the binding of the memory
-		//cv::ogl::Texture2D image_buffer;
+		virtual void Bind();
 		boost::mutex mtx;
+	private:
+		vtkOpenGLCudaImage();
+		
 	};
 
 	class vtkPlotter : public QtPlotter
@@ -310,9 +306,9 @@ namespace EagleLib
 
 	class vtkImageViewer : public vtkPlotter
 	{
-
-		
 	public:
+		int texture_stream_index;
+		//vtkSmartPointer<vtkOpenGLCudaImage> textureObject[2];
 		vtkSmartPointer<vtkOpenGLCudaImage> textureObject;
 		vtkSmartPointer<vtkOpenGLTexture> texture;
 		vtkImageViewer();
@@ -320,5 +316,7 @@ namespace EagleLib
 		virtual void SetInput(Parameters::Parameter::Ptr param_ = Parameters::Parameter::Ptr());
 		virtual void OnParameterUpdate(cv::cuda::Stream* stream);
 		virtual std::string PlotName() const;
+		virtual void Serialize(ISimpleSerializer *pSerializer);
+		virtual void Init(bool firstInit);
 	};
 }
