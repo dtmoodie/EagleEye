@@ -8,6 +8,7 @@
 #include <opencv2/core/persistence.hpp>
 #include "type.h"
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/lexical_cast.hpp>
 namespace EagleLib
 {
     struct ParameteredObjectImpl; // Private implementation stuffs

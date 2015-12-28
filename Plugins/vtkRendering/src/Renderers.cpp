@@ -65,7 +65,7 @@ std::string vtkPlotter::PlotName() const
 
 void vtkPlotter::SetInput(Parameters::Parameter::Ptr param_)
 {
-
+	QtPlotter::SetInput(param_);
 }
 
 void vtkPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
@@ -112,7 +112,7 @@ void vtkPlotter::Serialize(ISimpleSerializer *pSerializer)
 
 void vtkPlotter::Init(bool firstInit)
 {
-
+	QtPlotter::Init(firstInit);
 }
 
 REGISTERCLASS(vtkPlotter);
@@ -248,19 +248,8 @@ bool vtkImageViewer::AcceptsParameter(Parameters::Parameter::Ptr param)
 
 void vtkImageViewer::SetInput(Parameters::Parameter::Ptr param_)
 {
-	if (param_->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat)))
-	{
-		param = param_;
-		RegisterParameterCallback(param.get(), boost::bind(&vtkImageViewer::OnParameterUpdate, this, _1), false, false);
-	}
-	if (param_->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat)))
-	{
-		
-	}
-	if (param_->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::HostMem)))
-	{
-		
-	}
+	vtkPlotter::SetInput(param_);
+	
 }
 
 void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
@@ -278,8 +267,30 @@ void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
 			current_texture = vtkSmartPointer<vtkOpenGLCudaImage>::New();
 			current_texture->SetContext((*render_widgets.begin())->GetRenderWindow());
 		}
-		
-		auto future = EagleLib::cuda::enqueue_callback_async(
+
+		Parameters::UI::UiCallbackService::Instance()->post(boost::bind<void>([current_texture, d_mat, stream, this]()->void
+		{
+			{
+				rmt_ScopedCPUSample(opengl_buffer_fill);
+				current_texture->image_buffer.copyFrom(d_mat, *stream, cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+				stream->waitForCompletion();
+			}
+			
+			boost::recursive_mutex::scoped_lock lock(this->mtx);
+			{
+				rmt_ScopedCPUSample(texture_creation);
+				current_texture->map_gpu_mat(d_mat);
+				texture->SetTextureObject(current_texture);
+			}
+			{
+				rmt_ScopedCPUSample(Rendering);
+				for (auto itr : this->render_widgets)
+				{
+					itr->GetRenderWindow()->Render();
+				}
+			}
+		}));
+		/*EagleLib::cuda::enqueue_callback_async(
 			[this, d_mat, stream, current_texture]()->void
 		{
 			Parameters::UI::UiCallbackService::Instance()->post(
@@ -313,11 +324,8 @@ void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
 					}, *stream);
 				}
 			}));
-			
-		}, *stream);
-		
+		}, *stream);*/
 	}
-	
 }
 
 std::string vtkImageViewer::PlotName() const

@@ -32,7 +32,7 @@
 boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>> log_sink;
 void EagleLib::SetupLogging()
 {
-	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
 	boost::log::add_common_attributes();
 	if (!boost::filesystem::exists("./logs") || !boost::filesystem::is_directory("./logs"))
 	{

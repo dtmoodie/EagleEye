@@ -16,6 +16,7 @@ void Plotter::Init(bool firstInit)
 	{
 		if (param)
 		{
+			bc.disconnect();
 			bc = param->RegisterNotifier(boost::bind(&Plotter::OnParameterUpdate, this, _1));
 		}
 	}

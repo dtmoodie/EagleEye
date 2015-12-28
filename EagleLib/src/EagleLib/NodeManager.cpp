@@ -2,7 +2,7 @@
 #include "ObjectManager.h"
 #include "nodes/Node.h"
 #include <boost/filesystem.hpp>
-
+#include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 
 NodeManager& NodeManager::getInstance()

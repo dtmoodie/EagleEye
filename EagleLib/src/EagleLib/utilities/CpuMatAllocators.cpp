@@ -32,8 +32,8 @@ CpuDelayedDeallocationPool* CpuDelayedDeallocationPool::instance(size_t initial_
 
 void CpuDelayedDeallocationPool::allocate(void** ptr, size_t total, size_t elemSize)
 {
-    BOOST_LOG_TRIVIAL(trace) << "Requesting allocation of " << total << " bytes";
 	std::lock_guard<std::recursive_timed_mutex> lock(deallocate_pool_mutex);
+    BOOST_LOG_TRIVIAL(trace) << "Requesting allocation of " << total << " bytes";
     *ptr = nullptr;
 	if (total < _threshold_level && false)
 	{
@@ -82,7 +82,6 @@ void CpuDelayedDeallocationPool::allocate(void** ptr, size_t total, size_t elemS
 
 void CpuDelayedDeallocationPool::deallocate(void* ptr, size_t total)
 {
-	auto inst = instance();
     std::lock_guard<std::recursive_timed_mutex> lock(deallocate_pool_mutex);
     /*
 	for (auto itr : blocks)
@@ -97,6 +96,7 @@ void CpuDelayedDeallocationPool::deallocate(void* ptr, size_t total)
 		}
 	}
     */
+	BOOST_LOG_TRIVIAL(trace) << "Releasing " << total / (1024 * 1024) << " MB to lazy deallocation pool";
 	deallocate_pool.push_back(std::make_tuple((unsigned char*)ptr, clock(), total));
     cleanup();
 }
@@ -107,10 +107,8 @@ void CpuDelayedDeallocationPool::cleanup(bool force)
 		time = 0;
 	for (auto itr = deallocate_pool.begin(); itr != deallocate_pool.end(); ++itr)
 	{
-		//if ((time - itr->second.first) > deallocation_delay)
 		if((time - std::get<1>(*itr)) > deallocation_delay)
 		{
-			//total_usage -= itr->second.second;
 			total_usage -= std::get<2>(*itr);
             BOOST_LOG_TRIVIAL(info) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
 				<< " MB. Which was stale for " << time - std::get<1>(*itr)

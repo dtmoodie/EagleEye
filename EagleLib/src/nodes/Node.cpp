@@ -1,5 +1,8 @@
+#ifndef OPENCV_FOUND
+#define OPENCV_FOUND
+#endif
 #include "nodes/Node.h"
-
+#include "Persistence/OpenCV.hpp"
 #include <regex>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>

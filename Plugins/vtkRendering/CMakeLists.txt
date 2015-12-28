@@ -1,6 +1,18 @@
 PROJECT(vtkRendering)
 
-find_package(VTK REQUIRED)
+find_package(VTK COMPONENTS 
+				 vtkInteractionStyle 
+				 vtkRenderingLOD 
+				 vtkIOPLY 
+				 vtkFiltersTexture 
+				 vtkRenderingFreeType 
+				 vtkIOExport 
+				 vtkRenderingOpenGL2 
+				 vtkRenderingQt
+				 vtkGUISupportQt
+				 vtkGUISupportQtOpenGL)
+
+
   include(${VTK_USE_FILE})
   GET_TARGET_PROPERTY(vtk_core vtkCommonCore IMPORTED_IMPLIB_RELEASE)
   GET_FILENAME_COMPONENT(vtk_lib_dir ${vtk_core} DIRECTORY)
@@ -67,5 +79,6 @@ RCC_LINK_LIB(vtkRendering
   Qt5::Core
   Qt5::Widgets
   Qt5::OpenGL
+  opengl32
 )
 INCLUDE(../PluginTemplate.cmake)

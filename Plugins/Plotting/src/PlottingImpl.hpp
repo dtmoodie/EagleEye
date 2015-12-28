@@ -11,7 +11,7 @@
 #include <memory>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
-
+#include "Converters/DoubleConverter.hpp"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 

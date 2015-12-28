@@ -1,4 +1,5 @@
 #pragma once
+#include "cv_link_config.hpp"
 #include "RuntimeLinkLibrary.h"
 
 #include <opencv2/videoio.hpp>
@@ -6,9 +7,9 @@
 #ifdef _MSC_VER // Windows
 
 #ifdef _DEBUG
-RUNTIME_COMPILER_LINKLIBRARY("opencv_videoio300d.lib")
+RUNTIME_COMPILER_LINKLIBRARY("opencv_videoio" CV_VERSION_ "d.lib")
 #else
-RUNTIME_COMPILER_LINKLIBRARY("opencv_videoio300.lib")
+RUNTIME_COMPILER_LINKLIBRARY("opencv_videoio" CV_VERSION_ ".lib")
 #endif
 
 #else // Linux

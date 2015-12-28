@@ -5,9 +5,9 @@
 #ifdef _MSC_VER // Windows
 
 #ifdef _DEBUG
-RUNTIME_COMPILER_LINKLIBRARY("opencv_hal300d.lib")
+RUNTIME_COMPILER_LINKLIBRARY("opencv_hal" CV_VERSION_ "d.lib")
 #else
-RUNTIME_COMPILER_LINKLIBRARY("opencv_hal300.lib")
+RUNTIME_COMPILER_LINKLIBRARY("opencv_hal" CV_VERSION_ ".lib")
 #endif
 
 #else // Linux
