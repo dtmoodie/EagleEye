@@ -237,3 +237,7 @@ QWidget* PtCloudDisplay::GetControlWidget(QWidget* parent)
 {
     return nullptr;
 }
+void PtCloudDisplay::AddPlot(QWidget *plot_)
+{
+
+}

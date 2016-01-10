@@ -519,15 +519,10 @@ cv::cuda::GpuMat ReadCameraCalibration::doProcess(cv::cuda::GpuMat &img, cv::cud
     return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateCamera)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateStereoPair)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FindCheckerboard)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(LoadCameraCalibration)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ReadStereoCalibration)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ReadCameraCalibration)
-REGISTER_NODE_HIERARCHY(CalibrateCamera, Image, Extractor)
-REGISTER_NODE_HIERARCHY(CalibrateStereoPair, Image, Extractor)
-REGISTER_NODE_HIERARCHY(FindCheckerboard, Image, Extractor)
-REGISTER_NODE_HIERARCHY(LoadCameraCalibration, Utility)
-REGISTER_NODE_HIERARCHY(ReadStereoCalibration, Utility)
-REGISTER_NODE_HIERARCHY(ReadCameraCalibration, Utility)
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateCamera, Image, Extractor)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CalibrateStereoPair, Image, Extractor)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FindCheckerboard, Image, Extractor)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(LoadCameraCalibration, Utility)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ReadStereoCalibration, Utility)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ReadCameraCalibration, Utility)

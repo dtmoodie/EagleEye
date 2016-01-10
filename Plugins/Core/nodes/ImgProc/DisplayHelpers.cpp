@@ -136,11 +136,8 @@ cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     return normalized; 
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(AutoScale)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Colormap)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Normalize)
-REGISTERCLASS(QtColormapDisplay)
-REGISTER_NODE_HIERARCHY(AutoScale, Image, Processing)
-REGISTER_NODE_HIERARCHY(Colormap, Image, Processing)
-REGISTER_NODE_HIERARCHY(Normalize, Image, Processing)
-REGISTER_NODE_HIERARCHY(QtColormapDisplay, Image, Sink)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(AutoScale, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Colormap, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Normalize, Image, Processing)
+static EagleLib::NodeInfo g_registerer_QtColormapDisplay("QtColormapDisplay", { "Image", "Sink" });
+REGISTERCLASS(QtColormapDisplay, &g_registerer_QtColormapDisplay)

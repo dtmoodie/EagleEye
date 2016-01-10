@@ -372,12 +372,7 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     return output;
 }
 
-
-NODE_DEFAULT_CONSTRUCTOR_IMPL(MorphologyFilter)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FindContours)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ContourBoundingBox)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramThreshold)
-REGISTER_NODE_HIERARCHY(MorphologyFilter, Image, Processing);
-REGISTER_NODE_HIERARCHY(FindContours, Image, Extractor)
-REGISTER_NODE_HIERARCHY(ContourBoundingBox, Image, Processing)
-REGISTER_NODE_HIERARCHY(HistogramThreshold, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(MorphologyFilter, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FindContours, Image, Extractor)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ContourBoundingBox, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramThreshold, Image, Processing)

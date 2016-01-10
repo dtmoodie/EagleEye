@@ -8,19 +8,15 @@
 
 using namespace EagleLib;
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(OGLImageDisplay)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyPointDisplay)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FlowVectorDisplay)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramDisplay)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(DetectionDisplay)
 
-REGISTER_NODE_HIERARCHY(QtImageDisplay, Image, Sink, Display)
-REGISTER_NODE_HIERARCHY(OGLImageDisplay, Image, Sink, Display)
-REGISTER_NODE_HIERARCHY(KeyPointDisplay, Image, Sink, Display)
-REGISTER_NODE_HIERARCHY(FlowVectorDisplay, Image, Sink, Display)
-REGISTER_NODE_HIERARCHY(HistogramDisplay, Image, Sink, Display)
-REGISTER_NODE_HIERARCHY(DetectionDisplay, Image, Sink, Display)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay, Image, Sink, Display)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyPointDisplay, Image, Sink, Display)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FlowVectorDisplay, Image, Sink, Display)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramDisplay, Image, Sink, Display)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(DetectionDisplay, Image, Sink, Display)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(OGLImageDisplay, Image, Sink, Display)
+
+
 
 void QtImageDisplay::Init(bool firstInit)
 {
@@ -61,7 +57,7 @@ void OGLImageDisplay::Init(bool firstInit)
 		updateParameter("Default Name", std::string("Default Name"))->SetTooltip("Set name for window");
     }
 	prevName = *getParameter<std::string>(0)->Data();
-	cv::namedWindow("Default Name", cv::WINDOW_OPENGL);
+	cv::namedWindow("Default Name", cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
 }
 
 
@@ -73,7 +69,7 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         cv::destroyWindow(prevName);
         prevName = *getParameter<std::string>(0)->Data();
         parameters[0]->changed = false;
-        cv::namedWindow(prevName, cv::WINDOW_OPENGL);
+        cv::namedWindow(prevName, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
     }
 	std::string display_name = *getParameter<std::string>(0)->Data();
 	cv::cuda::GpuMat display_buffer;
@@ -81,10 +77,12 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 	cuda::enqueue_callback_async(
 		[display_buffer, display_name]()->void
 	{
-		cv::namedWindow(display_name, cv::WINDOW_OPENGL);
-		Parameters::UI::UiCallbackService::Instance()->post(
-			boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), 
-					display_name, display_buffer));
+		//cv::namedWindow(display_name, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
+        Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&WindowCallbackHandler::imshow, WindowCallbackHandler::instance(), display_name, display_buffer, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO));
+        //WindowCallbackHandler::instance()->imshow(display_name, display_buffer);
+		//Parameters::UI::UiCallbackService::Instance()->post(
+//			boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), 
+					//display_name, display_buffer));
 
 	}, stream);
     return img;

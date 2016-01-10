@@ -13,8 +13,9 @@ static void on_mouse_click(int event, int x, int y, int flags, void* callback_ha
     ptr->second->handle_click(event, x, y, flags, ptr->first);
 }
 
-void WindowCallbackHandler::imshow(const std::string& window_name, cv::InputArray img)
+void WindowCallbackHandler::imshow(const std::string& window_name, cv::InputArray img, int flags)
 {
+    cv::namedWindow(window_name, flags);
     cv::imshow(window_name, img);
     auto itr = windows.find(window_name);
     if (itr == windows.end())

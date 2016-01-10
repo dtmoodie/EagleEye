@@ -28,6 +28,7 @@ LIST(APPEND defs_ -DOPENCV_FOUND)
 LIST(APPEND defs_ -DEagleLIB_EXPORTS)
 LIST(APPEND defs_ ${Parameters_DEFS})
 LIST(APPEND defs_ -DRMT_USE_CUDA)
+LIST(APPEND defs_ -DRMT_USE_OPENGL)
 IF(EAGLE_LIB_JETSON)
 	LIST(APPEND defs_ "-DJETSON")
 ENDIF(EAGLE_LIB_JETSON)
@@ -202,6 +203,7 @@ TARGET_LINK_LIBRARIES(EagleLib
         ${Parameters_LIBRARIES}
 		${CUDA_CUDA_LIBRARY}
 		${CUDA_CUDART_LIBRARY}
+		OpenGL32
 )
 ADD_DEPENDENCIES(EagleLib
 	RuntimeCompiler
@@ -209,7 +211,7 @@ ADD_DEPENDENCIES(EagleLib
 	libParameter
 	pplx
 	)
-
+#cotire(EagleLib)
 
 if(UNIX)
     TARGET_LINK_LIBRARIES(EagleLib dl)

@@ -11,24 +11,13 @@ void GoodFeaturesToTrackDetector::Init(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter("Feature Detector",
-			cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1))->type = Parameters::Parameter::Output;
-        updateParameter("Max corners",
-			int(1000));
-        updateParameter("Quality Level",
-            double(0.01));
-        updateParameter("Min Distance",
-			double(0.0))->SetTooltip("The minimum distance between detected points");
-        updateParameter("Block Size",
-            int(3));
-        updateParameter("Use harris",
-            false);
-        updateParameter("Harris K",
-            double(0.04));
-        updateParameter("Enabled",
-            false);
-        //updateParameter<DetectAndComputeFunctor>("Detection functor",
-        //	boost::bind(&GoodFeaturesToTrackDetector::detect, this, _1, _2, _3, _4, _5))->type = Parameters::Parameter::Output;
+        updateParameter("Max corners",			int(1000));
+        updateParameter("Quality Level",            double(0.01));
+        updateParameter("Min Distance",			double(0.0))->SetTooltip("The minimum distance between detected points");
+        updateParameter("Block Size",            int(3));
+        updateParameter("Use harris",            false);
+        updateParameter("Harris K",            double(0.04));
+        
         greyImgs.resize(5);
         addInputParameter<cv::cuda::GpuMat>("Mask");
     }
@@ -41,32 +30,31 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
 {
     if(parameters[1]->changed || parameters[2]->changed ||
        parameters[3]->changed || parameters[4]->changed ||
-       parameters[5]->changed || parameters[6]->changed)
+       parameters[5]->changed || parameters[6]->changed || detector == nullptr)
     {
-        int numCorners = *getParameter<int>(1)->Data();
-        double qualityLevel = *getParameter<double>(2)->Data();
-        double minDistance = *getParameter<double>(3)->Data();
-        int blockSize = *getParameter<int>(4)->Data();
-        bool useHarris = *getParameter<bool>(5)->Data();
-        double harrisK = *getParameter<double>(6)->Data();
 
-        updateParameter(0,
-            cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1,
-            numCorners,qualityLevel,minDistance,blockSize,useHarris,harrisK));
+        int numCorners = *getParameter<int>(0)->Data();
+        double qualityLevel = *getParameter<double>(1)->Data();
+        double minDistance = *getParameter<double>(2)->Data();
+        int blockSize = *getParameter<int>(3)->Data();
+        bool useHarris = *getParameter<bool>(4)->Data();
+        double harrisK = *getParameter<double>(5)->Data();
+
+        detector = cv::cuda::createGoodFeaturesToTrackDetector(img.type(),
+            numCorners, qualityLevel, minDistance, blockSize, useHarris, harrisK);
 
 
 		NODE_LOG(info) << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
 			<< " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
 
+        parameters[0]->changed = false;
         parameters[1]->changed = false;
         parameters[2]->changed = false;
         parameters[3]->changed = false;
         parameters[4]->changed = false;
         parameters[5]->changed = false;
-        parameters[6]->changed = false;
     }
-    if(!*getParameter<bool>(7)->Data())
-        return img;
+
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
 
     cv::cuda::GpuMat grey_img;
@@ -299,13 +287,60 @@ void HistogramRange::updateLevels(int type)
     levels.upload(h_mat);
     updateParameter("Histogram bins", h_mat)->type =  Parameters::Parameter::Output;
 }
+void CornerHarris::Init(bool firstInit)
+{
+    Node::Init(firstInit);
+    if(firstInit)
+    {
+        updateParameter("Block size", 3);
+        updateParameter("Sobel aperature size", 5);
+        updateParameter("Harris free parameter", 1.0);
+    }
+    
+}
+cv::cuda::GpuMat CornerHarris::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+    if(parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || detector == nullptr)
+    {
+        detector = cv::cuda::createHarrisCorner(img.type(),*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data(), *getParameter<double>(2)->Data());
+        parameters[0]->changed = false;
+        parameters[1]->changed = false;
+        parameters[2]->changed = false;
+    }
+    cv::cuda::GpuMat score;
+    detector->compute(img, score, stream);
+    updateParameter("Corner score", score, &stream)->type = Parameters::Parameter::Output;
+    return img;
+}
+void CornerMinEigenValue::Init(bool firstInit)
+{
+    Node::Init(firstInit);
+    if(firstInit)
+    {
+        updateParameter("Block size", 3);
+        updateParameter("Sobel aperature size", 5);
+        updateParameter("Harris free parameter", 1.0);
+    }
+    
+}
+cv::cuda::GpuMat CornerMinEigenValue::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+    if (parameters[0]->changed || parameters[1]->changed || detector == nullptr)
+    {
+        detector = cv::cuda::createMinEigenValCorner(img.type(), *getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
+    }
+    cv::cuda::GpuMat score;
+    detector->compute(img, score, stream);
+    updateParameter("Corner score", score, &stream)->type = Parameters::Parameter::Output;
+    return img;
+}
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrackDetector)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ORBFeatureDetector)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FastFeatureDetector)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramRange)
 
-REGISTER_NODE_HIERARCHY(GoodFeaturesToTrackDetector, Image, Extractor)
-REGISTER_NODE_HIERARCHY(ORBFeatureDetector, Image, Extractor)
-REGISTER_NODE_HIERARCHY(FastFeatureDetector, Image, Extractor)
-REGISTER_NODE_HIERARCHY(HistogramRange, Image, Extractor)
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrackDetector, Image, Extractor);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ORBFeatureDetector, Image, Extractor);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FastFeatureDetector, Image, Extractor);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramRange, Image, Extractor);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CornerHarris, Image, Extractor);
+
+

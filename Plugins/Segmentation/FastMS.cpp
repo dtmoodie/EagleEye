@@ -46,6 +46,7 @@ void FastMumfordShah::Serialize(ISimpleSerializer* pSerializer)
 	SERIALIZE(solver);
 	SERIALIZE(h_img);
 }
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FastMumfordShah);
-REGISTER_NODE_HIERARCHY(FastMumfordShah, Image, Processing, Segmentation);
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FastMumfordShah, Image, Processing, Segmentation);
+
 #endif

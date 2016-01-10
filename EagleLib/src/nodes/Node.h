@@ -54,7 +54,7 @@
 #include "IObject.h"
 #include "EagleLib/Defs.hpp"
 #include "ParameteredObject.h"
-
+#include "IObjectInfo.h"
 
 
 #define TIME Clock(__LINE__);
@@ -96,18 +96,25 @@ RUNTIME_COMPILER_LINKLIBRARY("-lEagleLib")
 #endif
 
 
-#define NODE_DEFAULT_CONSTRUCTOR_IMPL(NodeName) \
+
+#define NODE_DEFAULT_CONSTRUCTOR_IMPL(NodeName, ...) \
 NodeName::NodeName():Node()                     \
 {                                               \
     nodeName = #NodeName;                       \
     treeName = nodeName;						\
 	fullTreeName = treeName;					\
 }												\
-REGISTERCLASS(NodeName)
+static EagleLib::NodeInfo g_registerer_##NodeName(#NodeName, {STRINGIFY(__VA_ARGS__) });\
+REGISTERCLASS(NodeName, &g_registerer_##NodeName)
+
+
+#define SET_NODE_TOOLTIP(name, tooltip) g_registerer_##name.node_tooltip = std::string(tooltip);
+#define SET_NODE_HELP(name, help) g_registerer_##name.node_help = std::string(help);
 
 
 
-#define REGISTER_NODE_HIERARCHY(name, ...) static EagleLib::NodeInfoRegisterer g_registerer_##name = EagleLib::NodeInfoRegisterer(#name, { STRINGIFY(__VA_ARGS__) });
+
+
 
 namespace EagleLib
 {
@@ -116,6 +123,23 @@ namespace EagleLib
 		NodeInfoRegisterer(const char* nodeName, const char** nodeInfo);
 		NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo);
 	};
+
+    struct EAGLE_EXPORTS NodeInfo: public IObjectInfo
+    {
+        NodeInfo(const char* name, std::initializer_list<char const*> nodeInfo);
+        virtual int GetObjectInfoType();
+        virtual std::string GetObjectName();
+        virtual std::string GetObjectTooltip();
+        virtual std::string GetObjectHelp();
+        virtual std::vector<const char*> GetNodeHierarchy();
+        std::string node_name;
+        std::string node_tooltip;
+        std::string node_help;
+        std::vector<const char*> node_hierarchy;
+    };
+
+
+
 
     class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, ParameteredObject>, public IObjectNotifiable
     {

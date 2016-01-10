@@ -20,7 +20,7 @@ namespace EagleLib
 
 		void RegisterNodeInfo(const char* nodeName, std::vector<char const*>& nodeInfo);
 
-		std::vector<char const*>& GetNodeInfo(std::string& nodeName);
+		std::vector<char const*> GetNodeInfo(std::string& nodeName);
 
 		shared_ptr<Node> addNode(const std::string& nodeName);
 

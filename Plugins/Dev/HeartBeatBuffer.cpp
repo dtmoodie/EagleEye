@@ -104,5 +104,6 @@ cv::cuda::GpuMat HeartBeatBuffer::process(cv::cuda::GpuMat &img, cv::cuda::Strea
 	return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(HeartBeatBuffer)
-REGISTER_NODE_HIERARCHY(HeartBeatBuffer, Utility)
+
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(HeartBeatBuffer, Utility)

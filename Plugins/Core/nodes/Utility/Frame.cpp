@@ -138,15 +138,11 @@ cv::cuda::GpuMat Subtract::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& st
 	cv::cuda::subtract(img, *getParameter<cv::Scalar>(0)->Data(), img, cv::noArray(), -1, stream);
 	return img;
 }
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SetMatrixValues)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameRate)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameLimiter)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CreateMat)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Resize)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Subtract)
-REGISTER_NODE_HIERARCHY(SetMatrixValues, Image, Processing)
-REGISTER_NODE_HIERARCHY(FrameRate, Utility)
-REGISTER_NODE_HIERARCHY(FrameLimiter, Utility)
-REGISTER_NODE_HIERARCHY(CreateMat, Image, Processing)
-REGISTER_NODE_HIERARCHY(Resize, Image, Processing)
-REGISTER_NODE_HIERARCHY(Subtract, Image, Processing)
+
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SetMatrixValues, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameRate, Utility)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameLimiter, Utility)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CreateMat, Image, Source)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Resize, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Subtract, Image, Processing)

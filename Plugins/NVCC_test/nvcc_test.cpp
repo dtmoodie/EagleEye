@@ -20,5 +20,5 @@ cv::cuda::GpuMat nvcc_test::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &s
 } 
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(nvcc_test)  
+NODE_DEFAULT_CONSTRUCTOR_IMPL(nvcc_test, testing)  
 

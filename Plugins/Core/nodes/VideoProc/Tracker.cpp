@@ -7,13 +7,13 @@
 #include <external_includes/cv_cudaimgproc.hpp>
 #include <UI/InterThread.hpp>
 using namespace EagleLib;
-NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyFrameTracker)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CMTTracker)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(TLDTracker)
 
-REGISTER_NODE_HIERARCHY(KeyFrameTracker, Image, Extractor)
-REGISTER_NODE_HIERARCHY(CMTTracker, Image, Extractor)
-REGISTER_NODE_HIERARCHY(TLDTracker, Image, Extractor)
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyFrameTracker, Image, Extractor)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CMTTracker, Image, Extractor)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(TLDTracker, Image, Extractor)
+
+
 
 #ifdef _MSC_VER
 

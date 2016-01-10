@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
+CMAKE_POLICY(SET CMP0020 NEW)
 PROJECT(Plotting)
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")

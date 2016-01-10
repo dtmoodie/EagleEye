@@ -58,5 +58,5 @@ cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SyncFunctionCall)
-REGISTER_NODE_HIERARCHY(SyncFunctionCall, Utility)
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SyncFunctionCall, Utility)

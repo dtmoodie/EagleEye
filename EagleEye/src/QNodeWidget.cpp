@@ -259,7 +259,7 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Node *node_)
 					if (node->parameters[i]->type & Parameters::Parameter::Input)
 					{
 						QInputProxy* proxy = new QInputProxy(node->parameters[i], node, this);
-						ui->gridLayout->addWidget(proxy->getWidget(0), i + 5, col, 1, 1);
+						ui->gridLayout->addWidget(proxy->getWidget(0), i + 7, col, 1, 1);
 						inputProxies.push_back(proxy);
 						++col;
 					}
@@ -273,7 +273,7 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Node *node_)
 							auto widget = interop->GetParameterWidget(this);
 							widget->installEventFilter(this);
 							widgetParamMap[widget] = node->parameters[i];
-							ui->gridLayout->addWidget(widget, i + 5, col, 1, 1);
+							ui->gridLayout->addWidget(widget, i + 7, col, 1, 1);
 							//ui->gridLayout->addWidget(interop->GetParameterWidget(this), i + 5, col, 1, 1);
 						}
 					}

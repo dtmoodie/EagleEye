@@ -38,7 +38,11 @@ ParameteredObject::ParameteredObject():
 
 ParameteredObject::~ParameteredObject()
 {
-
+    auto& connections = _impl->callbackConnections[this];
+    for (auto itr : connections)
+    {
+        itr.disconnect();
+    }
 }
 
 void ParameteredObject::Serialize(ISimpleSerializer* pSerializer)

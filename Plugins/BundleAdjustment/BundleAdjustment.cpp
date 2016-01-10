@@ -12,4 +12,4 @@ cv::cuda::GpuMat BundleAdjustment::doProcess(cv::cuda::GpuMat& img, cv::cuda::St
 	return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(BundleAdjustment);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(BundleAdjustment, Image);

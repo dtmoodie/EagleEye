@@ -10,6 +10,7 @@
 #include <boost/chrono.hpp>
 #include <boost/lexical_cast.hpp>
 
+
 #include <opencv2/core/cuda.hpp>
 #include "remotery/lib/Remotery.h"
 
@@ -172,6 +173,7 @@ ObjectManager::ObjectManager()
 	bind.EventQuery = (void*)&cuEventQuery;
 	bind.EventElapsedTime = (void*)&cuEventElapsedTime;
 	rmt_BindCUDA(&bind);
+    rmt_BindOpenGL();
 }
 ObjectManager& ObjectManager::Instance()
 {

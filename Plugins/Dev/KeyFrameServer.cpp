@@ -65,5 +65,5 @@ cv::cuda::GpuMat KeyFrameServer::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyFrameServer)
-REGISTER_NODE_HIERARCHY(KeyFrameServer, Utility)
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyFrameServer, Utility)

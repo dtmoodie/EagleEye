@@ -260,20 +260,15 @@ cv::cuda::GpuMat Reshape::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &str
     return img.reshape(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToGrey)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToHSV)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertColorspace)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ExtractChannels)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertDataType)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Merge)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Reshape)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Magnitude)
 
-REGISTER_NODE_HIERARCHY(ConvertToGrey, Image, Processing)
-REGISTER_NODE_HIERARCHY(ConvertToHSV, Image, Processing)
-REGISTER_NODE_HIERARCHY(ConvertColorspace, Image, Processing)
-REGISTER_NODE_HIERARCHY(ExtractChannels, Image, Processing)
-REGISTER_NODE_HIERARCHY(ConvertDataType, Image, Processing)
-REGISTER_NODE_HIERARCHY(Merge, Image, Processing)
-REGISTER_NODE_HIERARCHY(Reshape, Image, Processing)
-REGISTER_NODE_HIERARCHY(Magnitude, Image, Processing)
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToGrey, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToHSV, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertColorspace, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ExtractChannels, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertDataType, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Merge, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Reshape, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Magnitude, Image, Processing)
+
+

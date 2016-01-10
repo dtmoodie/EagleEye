@@ -516,22 +516,14 @@ cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream
 	return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(OtsuThreshold)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentMOG2)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentGrabCut)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentWatershed)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentKMeans)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ManualMask)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentMeanShift)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentCPMC)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SLaT)
 
-REGISTER_NODE_HIERARCHY(OtsuThreshold, Image, Processing, Segmentation)
-REGISTER_NODE_HIERARCHY(SegmentMOG2, Image, Processing, Segmentation)
-REGISTER_NODE_HIERARCHY(SegmentGrabCut, Image, Processing, Segmentation)
-REGISTER_NODE_HIERARCHY(SegmentWatershed, Image, Processing, Segmentation)
-REGISTER_NODE_HIERARCHY(SegmentKMeans, Image, Processing, Segmentation)
-REGISTER_NODE_HIERARCHY(ManualMask, Image, Processing, Segmentation)
-REGISTER_NODE_HIERARCHY(SegmentMeanShift, Image, Processing, Segmentation)
-REGISTER_NODE_HIERARCHY(SegmentCPMC, Image, Processing, Segmentation)
-REGISTER_NODE_HIERARCHY(SLaT, Image, Processing, Segmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(OtsuThreshold, Image, Processing, Segmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentMOG2, Image, Processing, Segmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentGrabCut, Image, Processing, Segmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentWatershed, Image, Processing, Segmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentKMeans, Image, Processing, Segmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ManualMask, Image, Processing, Segmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentMeanShift, Image, Processing, Segmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentCPMC, Image, Processing, Segmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SLaT, Image, Processing, Segmentation)
+

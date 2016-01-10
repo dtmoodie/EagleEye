@@ -43,6 +43,8 @@ Camera::~Camera()
 {
 //    acquisitionThread.interrupt();
 //    acquisitionThread.join();
+    read_thread.interrupt();
+    read_thread.join();
 }
 
 void Camera::Init(bool firstInit)
@@ -100,7 +102,7 @@ cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stre
 	cv::cuda::GpuMat popped_image;
 	if (notifier.try_pop(popped_image))
 	{
-		updateParameter("Output", popped_image)->type =  Parameters::Parameter::Output;
+		updateParameter("Output", popped_image, &stream)->type =  Parameters::Parameter::Output;
 		return popped_image;
 	}
     return cv::cuda::GpuMat();
@@ -358,7 +360,8 @@ void RTSPCamera::setString()
             str << ", height=" << *getParameter<unsigned short>("Height")->Data();
             str << " ! appsink";
             result = str.str();
-            std::cout << result << std::endl;
+            //std::cout << result << std::endl;
+            NODE_LOG(info) << "Setting gstreamer pipeline to: " << result;
             updateParameter<std::string>("Gstreamer string", result);
         }
 
@@ -409,7 +412,7 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
 	if (notifier.try_pop(h_img) && !h_img.empty())
     {
         output.upload(h_img, stream);
-        updateParameter("Output", output)->type =  Parameters::Parameter::Output;
+        updateParameter("Output", output, &stream)->type =  Parameters::Parameter::Output;
         return output;
     }
 	//onUpdate(&stream);
@@ -420,9 +423,8 @@ bool RTSPCamera::SkipEmpty() const
 {
     return false;
 }
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Camera)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(GStreamerCamera)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(RTSPCamera)
-REGISTER_NODE_HIERARCHY(Camera, Image, Source)
-REGISTER_NODE_HIERARCHY(GStreamerCamera, Image, Source)
-REGISTER_NODE_HIERARCHY(RTSPCamera, Image, Source)
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Camera, Image, Source)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(GStreamerCamera, Image, Source)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(RTSPCamera, Image, Source)
+

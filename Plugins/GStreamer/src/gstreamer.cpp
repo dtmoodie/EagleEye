@@ -350,8 +350,10 @@ RTSP_server::RTSP_server():
 	need_data_id = 0; 
 	enough_data_id = 0;
 }					
-REGISTERCLASS(RTSP_server)
-REGISTER_NODE_HIERARCHY(RTSP_server, Image, Sink)
+static EagleLib::NodeInfo g_registerer_RTSP_server("RTSP_server", { "Image", "Sink" });
+
+REGISTERCLASS(RTSP_server, &g_registerer_RTSP_server)
+
 
 // http://cgit.freedesktop.org/gstreamer/gst-rtsp-server/tree/examples/test-appsrc.c
 
@@ -615,5 +617,5 @@ cv::cuda::GpuMat RTSP_server_new::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 	return img;
 }
 
-REGISTERCLASS(RTSP_server_new);
-REGISTER_NODE_HIERARCHY(RTSP_server_new, Image, Sink)
+static EagleLib::NodeInfo g_registerer_RTSP_server_new("RTSP_server_new", { "Image", "Sink" });
+REGISTERCLASS(RTSP_server_new, &g_registerer_RTSP_server_new);

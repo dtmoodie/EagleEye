@@ -343,4 +343,4 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CaffeImageClassifier)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CaffeImageClassifier, Image, Extractor, ObjectClassification)

@@ -229,13 +229,9 @@ cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBM)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBilateralFilter)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBeliefPropagation)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoConstantSpaceBP)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(UndistortStereo)
-REGISTER_NODE_HIERARCHY(StereoBM, Image, Processing)
-REGISTER_NODE_HIERARCHY(StereoBilateralFilter, Image, Processing)
-REGISTER_NODE_HIERARCHY(StereoBeliefPropagation, Image, Processing)
-REGISTER_NODE_HIERARCHY(StereoConstantSpaceBP, Image, Processing)
-REGISTER_NODE_HIERARCHY(UndistortStereo, Image, Processing)
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBM, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBilateralFilter, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBeliefPropagation, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoConstantSpaceBP, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(UndistortStereo, Image, Processing)

@@ -198,5 +198,5 @@ cv::cuda::GpuMat SegmentEGBS::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 	return img; 
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentEGBS) 
-REGISTER_NODE_HIERARCHY(SegmentEGBS, Image, Processing, Segmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentEGBS, Image, Processing, Segmentation)
+

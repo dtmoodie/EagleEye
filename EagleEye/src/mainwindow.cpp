@@ -1,3 +1,5 @@
+#define PARAMETERS_GENERATE_UI
+#define OPENCV_FOUND
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "qpluginloader.h"

@@ -186,9 +186,27 @@ void NodeManager::RegisterNodeInfo(const char* nodeName, std::vector<char const*
 {
 	m_nodeInfoMap[nodeName] = nodeInfo;
 }
-std::vector<const char*>& NodeManager::GetNodeInfo(std::string& nodeName)
+std::vector<const char*> NodeManager::GetNodeInfo(std::string& nodeName)
 {
-	return m_nodeInfoMap[nodeName];
+    auto constructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
+    if (constructor)
+    {
+        auto obj_info = constructor->GetObjectInfo();
+        if (obj_info)
+        {
+            if (obj_info->GetObjectInfoType() == 1)
+            {
+                auto node_info = dynamic_cast<EagleLib::NodeInfo*>(obj_info);
+                if (node_info)
+                {
+                    return node_info->GetNodeHierarchy();
+                }
+                
+            }
+        }
+    }
+    return std::vector<const char*>();
+	//return m_nodeInfoMap[nodeName];
 }
 
 

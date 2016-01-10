@@ -15,7 +15,7 @@ namespace EagleLib
         static WindowCallbackHandler* instance(size_t stream_id = 0);
 
         void handle_click(int event, int x, int y, int flags, const std::string& win_name);
-        void imshow(const std::string& window_name, cv::InputArray img);
+        void imshow(const std::string& window_name, cv::InputArray img, int flags = 0);
 
 
         boost::signals2::signal<void(std::string, cv::Point, int)>* sig_click_right;

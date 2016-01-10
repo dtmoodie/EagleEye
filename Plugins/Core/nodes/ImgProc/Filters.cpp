@@ -78,18 +78,12 @@ cv::cuda::GpuMat MeanShiftSegmentation::doProcess(cv::cuda::GpuMat &img, cv::cud
     return img;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Sobel)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Canny)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Laplacian)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(BiLateral) 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(MeanShiftFilter)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(MeanShiftProc)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(MeanShiftSegmentation)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Sobel, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Canny, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(Laplacian, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(BiLateral, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(MeanShiftFilter, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(MeanShiftProc, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(MeanShiftSegmentation, Image, Processing)
 
-REGISTER_NODE_HIERARCHY(Sobel, Image, Processing)
-REGISTER_NODE_HIERARCHY(Canny, Image, Processing)
-REGISTER_NODE_HIERARCHY(Laplacian, Image, Processing)
-REGISTER_NODE_HIERARCHY(BiLateral, Image, Processing)
-REGISTER_NODE_HIERARCHY(MeanShiftFilter, Image, Processing)
-REGISTER_NODE_HIERARCHY(MeanShiftProc, Image, Processing)
-REGISTER_NODE_HIERARCHY(MeanShiftSegmentation, Image, Processing)
+

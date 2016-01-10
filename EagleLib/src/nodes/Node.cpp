@@ -65,7 +65,36 @@ catch (...)                                                                 \
     NODE_LOG(error) << "Unknown exception";                                 \
 }
 
+NodeInfo::NodeInfo(const char* name, std::initializer_list<char const*> nodeInfo):
+    node_name(name)
+{
+    for (auto itr : nodeInfo)
+    {
+        node_hierarchy.push_back(itr);
+    }
+}
 
+int NodeInfo::GetObjectInfoType()
+{
+    return 1;
+}
+std::string NodeInfo::GetObjectName()
+{
+    return node_name;
+}
+std::string NodeInfo::GetObjectTooltip()
+{
+    return node_tooltip;
+}
+std::string NodeInfo::GetObjectHelp()
+{
+    return node_help;
+}
+
+std::vector<const char*> NodeInfo::GetNodeHierarchy()
+{
+    return node_hierarchy;
+}
 
 namespace EagleLib
 {
@@ -486,7 +515,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 				rmt_EndCUDASample(cv::cuda::StreamAccessor::getStream(stream));
                 EndProcessingTime();
 			}
-			NODE_LOG(debug) << "End:   " << fullTreeName;
+			NODE_LOG(trace) << "End:   " << fullTreeName;
 		}CATCH_MACRO
     }
 	try

@@ -215,7 +215,7 @@ bool AxisCamera::SkipEmpty() const
 
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(AxisCamera)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(AxisCamera, Utility, Network, Control)
 
 
 /*

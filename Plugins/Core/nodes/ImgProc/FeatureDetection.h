@@ -55,4 +55,21 @@ namespace EagleLib
         virtual void Serialize(ISimpleSerializer *pSerializer);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+
+    class CornerHarris: public Node
+    {
+        cv::Ptr<cv::cuda::CornernessCriteria> detector;
+    public:
+        CornerHarris();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
+    class CornerMinEigenValue: public Node
+    {
+        cv::Ptr<cv::cuda::CornernessCriteria> detector;
+    public:
+        CornerMinEigenValue();
+        virtual void Init(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
 }

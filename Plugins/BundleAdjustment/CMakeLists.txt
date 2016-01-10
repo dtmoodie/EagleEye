@@ -40,7 +40,7 @@ add_definitions(-DCERES_LIB_DIR="${Ceres_DIR}/../lib")
 add_definitions(-DCERES_INC_DIR="${CERES_INCLUDE_DIRS_}")
 add_library(BundleAdjustment SHARED BundleAdjustment.h BundleAdjustment.cpp)
 target_link_libraries(BundleAdjustment ${Boost_LIBRARIES} ${EagleLib_LIBRARIES} ${CUDA_LIBRARIES})
-
+set_target_properties(BundleAdjustment PROPERTIES FOLDER "Plugins")
 add_dependencies(BundleAdjustment EagleLib)
 ELSE(${Ceres_FOUND})
 

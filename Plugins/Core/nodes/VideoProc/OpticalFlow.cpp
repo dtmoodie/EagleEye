@@ -8,12 +8,12 @@ using namespace EagleLib;
 #if __linux
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cudaoptflow")
 #endif
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SparsePyrLKOpticalFlow)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(BroxOpticalFlow)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(DensePyrLKOpticalFlow)
-REGISTER_NODE_HIERARCHY(SparsePyrLKOpticalFlow, Image, Extractor)
-REGISTER_NODE_HIERARCHY(BroxOpticalFlow, Image, Extractor)
-REGISTER_NODE_HIERARCHY(DensePyrLKOpticalFlow, Image, Extractor)
+
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(SparsePyrLKOpticalFlow, Image, Extractor)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(BroxOpticalFlow, Image, Extractor)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(DensePyrLKOpticalFlow, Image, Extractor)
+
 
 void DensePyrLKOpticalFlow::Init(bool firstInit)
 {

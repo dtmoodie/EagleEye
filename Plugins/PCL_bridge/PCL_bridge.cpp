@@ -43,6 +43,5 @@ void HuMoments::Init(bool firstInit)
 	}
 }
 
-
-NODE_DEFAULT_CONSTRUCTOR_IMPL(PCL_bridge)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(HuMoments)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(PCL_bridge, Testing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(HuMoments, PtCloud, Extractor)

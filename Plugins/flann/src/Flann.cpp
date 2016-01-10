@@ -118,7 +118,7 @@ cv::cuda::GpuMat ForegroundEstimate::doProcess(cv::cuda::GpuMat& img, cv::cuda::
 	}
 	return img;
 }
-REGISTER_NODE_HIERARCHY(ForegroundEstimate, PtCloud, Extractor)
+
 RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("flann_knl", ".cu")
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ForegroundEstimate);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ForegroundEstimate, PtCloud, Extractor);
 

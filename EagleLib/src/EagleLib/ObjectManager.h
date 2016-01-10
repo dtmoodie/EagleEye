@@ -1,4 +1,5 @@
 #pragma once
+#include <EagleLib/Logging.h>
 #include "Defs.hpp"
 #include "IObjectFactorySystem.h"
 #include "IRuntimeObjectSystem.h"
@@ -37,6 +38,21 @@ namespace EagleLib
 	class EAGLE_EXPORTS ObjectManager : public IObjectFactoryListener
 	{
 	public:
+        template<typename T, int IID> shared_ptr<T> GetObject(const std::string& object_name)
+        {
+            auto constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(object_name.c_str());
+            if (constructor)
+            {
+                if (IID == constructor->GetInterfaceId())
+                {
+                    auto object = constructor->Construct();
+                    return shared_ptr<T>(object);
+                }
+                LOG(warning) << "interface ID (" << IID << " doesn't match constructor interface " << constructor->GetInterfaceId();
+            }
+            LOG(warning) << "Constructor for " << object_name " doesn't exist";
+            return shared_ptr<T>();
+        }
 		static ObjectManager& Instance();
 		void addIncludeDir(const std::string& dir, unsigned short projId = 0);
 		void addDefinitions(const std::string& defs, unsigned short projId = 0);

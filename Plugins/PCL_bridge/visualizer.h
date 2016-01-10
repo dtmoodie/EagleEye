@@ -28,10 +28,11 @@ namespace EagleLib
 		virtual bool AcceptsParameter(Parameters::Parameter::Ptr param);
 		virtual std::string plotName() const;
 		virtual QWidget* getSettingsWidget() const;
-		virtual void AddPlot(QWidget *plot_);
+		
 		virtual void doUpdate();
 		virtual void setInput(Parameters::Parameter::Ptr param_);
         */
+        virtual void AddPlot(QWidget *plot_);
         virtual void SetInput(Parameters::Parameter::Ptr param_ = Parameters::Parameter::Ptr());
         virtual bool AcceptsParameter(Parameters::Parameter::Ptr param);
         virtual void OnParameterUpdate(cv::cuda::Stream* stream);
