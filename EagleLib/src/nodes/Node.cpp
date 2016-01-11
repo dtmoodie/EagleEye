@@ -19,7 +19,7 @@
 #include <boost/bind.hpp>
 #include <SystemTable.hpp>
 #include <Events.h>
-
+#include <EagleLib/utilities/GpuMatAllocators.h>
 #include <EagleLib/NodeManager.h>
 #include <EagleLib/DataStreamManager.h>
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
@@ -498,6 +498,11 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 			{
 				ClearProcessingTime();
 				boost::recursive_mutex::scoped_lock lock(mtx);
+                auto allocator = dynamic_cast<PitchedAllocator*>(cv::cuda::GpuMat::defaultAllocator());
+                if(allocator)
+                {
+                    allocator->SetScope(this->getTreeName());
+                }
 
 				// Do I lock each parameters mutex or do I just lock each node?
 				// I should only lock each node, but then I need to make sure the UI keeps track of the node

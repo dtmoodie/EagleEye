@@ -25,7 +25,7 @@
 #include <UI/InterThread.hpp>
 #include <../remotery/lib/Remotery.h>
 
-#include <EagleLib/utilities/GpuMatAllocators.h>
+#include <EagleLib/utilities/ogl_allocators.h>
 #include "EagleLib/utilities/CpuMatAllocators.h"
 #include <EagleLib/Logging.h>
 #include <EagleLib/shared_ptr.hpp>
@@ -47,9 +47,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	plotWizardDialog(new PlotWizardDialog(this)),
 	settingsDialog(new SettingDialog(this))
 {
-	cv::cuda::GpuMat::setDefaultAllocator(EagleLib::CombinedAllocator::Instance(100000000, 500000));
+	//cv::cuda::GpuMat::setDefaultAllocator(EagleLib::CombinedAllocator::Instance(100000000, 500000));
+    cv::cuda::GpuMat::setDefaultAllocator(EagleLib::ogl_allocator::instance(100000000, 500000));
 	
     cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
+
 	EagleLib::CpuDelayedDeallocationPool::instance()->deallocation_delay = 1000;
 	
 	EagleLib::SetupLogging();

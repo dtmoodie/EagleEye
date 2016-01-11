@@ -6,7 +6,7 @@
 #include <list>
 #include <map>
 #include <memory>
-
+#include <boost/thread.hpp>
 
 namespace EagleLib
 {
@@ -27,7 +27,9 @@ namespace EagleLib
 		size_t memoryUsage;
 		std::recursive_mutex mtx;
 		std::map<std::string, size_t> scopedAllocationSize;
-		std::string currentScopeName;
+        std::map<boost::thread::id, std::string> currentScopeName;
+		//std::string currentScopeName;
+        //boost::thread::id currentScopeThreadId;
 		std::map<unsigned char*, std::string> scopeOwnership;
 	};
 
@@ -41,6 +43,7 @@ namespace EagleLib
 		BlockMemoryAllocator(size_t initialBlockSize);
 		virtual bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
 		virtual void free(cv::cuda::GpuMat* mat);
+        virtual bool free_impl(cv::cuda::GpuMat* mat);
 		size_t initialBlockSize_;
 	protected:
 		std::list<std::shared_ptr<GpuMemoryBlock>> blocks;

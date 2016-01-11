@@ -4,6 +4,7 @@
 #include "MemoryBlock.h"
 #include <opencv2/cudev/common.hpp>
 #include <cuda_runtime.h>
+#include <boost/thread.hpp>
 namespace EagleLib
 {
 	unsigned char* alignMemory(unsigned char* ptr, int elemSize)
@@ -47,13 +48,15 @@ namespace EagleLib
 	}
 	void PitchedAllocator::SetScope(const std::string& name)
 	{
+        boost::recursive_mutex::scoped_lock lock(mtx);
+        auto id = boost::this_thread::get_id();
 		auto itr = scopedAllocationSize.find(name);
 		if (itr == scopedAllocationSize.end())
 		{
 			scopedAllocationSize[name] = 0;
-			currentScopeName = name; 
+			currentScopeName[id] = name; 
 		}
-		currentScopeName = name;
+		currentScopeName[id] = name;
 	}
 	PitchedAllocator::PitchedAllocator()
 	{
@@ -63,8 +66,9 @@ namespace EagleLib
 	}
 	void PitchedAllocator::Increment(unsigned char* ptr, size_t size)
 	{
-		scopeOwnership[ptr] = currentScopeName;
-		scopedAllocationSize[currentScopeName] += size;
+        auto id = boost::this_thread::get_id();
+		scopeOwnership[ptr] = currentScopeName[id];
+		scopedAllocationSize[currentScopeName[id]] += size;
 	}
 	void PitchedAllocator::Decrement(unsigned char* ptr, size_t size)
 	{
@@ -75,7 +79,6 @@ namespace EagleLib
 		}		
 	}
 	
-
 	BlockMemoryAllocator::BlockMemoryAllocator(size_t initialSize)
 	{
 		blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(initialSize)));
@@ -138,6 +141,19 @@ namespace EagleLib
 		}
 		throw cv::Exception(0, "[GPU] Unable to find memory to deallocate", __FUNCTION__, __FILE__, __LINE__);
 	}
+    bool BlockMemoryAllocator::free_impl(cv::cuda::GpuMat* mat)
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        for (auto itr : blocks)
+        {
+            if (itr->deAllocate(mat->data))
+            {
+                cv::fastFree(mat->refcount);
+                return true;
+            }
+        }
+        return false;
+    }
 	DelayedDeallocator::DelayedDeallocator() :
         PitchedAllocator()
 	{
@@ -230,35 +246,7 @@ namespace EagleLib
 			std::lock_guard<std::recursive_mutex> lock(mtx);
 			size_t sizeNeeded, stride;
 			SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
-			BlockMemoryAllocator::allocate(mat, rows, cols, elemSize);
-			/*unsigned char* ptr;
-			for (auto itr : blocks)
-			{
-				ptr = itr->allocate(sizeNeeded, elemSize);
-				if (ptr)
-				{
-					mat->data = ptr;
-					mat->step = stride;
-					mat->refcount = (int*)cv::fastMalloc(sizeof(int));
-					memoryUsage += mat->step*rows;
-					BOOST_LOG_TRIVIAL(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB from memory block. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
-					Increment(ptr, mat->step*rows);
-					return true;
-				}
-			}
-			// If we get to this point, then no memory was found, need to allocate new memory
-			blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(std::max(initialBlockSize_ / 2, sizeNeeded))));
-			BOOST_LOG_TRIVIAL(debug) << "[GPU] Expanding memory pool by " << std::max(initialBlockSize_ / 2, sizeNeeded) / (1024 * 1024) << " MB";
-			if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, elemSize))
-			{
-				mat->data = ptr;
-				mat->step = stride;
-				mat->refcount = (int*)cv::fastMalloc(sizeof(int));
-				memoryUsage += mat->step*rows;
-				Increment(ptr, mat->step*rows);
-				BOOST_LOG_TRIVIAL(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB from memory block. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
-				return true;
-			}*/
+			return BlockMemoryAllocator::allocate(mat, rows, cols, elemSize);
 		}
 		
 		return DelayedDeallocator::allocate(mat, rows, cols, elemSize);
@@ -266,18 +254,9 @@ namespace EagleLib
 	void CombinedAllocator::free(cv::cuda::GpuMat* mat)
 	{
 		std::lock_guard<std::recursive_mutex> lock(mtx);
-		for (auto itr : blocks)
-		{
-			if (mat->data > itr->begin && mat->data < itr->end)
-			{
-				if (itr->deAllocate(mat->data))
-				{
-					cv::fastFree(mat->refcount);
-					return;
-				}
-			}
-		}
-		DelayedDeallocator::free(mat);
+        if(!BlockMemoryAllocator::free_impl(mat))
+            DelayedDeallocator::free(mat);
+		
 	}
 }
 
