@@ -48,7 +48,7 @@ namespace EagleLib
 	}
 	void PitchedAllocator::SetScope(const std::string& name)
 	{
-        boost::recursive_mutex::scoped_lock lock(mtx);
+        std::lock_guard<std::recursive_mutex> lock(mtx);
         auto id = boost::this_thread::get_id();
 		auto itr = scopedAllocationSize.find(name);
 		if (itr == scopedAllocationSize.end())

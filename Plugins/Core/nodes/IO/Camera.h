@@ -51,7 +51,7 @@ namespace EagleLib
 
     class CV_EXPORTS RTSPCamera: public Node
     {
-        cv::cuda::GpuMat output;
+        //cv::cuda::GpuMat output;
         cv::VideoCapture cam;
         int putItr;
         int bufferSize;

@@ -26,7 +26,7 @@ namespace EagleLib
 	{
     protected:
 
-        std::list<std::tuple<std::string, int, int, int, boost::thread>> buffer_request_locations;
+        std::list<std::tuple<std::string, int, int, int, boost::thread::id, bool>> buffer_request_locations;
 		std::list<cv::ogl::Buffer> unused_ogl_buffers;
         std::list<cv::ogl::Buffer> used_ogl_buffers;
 		// All of the opengl buffers which are currently being mapped to global memory

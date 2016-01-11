@@ -408,7 +408,7 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         setString();
     }
     cv::Mat h_img;
-	
+	cv::cuda::GpuMat output;
 	if (notifier.try_pop(h_img) && !h_img.empty())
     {
         output.upload(h_img, stream);
