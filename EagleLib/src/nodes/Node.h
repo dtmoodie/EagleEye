@@ -55,7 +55,7 @@
 #include "EagleLib/Defs.hpp"
 #include "ParameteredObject.h"
 #include "IObjectInfo.h"
-
+#include "EagleLib/SyncedMemory.h"
 
 #define TIME Clock(__LINE__);
 
@@ -156,6 +156,7 @@ namespace EagleLib
          * @return output image
          */
         virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img, cv::cuda::Stream& steam = cv::cuda::Stream::Null());
+		virtual void process(SyncedMemory& input, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 		
         /**
          * @brief doProcess this is the most used node and where the bulk of the work is performed.

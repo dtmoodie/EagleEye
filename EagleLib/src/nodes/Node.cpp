@@ -560,6 +560,10 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 	
     return img;
 }
+void Node::process(SyncedMemory& input, cv::cuda::Stream& stream)
+{
+	
+}
 void Node::SetDataStream(std::shared_ptr<DataStream> stream_)
 {
 	if (_dataStream)

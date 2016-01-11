@@ -218,6 +218,7 @@ namespace EagleLib
 	}
 
 	CombinedAllocator::CombinedAllocator(size_t initial_pool_size, size_t threshold_level) :
+		BlockMemoryAllocator(initial_pool_size),
 		initialBlockSize_(initial_pool_size), DelayedDeallocator(), _threshold_level(threshold_level)
 	{
 		blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(initialBlockSize_)));
@@ -229,7 +230,8 @@ namespace EagleLib
 			std::lock_guard<std::recursive_mutex> lock(mtx);
 			size_t sizeNeeded, stride;
 			SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
-			unsigned char* ptr;
+			BlockMemoryAllocator::allocate(mat, rows, cols, elemSize);
+			/*unsigned char* ptr;
 			for (auto itr : blocks)
 			{
 				ptr = itr->allocate(sizeNeeded, elemSize);
@@ -256,8 +258,9 @@ namespace EagleLib
 				Increment(ptr, mat->step*rows);
 				BOOST_LOG_TRIVIAL(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB from memory block. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
 				return true;
-			}
+			}*/
 		}
+		
 		return DelayedDeallocator::allocate(mat, rows, cols, elemSize);
 	}
 	void CombinedAllocator::free(cv::cuda::GpuMat* mat)

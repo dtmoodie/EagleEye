@@ -257,6 +257,16 @@ void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
 	rmt_ScopedCPUSample(vtkImageViewer_OnParameterUpdate);
 	if (stream)
 	{
+		bool shown = false;
+		for (auto itr : render_widgets)
+		{
+			if (itr->isVisible())
+				shown = true;
+
+		}
+		if (shown == false)
+			return;
+
 		cv::cuda::GpuMat d_mat = *std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(param)->Data();
 		//texture_stream_index = (texture_stream_index + 1) % 2;
 		//auto& current_texture = textureObject[texture_stream_index];
@@ -267,7 +277,7 @@ void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
 			current_texture = vtkSmartPointer<vtkOpenGLCudaImage>::New();
 			current_texture->SetContext((*render_widgets.begin())->GetRenderWindow());
 		}
-
+		
 		Parameters::UI::UiCallbackService::Instance()->post(boost::bind<void>([current_texture, d_mat, stream, this]()->void
 		{
 			{

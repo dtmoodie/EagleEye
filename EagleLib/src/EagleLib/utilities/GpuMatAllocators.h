@@ -14,7 +14,7 @@ namespace EagleLib
 	cv::cuda::GpuMat::Allocator* GetDefaultDelayedDeallocator();
 	cv::cuda::GpuMat::Allocator* CreateBlockMemoryAllocator();
 	
-	class EAGLE_EXPORTS PitchedAllocator : public cv::cuda::GpuMat::Allocator
+	class EAGLE_EXPORTS PitchedAllocator : public virtual cv::cuda::GpuMat::Allocator
 	{
 	public:
 		PitchedAllocator();
@@ -33,7 +33,7 @@ namespace EagleLib
 
 	class GpuMemoryBlock;
 
-	class EAGLE_EXPORTS BlockMemoryAllocator: public PitchedAllocator
+	class EAGLE_EXPORTS BlockMemoryAllocator: public virtual PitchedAllocator
 	{
 	
 	public:
@@ -46,7 +46,7 @@ namespace EagleLib
 		std::list<std::shared_ptr<GpuMemoryBlock>> blocks;
 	};
 
-	class EAGLE_EXPORTS DelayedDeallocator : public PitchedAllocator
+	class EAGLE_EXPORTS DelayedDeallocator : public virtual PitchedAllocator
 	{
 	public:
 		DelayedDeallocator();
@@ -59,7 +59,7 @@ namespace EagleLib
 		std::list<std::tuple<unsigned char*, clock_t, size_t>> deallocateList;
 	};
 
-	class EAGLE_EXPORTS CombinedAllocator : public DelayedDeallocator //, private BlockMemoryAllocator
+	class EAGLE_EXPORTS CombinedAllocator : public virtual DelayedDeallocator, private virtual BlockMemoryAllocator
 	{
 	public:
 		/* Initial memory pool of 10MB */
