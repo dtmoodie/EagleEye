@@ -1,6 +1,6 @@
 #pragma once
 #include <boost/preprocessor.hpp>
-
+#include "RuntimeLinkLibrary.h"
 #define STRINGIFY_1(ARG1) #ARG1
 #define STRINGIFY_2(ARG1, ARG2)	#ARG1, #ARG2
 #define STRINGIFY_3(ARG1, ARG2, ARG3) #ARG1, #ARG2, #ARG3
@@ -21,7 +21,16 @@
 #else
 #  define EAGLE_EXPORTS
 #endif
+#ifdef _MSC_VER
+#ifdef _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY("EagleLibd.lib");
 
+#else
+RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib");
+#endif
+#else
+
+#endif
 
 																									
 

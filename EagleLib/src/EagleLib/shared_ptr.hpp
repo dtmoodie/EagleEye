@@ -239,3 +239,103 @@ public:
 	}
 
 };
+
+
+
+
+template<> class shared_ptr<IObject> : public IObjectNotifiable
+{
+    IObject* m_object;
+    int* refCount;
+    friend struct IObject;
+    template<typename U> friend class weak_ptr;
+    template<typename U> friend class shared_ptr;
+    virtual void updateObject(IObject *ptr);
+    void decrement();
+
+    void increment();
+
+
+public:
+    shared_ptr();
+    shared_ptr(IObject* ptr);
+    shared_ptr(shared_ptr<IObject> const & ptr);
+
+    template<typename V> shared_ptr(shared_ptr<V> const& ptr) :
+        shared_ptr()
+    {
+        swap(ptr);
+    }
+
+    ~shared_ptr();
+
+    IObject* operator->();
+
+    template<typename U> U* staticCast()
+    {
+        return static_cast<U*>(m_object);
+    }
+
+    template<typename U> U* dynamicCast()
+    {
+        return dynamic_cast<U*>(m_object);
+    }
+
+    shared_ptr& operator=(shared_ptr<IObject> const & r);
+    template<typename V> shared_ptr<IObject>& operator=(shared_ptr<V> const& r)
+    {
+        swap(r);
+        return &this;
+    }
+
+    bool operator ==(IObject* p);
+    bool operator !=(IObject* p);
+    bool operator == (shared_ptr<IObject> const & r);
+    bool operator != (shared_ptr<IObject> const& r);
+    void swap(shared_ptr<IObject> const & r);
+    template<typename V> void swap(shared_ptr<V> const & r)
+    {
+        decrement();
+        if (m_object)
+            m_object->deregisterNotifier(this);
+        m_object = dynamic_cast<IObject*>(r.m_object);
+        assert(m_object != nullptr);
+        if (m_object == nullptr)
+            return;
+        refCount = r.refCount;
+        increment();
+        if (m_object)
+            m_object->registerNotifier(this);
+    }
+    IObject* get() const;
+    template<typename V> V* get()
+    {
+        assert(m_object != nullptr);
+        return dynamic_cast<V*>(m_object);
+    }
+};
+
+template<> class weak_ptr<IObject> : public IObjectNotifiable
+{
+    IObject* m_object;
+    friend struct IObject;
+    template<typename T> friend class shared_ptr;
+    virtual void updateObject(IObject *ptr);
+public:
+    weak_ptr();
+    weak_ptr(IObject* ptr);
+    weak_ptr(weak_ptr<IObject> const & ptr);
+    ~weak_ptr();
+    IObject* operator->();
+    weak_ptr<IObject>& operator=(weak_ptr const & r);
+    bool operator ==(IObject* p);
+    bool operator !=(IObject* p);
+    bool operator == (weak_ptr<IObject> const & r);
+    bool operator == (shared_ptr<IObject> const & r);
+
+    bool operator != (weak_ptr const& r);
+    bool operator !=(shared_ptr<IObject> const& r);
+
+    void swap(weak_ptr<IObject> const & r);
+    IObject* get() const;
+};

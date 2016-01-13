@@ -7,7 +7,7 @@ find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cu
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 find_package(CUDA REQUIRED)
-find_package(Qt5 COMPONENTS Core Gui Widgets Network)
+find_package(Qt5 COMPONENTS Core Gui Widgets Network OpenGL)
 cmake_policy(SET CMP0012 NEW)
 
 IF(WIN32)
@@ -204,6 +204,7 @@ TARGET_LINK_LIBRARIES(EagleLib
 		${CUDA_CUDA_LIBRARY}
 		${CUDA_CUDART_LIBRARY}
 		OpenGL32
+		Qt5::OpenGL
 )
 ADD_DEPENDENCIES(EagleLib
 	RuntimeCompiler

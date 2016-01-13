@@ -15,7 +15,7 @@
 #include "rccsettingsdialog.h"
 
 #include "plotwizarddialog.h"
-
+#include <QtGui/qopenglcontext.h>
 
 namespace Ui {
 class MainWindow;
@@ -104,6 +104,9 @@ private:
     
     void processThread();
 	bool processingThreadActive;
+    QOpenGLContext* processing_thread_context;
+    QWindow* processing_thread_upload_window;
+
 };
 
 #endif // MAINWINDOW_H

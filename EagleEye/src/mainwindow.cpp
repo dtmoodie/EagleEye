@@ -14,6 +14,8 @@
 #include "QGLWidget"
 #include <QGraphicsSceneMouseEvent>
 
+
+
 #include "settingdialog.h"
 #include "logger.hpp"
 
@@ -47,8 +49,14 @@ MainWindow::MainWindow(QWidget *parent) :
 	plotWizardDialog(new PlotWizardDialog(this)),
 	settingsDialog(new SettingDialog(this))
 {
-	//cv::cuda::GpuMat::setDefaultAllocator(EagleLib::CombinedAllocator::Instance(100000000, 500000));
-    cv::cuda::GpuMat::setDefaultAllocator(EagleLib::ogl_allocator::instance(100000000, 500000));
+
+	
+    //cv::cuda::GpuMat::setDefaultAllocator(EagleLib::ogl_allocator::instance(100000000, 500000));
+    // Create the processing thread opengl context for creating buffers and uploading them
+    processing_thread_context = nullptr;
+    processing_thread_upload_window = nullptr;
+    
+
 	
     cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
 
@@ -172,7 +180,12 @@ MainWindow::MainWindow(QWidget *parent) :
     nodeListDialog->update();
     emit pluginLoaded();
     EagleLib::ObjectManager::Instance().setupModule(PerModuleInterface::GetInstance());
-
+    /*auto allocator = PerModuleInterface::GetInstance()->GetSystemTable()->GetSingleton<EagleLib::ogl_allocator>();
+    if (allocator)
+    {
+        cv::cuda::GpuMat::setDefaultAllocator(allocator);
+    }*/
+    cv::cuda::GpuMat::setDefaultAllocator(EagleLib::CombinedAllocator::Instance(100000000, 500000));
     startProcessingThread();
 	rccSettings->updateDisplay();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
@@ -644,6 +657,17 @@ void MainWindow::processThread()
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta;
+
+    if(processing_thread_context == nullptr)
+    {
+        processing_thread_context = new QOpenGLContext();
+        QSurfaceFormat fmt;
+        processing_thread_context->setFormat(fmt);
+        processing_thread_context->setShareContext(QOpenGLContext::globalShareContext());
+        processing_thread_context->create();
+        processing_thread_upload_window = new QWindow();
+    }
+    processing_thread_context->makeCurrent(processing_thread_upload_window);
     while (!boost::this_thread::interruption_requested())
     {
         try

@@ -24,7 +24,7 @@ namespace EagleLib
                 }
                 _pool.clear();
             }
-            Ptr<T> get_object()
+            virtual Ptr<T> get_object()
             {
                 std::lock_guard<std::mutex> lock(mtx);
                 if (_pool.empty())
@@ -37,7 +37,7 @@ namespace EagleLib
                 return ret;
             }
             
-        private:
+        protected:
             std::list<T*> _pool;
             std::mutex mtx;
             template<typename U> friend class Ptr;

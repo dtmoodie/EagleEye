@@ -62,7 +62,7 @@ namespace EagleLib
 		std::list<std::tuple<unsigned char*, clock_t, size_t>> deallocateList;
 	};
 
-	class EAGLE_EXPORTS CombinedAllocator : public virtual DelayedDeallocator, private virtual BlockMemoryAllocator
+	class EAGLE_EXPORTS CombinedAllocator : public DelayedDeallocator, public BlockMemoryAllocator
 	{
 	public:
 		/* Initial memory pool of 10MB */

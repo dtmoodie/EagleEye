@@ -43,6 +43,7 @@ namespace EagleLib
             auto constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(object_name.c_str());
             if (constructor)
             {
+                assert(!constructor->GetIsSingleton()); // Singletons should only be acquired with GetSingleton
                 if (IID == constructor->GetInterfaceId())
                 {
                     auto object = constructor->Construct();
@@ -53,6 +54,24 @@ namespace EagleLib
             LOG(warning) << "Constructor for " << object_name " doesn't exist";
             return shared_ptr<T>();
         }
+        template<typename T, int IID> weak_ptr<T> GetSingleton(const std::string& object_name)
+        {
+            auto constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(object_name.c_str());
+            if (constructor)
+            {
+                assert(constructor->GetIsSingleton()); // Singletons should only be acquired with GetSingleton
+                if (IID == constructor->GetInterfaceId())
+                {
+                    auto object = constructor->Construct();
+                    return weak_ptr<T>(object);
+                }
+                LOG(warning) << "interface ID (" << IID << " doesn't match constructor interface " << constructor->GetInterfaceId();
+            }
+            LOG(warning) << "Constructor for " << object_name " doesn't exist";
+            return weak_ptr<T>();
+        }
+        shared_ptr<IObject> GetObject(const std::string& object_name);
+        weak_ptr<IObject> GetSingleton(const std::string& object_name);
 		static ObjectManager& Instance();
 		void addIncludeDir(const std::string& dir, unsigned short projId = 0);
 		void addDefinitions(const std::string& defs, unsigned short projId = 0);

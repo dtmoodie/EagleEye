@@ -13,6 +13,7 @@
 #include <opencv2/core/opengl.hpp>
 #include <boost/thread/mutex.hpp>
 #include <vtkTextureObject.h>
+#include <EagleLib/utilities/ogl_allocators.h>
 #define VTK_VERSION_ "7.1"
 #ifdef _MSC_VER
 #ifdef _DEBUG
@@ -129,6 +130,10 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib")
 #endif
 SETUP_PROJECT_DEF
 class QVTKWidget2;
+class vtkPoints;
+class vtkFloatArray;
+class vtkPolyData;
+class vtkPolyDataMapper;
 namespace EagleLib
 {
 	class vtkOpenGLCudaImage : public vtkTextureObject
@@ -136,8 +141,10 @@ namespace EagleLib
 	public:
 		static vtkOpenGLCudaImage* New();
 		vtkTypeMacro(vtkOpenGLCudaImage, vtkTextureObject);
-		void map_gpu_mat(cv::cuda::GpuMat image);
-		cv::ogl::Buffer image_buffer;
+		
+        void compile_texture();
+        EagleLib::pool::Ptr<cv::ogl::Buffer> image_buffer;
+		//cv::ogl::Buffer image_buffer;
 		virtual void Bind();
 		boost::mutex mtx;
 	private:
@@ -169,11 +176,18 @@ namespace EagleLib
 	class vtkImageViewer : public vtkPlotter
 	{
 	public:
+        double current_aspect_ratio;
 		int texture_stream_index;
-		//vtkSmartPointer<vtkOpenGLCudaImage> textureObject[2];
 		vtkSmartPointer<vtkOpenGLCudaImage> textureObject;
 		vtkSmartPointer<vtkOpenGLTexture> texture;
+        vtkSmartPointer<vtkActor> texturedQuad;
+        vtkSmartPointer<vtkPoints> points;
+        vtkSmartPointer<vtkFloatArray> textureCoordinates;
+        vtkSmartPointer<vtkPolyDataMapper> mapper;
+        vtkSmartPointer<vtkPolyData> quad;
+
 		vtkImageViewer();
+        QWidget* CreatePlot(QWidget* parent);
 		virtual bool AcceptsParameter(Parameters::Parameter::Ptr param);
 		virtual void SetInput(Parameters::Parameter::Ptr param_ = Parameters::Parameter::Ptr());
 		virtual void OnParameterUpdate(cv::cuda::Stream* stream);

@@ -7,6 +7,7 @@
 #include "QtOpenGL/QGLContext"
 #include "vtkTexture.h"
 #include "vtkPointData.h"
+#include <vtkAxesActor.h>
 #include <vtkPolyDataMapper.h>
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #include "UI/InterThread.hpp"
@@ -25,6 +26,8 @@
 #include <vtkGenericOpenGLRenderWindow.h>
 #include "Remotery.h"
 #include "EagleLib/utilities/ObjectPool.hpp"
+#include <SystemTable.hpp>
+#include <QOpenGLContext>
 SETUP_PROJECT_IMPL
 using namespace EagleLib;
 
@@ -84,15 +87,16 @@ void vtkPlotter::AddPlot(QWidget* plot_)
 
 QWidget* vtkPlotter::CreatePlot(QWidget* parent)
 {
-	auto context = new QGLContext(QGLFormat());
-	//auto widget = new QVTKWidget2(new QGLContext(QGLFormat()), parent);
-	auto widget = new QVTKWidget2(context, parent);
-	//widget->GetRenderWindow()->OpenGLInit();
-	//widget->GetRenderWindow()->InitializeTextureInternalFormats();
+    auto global_context = QOpenGLContext::globalShareContext();
+    QOpenGLContext* draw_context = new QOpenGLContext();
+    draw_context->setShareContext(global_context);
+	auto widget = new QVTKWidget2(QGLContext::fromOpenGLContext(draw_context), parent);
+    widget->makeCurrent();
 	widget->show();
 	widget->setMinimumWidth(100);
 	widget->setMinimumHeight(100);
 	render_widgets.push_back(widget);
+    widget->GetRenderWindow()->OpenGLInit();
 	widget->GetRenderWindow()->AddRenderer(renderer);
 	
 	return widget;
@@ -127,38 +131,47 @@ vtkOpenGLCudaImage* vtkOpenGLCudaImage::New()
 	return new vtkOpenGLCudaImage();
 }
 
-void vtkOpenGLCudaImage::map_gpu_mat(cv::cuda::GpuMat image)
+void vtkOpenGLCudaImage::compile_texture()
 {
-	try
-	{
-		CV_Assert(image.depth() == CV_8U);
-		image_buffer.bind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
-		if (this->Width != image.cols || this->Height != image.rows || this->Components != image.channels() && Context)
-		{
-			InternalFormat = GL_RGB8;
-			Allocate2D(image.cols, image.rows, image.channels(), VTK_UNSIGNED_CHAR);
-		}
-		else
-		{
-			this->Activate();
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->Width, this->Height, GL_BGR, GL_UNSIGNED_BYTE, NULL);
-			//glTexImage2D(this->Target, 0, static_cast<GLint>(this->InternalFormat),
-			//	static_cast<GLsizei>(this->Width),
-			//	static_cast<GLsizei>(this->Height),
-			//	0, this->Format, this->Type, 0);
-		}
-		//glFinish();
-		image_buffer.unbind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
-		Modified();
-	}
-	catch (cv::Exception& e)
-	{
-		BOOST_LOG_TRIVIAL(error) << e.what();
-	}
-	catch (...)
-	{
+    try
+    {
+        if(image_buffer)
+        {
+            image_buffer->bind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+            
+            if (this->Width != image_buffer->cols() || this->Height != image_buffer->rows() || this->Components != image_buffer->channels() && Context)
+            {
+                InternalFormat = GL_RGB8;
+                int vtk_type = 0;
+                switch(image_buffer->depth())
+                {
+                    case CV_8U: vtk_type = VTK_UNSIGNED_CHAR; break;
+                    case CV_16U: vtk_type = VTK_UNSIGNED_SHORT; break;
+                    case CV_32S: vtk_type = VTK_INT; break;
+                    case CV_32F: vtk_type = VTK_FLOAT; break;
+                    case CV_64F: vtk_type = VTK_DOUBLE; break;
+                }
+                Allocate2D(image_buffer->cols(), image_buffer->rows(), image_buffer->channels(), vtk_type);
+            }
+            else
+            {
+                this->Activate();
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->Width, this->Height, this->Format, this->Type, NULL);
+            }
+            this->Deactivate();
+            image_buffer->unbind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+            Modified();
+        }
+        
+    }
+    catch (cv::Exception& e)
+    {
+        BOOST_LOG_TRIVIAL(error) << e.what();
+    }
+    catch (...)
+    {
 
-	}
+    }
 }
 void vtkOpenGLCudaImage::Bind()
 {
@@ -169,13 +182,34 @@ void vtkOpenGLCudaImage::Bind()
 vtkImageViewer::vtkImageViewer():
 	vtkPlotter()
 {
-	
+    current_aspect_ratio = 1.0;
 }
 void vtkImageViewer::Serialize(ISimpleSerializer *pSerializer)
 {
 	vtkPlotter::Serialize(pSerializer);
 	SERIALIZE(texture);
 	SERIALIZE(textureObject);
+    SERIALIZE(texturedQuad);
+    SERIALIZE(textureCoordinates);
+    SERIALIZE(points);
+    SERIALIZE(mapper);
+    SERIALIZE(quad);
+}
+QWidget* vtkImageViewer::CreatePlot(QWidget* parent)
+{
+    auto plot = vtkPlotter::CreatePlot(parent);
+    if(textureObject == nullptr)
+    {
+        cv::Mat default_texture(cv::Size(100, 100), CV_8UC3, cv::Scalar(255));
+        textureObject = vtkSmartPointer<vtkOpenGLCudaImage>::New();
+        this->textureObject->SetContext(render_widgets.back()->GetRenderWindow());
+        texture->SetTextureObject(textureObject);
+        textureObject->image_buffer = PerModuleInterface::GetInstance()->GetSystemTable()->GetSingleton<EagleLib::ogl_allocator>()->get_ogl_buffer(default_texture);
+        textureObject->compile_texture();
+        //textureObject->image_buffer.copyFrom(default_texture);
+    }
+    
+    return plot;
 }
 void vtkImageViewer::Init(bool firstInit)
 {
@@ -184,7 +218,7 @@ void vtkImageViewer::Init(bool firstInit)
 	{
 		texture = vtkSmartPointer<vtkOpenGLTexture>::New();
 		// Create a plane
-		vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+		points = vtkSmartPointer<vtkPoints>::New();
 		points->InsertNextPoint(0.0, 0.0, 0.0);
 		points->InsertNextPoint(1.0, 0.0, 0.0);
 		points->InsertNextPoint(1.0, 1.0, 0.0);
@@ -199,31 +233,31 @@ void vtkImageViewer::Init(bool firstInit)
 		polygon->GetPointIds()->SetId(3, 3);
 		polygons->InsertNextCell(polygon);
 
-		vtkSmartPointer<vtkPolyData> quad = vtkSmartPointer<vtkPolyData>::New();
+		quad = vtkSmartPointer<vtkPolyData>::New();
 		quad->SetPoints(points);
 		quad->SetPolys(polygons);
 
-		vtkSmartPointer<vtkFloatArray> textureCoordinates = vtkSmartPointer<vtkFloatArray>::New();
+		textureCoordinates = vtkSmartPointer<vtkFloatArray>::New();
 		textureCoordinates->SetNumberOfComponents(3);
 		textureCoordinates->SetName("TextureCoordinates");
-		float tuple[3] = { 0.0, 1.0, 0.0 };
-		textureCoordinates->InsertNextTuple(tuple);
-		tuple[0] = 1.0; tuple[1] = 1.0; tuple[2] = 0.0;
-		textureCoordinates->InsertNextTuple(tuple);
-		tuple[0] = 1.0; tuple[1] = 0.0; tuple[2] = 0.0;
-		textureCoordinates->InsertNextTuple(tuple);
-		tuple[0] = 0.0; tuple[1] = 0.0; tuple[2] = 0.0;
-		textureCoordinates->InsertNextTuple(tuple);
+		float tuple[3];
+        tuple[0] =  0.0; tuple[1] =  1.0; tuple[2] = 0.0; textureCoordinates->InsertNextTuple(tuple);
+        tuple[0] =  1.0; tuple[1] =  1.0; tuple[2] = 0.0; textureCoordinates->InsertNextTuple(tuple);
+        tuple[0] =  1.0; tuple[1] =  0.0; tuple[2] = 0.0; textureCoordinates->InsertNextTuple(tuple);
+        tuple[0] =  0.0; tuple[1] =  0.0; tuple[2] = 0.0; textureCoordinates->InsertNextTuple(tuple);
+		
 
 		quad->GetPointData()->SetTCoords(textureCoordinates);
-
-		vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        
+		mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 		mapper->SetInputData(quad);
 
-		vtkSmartPointer<vtkActor> texturedQuad = vtkSmartPointer<vtkActor>::New();
+        texturedQuad = vtkSmartPointer<vtkActor>::New();
 		texturedQuad->SetMapper(mapper);
 		texturedQuad->SetTexture(texture);
+        vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
 
+        this->renderer->AddActor(axes);
 		this->renderer->AddActor(texturedQuad);
 		this->renderer->ResetCamera();
 	}
@@ -249,7 +283,6 @@ bool vtkImageViewer::AcceptsParameter(Parameters::Parameter::Ptr param)
 void vtkImageViewer::SetInput(Parameters::Parameter::Ptr param_)
 {
 	vtkPlotter::SetInput(param_);
-	
 }
 
 void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
@@ -268,29 +301,33 @@ void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
 			return;
 
 		cv::cuda::GpuMat d_mat = *std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(param)->Data();
-		//texture_stream_index = (texture_stream_index + 1) % 2;
-		//auto& current_texture = textureObject[texture_stream_index];
-		auto& current_texture = textureObject;
-		if (current_texture == nullptr)
-		{
-			boost::recursive_mutex::scoped_lock lock(this->mtx);
-			current_texture = vtkSmartPointer<vtkOpenGLCudaImage>::New();
-			current_texture->SetContext((*render_widgets.begin())->GetRenderWindow());
-		}
 		
-		Parameters::UI::UiCallbackService::Instance()->post(boost::bind<void>([current_texture, d_mat, stream, this]()->void
+		
+		Parameters::UI::UiCallbackService::Instance()->post(boost::bind<void>([d_mat, stream, this]()->void
 		{
 			{
 				rmt_ScopedCPUSample(opengl_buffer_fill);
-				current_texture->image_buffer.copyFrom(d_mat, *stream, cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+                // Need to adjust points to the aspect ratio of the input image
+                double aspect_ratio = (double)d_mat.cols / (double)d_mat.rows;
+                if(aspect_ratio != current_aspect_ratio)
+                {
+                    points->SetPoint(0, 0.0         ,  0.0, 0.0);
+                    points->SetPoint(1, aspect_ratio,  0.0, 0.0);
+                    points->SetPoint(2, aspect_ratio,  1.0, 0.0);
+                    points->SetPoint(3, 0.0         ,  1.0, 0.0);
+                    points->Modified();
+                    current_aspect_ratio = aspect_ratio;
+                }
+                textureObject->image_buffer = PerModuleInterface::GetInstance()->GetSystemTable()->GetSingleton<EagleLib::ogl_allocator>()->get_ogl_buffer(d_mat, *stream);
+                
 				stream->waitForCompletion();
 			}
 			
 			boost::recursive_mutex::scoped_lock lock(this->mtx);
 			{
 				rmt_ScopedCPUSample(texture_creation);
-				current_texture->map_gpu_mat(d_mat);
-				texture->SetTextureObject(current_texture);
+                
+                textureObject->compile_texture();
 			}
 			{
 				rmt_ScopedCPUSample(Rendering);
