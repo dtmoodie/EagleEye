@@ -15,3 +15,15 @@ This software was created with a few main goals in mind.
 
 6) Rapid prototyping capabilities via runtime modifiable code and an easy to use plugin interface.
 
+
+External Dependencies:
+OpenCV 3.0 commit > 237f33d4f032b0496cb3bedd7a86bfed8468a739 (This adds a cv::Mat::setDefaultAllocator interface for using my custom allocators.  Which is easy to remove if necessary)
+Boost
+Qt 5.5 (Older versions will probably work, current opengl code is based on the new shared context introduced in 5.5)
+CUDA
+
+Some plugins depend on other external dependencies, but they are not necessary.
+
+This project depends on various other submodules which can be loaded by:
+git submodule update --init --recursive
+
