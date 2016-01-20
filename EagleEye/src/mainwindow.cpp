@@ -657,8 +657,8 @@ void MainWindow::processThread()
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta;
-
-    if(processing_thread_context == nullptr)
+    rmt_SetCurrentThreadName("ProcessingThread");
+    /*if(processing_thread_context == nullptr)
     {
         processing_thread_context = new QOpenGLContext();
         QSurfaceFormat fmt;
@@ -666,8 +666,8 @@ void MainWindow::processThread()
         processing_thread_context->setShareContext(QOpenGLContext::globalShareContext());
         processing_thread_context->create();
         processing_thread_upload_window = new QWindow();
-    }
-    processing_thread_context->makeCurrent(processing_thread_upload_window);
+    }*/
+    //processing_thread_context->makeCurrent(processing_thread_upload_window);
     while (!boost::this_thread::interruption_requested())
     {
         try

@@ -74,7 +74,7 @@ bool ogl_allocator::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t e
             // Allocate from opengl buffer
             {
 
-                auto ctx = QOpenGLContext::currentContext();
+                /*auto ctx = QOpenGLContext::currentContext();
                 if(ctx == nullptr)
                 {
                     ctx = new QOpenGLContext();
@@ -86,7 +86,7 @@ bool ogl_allocator::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t e
                     }
                     ctx->create();
                     ctx->makeCurrent(new QWindow());
-                }
+                }*/
                 
                 std::lock_guard<std::mutex> pool_lock(EagleLib::pool::ObjectPool<cv::ogl::Buffer>::mtx);
                 for(auto itr = _pool.begin(); itr != _pool.end(); ++itr)

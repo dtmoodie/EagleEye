@@ -128,6 +128,8 @@ void CaffeImageClassifier::Init(bool firstInit)
 {
     //std::cout << caffe::LayerRegistry<float>::LayerTypeList() << std::endl;
     caffe::Caffe::set_mode(caffe::Caffe::GPU);
+
+    
     if(firstInit)
     {
         updateParameter("NN model file", Parameters::ReadFile());
@@ -144,6 +146,7 @@ void CaffeImageClassifier::Init(bool firstInit)
 
 cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
+    caffe::Caffe::set_mode(caffe::Caffe::GPU);
     if(parameters[0]->changed)
     {
         Parameters::ReadFile* path = getParameter<Parameters::ReadFile>(0)->Data();

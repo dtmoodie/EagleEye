@@ -157,23 +157,30 @@ ObjectManager::ObjectManager()
 #endif
 	cv::cuda::GpuMat mat(10, 10, CV_32F);
 
-	Remotery* rmt;
-	rmt_CreateGlobalInstance(&rmt);
+    try
+    {
+        Remotery* rmt;
+        rmt_CreateGlobalInstance(&rmt);
 
-	CUcontext ctx;
-	cuCtxGetCurrent(&ctx);
+        CUcontext ctx;
+        cuCtxGetCurrent(&ctx);
 
-	rmtCUDABind bind;
-	bind.context = ctx;
-	bind.CtxSetCurrent = (void*)&cuCtxSetCurrent;
-	bind.CtxGetCurrent = (void*)&cuCtxGetCurrent;
-	bind.EventCreate = (void*)&cuEventCreate;
-	bind.EventDestroy = (void*)&cuEventDestroy;
-	bind.EventRecord = (void*)&cuEventRecord;
-	bind.EventQuery = (void*)&cuEventQuery;
-	bind.EventElapsedTime = (void*)&cuEventElapsedTime;
-	rmt_BindCUDA(&bind);
-    rmt_BindOpenGL();
+        rmtCUDABind bind;
+        bind.context = ctx;
+        bind.CtxSetCurrent = (void*)&cuCtxSetCurrent;
+        bind.CtxGetCurrent = (void*)&cuCtxGetCurrent;
+        bind.EventCreate = (void*)&cuEventCreate;
+        bind.EventDestroy = (void*)&cuEventDestroy;
+        bind.EventRecord = (void*)&cuEventRecord;
+        bind.EventQuery = (void*)&cuEventQuery;
+        bind.EventElapsedTime = (void*)&cuEventElapsedTime;
+        rmt_BindCUDA(&bind);
+        rmt_BindOpenGL();
+    }catch(...)
+    {
+        BOOST_LOG_TRIVIAL(warning) << "Unable to start remotery";
+    }
+	
 }
 ObjectManager& ObjectManager::Instance()
 {

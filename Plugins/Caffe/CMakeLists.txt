@@ -5,6 +5,14 @@ find_package(Caffe REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(OpenCV REQUIRED)
 
+set_target_properties(
+	opencv_core opencv_calib3d opencv_cudaarithm opencv_cudabgsegm opencv_cudacodec opencv_cudafeatures2d 
+	opencv_cudafilters opencv_cudaobjdetect opencv_cudaoptflow opencv_cudastereo opencv_cudawarping 
+	opencv_cudev opencv_features2d opencv_flann	opencv_highgui opencv_imgcodecs opencv_imgproc 
+	opencv_ml opencv_objdetect opencv_photo opencv_shape opencv_stitching opencv_superres 
+	opencv_ts opencv_video opencv_videoio opencv_videostab 
+	PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 include_directories(
  ${Caffe_INCLUDE_DIRS}
@@ -19,7 +27,7 @@ LINK_DIRECTORIES(${LINK_DIRS})
 add_library(Caffe SHARED Caffe.h Caffe.cpp)
 add_dependencies(Caffe EagleLib)
 SET(BIN_DIRS "${BIN_DIRS};CAFFE" CACHE STRING "" FORCE)
-
+set_target_properties(libcaffe_SHARED PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 IF(WIN32)
   RCC_LINK_LIB(Caffe
       EagleLib
@@ -33,7 +41,7 @@ IF(WIN32)
       ${CUDA_nppc_LIBRARY}
       ${CUDA_nppc_LIBRARY}
       ${CUDA_npps_LIBRARY}
-	  ${Caffe_LIBRARIES}
+	  libcaffe_SHARED
 	  ${GLOG_LIBRARY}
     )
 ELSE(WIN32)

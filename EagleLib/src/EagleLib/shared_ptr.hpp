@@ -285,7 +285,7 @@ public:
     template<typename V> shared_ptr<IObject>& operator=(shared_ptr<V> const& r)
     {
         swap(r);
-        return &this;
+        return *this;
     }
 
     bool operator ==(IObject* p);
