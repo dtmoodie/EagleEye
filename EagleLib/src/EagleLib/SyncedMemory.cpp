@@ -5,6 +5,19 @@ SyncedMemory::SyncedMemory()
 {
 	sync_flags.resize(1, SYNCED);
 }
+SyncedMemory::SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat)
+{
+    h_data.resize(1, h_mat);
+    d_data.resize(1, d_mat);
+    sync_flags.resize(1, SYNCED);
+}
+
+SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat):
+    h_data(h_mat), d_data(d_mat)
+{
+    assert(h_data.size() == d_data.size());
+    sync_flags.resize(h_data.size(), SYNCED);
+}
 
 SyncedMemory::SyncedMemory(cv::MatAllocator* cpu_allocator, cv::cuda::GpuMat::Allocator* gpu_allocator):
 	h_data(1, cv::Mat()), d_data(1, cv::cuda::GpuMat(gpu_allocator)), sync_flags(1, SYNCED)
@@ -91,4 +104,34 @@ SyncedMemory::GetGpuMatVecMutable(cv::cuda::Stream& stream)
 		sync_flags[i] = DEVICE_UPDATED;
 	}
 	return d_data;
+}
+void SyncedMemory::ResizeNumMats(int new_size)
+{
+    h_data.resize(new_size);
+    d_data.resize(new_size);
+    sync_flags.resize(new_size);
+}
+
+SyncedMemory SyncedMemory::clone(cv::cuda::Stream& stream)
+{
+    SyncedMemory output;
+    output.h_data.resize(h_data.size());
+    output.d_data.resize(d_data.size());
+    for(int i = 0; i < h_data.size(); ++i)
+    {
+        output.h_data[i] = h_data[i].clone();
+        d_data[i].copyTo(output.d_data[i], stream);
+    }
+    output.sync_flags = sync_flags;
+    return output;
+}
+int SyncedMemory::GetNumMats() const
+{
+    return h_data.size();
+}
+bool SyncedMemory::empty() const
+{
+    if(h_data.size())
+        return h_data[0].empty();
+    return true;
 }

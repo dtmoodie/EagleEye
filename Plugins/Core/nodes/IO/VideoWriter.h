@@ -1,13 +1,16 @@
 #pragma once
-#include <nodes/Node.h>
-#include <external_includes/cv_videoio.hpp>
-#include <external_includes/cv_cudacodec.hpp>
+#include <EagleLib/nodes/Node.h>
+#include <EagleLib/rcc/external_includes/cv_videoio.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudacodec.hpp>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
+    namespace Nodes
+    {
+    
     class VideoWriter : public Node
     {
 		bool gpuWriter;
@@ -29,5 +32,5 @@ namespace EagleLib
 		void endWrite();
         
     };
-
+    }
 }

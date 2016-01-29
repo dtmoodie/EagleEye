@@ -2,7 +2,7 @@
 
 
 using namespace EagleLib;
-
+using namespace EagleLib::Nodes;
 void Sobel::Init(bool firstInit)
 {
 

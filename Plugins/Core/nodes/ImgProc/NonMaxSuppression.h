@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
@@ -8,6 +8,9 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
+    namespace Nodes
+    {
+    
     class MinMax: public Node
     {
     public:
@@ -30,4 +33,5 @@ namespace EagleLib
         void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
+    }
 }

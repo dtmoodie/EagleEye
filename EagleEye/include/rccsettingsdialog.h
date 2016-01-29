@@ -24,6 +24,7 @@ private slots:
     void on_btnAddIncludeDir_clicked();
     void on_btnAddLinkDir_clicked();
     void on_btnTestRcc_clicked();
+    void on_btn_abort_compilation_clicked();
 
 private:
     Ui::RCCSettingsDialog *ui;

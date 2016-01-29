@@ -2,7 +2,7 @@
 #define  GLOG_NO_ABBREVIATED_SEVERITIES
 #include "nodes/Node.h"
 #include <iostream>
-#include <external_includes/cv_core.hpp>
+#include <EagleLib/rcc/external_includes/cv_core.hpp>
 #include <ObjectInterfacePerModule.h>
 #include "Manager.h"
 #include <ceres/ceres.h>

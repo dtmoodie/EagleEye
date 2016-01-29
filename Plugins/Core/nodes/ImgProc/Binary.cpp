@@ -1,18 +1,19 @@
 #include "nodes/ImgProc/Binary.h"
 
-#include <external_includes/cv_cudaarithm.hpp>
-#include <external_includes/cv_cudafilters.hpp>
-#include <external_includes/cv_cudabgsegm.hpp>
-#include <external_includes/cv_cudafeatures2d.hpp>
-#include <external_includes/cv_cudaimgproc.hpp>
-#include <external_includes/cv_cudalegacy.hpp>
-#include <external_includes/cv_cudaobjdetect.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudafilters.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudabgsegm.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudafeatures2d.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudalegacy.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaobjdetect.hpp>
 
 #include <algorithm>
 #include <utility>
-#include "Manager.h"
+
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 
 SETUP_PROJECT_IMPL

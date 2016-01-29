@@ -77,7 +77,7 @@
      <x>0</x>
      <y>0</y>
      <width>873</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -87,6 +87,8 @@
     <addaction name="actionSave"/>
     <addaction name="actionLoad"/>
     <addaction name="actionLoad_Plugin"/>
+    <addaction name="actionOpen_file"/>
+    <addaction name="actionOpen_Network"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -95,8 +97,16 @@
     <addaction name="actionRCC_settings"/>
     <addaction name="actionLog_settings"/>
    </widget>
+   <widget class="QMenu" name="menuBookmarks">
+    <property name="title">
+     <string>Bookmarks</string>
+    </property>
+    <addaction name="actionAdd_bookmark"/>
+    <addaction name="actionManage_bookmarks"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSettings"/>
+   <addaction name="menuBookmarks"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="plotDock">
@@ -117,7 +127,7 @@
   </widget>
   <action name="actionSave">
    <property name="text">
-    <string>Save</string>
+    <string>Save config</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
@@ -125,7 +135,7 @@
   </action>
   <action name="actionLoad">
    <property name="text">
-    <string>Open</string>
+    <string>Open config</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -147,6 +157,29 @@
   <action name="actionLog_settings">
    <property name="text">
     <string>Log settings</string>
+   </property>
+  </action>
+  <action name="actionOpen_file">
+   <property name="text">
+    <string>Open file</string>
+   </property>
+  </action>
+  <action name="actionAdd_bookmark">
+   <property name="text">
+    <string>Add bookmark</string>
+   </property>
+  </action>
+  <action name="actionManage_bookmarks">
+   <property name="text">
+    <string>Manage bookmarks</string>
+   </property>
+  </action>
+  <action name="actionOpen_Network">
+   <property name="text">
+    <string>Open Network Stream</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
  </widget>

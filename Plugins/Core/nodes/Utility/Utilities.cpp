@@ -4,6 +4,7 @@
 
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 bool functionQualifier(Parameters::Parameter* parameter)
 {

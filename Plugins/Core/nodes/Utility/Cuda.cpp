@@ -5,6 +5,7 @@
 
 RUNTIME_COMPILER_LINKLIBRARY("-lcudart")
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 void SetDevice::Init(bool firstInit)
 {

@@ -1,6 +1,6 @@
 #include "GpuMatAllocators.h"
 #include <boost/log/trivial.hpp>
-#include <logger.hpp>
+#include <EagleLib/logger.hpp>
 #include "MemoryBlock.h"
 #include <opencv2/cudev/common.hpp>
 #include <cuda_runtime.h>

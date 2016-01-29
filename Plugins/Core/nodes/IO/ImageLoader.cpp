@@ -1,8 +1,8 @@
 #include "nodes/IO/ImageLoader.h"
-#include <external_includes/cv_imgcodec.hpp>
+#include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
 #include <boost/filesystem.hpp>
 using namespace EagleLib;
-
+using namespace EagleLib::Nodes;
 
 
 void ImageLoader::Init(bool firstInit)

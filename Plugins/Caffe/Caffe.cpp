@@ -3,9 +3,9 @@
 
 #include "nodes/Node.h"
 
-#include <external_includes/cv_cudaimgproc.hpp>
-#include <external_includes/cv_cudaarithm.hpp>
-#include <external_includes/cv_cudawarping.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
 #include <Manager.h>
 #include "caffe/caffe.hpp"
 #include <boost/tokenizer.hpp>

@@ -8,7 +8,7 @@
 #include "plotwindow.h"
 #include "parameterplotter.h"
 #include "IObject.h"
-#include "plotters/Plotter.h"
+#include "EagleLib/plotters/Plotter.h"
 namespace Ui {
 class PlotWizardDialog;
 }

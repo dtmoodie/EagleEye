@@ -1,8 +1,8 @@
 #include "nodes/ImgProc/NonMaxSuppression.h"
-#include <external_includes/cv_cudaarithm.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 
 using namespace EagleLib;
-
+using namespace EagleLib::Nodes;
 void MinMax::Init(bool firstInit)
 {
     updateParameter<double>("Min value", 0.0)->type = Parameters::Parameter::Output;

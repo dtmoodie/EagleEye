@@ -1,9 +1,9 @@
 #include "Calibration.h"
-#include <external_includes/cv_calib3d.hpp>
-#include <external_includes/cv_highgui.hpp>
+#include <EagleLib/rcc/external_includes/cv_calib3d.hpp>
+#include <EagleLib/rcc/external_includes/cv_highgui.hpp>
 #include <nodes/VideoProc/Tracking.hpp>
-#include <external_includes/cv_cudaarithm.hpp>
-#include <external_includes/cv_cudaimgproc.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 
 #include "Manager.h"
 #include <UI/InterThread.hpp>

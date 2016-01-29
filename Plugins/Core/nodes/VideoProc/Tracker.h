@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nodes/Node.h>
-#include <nodes/VideoProc/Tracking.hpp>
+#include <EagleLib/nodes/Node.h>
+#include <EagleLib/nodes/VideoProc/Tracking.hpp>
 #include <boost/circular_buffer.hpp>
 #include "EagleLib/utilities/CudaUtils.hpp"
 #include "RuntimeInclude.h"
@@ -10,7 +10,9 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
-
+    namespace Nodes
+    {
+    
     class KeyFrameTracker: public Node
     {
         // Used to find homography once the data has been downloaded from the stream
@@ -46,4 +48,5 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
+    }
 }

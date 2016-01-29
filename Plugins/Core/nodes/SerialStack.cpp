@@ -1,6 +1,7 @@
 #include "nodes/SerialStack.h"
 #
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SerialStack, Utility);
 

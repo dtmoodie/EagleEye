@@ -1,8 +1,8 @@
 #include "nodes/ImgProc/FFT.h"
-#include <external_includes/cv_cudaarithm.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 
 using namespace EagleLib;
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaarithm")
+using namespace EagleLib::Nodes;
 
 void FFT::Init(bool firstInit)
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 #include "qgraphicsitem.h"
 #include "qwidget.h"
 #include <boost/type_traits.hpp>
@@ -16,14 +16,15 @@
 #include <qfiledialog.h>
 #include <QLineEdit>
 #include <QComboBox>
-#include <type.h>
+#include <EagleLib/type.h>
 #include <boost/thread/recursive_mutex.hpp>
 #include <UI/Qt.hpp>
-#include <EagleLib/shared_ptr.hpp>
-
+#include <EagleLib/rcc/shared_ptr.hpp>
+#include <EagleLib/DataStreamManager.h>
 
 namespace Ui {
 	class QNodeWidget;
+    class DataStreamWidget;
 }
 class IQNodeInterop;
 class QNodeWidget;
@@ -38,15 +39,14 @@ class QInputProxy : public QWidget
 	
 public:
 	std::shared_ptr<Parameters::InputParameter> inputParameter;
-	QInputProxy(std::shared_ptr<Parameters::Parameter> parameter, EagleLib::Node::Ptr node_, QWidget* parent);
-	//virtual void onUiUpdated(QWidget* widget);
+	QInputProxy(std::shared_ptr<Parameters::Parameter> parameter, EagleLib::Nodes::Node::Ptr node_, QWidget* parent);
 	virtual void updateUi(bool init = false);
 	virtual QWidget* getWidget(int num = 0);
 private slots:
 	void on_valueChanged(int);
 private:
 	boost::signals2::connection bc;
-	EagleLib::Node::Ptr node;
+	EagleLib::Nodes::Node::Ptr node;
 	QComboBox* box;
 };
 
@@ -54,11 +54,11 @@ class CV_EXPORTS QNodeWidget : public QWidget
 {
 	Q_OBJECT
 public:
-    QNodeWidget(QWidget* parent = nullptr, EagleLib::Node::Ptr node = EagleLib::Node::Ptr());
+    QNodeWidget(QWidget* parent = nullptr, EagleLib::Nodes::Node::Ptr node = EagleLib::Nodes::Node::Ptr());
 	~QNodeWidget();
-    EagleLib::Node::Ptr getNode();
+    EagleLib::Nodes::Node::Ptr getNode();
     void setSelected(bool state);
-    void updateUi(bool parameterUpdate = false, EagleLib::Node* node = nullptr);
+    void updateUi(bool parameterUpdate = false, EagleLib::Nodes::Node* node = nullptr);
     // Used for thread safety
     void on_nodeUpdate();
     void on_logReceive(boost::log::trivial::severity_level verb, const std::string& msg);
@@ -83,16 +83,33 @@ private:
     QLineEdit* errorDisplay;
 
 
-
 	std::map<QWidget*, Parameters::Parameter::Ptr> widgetParamMap;
 	Ui::QNodeWidget* ui;
-    EagleLib::Node::Ptr node;
+    EagleLib::Nodes::Node::Ptr node;
 	std::vector<Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
 	std::vector<QInputProxy*> inputProxies;
     //std::vector<boost::shared_ptr<IQNodeInterop>> interops;
     QNodeWidget* parentWidget;
     std::vector<QNodeWidget*> childWidgets;
 	size_t node_log_handler_id;
+};
+
+class CV_EXPORTS DataStreamWidget: public QWidget
+{
+    Q_OBJECT
+public:
+    DataStreamWidget(QWidget* parent = nullptr, EagleLib::DataStream::Ptr stream = EagleLib::DataStream::Ptr());
+    ~DataStreamWidget();
+
+    EagleLib::DataStream::Ptr GetStream();
+    void SetSelected(bool state);
+
+signals:
+
+
+private:
+    EagleLib::DataStream::Ptr _dataStream;
+    Ui::DataStreamWidget* ui;
 };
 
 class DraggableLabel: public QLabel
@@ -118,7 +135,7 @@ public:
     {        return new QLabel(QString::fromStdString(parameter->GetTypeInfo().name()));    }
 	boost::shared_ptr<Parameters::Parameter> parameter;
 };
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, Parameters::Parameter::Ptr parameter, EagleLib::Node::Ptr node);
+IQNodeProxy* dispatchParameter(IQNodeInterop* parent, Parameters::Parameter::Ptr parameter, EagleLib::Nodes::Node::Ptr node);
 
 
 // Interface class for the interop class
@@ -126,7 +143,7 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 {
 	Q_OBJECT
 public:
-    IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent = nullptr, EagleLib::Node::Ptr node_= EagleLib::Node::Ptr());
+    IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent = nullptr, EagleLib::Nodes::Node::Ptr node_= EagleLib::Nodes::Node::Ptr());
     virtual ~IQNodeInterop();
 
     IQNodeProxy* proxy;
@@ -148,934 +165,6 @@ signals:
 protected:
 	QLabel* nameElement;	
     QGridLayout* layout;
-    EagleLib::Node::Ptr node;
+    EagleLib::Nodes::Node::Ptr node;
 };
 
-
-
-/*// Proxy class for handling
-template<typename T, bool display, typename Enable = void> class QNodeProxy : public IQNodeProxy
-{
-
-};
-
-
-
-// **************************************************************************************************************
-template<typename T>
-class QNodeProxy<T, false, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public IQNodeProxy
-{
-public:
-	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
-	{
-		parameter = parameter_;
-		box = new QDoubleSpinBox(parent);
-		box->setMaximum(std::numeric_limits<T>::max());
-		box->setMinimum(std::numeric_limits<T>::min());
-        box->setMaximumWidth(100);
-        box->setSingleStep(0.01);
-		box->setDecimals(10);
-        updateUi(true);
-		parent->connect(box, SIGNAL(valueChanged(double)), parent, SLOT(on_valueChanged(double)));
-	}
-    virtual void updateUi(bool init = false)
-	{
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock) return;
-        if(auto param = EagleLib::getParameterPtr<T>(parameter))
-            box->setValue(*param);
-	}
-    virtual void onUiUpdated(QWidget* widget)
-	{
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<T>(parameter))
-            *param = box->value();
-        parameter->changed = true;
-	}
-    virtual QWidget* getWidget(int num = 0) { return box; }
-private:
-	QDoubleSpinBox* box;
-};
-// **************************************************************************************************************
-template<typename T>
-class QNodeProxy<T, true, typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value, void>::type> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parameter = parameter_;
-        box = new QLabel(parent);
-        updateUi(true);
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<T>(parameter))
-            box->setText(QString::number(*param));
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-    }
-    virtual QWidget* getWidget(int num = 0) { return box; }
-private:
-    QLabel* box;
-};
-// **************************************************************************************************************
-template<typename T>
-class QNodeProxy<T, false, typename std::enable_if<std::is_integral<T>::value, void>::type> : public IQNodeProxy
-{
-public:
-	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
-	{
-		parameter = parameter_;
-        box = new QSpinBox(parent);
-        if(std::numeric_limits<T>::max() > std::numeric_limits<int>::max())
-            box->setMaximum(std::numeric_limits<int>::max());
-        else
-            box->setMaximum(std::numeric_limits<T>::max());
-        box->setMinimum(std::numeric_limits<T>::min());
-        updateUi(true);
-		parent->connect(box, SIGNAL(valueChanged(int)), parent, SLOT(on_valueChanged(int)));
-	}
-    virtual void updateUi(bool init = false)
-	{
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<T>(parameter))
-            box->setValue(*param);
-	}
-    virtual void onUiUpdated(QWidget* widget)
-	{
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<T>(parameter))
-            *param = box->value();
-        parameter->changed = true;
-	}
-    virtual QWidget* getWidget(int num = 0) { return box; }
-private:
-	QSpinBox* box;
-};
-// **************************************************************************************************************
-template<>
-class QNodeProxy<bool, false, void>: public IQNodeProxy
-{
-public:
-	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)	
-	{
-        box = new QCheckBox(parent);
-		parameter=parameter_;
-        updateUi(true);
-        parent->connect(box, SIGNAL(stateChanged(int)), parent, SLOT(on_valueChanged(int)));
-	}
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<bool>(parameter))
-            box->setChecked(*param);
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<bool>(parameter))
-            *param = box->isChecked();
-        parameter->changed = true;
-    }
-    virtual QWidget* getWidget(int num = 0) { return box; }
-private:
-	QCheckBox* box;
-};
-template<>
-class QNodeProxy<bool, true, void>: public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        box = new QCheckBox(parent);
-        box->setCheckable(false);
-        parameter=parameter_;
-        updateUi(true);
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<bool>(parameter))
-            box->setChecked(*param);
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {	}
-    virtual QWidget* getWidget(int num = 0) { return box; }
-private:
-    QCheckBox* box;
-};
-// **************************************************************************************************************
-template<>
-class QNodeProxy<std::string, false, void> : public IQNodeProxy
-{
-public:
-	QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
-	{
-		box = new QLineEdit(parent);
-        parameter = parameter_;
-        updateUi(true);
-        parent->connect(box, SIGNAL(editingFinished()), parent, SLOT(on_valueChanged()));
-
-	}
-    virtual void updateUi(bool init = false)
-	{
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<std::string>(parameter))
-            if(parameter->changed || init)
-                box->setText(QString::fromStdString(*param));
-	}
-    virtual void onUiUpdated(QWidget* widget)
-	{
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<std::string>(parameter))
-            *param = box->text().toStdString();
-        parameter->changed = true;
-	}
-    virtual QWidget* getWidget(int num = 0) { return box; }
-private:
-	QLineEdit* box;
-};
-template<>
-class QNodeProxy<std::string, true, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        box = new QLineEdit(parent);
-        parameter = parameter_;
-        updateUi(true);
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<std::string>(parameter))
-            if(parameter->changed || init)
-                box->setText(QString::fromStdString(*param));
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-    }
-    virtual QWidget* getWidget(int num = 0) { return box; }
-private:
-    QLineEdit* box;
-};
-// **************************************************************************************************************
-template<>
-class QNodeProxy<boost::filesystem::path, false, void> : public IQNodeProxy
-{
-public:
-	QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-	{
-        parent = parent_;
-		button = new QPushButton(parent);
-        parameter = parameter_;
-        updateUi(true);
-        parent->connect(button, SIGNAL(clicked()), parent, SLOT(on_valueChanged()));
-
-	}
-    virtual void updateUi(bool init = false)
-	{
-        std::string fileName;
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter))
-            fileName = param->string();
-        lock.unlock();
-		if (fileName.size())
-			button->setText(QString::fromStdString(fileName));
-		else
-			button->setText("Select a file");
-	}
-    virtual void onUiUpdated(QWidget* widget)
-    {
-        QString filename;
-        QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(parent->parentWidget());
-
-        if(nodeWidget)
-            filename = QFileDialog::getSaveFileName(nodeWidget->mainWindow, "Select file");
-        else
-            filename = QFileDialog::getSaveFileName(parent, "Select file");
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter))
-            *param = boost::filesystem::path(filename.toStdString());
-        lock.unlock();
-		button->setText(filename);
-		button->setToolTip(filename);
-		parameter->changed = true;
-	}
-    virtual QWidget* getWidget(int num = 0) { return button; }
-private:
-	QPushButton* button;
-    IQNodeInterop* parent;
-};
-
-template<>
-class QNodeProxy<boost::filesystem::path, true, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parameter = parameter_;
-        box = new QLineEdit(parent);
-        updateUi();
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<boost::filesystem::path>(parameter))
-            box->setText(QString::fromStdString(param->string()));
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-    }
-    virtual QWidget* getWidget(int num = 0) { return box; }
-private:
-    QLineEdit* box;
-};
-
-template<>
-class QNodeProxy<EagleLib::ReadDirectory, false, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parent = parent_;
-        button = new QPushButton(parent);
-        parameter = parameter_;
-        updateUi(true);
-        parent->connect(button, SIGNAL(clicked()), parent, SLOT(on_valueChanged()));
-
-    }
-    virtual void updateUi(bool init = false)
-    {
-        std::string fileName;
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<EagleLib::ReadDirectory>(parameter))
-            fileName = param->string();
-        lock.unlock();
-        if (fileName.size())
-            button->setText(QString::fromStdString(fileName));
-        else
-            button->setText("Select a Directory");
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-        QString filename;
-        QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(parent->parentWidget());
-
-        if(nodeWidget)
-            //filename = QFileDialog::getSaveFileName(nodeWidget->mainWindow, "Select file");
-            filename = QFileDialog::getExistingDirectory(nodeWidget->mainWindow, "Select directory");
-        else
-            filename = QFileDialog::getExistingDirectory(parent, "Select directory");
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<EagleLib::ReadDirectory>(parameter))
-            *param = boost::filesystem::path(filename.toStdString());
-        lock.unlock();
-        button->setText(filename);
-        button->setToolTip(filename);
-        parameter->changed = true;
-    }
-    virtual QWidget* getWidget(int num = 0) { return button; }
-private:
-    QPushButton* button;
-    IQNodeInterop* parent;
-};
-
-template<>
-class QNodeProxy<EagleLib::ReadDirectory, true, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parameter = parameter_;
-        box = new QLineEdit(parent);
-        updateUi();
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        if(auto param = EagleLib::getParameterPtr<EagleLib::ReadDirectory>(parameter))
-            box->setText(QString::fromStdString(param->string()));
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-    }
-    virtual QWidget* getWidget(int num = 0) { return box; }
-private:
-    QLineEdit* box;
-};
-
-
-
-template<>
-class QNodeProxy<boost::function<void(void)>, false, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parent = parent_;
-        parameter = parameter_;
-        button = new QPushButton(parent);
-        parent->connect(button, SIGNAL(clicked()), parent, SLOT(on_valueChanged()));
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        button->setText(QString::fromStdString(parameter_->name));
-
-    }
-    virtual void updateUi(bool init = false)
-    {
-
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        auto function = EagleLib::getParameterPtr<boost::function<void(void)>>(parameter);
-        if(function)
-        {
-            //(*function)();
-			EagleLib::ProcessingThreadCallback::Instance().post(*function);
-        }
-    }
-    virtual QWidget* getWidget(int num = 0) { return button; }
-private:
-    QPushButton* button;
-    QWidget* parent;
-};
-
-template<>
-class QNodeProxy<EagleLib::EnumParameter, false, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parent = parent_;
-        parameter = parameter_;
-        box = new QComboBox(parent);
-        updateUi(true);
-        parent->connect(box, SIGNAL(currentIndexChanged(int)), parent_, SLOT(on_valueChanged(int)));
-
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        EagleLib::EnumParameter* param = EagleLib::getParameterPtr<EagleLib::EnumParameter>(parameter);
-        if(init)
-            for(size_t i = 0; i < param->enumerations.size(); ++i)
-                box->addItem(QString::fromStdString(param->enumerations[i]));
-        box->setCurrentIndex(param->currentSelection);
-
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        EagleLib::EnumParameter* param = EagleLib::getParameterPtr<EagleLib::EnumParameter>(parameter);
-        param->currentSelection = box->currentIndex();
-        parameter->changed = true;
-    }
-    virtual QWidget* getWidget(int num = 0){return box;}
-
-private:
-    QWidget* parent;
-    QComboBox* box;
-};
-
-template<>
-class QNodeProxy<EagleLib::EnumParameter, true, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parent = parent_;
-        parameter = parameter_;
-        box = new QComboBox(parent);
-        updateUi(true);
-        parent->connect(box, SIGNAL(currentIndexChanged(int)), parent_, SLOT(on_valueChanged(int)));
-
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        EagleLib::EnumParameter* param = EagleLib::getParameterPtr<EagleLib::EnumParameter>(parameter);
-        if(init)
-        {
-            for(size_t i = 0; i < param->enumerations.size(); ++i)
-                box->addItem(QString::fromStdString(param->enumerations[i]));
-        }
-        if(parameter->changed)
-        {
-            box->setCurrentIndex(param->currentSelection);
-        }
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-
-    }
-    virtual QWidget* getWidget(int num = 0){return box;}
-
-private:
-    QWidget* parent;
-    QComboBox* box;
-};
-
-template<>
-class QNodeProxy<cv::Scalar, false, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parent = parent_;
-        parameter = parameter_;
-        boxes[0] = new QDoubleSpinBox(parent);
-        boxes[1] = new QDoubleSpinBox(parent);
-        boxes[2] = new QDoubleSpinBox(parent);
-
-        boxes[0]->setMinimum(std::numeric_limits<double>::min());
-        boxes[0]->setMaximum(std::numeric_limits<double>::max());
-        boxes[1]->setMinimum(std::numeric_limits<double>::min());
-        boxes[1]->setMaximum(std::numeric_limits<double>::max());
-        boxes[2]->setMinimum(std::numeric_limits<double>::min());
-        boxes[2]->setMaximum(std::numeric_limits<double>::max());
-
-        boxes[0]->setMaximumWidth(100);
-        boxes[1]->setMaximumWidth(100);
-        boxes[2]->setMaximumWidth(100);
-
-        updateUi(true);
-        parent->connect(boxes[0], SIGNAL(valueChanged(double)), parent_, SLOT(on_valueChanged(double)));
-        parent->connect(boxes[1], SIGNAL(valueChanged(double)), parent_, SLOT(on_valueChanged(double)));
-        parent->connect(boxes[2], SIGNAL(valueChanged(double)), parent_, SLOT(on_valueChanged(double)));
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        cv::Scalar* param = EagleLib::getParameterPtr<cv::Scalar>(parameter);
-        boxes[0]->setValue(param->val[0]);
-        boxes[1]->setValue(param->val[1]);
-        boxes[2]->setValue(param->val[2]);
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        cv::Scalar* param = EagleLib::getParameterPtr<cv::Scalar>(parameter);
-        param->val[0] = boxes[0]->value();
-        param->val[1] = boxes[1]->value();
-        param->val[2] = boxes[2]->value();
-        parameter->changed = true;
-    }
-    virtual QWidget* getWidget(int num = 0){
-        return boxes[num];
-    }
-    virtual int getNumWidgets()
-    {
-        return 3;
-    }
-
-private:
-    QWidget* parent;
-    QDoubleSpinBox* boxes[3];
-};
-template<>
-class QNodeProxy<cv::Scalar, true, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parent = parent_;
-        parameter = parameter_;
-        boxes[0] = new QLabel(parent);
-        boxes[1] = new QLabel(parent);
-        boxes[2] = new QLabel(parent);
-        updateUi(true);
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        cv::Scalar* param = EagleLib::getParameterPtr<cv::Scalar>(parameter);
-        boxes[0]->setText(QString::number(param->val[0]));
-        boxes[1]->setText(QString::number(param->val[1]));
-        boxes[2]->setText(QString::number(param->val[2]));
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-
-    }
-    virtual QWidget* getWidget(int num = 0){
-        return boxes[num];
-    }
-    virtual int getNumWidgets()
-    {
-        return 3;
-    }
-
-private:
-    QWidget* parent;
-    QLabel* boxes[3];
-};
-template<typename T>
-class QNodeProxy<std::vector<T>, false, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parent = parent_;
-        parameter = parameter_;
-
-        size = new QLabel(parent_);
-        index = new QSpinBox(parent_);
-        value = new QDoubleSpinBox(parent_);
-        value->setMaximum(std::numeric_limits<T>::max());
-        value->setMinimum(std::numeric_limits<T>::min());
-        value->setMaximumWidth(100);
-        prevIndex = 0;
-        updateUi(true);
-        parent_->connect(index, SIGNAL(valueChanged(int)), parent_, SLOT(on_valueChanged(int)));
-        parent_->connect(value, SIGNAL(valueChanged(double)), parent_, SLOT(on_valueChanged(double)));
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        std::vector<T>* param = EagleLib::getParameterPtr<std::vector<T>>(parameter);
-        if(param->size())
-            index->setMaximum(param->size()-1);
-        else
-            index->setMaximum(0);
-        index->setMinimum(0);
-        if(index->value() < (int)param->size())
-        {
-            value->setValue((*param)[index->value()]);
-        }
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        std::vector<T>* param = EagleLib::getParameterPtr<std::vector<T>>(parameter);
-        if(widget == index)
-        {
-            if(index->value() < (int)param->size())
-            {
-                value->setValue((*param)[index->value()]);
-            }
-            return;
-        }
-        if(index->value() < (int)param->size())
-        {
-            (*param)[index->value()] = value->value();
-        }
-        parameter->changed = true;
-
-    }
-    virtual QWidget* getWidget(int num = 0)
-    {
-        if(num == 0)
-            return size;
-        if(num == 1)
-            return index;
-        if(num == 2)
-            return value;
-        return nullptr;
-    }
-    virtual int getNumWidgets()
-    {
-        return 3;
-    }
-
-private:
-    QWidget* parent;
-    QLabel* size;
-    QSpinBox* index;
-    QDoubleSpinBox* value;
-    int prevIndex;
-};
-
-template<typename T>
-class QNodeProxy<std::vector<T>, true, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parent = parent_;
-        parameter = parameter_;
-        size = new QLabel(parent_);
-        index = new QSpinBox(parent_);
-        value = new QLabel(parent_);
-
-        parent_->connect(index, SIGNAL(valueChanged(int)), parent_, SLOT(on_valueChanged(int)));
-        updateUi(true);
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        std::vector<T>* param = EagleLib::getParameterPtr<std::vector<T>>(parameter);
-        if(param->size())
-            index->setMaximum(param->size()-1);
-        else
-            index->setMaximum(0);
-        index->setMinimum(0);
-        if(index->value() < (int)param->size())
-        {
-            value->setText(QString::number(((*param)[index->value()])));
-        }
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-        updateUi();
-    }
-    virtual QWidget* getWidget(int num = 0)
-    {
-        if(num == 0)
-            return size;
-        if(num == 1)
-            return index;
-        if(num == 2)
-            return value;
-        return nullptr;
-    }
-    virtual int getNumWidgets()
-    {
-        return 3;
-    }
-
-private:
-    QWidget* parent;
-    QLabel* size;
-    QSpinBox* index;
-    QLabel* value;
-};
-
-template<typename T1, typename T2>
-class QNodeProxy<std::vector<std::pair<T1, T2>>, false, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parent = parent_;
-        parameter = parameter_;
-
-        size = new QLabel(parent_);
-        index = new QSpinBox(parent_);
-        value1 = new QDoubleSpinBox(parent_);
-        value1->setMaximum(std::numeric_limits<T1>::max());
-        value1->setMinimum(std::numeric_limits<T1>::min());
-        value1->setMaximumWidth(100);
-
-        value2 = new QDoubleSpinBox(parent_);
-        value2->setMaximum(std::numeric_limits<T2>::max());
-        value2->setMinimum(std::numeric_limits<T2>::min());
-        value2->setMaximumWidth(100);
-
-        prevIndex = 0;
-        updateUi(true);
-        parent_->connect(index, SIGNAL(valueChanged(int)), parent_, SLOT(on_valueChanged(int)));
-        parent_->connect(value1, SIGNAL(valueChanged(double)), parent_, SLOT(on_valueChanged(double)));
-        parent_->connect(value2, SIGNAL(valueChanged(double)), parent_, SLOT(on_valueChanged(double)));
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        std::vector<std::pair<T1,T2>>* param = EagleLib::getParameterPtr<std::vector<std::pair<T1, T2>>>(parameter);
-        if(param->size())
-            index->setMaximum(param->size()-1);
-        else
-            index->setMaximum(0);
-        index->setMinimum(0);
-        if(index->value() < (int)param->size())
-        {
-            value1->setValue((*param)[index->value()].first);
-            value2->setValue((*param)[index->value()].second);
-        }
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        std::vector<std::pair<T1, T2>>* param = EagleLib::getParameterPtr<std::vector<std::pair<T1, T2>>>(parameter);
-        if(widget == index)
-        {
-            if(index->value() < (int)param->size())
-            {
-                value1->setValue((*param)[index->value()].first);
-                value2->setValue((*param)[index->value()].second);
-            }
-            return;
-        }
-        if(widget == value1)
-        {
-            if(index->value() < (int)param->size())
-            {
-                (*param)[index->value()].first = value1->value();
-            }
-        }
-        if(widget == value2)
-        {
-            if(index->value() < (int)param->size())
-            {
-                (*param)[index->value()].second = value2->value();
-            }
-        }
-
-        parameter->changed = true;
-    }
-    virtual QWidget* getWidget(int num = 0)
-    {
-        if(num == 0)
-            return size;
-        if(num == 1)
-            return index;
-        if(num == 2)
-            return value1;
-        if(num == 3)
-            return value2;
-        return nullptr;
-    }
-    virtual int getNumWidgets()
-    {
-        return 4;
-    }
-
-private:
-    QWidget* parent;
-    QLabel* size;
-    QSpinBox* index;
-    QDoubleSpinBox* value1;
-    QDoubleSpinBox* value2;
-    int prevIndex;
-};
-template<typename T1, typename T2>
-class QNodeProxy<std::vector<std::pair<T1, T2>>, true, void> : public IQNodeProxy
-{
-public:
-    QNodeProxy(IQNodeInterop* parent_, boost::shared_ptr<Parameters::Parameter> parameter_)
-    {
-        parent = parent_;
-        parameter = parameter_;
-
-        size = new QLabel(parent_);
-        index = new QSpinBox(parent_);
-        value1 = new QLabel(parent_);
-        value2 = new QLabel(parent_);
-
-        prevIndex = 0;
-        updateUi(true);
-        parent_->connect(index, SIGNAL(valueChanged(int)), parent_, SLOT(on_valueChanged(int)));
-    }
-    virtual void updateUi(bool init = false)
-    {
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx, boost::try_to_lock);
-        if(!lock)
-            return;
-        std::vector<std::pair<T1,T2>>* param = EagleLib::getParameterPtr<std::vector<std::pair<T1, T2>>>(parameter);
-        if(param->size())
-            index->setMaximum(param->size()-1);
-        else
-            index->setMaximum(0);
-        index->setMinimum(0);
-        if(index->value() < (int)param->size())
-        {
-            value1->setText(QString::number((*param)[index->value()].first));
-            value2->setText(QString::number((*param)[index->value()].second));
-        }
-    }
-    virtual void onUiUpdated(QWidget* widget)
-    {
-
-        boost::recursive_mutex::scoped_lock lock(parameter->mtx);
-        if(!lock)
-            return;
-        std::vector<std::pair<T1, T2>>* param = EagleLib::getParameterPtr<std::vector<std::pair<T1, T2>>>(parameter);
-        if(widget == index)
-        {
-            if(index->value() < (int)param->size())
-            {
-                value1->setText(QString::number((*param)[index->value()].first));
-                value2->setText(QString::number((*param)[index->value()].second));
-            }
-            return;
-        }
-        parameter->changed = true;
-    }
-    virtual QWidget* getWidget(int num = 0)
-    {
-        if(num == 0)
-            return size;
-        if(num == 1)
-            return index;
-        if(num == 2)
-            return value1;
-        if(num == 3)
-            return value2;
-        return nullptr;
-    }
-    virtual int getNumWidgets()
-    {
-        return 4;
-    }
-
-private:
-    QWidget* parent;
-    QLabel* size;
-    QSpinBox* index;
-    QLabel* value1;
-    QLabel* value2;
-    int prevIndex;
-};
-*/

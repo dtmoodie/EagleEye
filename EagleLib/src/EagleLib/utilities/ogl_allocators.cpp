@@ -1,7 +1,7 @@
 #include "ogl_allocators.h"
 #include "ObjectInterfacePerModule.h"
-#include "SystemTable.hpp"
-#include <external_includes/cv_core.hpp>
+#include "EagleLib/rcc/SystemTable.hpp"
+#include <EagleLib/rcc/external_includes/cv_core.hpp>
 #include <QOpenGLContext>
 #include <qwindow.h>
 

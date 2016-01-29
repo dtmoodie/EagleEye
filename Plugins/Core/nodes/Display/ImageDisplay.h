@@ -1,21 +1,23 @@
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Sink.h"
 
-#include <external_includes/cv_highgui.hpp>
-#include <external_includes/cv_core.hpp>
+#include <EagleLib/rcc/external_includes/cv_highgui.hpp>
+#include <EagleLib/rcc/external_includes/cv_core.hpp>
 #include <opencv2/core/opengl.hpp>
 #include <EagleLib/utilities/CudaUtils.hpp>
-#include <ObjectDetection.hpp>
+#include <EagleLib/ObjectDetection.hpp>
 
 namespace EagleLib
 {
-    class QtImageDisplay: public Node
+    namespace Nodes
+    {
+    class QtImageDisplay: public CpuSink
     {
         std::string prevName;
     public:
         QtImageDisplay();
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-
+        virtual void doProcess(const cv::Mat& mat, double timestamp, int frame_number, cv::cuda::Stream& stream);
     };
     class OGLImageDisplay: public Node
     {
@@ -73,5 +75,5 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
-
-}
+    } // namespace Nodes
+} // namespace EagleLib

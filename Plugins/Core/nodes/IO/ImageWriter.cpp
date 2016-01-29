@@ -1,8 +1,9 @@
 #include "nodes/IO/ImageWriter.h"
-#include <external_includes/cv_imgcodec.hpp>
+#include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
 #include "../remotery/lib/Remotery.h"
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 void ImageWriterCallback(int status, void* data)
 {

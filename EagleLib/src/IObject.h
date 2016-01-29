@@ -36,7 +36,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <mutex>
-#include "IObjectNotifiable.h"
+#include "EagleLib/rcc/IObjectNotifiable.h"
 #include <list>
 
 struct ISimpleSerializer;
@@ -57,6 +57,10 @@ enum InterfaceIDEnum
 	IID_RenderInteractor,
 	IID_RenderObjectFactory,
     IID_Algorithm,
+    IID_ViewManager,
+    IID_CoordinateManager,
+    IID_TrackManager,
+    IID_FrameGrabber,
 	IID_ENDInterfaceID
 };
 

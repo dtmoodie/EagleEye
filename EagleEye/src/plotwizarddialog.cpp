@@ -1,5 +1,5 @@
-#include <EagleLib/PlotManager.h>
-#include "plotters/Plotter.h"
+#include <EagleLib/plotters/PlotManager.h>
+#include "EagleLib/plotters/Plotter.h"
 
 #include "plotwizarddialog.h"
 #include "ui_plotwizarddialog.h"

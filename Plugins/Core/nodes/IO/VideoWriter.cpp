@@ -1,7 +1,7 @@
 #include <nodes/IO/VideoWriter.h>
 #include <boost/filesystem.hpp>
 using namespace EagleLib;
-
+using namespace EagleLib::Nodes;
 
 
 VideoWriter::VideoWriter(std::string fileName)

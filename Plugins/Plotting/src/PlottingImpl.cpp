@@ -1,5 +1,7 @@
 #include "PlottingImpl.hpp"
 #define PARAMETERS_USE_UI
+#define Qt5_FOUND
+#define OPENCV_FOUND
 #include "UI/Qt.hpp"
 using namespace EagleLib;
 

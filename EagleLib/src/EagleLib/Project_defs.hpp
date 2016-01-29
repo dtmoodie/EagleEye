@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/ObjectManager.h"
+#include "EagleLib/rcc/ObjectManager.h"
 #include "Defs.hpp"
 // *************** SETUP_PROJECT_DEF ********************
 #ifdef __cplusplus

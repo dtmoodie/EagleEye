@@ -2,46 +2,43 @@
 #define OPENCV_FOUND
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "qpluginloader.h"
+#include <../remotery/lib/Remotery.h>
 
 #include <qfiledialog.h>
-#include <nodes/Node.h>
-#include <QNodeWidget.h>
-
-#include "Plugins.h"
-//#include <opencv2/calib3d.hpp>
 #include <qgraphicsproxywidget.h>
 #include "QGLWidget"
 #include <QGraphicsSceneMouseEvent>
 
-
-
 #include "settingdialog.h"
-#include "logger.hpp"
+#include "dialog_network_stream_selection.h"
+#include <QNodeWidget.h>
 
 #include <gl/GL.h>
 #include <gl/GLU.h>
 
-#include <SystemTable.hpp>
-#include <Events.h>
 #include <UI/InterThread.hpp>
-#include <../remotery/lib/Remotery.h>
 
+#include <EagleLib/rcc/SystemTable.hpp>
 #include <EagleLib/utilities/ogl_allocators.h>
 #include "EagleLib/utilities/CpuMatAllocators.h"
 #include <EagleLib/Logging.h>
-#include <EagleLib/shared_ptr.hpp>
+#include <EagleLib/rcc/shared_ptr.hpp>
 #include "EagleLib/utilities/BufferPool.hpp"
-#include <EagleLib/NodeManager.h>
-#include <EagleLib/ObjectManager.h>
+#include <EagleLib/nodes/NodeManager.h>
+#include <EagleLib/rcc/ObjectManager.h>
+#include "EagleLib/Signals.h"
+#include <EagleLib/DataStreamManager.h>
+#include "EagleLib/logger.hpp"
+#include "EagleLib/Plugins.h"
+#include <EagleLib/nodes/Node.h>
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
 	return 0;
 }
 
-static void processThread(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mutex *mtx);
-static void process(std::vector<EagleLib::Node::Ptr>* parentList, boost::timed_mutex *mtx);
+static void processThread(std::vector<EagleLib::Nodes::Node::Ptr>* parentList, boost::timed_mutex *mtx);
+static void process(std::vector<EagleLib::Nodes::Node::Ptr>* parentList, boost::timed_mutex *mtx);
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow),
@@ -69,8 +66,8 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
     qRegisterMetaType<cv::Mat>("cv::Mat");
-    qRegisterMetaType<EagleLib::Node::Ptr>("EagleLib::Node::Ptr");
-    qRegisterMetaType<EagleLib::Node*>("EagleLib::Node*");
+    qRegisterMetaType<EagleLib::Nodes::Node::Ptr>("EagleLib::Nodes::Node::Ptr");
+    qRegisterMetaType<EagleLib::Nodes::Node*>("EagleLib::Nodes::Node*");
 	qRegisterMetaType<boost::log::trivial::severity_level>("boost::log::trivial::severity_level");
     qRegisterMetaType<boost::function<cv::Mat(void)>>("boost::function<cv::Mat(void)>");
     qRegisterMetaType<boost::function<void(void)>>("boost::function<void(void)>");
@@ -86,8 +83,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
     nodeListDialog = new NodeListDialog(this);
     nodeListDialog->hide();
-    connect(nodeListDialog, SIGNAL(nodeConstructed(EagleLib::Node::Ptr)),
-        this, SLOT(onNodeAdd(EagleLib::Node::Ptr)));
+    connect(nodeListDialog, SIGNAL(nodeConstructed(EagleLib::Nodes::Node::Ptr)),
+        this, SLOT(onNodeAdd(EagleLib::Nodes::Node::Ptr)));
 	
 	nodeGraph = new QGraphicsScene(this);
     //connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
@@ -98,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent) :
     nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->gridLayout->addWidget(nodeGraphView, 2, 0, 1,4);
     currentSelectedNodeWidget = nullptr;
+    currentSelectedStreamWidget = nullptr;
     Parameters::UI::UiCallbackService::Instance()->setCallback(boost::bind(&MainWindow::processingThread_uiCallback, this, _1, _2));
     rccSettings->hide();
     plotWizardDialog->hide();
@@ -106,29 +104,22 @@ MainWindow::MainWindow(QWidget *parent) :
     cv::redirectError(&static_errorHandler);
 
 
-
-    // For some reason this doesn't work on linux :/
-
-    //connect(this, SIGNAL(uiCallback(boost::function<void()>)),
-    //        this, SLOT(on_uiCallback(boost::function<void()>)), Qt::QueuedConnection);
     connect(this, &MainWindow::uiCallback, this, &MainWindow::on_uiCallback, Qt::QueuedConnection);
-
-    //connect(this, SIGNAL(uiCallback()), this, SLOT(on_uiCallback()), Qt::QueuedConnection);
-
     connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
 	connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
-    //connect(this, SIGNAL(eLOG_TRIVIAL(QString)), this, SLOT(LOG_TRIVIAL(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
     connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
     connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
     connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
     connect(nodeGraphView, SIGNAL(widgetDeleted(QNodeWidget*)), this, SLOT(onWidgetDeleted(QNodeWidget*)));
+    connect(nodeGraphView, SIGNAL(widgetDeleted(DataStreamWidget*)), this, SLOT(onWidgetDeleted(DataStreamWidget*)));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(onSaveClicked()));
     connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
+    connect(ui->actionOpen_file, SIGNAL(triggered()), this, SLOT(onLoadFileClicked()));
     connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
     connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
-
-    connect(this, SIGNAL(onNewParameter(EagleLib::Node*)), this, SLOT(on_NewParameter(EagleLib::Node*)), Qt::QueuedConnection);
+    
+    connect(this, SIGNAL(onNewParameter(EagleLib::Nodes::Node*)), this, SLOT(on_NewParameter(EagleLib::Nodes::Node*)), Qt::QueuedConnection);
 
     connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
     //connect(plotWizardDialog, SIGNAL(on_plotAdded(PlotWindow*)), this, SLOT(onPlotAdd(PlotWindow*)));
@@ -191,11 +182,18 @@ MainWindow::MainWindow(QWidget *parent) :
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {
-        auto signalHandler = table->GetSingleton<EagleLib::ISignalHandler>();
-        auto signal = signalHandler->GetSignalSafe<boost::signals2::signal<void(EagleLib::Node*)>>("ParameterAdded");
-        signal->connect(boost::bind(&MainWindow::newParameter, this, _1));
-        auto dirtySignal = signalHandler->GetSignalSafe<boost::signals2::signal<void(EagleLib::Node*)>>("NodeUpdated");
-        dirtySignal->connect(boost::bind(&MainWindow::on_nodeUpdate, this, _1));
+        auto signal_manager = table->GetSingleton<EagleLib::SignalManager>();
+        if(!signal_manager)
+        {
+            table->SetSingleton<EagleLib::SignalManager>(new EagleLib::SignalManager());
+            signal_manager = table->GetSingleton<EagleLib::SignalManager>();
+            Signals::signal_manager::set_instance(signal_manager);
+        }            
+
+        auto signal = signal_manager->get_signal<void(EagleLib::Nodes::Node*)>("ParameterAdded");
+        new_parameter_connection = signal->connect(boost::bind(&MainWindow::newParameter, this, _1));
+        auto dirtySignal = signal_manager->get_signal<void(EagleLib::Nodes::Node*)>("NodeUpdated");
+        dirty_flag_connection = dirtySignal->connect(boost::bind(&MainWindow::on_nodeUpdate, this, _1));
     }
 }
 
@@ -205,7 +203,7 @@ MainWindow::~MainWindow()
 	cv::destroyAllWindows();
 	EagleLib::ui_collector::clearGenericCallbackHandlers();
 	EagleLib::ShutdownLogging();
-
+//    user_interface_persistence::variable_storage::instance().save_parameters();
     delete ui;
 }
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -248,7 +246,7 @@ void MainWindow::onPlotRemove(PlotWindow* plot)
 
 }
 
-void saveWidgetPosition(NodeView* nodeView, cv::FileStorage& fs, EagleLib::Node::Ptr node, int& count)
+void saveWidgetPosition(NodeView* nodeView, cv::FileStorage& fs, EagleLib::Nodes::Node::Ptr node, int& count)
 {
     QGraphicsProxyWidget* widget = nodeView->getWidget(node->GetObjectId());
     if(widget)
@@ -328,7 +326,7 @@ MainWindow::onLoadClicked()
     if(file.size() == 0)
         return;
     stopProcessingThread();
-    std::vector<EagleLib::Node::Ptr> nodes = EagleLib::NodeManager::getInstance().loadNodes(file.toStdString());
+    std::vector<EagleLib::Nodes::Node::Ptr> nodes = EagleLib::NodeManager::getInstance().loadNodes(file.toStdString());
     cv::FileStorage fs;
 	try
 	{
@@ -396,7 +394,35 @@ void MainWindow::onLoadPluginClicked()
         emit pluginLoaded();
     }
 }
-void MainWindow::on_NewParameter(EagleLib::Node* node)
+
+void MainWindow::onLoadFileClicked()
+{
+    QString filename = QFileDialog::getOpenFileName(this, "Select file", QString());
+    if(filename.size() == 0)
+        return;
+    filename = QDir::toNativeSeparators(filename);
+    load_file(filename);
+    
+}
+void MainWindow::load_file(QString filename)
+{
+    if (EagleLib::DataStream::CanLoadDocument(filename.toStdString()))
+    {
+        auto stream = EagleLib::DataStreamManager::instance()->create_stream();
+        if(stream->LoadDocument(filename.toStdString()))
+        {
+            data_streams.push_back(stream);
+            stream->LaunchProcess();
+            auto data_stream_widget = new DataStreamWidget(0, stream);
+            auto proxyWidget = nodeGraph->addWidget(data_stream_widget);
+            nodeGraphView->addWidget(proxyWidget, stream->get_stream_id());
+            current_stream = stream;
+            data_streams.push_back(stream);
+            data_stream_widgets.push_back(data_stream_widget);
+        }        
+    }
+}
+void MainWindow::on_NewParameter(EagleLib::Nodes::Node* node)
 {
     for(size_t i = 0; i < widgets.size(); ++i)
     {
@@ -404,13 +430,11 @@ void MainWindow::on_NewParameter(EagleLib::Node* node)
     }
 }
 // Called from the processing thread, that's why we need a queued connection here.
-void MainWindow::newParameter(EagleLib::Node* node)
+void MainWindow::newParameter(EagleLib::Nodes::Node* node)
 {
     emit onNewParameter(node);
 }
-
-void
-MainWindow::onTimeout()
+void MainWindow::onTimeout()
 {
 	rmt_ScopedCPUSample(onTimeout);
     static bool swapRequired = false;
@@ -459,15 +483,14 @@ void MainWindow::log(QString message)
     ui->console->appendPlainText(message);
 }
 // Called from the processing thread
-void MainWindow::oglDisplay(cv::cuda::GpuMat img, EagleLib::Node* node)
+void MainWindow::oglDisplay(cv::cuda::GpuMat img, EagleLib::Nodes::Node* node)
 {
     emit oglDisplayImage(node->fullTreeName, img);
 }
-void MainWindow::qtDisplay(cv::Mat img, EagleLib::Node *node)
+void MainWindow::qtDisplay(cv::Mat img, EagleLib::Nodes::Node *node)
 {
     emit qtDisplayImage(node->fullTreeName, img);
 }
-
 void MainWindow::onOGLDisplay(std::string name, cv::cuda::GpuMat img)
 {
     cv::namedWindow(name, cv::WINDOW_OPENGL);
@@ -478,14 +501,13 @@ void MainWindow::onQtDisplay(std::string name, cv::Mat img)
     cv::namedWindow(name);
     cv::imshow(name, img);
 }
-void MainWindow::onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::Node* node)
+void MainWindow::onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::Nodes::Node* node)
 {
     cv::Mat img = function();
     cv::namedWindow(node->fullTreeName);
     cv::imshow(node->fullTreeName, img);
 }
-
-void MainWindow::addNode(EagleLib::Node::Ptr node)
+void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
 {
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
@@ -520,6 +542,18 @@ void MainWindow::addNode(EagleLib::Node::Ptr node)
                     proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(500, yOffset));
             }
         }
+        if(currentSelectedStreamWidget)
+        {
+            int yOffset = 0;
+            if(current_stream != nullptr)
+            {
+                auto parentWidget = nodeGraphView->getStream(current_stream->get_stream_id());
+                if (parentWidget)
+                    proxyWidget->setPos(parentWidget->pos() + QPointF(500, yOffset));
+                else
+                    proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(500, yOffset));
+            }
+        }
     }
     nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
     nodeGraphView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
@@ -549,17 +583,20 @@ void MainWindow::updateLines()
 }
 
 void 
-MainWindow::onNodeAdd(EagleLib::Node::Ptr node)
+MainWindow::onNodeAdd(EagleLib::Nodes::Node::Ptr node)
 {	
 	rmt_ScopedCPUSample(onNodeAdd);
-    EagleLib::Node::Ptr prevNode = currentNode;
+    EagleLib::Nodes::Node::Ptr prevNode = currentNode;
     if(currentNode != nullptr)
     {
         boost::recursive_mutex::scoped_lock(currentNode->mtx);
         currentNode->addChild(node);
     }else
     {
-
+        if(current_stream != nullptr)
+        {
+            current_stream->AddNode(node);
+        }
     }
     addNode(node);
     for(size_t i = 0; i < widgets.size(); ++i)
@@ -600,6 +637,18 @@ void MainWindow::onWidgetDeleted(QNodeWidget* widget)
     if(parentItr != parentList.end())
         parentList.erase(parentItr);
 }
+void MainWindow::onWidgetDeleted(DataStreamWidget* widget)
+{
+    auto itr = std::find(data_stream_widgets.begin(), data_stream_widgets.end(), widget);
+    
+    if(itr != data_stream_widgets.end())
+        data_stream_widgets.erase(itr);
+    auto stream = widget->GetStream();
+    auto itr2 = std::find(data_streams.begin(), data_streams.end(), stream);
+    if(itr2 != data_streams.end())
+        data_streams.erase(itr2);
+    EagleLib::DataStreamManager::instance()->destroy_stream(stream.get());
+}
 void
 MainWindow::uiNotifier()
 {
@@ -618,23 +667,37 @@ MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
         if(currentSelectedNodeWidget)
             currentSelectedNodeWidget->setZValue(0);
         currentSelectedNodeWidget = nullptr;
-        currentNode = EagleLib::Node::Ptr();
+        currentSelectedStreamWidget = nullptr;
+        currentNode = EagleLib::Nodes::Node::Ptr();
         return;
     }
     if(currentSelectedNodeWidget)
         if(auto oldWidget = dynamic_cast<QNodeWidget*>(currentSelectedNodeWidget->widget()))
             oldWidget->setSelected(false);
-    currentSelectedNodeWidget = widget;
-    currentSelectedNodeWidget->setZValue(1);
+    if(currentSelectedStreamWidget)
+        if(auto oldWidget = dynamic_cast<DataStreamWidget*>(currentSelectedStreamWidget->widget()))
+            oldWidget->SetSelected(false);
     if(auto ptr = dynamic_cast<QNodeWidget*>(widget->widget()))
     {
+        currentSelectedNodeWidget = widget;
+        currentSelectedStreamWidget = nullptr;
+        widget->setZValue(1);
         currentNode = ptr->getNode();
         ptr->setSelected(true);
+    }
+    
+    if(auto ptr = dynamic_cast<DataStreamWidget*>(widget->widget()))
+    {
+        currentSelectedStreamWidget = widget;
+        currentSelectedNodeWidget = nullptr;
+        widget->setZValue(1);
+        current_stream = ptr->GetStream();
+        ptr->SetSelected(true);
     }
 }
 
 
-void process(std::vector<EagleLib::Node::Ptr>* nodes, boost::timed_mutex* mtx)
+void process(std::vector<EagleLib::Nodes::Node::Ptr>* nodes, boost::timed_mutex* mtx)
 {
     static std::vector<cv::cuda::GpuMat> images;
     static std::vector<cv::cuda::Stream> streams;
@@ -678,7 +741,6 @@ void MainWindow::processThread()
             {
                 dirty = false;
                 process(&parentList, &parentMtx);
-                
             }            
 			end = boost::posix_time::microsec_clock::universal_time();
 			delta = end - start;
@@ -721,6 +783,16 @@ void MainWindow::on_actionLog_settings_triggered()
 {
     settingsDialog->show();   
 }
+void MainWindow::on_actionOpen_Network_triggered()
+{
+    dialog_network_stream_selection dlg;
+    dlg.exec();
+    if(dlg.url.size())
+    {
+        load_file(dlg.url);
+    }
+}
+
 void MainWindow::on_btnClear_clicked()
 {
     stopProcessingThread();
@@ -738,7 +810,7 @@ void MainWindow::on_btnStop_clicked()
 {
     stopProcessingThread();
 }
-void MainWindow::on_nodeUpdate(EagleLib::Node* node)
+void MainWindow::on_nodeUpdate(EagleLib::Nodes::Node* node)
 {
     dirty = true;
 }

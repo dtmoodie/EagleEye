@@ -1,15 +1,13 @@
 #include "nodes/ImgProc/DisplayHelpers.h"
 #include "DisplayHelpers.cuh"
 using namespace EagleLib;
-#include <external_includes/cv_cudaarithm.hpp>
-#include <external_includes/cv_highgui.hpp>
+using namespace EagleLib::Nodes;
+
+#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
+#include <EagleLib/rcc/external_includes/cv_highgui.hpp>
 #include <Parameters.hpp>
 #include <UI/InterThread.hpp>
-#ifdef _MSC_VER
 
-#else
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudaarithm")
-#endif
 
 void
 AutoScale::Init(bool firstInit)
@@ -71,16 +69,13 @@ Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 QtColormapDisplay::QtColormapDisplay():
     Colormap()
 {
-    nodeName = "QtColormapDisplay";
-    treeName = nodeName;
-    fullTreeName = treeName;
 }
 
 void QtColormapDisplayCallback(int status, void* data)
 {
     QtColormapDisplay* node = static_cast<QtColormapDisplay*>(data);
 	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtColormapDisplay::display, node),
-        std::make_pair(data, Loki::TypeInfo(typeid(EagleLib::Node))));
+        std::make_pair(data, Loki::TypeInfo(typeid(EagleLib::Nodes::Node))));
 }
 
 void QtColormapDisplay::display()
@@ -139,5 +134,5 @@ cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 NODE_DEFAULT_CONSTRUCTOR_IMPL(AutoScale, Image, Processing)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Colormap, Image, Processing)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Normalize, Image, Processing)
-static EagleLib::NodeInfo g_registerer_QtColormapDisplay("QtColormapDisplay", { "Image", "Sink" });
+static EagleLib::Nodes::NodeInfo g_registerer_QtColormapDisplay("QtColormapDisplay", { "Image", "Sink" });
 REGISTERCLASS(QtColormapDisplay, &g_registerer_QtColormapDisplay)

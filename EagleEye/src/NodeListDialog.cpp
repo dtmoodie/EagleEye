@@ -1,7 +1,7 @@
 #include "NodeListDialog.h"
 #include "ui_nodelistdialog.h"
-#include <EagleLib/ObjectManager.h>
-#include <EagleLib/NodeManager.h>
+#include <EagleLib/rcc/ObjectManager.h>
+#include <EagleLib/nodes/NodeManager.h>
 #include "QListWidgetItem"
 NodeListDialog::NodeListDialog(QWidget *parent) :
     QDialog(parent),
@@ -91,7 +91,7 @@ void NodeListDialog::on_pushButton_clicked()
     if(ui->NodeList->currentItem())
     {
 		
-        EagleLib::Node::Ptr node = EagleLib::NodeManager::getInstance().addNode(ui->NodeList->currentItem()->text(0).toStdString());
+        EagleLib::Nodes::Node::Ptr node = EagleLib::NodeManager::getInstance().addNode(ui->NodeList->currentItem()->text(0).toStdString());
 		if (node != nullptr)
 		{
 			emit nodeConstructed(node);

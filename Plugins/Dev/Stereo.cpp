@@ -1,6 +1,6 @@
 #include "Stereo.h"
-#include "external_includes/cv_imgproc.hpp"
-#include "external_includes/cv_cudawarping.hpp"
+#include "EagleLib/rcc/external_includes/cv_imgproc.hpp"
+#include "EagleLib/rcc/external_includes/cv_cudawarping.hpp"
 
 #if _WIN32
     #if _DEBUG

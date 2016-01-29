@@ -1,10 +1,10 @@
 #ifndef PLOTWINDOW_H
 #define PLOTWINDOW_H
-#include "plotters/Plotter.h"
+#include "EagleLib/plotters/Plotter.h"
 #include "qcustomplot.h"
 
 #include <boost/shared_ptr.hpp>
-#include <EagleLib/shared_ptr.hpp>
+#include <EagleLib/rcc/shared_ptr.hpp>
 
 /* The plot window class used used to create a widget that looks as follows
  *

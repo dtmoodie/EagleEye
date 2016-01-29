@@ -1,11 +1,12 @@
 #include "nodes/ImgProc/FeatureDetection.h"
 
-#include <external_includes/cv_cudafilters.hpp>
-#include <external_includes/cv_cudaoptflow.hpp>
-#include <external_includes/cv_cudaimgproc.hpp>
-#include "nodes/VideoProc/Tracking.hpp"
+#include <EagleLib/rcc/external_includes/cv_cudafilters.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaoptflow.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
+#include "EagleLib/nodes/VideoProc/Tracking.hpp"
 #include "EagleLib/utilities/GpuMatAllocators.h"
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 void GoodFeaturesToTrackDetector::Init(bool firstInit)
 {

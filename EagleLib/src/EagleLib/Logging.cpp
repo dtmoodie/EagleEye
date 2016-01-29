@@ -28,7 +28,7 @@
 #include <boost/log/sinks/async_frontend.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/filesystem.hpp>
-#include <logger.hpp>
+#include <EagleLib/logger.hpp>
 boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>> log_sink;
 void EagleLib::SetupLogging()
 {

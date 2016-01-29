@@ -1,8 +1,9 @@
-#include "nodes/VideoProc/OpticalFlow.h"
-#include "nodes/VideoProc/Tracking.hpp"
-#include <external_includes/cv_cudaarithm.hpp>
-#include <external_includes/cv_cudaimgproc.hpp>
+#include "OpticalFlow.h"
+#include "EagleLib/nodes/VideoProc/Tracking.hpp"
+#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 #include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #if __linux

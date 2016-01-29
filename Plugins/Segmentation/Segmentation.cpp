@@ -1,8 +1,8 @@
 #include "Segmentation.h"
-#include <external_includes/cv_imgproc.hpp>
-#include <external_includes/cv_cudaimgproc.hpp>
-#include <external_includes/cv_cudaarithm.hpp>
-#include <external_includes/cv_cudalegacy.hpp>
+#include <EagleLib/rcc/external_includes/cv_imgproc.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudalegacy.hpp>
 #include "Manager.h"
 #include "RuntimeLinkLibrary.h"
 #ifdef _DEBUG

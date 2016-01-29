@@ -1,13 +1,14 @@
 #include "nodes/IO/VideoLoader.h"
 #if _WIN32
-#include <external_includes/cv_cudacodec.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudacodec.hpp>
 #else
-#include <external_includes/cv_videoio.hpp>
+#include <EagleLib/rcc/external_includes/cv_videoio.hpp>
 #endif
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <ISimpleSerializer.h>
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 //#define GPU_DECODE_ENABLED
 
 VideoLoader::~VideoLoader()

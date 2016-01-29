@@ -22,3 +22,6 @@
 [submodule "Plugins/SLAM/lsd_slam"]
 	path = Plugins/SLAM/lsd_slam
 	url = https://github.com/dtmoodie/lsd_slam
+[submodule "EagleLib/signals"]
+	path = EagleLib/signals
+	url = https://github.com/dtmoodie/signals

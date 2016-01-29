@@ -1,6 +1,6 @@
 #include "rccsettingsdialog.h"
 #include "ui_rccsettingsdialog.h"
-#include <EagleLib/ObjectManager.h>
+#include <EagleLib/rcc/ObjectManager.h>
 #include <qfiledialog.h>
 #include <boost/log/trivial.hpp>
 
@@ -155,4 +155,8 @@ void RCCSettingsDialog::on_btnAddLinkDir_clicked()
 void RCCSettingsDialog::on_btnTestRcc_clicked()
 {
     EagleLib::ObjectManager::Instance().TestRuntimeCompilation();
+}
+void RCCSettingsDialog::on_btn_abort_compilation_clicked()
+{
+    EagleLib::ObjectManager::Instance().abort_compilation();
 }

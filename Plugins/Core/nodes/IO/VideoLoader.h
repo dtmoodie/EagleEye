@@ -1,6 +1,6 @@
-#include <nodes/Node.h>
-#include <external_includes/cv_videoio.hpp>
-#include <external_includes/cv_cudacodec.hpp>
+#include <EagleLib/nodes/Node.h>
+#include <EagleLib/rcc/external_includes/cv_videoio.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudacodec.hpp>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -9,7 +9,9 @@ RUNTIME_MODIFIABLE_INCLUDE
 #include <boost/thread.hpp>
 namespace EagleLib
 {
-
+    namespace Nodes
+    {
+    
     class  VideoLoader: public Node
     {
 
@@ -30,6 +32,6 @@ namespace EagleLib
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         cv::Ptr<cv::cudacodec::VideoReader> d_videoReader;
         cv::Ptr<cv::VideoCapture>           h_videoReader;
-
     };
+    }
 }

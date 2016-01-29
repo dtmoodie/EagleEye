@@ -1,6 +1,7 @@
 #include "nodes/Utility/DataHandling.h"
 #include "Remotery.h"
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 void GetOutputImage::Init(bool firstInit)
 {

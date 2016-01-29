@@ -2,7 +2,7 @@
 #include "qapplication.h"
 #include "qdrag.h"
 #include <qmimedata.h>
-#include <EagleLib/NodeManager.h>
+#include <EagleLib/Nodes/NodeManager.h>
 
 NodeView::NodeView(QWidget* parent) :
     QGraphicsView(parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
@@ -11,7 +11,7 @@ NodeView::NodeView(QWidget* parent) :
 NodeView::NodeView(QGraphicsScene *scene, QWidget *parent):
     QGraphicsView(scene, parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
 {
-    actions.push_back(new QAction("Delete Node", rightClickMenu));
+    actions.push_back(new QAction("Delete Node / stream", rightClickMenu));
     actions.push_back(new QAction("Display as image", rightClickMenu));
     actions.push_back(new QAction("Plot", rightClickMenu));
     actions[1]->setEnabled(false);
@@ -32,10 +32,21 @@ void NodeView::addWidget(QGraphicsProxyWidget * widget, ObjectId id)
     // If this widget has a parent, draw a line to it
     drawLine2Parent(widget);
 }
+void NodeView::addWidget(QGraphicsProxyWidget* widget, size_t stream_id)
+{
+    dataStreamWidget[stream_id] = widget;
+}
 QGraphicsProxyWidget* NodeView::getWidget(ObjectId id)
 {
     auto itr = widgetMap.find(id);
     if (itr != widgetMap.end())
+        return itr->second;
+    else return nullptr;
+}
+QGraphicsProxyWidget* NodeView::getWidget(size_t id)
+{
+    auto itr = dataStreamWidget.find(id);
+    if (itr != dataStreamWidget.end())
         return itr->second;
     else return nullptr;
 }
@@ -80,28 +91,38 @@ void NodeView::on_deleteNode()
     // Delete the current node
     if(currentWidget == nullptr)
         return;
-    auto nodeWidget = dynamic_cast<QNodeWidget*>(currentWidget->widget());
     auto itr = parentLineMap.find(currentWidget);
-    if(itr != parentLineMap.end());
+    if (itr != parentLineMap.end())
         delete itr->second;
-    if(nodeWidget)
+    if(auto nodeWidget = dynamic_cast<QNodeWidget*>(currentWidget->widget()))
     {
-        auto node = nodeWidget->getNode();
-        node->enabled = false;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
-        emit stopThread();
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
-        Parameters::UI::ProcessingThreadCallbackService::run();
-        auto parent = node->getParent();
-        if(parent != nullptr)
-            parent->removeChild(node);
-        emit selectionChanged(nullptr);
-        emit widgetDeleted(nodeWidget);
-        scene()->removeItem(currentWidget);
-        delete currentWidget;
-        currentWidget = nullptr;
-        emit startThread();
+        
+        if (nodeWidget)
+        {
+            auto node = nodeWidget->getNode();
+            node->enabled = false;
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
+            emit stopThread();
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
+            Parameters::UI::ProcessingThreadCallbackService::run();
+            auto parent = node->getParent();
+            if (parent != nullptr)
+                parent->removeChild(node);
+            emit selectionChanged(nullptr);
+            emit widgetDeleted(nodeWidget);
+            emit startThread();
+        }
     }
+    if(auto streamWidget = dynamic_cast<DataStreamWidget*>(currentWidget->widget()))
+    {
+        auto stream = streamWidget->GetStream();
+        stream->StopProcess();
+        emit widgetDeleted(streamWidget);
+        
+    }
+    scene()->removeItem(currentWidget);
+    delete currentWidget;
+    currentWidget = nullptr;
     return;
 }
 void NodeView::on_displayImage()
@@ -286,7 +307,7 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
     QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(child->widget());
     if(nodeWidget == nullptr)
         return nullptr;
-    EagleLib::Node::Ptr node = nodeWidget->getNode();
+    EagleLib::Nodes::Node::Ptr node = nodeWidget->getNode();
     if(node == nullptr)
         return nullptr;
     // First check if this child's line already exists
@@ -315,17 +336,36 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
                 // Draw line from this widget to parent
                 connectingLine->setLine(center.x(), center.y(), child->pos().x() + child->size().width()/2, child->pos().y() + child->size().height()/2);
             }
+        }else
+        {
+            auto id = node->GetDataStream()->get_stream_id();
+            auto streamWidget = getWidget(id);
+            if(streamWidget)
+            {
+                auto center = streamWidget->pos() += QPointF(streamWidget->size().width() / 2, streamWidget->size().height() / 2);
+                connectingLine->setLine(center.x(), center.y(), child->pos().x() + child->size().width() / 2, child->pos().y() + child->size().height() / 2);
+            }
+            
         }
     }
     return connectingLine;
 }
-QGraphicsProxyWidget* NodeView::getParent(EagleLib::Node::Ptr child)
+QGraphicsProxyWidget* NodeView::getParent(EagleLib::Nodes::Node::Ptr child)
 {
     auto parentPtr = child->getParent();
     if(parentPtr != nullptr)
     {
         QGraphicsProxyWidget* parentWidget = getWidget(parentPtr->GetObjectId());
         return parentWidget;
+    }
+    return nullptr;
+}
+QGraphicsProxyWidget* NodeView::getStream(size_t stream_id)
+{
+    auto itr = dataStreamWidget.find(stream_id);
+    if(itr != dataStreamWidget.end())
+    {
+        return itr->second;
     }
     return nullptr;
 }

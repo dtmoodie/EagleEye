@@ -15,20 +15,20 @@ using namespace EagleLib;
 
 void XmppClient::onConnect()
 {
-    LOG_TRACE;
+    
 }
 void XmppClient::onDisconnect(ConnectionError e)
 {
-    LOG_TRACE;
+    
 }
 bool XmppClient::onTLSConnect(const CertInfo& info)
 {
-    LOG_TRACE;
+    
     return true;
 }
 void XmppClient::handleMessage(const Message& msg, MessageSession * session)
 {
-    LOG_TRACE;
+    
     auto body = msg.body();
     NODE_LOG(debug) << "Received message " << body;
     updateParameter<std::string>("Message", body);
@@ -69,15 +69,15 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
 }
 void XmppClient::handleMessageEvent(const JID& from, MessageEventType messageEvent)
 {
-    LOG_TRACE;
+    
 }
 void XmppClient::handleChatState(const JID& from, ChatStateType state)
 {
-    LOG_TRACE;
+    
 }
 void XmppClient::handleMessageSession(MessageSession *session)
 {
-    LOG_TRACE;
+    
     m_session.push_back(session);
     session->registerMessageHandler(this);
     m_messageEventFilter = new MessageEventFilter(session);
@@ -99,7 +99,7 @@ void XmppClient::handleMessageSession(MessageSession *session)
 }
 void XmppClient::handleLog(LogLevel level, LogArea area, const std::string& message)
 {
-    LOG_TRACE;
+    
     switch (level)
     {
     case LogLevelDebug:

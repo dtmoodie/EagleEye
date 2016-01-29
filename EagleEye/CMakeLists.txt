@@ -194,7 +194,6 @@ IF(Qt5_FOUND)
 			${Boost_LIBRARIES}
 			${OpenCV_LIBS} 
 	)
-    cotire(EagleEye)
 	if(UNIX)
 		TARGET_LINK_LIBRARIES(EagleEye dl)
 	endif()

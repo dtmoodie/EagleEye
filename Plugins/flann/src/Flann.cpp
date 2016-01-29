@@ -3,8 +3,8 @@
 #include "thrust/transform_reduce.h"
 #include "thrust/count.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
-#include <external_includes/cv_cudaarithm.hpp>
-#include <external_includes/cv_imgproc.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
+#include <EagleLib/rcc/external_includes/cv_imgproc.hpp>
 #include "flann.cuh"
 #include <Manager.h>
 #include "RuntimeSourceDependency.h"

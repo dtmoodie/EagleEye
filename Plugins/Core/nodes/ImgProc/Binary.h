@@ -1,4 +1,4 @@
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 #include "EagleLib/Defs.hpp"
 #include <EagleLib/Project_defs.hpp>
 #include "RuntimeInclude.h"
@@ -11,6 +11,9 @@ SETUP_PROJECT_DEF
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
+    
     class MorphologyFilter: public Node
     {
     public:
@@ -58,4 +61,5 @@ namespace EagleLib
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
         void runFilter();
     };
+    }
 }

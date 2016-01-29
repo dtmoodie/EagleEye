@@ -3,6 +3,7 @@
 #include "EagleLib/utilities/GpuMatAllocators.h"
 #include "EagleLib/utilities/CpuMatAllocators.h"
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 bool Camera::changeStream(int device)
 {

@@ -1,6 +1,6 @@
 #pragma once
-#include "nodes/Node.h"
-#include "external_includes/cv_videoio.hpp"
+#include "EagleLib/nodes/Node.h"
+#include "EagleLib/rcc/external_includes/cv_videoio.hpp"
 #include <EagleLib/utilities/CudaUtils.hpp>
 
 #include "RuntimeInclude.h"
@@ -9,6 +9,8 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
+    namespace Nodes
+    {
     enum SourceType
     {
         v4l2src = 0,
@@ -71,4 +73,5 @@ namespace EagleLib
         virtual bool SkipEmpty() const;
 
     };
+    }
 }

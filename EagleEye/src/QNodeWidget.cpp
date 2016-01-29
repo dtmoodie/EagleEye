@@ -1,13 +1,14 @@
 #include "QNodeWidget.h"
 
 #include "ui_QNodeWidget.h"
+#include "ui_datastreamwidget.h"
 #include <boost/bind.hpp>
 #include <QPalette>
 #include <QDateTime>
 #include "qevent.h"
-#include "logger.hpp"
+#include "EagleLib/logger.hpp"
 
-IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Node::Ptr node_) :
+IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
     QWidget(parent),
     parameter(parameter_),
     node(node_)
@@ -118,7 +119,7 @@ void DraggableLabel::dragMoveEvent(QDragMoveEvent* event)
 }
 
 
-QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
+QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
     mainWindow(parent),
     ui(new Ui::QNodeWidget()),
     node(node_)
@@ -152,7 +153,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Node::Ptr node_) :
         ui->profile->setChecked(node->profile);
         connect(ui->chkEnabled, SIGNAL(clicked(bool)), this, SLOT(on_enableClicked(bool)));
         connect(ui->profile, SIGNAL(clicked(bool)), this, SLOT(on_profileClicked(bool)));
-        ui->nodeName->setText(QString::fromStdString(node->nodeName));
+        ui->nodeName->setText(QString::fromStdString(node->getName()));
         ui->nodeName->setToolTip(QString::fromStdString(node->fullTreeName));
         ui->nodeName->setMaximumWidth(200);
         ui->gridLayout->setSpacing(0);
@@ -209,7 +210,7 @@ void QNodeWidget::addParameterWidgetMap(QWidget* widget, Parameters::Parameter::
     
 }
 
-void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Node *node_)
+void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
 {
     if(node == nullptr)
         return;
@@ -354,7 +355,7 @@ void QNodeWidget::on_profileClicked(bool state)
 	
 }
 
-EagleLib::Node::Ptr QNodeWidget::getNode()
+EagleLib::Nodes::Node::Ptr QNodeWidget::getNode()
 {
     return node;
 }
@@ -370,7 +371,41 @@ void QNodeWidget::setSelected(bool state)
     setAutoFillBackground(true);
     setPalette(pal);
 }
-QInputProxy::QInputProxy(std::shared_ptr<Parameters::Parameter> parameter_, EagleLib::Node::Ptr node_, QWidget* parent):
+
+DataStreamWidget::DataStreamWidget(QWidget* parent, EagleLib::DataStream::Ptr stream):
+    QWidget(parent), 
+    _dataStream(stream),
+    ui(new Ui::DataStreamWidget())
+{
+    ui->setupUi(this);
+    setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    ui->lbl_loaded_document->setText(QString::fromStdString(stream->GetFrameGrabber()->GetSourceFilename()));
+    ui->lbl_stream_id->setText(QString::number(stream->get_stream_id()));
+}
+
+DataStreamWidget::~DataStreamWidget()
+{
+
+}
+
+EagleLib::DataStream::Ptr DataStreamWidget::GetStream()
+{
+    return _dataStream;
+}
+void DataStreamWidget::SetSelected(bool state)
+{
+    QPalette pal(palette());
+    if (state == true)
+        pal.setColor(QPalette::Background, Qt::green);
+    else
+        pal.setColor(QPalette::Background, Qt::gray);
+    setAutoFillBackground(true);
+    setPalette(pal);
+}
+
+
+
+QInputProxy::QInputProxy(std::shared_ptr<Parameters::Parameter> parameter_, EagleLib::Nodes::Node::Ptr node_, QWidget* parent):
 	node(node_), QWidget(parent)
 {
     box = new QComboBox(this);
@@ -441,77 +476,3 @@ void QInputProxy::updateUi(bool init)
 		}
     }
 }
-
-/*template<typename T> bool acceptsType(Loki::TypeInfo& type)
-{
-    return Loki::TypeInfo(typeid(T)) == type || Loki::TypeInfo(typeid(T*)) == type || Loki::TypeInfo(typeid(T&)) == type;
-}
-#define MAKE_TYPE(type) if(acceptsType<type>(parameter->typeInfo)) return new QNodeProxy<type, false>(parent, parameter);
-#define MAKE_TYPE_(type) if(acceptsType<type>(parameter->typeInfo)) return new QNodeProxy<type, true>(parent, parameter);
-
-
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, Parameters::Parameter::Ptr parameter, EagleLib::Node::Ptr node)
-{
-    if(parameter->type & Parameters::Parameters::ParameterInput)
-    {
-        // Create a ui for finding relavent inputs
-        return new QInputProxy(parent, parameter, node);
-    }
-    typedef std::vector<std::pair<int,double>> vec_ID;
-    typedef std::vector<std::pair<double,double>> vec_DD;
-    typedef std::vector<std::pair<double,int>> vec_DI;
-    typedef std::vector<std::pair<int, int>> vec_II;
-    if(parameter->type & Parameters::Parameters::ParameterControl)
-    {
-        MAKE_TYPE(double);
-        MAKE_TYPE(float);
-        MAKE_TYPE(int);
-        MAKE_TYPE(unsigned int);
-        MAKE_TYPE(short);
-        MAKE_TYPE(unsigned short);
-        MAKE_TYPE(char);
-        MAKE_TYPE(unsigned char);
-        MAKE_TYPE(unsigned long);
-        MAKE_TYPE(std::string);
-        MAKE_TYPE(boost::filesystem::path);
-        MAKE_TYPE(bool);
-        MAKE_TYPE(boost::function<void(void)>);
-        MAKE_TYPE(EagleLib::EnumParameter);
-        MAKE_TYPE(cv::Scalar);
-        MAKE_TYPE(std::vector<int>);
-        MAKE_TYPE(std::vector<double>);
-        MAKE_TYPE(vec_ID);
-        MAKE_TYPE(vec_DD);
-        MAKE_TYPE(vec_DI);
-        MAKE_TYPE(vec_II);
-        MAKE_TYPE(EagleLib::ReadDirectory);
-    }
-
-    if(parameter->type & Parameters::Parameters::ParameterOutput || parameter->type & Parameters::Parameters::ParameterState)
-    {
-        MAKE_TYPE_(double);
-        MAKE_TYPE_(float);
-        MAKE_TYPE_(int);
-        MAKE_TYPE_(unsigned int);
-        MAKE_TYPE_(short);
-        MAKE_TYPE_(unsigned short);
-        MAKE_TYPE_(char);
-        MAKE_TYPE_(unsigned char);
-        MAKE_TYPE_(unsigned long);
-        MAKE_TYPE_(std::string);
-        MAKE_TYPE_(boost::filesystem::path);
-        MAKE_TYPE_(bool);
-        MAKE_TYPE_(EagleLib::EnumParameter);
-        MAKE_TYPE_(cv::Scalar);
-        MAKE_TYPE_(std::vector<int>);
-        MAKE_TYPE_(std::vector<double>);
-        MAKE_TYPE_(vec_ID);
-        MAKE_TYPE_(vec_DD);
-        MAKE_TYPE_(vec_DI);
-        MAKE_TYPE_(vec_II);
-        MAKE_TYPE_(EagleLib::ReadDirectory);
-    }
-	return nullptr;
-}
-*/
-

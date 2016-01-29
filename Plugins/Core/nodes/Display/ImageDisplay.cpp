@@ -1,15 +1,25 @@
 #include "nodes/Display/ImageDisplay.h"
-#include <external_includes/cv_core.hpp>
-#include <external_includes/cv_imgproc.hpp>
+#include <EagleLib/rcc/external_includes/cv_core.hpp>
+#include <EagleLib/rcc/external_includes/cv_imgproc.hpp>
 #include <UI/InterThread.hpp>
 #include "../remotery/lib/Remotery.h"
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #include <EagleLib/utilities/UiCallbackHandlers.h>
+#include <EagleLib/utilities/WindowCallbackManager.h>
+#include "ObjectInterfacePerModule.h"
+#include "EagleLib/rcc/SystemTable.hpp"
+#include "EagleLib/DataStreamManager.h"
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
-
-NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay, Image, Sink, Display)
+//NODE_DEFAULT_CONSTRUCTOR_IMPL(QtImageDisplay, Image, Sink, Display)
+QtImageDisplay::QtImageDisplay():
+    CpuSink()
+{
+}
+static NodeInfo g_registerer_QtImageDisplay("QtImageDisplay", { "Image", "Sink", "Display"});
+REGISTERCLASS(QtImageDisplay, &g_registerer_QtImageDisplay);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyPointDisplay, Image, Sink, Display)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FlowVectorDisplay, Image, Sink, Display)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramDisplay, Image, Sink, Display)
@@ -35,18 +45,36 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
 	display_name = fullTreeName;
 
     img.download(host_mat, stream);
+    EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
 	cuda::enqueue_callback_async(
-		[display_name, host_mat]()->void
+		[this, display_name, host_mat]()->void
 	{
 		rmt_ScopedCPUSample(QtImageDisplay_displayImage);
-        WindowCallbackHandler::instance()->imshow(display_name, host_mat);
-		//cv::imshow(display_name, host_mat);
+        auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+        auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
+        
+        auto instance = manager->instance(GetDataStream()->get_stream_id());
+        instance->imshow(display_name, host_mat);
 		cv::waitKey(1);
 	}, stream);
     
     return img;
 }
+void QtImageDisplay::doProcess(const cv::Mat& mat, double timestamp, int frame_number, cv::cuda::Stream& stream)
+{
+    EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
+    cuda::enqueue_callback_async(
+        [this, mat]()->void
+    {
+        rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+        auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+        auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
 
+        auto instance = manager->instance(GetDataStream()->get_stream_id());
+        instance->imshow(fullTreeName, mat);
+        cv::waitKey(1);
+    }, stream);
+}
 
 
 void OGLImageDisplay::Init(bool firstInit)
@@ -78,7 +106,10 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 		[display_buffer, display_name]()->void
 	{
 		//cv::namedWindow(display_name, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
-        Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&WindowCallbackHandler::imshow, WindowCallbackHandler::instance(), display_name, display_buffer, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO));
+        auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+        auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
+        auto instance = manager->instance(0);
+        Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&WindowCallbackHandler::imshow, instance, display_name, display_buffer, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO));
         //WindowCallbackHandler::instance()->imshow(display_name, display_buffer);
 		//Parameters::UI::UiCallbackService::Instance()->post(
 //			boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), 

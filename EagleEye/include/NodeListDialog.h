@@ -2,8 +2,8 @@
 #define NODELISTDIALOG_H
 
 #include <QDialog>
-#include "nodes/Node.h"
-#include <EagleLib/shared_ptr.hpp>
+#include "EagleLib/nodes/Node.h"
+#include <EagleLib/rcc/shared_ptr.hpp>
 namespace Ui {
 class NodeListDialog;
 }
@@ -18,7 +18,7 @@ public:
     void show();
     ~NodeListDialog();
 signals:
-    void nodeConstructed(EagleLib::Node::Ptr node);
+    void nodeConstructed(EagleLib::Nodes::Node::Ptr node);
 private slots:
     void on_pushButton_clicked();
 

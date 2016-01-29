@@ -1,12 +1,13 @@
-#include "nodes/VideoProc/Tracker.h"
-#include "nodes/VideoProc/Tracking.hpp"
-#include "external_includes/cv_imgproc.hpp"
-#include <external_includes/cv_highgui.hpp>
-#include <external_includes/cv_calib3d.hpp>
-#include <external_includes/cv_cudawarping.hpp>
-#include <external_includes/cv_cudaimgproc.hpp>
+#include "Tracker.h"
+#include "EagleLib/nodes/VideoProc/Tracking.hpp"
+#include "EagleLib/rcc/external_includes/cv_imgproc.hpp"
+#include <EagleLib/rcc/external_includes/cv_highgui.hpp>
+#include <EagleLib/rcc/external_includes/cv_calib3d.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <UI/InterThread.hpp>
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyFrameTracker, Image, Extractor)
@@ -120,7 +121,7 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
 {
     std::pair<cv::cuda::GpuMat*, std::string>* data = (std::pair<cv::cuda::GpuMat*, std::string>*)userData;
     boost::function<void(void)> f = boost::bind(displayCallback, *data->first, data->second);
-	Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, Loki::TypeInfo(typeid(EagleLib::Node))));
+	Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, Loki::TypeInfo(typeid(EagleLib::Nodes::Node))));
     delete data;
 }
 

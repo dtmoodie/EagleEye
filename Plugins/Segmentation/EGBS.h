@@ -30,7 +30,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include "DisjointSetForest.h"
-#include "external_includes/cv_imgproc.hpp"
+#include "EagleLib/rcc/external_includes/cv_imgproc.hpp"
 
 #ifdef __cplusplus
 extern "C"{

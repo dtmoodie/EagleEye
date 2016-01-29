@@ -1,12 +1,14 @@
 #pragma once
 
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 #include <EagleLib/utilities/CudaUtils.hpp>
 #include "DisplayHelpers.cuh"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
+    namespace Nodes
+    {
     class AutoScale: public Node
     {
     public:
@@ -43,4 +45,5 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
+    }
 }

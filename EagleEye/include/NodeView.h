@@ -2,10 +2,10 @@
 #include <qgraphicsview.h>
 #include <qevent.h>
 #include <qgraphicsproxywidget.h>
-#include <nodes/Node.h>
+#include <EagleLib/nodes/Node.h>
 #include <QNodeWidget.h>
 #include <QMenu>
-#include <EagleLib/shared_ptr.hpp>
+#include <EagleLib/rcc/shared_ptr.hpp>
 class NodeView : public QGraphicsView
 {
 	Q_OBJECT
@@ -15,19 +15,23 @@ public:
 
     NodeView(QGraphicsScene *scene, QWidget *parent = 0);
     void addWidget(QGraphicsProxyWidget * widget, ObjectId id);
+    void addWidget(QGraphicsProxyWidget* widget, size_t stream_id);
     QGraphicsProxyWidget* getWidget(ObjectId id);
+    QGraphicsProxyWidget* getWidget(size_t id);
     void mousePressEvent(QMouseEvent* event);
     void mouseMoveEvent(QMouseEvent* event);
     void mouseReleaseEvent(QMouseEvent* event);
     void wheelEvent(QWheelEvent* event);
     QGraphicsLineItem* drawLine2Parent(QGraphicsProxyWidget* child);
-    QGraphicsProxyWidget* getParent(EagleLib::Node::Ptr child);
+    QGraphicsProxyWidget* getParent(EagleLib::Nodes::Node::Ptr child);
+    QGraphicsProxyWidget* getStream(size_t stream_id);
 
 signals:
 	void selectionChanged(QGraphicsProxyWidget* widget);
     void stopThread();
     void startThread();
     void widgetDeleted(QNodeWidget*);
+    void widgetDeleted(DataStreamWidget*);
     void plotData(Parameters::Parameter::Ptr param);
     void displayImage(Parameters::Parameter::Ptr param);
 private slots:
@@ -41,6 +45,7 @@ private:
 	QGraphicsProxyWidget* currentWidget;
 	QPoint mousePressPosition;
 	std::map<ObjectId, QGraphicsProxyWidget*> widgetMap;
+    std::map<size_t, QGraphicsProxyWidget*> dataStreamWidget;
     bool resize = false;
     int resizeGrabSize;
     QPointF grabPoint;

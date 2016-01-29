@@ -2,7 +2,7 @@
 #include <boost/filesystem.hpp>
 #include "EagleLib/Defs.hpp"
 using namespace EagleLib;
-
+using namespace EagleLib::Nodes;
 
 void FolderLoader::backgroundThread(boost::filesystem::path path)
 {
