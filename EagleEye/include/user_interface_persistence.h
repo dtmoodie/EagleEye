@@ -17,7 +17,7 @@ class user_interface_persistence: public EagleLib::ParameteredObject
 public:
     class variable_storage
     {
-        std::map<std::string, std::vector<Parameters::Parameter::Ptr>> loaded_parameters;
+        std::map<std::string, std::map<std::string, Parameters::Parameter::Ptr>> loaded_parameters;
         variable_storage();
         ~variable_storage();
     public:

@@ -183,15 +183,8 @@ namespace EagleLib
          * @return
          */
 		std::string						getName() const;
-        /**
-         * @brief getTreeName depricated?
-         * @return
-         */
-		std::string						getTreeName() const;
-        /**
-         * @brief getParent returns a pointer to the parent node... depricated?
-         * @return
-         */
+		std::string						getTreeName();
+        std::string                     getFullTreeName();
         Node *getParent();
         /**
          * @brief getInputs [DEPRICATED]
@@ -373,10 +366,7 @@ namespace EagleLib
 
 		// Constant name that describes the node ie: Sobel
         //std::string															nodeName;
-		// Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
-        std::string															fullTreeName;       
-		// Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
-        std::string															treeName;
+		
         // Vector of parameters for this node
         //std::vector< Parameters::Parameter::Ptr >							parameters;
 
@@ -406,6 +396,10 @@ namespace EagleLib
 		unsigned int rmt_hash;
 		unsigned int rmt_cuda_hash;
 		DataStream*     								_dataStream;
+        // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
+        std::string															fullTreeName;
+        // Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
+        std::string															treeName;
     };
     } // namespace Nodes
 } // namespace EagleLib

@@ -3,11 +3,11 @@
 
 #include <QDialog>
 #include "user_interface_persistence.h"
-
+#include <set>
 namespace Ui {
 class dialog_network_stream_selection;
 }
-
+class QListWidgetItem;
 class dialog_network_stream_selection : public QDialog, public user_interface_persistence
 {
     Q_OBJECT
@@ -27,7 +27,7 @@ signals:
 private:
     void refresh_history();
     Ui::dialog_network_stream_selection *ui;
-    std::vector<std::string> url_history;
+    std::set<std::string> url_history;
 };
 
 #endif // DIALOG_NETWORK_STREAM_SELECTION_H

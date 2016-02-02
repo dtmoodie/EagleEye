@@ -10,10 +10,10 @@ void user_interface_persistence::variable_storage::load_parameters(EagleLib::Par
     auto& params = loaded_parameters[type.name()];
     for (auto& param : params)
     {
-        if (This->exists(param->GetName()))
+        if (This->exists(param.first))
         {
             // Update the variable with data from file
-            This->getParameter(param->GetName())->Update(param);
+            This->getParameter(param.first)->Update(param.second);
         }
     }
 }
@@ -22,7 +22,7 @@ void user_interface_persistence::variable_storage::save_parameters(EagleLib::Par
     auto& params = loaded_parameters[type.name()];
     for(auto& param:This->parameters)
     {
-        params.push_back(param->DeepCopy());
+        params[param->GetName()] = param->DeepCopy();
     }
 }
 void user_interface_persistence::variable_storage::save_parameters(const std::string& file_name)
@@ -38,7 +38,7 @@ void user_interface_persistence::variable_storage::save_parameters(const std::st
         fs << "Parameters" << "{";
         for(auto itr2: itr.second)
         {
-            Parameters::Persistence::cv::Serialize(&fs, itr2.get());            
+            Parameters::Persistence::cv::Serialize(&fs, itr2.second.get());
         }
         fs << "}"; // End parameters
         fs << "}"; // End widgets
@@ -63,7 +63,7 @@ void user_interface_persistence::variable_storage::load_parameters(const std::st
                 auto param = Parameters::Persistence::cv::DeSerialize(&(*itr2));
                 if (param)
                 {
-                    param_vec.push_back(Parameters::Parameter::Ptr(param));
+                    param_vec[param->GetName()] = Parameters::Parameter::Ptr(param);
                 }
             }
         }

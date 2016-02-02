@@ -1,4 +1,5 @@
 #pragma once
+#include "EagleLib/Defs.hpp"
 #include "Signals/signal_manager.h"
 namespace EagleLib
 {
@@ -8,7 +9,7 @@ namespace EagleLib
 
     // Basically reimplements some of the stuff from Signals::signal_manager, but with
     // access restrictions and stream segregation
-    class SignalManager: public Signals::signal_manager
+    class EAGLE_EXPORTS SignalManager: public Signals::signal_manager
     {
     public:
         template<typename T, typename C> std::shared_ptr<Signals::connection> Connect(const std::string& name, const std::function<T>& f, C* receiver, int stream_index = -1, boost::thread::id dest_thread = boost::this_thread::get_id())

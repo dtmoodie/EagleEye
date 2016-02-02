@@ -1,5 +1,5 @@
 #include "cv_capture.h"
-
+#include "EagleLib/Logging.h"
 using namespace EagleLib;
 frame_grabber_cv::frame_grabber_cv()
 {
@@ -41,6 +41,7 @@ bool frame_grabber_cv::d_LoadFile(const std::string& file_path)
 bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
 {
     h_cam.release();
+    LOG(info) << "Attempgin to load " << file_path;
     try
     {
         h_cam.reset(new cv::VideoCapture());
@@ -75,10 +76,6 @@ TS<SyncedMemory> frame_grabber_cv::GetFrame(int index, cv::cuda::Stream& stream)
 }
 TS<SyncedMemory> frame_grabber_cv::GetNextFrame(cv::cuda::Stream& stream)
 {
-    if (!buffer_thread.joinable())
-    {
-        LaunchBufferThread();
-    }
     while (frame_buffer.empty())
     {
         boost::this_thread::interruptible_wait(10);

@@ -24,7 +24,7 @@ namespace EagleLib
         virtual std::string GetObjectHelp() = 0;
         virtual bool CanLoadDocument(const std::string& document) const = 0;
         virtual int Priority() const = 0;
-        int LoadTimeout() const;
+        virtual int LoadTimeout() const;
         
     };
     
@@ -46,9 +46,11 @@ namespace EagleLib
         virtual void InitializeFrameGrabber(DataStream* stream);
 
         virtual void Serialize(ISimpleSerializer* pSerializer);
+        virtual void Init(bool firstInit);
     protected:
         Signals::signal<void()>* update_signal;
         std::string loaded_document;
+        DataStream* parent_stream;
     };
 
 
@@ -56,6 +58,7 @@ namespace EagleLib
     {
     public:
         FrameGrabberBuffered();
+        ~FrameGrabberBuffered();
         virtual int GetFrameNumber();
         virtual int GetNumFrames() = 0;
         
@@ -64,7 +67,7 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
         virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
         
-        
+        virtual void InitializeFrameGrabber(DataStream* stream);
         
 
         virtual void Init(bool firstInit);
@@ -74,17 +77,20 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
         virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
 
-        void                                     Buffer();
+        
         void                                     LaunchBufferThread();
         void                                     StopBufferThread();
 
         boost::circular_buffer<TS<SyncedMemory>> frame_buffer;
-        boost::thread                            buffer_thread;
+        
         boost::mutex                             buffer_mtx;
         int                                      playback_frame_number;
         int                                      buffer_frame_number;
+        std::vector<std::shared_ptr<Signals::connection>> connections;
+
     private:
-        
+        void                                     Buffer();
+        boost::thread                            buffer_thread;
     };
 
 }

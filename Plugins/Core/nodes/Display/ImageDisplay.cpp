@@ -42,7 +42,7 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
     }
 	cv::Mat host_mat;
 	std::string display_name;
-	display_name = fullTreeName;
+	display_name = getFullTreeName();
 
     img.download(host_mat, stream);
     EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
@@ -71,7 +71,7 @@ void QtImageDisplay::doProcess(const cv::Mat& mat, double timestamp, int frame_n
         auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
 
         auto instance = manager->instance(GetDataStream()->get_stream_id());
-        instance->imshow(fullTreeName, mat);
+        instance->imshow(getFullTreeName(), mat);
         cv::waitKey(1);
     }, stream);
 }
@@ -151,7 +151,7 @@ cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     {
 		cv::Scalar color = *getParameter<cv::Scalar>(3)->Data();
 		int radius = *getParameter<int>(2)->Data();
-		std::string displayName = fullTreeName;
+		std::string displayName = getFullTreeName();
 		cv::Mat h_img, pts;
 		TIME
 		img.download(h_img, stream);
@@ -209,7 +209,7 @@ cv::cuda::GpuMat FlowVectorDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 		cv::Scalar badColor = *getParameter<cv::Scalar>(4)->Data();
 		cv::Mat h_img;
 		img.download(h_img, stream);
-		std::string displayName = fullTreeName;
+		std::string displayName = getFullTreeName();
 		if (d_mask)
 		{
 			cv::Mat h_initial, h_final, h_mask;
@@ -306,7 +306,7 @@ void HistogramDisplay::displayHistogram()
         height *= 100;
         cv::rectangle(img, cv::Rect(i*5, 100 - (int)height, 5, 100), cv::Scalar(255),-1);
     }
-    cv::imshow(fullTreeName, img);
+    cv::imshow(getFullTreeName(), img);
 
 }
 
@@ -367,7 +367,7 @@ void DetectionDisplay::displayCallback()
                 pos.y = h_img.rows - 100;
         }
     }
-	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
+	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), getFullTreeName(), h_img));
 }
 
 void DetectionDisplay::Init(bool firstInit)

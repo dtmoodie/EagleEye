@@ -25,7 +25,7 @@ NodeManager::~NodeManager()
 void
 NodeManager::OnConstructorsAdded()
 {
-	LOG_TRACE;
+	
 	AUDynArray<IObjectConstructor*> constructors;
 	ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
 	std::vector<Nodes::Node*> newNodes;
@@ -61,7 +61,6 @@ NodeManager::OnConstructorsAdded()
 
 shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
 {
-	LOG_TRACE << nodeName;
 	IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
 
 	if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
@@ -107,7 +106,7 @@ shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
 }
 std::vector<shared_ptr<Nodes::Node>> NodeManager::loadNodes(const std::string& saveFile)
 {
-	LOG_TRACE;
+	
 	boost::filesystem::path path(saveFile);
 	if (!boost::filesystem::is_regular_file(path))
 	{
@@ -149,7 +148,7 @@ void NodeManager::saveNodes(std::vector<shared_ptr<Nodes::Node>>& topLevelNodes,
 }
 void NodeManager::saveNodes(std::vector<shared_ptr<Nodes::Node>>& topLevelNodes, cv::FileStorage fs)
 {
-	LOG_TRACE;
+	
 	fs << "TopLevelNodeCount" << (int)topLevelNodes.size();
 
 	for (size_t i = 0; i < topLevelNodes.size(); ++i)
@@ -162,12 +161,12 @@ void NodeManager::saveNodes(std::vector<shared_ptr<Nodes::Node>>& topLevelNodes,
 
 bool NodeManager::removeNode(const std::string& nodeName)
 {
-	LOG_TRACE;
+	
 	return false;
 }
 std::string NodeManager::getNodeFile(const ObjectId& id)
 {
-	LOG_TRACE;
+	
 	AUDynArray<IObjectConstructor*> constructors;
 	ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
 	if (constructors.Size() > id.m_ConstructorId)
@@ -179,7 +178,7 @@ std::string NodeManager::getNodeFile(const ObjectId& id)
 
 bool NodeManager::removeNode(ObjectId oid)
 {
-	LOG_TRACE;
+	
 	return false;
 }
 void NodeManager::RegisterNodeInfo(const char* nodeName, std::vector<char const*>& nodeInfo)
@@ -216,7 +215,7 @@ std::vector<const char*> NodeManager::GetNodeInfo(std::string& nodeName)
 
 void NodeManager::saveTree(const std::string &fileName)
 {
-	LOG_TRACE;
+	
 }
 
 void
@@ -227,7 +226,7 @@ NodeManager::onNodeRecompile(Nodes::Node *node)
 Nodes::Node*
 NodeManager::getNode(const ObjectId& id)
 {
-	LOG_TRACE;
+	
 	AUDynArray<IObjectConstructor*> constructors;
 	ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
 	if (!id.IsValid())
@@ -248,7 +247,7 @@ NodeManager::getNode(const ObjectId& id)
 Nodes::Node*
 NodeManager::getNode(const std::string &treeName)
 {
-	LOG_TRACE;
+	
 	for (size_t i = 0; i < nodes.size(); ++i)
 	{
 		if (nodes[i] != nullptr)
@@ -265,7 +264,7 @@ NodeManager::getNode(const std::string &treeName)
 void
 NodeManager::updateTreeName(Nodes::Node* node, const std::string& prevTreeName)
 {
-	LOG_TRACE;
+	
 	
 }
 
@@ -273,17 +272,17 @@ NodeManager::updateTreeName(Nodes::Node* node, const std::string& prevTreeName)
 void
 NodeManager::getSiblingNodes(const std::string& sourceNode, std::vector<Nodes::Node*>& output)
 {
-	LOG_TRACE;
+	
 }
 
 void printTreeHelper(std::stringstream& tree, int level, Nodes::Node* node)
 {
-	LOG_TRACE;
+	
 	for (int i = 0; i < level; ++i)
 	{
 		tree << "+";
 	}
-	tree << node->fullTreeName << std::endl;
+	tree << node->getFullTreeName() << std::endl;
 	for (size_t i = 0; i < node->children.size(); ++i)
 	{
 		printTreeHelper(tree, level + 1, node->children[i].get());
@@ -292,7 +291,7 @@ void printTreeHelper(std::stringstream& tree, int level, Nodes::Node* node)
 
 void NodeManager::printNodeTree(std::string* ret)
 {
-	LOG_TRACE;
+	
 	std::stringstream tree;
 	std::vector<weak_ptr<Nodes::Node>> parentNodes;
 	// First get the top level nodes for the tree
@@ -323,24 +322,24 @@ void NodeManager::printNodeTree(std::string* ret)
 Nodes::Node*
 NodeManager::getParent(const std::string& sourceNode)
 {
-	LOG_TRACE;
+	
 	return nullptr;
 }
 void NodeManager::getParentNodes(const std::string& sourceNode, std::vector<Nodes::Node*>& output)
 {
-	LOG_TRACE;
+	
 }
 
 void NodeManager::getAccessibleNodes(const std::string& sourceNode, std::vector<Nodes::Node*>& output)
 {
-	LOG_TRACE;
+	
 	getSiblingNodes(sourceNode, output);
 	getParentNodes(sourceNode, output);
 }
 std::vector<std::string>
 NodeManager::getConstructableNodes()
 {
-	LOG_TRACE;
+	
 	AUDynArray<IObjectConstructor*> constructors;
 	ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
 	std::vector<std::string> output;
@@ -361,7 +360,7 @@ NodeManager::getConstructableNodes()
 
 std::vector<std::string> NodeManager::getParametersOfType(boost::function<bool(Loki::TypeInfo)> selector)
 {
-	LOG_TRACE;
+	
 	std::vector<std::string> parameters;
 	for (size_t i = 0; i < nodes.size(); ++i)
 	{

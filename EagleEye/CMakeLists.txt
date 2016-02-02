@@ -163,7 +163,7 @@ IF(Qt5_FOUND)
 		CONFIGURE_FILE(EagleEye.vcxproj.user.in ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
 	ENDIF(WIN32)
 	ADD_DEFINITIONS(-DBUILD_DIR="${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-	add_dependencies(EagleEye EagleLib)
+	add_dependencies(EagleEye EagleLib frame_grabbers Core)
 	GET_TARGET_PROPERTY(LIB_DIR_RELEASE EagleLib IMPORTED_LINK_DEPENDENT_LIBRARIES)
 
 	LINK_DIRECTORIES(${LINK_DIRS})

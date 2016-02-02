@@ -154,7 +154,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
         connect(ui->chkEnabled, SIGNAL(clicked(bool)), this, SLOT(on_enableClicked(bool)));
         connect(ui->profile, SIGNAL(clicked(bool)), this, SLOT(on_profileClicked(bool)));
         ui->nodeName->setText(QString::fromStdString(node->getName()));
-        ui->nodeName->setToolTip(QString::fromStdString(node->fullTreeName));
+        ui->nodeName->setToolTip(QString::fromStdString(node->getFullTreeName()));
         ui->nodeName->setMaximumWidth(200);
         ui->gridLayout->setSpacing(0);
 		

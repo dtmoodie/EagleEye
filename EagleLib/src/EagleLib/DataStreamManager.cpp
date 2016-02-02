@@ -6,6 +6,7 @@
 #include <boost/thread.hpp>
 #include "utilities/sorting.hpp"
 #include "EagleLib/Logging.h"
+#include "Remotery.h"
 using namespace EagleLib;
 // **********************************************************************
 //              DataStream
@@ -23,9 +24,12 @@ DataStream::DataStream()
             table->SetSingleton<SignalManager>(signal_manager);
             Signals::signal_manager::set_instance(signal_manager);
         }
+        connections.push_back(signal_manager->Connect<void(void)>("StopThreads", std::bind(&DataStream::StopProcess, this), this, -1));
+        connections.push_back(signal_manager->Connect<void(void)>("StartThreads", std::bind(&DataStream::LaunchProcess, this), this, -1));
     }
     paused = false;
     stream_id = 0;
+    
 }
 
 DataStream::~DataStream()
@@ -114,14 +118,30 @@ bool DataStream::LoadDocument(const std::string& document)
         auto fg = shared_ptr<IFrameGrabber>(valid_frame_grabbers[idx[i]]->Construct());
         auto fg_info = static_cast<FrameGrabberInfo*>(valid_frame_grabbers[idx[i]]->GetObjectInfo());
         fg->InitializeFrameGrabber(this);
-        std::promise<bool> promise;
-        boost::thread connection_thread = boost::thread([&fg, &document, &promise](){
-            promise.set_value(fg->LoadFile(document));
+        //std::promise<bool> promise;
+        struct thread_load_object
+        {
+            std::promise<bool> promise;
+            shared_ptr<IFrameGrabber> fg;
+            std::string document;
+            void load()
+            {
+                promise.set_value(fg->LoadFile(document));
+            }
+        };
+        auto obj = new thread_load_object();
+        obj->fg = fg;
+        obj->document = document;
+        auto future = obj->promise.get_future();
+        boost::thread connection_thread = boost::thread([obj]()->void{
+            obj->load();
+            delete obj;
         });
         if(connection_thread.timed_join(boost::posix_time::milliseconds(fg_info->LoadTimeout())))
         {
-            if(promise.get_future().get())
+            if(future.get())
             {
+                frame_grabber = fg;
                 return true; // successful load
             }else // unsuccessful load
             {
@@ -228,6 +248,7 @@ void DataStream::process()
     int iteration_count = 0;
     signal_manager->register_thread(Signals::ANY);
     
+    rmt_SetCurrentThreadName("DataStreamThread");
     auto node_update_connection = signal_manager->Connect<void(EagleLib::Nodes::Node*)>("NodeUpdated",
         std::bind([this](EagleLib::Nodes::Node* node)->void
         {

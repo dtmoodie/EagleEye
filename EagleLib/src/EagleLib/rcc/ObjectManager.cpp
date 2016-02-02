@@ -218,7 +218,7 @@ weak_ptr<IObject> ObjectManager::GetSingleton(const std::string& object_name)
 }
 bool ObjectManager::TestRuntimeCompilation()
 {
-	LOG_TRACE;
+	
 	if (m_pTestCallback == nullptr)
 		m_pTestCallback = new TestCallback();
 	m_pRuntimeObjectSystem->TestBuildAllRuntimeHeaders(m_pTestCallback, true);
@@ -227,7 +227,6 @@ bool ObjectManager::TestRuntimeCompilation()
 }
 void ObjectManager::addIncludeDir(const std::string& dir, unsigned short projId)
 {
-	LOG_TRACE << " " << dir;
 	m_pRuntimeObjectSystem->AddIncludeDir(dir.c_str(), projId);
 }
 void ObjectManager::addIncludeDirs(const std::string& dirs, unsigned short projId)
@@ -243,7 +242,7 @@ void ObjectManager::addIncludeDirs(const std::string& dirs, unsigned short projI
 }
 void ObjectManager::addLinkDirs(const std::string& dirs, unsigned short projId)
 {
-	LOG_TRACE;
+	
 	if (!dirs.size())
 		return;
 	boost::char_separator<char> sep("+");
@@ -255,12 +254,11 @@ void ObjectManager::addLinkDirs(const std::string& dirs, unsigned short projId)
 }
 void ObjectManager::addLinkDir(const std::string& dir, unsigned short projId)
 {
-	LOG_TRACE << dir;
 	m_pRuntimeObjectSystem->AddLibraryDir(dir.c_str(), projId);
 }
 void ObjectManager::addDefinitions(const std::string& defs, unsigned short projId)
 {
-	LOG_TRACE;
+	
 	if (!defs.size())
 		return;
 	boost::char_separator<char> sep("+");
@@ -302,7 +300,7 @@ std::vector<std::string> ObjectManager::getLinkDirs(unsigned short projId)
 
 std::vector<std::string> ObjectManager::getIncludeDirs(unsigned short projId)
 {
-	LOG_TRACE;
+	
 	std::vector<std::string> output;
 	auto inc = m_pRuntimeObjectSystem->GetIncludeDirList(projId);
 	for (int i = 0; i < inc.size(); ++i)
@@ -313,13 +311,13 @@ std::vector<std::string> ObjectManager::getIncludeDirs(unsigned short projId)
 }
 RCppOptimizationLevel ObjectManager::getOptimizationLevel()
 {
-	LOG_TRACE;
+	
 	return m_pRuntimeObjectSystem->GetOptimizationLevel();
 }
 
 void ObjectManager::setOptimizationLevel(RCppOptimizationLevel level)
 {
-	LOG_TRACE;
+	
 	m_pRuntimeObjectSystem->SetOptimizationLevel(level);
 }
 int ObjectManager::getNumLoadedModules()
@@ -330,7 +328,7 @@ int ObjectManager::getNumLoadedModules()
 bool
 ObjectManager::CheckRecompile(bool swapAllowed)
 {
-	LOG_TRACE;
+	
 	static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
 	boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
 	boost::posix_time::time_duration delta = currentTime - prevTime;
@@ -360,7 +358,7 @@ void ObjectManager::RegisterConstructorAddedCallback(std::function<void(void)> f
 void
 ObjectManager::setupModule(IPerModuleInterface* pPerModuleInterface)
 {
-	LOG_TRACE;
+	
 	auto constructors = pPerModuleInterface->GetConstructors();
 	int projectId = 0;
 	if (constructors.size())
@@ -376,17 +374,16 @@ ObjectManager::setupModule(IPerModuleInterface* pPerModuleInterface)
 }
 void ObjectManager::addSourceFile(const std::string &file)
 {
-	LOG_TRACE << " " << file;
 	m_pRuntimeObjectSystem->AddToRuntimeFileList(file.c_str());
 }
 void ObjectManager::setCompileCallback(std::function<void(const std::string &, int)> &f)
 {
-	LOG_TRACE;
+	
 	m_pCompileLogger->callback = f;
 }
 std::vector<std::pair<std::string, int>> ObjectManager::getObjectList()
 {
-	LOG_TRACE;
+	
 	std::vector<std::pair<std::string, int>> output;
 	AUDynArray<IObjectConstructor*> constructors;
 	m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
@@ -412,7 +409,7 @@ std::string ObjectManager::getProjectName(int idx)
 
 std::vector<std::string> ObjectManager::getLinkDependencies(const std::string& objectName)
 {
-	LOG_TRACE;
+	
 	IObjectConstructor* constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(objectName.c_str());
 	
 	std::vector<std::string> linkDependency;
@@ -432,7 +429,7 @@ std::vector<std::string> ObjectManager::getLinkDependencies(const std::string& o
 void
 ObjectManager::OnConstructorsAdded()
 {
-	LOG_TRACE;
+	
 	for (int i = 0; i < onConstructorsAddedCallbacks.size(); ++i)
 	{
 		onConstructorsAddedCallbacks[i]();
@@ -441,7 +438,7 @@ ObjectManager::OnConstructorsAdded()
 void
 ObjectManager::addConstructors(IAUDynArray<IObjectConstructor*> & constructors)
 {
-	LOG_TRACE;
+	
 	m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddConstructors(constructors);
 }
 void ObjectManager::abort_compilation()

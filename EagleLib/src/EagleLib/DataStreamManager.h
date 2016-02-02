@@ -84,6 +84,7 @@ namespace EagleLib
         cv::cuda::Stream                cuda_stream;
         boost::thread                   processing_thread;
         volatile bool                   dirty_flag;
+        std::vector<std::shared_ptr<Signals::connection>> connections;
 	};
 
     class EAGLE_EXPORTS DataStreamManager

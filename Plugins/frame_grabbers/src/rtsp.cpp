@@ -23,6 +23,7 @@ bool frame_grabber_rtsp::frame_grabber_rtsp_info::CanLoadDocument(const std::str
     }
     return false;
 }
+
 int frame_grabber_rtsp::frame_grabber_rtsp_info::LoadTimeout() const
 {
     return 3000;
@@ -32,7 +33,39 @@ int frame_grabber_rtsp::frame_grabber_rtsp_info::Priority() const
 {
     return 9;
 }
+frame_grabber_rtsp::frame_grabber_rtsp()
+{
+    frame_count = 0;
+}
+TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
+{
+    try
+    {
+        if (h_cam)
+        {
+            cv::Mat h_mat;
+            if (h_cam->read(h_mat))
+            {
+                if (!h_mat.empty())
+                {
+                    cv::cuda::GpuMat d_mat;
+                    d_mat.upload(h_mat, stream);
+                    current_frame = TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (int)frame_count++, h_mat, d_mat);
+                    return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
+                }
+            }
+        }
+    }catch(cv::Exception &e)
+    {
 
+    }
+    catch(...)
+    {
+    
+    }
+    
+    return TS<SyncedMemory>();
+}
 
 bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 {

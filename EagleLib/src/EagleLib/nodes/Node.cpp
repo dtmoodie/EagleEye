@@ -577,7 +577,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 }
 void Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 {
-	
+	input.GetGpuMatMutable(stream) = process(input.GetGpuMatMutable(stream), stream);
 }
 bool Node::pre_check(const TS<SyncedMemory>& input)
 {
@@ -658,10 +658,21 @@ Node::getName() const
     return GetTypeName();
 }
 std::string
-Node::getTreeName() const
+Node::getTreeName()
 {
-	NODE_LOG(trace);
+	if(!treeName.size())
+    {
+        treeName = getName();
+        fullTreeName = getName();
+    }
+        
     return treeName;
+}
+std::string Node::getFullTreeName()
+{
+    if(!fullTreeName.size())
+        fullTreeName = getName();
+    return fullTreeName;
 }
 Node*
 Node::getParent()
@@ -1039,7 +1050,7 @@ Node::setTreeName(const std::string& name)
     if (parent == nullptr)
         fullTreeName_ = treeName;
 	else
-        fullTreeName_ = parent->fullTreeName + "." + treeName;
+        fullTreeName_ = parent->getFullTreeName() + "." + treeName;
 	setFullTreeName(fullTreeName_);
     for(size_t i = 0; i < children.size(); ++i)
     {

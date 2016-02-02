@@ -6,6 +6,10 @@
 #include "EagleLib/rcc/external_includes/cv_imgcodec.hpp"
 #include "EagleLib/rcc/external_includes/cv_videoio.hpp"
 
+#include "RuntimeSourceDependency.h"
+
+RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("cv_capture", ".cpp");
+
 namespace EagleLib
 {
     class frame_grabber_cv: public FrameGrabberBuffered

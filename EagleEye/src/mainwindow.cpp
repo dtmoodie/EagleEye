@@ -53,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
     processing_thread_context = nullptr;
     processing_thread_upload_window = nullptr;
     
-
+    
 	
     cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
 
@@ -177,7 +177,6 @@ MainWindow::MainWindow(QWidget *parent) :
         cv::cuda::GpuMat::setDefaultAllocator(allocator);
     }*/
     cv::cuda::GpuMat::setDefaultAllocator(EagleLib::CombinedAllocator::Instance(100000000, 500000));
-    startProcessingThread();
 	rccSettings->updateDisplay();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
@@ -195,6 +194,7 @@ MainWindow::MainWindow(QWidget *parent) :
         auto dirtySignal = signal_manager->get_signal<void(EagleLib::Nodes::Node*)>("NodeUpdated");
         dirty_flag_connection = dirtySignal->connect(boost::bind(&MainWindow::on_nodeUpdate, this, _1));
     }
+    startProcessingThread();
 }
 
 MainWindow::~MainWindow()
@@ -252,7 +252,7 @@ void saveWidgetPosition(NodeView* nodeView, cv::FileStorage& fs, EagleLib::Nodes
     if(widget)
     {
         fs << "{:";
-        fs << "Name" << node->fullTreeName;
+        fs << "Name" << node->getFullTreeName();
         fs << "x" << widget->pos().x();
         fs << "y" << widget->pos().y();
         fs << "}";
@@ -447,10 +447,11 @@ void MainWindow::onTimeout()
 
     if(swapRequired)
     {
+        stopProcessingThread();
         if(processingThread.joinable() && !processingThread.try_join_for(boost::chrono::milliseconds(200)) && !joined)
         {
             LOG_TRIVIAL(info) <<"Processing thread not joined, cannot perform object swap";
-			processingThread.interrupt();
+            stopProcessingThread();
             return;
         }else
         {
@@ -485,11 +486,11 @@ void MainWindow::log(QString message)
 // Called from the processing thread
 void MainWindow::oglDisplay(cv::cuda::GpuMat img, EagleLib::Nodes::Node* node)
 {
-    emit oglDisplayImage(node->fullTreeName, img);
+    emit oglDisplayImage(node->getFullTreeName(), img);
 }
 void MainWindow::qtDisplay(cv::Mat img, EagleLib::Nodes::Node *node)
 {
-    emit qtDisplayImage(node->fullTreeName, img);
+    emit qtDisplayImage(node->getFullTreeName(), img);
 }
 void MainWindow::onOGLDisplay(std::string name, cv::cuda::GpuMat img)
 {
@@ -504,8 +505,8 @@ void MainWindow::onQtDisplay(std::string name, cv::Mat img)
 void MainWindow::onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::Nodes::Node* node)
 {
     cv::Mat img = function();
-    cv::namedWindow(node->fullTreeName);
-    cv::imshow(node->fullTreeName, img);
+    cv::namedWindow(node->getFullTreeName());
+    cv::imshow(node->getFullTreeName(), img);
 }
 void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
 {
@@ -513,7 +514,7 @@ void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
     connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
 
-    auto itr = positionMap.find(node->fullTreeName);
+    auto itr = positionMap.find(node->getFullTreeName());
     if(itr != positionMap.end())
     {
         cv::Vec2f pt = itr->second;
@@ -766,6 +767,11 @@ void MainWindow::process_log_message(boost::log::trivial::severity_level severit
 }
 void MainWindow::startProcessingThread()
 {
+    stopProcessingThread();
+    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    auto manager = table->GetSingleton<EagleLib::SignalManager>();
+    (*manager->GetSignal<void(void)>("StartThreads", this, -1))();
+    
 	processingThreadActive = true;
     processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
 }
@@ -774,6 +780,10 @@ void MainWindow::startProcessingThread()
 // What we need is a signal beforehand that will disable all imshow's before a delete.
 void MainWindow::stopProcessingThread()
 {
+    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    auto manager = table->GetSingleton<EagleLib::SignalManager>();
+    auto result = (*manager->GetSignal<void(void)>("StopThreads", this, -1))();
+    result.get_result();
 	processingThreadActive = false;
     processingThread.interrupt();
     processingThread.join();
