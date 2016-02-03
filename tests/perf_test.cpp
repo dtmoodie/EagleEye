@@ -1,12 +1,12 @@
-#include <EagleLib/NodeManager.h>
-#include "nodes/Node.h"
+#include <EagleLib/nodes/NodeManager.h>
+#include "EagleLib/nodes/Node.h"
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 
 EagleLib::Nodes::Node::Ptr setVideoFile(EagleLib::Nodes::Node::Ptr node, const std::string& videoFile)
 {
-    if(node->nodeName == "VideoLoader")
+    if(node->getName() == "VideoLoader")
     {
         node->updateParameter<boost::filesystem::path>("Filename", boost::filesystem::path(videoFile));
         node->updateParameter<bool>("Loop", false);

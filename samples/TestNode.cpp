@@ -1,4 +1,4 @@
-#include <nodes/Node.h>
+#include <EagleLib/nodes/Node.h>
 #include <../RuntimeObjectSystem/ISimpleSerializer.h>
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/cuda.hpp>
@@ -31,6 +31,9 @@
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
+    
     class TestNode: public Node
     {
     public:
@@ -111,9 +114,11 @@ namespace EagleLib
     private:
 
     };
+    }
 
 }
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(TestNode);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(TestChildNode);

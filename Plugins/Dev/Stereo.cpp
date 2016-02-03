@@ -15,6 +15,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudastereo")
 
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 void StereoBM::Init(bool firstInit)
 {

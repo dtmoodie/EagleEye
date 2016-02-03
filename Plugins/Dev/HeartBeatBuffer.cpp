@@ -1,7 +1,8 @@
 #include "HeartBeatBuffer.h"
-#include "EagleLib/shared_ptr.hpp"
+#include "EagleLib/rcc/shared_ptr.hpp"
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 #define CATCH_MACRO                                                         \
     catch (boost::thread_resource_error& err)                               \
 {                                                                           \

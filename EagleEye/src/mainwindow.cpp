@@ -768,10 +768,10 @@ void MainWindow::process_log_message(boost::log::trivial::severity_level severit
 void MainWindow::startProcessingThread()
 {
     stopProcessingThread();
-    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    /*auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     auto manager = table->GetSingleton<EagleLib::SignalManager>();
-    (*manager->GetSignal<void(void)>("StartThreads", this, -1))();
-    
+    (*manager->GetSignal<void(void)>("StartThreads", this, -1))();*/
+    sig_StartThreads();
 	processingThreadActive = true;
     processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
 }
@@ -780,10 +780,10 @@ void MainWindow::startProcessingThread()
 // What we need is a signal beforehand that will disable all imshow's before a delete.
 void MainWindow::stopProcessingThread()
 {
-    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    auto manager = table->GetSingleton<EagleLib::SignalManager>();
-    auto result = (*manager->GetSignal<void(void)>("StopThreads", this, -1))();
-    result.get_result();
+    //auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    //auto manager = table->GetSingleton<EagleLib::SignalManager>();
+    //auto result = (*manager->GetSignal<void(void)>("StopThreads", this, -1))();
+    sig_StopThreads();
 	processingThreadActive = false;
     processingThread.interrupt();
     processingThread.join();

@@ -1,4 +1,4 @@
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 #include "ObjectInterfacePerModule.h"
 #define GLOOX_IMPORTS
 #include "gloox/loghandler.h"
@@ -25,6 +25,10 @@ RUNTIME_COMPILER_LINKLIBRARY("G:\libs\gloox\libs\gloox-1.0.lib");
 using namespace gloox;
 namespace EagleLib
 {
+    namespace Nodes
+    {
+    
+    
 	class XmppClient : public Node, MessageSessionHandler, ConnectionListener, LogHandler,
 		MessageEventHandler, MessageHandler, ChatStateHandler
 	{
@@ -48,4 +52,5 @@ namespace EagleLib
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream /* = cv::cuda::Stream::Null() */);
 	};
+    }
 }

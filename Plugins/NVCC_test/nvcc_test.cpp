@@ -5,6 +5,7 @@
 
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 SETUP_PROJECT_IMPL
 
 void nvcc_test::init(bool firstInit)  

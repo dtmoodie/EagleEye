@@ -1,6 +1,5 @@
 #pragma once
-#include "nodes/Node.h"
-#include "Manager.h"
+#include "EagleLib/nodes/Node.h"
 #include "qnetworkaccessmanager.h"
 #include "qnetworkreply.h"
 #include "qtcpsocket.h"
@@ -30,6 +29,8 @@ SETUP_PROJECT_DEF
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
 	class AxisSocket: public QObject
 	{
 		Q_OBJECT
@@ -78,4 +79,5 @@ namespace EagleLib
 		virtual bool SkipEmpty() const;
 
 	};
+    }
 }

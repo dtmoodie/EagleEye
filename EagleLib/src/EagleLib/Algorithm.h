@@ -3,7 +3,7 @@
 #include "ParameteredObject.h"
 
 #include <opencv2/core/cuda.hpp>
-#include <EagleLib/shared_ptr.hpp>
+#include <EagleLib/rcc/shared_ptr.hpp>
 namespace EagleLib
 {
     class EAGLE_EXPORTS Algorithm : public TInterface<IID_Algorithm, EagleLib::ParameteredIObject>

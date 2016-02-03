@@ -1,6 +1,6 @@
 #include <EagleLib/utilities/GpuMatAllocators.h>
 #include <EagleLib/utilities/BufferPool.hpp>
-#include <Thrust_interop.hpp>
+#include <EagleLib/Thrust_interop.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/cudafilters.hpp>
 #include <thrust/transform.h>

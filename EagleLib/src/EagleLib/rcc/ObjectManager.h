@@ -98,6 +98,7 @@ namespace EagleLib
 		virtual void OnConstructorsAdded();
 		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
         std::vector<IObjectConstructor*> GetConstructorsForInterface(int interface_id);
+        void set_build_directory(const std::string& build_directory);
 	private:
 		ObjectManager();
 		friend class PlotManager;
@@ -109,5 +110,6 @@ namespace EagleLib
 		std::shared_ptr<SystemTable>						m_systemTable;
 		std::vector<std::function<void(void)>>            onConstructorsAddedCallbacks;
 		std::map<int, std::string>                          m_projectNames;
+        std::string build_dir;
 	};// class ObjectManager
 }

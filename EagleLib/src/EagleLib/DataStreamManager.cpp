@@ -251,15 +251,15 @@ void DataStream::process()
     rmt_SetCurrentThreadName("DataStreamThread");
     auto node_update_connection = signal_manager->Connect<void(EagleLib::Nodes::Node*)>("NodeUpdated",
         std::bind([this](EagleLib::Nodes::Node* node)->void
-        {
-            dirty_flag = true;
-        }, std::placeholders::_1), this, stream_id);
+            {
+                dirty_flag = true;
+            }, std::placeholders::_1), this, stream_id);
 
     auto update_connection = signal_manager->Connect<void()>("update",
         std::bind([this]()->void
-    {
-        dirty_flag = true;
-    }), this, stream_id);
+            {
+                dirty_flag = true;
+            }), this, stream_id);
 
     while(!boost::this_thread::interruption_requested())
     {

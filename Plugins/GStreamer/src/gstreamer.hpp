@@ -3,7 +3,7 @@
 #define PARAMETERS_USE_UI
 #endif
 #include <gst/rtsp-server/rtsp-server.h>
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 
 #include <EagleLib/Defs.hpp>
 #include <EagleLib/Project_defs.hpp>
@@ -41,6 +41,9 @@ RUNTIME_COMPILER_LINKLIBRARY("gobject-2.0.lib");
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
+    
     class RTSP_server: public Node
     {
 		GstClockTime timestamp;
@@ -106,6 +109,7 @@ namespace EagleLib
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
 		cv::Size imgSize;
 	};
+    }
 }
 /*
 References

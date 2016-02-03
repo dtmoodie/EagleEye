@@ -1,4 +1,4 @@
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 #include <EagleLib/rcc/external_includes/cv_cudabgsegm.hpp>
 #include "EagleLib/utilities/CudaUtils.hpp"
 #include "Segmentation_impl.h"
@@ -9,6 +9,9 @@ SETUP_PROJECT_DEF
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
+    
     class OtsuThreshold: public Node
     {
     public:
@@ -119,5 +122,6 @@ namespace EagleLib
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
 	};
+    }
 
 }

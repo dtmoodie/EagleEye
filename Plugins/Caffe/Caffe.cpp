@@ -1,15 +1,14 @@
 #include "Caffe.h"
 #include "caffe/caffe.hpp"
 
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
-#include <Manager.h>
 #include "caffe/caffe.hpp"
 #include <boost/tokenizer.hpp>
-#include <ObjectDetection.hpp>
+#include <EagleLib/ObjectDetection.hpp>
 #include <string>
 #ifdef _MSC_VER // Windows
     #ifdef _DEBUG
@@ -25,6 +24,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 SETUP_PROJECT_IMPL;
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 template <typename T>
 std::vector<size_t> sort_indexes(const std::vector<T> &v) {
@@ -54,6 +54,18 @@ std::vector<size_t> sort_indexes(const T* begin, size_t size) {
   return idx;
 }
 template <typename T>
+std::vector<size_t> sort_indexes_ascending(const T* begin, size_t size) {
+
+    // initialize original index locations
+    std::vector<size_t> idx(size);
+    for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
+
+    // sort indexes based on comparing values in v
+    std::sort(idx.begin(), idx.end(), [&begin](size_t i1, size_t i2) {return begin[i1] > begin[i2]; });
+
+    return idx;
+}
+template <typename T>
 std::vector<size_t> sort_indexes(const T* begin, const T* end) {
     return sort_indexes<T>(begin, end - begin);
 }
@@ -67,6 +79,7 @@ namespace EagleLib
         bool weightsLoaded;
         boost::shared_ptr< std::vector< std::string > > labels;
         std::vector<std::vector<cv::cuda::GpuMat>> wrappedInputs;
+        cv::Mat wrapped_output;
         cv::Scalar channel_mean;
 	public:
 		CaffeImageClassifier();
@@ -74,6 +87,7 @@ namespace EagleLib
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
         virtual void WrapInput();
+        virtual void WrapOutput();
         };
 }
 
@@ -112,7 +126,21 @@ void CaffeImageClassifier::WrapInput()
         }
         wrappedInputs.push_back(wrappedChannels);
     }
+}
+void CaffeImageClassifier::WrapOutput()
+{
+    if (NN == nullptr)
+    {
+        NODE_LOG(error) << "Neural network not defined";
+        return;
+    }
+    if (NN->num_inputs() == 0)
+        return;
 
+    caffe::Blob<float>* output_layer = NN->output_blobs()[0];
+    float* begin = output_layer->mutable_cpu_data();
+    float* end = begin + output_layer->channels()*output_layer->num();
+    wrapped_output = cv::Mat(1, end - begin, CV_32F, begin);
 }
 
 void CaffeImageClassifier::Serialize(ISimpleSerializer* pSerializer)
@@ -262,11 +290,13 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         NODE_LOG(trace) << "Model not loaded";
         return img;
     }
-    if(img.size() != cv::Size(input_layer->width(), input_layer->height()))
+    /*if(img.size() != cv::Size(input_layer->width(), input_layer->height()))
     {
-        cv::cuda::resize(img,img,cv::Size(input_layer->width(), input_layer->height()), 0, 0, cv::INTER_LINEAR, stream);
-        NODE_LOG(warning) <<  "Resize required";
-    }
+        cv::cuda::GpuMat resized;
+        cv::cuda::resize(img,resized,cv::Size(input_layer->width(), input_layer->height()), 0, 0, cv::INTER_LINEAR, stream);
+        img = resized;
+        NODE_LOG(info) <<  "Resize required";
+    }*/
     if(img.depth() != CV_32F)
     {
         img.convertTo(img, CV_32F,stream);
@@ -287,9 +317,18 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     {
         NODE_LOG(warning) <<  "Too many input Regions of interest to handle in one pass, this network can only handle " << wrappedInputs.size() <<" inputs at a time";
     }
+    cv::Size input_size(input_layer->width(), input_layer->height());
     for(int i = 0; i < inputROIs->size() && i < wrappedInputs.size(); ++i)
     {
-        cv::cuda::split(img((*inputROIs)[i]), wrappedInputs[i], stream);
+        cv::cuda::GpuMat resized;
+        if((*inputROIs)[i].size() != input_size)
+        {
+            cv::cuda::resize(img, resized, input_size, 0, 0, cv::INTER_LINEAR, stream);
+        }else
+        {
+            resized = img((*inputROIs)[i]);
+        }
+        cv::cuda::split(resized, wrappedInputs[i], stream);
     }
     // Check if channels are still wrapping correctly
     if(input_layer->gpu_data() != reinterpret_cast<float*>(wrappedInputs[0][0].data))
@@ -309,12 +348,19 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     caffe::Blob<float>* output_layer = NN->output_blobs()[0];
 
     const float* begin = output_layer->cpu_data();
-    const float* end = begin + output_layer->channels()*output_layer->num();
+    const float* end = begin + output_layer->channels() * output_layer->num();
+    const size_t step = output_layer->channels();
+
+    if(begin != (const float*)wrapped_output.data)
+    {
+        NODE_LOG(debug) << "Output not wrapped to mat";
+        WrapOutput();
+    }
     int numClassifications = *getParameter<int>("Num classifications")->Data();
     std::vector<DetectedObject> objects(std::min(inputROIs->size(), wrappedInputs.size()));
     for(int i = 0; i < inputROIs->size() && i < wrappedInputs.size(); ++i)
     {
-        auto idx = sort_indexes(begin + i * output_layer->channels(), (size_t)output_layer->channels());
+        auto idx = sort_indexes_ascending(begin + i * output_layer->channels(), (size_t)output_layer->channels());
         objects[i].detections.resize(numClassifications);
         for(int j = 0; j < numClassifications; ++j)
         {

@@ -2,10 +2,10 @@
 #include "RuntimeLinkLibrary.h"
 #include <EagleLib/Defs.hpp>
 #include <EagleLib/Project_defs.hpp>
-#include "plotters/Plotter.h"
+#include "EagleLib/plotters/Plotter.h"
 
 
-#include <rendering/RenderingEngine.h>
+#include <EagleLib/rendering/RenderingEngine.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>

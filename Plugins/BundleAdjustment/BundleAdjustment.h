@@ -1,10 +1,9 @@
 #pragma once
 #define  GLOG_NO_ABBREVIATED_SEVERITIES
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 #include <iostream>
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
 #include <ObjectInterfacePerModule.h>
-#include "Manager.h"
 #include <ceres/ceres.h>
 
 #include "RuntimeInclude.h"
@@ -14,6 +13,8 @@ RUNTIME_MODIFIABLE_INCLUDE
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
 	class BundleAdjustment : public Node
 	{
 	public:
@@ -21,4 +22,5 @@ namespace EagleLib
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 	};
+    }
 }

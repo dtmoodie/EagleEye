@@ -2,7 +2,7 @@
 #include "opencv2/core/cuda_stream_accessor.hpp"
 #include <opencv2/cudaarithm.hpp>
 
-#include "Thrust_interop.hpp"
+#include "EagleLib/Thrust_interop.hpp"
 #include <thrust/transform.h>
 #include <thrust/sort.h>
 #include <thrust/system/cuda/execution_policy.h>

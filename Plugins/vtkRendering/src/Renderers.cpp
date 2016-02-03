@@ -1,16 +1,23 @@
 #include "Renderers.h"
-#include "nodes/Node.h"
-#include "Manager.h"
-//#include "QVTKWidget.h"
+#include "Remotery.h"
+#include "EagleLib/nodes/Node.h"
+#include <EagleLib/utilities/CudaCallbacks.hpp>
+#include "EagleLib/utilities/ObjectPool.hpp"
+#include <EagleLib/rcc/SystemTable.hpp>
+
+#include "UI/InterThread.hpp"
+
 #include <QVTKWidget2.h>
 #include <qopengl.h>
 #include "QtOpenGL/QGLContext"
+#include <QOpenGLContext>
+
 #include "vtkTexture.h"
 #include "vtkPointData.h"
 #include <vtkAxesActor.h>
 #include <vtkPolyDataMapper.h>
-#include <EagleLib/utilities/CudaCallbacks.hpp>
-#include "UI/InterThread.hpp"
+
+
 #include <vtkPointData.h>
 #include <vtkCellArray.h>
 #include <vtkJPEGReader.h>
@@ -24,10 +31,9 @@
 #include <vtkFloatArray.h>
 #include <vtkPolygon.h>
 #include <vtkGenericOpenGLRenderWindow.h>
-#include "Remotery.h"
-#include "EagleLib/utilities/ObjectPool.hpp"
-#include <SystemTable.hpp>
-#include <QOpenGLContext>
+
+
+
 SETUP_PROJECT_IMPL
 using namespace EagleLib;
 

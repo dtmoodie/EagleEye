@@ -1,5 +1,5 @@
 #pragma once
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 #include <boost/circular_buffer.hpp>
 #include "EagleLib/Defs.hpp"
 #include <EagleLib/Project_defs.hpp>
@@ -17,9 +17,11 @@ SETUP_PROJECT_DEF
 
 namespace EagleLib
 {
+
 	typedef std::vector<cv::Point2f> ImagePoints;
 	typedef std::vector<cv::Point3f> ObjectPoints;
-
+    namespace Nodes
+    {
 	class FindCheckerboard : public Node
 	{
 		ImagePoints imagePoints;
@@ -112,4 +114,5 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+    }
 }

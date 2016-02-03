@@ -1,5 +1,5 @@
-#include <EagleLib/NodeManager.h>
-#include "nodes/Node.h"
+#include <EagleLib/nodes/NodeManager.h>
+#include "EagleLib/nodes/Node.h"
 
 int main()
 {

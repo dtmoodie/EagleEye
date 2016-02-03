@@ -6,12 +6,12 @@
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_imgproc.hpp>
 #include "flann.cuh"
-#include <Manager.h>
 #include "RuntimeSourceDependency.h"
 SETUP_PROJECT_IMPL
 
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 void ForegroundEstimate::Init(bool firstInit)
 {
 	if (firstInit)
@@ -70,7 +70,7 @@ bool ForegroundEstimate::MapInput(cv::cuda::GpuMat img)
 }
 void ForegroundEstimateCallback(int status, void* userData)
 {
-	static_cast<EagleLib::ForegroundEstimate*>(userData)->updateOutput();
+	static_cast<EagleLib::Nodes::ForegroundEstimate*>(userData)->updateOutput();
 }
 void ForegroundEstimate::updateOutput()
 {

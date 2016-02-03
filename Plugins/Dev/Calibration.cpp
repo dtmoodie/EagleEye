@@ -1,14 +1,14 @@
 #include "Calibration.h"
 #include <EagleLib/rcc/external_includes/cv_calib3d.hpp>
 #include <EagleLib/rcc/external_includes/cv_highgui.hpp>
-#include <nodes/VideoProc/Tracking.hpp>
+#include <EagleLib/nodes/VideoProc/Tracking.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 
-#include "Manager.h"
+
 #include <UI/InterThread.hpp>
 using namespace EagleLib;
-
+using namespace EagleLib::Nodes;
 IPerModuleInterface* GetModule()
 {
     return PerModuleInterface::GetInstance();
@@ -75,7 +75,7 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 				prevFramePoints.copyTo(currentFramePoints, stream);
 				cv::drawChessboardCorners(h_img, cv::Size(numX, numY), imagePoints, found);
 				Parameters::UI::UiCallbackService::Instance()->post(
-                    boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img), std::make_pair((void*)this, Loki::TypeInfo(typeid(EagleLib::Node))));
+                    boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), getFullTreeName(), h_img), std::make_pair((void*)this, Loki::TypeInfo(typeid(EagleLib::Nodes::Node))));
 				prevGreyFrame = currentGreyFrame;
 				TIME
 			}
@@ -117,7 +117,7 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 		{
 			h_corners = cv::Mat(imagePoints);
 			cv::drawChessboardCorners(h_img, cv::Size(numX, numY), imagePoints, found);
-			Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), fullTreeName, h_img));
+			Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), getFullTreeName(), h_img));
 		}
 		else
 		{

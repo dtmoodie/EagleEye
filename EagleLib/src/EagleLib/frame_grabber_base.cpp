@@ -104,7 +104,7 @@ void FrameGrabberBuffered::Buffer()
     rmt_SetCurrentThreadName("FrameGrabberThread");
     while(!boost::this_thread::interruption_requested())
     {
-        if(frame_buffer.size() != frame_buffer.capacity() || playback_frame_number > buffer_frame_number - frame_buffer.capacity() / 2)
+        if(frame_buffer.size() != frame_buffer.capacity() || buffer_frame_number == -1 || playback_frame_number > buffer_frame_number - frame_buffer.capacity() / 2)
         {
             auto frame = GetNextFrameImpl(read_stream);
             if(!frame.empty())
@@ -150,9 +150,10 @@ void FrameGrabberBuffered::Init(bool firstInit)
     {
         if (parent_stream)
         {
-            connections.push_back(parent_stream->GetSignalManager()->Connect<void()>("SartThreads", std::bind(&FrameGrabberBuffered::LaunchBufferThread, this), this, -1));
+            connections.push_back(parent_stream->GetSignalManager()->Connect<void()>("StartThreads", std::bind(&FrameGrabberBuffered::LaunchBufferThread, this), this, -1));
             connections.push_back(parent_stream->GetSignalManager()->Connect<void()>("StopThreads", std::bind(&FrameGrabberBuffered::StopBufferThread, this), this, -1));
         }
+        buffer_frame_number = -1;
         LaunchBufferThread();
     }
     updateParameterPtr<boost::circular_buffer<TS<SyncedMemory>>>("Frame buffer", &frame_buffer)->type = Parameters::Parameter::Output;
@@ -162,5 +163,5 @@ void FrameGrabberBuffered::Serialize(ISimpleSerializer* pSerializer)
 {
     IFrameGrabber::Serialize(pSerializer);
     SERIALIZE(playback_frame_number);
-    SERIALIZE(buffer_frame_number);
+    
 }

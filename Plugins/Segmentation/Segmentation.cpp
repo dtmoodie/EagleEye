@@ -3,7 +3,6 @@
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudalegacy.hpp>
-#include "Manager.h"
 #include "RuntimeLinkLibrary.h"
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
@@ -11,7 +10,7 @@ RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
 RUNTIME_COMPILER_LINKLIBRARY("fastms.lib")
 #endif
 using namespace EagleLib;
-
+using namespace EagleLib::Nodes;
 SETUP_PROJECT_IMPL
 
 void OtsuThreshold::Init(bool firstInit)

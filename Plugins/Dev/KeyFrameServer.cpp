@@ -1,7 +1,7 @@
 #include "KeyFrameServer.h"
 
 using namespace EagleLib;
-
+using namespace EagleLib::Nodes;
 
 template<typename T> bool KeyFrameServer::getParameter(int frameIndex, KeyFrameParameter param, T* data)
 {

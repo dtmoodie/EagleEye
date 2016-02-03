@@ -4,6 +4,7 @@
 
 #ifdef FASTMS_FOUND
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 void FastMumfordShah::Init(bool firstInit)
 {
 	Node::Init(firstInit);

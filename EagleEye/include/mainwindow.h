@@ -1,8 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
 #include <QMainWindow>
+#include "EagleLib/Signals.h"
 #include <EagleLib/nodes/Node.h>
+
+
 #include <qtimer.h>
 #include "NodeListDialog.h"
 #include <qgraphicsscene.h>
@@ -15,6 +17,7 @@
 
 #include "plotwizarddialog.h"
 #include <QtGui/qopenglcontext.h>
+
 namespace EagleLib
 {
     class DataStream;
@@ -124,6 +127,16 @@ private:
     std::shared_ptr<Signals::connection>                new_parameter_connection;
     std::shared_ptr<Signals::connection>                dirty_flag_connection;
     std::vector<std::shared_ptr<EagleLib::DataStream>>  data_streams;
+    /*inline void sig_StartThreads() 
+    { 
+        static auto registerer = EagleLib::register_sender<void(void), -1>(this, "StartThreads"); 
+        registerer(); 
+    }*/
+    SIG_DEF(StartThreads);
+    SIG_DEF(StopThreads);
+    //SIG_DEF_0("StopThreads");
+    //SIG_DEF("StartThreads");
+    //SIG_DEF("StopThreads");
 
 };
 

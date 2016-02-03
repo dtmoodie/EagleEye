@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 #include <QtNetwork/qtcpserver.h>
 #include <QtNetwork/qtcpsocket.h>
 #include "RuntimeInclude.h"
@@ -10,6 +10,9 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE(PROJECT_BUILD_DIR "/include/moc_ptCloudSt
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
+    
 	class ServerHandler: public QObject
 	{
 		Q_OBJECT;
@@ -33,4 +36,5 @@ namespace EagleLib
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
 	};
+    }
 }

@@ -12,6 +12,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 using namespace gloox;
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 void XmppClient::onConnect()
 {
@@ -46,7 +47,7 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
                 auto inputParam = Parameters::Persistence::Text::DeSerialize(&ss);
                 for (auto node : nodes)
                 {
-                    if (node->fullTreeName == inputParam->GetTreeRoot())
+                    if (node->getFullTreeName() == inputParam->GetTreeRoot())
                     {
                         for (auto param : node->parameters)
                         {

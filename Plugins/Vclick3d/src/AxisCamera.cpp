@@ -5,6 +5,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 SETUP_PROJECT_IMPL
 

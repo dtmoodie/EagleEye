@@ -1,8 +1,8 @@
 
-#include <EagleLib/shared_ptr.hpp>
-#include <EagleLib/NodeManager.h>
-#include "nodes/Node.h"
-#include "Plugins.h"
+#include <EagleLib/rcc/shared_ptr.hpp>
+#include <EagleLib/nodes/NodeManager.h>
+#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Plugins.h"
 #include <EagleLib/DataStreamManager.h>
 
 #include <signal.h>
@@ -28,7 +28,7 @@ void PrintNodeTree(EagleLib::Nodes::Node::Ptr node, int depth)
     {
         std::cout << "=";
     }
-    std::cout << node->fullTreeName << std::endl;
+    std::cout << node->getFullTreeName() << std::endl;
     for(int i = 0; i < node->children.size(); ++i)
     {
         PrintNodeTree(node->children[i], depth + 1);

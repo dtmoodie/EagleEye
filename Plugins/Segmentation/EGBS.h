@@ -26,7 +26,7 @@
 
 #ifndef __EfficientGraphBasedImageSegmentation__EGBS__
 #define __EfficientGraphBasedImageSegmentation__EGBS__
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include "DisjointSetForest.h"
@@ -66,6 +66,9 @@ protected:
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
+    
     class SegmentEGBS: public Node
     {
 		EGBS egbs;
@@ -75,6 +78,7 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+    }
 }
 
 #endif /* defined(__EfficientGraphBasedImageSegmentation__EGBS__) */

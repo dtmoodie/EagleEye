@@ -1,7 +1,7 @@
 
 #include "EagleLib/utilities/CudaCallbacks.hpp"
 #include "UI/InterThread.hpp"
-#include "plotters/Plotter.h"
+#include "EagleLib/plotters/Plotter.h"
 #include "qcustomplot.h"
 #include "Remotery.h"
 #include <EagleLib/Project_defs.hpp>

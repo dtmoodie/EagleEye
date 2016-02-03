@@ -364,13 +364,24 @@ ObjectManager::setupModule(IPerModuleInterface* pPerModuleInterface)
 	if (constructors.size())
 	{
 		projectId = constructors[0]->GetProjectId();
+#ifdef BUILD_DIR
 #ifdef _DEBUG
+
 		addLinkDir(BUILD_DIR "/Debug", projectId);
 #else
 		addLinkDir(BUILD_DIR "/RelWithDebInfo", projectId);
 #endif
+#endif
+        if(build_dir.size())
+        {
+            addLinkDir(build_dir, projectId);
+        }
 	}
 	m_pRuntimeObjectSystem->SetupObjectConstructors(pPerModuleInterface);
+}
+void ObjectManager::set_build_directory(const std::string& build_directory)
+{
+    build_dir = build_directory;
 }
 void ObjectManager::addSourceFile(const std::string &file)
 {

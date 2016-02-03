@@ -3,7 +3,7 @@
 #include "cuda_runtime.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
 #include <thrust/transform.h>
-#include "Thrust_interop.hpp"
+#include "EagleLib/Thrust_interop.hpp"
 #include "thrust/system/cuda/execution_policy.h"
 
 template<typename T1, typename T2>

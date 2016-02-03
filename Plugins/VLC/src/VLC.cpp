@@ -1,7 +1,8 @@
 #include "VLC.h"
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 // callbacks for vlc
 
 SETUP_PROJECT_IMPL

@@ -2,8 +2,7 @@
 
 
 #include "vlc/vlc.h"
-#include <nodes/Node.h>
-#include <Manager.h>
+#include <EagleLib/nodes/Node.h>
 #include <EagleLib/Project_defs.hpp>
 #if defined( PROJECT_INCLUDES_) && !defined(PROJECT_INCLUDES)
 #define PROJECT_INCLUDES PROJECT_INCLUDES_
@@ -43,6 +42,9 @@ SETUP_PROJECT_DEF
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
+    
 	class vlcCamera : public Node
 	{
 		
@@ -60,6 +62,7 @@ namespace EagleLib
 		ConstBuffer<cv::cuda::GpuMat> d_dest;
 		concurrent_queue<cv::cuda::HostMem*> imgQueue;
 	};
+    }
 }
 /*
 https://forum.videolan.org/viewtopic.php?t=87031
