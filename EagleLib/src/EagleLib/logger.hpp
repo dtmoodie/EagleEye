@@ -2,9 +2,11 @@
 
 
 #include <boost/log/sinks/basic_sink_backend.hpp>
-#include <boost/function.hpp>
 #include <EagleLib/Defs.hpp>
 #include <boost/log/trivial.hpp>
+#include "ObjectInterface.h"
+#include "EagleLib/Signals.h"
+
 namespace EagleLib
 {
     namespace Nodes
@@ -16,20 +18,19 @@ namespace EagleLib
 	
     class EAGLE_EXPORTS ui_collector : public boost::log::sinks::basic_formatted_sink_backend<char, boost::log::sinks::concurrent_feeding>
 	{
-		boost::function<void(Nodes::Node*, const std::string&)> node_callback;
-		boost::function<void(const std::string&)> generic_callback;
-
+        typedef std::function<void(boost::log::trivial::severity_level, std::string, std::string)> object_log_handler_t;
+        typedef std::function<void(boost::log::trivial::severity_level, std::string)> log_handler_t;
+        object_log_handler_t object_log_handler;
+        log_handler_t log_handler;
 	public:
-		ui_collector(boost::function<void(Nodes::Node*, const std::string&)> nc = boost::function<void(Nodes::Node*, const std::string&)>(), boost::function<void(const std::string&)> gc = boost::function<void(const std::string&)>());
+		ui_collector(object_log_handler_t olh = object_log_handler_t(), log_handler_t lh = log_handler_t());
 		
 		void consume(boost::log::record_view const& rec, string_type const& command_line);
-        void setNodeCallback(boost::function<void(Nodes::Node*, const std::string&)> nc);
-        void setGenericCallback(boost::function<void(const std::string&)> gc);
-        static size_t addNodeCallbackHandler(Nodes::Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler);
-        static size_t addGenericCallbackHandler(const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler);
-		static void removeNodeCallbackHandler(EagleLib::Nodes::Node* node, size_t id);
-		static void clearGenericCallbackHandlers();
-        static void setNode(EagleLib::Nodes::Node* node);
-		static EagleLib::Nodes::Node* getNode();
+
+        static Signals::signal<void(boost::log::trivial::severity_level, std::string)>&                 get_object_log_handler(std::string);
+        static Signals::signal<void(boost::log::trivial::severity_level, std::string, std::string)>&    get_object_log_handler();
+        static Signals::signal<void(boost::log::trivial::severity_level, std::string)>&                 get_log_handler();
+
+        static void set_node_name(std::string name);
 	};
 }

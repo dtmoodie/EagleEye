@@ -1,7 +1,7 @@
 #include "nodes/IO/ImageWriter.h"
 #include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
 #include "../remotery/lib/Remotery.h"
-
+#include "EagleLib/utilities/CudaCallbacks.hpp"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -94,5 +94,49 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     ++frameSkip;
     return img; 
 }
-
+void ImageWriter::doProcess(TS<SyncedMemory> &img, cv::cuda::Stream &stream)
+{
+    if (parameters[0]->changed)
+    {
+        std::string& tmp = *getParameter<std::string>(0)->Data();
+        if (tmp.size())
+            baseName = tmp;
+        else
+        {
+            NODE_LOG(warning) << "Empty base name passed in";
+        }
+    }
+    if (parameters[1]->changed || extension.size() == 0)
+    {
+        Extensions ext = (Extensions)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
+        switch (ext)
+        {
+        case jpg:
+            extension = ".jpg";
+            break;
+        case png:
+            extension = ".png";
+            break;
+        case tiff:
+            extension = ".tif";
+            break;
+        case bmp:
+            extension = ".bmp";
+            break;
+        default:
+            extension = ".jpg";
+            break;
+        }
+    }
+    auto mat = img.GetMat(stream);
+    int freq = *getParameter<int>(2)->Data();
+    if ((writeRequested || (frameSkip >= freq && freq != -1)) && baseName.size() && extension.size())
+    {
+        cuda::enqueue_callback_async([mat, this]()->void
+        {
+            cv::imwrite(baseName + "-" + boost::lexical_cast<std::string>(frameCount++) + extension, mat);
+        }, stream);
+    }
+    ++frameSkip;
+}
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ImageWriter, Image, Sink)

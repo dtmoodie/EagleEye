@@ -91,7 +91,7 @@ private:
     //std::vector<boost::shared_ptr<IQNodeInterop>> interops;
     QNodeWidget* parentWidget;
     std::vector<QNodeWidget*> childWidgets;
-	size_t node_log_handler_id;
+    std::shared_ptr<Signals::connection> log_connection;
 };
 
 class CV_EXPORTS DataStreamWidget: public QWidget

@@ -60,7 +60,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	EagleLib::CpuDelayedDeallocationPool::instance()->deallocation_delay = 1000;
 	
 	EagleLib::SetupLogging();
-	EagleLib::ui_collector::addGenericCallbackHandler(boost::bind(&MainWindow::process_log_message, this, _1, _2));
+	//EagleLib::ui_collector::addGenericCallbackHandler(boost::bind(&MainWindow::process_log_message, this, _1, _2));
+    logging_connection = EagleLib::ui_collector::get_log_handler().connect(std::bind(&MainWindow::process_log_message, this, std::placeholders::_1, std::placeholders::_2));
 	
 
     qRegisterMetaType<std::string>("std::string");
@@ -201,7 +202,7 @@ MainWindow::~MainWindow()
 {
 	stopProcessingThread();
 	cv::destroyAllWindows();
-	EagleLib::ui_collector::clearGenericCallbackHandlers();
+	//EagleLib::ui_collector::clearGenericCallbackHandlers();
 	EagleLib::ShutdownLogging();
 //    user_interface_persistence::variable_storage::instance().save_parameters();
     delete ui;
@@ -760,7 +761,7 @@ void MainWindow::processThread()
     }
     BOOST_LOG_TRIVIAL(info) << "Interrupt requested, processing thread ended";
 }
-void MainWindow::process_log_message(boost::log::trivial::severity_level severity, const std::string& message)
+void MainWindow::process_log_message(boost::log::trivial::severity_level severity, std::string message)
 {
 	emit eLog(QString::fromStdString(message));
 	//ui->console->appendPlainText();

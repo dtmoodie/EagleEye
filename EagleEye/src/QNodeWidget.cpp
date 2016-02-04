@@ -183,7 +183,8 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
 			}
 			
 		}
-		node_log_handler_id = EagleLib::ui_collector::addNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
+        log_connection = EagleLib::ui_collector::get_object_log_handler(node->getFullTreeName()).connect(std::bind(&QNodeWidget::on_logReceive, this, std::placeholders::_1, std::placeholders::_2));
+		//EagleLib::ui_collector::addNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
 	}
 }
 bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
@@ -343,7 +344,7 @@ void QNodeWidget::on_logReceive(boost::log::trivial::severity_level verb, const 
 
 QNodeWidget::~QNodeWidget()
 {
-	EagleLib::ui_collector::removeNodeCallbackHandler(node.get(), node_log_handler_id);
+	//EagleLib::ui_collector::removeNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
 }
 
 void QNodeWidget::on_enableClicked(bool state)

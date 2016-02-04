@@ -172,7 +172,7 @@ namespace EagleLib
          * @return output image
          */
         virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-		
+		virtual void                    doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
 		virtual void					reset();
 
         virtual Parameters::Parameter* addParameter(Parameters::Parameter::Ptr param);

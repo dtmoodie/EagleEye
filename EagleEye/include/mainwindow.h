@@ -17,6 +17,7 @@
 
 #include "plotwizarddialog.h"
 #include <QtGui/qopenglcontext.h>
+#include <Signals/connection.h>
 
 namespace EagleLib
 {
@@ -43,7 +44,7 @@ public:
     void onCompileLog(const std::string& msg, int level);
     virtual void closeEvent(QCloseEvent *event);
     void processingThread_uiCallback(boost::function<void(void)> f, std::pair<void*, Loki::TypeInfo> source);
-	void process_log_message(boost::log::trivial::severity_level severity, const std::string& message);
+	void process_log_message(boost::log::trivial::severity_level severity, std::string message);
 private slots:
     void on_pushButton_clicked();
     void onTimeout();
@@ -127,6 +128,7 @@ private:
     std::shared_ptr<Signals::connection>                new_parameter_connection;
     std::shared_ptr<Signals::connection>                dirty_flag_connection;
     std::vector<std::shared_ptr<EagleLib::DataStream>>  data_streams;
+    std::shared_ptr<Signals::connection>                logging_connection;
     /*inline void sig_StartThreads() 
     { 
         static auto registerer = EagleLib::register_sender<void(void), -1>(this, "StartThreads"); 

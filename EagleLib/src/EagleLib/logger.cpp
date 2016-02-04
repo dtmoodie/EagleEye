@@ -19,70 +19,100 @@
 
 using namespace EagleLib;
 
-std::map < ObjectId, std::vector < boost::function<void(boost::log::trivial::severity_level, const std::string&)>>> nodeHandlers;
-std::vector<boost::function<void(boost::log::trivial::severity_level, const std::string&)>> genericHandlers;
+boost::log::attributes::mutable_constant<std::string>    attr(std::string(""));
 
-boost::log::attributes::mutable_constant<EagleLib::Nodes::Node*> attr(nullptr);
-BOOST_LOG_ATTRIBUTE_KEYWORD(NodePtr, "NodePtr", EagleLib::Nodes::Node*);
+BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName,"NodeName",std::string);
 
-ui_collector::ui_collector(boost::function<void(Nodes::Node*, const std::string&)> nc, boost::function<void(const std::string&)> gc)
+std::map<std::string, std::shared_ptr<Signals::signal<void(boost::log::trivial::severity_level, std::string)>>> object_specific_signals;
+Signals::signal<void(boost::log::trivial::severity_level, std::string)>                                         generic_signal;
+Signals::signal<void(boost::log::trivial::severity_level, std::string, std::string)>                            object_signal;
+
+ui_collector::ui_collector(object_log_handler_t olh, log_handler_t lh)
 {
-    node_callback = nc;
-    generic_callback = gc;
-    boost::log::core::get()->add_thread_attribute("NodePtr", attr);
+    object_log_handler = olh;
+    log_handler = lh;
+    boost::log::core::get()->add_thread_attribute("NodeName", attr);
 }
 void ui_collector::consume(boost::log::record_view const& rec, string_type const& message)
 {
     auto severity = rec.attribute_values()[boost::log::aux::default_attribute_names::severity()].extract<boost::log::trivial::severity_level>();
-    int count = rec.attribute_values().count("NodePtr");
-	if (count)
+    
+	if (rec.attribute_values().count("NodeName"))
 	{
-        //auto node = rec.attribute_values()[NodePtr].get();
-        auto node = rec.attribute_values()[NodePtr].get();
-        if (node != nullptr)
+        auto name = rec.attribute_values()[NodeName].get();
+        if(name.size())
         {
-            auto& handlers = nodeHandlers[node->GetObjectId()];
-            for (auto handler : handlers)
+            auto itr = object_specific_signals.find(name);
+            if(itr->second)
             {
-                handler(severity.get(), message);
+                (*itr->second)(severity.get(), message);
             }
-			return;
+            object_signal(severity.get(), name, message);
+            return;
 		}
 	}
-	for (auto handler : genericHandlers)
-	{
-		handler(severity.get(), message);
-	}
+    generic_signal(severity.get(), message);
 }
-size_t ui_collector::addNodeCallbackHandler(Nodes::Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
+
+
+Signals::signal<void(boost::log::trivial::severity_level, std::string)>& ui_collector::get_object_log_handler(std::string name)
+{
+    auto& sig = object_specific_signals[name];
+    if(!sig)
+        sig.reset(new Signals::signal<void(boost::log::trivial::severity_level, std::string)>());
+    return (*sig);
+}
+Signals::signal<void(boost::log::trivial::severity_level, std::string, std::string)>& ui_collector::get_object_log_handler()
+{
+    return object_signal;
+}
+Signals::signal<void(boost::log::trivial::severity_level, std::string)>& ui_collector::get_log_handler()
+{
+    return generic_signal;
+}
+
+void ui_collector::set_node_name(std::string name)
+{
+    attr.set(name);
+}
+
+/*
+void ui_collector::addNodeCallbackHandler(Nodes::Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
 {
     nodeHandlers[node->GetObjectId()].push_back(handler);
-	return nodeHandlers[node->GetObjectId()].size() - 1;
 }
-void ui_collector::removeNodeCallbackHandler(Nodes::Node* node, size_t id)
+void ui_collector::removeNodeCallbackHandler(Nodes::Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
 {
-	auto& handlers = nodeHandlers[node->GetObjectId()];
-	handlers.erase(handlers.begin() + id);
-	if (handlers.empty())
-	{
-		auto itr = nodeHandlers.find(node->GetObjectId());
-		nodeHandlers.erase(itr);
-	}
+    auto& handlers = nodeHandlers[node->GetObjectId()];
+    auto itr = std::find(handlers.begin(), handlers.end(), handler);
+    if (itr != handlers.end())
+        handlers.erase(itr);
 }
 size_t ui_collector::addGenericCallbackHandler(const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
 {
     genericHandlers.push_back(handler);
-	return genericHandlers.size() - 1;
+    return genericHandlers.size() - 1;
 }
 void ui_collector::clearGenericCallbackHandlers()
 {
-	genericHandlers.clear();
+    genericHandlers.clear();
 }
 void ui_collector::setNode(EagleLib::Nodes::Node* node)
 {
     attr.set(node);
+
+    object_id_attribute.set(node->GetObjectId().m_PerTypeId);
+    constructor_id_attribute.set(node->GetObjectId().m_ConstructorId);
 }
 EagleLib::Nodes::Node* ui_collector::getNode()
 {
-	return attr.get();
+    return attr.get();
 }
+ObjectId ui_collector::getId()
+{
+    ObjectId output;
+    output.m_ConstructorId = constructor_id_attribute.get();
+    output.m_PerTypeId = object_id_attribute.get();
+    return output;
+}
+*/

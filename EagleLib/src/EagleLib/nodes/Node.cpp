@@ -493,7 +493,8 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 	
     if(boost::this_thread::interruption_requested())
         return img;
-    ui_collector::setNode(this);
+    //ui_collector::setNode(this);
+    ui_collector::set_node_name(getFullTreeName());
     
     if(img.empty() && SkipEmpty())
     {
@@ -563,25 +564,84 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 			}
 			else
 			{
-                ui_collector::setNode(this);
+                ui_collector::set_node_name(getFullTreeName());
 				NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
 			}
 		}
-        ui_collector::setNode(this);
+        ui_collector::set_node_name(getFullTreeName());
 		// So here is the debate of is a node's output the output of it, or the output of its children....
 		// img = childResults;
     }CATCH_MACRO;
-    ui_collector::setNode(nullptr);
+    ui_collector::set_node_name("");
 	
     return img;
 }
 void Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 {
-	input.GetGpuMatMutable(stream) = process(input.GetGpuMatMutable(stream), stream);
+    if(pre_check(input))
+    {
+        if (boost::this_thread::interruption_requested())
+            return;
+        ui_collector::set_node_name(getFullTreeName());
+        try
+        {
+                ClearProcessingTime();
+                boost::recursive_mutex::scoped_lock lock(mtx);
+                auto allocator = dynamic_cast<PitchedAllocator*>(cv::cuda::GpuMat::defaultAllocator());
+                if (allocator)
+                {
+                    allocator->SetScope(this->getTreeName());
+                }
+
+                // Do I lock each parameters mutex or do I just lock each node?
+                // I should only lock each node, but then I need to make sure the UI keeps track of the node
+                // to access the node's mutex while accessing a parameter, for now this works though.
+                /*std::vector<boost::recursive_mutex::scoped_lock> locks;
+                for (size_t i = 0; i < parameters.size(); ++i)
+                {
+                locks.push_back(boost::recursive_mutex::scoped_lock(parameters[i]->mtx));
+                }*/
+                TIME
+                _rmt_BeginCPUSample(fullTreeName.c_str(), &rmt_hash);
+                _rmt_BeginCUDASample(fullTreeName.c_str(), &rmt_cuda_hash, cv::cuda::StreamAccessor::getStream(stream));
+                doProcess(input, stream);
+                rmt_EndCPUSample();
+                rmt_EndCUDASample(cv::cuda::StreamAccessor::getStream(stream));
+                EndProcessingTime();
+        }CATCH_MACRO
+        try
+        {
+            if (children.size() == 0)
+                return;
+            std::vector<Node::Ptr>  children_;
+            {
+                // Prevents adding of children while running, debatable how much this is needed
+                boost::recursive_mutex::scoped_lock lock(mtx);
+                children_ = children;
+            }
+            for (size_t i = 0; i < children_.size(); ++i)
+            {
+                if (children_[i] != nullptr)
+                {
+                    try
+                    {
+                        children_[i]->process(input, stream);
+                    }CATCH_MACRO
+                }
+                else
+                {
+                    ui_collector::set_node_name(getFullTreeName());
+                    NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
+                }
+            }
+            ui_collector::set_node_name(getFullTreeName());
+        }CATCH_MACRO;
+        ui_collector::set_node_name("");
+    }	
 }
 bool Node::pre_check(const TS<SyncedMemory>& input)
 {
-    return !input.empty();
+    return !input.empty() && enabled;
 }
 void Node::SetDataStream(DataStream* stream_)
 {
@@ -618,8 +678,11 @@ DataStream* Node::GetDataStream()
 cv::cuda::GpuMat
 Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )
 {
-	NODE_LOG(trace);
     return img;
+}
+void Node::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
+{
+    input.GetGpuMatMutable(stream) = doProcess(input.GetGpuMatMutable(stream), stream);
 }
 
 
@@ -692,7 +755,7 @@ Node::swap(Node* other)
 void
 Node::Init(bool firstInit)
 {
-    ui_collector::setNode(this);
+    ui_collector::set_node_name(getFullTreeName());
 	NODE_LOG(trace);
     IObject::Init(firstInit);
 	if (!firstInit)
@@ -708,7 +771,7 @@ Node::Init(bool firstInit)
 void
 Node::Init(const std::string &configFile)
 {
-    ui_collector::setNode(this);
+    ui_collector::set_node_name(getFullTreeName());
 	NODE_LOG(trace);
 }
 /*void Node::RegisterParameterCallback(int idx, boost::function<void(cv::cuda::Stream*)> callback)
@@ -745,7 +808,7 @@ void Node::RegisterSignalConnection(std::shared_ptr<Signals::connection> connect
 void
 Node::Init(const cv::FileNode& configNode)
 {
-    ui_collector::setNode(this);
+    ui_collector::set_node_name(getFullTreeName());
 	NODE_LOG(trace) << " Initializing from file";
     //configNode["NodeName"] >> nodeName;
     configNode["NodeTreeName"] >> treeName;
@@ -763,7 +826,7 @@ Node::Init(const cv::FileNode& configNode)
 		{
 			addChild(node);
 			node->Init(childNode);
-            ui_collector::setNode(this);
+            ui_collector::set_node_name(getFullTreeName());
 		}
 		else
 		{
