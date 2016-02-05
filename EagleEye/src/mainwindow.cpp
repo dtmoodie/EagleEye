@@ -3,7 +3,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <../remotery/lib/Remotery.h>
-
+#include "FileOrFolderDialog.h"
 #include <qfiledialog.h>
 #include <qgraphicsproxywidget.h>
 #include "QGLWidget"
@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
     
     
 	
-    cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
+    //cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
 
 	EagleLib::CpuDelayedDeallocationPool::instance()->deallocation_delay = 1000;
 	
@@ -398,12 +398,13 @@ void MainWindow::onLoadPluginClicked()
 
 void MainWindow::onLoadFileClicked()
 {
-    QString filename = QFileDialog::getOpenFileName(this, "Select file", QString());
-    if(filename.size() == 0)
+    FileDialog dlg(this);
+    dlg.exec();
+    if(dlg.selected().size() != 1)
         return;
-    filename = QDir::toNativeSeparators(filename);
-    load_file(filename);
     
+    QString filename = QDir::toNativeSeparators(dlg.selected().at(0));
+    load_file(filename);    
 }
 void MainWindow::load_file(QString filename)
 {

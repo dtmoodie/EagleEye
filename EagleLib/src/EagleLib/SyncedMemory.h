@@ -37,6 +37,8 @@ namespace EagleLib
 	public:
 		SyncedMemory();
         SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat);
+        SyncedMemory(const cv::Mat& h_mat);
+        SyncedMemory(const cv::cuda::GpuMat& d_mat);
         SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat);
 		SyncedMemory(cv::MatAllocator* cpu_allocator, cv::cuda::GpuMat::Allocator* gpu_allocator);
         SyncedMemory clone(cv::cuda::Stream& stream);
