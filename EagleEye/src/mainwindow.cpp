@@ -13,8 +13,9 @@
 #include "dialog_network_stream_selection.h"
 #include <QNodeWidget.h>
 
-#include <gl/GL.h>
-#include <gl/GLU.h>
+
+//#include <GL/gl.h>
+//#include <GL/glu.h>
 
 #include <UI/InterThread.hpp>
 

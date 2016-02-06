@@ -223,23 +223,30 @@ SOURCE_GROUP("Header Files\\External" FILES ${ext_inc})
 
 TARGET_LINK_LIBRARIES(EagleLib
         ${OpenCV_LIBS}
-        RuntimeCompiler
-        RuntimeObjectSystem
-		pplx
+        pplx
         libParameter
         ${Parameters_LIBRARIES}
-		${CUDA_CUDA_LIBRARY}
-		${CUDA_CUDART_LIBRARY}
-		OpenGL32
-		Qt5::OpenGL
-		signals
+        ${CUDA_CUDA_LIBRARY}
+        ${CUDA_CUDART_LIBRARY}
+        Qt5::OpenGL
+        signals
+        RuntimeObjectSystem
+        RuntimeCompiler
 )
+if(WIN32)
+    target_link_libraries(EagleLib OpenGL32)
+else(WIN32)
+  if(UNIX)
+    target_link_libraries(EagleLib GL GLU)
+  endif(UNIX)
+endif(WIN32)
+
 ADD_DEPENDENCIES(EagleLib
-	RuntimeCompiler
-	RuntimeObjectSystem
 	libParameter
 	pplx
 	signals
+        RuntimeObjectSystem
+        RuntimeCompiler
 	)
 
 install(TARGETS EagleLib

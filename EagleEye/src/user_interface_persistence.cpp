@@ -60,7 +60,8 @@ void user_interface_persistence::variable_storage::load_parameters(const std::st
             auto& param_vec = loaded_parameters[type];
             for (auto itr2 = parameter_node.begin(); itr2 != parameter_node.end(); ++itr2)
             {
-                auto param = Parameters::Persistence::cv::DeSerialize(&(*itr2));
+                auto node = *itr2;
+                auto param = Parameters::Persistence::cv::DeSerialize(&node);
                 if (param)
                 {
                     param_vec[param->GetName()] = Parameters::Parameter::Ptr(param);

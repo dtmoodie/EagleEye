@@ -69,14 +69,20 @@ IF(Qt5_FOUND)
 	QT5_WRAP_CPP(MOC ${headers})
 
 	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+        SET(executable_name "")
+        if(WIN32)
+            set(executable_name "EagleEye")
+        else(WIN32)
+            set(executable_name "EagleEye")
+        endif(WIN32)
 
-	ADD_EXECUTABLE(EagleEye
-			${sources}
-			${MOC}
-			${headers_moc}
-			${headers}
-			${UIS}
-	)
+        ADD_EXECUTABLE(${executable_name}
+                        ${sources}
+                        ${MOC}
+                        ${headers_moc}
+                        ${headers}
+                        ${UIS}
+        )
 	IF(WIN32)
 		FIND_PACKAGE(GstreamerWindows)
 		MACRO(APPEND_BIN_DIR ARG1 ARG2)
@@ -163,7 +169,7 @@ IF(Qt5_FOUND)
 		CONFIGURE_FILE(EagleEye.vcxproj.user.in ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
 	ENDIF(WIN32)
 	ADD_DEFINITIONS(-DBUILD_DIR="${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-	add_dependencies(EagleEye EagleLib frame_grabbers Core)
+        add_dependencies(${executable_name} EagleLib frame_grabbers Core)
 	GET_TARGET_PROPERTY(LIB_DIR_RELEASE EagleLib IMPORTED_LINK_DEPENDENT_LIBRARIES)
 
 	LINK_DIRECTORIES(${LINK_DIRS})
@@ -184,7 +190,7 @@ IF(Qt5_FOUND)
   
 	")
  
-	TARGET_LINK_LIBRARIES(EagleEye
+        TARGET_LINK_LIBRARIES(${executable_name}
 			Qt5::Gui
 			Qt5::Widgets
 			Qt5::Core
@@ -195,7 +201,7 @@ IF(Qt5_FOUND)
 			${OpenCV_LIBS} 
 	)
 	if(UNIX)
-		TARGET_LINK_LIBRARIES(EagleEye dl)
+                TARGET_LINK_LIBRARIES(${executable_name} dl)
 	endif()
 
 ENDIF(Qt5_FOUND)

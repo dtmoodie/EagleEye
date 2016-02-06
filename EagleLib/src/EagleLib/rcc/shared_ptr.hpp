@@ -1,5 +1,6 @@
 #pragma once
 #include "IObjectNotifiable.h"
+#include "IObject.h"
 #include <cassert>
 /**
 *  The RCC_shared_ptr class is similar to boost::shared_ptr except that it auto updates the ptr when

@@ -1,4 +1,5 @@
 #pragma once
+#include <opencv2/core.hpp>
 #include "EagleLib/Defs.hpp"
 #include "IObject.h"
 #include "Parameter.hpp"

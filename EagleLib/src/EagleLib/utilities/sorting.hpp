@@ -14,11 +14,11 @@ template<typename T> std::vector<size_t> sort_index_ascending(const std::vector<
 {
     std::vector<size_t> indecies;
     indecies.resize(value.size());
-    for(size_t i = 0; i < values.size(); ++i)
+    for(size_t i = 0; i < value.size(); ++i)
     {
         indecies[i] = i;
     }
-    std::sort(indecies.begin(), indecies.end(), [&values](size_t i1, size_t i2){ return value[i1] < value[i2];});
+    std::sort(indecies.begin(), indecies.end(), [&value](size_t i1, size_t i2){ return value[i1] < value[i2];});
     return indecies;
 }
 
