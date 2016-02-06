@@ -8,6 +8,39 @@
 #include "EagleLib/Logging.h"
 #include "Remotery.h"
 using namespace EagleLib;
+
+#define CATCH_MACRO                                                         \
+    catch (boost::thread_resource_error& err)                               \
+{                                                                           \
+    LOG(error) << err.what();                                          \
+}                                                                           \
+catch (boost::thread_interrupted& err)                                      \
+{                                                                           \
+    LOG(error) << "Thread interrupted";                                \
+    /* Needs to pass this back up to the chain to the processing thread.*/  \
+    /* That way it knowns it needs to exit this thread */                   \
+    throw err;                                                              \
+}                                                                           \
+catch (boost::thread_exception& err)                                        \
+{                                                                           \
+    LOG(error) << err.what();                                          \
+}                                                                           \
+    catch (cv::Exception &err)                                              \
+{                                                                           \
+    LOG(error) << err.what();                                          \
+}                                                                           \
+    catch (boost::exception &err)                                           \
+{                                                                           \
+    LOG(error) << "Boost error";                                       \
+}                                                                           \
+catch (std::exception &err)                                                 \
+{                                                                           \
+    LOG(error) << err.what();										    \
+}                                                                           \
+catch (...)                                                                 \
+{                                                                           \
+    LOG(error) << "Unknown exception";                                 \
+}
 // **********************************************************************
 //              DataStream
 // **********************************************************************
@@ -118,6 +151,7 @@ bool DataStream::LoadDocument(const std::string& document)
         auto fg = shared_ptr<IFrameGrabber>(valid_frame_grabbers[idx[i]]->Construct());
         auto fg_info = static_cast<FrameGrabberInfo*>(valid_frame_grabbers[idx[i]]->GetObjectInfo());
         fg->InitializeFrameGrabber(this);
+        fg->Init(true);
         //std::promise<bool> promise;
         struct thread_load_object
         {
@@ -261,6 +295,12 @@ void DataStream::process()
                 dirty_flag = true;
             }), this, stream_id);
 
+    auto object_update_connection = signal_manager->Connect<void(ParameteredObject*)>("ObjectUpdated",
+        std::bind([this](ParameteredObject*)->void
+            {
+                dirty_flag = true;
+            }, std::placeholders::_1), this, -1);
+
     while(!boost::this_thread::interruption_requested())
     {
         if(!paused)
@@ -275,9 +315,12 @@ void DataStream::process()
                     TS<SyncedMemory> current_frame;
                     std::vector<shared_ptr<Nodes::Node>> current_nodes;
                     {
-                        std::lock_guard<std::mutex> lock(nodes_mtx);
-                        current_frame = frame_grabber->GetNextFrame(streams[iteration_count % 2]);
-                        current_nodes = top_level_nodes;
+                        try
+                        {
+                            std::lock_guard<std::mutex> lock(nodes_mtx);
+                            current_frame = frame_grabber->GetNextFrame(streams[iteration_count % 2]);
+                            current_nodes = top_level_nodes;
+                        }CATCH_MACRO
                     }
                     for (auto& node : current_nodes)
                     {

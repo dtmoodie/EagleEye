@@ -14,7 +14,7 @@
 #include <vector>
 #include <boost/thread.hpp>
 #include "rccsettingsdialog.h"
-
+#include "user_interface_persistence.h"
 #include "plotwizarddialog.h"
 #include <QtGui/qopenglcontext.h>
 #include <Signals/connection.h>
@@ -32,7 +32,7 @@ namespace Signals
 {
     class connection;
 }
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, public user_interface_persistence
 {
     Q_OBJECT
 
@@ -129,6 +129,7 @@ private:
     std::shared_ptr<Signals::connection>                dirty_flag_connection;
     std::vector<std::shared_ptr<EagleLib::DataStream>>  data_streams;
     std::shared_ptr<Signals::connection>                logging_connection;
+    std::string file_load_path;
     /*inline void sig_StartThreads() 
     { 
         static auto registerer = EagleLib::register_sender<void(void), -1>(this, "StartThreads"); 

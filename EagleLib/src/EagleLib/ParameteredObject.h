@@ -9,6 +9,17 @@
 #include "type.h"
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/lexical_cast.hpp>
+
+#ifdef _MSC_VER
+    #ifdef _DEBUG
+        RUNTIME_COMPILER_LINKLIBRARY("libParameterd.lib")
+    #else
+        RUNTIME_COMPILER_LINKLIBRARY("libParameter.lib")
+    #endif
+#else
+
+#endif
+
 namespace EagleLib
 {
     struct ParameteredObjectImpl; // Private implementation stuffs

@@ -1,13 +1,14 @@
 #include "FileOrFolderDialog.h"
 #include <qpushbutton.h>
 
-FileDialog::FileDialog(QWidget *parent)
-    : QFileDialog(parent)
+FileDialog::FileDialog(QWidget *parent, QString title, QString dir)
+    : QFileDialog(parent, title, dir)
 {
     setOption(QFileDialog::DontUseNativeDialog);
     setFileMode(QFileDialog::Directory);
     // setFileMode(QFileDialog::ExistingFiles);
-    for (auto *pushButton : findChildren<QPushButton*>()) {
+    for (auto *pushButton : findChildren<QPushButton*>()) 
+    {
         if (pushButton->text() == "&Open" || pushButton->text() == "&Choose") {
             openButton = pushButton;
             break;

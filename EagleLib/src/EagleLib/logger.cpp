@@ -43,9 +43,12 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
         if(name.size())
         {
             auto itr = object_specific_signals.find(name);
-            if(itr->second)
+            if(itr != object_specific_signals.end())
             {
-                (*itr->second)(severity.get(), message);
+                if (itr->second)
+                {
+                    (*itr->second)(severity.get(), message);
+                }
             }
             object_signal(severity.get(), name, message);
             return;

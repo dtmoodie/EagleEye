@@ -42,14 +42,10 @@ cv::cuda::GpuMat ImageLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream&
     {
         load();
         parameters[0]->changed = false;
+        updateParameter("Loaded image", d_img, &stream);
     }
     TIME
-	if (!d_img.empty())
-    {
-        TIME
-        d_img.copyTo(img,stream);
-        TIME
-    }
+	
     return img;
 }
 

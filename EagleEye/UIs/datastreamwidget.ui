@@ -32,6 +32,9 @@
      </item>
     </layout>
    </item>
+   <item row="1" column="0">
+    <layout class="QGridLayout" name="parameter_layout"/>
+   </item>
   </layout>
  </widget>
  <resources/>

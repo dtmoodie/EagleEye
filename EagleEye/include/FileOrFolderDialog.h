@@ -6,7 +6,7 @@ class FileDialog : public QFileDialog
 {
     Q_OBJECT
 public:
-    explicit FileDialog(QWidget *parent = Q_NULLPTR);
+    explicit FileDialog(QWidget *parent = Q_NULLPTR, QString title = QString(), QString dir = QString());
 
     QStringList selected() const;
 

@@ -2,6 +2,8 @@
 #include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
 #include "../remotery/lib/Remotery.h"
 #include "EagleLib/utilities/CudaCallbacks.hpp"
+#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -47,7 +49,12 @@ void ImageWriter::Init(bool firstInit)
     updateParameter("Extension", param);
     updateParameter("Frequency", -1);
     updateParameter<boost::function<void(void)>>("Save image", boost::bind(&ImageWriter::requestWrite, this))->type = Parameters::Parameter::Output;
-	updateParameter<Parameters::WriteDirectory>("Save Diretory", Parameters::WriteDirectory(""));
+	updateParameter<Parameters::WriteDirectory>("Save Directory", Parameters::WriteDirectory("F:/temp"));
+    if(firstInit)
+    {
+        addInputParameter<cv::cuda::GpuMat>("Input image device");
+        addInputParameter<cv::Mat>("Input image host");
+    }
 }
 
 cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
@@ -96,6 +103,9 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 }
 void ImageWriter::doProcess(TS<SyncedMemory> &img, cv::cuda::Stream &stream)
 {
+    std::string dir = getParameter<Parameters::WriteDirectory>("Save Directory")->Data()->string();
+    if(dir.empty())
+        dir = ".";
     if (parameters[0]->changed)
     {
         std::string& tmp = *getParameter<std::string>(0)->Data();
@@ -128,13 +138,40 @@ void ImageWriter::doProcess(TS<SyncedMemory> &img, cv::cuda::Stream &stream)
             break;
         }
     }
-    auto mat = img.GetMat(stream);
-    int freq = *getParameter<int>(2)->Data();
-    if ((writeRequested || (frameSkip >= freq && freq != -1)) && baseName.size() && extension.size())
+    cv::Mat mat;
+    if(auto gpu_input_ptr = getParameter<cv::cuda::GpuMat>("Input image device")->Data())
     {
-        cuda::enqueue_callback_async([mat, this]()->void
+        //if(gpu_input_ptr->depth() != CV_8U)
+        if(gpu_input_ptr->depth() != CV_8UC1 && gpu_input_ptr->channels() == 1)
         {
-            cv::imwrite(baseName + "-" + boost::lexical_cast<std::string>(frameCount++) + extension, mat);
+            cv::cuda::GpuMat normalized;
+            cv::cuda::normalize(*gpu_input_ptr,normalized, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::noArray(), stream);
+            normalized.download(mat, stream);
+        }else
+        {
+            gpu_input_ptr->download(mat, stream);
+        }
+            
+        
+    }else
+    {
+        if(auto cpu_input_ptr = getParameter<cv::Mat>("Input image host")->Data())
+        {
+            mat = *cpu_input_ptr;
+        }else
+        {
+            mat = img.GetMat(stream);
+        }
+    }
+    
+    int freq = *getParameter<int>(2)->Data();
+    if ((writeRequested || (frameSkip >= freq) || freq == -1) && baseName.size() && extension.size())
+    {
+        cuda::enqueue_callback_async([mat, this, dir]()->void
+        {
+            std::stringstream ss;
+            ss << std::setfill('0') << std::setw(4) << frameCount++;
+            cv::imwrite( dir + "/" + baseName + "-" + ss.str() + extension, mat);
         }, stream);
     }
     ++frameSkip;

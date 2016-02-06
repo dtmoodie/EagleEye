@@ -118,7 +118,6 @@ void DraggableLabel::dragMoveEvent(QDragMoveEvent* event)
     return;
 }
 
-
 QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
     mainWindow(parent),
     ui(new Ui::QNodeWidget()),
@@ -181,7 +180,6 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
 					ui->gridLayout->addWidget(widget, i + 7, col, 1,1);
 				}
 			}
-			
 		}
         log_connection = EagleLib::ui_collector::get_object_log_handler(node->getFullTreeName()).connect(std::bind(&QNodeWidget::on_logReceive, this, std::placeholders::_1, std::placeholders::_2));
 		//EagleLib::ui_collector::addNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
@@ -382,6 +380,36 @@ DataStreamWidget::DataStreamWidget(QWidget* parent, EagleLib::DataStream::Ptr st
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     ui->lbl_loaded_document->setText(QString::fromStdString(stream->GetFrameGrabber()->GetSourceFilename()));
     ui->lbl_stream_id->setText(QString::number(stream->get_stream_id()));
+    update_ui();
+}
+void DataStreamWidget::update_ui()
+{
+    auto fg = _dataStream->GetFrameGrabber();
+    if (fg != nullptr)
+    {
+        auto& parameters = fg->parameters;
+        for (int i = 0; i < parameters.size(); ++i)
+        {
+            int col = 0;
+            if (parameters[i]->type & Parameters::Parameter::Input)
+            {
+                
+            }
+
+            if (parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::State || parameters[i]->type & Parameters::Parameter::Output)
+            {
+                auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(parameters[i]);
+                if (interop)
+                {
+                    parameterProxies.push_back(interop);
+                    auto widget = interop->GetParameterWidget(this);
+                    widget->installEventFilter(this);
+                    widgetParamMap[widget] = parameters[i];
+                    ui->parameter_layout->addWidget(widget, i, col, 1, 1);
+                }
+            }
+        }
+    }
 }
 
 DataStreamWidget::~DataStreamWidget()

@@ -29,6 +29,8 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
 
         virtual shared_ptr<ICoordinateManager> GetCoordinateManager();
+        virtual void Init(bool firstInit);
+        virtual void Serialize(ISimpleSerializer* pSerializer);
     private:
         cv::cuda::GpuMat                d_image;
         cv::Mat                         h_image;

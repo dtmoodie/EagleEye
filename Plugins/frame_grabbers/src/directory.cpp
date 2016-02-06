@@ -1,13 +1,32 @@
 #include "directory.h"
 #include <boost/filesystem.hpp>
 #include "ObjectInterfacePerModule.h"
-#include <opencv2/imgcodecs.hpp>
+#include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
 #include <boost/filesystem.hpp>
 
 using namespace EagleLib;
 frame_grabber_directory::frame_grabber_directory()
 {
     frame_index = 0;
+    
+
+}
+void frame_grabber_directory::Init(bool firstInit)
+{
+    updateParameter("Frame Index", 0);
+    updateParameter("Loaded file", std::string(""));
+    updateParameter<boost::function<void(void)>>("Restart", [this]()->void
+    {
+        frame_index = 0;
+        updateParameter("Frame Index", 0);
+    });
+}
+void frame_grabber_directory::Serialize(ISimpleSerializer* pSerializer)
+{
+    IFrameGrabber::Serialize(pSerializer);
+    SERIALIZE(frame_index);
+    SERIALIZE(files_on_disk);
+    SERIALIZE(loaded_images);
 }
 bool frame_grabber_directory::LoadFile(const std::string& file_path)
 {
@@ -47,9 +66,13 @@ TS<SyncedMemory> frame_grabber_directory::GetCurrentFrame(cv::cuda::Stream& stre
 TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& stream)
 {
     // First check if this has already been loaded in the frame buffer
+    if(files_on_disk.empty())
+        return TS<SyncedMemory>(0.0, 0);
     if(index >= files_on_disk.size())
         index = files_on_disk.size() - 1;
     std::string file_name = files_on_disk[index];
+    updateParameter("Frame Index", index);
+    updateParameter("Loaded file", file_name);
     for(auto& itr : loaded_images)
     {
         if(std::get<0>(itr) == file_name)
@@ -59,6 +82,8 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     }
 
     cv::Mat h_out = cv::imread(file_name);
+    if(h_out.empty())
+        return TS<SyncedMemory>(0.0, 0);
     cv::cuda::GpuMat d_mat;
     d_mat.upload(h_out, stream);
     loaded_images.push_back(std::make_tuple(file_name, h_out, d_mat));

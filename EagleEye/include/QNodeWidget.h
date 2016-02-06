@@ -103,6 +103,7 @@ public:
 
     EagleLib::DataStream::Ptr GetStream();
     void SetSelected(bool state);
+    void update_ui();
 
 signals:
 
@@ -110,6 +111,9 @@ signals:
 private:
     EagleLib::DataStream::Ptr _dataStream;
     Ui::DataStreamWidget* ui;
+    std::vector<QInputProxy*> inputProxies;
+    std::vector<Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
+    std::map<QWidget*, Parameters::Parameter::Ptr> widgetParamMap;
 };
 
 class DraggableLabel: public QLabel

@@ -24,7 +24,6 @@
 #ifdef _MSC_VER
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("EagleLibd.lib");
-
 #else
 RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib");
 #endif

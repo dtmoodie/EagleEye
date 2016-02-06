@@ -12,7 +12,18 @@ namespace EagleLib
     {
         ParameteredObjectImpl()
         {
-
+            update_signal = nullptr;
+            auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+            if (table)
+            {
+                auto signal_manager = table->GetSingleton<EagleLib::SignalManager>();
+                if(!signal_manager)
+                {
+                    signal_manager = new EagleLib::SignalManager();
+                    table->SetSingleton<EagleLib::SignalManager>(signal_manager);
+                }
+                update_signal = signal_manager->GetSignal<void(ParameteredObject*)>("ObjectUpdated", this);
+            }
         }
         ~ParameteredObjectImpl()
         {
@@ -25,9 +36,9 @@ namespace EagleLib
             }
         }
         std::map<ParameteredObject*, std::list<boost::signals2::connection>>	callbackConnections;
+        Signals::signal<void(ParameteredObject*)>* update_signal;
         boost::recursive_mutex mtx;
     };
-
 }
 
 
@@ -138,13 +149,8 @@ void ParameteredObject::RegisterParameterCallback(Parameter* param, const boost:
 }
 void ParameteredObject::onUpdate(cv::cuda::Stream* stream)
 {
-    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    if (table)
-    {
-        auto signal_manager = table->GetSingleton<EagleLib::SignalManager>();
-        auto signal = signal_manager->get_signal<void(ParameteredObject*)>("ObjectUpdated");
-        (*signal)(this);
-    }
+   if(_impl->update_signal)
+       (*_impl->update_signal)(this);
 }
 void ParameteredObject::RunCallbackLockObject(cv::cuda::Stream* stream, const boost::function<void(cv::cuda::Stream*)>& callback)
 {

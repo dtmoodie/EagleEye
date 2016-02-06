@@ -77,30 +77,9 @@ namespace EagleLib
     {
         class Node;
         class NodeImpl;
-    }
-	
-    
+    }    
 	class DataStream;
 }
-
-
-#ifdef _MSC_VER
-#ifdef _DEBUG
-	RUNTIME_COMPILER_LINKLIBRARY("EagleLibd.lib")
-	RUNTIME_COMPILER_LINKLIBRARY("libParameterd.lib")
-#else
-	RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib")
-	RUNTIME_COMPILER_LINKLIBRARY("libParameter.lib")
-#endif
-
-#else
-#ifdef _DEBUG
-    RUNTIME_COMPILER_LINKLIBRARY("-lEagleLibd")
-#else
-RUNTIME_COMPILER_LINKLIBRARY("-lEagleLib")
-#endif
-#endif
-
 
 
 #define NODE_DEFAULT_CONSTRUCTOR_IMPL(NodeName, ...) \
@@ -113,11 +92,6 @@ REGISTERCLASS(NodeName, &g_registerer_##NodeName)
 
 #define SET_NODE_TOOLTIP(name, tooltip) g_registerer_##name.node_tooltip = std::string(tooltip);
 #define SET_NODE_HELP(name, help) g_registerer_##name.node_help = std::string(help);
-
-
-
-
-
 
 namespace EagleLib
 {

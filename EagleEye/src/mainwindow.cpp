@@ -52,8 +52,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // Create the processing thread opengl context for creating buffers and uploading them
     processing_thread_context = nullptr;
     processing_thread_upload_window = nullptr;
-    
-    
+    updateParameterPtr("file load path", &file_load_path);
+    variable_storage::instance().load_parameters(this);
 	
     //cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
 
@@ -200,6 +200,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    variable_storage::instance().save_parameters(this);
 	stopProcessingThread();
 	cv::destroyAllWindows();
 	//EagleLib::ui_collector::clearGenericCallbackHandlers();
@@ -398,12 +399,19 @@ void MainWindow::onLoadPluginClicked()
 
 void MainWindow::onLoadFileClicked()
 {
-    FileDialog dlg(this);
+    FileDialog dlg(this, "Select file to load", QString::fromStdString(file_load_path));
     dlg.exec();
     if(dlg.selected().size() != 1)
         return;
     
     QString filename = QDir::toNativeSeparators(dlg.selected().at(0));
+    std::string std_filename = filename.toStdString();
+    boost::filesystem::path path(std_filename);
+    
+    if(boost::filesystem::is_directory(path))
+        file_load_path = std_filename;
+    else
+        file_load_path = path.parent_path().string();
     load_file(filename);    
 }
 void MainWindow::load_file(QString filename)
