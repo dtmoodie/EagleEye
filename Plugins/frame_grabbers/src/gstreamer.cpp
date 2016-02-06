@@ -1,5 +1,6 @@
 #include "gstreamer.h"
 #include "ObjectInterfacePerModule.h"
+#include <boost/filesystem.hpp>
 using namespace EagleLib;
 
 std::string frame_grabber_gstreamer::frame_grabber_gstreamer_info::GetObjectName()
@@ -16,7 +17,9 @@ std::string frame_grabber_gstreamer::frame_grabber_gstreamer_info::GetObjectHelp
 }
 bool frame_grabber_gstreamer::frame_grabber_gstreamer_info::CanLoadDocument(const std::string& document) const
 {
-    return true;
+    boost::filesystem::path path(document);
+    // oooor a gstreamer pipeline.... 
+    return boost::filesystem::is_regular_file(path);
 }
 int frame_grabber_gstreamer::frame_grabber_gstreamer_info::Priority() const
 {

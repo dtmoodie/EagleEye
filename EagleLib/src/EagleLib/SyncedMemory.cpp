@@ -5,6 +5,18 @@ SyncedMemory::SyncedMemory()
 {
 	sync_flags.resize(1, SYNCED);
 }
+SyncedMemory::SyncedMemory(const cv::Mat& h_mat)
+{
+    h_data.resize(1, h_mat);
+    d_data.resize(1);
+    sync_flags.resize(1, HOST_UPDATED);
+}
+SyncedMemory::SyncedMemory(const cv::cuda::GpuMat& d_mat)
+{
+    h_data.resize(1);
+    d_data.resize(1, d_mat);
+    sync_flags.resize(1, DEVICE_UPDATED);
+}
 SyncedMemory::SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat)
 {
     h_data.resize(1, h_mat);
