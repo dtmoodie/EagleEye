@@ -78,7 +78,8 @@ TS<SyncedMemory> frame_grabber_cv::GetNextFrame(cv::cuda::Stream& stream)
 {
     while (frame_buffer.empty())
     {
-        boost::this_thread::interruptible_wait(10);
+        //boost::this_thread::interruptible_wait(10);
+        boost::this_thread::sleep_for((boost::chrono::milliseconds(10)));
     }
     if (playback_frame_number == -1)
     {

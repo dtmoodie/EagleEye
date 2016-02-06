@@ -1,6 +1,5 @@
 #pragma once
-#include "Manager.h"
-
+#include <EagleLib/nodes/Node.h>
 
 #ifdef __cplusplus
 extern "C"{
@@ -12,6 +11,9 @@ extern "C"{
 #endif
 namespace EagleLib
 {
+namespace Nodes
+{
+
     class PCL_bridge: public Node
     {
     public:
@@ -26,4 +28,5 @@ namespace EagleLib
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream = cv::cuda::Stream::Null());
 		virtual void Init(bool firstInit);
 	};
+}
 }

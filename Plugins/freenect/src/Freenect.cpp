@@ -1,8 +1,9 @@
 #include "Freenect.h"
 #include "libfreenect/libfreenect.hpp"
 #include "freenect.cuh"
-#include "SystemTable.hpp"
-
+#include "EagleLib/rcc/SystemTable.hpp"
+using namespace EagleLib;
+using namespace EagleLib::Nodes;
 IPerModuleInterface* GetModule()
 {
     return PerModuleInterface::GetInstance();

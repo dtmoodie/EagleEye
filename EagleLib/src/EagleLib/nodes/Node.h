@@ -77,7 +77,9 @@ namespace EagleLib
     {
         class Node;
         class NodeImpl;
-    }    
+    }
+	
+    class NodeManager;
 	class DataStream;
 }
 
@@ -363,7 +365,7 @@ namespace EagleLib
         void ClearProcessingTime();
         void EndProcessingTime();
 
-        friend class NodeManager;
+        friend class EagleLib::NodeManager;
         std::shared_ptr<NodeImpl> pImpl_;
         Node*                                                               parent;
         //ConstBuffer<cv::cuda::GpuMat>                                       childResults;

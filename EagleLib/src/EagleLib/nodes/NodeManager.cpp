@@ -252,7 +252,7 @@ NodeManager::getNode(const std::string &treeName)
 	{
 		if (nodes[i] != nullptr)
 		{
-			if (nodes[i]->fullTreeName == treeName)
+            if (nodes[i]->getFullTreeName() == treeName)
 			{
 				return nodes[i].get();
 			}

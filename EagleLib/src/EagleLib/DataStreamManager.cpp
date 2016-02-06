@@ -280,8 +280,8 @@ void DataStream::process()
     cv::cuda::Stream streams[2];
     dirty_flag = true;
     int iteration_count = 0;
-    signal_manager->register_thread(Signals::ANY);
-    
+    //signal_manager->register_thread(Signals::ANY);
+    Signals::thread_registry::get_instance()->register_thread(Signals::ANY);
     rmt_SetCurrentThreadName("DataStreamThread");
     auto node_update_connection = signal_manager->Connect<void(EagleLib::Nodes::Node*)>("NodeUpdated",
         std::bind([this](EagleLib::Nodes::Node* node)->void

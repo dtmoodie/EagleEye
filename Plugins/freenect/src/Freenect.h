@@ -1,5 +1,5 @@
 #pragma once
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -16,6 +16,8 @@ namespace Freenect
 
 namespace EagleLib
 {
+namespace Nodes
+{
     class camera_freenect: public Node
     {
 		Freenect::Freenect* freenect;
@@ -30,4 +32,5 @@ namespace EagleLib
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
         virtual bool SkipEmpty() const;
     };
+}
 }

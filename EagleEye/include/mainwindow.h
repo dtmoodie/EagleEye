@@ -17,7 +17,7 @@
 #include "user_interface_persistence.h"
 #include "plotwizarddialog.h"
 #include <QtGui/qopenglcontext.h>
-#include <Signals/connection.h>
+#include <signals/connection.h>
 
 namespace EagleLib
 {
