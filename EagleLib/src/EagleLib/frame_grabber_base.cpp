@@ -107,15 +107,22 @@ void FrameGrabberBuffered::Buffer()
     {
         if(frame_buffer.size() != frame_buffer.capacity() || buffer_frame_number == -1 || playback_frame_number > buffer_frame_number - frame_buffer.capacity() / 2)
         {
-            auto frame = GetNextFrameImpl(read_stream);
-            if(!frame.empty())
+            try
             {
-                buffer_frame_number = frame.frame_number;
-                if(update_signal)
-                    (*update_signal)();
-                boost::mutex::scoped_lock lock(buffer_mtx);
-                frame_buffer.push_back(frame);
+                auto frame = GetNextFrameImpl(read_stream);
+                if (!frame.empty())
+                {
+                    buffer_frame_number = frame.frame_number;
+                    if (update_signal)
+                        (*update_signal)();
+                    boost::mutex::scoped_lock lock(buffer_mtx);
+                    frame_buffer.push_back(frame);
+                }
+            }catch(cv::Exception& e)
+            {
+                LOG(warning) << "Error reading next frame: " << e.what();
             }
+            
         }
     }
 }
@@ -135,7 +142,7 @@ void FrameGrabberBuffered::StopBufferThread()
 }
 int FrameGrabberInfo::LoadTimeout() const
 {
-    return 100;
+    return 1000;
 }
 int FrameGrabberInfo::GetObjectInfoType()
 {

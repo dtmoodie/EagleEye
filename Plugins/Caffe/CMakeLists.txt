@@ -5,6 +5,13 @@ find_package(Caffe REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(OpenCV REQUIRED)
 
+set(CUDNN_DIR "" CACHE PATH "cudnn directory")
+
+find_library(CUDNN_LIBRARY cudnn.lib HINTS "${CUDNN_DIR}/lib/x64/")
+find_path(CUDNN_LIB_DIR cudnn.lib HINTS "${CUDNN_DIR}/lib/x64")
+find_path(CUDNN_INCLUDE_DIR cudnn.h HINTS "${CUDNN_DIR}/include")
+find_path(CUDNN_BIN_DIR cudnn64_4.dll cudnn64_3.dll HINTS "${CUDNN_DIR}/bin")
+
 set_target_properties(
 	opencv_core opencv_calib3d opencv_cudaarithm opencv_cudabgsegm opencv_cudacodec opencv_cudafeatures2d 
 	opencv_cudafilters opencv_cudaobjdetect opencv_cudaoptflow opencv_cudastereo opencv_cudawarping 
@@ -12,18 +19,21 @@ set_target_properties(
 	opencv_ml opencv_objdetect opencv_photo opencv_shape opencv_stitching opencv_superres 
 	opencv_ts opencv_video opencv_videoio opencv_videostab 
 	PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 include_directories(
  ${Caffe_INCLUDE_DIRS}
  ${EagleLib_INCLUDE_DIRECTORIES}
  ${GLOG_INCLUDE_DIR}
+ ${CUDNN_INCLUDE_DIR}
 )
 SET(CAFFE_BIN_DIR "" CACHE PATH "")
 SET(CAFFE_BIN_DIR_DBG ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
 SET(CAFFE_BIN_DIR_OPT ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
 
 LINK_DIRECTORIES(${LINK_DIRS})
+LINK_DIRECTORIES(${CUDNN_LIB_DIR})
 add_library(Caffe SHARED Caffe.h Caffe.cpp)
 add_dependencies(Caffe EagleLib)
 SET(BIN_DIRS "${BIN_DIRS};CAFFE" CACHE STRING "" FORCE)
@@ -43,6 +53,7 @@ IF(WIN32)
       ${CUDA_npps_LIBRARY}
 	  libcaffe_SHARED
 	  ${GLOG_LIBRARY}
+	  ${CUDNN_LIBRARY}
     )
 ELSE(WIN32)
     RCC_LINK_LIB(Caffe

@@ -128,6 +128,43 @@ namespace EagleLib
 		}
 		return false;
 	}
+    unsigned char* BlockMemoryAllocator::allocate(size_t sizeNeeded)
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        unsigned char* ptr;
+        for (auto itr : blocks)
+        {
+            ptr = itr->allocate(sizeNeeded, 1);
+            if (ptr)
+            {
+                memoryUsage += sizeNeeded;
+                Increment(ptr, sizeNeeded);
+                return ptr;
+            }
+        }
+        // If we get to this point, then no memory was found, need to allocate new memory
+        blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(std::max(initialBlockSize_ / 2, sizeNeeded))));
+        BOOST_LOG_TRIVIAL(debug) << "[GPU] Expanding memory pool by " << std::max(initialBlockSize_ / 2, sizeNeeded) / (1024 * 1024) << " MB";
+        if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, 1))
+        {
+            memoryUsage += sizeNeeded;
+            Increment(ptr, sizeNeeded);
+            return ptr;
+        }
+        return nullptr;
+    }
+    void BlockMemoryAllocator::free(unsigned char* ptr)
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        for (auto itr : blocks)
+        {
+            if (itr->deAllocate(ptr))
+            {
+                return;
+            }
+        }
+        throw cv::Exception(0, "[GPU] Unable to find memory to deallocate", __FUNCTION__, __FILE__, __LINE__);
+    }
 	void BlockMemoryAllocator::free(cv::cuda::GpuMat* mat)
 	{
 		std::lock_guard<std::recursive_mutex> lock(mtx);
@@ -136,6 +173,8 @@ namespace EagleLib
 			if (itr->deAllocate(mat->data))
 			{
 				cv::fastFree(mat->refcount);
+                Decrement(mat->data, mat->step*mat->rows);
+                memoryUsage -= mat->step*mat->rows;
 				return;
 			}
 		}
@@ -198,6 +237,44 @@ namespace EagleLib
 		mat->refcount = (int*)cv::fastMalloc(sizeof(int));
 		return true;
 	}
+    unsigned char* DelayedDeallocator::allocate(size_t sizeNeeded)
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        unsigned char* ptr = nullptr;
+        for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
+        {
+            if (std::get<2>(*itr) == sizeNeeded)
+            {
+                ptr = std::get<0>(*itr);
+                deallocateList.erase(itr);
+                memoryUsage += sizeNeeded;
+                Increment(ptr, sizeNeeded);
+                current_allocations[ptr] = sizeNeeded;
+                return ptr;
+            }
+        }
+        CV_CUDEV_SAFE_CALL(cudaMalloc(&ptr, sizeNeeded));
+        memoryUsage += sizeNeeded;
+        Increment(ptr, sizeNeeded);
+        current_allocations[ptr] = sizeNeeded;
+        return ptr;
+    }
+    void DelayedDeallocator::free(unsigned char* ptr)
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        //Decrement(ptr, mat->step*mat->rows);
+        //scopedAllocationSize[scopeOwnership[ptr]] -= mat->rows*mat->step;
+        //memoryUsage -= mat->rows*mat->step;
+        //BOOST_LOG_TRIVIAL(trace) << "[GPU] Releasing mat of size (" << mat->rows << "," << mat->cols << ") " << (mat->dataend - mat->datastart) / (1024 * 1024) << " MB to the memory pool";
+        auto itr = current_allocations.find(ptr);
+        if(itr != current_allocations.end())
+        {
+            current_allocations.erase(itr);
+            deallocateList.push_back(std::make_tuple(ptr, clock(), current_allocations[ptr]));
+        }      
+        
+        clear();
+    }
 	void DelayedDeallocator::free(cv::cuda::GpuMat* mat)
 	{
 		std::lock_guard<std::recursive_mutex> lock(mtx);
@@ -251,6 +328,14 @@ namespace EagleLib
 		
 		return DelayedDeallocator::allocate(mat, rows, cols, elemSize);
 	}
+    unsigned char* CombinedAllocator::allocate(size_t num_bytes)
+    {
+        return BlockMemoryAllocator::allocate(num_bytes);
+    }
+    void CombinedAllocator::free(unsigned char* ptr)
+    {
+        return BlockMemoryAllocator::free(ptr);
+    }
 	void CombinedAllocator::free(cv::cuda::GpuMat* mat)
 	{
 		std::lock_guard<std::recursive_mutex> lock(mtx);

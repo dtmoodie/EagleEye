@@ -104,8 +104,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     cv::redirectError(&static_errorHandler);
-
-
+    persistence_timer = new QTimer(this);
+    persistence_timer->start(500); // save setting every half second
+    connect(persistence_timer, SIGNAL(timeout()), this, SLOT(on_persistence_timeout()));
     connect(this, &MainWindow::uiCallback, this, &MainWindow::on_uiCallback, Qt::QueuedConnection);
     connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
 	connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
@@ -118,6 +119,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(onSaveClicked()));
     connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
     connect(ui->actionOpen_file, SIGNAL(triggered()), this, SLOT(onLoadFileClicked()));
+    connect(ui->actionOpen_directory, SIGNAL(triggered()), this, SLOT(onLoadDirectoryClicked()));
     connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
     connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
     
@@ -400,12 +402,7 @@ void MainWindow::onLoadPluginClicked()
 
 void MainWindow::onLoadFileClicked()
 {
-    FileDialog dlg(this, "Select file to load", QString::fromStdString(file_load_path));
-    dlg.exec();
-    if(dlg.selected().size() != 1)
-        return;
-    
-    QString filename = QDir::toNativeSeparators(dlg.selected().at(0));
+    QString filename = QDir::toNativeSeparators(QFileDialog::getOpenFileName(this, "Select file", QString::fromStdString(file_load_path)));
     std::string std_filename = filename.toStdString();
     boost::filesystem::path path(std_filename);
     
@@ -414,6 +411,16 @@ void MainWindow::onLoadFileClicked()
     else
         file_load_path = path.parent_path().string();
     load_file(filename);    
+}
+void MainWindow::onLoadDirectoryClicked()
+{
+    QString filename = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(this, "Select directory", QString::fromStdString(dir_load_path)));
+    std::string std_filename = filename.toStdString();
+    boost::filesystem::path path(std_filename);
+
+    if (boost::filesystem::is_directory(path))
+        dir_load_path = std_filename;
+    load_file(filename);
 }
 void MainWindow::load_file(QString filename)
 {
@@ -489,6 +496,10 @@ void MainWindow::onTimeout()
         processingThread.interrupt();
         return;
     }
+}
+void MainWindow::on_persistence_timeout()
+{
+    variable_storage::instance().save_parameters();
 }
 void MainWindow::log(QString message)
 {

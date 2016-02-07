@@ -88,6 +88,7 @@
     <addaction name="actionLoad"/>
     <addaction name="actionLoad_Plugin"/>
     <addaction name="actionOpen_file"/>
+    <addaction name="actionOpen_directory"/>
     <addaction name="actionOpen_Network"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
@@ -180,6 +181,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionOpen_directory">
+   <property name="text">
+    <string>Open directory</string>
    </property>
   </action>
  </widget>

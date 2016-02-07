@@ -18,7 +18,7 @@
 #include "plotwizarddialog.h"
 #include <QtGui/qopenglcontext.h>
 #include <signals/connection.h>
-
+#include <qtimer.h>
 namespace EagleLib
 {
     class DataStream;
@@ -61,6 +61,7 @@ private slots:
     void onSaveClicked();
     void onLoadClicked();
     void onLoadFileClicked();
+    void onLoadDirectoryClicked();
     void onLoadPluginClicked();
     void addNode(EagleLib::Nodes::Node::Ptr node);
     void updateLines();
@@ -83,6 +84,7 @@ private slots:
     void on_btnStop_clicked();
     void on_nodeUpdate(EagleLib::Nodes::Node* node);
     void load_file(QString file);
+    void on_persistence_timeout();
 
 signals:
     void onNewParameter(EagleLib::Nodes::Node* node);
@@ -130,6 +132,9 @@ private:
     std::vector<std::shared_ptr<EagleLib::DataStream>>  data_streams;
     std::shared_ptr<Signals::connection>                logging_connection;
     std::string file_load_path;
+    std::string dir_load_path;
+
+    QTimer* persistence_timer;
     /*inline void sig_StartThreads() 
     { 
         static auto registerer = EagleLib::register_sender<void(void), -1>(this, "StartThreads"); 

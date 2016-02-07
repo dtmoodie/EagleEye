@@ -43,6 +43,9 @@ namespace EagleLib
 		BlockMemoryAllocator(size_t initialBlockSize);
 		virtual bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
 		virtual void free(cv::cuda::GpuMat* mat);
+        virtual unsigned char* allocate(size_t num_bytes);
+        virtual void free(unsigned char* ptr);
+        virtual 
         virtual bool free_impl(cv::cuda::GpuMat* mat);
 		size_t initialBlockSize_;
 	protected:
@@ -55,11 +58,14 @@ namespace EagleLib
 		DelayedDeallocator();
 		virtual bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
 		virtual void free(cv::cuda::GpuMat* mat);
+        virtual unsigned char* allocate(size_t num_bytes);
+        virtual void free(unsigned char* ptr);
 		size_t deallocateDelay; // ms
 		
 	protected:
 		virtual void clear();
 		std::list<std::tuple<unsigned char*, clock_t, size_t>> deallocateList;
+        std::map<unsigned char*, size_t> current_allocations;
 	};
 
 	class EAGLE_EXPORTS CombinedAllocator : public DelayedDeallocator, public BlockMemoryAllocator
@@ -71,6 +77,8 @@ namespace EagleLib
 		CombinedAllocator(size_t initial_pool_size = 10000000 , size_t threshold_level = 1000000);
 		virtual bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
 		virtual void free(cv::cuda::GpuMat* mat);
+        virtual unsigned char* allocate(size_t num_bytes);
+        virtual void free(unsigned char* ptr);
 		size_t _threshold_level;
 		size_t initialBlockSize_;
 	protected:
