@@ -7,6 +7,7 @@
 namespace Ui {
 class bookmark_dialog;
 }
+class QListWidgetItem;
 
 class bookmark_dialog : public QDialog, public user_interface_persistence
 {
@@ -19,7 +20,12 @@ public:
 public slots:
     void append_history(std::string dir);
 
+signals:
+    void open_file(std::string file);
 
+private slots:
+    void on_file_selected(QListWidgetItem* item);
+    
 private:
     Ui::bookmark_dialog *ui;
     std::set<std::string> history;
