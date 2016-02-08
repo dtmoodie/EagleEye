@@ -102,8 +102,7 @@
     <property name="title">
      <string>Bookmarks</string>
     </property>
-    <addaction name="actionAdd_bookmark"/>
-    <addaction name="actionManage_bookmarks"/>
+    <addaction name="actionBookmarks"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSettings"/>
@@ -165,16 +164,6 @@
     <string>Open file</string>
    </property>
   </action>
-  <action name="actionAdd_bookmark">
-   <property name="text">
-    <string>Add bookmark</string>
-   </property>
-  </action>
-  <action name="actionManage_bookmarks">
-   <property name="text">
-    <string>Manage bookmarks</string>
-   </property>
-  </action>
   <action name="actionOpen_Network">
    <property name="text">
     <string>Open Network Stream</string>
@@ -186,6 +175,11 @@
   <action name="actionOpen_directory">
    <property name="text">
     <string>Open directory</string>
+   </property>
+  </action>
+  <action name="actionBookmarks">
+   <property name="text">
+    <string>Open</string>
    </property>
   </action>
  </widget>

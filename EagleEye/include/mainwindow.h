@@ -28,6 +28,7 @@ namespace Ui {
 class MainWindow;
 }
 class SettingDialog;
+class bookmark_dialog;
 namespace Signals
 {
     class connection;
@@ -74,6 +75,7 @@ private slots:
     void onPlotRemove(PlotWindow* plot);
     void on_actionLog_settings_triggered();
     void on_actionOpen_Network_triggered();
+    void on_actionBookmarks_triggered();
 
     void on_btnClear_clicked();
     void on_uiCallback(boost::function<void()> f, std::pair<void*, Loki::TypeInfo> source);
@@ -104,7 +106,7 @@ private:
     void processThread();
     bool processingThreadActive;
 
-
+    bookmark_dialog*                                    bookmarks;
     bool                                                dirty;
     Ui::MainWindow *                                    ui;
     QTimer*                                             fileMonitorTimer;
@@ -135,16 +137,8 @@ private:
     std::string dir_load_path;
 
     QTimer* persistence_timer;
-    /*inline void sig_StartThreads() 
-    { 
-        static auto registerer = EagleLib::register_sender<void(void), -1>(this, "StartThreads"); 
-        registerer(); 
-    }*/
     SIG_DEF(StartThreads);
     SIG_DEF(StopThreads);
-    //SIG_DEF_0("StopThreads");
-    //SIG_DEF("StartThreads");
-    //SIG_DEF("StopThreads");
 
 };
 

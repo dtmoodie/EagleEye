@@ -21,7 +21,7 @@ public slots:
     void append_history(std::string dir);
 
 signals:
-    void open_file(std::string file);
+    void open_file(QString file);
 
 private slots:
     void on_file_selected(QListWidgetItem* item);

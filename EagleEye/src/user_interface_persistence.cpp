@@ -42,6 +42,7 @@ void user_interface_persistence::variable_storage::save_parameters(const std::st
         }
         fs << "}"; // End parameters
         fs << "}"; // End widgets
+        ++index;
     }
     
 }

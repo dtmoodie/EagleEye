@@ -10,8 +10,10 @@ bookmark_dialog::bookmark_dialog(QWidget *parent) :
     updateParameterPtr("history", &history);
 
     variable_storage::instance().load_parameters(this);
+    update();
     connect(ui->list_bookmarks, SIGNAL(itemDoubleClickd(QListWidgetItem*)), this, SLOT(on_file_selected(QListWidgetItem*)));
     connect(ui->list_history, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this,SLOT(on_file_selected(QListWidgetItem*)));
+    
 }
 
 bookmark_dialog::~bookmark_dialog()
@@ -37,7 +39,7 @@ void bookmark_dialog::append_history(std::string dir)
 }
 void bookmark_dialog::on_file_selected(QListWidgetItem* item)
 {
-    std::string name = item->text().toStdString();
+    auto name = item->text();
     if(sender() == ui->list_bookmarks)
     {
         

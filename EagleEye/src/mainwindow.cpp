@@ -13,7 +13,7 @@
 #include "dialog_network_stream_selection.h"
 #include <QNodeWidget.h>
 
-
+#include "bookmark_dialog.h"
 //#include <GL/gl.h>
 //#include <GL/glu.h>
 
@@ -102,10 +102,13 @@ MainWindow::MainWindow(QWidget *parent) :
     rccSettings->hide();
     plotWizardDialog->hide();
 
+    bookmarks = new bookmark_dialog(this);
+    bookmarks->hide();
 
     cv::redirectError(&static_errorHandler);
     persistence_timer = new QTimer(this);
     persistence_timer->start(500); // save setting every half second
+    connect(bookmarks, SIGNAL(open_file(QString)), this, SLOT(load_file(QString)));
     connect(persistence_timer, SIGNAL(timeout()), this, SLOT(on_persistence_timeout()));
     connect(this, &MainWindow::uiCallback, this, &MainWindow::on_uiCallback, Qt::QueuedConnection);
     connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
@@ -122,7 +125,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionOpen_directory, SIGNAL(triggered()), this, SLOT(onLoadDirectoryClicked()));
     connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
     connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
-    connect(ui->action)
+    //connect(ui->actionBookmarks, SIGNAL(triggered()), this, SLOT()
     connect(this, SIGNAL(onNewParameter(EagleLib::Nodes::Node*)), this, SLOT(on_NewParameter(EagleLib::Nodes::Node*)), Qt::QueuedConnection);
 
     connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
@@ -204,10 +207,12 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     variable_storage::instance().save_parameters(this);
+    delete bookmarks;
 	stopProcessingThread();
 	cv::destroyAllWindows();
 	//EagleLib::ui_collector::clearGenericCallbackHandlers();
 	EagleLib::ShutdownLogging();
+
 //    user_interface_persistence::variable_storage::instance().save_parameters();
     delete ui;
 }
@@ -410,6 +415,7 @@ void MainWindow::onLoadFileClicked()
         file_load_path = std_filename;
     else
         file_load_path = path.parent_path().string();
+    
     load_file(filename);    
 }
 void MainWindow::onLoadDirectoryClicked()
@@ -437,7 +443,8 @@ void MainWindow::load_file(QString filename)
             current_stream = stream;
             data_streams.push_back(stream);
             data_stream_widgets.push_back(data_stream_widget);
-        }        
+        }      
+        bookmarks->append_history(filename.toStdString());
     }
 }
 void MainWindow::on_NewParameter(EagleLib::Nodes::Node* node)
@@ -815,6 +822,7 @@ void MainWindow::on_actionLog_settings_triggered()
 {
     settingsDialog->show();   
 }
+
 void MainWindow::on_actionOpen_Network_triggered()
 {
     dialog_network_stream_selection dlg;
@@ -823,6 +831,11 @@ void MainWindow::on_actionOpen_Network_triggered()
     {
         load_file(dlg.url);
     }
+}
+
+void MainWindow::on_actionBookmarks_triggered()
+{
+    bookmarks->show();
 }
 
 void MainWindow::on_btnClear_clicked()
