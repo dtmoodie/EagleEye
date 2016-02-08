@@ -45,7 +45,6 @@ namespace EagleLib
 		virtual void free(cv::cuda::GpuMat* mat);
         virtual unsigned char* allocate(size_t num_bytes);
         virtual void free(unsigned char* ptr);
-        virtual 
         virtual bool free_impl(cv::cuda::GpuMat* mat);
 		size_t initialBlockSize_;
 	protected:
