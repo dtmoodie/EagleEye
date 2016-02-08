@@ -122,7 +122,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionOpen_directory, SIGNAL(triggered()), this, SLOT(onLoadDirectoryClicked()));
     connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
     connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
-    
+    connect(ui->action)
     connect(this, SIGNAL(onNewParameter(EagleLib::Nodes::Node*)), this, SLOT(on_NewParameter(EagleLib::Nodes::Node*)), Qt::QueuedConnection);
 
     connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
