@@ -1,6 +1,6 @@
 
 #include "EagleLib/utilities/CudaCallbacks.hpp"
-#include "UI/InterThread.hpp"
+#include "parameters/UI/InterThread.hpp"
 #include "EagleLib/plotters/Plotter.h"
 #include "qcustomplot.h"
 #include "Remotery.h"

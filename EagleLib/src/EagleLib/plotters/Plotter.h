@@ -1,7 +1,7 @@
 #pragma once
 #include "../ParameteredObject.h"
 
-#include "Parameters.hpp"
+#include "parameters/Parameters.hpp"
 
 
 #include "RuntimeLinkLibrary.h"
@@ -42,7 +42,7 @@ namespace EagleLib
         virtual PlotterType Type() const = 0;
 
 	protected:
-		boost::signals2::connection bc;
+		std::shared_ptr<Signals::connection> bc;
 		Parameters::Parameter::Ptr param;
 		cv::cuda::Stream plottingStream;
 		cv::cuda::Event plottingEvent;

@@ -77,7 +77,7 @@ namespace EagleLib
         shared_ptr<IRenderEngine>       rendering_engine;
         shared_ptr<ITrackManager>       track_manager;
         shared_ptr<IFrameGrabber>       frame_grabber;
-        SignalManager*                  signal_manager;
+		std::shared_ptr<SignalManager>  signal_manager;
         std::vector<shared_ptr<Nodes::Node>>   top_level_nodes;
         std::mutex                      nodes_mtx;
         bool                            paused;

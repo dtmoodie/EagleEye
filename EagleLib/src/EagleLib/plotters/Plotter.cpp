@@ -7,7 +7,7 @@ Plotter::Plotter()
 }
 Plotter::~Plotter()
 {
-	bc.disconnect();
+	//bc.disconnect();
 }
 
 void Plotter::Init(bool firstInit)
@@ -16,7 +16,8 @@ void Plotter::Init(bool firstInit)
 	{
 		if (param)
 		{
-			bc.disconnect();
+			bc.reset();
+			//bcdisconnect();
 			bc = param->RegisterNotifier(boost::bind(&Plotter::OnParameterUpdate, this, _1));
 		}
 	}
@@ -30,7 +31,8 @@ void Plotter::Serialize(ISimpleSerializer *pSerializer)
 
 void Plotter::SetInput(Parameters::Parameter::Ptr param_)
 {
-	bc.disconnect();
+	//bc.disconnect();
+	bc.reset();
 	param = param_;
 
 	if (param)

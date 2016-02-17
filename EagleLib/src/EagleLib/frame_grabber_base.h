@@ -48,7 +48,7 @@ namespace EagleLib
         virtual void Serialize(ISimpleSerializer* pSerializer);
         virtual void Init(bool firstInit);
     protected:
-        Signals::signal<void()>* update_signal;
+		Signals::typed_signal_base<void()>* update_signal;
         std::string loaded_document;
         DataStream* parent_stream;
     };

@@ -1,9 +1,10 @@
 #include "AxisCamera.h"
 #include "QtNetwork/qauthenticator.h"
-#include "UI/InterThread.hpp"
+#include "parameters/UI/InterThread.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -196,12 +197,7 @@ void AxisCamera::Init(bool firstInit)
 
 AxisCamera::~AxisCamera()
 {
-	zoomConnection.disconnect(); 
-	panConnection.disconnect();
-	tiltConnection.disconnect();
-	ipConnection.disconnect();
-	usernameConnection.disconnect();
-	passwordConnection.disconnect();
+	
 }
 
 cv::cuda::GpuMat AxisCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)

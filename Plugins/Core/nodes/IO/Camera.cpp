@@ -2,6 +2,7 @@
 #include "../remotery/lib/Remotery.h"
 #include "EagleLib/utilities/GpuMatAllocators.h"
 #include "EagleLib/utilities/CpuMatAllocators.h"
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

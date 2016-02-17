@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QVector>
 
-#include "Parameters.hpp"
+#include "parameters/Parameters.hpp"
 #include "plotwindow.h"
 #include "parameterplotter.h"
 #include "IObject.h"

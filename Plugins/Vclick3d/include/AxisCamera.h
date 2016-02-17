@@ -53,12 +53,12 @@ namespace EagleLib
 
 	class AxisCamera : public Node
 	{
-        boost::signals2::connection zoomConnection;
-        boost::signals2::connection panConnection;
-        boost::signals2::connection tiltConnection;
-		boost::signals2::connection ipConnection;
-		boost::signals2::connection usernameConnection;
-		boost::signals2::connection passwordConnection;
+		std::shared_ptr<Signals::connection> zoomConnection;
+		std::shared_ptr<Signals::connection> panConnection;
+		std::shared_ptr<Signals::connection> tiltConnection;
+		std::shared_ptr<Signals::connection> ipConnection;
+		std::shared_ptr<Signals::connection> usernameConnection;
+		std::shared_ptr<Signals::connection> passwordConnection;
         boost::shared_ptr<AxisSocket> socket;
 		
         void on_zoomRequest();

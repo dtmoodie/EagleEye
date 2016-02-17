@@ -38,10 +38,10 @@
 #include <vector>
 #include <type_traits>
 #include "EagleLib/type.h" // for demangle on linux
-#include "LokiTypeInfo.h"
+#include "parameters/LokiTypeInfo.h"
 #include "EagleLib/Defs.hpp"
-#include <Parameters.hpp>
-#include <Types.hpp>
+#include <parameters/Parameters.hpp>
+#include <parameters/Types.hpp>
 
 #include <opencv2/core/cuda.hpp>
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
@@ -277,7 +277,7 @@ namespace EagleLib
 		virtual void updateInputParameters();
 
 
-        void RegisterSignalConnection(boost::signals2::connection connection);
+        
         void RegisterSignalConnection(std::shared_ptr<Signals::connection> connection);
         virtual void onUpdate(cv::cuda::Stream* stream);
 

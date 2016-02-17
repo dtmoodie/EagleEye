@@ -2,9 +2,10 @@
 #include <boost/preprocessor.hpp>
 #include "EagleLib/Defs.hpp"
 #include "signals/signal_manager.h"
+#include "signals/signal.h"
 #include <EagleLib/rcc/SystemTable.hpp>
 #include <ObjectInterfacePerModule.h>
-
+/*
 #define SIG_DEF_1(name) \
 inline void sig_##name() \
 { \
@@ -89,7 +90,7 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
 #define SIG_DEF(...) BOOST_PP_OVERLOAD(SIG_DEF_, __VA_ARGS__ )(__VA_ARGS__)
 #endif
 
-
+*/
 namespace EagleLib
 {
 
@@ -100,94 +101,37 @@ namespace EagleLib
     class EAGLE_EXPORTS SignalManager: public Signals::signal_manager
     {
     public:
-        template<typename T, typename C> std::shared_ptr<Signals::connection> Connect(const std::string& name, const std::function<T>& f, C* receiver, int stream_index = -1, boost::thread::id dest_thread = boost::this_thread::get_id())
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            auto&sig = GetSignal(name, Loki::TypeInfo(typeid(T)), stream_index);
-            Signals::signal<T>* typedSignal = nullptr;
-            if (!sig)
-            {
-                typedSignal = new Signals::signal<T>();
-                sig.reset(typedSignal);
-            }else
-            {
-                typedSignal = std::dynamic_pointer_cast<Signals::signal<T>>(sig).get();
-            }
-            ConnectionInfo cinfo;
-            cinfo.ptr = (void*)receiver;
-            cinfo.sender = false;
-            cinfo.signal_name = name;
-            cinfo.object_type = Loki::TypeInfo(typeid(C));
-            cinfo.signal_signature = Loki::TypeInfo(typeid(T));
-            connections.push_back(cinfo);
-            return typedSignal->connect(f, dest_thread);
-        }
+		/*template<typename T, 
+			template<class> class combiner = Signals::default_combiner, 
+			template<class...> class Sink = Signals::signal_sink> 
+		Signals::typed_signal_base<T, combiner>* get_signal(const std::string& name, const std::string& description = "", std::string file_name = "", int line_number = -1)
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			if (line_number != -1 && file_name.size())
+				register_sender(Loki::TypeInfo(typeid(T)), name, description, file_name, line_number);
 
+			auto&sig = get_signal(name, Loki::TypeInfo(typeid(Signals::typed_signal_base<T, combiner>)));
+			if (!sig)
+				sig.reset(new Signals::typed_signal<T, combiner, Sink>(description));
 
-        template<typename T, typename C> Signals::signal<T>* GetSignal(const std::string& name, C* sender, int stream_index = -1)
-        {
-            std::lock_guard<std::mutex> lock(mtx);
+			return std::dynamic_pointer_cast<typed_signal_base<T, combiner>>(sig).get();
+		}
 
-            auto&sig = GetSignal(name, Loki::TypeInfo(typeid(T)), stream_index);
-            if (!sig)
-                sig.reset(new Signals::signal<T>());
-
-            ConnectionInfo cinfo;
-            cinfo.sender = true;
-            cinfo.ptr = (void*)sender;
-            cinfo.signal_name = name;
-            cinfo.object_type = Loki::TypeInfo(typeid(C));
-            cinfo.signal_signature = Loki::TypeInfo(typeid(T));
-            connections.push_back(cinfo);
-            return std::dynamic_pointer_cast<Signals::signal<T>>(sig).get();
-        }
-
-    private:
-        struct ConnectionInfo
-        {
-            bool sender; // True if sender, false if receiver
-            Loki::TypeInfo object_type;
-            Loki::TypeInfo signal_signature;
-            void* ptr;
-            std::string signal_name;
-        };
-        std::shared_ptr<Signals::signal_base>& GetSignal(const std::string& name, Loki::TypeInfo type, int stream_index);
-        // The signal manager object stores signals by the stream index, signature, and name
-        std::map<int,  // Stream index
-        std::map<Loki::TypeInfo, // Signal signature
-        std::map<std::string, // Signal name
-            std::shared_ptr<Signals::signal_base> >>> stream_specific_signals;
-        
-        /*std::map<Loki::TypeInfo, // Signal signature
-        std::map<std::string, // Signal name
-            std::shared_ptr<Signals::signal_base> >> global_signals;*/
-
-        std::list<ConnectionInfo> connections;
-        std::mutex mtx;
-    
+		template<typename T, template<class> class combiner = Signals::default_combiner> std::shared_ptr<Signals::connection> connect(const std::string& name, std::function<T> f, boost::thread::id destination_thread = boost::this_thread::get_id(), const std::string& receiver_description = "", int line_number = -1, const std::string& filename = "")
+		{
+			auto sig = get_signal<T, combiner>(name);
+			if (filename.size() && line_number != -1)
+				register_receiver(Loki::TypeInfo(typeid(T)), name, line_number, filename, receiver_description);
+			return sig->connect(f, destination_thread);
+		}
+		template<typename T, typename C> std::shared_ptr<Signals::connection> connect(const std::string& name, std::function<T> f, C* receiver, boost::thread::id destination_thread = boost::this_thread::get_id(), const std::string& receiver_description = "")
+		{
+			auto sig = get_signal<T>(name);
+			register_receiver(Loki::TypeInfo(typeid(T)), name, Loki::TypeInfo(typeid(C)), receiver);
+			return sig->connect(f, destination_thread);
+		}*/
+		static	SignalManager* get_instance();
     };
 
-    // Class that can send and receive signals
 
-    template<typename T, int S_ID> class register_sender
-    {
-    };
-    template<typename R, typename... T, int S_ID> struct register_sender<R(T...), S_ID>
-    {
-        template<typename C> register_sender(C* sender, const std::string& signal_name)
-        {
-            auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-            auto manager = table->GetSingleton<EagleLib::SignalManager>();
-            signal = manager->GetSignal<R(T...)>(signal_name, sender, S_ID);
-        }
-        void operator()(T... args)
-        {
-            (*signal)(args...);
-        }
-        ~register_sender()
-        {
-            // todo remove signal from signal manager
-        }
-        Signals::signal<R(T...)>* signal;
-    };
 }

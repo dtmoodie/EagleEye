@@ -17,7 +17,7 @@
 //#include <GL/gl.h>
 //#include <GL/glu.h>
 
-#include <UI/InterThread.hpp>
+#include <parameters/UI/InterThread.hpp>
 
 #include <EagleLib/rcc/SystemTable.hpp>
 #include <EagleLib/utilities/ogl_allocators.h>
@@ -210,10 +210,7 @@ MainWindow::~MainWindow()
     delete bookmarks;
 	stopProcessingThread();
 	cv::destroyAllWindows();
-	//EagleLib::ui_collector::clearGenericCallbackHandlers();
 	EagleLib::ShutdownLogging();
-
-//    user_interface_persistence::variable_storage::instance().save_parameters();
     delete ui;
 }
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -619,7 +616,7 @@ MainWindow::onNodeAdd(EagleLib::Nodes::Node::Ptr node)
     EagleLib::Nodes::Node::Ptr prevNode = currentNode;
     if(currentNode != nullptr)
     {
-        boost::recursive_mutex::scoped_lock(currentNode->mtx);
+        std::lock_guard<std::recursive_mutex> lock(currentNode->mtx);
         currentNode->addChild(node);
     }else
     {

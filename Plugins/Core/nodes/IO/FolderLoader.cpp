@@ -1,6 +1,7 @@
 #include "FolderLoader.h"
 #include <boost/filesystem.hpp>
 #include "EagleLib/Defs.hpp"
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

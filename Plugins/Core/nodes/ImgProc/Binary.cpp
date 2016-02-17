@@ -10,7 +10,7 @@
 
 #include <algorithm>
 #include <utility>
-
+#include <EagleLib/ParameteredObjectImpl.hpp>
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

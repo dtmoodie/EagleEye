@@ -31,16 +31,16 @@ namespace EagleLib
         void imshow(const std::string& window_name, cv::InputArray img, int flags = 0);
 
 
-        Signals::signal<void(std::string, cv::Point, int)>* sig_click_right;
-        Signals::signal<void(std::string, cv::Point, int)>* sig_click_left;
-        Signals::signal<void(std::string, cv::Point, int)>* sig_click_middle;
-        Signals::signal<void(std::string, cv::Point, int)>* sig_move_mouse;
+        Signals::typed_signal_base<void(std::string, cv::Point, int)>* sig_click_right;
+		Signals::typed_signal_base<void(std::string, cv::Point, int)>* sig_click_left;
+		Signals::typed_signal_base<void(std::string, cv::Point, int)>* sig_click_middle;
+		Signals::typed_signal_base<void(std::string, cv::Point, int)>* sig_move_mouse;
 
         
 
-        Signals::signal<void(std::string, cv::Point, int)>* sig_click;
-        Signals::signal<void(std::string, cv::Rect, int)>* sig_select_rect;
-        Signals::signal<void(std::string, std::vector<cv::Point>, int)>* sig_select_points;
+		Signals::typed_signal_base<void(std::string, cv::Point, int)>* sig_click;
+		Signals::typed_signal_base<void(std::string, cv::Rect, int)>* sig_select_rect;
+		Signals::typed_signal_base<void(std::string, std::vector<cv::Point>, int)>* sig_select_points;
     private:
         std::map<std::string, bool> dragging;
         std::map<std::string, cv::Point> drag_start;

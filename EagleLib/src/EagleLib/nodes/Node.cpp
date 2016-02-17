@@ -2,7 +2,7 @@
 #define OPENCV_FOUND
 #endif
 #include "Node.h"
-#include "Persistence/OpenCV.hpp"
+#include "parameters/Persistence/OpenCV.hpp"
 #include <regex>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -112,7 +112,8 @@ namespace EagleLib
                 {
                     for (auto itr2 : itr.second)
                     {
-                        itr2.disconnect();
+                        //itr2.disconnect();
+						itr2.reset();
                     }
                 }
             }
@@ -120,10 +121,10 @@ namespace EagleLib
             boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
             std::vector<std::pair<time_t, int>>                                                     timings;
             std::shared_ptr<Signals::connection>											        resetConnection;
-            std::map<EagleLib::Nodes::Node*, std::vector<boost::signals2::connection>>				callbackConnections;
+            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<Signals::connection>>> 	callbackConnections;
             std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<Signals::connection>>>	    callbackConnections2;
-            Signals::signal<void(Nodes::Node*)>*                                                    update_signal;
-            Signals::signal<void(Nodes::Node*)>*                                                    g_update_signal;
+            Signals::typed_signal_base<void(Nodes::Node*)>*                                                    update_signal;
+			Signals::typed_signal_base<void(Nodes::Node*)>*                                                    g_update_signal;
             boost::recursive_mutex                                                                  mtx;
         };
     }    
@@ -192,7 +193,8 @@ Node::~Node()
 	auto& connections = pImpl_->callbackConnections[this];
 	for (auto itr : connections)
 	{
-		itr.disconnect();
+		//itr.disconnect();
+		itr.reset();
 	}
     auto itr = pImpl_->callbackConnections2.find(this);
     if(itr != pImpl_->callbackConnections2.end())
@@ -508,7 +510,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 			if (enabled)
 			{
 				ClearProcessingTime();
-				boost::recursive_mutex::scoped_lock lock(mtx);
+				std::lock_guard<std::recursive_mutex> lock(mtx);
                 auto allocator = dynamic_cast<PitchedAllocator*>(cv::cuda::GpuMat::defaultAllocator());
                 if(allocator)
                 {
@@ -547,7 +549,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 		children_.reserve(children.size());
 		{
 			// Prevents adding of children while running, debatable how much this is needed
-			boost::recursive_mutex::scoped_lock lock(mtx);
+			std::lock_guard<std::recursive_mutex> lock(mtx);
 			for (int i = 0; i < children.size(); ++i)
 			{
 				children_.push_back(children[i]);
@@ -586,7 +588,7 @@ void Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
         try
         {
                 ClearProcessingTime();
-                boost::recursive_mutex::scoped_lock lock(mtx);
+				std::lock_guard<std::recursive_mutex> lock(mtx);
                 auto allocator = dynamic_cast<PitchedAllocator*>(cv::cuda::GpuMat::defaultAllocator());
                 if (allocator)
                 {
@@ -616,7 +618,7 @@ void Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
             std::vector<Node::Ptr>  children_;
             {
                 // Prevents adding of children while running, debatable how much this is needed
-                boost::recursive_mutex::scoped_lock lock(mtx);
+				std::lock_guard<std::recursive_mutex> lock(mtx);
                 children_ = children;
             }
             for (size_t i = 0; i < children_.size(); ++i)
@@ -645,9 +647,10 @@ bool Node::pre_check(const TS<SyncedMemory>& input)
 }
 void Node::SetDataStream(DataStream* stream_)
 {
-
+	
 	if (_dataStream)
 	{
+		
 		NODE_LOG(debug) << "Updating stream manager to a new manager";
 	}	
 	else
@@ -655,9 +658,9 @@ void Node::SetDataStream(DataStream* stream_)
 		NODE_LOG(debug) << "Setting stream manager";
 	}
     _dataStream = stream_;
-
-    pImpl_->update_signal = stream_->GetSignalManager()->GetSignal<void(Node*)>("NodeUpdated", this, stream_->get_stream_id());
-    pImpl_->g_update_signal = stream_->GetSignalManager()->GetSignal<void(Node*)>("NodeUpdated", this, -1);
+	//setup_signals(stream_->GetSignalManager());
+    pImpl_->update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
+	pImpl_->g_update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
 	for (auto& child : children)
 	{
 		child->SetDataStream(_dataStream);
@@ -774,31 +777,8 @@ Node::Init(const std::string &configFile)
     ui_collector::set_node_name(getFullTreeName());
 	NODE_LOG(trace);
 }
-/*void Node::RegisterParameterCallback(int idx, boost::function<void(cv::cuda::Stream*)> callback)
-{
-	NODE_LOG(trace);
-	auto param = getParameter(idx);
-	if (param)
-	{
-        boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-		pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(callback));
-	}
-}
-void Node::RegisterParameterCallback(const std::string& name, boost::function<void(cv::cuda::Stream*)> callback)
-{
-	NODE_LOG(trace);
-	auto param = getParameter(name);
-	if (param)
-	{
-        boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-		pImpl_->callbackConnections[this].push_back(param->RegisterNotifier(callback));
-	}
-}*/
-void Node::RegisterSignalConnection(boost::signals2::connection connection)
-{
-	boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-	pImpl_->callbackConnections[this].push_back(connection);
-}
+
+
 void Node::RegisterSignalConnection(std::shared_ptr<Signals::connection> connection)
 {
     boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);

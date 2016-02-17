@@ -4,7 +4,7 @@
 #include "../remotery/lib/Remotery.h"
 #include <QtNetwork/qnetworkinterface.h>
 #include <EagleLib/rcc/SystemTable.hpp>
-
+#include <EagleLib/ParameteredObjectImpl.hpp>
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

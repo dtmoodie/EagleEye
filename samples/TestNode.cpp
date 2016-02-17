@@ -1,4 +1,5 @@
 #include <EagleLib/nodes/Node.h>
+#include <EagleLib/ParameteredObjectImpl.hpp>
 #include <../RuntimeObjectSystem/ISimpleSerializer.h>
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/cuda.hpp>

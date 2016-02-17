@@ -6,7 +6,7 @@
 #include <IObject.h>
 #include <opencv2/core/persistence.hpp>
 #include <functional>
-#include <Parameters.hpp>
+#include <parameters/Parameters.hpp>
 #include "EagleLib/rcc/shared_ptr.hpp"
 
 namespace EagleLib

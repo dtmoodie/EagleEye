@@ -2,6 +2,7 @@
 #include "EagleLib/Logging.h"
 #include "EagleLib/DataStreamManager.h"
 #include "Remotery.h"
+#include "EagleLib/ParameteredObjectImpl.hpp"
 
 using namespace EagleLib;
 IFrameGrabber::IFrameGrabber()
@@ -19,7 +20,7 @@ void IFrameGrabber::InitializeFrameGrabber(DataStream* stream)
     parent_stream = stream;
     if(stream)
     {
-        update_signal = stream->GetSignalManager()->GetSignal<void()>("update", this, stream->get_stream_id());
+		update_signal = stream->GetSignalManager()->get_signal<void()>("update", this);
     }
 }
 void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
@@ -32,7 +33,7 @@ void IFrameGrabber::Init(bool firstInit)
 {
     if(!firstInit)
     {
-        update_signal = parent_stream->GetSignalManager()->GetSignal<void()>("update", this, parent_stream->get_stream_id());
+        update_signal = parent_stream->GetSignalManager()->get_signal<void()>("update", this);
     }
 }
 FrameGrabberBuffered::FrameGrabberBuffered()
@@ -53,8 +54,8 @@ void FrameGrabberBuffered::InitializeFrameGrabber(DataStream* stream)
     IFrameGrabber::InitializeFrameGrabber(stream);
     if (stream)
     {
-        connections.push_back(stream->GetSignalManager()->Connect<void()>("StartThreads", std::bind(&FrameGrabberBuffered::LaunchBufferThread, this), this, -1));
-        connections.push_back(stream->GetSignalManager()->Connect<void()>("StopThreads", std::bind(&FrameGrabberBuffered::StopBufferThread, this), this, -1));
+        connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberBuffered::LaunchBufferThread, this), this));
+        connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberBuffered::StopBufferThread, this), this));
     }
     LaunchBufferThread();
 }
@@ -158,8 +159,8 @@ void FrameGrabberBuffered::Init(bool firstInit)
     {
         if (parent_stream)
         {
-            connections.push_back(parent_stream->GetSignalManager()->Connect<void()>("StartThreads", std::bind(&FrameGrabberBuffered::LaunchBufferThread, this), this, -1));
-            connections.push_back(parent_stream->GetSignalManager()->Connect<void()>("StopThreads", std::bind(&FrameGrabberBuffered::StopBufferThread, this), this, -1));
+            connections.push_back(parent_stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberBuffered::LaunchBufferThread, this), this));
+            connections.push_back(parent_stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberBuffered::StopBufferThread, this), this));
         }
         buffer_frame_number = -1;
         LaunchBufferThread();

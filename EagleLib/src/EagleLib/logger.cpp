@@ -23,9 +23,9 @@ boost::log::attributes::mutable_constant<std::string>    attr(std::string(""));
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName,"NodeName",std::string);
 
-std::map<std::string, std::shared_ptr<Signals::signal<void(boost::log::trivial::severity_level, std::string)>>> object_specific_signals;
-Signals::signal<void(boost::log::trivial::severity_level, std::string)>                                         generic_signal;
-Signals::signal<void(boost::log::trivial::severity_level, std::string, std::string)>                            object_signal;
+std::map<std::string, std::shared_ptr<Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>>> object_specific_signals;
+Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>                                         generic_signal;
+Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string, std::string)>                            object_signal;
 
 ui_collector::ui_collector(object_log_handler_t olh, log_handler_t lh)
 {
@@ -58,18 +58,18 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
 }
 
 
-Signals::signal<void(boost::log::trivial::severity_level, std::string)>& ui_collector::get_object_log_handler(std::string name)
+Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>& ui_collector::get_object_log_handler(std::string name)
 {
     auto& sig = object_specific_signals[name];
     if(!sig)
-        sig.reset(new Signals::signal<void(boost::log::trivial::severity_level, std::string)>());
+		sig.reset(new Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>());
     return (*sig);
 }
-Signals::signal<void(boost::log::trivial::severity_level, std::string, std::string)>& ui_collector::get_object_log_handler()
+Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string, std::string)>& ui_collector::get_object_log_handler()
 {
     return object_signal;
 }
-Signals::signal<void(boost::log::trivial::severity_level, std::string)>& ui_collector::get_log_handler()
+Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>& ui_collector::get_log_handler()
 {
     return generic_signal;
 }
@@ -79,43 +79,3 @@ void ui_collector::set_node_name(std::string name)
     attr.set(name);
 }
 
-/*
-void ui_collector::addNodeCallbackHandler(Nodes::Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
-{
-    nodeHandlers[node->GetObjectId()].push_back(handler);
-}
-void ui_collector::removeNodeCallbackHandler(Nodes::Node* node, const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
-{
-    auto& handlers = nodeHandlers[node->GetObjectId()];
-    auto itr = std::find(handlers.begin(), handlers.end(), handler);
-    if (itr != handlers.end())
-        handlers.erase(itr);
-}
-size_t ui_collector::addGenericCallbackHandler(const boost::function<void(boost::log::trivial::severity_level, const std::string&)>& handler)
-{
-    genericHandlers.push_back(handler);
-    return genericHandlers.size() - 1;
-}
-void ui_collector::clearGenericCallbackHandlers()
-{
-    genericHandlers.clear();
-}
-void ui_collector::setNode(EagleLib::Nodes::Node* node)
-{
-    attr.set(node);
-
-    object_id_attribute.set(node->GetObjectId().m_PerTypeId);
-    constructor_id_attribute.set(node->GetObjectId().m_ConstructorId);
-}
-EagleLib::Nodes::Node* ui_collector::getNode()
-{
-    return attr.get();
-}
-ObjectId ui_collector::getId()
-{
-    ObjectId output;
-    output.m_ConstructorId = constructor_id_attribute.get();
-    output.m_PerTypeId = object_id_attribute.get();
-    return output;
-}
-*/

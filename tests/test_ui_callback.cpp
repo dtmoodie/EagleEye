@@ -1,4 +1,4 @@
-#include "UI/InterThread.hpp"
+#include "parameters/UI/InterThread.hpp"
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <boost/log/trivial.hpp>

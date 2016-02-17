@@ -5,8 +5,9 @@ using namespace EagleLib::Nodes;
 
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_highgui.hpp>
-#include <Parameters.hpp>
-#include <UI/InterThread.hpp>
+#include <parameters/Parameters.hpp>
+#include <parameters/UI/InterThread.hpp>
+#include <EagleLib/ParameteredObjectImpl.hpp>
 
 
 void

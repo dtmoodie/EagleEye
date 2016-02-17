@@ -27,9 +27,9 @@ namespace EagleLib
 		
 		void consume(boost::log::record_view const& rec, string_type const& command_line);
 
-        static Signals::signal<void(boost::log::trivial::severity_level, std::string)>&                 get_object_log_handler(std::string);
-        static Signals::signal<void(boost::log::trivial::severity_level, std::string, std::string)>&    get_object_log_handler();
-        static Signals::signal<void(boost::log::trivial::severity_level, std::string)>&                 get_log_handler();
+        static Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>&                 get_object_log_handler(std::string);
+		static Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string, std::string)>&    get_object_log_handler();
+		static Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>&                 get_log_handler();
 
         static void set_node_name(std::string name);
 	};

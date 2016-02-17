@@ -1,4 +1,4 @@
-#include "Persistence/TextSerializer.hpp"
+#include "parameters/Persistence/TextSerializer.hpp"
 #include "xmpp.h"
 #include "gloox/disco.h"
 #include "gloox/message.h"
@@ -10,6 +10,7 @@
 #include "gloox/socks5bytestreamserver.h"
 #include "gloox/messageeventfilter.h"
 #include <boost/algorithm/string/predicate.hpp>
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace gloox;
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

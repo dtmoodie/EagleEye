@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include "IObject.h"
-#include <Parameters.hpp>
+#include <parameters/Parameters.hpp>
 namespace EagleLib
 {
 	// Render objects are objects that are rendered inside of a scene

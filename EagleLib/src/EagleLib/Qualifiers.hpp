@@ -1,6 +1,6 @@
 #pragma once
 #include <boost/function.hpp>
-#include "Parameters.hpp"
+#include "parameters/Parameters.hpp"
 
 
 namespace EagleLib

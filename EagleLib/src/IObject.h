@@ -57,6 +57,7 @@ enum InterfaceIDEnum
 	IID_RenderInteractor,
 	IID_RenderObjectFactory,
     IID_Algorithm,
+	IID_CudaAlgorithm,
     IID_ViewManager,
     IID_CoordinateManager,
     IID_TrackManager,

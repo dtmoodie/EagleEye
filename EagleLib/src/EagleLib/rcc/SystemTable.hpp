@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LokiTypeInfo.h>
+#include <parameters/LokiTypeInfo.h>
 #include <map>
 namespace EagleLib
 {

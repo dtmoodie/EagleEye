@@ -3,7 +3,7 @@
 #include "ObjectInterfacePerModule.h"
 #include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
 #include <boost/filesystem.hpp>
-
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 frame_grabber_directory::frame_grabber_directory()
 {
@@ -71,8 +71,12 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     if(index >= files_on_disk.size())
         index = files_on_disk.size() - 1;
     std::string file_name = files_on_disk[index];
-    updateParameter("Frame Index", index);
-    updateParameter("Loaded file", file_name);
+	if (index != *getParameter<int>("Frame Index")->Data())
+	{
+		updateParameter("Frame Index", index);
+		updateParameter("Loaded file", file_name);
+	}
+    
     for(auto& itr : loaded_images)
     {
         if(std::get<0>(itr) == file_name)
@@ -80,7 +84,6 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
             return TS<SyncedMemory>(0.0, 0, std::get<1>(itr), std::get<2>(itr));
         }
     }
-
     cv::Mat h_out = cv::imread(file_name);
     if(h_out.empty())
         return TS<SyncedMemory>(0.0, 0);
@@ -91,6 +94,8 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
 }
 TS<SyncedMemory> frame_grabber_directory::GetNextFrame(cv::cuda::Stream& stream)
 {
+	if (frame_index == files_on_disk.size() - 1)
+		return GetCurrentFrame(stream);
     return GetFrame(frame_index++, stream);
 }
 

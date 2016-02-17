@@ -4,6 +4,8 @@
 #include "EagleLib/utilities/CudaCallbacks.hpp"
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
+#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

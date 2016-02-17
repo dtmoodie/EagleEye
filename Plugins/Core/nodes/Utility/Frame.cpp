@@ -2,6 +2,7 @@
 #include "EagleLib/rcc/external_includes/cv_cudawarping.hpp"
 #include "EagleLib/rcc/external_includes/cv_cudaarithm.hpp"
 #include <EagleLib/Qualifiers.hpp>
+#include <EagleLib/ParameteredObjectImpl.hpp>
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

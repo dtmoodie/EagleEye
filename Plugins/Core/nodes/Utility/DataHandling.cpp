@@ -1,5 +1,7 @@
 #include "nodes/Utility/DataHandling.h"
 #include "Remotery.h"
+#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

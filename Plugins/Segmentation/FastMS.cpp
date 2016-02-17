@@ -3,6 +3,7 @@
 
 
 #ifdef FASTMS_FOUND
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 void FastMumfordShah::Init(bool firstInit)

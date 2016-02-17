@@ -5,6 +5,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include "EagleLib/nodes/VideoProc/Tracking.hpp"
 #include "EagleLib/utilities/GpuMatAllocators.h"
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

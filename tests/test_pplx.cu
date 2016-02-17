@@ -7,7 +7,7 @@
 #include <opencv2/highgui.hpp>
 
 #include "EagleLib/Thrust_interop.hpp"
-#include "UI/InterThread.hpp"
+#include "parameters/UI/InterThread.hpp"
 
 #include "EagleLib/utilities/CudaCallbacks.hpp"
 #include "EagleLib/utilities/CpuMatAllocators.h"

@@ -1,12 +1,12 @@
 #ifndef TYPE_HPP
 #define TYPE_HPP
-//#define CVAPI_EXPORTS
-#include "opencv2/core/cvdef.h"
+
+#include <EagleLib/Defs.hpp>
 #include <string>
 #include <typeinfo>
 namespace TypeInfo
 {
-std::string CV_EXPORTS demangle(const char* name);
+	std::string EAGLE_EXPORTS demangle(const char* name);
 
 template <class T>
 std::string type(const T& t) {

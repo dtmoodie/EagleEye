@@ -18,6 +18,7 @@
 #include "plotwizarddialog.h"
 #include <QtGui/qopenglcontext.h>
 #include <signals/connection.h>
+#include <signals/signaler.h>
 #include <qtimer.h>
 namespace EagleLib
 {
@@ -33,7 +34,7 @@ namespace Signals
 {
     class connection;
 }
-class MainWindow : public QMainWindow, public user_interface_persistence
+class MainWindow : public QMainWindow, public user_interface_persistence, Signals::signaler
 {
     Q_OBJECT
 

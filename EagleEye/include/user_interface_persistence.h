@@ -7,7 +7,8 @@
 #endif
 
 #include "EagleLib/ParameteredObject.h"
-#include <LokiTypeInfo.h>
+#include "EagleLib/ParameteredObjectImpl.hpp"
+#include <parameters/LokiTypeInfo.h>
 #include <map>
 
 

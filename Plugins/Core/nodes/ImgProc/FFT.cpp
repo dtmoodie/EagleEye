@@ -1,6 +1,7 @@
 #include "nodes/ImgProc/FFT.h"
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

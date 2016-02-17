@@ -18,7 +18,7 @@
 #include "cuda_runtime.h"
 #include "cuda_runtime_api.h"
 
-#include "Parameter_def.hpp"
+#include "parameters/Parameter_def.hpp"
 
 #include <EagleLib/rcc/SystemTable.hpp>
 #include <stdarg.h>

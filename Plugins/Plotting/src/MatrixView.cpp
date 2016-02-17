@@ -1,7 +1,7 @@
 #include "Plotting.h"
 #include "PlottingImpl.hpp"
 #include "Remotery.h"
-
+#include <EagleLib/ParameteredObjectImpl.hpp>
 template<typename T> QTableWidgetItem* readItems(T* data, const int channels)
 {
 	QString str;

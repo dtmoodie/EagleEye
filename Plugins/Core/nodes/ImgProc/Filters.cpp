@@ -1,5 +1,6 @@
 #include "nodes/ImgProc/Filters.h"
 
+#include <EagleLib/ParameteredObjectImpl.hpp>
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

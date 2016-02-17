@@ -18,7 +18,7 @@
 #include <QComboBox>
 #include <EagleLib/type.h>
 #include <boost/thread/recursive_mutex.hpp>
-#include <UI/Qt.hpp>
+#include <parameters/UI/Qt.hpp>
 #include <EagleLib/rcc/shared_ptr.hpp>
 #include <EagleLib/DataStreamManager.h>
 
@@ -45,7 +45,7 @@ public:
 private slots:
 	void on_valueChanged(int);
 private:
-	boost::signals2::connection bc;
+	std::shared_ptr<Signals::connection> bc;
 	EagleLib::Nodes::Node::Ptr node;
 	QComboBox* box;
 };
@@ -152,7 +152,7 @@ public:
 
     IQNodeProxy* proxy;
 	Parameters::Parameter::Ptr parameter;
-    boost::signals2::connection bc;
+    std::shared_ptr<Signals::connection> bc;
     boost::posix_time::ptime previousUpdateTime;
 public slots:
     virtual void updateUi();

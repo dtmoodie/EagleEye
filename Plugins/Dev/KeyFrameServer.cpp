@@ -1,5 +1,5 @@
 #include "KeyFrameServer.h"
-
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

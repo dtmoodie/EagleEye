@@ -16,7 +16,7 @@ IF(WIN32)
   SET(CMAKE_CXX_FLAGS_RELEASE "/MD /Zi /O2 /Ob1 /D NDEBUG" CACHE STRING "" FORCE)
   SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2" CACHE STRING "" FORCE)
   ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
-  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
+  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0601)
 ELSE(WIN32)
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-reorder -Wno-sign-compare -Wl,--no-as-needed -O0")
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
@@ -142,7 +142,7 @@ SET(EagleLib_LIB_DIRS_RELEASE "${LIB_BUILD_DIR_RELEASE};${Boost_LIBRARY_DIR};${P
 SET(EagleLib_DEFS "${defs_}")
 
 CONFIGURE_FILE(EagleLibConfig.cmake.in ${CMAKE_BINARY_DIR}/EagleLibConfig.cmake @ONLY)
-CONFIGURE_FILE(EagleLibConfig.cmake.in ${CMAKE_INSTALL_PREFIX}/EagleLibConfig.cmake @ONLY)
+#CONFIGURE_FILE(EagleLibConfig.cmake.in ${CMAKE_INSTALL_PREFIX}/EagleLibConfig.cmake @ONLY)
 
 
 
@@ -245,8 +245,8 @@ ADD_DEPENDENCIES(EagleLib
 	libParameter
 	pplx
 	signals
-        RuntimeObjectSystem
-        RuntimeCompiler
+    RuntimeObjectSystem
+    RuntimeCompiler
 	)
 
 install(TARGETS EagleLib
@@ -260,6 +260,8 @@ install(DIRECTORY src/
 install(DIRECTORY src/
 		DESTINATION include
 		FILES_MATCHING PATTERN "*.hpp")
+install(FILES ${CMAKE_BINARY_DIR}/EagleLibConfig.cmake
+		DESTINATION ./)
 
 if(WIN32)
 	install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/

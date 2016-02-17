@@ -5,7 +5,7 @@
 #include "EagleLib/utilities/ObjectPool.hpp"
 #include <EagleLib/rcc/SystemTable.hpp>
 
-#include "UI/InterThread.hpp"
+#include "parameters/UI/InterThread.hpp"
 
 #include <QVTKWidget2.h>
 #include <qopengl.h>
@@ -31,7 +31,7 @@
 #include <vtkFloatArray.h>
 #include <vtkPolygon.h>
 #include <vtkGenericOpenGLRenderWindow.h>
-
+#include <EagleLib/ParameteredObjectImpl.hpp>
 
 
 SETUP_PROJECT_IMPL
@@ -93,9 +93,12 @@ void vtkPlotter::AddPlot(QWidget* plot_)
 
 QWidget* vtkPlotter::CreatePlot(QWidget* parent)
 {
+	QOpenGLContext* draw_context = new QOpenGLContext();
+
+#if QT_VERSION > 0x050500
     auto global_context = QOpenGLContext::globalShareContext();
-    QOpenGLContext* draw_context = new QOpenGLContext();
     draw_context->setShareContext(global_context);
+#endif
 	auto widget = new QVTKWidget2(QGLContext::fromOpenGLContext(draw_context), parent);
     widget->makeCurrent();
 	widget->show();
@@ -329,7 +332,7 @@ void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
 				stream->waitForCompletion();
 			}
 			
-			boost::recursive_mutex::scoped_lock lock(this->mtx);
+			std::lock_guard<std::recursive_mutex> lock(this->mtx);
 			{
 				rmt_ScopedCPUSample(texture_creation);
                 

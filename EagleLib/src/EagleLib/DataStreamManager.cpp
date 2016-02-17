@@ -50,15 +50,15 @@ DataStream::DataStream()
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {
-        signal_manager = table->GetSingleton<SignalManager>();
-        if(!signal_manager)
+        auto global_signal_manager = table->GetSingleton<SignalManager>();
+		if (!global_signal_manager)
         {
-            signal_manager = new SignalManager();
-            table->SetSingleton<SignalManager>(signal_manager);
-            Signals::signal_manager::set_instance(signal_manager);
+			global_signal_manager  = new SignalManager();
+			table->SetSingleton<SignalManager>(global_signal_manager);
+			Signals::signal_manager::set_instance(global_signal_manager);
         }
-        connections.push_back(signal_manager->Connect<void(void)>("StopThreads", std::bind(&DataStream::StopProcess, this), this, -1));
-        connections.push_back(signal_manager->Connect<void(void)>("StartThreads", std::bind(&DataStream::LaunchProcess, this), this, -1));
+		connections.push_back(global_signal_manager->connect<void(void)>("StopThreads", std::bind(&DataStream::StopProcess, this), this));
+		connections.push_back(global_signal_manager->connect<void(void)>("StartThreads", std::bind(&DataStream::LaunchProcess, this), this));
     }
     paused = false;
     stream_id = 0;
@@ -107,7 +107,9 @@ shared_ptr<IFrameGrabber> DataStream::GetFrameGrabber()
 
 SignalManager* DataStream::GetSignalManager()
 {
-    return signal_manager;
+	if (signal_manager == nullptr)
+		signal_manager.reset(new SignalManager());
+    return signal_manager.get();
 }
 
 bool DataStream::LoadDocument(const std::string& document)
@@ -283,23 +285,23 @@ void DataStream::process()
     //signal_manager->register_thread(Signals::ANY);
     Signals::thread_registry::get_instance()->register_thread(Signals::ANY);
     rmt_SetCurrentThreadName("DataStreamThread");
-    auto node_update_connection = signal_manager->Connect<void(EagleLib::Nodes::Node*)>("NodeUpdated",
+    auto node_update_connection = signal_manager->connect<void(EagleLib::Nodes::Node*)>("NodeUpdated",
         std::bind([this](EagleLib::Nodes::Node* node)->void
             {
                 dirty_flag = true;
-            }, std::placeholders::_1), this, stream_id);
+            }, std::placeholders::_1), this);
 
-    auto update_connection = signal_manager->Connect<void()>("update",
+    auto update_connection = signal_manager->connect<void()>("update",
         std::bind([this]()->void
             {
                 dirty_flag = true;
-            }), this, stream_id);
+            }), this);
 
-    auto object_update_connection = signal_manager->Connect<void(ParameteredObject*)>("ObjectUpdated",
+    auto object_update_connection = signal_manager->connect<void(ParameteredObject*)>("ObjectUpdated",
         std::bind([this](ParameteredObject*)->void
             {
                 dirty_flag = true;
-            }, std::placeholders::_1), this, -1);
+            }, std::placeholders::_1), this);
 
     while(!boost::this_thread::interruption_requested())
     {

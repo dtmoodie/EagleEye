@@ -6,11 +6,13 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 
-#include "EagleLib/rcc/external_includes/parameters.hpp"
+//#include "EagleLib/rcc/external_includes/parameters.hpp"
 #include "EagleLib/rcc/external_includes/cv_core.hpp"
 #include "EagleLib/rcc/external_includes/cv_cudev.hpp"
+#include <opencv2/core/cuda_types.hpp>
+#include <opencv2/core/cuda.hpp>
 
-#include "EagleLib/Algorithm.h"
+//#include "EagleLib/Algorithm.h"
 
 #include "thrust/device_vector.h"
 #include "thrust/host_vector.h"
@@ -56,7 +58,7 @@ namespace MIL {
         };
     } // namespace device
 
-class mil_tree : public EagleLib::Algorithm
+class mil_tree// : public EagleLib::Algorithm
 {
     thrust::device_vector<device::stump> d_stumps;
     thrust::host_vector<device::stump>   h_stumps;
@@ -72,8 +74,8 @@ class mil_tree : public EagleLib::Algorithm
     int num_weak_classifiers;
 public:
     void Init(bool firstInit);
-    void Serialize(ISimpleSerializer* pSerializer);
-    virtual std::vector<Parameters::Parameter::Ptr> GetParameters();
+    
+    //virtual std::vector<Parameters::Parameter::Ptr> GetParameters();
 
     void update(const cv::Mat& pos, const cv::Mat& neg);
     void update(const cv::cuda::GpuMat& pos, const cv::cuda::GpuMat& neg, cv::cuda::Stream& stream = cv::cuda::Stream::Null());

@@ -1,7 +1,7 @@
 #include "nodes/Display/ImageDisplay.h"
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
 #include <EagleLib/rcc/external_includes/cv_imgproc.hpp>
-#include <UI/InterThread.hpp>
+#include <parameters/UI/InterThread.hpp>
 #include "../remotery/lib/Remotery.h"
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #include <EagleLib/utilities/UiCallbackHandlers.h>
@@ -9,6 +9,7 @@
 #include "ObjectInterfacePerModule.h"
 #include "EagleLib/rcc/SystemTable.hpp"
 #include "EagleLib/DataStreamManager.h"
+#include <EagleLib/ParameteredObjectImpl.hpp>
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

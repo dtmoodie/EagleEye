@@ -1,6 +1,7 @@
 #include "nodes/Utility/Cuda.h"
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <EagleLib/ParameteredObjectImpl.hpp>
 
 
 RUNTIME_COMPILER_LINKLIBRARY("-lcudart")

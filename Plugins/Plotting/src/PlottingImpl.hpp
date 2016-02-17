@@ -1,5 +1,5 @@
 #pragma once
-#include "Parameters.hpp"
+#include "parameters/Parameters.hpp"
 #include "QVector"
 
 #include "opencv2/core.hpp"
@@ -11,7 +11,7 @@
 #include <memory>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
-#include "Converters/DoubleConverter.hpp"
+#include "parameters/Converters/DoubleConverter.hpp"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
@@ -37,7 +37,7 @@ namespace EagleLib
 		int channels;
 		cv::Size size;
 		std::shared_ptr<QWidget> controlWidget;
-		std::vector<boost::signals2::connection> connections;
+		std::vector<std::shared_ptr<Signals::connection>> connections;
 		std::mutex mtx;
 		
 		std::vector<std::shared_ptr<Parameters::UI::qt::IParameterProxy>> parameterProxies;

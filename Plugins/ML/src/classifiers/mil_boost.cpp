@@ -14,12 +14,9 @@ void mil_tree::Init(bool firstInit)
     }
     
 }
-void mil_tree::Serialize(ISimpleSerializer* pSerializer)
-{
 
-}
-std::vector<Parameters::Parameter::Ptr> mil_tree::GetParameters()
+/*std::vector<Parameters::Parameter::Ptr> mil_tree::GetParameters()
 {
     return this->parameters;
-}
+}*/
 

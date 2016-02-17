@@ -5,8 +5,8 @@
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 
-
-#include <UI/InterThread.hpp>
+#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/UI/InterThread.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 IPerModuleInterface* GetModule()

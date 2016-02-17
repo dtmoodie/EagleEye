@@ -1,5 +1,6 @@
 #include "nodes/Utility/Utilities.h"
-
+#include <boost/lexical_cast.hpp>
+#include <EagleLib/ParameteredObjectImpl.hpp>
 
 
 

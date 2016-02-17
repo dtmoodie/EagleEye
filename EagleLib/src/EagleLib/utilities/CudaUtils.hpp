@@ -660,7 +660,7 @@ template<typename Data>
         {
             for(size_t i = 0; i < buffer.size(); ++i)
             {
-                cleanup(buffer[i]);
+                EagleLib::cleanup(buffer[i]);
             }
         }
 

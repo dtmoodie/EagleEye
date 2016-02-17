@@ -1,14 +1,23 @@
 #include "Signals.h"
-
+#include "ObjectInterfacePerModule.h"
+#include "EagleLib/rcc/SystemTable.hpp"
 
 using namespace EagleLib;
-
-std::shared_ptr<Signals::signal_base>& SignalManager::GetSignal(const std::string& name, Loki::TypeInfo type, int stream_index)
+SignalManager* SignalManager::get_instance()
 {
-    if(stream_index == -1)
-    {
-        //return _signals[type][name];
-        return get_signal(name, type);
-    }
-    return stream_specific_signals[stream_index][type][name];
+	auto system_table = PerModuleInterface::GetInstance()->GetSystemTable();
+	static SignalManager* g_instance = nullptr;
+	if (g_instance == nullptr)
+	{
+		if (system_table)
+		{
+			g_instance = system_table->GetSingleton<SignalManager>();
+		}
+		if (g_instance == nullptr)
+		{
+			g_instance = new SignalManager();
+			system_table->SetSingleton<SignalManager>(g_instance);
+		}
+	}
+	return g_instance;	
 }

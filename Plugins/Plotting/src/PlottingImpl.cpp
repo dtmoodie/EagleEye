@@ -2,7 +2,8 @@
 #define PARAMETERS_USE_UI
 #define Qt5_FOUND
 #define OPENCV_FOUND
-#include "UI/Qt.hpp"
+#include "parameters/UI/Qt.hpp"
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 
 QtPlotterImpl::QtPlotterImpl()
@@ -15,7 +16,7 @@ QtPlotterImpl::~QtPlotterImpl()
 {
 	for (auto& connection : connections)
 	{
-		connection.disconnect();
+		//connection.disconnect();
 	}
 }
 QWidget* QtPlotterImpl::GetControlWidget(QWidget* parent)
