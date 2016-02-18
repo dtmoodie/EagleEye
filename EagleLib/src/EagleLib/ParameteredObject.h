@@ -45,7 +45,7 @@ namespace EagleLib
         ParameteredObject();
         ~ParameteredObject();
 		virtual void setup_signals(SignalManager* manager);
-        virtual void onUpdate(cv::cuda::Stream* stream);
+        virtual void onUpdate(cv::cuda::Stream* stream = nullptr);
 		virtual Parameters::Parameter* addParameter(ParameterPtr param);
         bool exists(const std::string& name);
         bool exists(size_t index);
@@ -105,10 +105,11 @@ namespace EagleLib
         // Mutex for blocking processing of a node during parameter update
         std::recursive_mutex                                              mtx;
 		
-		void sig_parameter_updated(cv::cuda::Stream* stream = nullptr);
+		
     protected:
 		std::list<std::shared_ptr<Signals::connection>> _callback_connections;
 		Signals::typed_signal_base<void(ParameteredObject*), Signals::default_combiner>* _sig_parameter_updated;
+		Signals::typed_signal_base<void(ParameteredObject*), Signals::default_combiner>* _sig_parameter_added;
     private:
 		
         void RunCallbackLockObject(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback);

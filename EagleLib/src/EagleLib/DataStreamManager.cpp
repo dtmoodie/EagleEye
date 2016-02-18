@@ -53,7 +53,7 @@ DataStream::DataStream()
         auto global_signal_manager = table->GetSingleton<SignalManager>();
 		if (!global_signal_manager)
         {
-			global_signal_manager  = new SignalManager();
+			global_signal_manager  = SignalManager::get_instance();
 			table->SetSingleton<SignalManager>(global_signal_manager);
 			Signals::signal_manager::set_instance(global_signal_manager);
         }

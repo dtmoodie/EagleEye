@@ -177,13 +177,7 @@ Parameters::Parameter* Node::addParameter(Parameters::Parameter::Ptr param)
     onParameterAdded();
     return param.get();
 }
-void Node::onUpdate(cv::cuda::Stream* stream)
-{
-    if(pImpl_->update_signal)
-        (*pImpl_->update_signal)(this);
-    if(pImpl_->g_update_signal)
-        (*pImpl_->g_update_signal)(this);
-}
+
 
 Node::~Node()
 {
@@ -193,7 +187,6 @@ Node::~Node()
 	auto& connections = pImpl_->callbackConnections[this];
 	for (auto itr : connections)
 	{
-		//itr.disconnect();
 		itr.reset();
 	}
     auto itr = pImpl_->callbackConnections2.find(this);
@@ -658,9 +651,10 @@ void Node::SetDataStream(DataStream* stream_)
 		NODE_LOG(debug) << "Setting stream manager";
 	}
     _dataStream = stream_;
+	setup_signals(_dataStream->GetSignalManager());
 	//setup_signals(stream_->GetSignalManager());
     pImpl_->update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
-	pImpl_->g_update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
+	//pImpl_->g_update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
 	for (auto& child : children)
 	{
 		child->SetDataStream(_dataStream);

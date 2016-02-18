@@ -13,6 +13,7 @@ using namespace Parameters;
 ParameteredObject::ParameteredObject()
 {
 	_sig_parameter_updated = nullptr;
+	_sig_parameter_added = nullptr;
 }
 
 ParameteredObject::~ParameteredObject()
@@ -23,6 +24,7 @@ ParameteredObject::~ParameteredObject()
 void ParameteredObject::setup_signals(EagleLib::SignalManager* manager)
 {
 	_sig_parameter_updated = manager->get_signal<void(ParameteredObject*)>("parameter_updated", this, "Emitted when a parameter is updated from ui");
+	_sig_parameter_added = manager->get_signal<void(ParameteredObject*)>("parameter_added", this, "Emitted when a new parameter is added");
 }
 
 void ParameteredIObject::Serialize(ISimpleSerializer* pSerializer)
@@ -30,6 +32,7 @@ void ParameteredIObject::Serialize(ISimpleSerializer* pSerializer)
     IObject::Serialize(pSerializer);
     SERIALIZE(parameters);
 	SERIALIZE(_sig_parameter_updated);
+	SERIALIZE(_sig_parameter_added);
 }
 void ParameteredIObject::Init(const cv::FileNode& configNode)
 {
@@ -54,6 +57,7 @@ Parameter* ParameteredObject::addParameter(Parameter::Ptr param)
 {
     parameters.push_back(param);
 	std::lock_guard<std::recursive_mutex> lock(mtx);
+	DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), warning);
 	_callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, std::placeholders::_1)));
     return param.get();
 }
@@ -131,8 +135,7 @@ void ParameteredObject::RegisterParameterCallback(Parameter* param, const std::f
 }
 void ParameteredObject::onUpdate(cv::cuda::Stream* stream)
 {
-	//(*_sig_parameter_updated)(this);
-	sig_parameter_updated();
+	DOIF(_sig_parameter_updated != nullptr, (*_sig_parameter_updated)(this), debug);
 }
 void ParameteredObject::RunCallbackLockObject(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback)
 {
@@ -160,8 +163,4 @@ bool ParameteredObject::exists(const std::string& name)
 bool ParameteredObject::exists(size_t index)
 {
     return index < parameters.size();
-}
-void ParameteredObject::sig_parameter_updated(cv::cuda::Stream* stream)
-{
-	DOIF(_sig_parameter_updated != nullptr, (*_sig_parameter_updated)(this), debug);
 }

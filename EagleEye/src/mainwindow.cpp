@@ -185,13 +185,15 @@ MainWindow::MainWindow(QWidget *parent) :
     }*/
     cv::cuda::GpuMat::setDefaultAllocator(EagleLib::CombinedAllocator::Instance(100000000, 500000));
 	rccSettings->updateDisplay();
+	
+	_sig_manager = EagleLib::SignalManager::get_instance();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {
         auto signal_manager = table->GetSingleton<EagleLib::SignalManager>();
         if(!signal_manager)
         {
-            table->SetSingleton<EagleLib::SignalManager>(new EagleLib::SignalManager());
+            table->SetSingleton<EagleLib::SignalManager>(EagleLib::SignalManager::get_instance());
             signal_manager = table->GetSingleton<EagleLib::SignalManager>();
             Signals::signal_manager::set_instance(signal_manager);
         }            
@@ -614,6 +616,7 @@ MainWindow::onNodeAdd(EagleLib::Nodes::Node::Ptr node)
 {	
 	rmt_ScopedCPUSample(onNodeAdd);
     EagleLib::Nodes::Node::Ptr prevNode = currentNode;
+	stopProcessingThread();
     if(currentNode != nullptr)
     {
         std::lock_guard<std::recursive_mutex> lock(currentNode->mtx);

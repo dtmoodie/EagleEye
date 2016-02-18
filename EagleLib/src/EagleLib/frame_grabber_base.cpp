@@ -123,7 +123,6 @@ void FrameGrabberBuffered::Buffer()
             {
                 LOG(warning) << "Error reading next frame: " << e.what();
             }
-            
         }
     }
 }

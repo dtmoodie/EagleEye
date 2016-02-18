@@ -41,7 +41,7 @@ bool frame_grabber_cv::d_LoadFile(const std::string& file_path)
 bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
 {
     h_cam.release();
-    LOG(info) << "Attempgin to load " << file_path;
+    LOG(info) << "Attemping to load " << file_path;
     try
     {
         h_cam.reset(new cv::VideoCapture());

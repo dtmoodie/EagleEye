@@ -279,7 +279,7 @@ namespace EagleLib
 
         
         void RegisterSignalConnection(std::shared_ptr<Signals::connection> connection);
-        virtual void onUpdate(cv::cuda::Stream* stream);
+        //virtual void onUpdate(cv::cuda::Stream* stream);
 
         
         // ****************************************************************************************************************
