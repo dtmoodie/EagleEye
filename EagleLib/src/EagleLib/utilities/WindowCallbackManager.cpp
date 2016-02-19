@@ -33,6 +33,7 @@ void WindowCallbackHandlerManager::Init(bool firstInit)
 }
 WindowCallbackHandler* WindowCallbackHandlerManager::instance(size_t stream_id)
 {
+	std::lock_guard<std::mutex> lock(mtx);
     auto itr = instances.find(stream_id);
     if (itr == instances.end())
     {

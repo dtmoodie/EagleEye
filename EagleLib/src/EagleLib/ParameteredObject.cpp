@@ -5,6 +5,7 @@
 #include "Signals.h"
 #include "ParameteredObjectImpl.hpp"
 #include <EagleLib/Signals.h>
+#include <Signals/logging.hpp>
 
 using namespace EagleLib;
 using namespace Parameters;

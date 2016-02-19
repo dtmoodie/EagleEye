@@ -190,12 +190,6 @@ bool DataStream::LoadDocument(const std::string& document)
         }
     }
     return false;
-    //auto max = std::max_element(frame_grabber_priorities.begin(), frame_grabber_priorities.end());
-    //auto idx = std::distance(frame_grabber_priorities.begin(), max);
-    //frame_grabber = shared_ptr<IFrameGrabber>(valid_frame_grabbers[idx]->Construct());
-    //frame_grabber->InitializeFrameGrabber(this);
-
-    //return frame_grabber->LoadFile(document);
 }
 bool DataStream::CanLoadDocument(const std::string& document)
 {

@@ -18,8 +18,10 @@ std::string IFrameGrabber::GetSourceFilename()
 void IFrameGrabber::InitializeFrameGrabber(DataStream* stream)
 {
     parent_stream = stream;
+	
     if(stream)
     {
+		setup_signals(stream->GetSignalManager());
 		update_signal = stream->GetSignalManager()->get_signal<void()>("update", this);
     }
 }

@@ -10,7 +10,7 @@
 #include "EagleLib/rcc/SystemTable.hpp"
 #include "EagleLib/DataStreamManager.h"
 #include <EagleLib/ParameteredObjectImpl.hpp>
-
+#include "EagleLib/profiling.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -51,6 +51,7 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
 		[this, display_name, host_mat]()->void
 	{
 		rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+		PROFILE_FUNCTION;
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
         
@@ -63,11 +64,13 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
 }
 void QtImageDisplay::doProcess(const cv::Mat& mat, double timestamp, int frame_number, cv::cuda::Stream& stream)
 {
+	PROFILE_FUNCTION
     EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
     cuda::enqueue_callback_async(
         [this, mat]()->void
     {
         rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+		PROFILE_FUNCTION;
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
 

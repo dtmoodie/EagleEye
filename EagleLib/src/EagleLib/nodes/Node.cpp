@@ -26,6 +26,7 @@
 #include "remotery/lib/Remotery.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
 #include "EagleLib/Signals.h"
+#include "EagleLib/profiling.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -236,13 +237,13 @@ std::vector<std::pair<time_t, int>> Node::GetProfileTimings() const
 }
 void Node::reset()
 {
-	NODE_LOG(trace);
+	
 	Init(false);
 }
 
 void Node::updateParent()
 {
-	NODE_LOG(trace);
+	
     if(parent)
         parent->registerNotifier(this);
 }
@@ -250,18 +251,18 @@ void Node::updateParent()
 void
 Node::getInputs()
 {
-	NODE_LOG(trace);
+	
 }
 Node::Ptr
 Node::addChild(Node* child)
 {
-	NODE_LOG(trace);
+	
     return addChild(Node::Ptr(child));
 }
 Node::Ptr
 Node::addChild(Node::Ptr child)
 {
-	NODE_LOG(trace);
+	
     if (child == nullptr)
         return child;
     if(std::find(children.begin(), children.end(), child) != children.end())
@@ -285,7 +286,7 @@ Node::addChild(Node::Ptr child)
 Node::Ptr
 Node::getChild(const std::string& treeName)
 {
-	NODE_LOG(trace);
+	
     for(size_t i = 0; i < children.size(); ++i)
     {
         if(children[i]->treeName == treeName)
@@ -298,20 +299,20 @@ Node::getChild(const std::string& treeName)
 Node::Ptr
 Node::getChild(const int& index)
 {
-	NODE_LOG(trace);
+	
     return children[index];
 }
 void
 Node::swapChildren(int idx1, int idx2)
 {
-	NODE_LOG(trace);
+	
     std::iter_swap(children.begin() + idx1, children.begin() + idx2);
 }
 
 void
 Node::swapChildren(const std::string& name1, const std::string& name2)
 {
-	NODE_LOG(trace);
+	
     auto itr1 = children.begin();
     auto itr2 = children.begin();
     for(; itr1 != children.begin(); ++itr1)
@@ -330,7 +331,7 @@ Node::swapChildren(const std::string& name1, const std::string& name2)
 void
 Node::swapChildren(Node::Ptr child1, Node::Ptr child2)
 {
-	NODE_LOG(trace);
+	
     auto itr1 = std::find(children.begin(),children.end(), child1);
     if(itr1 == children.end())
         return;
@@ -341,7 +342,7 @@ Node::swapChildren(Node::Ptr child1, Node::Ptr child2)
 }
 std::vector<Node *> Node::getNodesInScope()
 {
-	NODE_LOG(trace);
+	
     std::vector<Node*> nodes;
     if(parent)
         parent->getNodesInScope(nodes);
@@ -350,7 +351,7 @@ std::vector<Node *> Node::getNodesInScope()
 Node*
 Node::getNodeInScope(const std::string& name)
 {
-	NODE_LOG(trace);
+	
     // Check if this is a child node of mine, if not go up
     int ret = name.compare(0, fullTreeName.length(), fullTreeName);
     if(ret == 0)
@@ -372,7 +373,7 @@ void
 Node::getNodesInScope(std::vector<Node *> &nodes)
 {
 	// Perhaps not thread safe?
-	NODE_LOG(trace);
+	
     // First travel to the root node
 
     if(nodes.size() == 0)
@@ -396,7 +397,7 @@ Node::getNodesInScope(std::vector<Node *> &nodes)
 
 /*Parameters::Parameter::Ptr Node::getParameter(int idx)
 {
-	NODE_LOG(trace);
+	
 	if (idx < parameters.size())
 		return parameters[idx];
 	else
@@ -405,7 +406,7 @@ Node::getNodesInScope(std::vector<Node *> &nodes)
 
 Parameters::Parameter::Ptr Node::getParameter(const std::string& name)
 {
-	NODE_LOG(trace);
+	
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->GetName() == name)
@@ -416,7 +417,7 @@ Parameters::Parameter::Ptr Node::getParameter(const std::string& name)
 */
 std::vector<std::string> Node::listParameters()
 {
-	NODE_LOG(trace);
+	
 	std::vector<std::string> paramList;
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
@@ -426,7 +427,7 @@ std::vector<std::string> Node::listParameters()
 }
 std::vector<std::string> Node::listInputs()
 {
-	NODE_LOG(trace);
+	
 	std::vector<std::string> paramList;
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
@@ -438,7 +439,7 @@ std::vector<std::string> Node::listInputs()
 Node*
 Node::getChildRecursive(std::string treeName_)
 {
-	NODE_LOG(trace);
+	
 
     // TODO tree structure parsing and correct directing of the search
     // Find the common base between this node and treeName
@@ -450,7 +451,7 @@ Node::getChildRecursive(std::string treeName_)
 void
 Node::removeChild(Node::Ptr node)
 {
-	NODE_LOG(trace);
+	
     for(auto itr = children.begin(); itr != children.end(); ++itr)
     {
         if(*itr == node)
@@ -463,14 +464,14 @@ Node::removeChild(Node::Ptr node)
 void
 Node::removeChild(int idx)
 {
-	NODE_LOG(trace);
+	
     children.erase(children.begin() + idx);
 }
 
 void
 Node::removeChild(const std::string &name)
 {
-	NODE_LOG(trace);
+	
     for(auto itr = children.begin(); itr != children.end(); ++itr)
     {
         if((*itr)->treeName == name)
@@ -521,6 +522,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 				TIME
 				_rmt_BeginCPUSample(fullTreeName.c_str(), &rmt_hash);
 				_rmt_BeginCUDASample(fullTreeName.c_str(), &rmt_cuda_hash, cv::cuda::StreamAccessor::getStream(stream));
+				PROFILE_OBJ(fullTreeName.c_str());
 				img = doProcess(img, stream);
 				rmt_EndCPUSample();
 				rmt_EndCUDASample(cv::cuda::StreamAccessor::getStream(stream));
@@ -599,6 +601,7 @@ void Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
                 TIME
                 _rmt_BeginCPUSample(fullTreeName.c_str(), &rmt_hash);
                 _rmt_BeginCUDASample(fullTreeName.c_str(), &rmt_cuda_hash, cv::cuda::StreamAccessor::getStream(stream));
+				PROFILE_OBJ(fullTreeName.c_str());
                 doProcess(input, stream);
                 rmt_EndCPUSample();
                 rmt_EndCUDASample(cv::cuda::StreamAccessor::getStream(stream));
@@ -687,28 +690,28 @@ void Node::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 void
 Node::registerDisplayCallback(boost::function<void(cv::Mat, Node*)>& f)
 {
-	NODE_LOG(trace);
+	
     //cpuDisplayCallback = f;
 }
 
 void
 Node::registerDisplayCallback(boost::function<void(cv::cuda::GpuMat, Node*)>& f)
 {
-	NODE_LOG(trace);
+	
 	//gpuDisplayCallback = f;
 }
 
 void
 Node::spawnDisplay()
 {
-	NODE_LOG(trace);
+	
 	cv::namedWindow(treeName);
 	externalDisplay = true;
 }
 void
 Node::killDisplay()
 {
-	NODE_LOG(trace);
+	
 	if (externalDisplay)
 		cv::destroyWindow(treeName);
 }
@@ -737,7 +740,7 @@ std::string Node::getFullTreeName()
 Node*
 Node::getParent()
 {
-	NODE_LOG(trace);
+	
     return parent;
 }
 
@@ -746,14 +749,14 @@ Node*
 Node::swap(Node* other)
 {
     // By moving ownership of all parameters to the new node, all
-	NODE_LOG(trace);
+	
     return other;
 }
 void
 Node::Init(bool firstInit)
 {
     ui_collector::set_node_name(getFullTreeName());
-	NODE_LOG(trace);
+	
     IObject::Init(firstInit);
 	if (!firstInit)
 	{
@@ -769,7 +772,7 @@ void
 Node::Init(const std::string &configFile)
 {
     ui_collector::set_node_name(getFullTreeName());
-	NODE_LOG(trace);
+	
 }
 
 
@@ -930,7 +933,7 @@ Node::Serialize(cv::FileStorage& fs)
 std::vector<std::string>
 Node::findType(Parameters::Parameter::Ptr param)
 {
-	NODE_LOG(trace);
+	
     std::vector<Node*> nodes;
     getNodesInScope(nodes);
     return findType(param, nodes);
@@ -939,7 +942,7 @@ Node::findType(Parameters::Parameter::Ptr param)
 std::vector<std::string>
 Node::findType(Loki::TypeInfo typeInfo)
 {
-	NODE_LOG(trace);
+	
     std::vector<Node*> nodes;
     getNodesInScope(nodes);
     return findType(typeInfo, nodes);
@@ -947,7 +950,7 @@ Node::findType(Loki::TypeInfo typeInfo)
 std::vector<std::string>
 Node::findType(Parameters::Parameter::Ptr param, std::vector<Node*>& nodes)
 {
-	NODE_LOG(trace);
+	
     std::vector<std::string> output;
 	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
 	if (inputParam)
@@ -977,7 +980,7 @@ Node::findType(Parameters::Parameter::Ptr param, std::vector<Node*>& nodes)
 std::vector<std::string> 
 Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*> &nodes)
 {
-	NODE_LOG(trace);
+	
 	std::vector<std::string> output;
 
     for (size_t i = 0; i < nodes.size(); ++i)
@@ -1000,7 +1003,7 @@ Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*> &nodes)
 std::vector<std::vector<std::string>> 
 Node::findCompatibleInputs()
 {
-	NODE_LOG(trace);
+	
 	std::vector<std::vector<std::string>> output;
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
@@ -1011,7 +1014,7 @@ Node::findCompatibleInputs()
 }
 std::vector<std::string> Node::findCompatibleInputs(const std::string& paramName)
 {
-	NODE_LOG(trace);
+	
     std::vector<std::string> output;
     {
         auto param = Node::getParameter(paramName);
@@ -1022,23 +1025,23 @@ std::vector<std::string> Node::findCompatibleInputs(const std::string& paramName
 }
 std::vector<std::string> Node::findCompatibleInputs(int paramIdx)
 {
-	NODE_LOG(trace);
+	
     return findCompatibleInputs(parameters[paramIdx]);
 }
 
 std::vector<std::string> Node::findCompatibleInputs(Parameters::Parameter::Ptr param)
 {
-	NODE_LOG(trace);
+	
     return findType(param);
 }
 std::vector<std::string> Node::findCompatibleInputs(Loki::TypeInfo& type)
 {
-	NODE_LOG(trace);
+	
 	return findType(type);
 }
 std::vector<std::string> Node::findCompatibleInputs(Parameters::InputParameter::Ptr param)
 {
-	NODE_LOG(trace);
+	
 	std::vector<Node*> nodes;
 	std::vector<std::string> output;
 	getNodesInScope(nodes);
@@ -1058,7 +1061,7 @@ std::vector<std::string> Node::findCompatibleInputs(Parameters::InputParameter::
 void
 Node::setInputParameter(const std::string& sourceName, const std::string& inputName)
 {
-	NODE_LOG(trace);
+	
 	auto param = getParameter(inputName);
 	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
 	if (inputParam)
@@ -1070,7 +1073,7 @@ Node::setInputParameter(const std::string& sourceName, const std::string& inputN
 void
 Node::setInputParameter(const std::string& sourceName, int inputIdx)
 {
-	NODE_LOG(trace);
+	
 	auto param = getParameter(inputIdx);
 	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
 	if (inputParam)
@@ -1081,7 +1084,7 @@ Node::setInputParameter(const std::string& sourceName, int inputIdx)
 void
 Node::setTreeName(const std::string& name)
 {
-	NODE_LOG(trace);
+	
     treeName = name;
 	std::string fullTreeName_;
     if (parent == nullptr)
@@ -1097,7 +1100,7 @@ Node::setTreeName(const std::string& name)
 void
 Node::setFullTreeName(const std::string& name)
 {
-	NODE_LOG(trace);
+	
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		parameters[i]->SetTreeRoot(name);
@@ -1108,7 +1111,7 @@ Node::setFullTreeName(const std::string& name)
 void
 Node::setParent(Node* parent_)
 {
-	NODE_LOG(trace);
+	
     if(parent)
     {
         parent->deregisterNotifier(this);
@@ -1119,14 +1122,14 @@ Node::setParent(Node* parent_)
 void
 Node::updateObject(IObject* ptr)
 {
-	NODE_LOG(trace);
+	
     parent = static_cast<Node*>(ptr);
 }
 
 void 
 Node::updateInputParameters()
 {
-	NODE_LOG(trace);
+	
     for (size_t i = 0; i < parameters.size(); ++i)
 	{
 		if (parameters[i]->type & Parameters::Parameter::Input)
