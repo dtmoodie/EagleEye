@@ -33,7 +33,7 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 	int numY = *getParameter<int>(1)->Data();
 	int numX = *getParameter<int>(0)->Data();
 	double dx = *getParameter<double>(2)->Data();
-	if (parameters[0]->changed || parameters[1]->changed || parameters[2]->changed)
+	if (_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed)
 	{
         objectPoints.resize(numY * numX);
         int count = 0;
@@ -44,9 +44,9 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                 objectPoints[count] = cv::Point3f(dx*j, dx*i, 0);
 			}
 		}
-		parameters[0]->changed = false;
-		parameters[1]->changed = false;
-		parameters[2]->changed = false;
+		_parameters[0]->changed = false;
+		_parameters[1]->changed = false;
+		_parameters[2]->changed = false;
 	}
 	TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor>("Sparse tracking functor")->Data();
 	bool found = false;
@@ -462,7 +462,7 @@ void ReadStereoCalibration::Init(bool firstInit)
 
 cv::cuda::GpuMat ReadStereoCalibration::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
         std::string path = getParameter<Parameters::ReadFile>(0)->Data()->string();
         cv::FileStorage fs(path, cv::FileStorage::READ);
@@ -505,7 +505,7 @@ void ReadCameraCalibration::Init(bool firstInit)
 
 cv::cuda::GpuMat ReadCameraCalibration::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
         std::string path = getParameter<Parameters::ReadFile>(0)->Data()->string();
         cv::FileStorage fs(path, cv::FileStorage::READ);

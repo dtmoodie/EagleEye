@@ -1,0 +1,40 @@
+#include "VariableManager.h"
+#include "parameters/Parameter.hpp"
+
+using namespace EagleLib;
+void VariableManager::AddParameter(std::shared_ptr<Parameters::Parameter> param)
+{
+    _parameters[param->GetTreeName()] = param;
+}
+void VariableManager::RemoveParameter(std::shared_ptr<Parameters::Parameter> param)
+{
+    for(auto itr = _parameters.begin(); itr != _parameters.end(); ++itr)
+    {
+        if(itr->second == param)
+        {
+            _parameters.erase(itr);
+            return;
+        }
+    }
+}
+std::vector<std::shared_ptr<Parameters::Parameter>> VariableManager::GetOutputParameters(Loki::TypeInfo type)
+{
+    std::vector<std::shared_ptr<Parameters::Parameter>> valid_outputs;
+    for(auto itr = _parameters.begin(); itr != _parameters.end(); ++itr)
+    {
+        if(itr->second->GetTypeInfo() == type && itr->second->type & Parameters::Parameter::Output)
+        {
+            valid_outputs.push_back(itr->second);
+        }
+    }
+    return valid_outputs;
+}
+std::shared_ptr<Parameters::Parameter> VariableManager::GetOutputParameter(std::string name)
+{
+    auto itr = _parameters.find(name);
+    if(itr != _parameters.end())
+    {
+        return itr->second;
+    }
+    return std::shared_ptr<Parameters::Parameter>();
+}

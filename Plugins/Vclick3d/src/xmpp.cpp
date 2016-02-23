@@ -50,7 +50,8 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
                 {
                     if (node->getFullTreeName() == inputParam->GetTreeRoot())
                     {
-                        for (auto param : node->parameters)
+                        auto parameters = node->getParameters();
+                        for (auto param : parameters)
                         {
                             if (param->GetName() == inputParam->GetName())
                             {
@@ -91,7 +92,8 @@ void XmppClient::handleMessageSession(MessageSession *session)
     auto nodes = getNodesInScope();
     for (auto node : nodes)
     {
-        for (auto param : node->parameters)
+        auto parameters = node->getParameters();
+        for (auto param : parameters)
         {
             Parameters::Persistence::Text::Serialize(&ss, param.get());
             //ss << param->GetTreeName() << ":" << param->GetTypeInfo().name() << "\n";
@@ -149,7 +151,7 @@ void XmppClient::sendPointCloud()
 }
 cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-    if (parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed)
+    if (_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed || _parameters[3]->changed)
     {
         gloox::JID jid(*getParameter<std::string>(0)->Data() + "@" + *getParameter<std::string>(2)->Data());;
         xmpp_client.reset(new gloox::Client(jid, *getParameter<std::string>(1)->Data(), *getParameter<unsigned short>(3)->Data()));
@@ -163,10 +165,10 @@ cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         {
             NODE_LOG(error) << "Unable to connect";
         }
-        parameters[0]->changed = false;
-        parameters[1]->changed = false;
-        parameters[2]->changed = false;
-        parameters[3]->changed = false;
+        _parameters[0]->changed = false;
+        _parameters[1]->changed = false;
+        _parameters[2]->changed = false;
+        _parameters[3]->changed = false;
     }
     if (xmpp_client)
     {

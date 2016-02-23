@@ -7,6 +7,7 @@
 #include "utilities/sorting.hpp"
 #include "EagleLib/Logging.h"
 #include "Remotery.h"
+#include "VariableManager.h"
 using namespace EagleLib;
 
 #define CATCH_MACRO                                                         \
@@ -110,6 +111,12 @@ SignalManager* DataStream::GetSignalManager()
 	if (signal_manager == nullptr)
 		signal_manager.reset(new SignalManager());
     return signal_manager.get();
+}
+std::shared_ptr<IVariableManager> DataStream::GetVariableManager()
+{
+    if(variable_manager == nullptr)
+        variable_manager.reset(new VariableManager());
+    return variable_manager;
 }
 
 bool DataStream::LoadDocument(const std::string& document)
@@ -224,6 +231,7 @@ void DataStream::AddNode(shared_ptr<Nodes::Node> node)
 {
     std::lock_guard<std::mutex> lock(nodes_mtx);
     node->SetDataStream(this);
+    node->Init(true);
     top_level_nodes.push_back(node);
     dirty_flag = true;
 }

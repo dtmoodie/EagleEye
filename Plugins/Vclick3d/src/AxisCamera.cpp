@@ -172,8 +172,8 @@ void AxisCamera::Init(bool firstInit)
 		currentFocus.reset(new Parameters::TypedParameter<int>("Current Focus", 0, Parameters::Parameter::State));
 		socket->zoom = currentZoom;
 		socket->focus = currentFocus;
-		parameters.push_back(currentZoom);
-		parameters.push_back(currentFocus);
+		_parameters.push_back(currentZoom);
+		_parameters.push_back(currentFocus);
 
 		updateParameter("Camera matrix", cv::Mat())->type = Parameters::Parameter::Output;
 		updateParameter("Camera pose", cv::Mat())->type =  Parameters::Parameter::Output;

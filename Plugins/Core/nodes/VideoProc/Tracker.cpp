@@ -129,10 +129,10 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
 cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
         trackedFrames.set_capacity(*getParameter<int>(0)->Data());
-        parameters[0]->changed = false;
+        _parameters[0]->changed = false;
     }
     DetectAndComputeFunctor* detector = getParameter<DetectAndComputeFunctor>("Detector")->Data();
     TrackSparseFunctor* tracker = getParameter<TrackSparseFunctor>("Tracker")->Data();

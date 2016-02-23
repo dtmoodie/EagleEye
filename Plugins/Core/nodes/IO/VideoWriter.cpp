@@ -53,7 +53,7 @@ cv::cuda::GpuMat
 VideoWriter::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     size = img.size();
-    if(parameters[0]->changed || parameters[1]->changed || restart)
+    if(_parameters[0]->changed || _parameters[1]->changed || restart)
         startWrite();
     if(d_writer != nullptr || h_writer != nullptr)
         writeImg(img);
@@ -146,8 +146,8 @@ VideoWriter::startWrite()
 		}
 			
     }
-    parameters[0]->changed = false;
-    parameters[1]->changed = false;
+    _parameters[0]->changed = false;
+    _parameters[1]->changed = false;
     restart = false;
 
 }

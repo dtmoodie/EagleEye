@@ -16,6 +16,7 @@ return img;
 
 void Canny::Init(bool firstInit)	
 {
+    Node::Init(firstInit);
 	updateParameter("Low thresh", 0.0);
 	updateParameter("High thresh", 20.0);
 	updateParameter("Aperature size", int(3));
@@ -31,7 +32,7 @@ cv::cuda::GpuMat Canny::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
 
 void Laplacian::Init(bool firstInit)
 {
-
+    Node::Init(firstInit);
 }
 
 cv::cuda::GpuMat Laplacian::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -41,7 +42,7 @@ return img;
 
 void BiLateral::Init(bool firstInit)
 {
-
+    Node::Init(firstInit);
 }
 
 cv::cuda::GpuMat BiLateral::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -51,7 +52,7 @@ return img;
 
 void MeanShiftFilter::Init(bool firstInit)
 {
-
+    Node::Init(firstInit);
 }
 
 cv::cuda::GpuMat MeanShiftFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -61,7 +62,7 @@ return img;
 
 void MeanShiftProc::Init(bool firstInit)
 {
-
+    Node::Init(firstInit);
 }
 
 cv::cuda::GpuMat MeanShiftProc::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -71,7 +72,7 @@ cv::cuda::GpuMat MeanShiftProc::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
 
 void MeanShiftSegmentation::Init(bool firstInit)
 {
-
+    Node::Init(firstInit);
 }
 
 cv::cuda::GpuMat MeanShiftSegmentation::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)

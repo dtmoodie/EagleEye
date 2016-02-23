@@ -56,16 +56,16 @@ void CreateMat::Init(bool firstInit)
         updateParameter("Height", 1080);
         updateParameter("Fill", cv::Scalar::all(0));
     }
-    parameters[0]->changed = true;
+    _parameters[0]->changed = true;
 }
 
 cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    if(parameters[0]->changed ||
-       parameters[1]->changed ||
-       parameters[2]->changed ||
-       parameters[3]->changed ||
-       parameters[4]->changed )
+    if(_parameters[0]->changed ||
+       _parameters[1]->changed ||
+       _parameters[2]->changed ||
+       _parameters[3]->changed ||
+       _parameters[4]->changed )
     {
         auto typeParam = getParameter<Parameters::EnumParameter>(0);
 		int selection = typeParam->Data()->currentSelection;
@@ -74,11 +74,11 @@ cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 					*getParameter<int>(2)->Data(),
 					dtype, *getParameter<cv::Scalar>(4)->Data());
         updateParameter("Output", createdMat)->type = Parameters::Parameter::Output;
-        parameters[0]->changed = false;
-        parameters[1]->changed = false;
-        parameters[2]->changed = false;
-        parameters[3]->changed = false;
-        parameters[4]->changed = false;
+        _parameters[0]->changed = false;
+        _parameters[1]->changed = false;
+        _parameters[2]->changed = false;
+        _parameters[3]->changed = false;
+        _parameters[4]->changed = false;
     }
     return img;
 }
@@ -100,7 +100,7 @@ cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     if(input == nullptr)
         input = &img;
     TIME
-    if(parameters[0]->changed || qualifiersSetup == false)
+    if(_parameters[0]->changed || qualifiersSetup == false)
     {
         boost::function<bool(Parameters::Parameter*)> f = GpuMatQualifier::get(input->cols, input->rows, 1, CV_8U);
         updateInputQualifier<cv::cuda::GpuMat>(1, f);

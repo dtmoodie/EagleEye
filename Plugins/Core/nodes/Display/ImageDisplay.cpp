@@ -96,11 +96,11 @@ void OGLImageDisplay::Init(bool firstInit)
 
 cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
         cv::destroyWindow(prevName);
         prevName = *getParameter<std::string>(0)->Data();
-        parameters[0]->changed = false;
+        _parameters[0]->changed = false;
         cv::namedWindow(prevName, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
     }
 	std::string display_name = *getParameter<std::string>(0)->Data();

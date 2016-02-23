@@ -7,6 +7,7 @@
 #include <QDateTime>
 #include "qevent.h"
 #include "EagleLib/logger.hpp"
+#include "EagleLib/IVariableManager.h"
 
 IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
     QWidget(parent),
@@ -156,27 +157,27 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
         ui->nodeName->setToolTip(QString::fromStdString(node->getFullTreeName()));
         ui->nodeName->setMaximumWidth(200);
         ui->gridLayout->setSpacing(0);
-		
-        for (size_t i = 0; i < node->parameters.size(); ++i)
+		auto parameters = node->getParameters();
+        for (size_t i = 0; i < parameters.size(); ++i)
 		{
 			int col = 0;
-			if (node->parameters[i]->type & Parameters::Parameter::Input)
+			if (parameters[i]->type & Parameters::Parameter::Input)
 			{
-				QInputProxy* proxy = new QInputProxy(node->parameters[i], node, this);
+				QInputProxy* proxy = new QInputProxy(parameters[i], node, this);
 				ui->gridLayout->addWidget(proxy->getWidget(0), i+7, col, 1,1);
 				inputProxies.push_back(proxy);
 				++col;
 			}
 			
-            if(node->parameters[i]->type & Parameters::Parameter::Control || node->parameters[i]->type & Parameters::Parameter::State || node->parameters[i]->type & Parameters::Parameter::Output)
+            if(parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::State || parameters[i]->type & Parameters::Parameter::Output)
 			{
-				auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
+				auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(parameters[i]);
 				if (interop)
 				{
 					parameterProxies.push_back(interop);
 					auto widget = interop->GetParameterWidget(this);
 					widget->installEventFilter(this);
-					widgetParamMap[widget] = node->parameters[i];
+					widgetParamMap[widget] = parameters[i];
 					ui->gridLayout->addWidget(widget, i + 7, col, 1,1);
 				}
 			}
@@ -234,21 +235,22 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
 	}
     if(parameterUpdate && node_ == node.get())
     {
-		if (node->parameters.size() != parameterProxies.size())
+        auto parameters = node->getParameters();
+		if (parameters.size() != parameterProxies.size())
         {
-            for(size_t i = 0; i < node->parameters.size(); ++i)
+            for(size_t i = 0; i < parameters.size(); ++i)
             {
                 bool found = false;
 				for (size_t j = 0; j < parameterProxies.size(); ++j)
                 {
-					if (parameterProxies[j]->CheckParameter(node->parameters[i].get()))
+					if (parameterProxies[j]->CheckParameter(parameters[i].get()))
                         found = true;
                 }
 				for (size_t j = 0; j < inputProxies.size(); ++j)
 				{
 					
-					if (node->parameters[i]->type & Parameters::Parameter::Input && 
-						inputProxies[j]->inputParameter == std::dynamic_pointer_cast<Parameters::InputParameter>(node->parameters[i]))
+					if (parameters[i]->type & Parameters::Parameter::Input && 
+						inputProxies[j]->inputParameter == std::dynamic_pointer_cast<Parameters::InputParameter>(parameters[i]))
 					{
 						found = true;
 					}
@@ -256,23 +258,23 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
                 if(found == false)
                 {
 					int col = 0;
-					if (node->parameters[i]->type & Parameters::Parameter::Input)
+					if (parameters[i]->type & Parameters::Parameter::Input)
 					{
-						QInputProxy* proxy = new QInputProxy(node->parameters[i], node, this);
+						QInputProxy* proxy = new QInputProxy(parameters[i], node, this);
 						ui->gridLayout->addWidget(proxy->getWidget(0), i + 7, col, 1, 1);
 						inputProxies.push_back(proxy);
 						++col;
 					}
 
-                    if (node->parameters[i]->type & Parameters::Parameter::Control || node->parameters[i]->type & Parameters::Parameter::State  || node->parameters[i]->type & Parameters::Parameter::Output)
+                    if (parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::State  || parameters[i]->type & Parameters::Parameter::Output)
 					{
-						auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(node->parameters[i]);
+						auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(parameters[i]);
 						if (interop)
 						{
 							parameterProxies.push_back(interop);
 							auto widget = interop->GetParameterWidget(this);
 							widget->installEventFilter(this);
-							widgetParamMap[widget] = node->parameters[i];
+							widgetParamMap[widget] = parameters[i];
 							ui->gridLayout->addWidget(widget, i + 7, col, 1, 1);
 							//ui->gridLayout->addWidget(interop->GetParameterWidget(this), i + 5, col, 1, 1);
 						}
@@ -387,7 +389,7 @@ void DataStreamWidget::update_ui()
     auto fg = _dataStream->GetFrameGrabber();
     if (fg != nullptr)
     {
-        auto& parameters = fg->parameters;
+        auto parameters = fg->getParameters();
         for (int i = 0; i < parameters.size(); ++i)
         {
             int col = 0;
@@ -462,6 +464,9 @@ void QInputProxy::on_valueChanged(int idx)
     prevIdx = idx;
     QString inputName = box->currentText();
     auto tokens = inputName.split(":");
+    auto var_manager = node->GetVariableManager();
+    auto tmp_param = var_manager->GetOutputParameter(inputName.toStdString());
+    
     auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
     if(sourceNode == nullptr)
         return;
@@ -483,12 +488,14 @@ void QInputProxy::updateUi(bool init)
 {
     if(init)
     {
-        auto inputs = node->findCompatibleInputs(inputParameter);
+        auto var_man = node->GetVariableManager();
+        auto inputs = var_man->GetOutputParameters(inputParameter->GetTypeInfo());
+        //= node->findCompatibleInputs(inputParameter);
         box->clear();
         box->addItem(QString::fromStdString(std::dynamic_pointer_cast<Parameters::Parameter>(inputParameter)->GetTreeName()));
         for(size_t i = 0; i < inputs.size(); ++i)
         {
-            QString text = QString::fromStdString(inputs[i]);
+            QString text = QString::fromStdString(inputs[i]->GetTreeName());
             box->addItem(text);
         }
     }

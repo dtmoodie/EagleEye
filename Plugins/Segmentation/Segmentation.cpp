@@ -190,9 +190,9 @@ void SegmentMOG2::Serialize(ISimpleSerializer *pSerializer)
 cv::cuda::GpuMat SegmentMOG2::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
     //std::cout << "Test" << std::endl;
-    if(parameters[0]->changed ||
-        parameters[1]->changed ||
-        parameters[2]->changed)
+    if(_parameters[0]->changed ||
+        _parameters[1]->changed ||
+        _parameters[2]->changed)
     {
         mog2 = cv::cuda::createBackgroundSubtractorMOG2(*getParameter<int>(0)->Data(),*getParameter<double>(1)->Data(), *getParameter<bool>(2)->Data());
     }
@@ -420,15 +420,15 @@ void ManualMask::Init(bool firstInit)
         updateParameter("Radius", int(5));
         updateParameter("Inverted", false);
     }
-    parameters[0]->changed = true;
+    _parameters[0]->changed = true;
 }
 
 cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(parameters[0]->changed ||
-       parameters[1]->changed ||
-       parameters[2]->changed ||
-       parameters[3]->changed || parameters.size() == 4)
+    if(_parameters[0]->changed ||
+       _parameters[1]->changed ||
+       _parameters[2]->changed ||
+       _parameters[3]->changed || _parameters.size() == 4)
     {
         bool inverted = *getParameter<bool>(4)->Data();
         cv::Scalar origin = *getParameter<cv::Scalar>(1)->Data();
@@ -456,10 +456,10 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
                 cv::rectangle(h_mask, cv::Rect(origin.val[0], origin.val[1], size.val[0], size.val[1]), cv::Scalar(0),-1);
         }
         updateParameter("Manually defined mask", cv::cuda::GpuMat(h_mask))->type = Parameters::Parameter::Output;
-        parameters[0]->changed = false;
-        parameters[1]->changed = false;
-        parameters[2]->changed = false;
-        parameters[3]->changed = false;
+        _parameters[0]->changed = false;
+        _parameters[1]->changed = false;
+        _parameters[2]->changed = false;
+        _parameters[3]->changed = false;
     }
     return img;
 }

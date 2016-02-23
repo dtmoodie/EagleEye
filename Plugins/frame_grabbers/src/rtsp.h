@@ -1,11 +1,11 @@
 #pragma once
 
-#include "cv_capture.h"
+#include "gstreamer.h"
 #include "EagleLib/ICoordinateManager.h"
 
 namespace EagleLib
 {
-    class frame_grabber_rtsp: public frame_grabber_cv
+    class frame_grabber_rtsp: public frame_grabber_gstreamer
     {
     public:
         class frame_grabber_rtsp_info: public FrameGrabberInfo
@@ -19,7 +19,8 @@ namespace EagleLib
             virtual int LoadTimeout() const;
         };
         frame_grabber_rtsp();
-        virtual bool LoadFile(const std::string& file_path);
+        virtual void Init(bool firstInit);
+        virtual bool LoadFile(const std::string& file_path = "");
         virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
 
         virtual shared_ptr<ICoordinateManager> GetCoordinateManager();
@@ -27,5 +28,6 @@ namespace EagleLib
     protected:
         shared_ptr<ICoordinateManager>          coordinate_manager;
         size_t frame_count;
+        bool _reconnect;
     };
 }

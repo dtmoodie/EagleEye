@@ -147,7 +147,7 @@ MainWindow::MainWindow(QWidget *parent) :
     Parameters::TypedParameter<Parameters::ReadFile>("Instantiation");
     Parameters::TypedParameter<Parameters::EnumParameter>("Instantiation");
 	Parameters::TypedParameter<boost::filesystem::path>("Instantiation");
-	Parameters::TypedParameter<boost::function<void(void)>>("Instantiation");
+	Parameters::TypedParameter<std::function<void(void)>>("Instantiation");
 	Parameters::TypedParameter<bool>("Instantiation");
 
     //EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
@@ -605,6 +605,7 @@ void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
     {
         currentSelectedNodeWidget = prevWidget;
     }
+	startProcessingThread();
 }
 void MainWindow::updateLines()
 {

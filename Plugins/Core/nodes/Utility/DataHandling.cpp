@@ -62,7 +62,7 @@ cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     if(param->Data()->currentSelection != img.type())
     {
         param->Data()->currentSelection = img.type();
-        parameters[0]->changed = true;
+        _parameters[0]->changed = true;
         
     }
     //std::stringstream str;
@@ -99,7 +99,7 @@ cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& 
         newCols += 2;
     int rows = img.size().area();
     TIME
-    if((position && positionMat.empty()) || parameters[0]->changed)
+    if((position && positionMat.empty()) || _parameters[0]->changed)
     {
         cv::Mat h_positionMat(img.size().area(), 2, type);
         int row = 0;
@@ -140,7 +140,7 @@ cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& 
             }
         }
         positionMat.upload(h_positionMat, stream);
-        parameters[0]->changed = false;
+        _parameters[0]->changed = false;
     }
     TIME
     auto buf = bufferPool.getFront();
@@ -176,9 +176,9 @@ cv::cuda::GpuMat ConcatTensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     bool full = true;
     std::vector<cv::cuda::GpuMat*> inputs;
     int type = -1;
-    for(int i = 1; i < parameters.size(); ++i)
+    for(int i = 1; i < _parameters.size(); ++i)
     {
-        auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(parameters[i]);
+        auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(_parameters[i]);
         if(param)
         {
             if(param->Data() == nullptr)
@@ -189,7 +189,7 @@ cv::cuda::GpuMat ConcatTensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     }
     if(full == true)
     {
-        addInputParameter<cv::cuda::GpuMat>("Input " + boost::lexical_cast<std::string>(parameters.size()-1));
+        addInputParameter<cv::cuda::GpuMat>("Input " + boost::lexical_cast<std::string>(_parameters.size()-1));
     }
     int cols = 0;
     int rows = 0;
@@ -225,12 +225,12 @@ void ConcatTensor::Init(bool firstInit)
 }
 cv::cuda::GpuMat LagBuffer::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-	if (parameters[0]->changed)
+	if (_parameters[0]->changed)
 	{
 		putItr = 0;
 		getItr = 0;
 		imageBuffer.resize(lagFrames);
-		parameters[0]->changed = false;
+		_parameters[0]->changed = false;
 	}
 	if (lagFrames == 0)
 		return img;
@@ -257,7 +257,7 @@ void LagBuffer::Init(bool firstInit)
 	putItr = 0;
 	getItr = 0;
 	lagFrames = 20;
-	parameters.push_back(Parameters::TypedInputParameterCopy<unsigned int>::Ptr(
+	_parameters.push_back(Parameters::TypedInputParameterCopy<unsigned int>::Ptr(
 							new Parameters::TypedInputParameterCopy<unsigned int>("Lag frames", 
 								&lagFrames, Parameters::Parameter::ParameterType(Parameters::Parameter::Input | Parameters::Parameter::Control), 
 								"Number of frames for this video stream to lag behind")));
@@ -266,7 +266,7 @@ void LagBuffer::Init(bool firstInit)
 }
 cv::cuda::GpuMat CameraSync::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-	if (parameters[0]->changed)
+	if (_parameters[0]->changed)
 	{
 		int offset = *getParameter<int>(0)->Data();
 		if (offset == 0)
@@ -287,7 +287,7 @@ cv::cuda::GpuMat CameraSync::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
 				updateParameter<unsigned int>("Camera 2 offset", abs(offset))->type =  Parameters::Parameter::Output;
 			}
 		}	
-		parameters[0]->changed = false;
+		_parameters[0]->changed = false;
 	}
 	return img;
 }

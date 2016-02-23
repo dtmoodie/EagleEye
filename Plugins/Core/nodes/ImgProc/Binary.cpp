@@ -46,8 +46,8 @@ void MorphologyFilter::Init(bool firstInit)
 
 cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    bool updateFilter = parameters.size() != 7;
-    if(parameters[0]->changed || parameters[2]->changed)
+    bool updateFilter = _parameters.size() != 7;
+    if(_parameters[0]->changed || _parameters[2]->changed)
     {
         int size = *getParameter<int>(2)->Data();
         cv::Point anchor = *getParameter<cv::Point>(3)->Data();
@@ -56,12 +56,12 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 							cv::Size(size,size),anchor));
 
         updateFilter = true;
-        parameters[0]->changed = false; 
-        parameters[2]->changed = false;
+        _parameters[0]->changed = false; 
+        _parameters[2]->changed = false;
         //log(Status,"Structuring element updated");
 		NODE_LOG(info) << "Structuring element updated";
     }
-    if(parameters[1]->changed || updateFilter)
+    if(_parameters[1]->changed || updateFilter)
     {
         updateParameter("Filter",
             cv::cuda::createMorphologyFilter(
@@ -70,7 +70,7 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                 *getParameter<cv::Point>(3)->Data(),
                 *getParameter<int>(5)->Data()));
 		NODE_LOG(info) << "Filter updated";
-        parameters[1]->changed = false; 
+        _parameters[1]->changed = false; 
     }
 	cv::cuda::GpuMat output;
     (*getParameter<cv::Ptr<cv::cuda::Filter>>(6)->Data())->apply(img,output,stream);
@@ -124,15 +124,15 @@ void FindContours::findContours(cv::cuda::HostMem h_img)
 		getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
 		getParameter<Parameters::EnumParameter>(1)->Data()->currentSelection);
 	updateParameter<int>("Contours found", ptr->size())->type =  Parameters::Parameter::State;
-	parameters[2]->changed = true;
-	parameters[3]->changed = true;
+	_parameters[2]->changed = true;
+	_parameters[3]->changed = true;
 	if (*getParameter<bool>(4)->Data())
 	{
-		if (parameters[4]->changed)
+		if (_parameters[4]->changed)
 		{
 			updateParameter<bool>("Oriented Area", false);
 			updateParameter<bool>("Filter area", false);
-			parameters[4]->changed = false;
+			_parameters[4]->changed = false;
 		}
 		auto areaParam = getParameter<bool>("Filter area");
 		if (areaParam != nullptr && *areaParam->Data() && areaParam->changed)

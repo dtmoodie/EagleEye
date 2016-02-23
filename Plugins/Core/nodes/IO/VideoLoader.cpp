@@ -88,7 +88,7 @@ cv::cuda::GpuMat
 VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     bool firstLoad = false;
-    if (parameters[0]->changed || load)
+    if (_parameters[0]->changed || load)
     {
 		loadFile();
         readThread = boost::thread(boost::bind(&VideoLoader::ReadThread, this));

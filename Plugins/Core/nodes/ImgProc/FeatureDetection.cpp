@@ -11,6 +11,7 @@ using namespace EagleLib::Nodes;
 
 void GoodFeaturesToTrackDetector::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter("Max corners",			int(1000));
@@ -30,9 +31,9 @@ void GoodFeaturesToTrackDetector::Init(bool firstInit)
 cv::cuda::GpuMat
 GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-    if(parameters[1]->changed || parameters[2]->changed ||
-       parameters[3]->changed || parameters[4]->changed ||
-       parameters[5]->changed || parameters[6]->changed || detector == nullptr)
+    if(_parameters[1]->changed || _parameters[2]->changed ||
+       _parameters[3]->changed || _parameters[4]->changed ||
+       _parameters[5]->changed || _parameters[6]->changed || detector == nullptr)
     {
 
         int numCorners = *getParameter<int>(0)->Data();
@@ -49,12 +50,12 @@ GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
 		NODE_LOG(info) << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
 			<< " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
 
-        parameters[0]->changed = false;
-        parameters[1]->changed = false;
-        parameters[2]->changed = false;
-        parameters[3]->changed = false;
-        parameters[4]->changed = false;
-        parameters[5]->changed = false;
+        _parameters[0]->changed = false;
+        _parameters[1]->changed = false;
+        _parameters[2]->changed = false;
+        _parameters[3]->changed = false;
+        _parameters[4]->changed = false;
+        _parameters[5]->changed = false;
     }
 
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
@@ -105,20 +106,20 @@ void FastFeatureDetector::Serialize(ISimpleSerializer *pSerializer)
 }
 cv::cuda::GpuMat FastFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-    if(parameters[0]->changed ||
-       parameters[1]->changed ||
-       parameters[2]->changed ||
-       parameters[3]->changed)
+    if(_parameters[0]->changed ||
+       _parameters[1]->changed ||
+       _parameters[2]->changed ||
+       _parameters[3]->changed)
     {
 		detector = cv::cuda::FastFeatureDetector::create(
 			*getParameter<int>(1)->Data(),
 			*getParameter<bool>(2)->Data(),
 			getParameter<Parameters::EnumParameter>(3)->Data()->getValue(),
 			*getParameter<int>(4)->Data());
-        parameters[0]->changed = false;
-        parameters[1]->changed = false;
-        parameters[2]->changed = false;
-        parameters[3]->changed = false;
+        _parameters[0]->changed = false;
+        _parameters[1]->changed = false;
+        _parameters[2]->changed = false;
+        _parameters[3]->changed = false;
     }
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
 	cv::cuda::GpuMat key_points(BlockMemoryAllocator::Instance());
@@ -169,16 +170,16 @@ void ORBFeatureDetector::Serialize(ISimpleSerializer* pSerializer)
 }
 cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-    if(parameters[1]->changed ||
-       parameters[2]->changed ||
-       parameters[3]->changed ||
-       parameters[4]->changed ||
-       parameters[5]->changed ||
-       parameters[6]->changed ||
-       parameters[7]->changed ||
-       parameters[8]->changed ||
-       parameters[9]->changed ||
-       parameters[0]->changed || detector == nullptr)
+    if(_parameters[1]->changed ||
+       _parameters[2]->changed ||
+       _parameters[3]->changed ||
+       _parameters[4]->changed ||
+       _parameters[5]->changed ||
+       _parameters[6]->changed ||
+       _parameters[7]->changed ||
+       _parameters[8]->changed ||
+       _parameters[9]->changed ||
+       _parameters[0]->changed || detector == nullptr)
     {
         detector = cv::cuda::ORB::create(
 					*getParameter<int>(0)->Data(),
@@ -192,16 +193,16 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
 					*getParameter<int>(8)->Data(),
 					*getParameter<bool>(9)->Data());
 
-       parameters[1]->changed = false;
-       parameters[2]->changed = false;
-       parameters[3]->changed = false;
-       parameters[4]->changed = false;
-       parameters[5]->changed = false;
-       parameters[6]->changed = false;
-       parameters[7]->changed = false;
-       parameters[8]->changed = false;
-       parameters[9]->changed = false;
-       parameters[0]->changed = false;
+       _parameters[1]->changed = false;
+       _parameters[2]->changed = false;
+       _parameters[3]->changed = false;
+       _parameters[4]->changed = false;
+       _parameters[5]->changed = false;
+       _parameters[6]->changed = false;
+       _parameters[7]->changed = false;
+       _parameters[8]->changed = false;
+       _parameters[9]->changed = false;
+       _parameters[0]->changed = false;
     }
 	cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
 	
@@ -239,14 +240,14 @@ void HistogramRange::Init(bool firstInit)
 
 cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(parameters[0]->changed ||
-       parameters[1]->changed ||
-       parameters[2]->changed)
+    if(_parameters[0]->changed ||
+       _parameters[1]->changed ||
+       _parameters[2]->changed)
     {
         updateLevels(img.type());
-        parameters[0]->changed = false;
-        parameters[1]->changed = false;
-        parameters[2]->changed = false;
+        _parameters[0]->changed = false;
+        _parameters[1]->changed = false;
+        _parameters[2]->changed = false;
     }
     if(img.channels() == 1 || img.channels() == 4)
     {
@@ -256,7 +257,7 @@ cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
         TIME
         updateParameter(3, hist, &stream);
         TIME
-        if(parameters[3]->subscribers > 0)
+        if(_parameters[3]->subscribers > 0)
             return img;
         return hist;
     }else
@@ -302,12 +303,12 @@ void CornerHarris::Init(bool firstInit)
 }
 cv::cuda::GpuMat CornerHarris::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || detector == nullptr)
+    if(_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed || detector == nullptr)
     {
         detector = cv::cuda::createHarrisCorner(img.type(),*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data(), *getParameter<double>(2)->Data());
-        parameters[0]->changed = false;
-        parameters[1]->changed = false;
-        parameters[2]->changed = false;
+        _parameters[0]->changed = false;
+        _parameters[1]->changed = false;
+        _parameters[2]->changed = false;
     }
     cv::cuda::GpuMat score;
     detector->compute(img, score, stream);
@@ -327,7 +328,7 @@ void CornerMinEigenValue::Init(bool firstInit)
 }
 cv::cuda::GpuMat CornerMinEigenValue::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if (parameters[0]->changed || parameters[1]->changed || detector == nullptr)
+    if (_parameters[0]->changed || _parameters[1]->changed || detector == nullptr)
     {
         detector = cv::cuda::createMinEigenValCorner(img.type(), *getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
     }

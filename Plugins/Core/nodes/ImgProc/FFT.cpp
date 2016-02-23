@@ -7,6 +7,7 @@ using namespace EagleLib::Nodes;
 
 void FFT::Init(bool firstInit)
 {
+    Node::Init(firstInit);
     if(firstInit)
     {
         Parameters::EnumParameter param;
@@ -75,7 +76,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     int channel = getParameter<Parameters::EnumParameter>(4)->Data()->getValue();
 	updateParameter("Coefficients", dest)->type =  Parameters::Parameter::Output;
     TIME
-    if(parameters[4]->changed)
+    if(_parameters[4]->changed)
     {
         //log(Status, channel == 0 ? "Magnitude" : "Phase");
 		if (channel == 0)
@@ -87,13 +88,13 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 			NODE_LOG(info) <<"Phase";
 		}
 		
-        parameters[4]->changed = false;
+        _parameters[4]->changed = false;
     }
     TIME
     cv::cuda::GpuMat magnitude, phase;
 //    magnitude = *magBuffer.getFront();
 //    phase = *phaseBuffer.getFront();
-    if(channel == 0 || parameters[6]->subscribers != 0)
+    if(channel == 0 || _parameters[6]->subscribers != 0)
     {
         cv::cuda::magnitude(dest,magnitude, stream);
         if(*getParameter<bool>(5)->Data())
@@ -106,7 +107,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         updateParameter(6,magnitude);
     }
     TIME
-    if(channel == 1 || parameters[7]->subscribers != 0)
+    if(channel == 1 || _parameters[7]->subscribers != 0)
     {
         std::vector<cv::cuda::GpuMat> channels;
         cv::cuda::split(dest,channels, stream);
@@ -137,7 +138,7 @@ cv::Mat getShiftMat(cv::Size matSize)
 
 void FFTPreShiftImage::Init(bool firstInit)
 {
-
+    Node::Init(firstInit);
 }
 
 cv::cuda::GpuMat FFTPreShiftImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -152,7 +153,7 @@ cv::cuda::GpuMat FFTPreShiftImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 }
 void FFTPostShift::Init(bool firstInit)
 {
-
+    Node::Init(firstInit);
 }
 
 cv::cuda::GpuMat FFTPostShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)

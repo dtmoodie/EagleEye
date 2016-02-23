@@ -2,11 +2,13 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void CpuExtraction::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
+TS<SyncedMemory> CpuExtraction::process(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
     process(input.GetMat(stream), input.timestamp, input.frame_number, stream);
+	return input;
 }
-void GpuExtraction::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
+TS<SyncedMemory> GpuExtraction::process(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
     process(input.GetGpuMat(stream), input.timestamp, input.frame_number, stream);
+	return input;
 }

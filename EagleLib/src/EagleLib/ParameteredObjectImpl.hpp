@@ -89,11 +89,11 @@ namespace EagleLib
 			// Parameter exists but is of the wrong type, due to being loaded from a file as a generic typed parameter
 			*data = *non_ref_param->Data();
 			// Find the incorrectly typed parameter
-			for (int i = 0; i < parameters.size(); ++i)
+			for (int i = 0; i < _parameters.size(); ++i)
 			{
-				if (parameters[i]->GetName() == name)
+				if (_parameters[i]->GetName() == name)
 				{
-					parameters[i] = typename Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data));
+					_parameters[i] = typename Parameters::TypedParameterPtr<T>::Ptr(new Parameters::TypedParameterPtr<T>(name, data));
 				}
 			}
 		}
@@ -120,9 +120,9 @@ namespace EagleLib
 	template<typename T>
 	Parameters::Parameter* ParameteredObject::updateParameter(size_t idx, const T data, cv::cuda::Stream* stream)
 	{
-		if (idx > parameters.size() || idx < 0)
+		if (idx > _parameters.size() || idx < 0)
 			return nullptr;
-		auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(parameters[idx]);
+		auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(_parameters[idx]);
 		if (param == NULL)
 			return nullptr;
 		param->UpdateData(data, stream);

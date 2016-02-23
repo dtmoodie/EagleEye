@@ -53,49 +53,49 @@ void super_resolution::Init(bool firstInit)
 
     }else
     {
-        for(int i = 0; i < parameters.size(); ++i)
+        for(int i = 0; i < _parameters.size(); ++i)
         {
-            parameters[i]->changed = true;
+            _parameters[i]->changed = true;
         }
     }
 }
 void super_resolution::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 {
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
-        super_res->setScale(*getParameter<int>(0)->Data()); parameters[0]->changed = false;
+        super_res->setScale(*getParameter<int>(0)->Data()); _parameters[0]->changed = false;
     }
-    if(parameters[1]->changed)
+    if(_parameters[1]->changed)
     {
-        super_res->setIterations(*getParameter<int>(1)->Data()); parameters[1]->changed = false;
+        super_res->setIterations(*getParameter<int>(1)->Data()); _parameters[1]->changed = false;
     }
-    if(parameters[2]->changed)
+    if(_parameters[2]->changed)
     {
-        super_res->setTau(*getParameter<double>(2)->Data()); parameters[2]->changed = false;
+        super_res->setTau(*getParameter<double>(2)->Data()); _parameters[2]->changed = false;
     }
-    if (parameters[3]->changed)
+    if (_parameters[3]->changed)
     {
-        super_res->setLabmda(*getParameter<double>(3)->Data()); parameters[3]->changed = false;
+        super_res->setLabmda(*getParameter<double>(3)->Data()); _parameters[3]->changed = false;
     }
-    if (parameters[4]->changed)
+    if (_parameters[4]->changed)
     {
-        super_res->setAlpha(*getParameter<double>(4)->Data()); parameters[4]->changed = false;
+        super_res->setAlpha(*getParameter<double>(4)->Data()); _parameters[4]->changed = false;
     }
-    if (parameters[5]->changed)
+    if (_parameters[5]->changed)
     {
-        super_res->setKernelSize(*getParameter<int>(5)->Data()); parameters[5]->changed = false;
+        super_res->setKernelSize(*getParameter<int>(5)->Data()); _parameters[5]->changed = false;
     }
-    if (parameters[6]->changed)
+    if (_parameters[6]->changed)
     {
-        super_res->setBlurKernelSize(*getParameter<int>(6)->Data()); parameters[6]->changed = false;
+        super_res->setBlurKernelSize(*getParameter<int>(6)->Data()); _parameters[6]->changed = false;
     }
-    if (parameters[7]->changed)
+    if (_parameters[7]->changed)
     {
-        super_res->setBlurSigma(*getParameter<double>(7)->Data()); parameters[7]->changed = false;
+        super_res->setBlurSigma(*getParameter<double>(7)->Data()); _parameters[7]->changed = false;
     }
-    if (parameters[8]->changed)
+    if (_parameters[8]->changed)
     {
-        super_res->setTemporalAreaRadius(*getParameter<int>(8)->Data()); parameters[8]->changed = false;
+        super_res->setTemporalAreaRadius(*getParameter<int>(8)->Data()); _parameters[8]->changed = false;
     }
     frame_source->input_frame(input, stream);
     cv::cuda::GpuMat result;

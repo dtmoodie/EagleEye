@@ -61,7 +61,7 @@ void ImageWriter::Init(bool firstInit)
 
 cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
 		std::string& tmp = *getParameter<std::string>(0)->Data();
 		if (tmp.size())
@@ -71,7 +71,7 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 			NODE_LOG(warning) << "Empty base name passed in";
 		}
     }
-    if(parameters[1]->changed || extension.size() == 0)
+    if(_parameters[1]->changed || extension.size() == 0)
     {
 		Extensions ext = (Extensions)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
         switch (ext)
@@ -108,7 +108,7 @@ void ImageWriter::doProcess(TS<SyncedMemory> &img, cv::cuda::Stream &stream)
     std::string dir = getParameter<Parameters::WriteDirectory>("Save Directory")->Data()->string();
     if(dir.empty())
         dir = ".";
-    if (parameters[0]->changed)
+    if (_parameters[0]->changed)
     {
         std::string& tmp = *getParameter<std::string>(0)->Data();
         if (tmp.size())
@@ -118,7 +118,7 @@ void ImageWriter::doProcess(TS<SyncedMemory> &img, cv::cuda::Stream &stream)
             NODE_LOG(warning) << "Empty base name passed in";
         }
     }
-    if (parameters[1]->changed || extension.size() == 0)
+    if (_parameters[1]->changed || extension.size() == 0)
     {
         Extensions ext = (Extensions)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
         switch (ext)

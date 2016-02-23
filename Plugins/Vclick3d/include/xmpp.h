@@ -14,9 +14,9 @@
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
-RUNTIME_COMPILER_LINKLIBRARY("G:\libs\gloox\libs\gloox-1.0d.lib");
+RUNTIME_COMPILER_LINKLIBRARY("G:/libs/gloox/libs/gloox-1.0d.lib");
 #else
-RUNTIME_COMPILER_LINKLIBRARY("G:\libs\gloox\libs\gloox-1.0.lib");
+RUNTIME_COMPILER_LINKLIBRARY("G:/libs/gloox/libs/gloox-1.0.lib");
 #endif
 #else
 

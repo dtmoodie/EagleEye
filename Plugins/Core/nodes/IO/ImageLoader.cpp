@@ -10,7 +10,7 @@ void ImageLoader::Init(bool firstInit)
 {
     Node::Init(firstInit);
     updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/oimg.jpeg"))->SetTooltip("Path to image file");
-    parameters[0]->changed = true;
+    _parameters[0]->changed = true;
 }
 void ImageLoader::load()
 {
@@ -39,10 +39,10 @@ void ImageLoader::load()
 cv::cuda::GpuMat ImageLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     TIME
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
         load();
-        parameters[0]->changed = false;
+        _parameters[0]->changed = false;
         updateParameter("Loaded image", d_img, &stream);
     }
     TIME
@@ -73,7 +73,7 @@ void DirectoryLoader::restart()
 
 cv::cuda::GpuMat DirectoryLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
 		boost::filesystem::path& path = *getParameter<Parameters::ReadDirectory>(0)->Data();
         files.clear();

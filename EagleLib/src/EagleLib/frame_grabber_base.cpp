@@ -23,6 +23,7 @@ void IFrameGrabber::InitializeFrameGrabber(DataStream* stream)
     {
 		setup_signals(stream->GetSignalManager());
 		update_signal = stream->GetSignalManager()->get_signal<void()>("update", this);
+        SetupVariableManager(stream->GetVariableManager().get());
     }
 }
 void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
@@ -42,14 +43,6 @@ FrameGrabberBuffered::FrameGrabberBuffered()
 {
     buffer_frame_number = 0;
     playback_frame_number = 1;
-    updateParameter<int>("Frame buffer size", 50);
-    frame_buffer.set_capacity(50);
-    
-    boost::function<void(cv::cuda::Stream*)> f =[&](cv::cuda::Stream*)
-    {
-        frame_buffer.set_capacity(*getParameter<int>("Frame buffer size")->Data());
-    };
-    RegisterParameterCallback("Frame buffer size", f, true, true);
 }
 void FrameGrabberBuffered::InitializeFrameGrabber(DataStream* stream)
 {
@@ -140,7 +133,8 @@ void FrameGrabberBuffered::StopBufferThread()
 {
     LOG(info);
     buffer_thread.interrupt();
-    buffer_thread.join();
+    if(buffer_thread.joinable())
+        buffer_thread.join();
 }
 int FrameGrabberInfo::LoadTimeout() const
 {
@@ -155,7 +149,8 @@ void FrameGrabberBuffered::Init(bool firstInit)
     IFrameGrabber::Init(firstInit);
     if(firstInit)
     {
-        
+        updateParameter<int>("Frame buffer size", 50);
+        frame_buffer.set_capacity(50);    
     }else
     {
         if (parent_stream)
@@ -167,11 +162,17 @@ void FrameGrabberBuffered::Init(bool firstInit)
         LaunchBufferThread();
     }
     updateParameterPtr<boost::circular_buffer<TS<SyncedMemory>>>("Frame buffer", &frame_buffer)->type = Parameters::Parameter::Output;
+    
+    boost::function<void(cv::cuda::Stream*)> f =[&](cv::cuda::Stream*)
+    {
+        frame_buffer.set_capacity(*getParameter<int>("Frame buffer size")->Data());
+    };
+    RegisterParameterCallback("Frame buffer size", f, true, true);
 }
 
 void FrameGrabberBuffered::Serialize(ISimpleSerializer* pSerializer)
 {
     IFrameGrabber::Serialize(pSerializer);
     SERIALIZE(playback_frame_number);
-    
+    SERIALIZE(frame_buffer);
 }

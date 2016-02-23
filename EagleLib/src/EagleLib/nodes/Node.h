@@ -81,6 +81,7 @@ namespace EagleLib
 	
     class NodeManager;
 	class DataStream;
+	class IVariableManager;
 }
 
 
@@ -139,7 +140,7 @@ namespace EagleLib
          * @return output image
          */
         virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img, cv::cuda::Stream& steam = cv::cuda::Stream::Null());
-		virtual void process(TS<SyncedMemory>& input, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+		virtual TS<SyncedMemory> process(TS<SyncedMemory>& input, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         virtual bool pre_check(const TS<SyncedMemory>& input);
         /**
          * @brief doProcess this is the most used node and where the bulk of the work is performed.
@@ -148,7 +149,7 @@ namespace EagleLib
          * @return output image
          */
         virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-		virtual void                    doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
+		virtual TS<SyncedMemory>		doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
 		virtual void					reset();
 
         virtual Parameters::Parameter* addParameter(Parameters::Parameter::Ptr param);
@@ -245,10 +246,10 @@ namespace EagleLib
 		//
 		//									Parameter updating, getting and searching
 		//
-
+        
 		virtual std::vector<std::string> listInputs();
 
-		virtual std::vector<std::string>	 listParameters();
+		virtual std::vector<std::string> listParameters();
 
         virtual std::vector<std::string> findType(Parameters::Parameter::Ptr param);
 
@@ -372,6 +373,7 @@ namespace EagleLib
 		unsigned int rmt_hash;
 		unsigned int rmt_cuda_hash;
 		DataStream*     								_dataStream;
+		std::shared_ptr<IVariableManager>								_variable_manager;
         // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
         std::string															fullTreeName;
         // Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1

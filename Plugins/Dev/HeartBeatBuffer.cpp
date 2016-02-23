@@ -65,10 +65,10 @@ cv::cuda::GpuMat HeartBeatBuffer::process(cv::cuda::GpuMat &img, cv::cuda::Strea
 	}
 	else
 	{
-		if (parameters[0]->changed)
+		if (_parameters[0]->changed)
 		{
 			image_buffer.set_capacity(*getParameter<int>(0)->Data());
-			parameters[0]->changed = false;
+			_parameters[0]->changed = false;
 		}
 		try
 		{

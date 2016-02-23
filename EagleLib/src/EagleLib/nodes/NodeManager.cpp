@@ -48,11 +48,12 @@ NodeManager::OnConstructorsAdded()
 	}
 	for (size_t i = 0; i < newNodes.size(); ++i)
 	{
-		for (size_t j = 0; j < newNodes[i]->parameters.size(); ++j)
+        auto parameters = newNodes[i]->getParameters();
+		for (size_t j = 0; j < parameters.size(); ++j)
 		{
-			if (newNodes[i]->parameters[j]->type & Parameters::Parameter::Input)
+			if (parameters[j]->type & Parameters::Parameter::Input)
 			{
-				auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(newNodes[i]->parameters[j]);
+				auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(parameters[j]);
 				inputParam->SetInput(std::string());
 			}
 		}
@@ -73,7 +74,7 @@ shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
 			Nodes::Node* node = static_cast<Nodes::Node*>(interface);
 			try
 			{
-				node->Init(true);
+				//node->Init(true);
 			}
 			catch (cv::Exception &e)
 			{
@@ -364,10 +365,11 @@ std::vector<std::string> NodeManager::getParametersOfType(boost::function<bool(L
 	std::vector<std::string> parameters;
 	for (size_t i = 0; i < nodes.size(); ++i)
 	{
-		for (size_t j = 0; j < nodes[i]->parameters.size(); ++j)
+        auto node_params = nodes[i]->getParameters();
+		for (size_t j = 0; j < node_params.size(); ++j)
 		{
-			if (selector(nodes[i]->parameters[j]->GetTypeInfo()))
-				parameters.push_back(nodes[i]->parameters[j]->GetTreeName());
+			if (selector(node_params[j]->GetTypeInfo()))
+				parameters.push_back(node_params[j]->GetTreeName());
 		}
 	}
 	return parameters;

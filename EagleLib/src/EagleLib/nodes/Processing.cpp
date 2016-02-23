@@ -3,11 +3,13 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void CpuProcessing::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
+TS<SyncedMemory> CpuProcessing::process(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
-    doProcess(input.GetMatMutable(stream),input.timestamp, input.frame_number, stream);
+	input.GetMatMutable(stream, 0) = doProcess(input.GetMatMutable(stream), input.timestamp, input.frame_number, stream);
+	return input;
 }
-void GpuProcessing::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
+TS<SyncedMemory> GpuProcessing::process(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
-    doProcess(input.GetGpuMatMutable(stream, 0), input.timestamp, input.frame_number, stream);
+    input.GetGpuMatMutable(stream,0) = doProcess(input.GetGpuMatMutable(stream, 0), input.timestamp, input.frame_number, stream);
+	return input;
 }

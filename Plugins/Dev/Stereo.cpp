@@ -31,7 +31,7 @@ void StereoBM::Init(bool firstInit)
 
 cv::cuda::GpuMat StereoBM::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(parameters[0]->changed || parameters[1]->changed)
+    if(_parameters[0]->changed || _parameters[1]->changed)
     {
         stereoBM = cv::cuda::createStereoBM(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
     }
@@ -106,14 +106,14 @@ void StereoConstantSpaceBP::Init(bool firstInit)
         csbp = cv::cuda::createStereoConstantSpaceBP();
     }else
     {
-        parameters[0]->changed = true;
+        _parameters[0]->changed = true;
     }
 
 }
 
 cv::cuda::GpuMat StereoConstantSpaceBP::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed || parameters[4]->changed)
+    if(_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed || _parameters[3]->changed || _parameters[4]->changed)
     {
         csbp = cv::cuda::createStereoConstantSpaceBP(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data(), *getParameter<int>(2)->Data(), *getParameter<int>(3)->Data(), getParameter<Parameters::EnumParameter>(4)->Data()->getValue());
     }
@@ -153,7 +153,7 @@ void UndistortStereo::Init(bool firstInit)
 
 cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed)
+    if(_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed || _parameters[3]->changed)
     {
         cv::Mat* K = getParameter<cv::Mat>(0)->Data();
         if(K == nullptr)
@@ -215,10 +215,10 @@ cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         mapY.upload(Y,stream);
         //log(Status, "Undistortion maps calculated");
 		NODE_LOG(info) << "Undistortion maps calculated";
-        parameters[0]->changed = false;
-        parameters[1]->changed = false;
-        parameters[2]->changed = false;
-        parameters[3]->changed = false;
+        _parameters[0]->changed = false;
+        _parameters[1]->changed = false;
+        _parameters[2]->changed = false;
+        _parameters[3]->changed = false;
         updateParameter("mapX", mapX);
         updateParameter("mapY", mapY);
 

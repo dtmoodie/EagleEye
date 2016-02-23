@@ -27,16 +27,16 @@ void DensePyrLKOpticalFlow::Init(bool firstInit)
 }
 cv::cuda::GpuMat DensePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-	if (parameters[0]->changed || parameters[1]->changed || parameters[2]->changed || parameters[3]->changed)
+	if (_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed || _parameters[3]->changed)
 	{
 		int size = *getParameter<int>("Window Size")->Data();
 		int levels = *getParameter<int>("Pyramid levels")->Data();
 		int iters = *getParameter<int>("Iterations")->Data();
 		opt_flow = cv::cuda::DensePyrLKOpticalFlow::create(cv::Size(size, size), levels, iters, false);
-		parameters[0]->changed = false;
-		parameters[1]->changed = false; 
-		parameters[2]->changed = false;
-		parameters[3]->changed = false;
+		_parameters[0]->changed = false;
+		_parameters[1]->changed = false; 
+		_parameters[2]->changed = false;
+		_parameters[3]->changed = false;
 	}
 
 
@@ -71,7 +71,7 @@ void SparsePyrLKOpticalFlow::Init(bool firstInit)
         updateParameter("Iterations", int(30));
         updateParameter("Use initial flow", true);
         updateParameter("Enabled", false);
-        parameters[1]->changed = true;
+        _parameters[1]->changed = true;
     }
 	updateParameter<boost::function<void(cv::cuda::GpuMat&, cv::cuda::GpuMat&, size_t, cv::cuda::Stream&)>>("Set reference callback", boost::bind(&SparsePyrLKOpticalFlow::set_reference, this, _1,_2,_3,_4));
 }
@@ -86,20 +86,20 @@ void SparsePyrLKOpticalFlow::set_reference(cv::cuda::GpuMat& ref_image, cv::cuda
 }
 cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    if(parameters[1]->changed ||
-       parameters[2]->changed ||
-       parameters[3]->changed ||
-       parameters[4]->changed)
+    if(_parameters[1]->changed ||
+       _parameters[2]->changed ||
+       _parameters[3]->changed ||
+       _parameters[4]->changed)
     {
 		int winSize = *getParameter<int>(1)->Data();
 		int levels = *getParameter<int>(2)->Data();
 		int iters = *getParameter<int>(3)->Data();
 		bool useInital = *getParameter<bool>(4)->Data();
         optFlow = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(winSize,winSize),levels,iters,useInital);
-        parameters[1]->changed = false;
-        parameters[2]->changed = false;
-        parameters[3]->changed = false;
-        parameters[4]->changed = false;
+        _parameters[1]->changed = false;
+        _parameters[2]->changed = false;
+        _parameters[3]->changed = false;
+        _parameters[4]->changed = false;
     }
 	cv::cuda::GpuMat grey_img;
     if(img.channels() != 1)

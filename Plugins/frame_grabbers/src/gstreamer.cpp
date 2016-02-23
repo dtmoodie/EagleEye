@@ -1,6 +1,9 @@
 #include "gstreamer.h"
 #include "ObjectInterfacePerModule.h"
 #include <boost/filesystem.hpp>
+#include <gst/video/video.h>
+#include <gst/app/gstappsrc.h>
+
 using namespace EagleLib;
 
 std::string frame_grabber_gstreamer::frame_grabber_gstreamer_info::GetObjectName()
@@ -27,9 +30,16 @@ int frame_grabber_gstreamer::frame_grabber_gstreamer_info::Priority() const
 }
 
 
-frame_grabber_gstreamer::frame_grabber_gstreamer()
+frame_grabber_gstreamer::frame_grabber_gstreamer():
+    frame_grabber_cv()
 {
-
+    if (!gst_is_initialized())
+    {
+	    char** argv;
+	    argv = new char*{ "-vvv" };
+	    int argc = 1;
+	    gst_init(&argc, &argv);
+    }
 }
 
 bool frame_grabber_gstreamer::LoadFile(const std::string& file_path)

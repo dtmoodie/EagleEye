@@ -56,8 +56,8 @@ void Camera::Init(bool firstInit)
     {
         updateParameter<int>("Camera Number", 0);
         updateParameter<std::string>("Gstreamer stream", "rtsp://root:12369pp@192.168.0.6/axis-media/media.amp");
-        parameters[0]->changed = false;
-        parameters[1]->changed = false;
+        _parameters[0]->changed = false;
+        _parameters[1]->changed = false;
     }
 }
 void Camera::Serialize(ISimpleSerializer *pSerializer)
@@ -91,14 +91,14 @@ void Camera::read_image()
 }
 cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
-        parameters[0]->changed = false;
+        _parameters[0]->changed = false;
         changeStream(*getParameter<int>(0)->Data()); 
     }
-    if(parameters[1]->changed)
+    if(_parameters[1]->changed)
     {
-        parameters[1]->changed = false;
+        _parameters[1]->changed = false;
         changeStream(*getParameter<std::string>(1)->Data());
     }
 	cv::cuda::GpuMat popped_image;
@@ -222,9 +222,9 @@ void GStreamerCamera::setString()
 	}
 		
 
-    for(size_t i = 0; i < parameters.size(); ++i)
+    for(size_t i = 0; i < _parameters.size(); ++i)
     {
-        parameters[i]->changed = false;
+        _parameters[i]->changed = false;
     }
 }
 
@@ -232,15 +232,15 @@ void GStreamerCamera::setString()
 
 cv::cuda::GpuMat GStreamerCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if(parameters[0]->changed ||
-       parameters[1]->changed ||
-       parameters[2]->changed ||
-       parameters[3]->changed ||
-       parameters[4]->changed ||
-       parameters[5]->changed ||
-       parameters[6]->changed ||
-       parameters[7]->changed ||
-       parameters[8]->changed)
+    if(_parameters[0]->changed ||
+       _parameters[1]->changed ||
+       _parameters[2]->changed ||
+       _parameters[3]->changed ||
+       _parameters[4]->changed ||
+       _parameters[5]->changed ||
+       _parameters[6]->changed ||
+       _parameters[7]->changed ||
+       _parameters[8]->changed)
     {
         setString();
     }
@@ -282,7 +282,7 @@ void RTSPCamera::Init(bool firstInit)
         updateParameter<unsigned short>("Height", 1080);
         updateParameter("Output", cv::cuda::GpuMat())->type =  Parameters::Parameter::Output;
     }
-	for (auto itr = parameters.begin(); itr != parameters.end(); ++itr)
+	for (auto itr = _parameters.begin(); itr != _parameters.end(); ++itr)
 	{
 		(*itr)->changed = false;
 	}
@@ -393,19 +393,19 @@ void RTSPCamera::setString()
 		NODE_LOG(error) << "Failed to open camera";
 	}
 
-    for(size_t i = 0; i < parameters.size(); ++i)
+    for(size_t i = 0; i < _parameters.size(); ++i)
     {
-        parameters[i]->changed = false;
+        _parameters[i]->changed = false;
     }
 }
 
 cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-    if(parameters[0]->changed ||
-       parameters[1]->changed ||
-       parameters[2]->changed ||
-       parameters[3]->changed ||
-       parameters[4]->changed)
+    if(_parameters[0]->changed ||
+       _parameters[1]->changed ||
+       _parameters[2]->changed ||
+       _parameters[3]->changed ||
+       _parameters[4]->changed)
     {
         setString();
     }

@@ -29,9 +29,9 @@ void SyncFunctionCall::Init(bool firstInit)
 
 void SyncFunctionCall::call()
 {
-    for(int i = 1; i < parameters.size(); ++i)
+    for(int i = 1; i < _parameters.size(); ++i)
     {
-		auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<boost::function<void(void)>>>(parameters[i]);
+		auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<boost::function<void(void)>>>(_parameters[i]);
         if(param)
         {
             if(param->Data() != nullptr)
@@ -43,9 +43,9 @@ void SyncFunctionCall::call()
 cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
     bool full = true;
-    for(int i = 1; i < parameters.size(); ++i)
+    for(int i = 1; i < _parameters.size(); ++i)
     {
-        auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<boost::function<void(void)>>>(parameters[i]);
+        auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<boost::function<void(void)>>>(_parameters[i]);
 		
         if(param)
         {
@@ -55,7 +55,7 @@ cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     }
     if(full == true)
     {
-		addInputParameter<boost::function<void(void)>>("Input " + boost::lexical_cast<std::string>(parameters.size()))->SetQualifier(boost::bind(&functionQualifier, _1));
+		addInputParameter<boost::function<void(void)>>("Input " + boost::lexical_cast<std::string>(_parameters.size()))->SetQualifier(boost::bind(&functionQualifier, _1));
     }
     return img;
 }

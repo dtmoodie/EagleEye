@@ -20,7 +20,8 @@ void user_interface_persistence::variable_storage::load_parameters(EagleLib::Par
 void user_interface_persistence::variable_storage::save_parameters(EagleLib::ParameteredObject* This, Loki::TypeInfo type)
 {
     auto& params = loaded_parameters[type.name()];
-    for(auto& param:This->parameters)
+    auto all_params = This->getParameters();
+    for(auto& param: all_params)
     {
         params[param->GetName()] = param->DeepCopy();
     }

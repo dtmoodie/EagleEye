@@ -25,7 +25,7 @@ void SetDevice::Init(bool firstInit)
 cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
         unsigned int device = *getParameter<unsigned int>(0)->Data();
         if(device >= maxDevice)
@@ -47,7 +47,7 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
             stream = cv::cuda::Stream();
             return cv::cuda::GpuMat();
         }
-        parameters[0]->changed = false;
+        _parameters[0]->changed = false;
     }
 
 
@@ -73,7 +73,7 @@ void StreamDispatcher::Init(bool firstInit)
 
 cv::cuda::GpuMat StreamDispatcher::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
         streams.resize(*getParameter<int>(0)->Data());
     }

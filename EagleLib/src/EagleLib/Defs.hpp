@@ -28,7 +28,24 @@ RUNTIME_COMPILER_LINKLIBRARY("EagleLibd.lib");
 RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib");
 #endif
 #else
+#endif
 
+#ifdef _MSC_VER
+#ifndef EagleLib_EXPORTS
+#ifdef _DEBUG
+#pragma comment(lib, "EagleLibd.lib")
+#pragma comment(lib, "signalsd.lib")
+#pragma comment(lib, "pplx_2_7d.lib")
+//#pragma comment(lib, "RuntimeCompilerd.lib")
+//#pragma comment(lib, "RuntimeCompilerObjectSystemd.lib")
+#else
+#pragma comment(lib, "EagleLib.lib")
+#pragma comment(lib, "signals.lib")
+#pragma comment(lib, "pplx_2_7.lib")
+//#pragma comment(lib, "RuntimeCompiler.lib")
+//#pragma comment(lib, "RuntimeCompilerObjectSystem.lib")
+#endif
+#endif
 #endif
 
 																									

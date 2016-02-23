@@ -36,7 +36,7 @@ void register_to_reference::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream&
 {
     for(int i = 1; i < 10; ++i)
     {
-        if(parameters[i]->changed)
+        if(_parameters[i]->changed)
         {
             d_orb = cv::cuda::ORB::create(
                 *getParameter<int>(1)->Data(),
@@ -50,11 +50,11 @@ void register_to_reference::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream&
                 *getParameter<int>(8)->Data(),
                 *getParameter<bool>(9)->Data());
             for(int i = 1; i < 10; ++i)
-                parameters[i]->changed = false;
+                _parameters[i]->changed = false;
             break;
         }
     }
-    if(parameters[0]->changed || ref_descriptors.empty())
+    if(_parameters[0]->changed || ref_descriptors.empty())
     {
         auto ref_mat = getParameter<cv::cuda::GpuMat>(0)->Data();
         if(ref_mat && ! ref_mat->empty())
@@ -74,7 +74,7 @@ void register_to_reference::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream&
             d_orb->detectAndComputeAsync(d_reference_grey, cv::noArray(), temp_ref_keypoints, ref_descriptors, false, stream);
             temp_ref_keypoints.download(ref_keypoints, stream);
         }
-        parameters[0]->changed = false;
+        _parameters[0]->changed = false;
     }
     if(ref_descriptors.empty() || ref_keypoints.empty() || d_reference_original.empty())
         return;

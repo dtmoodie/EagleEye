@@ -13,6 +13,7 @@
 #include "nodes/Node.h"
 #include "EagleLib/Signals.h"
 
+
 namespace EagleLib
 {
 	class IViewManager;
@@ -22,6 +23,7 @@ namespace EagleLib
     class DataStreamManager;
     class IFrameGrabber;
     class SignalManager;
+	class IVariableManager;
 
 	class EAGLE_EXPORTS DataStream
 	{
@@ -45,6 +47,8 @@ namespace EagleLib
 
         // Handles actual loading of the image, etc
         shared_ptr<IFrameGrabber>     GetFrameGrabber();
+
+		std::shared_ptr<IVariableManager> GetVariableManager();
 
         SignalManager* GetSignalManager();
 
@@ -72,19 +76,20 @@ namespace EagleLib
 
         // members
         int stream_id;
-        shared_ptr<IViewManager>        view_manager;
-        shared_ptr<ICoordinateManager>  coordinate_manager;
-        shared_ptr<IRenderEngine>       rendering_engine;
-        shared_ptr<ITrackManager>       track_manager;
-        shared_ptr<IFrameGrabber>       frame_grabber;
-		std::shared_ptr<SignalManager>  signal_manager;
-        std::vector<shared_ptr<Nodes::Node>>   top_level_nodes;
-        std::mutex                      nodes_mtx;
-        bool                            paused;
-        cv::cuda::Stream                cuda_stream;
-        boost::thread                   processing_thread;
-        volatile bool                   dirty_flag;
-        std::vector<std::shared_ptr<Signals::connection>> connections;
+        shared_ptr<IViewManager>							view_manager;
+        shared_ptr<ICoordinateManager>						coordinate_manager;
+        shared_ptr<IRenderEngine>							rendering_engine;
+        shared_ptr<ITrackManager>							track_manager;
+        shared_ptr<IFrameGrabber>							frame_grabber;
+		std::shared_ptr<IVariableManager>					variable_manager;
+		std::shared_ptr<SignalManager>						signal_manager;
+        std::vector<shared_ptr<Nodes::Node>>				top_level_nodes;
+        std::mutex											nodes_mtx;
+        bool												paused;
+        cv::cuda::Stream									cuda_stream;
+        boost::thread										processing_thread;
+        volatile bool										dirty_flag;
+        std::vector<std::shared_ptr<Signals::connection>>	connections;
 	};
 
     class EAGLE_EXPORTS DataStreamManager
@@ -99,7 +104,6 @@ namespace EagleLib
         DataStreamManager();
         ~DataStreamManager();
 
-        std::vector<std::shared_ptr<DataStream>>    streams;
-        
+        std::vector<std::shared_ptr<DataStream>>    streams;    
     };
 }

@@ -10,6 +10,6 @@ namespace EagleLib
     {
         std::vector<shared_ptr<Algorithm>> child_algorithms;
     public:
-        virtual std::vector<Parameters::Parameter::Ptr> GetParameters() = 0;
+        virtual std::vector<std::shared_ptr<Parameters::Parameter>> GetParameters() = 0;
     };
 }

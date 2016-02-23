@@ -157,7 +157,7 @@ cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         updateParameter("Channel " + std::to_string(i), (*channels)[i])->type = Parameters::Parameter::Output;
     }
     TIME
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
         channelNum = *getParameter<int>(0)->Data();
     TIME
     if(channelNum == -1)
@@ -231,10 +231,10 @@ cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
 //        updateInputQualifier<cv::cuda::GpuMat>(1,f);
 //        updateInputQualifier<cv::cuda::GpuMat>(2,f);
 //        updateInputQualifier<cv::cuda::GpuMat>(3,f);
-//        parameters[0]->changed = false;
-//        parameters[1]->changed = false;
-//        parameters[2]->changed = false;
-//        parameters[3]->changed = false;
+//        _parameters[0]->changed = false;
+//        _parameters[1]->changed = false;
+//        _parameters[2]->changed = false;
+//        _parameters[3]->changed = false;
 //        qualifiersSet = true;
 //    }
     std::vector<cv::cuda::GpuMat> channels;
