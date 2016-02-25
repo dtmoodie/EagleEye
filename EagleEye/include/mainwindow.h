@@ -123,7 +123,7 @@ private:
     boost::timed_mutex                                  parentMtx;
     std::vector<QNodeWidget*>                           widgets;
     std::vector<DataStreamWidget*>                       data_stream_widgets;
-    boost::thread                                       processingThread;
+    //boost::thread                                       processingThread;
     RCCSettingsDialog*                                  rccSettings;
     std::map<std::string, cv::Vec2f>                    positionMap;
     PlotWizardDialog*                                   plotWizardDialog;

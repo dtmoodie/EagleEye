@@ -304,7 +304,7 @@ void DataStream::process()
             {
                 dirty_flag = true;
             }, std::placeholders::_1), this);
-
+    LOG(info) << "Starting stream thread";
     while(!boost::this_thread::interruption_requested())
     {
         if(!paused)
@@ -350,6 +350,7 @@ void DataStream::process()
             boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
         }
     }
+    LOG(info) << "Stream thread shutting down";
 }
 
 // **********************************************************************

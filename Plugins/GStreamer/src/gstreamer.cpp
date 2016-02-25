@@ -397,6 +397,7 @@ void RTSP_server_new::onPipeChange()
 }
 void RTSP_server_new::glibThread()
 {
+    LOG(info) << "Starting gmain loop";
 	if (!g_main_loop_is_running(loop))
 	{
 		g_main_loop_run(loop);
@@ -533,15 +534,13 @@ void new_client_handler(GstRTSPServer *server, GstRTSPClient *client, EagleLib::
 
 void RTSP_server_new::Init(bool firstInit)
 {
+    Node::Init(firstInit);
 	if (firstInit)
 	{
 		GstRTSPMountPoints *mounts = nullptr;
 		gst_debug_set_active(1);
-		if (firstInit)
-		{
-			timestamp = 0;
-			prevTime = clock();
-		}
+		timestamp = 0;
+		prevTime = clock();
 		if (!gst_is_initialized())
 		{
 			char** argv;

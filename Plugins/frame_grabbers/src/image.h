@@ -5,11 +5,11 @@
 
 namespace EagleLib
 {
-    class frame_grabber_image: public IFrameGrabber
+    class PLUGIN_EXPORTS frame_grabber_image: public IFrameGrabber
     {
     public:
 
-        class frame_grabber_image_info: public FrameGrabberInfo
+        class PLUGIN_EXPORTS frame_grabber_image_info: public FrameGrabberInfo
         {
         public:
             virtual std::string GetObjectName();

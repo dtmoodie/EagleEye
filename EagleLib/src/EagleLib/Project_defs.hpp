@@ -1,6 +1,34 @@
 #pragma once
 #include "EagleLib/rcc/ObjectManager.h"
 #include "Defs.hpp"
+
+#ifdef PLUGIN_NAME
+#include "RuntimeLinkLibrary.h"
+#ifdef _MSC_VER // Windows
+#define PLUGIN_EXPORTS __declspec(dllexport) 
+#ifdef _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY(STRINGIFY(PLUGIN_NAME) "d.lib")
+#else
+RUNTIME_COMPILER_LINKLIBRARY(STRINGIFY(PLUGIN_NAME) ".lib")
+#endif
+
+#else // Linux
+#define PLUGIN_EXPORTS
+#ifdef _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY("-l" STRINGIFY(PLUGIN_NAME) )
+#else
+RUNTIME_COMPILER_LINKLIBRARY("-l" STRINGIFY(PLUGIN_NAME) "d")
+#endif
+#endif
+#else
+#define PLUGIN_EXPORTS
+#endif
+
+#ifndef PLUGIN_EXPORTS
+#define PLUGIN_EXPORTS
+#endif
+
+
 // *************** SETUP_PROJECT_DEF ********************
 #ifdef __cplusplus
 #define SETUP_PROJECT_DEF extern "C"{	\

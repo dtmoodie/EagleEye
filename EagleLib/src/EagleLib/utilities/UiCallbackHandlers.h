@@ -3,6 +3,7 @@
 #include "EagleLib/Defs.hpp"
 #include <opencv2/core/types.hpp>
 #include <opencv2/core/mat.hpp>
+#include <opencv2/core/cuda.hpp>
 #include <set>
 #include <memory>
 #include "EagleLib/Signals.h"
@@ -28,7 +29,8 @@ namespace EagleLib
         //static WindowCallbackHandler* instance(size_t stream_id = 0);
         
         void handle_click(int event, int x, int y, int flags, const std::string& win_name);
-        void imshow(const std::string& window_name, cv::InputArray img, int flags = 0);
+        void imshow(const std::string& window_name, cv::Mat img, int flags = 0);
+        void imshowd(const std::string& window_name, cv::cuda::GpuMat img, int flags = 0);
 
 
         Signals::typed_signal_base<void(std::string, cv::Point, int)>* sig_click_right;

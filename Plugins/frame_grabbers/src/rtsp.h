@@ -5,10 +5,10 @@
 
 namespace EagleLib
 {
-    class frame_grabber_rtsp: public frame_grabber_gstreamer
+    class PLUGIN_EXPORTS frame_grabber_rtsp: public frame_grabber_gstreamer
     {
     public:
-        class frame_grabber_rtsp_info: public FrameGrabberInfo
+        class PLUGIN_EXPORTS frame_grabber_rtsp_info: public FrameGrabberInfo
         {
         public:
             virtual std::string GetObjectName();

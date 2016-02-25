@@ -1,6 +1,8 @@
 #include "cv_capture.h"
 #include "EagleLib/Logging.h"
 using namespace EagleLib;
+
+
 frame_grabber_cv::frame_grabber_cv()
 {
     playback_frame_number = -1;

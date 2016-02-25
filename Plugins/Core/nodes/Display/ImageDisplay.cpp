@@ -57,7 +57,6 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
         
         auto instance = manager->instance(GetDataStream()->get_stream_id());
         instance->imshow(display_name, host_mat);
-		cv::waitKey(1);
 	}, stream);
     
     return img;
@@ -76,7 +75,6 @@ void QtImageDisplay::doProcess(const cv::Mat& mat, double timestamp, int frame_n
 
         auto instance = manager->instance(GetDataStream()->get_stream_id());
         instance->imshow(getFullTreeName(), mat);
-        cv::waitKey(1);
     }, stream);
 }
 
@@ -113,7 +111,7 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
         auto instance = manager->instance(0);
-        Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&WindowCallbackHandler::imshow, instance, display_name, display_buffer, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO));
+        Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&WindowCallbackHandler::imshowd, instance, display_name, display_buffer, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO));
         //WindowCallbackHandler::instance()->imshow(display_name, display_buffer);
 		//Parameters::UI::UiCallbackService::Instance()->post(
 //			boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), 

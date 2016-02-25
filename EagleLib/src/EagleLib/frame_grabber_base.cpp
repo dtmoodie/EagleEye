@@ -99,6 +99,7 @@ void FrameGrabberBuffered::Buffer()
 {
     cv::cuda::Stream read_stream;
     rmt_SetCurrentThreadName("FrameGrabberThread");
+    LOG(info) << "Starting buffer thread";
     while(!boost::this_thread::interruption_requested())
     {
         if(frame_buffer.size() != frame_buffer.capacity() || buffer_frame_number == -1 || playback_frame_number > buffer_frame_number - frame_buffer.capacity() / 2)
@@ -120,6 +121,7 @@ void FrameGrabberBuffered::Buffer()
             }
         }
     }
+    LOG(info) << "Shutting down buffer thread";
 }
 
 void FrameGrabberBuffered::LaunchBufferThread()
@@ -150,7 +152,7 @@ void FrameGrabberBuffered::Init(bool firstInit)
     if(firstInit)
     {
         updateParameter<int>("Frame buffer size", 50);
-        frame_buffer.set_capacity(50);    
+        //frame_buffer.set_capacity(50);    
     }else
     {
         if (parent_stream)
@@ -161,6 +163,7 @@ void FrameGrabberBuffered::Init(bool firstInit)
         buffer_frame_number = -1;
         LaunchBufferThread();
     }
+    frame_buffer.set_capacity(*getParameter<int>("Frame buffer size")->Data());
     updateParameterPtr<boost::circular_buffer<TS<SyncedMemory>>>("Frame buffer", &frame_buffer)->type = Parameters::Parameter::Output;
     
     boost::function<void(cv::cuda::Stream*)> f =[&](cv::cuda::Stream*)
@@ -173,6 +176,6 @@ void FrameGrabberBuffered::Init(bool firstInit)
 void FrameGrabberBuffered::Serialize(ISimpleSerializer* pSerializer)
 {
     IFrameGrabber::Serialize(pSerializer);
-    SERIALIZE(playback_frame_number);
-    SERIALIZE(frame_buffer);
+    //SERIALIZE(playback_frame_number);
+    //SERIALIZE(frame_buffer);
 }

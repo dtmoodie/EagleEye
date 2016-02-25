@@ -8,11 +8,13 @@
 
 #include "RuntimeSourceDependency.h"
 
+
+
 RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("cv_capture", ".cpp");
 
 namespace EagleLib
 {
-    class frame_grabber_cv: public FrameGrabberBuffered
+    class PLUGIN_EXPORTS frame_grabber_cv: public FrameGrabberBuffered
     {
     public:
         frame_grabber_cv();

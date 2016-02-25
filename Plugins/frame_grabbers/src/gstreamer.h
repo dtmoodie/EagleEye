@@ -4,10 +4,10 @@
 #include "EagleLib/ICoordinateManager.h"
 namespace EagleLib
 {
-    class frame_grabber_gstreamer: public frame_grabber_cv
+    class PLUGIN_EXPORTS frame_grabber_gstreamer: public frame_grabber_cv
     {
     public:
-        class frame_grabber_gstreamer_info: public FrameGrabberInfo
+        class PLUGIN_EXPORTS frame_grabber_gstreamer_info: public FrameGrabberInfo
         {
             virtual std::string GetObjectName();
             virtual std::string GetObjectTooltip();
