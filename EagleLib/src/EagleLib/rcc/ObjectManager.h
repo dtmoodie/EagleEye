@@ -7,7 +7,8 @@
 #include <functional>
 #include <map>
 #include "shared_ptr.hpp"
-
+#include <list>
+#include <mutex>
 
 struct SystemTable;
 struct IRuntimeObjectSystem;
@@ -71,6 +72,7 @@ namespace EagleLib
             return weak_ptr<T>();
         }
         shared_ptr<IObject> GetObject(const std::string& object_name);
+        IObject* GetObject(ObjectId oid);
         weak_ptr<IObject> GetSingleton(const std::string& object_name);
 		static ObjectManager& Instance();
 		void addIncludeDir(const std::string& dir, unsigned short projId = 0);
@@ -99,6 +101,8 @@ namespace EagleLib
 		void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
         std::vector<IObjectConstructor*> GetConstructorsForInterface(int interface_id);
         void set_build_directory(const std::string& build_directory);
+        void register_notifier(IObjectNotifiable* obj);
+        void remove_notifier(IObjectNotifiable* obj);
 	private:
 		ObjectManager();
 		friend class PlotManager;
@@ -111,5 +115,7 @@ namespace EagleLib
 		std::vector<std::function<void(void)>>            onConstructorsAddedCallbacks;
 		std::map<int, std::string>                          m_projectNames;
         std::string build_dir;
+        std::list<IObjectNotifiable*>                       m_sharedPtrs;
+        std::mutex mtx;
 	};// class ObjectManager
 }

@@ -349,7 +349,7 @@ RTSP_server::RTSP_server():
 }					
 static EagleLib::Nodes::NodeInfo g_registerer_RTSP_server("RTSP_server", { "Image", "Sink" });
 
-REGISTERCLASS(RTSP_server, &g_registerer_RTSP_server)
+//REGISTERCLASS(RTSP_server, &g_registerer_RTSP_server)
 
 
 // http://cgit.freedesktop.org/gstreamer/gst-rtsp-server/tree/examples/test-appsrc.c
@@ -369,7 +369,13 @@ RTSP_server_new::~RTSP_server_new()
 {
 	NODE_LOG(info) << "Shutting down rtsp server";
 	if(pipeline)
-		gst_element_set_state(pipeline, GST_STATE_NULL);
+    {
+		if(gst_element_set_state(pipeline, GST_STATE_NULL) != GST_STATE_CHANGE_SUCCESS)
+        {
+            NODE_LOG(debug) << "gst_element_set_state(pipeline, GST_STATE_NULL) != GST_STATE_CHANGE_SUCCESS";
+        }
+    }
+        
 	g_main_loop_quit(loop);
 	if(factory)
 		gst_object_unref(factory);
@@ -410,6 +416,7 @@ void RTSP_server_new::setup(std::string pipeOverride)
 }
 void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpointer user_data)
 {
+    BOOST_LOG_TRIVIAL(debug) << __FUNCTION__;
 	auto node = static_cast<EagleLib::Nodes::RTSP_server_new*>(user_data);
 	cv::cuda::HostMem* h_buffer = nullptr;
 	node->notifier.wait_and_pop(h_buffer);
@@ -487,6 +494,7 @@ void client_close_handler(GstRTSPClient *client, EagleLib::Nodes::RTSP_server_ne
 }
 void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, EagleLib::Nodes::RTSP_server_new* node)
 {
+    BOOST_LOG_TRIVIAL(debug) << __FUNCTION__;
 	if (node->imgSize.area() == 0)
 	{
 		return;
@@ -519,7 +527,7 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, EagleL
 }
 void new_client_handler(GstRTSPServer *server, GstRTSPClient *client, EagleLib::Nodes::RTSP_server_new* node)
 {
-	
+	BOOST_LOG_TRIVIAL(debug) << __FUNCTION__;
 	node->clientCount++;
 	node->connected = true;
 	BOOST_LOG_TRIVIAL(info) << "New client connected " << node->clientCount << " " << client;
@@ -543,21 +551,34 @@ void RTSP_server_new::Init(bool firstInit)
 		prevTime = clock();
 		if (!gst_is_initialized())
 		{
+            NODE_LOG(debug) << "Initializing gstreamer";
 			char** argv;
 			argv = new char*{ "-vvv" };
 			int argc = 1;
 			gst_init(&argc, &argv);
 		}
 		if (!loop)
-			loop = g_main_loop_new(NULL, FALSE);
+        {
+            NODE_LOG(debug) << "Creating glib event loop";
+            loop = g_main_loop_new(NULL, FALSE);
+        }
+			
 
 		// create a server instance 
 		if (!server)
-			server = gst_rtsp_server_new();
+        {
+            NODE_LOG(debug) << "Creating new rtsp server";
+        	server = gst_rtsp_server_new();
+        }
+		
 		// get the mount points for this server, every server has a default object
 		// that be used to map uri mount points to media factories 
 		if (!mounts)
-			mounts = gst_rtsp_server_get_mount_points(server);
+        {
+            NODE_LOG(debug) << "Creating new mount points";
+            mounts = gst_rtsp_server_get_mount_points(server);
+        }
+			
 
 		// make a media factory for a test stream. The default media factory can use
 		// gst-launch syntax to create pipelines.
@@ -565,6 +586,7 @@ void RTSP_server_new::Init(bool firstInit)
 		// element with pay%d names will be a stream 
 		if (!factory)
 		{
+            NODE_LOG(debug) << "Creating rtsp media factory";
 			factory = gst_rtsp_media_factory_new();
 		}
 		gst_rtsp_media_factory_set_shared(factory, true);
@@ -585,7 +607,7 @@ void RTSP_server_new::Init(bool firstInit)
 		// attach the server to the default maincontext 
 		server_id = gst_rtsp_server_attach(server, NULL);
 		g_signal_connect(server, "client-connected",G_CALLBACK(new_client_handler), this);
-
+        
 		glib_thread = boost::thread(std::bind(&RTSP_server_new::glibThread, this));
 	}
 }

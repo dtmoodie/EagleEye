@@ -322,6 +322,7 @@ void DataStream::process()
                         try
                         {
                             std::lock_guard<std::mutex> lock(nodes_mtx);
+                            rmt_ScopedCPUSample(GrabbingFrame);
                             current_frame = frame_grabber->GetNextFrame(streams[iteration_count % 2]);
                             current_nodes = top_level_nodes;
                         }CATCH_MACRO
@@ -332,18 +333,17 @@ void DataStream::process()
                             node->process(current_frame, streams[iteration_count % 2]);
                     }
                     ++iteration_count;
-                    
+                    if(!dirty_flag)
+                        LOG(trace) << "Dirty flag not set and end of iteration " << iteration_count << " with frame number " << current_frame.frame_number;
                 }
                 else
                 {
                     // No update to parameters or variables since last run
-
                 }
             }
             else
             {
                 // Thread was launched without a frame grabber
-
             }
         }else
         {

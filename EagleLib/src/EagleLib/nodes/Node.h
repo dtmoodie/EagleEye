@@ -29,7 +29,7 @@
  *
 */
 
-
+#include <EagleLib/rcc/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/expressions/keyword.hpp>
@@ -125,7 +125,7 @@ namespace EagleLib
 
 
 
-    class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, ParameteredIObject>, public IObjectNotifiable
+    class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, ParameteredIObject>
     {
     public:
         typedef shared_ptr<Node> Ptr;
@@ -234,11 +234,6 @@ namespace EagleLib
          * @param parent
          */
         virtual void setParent(Node *parent);
-        /**
-         * @brief updateObject [DEPRICATED]
-         * @param ptr
-         */
-        virtual void updateObject(IObject* ptr);
 		
 
 
@@ -367,17 +362,16 @@ namespace EagleLib
         void EndProcessingTime();
 
         friend class EagleLib::NodeManager;
-        std::shared_ptr<NodeImpl> pImpl_;
-        Node*                                                               parent;
-        //ConstBuffer<cv::cuda::GpuMat>                                       childResults;
-		unsigned int rmt_hash;
-		unsigned int rmt_cuda_hash;
-		DataStream*     								_dataStream;
-		std::shared_ptr<IVariableManager>								_variable_manager;
+        std::shared_ptr<NodeImpl>                                               pImpl_;
+        weak_ptr<Node>                                                          parent;
+		unsigned int                                                            rmt_hash;
+		unsigned int                                                            rmt_cuda_hash;
+		DataStream*     								                        _dataStream;
+		std::shared_ptr<IVariableManager>								        _variable_manager;
         // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
-        std::string															fullTreeName;
+        std::string															    fullTreeName;
         // Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
-        std::string															treeName;
+        std::string															    treeName;
     };
     } // namespace Nodes
 } // namespace EagleLib

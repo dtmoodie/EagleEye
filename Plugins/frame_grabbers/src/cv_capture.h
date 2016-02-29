@@ -22,9 +22,9 @@ namespace EagleLib
         virtual bool d_LoadFile(const std::string& file_path);
         virtual bool h_LoadFile(const std::string& file_path);
         virtual int GetNumFrames();
-        virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
-        virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
-        virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
+        //virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
+        //virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
+        //virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
         virtual void Serialize(ISimpleSerializer* pSerializer);
         virtual void Init(bool firstInit);
 
