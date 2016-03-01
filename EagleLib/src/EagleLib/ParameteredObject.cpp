@@ -5,7 +5,7 @@
 #include "Signals.h"
 #include "ParameteredObjectImpl.hpp"
 #include <EagleLib/Signals.h>
-#include <Signals/logging.hpp>
+#include <signals/logging.hpp>
 #include <EagleLib/VariableManager.h>
 
 using namespace EagleLib;

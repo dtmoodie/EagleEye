@@ -23,7 +23,7 @@ INCLUDE_DIRECTORIES(
 	${CMAKE_CURRENT_SOURCE_DIR}/src
 	${CMAKE_CURRENT_SOURCE_DIR}/dtam/Cpp
 )
-ADD_SUBDIRECTORY("dtam/cpp")
+#ADD_SUBDIRECTORY("dtam/cpp")
 ADD_SUBDIRECTORY("lsd_slam/lsd_slam_core")
 
 file(GLOB_RECURSE src "src/*.cpp")
