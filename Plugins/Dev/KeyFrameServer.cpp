@@ -24,7 +24,7 @@ template<typename T> bool KeyFrameServer::getParameter(int frameIndex, KeyFrameP
 #define logParam( param ) case param: logMsg << #param; break;
 template<typename T> bool KeyFrameServer::setParameter(int frameIndex, KeyFrameParameter param, const T& data)
 {
-	std::map<KeyFrameParameter, Parameters::Parameter::Ptr>& keyFrame = KeyFrame_parameters[frameIndex];
+	std::map<KeyFrameParameter, Parameters::Parameter::Ptr>& keyFrame = KeyFrameParameters[frameIndex];
 	keyFrame[param] = typename Parameters::ITypedParameter<T>::Ptr(new Parameters::TypedParameter<T>("", data));
     std::stringstream logMsg;
     switch(param)

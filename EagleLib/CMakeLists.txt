@@ -74,7 +74,7 @@ FILE(GLOB_RECURSE ext_inc "include/EagleLib/rcc/external_includes")
 FILE(GLOB_RECURSE knl "src/*.cu")
 ADD_SUBDIRECTORY("parameters")
 ADD_SUBDIRECTORY("signals")
-  include_directories("signals")
+    include_directories("signals")
 ADD_SUBDIRECTORY("pplx")
 
 INCLUDE_DIRECTORIES(
@@ -83,14 +83,14 @@ INCLUDE_DIRECTORIES(
     ${CUDA_INCLUDE_DIRS}
     ${Qt5Core_INCLUDE_DIRS}
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
-	${Parameters_INCLUDE}
-	${Qt5Gui_INCLUDE_DIRS} 
-	${Qt5Widgets_INCLUDE_DIRS}
-	${Qt5Network_INCLUDE_DIRS}
-	${PPLX_INCLUDE_DIRS}
-	${CMAKE_CURRENT_SOURCE_DIR}/signals
-	${CMAKE_CURRENT_SOURCE_DIR}/remotery/lib
-	)
+    ${Parameters_INCLUDE}
+    ${Qt5Gui_INCLUDE_DIRS} 
+    ${Qt5Widgets_INCLUDE_DIRS}
+    ${Qt5Network_INCLUDE_DIRS}
+    ${PPLX_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/signals
+    ${CMAKE_CURRENT_SOURCE_DIR}/remotery/lib
+    )
 
 
 
@@ -233,7 +233,6 @@ SOURCE_GROUP("Header Files\\External" FILES ${ext_inc})
 TARGET_LINK_LIBRARIES(EagleLib
         ${OpenCV_LIBS}
         pplx
-        libParameter
         ${Parameters_LIBRARIES}
         ${CUDA_CUDA_LIBRARY}
         ${CUDA_CUDART_LIBRARY}
@@ -252,7 +251,7 @@ else(WIN32)
 endif(WIN32)
 
 ADD_DEPENDENCIES(EagleLib
-	libParameter
+	parameters
 	pplx
 	signals
     RuntimeObjectSystem
