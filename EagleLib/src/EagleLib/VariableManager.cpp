@@ -1,6 +1,6 @@
 #include "VariableManager.h"
 #include "parameters/Parameter.hpp"
-
+#include <signals/logging.hpp>
 using namespace EagleLib;
 void VariableManager::AddParameter(std::shared_ptr<Parameters::Parameter> param)
 {
@@ -36,5 +36,6 @@ std::shared_ptr<Parameters::Parameter> VariableManager::GetOutputParameter(std::
     {
         return itr->second;
     }
+    LOG(warning) << "Unable to find parameter named " << name;
     return std::shared_ptr<Parameters::Parameter>();
 }

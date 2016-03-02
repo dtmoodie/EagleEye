@@ -74,6 +74,7 @@ void ParameteredIObject::Init(bool firstInit)
         for (auto& param : _parameters)
 		{	
             RegisterParameterCallback(param.get(), std::bind(&ParameteredIObject::onUpdate, this, std::placeholders::_1));
+            DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param), debug);
 		}		
 	}
 }

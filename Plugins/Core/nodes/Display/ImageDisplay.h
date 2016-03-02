@@ -15,6 +15,7 @@ namespace EagleLib
         std::string prevName;
     public:
         QtImageDisplay();
+        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
         virtual void Init(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         virtual void doProcess(const cv::Mat& mat, double timestamp, int frame_number, cv::cuda::Stream& stream);
@@ -38,6 +39,7 @@ namespace EagleLib
 
         KeyPointDisplay();
         virtual void Init(bool firstInit);
+        TS<SyncedMemory> doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         cv::Mat uicallback();
         virtual void Serialize(ISimpleSerializer *pSerializer);

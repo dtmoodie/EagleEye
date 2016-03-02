@@ -47,9 +47,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	plotWizardDialog(new PlotWizardDialog(this)),
 	settingsDialog(new SettingDialog(this))
 {
-
-	
-    //cv::cuda::GpuMat::setDefaultAllocator(EagleLib::ogl_allocator::instance(100000000, 500000));
     // Create the processing thread opengl context for creating buffers and uploading them
     processing_thread_context = nullptr;
     processing_thread_upload_window = nullptr;
@@ -204,6 +201,8 @@ MainWindow::MainWindow(QWidget *parent) :
         dirty_flag_connection = dirtySignal->connect(boost::bind(&MainWindow::on_nodeUpdate, this, _1));
     }
     startProcessingThread();
+    Signals::thread_registry::get_instance()->register_thread(Signals::GUI);
+    Signals::thread_specific_queue::register_notifier(std::bind(&MainWindow::uiNotifier, this));
 }
 
 MainWindow::~MainWindow()
@@ -301,15 +300,11 @@ void MainWindow::on_uiCallback(boost::function<void()> f, std::pair<void*, Loki:
 	try
 	{
 		rmt_ScopedCPUSample(on_uiCallback);
-		if (processingThreadActive)
-		{
-            if (f)
-            {
-                if(Parameters::UI::InvalidCallbacks::check_valid(source.first))
-                    f();
-            }
-				
-		}
+        if (f)
+        {
+            if(Parameters::UI::InvalidCallbacks::check_valid(source.first))
+                f();
+        }
 	}
 	catch (cv::Exception &e)
 	{
@@ -472,7 +467,7 @@ void MainWindow::onTimeout()
     if(swapRequired)
     {
         stopProcessingThread();
-        if(processingThread.joinable() && !processingThread.try_join_for(boost::chrono::milliseconds(200)) && !joined)
+        /*if(processingThread.joinable() && !processingThread.try_join_for(boost::chrono::milliseconds(200)) && !joined)
         {
             LOG_TRIVIAL(info) <<"Processing thread not joined, cannot perform object swap";
             stopProcessingThread();
@@ -481,7 +476,7 @@ void MainWindow::onTimeout()
         {
 			LOG_TRIVIAL(info) << "Processing thread joined";
             joined = true;
-        }
+        }*/
         if(EagleLib::ObjectManager::Instance().CheckRecompile(true))
         {
            // Still compiling
@@ -489,7 +484,8 @@ void MainWindow::onTimeout()
         }else
         {
 			LOG_TRIVIAL(info) << "Recompile complete";
-            processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
+            //processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
+            startProcessingThread();
             swapRequired = false;
         }
         return;
@@ -499,7 +495,8 @@ void MainWindow::onTimeout()
 		LOG_TRIVIAL(info) << "Recompiling.....";
         swapRequired = true;
         joined = false;
-        processingThread.interrupt();
+        //processingThread.interrupt();
+        stopProcessingThread();
         return;
     }
 }
@@ -688,6 +685,8 @@ MainWindow::uiNotifier()
 void MainWindow::onUiUpdate()
 {
     //EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
+    
+    Signals::thread_specific_queue::run();
 }
 
 void
@@ -802,8 +801,8 @@ void MainWindow::startProcessingThread()
     auto manager = table->GetSingleton<EagleLib::SignalManager>();
     (*manager->GetSignal<void(void)>("StartThreads", this, -1))();*/
     sig_StartThreads();
-	processingThreadActive = true;
-    processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
+	//processingThreadActive = true;
+    //processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
 }
 // So the problem here is that cv::imshow operates on the main thread, thus if the main thread blocks
 // because it's waiting for processingThread to join, then cv::imshow will block, thus causing deadlock.
@@ -815,8 +814,8 @@ void MainWindow::stopProcessingThread()
     //auto result = (*manager->GetSignal<void(void)>("StopThreads", this, -1))();
     sig_StopThreads();
 	processingThreadActive = false;
-    processingThread.interrupt();
-    processingThread.join();
+    //processingThread.interrupt();
+    //processingThread.join();
 }
 
 void MainWindow::on_actionLog_settings_triggered()

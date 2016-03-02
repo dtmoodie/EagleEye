@@ -1,6 +1,8 @@
 #include "cv_capture.h"
 #include "EagleLib/Logging.h"
 using namespace EagleLib;
+
+
 frame_grabber_cv::frame_grabber_cv()
 {
     playback_frame_number = -1;
@@ -42,6 +44,11 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
 {
     h_cam.release();
     LOG(info) << "Attemping to load " << file_path;
+    boost::mutex::scoped_lock lock(buffer_mtx);
+    frame_buffer.clear();
+    buffer_begin_frame_number = 0;
+    buffer_end_frame_number = 0;
+    playback_frame_number = -1;
     try
     {
         h_cam.reset(new cv::VideoCapture());
@@ -50,8 +57,7 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
             if (h_cam->open(file_path))
             {
                 loaded_document = file_path;
-                playback_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES) + 1;
-
+                //buffer_end_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES);
                 return true;
             }
         }
@@ -62,7 +68,7 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
     return false;
 }
 
-TS<SyncedMemory> frame_grabber_cv::GetFrame(int index, cv::cuda::Stream& stream)
+/*TS<SyncedMemory> frame_grabber_cv::GetFrame(int index, cv::cuda::Stream& stream)
 {
     boost::mutex::scoped_lock lock(buffer_mtx);
     for (auto& itr : frame_buffer)
@@ -73,8 +79,8 @@ TS<SyncedMemory> frame_grabber_cv::GetFrame(int index, cv::cuda::Stream& stream)
         }
     }
     return TS<SyncedMemory>();
-}
-TS<SyncedMemory> frame_grabber_cv::GetNextFrame(cv::cuda::Stream& stream)
+}*/
+/*TS<SyncedMemory> frame_grabber_cv::GetNextFrame(cv::cuda::Stream& stream)
 {
     while (frame_buffer.empty())
     {
@@ -105,7 +111,7 @@ TS<SyncedMemory> frame_grabber_cv::GetNextFrame(cv::cuda::Stream& stream)
     if (!ret.empty())
         playback_frame_number++;
     return ret;
-}
+}*/
 
 int frame_grabber_cv::GetNumFrames()
 {
@@ -120,10 +126,10 @@ int frame_grabber_cv::GetNumFrames()
     return -1;
 }
 
-TS<SyncedMemory> frame_grabber_cv::GetCurrentFrame(cv::cuda::Stream& stream)
+/*TS<SyncedMemory> frame_grabber_cv::GetCurrentFrame(cv::cuda::Stream& stream)
 {
     return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
-}
+}*/
 
 TS<SyncedMemory> frame_grabber_cv::GetFrameImpl(int index, cv::cuda::Stream& stream)
 {
@@ -156,8 +162,9 @@ TS<SyncedMemory> frame_grabber_cv::GetNextFrameImpl(cv::cuda::Stream& stream)
             {
                 cv::cuda::GpuMat d_mat;
                 d_mat.upload(h_mat, stream);
-                current_frame = TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (int)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
-                return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
+                //current_frame = TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (int)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
+                //return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
+                return TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (int)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
             }
         }
     }
@@ -169,7 +176,7 @@ void frame_grabber_cv::Serialize(ISimpleSerializer* pSerializer)
     FrameGrabberBuffered::Serialize(pSerializer);
     SERIALIZE(h_cam);
     SERIALIZE(d_cam);
-    SERIALIZE(current_frame);
+    //SERIALIZE(current_frame);
 }
 void frame_grabber_cv::Init(bool firstInit)
 {

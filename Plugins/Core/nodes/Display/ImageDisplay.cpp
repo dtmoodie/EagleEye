@@ -33,7 +33,24 @@ void QtImageDisplay::Init(bool firstInit)
 {
 
 }
-
+TS<SyncedMemory> QtImageDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
+{
+    cv::Mat img = input.GetMat(stream);
+    std::string display_name = getFullTreeName();
+    EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
+	cuda::enqueue_callback_async(
+		[this, display_name, img]()->void
+	{
+		rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+		PROFILE_FUNCTION;
+        auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+        auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
+        
+        auto instance = manager->instance(GetDataStream()->get_stream_id());
+        instance->imshow(display_name, img);
+	}, stream);
+    return input;
+}
 cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     if(img.channels() != 1 && img.channels() != 3)
@@ -57,7 +74,6 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
         
         auto instance = manager->instance(GetDataStream()->get_stream_id());
         instance->imshow(display_name, host_mat);
-		cv::waitKey(1);
 	}, stream);
     
     return img;
@@ -76,7 +92,6 @@ void QtImageDisplay::doProcess(const cv::Mat& mat, double timestamp, int frame_n
 
         auto instance = manager->instance(GetDataStream()->get_stream_id());
         instance->imshow(getFullTreeName(), mat);
-        cv::waitKey(1);
     }, stream);
 }
 
@@ -113,7 +128,7 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
         auto instance = manager->instance(0);
-        Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&WindowCallbackHandler::imshow, instance, display_name, display_buffer, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO));
+        Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&WindowCallbackHandler::imshowd, instance, display_name, display_buffer, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO));
         //WindowCallbackHandler::instance()->imshow(display_name, display_buffer);
 		//Parameters::UI::UiCallbackService::Instance()->post(
 //			boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), 
@@ -146,6 +161,37 @@ void KeyPointDisplay::Serialize(ISimpleSerializer *pSerializer)
 {
     Node::Serialize(pSerializer);
     //SERIALIZE(hostData);
+}
+TS<SyncedMemory> KeyPointDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
+{
+    cv::cuda::GpuMat* d_mat = getParameter<cv::cuda::GpuMat>(0)->Data();
+	TIME
+    if(d_mat && !d_mat->empty())
+    {
+		cv::Scalar color = *getParameter<cv::Scalar>(3)->Data();
+		int radius = *getParameter<int>(2)->Data();
+		std::string displayName = getFullTreeName();
+		cv::Mat h_img, pts;
+		TIME
+		h_img = input.GetMat(stream);
+        pts.create(1, 1000, CV_32FC2);
+		d_mat->download(pts, stream);
+		TIME
+		EagleLib::cuda::enqueue_callback_async(
+			[h_img, pts, radius, color, displayName]()->void
+		{
+			const cv::Vec2f* ptr = pts.ptr<cv::Vec2f>(0);
+			for (int i = 0; i < pts.cols; ++i, ++ptr)
+			{
+				cv::circle(h_img, cv::Point(ptr->val[0], ptr->val[1]), radius, color, 1);
+			}
+			Parameters::UI::UiCallbackService::Instance()->post(
+				boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), displayName, h_img));
+		}, stream);
+		TIME
+        return input;
+    }
+    return input;
 }
 cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {

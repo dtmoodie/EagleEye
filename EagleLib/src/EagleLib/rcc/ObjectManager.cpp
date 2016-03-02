@@ -22,6 +22,7 @@
 
 #include <EagleLib/rcc/SystemTable.hpp>
 #include <stdarg.h>
+#include <EagleLib/rcc/IObjectNotifiable.h>
 using namespace EagleLib;
 
 #ifdef _WIN32
@@ -204,6 +205,13 @@ shared_ptr<IObject> ObjectManager::GetObject(const std::string& object_name)
     LOG(warning) << "Constructor for " << object_name << " doesn't exist";
     return shared_ptr<IObject>();
 }
+IObject* ObjectManager::GetObject(ObjectId oid)
+{
+    if(!oid.IsValid())
+        return nullptr;
+    auto constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(oid.m_ConstructorId);
+    return constructor->GetConstructedObject(oid.m_PerTypeId);
+}
 weak_ptr<IObject> ObjectManager::GetSingleton(const std::string& object_name)
 {
     auto constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(object_name.c_str());
@@ -339,6 +347,11 @@ ObjectManager::CheckRecompile(bool swapAllowed)
 	if (m_pRuntimeObjectSystem->GetIsCompiledComplete() && swapAllowed)
 	{
 		m_pRuntimeObjectSystem->LoadCompiledModule();
+        std::lock_guard<std::mutex> lock(mtx);
+        for(auto itr = m_sharedPtrs.begin(); itr !=  m_sharedPtrs.end(); ++itr)
+        {
+            (*itr)->notify_swap();    
+        }
 	}
 	if (m_pRuntimeObjectSystem->GetIsCompiling())
 	{
@@ -469,4 +482,16 @@ std::vector<IObjectConstructor*> ObjectManager::GetConstructorsForInterface(int 
         }
     }
     return output;
+}
+void ObjectManager::register_notifier(IObjectNotifiable* obj)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    m_sharedPtrs.push_back(obj);
+}
+void ObjectManager::remove_notifier(IObjectNotifiable* obj)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    auto itr = std::find(m_sharedPtrs.begin(), m_sharedPtrs.end(), obj);
+    if(itr != m_sharedPtrs.end())
+        m_sharedPtrs.erase(itr);
 }

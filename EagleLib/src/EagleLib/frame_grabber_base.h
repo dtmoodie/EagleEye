@@ -9,7 +9,7 @@
 #include <boost/thread.hpp>
 #include "ParameteredObject.h"
 #include "EagleLib/Signals.h"
-
+#include <atomic>
 namespace EagleLib
 {
     class DataStream;
@@ -25,7 +25,6 @@ namespace EagleLib
         virtual bool CanLoadDocument(const std::string& document) const = 0;
         virtual int Priority() const = 0;
         virtual int LoadTimeout() const;
-        
     };
     
     // Interface class for the base level of features frame grabber
@@ -53,7 +52,11 @@ namespace EagleLib
         DataStream* parent_stream;
     };
 
-
+    //   [ 0 ,1, 2, 3, 4, 5 ....... N-5, N-4, N-3, N-2, N-1, N]
+    //    buffer begin                                  buffer end
+    //            |      safe playback frames          |
+    //        buffer begin + 5 < playback            > buffer end - 5
+    //                    
     class EAGLE_EXPORTS FrameGrabberBuffered: public IFrameGrabber
     {
     public:
@@ -84,10 +87,17 @@ namespace EagleLib
         boost::circular_buffer<TS<SyncedMemory>> frame_buffer;
         
         boost::mutex                             buffer_mtx;
-        int                                      playback_frame_number;
-        int                                      buffer_frame_number;
-        std::vector<std::shared_ptr<Signals::connection>> connections;
-
+        boost::mutex                             grabber_mtx;
+        //std::vector<std::shared_ptr<Signals::connection>> connections;
+        std::atomic_llong                        buffer_begin_frame_number;
+        std::atomic_llong                        buffer_end_frame_number;
+        std::atomic_llong                        playback_frame_number;
+        // If the buffering thread is too far ahead, it will wait on this condition variable
+        // until the read thread reads an image from the frame buffer
+        boost::condition_variable                  frame_read_cv;
+        // If the read thread is too far ahead of the buffer thread, then it will wait on this
+        // condition variable for a notification of grabbing of a new image
+        boost::condition_variable                  frame_grabbed_cv;
     private:
         void                                     Buffer();
         boost::thread                            buffer_thread;

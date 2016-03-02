@@ -8,7 +8,7 @@
 #include "qevent.h"
 #include "EagleLib/logger.hpp"
 #include "EagleLib/IVariableManager.h"
-
+#include <signals/logging.hpp>
 IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
     QWidget(parent),
     parameter(parameter_),
@@ -455,26 +455,25 @@ void QInputProxy::on_valueChanged(int idx)
 {
     if(idx == prevIdx)
         return;
+    prevIdx = idx;
 	if (idx == 0)
 	{
 		inputParameter->SetInput(Parameters::Parameter::Ptr());
 		return;
 	}
-		
-    prevIdx = idx;
     QString inputName = box->currentText();
+    LOG(debug) << "Input changed to " << inputName.toStdString() << " for variable " << std::dynamic_pointer_cast<Parameters::Parameter>(inputParameter)->GetName();
     auto tokens = inputName.split(":");
     auto var_manager = node->GetVariableManager();
     auto tmp_param = var_manager->GetOutputParameter(inputName.toStdString());
     
-    auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
-    if(sourceNode == nullptr)
-        return;
-    auto param = sourceNode->getParameter(tokens[1].toStdString());
-    if(param)
+    //auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
+    //DOIF(sourceNode == nullptr, "Unable to find source node"; return;, debug);
+    //auto param = sourceNode->getParameter(tokens[1].toStdString());
+    if(tmp_param)
     {
-        inputParameter->SetInput(param);
-        std::dynamic_pointer_cast<Parameters::Parameter>(param)->changed = true;
+        inputParameter->SetInput(tmp_param);
+        std::dynamic_pointer_cast<Parameters::Parameter>(inputParameter)->changed = true;
     }
 }
 QWidget* QInputProxy::getWidget(int num)

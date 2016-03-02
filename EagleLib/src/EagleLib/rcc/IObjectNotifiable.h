@@ -1,8 +1,11 @@
 #pragma once
-struct IObject;
-class IObjectNotifiable
+#include <EagleLib/Defs.hpp>
+class EAGLE_EXPORTS IObjectNotifiable
 {
+public:
+    IObjectNotifiable();
+    virtual ~IObjectNotifiable();    
+    virtual void notify_swap();
 protected:
-	friend struct IObject;
-	virtual void updateObject(IObject* ptr) = 0;
+    bool object_swapped;
 };

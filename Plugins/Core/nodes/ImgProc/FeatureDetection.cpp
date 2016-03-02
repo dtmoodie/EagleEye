@@ -216,8 +216,8 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
     {
 		detector->detectAndComputeAsync(img, cv::cuda::GpuMat(), key_points, point_descriptors, false, stream);
     }
-	updateParameter("Detected Points", key_points);
-	updateParameter("Point Descriptors", point_descriptors);
+	updateParameter("Detected Points", key_points)->type = Parameters::Parameter::Output;
+	updateParameter("Point Descriptors", point_descriptors)->type = Parameters::Parameter::Output;
     return img;
 }
 void HistogramRange::Serialize(ISimpleSerializer *pSerializer)

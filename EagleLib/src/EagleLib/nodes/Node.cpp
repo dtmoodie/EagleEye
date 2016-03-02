@@ -147,7 +147,7 @@ Node::Node():
 	profile = false;
     enabled = true;
 	externalDisplay = false;
-    parent = nullptr;
+    //parent = nullptr;
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {
@@ -183,8 +183,6 @@ Parameters::Parameter* Node::addParameter(Parameters::Parameter::Ptr param)
 
 Node::~Node()
 {
-    if(parent)
-        parent->deregisterNotifier(this);
     boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
 	auto& connections = pImpl_->callbackConnections[this];
 	for (auto itr : connections)
@@ -244,9 +242,6 @@ void Node::reset()
 
 void Node::updateParent()
 {
-	
-    if(parent)
-        parent->registerNotifier(this);
 }
 
 void
@@ -341,7 +336,7 @@ Node::swapChildren(Node::Ptr child1, Node::Ptr child2)
         return;
     std::iter_swap(itr1,itr2);
 }
-std::vector<Node *> Node::getNodesInScope()
+std::vector<Node*> Node::getNodesInScope()
 {
 	
     std::vector<Node*> nodes;
@@ -371,7 +366,7 @@ Node::getNodeInScope(const std::string& name)
 }
 
 void
-Node::getNodesInScope(std::vector<Node *> &nodes)
+Node::getNodesInScope(std::vector<Node*> &nodes)
 {
 	// Perhaps not thread safe?
 	
@@ -382,7 +377,7 @@ Node::getNodesInScope(std::vector<Node *> &nodes)
         Node* node = this;
         while(node->parent != nullptr)
         {
-            node = node->parent;
+            node = node->parent.get();
         }
         nodes.push_back(node);
         node->getNodesInScope(nodes);
@@ -648,10 +643,12 @@ DataStream* Node::GetDataStream()
 {
 	if (parent && _dataStream == nullptr)
 	{
+        NODE_LOG(debug) << "Setting data stream from parent";
 		SetDataStream(parent->GetDataStream());
 	}
 	if (parent == nullptr && _dataStream == nullptr)
 	{
+        NODE_LOG(debug) << "No datastream set, creating";
         _dataStream = DataStreamManager::instance()->create_stream().get();
 	}	
 	return _dataStream;
@@ -716,7 +713,9 @@ std::string Node::getFullTreeName()
 Node*
 Node::getParent()
 {
-    return parent;
+    if(parent)
+        return parent.get();
+    return nullptr;
 }
 
 
@@ -830,6 +829,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);
     SERIALIZE(pImpl_);
+    SERIALIZE(_dataStream);
 }
 
 void
@@ -1076,20 +1076,9 @@ Node::setFullTreeName(const std::string& name)
 void
 Node::setParent(Node* parent_)
 {
-	
-    if(parent)
-    {
-        parent->deregisterNotifier(this);
-    }
-    parent = parent_;
-    parent->registerNotifier(this);
+    parent = parent_;   
 }
-void
-Node::updateObject(IObject* ptr)
-{
-	
-    parent = static_cast<Node*>(ptr);
-}
+
 
 void 
 Node::updateInputParameters()

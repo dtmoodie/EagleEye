@@ -54,12 +54,12 @@ void HeartBeatBuffer::onActivation()
 {
 	activated = true;
 }
-cv::cuda::GpuMat HeartBeatBuffer::process(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+TS<SyncedMemory> HeartBeatBuffer::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 {
 	if (boost::this_thread::interruption_requested())
-		return img;
+		return input;
 
-	if (img.empty() && SkipEmpty())
+	if (input.empty() && SkipEmpty())
 	{
 		NODE_LOG(trace) << " Skipped due to empty input";
 	}
@@ -91,18 +91,16 @@ cv::cuda::GpuMat HeartBeatBuffer::process(cv::cuda::GpuMat &img, cv::cuda::Strea
 				// Send heartbeat
 				for (auto itr : children)
 				{
-					img = itr->process(img, stream);
+					input = itr->process(input, stream);
 				}
 			}
 			else
 			{
-				image_buffer.push_back(img);
+				image_buffer.push_back(input);
 			}
-			
-
 		}CATCH_MACRO
 	}
-	return img;
+	return input;
 }
 
 
