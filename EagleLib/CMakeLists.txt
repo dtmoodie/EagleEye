@@ -119,7 +119,11 @@ ADD_SUBDIRECTORY("RCC")
 INCLUDE_DIRECTORIES(${RCC_INCLUDE_DIRS})
 
 
-
+set_target_properties(pplx PROPERTIES FOLDER Dependencies)
+set_target_properties(signals PROPERTIES FOLDER Dependencies)
+set_target_properties(parameters PROPERTIES FOLDER Dependencies)
+set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
+set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
 IF(NOT WIN32)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")

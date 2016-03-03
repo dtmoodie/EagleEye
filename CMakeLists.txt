@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(EagleEye)
 SET(BIN_DIRS "" CACHE STRING "" FORCE)
-
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # This macro is used for linking libs to a target, but also adding the correct directories to the RCC config
 MACRO(RCC_LINK_LIB TARGET)

@@ -16,7 +16,7 @@ find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cu
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 ADD_SUBDIRECTORY(fastms)
-
+set_target_properties(fastms PROPERTIES FOLDER Dependencies)
 INCLUDE_DIRECTORIES(
         ${INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}

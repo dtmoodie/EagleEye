@@ -28,7 +28,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_library(Plotting SHARED ${src} ${hdr} ${knl})
 add_dependencies(Plotting EagleLib)
 add_dependencies(Plotting QCustomPlot)
-
+set_target_properties(QCustomPlot PROPERTIES FOLDER Dependencies)
 
 RCC_LINK_LIB(Plotting 
 	EagleLib 
