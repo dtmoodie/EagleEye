@@ -7,9 +7,9 @@
 #include <boost/lexical_cast.hpp>
 #ifdef _MSC_VER
 #ifdef _DEBUG
-RUNTIME_COMPILER_LINKLIBRARY("libParameterd.lib")
+RUNTIME_COMPILER_LINKLIBRARY("parametersd.lib")
 #else
-RUNTIME_COMPILER_LINKLIBRARY("libParameter.lib")
+RUNTIME_COMPILER_LINKLIBRARY("parameters.lib")
 #endif
 #else
 #endif
