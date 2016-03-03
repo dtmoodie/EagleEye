@@ -34,23 +34,24 @@ namespace EagleLib
         ~DataStream();
 
         // Handles user interactions such as moving the viewport, user interface callbacks, etc
-        shared_ptr<IViewManager>       GetViewManager();
+        shared_ptr<IViewManager>            GetViewManager();
 
         // Handles conversion of coordinate systems, such as to and from image coordinates, world coordinates, render scene coordinates, etc.
-        shared_ptr<ICoordinateManager> GetCoordinateManager();
+        shared_ptr<ICoordinateManager>      GetCoordinateManager();
         
         // Handles actual rendering of data.  Use for adding extra objects to the scene
-        shared_ptr<IRenderEngine>      GetRenderingEngine();
+        shared_ptr<IRenderEngine>           GetRenderingEngine();
         
         // Handles tracking objects within a stream and communicating with the global track manager to track across multiple data streams
-        shared_ptr<ITrackManager>      GetTrackManager();
+        shared_ptr<ITrackManager>            GetTrackManager();
 
         // Handles actual loading of the image, etc
-        shared_ptr<IFrameGrabber>     GetFrameGrabber();
+        shared_ptr<IFrameGrabber>           GetFrameGrabber();
 
-		std::shared_ptr<IVariableManager> GetVariableManager();
+		std::shared_ptr<IVariableManager>   GetVariableManager();
 
-        SignalManager* GetSignalManager();
+        SignalManager*                      GetSignalManager();
+        std::vector<shared_ptr<Nodes::Node>> GetNodes();
 
         bool LoadDocument(const std::string& document);
         

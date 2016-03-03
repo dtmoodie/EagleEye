@@ -110,8 +110,8 @@ namespace EagleLib
 
 		boost::thread glib_thread;
 		void glibThread();
-		ConstBuffer<cv::cuda::HostMem> hostBuffer;
-		concurrent_notifier<cv::cuda::HostMem*> notifier;
+		//ConstBuffer<cv::cuda::HostMem> hostBuffer;
+		concurrent_notifier<cv::Mat> notifier;
 		cv::cuda::HostMem* currentNewestFrame;
 		RTSP_server_new();
 		void push_image();
@@ -119,7 +119,8 @@ namespace EagleLib
 		void setup(std::string pipeOverride = std::string());
 		~RTSP_server_new();
 		virtual void Init(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
+		//virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
 		cv::Size imgSize;
 	};
     }

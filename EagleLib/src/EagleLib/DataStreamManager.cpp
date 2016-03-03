@@ -227,6 +227,11 @@ bool DataStream::CanLoadDocument(const std::string& document)
     return !valid_frame_grabbers.empty();
 }
 
+std::vector<shared_ptr<Nodes::Node>> DataStream::GetNodes()
+{
+    return top_level_nodes;
+}
+
 void DataStream::AddNode(shared_ptr<Nodes::Node> node)
 {
     std::lock_guard<std::mutex> lock(nodes_mtx);

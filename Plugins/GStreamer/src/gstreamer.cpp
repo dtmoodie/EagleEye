@@ -5,7 +5,7 @@
 #include <QtNetwork/qnetworkinterface.h>
 #include <EagleLib/rcc/SystemTable.hpp>
 #include <EagleLib/ParameteredObjectImpl.hpp>
-
+#include <EagleLib/utilities/CudaCallbacks.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -418,16 +418,16 @@ void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpoin
 {
     BOOST_LOG_TRIVIAL(debug) << __FUNCTION__;
 	auto node = static_cast<EagleLib::Nodes::RTSP_server_new*>(user_data);
-	cv::cuda::HostMem* h_buffer = nullptr;
+	cv::Mat h_buffer;
 	node->notifier.wait_and_pop(h_buffer);
-	if (h_buffer && node->connected)
+	if (!h_buffer.empty() && node->connected)
 	{
-		int bufferlength = h_buffer->cols * h_buffer->rows * h_buffer->channels();
+		int bufferlength = h_buffer.cols * h_buffer.rows * h_buffer.channels();
 		auto buffer = gst_buffer_new_and_alloc(bufferlength);
-		cv::Mat img = h_buffer->createMatHeader();
+		
 		GstMapInfo map;
 		gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
-		memcpy(map.data, h_buffer->data, map.size);
+		memcpy(map.data, h_buffer.data, map.size);
 		gst_buffer_unmap(buffer, &map);
 
 		GST_BUFFER_PTS(buffer) = node->timestamp;
@@ -611,7 +611,7 @@ void RTSP_server_new::Init(bool firstInit)
 		glib_thread = boost::thread(std::bind(&RTSP_server_new::glibThread, this));
 	}
 }
-void RTSP_server_download_callback(int status, void* user_data)
+/*void RTSP_server_download_callback(int status, void* user_data)
 {
 	auto node = static_cast<RTSP_server_new*>(user_data);
 	auto buf = node->hostBuffer.getBack();
@@ -622,8 +622,22 @@ void RTSP_server_download_callback(int status, void* user_data)
 			node->notifier.push(buf);
 		}
 	}
+}*/
+
+TS<SyncedMemory> RTSP_server_new::doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream)
+{
+    auto curTime = clock();
+	delta = curTime - prevTime;
+	prevTime = curTime;
+    cv::Mat h_image = img.GetMat(stream);
+    imgSize = h_image.size();
+    cuda::enqueue_callback_async([h_image, this]()->void
+    {
+        notifier.push(h_image);
+    }, stream);
+    return img;
 }
-cv::cuda::GpuMat RTSP_server_new::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+/*cv::cuda::GpuMat RTSP_server_new::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
 	imgSize = img.size();
 	auto curTime = clock();
@@ -633,7 +647,7 @@ cv::cuda::GpuMat RTSP_server_new::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 	img.download(*buf, stream);
 	stream.enqueueHostCallback(RTSP_server_download_callback, this);
 	return img;
-}
+}*/
 
 static EagleLib::Nodes::NodeInfo g_registerer_RTSP_server_new("RTSP_server_new", { "Image", "Sink" });
 REGISTERCLASS(RTSP_server_new, &g_registerer_RTSP_server_new);
