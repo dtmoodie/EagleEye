@@ -92,10 +92,14 @@ int main(int argc, char* argv[])
     	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
     }
 	boost::filesystem::path currentDir = boost::filesystem::current_path();
+#ifdef _MSC_VER
 #ifdef _DEBUG
-    currentDir.append("../Debug");
+    currentDir = boost::filesystem::path(currentDir.string() + "../Debug");
 #else
-    currentDir.append("../RelWithDebInfo");
+    currentDir = boost::filesystem::path(currentDir.string() + "../RelWithDebInfo");
+#endif
+#else
+    currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
 #endif
     boost::filesystem::directory_iterator end_itr;
 
