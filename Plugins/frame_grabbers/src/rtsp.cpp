@@ -89,10 +89,15 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
         file_to_load = loaded_document;
     else
         file_to_load = file_path;
+#ifdef JETSON
+    std::string gstreamer_string = "rtspsrc location=" + file_path + " ! rtph264depay ! h264parse ! omxh264dec ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
+#else
     std::string gstreamer_string = "rtspsrc location=" + file_path + " ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
+#endif
 	
 	h_cam.release();
 	LOG(info) << "Attemping to load " << file_to_load;
+    LOG(debug) << "Gstreamer string: " << gstreamer_string;
     _reconnect = false;
     playback_frame_number = -1;
 	try
@@ -100,7 +105,7 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 		h_cam.reset(new cv::VideoCapture());
 		if (h_cam)
 		{
-			if (h_cam->open(file_to_load, cv::CAP_GSTREAMER))
+            if (h_cam->open(gstreamer_string, cv::CAP_GSTREAMER))
 			{
 				loaded_document = file_to_load;
 				playback_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES) + 1;

@@ -41,6 +41,8 @@ void sig_handler(int s)
     //std::cout << "Caught signal " << s << std::endl;
 	BOOST_LOG_TRIVIAL(error) << "Caught signal " << s;
     quit = true;
+    if(s == 2)
+        exit(EXIT_FAILURE);
 }
 
 int main(int argc, char* argv[])
