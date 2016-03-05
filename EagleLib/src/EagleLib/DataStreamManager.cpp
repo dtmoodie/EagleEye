@@ -47,7 +47,7 @@ catch (...)                                                                 \
 // **********************************************************************
 DataStream::DataStream()
 {
-    //signal_manager.reset(new SignalManager);
+	_sig_manager = GetSignalManager();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {
@@ -63,7 +63,6 @@ DataStream::DataStream()
     }
     paused = false;
     stream_id = 0;
-    
 }
 
 DataStream::~DataStream()
@@ -185,6 +184,7 @@ bool DataStream::LoadDocument(const std::string& document)
             if(future.get())
             {
                 frame_grabber = fg;
+				LOG(info) << "Loading " << document << " with frame_grabber: " << fg->GetTypeName() << " with priority: " << fg_info->Priority();
                 return true; // successful load
             }else // unsuccessful load
             {
@@ -218,6 +218,7 @@ bool DataStream::CanLoadDocument(const std::string& document)
             {
                 if (fg_info->CanLoadDocument(document))
                 {
+					LOG(trace) << fg_info->GetObjectName() << " can load document";
                     valid_frame_grabbers.push_back(constructor);
                     frame_grabber_priorities.push_back(fg_info->Priority());
                 }
@@ -234,15 +235,24 @@ std::vector<shared_ptr<Nodes::Node>> DataStream::GetNodes()
 
 void DataStream::AddNode(shared_ptr<Nodes::Node> node)
 {
-    std::lock_guard<std::mutex> lock(nodes_mtx);
+	if (boost::this_thread::get_id() != processing_thread.get_id())
+	{
+		Signals::thread_specific_queue::push(std::bind(&DataStream::AddNode, this, node), processing_thread.get_id());
+		return;
+	}
+
     node->SetDataStream(this);
     node->Init(true);
     top_level_nodes.push_back(node);
     dirty_flag = true;
 }
-void DataStream::AddNode(std::vector<shared_ptr<Nodes::Node>> nodes)
+void DataStream::AddNodes(std::vector<shared_ptr<Nodes::Node>> nodes)
 {
-    std::lock_guard<std::mutex> lock(nodes_mtx);
+	if (boost::this_thread::get_id() != processing_thread.get_id())
+	{
+		Signals::thread_specific_queue::push(std::bind(&DataStream::AddNodes, this, nodes), processing_thread.get_id());
+		return;
+	}
     for(auto& node: nodes)
     {
         node->SetDataStream(this);
@@ -264,6 +274,7 @@ void DataStream::RemoveNode(shared_ptr<Nodes::Node> node)
 void DataStream::LaunchProcess()
 {
     StopProcess();
+	sig_StartThreads();
     processing_thread = boost::thread(boost::bind(&DataStream::process, this));
 }
 
@@ -271,6 +282,7 @@ void DataStream::StopProcess()
 {
     processing_thread.interrupt();
     processing_thread.join();
+	sig_StopThreads();
 }
 
 
@@ -289,26 +301,32 @@ void DataStream::process()
     cv::cuda::Stream streams[2];
     dirty_flag = true;
     int iteration_count = 0;
-    //signal_manager->register_thread(Signals::ANY);
     Signals::thread_registry::get_instance()->register_thread(Signals::ANY);
     rmt_SetCurrentThreadName("DataStreamThread");
     auto node_update_connection = signal_manager->connect<void(EagleLib::Nodes::Node*)>("NodeUpdated",
-        std::bind([this](EagleLib::Nodes::Node* node)->void
-            {
-                dirty_flag = true;
-            }, std::placeholders::_1), this);
+		std::bind([this](EagleLib::Nodes::Node* node)->void
+		{
+			dirty_flag = true;
+		}, std::placeholders::_1), this);
 
     auto update_connection = signal_manager->connect<void()>("update",
         std::bind([this]()->void
-            {
-                dirty_flag = true;
-            }), this);
+        {
+            dirty_flag = true;
+        }), this);
 
-    auto object_update_connection = signal_manager->connect<void(ParameteredObject*)>("ObjectUpdated",
+    auto object_update_connection = signal_manager->connect<void(ParameteredObject*)>("parameter_updated",
         std::bind([this](ParameteredObject*)->void
-            {
-                dirty_flag = true;
-            }, std::placeholders::_1), this);
+        {
+            dirty_flag = true;
+        }, std::placeholders::_1), this);
+
+	auto parameter_added_connection = signal_manager->connect<void(ParameteredObject*)>("parameter_added",
+		std::bind([this](ParameteredObject*)->void
+		{
+			dirty_flag = true;
+		}, std::placeholders::_1), this);
+
     LOG(info) << "Starting stream thread";
     while(!boost::this_thread::interruption_requested())
     {

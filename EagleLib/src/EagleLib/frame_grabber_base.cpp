@@ -54,7 +54,7 @@ void FrameGrabberBuffered::InitializeFrameGrabber(DataStream* stream)
         _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberBuffered::LaunchBufferThread, this), this));
         _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberBuffered::StopBufferThread, this), this));
     }
-    LaunchBufferThread();
+    //LaunchBufferThread();
 }
 FrameGrabberBuffered::~FrameGrabberBuffered()
 {

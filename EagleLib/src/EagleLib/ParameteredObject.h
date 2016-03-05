@@ -50,7 +50,7 @@ namespace EagleLib
 		virtual void setup_signals(SignalManager* manager);
 		virtual void SetupVariableManager(IVariableManager* manager);
         virtual IVariableManager* GetVariableManager();
-        virtual void onUpdate(cv::cuda::Stream* stream = nullptr);
+        virtual void onUpdate(Parameters::Parameter* param = nullptr, cv::cuda::Stream* stream = nullptr);
 		virtual Parameters::Parameter* addParameter(ParameterPtr param);
         virtual void RemoveParameter(std::string name);
         virtual void RemoveParameter(size_t index);

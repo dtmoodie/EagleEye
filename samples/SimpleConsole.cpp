@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
         ("config", boost::program_options::value<std::string>(), "Required - File containing node structure")
         ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")
 		("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")
-        ("mode", boost::program_options::value<std::string>()->default_value("batch"), "Processing mode, options are interactive or batch")
+        ("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")
         ;
 
     boost::program_options::variables_map vm;
@@ -96,9 +96,9 @@ int main(int argc, char* argv[])
 	boost::filesystem::path currentDir = boost::filesystem::current_path();
 #ifdef _MSC_VER
 #ifdef _DEBUG
-    currentDir = boost::filesystem::path(currentDir.string() + "../Debug");
+    currentDir = boost::filesystem::path(currentDir.string() + "/../Debug");
 #else
-    currentDir = boost::filesystem::path(currentDir.string() + "../RelWithDebInfo");
+    currentDir = boost::filesystem::path(currentDir.string() + "/../RelWithDebInfo");
 #endif
 #else
     currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
@@ -140,10 +140,6 @@ int main(int argc, char* argv[])
                     std::string file = itr->path().string();
                     EagleLib::loadPlugin(file);
                 }
-                else
-                {
-                    std::cout << itr->path().extension() << std::endl;
-                }
             }
         }
     }
@@ -156,12 +152,11 @@ int main(int argc, char* argv[])
         std::string configFile = vm["config"].as<std::string>();
         LOG(info) << "Loading config file " << configFile;
     
-
         auto stream = EagleLib::DataStreamManager::instance()->create_stream();
         stream->LoadDocument(document);
     
         auto nodes = EagleLib::NodeManager::getInstance().loadNodes(configFile);
-        stream->AddNode(nodes);
+        stream->AddNodes(nodes);
 
         LOG(info) << "Loaded " << nodes.size() << " top level nodes";
         for(int i = 0; i < nodes.size(); ++i)
@@ -178,22 +173,23 @@ int main(int argc, char* argv[])
         auto print_options = []()->void
         {
             std::cout << 
-                "- Options: \n "
-                " - LoadFile {document}                       -- Create a frame grabber for a document \n"
-                " - Add {node}                                -- Add a node to the current selected object\n"
-                " - List {nodes}                              -- List all possible nodes that can be constructed\n"
-                " - Print {streams,nodes,parameters, current} -- Prints the current streams, nodes in current stream, \n"
+                "- Options: \n"
+                " - load_file {document}                      -- Create a frame grabber for a document \n"
+                " - add {node}                                -- Add a node to the current selected object\n"
+                " - list {nodes}                              -- List all possible nodes that can be constructed\n"
+                " - print {streams,nodes,parameters, current} -- Prints the current streams, nodes in current stream, \n"
                 "                                                or parameters of current node\n"
-                " - Select {node,stream}                      -- Select a node by name (relative to current selection\n"
+				" - set {parameter - values}                  -- Set a parameters value\n"
+                " - select {node,stream}                      -- Select a node by name (relative to current selection\n"
                 "                                                or absolute, or a stream by index)\n"
-                " - Save                                      -- Save node configuration\n"
-                " - Load                                      -- Load node configuration\n"
-                " - Help                                      -- Print this help\n"
-                " - Quit                                      -- Close program and cleanup\n";
+                " - save                                      -- Save node configuration\n"
+                " - load                                      -- Load node configuration\n"
+                " - help                                      -- Print this help\n"
+                " - quit                                      -- Close program and cleanup\n";
         };
 
         std::map<std::string, std::function<void(std::string)>> function_map;
-        function_map["LoadFile"] = [&_dataStreams](std::string doc)->void
+        function_map["load_file"] = [&_dataStreams](std::string doc)->void
         {
             if(EagleLib::DataStream::CanLoadDocument(doc))
             {
@@ -201,6 +197,7 @@ int main(int argc, char* argv[])
                 auto stream = EagleLib::DataStreamManager::instance()->create_stream();
                 if(stream->LoadDocument(doc))
                 {
+					stream->LaunchProcess();
                     _dataStreams.push_back(stream);
                 }else
                 {
@@ -211,11 +208,11 @@ int main(int argc, char* argv[])
                 LOG(warning) << "Unable to find a frame grabber which can load " << doc;
             }
         };
-        function_map["Quit"] = [](std::string)->void
+        function_map["quit"] = [](std::string)->void
         {
             quit = true;
         };
-        function_map["Print"] = [&_dataStreams, &current_stream, &current_node](std::string what)->void
+        function_map["print"] = [&_dataStreams, &current_stream, &current_node](std::string what)->void
         {
             if(what == "streams")
             {
@@ -278,7 +275,7 @@ int main(int argc, char* argv[])
                 std::cout << "Nothing currently selected\n";
             }
         };
-        function_map["Select"] = [&_dataStreams,&current_stream, &current_node](std::string what)
+        function_map["select"] = [&_dataStreams,&current_stream, &current_node](std::string what)
         {
             int idx = -1;
             std::string name;
@@ -325,8 +322,8 @@ int main(int argc, char* argv[])
             }
           
         };
-        function_map["Help"] = [&print_options](std::string)->void{print_options();};
-        function_map["List"] = [](std::string)->void
+        function_map["help"] = [&print_options](std::string)->void{print_options();};
+        function_map["list"] = [](std::string)->void
         {
             auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
             for(auto& node : nodes)
@@ -334,7 +331,7 @@ int main(int argc, char* argv[])
                 std::cout << " - " << node << "\n";
             }
         };
-        function_map["Add"] = [&current_node, &current_stream](std::string name)->void
+        function_map["add"] = [&current_node, &current_stream](std::string name)->void
         {
             auto node = EagleLib::NodeManager::getInstance().addNode(name);
             if(!node)
@@ -352,10 +349,42 @@ int main(int argc, char* argv[])
                 return;
             }
         };
+		function_map["set"] = [&current_node, &current_stream](std::string value)->void
+		{
+			std::stringstream ss;
+			ss << value;
+			std::string param_name;
+			std::getline(ss, param_name, ' ');
+			if (current_node)
+			{
+				auto param = current_node->getParameterOptional(param_name);
+				if (param)
+				{
+					try
+					{
+						Parameters::Persistence::Text::DeSerialize(&ss, param.get());
+					}
+					catch (...)
+					{
+						LOG(info) << "Failed to read parameter values for parameter " << param_name;
+					}
+				}
+				else
+				{
+					LOG(info) << "Failed to find parameter by name " << param_name;
+				}
+
+			}
+		};
+	
+		if (vm.count("file"))
+		{
+			function_map["load_file"](vm["file"].as<std::string>());
+		}
+		
+		print_options();
         
-        print_options();
-        
-        while(!quit)
+		while(!quit)
         {
             std::string command_line;
             std::getline(std::cin, command_line);
@@ -367,7 +396,7 @@ int main(int argc, char* argv[])
             if(function_map.count(command))
             {
                 std::string rest;
-                ss >> rest;
+				std::getline(ss, rest);
                 LOG(debug) << "Executing command (" << command << ") with arguments: " << rest;
                 function_map[command](rest);
             }else

@@ -99,7 +99,7 @@ namespace EagleLib
 		}
 		param->UpdateData(data);
         if(param->type != Parameters::Parameter::Output)
-		    onUpdate(stream);
+		    onUpdate(param.get(),stream);
 		return param.get();
 	}
 
@@ -115,7 +115,7 @@ namespace EagleLib
 		}
 		param->UpdateData(data, stream);
         if(param->type != Parameters::Parameter::Output)
-		    onUpdate(stream);
+		    onUpdate(param.get(), stream);
 		return param.get();
 	}
 
@@ -129,7 +129,7 @@ namespace EagleLib
 			return nullptr;
 		param->UpdateData(data, stream);
         if(param->type != Parameters::Parameter::Output)
-		    onUpdate(stream);
+		    onUpdate(param.get(), stream);
 		return param.get();
 	}
 

@@ -71,11 +71,12 @@ bool frame_grabber_image::frame_grabber_image_info::CanLoadDocument(const std::s
 {
     auto path = boost::filesystem::path(document);
     auto ext = path.extension().string();
+	std::transform(ext.begin(), ext.end(), ext.begin(), std::tolower);
     return ext == ".jpg" || ext == ".png" || ext == ".tif";
 }
 int frame_grabber_image::frame_grabber_image_info::Priority() const
 {
-    return 1;
+    return 3;
 }
 static frame_grabber_image::frame_grabber_image_info info;
 REGISTERCLASS(frame_grabber_image, &info);

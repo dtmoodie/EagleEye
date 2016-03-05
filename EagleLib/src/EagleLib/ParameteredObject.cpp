@@ -73,7 +73,7 @@ void ParameteredIObject::Init(bool firstInit)
 	{
         for (auto& param : _parameters)
 		{	
-            RegisterParameterCallback(param.get(), std::bind(&ParameteredIObject::onUpdate, this, std::placeholders::_1));
+            RegisterParameterCallback(param.get(), std::bind(&ParameteredIObject::onUpdate, this, param.get(), std::placeholders::_1));
             DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param), debug);
 		}		
 	}
@@ -84,7 +84,7 @@ Parameter* ParameteredObject::addParameter(Parameter::Ptr param)
 	std::lock_guard<std::recursive_mutex> lock(mtx);
 	DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), warning);
     DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param), debug);
-	_callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, std::placeholders::_1)));
+	_callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, param.get(), std::placeholders::_1)));
     _parameters.push_back(param);
     return param.get();
 }
@@ -185,7 +185,7 @@ void ParameteredObject::RegisterParameterCallback(Parameter* param, const std::f
 	_callback_connections.push_back(param->RegisterNotifier(callback));
     
 }
-void ParameteredObject::onUpdate(cv::cuda::Stream* stream)
+void ParameteredObject::onUpdate(Parameters::Parameter* param, cv::cuda::Stream* stream)
 {
 	DOIF_LOG_FAIL(_sig_parameter_updated != nullptr, (*_sig_parameter_updated)(this), debug);
 }

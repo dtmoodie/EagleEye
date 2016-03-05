@@ -12,7 +12,7 @@
 #include "frame_grabber_base.h"
 #include "nodes/Node.h"
 #include "EagleLib/Signals.h"
-
+#include <signals/signaler.h>
 
 namespace EagleLib
 {
@@ -25,9 +25,10 @@ namespace EagleLib
     class SignalManager;
 	class IVariableManager;
 
-	class EAGLE_EXPORTS DataStream
+	class EAGLE_EXPORTS DataStream: public Signals::signaler
 	{
 	public:
+		typedef EagleLib::SignalManager manager;
         typedef std::shared_ptr<DataStream> Ptr;
         static bool CanLoadDocument(const std::string& document);
 
@@ -59,7 +60,7 @@ namespace EagleLib
         int get_stream_id();
 
         void AddNode(shared_ptr<Nodes::Node> node);
-        void AddNode(std::vector<shared_ptr<Nodes::Node>> node);
+        void AddNodes(std::vector<shared_ptr<Nodes::Node>> node);
         void RemoveNode(shared_ptr<Nodes::Node> node);
         
         void LaunchProcess();
@@ -91,6 +92,8 @@ namespace EagleLib
         boost::thread										processing_thread;
         volatile bool										dirty_flag;
         std::vector<std::shared_ptr<Signals::connection>>	connections;
+		SIG_DEF(StartThreads);
+		SIG_DEF(StopThreads);
 	};
 
     class EAGLE_EXPORTS DataStreamManager

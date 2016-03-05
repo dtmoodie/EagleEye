@@ -1,6 +1,6 @@
 #include "VLC.h"
 #include "EagleLib/nodes/Node.h"
-
+#include <EagleLib/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 // callbacks for vlc
