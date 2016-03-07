@@ -117,9 +117,6 @@ int main(int argc, char* argv[])
             {
                 std::string file = itr->path().string();
                 EagleLib::loadPlugin(file);
-            }else
-            {
-                std::cout << itr->path().extension() << std::endl;
             }
         }
     }
@@ -174,18 +171,29 @@ int main(int argc, char* argv[])
         {
             std::cout << 
                 "- Options: \n"
-                " - load_file {document}                      -- Create a frame grabber for a document \n"
-                " - add {node}                                -- Add a node to the current selected object\n"
-                " - list {nodes}                              -- List all possible nodes that can be constructed\n"
-                " - print {streams,nodes,parameters, current} -- Prints the current streams, nodes in current stream, \n"
-                "                                                or parameters of current node\n"
-				" - set {parameter - values}                  -- Set a parameters value\n"
-                " - select {node,stream}                      -- Select a node by name (relative to current selection\n"
-                "                                                or absolute, or a stream by index)\n"
-                " - save                                      -- Save node configuration\n"
-                " - load                                      -- Load node configuration\n"
-                " - help                                      -- Print this help\n"
-                " - quit                                      -- Close program and cleanup\n";
+				" - load_file        -- Create a frame grabber for a document\n"
+				"    document        -- Name of document to load\n"
+                " - add              -- Add a node to the current selected object\n"
+				"    node            -- name of node, names are listed with list\n"
+                " - list             -- List constructable objects\n"
+				"    nodes           -- List nodes registered\n"
+                " - print            -- Prints the current streams, nodes in current stream, \n"
+				"    streams         -- prints all streams\n"
+				"    nodes           -- prints all nodes of current stream\n"
+				"    parameters      -- prints all parameters of current node or stream\n"
+				"    current         -- prints what is currently selected (default)\n"  
+				"    signals         -- prints current signal map\n"
+				" - set              -- Set a parameters value\n"
+				"    name value      -- name value pair to be applied to parameter\n"
+				" - select           -- Select object\n"
+				"    name            -- select node by name\n"
+				"    index           -- select stream by index\n"
+				" - emit             -- Send a signal\n"
+				"    name parameters -- signal name and parameters\n"
+                " - save             -- Save node configuration\n"
+                " - load             -- Load node configuration\n"
+                " - help             -- Print this help\n"
+                " - quit             -- Close program and cleanup\n";
         };
 
         std::map<std::string, std::function<void(std::string)>> function_map;
@@ -260,7 +268,7 @@ int main(int argc, char* argv[])
                     }
                 }
             }
-            if(what == "current")
+            if(what == "current" || what.empty())
             {
                 if(current_stream)
                 {
@@ -274,7 +282,18 @@ int main(int argc, char* argv[])
                 }
                 std::cout << "Nothing currently selected\n";
             }
-        };
+			if (what == "signals")
+			{
+				if (current_node)
+				{
+					current_node->GetDataStream()->GetSignalManager()->print_signal_map();
+				}
+				if (current_stream)
+				{
+					current_stream->GetSignalManager()->print_signal_map();
+				}
+			}
+		};
         function_map["select"] = [&_dataStreams,&current_stream, &current_node](std::string what)
         {
             int idx = -1;
@@ -376,7 +395,47 @@ int main(int argc, char* argv[])
 
 			}
 		};
-	
+		function_map["ls"] = [&function_map](std::string str)->void {function_map["print"](str); };
+		function_map["emit"] = [&current_node, &current_stream](std::string name)
+		{
+			EagleLib::SignalManager* mgr = nullptr;
+			if (current_node)
+			{
+				mgr = current_node->GetDataStream()->GetSignalManager();
+			}
+			if (current_stream)
+			{
+				mgr = current_stream->GetSignalManager();
+			}
+			if (!mgr)
+				return;
+			auto signals = mgr->get_signals(name);
+			if (signals.size() == 0)
+			{
+				LOG(info) << "No signals found with name: " << name;
+			}
+			int idx = 0;
+			if (signals.size() > 1)
+			{
+				for (auto signal : signals)
+				{
+					std::cout << idx << " - " << signal->get_signal_type().name();
+					++idx;
+				}
+				std::cin >> idx;
+			}
+			LOG(info) << "Attempting to send signal with name \"" << name << "\" and signature: " << signals[idx]->get_signal_type().name();
+			if (signals[idx]->get_signal_type() == Loki::TypeInfo(typeid(void(void))))
+			{
+				auto typed = dynamic_cast<Signals::typed_signal<void(void)>*>(signals[idx]);
+				if (typed)
+				{
+					(*typed)();
+				}
+			}
+			
+		};
+
 		if (vm.count("file"))
 		{
 			function_map["load_file"](vm["file"].as<std::string>());
