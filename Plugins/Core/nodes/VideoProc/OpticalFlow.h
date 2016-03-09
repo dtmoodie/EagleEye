@@ -14,7 +14,8 @@ namespace EagleLib
     class SparsePyrLKOpticalFlow: public Node
     {
         cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> optFlow;
-		cv::cuda::GpuMat prev_grey;
+        std::vector<cv::cuda::GpuMat> prev_grey;
+		//cv::cuda::GpuMat prev_grey;
 		cv::cuda::GpuMat prev_key_points;
 		void set_reference(cv::cuda::GpuMat& ref_image, cv::cuda::GpuMat& ref_points, size_t frame_number, cv::cuda::Stream& stream);
 

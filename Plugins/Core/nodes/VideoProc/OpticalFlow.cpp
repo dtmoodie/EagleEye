@@ -2,7 +2,9 @@
 #include "EagleLib/nodes/VideoProc/Tracking.hpp"
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
 #include <EagleLib/ParameteredObjectImpl.hpp>
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -38,7 +40,7 @@ cv::cuda::GpuMat DensePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cud
 		_parameters[2]->changed = false;
 		_parameters[3]->changed = false;
 	}
-
+    
 
 	if (img.channels() != 1)
 	{
@@ -84,6 +86,18 @@ void SparsePyrLKOpticalFlow::set_reference(cv::cuda::GpuMat& ref_image, cv::cuda
 {
 
 }
+
+void build_pyramid(std::vector<cv::cuda::GpuMat>& pyramid, int levels, cv::cuda::Stream& stream)
+{
+    CV_Assert(pyramid.size());
+    CV_Assert(!pyramid[0].empty());
+    pyramid.resize(levels);
+    for (int level = 1; level <= levels; ++level)
+    {
+        cv::cuda::pyrDown(pyramid[level - 1], pyramid[level], stream);
+    }
+}
+
 cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(_parameters[1]->changed ||
@@ -101,14 +115,18 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
         _parameters[3]->changed = false;
         _parameters[4]->changed = false;
     }
+    std::vector<cv::cuda::GpuMat> grey_pyramid(*getParameter<int>(2)->Data() + 1);
+
 	cv::cuda::GpuMat grey_img;
     if(img.channels() != 1)
-        cv::cuda::cvtColor(img, grey_img, cv::COLOR_BGR2GRAY,0, stream);
+        cv::cuda::cvtColor(img, grey_pyramid[0], cv::COLOR_BGR2GRAY,0, stream);
     else
-		grey_img = img;
+		grey_pyramid[0] = img;
+    build_pyramid(grey_pyramid, grey_pyramid.size(), stream);
+
     if(prev_grey.empty())
     {
-		prev_grey = grey_img;
+		prev_grey = grey_pyramid;
 		cv::cuda::GpuMat* inputPts = getParameter<cv::cuda::GpuMat>(0)->Data();
 		if (inputPts && prev_key_points.empty())
 		{
@@ -131,14 +149,14 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
 			if (*getParameter<bool>(4)->Data() && tracked_points.empty())
 				prev_key_points.copyTo(tracked_points, stream);
 
-			optFlow->calc(prev_grey, grey_img, prev_key_points, tracked_points, status, error, stream);
+			optFlow->calc(prev_grey, grey_pyramid, prev_key_points, tracked_points, status, error, stream);
 
 			updateParameter("Tracked points", tracked_points)->type = Parameters::Parameter::Output;
 			updateParameter("Status", status)->type = Parameters::Parameter::Output;
 			updateParameter("Error", error)->type = Parameters::Parameter::Output;
 			
 			prev_key_points = tracked_points;
-			prev_grey = grey_img;
+			prev_grey = grey_pyramid;
         }
     }
     return img;

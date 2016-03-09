@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     //boost::log::add_file_log(boost::log::keywords::file_name = "SimpleConsole%N.log", boost::log::keywords::rotation_size = 10 * 1024 * 1024);
     EagleLib::SetupLogging();
     
-    
+    Signals::thread_registry::get_instance()->register_thread(Signals::GUI);
     desc.add_options()
         ("file", boost::program_options::value<std::string>(), "Required - File to load for processing")
         ("config", boost::program_options::value<std::string>(), "Required - File containing node structure")
@@ -425,14 +425,12 @@ int main(int argc, char* argv[])
 				std::cin >> idx;
 			}
 			LOG(info) << "Attempting to send signal with name \"" << name << "\" and signature: " << signals[idx]->get_signal_type().name();
-			if (signals[idx]->get_signal_type() == Loki::TypeInfo(typeid(void(void))))
-			{
-				auto typed = dynamic_cast<Signals::typed_signal<void(void)>*>(signals[idx]);
-				if (typed)
-				{
-					(*typed)();
-				}
-			}
+            auto proxy = Signals::serialization::text::factory::instance()->get_proxy(signals[idx]);
+            if(proxy)
+            {
+                proxy->send(signals[idx], "");
+            }
+			
 			
 		};
 
@@ -463,6 +461,8 @@ int main(int argc, char* argv[])
                 LOG(warning) << "Invalid command: " << command_line;
                 print_options();
             }
+            for(int i = 0; i < 20; ++i)
+                Signals::thread_specific_queue::run_once();
         }
         LOG(info) << "Shutting down";
     }
