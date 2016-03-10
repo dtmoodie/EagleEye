@@ -120,6 +120,15 @@ int main(int argc, char* argv[])
             }
         }
     }
+    boost::thread gui_thread([]
+    {
+        Signals::thread_registry::get_instance()->register_thread(Signals::GUI);
+        while(!boost::this_thread::interruption_requested())
+        {
+            Signals::thread_specific_queue::run();
+            cv::waitKey(1);
+        }
+    });
 
     if(vm.count("plugins"))
     {
@@ -193,7 +202,8 @@ int main(int argc, char* argv[])
                 " - save             -- Save node configuration\n"
                 " - load             -- Load node configuration\n"
                 " - help             -- Print this help\n"
-                " - quit             -- Close program and cleanup\n";
+                " - quit             -- Close program and cleanup\n"
+                " - log              -- change logging level\n";
         };
 
         std::map<std::string, std::function<void(std::string)>> function_map;
@@ -433,6 +443,21 @@ int main(int argc, char* argv[])
 			
 			
 		};
+        function_map["log"] = [](std::string level)
+        {
+        if (level == "trace")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
+		if (level == "debug")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
+		if (level == "info")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+		if (level == "warning")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning);
+		if (level == "error")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error);
+		if (level == "fatal")
+			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
+        };
 
 		if (vm.count("file"))
 		{
@@ -466,7 +491,8 @@ int main(int argc, char* argv[])
         }
         LOG(info) << "Shutting down";
     }
-    
+    gui_thread.interrupt();
+    gui_thread.join();
     
     return 0;
 }
