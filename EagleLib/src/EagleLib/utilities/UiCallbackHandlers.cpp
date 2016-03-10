@@ -37,7 +37,6 @@ void WindowCallbackHandler::imshow(const std::string& window_name, cv::Mat img, 
 	}
 	if (!dragging[window_name])
 		cv::imshow(window_name, img);
-    cv::waitKey(1);
 }
 void WindowCallbackHandler::imshowd(const std::string& window_name, cv::cuda::GpuMat img, int flags)
 {

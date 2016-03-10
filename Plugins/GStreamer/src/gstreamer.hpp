@@ -90,39 +90,40 @@ namespace EagleLib
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 	
-	class RTSP_server_new : public Node
-	{
-		
-		
-		
-	public:
-		GstClockTime timestamp;
-		time_t prevTime;
-		time_t delta;
-		GMainLoop *loop;
-		GstRTSPServer *server;
-		int clientCount;
-		bool connected;
-		bool first_run;
-		guint server_id;
-		GstRTSPMediaFactory *factory;
-		GstElement *pipeline, *appsrc;
+	    class RTSP_server_new : public Node
+	    {
+	    public:
+		    GstClockTime timestamp;
+		    time_t prevTime;
+		    time_t delta;
+		    GMainLoop *loop;
+		    GstRTSPServer *server;
+		    int clientCount;
+		    bool connected;
+		    bool first_run;
+		    guint server_id;
+		    GstRTSPMediaFactory *factory;
+		    GstElement *pipeline, *appsrc;
 
-		boost::thread glib_thread;
-		void glibThread();
-		//ConstBuffer<cv::cuda::HostMem> hostBuffer;
-		concurrent_notifier<cv::Mat> notifier;
-		cv::cuda::HostMem* currentNewestFrame;
-		RTSP_server_new();
-		void push_image();
-		void onPipeChange();
-		void setup(std::string pipeOverride = std::string());
-		~RTSP_server_new();
-		virtual void Init(bool firstInit);
-        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
-		//virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-		cv::Size imgSize;
-	};
+		    boost::thread glib_thread;
+		    void glibThread();
+		    concurrent_notifier<cv::Mat> notifier;
+		    cv::cuda::HostMem* currentNewestFrame;
+		    RTSP_server_new();
+		    void push_image();
+		    void onPipeChange();
+		    void setup(std::string pipeOverride = std::string());
+		    ~RTSP_server_new();
+		    virtual void Init(bool firstInit);
+            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
+		    cv::Size imgSize;
+	    };
+        class gstreamer_sink: public Node
+        {
+        public:
+            virtual void Init(bool firstInit);
+            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
+        };
     }
 }
 /*

@@ -58,8 +58,8 @@ DataStream::DataStream()
 			table->SetSingleton<SignalManager>(global_signal_manager);
 			Signals::signal_manager::set_instance(global_signal_manager);
         }
-		connections.push_back(global_signal_manager->connect<void(void)>("StopThreads", std::bind(&DataStream::StopProcess, this), this));
-		connections.push_back(global_signal_manager->connect<void(void)>("StartThreads", std::bind(&DataStream::LaunchProcess, this), this));
+		connections.push_back(global_signal_manager->connect<void(void)>("StopThreads", std::bind(&DataStream::PauseProcess, this), this));
+		connections.push_back(global_signal_manager->connect<void(void)>("StartThreads", std::bind(&DataStream::ResumeProcess, this), this));
     }
 	//connections.push_back(GetSignalManager()->connect<void(void)>("StopThreads", std::bind(&DataStream::StopProcess, this), this));
 	//connections.push_back(GetSignalManager()->connect<void(void)>("StartThreads", std::bind(&DataStream::LaunchProcess, this), this));
