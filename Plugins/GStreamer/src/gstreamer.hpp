@@ -5,9 +5,11 @@
 #include <gst/rtsp-server/rtsp-server.h>
 #include "EagleLib/nodes/Node.h"
 
+
 #include <EagleLib/Defs.hpp>
 #include <EagleLib/Project_defs.hpp>
 #include <EagleLib/utilities/CudaUtils.hpp>
+
 
 #include <gst/gst.h>
 #include <gst/gstelement.h>
@@ -56,41 +58,85 @@ namespace EagleLib
 {
     namespace Nodes
     {
-    
-    class RTSP_server: public Node
-    {
-		GstClockTime timestamp;
-		time_t prevTime;
-		time_t delta;
-    public:
-		enum ServerType
-		{
-			TCP = 0,
-			UDP = 1
-		};
-		bool feed_enabled;
-		GstElement* source_OpenCV;
-		GstElement* pipeline;
-		GMainLoop* glib_MainLoop;
-		cv::Size imgSize;
-		boost::thread glibThread;
-		ConstBuffer<cv::cuda::HostMem> bufferPool;
-		
-		guint need_data_id;
-		guint enough_data_id;
+        class PLUGIN_EXPORTS gstreamer_sink: public Node
+        {
+        protected:
+            // The gstreamer pipeline
+            GstElement*     _pipeline;
+            // The output of EagleLib's processing pipeline and the input to the gstreamer pipeline
+            GstElement*     _source;
+            // id for the need data signal
+            guint           _need_data_id;
+            // id for the enough data signal
+		    guint           _enough_data_id;
 
-		void gst_loop();
-		void Serialize(ISimpleSerializer* pSerializer);
-		void push_image();
-		void onPipeChange();
-        void setup(std::string pipeOverride = std::string());
-        RTSP_server();
-		~RTSP_server();
-        virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };
+            GstClockTime    _timestamp;
+		    time_t          _prevTime;
+		    time_t          _delta;
+
+            void cleanup();
+            bool _feed_enabled;
+            bool _caps_set;
+        public:
+            gstreamer_sink();
+            ~gstreamer_sink();
+            virtual void Init(bool firstInit);
+            virtual void Serialize(ISimpleSerializer* pSerializer);
+        
+            virtual bool create_pipeline(const std::string& pipeline_, cv::Size image_size, int channels);
+            virtual bool set_caps(cv::Size image_size, int channels);
+
+            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
+            virtual void start_feed();
+            virtual void stop_feed();
+
+        };
+
+
+        class PLUGIN_EXPORTS tcpserver_sink: public gstreamer_sink
+        {
+            bool _initialized;
+        public:
+            tcpserver_sink();
+            ~tcpserver_sink();
+            virtual void Init(bool firstInit);
+            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
+        };
+
+        class PLUGIN_EXPORTS RTSP_server: public Node
+        {
+		    GstClockTime timestamp;
+		    time_t prevTime;
+		    time_t delta;
+        public:
+		    enum ServerType
+		    {
+			    TCP = 0,
+			    UDP = 1
+		    };
+		    bool feed_enabled;
+		    GstElement* source_OpenCV;
+		    GstElement* pipeline;
+		    GMainLoop* glib_MainLoop;
+		    cv::Size imgSize;
+		    boost::thread glibThread;
+		    ConstBuffer<cv::cuda::HostMem> bufferPool;
+		
+		    guint need_data_id;
+		    guint enough_data_id;
+
+		    void gst_loop();
+		    void Serialize(ISimpleSerializer* pSerializer);
+		    void push_image();
+		    void onPipeChange();
+            void setup(std::string pipeOverride = std::string());
+            RTSP_server();
+		    ~RTSP_server();
+            virtual void Init(bool firstInit);
+            virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        };
 	
-	    class RTSP_server_new : public Node
+	    class PLUGIN_EXPORTS RTSP_server_new : public Node
 	    {
 	    public:
 		    GstClockTime timestamp;
@@ -118,12 +164,6 @@ namespace EagleLib
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
 		    cv::Size imgSize;
 	    };
-        class gstreamer_sink: public Node
-        {
-        public:
-            virtual void Init(bool firstInit);
-            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
-        };
     }
 }
 /*

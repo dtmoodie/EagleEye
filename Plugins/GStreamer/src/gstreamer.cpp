@@ -1,20 +1,30 @@
 #include "gstreamer.hpp"
-#include <gst/video/video.h>
-#include <gst/app/gstappsrc.h>
-#include "../remotery/lib/Remotery.h"
-#include <QtNetwork/qnetworkinterface.h>
+#include "glib_thread.h"
+
 #include <EagleLib/rcc/SystemTable.hpp>
 #include <EagleLib/ParameteredObjectImpl.hpp>
 #include <EagleLib/utilities/CudaCallbacks.hpp>
+
+#include <gst/video/video.h>
+#include <gst/app/gstappsrc.h>
+
+#include "../remotery/lib/Remotery.h"
+
+#include <QtNetwork/qnetworkinterface.h>
+
+
+
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
 
 SETUP_PROJECT_IMPL
 
-typedef class RTSP_server App;
-static gboolean
-bus_message(GstBus * bus, GstMessage * message, App * app)
+typedef class gstreamer_sink App;
+
+// handled messages from the pipeline
+static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
 {
 	BOOST_LOG_TRIVIAL(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
 
@@ -30,11 +40,9 @@ bus_message(GstBus * bus, GstMessage * message, App * app)
 		BOOST_LOG_TRIVIAL(error) << "Debugging info: " << (dbg_info) ? dbg_info : "none";
 		g_error_free(err);
 		g_free(dbg_info);
-		g_main_loop_quit(app->glib_MainLoop);
 		break;
 	}
 	case GST_MESSAGE_EOS:
-		g_main_loop_quit(app->glib_MainLoop);
 		break; 
 	default:
 		break;
@@ -43,14 +51,230 @@ bus_message(GstBus * bus, GstMessage * message, App * app)
 }
 
 
-static void start_feed(GstElement * pipeline, guint size, App * app)
+static void _start_feed(GstElement * pipeline, guint size, App * app)
 {
-	app->feed_enabled = true;
+	app->start_feed();
 }
-static void stop_feed(GstElement * pipeline, App *app)
+
+static void _stop_feed(GstElement * pipeline, App *app)
 {
-	app->feed_enabled = false;
+	app->stop_feed();
 }
+
+gstreamer_sink::gstreamer_sink()
+{
+    _pipeline = nullptr;
+    _source = nullptr;
+    _need_data_id = 0;
+    _enough_data_id = 0;
+    _feed_enabled = false;
+    gst_debug_set_active(1);
+
+	if (!gst_is_initialized())
+	{
+		char** argv;
+		argv = new char*{ "-vvv" };
+		int argc = 1;
+		gst_init(&argc, &argv);
+	}
+}
+
+gstreamer_sink::~gstreamer_sink()
+{
+    cleanup();
+}
+
+void gstreamer_sink::Init(bool firstInit)
+{
+    Node::Init(firstInit);
+}
+
+void gstreamer_sink::Serialize(ISimpleSerializer* pSerializer)
+{
+    Node::Serialize(pSerializer);
+    SERIALIZE(_pipeline);
+    SERIALIZE(_source);
+    SERIALIZE(_need_data_id);
+    SERIALIZE(_enough_data_id);
+}
+
+void gstreamer_sink::cleanup()
+{
+    if (_pipeline)
+	{
+		GstStateChangeReturn ret = gst_element_set_state(_pipeline, GST_STATE_NULL);
+		gst_object_unref(_pipeline);
+        _pipeline = nullptr;
+        if(_source)
+	    {
+		    g_signal_handler_disconnect(_source, _need_data_id);
+		    g_signal_handler_disconnect(_source, _enough_data_id);
+		    gst_object_unref(_source);
+            _source = nullptr;
+	    }
+	}    
+}
+
+bool gstreamer_sink::create_pipeline(const std::string& pipeline_, cv::Size img_size, int channels)
+{
+    cleanup();
+    glib_thread::instance()->start_thread();
+
+
+
+    GError* error = nullptr;
+    _pipeline = gst_parse_launch(pipeline_.c_str(), &error);
+	
+	if (_pipeline == nullptr)
+	{
+		NODE_LOG(error) << "Error parsing pipeline";
+		_feed_enabled = false;
+		return false;
+	}
+	
+	if (error != nullptr)
+	{
+		NODE_LOG(error) << "Error parsing pipeline " << error->message;
+        return false;
+	}
+    
+	_source = gst_bin_get_by_name(GST_BIN(_pipeline), "mysource");
+	
+	GstCaps* caps = gst_caps_new_simple(
+        "video/x-raw",
+		"format", G_TYPE_STRING, "BGR",
+		"width", G_TYPE_INT, img_size.width,
+		"height", G_TYPE_INT, img_size.height,
+		"framerate", GST_TYPE_FRACTION, 15, 1,
+		"pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+		NULL);
+
+	if (caps == nullptr)
+	{
+		NODE_LOG(error) << "Error creating caps for appsrc";
+        return false;
+	}
+
+	gst_app_src_set_caps(GST_APP_SRC(_source), caps);
+
+	g_object_set(
+        G_OBJECT(_source), 
+		"stream-type", GST_APP_STREAM_TYPE_STREAM, 
+		"format", GST_FORMAT_TIME, 
+		NULL);
+	
+	_need_data_id   = g_signal_connect(_source, "need-data",   G_CALLBACK(_start_feed), this);
+	_enough_data_id = g_signal_connect(_source, "enough-data", G_CALLBACK(_stop_feed),  this);
+	
+	// Error callback
+	auto bus = gst_pipeline_get_bus(GST_PIPELINE(_pipeline));
+	if(!bus)
+    {
+        NODE_LOG(error) << "Unable to get bus from pipeline";
+        return false;
+    }
+	gst_bus_add_watch(bus, (GstBusFunc)bus_message, this);
+	gst_object_unref(bus);
+
+	GstStateChangeReturn ret = gst_element_set_state(_pipeline, GST_STATE_PLAYING);
+	if(ret == GST_STATE_CHANGE_FAILURE)
+    {
+        NODE_LOG(error) << "Unable to start pipeline";
+        return false;
+    }
+    return true;
+}
+
+bool gstreamer_sink::set_caps(cv::Size img_size, int channels)
+{
+
+
+}
+
+
+TS<SyncedMemory> gstreamer_sink::doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream)
+{
+    auto curTime = clock();
+	_delta = curTime - _prevTime;
+	_prevTime = curTime;
+    if(_feed_enabled)
+    {
+        cv::Mat h_img = img.GetMat(stream);
+        cuda::enqueue_callback_async(
+        [h_img, this]()->void
+        {
+            int bufferlength = h_img.cols * h_img.rows * h_img.channels();
+		    GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
+		    GstMapInfo map;
+		    gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
+		    memcpy(map.data, h_img.data, map.size);
+		    gst_buffer_unmap(buffer, &map);
+
+		    GST_BUFFER_PTS(buffer) = _timestamp; 
+		
+		    GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(_delta, GST_SECOND, 1000);
+		    _timestamp += GST_BUFFER_DURATION(buffer);
+
+		    GstFlowReturn rw;
+		    g_signal_emit_by_name(_source, "push-buffer", buffer, &rw);
+
+		    if (rw != GST_FLOW_OK)
+		    {
+			    LOG(error) << "Error pushing buffer into appsrc " << rw;
+		    }
+		    gst_buffer_unref(buffer);
+        },  stream);
+    }
+    return img;
+}
+
+void gstreamer_sink::start_feed()
+{
+    _feed_enabled = true;
+}
+void gstreamer_sink::stop_feed()
+{
+    _feed_enabled = false;
+}
+
+// ---------------------------------------------------------------------------
+tcpserver_sink::tcpserver_sink()
+{
+    _initialized = false;
+}
+
+tcpserver_sink::~tcpserver_sink()
+{
+
+}
+
+void tcpserver_sink::Init(bool firstInit)
+{
+    if(firstInit)
+    {
+        
+    }
+}
+TS<SyncedMemory> tcpserver_sink::doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream)
+{
+    if(!_initialized)
+    {
+        create_pipeline("appsrc name=mysource ! videoconvert ! openh264enc ! matroskamux streamable=true ! tcpserversink host=192.168.1.208 port=8080", img.GetMat(stream).size(), img.GetMat(stream).channels());
+        _initialized = true;
+    }
+    return gstreamer_sink::doProcess(img, stream);
+}
+
+static EagleLib::Nodes::NodeInfo g_registerer_tcpserver_sink("tcpserver_sink", { "Image", "Sink" });
+REGISTERCLASS(tcpserver_sink, &g_registerer_tcpserver_sink);
+
+
+
+
+// ------------------------------------------------------------------------
+// rtsp server
+// -----------------------------------------------------------------------
+
 // This only actually gets called when gstreamer.cpp gets recompiled or the node is deleted
 RTSP_server::~RTSP_server()
 {
@@ -233,8 +457,8 @@ void RTSP_server::setup(std::string pipeOverride)
 		"format", GST_FORMAT_TIME, 
 		NULL);
 	
-	need_data_id = g_signal_connect(source_OpenCV, "need-data", G_CALLBACK(start_feed), this);
-	enough_data_id = g_signal_connect(source_OpenCV, "enough-data", G_CALLBACK(stop_feed), this);
+	need_data_id = g_signal_connect(source_OpenCV, "need-data", G_CALLBACK(_start_feed), this);
+	enough_data_id = g_signal_connect(source_OpenCV, "enough-data", G_CALLBACK(_stop_feed), this);
 	
 	// Error callback
 	auto bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
