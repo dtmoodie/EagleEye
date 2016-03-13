@@ -352,12 +352,22 @@ int main(int argc, char* argv[])
           
         };
         function_map["help"] = [&print_options](std::string)->void{print_options();};
-        function_map["list"] = [](std::string)->void
+        function_map["list"] = [](std::string filter)->void
         {
             auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
             for(auto& node : nodes)
             {
-                std::cout << " - " << node << "\n";
+                if(filter.size())
+                {
+                    if(node.find(filter) != std::string::npos)
+                    {
+                        std::cout << " - " << node << "\n";
+                    }
+                }else
+                {
+                    std::cout << " - " << node << "\n";
+                }
+                
             }
         };
         function_map["add"] = [&current_node, &current_stream](std::string name)->void
