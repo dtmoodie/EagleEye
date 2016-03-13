@@ -131,7 +131,7 @@ ObjectManager::ObjectManager()
 	m_pCompileLogger.reset(new CompileLogger());
 	m_systemTable.reset(new SystemTable());
 	m_pRuntimeObjectSystem->Initialise(m_pCompileLogger.get(), m_systemTable.get());
-    m_systemTable->SetSingleton<ObjectManager>(this, -1);
+    m_systemTable->SetSingleton<ObjectManager>(this);
 	m_pRuntimeObjectSystem->GetObjectFactorySystem()->AddListener(this);
 	boost::filesystem::path workingDir(__FILE__);
 	std::string includePath = workingDir.parent_path().parent_path().string();

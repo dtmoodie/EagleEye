@@ -58,7 +58,7 @@ namespace EagleLib
 {
     namespace Nodes
     {
-        class PLUGIN_EXPORTS gstreamer_sink: public Node
+        class PLUGIN_EXPORTS gstreamer_sink_base: public Node
         {
         protected:
             // The gstreamer pipeline
@@ -78,30 +78,25 @@ namespace EagleLib
             bool _feed_enabled;
             bool _caps_set;
         public:
-            gstreamer_sink();
-            ~gstreamer_sink();
+            gstreamer_sink_base();
+            ~gstreamer_sink_base();
             virtual void Init(bool firstInit);
             virtual void Serialize(ISimpleSerializer* pSerializer);
         
-            virtual bool create_pipeline(const std::string& pipeline_, cv::Size image_size, int channels);
-            virtual bool set_caps(cv::Size image_size, int channels);
+            virtual bool create_pipeline(const std::string& pipeline_);
+            virtual bool set_caps(cv::Size image_size, int channels, int depth = CV_8U);
 
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
             virtual void start_feed();
             virtual void stop_feed();
-
+            virtual bool start_pipeline();
+            virtual bool stop_pipeline();
+            virtual bool pause_pipeline();
+            static std::vector<std::string> get_interfaces();
+            static std::vector<std::string> get_gstreamer_features(const std::string& filter = "");
+            static bool check_feature(const std::string& feature_name);
         };
 
-
-        class PLUGIN_EXPORTS tcpserver_sink: public gstreamer_sink
-        {
-            bool _initialized;
-        public:
-            tcpserver_sink();
-            ~tcpserver_sink();
-            virtual void Init(bool firstInit);
-            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
-        };
 
         class PLUGIN_EXPORTS RTSP_server: public Node
         {

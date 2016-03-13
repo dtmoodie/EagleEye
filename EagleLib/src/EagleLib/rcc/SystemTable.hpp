@@ -37,19 +37,10 @@ struct SystemTable
 		}
         return nullptr;
 	}
-	template<typename T> void SetSingleton(T* singleton, int stream_id = 0)
+	template<typename T> T* SetSingleton(T* singleton)
 	{
-        if(stream_id == -1)
-        {
-            g_singletons[Loki::TypeInfo(typeid(T))] = singleton;
-            return;
-        }
-        singletons[Loki::TypeInfo(typeid(T))][stream_id] = singleton;
-		/*auto itr = singletons.find(Loki::TypeInfo(typeid(T)));
-		if (itr == singletons.end())
-		{
-			singletons[Loki::TypeInfo(typeid(T))] = static_cast<void*>(singleton);
-		}*/
+        g_singletons[Loki::TypeInfo(typeid(T))] = singleton;
+        return singleton;   
 	}
 
 };

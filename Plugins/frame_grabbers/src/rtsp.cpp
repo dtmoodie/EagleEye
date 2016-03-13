@@ -92,7 +92,7 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 #ifdef JETSON
     std::string gstreamer_string = "rtspsrc location=" + file_path + " ! rtph264depay ! h264parse ! omxh264dec ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
 #else
-    std::string gstreamer_string = "rtspsrc location=" + file_path + " ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
+    std::string gstreamer_string = "rtspsrc location=" + file_to_load + " ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
 #endif
 	
 	h_cam.release();
