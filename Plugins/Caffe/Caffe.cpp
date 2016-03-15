@@ -2,7 +2,7 @@
 #include "caffe/caffe.hpp"
 
 #include "EagleLib/nodes/Node.h"
-
+#include <EagleLib/ParameteredObjectImpl.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
@@ -175,20 +175,20 @@ void CaffeImageClassifier::Init(bool firstInit)
 cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     caffe::Caffe::set_mode(caffe::Caffe::GPU);
-    if(parameters[0]->changed)
+    if(_parameters[0]->changed)
     {
         Parameters::ReadFile* path = getParameter<Parameters::ReadFile>(0)->Data();
         if(boost::filesystem::exists(*path))
         {
             NN.reset(new caffe::Net<float>(path->string(), caffe::TEST));
             WrapInput();
-            parameters[0]->changed = false;
+            _parameters[0]->changed = false;
         }else
         {
             NODE_LOG(debug) << "Architecture file does not exist";
         }
     }
-    if(parameters[1]->changed && NN)
+    if(_parameters[1]->changed && NN)
     {
         Parameters::ReadFile* path = getParameter<Parameters::ReadFile>(1)->Data();
         if(boost::filesystem::exists(*path))
@@ -202,7 +202,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
                 layerNames.push_back(std::string(layer->type()));
             }
             NODE_LOG(info) << "Weights loaded";
-            parameters[1]->changed = false;
+            _parameters[1]->changed = false;
             weightsLoaded = true;
             updateParameter("Loaded layers", layerNames);
         }else
@@ -210,7 +210,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 			NODE_LOG(debug) << "Weight file does not exist";
         }
     }
-    if(parameters[2]->changed)
+    if(_parameters[2]->changed)
     {
         // Handle loading of the label file
         Parameters::ReadFile* path = getParameter<Parameters::ReadFile>(2)->Data();
@@ -230,11 +230,11 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
                     labels->push_back(line);
                 }
                 NODE_LOG(info) << "Loaded " << labels->size() <<" classes";
-                parameters[2]->changed = false;
+                _parameters[2]->changed = false;
             }
         }
     }
-    if(parameters[3]->changed)
+    if(_parameters[3]->changed)
     {
         Parameters::ReadFile* path = getParameter<Parameters::ReadFile>(3)->Data();
         if(boost::filesystem::exists(*path))
@@ -277,7 +277,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
                     channel_mean = cv::mean(mean);
                     updateParameter("Required mean subtraction", channel_mean);
                     updateParameter("Subtraction required", false);
-                    parameters[3]->changed = false;
+                    _parameters[3]->changed = false;
                 }else
                 {
                     NODE_LOG(error) <<  "Unable to load mean file";
