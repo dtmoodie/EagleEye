@@ -16,14 +16,14 @@ std::string frame_grabber_rtsp::frame_grabber_rtsp_info::GetObjectHelp()
 {
     return "";
 }
-bool frame_grabber_rtsp::frame_grabber_rtsp_info::CanLoadDocument(const std::string& document) const
+int frame_grabber_rtsp::frame_grabber_rtsp_info::CanLoadDocument(const std::string& document) const
 {
     std::string rtsp("rtsp");
     if(document.compare(0, rtsp.length(), rtsp) == 0)
     {
-        return true;
+        return 10;
     }
-    return false;
+    return 0;
 }
 
 int frame_grabber_rtsp::frame_grabber_rtsp_info::LoadTimeout() const

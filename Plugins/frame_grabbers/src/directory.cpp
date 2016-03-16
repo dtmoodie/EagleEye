@@ -119,11 +119,11 @@ std::string frame_grabber_directory::frame_grabber_directory_info::GetObjectHelp
     return "Frame grabber for static image files in a directory";
 }
 
-bool frame_grabber_directory::frame_grabber_directory_info::CanLoadDocument(const std::string& document) const
+int frame_grabber_directory::frame_grabber_directory_info::CanLoadDocument(const std::string& document) const
 {
     auto path = boost::filesystem::path(document);
     
-    return (boost::filesystem::exists(path) && boost::filesystem::is_directory(path));
+    return (boost::filesystem::exists(path) && boost::filesystem::is_directory(path)) ? 1 : 0;
 }
 int frame_grabber_directory::frame_grabber_directory_info::Priority() const
 {

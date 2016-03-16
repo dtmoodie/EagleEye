@@ -122,6 +122,13 @@ std::shared_ptr<IVariableManager> DataStream::GetVariableManager()
 
 bool DataStream::LoadDocument(const std::string& document)
 {
+    std::string file_to_load = document;
+    if(file_to_load.size() == 0)
+        return false;
+    if(file_to_load.at(0) == '\"' && file_to_load.at(file_to_load.size() - 1) == '\"')
+    {
+        file_to_load = file_to_load.substr(1, file_to_load.size() - 2);
+    }
     std::lock_guard<std::mutex> lock(nodes_mtx);
     auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
     std::vector<IObjectConstructor*> valid_frame_grabbers;
@@ -139,10 +146,11 @@ bool DataStream::LoadDocument(const std::string& document)
             auto fg_info = dynamic_cast<FrameGrabberInfo*>(info);
             if(fg_info)
             {
-                if(fg_info->CanLoadDocument(document))
+                int priority = fg_info->CanLoadDocument(file_to_load);
+                if(priority != 0)
                 {
                     valid_frame_grabbers.push_back(constructor);
-                    frame_grabber_priorities.push_back(fg_info->Priority());
+                    frame_grabber_priorities.push_back(priority);
                 }
             }
         }
@@ -150,7 +158,7 @@ bool DataStream::LoadDocument(const std::string& document)
 
     if(valid_frame_grabbers.empty())
     {
-        LOG(warning) << "No valid frame grabbers for " << document;
+        LOG(warning) << "No valid frame grabbers for " << file_to_load;
         return false;
     }
     // Pick the frame grabber with highest priority
@@ -175,7 +183,7 @@ bool DataStream::LoadDocument(const std::string& document)
         };
         auto obj = new thread_load_object();
         obj->fg = fg;
-        obj->document = document;
+        obj->document = file_to_load;
         auto future = obj->promise.get_future();
         boost::thread connection_thread = boost::thread([obj]()->void{
             obj->load();
@@ -186,22 +194,29 @@ bool DataStream::LoadDocument(const std::string& document)
             if(future.get())
             {
                 frame_grabber = fg;
-				LOG(info) << "Loading " << document << " with frame_grabber: " << fg->GetTypeName() << " with priority: " << fg_info->Priority();
+				LOG(info) << "Loading " << file_to_load << " with frame_grabber: " << fg->GetTypeName() << " with priority: " << fg_info->Priority();
                 return true; // successful load
             }else // unsuccessful load
             {
-                LOG(warning) << "Unable to load " << document << " with " << fg_info->GetObjectName();
+                LOG(warning) << "Unable to load " << file_to_load << " with " << fg_info->GetObjectName();
             }
         }
         else // timeout        
         {
-            LOG(warning) << "Timeout while loading " << document << " with " << fg_info->GetObjectName() << " after waiting " << fg_info->LoadTimeout() << " ms";
+            LOG(warning) << "Timeout while loading " << file_to_load << " with " << fg_info->GetObjectName() << " after waiting " << fg_info->LoadTimeout() << " ms";
         }
     }
     return false;
 }
 bool DataStream::CanLoadDocument(const std::string& document)
 {
+    std::string doc_to_load = document;
+    if(doc_to_load.size() == 0)
+        return false;
+    if(doc_to_load.at(0) == '\"' && doc_to_load.at(doc_to_load.size() - 1) == '\"')
+    {
+        doc_to_load = doc_to_load.substr(1, doc_to_load.size() - 2);
+    }
     auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
     std::vector<IObjectConstructor*> valid_frame_grabbers;
     std::vector<int> frame_grabber_priorities;
@@ -218,11 +233,12 @@ bool DataStream::CanLoadDocument(const std::string& document)
             auto fg_info = dynamic_cast<FrameGrabberInfo*>(info);
             if (fg_info)
             {
-                if (fg_info->CanLoadDocument(document))
+                int priority = fg_info->CanLoadDocument(doc_to_load);
+                if (priority != 0)
                 {
 					LOG(trace) << fg_info->GetObjectName() << " can load document";
                     valid_frame_grabbers.push_back(constructor);
-                    frame_grabber_priorities.push_back(fg_info->Priority());
+                    frame_grabber_priorities.push_back(priority);
                 }
             }
         }

@@ -15,7 +15,7 @@ namespace EagleLib
             virtual std::string GetObjectName();
             virtual std::string GetObjectTooltip();
             virtual std::string GetObjectHelp();
-            virtual bool CanLoadDocument(const std::string& document) const;
+            virtual int CanLoadDocument(const std::string& document) const;
             virtual int Priority() const;
         };
         virtual bool LoadFile(const std::string& file_path);

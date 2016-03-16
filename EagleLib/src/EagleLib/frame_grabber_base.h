@@ -22,7 +22,7 @@ namespace EagleLib
         virtual std::string GetObjectName() = 0;
         virtual std::string GetObjectTooltip() = 0;
         virtual std::string GetObjectHelp() = 0;
-        virtual bool CanLoadDocument(const std::string& document) const = 0;
+        virtual int CanLoadDocument(const std::string& document) const = 0;
         virtual int Priority() const = 0;
         virtual int LoadTimeout() const;
     };
