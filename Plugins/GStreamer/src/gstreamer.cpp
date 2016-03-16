@@ -664,7 +664,7 @@ static EagleLib::Nodes::NodeInfo g_registerer_RTSP_server("RTSP_server", { "Imag
 
 
 // http://cgit.freedesktop.org/gstreamer/gst-rtsp-server/tree/examples/test-appsrc.c
-
+#ifdef HAVE_GST_RTSPSERVER
 RTSP_server_new::RTSP_server_new()
 {
 	loop = nullptr;
@@ -962,3 +962,4 @@ TS<SyncedMemory> RTSP_server_new::doProcess(TS<SyncedMemory> img, cv::cuda::Stre
 
 static EagleLib::Nodes::NodeInfo g_registerer_RTSP_server_new("RTSP_server_new", { "Image", "Sink" });
 REGISTERCLASS(RTSP_server_new, &g_registerer_RTSP_server_new);
+#endif

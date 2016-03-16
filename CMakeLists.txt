@@ -43,7 +43,7 @@ MACRO(RCC_LINK_LIB TARGET)
 			ENDIF(EXISTS ${lib})
             
 			TARGET_LINK_LIBRARIES(${TARGET} ${PREFIX}${lib})
-			MESSAGE("Linking ${PREFIX}${lib} to ${TARGET}")
+            #MESSAGE("Linking ${PREFIX}${lib} to ${TARGET}")
 		ENDIF(${SKIP} STREQUAL "0")
 	ENDFOREACH(lib)
 	LIST(REMOVE_DUPLICATES LINK_DIRS_DEBUG)

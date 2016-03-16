@@ -14,6 +14,8 @@ find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cu
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 LINK_DIRECTORIES(${LINK_DIRS})
 
+find_package(CUDA REQUIRED)
+  
 INCLUDE_DIRECTORIES(
 	${EagleLib_INCLUDE_DIRECTORIES}
 	${OpenCV_INCLUDE_DIRS}
@@ -27,4 +29,10 @@ target_link_libraries(SimpleConsole
     EagleLib
     ${Boost_LIBRARIES}
     RuntimeObjectSystem
-    RuntimeCompiler)
+    RuntimeCompiler
+    ${CUDA_cublas_LIBRARY}
+    ${CUDA_cupti_LIBRARY}
+    ${CUDA_nppi_LIBRARY}
+    ${CUDA_cufft_LIBRARY}
+    ${CUDA_npps_LIBRARY}
+)

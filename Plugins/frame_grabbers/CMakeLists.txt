@@ -75,8 +75,8 @@ RCC_LINK_LIB(frame_grabbers
 		${GSTREAMER_gstvideo_LIBRARY}
 		${Glib_LIBRARY}
 		${GLIB_LIBRARY}
-		${GOBJECT_LIBRARY}
-		${GSTREAMER_gstrtspserver_LIBRARY})
+		${GOBJECT_LIBRARY})
+		#${GSTREAMER_gstrtspserver_LIBRARY})
 
 INCLUDE(../PluginTemplate.cmake)
 

@@ -1,5 +1,6 @@
 #include "EagleLib/nodes/Node.h"
 #include "ObjectInterfacePerModule.h"
+#ifdef HAVE_GLOOX
 #define GLOOX_IMPORTS
 #include "gloox/loghandler.h"
 #include "gloox/connectionlistener.h"
@@ -54,3 +55,4 @@ namespace EagleLib
 	};
     }
 }
+#endif

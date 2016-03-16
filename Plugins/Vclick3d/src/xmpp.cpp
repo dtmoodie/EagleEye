@@ -1,3 +1,4 @@
+#ifdef HAVE_GLOOX
 #include "parameters/Persistence/TextSerializer.hpp"
 #include "xmpp.h"
 #include "gloox/disco.h"
@@ -179,3 +180,4 @@ cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
 
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(XmppClient, Utility)
+#endif

@@ -79,6 +79,11 @@ RCC_LINK_LIB(vtkRendering
   Qt5::Core
   Qt5::Widgets
   Qt5::OpenGL
-  opengl32
 )
+IF(WIN32)
+  RCC_LINK_LIB(vtkRendering opengl32)
+ELSE(WIN32)
+
+ENDIF(WIN32)
+
 INCLUDE(../PluginTemplate.cmake)
