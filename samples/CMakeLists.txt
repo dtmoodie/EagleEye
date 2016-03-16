@@ -11,7 +11,11 @@ find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
-set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+  set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+
+find_package(CUDA REQUIRED)
+  include_directories(${CUDA_INCLUDE_DIRS})
+
 LINK_DIRECTORIES(${LINK_DIRS})
 
 find_package(CUDA REQUIRED)
@@ -35,4 +39,4 @@ target_link_libraries(SimpleConsole
     ${CUDA_nppi_LIBRARY}
     ${CUDA_cufft_LIBRARY}
     ${CUDA_npps_LIBRARY}
-)
+    ${CUDA_CUDART_LIBRARY})

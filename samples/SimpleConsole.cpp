@@ -5,8 +5,10 @@
 #include "EagleLib/Plugins.h"
 #include <EagleLib/DataStreamManager.h>
 #include <EagleLib/Logging.h>
+
 #include <signal.h>
 #include <signals/logging.hpp>
+#include <parameters/Persistence/TextSerializer.hpp>
 
 #include <boost/program_options.hpp>
 #include <boost/log/core.hpp>
@@ -21,7 +23,9 @@
 #include <boost/version.hpp>
 #include <boost/tokenizer.hpp>
 
-#include <parameters/Persistence/TextSerializer.hpp>
+#include <cuda.h>
+#include <cuda_runtime_api.h>
+#include <cuda_runtime.h>
 
 void PrintNodeTree(EagleLib::Nodes::Node* node, int depth)
 {
@@ -68,6 +72,22 @@ int main(int argc, char* argv[])
     boost::program_options::variables_map vm;
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
     
+    
+    {
+        boost::posix_time::ptime initialization_start = boost::posix_time::microsec_clock::universal_time();
+        LOG(info) << "Initializing GPU...";
+        cv::cuda::GpuMat(10,10, CV_32F);
+        boost::posix_time::ptime initialization_end= boost::posix_time::microsec_clock::universal_time();
+        if(boost::posix_time::time_duration(initialization_end - initialization_start).total_seconds() > 1)
+        {
+            cudaDeviceProp props;
+            cudaGetDeviceProperties(&props, cv::cuda::getDevice());
+            LOG(warning) << "Initialization took " << boost::posix_time::time_duration(initialization_end - initialization_start).total_milliseconds() << " ms.  CUDA code likely not generated for this architecture (" << props.major << "." << props.minor << ")";
+
+        }
+    }
+
+
     if((!vm.count("config") || !vm.count("file")) && vm["mode"].as<std::string>() == "batch")
     {
         LOG(info) << "Batch mode selected but \"file\" and \"config\" options not set";
