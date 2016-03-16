@@ -57,7 +57,7 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
             if (h_cam->open(file_path))
             {
                 loaded_document = file_path;
-                //buffer_end_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES);
+                playback_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES);
                 return true;
             }
         }
@@ -67,51 +67,6 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
     }
     return false;
 }
-
-/*TS<SyncedMemory> frame_grabber_cv::GetFrame(int index, cv::cuda::Stream& stream)
-{
-    boost::mutex::scoped_lock lock(buffer_mtx);
-    for (auto& itr : frame_buffer)
-    {
-        if (itr.frame_number == index)
-        {
-            return itr;
-        }
-    }
-    return TS<SyncedMemory>();
-}*/
-/*TS<SyncedMemory> frame_grabber_cv::GetNextFrame(cv::cuda::Stream& stream)
-{
-    while (frame_buffer.empty())
-    {
-        //boost::this_thread::interruptible_wait(10);
-        boost::this_thread::sleep_for((boost::chrono::milliseconds(10)));
-    }
-    if (playback_frame_number == -1)
-    {
-        int min = std::numeric_limits<int>::max();
-        {
-            boost::mutex::scoped_lock lock(buffer_mtx);
-            for (auto itr : frame_buffer)
-            {
-                min = std::min(min, itr.frame_number);
-            }
-        }
-
-        playback_frame_number = min;
-        auto frame = GetFrame(playback_frame_number, stream);
-        if (!frame.empty())
-            playback_frame_number++;
-        return frame;
-    }
-
-    if (update_signal)
-        (*update_signal)();
-    auto ret = GetFrame(playback_frame_number, stream);
-    if (!ret.empty())
-        playback_frame_number++;
-    return ret;
-}*/
 
 int frame_grabber_cv::GetNumFrames()
 {
@@ -162,8 +117,6 @@ TS<SyncedMemory> frame_grabber_cv::GetNextFrameImpl(cv::cuda::Stream& stream)
             {
                 cv::cuda::GpuMat d_mat;
                 d_mat.upload(h_mat, stream);
-                //current_frame = TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (int)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
-                //return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
                 return TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (int)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
             }
         }

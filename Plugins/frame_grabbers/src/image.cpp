@@ -67,12 +67,12 @@ std::string frame_grabber_image::frame_grabber_image_info::GetObjectHelp()
     return "Frame grabber for static image files";
 }
 
-bool frame_grabber_image::frame_grabber_image_info::CanLoadDocument(const std::string& document) const
+int frame_grabber_image::frame_grabber_image_info::CanLoadDocument(const std::string& document) const
 {
     auto path = boost::filesystem::path(document);
     auto ext = path.extension().string();
 	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-    return ext == ".jpg" || ext == ".png" || ext == ".tif";
+    return (ext == ".jpg" || ext == ".png" || ext == ".tif") ? 3 : 0;
 }
 int frame_grabber_image::frame_grabber_image_info::Priority() const
 {
