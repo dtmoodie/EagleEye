@@ -76,10 +76,10 @@ gstreamer_sink_base::gstreamer_sink_base()
 
 	if (!gst_is_initialized())
 	{
-		char** argv;
-		argv = new char*{ "-vvv" };
+        char** argv;
+        argv = new char*{ "-vvv" };
 		int argc = 1;
-		gst_init(&argc, &argv);
+        gst_init(&argc, &argv);
         delete argv;
 	}
 }
