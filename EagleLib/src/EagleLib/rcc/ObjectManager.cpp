@@ -1,5 +1,11 @@
 #include "ObjectManager.h"
 #include <RuntimeObjectSystem.h>
+#include <EagleLib/rcc/SystemTable.hpp>
+#include <EagleLib/rcc/IObjectNotifiable.h>
+
+#include "parameters/Parameter_def.hpp"
+
+#include <signals/logging.hpp>
 
 #include <boost/tokenizer.hpp>
 #include <boost/foreach.hpp>
@@ -10,19 +16,17 @@
 #include <boost/chrono.hpp>
 #include <boost/lexical_cast.hpp>
 
-
 #include <opencv2/core/cuda.hpp>
+
 #include "remotery/lib/Remotery.h"
 
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include "cuda_runtime_api.h"
 
-#include "parameters/Parameter_def.hpp"
-
-#include <EagleLib/rcc/SystemTable.hpp>
 #include <stdarg.h>
-#include <EagleLib/rcc/IObjectNotifiable.h>
+
+
 using namespace EagleLib;
 
 #ifdef _WIN32

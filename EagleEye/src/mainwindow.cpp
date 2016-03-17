@@ -33,9 +33,18 @@
 #include "EagleLib/Plugins.h"
 #include <EagleLib/nodes/Node.h>
 
+#include <signals/logging.hpp>
+
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
-	return 0;
+    std::stringstream ss;
+    std::function<void(const std::string&)> f = [&ss](const std::string& str)->void
+    {
+        ss << str;
+    };
+    Signals::collect_callstack(0, true, f);
+    BOOST_LOG_TRIVIAL(trace) << ss.str();
+    return 0;
 }
 
 static void processThread(std::vector<EagleLib::Nodes::Node::Ptr>* parentList, boost::timed_mutex *mtx);
