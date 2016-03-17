@@ -18,6 +18,8 @@ find_package(CUDA REQUIRED)
 
 LINK_DIRECTORIES(${LINK_DIRS})
 
+find_package(CUDA REQUIRED)
+  
 INCLUDE_DIRECTORIES(
 	${EagleLib_INCLUDE_DIRECTORIES}
 	${OpenCV_INCLUDE_DIRS}
@@ -32,4 +34,9 @@ target_link_libraries(SimpleConsole
     ${Boost_LIBRARIES}
     RuntimeObjectSystem
     RuntimeCompiler
-	${CUDA_CUDART_LIBRARY})
+    ${CUDA_cublas_LIBRARY}
+    ${CUDA_cupti_LIBRARY}
+    ${CUDA_nppi_LIBRARY}
+    ${CUDA_cufft_LIBRARY}
+    ${CUDA_npps_LIBRARY}
+    ${CUDA_CUDART_LIBRARY})

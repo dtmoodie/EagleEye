@@ -194,7 +194,7 @@ bool DataStream::LoadDocument(const std::string& document)
             if(future.get())
             {
                 frame_grabber = fg;
-				LOG(info) << "Loading " << file_to_load << " with frame_grabber: " << fg->GetTypeName() << " with priority: " << fg_info->Priority();
+                LOG(info) << "Loading " << file_to_load << " with frame_grabber: " << fg->GetTypeName() << " with priority: " << frame_grabber_priorities[idx[i]];
                 return true; // successful load
             }else // unsuccessful load
             {

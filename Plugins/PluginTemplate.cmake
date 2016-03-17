@@ -37,39 +37,9 @@ INSTALL(TARGETS ${PROJECT_NAME}
 	LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin)
         
-MESSAGE(STATUS 
+MESSAGE(STATUS
 "====== ${PROJECT_NAME} ======
-
- Project ID: ${PROJECT_ID}
- 
- Config file: ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_config.txt
- 
- Headers: 
- ${hdr}
- 
- Source: 
- ${src}
- 
- Cuda kernels: 
- ${knl}
- 
- QT MOC: 
- ${MOC}
- 
- Definitions:
- ${DEFS}
- 
- C++ flags:
-  ${CMAKE_CXX_FLAGS}
- Debug:
-  ${CMAKE_CXX_FLAGS_DEBUG}
- Release:
-  ${CMAKE_CXX_FLAGS_RELEASE}
- C Flags
-  ${CMAKE_C_FLAGS}
-  Include Dirs: ${INCLUDE_DIRS}
-  
+  Include Dirs: ${INCLUDE_DIRS}  
   Link Dirs Debug: ${LINK_DIRS_DEBUG}
-  
   Link Dirs Release: ${LINK_DIRS_RELEASE}
  ")

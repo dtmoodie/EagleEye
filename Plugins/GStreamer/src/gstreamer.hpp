@@ -2,7 +2,9 @@
 #ifndef PARAMETERS_USE_UI
 #define PARAMETERS_USE_UI
 #endif
+#ifdef HAVE_GST_RTSPSERVER
 #include <gst/rtsp-server/rtsp-server.h>
+#endif
 #include "EagleLib/nodes/Node.h"
 
 
@@ -130,7 +132,7 @@ namespace EagleLib
             virtual void Init(bool firstInit);
             virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
         };
-	
+#ifdef HAVE_GST_RTSPSERVER
 	    class PLUGIN_EXPORTS RTSP_server_new : public Node
 	    {
 	    public:
@@ -159,6 +161,7 @@ namespace EagleLib
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
 		    cv::Size imgSize;
 	    };
+#endif
     }
 }
 /*
