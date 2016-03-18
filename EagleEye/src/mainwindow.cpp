@@ -47,7 +47,7 @@ int static_errorHandler( int status, const char* func_name,const char* err_msg, 
     return 0;
 }
 
-static void processThread(std::vector<EagleLib::Nodes::Node::Ptr>* parentList, boost::timed_mutex *mtx);
+
 static void process(std::vector<EagleLib::Nodes::Node::Ptr>* parentList, boost::timed_mutex *mtx);
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -790,7 +790,7 @@ void MainWindow::processThread()
 				boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
         }catch(boost::thread_interrupted& err)
         {
-			err;
+            (void)err;
 			BOOST_LOG_TRIVIAL(info) << "Processing thread interrupted";
             break;
         }

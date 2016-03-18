@@ -17,10 +17,8 @@ tcpserver::~tcpserver()
 }
 
 #define ENUM_FEATURE(Enum, feature)     \
-    bool has_##feature = false;         \
     if(check_feature(#feature)) {       \
         Enum.addEnum(__COUNTER__, #feature); \
-        has_##feature = true; \
     }
 
 void tcpserver::Init(bool firstInit)

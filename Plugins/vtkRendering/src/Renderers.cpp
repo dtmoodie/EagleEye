@@ -148,7 +148,7 @@ void vtkOpenGLCudaImage::compile_texture()
         {
             image_buffer->bind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
             
-            if (this->Width != image_buffer->cols() || this->Height != image_buffer->rows() || this->Components != image_buffer->channels() && Context)
+            if ((this->Width != image_buffer->cols() || this->Height != image_buffer->rows() || this->Components != image_buffer->channels()) && Context)
             {
                 InternalFormat = GL_RGB8;
                 int vtk_type = 0;

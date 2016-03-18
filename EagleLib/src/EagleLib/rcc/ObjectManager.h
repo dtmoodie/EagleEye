@@ -1,12 +1,14 @@
 #pragma once
-#include <EagleLib/Logging.h>
 #include "../Defs.hpp"
 #include "IObjectFactorySystem.h"
 #include "IRuntimeObjectSystem.h"
+#include "shared_ptr.hpp"
+
+#include <signals/logging.hpp>
+
 #include <memory>
 #include <functional>
 #include <map>
-#include "shared_ptr.hpp"
 #include <list>
 #include <mutex>
 

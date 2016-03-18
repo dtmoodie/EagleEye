@@ -37,7 +37,7 @@ static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
 
 		gst_message_parse_error(message, &err, &dbg_info);
 		BOOST_LOG_TRIVIAL(error) << "Error from element " << GST_OBJECT_NAME(message->src) << ": " << err->message;
-		BOOST_LOG_TRIVIAL(error) << "Debugging info: " << (dbg_info) ? dbg_info : "none";
+        BOOST_LOG_TRIVIAL(error) << "Debugging info: " << (dbg_info ? dbg_info : "none");
 		g_error_free(err);
 		g_free(dbg_info);
 		break;
@@ -120,7 +120,7 @@ void gstreamer_sink_base::cleanup()
 		    gst_object_unref(_source);
             _source = nullptr;
 	    }
-		GstStateChangeReturn ret = gst_element_set_state(_pipeline, GST_STATE_NULL);
+        gst_element_set_state(_pipeline, GST_STATE_NULL);
 		gst_object_unref(_pipeline);
         _pipeline = nullptr;
 	}    
@@ -317,7 +317,6 @@ std::vector<std::string> gstreamer_sink_base::get_gstreamer_features(const std::
 {
     auto registry = gst_registry_get();
     auto plugins = gst_registry_get_plugin_list(registry);
-    auto start = plugins;
     std::vector<std::string> plugin_names;
     while(plugins)
     {
@@ -370,7 +369,7 @@ RTSP_server::~RTSP_server()
     NODE_LOG(info) << "RTSP server destructor";
 	if (pipeline)
 	{
-		GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_NULL);
+        gst_element_set_state(pipeline, GST_STATE_NULL);
 	}
     
 #ifdef _MSC_VER
@@ -498,7 +497,7 @@ void RTSP_server::setup(std::string pipeOverride)
     
 	if (pipeline)
 	{
-		GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_NULL);
+        gst_element_set_state(pipeline, GST_STATE_NULL);
 		gst_object_unref(pipeline);
 		g_signal_handler_disconnect(source_OpenCV, need_data_id);
 		g_signal_handler_disconnect(source_OpenCV, enough_data_id);

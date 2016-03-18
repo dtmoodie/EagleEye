@@ -500,7 +500,6 @@ int main(int argc, char* argv[])
         {
             std::string command_line;
             std::getline(std::cin, command_line);
-            int count = 0;
 	        std::stringstream ss;
             ss << command_line;
             std::string command;

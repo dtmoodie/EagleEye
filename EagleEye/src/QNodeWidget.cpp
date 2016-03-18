@@ -330,6 +330,12 @@ void QNodeWidget::log(boost::log::trivial::severity_level verb, const std::strin
         errorDisplay->show();
         break;
     }
+    case(boost::log::trivial::fatal):
+    {
+        errorDisplay->setText(QString::fromStdString(msg));
+        errorDisplay->show();
+        break;
+    }
     }
 }
 

@@ -14,10 +14,7 @@ QtPlotterImpl::QtPlotterImpl()
 }
 QtPlotterImpl::~QtPlotterImpl()
 {
-	for (auto& connection : connections)
-	{
-		//connection.disconnect();
-	}
+
 }
 QWidget* QtPlotterImpl::GetControlWidget(QWidget* parent)
 {

@@ -30,8 +30,8 @@ void super_resolution::Init(bool firstInit)
     super_res->setInput(frame_source);
     if(firstInit)
     {
-        auto scale                  = super_res->getScale();
-        auto iterations             = super_res->getIterations();
+        //auto scale                  = super_res->getScale();
+        //auto iterations             = super_res->getIterations();
         auto tau                    = super_res->getTau();
         auto lambda                 = super_res->getLabmda();
         auto alpha                  = super_res->getAlpha();

@@ -197,5 +197,5 @@ void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, con
     }
 }
 
-REGISTERCLASS(WindowCallbackHandler, false)
+REGISTERCLASS(WindowCallbackHandler, nullptr)
 
