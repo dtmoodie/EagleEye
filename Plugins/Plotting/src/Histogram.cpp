@@ -155,7 +155,7 @@ void HistogramPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
 		EagleLib::cuda::enqueue_callback_async(
 			[this, rescale]()->void
 		{
-			Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&HistogramPlotter::UpdatePlots, this, rescale));
+            Parameters::UI::UiCallbackService::Instance()->post(std::bind(&HistogramPlotter::UpdatePlots, this, rescale));
 		}, *stream);
 			
 	}

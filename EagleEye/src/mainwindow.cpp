@@ -34,6 +34,7 @@
 #include <EagleLib/nodes/Node.h>
 
 #include <signals/logging.hpp>
+#include <pplx/threadpool.h>
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
@@ -212,6 +213,7 @@ MainWindow::MainWindow(QWidget *parent) :
     startProcessingThread();
     Signals::thread_registry::get_instance()->register_thread(Signals::GUI);
     Signals::thread_specific_queue::register_notifier(std::bind(&MainWindow::uiNotifier, this));
+
 }
 
 MainWindow::~MainWindow()
@@ -466,7 +468,7 @@ void MainWindow::onTimeout()
 {
 	rmt_ScopedCPUSample(onTimeout);
     static bool swapRequired = false;
-    static bool joined = false;
+
 	
     for(size_t i = 0; i < widgets.size(); ++i)
     {
@@ -503,8 +505,6 @@ void MainWindow::onTimeout()
     {
 		LOG_TRIVIAL(info) << "Recompiling.....";
         swapRequired = true;
-        joined = false;
-        //processingThread.interrupt();
         stopProcessingThread();
         return;
     }

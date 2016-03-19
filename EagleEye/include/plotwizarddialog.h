@@ -9,6 +9,9 @@
 #include "parameterplotter.h"
 #include "IObject.h"
 #include "EagleLib/plotters/Plotter.h"
+
+#include <boost/date_time.hpp>
+
 namespace Ui {
 class PlotWizardDialog;
 }

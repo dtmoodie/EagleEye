@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
 	signal(SIGINT, sig_handler);
 	signal(SIGILL, sig_handler);
 	signal(SIGTERM, sig_handler);
+    signal(SIGSEGV, sig_handler);
     
     boost::program_options::options_description desc("Allowed options");
 	

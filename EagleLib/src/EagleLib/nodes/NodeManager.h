@@ -56,7 +56,7 @@ namespace EagleLib
         Nodes::Node* getParent(const std::string& sourceNode);
 
 		std::vector<std::string> getConstructableNodes();
-		std::vector<std::string> getParametersOfType(boost::function<bool(Loki::TypeInfo)> selector);
+        std::vector<std::string> getParametersOfType(std::function<bool(Loki::TypeInfo)> selector);
 		virtual void OnConstructorsAdded();
 	private:
 		NodeManager();

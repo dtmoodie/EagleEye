@@ -1,14 +1,15 @@
 #include "UiCallbackHandlers.h"
-
-#include "EagleLib/rcc/external_includes/cv_core.hpp"
-#include "EagleLib/rcc/external_includes/cv_highgui.hpp"
-#include <ObjectInterfacePerModule.h>
-#include <EagleLib/rcc/SystemTable.hpp>
-#include <boost/thread/mutex.hpp>
-#include "signals/signal_manager.h"
 #include "Remotery.h"
 #include "ObjectInterfacePerModule.h"
+#include "EagleLib/rcc/external_includes/cv_core.hpp"
+#include "EagleLib/rcc/external_includes/cv_highgui.hpp"
 #include "EagleLib/rcc/ObjectManager.h"
+#include "EagleLib/rcc/SystemTable.hpp"
+
+#include <signals/signal_manager.h>
+#include <signals/thread_registry.h>
+
+#include <boost/thread/mutex.hpp>
 
 using namespace EagleLib;
 
@@ -22,7 +23,7 @@ static void on_mouse_click(int event, int x, int y, int flags, void* callback_ha
 void WindowCallbackHandler::imshow(const std::string& window_name, cv::Mat img, int flags)
 {
 	auto gui_thread_id = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
-	if (boost::this_thread::get_id() != gui_thread_id)
+    if (Signals::get_this_thread() != gui_thread_id)
 	{
 		Signals::thread_specific_queue::push(std::bind(&WindowCallbackHandler::imshow, this, window_name, img, flags), gui_thread_id);
 		return;
@@ -41,7 +42,7 @@ void WindowCallbackHandler::imshow(const std::string& window_name, cv::Mat img, 
 void WindowCallbackHandler::imshowd(const std::string& window_name, cv::cuda::GpuMat img, int flags)
 {
 	auto gui_thread_id = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
-	if (boost::this_thread::get_id() != gui_thread_id)
+    if (Signals::get_this_thread() != gui_thread_id)
 	{
 		Signals::thread_specific_queue::push(std::bind(&WindowCallbackHandler::imshowd, this, window_name, img, flags), gui_thread_id);
 		return;

@@ -18,7 +18,7 @@ void Plotter::Init(bool firstInit)
 		{
 			bc.reset();
 			//bcdisconnect();
-			bc = param->RegisterNotifier(boost::bind(&Plotter::OnParameterUpdate, this, _1));
+            bc = param->RegisterNotifier(std::bind(&Plotter::OnParameterUpdate, this, std::placeholders::_1));
 		}
 	}
 }
@@ -36,7 +36,7 @@ void Plotter::SetInput(Parameters::Parameter::Ptr param_)
 	param = param_;
 
 	if (param)
-		bc = param->RegisterNotifier(boost::bind(&Plotter::OnParameterUpdate, this, _1));
+        bc = param->RegisterNotifier(std::bind(&Plotter::OnParameterUpdate, this, std::placeholders::_1));
 }
 
 void QtPlotter::Serialize(ISimpleSerializer *pSerializer)

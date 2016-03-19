@@ -162,7 +162,7 @@ namespace EagleLib
 						items.push_back(new QTableWidgetItem(text));
 					}
 				}
-				Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&MatrixView::UpdateUi, this, items, cv::Size(converter->NumCols(), converter->NumRows())));
+                Parameters::UI::UiCallbackService::Instance()->post(std::bind(&MatrixView::UpdateUi, this, items, cv::Size(converter->NumCols(), converter->NumRows())));
 			}, *stream);
 		}
     };

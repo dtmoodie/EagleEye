@@ -1,13 +1,16 @@
 #include "DataStreamManager.h"
-#include <opencv2/core.hpp>
 #include "rcc/SystemTable.hpp"
 #include "rcc/ObjectManager.h"
-#include <boost/chrono.hpp>
-#include <boost/thread.hpp>
 #include "utilities/sorting.hpp"
 #include "EagleLib/Logging.h"
 #include "Remotery.h"
 #include "VariableManager.h"
+
+#include <opencv2/core.hpp>
+
+#include <boost/chrono.hpp>
+#include <boost/thread.hpp>
+#include <signals/boost_thread.h>
 using namespace EagleLib;
 
 #define CATCH_MACRO                                                         \
@@ -255,7 +258,7 @@ void DataStream::AddNode(shared_ptr<Nodes::Node> node)
 {
 	if (boost::this_thread::get_id() != processing_thread.get_id())
 	{
-		Signals::thread_specific_queue::push(std::bind(&DataStream::AddNode, this, node), processing_thread.get_id());
+        Signals::thread_specific_queue::push(std::bind(&DataStream::AddNode, this, node), Signals::get_thread_id(processing_thread.get_id()));
 		return;
 	}
 
@@ -268,7 +271,7 @@ void DataStream::AddNodes(std::vector<shared_ptr<Nodes::Node>> nodes)
 {
 	if (boost::this_thread::get_id() != processing_thread.get_id())
 	{
-		Signals::thread_specific_queue::push(std::bind(&DataStream::AddNodes, this, nodes), processing_thread.get_id());
+        Signals::thread_specific_queue::push(std::bind(&DataStream::AddNodes, this, nodes), Signals::get_thread_id(processing_thread.get_id()));
 		return;
 	}
     for(auto& node: nodes)

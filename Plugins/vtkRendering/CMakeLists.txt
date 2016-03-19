@@ -10,7 +10,8 @@ find_package(VTK COMPONENTS
 				 vtkRenderingOpenGL2 
 				 vtkRenderingQt
 				 vtkGUISupportQt
-				 vtkGUISupportQtOpenGL)
+                 vtkGUISupportQtOpenGL
+                 vtkRenderingAnnotation)
 
 
   include(${VTK_USE_FILE})

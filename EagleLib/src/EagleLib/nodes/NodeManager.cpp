@@ -359,7 +359,7 @@ NodeManager::getConstructableNodes()
 	return output;
 }
 
-std::vector<std::string> NodeManager::getParametersOfType(boost::function<bool(Loki::TypeInfo)> selector)
+std::vector<std::string> NodeManager::getParametersOfType(std::function<bool(Loki::TypeInfo)> selector)
 {
 	
 	std::vector<std::string> parameters;

@@ -74,12 +74,12 @@ void HistoryPlotter::Init(bool firstInit)
 	if (firstInit)
 	{
 		auto param = std::shared_ptr<Parameters::Parameter>(new Parameters::TypedParameter<size_t>("History Size", 10));
-		connections.push_back(param->RegisterNotifier(boost::bind(&HistoryPlotter::on_history_size_change, this)));
+        connections.push_back(param->RegisterNotifier(std::bind(&HistoryPlotter::on_history_size_change, this)));
 		parameters.push_back(param);
 	}
 	else
 	{
-		connections.push_back(GetParameter<size_t>("History Size")->RegisterNotifier(boost::bind(&HistoryPlotter::on_history_size_change, this)));
+        connections.push_back(GetParameter<size_t>("History Size")->RegisterNotifier(std::bind(&HistoryPlotter::on_history_size_change, this)));
 	}
 }
 
