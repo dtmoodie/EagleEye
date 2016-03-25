@@ -1,15 +1,22 @@
 #pragma once
 
-#include <string>
-#include "SyncedMemory.h"
-#include "IObjectInfo.h"
 #include "IObject.h"
+#include "IObjectInfo.h"
+#include "ParameteredObject.h"
 #include "EagleLib/rcc/shared_ptr.hpp"
+#include "EagleLib/Signals.h"
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+#include "SyncedMemory.h"
+
 #include <boost/circular_buffer.hpp>
 #include <boost/thread.hpp>
-#include "ParameteredObject.h"
-#include "EagleLib/Signals.h"
+
 #include <atomic>
+#include <string>
+
+RUNTIME_MODIFIABLE_INCLUDE;
+RUNTIME_COMPILER_SOURCEDEPENDENCY;
 namespace EagleLib
 {
     class DataStream;
@@ -62,8 +69,10 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream) = 0;
         virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream) = 0;
         virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream) = 0;
+		// Get a frame relative to the current frame.  Index can be positive and negative
+		virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream) = 0;
 
-        virtual shared_ptr<ICoordinateManager> GetCoordinateManager() = 0;
+        virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager() = 0;
         virtual void InitializeFrameGrabber(DataStream* stream);
 
         virtual void Serialize(ISimpleSerializer* pSerializer);
@@ -91,7 +100,7 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
         virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
         virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
-        
+		virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
         virtual void InitializeFrameGrabber(DataStream* stream);
         
 

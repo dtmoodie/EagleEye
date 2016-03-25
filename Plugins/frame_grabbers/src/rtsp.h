@@ -23,10 +23,10 @@ namespace EagleLib
         virtual bool LoadFile(const std::string& file_path = "");
         virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
 
-        virtual shared_ptr<ICoordinateManager> GetCoordinateManager();
+        virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
         
     protected:
-        shared_ptr<ICoordinateManager>          coordinate_manager;
+        rcc::shared_ptr<ICoordinateManager>          coordinate_manager;
         size_t frame_count;
         bool _reconnect;
     };

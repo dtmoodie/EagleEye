@@ -52,7 +52,7 @@ bool frame_grabber_gstreamer::LoadFile(const std::string& file_path)
     return frame_grabber_cv::h_LoadFile(file_path);
 }
 
-shared_ptr<ICoordinateManager> frame_grabber_gstreamer::GetCoordinateManager()
+rcc::shared_ptr<ICoordinateManager> frame_grabber_gstreamer::GetCoordinateManager()
 {
     return coordinate_manager;
 }

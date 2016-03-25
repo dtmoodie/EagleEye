@@ -46,8 +46,11 @@ TS<SyncedMemory> frame_grabber_image::GetNextFrame(cv::cuda::Stream& stream)
 {
     return GetFrame(0, stream);
 }
-
-shared_ptr<ICoordinateManager> frame_grabber_image::GetCoordinateManager()
+TS<SyncedMemory> frame_grabber_image::GetFrameRelative(int index, cv::cuda::Stream& stream)
+{
+	return GetFrame(0, stream);
+}
+rcc::shared_ptr<ICoordinateManager> frame_grabber_image::GetCoordinateManager()
 {
     return coordinate_manager;
 }

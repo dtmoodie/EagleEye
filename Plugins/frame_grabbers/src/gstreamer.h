@@ -17,11 +17,11 @@ namespace EagleLib
         };
         frame_grabber_gstreamer();
         virtual bool LoadFile(const std::string& file_path);
-        virtual shared_ptr<ICoordinateManager> GetCoordinateManager();
+        virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
     protected:
 
         cv::Ptr<cv::VideoCapture> h_cam;
-        shared_ptr<ICoordinateManager>          coordinate_manager;
+        rcc::shared_ptr<ICoordinateManager>          coordinate_manager;
         std::string                             loaded_file;
         TS<SyncedMemory>                        current_frame;
     };

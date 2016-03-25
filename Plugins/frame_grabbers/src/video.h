@@ -18,9 +18,9 @@ namespace EagleLib
             virtual int Priority() const;
         };
         
-        virtual shared_ptr<ICoordinateManager> GetCoordinateManager();
+        virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
 
     protected:
-        shared_ptr<ICoordinateManager>          coordinate_manager;
+        rcc::shared_ptr<ICoordinateManager>          coordinate_manager;
     };
 }

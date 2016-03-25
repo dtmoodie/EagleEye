@@ -5,13 +5,23 @@
 
 namespace EagleLib
 {
-    template<typename T> class TS: public T
+	template<typename T> struct FN : public T
+	{
+		template<class...U> FN(int frame_number_ = 0) : frame_number(frame_number_) {}
+		template<class...U> FN(int frame_number_, const U&... args) : frame_number(frame_number_), T(args...) {}
+		FN& operator=(const T& other)
+		{
+			T::operator=(other);
+			return *this;
+		}
+		int frame_number;
+	};
+    template<typename T> struct TS: public T
     {
-    public:
         template<class...U> TS(U...args):T(args...)
         {
             timestamp = 0.0;
-            frame_number = 0.0;
+            frame_number = 0;
         }
         template<class...U> TS(double ts, int frame_number, U...args) : T(args...)
         {

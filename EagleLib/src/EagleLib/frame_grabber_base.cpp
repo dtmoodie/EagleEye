@@ -122,9 +122,26 @@ TS<SyncedMemory> FrameGrabberBuffered::GetNextFrame(cv::cuda::Stream& stream)
             }
         }
     }
+	// If we get to this point then perhaps playback frame number 
     LOG(debug) << "Unable to find valid frame in frame buffer";
     return TS<SyncedMemory>();
 }
+TS<SyncedMemory> FrameGrabberBuffered::GetFrameRelative(int index, cv::cuda::Stream& stream)
+{
+	boost::mutex::scoped_lock bLock(buffer_mtx);
+	int _index = 0;
+	for (auto& itr : frame_buffer)
+	{
+		if (itr.frame_number == playback_frame_number + index)
+		{
+			LOG(trace) << "Found next frame in frame buffer with frame index (" << playback_frame_number + index << ") at buffer index (" << _index << ")";
+			return itr;
+		}
+		++_index;
+	}
+	return TS<SyncedMemory>();
+}
+
 int FrameGrabberBuffered::GetFrameNumber()
 {
     return playback_frame_number;

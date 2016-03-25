@@ -9,7 +9,7 @@ namespace EagleLib
 	{
 	public:
 		static PlotManager& getInstance();
-		shared_ptr<Plotter> getPlot(const std::string& plotName);
+		rcc::shared_ptr<Plotter> getPlot(const std::string& plotName);
 		std::vector<std::string> getAvailablePlots();
 	};
 }

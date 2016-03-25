@@ -50,12 +50,12 @@ private:
     QVector<QWidget*> previewPlots;
 	std::map<QWidget*, QWidget*> previewPlotControllers;
     // These are all the ploters which generate data from parameters that go into the plot window
-    QVector<shared_ptr<EagleLib::QtPlotter>> previewPlotters;
-    QVector<shared_ptr<EagleLib::QtPlotter>> plotters;
+    QVector<rcc::shared_ptr<EagleLib::QtPlotter>> previewPlotters;
+    QVector<rcc::shared_ptr<EagleLib::QtPlotter>> plotters;
     Ui::PlotWizardDialog *ui;
     QList<QCheckBox*> plotOptions;
 
-    shared_ptr<EagleLib::QtPlotter> currentPlotter;
+    rcc::shared_ptr<EagleLib::QtPlotter> currentPlotter;
     std::vector<boost::posix_time::ptime> lastUpdateTime;
 };
 

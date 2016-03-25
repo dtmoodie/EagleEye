@@ -1,13 +1,15 @@
 #pragma once
-#include "../Defs.hpp"
+#include "EagleLib/Defs.hpp"
+#include "EagleLib/rcc/shared_ptr.hpp"
+#include <IObject.h>
+#include <parameters/Parameters.hpp>
+
+#include <opencv2/core/persistence.hpp>
+
+#include <functional>
 #include <vector>
 #include <string>
 #include <map>
-#include <IObject.h>
-#include <opencv2/core/persistence.hpp>
-#include <functional>
-#include <parameters/Parameters.hpp>
-#include "EagleLib/rcc/shared_ptr.hpp"
 
 namespace EagleLib
 {
@@ -15,7 +17,7 @@ namespace EagleLib
     {
         class Node;
     }
-	
+	class DataStream;
 
 	class EAGLE_EXPORTS NodeManager
 	{
@@ -26,13 +28,18 @@ namespace EagleLib
 
 		std::vector<char const*> GetNodeInfo(std::string& nodeName);
 
-		shared_ptr<Nodes::Node> addNode(const std::string& nodeName);
+		rcc::shared_ptr<Nodes::Node> addNode(const std::string& nodeName);
 
-		std::vector<shared_ptr<Nodes::Node>> loadNodes(const std::string& saveFile);
+		// Adds a node by name to the data stream or the parent node.  
+		std::vector<rcc::shared_ptr<Nodes::Node>> addNode(const std::string& nodeName, DataStream* parentStream);
+		std::vector<rcc::shared_ptr<Nodes::Node>> addNode(const std::string& nodeName, Nodes::Node* parentNode);
 
-		void saveNodes(std::vector<shared_ptr<Nodes::Node>>& topLevelNodes, const std::string& fileName);
 
-		void saveNodes(std::vector<shared_ptr<Nodes::Node>>& topLevelNodes, cv::FileStorage fs);
+		std::vector<rcc::shared_ptr<Nodes::Node>> loadNodes(const std::string& saveFile);
+
+		void saveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, const std::string& fileName);
+
+		void saveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, cv::FileStorage fs);
 
 		void printNodeTree(std::string* ret = nullptr);
 		void saveTree(const std::string& fileName);
@@ -61,7 +68,7 @@ namespace EagleLib
 	private:
 		NodeManager();
 		virtual ~NodeManager();
-		std::vector<weak_ptr<Nodes::Node>>                         nodes;
+		std::vector<rcc::weak_ptr<Nodes::Node>>                         nodes;
 		std::map<std::string, std::vector<char const*>>		m_nodeInfoMap;
 	}; // class NodeManager
 }

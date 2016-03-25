@@ -9,72 +9,69 @@
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
+
 namespace EagleLib
 {
-    namespace Nodes
-    {
-    
-    class GoodFeaturesToTrackDetector : public Node
-    {
-        ConstBuffer<cv::cuda::GpuMat> greyImgs;
-        ConstBuffer<std::pair<cv::cuda::GpuMat, cv::cuda::GpuMat>> detectedPoints;
-        cv::cuda::GpuMat detectedCorners;
-        cv::Ptr<cv::cuda::CornersDetector> detector;
-    public:
-        GoodFeaturesToTrackDetector();
-        virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-    };
-    class FastFeatureDetector: public Node
-    {
-		cv::Ptr<cv::cuda::Feature2DAsync> detector;
-        
-    public:
-        FastFeatureDetector();
-        virtual void Init(bool firstInit);
-		virtual void Serialize(ISimpleSerializer *pSerializer);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-    };
+	namespace Nodes
+	{
+		class GoodFeaturesToTrack : public Node
+		{
+			cv::Ptr<cv::cuda::CornersDetector> detector;
+			void update_detector(int depth);
+			void detect(const cv::cuda::GpuMat& img, int frame_number, const cv::cuda::GpuMat& mask, cv::cuda::Stream& stream);
+		public:
+			GoodFeaturesToTrack();
+			virtual void Init(bool firstInit);
+			virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+		};
 
-    class ORBFeatureDetector: public Node
-    {
-		cv::Ptr<cv::cuda::ORB> detector;
-		
-        
-    public:
-        ORBFeatureDetector();
-        virtual void Init(bool firstInit);
-		virtual void Serialize(ISimpleSerializer *pSerializer);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-    };
+		class FastFeatureDetector : public Node
+		{
+			cv::Ptr<cv::cuda::Feature2DAsync> detector;
 
+		public:
+			FastFeatureDetector();
+			virtual void Init(bool firstInit);
+			virtual void Serialize(ISimpleSerializer *pSerializer);
+			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+		};
 
-    class HistogramRange: public Node
-    {
-        cv::cuda::GpuMat levels;
-        void updateLevels(int type);
-    public:
-        HistogramRange();
-        virtual void Init(bool firstInit);
-        virtual void Serialize(ISimpleSerializer *pSerializer);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };
+		class ORBFeatureDetector : public Node
+		{
+			cv::Ptr<cv::cuda::ORB> detector;
+		public:
+			ORBFeatureDetector();
+			virtual void Init(bool firstInit);
+			virtual void Serialize(ISimpleSerializer *pSerializer);
+			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+		};
 
-    class CornerHarris: public Node
-    {
-        cv::Ptr<cv::cuda::CornernessCriteria> detector;
-    public:
-        CornerHarris();
-        virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };
-    class CornerMinEigenValue: public Node
-    {
-        cv::Ptr<cv::cuda::CornernessCriteria> detector;
-    public:
-        CornerMinEigenValue();
-        virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };
-    }
+		class HistogramRange : public Node
+		{
+			cv::cuda::GpuMat levels;
+			void updateLevels(int type);
+		public:
+			HistogramRange();
+			virtual void Init(bool firstInit);
+			virtual void Serialize(ISimpleSerializer *pSerializer);
+			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+		};
+
+		class CornerHarris : public Node
+		{
+			cv::Ptr<cv::cuda::CornernessCriteria> detector;
+		public:
+			CornerHarris();
+			virtual void Init(bool firstInit);
+			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+		};
+		class CornerMinEigenValue : public Node
+		{
+			cv::Ptr<cv::cuda::CornernessCriteria> detector;
+		public:
+			CornerMinEigenValue();
+			virtual void Init(bool firstInit);
+			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+		};
+	}
 }

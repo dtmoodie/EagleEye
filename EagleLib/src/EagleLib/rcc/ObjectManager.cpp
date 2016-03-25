@@ -197,17 +197,17 @@ ObjectManager& ObjectManager::Instance()
 	}
 	return *inst;
 }
-shared_ptr<IObject> ObjectManager::GetObject(const std::string& object_name)
+rcc::shared_ptr<IObject> ObjectManager::GetObject(const std::string& object_name)
 {
     auto constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(object_name.c_str());
     if (constructor)
     {
         assert(!constructor->GetIsSingleton());
         auto object = constructor->Construct();
-        return shared_ptr<IObject>(object);
+        return rcc::shared_ptr<IObject>(object);
     }
     LOG(warning) << "Constructor for " << object_name << " doesn't exist";
-    return shared_ptr<IObject>();
+    return rcc::shared_ptr<IObject>();
 }
 IObject* ObjectManager::GetObject(ObjectId oid)
 {
@@ -216,17 +216,17 @@ IObject* ObjectManager::GetObject(ObjectId oid)
     auto constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(oid.m_ConstructorId);
     return constructor->GetConstructedObject(oid.m_PerTypeId);
 }
-weak_ptr<IObject> ObjectManager::GetSingleton(const std::string& object_name)
+rcc::weak_ptr<IObject> ObjectManager::GetSingleton(const std::string& object_name)
 {
     auto constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(object_name.c_str());
     if (constructor)
     {
         assert(constructor->GetIsSingleton());
         auto object = constructor->Construct();
-        return weak_ptr<IObject>(object);
+        return rcc::weak_ptr<IObject>(object);
     }
     LOG(warning) << "Constructor for " << object_name << " doesn't exist";
-    return weak_ptr<IObject>();
+    return rcc::weak_ptr<IObject>();
 }
 bool ObjectManager::TestRuntimeCompilation()
 {

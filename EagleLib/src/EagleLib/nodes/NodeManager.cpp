@@ -1,6 +1,8 @@
 #include "NodeManager.h"
 #include "EagleLib/rcc/ObjectManager.h"
+#include "EagleLib/DataStreamManager.h"
 #include "Node.h"
+
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 using namespace EagleLib;
@@ -60,7 +62,7 @@ NodeManager::OnConstructorsAdded()
 	}
 }
 
-shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
+rcc::shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
 {
 	IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
 
@@ -79,33 +81,88 @@ shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
 			catch (cv::Exception &e)
 			{
 				BOOST_LOG_TRIVIAL(error) << "Failed to initialize node " << nodeName << " due to: " << e.what();
-				return shared_ptr<Nodes::Node>();
+				return rcc::shared_ptr<Nodes::Node>();
 			}
 			catch (...)
 			{
 				BOOST_LOG_TRIVIAL(error) << "Failed to initialize node " << nodeName;
-				return shared_ptr<Nodes::Node>();
+				return rcc::shared_ptr<Nodes::Node>();
 			}
 
-			nodes.push_back(weak_ptr<Nodes::Node>(node));
+			nodes.push_back(rcc::weak_ptr<Nodes::Node>(node));
 			return Nodes::Node::Ptr(node);
 		}
 		else
 		{
 			BOOST_LOG_TRIVIAL(warning) << "[ NodeManager ] " << nodeName << " not a node";
 			// Input nodename is a compatible object but it is not a node
-			return shared_ptr<Nodes::Node>();
+			return rcc::shared_ptr<Nodes::Node>();
 		}
 	}
 	else
 	{
 		BOOST_LOG_TRIVIAL(warning) << "[ NodeManager ] " << nodeName << " not a valid node name";
-		return shared_ptr<Nodes::Node>();
+		return rcc::shared_ptr<Nodes::Node>();
 	}
 
-	return shared_ptr<Nodes::Node>();
+	return rcc::shared_ptr<Nodes::Node>();
 }
-std::vector<shared_ptr<Nodes::Node>> NodeManager::loadNodes(const std::string& saveFile)
+// WIP needs to be tested for complex dependency trees
+std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string& nodeName, DataStream* parentStream)
+{
+	IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
+	std::vector<rcc::shared_ptr<Nodes::Node>> constructed_nodes;
+	if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
+	{
+		auto obj_info = pConstructor->GetObjectInfo();
+		auto node_info = dynamic_cast<Nodes::NodeInfo*>(obj_info);
+		auto parental_deps = node_info->GetParentalDependencies();
+		for (auto& parent_dep : parental_deps)
+		{
+			auto parent_nodes = addNode(parent_dep, parentStream);
+			constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
+		}
+		auto non_parent_deps = node_info->GetNonParentalDependencies();
+		auto existing_nodes = parentStream->GetNodes();
+		for (auto & non_parent_dep : non_parent_deps)
+		{
+			bool found = false;
+			for (auto& existing_node : existing_nodes)
+			{
+				if (existing_node->getName() == non_parent_dep)
+				{
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+			{
+				auto added_nodes = addNode(non_parent_dep, parentStream);
+				constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
+			}
+		}
+		auto dependent_variable_nodes = node_info->CheckDependentVariables(parentStream->GetVariableManager().get());
+		for (auto& dependent_variable_node : dependent_variable_nodes)
+		{
+			auto added_nodes = addNode(dependent_variable_node, parentStream);
+			constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
+		}
+	}
+	return constructed_nodes;
+}
+
+std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string& nodeName, Nodes::Node* parentNode)
+{
+	IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
+	std::vector<rcc::shared_ptr<Nodes::Node>> constructed_nodes;
+	if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
+	{
+
+	}
+	return constructed_nodes;	
+}
+
+std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::loadNodes(const std::string& saveFile)
 {
 	
 	boost::filesystem::path path(saveFile);
@@ -127,7 +184,7 @@ std::vector<shared_ptr<Nodes::Node>> NodeManager::loadNodes(const std::string& s
 
 	int nodeCount = (int)fs["TopLevelNodeCount"];
 	LOG_TRIVIAL(info) << "[ NodeManager ] " << "Loading " << nodeCount << " nodes";
-	std::vector<shared_ptr<Nodes::Node>> nodes;
+	std::vector<rcc::shared_ptr<Nodes::Node>> nodes;
 	nodes.reserve(nodeCount);
 	for (int i = 0; i < nodeCount; ++i)
 	{
@@ -140,14 +197,14 @@ std::vector<shared_ptr<Nodes::Node>> NodeManager::loadNodes(const std::string& s
 	return nodes;
 }
 
-void NodeManager::saveNodes(std::vector<shared_ptr<Nodes::Node>>& topLevelNodes, const std::string& fileName)
+void NodeManager::saveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, const std::string& fileName)
 {
 	cv::FileStorage fs;
 	fs.open(fileName, cv::FileStorage::WRITE);
 	saveNodes(topLevelNodes, fs);
 	fs.release();
 }
-void NodeManager::saveNodes(std::vector<shared_ptr<Nodes::Node>>& topLevelNodes, cv::FileStorage fs)
+void NodeManager::saveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, cv::FileStorage fs)
 {
 	
 	fs << "TopLevelNodeCount" << (int)topLevelNodes.size();
@@ -294,7 +351,7 @@ void NodeManager::printNodeTree(std::string* ret)
 {
 	
 	std::stringstream tree;
-	std::vector<weak_ptr<Nodes::Node>> parentNodes;
+	std::vector<rcc::weak_ptr<Nodes::Node>> parentNodes;
 	// First get the top level nodes for the tree
 	for (size_t i = 0; i < nodes.size(); ++i)
 	{

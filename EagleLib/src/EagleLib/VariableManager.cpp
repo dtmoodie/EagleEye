@@ -1,5 +1,6 @@
 #include "VariableManager.h"
 #include "parameters/Parameter.hpp"
+#include "parameters/InputParameter.hpp"
 #include <signals/logging.hpp>
 using namespace EagleLib;
 void VariableManager::AddParameter(std::shared_ptr<Parameters::Parameter> param)
@@ -38,4 +39,9 @@ std::shared_ptr<Parameters::Parameter> VariableManager::GetOutputParameter(std::
     }
     LOG(warning) << "Unable to find parameter named " << name;
     return std::shared_ptr<Parameters::Parameter>();
+}
+void VariableManager::LinkParameters(std::shared_ptr<Parameters::Parameter> output, std::shared_ptr<Parameters::Parameter> input)
+{
+	if(auto input_param = std::dynamic_pointer_cast<Parameters::InputParameter>(input))
+		input_param->SetInput(output);
 }

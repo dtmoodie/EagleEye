@@ -99,7 +99,15 @@ TS<SyncedMemory> frame_grabber_directory::GetNextFrame(cv::cuda::Stream& stream)
     return GetFrame(frame_index++, stream);
 }
 
-shared_ptr<ICoordinateManager> frame_grabber_directory::GetCoordinateManager()
+TS<SyncedMemory> frame_grabber_directory::GetFrameRelative(int index, cv::cuda::Stream& stream)
+{
+	index = frame_index + index;
+	index = std::max((int)files_on_disk.size() - 1, index);
+	index = std::min(0, index);
+	return GetFrame(index, stream);
+}
+
+rcc::shared_ptr<ICoordinateManager> frame_grabber_directory::GetCoordinateManager()
 {
     return coordinate_manager;
 }

@@ -13,5 +13,11 @@ namespace EagleLib
 		virtual void RemoveParameter(std::shared_ptr<Parameters::Parameter> param);
 		virtual std::vector<std::shared_ptr<Parameters::Parameter>> GetOutputParameters(Loki::TypeInfo type);
         virtual std::shared_ptr<Parameters::Parameter> GetOutputParameter(std::string name);
+		virtual void LinkParameters(std::shared_ptr<Parameters::Parameter> output, std::shared_ptr<Parameters::Parameter> input);
     };
+	class BufferedVariableManager : public VariableManager
+	{
+
+
+	};
 }

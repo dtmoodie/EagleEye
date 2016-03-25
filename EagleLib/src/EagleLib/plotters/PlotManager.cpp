@@ -10,7 +10,7 @@ PlotManager& PlotManager::getInstance()
 	return instance;
 }
 
-shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
+rcc::shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
 {
 	
 	IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(plotName.c_str());
@@ -27,7 +27,7 @@ shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
 				{
 					plotter->Init(true);
 					LOG_TRIVIAL(info) << "[ PlotManager ] successfully generating plot " << plotName;
-					return shared_ptr<Plotter>(plotter);
+					return rcc::shared_ptr<Plotter>(plotter);
 				}
 				else
 				{
@@ -48,7 +48,7 @@ shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
 	{
 		LOG_TRIVIAL(warning) << "[ PlotManager ] failed to get constructor " << plotName;
 	}
-	return shared_ptr<Plotter>();
+	return rcc::shared_ptr<Plotter>();
 }
 
 std::vector<std::string> PlotManager::getAvailablePlots()

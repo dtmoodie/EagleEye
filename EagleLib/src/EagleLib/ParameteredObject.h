@@ -51,11 +51,15 @@ namespace EagleLib
 		virtual void SetupVariableManager(IVariableManager* manager);
         virtual IVariableManager* GetVariableManager();
         virtual void onUpdate(Parameters::Parameter* param = nullptr, cv::cuda::Stream* stream = nullptr);
+		
 		virtual Parameters::Parameter* addParameter(ParameterPtr param);
-        virtual void RemoveParameter(std::string name);
+        
+		virtual void RemoveParameter(std::string name);
         virtual void RemoveParameter(size_t index);
+
         virtual bool exists(const std::string& name);
         virtual bool exists(size_t index);
+
         // Thows exception on unable to get parameter
 		virtual ParameterPtr getParameter(int idx);
 		virtual ParameterPtr getParameter(const std::string& name);
@@ -63,54 +67,44 @@ namespace EagleLib
         // Returns nullptr on unable to get parameter
 		virtual ParameterPtr getParameterOptional(int idx);
 		virtual ParameterPtr getParameterOptional(const std::string& name);
+
         virtual std::vector<ParameterPtr> getParameters();
 
 
         virtual void RegisterParameterCallback(int idx, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param = false, bool lock_object = false);
+
         virtual void RegisterParameterCallback(const std::string& name, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param = false, bool lock_object = false);
+
         virtual void RegisterParameterCallback(Parameters::Parameter* param, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param = false, bool lock_object = false);
 
-        template<typename T>
-        Parameters::Parameter* registerParameter(const std::string& name, T* data);
+        template<typename T> Parameters::Parameter* registerParameter(const std::string& name, T* data);
 
-        template<typename T>
-        Parameters::Parameter* addParameter(const std::string& name, const T& data);
+        template<typename T> Parameters::Parameter* addParameter(const std::string& name, const T& data);
         
-        template<typename T>
-        Parameters::Parameter* addIfNotExist(const std::string& name, const T& data);
+        template<typename T> Parameters::Parameter* addIfNotExist(const std::string& name, const T& data);
 
-        template<typename T>
-        Parameters::TypedInputParameter<T>* addInputParameter(const std::string& name);
+        template<typename T> Parameters::TypedInputParameter<T>* addInputParameter(const std::string& name);
 
-        template<typename T>
-        bool updateInputQualifier(const std::string& name, const std::function<bool(Parameters::Parameter*)>& qualifier);
+        template<typename T> bool updateInputQualifier(const std::string& name, const std::function<bool(Parameters::Parameter*)>& qualifier);
 
-        template<typename T>
-        bool updateInputQualifier(int idx, const std::function<bool(Parameters::Parameter*)>& qualifier);
+        template<typename T> bool updateInputQualifier(int idx, const std::function<bool(Parameters::Parameter*)>& qualifier);
 
-        template<typename T>
-        Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream = nullptr);
+        template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream = nullptr);
 
-        template<typename T>
-        Parameters::Parameter* updateParameter(const std::string& name, const T& data, cv::cuda::Stream* stream = nullptr);
+        template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, cv::cuda::Stream* stream = nullptr);
 
-        template<typename T>
-        Parameters::Parameter* updateParameter(size_t idx, const T data, cv::cuda::Stream* stream = nullptr);
+        template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, cv::cuda::Stream* stream = nullptr);
 
-        template<typename T>
-        typename std::shared_ptr<Parameters::ITypedParameter<T>> getParameter(std::string name);
+        template<typename T> typename std::shared_ptr<Parameters::ITypedParameter<T>> getParameter(std::string name);
 
-        template<typename T>
-		typename std::shared_ptr<Parameters::ITypedParameter<T>> getParameter(int idx);
+        template<typename T> typename std::shared_ptr<Parameters::ITypedParameter<T>> getParameter(int idx);
 
-        template<typename T>
-		typename std::shared_ptr<Parameters::ITypedParameter<T>> getParameterOptional(std::string name);
+        template<typename T> typename std::shared_ptr<Parameters::ITypedParameter<T>> getParameterOptional(std::string name);
 
-        template<typename T>
-		typename std::shared_ptr<Parameters::ITypedParameter<T>> getParameterOptional(int idx);
+        template<typename T> typename std::shared_ptr<Parameters::ITypedParameter<T>> getParameterOptional(int idx);
 
         
-        // Mutex for blocking processing of a node during parameter update
+        // Mutex for blocking processing of a object during update
         std::recursive_mutex                                              mtx;
     protected:
 		IVariableManager*				                                                    _variable_manager;

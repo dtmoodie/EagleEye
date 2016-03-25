@@ -2,23 +2,25 @@
 #include "IObject.h"
 #include <EagleLib/rcc/ObjectManager.h>
 
-IObject* get_object(ObjectId id)
+using namespace rcc;
+
+IObject* rcc::get_object(ObjectId id)
 {
     return EagleLib::ObjectManager::Instance().GetObject(id);
 }
 
-void shared_ptr<IObject>::notify_swap()
+void rcc::shared_ptr<IObject>::notify_swap()
 {
     m_object = nullptr;
     auto obj = get_object(m_objectId);
     if(obj)
         m_object = obj;
 }
-void shared_ptr<IObject>::updateObject(IObject *ptr)
+void rcc::shared_ptr<IObject>::updateObject(IObject *ptr)
 {
     m_object = static_cast<IObject*>(ptr);
 }
-void shared_ptr<IObject>::decrement()
+void rcc::shared_ptr<IObject>::decrement()
 {
     if (refCount)
     {
@@ -30,65 +32,81 @@ void shared_ptr<IObject>::decrement()
         }
     }
 }
+void rcc::shared_ptr<IObject>::reset(IObject* r)
+{
+    decrement();
+    m_object = r;
+    if(r)
+    {
+        refCount = new int;
+        m_objectId = r->GetObjectId();
+    }
+    else
+    {
+        refCount = nullptr;
+        m_objectId.SetInvalid();
+    }
+    increment();
+}
 
-void shared_ptr<IObject>::increment()
+void rcc::shared_ptr<IObject>::increment()
 {
     if (refCount)
         ++(*refCount);
 }
 
 
- shared_ptr<IObject>::shared_ptr() : m_object(nullptr), refCount(nullptr)
+ rcc::shared_ptr<IObject>::shared_ptr() : m_object(nullptr), refCount(nullptr)
 {
 }
- shared_ptr<IObject>::shared_ptr(IObject* ptr) :
+ rcc::shared_ptr<IObject>::shared_ptr(IObject* ptr) :
     m_object(ptr),
     refCount(new int)
 {
     *refCount = 1;
 }
 
- shared_ptr<IObject>::shared_ptr(shared_ptr<IObject> const & ptr) :
+ rcc::shared_ptr<IObject>::shared_ptr(shared_ptr<IObject> const & ptr) :
     shared_ptr()
 {
     swap(ptr);
 }
 
 
- shared_ptr<IObject>::~shared_ptr()
+ rcc::shared_ptr<IObject>::~shared_ptr()
 {
     decrement();
 }
 
- IObject* shared_ptr<IObject>::operator->()
+ IObject* rcc::shared_ptr<IObject>::operator->()
 {
     assert(m_object != nullptr);
     return m_object;
 }
 
- shared_ptr<IObject>& shared_ptr<IObject>::operator=(shared_ptr<IObject> const & r)
+ rcc::shared_ptr<IObject>& rcc::shared_ptr<IObject>::operator=(shared_ptr<IObject> const & r)
 {
     swap(r);
     return *this;
 }
 
- bool shared_ptr<IObject>::operator ==(IObject* p)
+ bool rcc::shared_ptr<IObject>::operator ==(IObject* p)
 {
     return m_object == p;
 }
- bool shared_ptr<IObject>::operator !=(IObject* p)
+ bool rcc::shared_ptr<IObject>::operator !=(IObject* p)
 {
     return m_object != p;
 }
- bool shared_ptr<IObject>::operator == (shared_ptr<IObject> const & r)
+ bool rcc::shared_ptr<IObject>::operator == (shared_ptr<IObject> const & r)
 {
     return r.m_objectId == m_objectId;
 }
- bool shared_ptr<IObject>::operator != (shared_ptr<IObject> const& r)
+ bool rcc::shared_ptr<IObject>::operator != (shared_ptr<IObject> const& r)
 {
     return r.m_objectId != m_objectId;
 }
- void shared_ptr<IObject>::swap(shared_ptr<IObject> const & r)
+ void rcc::shared_ptr<IObject>::swap(shared_ptr<IObject> const & r)
 {
     decrement();
     m_object = r.m_object;
@@ -96,7 +114,7 @@ void shared_ptr<IObject>::increment()
     increment();
 }
    
- IObject* shared_ptr<IObject>::get()
+ IObject* rcc::shared_ptr<IObject>::get()
 {
     assert(m_object != nullptr);
     return m_object;

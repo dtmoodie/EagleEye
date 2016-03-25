@@ -41,7 +41,7 @@ namespace EagleLib
 	class EAGLE_EXPORTS ObjectManager : public IObjectFactoryListener
 	{
 	public:
-        template<typename T, int IID> shared_ptr<T> GetObject(const std::string& object_name)
+        template<typename T, int IID> rcc::shared_ptr<T> GetObject(const std::string& object_name)
         {
             auto constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(object_name.c_str());
             if (constructor)
@@ -50,14 +50,14 @@ namespace EagleLib
                 if (IID == constructor->GetInterfaceId())
                 {
                     auto object = constructor->Construct();
-                    return shared_ptr<T>(object);
+                    return rcc::shared_ptr<T>(object);
                 }
                 LOG(warning) << "interface ID (" << IID << " doesn't match constructor interface " << constructor->GetInterfaceId();
             }
             LOG(warning) << "Constructor for " << object_name << " doesn't exist";
-            return shared_ptr<T>();
+            return rcc::shared_ptr<T>();
         }
-        template<typename T, int IID> weak_ptr<T> GetSingleton(const std::string& object_name)
+        template<typename T, int IID> rcc::weak_ptr<T> GetSingleton(const std::string& object_name)
         {
             auto constructor = m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(object_name.c_str());
             if (constructor)
@@ -73,9 +73,9 @@ namespace EagleLib
             LOG(warning) << "Constructor for " << object_name << " doesn't exist";
             return weak_ptr<T>();
         }
-        shared_ptr<IObject> GetObject(const std::string& object_name);
+        rcc::shared_ptr<IObject> GetObject(const std::string& object_name);
         IObject* GetObject(ObjectId oid);
-        weak_ptr<IObject> GetSingleton(const std::string& object_name);
+        rcc::weak_ptr<IObject> GetSingleton(const std::string& object_name);
 		static ObjectManager& Instance();
 		void addIncludeDir(const std::string& dir, unsigned short projId = 0);
 		void addDefinitions(const std::string& defs, unsigned short projId = 0);

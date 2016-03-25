@@ -34,7 +34,7 @@
 #include <EagleLib/nodes/Node.h>
 
 #include <signals/logging.hpp>
-#include <pplx/threadpool.h>
+
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
@@ -555,9 +555,9 @@ void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
         proxyWidget->setPos(pt.val[0], pt.val[1]);
     }else
     {
+        int yOffset = 0;
         if (currentSelectedNodeWidget)
         {
-            int yOffset = 0;
             if(currentNode != nullptr)
             {
                 auto parentNode = currentNode->getParent();
@@ -577,18 +577,18 @@ void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
                     proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(500, yOffset));
             }
         }
-        if(currentSelectedStreamWidget)
+        if (currentSelectedStreamWidget)
         {
-            int yOffset = 0;
-            if(current_stream != nullptr)
+            proxyWidget->setPos(currentSelectedStreamWidget->pos() + QPointF(500, yOffset));
+        }        
+        else
+        {
+            if(currentSelectedNodeWidget)
             {
-                auto parentWidget = nodeGraphView->getStream(current_stream->get_stream_id());
-                if (parentWidget)
-                    proxyWidget->setPos(parentWidget->pos() + QPointF(500, yOffset));
-                else
-                    proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(500, yOffset));
-            }
+                proxyWidget->setPos(currentSelectedNodeWidget->pos() + QPointF(500, yOffset));
+            }            
         }
+        
     }
     nodeGraphView->addWidget(proxyWidget, node->GetObjectId());
     nodeGraphView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
@@ -722,6 +722,7 @@ MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
         currentSelectedStreamWidget = nullptr;
         widget->setZValue(1);
         currentNode = ptr->getNode();
+        current_stream.reset();
         ptr->setSelected(true);
     }
     
@@ -731,6 +732,7 @@ MainWindow::onSelectionChanged(QGraphicsProxyWidget* widget)
         currentSelectedNodeWidget = nullptr;
         widget->setZValue(1);
         current_stream = ptr->GetStream();
+        currentNode = rcc::shared_ptr<EagleLib::Nodes::Node>();
         ptr->SetSelected(true);
     }
 }

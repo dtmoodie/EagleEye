@@ -115,7 +115,18 @@ namespace EagleLib
         virtual std::string GetObjectName();
         virtual std::string GetObjectTooltip();
         virtual std::string GetObjectHelp();
+		// Get the organizational hierarchy of this node, ie Image -> Processing -> ConvertToGrey
         virtual std::vector<const char*> GetNodeHierarchy();
+		
+		// List of nodes that need to be in the direct parental tree of this node, in required order
+		virtual std::vector<std::string> GetParentalDependencies() const;
+		
+		// List of nodes that must exist in this data stream, but do not need to be in the direct parental tree of this node
+		virtual std::vector<std::string> GetNonParentalDependencies() const;
+
+		// Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
+		virtual std::vector<std::string> CheckDependentVariables(IVariableManager* var_manager_) const;
+
         std::string node_name;
         std::string node_tooltip;
         std::string node_help;
@@ -128,7 +139,7 @@ namespace EagleLib
     class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, ParameteredIObject>
     {
     public:
-        typedef shared_ptr<Node> Ptr;
+        typedef rcc::shared_ptr<Node> Ptr;
 		
 		Node();
 		virtual ~Node();
@@ -355,18 +366,19 @@ namespace EagleLib
         double GetProcessingTime() const;
         void Clock(int line_num);
 		
-
-    private:
+	protected:
+		DataStream*     								                        _dataStream;
+	private:
 
         void ClearProcessingTime();
         void EndProcessingTime();
 
         friend class EagleLib::NodeManager;
         std::shared_ptr<NodeImpl>                                               pImpl_;
-        weak_ptr<Node>                                                          parent;
+        rcc::weak_ptr<Node>                                                     parent;
 		unsigned int                                                            rmt_hash;
 		unsigned int                                                            rmt_cuda_hash;
-		DataStream*     								                        _dataStream;
+		
 		std::shared_ptr<IVariableManager>								        _variable_manager;
         // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
         std::string															    fullTreeName;

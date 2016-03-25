@@ -27,14 +27,15 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
         virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
         virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
+		virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
 
-        virtual shared_ptr<ICoordinateManager> GetCoordinateManager();
+        virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
     private:
         cv::cuda::GpuMat                d_image;
         cv::Mat                         h_image;
-        shared_ptr<ICoordinateManager>  coordinate_manager;
+        rcc::shared_ptr<ICoordinateManager>  coordinate_manager;
         std::string                     loaded_file;
         std::vector<std::string>        files_on_disk;
         int frame_index;

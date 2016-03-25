@@ -5,6 +5,7 @@
 #include "EagleLib/Logging.h"
 #include "Remotery.h"
 #include "VariableManager.h"
+#include "ParameterBuffer.h"
 
 #include <opencv2/core.hpp>
 
@@ -81,31 +82,31 @@ int DataStream::get_stream_id()
     return stream_id;
 }
 
-shared_ptr<IViewManager> DataStream::GetViewManager()
+rcc::shared_ptr<IViewManager> DataStream::GetViewManager()
 {
     return view_manager;
 }
 
 // Handles conversion of coordinate systems, such as to and from image coordinates, world coordinates, render scene coordinates, etc.
-shared_ptr<ICoordinateManager> DataStream::GetCoordinateManager()
+rcc::shared_ptr<ICoordinateManager> DataStream::GetCoordinateManager()
 {
     return coordinate_manager;
 }
 
 // Handles actual rendering of data.  Use for adding extra objects to the scene
-shared_ptr<IRenderEngine> DataStream::GetRenderingEngine()
+rcc::shared_ptr<IRenderEngine> DataStream::GetRenderingEngine()
 {
     return rendering_engine;
 }
 
 // Handles tracking objects within a stream and communicating with the global track manager to track across multiple data streams
-shared_ptr<ITrackManager> DataStream::GetTrackManager()
+rcc::shared_ptr<ITrackManager> DataStream::GetTrackManager()
 {
     return track_manager;
 }
 
 // Handles actual loading of the image, etc
-shared_ptr<IFrameGrabber> DataStream::GetFrameGrabber()
+rcc::shared_ptr<IFrameGrabber> DataStream::GetFrameGrabber()
 {
     return frame_grabber;
 }
@@ -115,6 +116,13 @@ SignalManager* DataStream::GetSignalManager()
 	if (signal_manager == nullptr)
 		signal_manager.reset(new SignalManager());
     return signal_manager.get();
+}
+IParameterBuffer* DataStream::GetParameterBuffer()
+{
+	if (_parameter_buffer == nullptr)
+		_parameter_buffer.reset(new ParameterBuffer(10));
+	return _parameter_buffer.get();
+
 }
 std::shared_ptr<IVariableManager> DataStream::GetVariableManager()
 {
@@ -169,7 +177,7 @@ bool DataStream::LoadDocument(const std::string& document)
     auto idx = sort_index_descending(frame_grabber_priorities);
     for(int i = 0; i < idx.size(); ++i)
     {
-        auto fg = shared_ptr<IFrameGrabber>(valid_frame_grabbers[idx[i]]->Construct());
+        auto fg = rcc::shared_ptr<IFrameGrabber>(valid_frame_grabbers[idx[i]]->Construct());
         auto fg_info = static_cast<FrameGrabberInfo*>(valid_frame_grabbers[idx[i]]->GetObjectInfo());
         fg->InitializeFrameGrabber(this);
         fg->Init(true);
@@ -177,7 +185,7 @@ bool DataStream::LoadDocument(const std::string& document)
         struct thread_load_object
         {
             std::promise<bool> promise;
-            shared_ptr<IFrameGrabber> fg;
+            rcc::shared_ptr<IFrameGrabber> fg;
             std::string document;
             void load()
             {
@@ -249,12 +257,12 @@ bool DataStream::CanLoadDocument(const std::string& document)
     return !valid_frame_grabbers.empty();
 }
 
-std::vector<shared_ptr<Nodes::Node>> DataStream::GetNodes()
+std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::GetNodes()
 {
     return top_level_nodes;
 }
 
-void DataStream::AddNode(shared_ptr<Nodes::Node> node)
+void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
 	if (boost::this_thread::get_id() != processing_thread.get_id())
 	{
@@ -267,7 +275,7 @@ void DataStream::AddNode(shared_ptr<Nodes::Node> node)
     top_level_nodes.push_back(node);
     dirty_flag = true;
 }
-void DataStream::AddNodes(std::vector<shared_ptr<Nodes::Node>> nodes)
+void DataStream::AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> nodes)
 {
 	if (boost::this_thread::get_id() != processing_thread.get_id())
 	{
@@ -282,7 +290,7 @@ void DataStream::AddNodes(std::vector<shared_ptr<Nodes::Node>> nodes)
     dirty_flag = true;
 }
 
-void DataStream::RemoveNode(shared_ptr<Nodes::Node> node)
+void DataStream::RemoveNode(rcc::shared_ptr<Nodes::Node> node)
 {
     std::lock_guard<std::mutex> lock(nodes_mtx);
     auto itr = std::find(top_level_nodes.begin(), top_level_nodes.end(), node);
@@ -361,7 +369,7 @@ void DataStream::process()
                 {
                     dirty_flag = false;
                     TS<SyncedMemory> current_frame;
-                    std::vector<shared_ptr<Nodes::Node>> current_nodes;
+                    std::vector<rcc::shared_ptr<Nodes::Node>> current_nodes;
                     {
                         try
                         {

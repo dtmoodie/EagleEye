@@ -38,7 +38,11 @@
 
 struct ISimpleSerializer;
 class ObjectFactorySystem;
-template<typename T> class shared_ptr;
+namespace rcc
+{
+    template<typename T> class shared_ptr;
+}
+
 
 // IIDs
 enum InterfaceIDEnum

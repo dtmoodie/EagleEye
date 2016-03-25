@@ -97,6 +97,23 @@ std::vector<const char*> Nodes::NodeInfo::GetNodeHierarchy()
     return node_hierarchy;
 }
 
+std::vector<std::string> Nodes::NodeInfo::GetParentalDependencies() const
+{
+	return std::vector<std::string>();
+}
+
+
+std::vector<std::string> Nodes::NodeInfo::GetNonParentalDependencies() const
+{
+	return std::vector<std::string>();
+}
+
+
+std::vector<std::string> Nodes::NodeInfo::CheckDependentVariables(IVariableManager* var_manager_) const
+{
+	return std::vector<std::string>();
+}
+
 namespace EagleLib
 {
     namespace Nodes

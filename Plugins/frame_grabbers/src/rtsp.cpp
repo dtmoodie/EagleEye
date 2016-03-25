@@ -69,7 +69,7 @@ TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
     {
     
     }
-    
+	_reconnect = true;
     return TS<SyncedMemory>();
 }
 void frame_grabber_rtsp::Init(bool firstInit)
@@ -109,6 +109,7 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 			{
 				loaded_document = file_to_load;
 				playback_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES) + 1;
+				LOG(info) << "Load success, first frame number: " << playback_frame_number;
 
 				return true;
 			}
@@ -120,7 +121,7 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 	return false;
 }
 
-shared_ptr<ICoordinateManager> frame_grabber_rtsp::GetCoordinateManager()
+rcc::shared_ptr<ICoordinateManager> frame_grabber_rtsp::GetCoordinateManager()
 {
     return coordinate_manager;
 }

@@ -30,7 +30,7 @@ int frame_grabber_video::frame_grabber_video_info::Priority() const
     return 1;
 }
 
-shared_ptr<ICoordinateManager> frame_grabber_video::GetCoordinateManager()
+rcc::shared_ptr<ICoordinateManager> frame_grabber_video::GetCoordinateManager()
 {
     return coordinate_manager;
 }

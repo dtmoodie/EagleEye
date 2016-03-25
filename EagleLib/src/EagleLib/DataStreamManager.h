@@ -24,6 +24,7 @@ namespace EagleLib
     class IFrameGrabber;
     class SignalManager;
 	class IVariableManager;
+	class IParameterBuffer;
 
 	class EAGLE_EXPORTS DataStream: public Signals::signaler
 	{
@@ -35,40 +36,41 @@ namespace EagleLib
         ~DataStream();
 
         // Handles user interactions such as moving the viewport, user interface callbacks, etc
-        shared_ptr<IViewManager>            GetViewManager();
+        rcc::shared_ptr<IViewManager>            GetViewManager();
 
         // Handles conversion of coordinate systems, such as to and from image coordinates, world coordinates, render scene coordinates, etc.
-        shared_ptr<ICoordinateManager>      GetCoordinateManager();
+        rcc::shared_ptr<ICoordinateManager>      GetCoordinateManager();
         
         // Handles actual rendering of data.  Use for adding extra objects to the scene
-        shared_ptr<IRenderEngine>           GetRenderingEngine();
+        rcc::shared_ptr<IRenderEngine>           GetRenderingEngine();
         
         // Handles tracking objects within a stream and communicating with the global track manager to track across multiple data streams
-        shared_ptr<ITrackManager>            GetTrackManager();
+        rcc::shared_ptr<ITrackManager>            GetTrackManager();
 
         // Handles actual loading of the image, etc
-        shared_ptr<IFrameGrabber>           GetFrameGrabber();
+        rcc::shared_ptr<IFrameGrabber>           GetFrameGrabber();
 
-		std::shared_ptr<IVariableManager>   GetVariableManager();
+		std::shared_ptr<IVariableManager>		GetVariableManager();
 
-        SignalManager*                      GetSignalManager();
-        std::vector<shared_ptr<Nodes::Node>> GetNodes();
+        SignalManager*							GetSignalManager();
+
+		IParameterBuffer*						GetParameterBuffer();
+
+        std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes();
 
         bool LoadDocument(const std::string& document);
         
-
         int get_stream_id();
 
-        void AddNode(shared_ptr<Nodes::Node> node);
-        void AddNodes(std::vector<shared_ptr<Nodes::Node>> node);
-        void RemoveNode(shared_ptr<Nodes::Node> node);
+        void AddNode(rcc::shared_ptr<Nodes::Node> node);
+        void AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node);
+        void RemoveNode(rcc::shared_ptr<Nodes::Node> node);
         
         void LaunchProcess();
         void StopProcess();
         void PauseProcess();
         void ResumeProcess();
         void process();
-    
         
     protected:
         friend class DataStreamManager;
@@ -78,20 +80,21 @@ namespace EagleLib
 
         // members
         int stream_id;
-        shared_ptr<IViewManager>							view_manager;
-        shared_ptr<ICoordinateManager>						coordinate_manager;
-        shared_ptr<IRenderEngine>							rendering_engine;
-        shared_ptr<ITrackManager>							track_manager;
-        shared_ptr<IFrameGrabber>							frame_grabber;
-		std::shared_ptr<IVariableManager>					variable_manager;
-		std::shared_ptr<SignalManager>						signal_manager;
-        std::vector<shared_ptr<Nodes::Node>>				top_level_nodes;
-        std::mutex											nodes_mtx;
-        bool												paused;
-        cv::cuda::Stream									cuda_stream;
-        boost::thread										processing_thread;
-        volatile bool										dirty_flag;
-        std::vector<std::shared_ptr<Signals::connection>>	connections;
+        rcc::shared_ptr<IViewManager>							view_manager;
+        rcc::shared_ptr<ICoordinateManager>						coordinate_manager;
+        rcc::shared_ptr<IRenderEngine>							rendering_engine;
+        rcc::shared_ptr<ITrackManager>							track_manager;
+        rcc::shared_ptr<IFrameGrabber>							frame_grabber;
+		std::shared_ptr<IVariableManager>						variable_manager;
+		std::shared_ptr<SignalManager>							signal_manager;
+        std::vector<rcc::shared_ptr<Nodes::Node>>				top_level_nodes;
+		std::shared_ptr<IParameterBuffer>						_parameter_buffer;
+        std::mutex												nodes_mtx;
+        bool													paused;
+        cv::cuda::Stream										cuda_stream;
+        boost::thread											processing_thread;
+        volatile bool											dirty_flag;
+        std::vector<std::shared_ptr<Signals::connection>>		connections;
 		SIG_DEF(StartThreads);
 		SIG_DEF(StopThreads);
 	};

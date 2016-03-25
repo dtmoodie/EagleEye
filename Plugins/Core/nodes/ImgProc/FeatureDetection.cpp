@@ -6,80 +6,88 @@
 #include "EagleLib/nodes/VideoProc/Tracking.hpp"
 #include "EagleLib/utilities/GpuMatAllocators.h"
 #include <EagleLib/ParameteredObjectImpl.hpp>
+#include <EagleLib/DataStreamManager.h>
+#include <EagleLib/IParameterBuffer.hpp>
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void GoodFeaturesToTrackDetector::Init(bool firstInit)
+void GoodFeaturesToTrack::Init(bool firstInit)
 {
     Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter("Max corners",			int(1000));
-        updateParameter("Quality Level",            double(0.01));
+        updateParameter("Quality Level",        double(0.01));
         updateParameter("Min Distance",			double(0.0))->SetTooltip("The minimum distance between detected points");
-        updateParameter("Block Size",            int(3));
-        updateParameter("Use harris",            false);
-        updateParameter("Harris K",            double(0.04));
-        
-        greyImgs.resize(5);
+        updateParameter("Block Size",           int(3));
+        updateParameter("Use harris",           false);
+        updateParameter("Harris K",             double(0.04));
         addInputParameter<cv::cuda::GpuMat>("Mask");
     }
-    detectedPoints.resize(5);
 }
 
-
-cv::cuda::GpuMat
-GoodFeaturesToTrackDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+void GoodFeaturesToTrack::detect(const cv::cuda::GpuMat& img, int frame_number, const cv::cuda::GpuMat& mask, cv::cuda::Stream& stream)
 {
+	TS<cv::cuda::GpuMat> key_points;
+	cv::cuda::GpuMat grey_img;
+	if (img.channels() != 1)
+	{
+		if (!GetDataStream()->GetParameterBuffer()->GetParameter(grey_img, "gray_image", frame_number))
+		{
+			cv::cuda::cvtColor(img, grey_img, cv::COLOR_BGR2GRAY, 0, stream);
+			GetDataStream()->GetParameterBuffer()->SetParameter(grey_img, "gray_image", frame_number);
+		}
+	}
+	else
+	{
+		grey_img = img;
+	}
+	
+	detector->detect(grey_img, key_points, mask, stream);
+	key_points.frame_number = frame_number;
+	updateParameter("Detected Corners", key_points)->type = Parameters::Parameter::Output;
+	updateParameter("Num corners", key_points.cols)->type = Parameters::Parameter::State;
+}
+
+void GoodFeaturesToTrack::update_detector(int depth)
+{
+	int numCorners = *getParameter<int>(0)->Data();
+	double qualityLevel = *getParameter<double>(1)->Data();
+	double minDistance = *getParameter<double>(2)->Data();
+	int blockSize = *getParameter<int>(3)->Data();
+	bool useHarris = *getParameter<bool>(4)->Data();
+	double harrisK = *getParameter<double>(5)->Data();
+
+	detector = cv::cuda::createGoodFeaturesToTrackDetector(depth,
+		numCorners, qualityLevel, minDistance, blockSize, useHarris, harrisK);
+
+
+	NODE_LOG(info) << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
+		<< " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
+
+	_parameters[0]->changed = false;
+	_parameters[1]->changed = false;
+	_parameters[2]->changed = false;
+	_parameters[3]->changed = false;
+	_parameters[4]->changed = false;
+	_parameters[5]->changed = false;
+}
+
+TS<SyncedMemory> GoodFeaturesToTrack::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
+{
+	cv::cuda::GpuMat d_img = img.GetGpuMat(stream);
     if(_parameters[1]->changed || _parameters[2]->changed ||
        _parameters[3]->changed || _parameters[4]->changed ||
        _parameters[5]->changed || _parameters[6]->changed || detector == nullptr)
     {
-
-        int numCorners = *getParameter<int>(0)->Data();
-        double qualityLevel = *getParameter<double>(1)->Data();
-        double minDistance = *getParameter<double>(2)->Data();
-        int blockSize = *getParameter<int>(3)->Data();
-        bool useHarris = *getParameter<bool>(4)->Data();
-        double harrisK = *getParameter<double>(5)->Data();
-
-        detector = cv::cuda::createGoodFeaturesToTrackDetector(img.type(),
-            numCorners, qualityLevel, minDistance, blockSize, useHarris, harrisK);
-
-
-		NODE_LOG(info) << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
-			<< " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
-
-        _parameters[0]->changed = false;
-        _parameters[1]->changed = false;
-        _parameters[2]->changed = false;
-        _parameters[3]->changed = false;
-        _parameters[4]->changed = false;
-        _parameters[5]->changed = false;
+		update_detector(d_img.depth());
     }
-
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
-
-    cv::cuda::GpuMat grey_img;
-    if(img.channels() != 1)
-    {
-        cv::cuda::cvtColor(img, grey_img, cv::COLOR_BGR2GRAY, 0, stream);
-
-    }else
-    {
-        grey_img = img;
-    }
-    cv::cuda::GpuMat key_points;
-    if(mask)
-    {
-
-        detector->detect(grey_img, key_points, *mask, stream);
-    }else
-    {
-        detector->detect(grey_img, key_points, cv::cuda::GpuMat(), stream);
-    }
-    updateParameter("Detected Corners", key_points)->type =  Parameters::Parameter::Output;
-    updateParameter("Num corners", key_points.cols)->type = Parameters::Parameter::State;
+	if (mask)
+		detect(img.GetGpuMat(stream), img.frame_number, *mask, stream);
+	else
+		detect(img.GetGpuMat(stream), img.frame_number, cv::cuda::GpuMat(), stream);
     return img;
 }
 
@@ -340,10 +348,10 @@ cv::cuda::GpuMat CornerMinEigenValue::doProcess(cv::cuda::GpuMat &img, cv::cuda:
 
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrackDetector, Image, Extractor);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ORBFeatureDetector, Image, Extractor);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FastFeatureDetector, Image, Extractor);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrack, Image, Extractor, KeypointDetection);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(ORBFeatureDetector, Image, Extractor, KeypointDetection);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(FastFeatureDetector, Image, Extractor, KeypointDetection);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramRange, Image, Extractor);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CornerHarris, Image, Extractor);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(CornerHarris, Image, Extractor, KeypointDetection);
 
 

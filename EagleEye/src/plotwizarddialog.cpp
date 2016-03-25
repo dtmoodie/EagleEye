@@ -26,12 +26,12 @@ void PlotWizardDialog::setup()
     auto plotters = EagleLib::PlotManager::getInstance().getAvailablePlots();
     for(size_t i = 0; i < plotters.size(); ++i)
     {
-        shared_ptr<EagleLib::Plotter> plotter = EagleLib::PlotManager::getInstance().getPlot(plotters[i]);
+        rcc::shared_ptr<EagleLib::Plotter> plotter = EagleLib::PlotManager::getInstance().getPlot(plotters[i]);
         if(plotter != nullptr)
         {
             if(plotter->Type() == EagleLib::Plotter::QT_Plotter)
             {
-                shared_ptr<EagleLib::QtPlotter> qtPlotter(plotter);
+                rcc::shared_ptr<EagleLib::QtPlotter> qtPlotter(plotter);
                 //plotter->setCallback(boost::bind(&PlotWizardDialog::onUpdate, this, (int)previewPlots.size()));
 
                 QWidget* plot = qtPlotter->CreatePlot(this);
