@@ -75,7 +75,7 @@ namespace EagleLib
 	}
 
 	template<typename T>
-	Parameters::Parameter* ParameteredObject::updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream)
+	Parameters::Parameter* ParameteredObject::updateParameterPtr(const std::string& name, T* data, long long timestamp, cv::cuda::Stream* stream)
 	{
 		typename Parameters::ITypedParameter<T>::Ptr param;
 		param = getParameterOptional<T>(name);
@@ -97,14 +97,14 @@ namespace EagleLib
 				}
 			}
 		}
-		param->UpdateData(data);
+		param->UpdateData(data, timestamp, stream);
         if(param->type != Parameters::Parameter::Output)
 		    onUpdate(param.get(),stream);
 		return param.get();
 	}
 
 	template<typename T>
-	Parameters::Parameter* ParameteredObject::updateParameter(const std::string& name, const T& data, cv::cuda::Stream* stream)
+	Parameters::Parameter* ParameteredObject::updateParameter(const std::string& name, const T& data, long long timestamp, cv::cuda::Stream* stream)
 	{
 		typename Parameters::ITypedParameter<T>::Ptr param;
 		param = getParameterOptional<T>(name);
@@ -113,21 +113,21 @@ namespace EagleLib
 			BOOST_LOG_TRIVIAL(debug) << "Parameter named \"" << name << "\" with type " << Loki::TypeInfo(typeid(T)).name() << " doesn't exist, adding";
 			return addParameter<T>(name, data);
 		}
-		param->UpdateData(data, stream);
+		param->UpdateData(data, timestamp, stream);
         if(param->type != Parameters::Parameter::Output)
 		    onUpdate(param.get(), stream);
 		return param.get();
 	}
 
 	template<typename T>
-	Parameters::Parameter* ParameteredObject::updateParameter(size_t idx, const T data, cv::cuda::Stream* stream)
+	Parameters::Parameter* ParameteredObject::updateParameter(size_t idx, const T data, long long timestamp, cv::cuda::Stream* stream)
 	{
 		if (idx > _parameters.size() || idx < 0)
 			return nullptr;
 		auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(_parameters[idx]);
 		if (param == NULL)
 			return nullptr;
-		param->UpdateData(data, stream);
+		param->UpdateData(data, timestamp, stream);
         if(param->type != Parameters::Parameter::Output)
 		    onUpdate(param.get(), stream);
 		return param.get();

@@ -152,6 +152,10 @@ std::vector<ParameterPtr> ParameteredObject::getParameters()
 {
     return _parameters;
 }
+std::vector<ParameterPtr> ParameteredObject::getDisplayParameters()
+{
+	return getParameters();
+}
 
 
 void ParameteredObject::RegisterParameterCallback(int idx, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param, bool lock_object)

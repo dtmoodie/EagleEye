@@ -151,7 +151,7 @@ namespace EagleLib
          * @return output image
          */
         virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img, cv::cuda::Stream& steam = cv::cuda::Stream::Null());
-		virtual TS<SyncedMemory> process(TS<SyncedMemory>& input, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+		virtual TS<SyncedMemory>		process(TS<SyncedMemory>& input, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         virtual bool pre_check(const TS<SyncedMemory>& input);
         /**
          * @brief doProcess this is the most used node and where the bulk of the work is performed.
@@ -164,7 +164,33 @@ namespace EagleLib
 		virtual void					reset();
 
         virtual Parameters::Parameter* addParameter(Parameters::Parameter::Ptr param);
+		template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream = nullptr)
+		{
+			return ParameteredIObject::updateParameterPtr(name, data, GetTimestamp(), stream);
+		}
 
+		template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, long long timestamp, cv::cuda::Stream* stream = nullptr)
+		{
+			return ParameteredIObject::updateParameterPtr(name, data, timestamp, stream);
+		}
+		
+		template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, cv::cuda::Stream* stream = nullptr)
+		{
+			return ParameteredIObject::updateParameter(name, data, GetTimestamp(), stream);
+		}
+		template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, long long timestamp, cv::cuda::Stream* stream = nullptr)
+		{
+			return ParameteredIObject::updateParameter(name, data, timestamp, stream);
+		}
+		
+		template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, cv::cuda::Stream* stream = nullptr)
+		{
+			return ParameteredIObject::updateParameter(idx, data, GetTimestamp(), stream);
+		}
+		template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, long long timestamp, cv::cuda::Stream* stream = nullptr)
+		{
+			return ParameteredIObject::updateParameter(idx, data, timestamp, stream);
+		}
         /**
          * @brief getName depricated?  Idea was to recursively go through parent nodes and rebuild my tree name, useful I guess once
          * @brief node swapping and moving is implemented
@@ -337,6 +363,8 @@ namespace EagleLib
          */
         virtual bool SkipEmpty() const;
 
+		long long GetTimestamp() const;
+
 		std::vector<std::pair<time_t, int>> GetProfileTimings() const;
 
         // ****************************************************************************************************************
@@ -368,6 +396,7 @@ namespace EagleLib
 		
 	protected:
 		DataStream*     								                        _dataStream;
+		long long																_current_timestamp;
 	private:
 
         void ClearProcessingTime();

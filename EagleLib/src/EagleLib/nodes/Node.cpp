@@ -569,6 +569,7 @@ TS<SyncedMemory> Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream
 	TS < SyncedMemory> output = input;
     if(pre_check(input))
     {
+		_current_timestamp = input.frame_number;
         if (boost::this_thread::interruption_requested())
             return output;
         ui_collector::set_node_name(getFullTreeName());
@@ -1115,3 +1116,7 @@ bool Node::SkipEmpty() const
     return true;
 }
 
+long long Node::GetTimestamp() const
+{
+	return _current_timestamp;
+}

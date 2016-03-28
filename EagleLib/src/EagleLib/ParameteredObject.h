@@ -69,6 +69,7 @@ namespace EagleLib
 		virtual ParameterPtr getParameterOptional(const std::string& name);
 
         virtual std::vector<ParameterPtr> getParameters();
+		virtual std::vector<ParameterPtr> getDisplayParameters();
 
 
         virtual void RegisterParameterCallback(int idx, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param = false, bool lock_object = false);
@@ -89,11 +90,11 @@ namespace EagleLib
 
         template<typename T> bool updateInputQualifier(int idx, const std::function<bool(Parameters::Parameter*)>& qualifier);
 
-        template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream = nullptr);
+        template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, long long timestamp = -1, cv::cuda::Stream* stream = nullptr);
 
-        template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, cv::cuda::Stream* stream = nullptr);
+        template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, long long timestamp = -1, cv::cuda::Stream* stream = nullptr);
 
-        template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, cv::cuda::Stream* stream = nullptr);
+        template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, long long timestamp = -1, cv::cuda::Stream* stream = nullptr);
 
         template<typename T> typename std::shared_ptr<Parameters::ITypedParameter<T>> getParameter(std::string name);
 
@@ -105,7 +106,7 @@ namespace EagleLib
 
         
         // Mutex for blocking processing of a object during update
-        std::recursive_mutex                                              mtx;
+        std::recursive_mutex																mtx;
     protected:
 		IVariableManager*				                                                    _variable_manager;
 		Signals::typed_signal_base<void(ParameteredObject*), Signals::default_combiner>*    _sig_parameter_updated;
