@@ -397,22 +397,22 @@ namespace EagleLib
 	protected:
 		DataStream*     								                        _dataStream;
 		long long																_current_timestamp;
-	private:
+        std::shared_ptr<IVariableManager>								        _variable_manager;
 
-        void ClearProcessingTime();
-        void EndProcessingTime();
-
-        friend class EagleLib::NodeManager;
-        std::shared_ptr<NodeImpl>                                               pImpl_;
         rcc::weak_ptr<Node>                                                     parent;
-		unsigned int                                                            rmt_hash;
-		unsigned int                                                            rmt_cuda_hash;
-		
-		std::shared_ptr<IVariableManager>								        _variable_manager;
         // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
         std::string															    fullTreeName;
         // Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
         std::string															    treeName;
+	private:
+        friend class EagleLib::NodeManager;
+
+        void ClearProcessingTime();
+        void EndProcessingTime();
+        
+        std::shared_ptr<NodeImpl>                                               pImpl_;
+		unsigned int                                                            rmt_hash;
+		unsigned int                                                            rmt_cuda_hash;
     };
     } // namespace Nodes
 } // namespace EagleLib
