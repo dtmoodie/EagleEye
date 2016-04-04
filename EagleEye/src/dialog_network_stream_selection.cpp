@@ -37,6 +37,7 @@ void dialog_network_stream_selection::cancel()
 {
     
 }
+
 void dialog_network_stream_selection::refresh_history()
 {
     ui->list_url_history->clear();

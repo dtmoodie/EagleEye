@@ -38,17 +38,35 @@ TS<SyncedMemory> QtImageDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::Str
     cv::Mat img = input.GetMat(stream);
     std::string display_name = getFullTreeName();
     EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
-	cuda::enqueue_callback_async(
-		[this, display_name, img]()->void
+	if (auto table = PerModuleInterface::GetInstance()->GetSystemTable())
 	{
-		rmt_ScopedCPUSample(QtImageDisplay_displayImage);
-		PROFILE_FUNCTION;
-        auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-        auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
-        
-        auto instance = manager->instance(GetDataStream()->get_stream_id());
-        instance->imshow(display_name, img);
-	}, stream);
+		if (auto manager = table->GetSingleton<WindowCallbackHandlerManager>())
+		{
+			if (auto instance = manager->instance(GetDataStream()->get_stream_id()))
+			{
+				cuda::enqueue_callback_async(
+					[instance, display_name, img]()->void
+				{
+					//rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+					PROFILE_FUNCTION;
+					instance->imshow(display_name, img);
+				}, stream);
+			}
+			else
+			{
+				LOG(warning) << "Unable tog et instance of WindowCallbackHandler for stream " << GetDataStream()->get_stream_id();
+			}
+		}
+		else
+		{
+			LOG(warning) << "Unable to get instance of WindowCallbackHandlerManager";
+		}
+	}
+	else
+	{
+		LOG(warning) << "Unable to get SystemTable";
+	}
+	
     return input;
 }
 cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)

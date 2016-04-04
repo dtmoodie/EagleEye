@@ -12,21 +12,24 @@ namespace EagleLib
         {
             boost::thread _thread;
             std::condition_variable_any _cv;
+			bool _pause;
         public:
             struct ProcessFutureInfo: public NodeInfo
             {
-                virtual std::string GetObjectName();
+				ProcessFutureInfo();
                 virtual std::string GetObjectTooltip();
                 virtual std::string GetObjectHelp();
-		        // Get the organizational hierarchy of this node, ie Image -> Processing -> ConvertToGrey
-                virtual std::vector<const char*> GetNodeHierarchy();
             };
 
             ProcessFuture();
             ~ProcessFuture();
             virtual void Init(bool firstInit);
+			virtual void SetDataStream(DataStream* stream);
             virtual TS<SyncedMemory> process(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
+			virtual TS<SyncedMemory> doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
             virtual void process_ahead();
+			virtual void stop_thread();
+			virtual void start_thread();
         };
     }
 }

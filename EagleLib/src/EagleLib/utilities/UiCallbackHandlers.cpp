@@ -28,6 +28,7 @@ void WindowCallbackHandler::imshow(const std::string& window_name, cv::Mat img, 
 		Signals::thread_specific_queue::push(std::bind(&WindowCallbackHandler::imshow, this, window_name, img, flags), gui_thread_id);
 		return;
 	}
+	// The below code should only execute if this is on the GUI thread, thus it doesn't need locking
 	auto itr = windows.find(window_name);
 	if (itr == windows.end())
 	{

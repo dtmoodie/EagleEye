@@ -6,16 +6,11 @@ namespace EagleLib
 {
 	class EventHandler;
 }
-namespace Freenect
-{
-	class Freenect;
-}
 struct SystemTable
 {
 	SystemTable();
 
 	EagleLib::EventHandler* eventHandler;
-	Freenect::Freenect* freenect;
     // These are per stream singletons
 	std::map<Loki::TypeInfo, std::map<int,void*>> singletons;
     // These are global single instance singletons

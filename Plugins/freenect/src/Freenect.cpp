@@ -2,8 +2,9 @@
 #include "libfreenect/libfreenect.hpp"
 #include "freenect.cuh"
 #include "EagleLib/rcc/SystemTable.hpp"
+#include <boost/lexical_cast.hpp>
+
 using namespace EagleLib;
-using namespace EagleLib::Nodes;
 IPerModuleInterface* GetModule()
 {
     return PerModuleInterface::GetInstance();
@@ -14,11 +15,13 @@ class MyFreenectDevice : public Freenect::FreenectDevice
 public:
     MyFreenectDevice(freenect_context *_ctx, int _index)
         : Freenect::FreenectDevice(_ctx, _index),
-          m_buffer_video(freenect_find_video_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_VIDEO_RGB).bytes),
-          m_buffer_depth(freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_REGISTERED).bytes / 2),
           m_new_rgb_frame(false), m_new_depth_frame(false)
     {
         setDepthFormat(FREENECT_DEPTH_REGISTERED);
+		auto video_mode = freenect_find_video_mode(FREENECT_RESOLUTION_HIGH, FREENECT_VIDEO_RGB);
+		auto depth_mode = freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_REGISTERED);
+		m_buffer_video.create(video_mode.height, video_mode.width, CV_8UC3);
+		m_buffer_depth.create(depth_mode.height, depth_mode.width, CV_16U);
     }
 
     // Do not call directly, even in child
@@ -26,8 +29,9 @@ public:
     {
         std::lock_guard<std::mutex> lock(m_rgb_mutex);
         uint8_t* rgb = static_cast<uint8_t*>(_rgb);
-        copy(rgb, rgb+getVideoBufferSize(), m_buffer_video.begin());
+        memcpy(rgb, m_buffer_video.data, getVideoBufferSize());
         m_new_rgb_frame = true;
+		video_timestamp = timestamp;
     }
 
     // Do not call directly, even in child
@@ -35,31 +39,33 @@ public:
     {
         std::lock_guard<std::mutex> lock(m_depth_mutex);
         uint16_t* depth = static_cast<uint16_t*>(_depth);
-        copy(depth, depth+getDepthBufferSize()/2, m_buffer_depth.begin());
+        memcpy(depth, m_buffer_depth.data, getDepthBufferSize());
         m_new_depth_frame = true;
+		depth_timestamp = timestamp;
     }
 
-    bool getRGB(std::vector<uint8_t> &buffer)
+    bool getRGB(cv::Mat h_buffer, uint32_t& timestamp)
     {
         std::lock_guard<std::mutex> lock(m_rgb_mutex);
 
         if (!m_new_rgb_frame)
             return false;
 
-        buffer.swap(m_buffer_video);
+		m_buffer_video.copyTo(h_buffer);
+		timestamp = video_timestamp;
         m_new_rgb_frame = false;
 
         return true;
     }
 
-    bool getDepth(std::vector<uint16_t> &buffer)
+    bool getDepth(cv::Mat h_buffer, uint32_t& timestamp)
     {
         std::lock_guard<std::mutex> lock(m_depth_mutex);
 
         if (!m_new_depth_frame)
             return false;
-
-        buffer.swap(m_buffer_depth);
+		m_buffer_depth.copyTo(h_buffer);
+		timestamp = depth_timestamp;
         m_new_depth_frame = false;
 
         return true;
@@ -68,68 +74,101 @@ public:
 private:
     std::mutex m_rgb_mutex;
     std::mutex m_depth_mutex;
-    std::vector<uint8_t> m_buffer_video;
-    std::vector<uint16_t> m_buffer_depth;
+	cv::Mat m_buffer_video;
+	cv::Mat m_buffer_depth;
+	uint32_t video_timestamp;
+	uint32_t depth_timestamp;
     bool m_new_rgb_frame;
     bool m_new_depth_frame;
 };
 
-//static Freenect::Freenect* freenect = nullptr;
 using namespace EagleLib;
 
-camera_freenect::~camera_freenect()
+freenect::~freenect()
 {
-	//freenect->deleteDevice(0);
-	//delete freenect;
-	//myDevice = nullptr;
 }
-
-void camera_freenect::Init(bool firstInit)
+bool freenect::LoadFile(const std::string& file_path)
 {
-	auto systemTable = PerModuleInterface::GetInstance()->GetSystemTable();
-	if (systemTable->freenect == nullptr)
-		systemTable->freenect = new Freenect::Freenect();
-	freenect = systemTable->freenect;
-	try
+	auto idx = file_path.find("freenect/");
+	if (idx != std::string::npos)
 	{
-		myDevice = &freenect->createDevice<MyFreenectDevice>(0);
-	}
-	catch (std::runtime_error & e)
-	{
-		NODE_LOG(error) << e.what();
-		myDevice = nullptr;
-		return;
-	}
-    myDevice->startVideo();
-    myDevice->startDepth();
-    depthBuffer.resize(640*480);
-}
-void camera_freenect::Serialize(ISimpleSerializer* pSerializer)
-{
-	SERIALIZE(myDevice);
-	SERIALIZE(freenect);
-}
-cv::cuda::GpuMat camera_freenect::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-	if (myDevice)
-	{
-		if (myDevice->getDepth(depthBuffer))
+		auto substr = file_path.substr(idx + 9);
+		auto systemTable = PerModuleInterface::GetInstance()->GetSystemTable();
+		auto freenect = systemTable->GetSingleton<Freenect::Freenect>();
+		if (!freenect)
 		{
-			cv::Mat h_depth(480, 640, CV_16U, (void*)&depthBuffer[0]);
-			img.upload(h_depth, stream);
-			Depth2XYZ(img, XYZ, stream);
-			updateParameter("PointCloud", XYZ);
-			cv::Mat h_xyz(XYZ);
-			return img;
+			freenect = new Freenect::Freenect();
+			systemTable->SetSingleton<Freenect::Freenect>(freenect);
 		}
+		try
+		{
+			_myDevice = &freenect->createDevice<MyFreenectDevice>(boost::lexical_cast<int>(substr));
+		}
+		catch (std::runtime_error & e)
+		{
+			LOG(error) << e.what();
+			_myDevice = nullptr;
+			return false;
+		}
+		_myDevice->startVideo();
+		_myDevice->startDepth();
+		return true;
 	}
-    
-    return cv::cuda::GpuMat();
+	return false;
 }
-
-bool camera_freenect::SkipEmpty() const
+rcc::shared_ptr<ICoordinateManager> freenect::GetCoordinateManager()
 {
-    return false;
+	return _coordinate_manager;
+}
+TS<SyncedMemory> freenect::GetFrameImpl(int index, cv::cuda::Stream& stream)
+{
+	return TS<SyncedMemory>();
+}
+TS<SyncedMemory> freenect::GetNextFrameImpl(cv::cuda::Stream& stream)
+{
+	if (_myDevice)
+	{
+		cv::Mat depth;
+		uint32_t timestamp;
+		_myDevice->getDepth(depth, timestamp);
+		return TS<SyncedMemory>((double)timestamp, (int)timestamp, depth);
+	}
+	return TS<SyncedMemory>();
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(camera_freenect)
+void freenect::Serialize(ISimpleSerializer* pSerializer)
+{
+	SERIALIZE(_myDevice);
+	SERIALIZE(_freenect);
+}
+std::string freenect::frame_grabber_freenect_info::GetObjectName()
+{
+	return "freenect";
+}
+std::string freenect::frame_grabber_freenect_info::GetObjectTooltip()
+{
+	return "";
+}
+std::string freenect::frame_grabber_freenect_info::GetObjectHelp()
+{
+	return "";
+}
+int freenect::frame_grabber_freenect_info::CanLoadDocument(const std::string& document) const
+{
+	if (document.find("freenect/") != std::string::npos)
+	{
+		return 10;
+	}
+	return 0;
+}
+int freenect::frame_grabber_freenect_info::Priority() const
+{
+	return 0;
+}
+int freenect::frame_grabber_freenect_info::LoadTimeout() const
+{
+	return 1000;
+}
+
+static freenect::frame_grabber_freenect_info info;
+REGISTERCLASS(freenect, &info);

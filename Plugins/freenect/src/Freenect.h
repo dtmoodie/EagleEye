@@ -1,5 +1,6 @@
 #pragma once
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/frame_grabber_base.h"
+#include "EagleLib/ICoordinateManager.h"
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -8,6 +9,7 @@ extern "C"{
 #ifdef __cplusplus
 }
 #endif
+
 class MyFreenectDevice;
 namespace Freenect
 {
@@ -16,21 +18,33 @@ namespace Freenect
 
 namespace EagleLib
 {
-namespace Nodes
-{
-    class camera_freenect: public Node
+
+    class PLUGIN_EXPORTS freenect: public FrameGrabberBuffered
     {
-		Freenect::Freenect* freenect;
+		Freenect::Freenect* _freenect;
 		cv::cuda::GpuMat XYZ;
-        MyFreenectDevice* myDevice;
-        std::vector<uint16_t> depthBuffer;
+        MyFreenectDevice* _myDevice;
+
     public:
-        camera_freenect();
-		~camera_freenect();
+		class PLUGIN_EXPORTS frame_grabber_freenect_info : public FrameGrabberInfo
+		{
+		public:
+			virtual std::string GetObjectName();
+			virtual std::string GetObjectTooltip();
+			virtual std::string GetObjectHelp();
+			virtual int CanLoadDocument(const std::string& document) const;
+			virtual int Priority() const;
+			virtual int LoadTimeout() const;
+		};
+		//freenect();
+		~freenect();
 		virtual void Serialize(ISimpleSerializer* pSerializer);
-        virtual void Init(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-        virtual bool SkipEmpty() const;
+		virtual bool LoadFile(const std::string& file_path);
+		int GetNumFrames() { return -1; }
+		rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
+		virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream);
+		virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
+		rcc::shared_ptr<ICoordinateManager> _coordinate_manager;
     };
-}
+
 }

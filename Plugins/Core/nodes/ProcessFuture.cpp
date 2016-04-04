@@ -1,12 +1,12 @@
 #include "ProcessFuture.h"
 #include "EagleLib/DataStreamManager.h"
-
+#include "Remotery.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
 ProcessFuture::ProcessFuture()
 {
-
+	_pause = false;
 }
 
 ProcessFuture::~ProcessFuture()
@@ -30,24 +30,33 @@ TS<SyncedMemory> ProcessFuture::process(TS<SyncedMemory>& input, cv::cuda::Strea
     }
     return Node::process(input, stream);
 }
+TS<SyncedMemory> ProcessFuture::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
+{
+	return input;
+}
 
 void ProcessFuture::process_ahead()
 {
     std::unique_lock<std::recursive_mutex> lock(mtx);
     auto frame_grabber = GetDataStream()->GetFrameGrabber();
-    
+	rmt_SetCurrentThreadName("ProcessFuture_thread");
     if(!frame_grabber)
     {
         LOG(debug) << "No valid frame grabber";
         return;
     }
     cv::cuda::Stream stream;
-    TS<SyncedMemory> frame;
+    
     while(!boost::this_thread::interruption_requested())
     {
-        int num_frames_ahead = *getParameter<int>("Num Frames Ahead")->Data();
+		TS<SyncedMemory> frame;
+		while (_pause)
+		{
+			_cv.wait(lock);
+		}
         while(frame.empty())
         {
+			int num_frames_ahead = *getParameter<int>("Num Frames Ahead")->Data();
             _cv.wait_for(lock, std::chrono::milliseconds(100));
             frame = frame_grabber->GetFrameRelative(num_frames_ahead,stream);
         }
@@ -55,3 +64,37 @@ void ProcessFuture::process_ahead()
         process(frame, stream);
     }
 }
+void ProcessFuture::SetDataStream(DataStream* stream)
+{
+	Node::SetDataStream(stream);
+	_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&ProcessFuture::start_thread, this), this));
+	_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&ProcessFuture::stop_thread, this), this));
+}
+void ProcessFuture::stop_thread()
+{
+	_pause = true;
+}
+void ProcessFuture::start_thread()
+{
+	_pause = false;
+	_cv.notify_all();
+}
+
+ProcessFuture::ProcessFutureInfo::ProcessFutureInfo():
+	NodeInfo("ProcessFuture", { "Utilities" })
+{
+}
+std::string ProcessFuture::ProcessFutureInfo::GetObjectTooltip()
+{
+	return "";
+}
+std::string ProcessFuture::ProcessFutureInfo::GetObjectHelp()
+{
+	return "";
+}
+
+
+ProcessFuture::ProcessFutureInfo s_process_future_info;
+
+
+REGISTERCLASS(ProcessFuture, &s_process_future_info)

@@ -34,7 +34,7 @@
 #include <EagleLib/nodes/Node.h>
 
 #include <signals/logging.hpp>
-
+#include <signal.h>
 
 int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
 {
@@ -48,7 +48,12 @@ int static_errorHandler( int status, const char* func_name,const char* err_msg, 
     return 0;
 }
 
-
+void sig_handler(int s)
+{
+	BOOST_LOG_TRIVIAL(error) << "Caught signal " << s << " with callstack:\n" << Signals::print_callstack(0,true);
+	if (s == 2)
+		exit(EXIT_FAILURE);
+}
 static void process(std::vector<EagleLib::Nodes::Node::Ptr>* parentList, boost::timed_mutex *mtx);
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -57,13 +62,18 @@ MainWindow::MainWindow(QWidget *parent) :
 	plotWizardDialog(new PlotWizardDialog(this)),
 	settingsDialog(new SettingDialog(this))
 {
+	signal(SIGINT, sig_handler);
+	signal(SIGILL, sig_handler);
+	signal(SIGTERM, sig_handler);
+	signal(SIGSEGV, sig_handler);
+	rmt_SetCurrentThreadName("GUI_thread");
     // Create the processing thread opengl context for creating buffers and uploading them
     processing_thread_context = nullptr;
     processing_thread_upload_window = nullptr;
     updateParameterPtr("file load path", &file_load_path);
     variable_storage::instance().load_parameters(this);
 	
-    //cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
+    cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
 
 	EagleLib::CpuDelayedDeallocationPool::instance()->deallocation_delay = 1000;
 	

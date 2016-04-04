@@ -29,34 +29,39 @@
  *
 */
 
-#include <EagleLib/rcc/shared_ptr.hpp>
+// In library includes
+#include "EagleLib/Defs.hpp"
+#include "EagleLib/ParameteredObject.h"
+#include "EagleLib/SyncedMemory.h"
+#include "EagleLib/type.h" // for demangle on linux
+#include "EagleLib/utilities/CudaUtils.hpp"
+
+// RCC includes
+#include <IObject.h>
+#include <IObjectInfo.h>
+#include <ObjectInterfacePerModule.h>
+#include <RuntimeLinkLibrary.h>
+#include "EagleLib/rcc/shared_ptr.hpp"
+
+// Dependent in house libraries
+#include <parameters/LokiTypeInfo.h>
+#include <parameters/Parameters.hpp>
+#include <parameters/Types.hpp>
+#include <signals/connection.h>
+
+// Dependent 3rd party libraries
+#include <opencv2/core/cuda.hpp>
+#include <EagleLib/rcc/external_includes/cv_core.hpp>
+#include <EagleLib/rcc/external_includes/cv_highgui.hpp>
+
 #include <boost/function.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/expressions/keyword.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
 
+// stl
 #include <vector>
 #include <type_traits>
-#include "EagleLib/type.h" // for demangle on linux
-#include "parameters/LokiTypeInfo.h"
-#include "EagleLib/Defs.hpp"
-#include <parameters/Parameters.hpp>
-#include <parameters/Types.hpp>
-
-#include <opencv2/core/cuda.hpp>
-#include <EagleLib/rcc/external_includes/cv_core.hpp>
-#include <EagleLib/rcc/external_includes/cv_highgui.hpp>
-
-#include "EagleLib/utilities/CudaUtils.hpp"
-
-#include "RuntimeLinkLibrary.h"
-#include "ObjectInterfacePerModule.h"
-#include "IObject.h"
-#include "EagleLib/Defs.hpp"
-#include "EagleLib/ParameteredObject.h"
-#include "IObjectInfo.h"
-#include "EagleLib/SyncedMemory.h"
-#include "signals/connection.h"
 
 #define TIME Clock(__LINE__);
 

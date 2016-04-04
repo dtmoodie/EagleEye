@@ -139,6 +139,7 @@ TS<SyncedMemory> FrameGrabberBuffered::GetFrameRelative(int index, cv::cuda::Str
 		}
 		++_index;
 	}
+	LOG(trace) << "Unable to find requested frame (" << playback_frame_number + index << ") in frame buffer. [" << frame_buffer.front().frame_number << "," << frame_buffer.back().frame_number << "]";
 	return TS<SyncedMemory>();
 }
 
@@ -158,6 +159,7 @@ void FrameGrabberBuffered::Buffer()
         {
             TS<SyncedMemory> frame;
             {
+				rmt_ScopedCPUSample(BufferingFrame);
                 boost::mutex::scoped_lock gLock(grabber_mtx);
                 frame = GetNextFrameImpl(read_stream);
             }            
