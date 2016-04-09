@@ -4,11 +4,14 @@
 #include <QDialog>
 #include "EagleLib/nodes/Node.h"
 #include <EagleLib/rcc/shared_ptr.hpp>
+
+#include <signals/signaler.h>
+
 namespace Ui {
 class NodeListDialog;
 }
 
-class NodeListDialog : public QDialog
+class NodeListDialog : public QDialog, public Signals::signaler
 {
     Q_OBJECT
 
@@ -17,6 +20,10 @@ public:
     void update();
     void show();
     ~NodeListDialog();
+
+
+	SIG_DEF(add_node, std::string);
+
 signals:
     void nodeConstructed(EagleLib::Nodes::Node::Ptr node);
 private slots:

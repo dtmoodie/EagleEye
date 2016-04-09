@@ -102,8 +102,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
     nodeListDialog = new NodeListDialog(this);
     nodeListDialog->hide();
-    connect(nodeListDialog, SIGNAL(nodeConstructed(EagleLib::Nodes::Node::Ptr)),
-        this, SLOT(onNodeAdd(EagleLib::Nodes::Node::Ptr)));
+	nodeListDialog->setup_signals(&_ui_manager);
+	_signal_connections.push_back(_ui_manager.connect<void(std::string)>("add_node", std::bind(&MainWindow::onNodeAdd, this, std::placeholders::_1), this, Signals::get_this_thread(), "Main user interface"));
+
+    /*connect(nodeListDialog, SIGNAL(nodeConstructed(EagleLib::Nodes::Node::Ptr)),
+        this, SLOT(onNodeAdd(EagleLib::Nodes::Node::Ptr)));*/
 	
 	nodeGraph = new QGraphicsScene(this);
     //connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
@@ -629,24 +632,35 @@ void MainWindow::updateLines()
 }
 
 void 
-MainWindow::onNodeAdd(EagleLib::Nodes::Node::Ptr node)
+MainWindow::onNodeAdd(std::string node_name)
 {	
-	rmt_ScopedCPUSample(onNodeAdd);
+	rmt_ScopedCPUSample(adding_node);
     EagleLib::Nodes::Node::Ptr prevNode = currentNode;
 	stopProcessingThread();
-    if(currentNode != nullptr)
+	std::vector<rcc::shared_ptr<EagleLib::Nodes::Node>> added_nodes;
+	if(currentNode != nullptr)
     {
         std::lock_guard<std::recursive_mutex> lock(currentNode->mtx);
-        currentNode->addChild(node);
+		added_nodes = EagleLib::NodeManager::getInstance().addNode(node_name, currentNode.get());
+        //currentNode->addChild(node);
     }else
     {
         if(current_stream != nullptr)
         {
-            current_stream->AddNode(node);
-        }
-    }
-    addNode(node);
-    for(size_t i = 0; i < widgets.size(); ++i)
+            //current_stream->AddNode(node);
+			added_nodes = EagleLib::NodeManager::getInstance().addNode(node_name, current_stream.get());
+		}
+		else
+		{
+			// Node added without a parent node or data stream, node top level node in returned tree is a new parent node
+		}
+	}
+	for (auto& node : added_nodes)
+	{
+		addNode(node);
+	}
+	
+    /*for(size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi();
     }
@@ -662,8 +676,6 @@ MainWindow::onNodeAdd(EagleLib::Nodes::Node::Ptr node)
             parentList.push_back(node);
             startProcessingThread();
         }
-
-
     }
     if(currentNode == nullptr)
     {
@@ -671,7 +683,7 @@ MainWindow::onNodeAdd(EagleLib::Nodes::Node::Ptr node)
     }else
     {
         currentNode = prevNode;
-    }
+    }*/
     dirty = true;
 }
 void MainWindow::onWidgetDeleted(QNodeWidget* widget)
@@ -704,8 +716,8 @@ MainWindow::uiNotifier()
 void MainWindow::onUiUpdate()
 {
     //EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
-    
-    Signals::thread_specific_queue::run();
+	rmt_ScopedCPUSample(onUiUpdate);
+    Signals::thread_specific_queue::run_once();
 }
 
 void

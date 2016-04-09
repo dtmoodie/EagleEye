@@ -109,15 +109,17 @@ namespace EagleLib
 			enqueue_callback_async(_Ty function,cv::cuda::Stream& stream)->std::future<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>
 		{
 			auto fc = new LambdaCallback<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>(function);
+			auto future = fc->promise.get_future();
 			stream.enqueueHostCallback(&ICallback::cb_func_async, fc);
-			return fc->promise.get_future();
+			return future;
 		}
 		template<typename _Ty> auto
 			enqueue_callback(_Ty function, cv::cuda::Stream& stream)->std::future<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>
 		{
 			auto fc = new LambdaCallback<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>(function);
+			auto future = fc->promise.get_future();
 			stream.enqueueHostCallback(&ICallback::cb_func, fc);
-			return fc->promise.get_future();
+			return future;
 		}
 
 

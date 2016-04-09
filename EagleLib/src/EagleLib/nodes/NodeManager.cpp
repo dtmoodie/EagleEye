@@ -117,10 +117,25 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 		auto obj_info = pConstructor->GetObjectInfo();
 		auto node_info = dynamic_cast<Nodes::NodeInfo*>(obj_info);
 		auto parental_deps = node_info->GetParentalDependencies();
+		// Since a data stream is selected and by definition a parental dependency must be in the direct parental path,
+		// we build all parent dependencies
+		rcc::shared_ptr<Nodes::Node> parent_node;
 		for (auto& parent_dep : parental_deps)
 		{
-			auto parent_nodes = addNode(parent_dep, parentStream);
-			constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
+			if (parent_dep.size())
+			{
+				if (parent_node)
+				{
+					auto parent_nodes = addNode(parent_dep[0], parent_node.get());
+					constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
+				}
+				else
+				{
+					auto parent_nodes = addNode(parent_dep[0], parentStream);
+					constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
+					parent_node = parent_nodes.back();
+				}
+			}
 		}
 		auto non_parent_deps = node_info->GetNonParentalDependencies();
 		auto existing_nodes = parentStream->GetNodes();
@@ -129,15 +144,19 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 			bool found = false;
 			for (auto& existing_node : existing_nodes)
 			{
-				if (existing_node->getName() == non_parent_dep)
+				for (auto& dep : non_parent_dep)
 				{
-					found = true;
-					break;
+					if (existing_node->getName() == dep)
+					{
+						found = true;
+						break;
+					}
 				}
 			}
+			// No qualified parental dependency was found, add first best candidate
 			if (!found)
 			{
-				auto added_nodes = addNode(non_parent_dep, parentStream);
+				auto added_nodes = addNode(non_parent_dep[0], parentStream);
 				constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
 			}
 		}
@@ -146,6 +165,19 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 		{
 			auto added_nodes = addNode(dependent_variable_node, parentStream);
 			constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
+		}
+		// All dependencies have been handled, construct node
+		auto pNode = static_cast<EagleLib::Nodes::Node*>(pConstructor->Construct());
+		nodes.push_back(rcc::weak_ptr<Nodes::Node>(pNode));
+		rcc::shared_ptr<Nodes::Node> node(pNode);
+		constructed_nodes.push_back(node);
+		if (parent_node)
+		{
+			parent_node->addChild(node);
+		}
+		else
+		{
+			parentStream->AddNode(node);
 		}
 	}
 	return constructed_nodes;
@@ -157,7 +189,60 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 	std::vector<rcc::shared_ptr<Nodes::Node>> constructed_nodes;
 	if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
 	{
+		auto obj_info = pConstructor->GetObjectInfo();
+		auto node_info = static_cast<Nodes::NodeInfo*>(obj_info);
+		auto parental_deps = node_info->GetParentalDependencies();
+		rcc::shared_ptr<Nodes::Node> parent_node;
+		for (auto& parent_dep : parental_deps)
+		{
+			if (parent_dep.size())
+			{
+				if (parent_node)
+				{
+					auto parent_nodes = addNode(parent_dep[0], parent_node.get());
+					constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
+				}
+				else
+				{
+					auto parent_nodes = addNode(parent_dep[0], parentNode);
+					constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
+					parent_node = parent_nodes.back();
+				}
+			}
+		}
+		auto non_parent_deps = node_info->GetNonParentalDependencies();
+		auto existing_nodes = parentNode->GetDataStream()->GetNodes();
+		for (auto & non_parent_dep : non_parent_deps)
+		{
+			bool found = false;
+			for (auto& existing_node : existing_nodes)
+			{
+				for (auto& dep : non_parent_dep)
+				{
+					if (existing_node->getName() == dep)
+					{
+						found = true;
+						break;
+					}
+				}
+			}
+			// No qualified parental dependency was found, add first best candidate
+			if (!found)
+			{
+				auto added_nodes = addNode(non_parent_dep[0], parentNode);
+				constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
+			}
+		}
+		auto dependent_variable_nodes = node_info->CheckDependentVariables(parentNode->GetVariableManager());
+		for (auto& dependent_variable_node : dependent_variable_nodes)
+		{
+			auto added_nodes = addNode(dependent_variable_node, parentNode);
+			constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
+		}
 
+		rcc::shared_ptr<Nodes::Node> node(pConstructor->Construct());
+		parentNode->addChild(node);
+		constructed_nodes.push_back(node);
 	}
 	return constructed_nodes;	
 }

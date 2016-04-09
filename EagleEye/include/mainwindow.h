@@ -19,7 +19,12 @@
 #include <QtGui/qopenglcontext.h>
 #include <signals/connection.h>
 #include <signals/signaler.h>
+#include <signals/signal_manager.h>
+
 #include <qtimer.h>
+
+#include <functional>
+
 namespace EagleLib
 {
     class DataStream;
@@ -50,7 +55,7 @@ public:
 private slots:
     void on_pushButton_clicked();
     void onTimeout();
-    void onNodeAdd(EagleLib::Nodes::Node::Ptr node);
+    
 	void onSelectionChanged(QGraphicsProxyWidget* widget);
     void log(QString message);
     void onOGLDisplay(std::string name, cv::cuda::GpuMat img);
@@ -101,7 +106,7 @@ signals:
 
 
 private:
-    
+	void onNodeAdd(std::string name);
     void onError(const std::string& error);
     void onStatus(const std::string& status);
     void processThread();
@@ -140,7 +145,10 @@ private:
     QTimer* persistence_timer;
     SIG_DEF(StartThreads);
     SIG_DEF(StopThreads);
-
+	// All signals from the user get directed through this manager so that 
+	// they can all be attached to a serialization sink for recording user interaction
+	Signals::signal_manager								_ui_manager;
+	std::vector<std::shared_ptr<Signals::connection>>   _signal_connections;
 };
 
 #endif // MAINWINDOW_H

@@ -124,10 +124,10 @@ namespace EagleLib
         virtual std::vector<const char*> GetNodeHierarchy();
 		
 		// List of nodes that need to be in the direct parental tree of this node, in required order
-		virtual std::vector<std::string> GetParentalDependencies() const;
+		virtual std::vector<std::vector<std::string>> GetParentalDependencies() const;
 		
 		// List of nodes that must exist in this data stream, but do not need to be in the direct parental tree of this node
-		virtual std::vector<std::string> GetNonParentalDependencies() const;
+		virtual std::vector<std::vector<std::string>> GetNonParentalDependencies() const;
 
 		// Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
 		virtual std::vector<std::string> CheckDependentVariables(IVariableManager* var_manager_) const;

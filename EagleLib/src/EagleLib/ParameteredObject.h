@@ -12,7 +12,7 @@
 #include <vector>
 #include <mutex>
 
-class ISimpleSerializer;
+struct ISimpleSerializer;
 namespace Parameters
 {
 	class Parameter;

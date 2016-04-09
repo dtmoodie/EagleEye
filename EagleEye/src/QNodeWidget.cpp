@@ -157,7 +157,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
         ui->nodeName->setToolTip(QString::fromStdString(node->getFullTreeName()));
         ui->nodeName->setMaximumWidth(200);
         ui->gridLayout->setSpacing(0);
-		auto parameters = node->getParameters();
+		auto parameters = node->getDisplayParameters();
         for (size_t i = 0; i < parameters.size(); ++i)
 		{
 			int col = 0;
@@ -235,7 +235,7 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
 	}
     if(parameterUpdate && node_ == node.get())
     {
-        auto parameters = node->getParameters();
+        auto parameters = node->getDisplayParameters();
 		if (parameters.size() != parameterProxies.size())
         {
             for(size_t i = 0; i < parameters.size(); ++i)

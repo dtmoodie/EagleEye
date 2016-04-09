@@ -91,11 +91,12 @@ void NodeListDialog::on_pushButton_clicked()
     if(ui->NodeList->currentItem())
     {
 		
-        EagleLib::Nodes::Node::Ptr node = EagleLib::NodeManager::getInstance().addNode(ui->NodeList->currentItem()->text(0).toStdString());
-		if (node != nullptr)
-		{
-			emit nodeConstructed(node);
-		}
+		sig_add_node(ui->NodeList->currentItem()->text(0).toStdString());
+        //EagleLib::Nodes::Node::Ptr node = EagleLib::NodeManager::getInstance().addNode(ui->NodeList->currentItem()->text(0).toStdString());
+		//if (node != nullptr)
+		//{
+			//emit nodeConstructed(node);
+		//}
         
     }
 }
