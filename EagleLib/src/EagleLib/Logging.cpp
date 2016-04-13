@@ -1,4 +1,5 @@
 #include "Logging.h"
+
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
@@ -28,10 +29,23 @@
 #include <boost/log/sinks/async_frontend.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/filesystem.hpp>
+
 #include <EagleLib/logger.hpp>
+#include <opencv2/core.hpp>
+
+int static_errorHandler(int status, const char* func_name, const char* err_msg, const char* file_name, int line, void* userdata)
+{
+	std::stringstream ss;
+	BOOST_LOG_TRIVIAL(debug) << "Exception at\n" << Signals::print_callstack(0, true, ss);
+	throw Signals::ExceptionWithCallStack<cv::Exception>(cv::Exception(status, err_msg, func_name, file_name, line), ss.str());
+	return 0;
+}
+
 boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>> log_sink;
+
 void EagleLib::SetupLogging()
 {
+	cv::redirectError(&static_errorHandler);
 #ifdef _DEBUG
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
 #else

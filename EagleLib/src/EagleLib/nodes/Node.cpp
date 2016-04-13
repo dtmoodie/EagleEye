@@ -34,7 +34,11 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
 #define CATCH_MACRO                                                         \
-    catch (boost::thread_resource_error& err)                               \
+	catch(Signals::ExceptionWithCallStack<cv::Exception>& e)				\
+{																			\
+	NODE_LOG(error) << e.what() << "\n" << e.CallStack();					\
+}																			\
+catch (boost::thread_resource_error& err)									\
 {                                                                           \
     NODE_LOG(error) << err.what();                                          \
 }                                                                           \

@@ -4,6 +4,7 @@
 #include "parameters/InputParameter.hpp"
 #include "parameters/TypedParameter.hpp"
 #include "parameters/TypedInputParameter.hpp"
+#include "parameters/RangedParameter.hpp"
 #include <boost/lexical_cast.hpp>
 #ifdef _MSC_VER
 #ifdef _DEBUG
@@ -26,6 +27,13 @@ namespace EagleLib
 	{
 		return addParameter(typename Parameters::TypedParameter<T>::Ptr(new Parameters::TypedParameter<T>(name, data)));
 	}
+
+	template<typename T> 
+	Parameters::Parameter* ParameteredObject::addParameter(const std::string& name, const T& data, const T& min_value_, const T& max_value_)
+	{
+		return addParameter(typename Parameters::RangedParameter<T>::Ptr(new Parameters::RangedParameter<T>(min_value_, max_value_, name, data)));
+	}
+
 	template<typename T>
 	Parameters::Parameter* ParameteredObject::addIfNotExist(const std::string& name, const T& data)
 	{
@@ -130,6 +138,47 @@ namespace EagleLib
 		param->UpdateData(data, timestamp, stream);
         if(param->type != Parameters::Parameter::Output)
 		    onUpdate(param.get(), stream);
+		return param.get();
+	}
+
+	template<typename T> 
+	Parameters::Parameter* ParameteredObject::updateParameter(const std::string& name, const T& data, const T& min_value_, const T& max_value_, long long timestamp, cv::cuda::Stream* stream)
+	{
+		typename Parameters::ITypedParameter<T>::Ptr param;
+		param = getParameterOptional<T>(name);
+		if (param == nullptr)
+		{
+			BOOST_LOG_TRIVIAL(debug) << "Parameter named \"" << name << "\" with type " << Loki::TypeInfo(typeid(T)).name() << " doesn't exist, adding";
+			auto output = addParameter<T>(name, data, min_value_, max_value_);
+			output->SetTimeIndex(timestamp);
+			return output;
+		}
+
+		auto ranged_param = std::dynamic_pointer_cast<Parameters::ITypedRangedParameter<T>>(param);
+		DOIF_LOG_FAIL(ranged_param, ranged_param->SetRange(min_value_, max_value_) , debug);
+
+		param->UpdateData(data, timestamp, stream);
+		if (param->type != Parameters::Parameter::Output)
+			onUpdate(param.get(), stream);
+		return param.get();
+	}
+
+	template<typename T> 
+	Parameters::Parameter* ParameteredObject::updateParameter(size_t idx, const T data, const T& min_value_, const T& max_value_, long long timestamp, cv::cuda::Stream* stream)
+	{
+		if (idx > _parameters.size() || idx < 0)
+			return nullptr;
+
+		auto ranged_param = std::dynamic_pointer_cast<Parameters::ITypedRangedParameter<T>>(_parameters[idx]);
+		DOIF_LOG_FAIL(ranged_param, ranged_param->SetRange(min_value_, max_value_), debug);
+
+		auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(_parameters[idx]);
+		if (param == NULL)
+			return nullptr;
+
+		param->UpdateData(data, timestamp, stream);
+		if (param->type != Parameters::Parameter::Output)
+			onUpdate(param.get(), stream);
 		return param.get();
 	}
 

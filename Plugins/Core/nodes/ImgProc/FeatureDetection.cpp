@@ -22,14 +22,14 @@ void GoodFeaturesToTrack::Init(bool firstInit)
         updateParameter("Min Distance",			double(0.0))->SetTooltip("The minimum distance between detected points");
         updateParameter("Block Size",           int(3));
         updateParameter("Use harris",           false);
-        updateParameter("Harris K",             double(0.04));
+        ParameteredObject::updateParameter("Harris K", 0.04, 0.01, 1.0);
         addInputParameter<cv::cuda::GpuMat>("Mask");
     }
 }
 
 void GoodFeaturesToTrack::detect(const cv::cuda::GpuMat& img, int frame_number, const cv::cuda::GpuMat& mask, cv::cuda::Stream& stream)
 {
-	TS<cv::cuda::GpuMat> key_points;
+	cv::cuda::GpuMat key_points;
 	cv::cuda::GpuMat grey_img;
 	if (img.channels() != 1)
 	{
@@ -45,7 +45,7 @@ void GoodFeaturesToTrack::detect(const cv::cuda::GpuMat& img, int frame_number, 
 	}
 	
 	detector->detect(grey_img, key_points, mask, stream);
-	key_points.frame_number = frame_number;
+	
 	updateParameter("Detected Corners", key_points)->type = Parameters::Parameter::Output;
 	updateParameter("Num corners", key_points.cols)->type = Parameters::Parameter::State;
 }

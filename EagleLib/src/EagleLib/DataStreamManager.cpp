@@ -264,7 +264,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::GetNodes()
 
 void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
-	if (boost::this_thread::get_id() != processing_thread.get_id())
+	if (boost::this_thread::get_id() != processing_thread.get_id() && !paused)
 	{
         Signals::thread_specific_queue::push(std::bind(&DataStream::AddNode, this, node), Signals::get_thread_id(processing_thread.get_id()));
 		return;

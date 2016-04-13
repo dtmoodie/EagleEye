@@ -88,6 +88,7 @@ Parameter* ParameteredObject::addParameter(Parameter::Ptr param)
     _parameters.push_back(param);
     return param.get();
 }
+
 void ParameteredObject::RemoveParameter(std::string name)
 {
     for(auto itr = _parameters.begin(); itr != _parameters.end(); ++itr)
@@ -148,10 +149,12 @@ Parameter::Ptr ParameteredObject::getParameterOptional(const std::string& name)
     BOOST_LOG_TRIVIAL(debug) << "Unable to find parameter by name: " << name;
     return Parameter::Ptr();
 }
+
 std::vector<ParameterPtr> ParameteredObject::getParameters()
 {
     return _parameters;
 }
+
 std::vector<ParameterPtr> ParameteredObject::getDisplayParameters()
 {
 	return getParameters();

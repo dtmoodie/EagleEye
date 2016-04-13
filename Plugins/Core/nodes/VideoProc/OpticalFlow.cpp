@@ -92,7 +92,7 @@ void build_pyramid(std::vector<cv::cuda::GpuMat>& pyramid, int levels, cv::cuda:
     CV_Assert(pyramid.size());
     CV_Assert(!pyramid[0].empty());
     pyramid.resize(levels);
-    for (int level = 1; level <= levels; ++level)
+    for (int level = 1; level < levels; ++level)
     {
         cv::cuda::pyrDown(pyramid[level - 1], pyramid[level], stream);
     }
@@ -148,7 +148,6 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
 
 			if (*getParameter<bool>(4)->Data() && tracked_points.empty())
 				prev_key_points.copyTo(tracked_points, stream);
-
 			optFlow->calc(prev_grey, grey_pyramid, prev_key_points, tracked_points, status, error, stream);
 
 			updateParameter("Tracked points", tracked_points)->type = Parameters::Parameter::Output;

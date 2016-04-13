@@ -36,17 +36,7 @@
 #include <signals/logging.hpp>
 #include <signal.h>
 
-int static_errorHandler( int status, const char* func_name,const char* err_msg, const char* file_name, int line, void* userdata )
-{
-    std::stringstream ss;
-    std::function<void(const std::string&)> f = [&ss](const std::string& str)->void
-    {
-        ss << str;
-    };
-    Signals::collect_callstack(0, true, f);
-    BOOST_LOG_TRIVIAL(trace) << ss.str();
-    return 0;
-}
+
 
 void sig_handler(int s)
 {
@@ -125,7 +115,7 @@ MainWindow::MainWindow(QWidget *parent) :
     bookmarks = new bookmark_dialog(this);
     bookmarks->hide();
 
-    cv::redirectError(&static_errorHandler);
+    
     persistence_timer = new QTimer(this);
     persistence_timer->start(500); // save setting every half second
     connect(bookmarks, SIGNAL(open_file(QString)), this, SLOT(load_file(QString)));
@@ -557,6 +547,10 @@ void MainWindow::onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::
 }
 void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
 {
+	// Check if this node already exists
+	if (nodeGraphView->getWidget(node->GetObjectId()))
+		return;
+
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
     connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);

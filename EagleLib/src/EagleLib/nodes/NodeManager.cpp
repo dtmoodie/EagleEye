@@ -128,6 +128,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 				{
 					auto parent_nodes = addNode(parent_dep[0], parent_node.get());
 					constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
+					parent_node = parent_nodes.back();
 				}
 				else
 				{
@@ -183,6 +184,16 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 	return constructed_nodes;
 }
 
+// recursively checks if a node exists in the parent hierarchy
+bool check_parent_exists(Nodes::Node* node, const std::string& name)
+{
+	if (node->getName() == name)
+		return true;
+	if (auto parent = node->getParent())
+		return check_parent_exists(parent, name);
+	return false;
+}
+
 std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string& nodeName, Nodes::Node* parentNode)
 {
 	IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
@@ -197,16 +208,29 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 		{
 			if (parent_dep.size())
 			{
-				if (parent_node)
+				// For each node already in this tree, search for any of the allowed parental dependencies
+				bool found = false;
+				for (auto& dep : parent_dep)
 				{
-					auto parent_nodes = addNode(parent_dep[0], parent_node.get());
-					constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
+					if (check_parent_exists(parentNode, dep))
+					{
+						found = true;
+						break;
+					}
 				}
-				else
+				if (!found)
 				{
-					auto parent_nodes = addNode(parent_dep[0], parentNode);
-					constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
-					parent_node = parent_nodes.back();
+					if (parent_node)
+					{
+						auto parent_nodes = addNode(parent_dep[0], parent_node.get());
+						constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
+					}
+					else
+					{
+						auto parent_nodes = addNode(parent_dep[0], parentNode);
+						constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
+						parent_node = parent_nodes.back();
+					}
 				}
 			}
 		}

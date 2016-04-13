@@ -81,6 +81,8 @@ namespace EagleLib
         template<typename T> Parameters::Parameter* registerParameter(const std::string& name, T* data);
 
         template<typename T> Parameters::Parameter* addParameter(const std::string& name, const T& data);
+
+		template<typename T> Parameters::Parameter* addParameter(const std::string& name, const T& data, const T& min_value_, const T& max_value_);
         
         template<typename T> Parameters::Parameter* addIfNotExist(const std::string& name, const T& data);
 
@@ -95,6 +97,10 @@ namespace EagleLib
         template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, long long timestamp = -1, cv::cuda::Stream* stream = nullptr);
 
         template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, long long timestamp = -1, cv::cuda::Stream* stream = nullptr);
+
+		template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, const T& min_value_, const T& max_value_, long long timestamp = -1, cv::cuda::Stream* stream = nullptr);
+
+		template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, const T& min_value_, const T& max_value_, long long timestamp = -1, cv::cuda::Stream* stream = nullptr);
 
         template<typename T> typename std::shared_ptr<Parameters::ITypedParameter<T>> getParameter(std::string name);
 
