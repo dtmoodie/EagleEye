@@ -80,6 +80,7 @@ namespace EagleLib
             bool _feed_enabled;
             bool _caps_set;
         public:
+
             gstreamer_sink_base();
             ~gstreamer_sink_base();
             virtual void Init(bool firstInit);
@@ -94,6 +95,7 @@ namespace EagleLib
             virtual bool start_pipeline();
             virtual bool stop_pipeline();
             virtual bool pause_pipeline();
+			virtual GstState get_pipeline_state();
             static std::vector<std::string> get_interfaces();
             static std::vector<std::string> get_gstreamer_features(const std::string& filter = "");
             static bool check_feature(const std::string& feature_name);

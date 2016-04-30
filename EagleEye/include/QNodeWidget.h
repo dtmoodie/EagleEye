@@ -16,7 +16,7 @@
 #include <qfiledialog.h>
 #include <QLineEdit>
 #include <QComboBox>
-#include <EagleLib/type.h>
+#include <parameters/type.h>
 #include <boost/thread/recursive_mutex.hpp>
 #include <parameters/UI/Qt.hpp>
 #include <EagleLib/rcc/shared_ptr.hpp>
@@ -36,16 +36,17 @@ class QInputProxy : public QWidget
 {
 	Q_OBJECT
     int prevIdx;
-	
+	void onParamDelete(Parameters::Parameter* parameter);
 public:
-	std::shared_ptr<Parameters::InputParameter> inputParameter;
-	QInputProxy(std::shared_ptr<Parameters::Parameter> parameter, EagleLib::Nodes::Node::Ptr node_, QWidget* parent);
+	Parameters::InputParameter* inputParameter;
+	QInputProxy(Parameters::Parameter* parameter, EagleLib::Nodes::Node::Ptr node_, QWidget* parent);
 	virtual void updateUi(bool init = false);
 	virtual QWidget* getWidget(int num = 0);
 private slots:
 	void on_valueChanged(int);
 private:
 	std::shared_ptr<Signals::connection> bc;
+	std::shared_ptr<Signals::connection> dc;
 	EagleLib::Nodes::Node::Ptr node;
 	QComboBox* box;
 };
@@ -73,7 +74,7 @@ private slots:
 	void log(boost::log::trivial::severity_level verb, const std::string& msg);
 signals:
 	void eLog(boost::log::trivial::severity_level verb, const std::string& msg);
-	void parameterClicked(Parameters::Parameter::Ptr param, QPoint pos);
+	void parameterClicked(Parameters::Parameter* param, QPoint pos);
 private:
 	QLineEdit* profileDisplay;
     QLineEdit* traceDisplay;
@@ -83,7 +84,7 @@ private:
     QLineEdit* errorDisplay;
 
 
-	std::map<QWidget*, Parameters::Parameter::Ptr> widgetParamMap;
+	std::map<QWidget*, Parameters::Parameter*> widgetParamMap;
 	Ui::QNodeWidget* ui;
     EagleLib::Nodes::Node::Ptr node;
 	std::vector<Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
@@ -113,7 +114,7 @@ private:
     Ui::DataStreamWidget* ui;
     std::vector<QInputProxy*> inputProxies;
     std::vector<Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
-    std::map<QWidget*, Parameters::Parameter::Ptr> widgetParamMap;
+    std::map<QWidget*, Parameters::Parameter*> widgetParamMap;
 };
 
 class DraggableLabel: public QLabel

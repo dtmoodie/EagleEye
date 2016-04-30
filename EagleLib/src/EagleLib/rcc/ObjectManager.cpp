@@ -45,17 +45,17 @@ void CompileLogger::log(int level, const char *format, va_list args)
 	{
 	case 0:
 	{
-		LOG_TRIVIAL(info) << "[RCC] " << m_buff;
+		LOG(info) << "[RCC] " << m_buff;
 		break;
 	}
 	case 1:
 	{
-		LOG_TRIVIAL(warning) << "[RCC] " << m_buff;
+		LOG(warning) << "[RCC] " << m_buff;
 		break;
 	}
 	case 2:
 	{
-		LOG_TRIVIAL(error) << "[RCC] " << m_buff;
+		LOG(error) << "[RCC] " << m_buff;
 		break;
 	}
 	}
@@ -93,30 +93,30 @@ bool TestCallback::TestBuildCallback(const char* file, TestBuildResult type)
 	switch (type)
 	{
 	case TESTBUILDRRESULT_SUCCESS:
-		BOOST_LOG_TRIVIAL(info) << "TESTBUILDRRESULT_SUCCESS - " << file;
+		LOG(info) << "TESTBUILDRRESULT_SUCCESS - " << file;
 		break;
 	case TESTBUILDRRESULT_NO_FILES_TO_BUILD:
-		BOOST_LOG_TRIVIAL(info) << "TESTBUILDRRESULT_NO_FILES_TO_BUILD - " << file;
+		LOG(info) << "TESTBUILDRRESULT_NO_FILES_TO_BUILD - " << file;
 		success = false;
 		break;
 	case TESTBUILDRRESULT_BUILD_FILE_GONE:
-		BOOST_LOG_TRIVIAL(info) << "TESTBUILDRRESULT_BUILD_FILE_GONE - " << file;
+		LOG(info) << "TESTBUILDRRESULT_BUILD_FILE_GONE - " << file;
 		success = false;
 		break;
 	case TESTBUILDRRESULT_BUILD_NOT_STARTED:
-		BOOST_LOG_TRIVIAL(info) << "TESTBUILDRRESULT_BUILD_NOT_STARTED - " << file;
+		LOG(info) << "TESTBUILDRRESULT_BUILD_NOT_STARTED - " << file;
 		success = false;
 		break;
 	case TESTBUILDRRESULT_BUILD_FAILED:
-		BOOST_LOG_TRIVIAL(info) << "TESTBUILDRRESULT_BUILD_FAILED - " << file;
+		LOG(info) << "TESTBUILDRRESULT_BUILD_FAILED - " << file;
 		success = false;
 		break;
 	case TESTBUILDRRESULT_OBJECT_SWAP_FAIL:
-		BOOST_LOG_TRIVIAL(info) << "TESTBUILDRRESULT_OBJECT_SWAP_FAIL - " << file;
+		LOG(info) << "TESTBUILDRRESULT_OBJECT_SWAP_FAIL - " << file;
 		success = false;
 		break;
 	}
-	//BOOST_LOG_TRIVIAL(info) << file;
+	//BOOST_LOG(info) << file;
 	return success;
 }
 
@@ -184,7 +184,7 @@ ObjectManager::ObjectManager()
         rmt_BindOpenGL();
     }catch(...)
     {
-        BOOST_LOG_TRIVIAL(warning) << "Unable to start remotery";
+		LOG(warning) << "Unable to start remotery";
     }
 	
 }

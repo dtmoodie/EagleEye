@@ -1,6 +1,6 @@
 #include "nodes/Utility/DataHandling.h"
 #include "Remotery.h"
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 #include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -178,7 +178,7 @@ cv::cuda::GpuMat ConcatTensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     int type = -1;
     for(int i = 1; i < _parameters.size(); ++i)
     {
-        auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>>(_parameters[i]);
+        auto param = dynamic_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>*>(_parameters[i]);
         if(param)
         {
             if(param->Data() == nullptr)
@@ -257,10 +257,9 @@ void LagBuffer::Init(bool firstInit)
 	putItr = 0;
 	getItr = 0;
 	lagFrames = 20;
-	_parameters.push_back(Parameters::TypedInputParameterCopy<unsigned int>::Ptr(
-							new Parameters::TypedInputParameterCopy<unsigned int>("Lag frames", 
+	_parameters.push_back(new Parameters::TypedInputParameterCopy<unsigned int>("Lag frames", 
 								&lagFrames, Parameters::Parameter::ParameterType(Parameters::Parameter::Input | Parameters::Parameter::Control), 
-								"Number of frames for this video stream to lag behind")));
+								"Number of frames for this video stream to lag behind"));
 
 	//	updateParameter<unsigned int>("Lag frames", &lagFrames, Parameters::Parameter::Control, "Number of frames for this video stream to lag behind");
 }

@@ -3,7 +3,7 @@
 #define Qt5_FOUND
 #define OPENCV_FOUND
 #include "parameters/UI/Qt.hpp"
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 
 QtPlotterImpl::QtPlotterImpl()
@@ -59,6 +59,7 @@ void QtPlotterImpl::OnParameterUpdate(cv::cuda::Stream* stream)
 	if (converter == nullptr)
 	{
 		converter = Parameters::Converters::Double::Factory::Create(param.get(), stream);
+		converter->Update(param.get(), stream);
 		return;
 	}
 	CV_Assert(converter);
@@ -73,7 +74,7 @@ void HistoryPlotter::Init(bool firstInit)
 {
 	if (firstInit)
 	{
-		auto param = std::shared_ptr<Parameters::Parameter>(new Parameters::TypedParameter<size_t>("History Size", 10));
+		auto param = new Parameters::TypedParameter<size_t>("History Size", 10);
         connections.push_back(param->RegisterNotifier(std::bind(&HistoryPlotter::on_history_size_change, this)));
 		parameters.push_back(param);
 	}

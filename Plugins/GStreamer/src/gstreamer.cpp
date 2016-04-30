@@ -2,7 +2,7 @@
 #include "glib_thread.h"
 
 #include <EagleLib/rcc/SystemTable.hpp>
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 
 #include <gst/video/video.h>
@@ -26,7 +26,7 @@ typedef class gstreamer_sink_base App;
 // handled messages from the pipeline
 static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
 {
-	BOOST_LOG_TRIVIAL(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
+	LOG(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
 
 	switch (GST_MESSAGE_TYPE(message)) 
 	{
@@ -36,8 +36,8 @@ static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
 		gchar *dbg_info = NULL;
 
 		gst_message_parse_error(message, &err, &dbg_info);
-		BOOST_LOG_TRIVIAL(error) << "Error from element " << GST_OBJECT_NAME(message->src) << ": " << err->message;
-        BOOST_LOG_TRIVIAL(error) << "Debugging info: " << (dbg_info ? dbg_info : "none");
+		LOG(error) << "Error from element " << GST_OBJECT_NAME(message->src) << ": " << err->message;
+		LOG(error) << "Debugging info: " << (dbg_info ? dbg_info : "none");
 		g_error_free(err);
 		g_free(dbg_info);
 		break;
@@ -231,6 +231,7 @@ bool gstreamer_sink_base::pause_pipeline()
     if(!_pipeline)
         return false;
     GstStateChangeReturn ret = gst_element_set_state(_pipeline, GST_STATE_PAUSED);
+	
 	if(ret == GST_STATE_CHANGE_FAILURE)
     {
         NODE_LOG(error) << "Unable to pause pipeline";
@@ -285,6 +286,17 @@ TS<SyncedMemory> gstreamer_sink_base::doProcess(TS<SyncedMemory> img, cv::cuda::
         },  stream);
     }
     return img;
+}
+GstState gstreamer_sink_base::get_pipeline_state()
+{
+	if (_pipeline)
+	{
+		GstState ret;
+		GstState pending;
+		if (gst_element_get_state(_pipeline, &ret, &pending, GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_FAILURE)
+			return ret;
+	}
+	return GST_STATE_NULL;
 }
 
 void gstreamer_sink_base::start_feed()
@@ -718,7 +730,7 @@ void RTSP_server_new::glibThread()
 	{
 		g_main_loop_run(loop);
 	}
-	BOOST_LOG_TRIVIAL(info) << "[RTSP Server] Gmain loop quitting";
+	LOG(info) << "[RTSP Server] Gmain loop quitting";
 }
 void RTSP_server_new::setup(std::string pipeOverride)
 {
@@ -726,7 +738,7 @@ void RTSP_server_new::setup(std::string pipeOverride)
 }
 void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpointer user_data)
 {
-    BOOST_LOG_TRIVIAL(debug) << __FUNCTION__;
+	LOG(debug) << __FUNCTION__;
 	auto node = static_cast<EagleLib::Nodes::RTSP_server_new*>(user_data);
 	cv::Mat h_buffer;
 	node->notifier.wait_and_pop(h_buffer);
@@ -762,7 +774,7 @@ void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpoin
 static gboolean
 bus_message_new(GstBus * bus, GstMessage * message, RTSP_server_new * app)
 {
-	BOOST_LOG_TRIVIAL(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
+	LOG(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
 
 	switch (GST_MESSAGE_TYPE(message))
 	{
@@ -772,8 +784,8 @@ bus_message_new(GstBus * bus, GstMessage * message, RTSP_server_new * app)
 		gchar *dbg_info = NULL;
 
 		gst_message_parse_error(message, &err, &dbg_info);
-		BOOST_LOG_TRIVIAL(error) << "Error from element " << GST_OBJECT_NAME(message->src) << ": " << err->message;
-		BOOST_LOG_TRIVIAL(error) << "Debugging info: " << (dbg_info) ? dbg_info : "none";
+		BOOST_LOG(error) << "Error from element " << GST_OBJECT_NAME(message->src) << ": " << err->message;
+		BOOST_LOG(error) << "Debugging info: " << (dbg_info) ? dbg_info : "none";
 		g_error_free(err);
 		g_free(dbg_info);
 		g_main_loop_quit(app->loop);
@@ -790,10 +802,10 @@ bus_message_new(GstBus * bus, GstMessage * message, RTSP_server_new * app)
 void client_close_handler(GstRTSPClient *client, EagleLib::Nodes::RTSP_server_new* node)
 {
 	node->clientCount--;
-	BOOST_LOG_TRIVIAL(info) << "[RTSP Server] Client Disconnected " << node->clientCount << " " << client;
+	LOG(info) << "[RTSP Server] Client Disconnected " << node->clientCount << " " << client;
 	if (node->clientCount == 0)
 	{
-		BOOST_LOG_TRIVIAL(info) << "[RTSP Server] Setting pipeline state to GST_STATE_NULL and unreffing old pipeline";
+		BOOST_LOG(info) << "[RTSP Server] Setting pipeline state to GST_STATE_NULL and unreffing old pipeline";
 		gst_element_set_state(node->pipeline,GST_STATE_NULL);
 		gst_object_unref(node->pipeline);
 		gst_object_unref(node->appsrc);
@@ -804,7 +816,7 @@ void client_close_handler(GstRTSPClient *client, EagleLib::Nodes::RTSP_server_ne
 }
 void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, EagleLib::Nodes::RTSP_server_new* node)
 {
-    BOOST_LOG_TRIVIAL(debug) << __FUNCTION__;
+    BOOST_LOG(debug) << __FUNCTION__;
 	if (node->imgSize.area() == 0)
 	{
 		return;
@@ -816,7 +828,7 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, EagleL
 	// get our appsrc, we named it 'mysrc' with the name property 
 	node->appsrc = gst_bin_get_by_name_recurse_up(GST_BIN(node->pipeline), "mysrc");
 
-	BOOST_LOG_TRIVIAL(info) << "[RTSP Server] Configuring pipeline " << node->clientCount << " " << node->pipeline << " " << node->appsrc;
+	BOOST_LOG(info) << "[RTSP Server] Configuring pipeline " << node->clientCount << " " << node->pipeline << " " << node->appsrc;
 
 	// this instructs appsrc that we will be dealing with timed buffer 
 	gst_util_set_object_arg(G_OBJECT(node->appsrc), "format", "time");
@@ -837,10 +849,10 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, EagleL
 }
 void new_client_handler(GstRTSPServer *server, GstRTSPClient *client, EagleLib::Nodes::RTSP_server_new* node)
 {
-	BOOST_LOG_TRIVIAL(debug) << __FUNCTION__;
+	LOG(debug) << __FUNCTION__;
 	node->clientCount++;
 	node->connected = true;
-	BOOST_LOG_TRIVIAL(info) << "New client connected " << node->clientCount << " " << client;
+	LOG(info) << "New client connected " << node->clientCount << " " << client;
 	if (node->first_run)
 	{
 		g_signal_connect(node->factory, "media-configure", G_CALLBACK(media_configure), node);
@@ -877,7 +889,7 @@ void RTSP_server_new::Init(bool firstInit)
 		// create a server instance 
 		if (!server)
         {
-            NODE_LOG(debug) << "Creating new rtsp server";
+			LOG(debug) << "Creating new rtsp server";
         	server = gst_rtsp_server_new();
         }
 		
@@ -885,7 +897,7 @@ void RTSP_server_new::Init(bool firstInit)
 		// that be used to map uri mount points to media factories 
 		if (!mounts)
         {
-            NODE_LOG(debug) << "Creating new mount points";
+			LOG(debug) << "Creating new mount points";
             mounts = gst_rtsp_server_get_mount_points(server);
         }
 			
@@ -896,7 +908,7 @@ void RTSP_server_new::Init(bool firstInit)
 		// element with pay%d names will be a stream 
 		if (!factory)
 		{
-            NODE_LOG(debug) << "Creating rtsp media factory";
+			LOG(debug) << "Creating rtsp media factory";
 			factory = gst_rtsp_media_factory_new();
 		}
 		gst_rtsp_media_factory_set_shared(factory, true);

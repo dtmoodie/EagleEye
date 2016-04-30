@@ -7,7 +7,7 @@
 #include <QDateTime>
 #include "qevent.h"
 #include "EagleLib/logger.hpp"
-#include "EagleLib/IVariableManager.h"
+#include "Parameters/IVariableManager.h"
 #include <signals/logging.hpp>
 IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
     QWidget(parent),
@@ -243,14 +243,14 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
                 bool found = false;
 				for (size_t j = 0; j < parameterProxies.size(); ++j)
                 {
-					if (parameterProxies[j]->CheckParameter(parameters[i].get()))
+					if (parameterProxies[j]->CheckParameter(parameters[i]))
                         found = true;
                 }
 				for (size_t j = 0; j < inputProxies.size(); ++j)
 				{
 					
 					if (parameters[i]->type & Parameters::Parameter::Input && 
-						inputProxies[j]->inputParameter == std::dynamic_pointer_cast<Parameters::InputParameter>(parameters[i]))
+						inputProxies[j]->inputParameter == dynamic_cast<Parameters::InputParameter*>(parameters[i]))
 					{
 						found = true;
 					}
@@ -442,21 +442,24 @@ void DataStreamWidget::SetSelected(bool state)
 
 
 
-QInputProxy::QInputProxy(std::shared_ptr<Parameters::Parameter> parameter_, EagleLib::Nodes::Node::Ptr node_, QWidget* parent):
+QInputProxy::QInputProxy(Parameters::Parameter* parameter_, EagleLib::Nodes::Node::Ptr node_, QWidget* parent):
 	node(node_), QWidget(parent)
 {
     box = new QComboBox(this);
 	box->setMinimumWidth(200);
 	box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-	//box->setToolTip(QString::fromStdString(parameter_->GetTooltip()));
 
 	bc = parameter_->RegisterNotifier(boost::bind(&QInputProxy::updateUi, this, false));
-    inputParameter = std::dynamic_pointer_cast<Parameters::InputParameter>(parameter_);
+	dc = parameter_->RegisterDeleteNotifier(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
+    inputParameter = dynamic_cast<Parameters::InputParameter*>(parameter_);
     updateUi(true);
     connect(box, SIGNAL(currentIndexChanged(int)), this, SLOT(on_valueChanged(int)));
     prevIdx = 0;
 }
+void QInputProxy::onParamDelete(Parameters::Parameter* parameter)
+{
 
+}
 void QInputProxy::on_valueChanged(int idx)
 {
     if(idx == prevIdx)
@@ -464,11 +467,11 @@ void QInputProxy::on_valueChanged(int idx)
     prevIdx = idx;
 	if (idx == 0)
 	{
-		inputParameter->SetInput(Parameters::Parameter::Ptr());
+		inputParameter->SetInput(nullptr);
 		return;
 	}
     QString inputName = box->currentText();
-    LOG(debug) << "Input changed to " << inputName.toStdString() << " for variable " << std::dynamic_pointer_cast<Parameters::Parameter>(inputParameter)->GetName();
+    LOG(debug) << "Input changed to " << inputName.toStdString() << " for variable " << dynamic_cast<Parameters::Parameter*>(inputParameter)->GetName();
     auto tokens = inputName.split(":");
     auto var_manager = node->GetVariableManager();
     auto tmp_param = var_manager->GetOutputParameter(inputName.toStdString());
@@ -479,7 +482,7 @@ void QInputProxy::on_valueChanged(int idx)
     if(tmp_param)
     {
         inputParameter->SetInput(tmp_param);
-        std::dynamic_pointer_cast<Parameters::Parameter>(inputParameter)->changed = true;
+        dynamic_cast<Parameters::Parameter*>(inputParameter)->changed = true;
     }
 }
 QWidget* QInputProxy::getWidget(int num)
@@ -497,7 +500,7 @@ void QInputProxy::updateUi(bool init)
         auto inputs = var_man->GetOutputParameters(inputParameter->GetTypeInfo());
         //= node->findCompatibleInputs(inputParameter);
         box->clear();
-        box->addItem(QString::fromStdString(std::dynamic_pointer_cast<Parameters::Parameter>(inputParameter)->GetTreeName()));
+        box->addItem(QString::fromStdString(dynamic_cast<Parameters::Parameter*>(inputParameter)->GetTreeName()));
         for(size_t i = 0; i < inputs.size(); ++i)
         {
             QString text = QString::fromStdString(inputs[i]->GetTreeName());

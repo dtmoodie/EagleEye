@@ -1,6 +1,6 @@
 #include "nodes/Utility/Utilities.h"
 #include <boost/lexical_cast.hpp>
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 
 
 
@@ -31,7 +31,7 @@ void SyncFunctionCall::call()
 {
     for(int i = 1; i < _parameters.size(); ++i)
     {
-		auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<boost::function<void(void)>>>(_parameters[i]);
+		auto param = dynamic_cast<Parameters::ITypedParameter<boost::function<void(void)>>*>(_parameters[i]);
         if(param)
         {
             if(param->Data() != nullptr)
@@ -45,7 +45,7 @@ cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     bool full = true;
     for(int i = 1; i < _parameters.size(); ++i)
     {
-        auto param = std::dynamic_pointer_cast<Parameters::ITypedParameter<boost::function<void(void)>>>(_parameters[i]);
+        auto param = dynamic_cast<Parameters::ITypedParameter<boost::function<void(void)>>*>(_parameters[i]);
 		
         if(param)
         {

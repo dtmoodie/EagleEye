@@ -1,5 +1,5 @@
 #include "super_resolution.h"
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 my_frame_source::my_frame_source()

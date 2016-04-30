@@ -26,27 +26,27 @@ rcc::shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
 				if (plotter)
 				{
 					plotter->Init(true);
-					LOG_TRIVIAL(info) << "[ PlotManager ] successfully generating plot " << plotName;
+					LOG(info) << "[ PlotManager ] successfully generating plot " << plotName;
 					return rcc::shared_ptr<Plotter>(plotter);
 				}
 				else
 				{
-					LOG_TRIVIAL(warning) << "[ PlotManager ] failed to cast to plotter object " << plotName;
+					LOG(warning) << "[ PlotManager ] failed to cast to plotter object " << plotName;
 				}
 			}
 			else
 			{
-				LOG_TRIVIAL(warning) << "[ PlotManager ] incorrect interface " << plotName;
+				LOG(warning) << "[ PlotManager ] incorrect interface " << plotName;
 			}
 		}
 		else
 		{
-			LOG_TRIVIAL(warning) << "[ PlotManager ] failed to construct plot " << plotName;
+			LOG(warning) << "[ PlotManager ] failed to construct plot " << plotName;
 		}
 	}
 	else
 	{
-		LOG_TRIVIAL(warning) << "[ PlotManager ] failed to get constructor " << plotName;
+		LOG(warning) << "[ PlotManager ] failed to get constructor " << plotName;
 	}
 	return rcc::shared_ptr<Plotter>();
 }

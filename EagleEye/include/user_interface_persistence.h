@@ -6,14 +6,14 @@
 #define PARAMTERS_GENERATE_PERSISTENCE
 #endif
 
-#include "EagleLib/ParameteredObject.h"
-#include "EagleLib/ParameteredObjectImpl.hpp"
+#include "EagleLib/ParameteredIObject.h"
+#include "parameters/ParameteredObjectImpl.hpp"
 #include <parameters/LokiTypeInfo.h>
 #include <map>
 
 
 
-class user_interface_persistence: public EagleLib::ParameteredObject
+class user_interface_persistence: public Parameters::ParameteredObject
 {
 public:
     class variable_storage
@@ -25,8 +25,8 @@ public:
         static variable_storage& instance();
         void save_parameters(const std::string& file_name = "user_preferences.yml");
         void load_parameters(const std::string& file_name = "user_preferences.yml");
-        void load_parameters(EagleLib::ParameteredObject* This, Loki::TypeInfo type);
-        void save_parameters(EagleLib::ParameteredObject* This, Loki::TypeInfo type);
+        void load_parameters(Parameters::ParameteredObject* This, Loki::TypeInfo type);
+        void save_parameters(Parameters::ParameteredObject* This, Loki::TypeInfo type);
 
         template<typename T> void load_parameters(T* This)
         {

@@ -31,7 +31,7 @@
 #include <vtkFloatArray.h>
 #include <vtkPolygon.h>
 #include <vtkGenericOpenGLRenderWindow.h>
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 
 
 SETUP_PROJECT_IMPL
@@ -175,7 +175,7 @@ void vtkOpenGLCudaImage::compile_texture()
     }
     catch (cv::Exception& e)
     {
-        BOOST_LOG_TRIVIAL(error) << e.what();
+        LOG(error) << e.what();
     }
     catch (...)
     {

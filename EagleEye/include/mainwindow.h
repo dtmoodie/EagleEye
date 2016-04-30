@@ -35,11 +35,8 @@ class MainWindow;
 }
 class SettingDialog;
 class bookmark_dialog;
-namespace Signals
-{
-    class connection;
-}
-class MainWindow : public QMainWindow, public user_interface_persistence, Signals::signaler
+
+class MainWindow : public QMainWindow, public user_interface_persistence//, Signals::signaler
 {
     Q_OBJECT
 

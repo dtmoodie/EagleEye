@@ -9,12 +9,12 @@
 bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
     static int projectCount = 0;
-    BOOST_LOG_TRIVIAL(info) << "Loading plugin " << fullPluginPath;
+	LOG(info) << "Loading plugin " << fullPluginPath;
 	HMODULE handle = LoadLibrary(fullPluginPath.c_str());
 	if (handle == nullptr)
 	{
 		auto err = GetLastError();
-        BOOST_LOG_TRIVIAL(error) << "Failed to load library due to: " << err;
+		LOG(error) << "Failed to load library due to: " << err;
 		return false;
 	}
 	typedef int(*BuildLevelFunctor)();
@@ -23,13 +23,13 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 	{
 		if (buildLevel() != BUILD_TYPE)
 		{
-			BOOST_LOG_TRIVIAL(info) << "Library debug level does not match";
+			LOG(info) << "Library debug level does not match";
 			return false;
 		}
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(warning) << "Build level not defined in library, attempting to load anyways";
+		LOG(warning) << "Build level not defined in library, attempting to load anyways";
 	}
 
 	typedef void(*includeFunctor)();
@@ -37,7 +37,7 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 	if (functor)
 		functor();
 	else
-		BOOST_LOG_TRIVIAL(warning) << "Setup Includes not found in plugin " << fullPluginPath;
+		LOG(warning) << "Setup Includes not found in plugin " << fullPluginPath;
         
 	typedef IPerModuleInterface* (*moduleFunctor)();
 	moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetPerModuleInterface");
@@ -49,7 +49,7 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 		
 	else
 	{
-		BOOST_LOG_TRIVIAL(warning) << "GetPerModuleInterface not found in plugin " << fullPluginPath;
+		LOG(warning) << "GetPerModuleInterface not found in plugin " << fullPluginPath;
 		module = (moduleFunctor)GetProcAddress(handle, "GetModule");
 		if (module)
 		{
@@ -58,7 +58,7 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 		}
 		else
 		{
-			BOOST_LOG_TRIVIAL(warning) << "GetModule not found in plugin " << fullPluginPath;
+			LOG(warning) << "GetModule not found in plugin " << fullPluginPath;
 			FreeLibrary(handle);
 		}	
 	}

@@ -4,7 +4,7 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -168,8 +168,8 @@ void AxisCamera::Init(bool firstInit)
 
         updateParameter("Camera moving", false)->type = Parameters::Parameter::State;
 
-		currentZoom.reset(new Parameters::TypedParameter<int>("Current Zoom", 0, Parameters::Parameter::State));
-		currentFocus.reset(new Parameters::TypedParameter<int>("Current Focus", 0, Parameters::Parameter::State));
+		currentZoom = new Parameters::TypedParameter<int>("Current Zoom", 0, Parameters::Parameter::State);
+		currentFocus = new Parameters::TypedParameter<int>("Current Focus", 0, Parameters::Parameter::State);
 		socket->zoom = currentZoom;
 		socket->focus = currentFocus;
 		_parameters.push_back(currentZoom);
@@ -180,8 +180,8 @@ void AxisCamera::Init(bool firstInit)
 	}
 	else
 	{
-		currentZoom = std::dynamic_pointer_cast<Parameters::TypedParameter<int>>(getParameter<int>("Current Zoom"));
-		currentFocus = std::dynamic_pointer_cast<Parameters::TypedParameter<int>>(getParameter<int>("Current Focus"));
+		currentZoom = getParameter<int>("Current Zoom");
+		currentFocus = getParameter<int>("Current Focus");
 	}
 	updateParameter<boost::function<void(void)>>("Get position", boost::bind(&AxisCamera::get_position, this));
 

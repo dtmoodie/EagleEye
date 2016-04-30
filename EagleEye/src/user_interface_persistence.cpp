@@ -5,7 +5,7 @@
 #include "user_interface_persistence.h"
 
 
-void user_interface_persistence::variable_storage::load_parameters(EagleLib::ParameteredObject* This, Loki::TypeInfo type)
+void user_interface_persistence::variable_storage::load_parameters(Parameters::ParameteredObject* This, Loki::TypeInfo type)
 {
     auto& params = loaded_parameters[type.name()];
     for (auto& param : params)
@@ -13,11 +13,11 @@ void user_interface_persistence::variable_storage::load_parameters(EagleLib::Par
         if (This->exists(param.first))
         {
             // Update the variable with data from file
-            This->getParameter(param.first)->Update(param.second);
+            This->getParameter(param.first)->Update(param.second.get());
         }
     }
 }
-void user_interface_persistence::variable_storage::save_parameters(EagleLib::ParameteredObject* This, Loki::TypeInfo type)
+void user_interface_persistence::variable_storage::save_parameters(Parameters::ParameteredObject* This, Loki::TypeInfo type)
 {
     auto& params = loaded_parameters[type.name()];
     auto all_params = This->getParameters();
@@ -66,7 +66,7 @@ void user_interface_persistence::variable_storage::load_parameters(const std::st
                 auto param = Parameters::Persistence::cv::DeSerialize(&node);
                 if (param)
                 {
-                    param_vec[param->GetName()] = Parameters::Parameter::Ptr(param);
+                    param_vec[param->GetName()] = std::shared_ptr<Parameters::Parameter>(param);
                 }
             }
         }

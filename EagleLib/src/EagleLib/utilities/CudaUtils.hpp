@@ -305,7 +305,7 @@ template<typename Data>
 			if (!buffer[itr].ready())
 			{
 #ifndef __NVCC__
-				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
 				resize(buffer.size() + 1);
 			}
@@ -318,7 +318,7 @@ template<typename Data>
 			if (!buffer[itr].ready())
 			{
 #ifndef __NVCC__
-				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
 				resize(buffer.size() + 1);
 			}
@@ -375,7 +375,7 @@ template<typename Data>
 			if (!buffer[itr].ready())
 			{
 #ifndef __NVCC__
-				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
 				resize(buffer.size() + 1);
 			}
@@ -388,7 +388,7 @@ template<typename Data>
 			if (!buffer[itr].ready())
 			{
 #ifndef __NVCC__
-				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
 				resize(buffer.size() + 1);
 			}			
@@ -445,7 +445,7 @@ template<typename Data>
 			if (!buffer[itr].ready())
 			{
 #ifndef __NVCC__
-				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
 				resize(buffer.size() + 1);
 			}
@@ -458,7 +458,7 @@ template<typename Data>
 			if (!buffer[itr].ready())
 			{
 #ifndef __NVCC__
-				BOOST_LOG_TRIVIAL(warning) << "Buffer not ready, increasing size of buffer pool";
+				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
 				resize(buffer.size() + 1);
 			}

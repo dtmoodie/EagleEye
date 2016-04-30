@@ -1,5 +1,5 @@
 #pragma once
-#include "../ParameteredObject.h"
+#include "EagleLib//ParameteredIObject.h"
 
 #include "parameters/Parameters.hpp"
 

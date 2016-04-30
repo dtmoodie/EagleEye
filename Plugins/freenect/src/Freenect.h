@@ -1,14 +1,7 @@
 #pragma once
 #include "EagleLib/frame_grabber_base.h"
 #include "EagleLib/ICoordinateManager.h"
-#ifdef __cplusplus
-extern "C"{
-#endif
-    CV_EXPORTS IPerModuleInterface* GetModule();
-
-#ifdef __cplusplus
-}
-#endif
+SETUP_PROJECT_DEF
 
 class MyFreenectDevice;
 namespace Freenect

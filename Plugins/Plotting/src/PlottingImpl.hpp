@@ -41,7 +41,7 @@ namespace EagleLib
 		std::mutex mtx;
 		
 		std::vector<std::shared_ptr<Parameters::UI::qt::IParameterProxy>> parameterProxies;
-		std::vector<std::shared_ptr<Parameters::Parameter>> parameters;
+		std::vector<Parameters::Parameter*> parameters;
 		Parameters::Converters::Double::IConverter* converter;
 	public:
 		QtPlotterImpl();
@@ -49,16 +49,16 @@ namespace EagleLib
 		virtual QWidget* GetControlWidget(QWidget* parent);
 		virtual void Serialize(ISimpleSerializer *pSerializer);
 		//virtual void Init(bool firstInit);
-		template<typename T> typename Parameters::ITypedParameter<T>::Ptr GetParameter(const std::string& name)
+		template<typename T> typename Parameters::ITypedParameter<T>* GetParameter(const std::string& name)
 		{
 			for (auto& itr : parameters)
 			{
 				if (itr->GetName() == name)
 				{
-					return std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(itr);
+					return dynamic_cast<typename Parameters::ITypedParameter<T>*>(itr);
 				}
 			}
-            return typename Parameters::ITypedParameter<T>::Ptr();
+			return nullptr;
 		}
 		template<typename T> typename Parameters::ITypedParameter<T>::Ptr GetParameter(size_t index)
 		{

@@ -11,7 +11,7 @@
 #include "gloox/socks5bytestreamserver.h"
 #include "gloox/messageeventfilter.h"
 #include <boost/algorithm/string/predicate.hpp>
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 using namespace gloox;
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -56,7 +56,7 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
                         {
                             if (param->GetName() == inputParam->GetName())
                             {
-                                param->Update(inputParam);
+                                param->Update(inputParam.get());
                             }
 
                         }
@@ -96,7 +96,7 @@ void XmppClient::handleMessageSession(MessageSession *session)
         auto parameters = node->getParameters();
         for (auto param : parameters)
         {
-            Parameters::Persistence::Text::Serialize(&ss, param.get());
+            Parameters::Persistence::Text::Serialize(&ss, param);
             //ss << param->GetTreeName() << ":" << param->GetTypeInfo().name() << "\n";
         }
     }
@@ -109,15 +109,15 @@ void XmppClient::handleLog(LogLevel level, LogArea area, const std::string& mess
     {
     case LogLevelDebug:
     {
-                          NODE_LOG(debug) << message;
+         NODE_LOG(debug) << message;
     }
     case LogLevelError:
     {
-                          NODE_LOG(error) << message;
+        NODE_LOG(error) << message;
     }
     case LogLevelWarning:
     {
-                            NODE_LOG(warning) << message;
+         NODE_LOG(warning) << message;
     }
 
     }

@@ -113,7 +113,7 @@ std::vector<std::vector<std::string>> Nodes::NodeInfo::GetNonParentalDependencie
 }
 
 
-std::vector<std::string> Nodes::NodeInfo::CheckDependentVariables(IVariableManager* var_manager_) const
+std::vector<std::string> Nodes::NodeInfo::CheckDependentVariables(Parameters::IVariableManager* var_manager_) const
 {
 	return std::vector<std::string>();
 }
@@ -296,7 +296,7 @@ Node::addChild(Node::Ptr child)
     child->setTreeName(node_name + "-" + boost::lexical_cast<std::string>(count));
     child->Init(true);
     children.push_back(child);
-	BOOST_LOG_TRIVIAL(trace) << "[ " << fullTreeName << " ]" << " Adding child " << child->treeName;
+	LOG(trace) << "[ " << fullTreeName << " ]" << " Adding child " << child->treeName;
     return child;
 }
 
@@ -819,7 +819,7 @@ Node::Init(const cv::FileNode& configNode)
                         auto param = node->getParameter(paramName);
                         if (param)
                         {
-                            auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(_parameters[i]);
+                            auto inputParam = dynamic_cast<Parameters::InputParameter*>(_parameters[i]);
                             inputParam->SetInput(param);
                         }
                     }
@@ -829,12 +829,12 @@ Node::Init(const cv::FileNode& configNode)
             else
             {
                 if (_parameters[i]->type & Parameters::Parameter::Control)
-                    Parameters::Persistence::cv::DeSerialize(&paramNode, _parameters[i].get());
+                    Parameters::Persistence::cv::DeSerialize(&paramNode, _parameters[i]);
             }
         }
         catch (cv::Exception &e)
         {
-            BOOST_LOG_TRIVIAL(error) << "Deserialization failed for " << _parameters[i]->GetName() << " with type " << _parameters[i]->GetTypeInfo().name() << std::endl;
+            LOG(error) << "Deserialization failed for " << _parameters[i]->GetName() << " with type " << _parameters[i]->GetTypeInfo().name() << std::endl;
         }
     }
 }
@@ -880,7 +880,7 @@ Node::Serialize(cv::FileStorage& fs)
         {
 			if (_parameters[i]->type & Parameters::Parameter::Input)
 			{
-				auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(_parameters[i]);
+				auto inputParam = dynamic_cast<Parameters::InputParameter*>(_parameters[i]);
 				if (inputParam)
 				{
 					auto input = inputParam->GetInput();
@@ -904,7 +904,7 @@ Node::Serialize(cv::FileStorage& fs)
 					// TODO
 					try
 					{
-						Parameters::Persistence::cv::Serialize(&fs, _parameters[i].get());
+						Parameters::Persistence::cv::Serialize(&fs, _parameters[i]);
 					}
 					catch (cv::Exception &e)
 					{
@@ -919,156 +919,6 @@ Node::Serialize(cv::FileStorage& fs)
     }
 }
 
-std::vector<std::string>
-Node::findType(Parameters::Parameter::Ptr param)
-{
-	
-    std::vector<Node*> nodes;
-    getNodesInScope(nodes);
-    return findType(param, nodes);
-}
-
-std::vector<std::string>
-Node::findType(Loki::TypeInfo typeInfo)
-{
-	
-    std::vector<Node*> nodes;
-    getNodesInScope(nodes);
-    return findType(typeInfo, nodes);
-}
-std::vector<std::string>
-Node::findType(Parameters::Parameter::Ptr param, std::vector<Node*>& nodes)
-{
-	
-    std::vector<std::string> output;
-	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
-	if (inputParam)
-	{
-		for (size_t i = 0; i < nodes.size(); ++i)
-		{
-			if (nodes[i] == this)
-				continue;
-			for (size_t j = 0; j < nodes[i]->_parameters.size(); ++j)
-			{
-
-				if (nodes[i]->_parameters[j]->type & Parameters::Parameter::Output)
-				{
-					if (inputParam->AcceptsInput(nodes[i]->_parameters[j]))
-					{
-						output.push_back(nodes[i]->_parameters[j]->GetTreeName());
-					}
-					
-				}
-
-			}
-		}
-	}
-    return output;
-}
-
-std::vector<std::string> 
-Node::findType(Loki::TypeInfo &typeInfo, std::vector<Node*> &nodes)
-{
-	
-	std::vector<std::string> output;
-
-    for (size_t i = 0; i < nodes.size(); ++i)
-	{
-		if (nodes[i] == this)
-			continue;
-        for (size_t j = 0; j < nodes[i]->_parameters.size(); ++j)
-		{
-			if (nodes[i]->_parameters[j]->type & Parameters::Parameter::Output)
-			{
-				if (nodes[i]->_parameters[j]->GetTypeInfo() == typeInfo)
-				{
-					output.push_back(nodes[i]->_parameters[j]->GetTreeName());
-				}
-			}
-		}
-	}
-	return output;
-}
-std::vector<std::vector<std::string>> 
-Node::findCompatibleInputs()
-{
-	
-	std::vector<std::vector<std::string>> output;
-    for (size_t i = 0; i < _parameters.size(); ++i)
-	{
-		if (_parameters[i]->type & Parameters::Parameter::Input)
-            output.push_back(findType(_parameters[i]->GetTypeInfo()));
-	}
-	return output;
-}
-std::vector<std::string> Node::findCompatibleInputs(const std::string& paramName)
-{
-	
-    std::vector<std::string> output;
-    {
-        auto param = Node::getParameter(paramName);
-        if(param)
-            output = findType(param);
-    }
-    return output;
-}
-std::vector<std::string> Node::findCompatibleInputs(int paramIdx)
-{
-	
-    return findCompatibleInputs(_parameters[paramIdx]);
-}
-
-std::vector<std::string> Node::findCompatibleInputs(Parameters::Parameter::Ptr param)
-{
-	
-    return findType(param);
-}
-std::vector<std::string> Node::findCompatibleInputs(Loki::TypeInfo& type)
-{
-	
-	return findType(type);
-}
-std::vector<std::string> Node::findCompatibleInputs(Parameters::InputParameter::Ptr param)
-{
-	std::vector<Node*> nodes;
-	std::vector<std::string> output;
-	getNodesInScope(nodes);
-	for (int i = 0; i < nodes.size(); ++i)
-	{
-		for (int j = 0; j < nodes[i]->_parameters.size(); ++j)
-		{
-			if (!(nodes[i]->_parameters[j]->type & Parameters::Parameter::Input))
-				if (param->AcceptsInput(nodes[i]->_parameters[j]))
-					output.push_back(nodes[i]->_parameters[j]->GetTreeName());
-		}
-	}
-	return output;
-}
-
-
-void
-Node::setInputParameter(const std::string& sourceName, const std::string& inputName)
-{
-	
-	auto param = getParameter(inputName);
-	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
-	if (inputParam)
-	{
-		inputParam->SetInput(sourceName);
-	}
-}
-
-void
-Node::setInputParameter(const std::string& sourceName, int inputIdx)
-{
-	
-	auto param = getParameter(inputIdx);
-	auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(param);
-	if (inputParam)
-	{
-		inputParam->SetInput(sourceName);
-	}
-}
 void
 Node::setTreeName(const std::string& name)
 {
@@ -1102,19 +952,6 @@ Node::setParent(Node* parent_)
 }
 
 
-void 
-Node::updateInputParameters()
-{
-	
-    for (size_t i = 0; i < _parameters.size(); ++i)
-	{
-		if (_parameters[i]->type & Parameters::Parameter::Input)
-		{
-			// TODO
-			//_parameters[i]->setSource("");
-		}
-	}
-}
 bool Node::SkipEmpty() const
 {
     return true;

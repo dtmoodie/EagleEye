@@ -14,6 +14,13 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("cv_capture", ".cpp");
 
 namespace EagleLib
 {
+	class PLUGIN_EXPORTS frame_grabber_cv_info : public FrameGrabberInfo
+	{
+	public:
+		virtual std::string GetObjectName();
+		virtual int CanLoadDocument(const std::string& document) const;
+		virtual int Priority() const;
+	};
     class PLUGIN_EXPORTS frame_grabber_cv: public FrameGrabberBuffered
     {
     public:
@@ -22,9 +29,6 @@ namespace EagleLib
         virtual bool d_LoadFile(const std::string& file_path);
         virtual bool h_LoadFile(const std::string& file_path);
         virtual int GetNumFrames();
-        //virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
-        //virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
-        //virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
         virtual void Serialize(ISimpleSerializer* pSerializer);
         virtual void Init(bool firstInit);
 

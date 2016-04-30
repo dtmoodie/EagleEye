@@ -5,7 +5,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include "EagleLib/nodes/VideoProc/Tracking.hpp"
 #include "EagleLib/utilities/GpuMatAllocators.h"
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 #include <EagleLib/DataStreamManager.h>
 #include <EagleLib/IParameterBuffer.hpp>
 
@@ -72,6 +72,7 @@ void GoodFeaturesToTrack::update_detector(int depth)
 	_parameters[3]->changed = false;
 	_parameters[4]->changed = false;
 	_parameters[5]->changed = false;
+	_parameters[6]->changed = false;
 }
 
 TS<SyncedMemory> GoodFeaturesToTrack::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)

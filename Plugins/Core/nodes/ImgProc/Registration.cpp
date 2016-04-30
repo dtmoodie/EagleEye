@@ -7,7 +7,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
 #include <thrust/transform.h>
 #include <opencv2/core/cuda_stream_accessor.hpp>
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 
 
 using namespace EagleLib;

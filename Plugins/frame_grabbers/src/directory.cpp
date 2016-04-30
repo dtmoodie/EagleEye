@@ -3,7 +3,7 @@
 #include "ObjectInterfacePerModule.h"
 #include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
 #include <boost/filesystem.hpp>
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 frame_grabber_directory::frame_grabber_directory()
 {

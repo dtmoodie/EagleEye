@@ -31,9 +31,9 @@
 
 // In library includes
 #include "EagleLib/Defs.hpp"
-#include "EagleLib/ParameteredObject.h"
+//#include "EagleLib/ParameteredObject.h"
+#include "EagleLib/Algorithm.h"
 #include "EagleLib/SyncedMemory.h"
-#include "EagleLib/type.h" // for demangle on linux
 #include "EagleLib/utilities/CudaUtils.hpp"
 
 // RCC includes
@@ -70,11 +70,16 @@
 #define NODE_LOG(severity)                                                                                                                              \
     /*BOOST_LOG_SCOPED_THREAD_ATTR("NodeName", boost::log::attributes::mutable_constant<std::string>(fullTreeName));*/			                            \
     /*BOOST_LOG_SCOPED_THREAD_ATTR("Node", boost::log::attributes::mutable_constant<const Node*>(this));*/													\
-	LOG_TRIVIAL(severity)
+	LOG(severity)
 
 #else
-#define NODE_LOG(severity) 	LOG_TRIVIAL(severity)
+#define NODE_LOG(severity) 	LOG(severity)
 #endif
+
+namespace Parameters
+{
+	class IVariableManager;
+}
 
 namespace EagleLib
 {
@@ -83,10 +88,8 @@ namespace EagleLib
         class Node;
         class NodeImpl;
     }
-	
     class NodeManager;
 	class DataStream;
-	class IVariableManager;
 }
 
 
@@ -130,7 +133,7 @@ namespace EagleLib
 		virtual std::vector<std::vector<std::string>> GetNonParentalDependencies() const;
 
 		// Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
-		virtual std::vector<std::string> CheckDependentVariables(IVariableManager* var_manager_) const;
+		virtual std::vector<std::string> CheckDependentVariables(Parameters::IVariableManager* var_manager_) const;
 
         std::string node_name;
         std::string node_tooltip;
@@ -288,33 +291,6 @@ namespace EagleLib
 
 		virtual std::vector<std::string> listParameters();
 
-        virtual std::vector<std::string> findType(Parameters::Parameter::Ptr param);
-
-        virtual std::vector<std::string> findType(Loki::TypeInfo typeInfo);
-
-        virtual std::vector<std::string> findType(Loki::TypeInfo& typeInfo, std::vector<Node*>& nodes);
-
-        virtual std::vector<std::string> findType(Parameters::Parameter::Ptr param, std::vector<Node *> &nodes);
-
-		virtual std::vector<std::vector<std::string>> findCompatibleInputs();
-
-        std::vector<std::string> findCompatibleInputs(const std::string& paramName);
-
-        std::vector<std::string> findCompatibleInputs(int paramIdx);
-
-        std::vector<std::string> findCompatibleInputs(Parameters::Parameter::Ptr param);
-
-		std::vector<std::string> findCompatibleInputs(Loki::TypeInfo& type);
-
-		std::vector<std::string> findCompatibleInputs(Parameters::InputParameter::Ptr param);
-
-        virtual void setInputParameter(const std::string& sourceName, const std::string& inputName);
-
-        virtual void setInputParameter(const std::string& sourceName, int inputIdx);
-
-		virtual void updateInputParameters();
-
-
         
         void RegisterSignalConnection(std::shared_ptr<Signals::connection> connection);
         //virtual void onUpdate(cv::cuda::Stream* stream);
@@ -402,7 +378,7 @@ namespace EagleLib
 	protected:
 		DataStream*     								                        _dataStream;
 		long long																_current_timestamp;
-        std::shared_ptr<IVariableManager>								        _variable_manager;
+        std::shared_ptr<Parameters::IVariableManager>								        _variable_manager;
 
         rcc::weak_ptr<Node>                                                     parent;
         // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1

@@ -1,7 +1,7 @@
 #include "rtsp.h"
 #include "ObjectInterfacePerModule.h"
 #include <signals/logging.hpp>
-#include "EagleLib/ParameteredObjectImpl.hpp"
+#include "parameters/ParameteredObjectImpl.hpp"
 using namespace EagleLib;
 
 std::string frame_grabber_rtsp::frame_grabber_rtsp_info::GetObjectName()
@@ -40,6 +40,7 @@ frame_grabber_rtsp::frame_grabber_rtsp():
 {
     frame_count = 0;
     _reconnect = false;
+	_is_stream = true;
 }
 TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
 {
@@ -99,7 +100,7 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 	LOG(info) << "Attemping to load " << file_to_load;
     LOG(debug) << "Gstreamer string: " << gstreamer_string;
     _reconnect = false;
-    playback_frame_number = -1;
+    playback_frame_number = 0;
 	try
 	{
 		h_cam.reset(new cv::VideoCapture());
@@ -110,7 +111,9 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 				loaded_document = file_to_load;
 				playback_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES) + 1;
 				LOG(info) << "Load success, first frame number: " << playback_frame_number;
-
+				frame_buffer.clear();
+				buffer_begin_frame_number = playback_frame_number;
+				buffer_end_frame_number = playback_frame_number;
 				return true;
 			}
 		}

@@ -145,7 +145,7 @@ void RCCSettingsDialog::on_btnAddLinkDir_clicked()
 	}
 	if (projectId == -1)
 	{
-		BOOST_LOG_TRIVIAL(warning) << "Unable to determine correct project";
+		LOG(warning) << "Unable to determine correct project";
 		return;
 	}
 	EagleLib::ObjectManager::Instance().addLinkDir(dir.toStdString(), projectId);

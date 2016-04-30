@@ -2,7 +2,7 @@
 #include "../remotery/lib/Remotery.h"
 #include "EagleLib/utilities/GpuMatAllocators.h"
 #include "EagleLib/utilities/CpuMatAllocators.h"
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -308,11 +308,11 @@ void RTSPCamera::readImage_thread()
             }
             catch (cv::Exception &e)
             {
-                BOOST_LOG_TRIVIAL(error) << "Error in reading image " << e.what();
+                LOG(error) << "Error in reading image " << e.what();
             }
 			catch (...)
 			{
-				NODE_LOG(error) << "Error in reading image";
+				LOG(error) << "Error in reading image";
 			}
 		}
 	}    

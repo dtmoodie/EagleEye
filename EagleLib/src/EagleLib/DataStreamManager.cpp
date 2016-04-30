@@ -4,7 +4,7 @@
 #include "utilities/sorting.hpp"
 #include "EagleLib/Logging.h"
 #include "Remotery.h"
-#include "VariableManager.h"
+#include "parameters/VariableManager.h"
 #include "ParameterBuffer.h"
 
 #include <opencv2/core.hpp>
@@ -124,10 +124,10 @@ IParameterBuffer* DataStream::GetParameterBuffer()
 	return _parameter_buffer.get();
 
 }
-std::shared_ptr<IVariableManager> DataStream::GetVariableManager()
+std::shared_ptr<Parameters::IVariableManager> DataStream::GetVariableManager()
 {
     if(variable_manager == nullptr)
-        variable_manager.reset(new VariableManager());
+        variable_manager.reset(new Parameters::VariableManager());
     return variable_manager;
 }
 
@@ -344,14 +344,14 @@ void DataStream::process()
             dirty_flag = true;
         }), this);
 
-    auto object_update_connection = signal_manager->connect<void(ParameteredObject*)>("parameter_updated",
-        std::bind([this](ParameteredObject*)->void
+    auto object_update_connection = signal_manager->connect<void(Parameters::ParameteredObject*)>("parameter_updated",
+        std::bind([this](Parameters::ParameteredObject*)->void
         {
             dirty_flag = true;
         }, std::placeholders::_1), this);
 
-	auto parameter_added_connection = signal_manager->connect<void(ParameteredObject*)>("parameter_added",
-		std::bind([this](ParameteredObject*)->void
+	auto parameter_added_connection = signal_manager->connect<void(Parameters::ParameteredObject*)>("parameter_added",
+		std::bind([this](Parameters::ParameteredObject*)->void
 		{
 			dirty_flag = true;
 		}, std::placeholders::_1), this);

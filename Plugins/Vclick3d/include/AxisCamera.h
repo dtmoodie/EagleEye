@@ -37,8 +37,8 @@ namespace EagleLib
 		QNetworkAccessManager* network_manager;
         QNetworkReply* network_request;		
 	public:
-		Parameters::ITypedParameter<int>::Ptr zoom;
-		Parameters::ITypedParameter<int>::Ptr focus;
+		Parameters::ITypedParameter<int>* zoom;
+		Parameters::ITypedParameter<int>* focus;
 
 		AxisSocket();
 		void request(QUrl url);
@@ -67,8 +67,8 @@ namespace EagleLib
 		void on_addressChange();
 		void on_credentialChange();
 		void get_position();
-		Parameters::TypedParameter<int>::Ptr currentZoom;
-		Parameters::TypedParameter<int>::Ptr currentFocus;
+		Parameters::ITypedParameter<int>* currentZoom;
+		Parameters::ITypedParameter<int>* currentFocus;
 
 	public:
 		AxisCamera();

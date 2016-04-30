@@ -1,7 +1,7 @@
 #include "Plotting.h"
 #include "PlottingImpl.hpp"
 #include "Remotery.h"
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 template<typename T> QTableWidgetItem* readItems(T* data, const int channels)
 {
 	QString str;
@@ -29,8 +29,8 @@ namespace EagleLib
 			QtPlotterImpl::Init(firstInit);
 			if (firstInit)
 			{
-				parameters.push_back(std::shared_ptr<Parameters::Parameter>(new Parameters::TypedParameter<unsigned int>("Row", 0)));
-				parameters.push_back(std::shared_ptr<Parameters::Parameter>(new Parameters::TypedParameter<unsigned int>("Col", 0)));
+				parameters.push_back(new Parameters::TypedParameter<unsigned int>("Row", 0));
+				parameters.push_back(new Parameters::TypedParameter<unsigned int>("Col", 0));
 			}
 		}
 		void Serialize(ISimpleSerializer *pSerializer)

@@ -9,7 +9,7 @@
 #include "ObjectInterfacePerModule.h"
 #include "EagleLib/rcc/SystemTable.hpp"
 #include "EagleLib/DataStreamManager.h"
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 #include "EagleLib/profiling.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

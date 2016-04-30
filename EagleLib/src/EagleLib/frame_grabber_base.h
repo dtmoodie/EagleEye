@@ -2,7 +2,7 @@
 
 #include "IObject.h"
 #include "IObjectInfo.h"
-#include "ParameteredObject.h"
+#include "ParameteredIObject.h"
 #include "EagleLib/rcc/shared_ptr.hpp"
 #include "EagleLib/Signals.h"
 #include "RuntimeInclude.h"
@@ -38,11 +38,11 @@ namespace EagleLib
         /*!
          * \brief GetObjectTooltip
          */
-        virtual std::string GetObjectTooltip() = 0;
+        virtual std::string GetObjectTooltip();
         /*!
          * \brief GetObjectHelp return detailed help information for this framegrabber type
          */
-        virtual std::string GetObjectHelp() = 0;
+        virtual std::string GetObjectHelp();
         /*!
          * \brief CanLoadDocument determines if the frame grabber associated with this info object can load an input document
          * \param document is a string descibing a file / path / URI to load
@@ -129,6 +129,7 @@ namespace EagleLib
         // If the read thread is too far ahead of the buffer thread, then it will wait on this
         // condition variable for a notification of grabbing of a new image
         boost::condition_variable                  frame_grabbed_cv;
+		bool _is_stream;
     private:
         void                                     Buffer();
         boost::thread                            buffer_thread;

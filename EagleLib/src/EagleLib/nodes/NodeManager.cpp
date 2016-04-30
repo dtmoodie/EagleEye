@@ -55,8 +55,9 @@ NodeManager::OnConstructorsAdded()
 		{
 			if (parameters[j]->type & Parameters::Parameter::Input)
 			{
-				auto inputParam = std::dynamic_pointer_cast<Parameters::InputParameter>(parameters[j]);
-				inputParam->SetInput(std::string());
+				auto inputParam = dynamic_cast<Parameters::InputParameter*>(parameters[j]);
+				if(inputParam)
+					inputParam->SetInput(std::string());
 			}
 		}
 	}
@@ -80,12 +81,12 @@ rcc::shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
 			}
 			catch (cv::Exception &e)
 			{
-				BOOST_LOG_TRIVIAL(error) << "Failed to initialize node " << nodeName << " due to: " << e.what();
+				LOG(error) << "Failed to initialize node " << nodeName << " due to: " << e.what();
 				return rcc::shared_ptr<Nodes::Node>();
 			}
 			catch (...)
 			{
-				BOOST_LOG_TRIVIAL(error) << "Failed to initialize node " << nodeName;
+				LOG(error) << "Failed to initialize node " << nodeName;
 				return rcc::shared_ptr<Nodes::Node>();
 			}
 
@@ -94,14 +95,14 @@ rcc::shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
 		}
 		else
 		{
-			BOOST_LOG_TRIVIAL(warning) << "[ NodeManager ] " << nodeName << " not a node";
+			LOG(warning) << "[ NodeManager ] " << nodeName << " not a node";
 			// Input nodename is a compatible object but it is not a node
 			return rcc::shared_ptr<Nodes::Node>();
 		}
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(warning) << "[ NodeManager ] " << nodeName << " not a valid node name";
+		LOG(warning) << "[ NodeManager ] " << nodeName << " not a valid node name";
 		return rcc::shared_ptr<Nodes::Node>();
 	}
 
@@ -278,7 +279,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::loadNodes(const std::stri
 	if (!boost::filesystem::is_regular_file(path))
 	{
 		//std::cout << "Unable to load " << saveFile << " doesn't exist, or is not a regular file" << std::endl;
-		LOG_TRIVIAL(warning) << "[ NodeManager ] " << saveFile << " doesn't exist or not a regular file";
+		LOG(warning) << "[ NodeManager ] " << saveFile << " doesn't exist or not a regular file";
 	}
 	cv::FileStorage fs;
 	try
@@ -288,11 +289,11 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::loadNodes(const std::stri
 	catch (cv::Exception &e)
 	{
 		//std::cout << e.what() << std::endl;
-		LOG_TRIVIAL(error) << "[ NodeManager ] " << e.what();
+		LOG(error) << "[ NodeManager ] " << e.what();
 	}
 
 	int nodeCount = (int)fs["TopLevelNodeCount"];
-	LOG_TRIVIAL(info) << "[ NodeManager ] " << "Loading " << nodeCount << " nodes";
+	LOG(info) << "[ NodeManager ] " << "Loading " << nodeCount << " nodes";
 	std::vector<rcc::shared_ptr<Nodes::Node>> nodes;
 	nodes.reserve(nodeCount);
 	for (int i = 0; i < nodeCount; ++i)

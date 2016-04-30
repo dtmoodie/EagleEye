@@ -1,6 +1,6 @@
 #include <nodes/IO/VideoWriter.h>
 #include <boost/filesystem.hpp>
-#include <EagleLib/ParameteredObjectImpl.hpp>
+#include <parameters/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

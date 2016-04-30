@@ -1,27 +1,33 @@
 #include "Caffe.h"
-#include "caffe/caffe.hpp"
-
+#include "caffe_init.h"
 #include "EagleLib/nodes/Node.h"
 #include <EagleLib/ParameteredObjectImpl.hpp>
+#include <EagleLib/ObjectDetection.hpp>
+
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
-#include "caffe/caffe.hpp"
+
 #include <boost/tokenizer.hpp>
-#include <EagleLib/ObjectDetection.hpp>
+
 #include <string>
-#ifdef _MSC_VER // Windows
-    #ifdef _DEBUG
-    
-    #else
-    RUNTIME_COMPILER_LINKLIBRARY("libglog.lib")
-    RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib")
-    #endif
-#else // Linux
-RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
+
+#undef LOG
+#include "caffe/caffe.hpp"
+#undef LOG
+
+#ifdef _MSC_VER
+  #ifdef _DEBUG
+	RUNTIME_COMPILER_LINKLIBRARY("libcaffe_SHARED-d.lib");
+	RUNTIME_COMPILER_LINKLIBRARY("libglog.lib")
+  #else
+    RUNTIME_COMPILER_LINKLIBRARY("libcaffe_SHARED.lib")
+  #endif
+#else
 #endif
 
 SETUP_PROJECT_IMPL;
+
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -70,24 +76,30 @@ std::vector<size_t> sort_indexes(const T* begin, const T* end) {
     return sort_indexes<T>(begin, end - begin);
 }
 
+
+
+
+
+
+
 namespace EagleLib
 {
 	class CaffeImageClassifier : public Node
 	{
-        caffe::Blob<float>* input_layer;
-        boost::shared_ptr<caffe::Net<float>> NN;
-        bool weightsLoaded;
-        boost::shared_ptr< std::vector< std::string > > labels;
-        std::vector<std::vector<cv::cuda::GpuMat>> wrappedInputs;
-        cv::Mat wrapped_output;
-        cv::Scalar channel_mean;
+		caffe::Blob<float>* input_layer;
+		boost::shared_ptr<caffe::Net<float>> NN;
+		bool weightsLoaded;
+		boost::shared_ptr< std::vector< std::string > > labels;
+		std::vector<std::vector<cv::cuda::GpuMat>> wrappedInputs;
+		cv::Mat wrapped_output;
+		cv::Scalar channel_mean;
 	public:
 		CaffeImageClassifier();
 		virtual void Serialize(ISimpleSerializer* pSerializer);
 		virtual void Init(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-        virtual void WrapInput();
-        virtual void WrapOutput();
+		virtual void WrapInput();
+		virtual void WrapOutput();
         };
 }
 
@@ -154,9 +166,8 @@ void CaffeImageClassifier::Serialize(ISimpleSerializer* pSerializer)
 
 void CaffeImageClassifier::Init(bool firstInit)
 {
-    //std::cout << caffe::LayerRegistry<float>::LayerTypeList() << std::endl;
+	EagleLib::caffe_init_singleton::inst();
     caffe::Caffe::set_mode(caffe::Caffe::GPU);
-
     
     if(firstInit)
     {
@@ -164,9 +175,11 @@ void CaffeImageClassifier::Init(bool firstInit)
         updateParameter("NN weights file", Parameters::ReadFile());
         updateParameter("Label file", Parameters::ReadFile());
         updateParameter("Mean file", Parameters::ReadFile());
+		updateParameter("Scale", 0.00390625f)->SetTooltip("Scale factor to multiply the image by, after mean subtraction");
 		updateParameter("Subtraction required", false);
         updateParameter("Num classifications", 5);
         addInputParameter<std::vector<cv::Rect>>("Bounding boxes");
+		
         weightsLoaded = false;
         input_layer = nullptr;
     }
@@ -297,14 +310,22 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         img = resized;
         NODE_LOG(info) <<  "Resize required";
     }*/
+	cv::cuda::GpuMat float_image;
     if(img.depth() != CV_32F)
     {
-        img.convertTo(img, CV_32F,stream);
-    }
+        img.convertTo(float_image, CV_32F,stream);
+	}
+	else
+	{
+		float_image = img;
+	}
+
     if(*getParameter<bool>("Subtraction required")->Data())
     {
-        cv::cuda::subtract(img, channel_mean, img, cv::noArray(), -1, stream);
+        cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, stream);
     }
+	cv::cuda::multiply(float_image, cv::Scalar::all(*getParameter<float>("Scale")->Data()), float_image, 1.0, -1, stream);
+	cv::Mat tmp(float_image);
     std::vector<cv::Rect> defaultROI;
     defaultROI.push_back(cv::Rect(cv::Point(), img.size()));
     std::vector<cv::Rect>* inputROIs = getParameter<std::vector<cv::Rect>>("Bounding boxes")->Data();
@@ -323,19 +344,29 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         cv::cuda::GpuMat resized;
         if((*inputROIs)[i].size() != input_size)
         {
-            cv::cuda::resize(img, resized, input_size, 0, 0, cv::INTER_LINEAR, stream);
+            cv::cuda::resize(float_image, resized, input_size, 0, 0, cv::INTER_LINEAR, stream);
         }else
         {
-            resized = img((*inputROIs)[i]);
+            resized = float_image((*inputROIs)[i]);
         }
+		cv::Mat tmp(resized);
         cv::cuda::split(resized, wrappedInputs[i], stream);
     }
     // Check if channels are still wrapping correctly
-    if(input_layer->gpu_data() != reinterpret_cast<float*>(wrappedInputs[0][0].data))
-    {
-        NODE_LOG(error) << "Gpu mat not wrapping input blob!";
-        WrapInput();
-    }
+	const float* blob_data = input_layer->gpu_data();
+	int channels = input_layer->channels();
+	for (int i = 0; i < wrappedInputs.size(); ++i)
+	{
+		for (int j = 0; j < wrappedInputs[i].size(); ++j)
+		{
+			if (reinterpret_cast<float*>(wrappedInputs[i][j].data) != blob_data + input_size.area() * j + i*input_size.area() * channels)
+			{
+				NODE_LOG(debug) << "GPU mat not mapping input blob";
+				WrapInput();
+				break;
+			}
+		}
+	}
 
     stream.waitForCompletion();
     TIME
@@ -350,6 +381,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     const float* begin = output_layer->cpu_data();
     const float* end = begin + output_layer->channels() * output_layer->num();
     const size_t step = output_layer->channels();
+
 
     if(begin != (const float*)wrapped_output.data)
     {
@@ -374,19 +406,12 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         objects[i].boundingBox = (*inputROIs)[i];
     }
     updateParameter("Detections", objects)->type =  Parameters::Parameter::Output;
-    auto maxvalue = std::max_element(begin, end);
-    TIME
-    int idx = maxvalue - begin;
-    float score = *maxvalue;
-    updateParameter("Highest scoring class", idx);
-    updateParameter("Highest score", score);
+    updateParameter("Highest scoring class", objects[0].detections[0].classNumber);
+    updateParameter("Highest score", objects[0].detections[0].confidence);
+	updateParameter("Probability distribution", wrapped_output);
     if(labels)
     {
-        if(idx < labels->size())
-        {
-            std::string label = (*labels)[idx];
-            updateParameter("Highest scoring label", label);
-        }
+        updateParameter("Highest scoring label", objects[0].detections[0].label);
     }
     TIME
     return img;

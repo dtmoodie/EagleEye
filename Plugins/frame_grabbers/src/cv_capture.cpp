@@ -1,5 +1,7 @@
 #include "cv_capture.h"
 #include "EagleLib/Logging.h"
+#include <boost/lexical_cast.hpp>
+
 using namespace EagleLib;
 
 
@@ -45,6 +47,7 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
     h_cam.release();
     LOG(info) << "Attemping to load " << file_path;
     boost::mutex::scoped_lock lock(buffer_mtx);
+
     frame_buffer.clear();
     buffer_begin_frame_number = 0;
     buffer_end_frame_number = 0;
@@ -52,18 +55,40 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
     try
     {
         h_cam.reset(new cv::VideoCapture());
-        if (h_cam)
-        {
-            if (h_cam->open(file_path))
-            {
-                loaded_document = file_path;
-                playback_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES);
-                return true;
-            }
+		if (h_cam)
+		{
+			int index = -1;
+			try
+			{
+				index = boost::lexical_cast<int>(file_path);
+			}
+			catch (boost::bad_lexical_cast e)
+			{
+				index = -1;
+			}
+			if (index == -1)
+			{
+				if (h_cam->open(file_path))
+				{
+					loaded_document = file_path;
+					playback_frame_number = 0;
+					return true;
+				}
+			}
+			else
+			{
+				if (h_cam->open(index))
+				{
+					loaded_document = file_path;
+					playback_frame_number = 0;
+					return true;
+				}
+			}
         }
     }
     catch (cv::Exception& e)
     {
+		LOG(debug) << "Unable to load " << file_path << " due to " << e.what();
     }
     return false;
 }
@@ -134,4 +159,25 @@ void frame_grabber_cv::Serialize(ISimpleSerializer* pSerializer)
 void frame_grabber_cv::Init(bool firstInit)
 {
     FrameGrabberBuffered::Init(firstInit);
+}
+std::string frame_grabber_cv_info::GetObjectName()
+{
+	return "frame_grabber_cv";
+}
+int frame_grabber_cv_info::CanLoadDocument(const std::string& document) const
+{
+	try
+	{
+		int index = boost::lexical_cast<int>(document);
+		return 5;
+	}catch(boost::bad_lexical_cast e)
+	{
+		(void)e;
+	}
+	return 0;
+	
+}
+int frame_grabber_cv_info::Priority() const
+{
+	return 0;
 }

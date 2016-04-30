@@ -3,7 +3,7 @@
 #include "freenect.cuh"
 #include "EagleLib/rcc/SystemTable.hpp"
 #include <boost/lexical_cast.hpp>
-
+SETUP_PROJECT_IMPL
 using namespace EagleLib;
 IPerModuleInterface* GetModule()
 {

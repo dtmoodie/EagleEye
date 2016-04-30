@@ -43,7 +43,7 @@ static volatile bool quit;
 void sig_handler(int s)
 {
     //std::cout << "Caught signal " << s << std::endl;
-	BOOST_LOG_TRIVIAL(error) << "Caught signal " << s;
+	LOG(error) << "Caught signal " << s;
     quit = true;
     if(s == 2)
         exit(EXIT_FAILURE);
@@ -277,7 +277,7 @@ int main(int argc, char* argv[])
             }
             if(what == "parameters")
             {
-                std::vector<std::shared_ptr<Parameters::Parameter>> parameters;
+                std::vector<Parameters::Parameter*> parameters;
                 if(current_node)
                 {
                     parameters = current_node->getParameters();
@@ -291,7 +291,7 @@ int main(int argc, char* argv[])
                     std::stringstream ss;
                     try
                     {
-                        Parameters::Persistence::Text::Serialize(&ss, itr.get());   
+                        Parameters::Persistence::Text::Serialize(&ss, itr);   
                         std::cout << " - " << itr->GetTreeName() << ": " << ss.str() << "\n";
                     }catch(...)
                     {
@@ -422,7 +422,7 @@ int main(int argc, char* argv[])
 				{
 					try
 					{
-						Parameters::Persistence::Text::DeSerialize(&ss, param.get());
+						Parameters::Persistence::Text::DeSerialize(&ss, param);
 					}
 					catch (...)
 					{

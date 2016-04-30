@@ -14,6 +14,11 @@
 #include "EagleLib/Signals.h"
 #include <signals/signaler.h>
 
+namespace Parameters
+{
+	class IVariableManager;
+}
+
 namespace EagleLib
 {
 	class IViewManager;
@@ -23,7 +28,6 @@ namespace EagleLib
     class DataStreamManager;
     class IFrameGrabber;
     class SignalManager;
-	class IVariableManager;
 	class IParameterBuffer;
 
 	class EAGLE_EXPORTS DataStream: public Signals::signaler
@@ -50,7 +54,7 @@ namespace EagleLib
         // Handles actual loading of the image, etc
         rcc::shared_ptr<IFrameGrabber>           GetFrameGrabber();
 
-		std::shared_ptr<IVariableManager>		GetVariableManager();
+		std::shared_ptr<Parameters::IVariableManager>		GetVariableManager();
 
         SignalManager*							GetSignalManager();
 
@@ -85,7 +89,7 @@ namespace EagleLib
         rcc::shared_ptr<IRenderEngine>							rendering_engine;
         rcc::shared_ptr<ITrackManager>							track_manager;
         rcc::shared_ptr<IFrameGrabber>							frame_grabber;
-		std::shared_ptr<IVariableManager>						variable_manager;
+		std::shared_ptr<Parameters::IVariableManager>			variable_manager;
 		std::shared_ptr<SignalManager>							signal_manager;
         std::vector<rcc::shared_ptr<Nodes::Node>>				top_level_nodes;
 		std::shared_ptr<IParameterBuffer>						_parameter_buffer;

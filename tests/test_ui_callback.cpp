@@ -2,21 +2,22 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <boost/log/trivial.hpp>
-#include <EagleLib/Logging.h>
+#include <Signals/Logging.hpp>
+#include "EagleLib/Logging.h"
 
 int main()
 {
 	EagleLib::SetupLogging();
-	BOOST_LOG_TRIVIAL(info) << "Main thread started";
+	LOG(info) << "Main thread started";
 	boost::thread thread(boost::bind<void>([]()->void
 	{
 		while (!boost::this_thread::interruption_requested())
 		{
-			BOOST_LOG_TRIVIAL(info) << "Launching callback from work thread";
+			LOG(info) << "Launching callback from work thread";
 			Parameters::UI::UiCallbackService::Instance()->post(
 				boost::bind<void>([]()->void
 			{
-				BOOST_LOG_TRIVIAL(info) << "Running callback from main thread";
+				LOG(info) << "Running callback from main thread";
 			}));
 		}
 	}));

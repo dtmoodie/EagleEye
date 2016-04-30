@@ -40,7 +40,7 @@
 
 void sig_handler(int s)
 {
-	BOOST_LOG_TRIVIAL(error) << "Caught signal " << s << " with callstack:\n" << Signals::print_callstack(0,true);
+	LOG(error) << "Caught signal " << s << " with callstack:\n" << Signals::print_callstack(0,true);
 	if (s == 2)
 		exit(EXIT_FAILURE);
 }
@@ -143,9 +143,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
 #ifdef _MSC_VER
 #ifdef _DEBUG
-	BOOST_LOG_TRIVIAL(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Debug mode.";
+	LOG(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Debug mode.";
 #else
-	BOOST_LOG_TRIVIAL(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Release mode.";
+	LOG(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Release mode.";
 #endif
 #else
 
@@ -322,7 +322,7 @@ void MainWindow::on_uiCallback(boost::function<void()> f, std::pair<void*, Loki:
 	}
 	catch (cv::Exception &e)
 	{
-		BOOST_LOG_TRIVIAL(error) << e.what();
+		LOG(error) << e.what();
 	}
 	catch (...)
 	{
@@ -352,7 +352,7 @@ MainWindow::onLoadClicked()
 	}
 	catch (cv::Exception &e)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Failed to load file " << file.toStdString() << " " << e.what();
+		LOG(error) << "Failed to load file " << file.toStdString() << " " << e.what();
 		return;
 	}
     
@@ -483,21 +483,21 @@ void MainWindow::onTimeout()
         stopProcessingThread();
         /*if(processingThread.joinable() && !processingThread.try_join_for(boost::chrono::milliseconds(200)) && !joined)
         {
-            LOG_TRIVIAL(info) <<"Processing thread not joined, cannot perform object swap";
+            LOG(info) <<"Processing thread not joined, cannot perform object swap";
             stopProcessingThread();
             return;
         }else
         {
-			LOG_TRIVIAL(info) << "Processing thread joined";
+			LOG(info) << "Processing thread joined";
             joined = true;
         }*/
         if(EagleLib::ObjectManager::Instance().CheckRecompile(true))
         {
            // Still compiling
-			LOG_TRIVIAL(info) << "Still compiling";
+			LOG(info) << "Still compiling";
         }else
         {
-			LOG_TRIVIAL(info) << "Recompile complete";
+			LOG(info) << "Recompile complete";
             //processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
             startProcessingThread();
             swapRequired = false;
@@ -506,7 +506,7 @@ void MainWindow::onTimeout()
     }
     if(EagleLib::ObjectManager::Instance().CheckRecompile(false))
     {
-		LOG_TRIVIAL(info) << "Recompiling.....";
+		LOG(info) << "Recompiling.....";
         swapRequired = true;
         stopProcessingThread();
         return;
@@ -773,7 +773,7 @@ void MainWindow::processThread()
 {
 	//auto handle = GetDC(0);
 	//wglCreateContext(handle);
-	BOOST_LOG_TRIVIAL(info) << "Processing thread started" << std::endl;
+	LOG(info) << "Processing thread started" << std::endl;
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta;
@@ -809,12 +809,12 @@ void MainWindow::processThread()
         }catch(boost::thread_interrupted& err)
         {
             (void)err;
-			BOOST_LOG_TRIVIAL(info) << "Processing thread interrupted";
+			LOG(info) << "Processing thread interrupted";
             break;
         }
         
     }
-    BOOST_LOG_TRIVIAL(info) << "Interrupt requested, processing thread ended";
+	LOG(info) << "Interrupt requested, processing thread ended";
 }
 void MainWindow::process_log_message(boost::log::trivial::severity_level severity, std::string message)
 {

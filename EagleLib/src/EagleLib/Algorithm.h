@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ParameteredObject.h"
+#include "ParameteredIObject.h"
 
 #include <opencv2/core/cuda.hpp>
 #include <EagleLib/rcc/shared_ptr.hpp>
