@@ -2,19 +2,27 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/microsec_time_clock.hpp>
 #include <boost/date_time/time_duration.hpp>
-#include <Signals/logging.hpp>
+#include <signals/logging.hpp>
 using namespace EagleLib::cuda;
 
 void EagleLib::cuda::ICallback::cb_func_async(int status, void* user_data)
 {
+#ifdef _MSC_VER
 	pplx::create_task([user_data]()->void
 	{
-		auto cb = static_cast<ICallback*>(user_data);
-		auto start = clock();
-		cb->run();
-		LOG(trace) << "Callback execution time: " << clock() - start << " ms";
-		delete cb;
+        auto cb = static_cast<ICallback*>(user_data);
+        auto start = clock();
+        cb->run();
+        LOG(trace) << "Callback execution time: " << clock() - start << " ms";
+        delete cb;
 	});
+#else
+    auto cb = static_cast<ICallback*>(user_data);
+    auto start = clock();
+    cb->run();
+    LOG(trace) << "Callback execution time: " << clock() - start << " ms";
+    delete cb;
+#endif
 }
 void EagleLib::cuda::ICallback::cb_func(int status, void* user_data)
 {

@@ -66,12 +66,12 @@ namespace EagleLib
                 if (IID == constructor->GetInterfaceId())
                 {
                     auto object = constructor->Construct();
-                    return weak_ptr<T>(object);
+                    return rcc::weak_ptr<T>(object);
                 }
                 LOG(warning) << "interface ID (" << IID << " doesn't match constructor interface " << constructor->GetInterfaceId();
             }
             LOG(warning) << "Constructor for " << object_name << " doesn't exist";
-            return weak_ptr<T>();
+            return rcc::weak_ptr<T>();
         }
         rcc::shared_ptr<IObject> GetObject(const std::string& object_name);
         IObject* GetObject(ObjectId oid);

@@ -1,5 +1,5 @@
 #include "ParameteredIObject.h"
-#include "Signals/logging.hpp"
+#include "signals/logging.hpp"
 #include "parameters/IVariableManager.h"
 using namespace EagleLib;
 ParameteredIObject::ParameteredIObject()

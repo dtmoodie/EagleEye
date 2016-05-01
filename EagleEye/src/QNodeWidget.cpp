@@ -7,7 +7,7 @@
 #include <QDateTime>
 #include "qevent.h"
 #include "EagleLib/logger.hpp"
-#include "Parameters/IVariableManager.h"
+#include "parameters/IVariableManager.h"
 #include <signals/logging.hpp>
 IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
     QWidget(parent),

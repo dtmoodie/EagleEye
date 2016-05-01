@@ -112,8 +112,8 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 				playback_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES) + 1;
 				LOG(info) << "Load success, first frame number: " << playback_frame_number;
 				frame_buffer.clear();
-				buffer_begin_frame_number = playback_frame_number;
-				buffer_end_frame_number = playback_frame_number;
+                buffer_begin_frame_number = playback_frame_number.load();
+                buffer_end_frame_number = playback_frame_number.load();
 				return true;
 			}
 		}

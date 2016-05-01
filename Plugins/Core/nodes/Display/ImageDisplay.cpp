@@ -37,20 +37,20 @@ TS<SyncedMemory> QtImageDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::Str
 {
     cv::Mat img = input.GetMat(stream);
     std::string display_name = getFullTreeName();
-    EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
+//    EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
 	if (auto table = PerModuleInterface::GetInstance()->GetSystemTable())
 	{
 		if (auto manager = table->GetSingleton<WindowCallbackHandlerManager>())
 		{
 			if (auto instance = manager->instance(GetDataStream()->get_stream_id()))
 			{
-				cuda::enqueue_callback_async(
+                cuda::enqueue_callback_async(
 					[instance, display_name, img]()->void
 				{
-					//rmt_ScopedCPUSample(QtImageDisplay_displayImage);
-					PROFILE_FUNCTION;
-					instance->imshow(display_name, img);
-				}, stream);
+                    rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+                    PROFILE_FUNCTION;
+                    instance->imshow(display_name, img);
+                }, stream);
 			}
 			else
 			{
