@@ -244,6 +244,10 @@ int FrameGrabberInfo::GetObjectInfoType()
 {
     return IObjectInfo::ObjectInfoType::frame_grabber;
 }
+std::vector<std::string> FrameGrabberInfo::ListLoadableDocuments()
+{
+	return std::vector<std::string>();
+}
 void FrameGrabberBuffered::Init(bool firstInit)
 {
     IFrameGrabber::Init(firstInit);

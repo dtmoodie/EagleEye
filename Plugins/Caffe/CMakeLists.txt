@@ -39,7 +39,7 @@ file(GLOB_RECURSE src "*.h" "*.cpp")
 add_library(Caffe SHARED ${src})
 add_dependencies(Caffe EagleLib)
 SET(BIN_DIRS "${BIN_DIRS};CAFFE" CACHE STRING "" FORCE)
-set_target_properties(libcaffe_SHARED PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+set_target_properties(libcaffe PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 IF(WIN32)
   RCC_LINK_LIB(Caffe
       EagleLib

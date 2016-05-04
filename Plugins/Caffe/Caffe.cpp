@@ -1,12 +1,14 @@
 #include "Caffe.h"
 #include "caffe_init.h"
-#include "EagleLib/nodes/Node.h"
-#include <EagleLib/ParameteredObjectImpl.hpp>
-#include <EagleLib/ObjectDetection.hpp>
 
+#include "EagleLib/nodes/Node.h"
+#include <EagleLib/ObjectDetection.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
+
+#include <parameters/ParameteredObjectImpl.hpp>
+
 
 #include <boost/tokenizer.hpp>
 
@@ -15,7 +17,7 @@
 #undef LOG
 #include "caffe/caffe.hpp"
 #undef LOG
-
+#include <signals/logging.hpp>
 #ifdef _MSC_VER
   #ifdef _DEBUG
 	RUNTIME_COMPILER_LINKLIBRARY("libcaffe_SHARED-d.lib");
@@ -107,7 +109,7 @@ void CaffeImageClassifier::WrapInput()
 {
     if(NN == nullptr)
     {
-        NODE_LOG(error) << "Neural network not defined";
+        LOG(error) << "Neural network not defined";
         return;
     }
     if(NN->num_inputs() == 0)
@@ -143,7 +145,7 @@ void CaffeImageClassifier::WrapOutput()
 {
     if (NN == nullptr)
     {
-        NODE_LOG(error) << "Neural network not defined";
+		LOG(error) << "Neural network not defined";
         return;
     }
     if (NN->num_inputs() == 0)
@@ -300,7 +302,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     }
     if(NN == nullptr || weightsLoaded == false)
     {
-        NODE_LOG(trace) << "Model not loaded";
+		LOG(trace) << "Model not loaded";
         return img;
     }
     /*if(img.size() != cv::Size(input_layer->width(), input_layer->height()))
@@ -336,7 +338,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 
     if(inputROIs->size() > wrappedInputs.size())
     {
-        NODE_LOG(warning) <<  "Too many input Regions of interest to handle in one pass, this network can only handle " << wrappedInputs.size() <<" inputs at a time";
+		LOG(warning) <<  "Too many input Regions of interest to handle in one pass, this network can only handle " << wrappedInputs.size() <<" inputs at a time";
     }
     cv::Size input_size(input_layer->width(), input_layer->height());
     for(int i = 0; i < inputROIs->size() && i < wrappedInputs.size(); ++i)
@@ -385,7 +387,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 
     if(begin != (const float*)wrapped_output.data)
     {
-        NODE_LOG(debug) << "Output not wrapped to mat";
+		LOG(debug) << "Output not wrapped to mat";
         WrapOutput();
     }
     int numClassifications = *getParameter<int>("Num classifications")->Data();

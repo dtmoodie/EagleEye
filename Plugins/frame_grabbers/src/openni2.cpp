@@ -70,7 +70,7 @@ TS<SyncedMemory> frame_grabber_openni2::GetNextFrameImpl(cv::cuda::Stream& strea
 	{
 		cv::Mat point_cloud;
 		cv::Mat depth;
-		//h_cam->retrieve(depth, cv::CAP_OPENNI_DEPTH_MAP);
+		h_cam->retrieve(depth, cv::CAP_OPENNI_DEPTH_MAP);
 		if (h_cam->retrieve(point_cloud, cv::CAP_OPENNI_POINT_CLOUD_MAP))
 		{
 			if (!point_cloud.empty())

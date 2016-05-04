@@ -70,6 +70,7 @@ ADD_SUBDIRECTORY("parameters")
 ADD_SUBDIRECTORY("signals")
     include_directories("signals")
 ADD_SUBDIRECTORY("pplx")
+add_subdirectory("pythonqt")
 
 INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}

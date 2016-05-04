@@ -54,6 +54,10 @@ namespace EagleLib
          * \return timeout in ms
          */
         virtual int LoadTimeout() const;
+
+		// Function used for listing what documents are available for loading, used in cases of connected devices to list what
+		// devices have been enumerated
+		virtual std::vector<std::string> ListLoadableDocuments();
     };
     
     // Interface class for the base level of features frame grabber

@@ -5,8 +5,13 @@
 #include <EagleLib/Project_defs.hpp>
 #ifdef _MSC_VER
 #include "Windows.h"
+std::vector<std::string> plugins;
+std::vector<std::string> EAGLE_EXPORTS EagleLib::ListLoadedPlugins()
+{
+	return plugins;
+}
 
-bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
+bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
     static int projectCount = 0;
 	LOG(info) << "Loading plugin " << fullPluginPath;
@@ -15,6 +20,7 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 	{
 		auto err = GetLastError();
 		LOG(error) << "Failed to load library due to: " << err;
+		plugins.push_back(fullPluginPath + " - failed");
 		return false;
 	}
 	typedef int(*BuildLevelFunctor)();
@@ -24,6 +30,7 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 		if (buildLevel() != BUILD_TYPE)
 		{
 			LOG(info) << "Library debug level does not match";
+			plugins.push_back(fullPluginPath + " - failed");
 			return false;
 		}
 	}
@@ -62,12 +69,13 @@ bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
 			FreeLibrary(handle);
 		}	
 	}
+	plugins.push_back(fullPluginPath + " - success");
     return true;
 }
 #else
 #include "dlfcn.h"
 
-bool CV_EXPORTS EagleLib::loadPlugin(const std::string& fullPluginPath)
+bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
     void* handle = dlopen(fullPluginPath.c_str(), RTLD_LAZY);
     // Fallback on old module
