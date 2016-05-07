@@ -36,6 +36,10 @@ int frame_grabber_openni2_info::Priority() const
 {
 	return 0;
 }
+int frame_grabber_openni2_info::LoadTimeout() const
+{
+	return 10000;
+}
 
 bool frame_grabber_openni2::LoadFile(const std::string& file_path)
 {

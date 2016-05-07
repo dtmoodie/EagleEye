@@ -109,7 +109,7 @@ void CaffeImageClassifier::WrapInput()
 {
     if(NN == nullptr)
     {
-        LOG(error) << "Neural network not defined";
+        BOOST_LOG_TRIVIAL(error) << "Neural network not defined";
         return;
     }
     if(NN->num_inputs() == 0)
@@ -145,7 +145,7 @@ void CaffeImageClassifier::WrapOutput()
 {
     if (NN == nullptr)
     {
-		LOG(error) << "Neural network not defined";
+		BOOST_LOG_TRIVIAL(error) << "Neural network not defined";
         return;
     }
     if (NN->num_inputs() == 0)
@@ -200,7 +200,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
             _parameters[0]->changed = false;
         }else
         {
-            NODE_LOG(debug) << "Architecture file does not exist";
+            BOOST_LOG_TRIVIAL(debug) << "Architecture file does not exist";
         }
     }
     if(_parameters[1]->changed && NN)
@@ -216,13 +216,13 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
             {
                 layerNames.push_back(std::string(layer->type()));
             }
-            NODE_LOG(info) << "Weights loaded";
+            BOOST_LOG_TRIVIAL(info) << "Weights loaded";
             _parameters[1]->changed = false;
             weightsLoaded = true;
             updateParameter("Loaded layers", layerNames);
         }else
         {
-			NODE_LOG(debug) << "Weight file does not exist";
+			BOOST_LOG_TRIVIAL(debug) << "Weight file does not exist";
         }
     }
     if(_parameters[2]->changed)
@@ -236,7 +236,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
                 std::ifstream ifs(path->string().c_str());
                 if(!ifs)
                 {
-                    NODE_LOG(error) << "Unable to load label file";
+                    BOOST_LOG_TRIVIAL(error) << "Unable to load label file";
                 }
                 labels.reset(new std::vector<std::string>());
                 std::string line;
@@ -244,7 +244,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
                 {
                     labels->push_back(line);
                 }
-                NODE_LOG(info) << "Loaded " << labels->size() <<" classes";
+                BOOST_LOG_TRIVIAL(info) << "Loaded " << labels->size() <<" classes";
                 _parameters[2]->changed = false;
             }
         }
@@ -263,12 +263,12 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
                     mean_blob.FromProto(blob_proto);
                     if(input_layer == nullptr)
                     {
-                        NODE_LOG(error) <<  "Input layer not defined";
+                        BOOST_LOG_TRIVIAL(error) <<  "Input layer not defined";
                         return img;
                     }
                     if(input_layer->channels() != mean_blob.channels())
                     {
-                        NODE_LOG(error) << "Number of channels of mean file doesn't match input layer.";
+                        BOOST_LOG_TRIVIAL(error) << "Number of channels of mean file doesn't match input layer.";
                         return img;
                     }
 
@@ -295,14 +295,14 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
                     _parameters[3]->changed = false;
                 }else
                 {
-                    NODE_LOG(error) <<  "Unable to load mean file";
+                    BOOST_LOG_TRIVIAL(error) <<  "Unable to load mean file";
                 }
             }
         }
     }
     if(NN == nullptr || weightsLoaded == false)
     {
-		LOG(trace) << "Model not loaded";
+		BOOST_LOG_TRIVIAL(trace) << "Model not loaded";
         return img;
     }
     /*if(img.size() != cv::Size(input_layer->width(), input_layer->height()))
@@ -310,7 +310,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         cv::cuda::GpuMat resized;
         cv::cuda::resize(img,resized,cv::Size(input_layer->width(), input_layer->height()), 0, 0, cv::INTER_LINEAR, stream);
         img = resized;
-        NODE_LOG(info) <<  "Resize required";
+        BOOST_LOG_TRIVIAL(info) <<  "Resize required";
     }*/
 	cv::cuda::GpuMat float_image;
     if(img.depth() != CV_32F)
@@ -338,7 +338,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 
     if(inputROIs->size() > wrappedInputs.size())
     {
-		LOG(warning) <<  "Too many input Regions of interest to handle in one pass, this network can only handle " << wrappedInputs.size() <<" inputs at a time";
+		BOOST_LOG_TRIVIAL(warning) <<  "Too many input Regions of interest to handle in one pass, this network can only handle " << wrappedInputs.size() <<" inputs at a time";
     }
     cv::Size input_size(input_layer->width(), input_layer->height());
     for(int i = 0; i < inputROIs->size() && i < wrappedInputs.size(); ++i)
@@ -363,7 +363,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 		{
 			if (reinterpret_cast<float*>(wrappedInputs[i][j].data) != blob_data + input_size.area() * j + i*input_size.area() * channels)
 			{
-				NODE_LOG(debug) << "GPU mat not mapping input blob";
+				BOOST_LOG_TRIVIAL(debug) << "GPU mat not mapping input blob";
 				WrapInput();
 				break;
 			}
@@ -387,7 +387,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 
     if(begin != (const float*)wrapped_output.data)
     {
-		LOG(debug) << "Output not wrapped to mat";
+		BOOST_LOG_TRIVIAL(debug) << "Output not wrapped to mat";
         WrapOutput();
     }
     int numClassifications = *getParameter<int>("Num classifications")->Data();

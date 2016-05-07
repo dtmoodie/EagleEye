@@ -3,7 +3,7 @@ CMAKE_POLICY(SET CMP0020 NEW)
 find_package(Caffe REQUIRED)
 
 find_package(CUDA REQUIRED)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV QUIET)
 
 set(CUDNN_DIR "" CACHE PATH "cudnn directory")
 
@@ -53,7 +53,7 @@ IF(WIN32)
       ${CUDA_nppc_LIBRARY}
       ${CUDA_nppc_LIBRARY}
       ${CUDA_npps_LIBRARY}
-	  libcaffe_SHARED
+	  libcaffe
 	  ${GLOG_LIBRARY}
 	  ${CUDNN_LIBRARY}
     )

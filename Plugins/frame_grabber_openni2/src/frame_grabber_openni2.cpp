@@ -65,6 +65,7 @@ int frame_grabber_openni2::GetNumFrames()
 {
 	return -1;
 }
+
 bool frame_grabber_openni2::LoadFile(const std::string& file_path)
 {
 	std::string doc = file_path;
@@ -85,25 +86,54 @@ bool frame_grabber_openni2::LoadFile(const std::string& file_path)
 			rc = _device->open(openni::ANY_DEVICE);
 			if(rc != openni::STATUS_OK)
 			{
-				LOG(info) << "Unable to connect to openni2 compatible device";
+				LOG(info) << "Unable to connect to openni2 compatible device: " << openni::OpenNI::getExtendedError();
 				return false;
 			}
+			_depth.reset(new openni::VideoStream());
+			rc = _depth->create(*_device, openni::SENSOR_DEPTH);
+			if( rc != openni::STATUS_OK)
+			{
+				LOG(info) << "Unable to retrieve depth stream: " << openni::OpenNI::getExtendedError();
+				return false;
+			}
+			_depth->addNewFrameListener(this);
+			_depth->start();
 			LOG(info) << "Connected to device " << _device->getDeviceInfo().getUri();
 			return true;
 		}
 	}
 	return false;
 }
-
-TS<SyncedMemory> frame_grabber_openni2::GetFrameImpl(int index, cv::cuda::Stream& stream)
+void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
 {
-	return TS<SyncedMemory>();
+	openni::Status rc = stream.readFrame(&_frame);
+	if(rc != openni::STATUS_OK)
+	{
+		LOG(debug) << "Unable to read new depth frame: " << openni::OpenNI::getExtendedError();
+		return;
+	}
+	int height = _frame.getHeight();
+	int width = _frame.getWidth();
+	auto ts = _frame.getTimestamp();
+	auto fn = _frame.getFrameIndex();
+	int scale = 1;
+	switch(_frame.getVideoMode().getPixelFormat())
+	{
+	case openni::PIXEL_FORMAT_DEPTH_100_UM:
+		scale = 10;
+	case openni::PIXEL_FORMAT_DEPTH_1_MM:
+		
+		cv::Mat data(height, width, CV_16U, (ushort*)_frame.getData());
+		cv::Mat copy;
+		if(scale == 1)
+			data.copyTo(copy);
+		else
+			copy = data*scale;
+		_buffer.push_back(TS<SyncedMemory>(double(ts), fn, copy));
+		break;
+	}
 }
 
-TS<SyncedMemory> frame_grabber_openni2::GetNextFrameImpl(cv::cuda::Stream& stream)
-{
-	return TS<SyncedMemory>();
-}
 rcc::shared_ptr<ICoordinateManager> frame_grabber_openni2::GetCoordinateManager()
 {
 	return rcc::shared_ptr<ICoordinateManager>();

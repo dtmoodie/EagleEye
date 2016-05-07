@@ -16,16 +16,18 @@ namespace EagleLib
 		virtual int LoadTimeout() const;
 		virtual std::vector<std::string> ListLoadableDocuments();
 	};
-	class PLUGIN_EXPORTS frame_grabber_openni2: public FrameGrabberBuffered
+	class PLUGIN_EXPORTS frame_grabber_openni2: public FrameGrabberBuffered, public openni::VideoStream::NewFrameListener
 	{
+		openni::VideoFrameRef _frame;
 		std::shared_ptr<openni::Device> _device;
 		std::shared_ptr<openni::VideoStream> _depth;
+		boost::circular_buffer<TS<SyncedMemory>> _buffer;
 	public:
 		frame_grabber_openni2();
-		virtual int GetNumFrames();
+		
 		virtual bool LoadFile(const std::string& file_path);
-		virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream);
-		virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
 		virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
+		int GetNumFrames();
+		void onNewFrame(openni::VideoStream& stream);
 	};
 }

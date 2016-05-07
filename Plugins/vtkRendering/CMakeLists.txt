@@ -20,10 +20,8 @@ find_package(VTK COMPONENTS
   LINK_DIRECTORIES(${vtk_lib_dir})
   INCLUDE_DIRECTORIES(${VTK_INCLUDE_DIRS})
 
-  MESSAGE(info 
-  "============ vtk kits ================
-  ${VTK_KITS}
-  ============ vtk libs =================
+  MESSAGE(STATUS  
+  "============ vtk libs =================
   ${VTK_LIBRARIES}
   ${vtk_core}
   ${vtk_lib_dir}")
@@ -33,7 +31,7 @@ FIND_PACKAGE(CUDA REQUIRED)
 
 FIND_PACKAGE(Qt5 REQUIRED Core Widgets OpenGL)
 
-FIND_PACKAGE(OpenCV REQUIRED core viz)
+FIND_PACKAGE(OpenCV QUIET COMPONENTS core viz)
 
 ADD_DEFINITIONS(${DEFS})
 LINK_DIRECTORIES(${LINK_DIRS})

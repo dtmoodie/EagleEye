@@ -6,7 +6,7 @@ CMAKE_POLICY(SET CMP0053 OLD)
 ENDIF()
 find_package(Qt5 COMPONENTS Gui Widgets Core OpenGL PrintSupport)
 IF(Qt5_FOUND)
-	find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
+	find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
 
 	set_target_properties(
 		opencv_core 
@@ -41,7 +41,7 @@ IF(Qt5_FOUND)
 
     set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono log log_setup)
 
-	find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
+	find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 	ADD_DEFINITIONS("-DQt5_FOUND")
 	ADD_DEFINITIONS("-DPARAMETERS_USE_UI")
 	INCLUDE_DIRECTORIES(

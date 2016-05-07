@@ -7,10 +7,10 @@ IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 ENDIF()
 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono program_options log log_setup)
-find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
+find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 
-find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
+find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
   set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 find_package(CUDA REQUIRED)
@@ -40,3 +40,7 @@ target_link_libraries(SimpleConsole
     ${CUDA_cufft_LIBRARY}
     ${CUDA_npps_LIBRARY}
     ${CUDA_CUDART_LIBRARY})
+add_subdirectory(PythonInteractive)
+
+	
+	

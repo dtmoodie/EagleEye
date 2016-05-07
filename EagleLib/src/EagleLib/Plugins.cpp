@@ -6,7 +6,7 @@
 #ifdef _MSC_VER
 #include "Windows.h"
 std::vector<std::string> plugins;
-std::vector<std::string> EAGLE_EXPORTS EagleLib::ListLoadedPlugins()
+std::vector<std::string> EagleLib::ListLoadedPlugins()
 {
 	return plugins;
 }

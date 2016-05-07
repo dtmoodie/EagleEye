@@ -97,28 +97,20 @@ namespace EagleLib
     public:
         FrameGrabberBuffered();
         ~FrameGrabberBuffered();
-        virtual int GetFrameNumber();
+        
+		virtual int GetFrameNumber();
         virtual int GetNumFrames() = 0;
         
-
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
         virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
         virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
 		virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
-        virtual void InitializeFrameGrabber(DataStream* stream);
         
+		virtual void InitializeFrameGrabber(DataStream* stream);
 
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
     protected:
-        // Should only ever be called from the buffer thread
-        virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
-        virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
-
-        
-        void                                     LaunchBufferThread();
-        void                                     StopBufferThread();
-
         boost::circular_buffer<TS<SyncedMemory>> frame_buffer;
         
         boost::mutex                             buffer_mtx;
@@ -134,9 +126,22 @@ namespace EagleLib
         // condition variable for a notification of grabbing of a new image
         boost::condition_variable                  frame_grabbed_cv;
 		bool _is_stream;
-    private:
-        void                                     Buffer();
-        boost::thread                            buffer_thread;
     };
+	class EAGLE_EXPORTS FrameGrabberThreaded: public FrameGrabberBuffered
+	{
+	private:
+		void                                     Buffer();
+		boost::thread                            buffer_thread;
+	protected:
+		// Should only ever be called from the buffer thread
+		virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
+		virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
+	public:
+		~FrameGrabberThreaded();
+		virtual void InitializeFrameGrabber(DataStream* stream);
+		virtual void Init(bool firstInit);
+		void                                     LaunchBufferThread();
+		void                                     StopBufferThread();
+	};
 
 }

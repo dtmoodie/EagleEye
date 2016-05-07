@@ -6,11 +6,11 @@ ENDIF()
 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 
-find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
+find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 find_package(CUDA REQUIRED)
 
-find_package(OpenCV 3.0 REQUIRED core imgcodecs cudacodec)
+find_package(OpenCV 3.0 QUIET COMPONENTS core imgcodecs cudacodec)
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 if(WIN32)
     FIND_PACKAGE(GStreamerWindows)
