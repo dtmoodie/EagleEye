@@ -141,6 +141,7 @@ bool DataStream::LoadDocument(const std::string& document)
         file_to_load = file_to_load.substr(1, file_to_load.size() - 2);
     }
     std::lock_guard<std::mutex> lock(nodes_mtx);
+	
     auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
     std::vector<IObjectConstructor*> valid_frame_grabbers;
     std::vector<int> frame_grabber_priorities;

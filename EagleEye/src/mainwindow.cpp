@@ -89,7 +89,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     fileMonitorTimer = new QTimer(this);
     fileMonitorTimer->start(1000);
-    connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+	QObject::connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
     nodeListDialog = new NodeListDialog(this);
     nodeListDialog->hide();
 	nodeListDialog->setup_signals(&_ui_manager);
@@ -101,7 +101,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	nodeGraph = new QGraphicsScene(this);
     //connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
 	nodeGraphView = new NodeView(nodeGraph);
-	connect(nodeGraphView, SIGNAL(selectionChanged(QGraphicsProxyWidget*)), this, SLOT(onSelectionChanged(QGraphicsProxyWidget*)));
+	QObject::connect(nodeGraphView, SIGNAL(selectionChanged(QGraphicsProxyWidget*)), this, SLOT(onSelectionChanged(QGraphicsProxyWidget*)));
 	nodeGraphView->setInteractive(true);
     nodeGraphView->setViewport(new QGLWidget());
     nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
@@ -118,29 +118,29 @@ MainWindow::MainWindow(QWidget *parent) :
     
     persistence_timer = new QTimer(this);
     persistence_timer->start(500); // save setting every half second
-    connect(bookmarks, SIGNAL(open_file(QString)), this, SLOT(load_file(QString)));
-    connect(persistence_timer, SIGNAL(timeout()), this, SLOT(on_persistence_timeout()));
-    connect(this, &MainWindow::uiCallback, this, &MainWindow::on_uiCallback, Qt::QueuedConnection);
-    connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
-	connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
-    connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
-    connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
-    connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
-    connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
-    connect(nodeGraphView, SIGNAL(widgetDeleted(QNodeWidget*)), this, SLOT(onWidgetDeleted(QNodeWidget*)));
-    connect(nodeGraphView, SIGNAL(widgetDeleted(DataStreamWidget*)), this, SLOT(onWidgetDeleted(DataStreamWidget*)));
-    connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(onSaveClicked()));
-    connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
-    connect(ui->actionOpen_file, SIGNAL(triggered()), this, SLOT(onLoadFileClicked()));
-    connect(ui->actionOpen_directory, SIGNAL(triggered()), this, SLOT(onLoadDirectoryClicked()));
-    connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
-    connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
+    QObject::connect(bookmarks, SIGNAL(open_file(QString)), this, SLOT(load_file(QString)));
+	QObject::connect(persistence_timer, SIGNAL(timeout()), this, SLOT(on_persistence_timeout()));
+	QObject::connect(this, &MainWindow::uiCallback, this, &MainWindow::on_uiCallback, Qt::QueuedConnection);
+	QObject::connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
+	QObject::connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
+	QObject::connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
+	QObject::connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
+	QObject::connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
+	QObject::connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
+	QObject::connect(nodeGraphView, SIGNAL(widgetDeleted(QNodeWidget*)), this, SLOT(onWidgetDeleted(QNodeWidget*)));
+	QObject::connect(nodeGraphView, SIGNAL(widgetDeleted(DataStreamWidget*)), this, SLOT(onWidgetDeleted(DataStreamWidget*)));
+	QObject::connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(onSaveClicked()));
+	QObject::connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
+	QObject::connect(ui->actionOpen_file, SIGNAL(triggered()), this, SLOT(onLoadFileClicked()));
+	QObject::connect(ui->actionOpen_directory, SIGNAL(triggered()), this, SLOT(onLoadDirectoryClicked()));
+	QObject::connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
+	QObject::connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
     //connect(ui->actionBookmarks, SIGNAL(triggered()), this, SLOT()
-    connect(this, SIGNAL(onNewParameter(EagleLib::Nodes::Node*)), this, SLOT(on_NewParameter(EagleLib::Nodes::Node*)), Qt::QueuedConnection);
+	QObject::connect(this, SIGNAL(onNewParameter(EagleLib::Nodes::Node*)), this, SLOT(on_NewParameter(EagleLib::Nodes::Node*)), Qt::QueuedConnection);
 
-    connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
+	QObject::connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
     //connect(plotWizardDialog, SIGNAL(on_plotAdded(PlotWindow*)), this, SLOT(onPlotAdd(PlotWindow*)));
-    connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
+	QObject::connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
 #ifdef _MSC_VER
 #ifdef _DEBUG
 	LOG(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Debug mode.";
@@ -552,7 +552,7 @@ void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
 		return;
 
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
-    connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
+	QObject::connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
 
     auto itr = positionMap.find(node->getFullTreeName());

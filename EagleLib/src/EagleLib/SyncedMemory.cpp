@@ -1,4 +1,10 @@
 #include "SyncedMemory.h"
+#ifdef HAVE_MXNET
+
+
+
+#endif
+
 
 using namespace EagleLib;
 SyncedMemory::SyncedMemory()

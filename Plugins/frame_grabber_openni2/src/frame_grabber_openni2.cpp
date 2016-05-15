@@ -2,7 +2,7 @@
 #include "openni2_initializer.h"
 #include <EagleLib/ICoordinateManager.h>
 using namespace EagleLib;
-
+SETUP_PROJECT_IMPL
 
 
 std::string frame_grabber_openni2_info::GetObjectName()
@@ -37,7 +37,7 @@ int frame_grabber_openni2_info::CanLoadDocument(const std::string& document) con
 
 int frame_grabber_openni2_info::LoadTimeout() const
 {
-	return 1000;
+	return 10000;
 }
 
 std::vector<std::string> frame_grabber_openni2_info::ListLoadableDocuments()
@@ -129,7 +129,10 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
 			data.copyTo(copy);
 		else
 			copy = data*scale;
+		boost::mutex::scoped_lock lock(buffer_mtx);
 		_buffer.push_back(TS<SyncedMemory>(double(ts), fn, copy));
+		if(update_signal)
+			(*update_signal)();
 		break;
 	}
 }

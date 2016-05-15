@@ -3,7 +3,7 @@
 #include "OpenNI.h"
 #include <EagleLib/frame_grabber_base.h>
 #include "RuntimeLinkLibrary.h"
-
+SETUP_PROJECT_DEF
 RUNTIME_COMPILER_LINKLIBRARY("OpenNI2.lib");
 
 namespace EagleLib

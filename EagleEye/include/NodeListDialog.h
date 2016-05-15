@@ -21,8 +21,9 @@ public:
     void show();
     ~NodeListDialog();
 
-
-	SIG_DEF(add_node, std::string);
+	SIGNALS_BEGIN(NodeListDialog)
+		SIG_DEF(add_node, std::string);
+	SIGNALS_END
 
 signals:
     void nodeConstructed(EagleLib::Nodes::Node::Ptr node);

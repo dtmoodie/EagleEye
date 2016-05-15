@@ -1,10 +1,31 @@
 #include "Plugins.h"
 #include <EagleLib/rcc/ObjectManager.h>
 #include <boost/log/trivial.hpp>
+#include <boost/filesystem.hpp>
+
 #include <EagleLib/Defs.hpp>
 #include <EagleLib/Project_defs.hpp>
 #ifdef _MSC_VER
 #include "Windows.h"
+std::string GetLastErrorAsString()
+{
+	//Get the error message, if any.
+	DWORD errorMessageID = ::GetLastError();
+	if(errorMessageID == 0)
+		return std::string(); //No error message has been recorded
+
+	LPSTR messageBuffer = nullptr;
+	size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+	std::string message(messageBuffer, size);
+
+	//Free the buffer.
+	LocalFree(messageBuffer);
+
+	return message;
+}
+
 std::vector<std::string> plugins;
 std::vector<std::string> EagleLib::ListLoadedPlugins()
 {
@@ -15,11 +36,16 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
     static int projectCount = 0;
 	LOG(info) << "Loading plugin " << fullPluginPath;
+	if(!boost::filesystem::is_regular_file(fullPluginPath))
+	{
+		return false;
+	}
+	std::string plugin_name = boost::filesystem::path(fullPluginPath).stem().string();
 	HMODULE handle = LoadLibrary(fullPluginPath.c_str());
 	if (handle == nullptr)
 	{
 		auto err = GetLastError();
-		LOG(error) << "Failed to load library due to: " << err;
+		LOG(error) << "Failed to load " << plugin_name <<  " due to: [" << err << "] " << GetLastErrorAsString();
 		plugins.push_back(fullPluginPath + " - failed");
 		return false;
 	}
@@ -44,7 +70,7 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 	if (functor)
 		functor();
 	else
-		LOG(warning) << "Setup Includes not found in plugin " << fullPluginPath;
+		LOG(warning) << "Setup Includes not found in plugin " << plugin_name;
         
 	typedef IPerModuleInterface* (*moduleFunctor)();
 	moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetPerModuleInterface");
@@ -56,7 +82,7 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 		
 	else
 	{
-		LOG(warning) << "GetPerModuleInterface not found in plugin " << fullPluginPath;
+		LOG(warning) << "GetPerModuleInterface not found in plugin " << plugin_name;
 		module = (moduleFunctor)GetProcAddress(handle, "GetModule");
 		if (module)
 		{
@@ -65,11 +91,11 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 		}
 		else
 		{
-			LOG(warning) << "GetModule not found in plugin " << fullPluginPath;
+			LOG(warning) << "GetModule not found in plugin " << plugin_name;
 			FreeLibrary(handle);
 		}	
 	}
-	plugins.push_back(fullPluginPath + " - success");
+	plugins.push_back(plugin_name + " - success");
     return true;
 }
 #else

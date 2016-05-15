@@ -1,0 +1,54 @@
+
+
+find_package(Qt5 QUIET COMPONENTS Core Gui Widgets)
+if(Qt5_FOUND)
+  find_package(PythonInterp REQUIRED)
+  if(PYTHONINTERP_FOUND)
+	project(PythonInteractive)
+	set(_python_qt_name Qt5Python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR})
+	find_package(${_python_qt_name}_QtAll REQUIRED)
+    #find_package(${_python_qt_name} REQUIRED)
+	  include_directories("${Qt5Python35_DIR}/../../../include"
+	  ${EaglePython_INCLUDE})
+	
+	
+	set(Qt5Python35_BIN_DIR "" CACHE PATH "${Qt5Python35_DIR}/../../../bin")
+	set(Qt5Python35_BIN_DIR_OPT "" CACHE PATH "${Qt5Python35_DIR}/../../../bin")
+	set(Qt5Python35_BIN_DIR_DBG "" CACHE PATH "${Qt5Python35_DIR}/../../../bin")
+	set(BIN_DIRS "${BIN_DIRS};Qt5Python35" CACHE STRING "" FORCE)
+
+	file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp")
+	file(GLOB_RECURSE src "src/*.cpp")
+	MACRO(APPEND_BIN_DIR ARG1 ARG2)
+		IF(EXISTS "${${ARG1}}" AND IS_DIRECTORY "${${ARG1}}")
+			LIST(APPEND ${ARG2} ${${ARG1}})
+		ELSE()
+			MESSAGE("${ARG1} : ${${ARG1}} is not a valid directory")
+		ENDIF()
+	ENDMACRO(APPEND_BIN_DIR)
+	SET(PROJECT_BIN_DIRS_DEBUG)
+	SET(PROJECT_BIN_DIRS_RELEASE)
+	SET(PROJECT_BIN_DIRS_RELWITHDEBINFO)
+
+	SET(OpenCV_BIN_DIR_DBG "${OpenCV_DIR}/x64/vc12/bin" CACHE PATH "")
+	SET(OpenCV_BIN_DIR_OPT "${OpenCV_DIR}/x64/vc12/bin" CACHE PATH "")
+	SET(Qt5_BIN_DIR "${Qt5_DIR}/../../../bin" CACHE PATH "")
+	#SET(CAFFE_RELEASE "${Caffe_DIR}/../../bin" CACHE PATH "")
+	#SET(CAFFE_DEBUG "${Caffe_DIR}/../../bin" CACHE PATH "")
+	SET(CUDA_BIN_DIR "${CUDA_TOOLKIT_ROOT_DIR}/bin" CACHE PATH "")
+	SET(Boost_BIN_DIR ${Boost_LIBRARY_DIR} CACHE PATH "")
+		
+	FOREACH(dir ${BIN_DIRS})
+		APPEND_BIN_DIR(${dir}_BIN_DIR_DBG PROJECT_BIN_DIRS_DEBUG )
+		APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELEASE)
+		APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELWITHDEBINFO)
+	ENDFOREACH(dir ${BIN_DIRS})
+    CONFIGURE_FILE(PythonInteractive.vcxproj.user.in ${CMAKE_BINARY_DIR}/samples/PythonInteractive/PythonInteractive.vcxproj.user @ONLY)
+	QT5_WRAP_CPP(MOC ${hdr})
+	
+	add_executable(PythonInteractive ${MOC} ${hdr} ${src})
+	RCC_LINK_LIB(PythonInteractive EagleLib ${_python_qt_name} ${_python_qt_name}_QtAll EaglePython)
+	add_dependencies(PythonInteractive EagleLib EaglePython)
+  endif()
+endif()
+

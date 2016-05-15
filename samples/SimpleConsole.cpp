@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
 							LOG(info) << ss.str();
 						}
 					}
-				}				
+				}
 			}
 		};
         function_map["load_file"] = [&_dataStreams](std::string doc)->void

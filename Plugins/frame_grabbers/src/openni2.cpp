@@ -93,4 +93,4 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_openni2::GetCoordinateManager(
 }
 static frame_grabber_openni2_info g_info;
 
-REGISTERCLASS(frame_grabber_openni2, &g_info);
+//REGISTERCLASS(frame_grabber_openni2, &g_info);

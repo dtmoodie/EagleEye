@@ -71,6 +71,17 @@ ADD_SUBDIRECTORY("signals")
     include_directories("signals")
 ADD_SUBDIRECTORY("pplx")
 
+find_package(mxnet QUIET)
+if(${MXNET_FOUND})
+  INCLUDE_DIRECTORIES(${MXNET_INCLUDE_DIRS})
+  add_definitions(-DHAVE_MXNET)
+  add_definitions(-DMSHADOW_USE_CBLAS=1)
+  add_definitions(-DMSHADOW_USE_CUDA=1)
+  add_definitions(-DMSHADOW_USE_MKL=0)
+  add_definitions(-DMSHADOW_USE_CUDNN=1)
+endif()
+
+
 
 INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
@@ -241,6 +252,10 @@ TARGET_LINK_LIBRARIES(EagleLib
         RuntimeCompiler
 		${LINK_LIBS}
 )
+if(${MXNET_FOUND})
+  TARGET_LINK_LIBRARIES(EagleLib ${MXNET_LIBRARY})
+
+endif()
 if(WIN32)
     target_link_libraries(EagleLib OpenGL32)
 else(WIN32)
@@ -284,4 +299,4 @@ endif(WIN32)
 if(UNIX)
     TARGET_LINK_LIBRARIES(EagleLib dl)
 endif()
-add_subdirectory("pythonqt")
+add_subdirectory("python")

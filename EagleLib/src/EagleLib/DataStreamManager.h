@@ -33,10 +33,10 @@ namespace EagleLib
 	class EAGLE_EXPORTS DataStream: public Signals::signaler
 	{
 	public:
-		typedef EagleLib::SignalManager manager;
+		//typedef EagleLib::SignalManager manager;
         typedef std::shared_ptr<DataStream> Ptr;
         static bool CanLoadDocument(const std::string& document);
-
+		DataStream();
         ~DataStream();
 
         // Handles user interactions such as moving the viewport, user interface callbacks, etc
@@ -78,10 +78,6 @@ namespace EagleLib
         
     protected:
         friend class DataStreamManager;
-
-        DataStream();
-        
-
         // members
         int stream_id;
         rcc::shared_ptr<IViewManager>							view_manager;
@@ -93,14 +89,16 @@ namespace EagleLib
 		std::shared_ptr<SignalManager>							signal_manager;
         std::vector<rcc::shared_ptr<Nodes::Node>>				top_level_nodes;
 		std::shared_ptr<IParameterBuffer>						_parameter_buffer;
-        std::mutex												nodes_mtx;
+        std::mutex    											nodes_mtx;
         bool													paused;
         cv::cuda::Stream										cuda_stream;
         boost::thread											processing_thread;
         volatile bool											dirty_flag;
         std::vector<std::shared_ptr<Signals::connection>>		connections;
-		SIG_DEF(StartThreads);
-		SIG_DEF(StopThreads);
+		SIGNALS_BEGIN(DataStream)
+			SIG_SEND(StartThreads);
+			SIG_SEND(StopThreads);
+		SIGNALS_END
 	};
 
     class EAGLE_EXPORTS DataStreamManager
