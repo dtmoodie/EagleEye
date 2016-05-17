@@ -21,7 +21,7 @@ namespace EagleLib
 		virtual int CanLoadDocument(const std::string& document) const;
 		virtual int Priority() const;
 	};
-    class PLUGIN_EXPORTS frame_grabber_cv: public FrameGrabberBuffered
+    class PLUGIN_EXPORTS frame_grabber_cv: public FrameGrabberThreaded
     {
     public:
         frame_grabber_cv();

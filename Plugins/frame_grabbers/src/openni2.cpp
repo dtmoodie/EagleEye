@@ -36,6 +36,10 @@ int frame_grabber_openni2_info::Priority() const
 {
 	return 0;
 }
+int frame_grabber_openni2_info::LoadTimeout() const
+{
+	return 10000;
+}
 
 bool frame_grabber_openni2::LoadFile(const std::string& file_path)
 {
@@ -70,7 +74,7 @@ TS<SyncedMemory> frame_grabber_openni2::GetNextFrameImpl(cv::cuda::Stream& strea
 	{
 		cv::Mat point_cloud;
 		cv::Mat depth;
-		//h_cam->retrieve(depth, cv::CAP_OPENNI_DEPTH_MAP);
+		h_cam->retrieve(depth, cv::CAP_OPENNI_DEPTH_MAP);
 		if (h_cam->retrieve(point_cloud, cv::CAP_OPENNI_POINT_CLOUD_MAP))
 		{
 			if (!point_cloud.empty())
@@ -89,4 +93,4 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_openni2::GetCoordinateManager(
 }
 static frame_grabber_openni2_info g_info;
 
-REGISTERCLASS(frame_grabber_openni2, &g_info);
+//REGISTERCLASS(frame_grabber_openni2, &g_info);

@@ -5,7 +5,7 @@
 #include "EagleLib/Plugins.h"
 #include <EagleLib/DataStreamManager.h>
 #include <EagleLib/Logging.h>
-
+#include <EagleLib/rcc/ObjectManager.h>
 #include <signal.h>
 #include <signals/logging.hpp>
 #include <parameters/Persistence/TextSerializer.hpp>
@@ -201,12 +201,14 @@ int main(int argc, char* argv[])
         {
             std::cout << 
                 "- Options: \n"
+				" - list_devices     -- List available connected devices for streaming access\n"
 				" - load_file        -- Create a frame grabber for a document\n"
 				"    document        -- Name of document to load\n"
                 " - add              -- Add a node to the current selected object\n"
 				"    node            -- name of node, names are listed with list\n"
                 " - list             -- List constructable objects\n"
 				"    nodes           -- List nodes registered\n"
+				" - plugins          -- list all plugins\n"
                 " - print            -- Prints the current streams, nodes in current stream, \n"
 				"    streams         -- prints all streams\n"
 				"    nodes           -- prints all nodes of current stream\n"
@@ -228,6 +230,32 @@ int main(int argc, char* argv[])
         };
 
         std::map<std::string, std::function<void(std::string)>> function_map;
+		function_map["list_devices"] = [](std::string null)->void
+		{
+			auto constructors = EagleLib::ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
+			for(auto constructor : constructors)
+			{
+				auto info = constructor->GetObjectInfo();
+				if(info)
+				{
+					auto fg_info = dynamic_cast<EagleLib::FrameGrabberInfo*>(info);
+					if(fg_info)
+					{
+						auto devices = fg_info->ListLoadableDocuments();
+						if(devices.size())
+						{
+							std::stringstream ss;
+							ss << fg_info->GetObjectName() << " can load:\n";
+							for(auto& device : devices)
+							{
+								ss << "    " << device;
+							}
+							LOG(info) << ss.str();
+						}
+					}
+				}
+			}
+		};
         function_map["load_file"] = [&_dataStreams](std::string doc)->void
         {
             if(EagleLib::DataStream::CanLoadDocument(doc))
@@ -391,6 +419,17 @@ int main(int argc, char* argv[])
                 
             }
         };
+		function_map["plugins"] = [](std::string null)->void
+		{
+			auto plugins = EagleLib::ListLoadedPlugins();
+			std::stringstream ss;
+			ss << "Loaded / failed plugins:\n";
+			for(auto& plugin: plugins)
+			{
+				ss << "  " << plugin << "\n";
+			}
+			LOG(info) << ss.str();
+		};
         function_map["add"] = [&current_node, &current_stream](std::string name)->void
         {
             auto node = EagleLib::NodeManager::getInstance().addNode(name);

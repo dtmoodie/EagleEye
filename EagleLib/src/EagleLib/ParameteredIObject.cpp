@@ -12,8 +12,8 @@ void ParameteredIObject::Serialize(ISimpleSerializer* pSerializer)
 	IObject::Serialize(pSerializer);
 	SerializeAllParams(pSerializer);
 	SERIALIZE(_parameters);
-	SERIALIZE(_sig_parameter_updated);
-	SERIALIZE(_sig_parameter_added);
+	//SERIALIZE(_sig_parameter_updated);
+	//SERIALIZE(_sig_parameter_added);
 	SERIALIZE(_variable_manager);
 }
 

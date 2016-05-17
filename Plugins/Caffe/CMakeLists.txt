@@ -3,7 +3,7 @@ CMAKE_POLICY(SET CMP0020 NEW)
 find_package(Caffe REQUIRED)
 
 find_package(CUDA REQUIRED)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV QUIET)
 
 set(CUDNN_DIR "" CACHE PATH "cudnn directory")
 
@@ -39,7 +39,7 @@ file(GLOB_RECURSE src "*.h" "*.cpp")
 add_library(Caffe SHARED ${src})
 add_dependencies(Caffe EagleLib)
 SET(BIN_DIRS "${BIN_DIRS};CAFFE" CACHE STRING "" FORCE)
-set_target_properties(libcaffe_SHARED PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+set_target_properties(libcaffe PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 IF(WIN32)
   RCC_LINK_LIB(Caffe
       EagleLib
@@ -53,7 +53,7 @@ IF(WIN32)
       ${CUDA_nppc_LIBRARY}
       ${CUDA_nppc_LIBRARY}
       ${CUDA_npps_LIBRARY}
-	  libcaffe_SHARED
+	  libcaffe
 	  ${GLOG_LIBRARY}
 	  ${CUDNN_LIBRARY}
     )

@@ -7,11 +7,11 @@ project(freenect_framegrabber)
 #set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-#find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
+
 find_package(CUDA REQUIRED)
 
 FIND_PACKAGE(libusb-1.0)
-#find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
+
 find_package(libfreenect)
 
 IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)

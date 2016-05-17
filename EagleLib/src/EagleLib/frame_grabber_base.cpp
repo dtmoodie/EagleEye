@@ -49,18 +49,27 @@ FrameGrabberBuffered::FrameGrabberBuffered()
 void FrameGrabberBuffered::InitializeFrameGrabber(DataStream* stream)
 {
     IFrameGrabber::InitializeFrameGrabber(stream);
-    if (stream)
-    {
-        _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberBuffered::LaunchBufferThread, this), this));
-        _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberBuffered::StopBufferThread, this), this));
-    }
-    //LaunchBufferThread();
+    
+}
+void FrameGrabberThreaded::InitializeFrameGrabber(DataStream* stream)
+{
+	FrameGrabberBuffered::InitializeFrameGrabber(stream);
+	if (stream)
+	{
+		_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberThreaded::LaunchBufferThread, this), this));
+		_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberThreaded::StopBufferThread, this), this));
+	}
 }
 FrameGrabberBuffered::~FrameGrabberBuffered()
 {
-    buffer_thread.interrupt();
-    buffer_thread.join();
+    
 }
+FrameGrabberThreaded::~FrameGrabberThreaded()
+{
+	buffer_thread.interrupt();
+	buffer_thread.join();
+}
+
 TS<SyncedMemory> FrameGrabberBuffered::GetCurrentFrame(cv::cuda::Stream& stream)
 {
     return GetFrame(playback_frame_number, stream);
@@ -160,7 +169,7 @@ int FrameGrabberBuffered::GetFrameNumber()
     return playback_frame_number;
 }
 
-void FrameGrabberBuffered::Buffer()
+void FrameGrabberThreaded::Buffer()
 {
     cv::cuda::Stream read_stream;
     rmt_SetCurrentThreadName("FrameGrabberThread");
@@ -214,14 +223,14 @@ void FrameGrabberBuffered::Buffer()
     LOG(info) << "Shutting down buffer thread";
 }
 
-void FrameGrabberBuffered::LaunchBufferThread()
+void FrameGrabberThreaded::LaunchBufferThread()
 {
     LOG(info);
     StopBufferThread();
-    buffer_thread = boost::thread(boost::bind(&FrameGrabberBuffered::Buffer, this));
+    buffer_thread = boost::thread(boost::bind(&FrameGrabberThreaded::Buffer, this));
 }
 
-void FrameGrabberBuffered::StopBufferThread()
+void FrameGrabberThreaded::StopBufferThread()
 {
     LOG(info);
     buffer_thread.interrupt();
@@ -244,6 +253,10 @@ int FrameGrabberInfo::GetObjectInfoType()
 {
     return IObjectInfo::ObjectInfoType::frame_grabber;
 }
+std::vector<std::string> FrameGrabberInfo::ListLoadableDocuments()
+{
+	return std::vector<std::string>();
+}
 void FrameGrabberBuffered::Init(bool firstInit)
 {
     IFrameGrabber::Init(firstInit);
@@ -252,13 +265,7 @@ void FrameGrabberBuffered::Init(bool firstInit)
         updateParameter<int>("Frame buffer size", 50);
     }else
     {
-        if (parent_stream)
-        {
-            _callback_connections.push_back(parent_stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberBuffered::LaunchBufferThread, this), this));
-            _callback_connections.push_back(parent_stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberBuffered::StopBufferThread, this), this));
-        }
         
-        LaunchBufferThread();
     }
     frame_buffer.set_capacity(*getParameter<int>("Frame buffer size")->Data());
     updateParameterPtr<boost::circular_buffer<TS<SyncedMemory>>>("Frame buffer", &frame_buffer)->type = Parameters::Parameter::Output;
@@ -271,6 +278,20 @@ void FrameGrabberBuffered::Init(bool firstInit)
     RegisterParameterCallback("Frame buffer size", f, true, true);
 }
 
+void FrameGrabberThreaded::Init(bool firstInit)
+{
+	FrameGrabberBuffered::Init(firstInit);
+	if(!firstInit)
+	{
+		if (parent_stream)
+		{
+			_callback_connections.push_back(parent_stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberThreaded::LaunchBufferThread, this), this));
+			_callback_connections.push_back(parent_stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberThreaded::StopBufferThread, this), this));
+		}
+
+		LaunchBufferThread();
+	}	
+}
 void FrameGrabberBuffered::Serialize(ISimpleSerializer* pSerializer)
 {
     IFrameGrabber::Serialize(pSerializer);

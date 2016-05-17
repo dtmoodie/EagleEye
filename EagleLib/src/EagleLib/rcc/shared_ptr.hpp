@@ -39,6 +39,7 @@ namespace rcc
 			    ++(*refCount);
 	    }
     public:
+		typedef T element_type;
 	    shared_ptr() : m_object(nullptr), refCount(nullptr)
 	    {
 	    }
@@ -168,15 +169,10 @@ namespace rcc
             auto id = m_objectId; m_objectId = r.m_objectId; 
 		    increment();
 	    }
-	    T* get()
+	    T* get() const
 	    {
 		    assert(m_object != nullptr);
 		    return m_object;
-	    }
-	    template<typename V> V* get()
-	    {
-		    assert(m_object != nullptr);
-		    return dynamic_cast<V*>(m_object);
 	    }
         explicit operator bool() const
         {
@@ -191,6 +187,7 @@ namespace rcc
 	    friend struct IObject;
 	    friend class shared_ptr<T>;
     public:
+		typedef T element_type;
 	    weak_ptr() : m_object(nullptr)
 	    {
 	    }
@@ -294,6 +291,7 @@ namespace rcc
         void increment();
 
     public:
+		typedef IObject element_type;
         shared_ptr();
         shared_ptr(IObject* ptr);
         shared_ptr(shared_ptr<IObject> const & ptr);
@@ -356,6 +354,7 @@ namespace rcc
         template<typename T> friend class rcc::shared_ptr;
         virtual void updateObject(IObject *ptr);
     public:
+		typedef IObject element_type;
         weak_ptr();
         weak_ptr(IObject* ptr);
         weak_ptr(weak_ptr<IObject> const & ptr);

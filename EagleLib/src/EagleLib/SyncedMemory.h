@@ -1,7 +1,8 @@
 #pragma once
 #include "Defs.hpp"
+#include "EagleLib/rcc/external_includes/cv_core.hpp"
 #include <opencv2/core/cuda.hpp>
-#include <opencv2/core/mat.hpp>
+
 
 namespace EagleLib
 {

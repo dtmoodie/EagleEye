@@ -19,7 +19,7 @@ ELSE(WIN32)
   SET(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Executable output path" FORCE)
 ENDIF(WIN32)
 
-find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
+find_package(OpenCV 3.0 QUIET COMPONENTS  core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudabgsegm)
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 find_package(CUDA REQUIRED)
@@ -62,7 +62,7 @@ ENDIF(${EagleLib_JETSON})
 IF(NOT WIN32)
         set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex log log_setup atomic)
 ENDIF(NOT WIN32)
-find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES}) 
+find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 
 FILE(GLOB_RECURSE src "src/*.cpp" "remotery/lib/*.c")
 FILE(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "remotery/lib/*.h")
@@ -72,6 +72,18 @@ ADD_SUBDIRECTORY("parameters")
 ADD_SUBDIRECTORY("signals")
     include_directories("signals")
 ADD_SUBDIRECTORY("pplx")
+
+find_package(mxnet QUIET)
+if(${MXNET_FOUND})
+  INCLUDE_DIRECTORIES(${MXNET_INCLUDE_DIRS})
+  add_definitions(-DHAVE_MXNET)
+  add_definitions(-DMSHADOW_USE_CBLAS=1)
+  add_definitions(-DMSHADOW_USE_CUDA=1)
+  add_definitions(-DMSHADOW_USE_MKL=0)
+  add_definitions(-DMSHADOW_USE_CUDNN=1)
+endif()
+
+
 
 INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
@@ -242,6 +254,10 @@ TARGET_LINK_LIBRARIES(EagleLib
         RuntimeCompiler
 		${LINK_LIBS}
 )
+if(${MXNET_FOUND})
+  TARGET_LINK_LIBRARIES(EagleLib ${MXNET_LIBRARY})
+
+endif()
 if(WIN32)
     target_link_libraries(EagleLib OpenGL32)
 else(WIN32)
@@ -285,3 +301,4 @@ endif(WIN32)
 if(UNIX)
     TARGET_LINK_LIBRARIES(EagleLib dl)
 endif()
+add_subdirectory("python")

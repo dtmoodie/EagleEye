@@ -13,6 +13,7 @@ namespace EagleLib
 		virtual std::string GetObjectName();
 		virtual int CanLoadDocument(const std::string& document) const;
 		virtual int Priority() const;
+		virtual int LoadTimeout() const;
 	};
 
 	class PLUGIN_EXPORTS frame_grabber_openni2 : public frame_grabber_cv
