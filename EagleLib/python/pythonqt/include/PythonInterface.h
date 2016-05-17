@@ -31,11 +31,11 @@ namespace EagleLib
 			{
 				Q_OBJECT
 				public Q_SLOTS:
-					void delete_NodePtr(NodePtr o);
-					QString GetName(NodePtr node);
-					QString GetFullName(NodePtr node);
-					QStringList ListParameters(NodePtr node);
-					void AddNode(NodePtr node, QString name);
+					void delete_NodePtr(NodePtr* o);
+					QString GetName(NodePtr* node);
+					QString GetFullName(NodePtr* node);
+					QStringList ListParameters(NodePtr* node);
+					void AddNode(NodePtr* node, QString name);
 			};
 			class EAGLEPYTHON_EXPORTS DataStreamWrapper: public QObject
 			{

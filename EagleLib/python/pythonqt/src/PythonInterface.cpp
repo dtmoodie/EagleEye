@@ -197,32 +197,33 @@ DataStream* EaglePython::OpenDataSource(QString source)
     }
 	return nullptr;
 }
-void NodeWrapper::delete_NodePtr(NodePtr o) 
+void NodeWrapper::delete_NodePtr(NodePtr* o) 
 { 
+	delete o;
 }
-QString NodeWrapper::GetName(NodePtr node)
+QString NodeWrapper::GetName(NodePtr* node)
 {
-	return QString::fromStdString((node)->getName());
+	return QString::fromStdString((*node)->getName());
 }
 
-QString NodeWrapper::GetFullName(NodePtr node)
+QString NodeWrapper::GetFullName(NodePtr* node)
 {
-	return QString::fromStdString((node)->getFullTreeName());
+	return QString::fromStdString((*node)->getFullTreeName());
 }
 
-void NodeWrapper::AddNode(rcc::shared_ptr<EagleLib::Nodes::Node> node, QString name)
+void NodeWrapper::AddNode(rcc::shared_ptr<EagleLib::Nodes::Node>* node, QString name)
 {
 	auto new_node = EagleLib::NodeManager::getInstance().addNode(name.toStdString());
 	if(new_node)
 	{
-		(node)->addChild(new_node);
+		(*node)->addChild(new_node);
 	}
 	
 }
 
-QStringList NodeWrapper::ListParameters(rcc::shared_ptr<EagleLib::Nodes::Node> node)
+QStringList NodeWrapper::ListParameters(rcc::shared_ptr<EagleLib::Nodes::Node>* node)
 {
-	auto params = (node)->getDisplayParameters();
+	auto params = (*node)->getDisplayParameters();
 	QStringList output;
 	for(auto& param : params)
 	{

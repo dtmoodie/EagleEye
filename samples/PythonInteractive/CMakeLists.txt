@@ -6,8 +6,9 @@ if(Qt5_FOUND)
   if(PYTHONINTERP_FOUND)
 	project(PythonInteractive)
 	set(_python_qt_name Qt5Python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR})
-	find_package(${_python_qt_name}_QtAll REQUIRED)
-    #find_package(${_python_qt_name} REQUIRED)
+	find_package(${_python_qt_name}_QtAll QUIET)
+	if(${_python_qt_name}_QtAll_FOUND)
+    
 	  include_directories("${Qt5Python35_DIR}/../../../include"
 	  ${EaglePython_INCLUDE})
 	
@@ -45,10 +46,11 @@ if(Qt5_FOUND)
 	ENDFOREACH(dir ${BIN_DIRS})
     CONFIGURE_FILE(PythonInteractive.vcxproj.user.in ${CMAKE_BINARY_DIR}/samples/PythonInteractive/PythonInteractive.vcxproj.user @ONLY)
 	QT5_WRAP_CPP(MOC ${hdr})
-	
+	LINK_DIRECTORIES(${LINK_DIRS})
 	add_executable(PythonInteractive ${MOC} ${hdr} ${src})
 	RCC_LINK_LIB(PythonInteractive EagleLib ${_python_qt_name} ${_python_qt_name}_QtAll EaglePython)
 	add_dependencies(PythonInteractive EagleLib EaglePython)
+	endif()
   endif()
 endif()
 

@@ -141,8 +141,8 @@ private:
 
     QTimer* persistence_timer;
 	SIGNALS_BEGIN(MainWindow)
-		SIG_DEF(StartThreads);
-		SIG_DEF(StopThreads);
+		SIG_SEND(StartThreads);
+		SIG_SEND(StopThreads);
 	SIGNALS_END
 	// All signals from the user get directed through this manager so that 
 	// they can all be attached to a serialization sink for recording user interaction

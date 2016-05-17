@@ -17,12 +17,13 @@ if(Qt5_FOUND)
 		if(${_python_qt_name}_FOUND)
 			include_directories("pythonqt/include")
 			include_directories("${${_python_qt_name}_DIR}/../../../include")
-			list(APPEND includes_ "${CMAKE_CURRENT_SOURCE_DIR}/pythonqt/include")
 			file(GLOB_RECURSE __src "pythonqt/src/*.cpp")
 			file(GLOB_RECURSE __hdr "pythonqt/include/*.h" "pythonqt/include/*.hpp")
 			QT5_WRAP_CPP(MOC ${__hdr})
+			list(APPEND includes_ "${CMAKE_CURRENT_SOURCE_DIR}/pythonqt/include")
 			list(APPEND src "${__src}")
 			list(APPEND hdr "${__hdr}")
+			list(APPEND libs "${_python_qt_name}")
 			message("Building PythonQt")
 		endif()
 	endif()
@@ -30,7 +31,7 @@ endif()
 
 # ----------------------- Boost::Python section ---------------------
 unset(PYTHON_LIBRARY)
-find_package(PythonLibs 3.5 REQUIRED )
+find_package(PythonLibs 2.7 REQUIRED )
 include_directories( ${PYTHON_INCLUDE_DIRS} )
 find_package(Boost REQUIRED COMPONENTS Python)
 include_directories( ${Boost_INCLUDE_DIR} )
@@ -41,7 +42,21 @@ list(APPEND hdr "${_hdr}")
 
 # ----------------------- Build library ---------------------
 include_directories(${EagleLib_INCLUDE_DIRS} ${INCLUDE_DIRS})
-add_library(EaglePython ${hdr} ${src} ${MOC})
-target_link_libraries(EaglePython ${libs} ${Boost_LIBRARIES})
+add_library(EaglePython SHARED ${hdr} ${src} ${MOC})
+link_directories("${CMAKE_BINARY_DIR}")
+target_link_libraries(EaglePython 
+	${libs} 
+	${Boost_LIBRARIES} 
+	EagleLib
+    RuntimeObjectSystem
+    RuntimeCompiler
+    ${CUDA_cublas_LIBRARY}
+    ${CUDA_cupti_LIBRARY}
+    ${CUDA_nppi_LIBRARY}
+    ${CUDA_cufft_LIBRARY}
+    ${CUDA_npps_LIBRARY}
+    ${CUDA_CUDART_LIBRARY}
+	${PYTHON_LIBRARY}
+	${PYTHON_DEBUG_LIBRARY})
 message(${includes_})
 set(EaglePython_INCLUDE "${includes_}" CACHE PATH "" FORCE)

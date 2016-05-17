@@ -22,7 +22,7 @@ public:
     ~NodeListDialog();
 
 	SIGNALS_BEGIN(NodeListDialog)
-		SIG_DEF(add_node, std::string);
+		SIG_SEND(add_node, std::string);
 	SIGNALS_END
 
 signals:

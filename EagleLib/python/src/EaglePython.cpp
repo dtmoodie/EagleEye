@@ -3,13 +3,14 @@
 #include <EagleLib/nodes/NodeManager.h>
 #include <EagleLib/nodes/Node.h>
 #include <EagleLib/frame_grabber_base.h>
-
+#include <EagleLib/DataStreamManager.h>
 
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-
+using namespace std;
+using namespace EagleLib;
 
 
 // --------------------------------------------------------------
@@ -71,13 +72,76 @@ std::vector<std::string> ListHistory()
 	return std::vector<std::string>();
 }
 
+shared_ptr<DataStream> open_datastream(string source)
+{
+	std::string doc = source;
+	if(EagleLib::DataStream::CanLoadDocument(doc))
+	{
+		LOG(debug) << "Found a frame grabber which can load " << doc;
+		auto stream = EagleLib::DataStreamManager::instance()->create_stream();
+		if(stream->LoadDocument(doc))
+		{
+			stream->LaunchProcess();
+			return stream;
+		}else
+		{
+			LOG(warning) << "Unable to load document";
+		}
+	}else
+	{
+		LOG(warning) << "Unable to find a frame grabber which can load " << doc;
+	}
+	return shared_ptr<DataStream>(nullptr);
+}
 
+rcc::shared_ptr<Nodes::Node> create_node(string name)
+{
+	return EagleLib::NodeManager::getInstance().addNode(name);
+}
+
+namespace boost
+{
+	namespace python
+	{
+		template<typename T> T* get_pointer(rcc::shared_ptr<T> const& a_P)
+		{
+			return a_P.get();
+		}
+		template<typename T> struct pointee<rcc::shared_ptr<T>>
+		{
+			typedef T type;
+		};
+	}
+}
 
 BOOST_PYTHON_MODULE(EaglePython)
 {
 	boost::python::scope().attr("__version__") = "0.1";
 
-	boost::python::def("ListConstructableNodes", ListConstructableNodes);
-	boost::python::def("ListConstructableNodes", ListConstructableNodes1);
+	boost::python::def("ListConstructableNodes", &ListConstructableNodes);
+	boost::python::def("ListConstructableNodes", &ListConstructableNodes1);
+	boost::python::def("ListDevices", &ListDevices);
+
+
+	boost::python::class_<EagleLib::DataStream, std::shared_ptr<EagleLib::DataStream>, boost::noncopyable>("DataStream", boost::python::no_init)
+		.def("__init__", boost::python::make_constructor(&open_datastream))
+		.def("GetName", &EagleLib::Nodes::Node::getName)
+		.def("GetFullName", &EagleLib::Nodes::Node::getFullTreeName)
+		.def("GetParameters", &EagleLib::Nodes::Node::getParameters);
+
+	boost::python::class_<EagleLib::Nodes::Node, rcc::shared_ptr<EagleLib::Nodes::Node>, boost::noncopyable>("Node", boost::python::no_init)
+		.def("__init__", boost::python::make_constructor(&create_node));
+
+
+	//boost::python::class_<Parameters::Parameter, boost::noncopyable>("Parameter", boost::python::no_init)
+		//.def("GetName", &Parameters::Parameter::GetName);
+		
+	
+	boost::python::register_ptr_to_python<std::shared_ptr<EagleLib::DataStream>>();
+
+	boost::python::register_ptr_to_python<rcc::shared_ptr<EagleLib::Nodes::Node>>();
+
+	boost::python::class_<vector<Parameters::Parameter*>>("ParamVec")
+		.def(boost::python::vector_indexing_suite<vector<Parameters::Parameter*>, true>());
 
 }
