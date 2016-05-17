@@ -39,4 +39,5 @@ target_link_libraries(SimpleConsole
     ${CUDA_nppi_LIBRARY}
     ${CUDA_cufft_LIBRARY}
     ${CUDA_npps_LIBRARY}
+    ${CUDA_nppc_LIBRARY}
     ${CUDA_CUDART_LIBRARY})

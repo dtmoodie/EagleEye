@@ -28,9 +28,8 @@ ADD_DEFINITIONS(-DPROJECT_INCLUDES="${CMAKE_CURRENT_SOURCE_DIR}")
 
 SET(knl "")
 
-IF(WIN32)
+
 file(GLOB_RECURSE knl "*.cu")
-ENDIF(WIN32)
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp")
 
