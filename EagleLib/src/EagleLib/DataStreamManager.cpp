@@ -198,7 +198,14 @@ bool DataStream::LoadDocument(const std::string& document)
         obj->document = file_to_load;
         auto future = obj->promise.get_future();
         boost::thread connection_thread = boost::thread([obj]()->void{
-            obj->load();
+            try
+            {
+                obj->load();
+            }catch(cv::Exception&e)
+            {
+                LOG(debug) << e.what();
+            }
+            
             delete obj;
         });
         if(connection_thread.timed_join(boost::posix_time::milliseconds(fg_info->LoadTimeout())))

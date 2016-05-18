@@ -24,6 +24,10 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
 
         virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
+
+        SIGNALS_BEGIN(frame_grabber_rtsp)
+            SLOT_DEF(seek_relative_msec, void, double);
+        SIGNALS_END
         
     protected:
         rcc::shared_ptr<ICoordinateManager>          coordinate_manager;

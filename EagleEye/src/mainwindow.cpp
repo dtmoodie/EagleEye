@@ -824,25 +824,15 @@ void MainWindow::process_log_message(boost::log::trivial::severity_level severit
 void MainWindow::startProcessingThread()
 {
     stopProcessingThread();
-    /*auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    auto manager = table->GetSingleton<EagleLib::SignalManager>();
-    (*manager->GetSignal<void(void)>("StartThreads", this, -1))();*/
     sig_StartThreads();
-	//processingThreadActive = true;
-    //processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
 }
 // So the problem here is that cv::imshow operates on the main thread, thus if the main thread blocks
 // because it's waiting for processingThread to join, then cv::imshow will block, thus causing deadlock.
 // What we need is a signal beforehand that will disable all imshow's before a delete.
 void MainWindow::stopProcessingThread()
 {
-    //auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    //auto manager = table->GetSingleton<EagleLib::SignalManager>();
-    //auto result = (*manager->GetSignal<void(void)>("StopThreads", this, -1))();
     sig_StopThreads();
 	processingThreadActive = false;
-    //processingThread.interrupt();
-    //processingThread.join();
 }
 
 void MainWindow::on_actionLog_settings_triggered()

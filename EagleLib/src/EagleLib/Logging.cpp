@@ -36,7 +36,7 @@
 int static_errorHandler(int status, const char* func_name, const char* err_msg, const char* file_name, int line, void* userdata)
 {
 	std::stringstream ss;
-	LOG(debug) << "Exception at\n" << Signals::print_callstack(0, true, ss);
+	LOG(debug) << "Exception at" << Signals::print_callstack(0, true, ss) << "[" << file_name << ":" << line << " " << func_name << "] " << err_msg;
 	throw Signals::ExceptionWithCallStack<cv::Exception>(cv::Exception(status, err_msg, func_name, file_name, line), ss.str());
 	return 0;
 }

@@ -81,8 +81,17 @@ namespace EagleLib
 
         virtual void Serialize(ISimpleSerializer* pSerializer);
         virtual void Init(bool firstInit);
+
+
+        SIGNALS_BEGIN(IFrameGrabber, ParameteredIObject)
     protected:
-		Signals::typed_signal_base<void()>* update_signal;
+            SIG_SEND(update_signal)
+    public:
+        SIGNALS_END;
+        
+    protected:
+        
+		//Signals::typed_signal_base<void()>* update_signal;
         std::string loaded_document;
         DataStream* parent_stream;
     };
@@ -132,6 +141,12 @@ namespace EagleLib
 	private:
 		void                                     Buffer();
 		boost::thread                            buffer_thread;
+        SIGNALS_BEGIN(FrameGrabberThreaded, FrameGrabberBuffered);
+            AUTO_SLOT(StartThreads, void)
+            AUTO_SLOT(StopThreads, void)
+            AUTO_SLOT(PauseThreads, void)
+            AUTO_SLOT(ResumeThreads, void)
+        SIGNALS_END
 	protected:
 		// Should only ever be called from the buffer thread
 		virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
@@ -140,8 +155,7 @@ namespace EagleLib
 		~FrameGrabberThreaded();
 		virtual void InitializeFrameGrabber(DataStream* stream);
 		virtual void Init(bool firstInit);
-		void                                     LaunchBufferThread();
-		void                                     StopBufferThread();
+		bool _pause = false;
 	};
 
 }

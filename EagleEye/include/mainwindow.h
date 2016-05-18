@@ -143,6 +143,8 @@ private:
 	SIGNALS_BEGIN(MainWindow)
 		SIG_SEND(StartThreads);
 		SIG_SEND(StopThreads);
+        SIG_SEND(PauseThreads);
+        SIG_SEND(ResumeThreads);
 	SIGNALS_END
 	// All signals from the user get directed through this manager so that 
 	// they can all be attached to a serialization sink for recording user interaction
