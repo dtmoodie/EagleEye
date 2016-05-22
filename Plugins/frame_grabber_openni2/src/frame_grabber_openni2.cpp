@@ -59,7 +59,19 @@ std::vector<std::string> frame_grabber_openni2_info::ListLoadableDocuments()
 
 frame_grabber_openni2::frame_grabber_openni2()
 {
-	
+	_is_stream = true;
+}
+frame_grabber_openni2::~frame_grabber_openni2()
+{
+	if(_depth)
+	{
+		_depth->removeNewFrameListener(this);
+		_depth->stop();
+		if(_device)
+		{
+			_device->close();
+		}
+	}
 }
 int frame_grabber_openni2::GetNumFrames()
 {
@@ -121,18 +133,21 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
 	{
 	case openni::PIXEL_FORMAT_DEPTH_100_UM:
 		scale = 10;
-	case openni::PIXEL_FORMAT_DEPTH_1_MM:
-		
+	case openni::PIXEL_FORMAT_DEPTH_1_MM:	
 		cv::Mat data(height, width, CV_16U, (ushort*)_frame.getData());
-		cv::Mat copy;
-		if(scale == 1)
-			data.copyTo(copy);
-		else
-			copy = data*scale;
-		boost::mutex::scoped_lock lock(buffer_mtx);
-		_buffer.push_back(TS<SyncedMemory>(double(ts), fn, copy));
-		if(update_signal)
-			(*update_signal)();
+		cv::Mat XYZ;
+		XYZ.create(height, width, CV_32FC3);
+		for(int i = 0; i < height; ++i)
+		{
+			ushort* ptr = data.ptr<ushort>(i);
+			cv::Vec3f* pt_ptr = XYZ.ptr<cv::Vec3f>(i);
+			for(int j = 0; j < width; ++j)
+			{
+				openni::CoordinateConverter::convertDepthToWorld(*_depth, j, i, ptr[j], &pt_ptr[j].val[0], &pt_ptr[j].val[1], &pt_ptr[j].val[2]);
+			}
+		}
+		
+		PushFrame(TS<SyncedMemory>(double(ts), fn, XYZ), false);
 		break;
 	}
 }

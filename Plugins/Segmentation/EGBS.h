@@ -75,7 +75,7 @@ namespace EagleLib
 		cv::cuda::HostMem h_buf;
     public:
 		SegmentEGBS();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     }

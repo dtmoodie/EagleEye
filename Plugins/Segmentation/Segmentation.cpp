@@ -15,7 +15,7 @@ using namespace EagleLib;
 using namespace EagleLib::Nodes;
 SETUP_PROJECT_IMPL
 
-void OtsuThreshold::Init(bool firstInit)
+void OtsuThreshold::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -169,7 +169,7 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     return img;
 }
 
-void SegmentMOG2::Init(bool firstInit)
+void SegmentMOG2::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -205,7 +205,7 @@ cv::cuda::GpuMat SegmentMOG2::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     return img;
 }
 
-void SegmentWatershed::Init(bool firstInit)
+void SegmentWatershed::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -226,7 +226,7 @@ cv::cuda::GpuMat SegmentWatershed::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     return img;
 }
 
-void SegmentCPMC::Init(bool firstInit)
+void SegmentCPMC::NodeInit(bool firstInit)
 {
 
 }
@@ -238,7 +238,7 @@ cv::cuda::GpuMat SegmentCPMC::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 }
 
 
-void SegmentGrabCut::Init(bool firstInit)
+void SegmentGrabCut::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -312,7 +312,7 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     return img;
 }
 
-void KMeans::Init(bool firstInit)
+void KMeans::NodeInit(bool firstInit)
 {
 
 }
@@ -324,7 +324,7 @@ cv::cuda::GpuMat KMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stre
 }
 
 
-void SegmentKMeans::Init(bool firstInit)
+void SegmentKMeans::NodeInit(bool firstInit)
 {
     Parameters::EnumParameter flags;
     flags.addEnum(ENUM(cv::KMEANS_PP_CENTERS));
@@ -360,7 +360,7 @@ cv::cuda::GpuMat SegmentKMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     return img;
 }
 void
-SegmentMeanShift::Init(bool firstInit)
+SegmentMeanShift::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -406,7 +406,7 @@ cv::cuda::GpuMat SegmentMeanShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 
 
 
-void ManualMask::Init(bool firstInit)
+void ManualMask::NodeInit(bool firstInit)
 {
 
     if(firstInit)
@@ -464,9 +464,8 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
     return img;
 }
 
-void SLaT::Init(bool firstInit)
+void SLaT::NodeInit(bool firstInit)
 {
-	Node::Init(firstInit);
 	updateParameter("Lambda", double(0.1))->SetTooltip( "For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities");
 	updateParameter("Alpha", double(20.0))->SetTooltip("For bigger values, solution will be more flat, for smaller values, solution will be more rough.");
 	updateParameter("Temporal", double(0.0))->SetTooltip("For bigger values, solution will be driven to be similar to the previous frame, smaller values will allow for more interframe independence");

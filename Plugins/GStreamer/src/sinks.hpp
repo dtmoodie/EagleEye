@@ -13,7 +13,7 @@ namespace EagleLib
         public:
             tcpserver();
             ~tcpserver();
-            virtual void Init(bool firstInit);
+            virtual void NodeInit(bool firstInit);
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
         };
     }

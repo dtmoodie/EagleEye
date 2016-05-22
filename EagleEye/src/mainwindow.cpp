@@ -444,7 +444,7 @@ void MainWindow::load_file(QString filename)
         if(stream->LoadDocument(filename.toStdString()))
         {
             data_streams.push_back(stream);
-            stream->LaunchProcess();
+            stream->StartThread();
             auto data_stream_widget = new DataStreamWidget(0, stream);
             auto proxyWidget = nodeGraph->addWidget(data_stream_widget);
             nodeGraphView->addWidget(proxyWidget, stream->get_stream_id());
@@ -548,9 +548,8 @@ void MainWindow::onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::
 void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
 {
 	// Check if this node already exists
-	if (nodeGraphView->getWidget(node->GetObjectId()))
-		return;
-
+	DOIF_LOG_PASS(nodeGraphView->getWidget(node->GetObjectId()), return, debug);
+	
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
 	QObject::connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
@@ -618,7 +617,7 @@ void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
     {
         currentSelectedNodeWidget = prevWidget;
     }
-	startProcessingThread();
+	startProcessingThread(); // need to do something to prevent calling this from adding children
 }
 void MainWindow::updateLines()
 {
@@ -653,45 +652,26 @@ MainWindow::onNodeAdd(std::string node_name)
 	{
 		addNode(node);
 	}
-	
-    /*for(size_t i = 0; i < widgets.size(); ++i)
-    {
-        widgets[i]->updateUi();
-    }
-    if(node->getParent() == nullptr)
-    {
-        boost::timed_mutex::scoped_lock lock(parentMtx, boost::chrono::milliseconds(1000));
-        if(lock.owns_lock())
-        {
-            parentList.push_back(node);
-        }else
-        {
-            stopProcessingThread();
-            parentList.push_back(node);
-            startProcessingThread();
-        }
-    }
-    if(currentNode == nullptr)
-    {
-        currentNode = node;
-    }else
-    {
-        currentNode = prevNode;
-    }*/
     dirty = true;
 }
 void MainWindow::onWidgetDeleted(QNodeWidget* widget)
 {
-    auto itr = std::find(widgets.begin(), widgets.end(), widget);
+	nodeGraphView->removeWidget(widget->getNode()->GetObjectId());
+	auto itr = std::find(widgets.begin(), widgets.end(), widget);
     if(itr != widgets.end())
         widgets.erase(itr);
     boost::mutex::scoped_lock(parentMtx);
     auto parentItr = std::find(parentList.begin(), parentList.end(), widget->getNode());
     if(parentItr != parentList.end())
         parentList.erase(parentItr);
+	
 }
 void MainWindow::onWidgetDeleted(DataStreamWidget* widget)
 {
+	if(currentSelectedStreamWidget)
+		if(currentSelectedStreamWidget->widget() == widget)
+			currentSelectedStreamWidget = nullptr;
+
     auto itr = std::find(data_stream_widgets.begin(), data_stream_widgets.end(), widget);
     
     if(itr != data_stream_widgets.end())
@@ -701,6 +681,8 @@ void MainWindow::onWidgetDeleted(DataStreamWidget* widget)
     if(itr2 != data_streams.end())
         data_streams.erase(itr2);
     EagleLib::DataStreamManager::instance()->destroy_stream(stream.get());
+	if(current_stream.get() == stream.get())
+		current_stream.reset();
 }
 void
 MainWindow::uiNotifier()

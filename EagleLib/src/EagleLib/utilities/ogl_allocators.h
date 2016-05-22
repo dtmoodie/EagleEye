@@ -45,7 +45,7 @@ namespace EagleLib
         bool is_default_allocator;
 	public:
 
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
         

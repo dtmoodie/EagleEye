@@ -33,6 +33,7 @@ namespace EagleLib
 
 		virtual void Serialize(ISimpleSerializer *pSerializer);
         virtual void Init(bool firstInit);
+		virtual void PlotInit(bool firstInit);
 
 		virtual void SetInput(Parameters::Parameter::Ptr param_ = Parameters::Parameter::Ptr());
 

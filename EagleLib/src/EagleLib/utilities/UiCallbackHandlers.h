@@ -25,7 +25,7 @@ namespace EagleLib
 
         WindowCallbackHandler();
 
-        void Init(bool firstInit);
+        void NodeInit(bool firstInit);
         //static WindowCallbackHandler* instance(size_t stream_id = 0);
         
         void handle_click(int event, int x, int y, int flags, const std::string& win_name);

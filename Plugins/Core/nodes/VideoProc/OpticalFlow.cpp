@@ -19,7 +19,7 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(BroxOpticalFlow, Image, Extractor)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(DensePyrLKOpticalFlow, Image, Extractor)
 
 
-void DensePyrLKOpticalFlow::Init(bool firstInit)
+void DensePyrLKOpticalFlow::NodeInit(bool firstInit)
 {
 	opt_flow = cv::cuda::DensePyrLKOpticalFlow::create(cv::Size(13, 13), 3, 30, false); 
 	updateParameter<int>("Window Size", 13);
@@ -63,7 +63,7 @@ cv::cuda::GpuMat DensePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cud
 	updateParameter("FlowField", flow);
 	return img;
 }
-void SparsePyrLKOpticalFlow::Init(bool firstInit)
+void SparsePyrLKOpticalFlow::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -162,7 +162,7 @@ cv::cuda::GpuMat SparsePyrLKOpticalFlow::doProcess(cv::cuda::GpuMat &img, cv::cu
 }
 
 
-void BroxOpticalFlow::Init(bool firstInit)
+void BroxOpticalFlow::NodeInit(bool firstInit)
 {
 
 }

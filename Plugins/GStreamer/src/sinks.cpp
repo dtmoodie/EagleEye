@@ -21,7 +21,7 @@ tcpserver::~tcpserver()
         Enum.addEnum(__COUNTER__, #feature); \
     }
 
-void tcpserver::Init(bool firstInit)
+void tcpserver::NodeInit(bool firstInit)
 {
     if(firstInit)
     {

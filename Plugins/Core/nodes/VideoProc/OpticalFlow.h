@@ -22,7 +22,7 @@ namespace EagleLib
 
     public:
         SparsePyrLKOpticalFlow();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         virtual void Serialize(ISimpleSerializer *pSerializer);
     };
@@ -36,7 +36,7 @@ namespace EagleLib
 	public:
 
 		DensePyrLKOpticalFlow();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 	};
 
@@ -46,7 +46,7 @@ namespace EagleLib
     {
     public:
         BroxOpticalFlow();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 
     };

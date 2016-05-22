@@ -21,6 +21,12 @@ void Plotter::Init(bool firstInit)
             bc = param->RegisterNotifier(std::bind(&Plotter::OnParameterUpdate, this, std::placeholders::_1));
 		}
 	}
+	PlotInit(firstInit);
+	ParameteredIObject::Init(firstInit);
+}
+void Plotter::PlotInit(bool firstInit)
+{
+
 }
 
 void Plotter::Serialize(ISimpleSerializer *pSerializer)

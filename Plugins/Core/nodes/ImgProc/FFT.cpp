@@ -5,9 +5,8 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void FFT::Init(bool firstInit)
+void FFT::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         Parameters::EnumParameter param;
@@ -136,9 +135,9 @@ cv::Mat getShiftMat(cv::Size matSize)
     return shift;
 }
 
-void FFTPreShiftImage::Init(bool firstInit)
+void FFTPreShiftImage::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
+    
 }
 
 cv::cuda::GpuMat FFTPreShiftImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -151,9 +150,9 @@ cv::cuda::GpuMat FFTPreShiftImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     cv::cuda::multiply(d_shiftMat,img, result,1,-1,stream);
     return result;
 }
-void FFTPostShift::Init(bool firstInit)
+void FFTPostShift::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
+    
 }
 
 cv::cuda::GpuMat FFTPostShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)

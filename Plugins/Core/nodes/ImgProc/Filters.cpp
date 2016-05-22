@@ -4,7 +4,7 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-void Sobel::Init(bool firstInit)
+void Sobel::NodeInit(bool firstInit)
 {
 
 }
@@ -14,9 +14,9 @@ cv::cuda::GpuMat Sobel::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
 return img;
 }
 
-void Canny::Init(bool firstInit)	
+void Canny::NodeInit(bool firstInit)	
 {
-    Node::Init(firstInit);
+    
 	updateParameter("Low thresh", 0.0);
 	updateParameter("High thresh", 20.0);
 	updateParameter("Aperature size", int(3));
@@ -30,9 +30,9 @@ cv::cuda::GpuMat Canny::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
 	return img;
 }
 
-void Laplacian::Init(bool firstInit)
+void Laplacian::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
+    
 }
 
 cv::cuda::GpuMat Laplacian::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -40,9 +40,9 @@ cv::cuda::GpuMat Laplacian::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 return img;
 }
 
-void BiLateral::Init(bool firstInit)
+void BiLateral::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
+    
 }
 
 cv::cuda::GpuMat BiLateral::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -50,9 +50,9 @@ cv::cuda::GpuMat BiLateral::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 return img;
 }
 
-void MeanShiftFilter::Init(bool firstInit)
+void MeanShiftFilter::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
+    
 }
 
 cv::cuda::GpuMat MeanShiftFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -60,9 +60,9 @@ cv::cuda::GpuMat MeanShiftFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 return img;
 }
 
-void MeanShiftProc::Init(bool firstInit)
+void MeanShiftProc::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
+    
 }
 
 cv::cuda::GpuMat MeanShiftProc::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -70,9 +70,9 @@ cv::cuda::GpuMat MeanShiftProc::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     return img;
 }
 
-void MeanShiftSegmentation::Init(bool firstInit)
+void MeanShiftSegmentation::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
+    
 }
 
 cv::cuda::GpuMat MeanShiftSegmentation::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)

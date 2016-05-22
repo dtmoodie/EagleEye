@@ -6,7 +6,7 @@ using namespace EagleLib::ML::classifiers;
 using namespace EagleLib::ML::classifiers::MIL;
 
 
-void mil_tree::Init(bool firstInit)
+void mil_tree::NodeInit(bool firstInit)
 {
     if(firstInit)
     {

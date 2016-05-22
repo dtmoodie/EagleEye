@@ -12,6 +12,8 @@
 #include <boost/chrono.hpp>
 #include <boost/thread.hpp>
 #include <signals/boost_thread.h>
+#include "frame_grabber_base.h"
+#include "nodes/Node.h"
 using namespace EagleLib;
 
 #define CATCH_MACRO                                                         \
@@ -51,6 +53,7 @@ catch (...)                                                                 \
 // **********************************************************************
 DataStream::DataStream()
 {
+	
 	_sig_manager = GetSignalManager();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
@@ -62,18 +65,19 @@ DataStream::DataStream()
 			table->SetSingleton<SignalManager>(global_signal_manager);
 			Signals::signal_manager::set_instance(global_signal_manager);
         }
-		connections.push_back(global_signal_manager->connect<void(void)>("StopThreads", std::bind(&DataStream::PauseProcess, this), this));
-		connections.push_back(global_signal_manager->connect<void(void)>("StartThreads", std::bind(&DataStream::ResumeProcess, this), this));
+		connections.push_back(global_signal_manager->connect<void(void)>("StopThreads", std::bind(&DataStream::StopThread, this), this));
+		connections.push_back(global_signal_manager->connect<void(void)>("StartThreads", std::bind(&DataStream::StartThread, this), this));
+		connections.push_back(global_signal_manager->connect<void(void)>("PauseThreads", std::bind(&DataStream::PauseThread, this), this));
+		connections.push_back(global_signal_manager->connect<void(void)>("ResumeThreads", std::bind(&DataStream::ResumeThread, this), this));
     }
-	//connections.push_back(GetSignalManager()->connect<void(void)>("StopThreads", std::bind(&DataStream::StopProcess, this), this));
-	//connections.push_back(GetSignalManager()->connect<void(void)>("StartThreads", std::bind(&DataStream::LaunchProcess, this), this));
     paused = false;
     stream_id = 0;
+	_thread_id = 0;
 }
 
 DataStream::~DataStream()
 {
-    StopProcess();
+	StopThread();
 
 }
 
@@ -124,11 +128,11 @@ IParameterBuffer* DataStream::GetParameterBuffer()
 	return _parameter_buffer.get();
 
 }
-std::shared_ptr<Parameters::IVariableManager> DataStream::GetVariableManager()
+Parameters::IVariableManager* DataStream::GetVariableManager()
 {
     if(variable_manager == nullptr)
         variable_manager.reset(new Parameters::VariableManager());
-    return variable_manager;
+    return variable_manager.get();
 }
 
 bool DataStream::LoadDocument(const std::string& document)
@@ -274,7 +278,7 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
 	if (boost::this_thread::get_id() != processing_thread.get_id() && !paused)
 	{
-        Signals::thread_specific_queue::push(std::bind(&DataStream::AddNode, this, node), Signals::get_thread_id(processing_thread.get_id()));
+        Signals::thread_specific_queue::push(std::bind(&DataStream::AddNode, this, node), _thread_id);
 		return;
 	}
 
@@ -308,14 +312,14 @@ void DataStream::RemoveNode(rcc::shared_ptr<Nodes::Node> node)
     }
 }
 
-void DataStream::LaunchProcess()
+void DataStream::StartThread()
 {
-    StopProcess();
+	StopThread();
 	sig_StartThreads();
     processing_thread = boost::thread(boost::bind(&DataStream::process, this));
 }
 
-void DataStream::StopProcess()
+void DataStream::StopThread()
 {
     processing_thread.interrupt();
     processing_thread.join();
@@ -323,14 +327,16 @@ void DataStream::StopProcess()
 }
 
 
-void DataStream::PauseProcess()
+void DataStream::PauseThread()
 {
     paused = true;
+	sig_StopThreads();
 }
 
-void DataStream::ResumeProcess()
+void DataStream::ResumeThread()
 {
     paused = false;
+	sig_StartThreads();
 }
 
 void DataStream::process()
@@ -338,7 +344,8 @@ void DataStream::process()
     cv::cuda::Stream streams[2];
     dirty_flag = true;
     int iteration_count = 0;
-    Signals::thread_registry::get_instance()->register_thread(Signals::ANY);
+	Signals::thread_registry::get_instance()->register_thread(Signals::ANY);
+	
     rmt_SetCurrentThreadName("DataStreamThread");
     auto node_update_connection = signal_manager->connect<void(EagleLib::Nodes::Node*)>("NodeUpdated",
 		std::bind([this](EagleLib::Nodes::Node* node)->void
@@ -363,13 +370,14 @@ void DataStream::process()
 		{
 			dirty_flag = true;
 		}, std::placeholders::_1), this);
-
+	if(_thread_id == 0)
+		_thread_id = Signals::get_this_thread();
     LOG(info) << "Starting stream thread";
     while(!boost::this_thread::interruption_requested())
     {
         if(!paused)
         {
-            Signals::thread_specific_queue::run();
+            Signals::thread_specific_queue::run(_thread_id);
 
             if (frame_grabber != nullptr)
             {
@@ -434,9 +442,10 @@ DataStreamManager::~DataStreamManager()
 
 }
 
-std::shared_ptr<DataStream> DataStreamManager::create_stream()
+rcc::shared_ptr<DataStream> DataStreamManager::create_stream()
 {
-    std::shared_ptr<DataStream> stream(new DataStream);
+    //std::shared_ptr<DataStream> stream(new DataStream);
+	auto stream = ObjectManager::Instance().GetObject<DataStream, IID_DataStream>("DataStream");
     stream->stream_id = streams.size();
     streams.push_back(stream);
     return stream;
@@ -458,3 +467,5 @@ DataStream* DataStreamManager::get_stream(size_t id)
     CV_Assert(id < streams.size());
     return streams[id].get();
 }
+
+REGISTERCLASS(DataStream)

@@ -23,7 +23,7 @@ void IFrameGrabber::InitializeFrameGrabber(DataStream* stream)
     {
 		setup_signals(stream->GetSignalManager());
 		//update_signal = stream->GetSignalManager()->get_signal<void()>("update", this);
-        SetupVariableManager(stream->GetVariableManager().get());
+        SetupVariableManager(stream->GetVariableManager());
     }
 }
 void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
@@ -32,34 +32,12 @@ void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
     SERIALIZE(loaded_document);
     SERIALIZE(parent_stream);
 }
-void IFrameGrabber::Init(bool firstInit)
-{
-    if(!firstInit)
-    {
-        //update_signal = parent_stream->GetSignalManager()->get_signal<void()>("update", this);
-    }
-}
 FrameGrabberBuffered::FrameGrabberBuffered()
 {
     buffer_begin_frame_number = 0;
     buffer_end_frame_number = 0;
     playback_frame_number = 0;
 	_is_stream = false;
-}
-void FrameGrabberBuffered::InitializeFrameGrabber(DataStream* stream)
-{
-    IFrameGrabber::InitializeFrameGrabber(stream);
-    
-}
-void FrameGrabberThreaded::InitializeFrameGrabber(DataStream* stream)
-{
-	FrameGrabberBuffered::InitializeFrameGrabber(stream);
-	if (stream)
-	{
-		//_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberThreaded::LaunchBufferThread, this), this));
-		//_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberThreaded::StopBufferThread, this), this));
-	}
-    setup_signals(stream->GetSignalManager());
 }
 FrameGrabberBuffered::~FrameGrabberBuffered()
 {
@@ -126,12 +104,22 @@ TS<SyncedMemory> FrameGrabberBuffered::GetNextFrame(cv::cuda::Stream& stream)
             // Found the next frame
             //if (update_signal)
                 //(*update_signal)();
-            sig_update_signal();
+            sig_update();
             return itr;
         }
         ++index;
     }
     // If we get to this point, perhaps a frame was dropped. look for the next valid frame number in the frame buffer
+   if(_is_stream)
+   {
+		if(desired_frame < buffer_begin_frame_number)
+		{
+			// If this is a live stream and we've fallen behind, rail desired frame and return back of frame buffer
+			playback_frame_number = frame_buffer.begin()->frame_number;
+			sig_update();
+			return *frame_buffer.begin();		
+		}   
+   }
     LOG(trace) << "Unable to find desired frame (" << desired_frame << ") in frame buffer [" << buffer_begin_frame_number << "," << buffer_end_frame_number << "]";
     for(int i = 0; i < frame_buffer.size(); ++i)
     {
@@ -170,7 +158,27 @@ int FrameGrabberBuffered::GetFrameNumber()
 {
     return playback_frame_number;
 }
+void FrameGrabberBuffered::PushFrame(TS<SyncedMemory>& frame, bool blocking)
+{
+	boost::mutex::scoped_lock bLock(buffer_mtx);
 
+	// Waiting for the reading thread to catch up
+	if(blocking)
+	{
+		while(((buffer_begin_frame_number + 5 > playback_frame_number && frame_buffer.size() == frame_buffer.capacity()) && !_is_stream))
+		{
+			LOG(trace) << "Frame buffer is full and playback frame (" << playback_frame_number << ") is too close to the beginning of the frame buffer (" << buffer_begin_frame_number << ")";
+			frame_read_cv.wait_for(bLock, boost::chrono::milliseconds(10));
+		}
+	}
+	
+	buffer_end_frame_number = frame.frame_number;
+	frame_buffer.push_back(frame);
+	if(frame_buffer.size())
+		buffer_begin_frame_number = frame_buffer[0].frame_number;
+	frame_grabbed_cv.notify_all();
+	sig_update();
+}
 void FrameGrabberThreaded::Buffer()
 {
     cv::cuda::Stream read_stream;
@@ -190,20 +198,7 @@ void FrameGrabberThreaded::Buffer()
             }            
             if (!frame.empty())
             {
-                boost::mutex::scoped_lock bLock(buffer_mtx);
-
-                // Waiting for the reading thread to catch up
-                while((buffer_begin_frame_number + 5 > playback_frame_number && frame_buffer.size() == frame_buffer.capacity()) && !_is_stream)
-                {
-                    LOG(trace) << "Frame buffer is full and playback frame (" << playback_frame_number << ") is too close to the beginning of the frame buffer (" << buffer_begin_frame_number << ")";
-                    frame_read_cv.wait_for(bLock, boost::chrono::milliseconds(10));
-                }
-                buffer_end_frame_number = frame.frame_number;
-                if(frame_buffer.size())
-                    buffer_begin_frame_number = frame_buffer[0].frame_number;
-                frame_buffer.push_back(frame);
-                frame_grabbed_cv.notify_all();
-				sig_update_signal();
+				PushFrame(frame, true);
             }else
             {
                 LOG(trace) << "Read empty frame from frame grabber";
@@ -289,13 +284,6 @@ void FrameGrabberThreaded::Init(bool firstInit)
 	FrameGrabberBuffered::Init(firstInit);
 	if(!firstInit)
 	{
-		if (parent_stream)
-		{
-			//_callback_connections.push_back(parent_stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberThreaded::LaunchBufferThread, this), this));
-			//_callback_connections.push_back(parent_stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberThreaded::StopBufferThread, this), this));
-		}
-
-		//LaunchBufferThread();
         StartThreads();
 	}	
 }

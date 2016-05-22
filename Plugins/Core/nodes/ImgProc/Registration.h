@@ -20,7 +20,7 @@ namespace EagleLib{ namespace Nodes{
     public:
         register_to_reference();
         virtual void doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
 
     };
 

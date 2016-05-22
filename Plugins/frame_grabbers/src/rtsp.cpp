@@ -73,7 +73,7 @@ TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
 	_reconnect = true;
     return TS<SyncedMemory>();
 }
-void frame_grabber_rtsp::Init(bool firstInit)
+void frame_grabber_rtsp::NodeInit(bool firstInit)
 {
     frame_grabber_cv::Init(firstInit);
     _reconnect = false;

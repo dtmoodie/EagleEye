@@ -33,7 +33,7 @@ namespace EagleLib
 	public:
 		Server();
 
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
 	};
     }

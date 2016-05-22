@@ -35,7 +35,7 @@ namespace EagleLib
 		cv::cuda::HostMem h_img;
 	public:
 		FindCheckerboard();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
 	};
 	class LoadCameraCalibration : public Node
@@ -44,7 +44,7 @@ namespace EagleLib
 		cv::Mat dist;
 	public:
 		LoadCameraCalibration();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
 
 	};
@@ -65,7 +65,7 @@ namespace EagleLib
         virtual void clear();
         virtual void calibrate();
         CalibrateCamera();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
@@ -92,7 +92,7 @@ namespace EagleLib
 		virtual void clear();
         virtual void save();
 		CalibrateStereoPair();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
@@ -102,7 +102,7 @@ namespace EagleLib
         cv::Mat R1, R2, P1, P2, Q;
     public:
         ReadStereoCalibration();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
@@ -111,7 +111,7 @@ namespace EagleLib
         cv::Mat K, dist;
     public:
         ReadCameraCalibration();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     }

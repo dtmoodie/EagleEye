@@ -80,12 +80,11 @@ namespace EagleLib
         virtual void InitializeFrameGrabber(DataStream* stream);
 
         virtual void Serialize(ISimpleSerializer* pSerializer);
-        virtual void Init(bool firstInit);
 
-
-        SIGNALS_BEGIN(IFrameGrabber, ParameteredIObject)
+		
+        SIGNALS_BEGIN(IFrameGrabber, ParameteredIObject);
     protected:
-            SIG_SEND(update_signal)
+            SIG_SEND(update);
     public:
         SIGNALS_END;
         
@@ -115,11 +114,12 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
 		virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
         
-		virtual void InitializeFrameGrabber(DataStream* stream);
 
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
     protected:
+		virtual void PushFrame(TS<SyncedMemory>& frame, bool blocking = true);
+
         boost::circular_buffer<TS<SyncedMemory>> frame_buffer;
         
         boost::mutex                             buffer_mtx;
@@ -141,21 +141,22 @@ namespace EagleLib
 	private:
 		void                                     Buffer();
 		boost::thread                            buffer_thread;
-        SIGNALS_BEGIN(FrameGrabberThreaded, FrameGrabberBuffered);
-            AUTO_SLOT(StartThreads, void)
-            AUTO_SLOT(StopThreads, void)
-            AUTO_SLOT(PauseThreads, void)
-            AUTO_SLOT(ResumeThreads, void)
-        SIGNALS_END
+        
 	protected:
+		bool _pause = false;
 		// Should only ever be called from the buffer thread
 		virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
 		virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
 	public:
 		~FrameGrabberThreaded();
-		virtual void InitializeFrameGrabber(DataStream* stream);
 		virtual void Init(bool firstInit);
-		bool _pause = false;
+		
+		SIGNALS_BEGIN(FrameGrabberThreaded, FrameGrabberBuffered);
+			AUTO_SLOT(StartThreads, void)
+			AUTO_SLOT(StopThreads, void)
+			AUTO_SLOT(PauseThreads, void)
+			AUTO_SLOT(ResumeThreads, void)
+		SIGNALS_END
 	};
 
 }

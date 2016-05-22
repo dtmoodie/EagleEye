@@ -128,7 +128,7 @@ void XmppClient::on_msgReceived(std::string& msg)
 
 }
 
-void XmppClient::Init(bool firstInit)
+void XmppClient::NodeInit(bool firstInit)
 {
     if (firstInit)
     {

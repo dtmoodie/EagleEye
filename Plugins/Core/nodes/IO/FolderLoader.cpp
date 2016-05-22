@@ -41,7 +41,7 @@ void FolderLoader::onDirectoryChange()
 		boost::filesystem::path(getParameter<Parameters::ReadDirectory>(0)->Data()->string())));
 }
 
-void FolderLoader::Init(bool firstInit)
+void FolderLoader::NodeInit(bool firstInit)
 {
 	updateParameter<Parameters::ReadDirectory>("Load Directory", boost::filesystem::path(""));
 	updateParameter<bool>("Loop", true);

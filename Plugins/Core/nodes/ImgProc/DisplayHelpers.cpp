@@ -11,9 +11,9 @@ using namespace EagleLib::Nodes;
 
 
 void
-AutoScale::Init(bool firstInit)
+AutoScale::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
+    
 }
 
 cv::cuda::GpuMat
@@ -35,10 +35,9 @@ AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 }
 
 void
-Colormap::Init(bool firstInit)
+Colormap::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
-	rescale = true;
+    rescale = true;
     updateParameter("Colormapping scheme", int(0));
 	updateParameter<boost::function<void(void)>>("Rescale colormap", boost::bind(&Colormap::Rescale, this));
 }
@@ -84,7 +83,7 @@ void QtColormapDisplay::display()
 
 }
 
-void QtColormapDisplay::Init(bool firstInit)
+void QtColormapDisplay::NodeInit(bool firstInit)
 {
     Colormap::Init(firstInit);
 }
@@ -101,9 +100,8 @@ cv::cuda::GpuMat QtColormapDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
     return img;
 }
 
-void Normalize::Init(bool firstInit)
+void Normalize::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
 	Parameters::EnumParameter param;
     param.addEnum(ENUM(CV_MINMAX));
     param.addEnum(ENUM(cv::NORM_L2));
@@ -120,15 +118,31 @@ void Normalize::Init(bool firstInit)
 
 cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    TIME
-    cv::cuda::GpuMat normalized = *normalizedBuf.getFront();
+    cv::cuda::GpuMat normalized;
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>(3)->Data();
-    cv::cuda::normalize(img,normalized,
-            *getParameter<double>(1)->Data(),
-            *getParameter<double>(2)->Data(),
-            getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.type(),
-            mask == NULL ? cv::noArray(): *mask,
-            stream);
+	if(img.channels() == 1)
+	{
+		cv::cuda::normalize(img,normalized,
+			*getParameter<double>(1)->Data(),
+			*getParameter<double>(2)->Data(),
+			getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.depth(),
+			mask == NULL ? cv::noArray(): *mask,
+			stream);
+	}else
+	{
+		std::vector<cv::cuda::GpuMat> channels;
+		cv::cuda::split(img, channels, stream);
+		for(int i = 0; i < channels.size(); ++i)
+		{
+			cv::cuda::normalize(channels[i], channels[i],
+				*getParameter<double>(1)->Data(),
+				*getParameter<double>(2)->Data(),
+				getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.depth(),
+				mask == NULL ? cv::noArray(): *mask,
+				stream);
+		}
+		cv::cuda::merge(channels, normalized);
+	}   
     return normalized; 
 }
 

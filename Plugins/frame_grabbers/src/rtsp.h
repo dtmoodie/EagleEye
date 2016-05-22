@@ -19,13 +19,13 @@ namespace EagleLib
             virtual int LoadTimeout() const;
         };
         frame_grabber_rtsp();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual bool LoadFile(const std::string& file_path = "");
         virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
 
         virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
 
-        SIGNALS_BEGIN(frame_grabber_rtsp)
+        SIGNALS_BEGIN(frame_grabber_rtsp, frame_grabber_gstreamer)
             SLOT_DEF(seek_relative_msec, void, double);
         SIGNALS_END
         

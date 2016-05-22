@@ -47,7 +47,7 @@ template<typename T> bool KeyFrameServer::setParameter(int frameIndex, KeyFrameP
 }
 
 
-void KeyFrameServer::Init(bool firstInit)
+void KeyFrameServer::NodeInit(bool firstInit)
 {
     /*updateParameter<d_ParameterSetFunctor>("Update Device Parameter",       boost::bind(&KeyFrameServer::setParameter<cv::cuda::GpuMat>,this,_1,_2,_3));
     updateParameter<h_ParameterSetFunctor>("Update Host Parameter",         boost::bind(&KeyFrameServer::setParameter<cv::Mat>,this,_1,_2,_3));

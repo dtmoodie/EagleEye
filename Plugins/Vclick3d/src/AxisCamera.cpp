@@ -148,7 +148,7 @@ void AxisCamera::Serialize(ISimpleSerializer* pSerializer)
 	Node::Serialize(pSerializer); 
 	SERIALIZE(socket);
 }
-void AxisCamera::Init(bool firstInit)
+void AxisCamera::NodeInit(bool firstInit)
 {
 	if (firstInit) 
 	{

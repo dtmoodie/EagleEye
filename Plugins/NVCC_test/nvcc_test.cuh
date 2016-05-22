@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
-RUNTIME_COMPILER_SOURCEDEPENDENCY
+RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("nvcc_test",".cu");
 RUNTIME_MODIFIABLE_INCLUDE
 
 

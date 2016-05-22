@@ -77,7 +77,7 @@ void WindowCallbackHandler::set_stream(size_t stream)
         sig_select_points = signalHandler->get_signal<void(std::string, std::vector<cv::Point>, int)>("points_select");
     }
 }
-void WindowCallbackHandler::Init(bool firstInit)
+void WindowCallbackHandler::NodeInit(bool firstInit)
 {
     if(firstInit)
     {

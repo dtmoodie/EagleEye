@@ -63,6 +63,7 @@ enum InterfaceIDEnum
     IID_CoordinateManager,
     IID_TrackManager,
     IID_FrameGrabber,
+	IID_DataStream,
 	IID_ENDInterfaceID
 };
 

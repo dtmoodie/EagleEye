@@ -33,7 +33,7 @@ namespace EagleLib
     public:
         Camera();
         ~Camera();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual void Serialize(ISimpleSerializer *pSerializer);
         virtual bool SkipEmpty() const;
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
@@ -46,7 +46,7 @@ namespace EagleLib
         void setString();
     public:
         GStreamerCamera();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
         virtual bool SkipEmpty() const;
     };
@@ -68,7 +68,7 @@ namespace EagleLib
     public:
         RTSPCamera();
         ~RTSPCamera();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
         virtual bool SkipEmpty() const;
 

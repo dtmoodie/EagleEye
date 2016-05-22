@@ -48,7 +48,6 @@ namespace EagleLib
 		~QtPlotterImpl();
 		virtual QWidget* GetControlWidget(QWidget* parent);
 		virtual void Serialize(ISimpleSerializer *pSerializer);
-		//virtual void Init(bool firstInit);
 		template<typename T> typename Parameters::ITypedParameter<T>* GetParameter(const std::string& name)
 		{
 			for (auto& itr : parameters)
@@ -80,7 +79,7 @@ namespace EagleLib
 		void on_history_size_change();
 
 	public:
-		virtual void Init(bool firstInit);
+		virtual void PlotInit(bool firstInit);
 	};
 	class EAGLE_EXPORTS StaticPlotter : public QtPlotterImpl
 	{

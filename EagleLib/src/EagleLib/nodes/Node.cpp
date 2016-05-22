@@ -28,6 +28,7 @@
 #include "EagleLib/Signals.h"
 #include "EagleLib/profiling.h"
 #include "signals/logging.hpp"
+#include <EagleLib/frame_grabber_base.h>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -653,7 +654,7 @@ void Node::SetDataStream(DataStream* stream_)
 	}
     _dataStream = stream_;
 	setup_signals(_dataStream->GetSignalManager());
-    SetupVariableManager(_dataStream->GetVariableManager().get());
+    SetupVariableManager(_dataStream->GetVariableManager());
     pImpl_->update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
 	//pImpl_->g_update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
 	for (auto& child : children)
@@ -682,8 +683,9 @@ Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )
 }
 TS<SyncedMemory> Node::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
-    input.GetGpuMatMutable(stream) = doProcess(input.GetGpuMatMutable(stream), stream);
-	return input;
+	TS<SyncedMemory> output = input;
+    output.GetGpuMatMutable(stream) = doProcess(input.GetGpuMatMutable(stream), stream);
+	return output;
 }
 
 
@@ -752,8 +754,14 @@ void
 Node::Init(bool firstInit)
 {
     ui_collector::set_node_name(getFullTreeName());
-	
+	// Node init should be called first because it is where implicit parameters should be setup
+	// Then in ParmaeteredIObject, the implicit parameters will be added back to the _parameter vector
+	NodeInit(firstInit); 
     ParameteredIObject::Init(firstInit);
+}
+void Node::NodeInit(bool firstInit)
+{
+
 }
 
 void

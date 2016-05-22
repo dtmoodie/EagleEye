@@ -83,7 +83,7 @@ namespace EagleLib
 
             gstreamer_sink_base();
             ~gstreamer_sink_base();
-            virtual void Init(bool firstInit);
+            virtual void NodeInit(bool firstInit);
             virtual void Serialize(ISimpleSerializer* pSerializer);
         
             virtual bool create_pipeline(const std::string& pipeline_);
@@ -131,7 +131,7 @@ namespace EagleLib
             void setup(std::string pipeOverride = std::string());
             RTSP_server();
 		    ~RTSP_server();
-            virtual void Init(bool firstInit);
+            virtual void NodeInit(bool firstInit);
             virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
         };
 #ifdef HAVE_GST_RTSPSERVER
@@ -159,7 +159,7 @@ namespace EagleLib
 		    void onPipeChange();
 		    void setup(std::string pipeOverride = std::string());
 		    ~RTSP_server_new();
-		    virtual void Init(bool firstInit);
+		    virtual void NodeInit(bool firstInit);
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
 		    cv::Size imgSize;
 	    };

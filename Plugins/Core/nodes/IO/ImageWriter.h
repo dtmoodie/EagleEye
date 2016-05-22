@@ -31,7 +31,7 @@ namespace EagleLib
         void requestWrite();
         void writeImage();
 
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
         virtual void doProcess(TS<SyncedMemory> &img, cv::cuda::Stream &stream);
     };

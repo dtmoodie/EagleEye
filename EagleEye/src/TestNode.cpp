@@ -18,10 +18,8 @@ namespace EagleLib
         }
 
         ~TestNode(){}
-        void Init(bool firstInit)
+        void NodeInit(bool firstInit)
         {
-            Node::Init(firstInit);
-
             updateParameter<int>("int",0);
             updateParameter<short>("short",0);
             //updateParameter<char>("char",0);

@@ -98,7 +98,7 @@ namespace EagleLib
 	public:
 		CaffeImageClassifier();
 		virtual void Serialize(ISimpleSerializer* pSerializer);
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
 		virtual void WrapInput();
 		virtual void WrapOutput();
@@ -166,7 +166,7 @@ void CaffeImageClassifier::Serialize(ISimpleSerializer* pSerializer)
     SERIALIZE(input_layer);
 }
 
-void CaffeImageClassifier::Init(bool firstInit)
+void CaffeImageClassifier::NodeInit(bool firstInit)
 {
 	EagleLib::caffe_init_singleton::inst();
     caffe::Caffe::set_mode(caffe::Caffe::GPU);

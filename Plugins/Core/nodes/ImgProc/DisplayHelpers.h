@@ -13,7 +13,7 @@ namespace EagleLib
     {
     public:
         AutoScale();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 
@@ -26,7 +26,7 @@ namespace EagleLib
 		void Rescale();
 		bool rescale;
         Colormap();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     class QtColormapDisplay: public Colormap
@@ -34,15 +34,14 @@ namespace EagleLib
     public:
         void display();
         QtColormapDisplay();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     class Normalize: public Node
     {
-        ConstBuffer<cv::cuda::GpuMat> normalizedBuf;
     public:
         Normalize();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     }

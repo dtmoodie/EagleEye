@@ -16,7 +16,7 @@ namespace EagleLib
     {
     public:
         OtsuThreshold();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
@@ -26,7 +26,7 @@ namespace EagleLib
         cv::Ptr<cv::cuda::BackgroundSubtractorMOG2> mog2;
     public:
         SegmentMOG2();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual void Serialize(ISimpleSerializer *pSerializer);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
@@ -35,7 +35,7 @@ namespace EagleLib
     {
     public:
         SegmentWatershed();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     class SegmentCPMC: public Node
@@ -50,7 +50,7 @@ namespace EagleLib
 
     public:
         SegmentCPMC();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
@@ -61,7 +61,7 @@ namespace EagleLib
         ConstBuffer<cv::Mat> maskBuf;
     public:
         SegmentGrabCut();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     void kmeans_impl(cv::cuda::GpuMat input, cv::cuda::GpuMat& labels, cv::cuda::GpuMat& clusters, int k, cv::cuda::Stream stream, cv::cuda::GpuMat weights = cv::cuda::GpuMat());
@@ -69,7 +69,7 @@ namespace EagleLib
     {
     public:
         KMeans();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
@@ -80,7 +80,7 @@ namespace EagleLib
         cv::cuda::HostMem hostBuf;
     public:
         SegmentKMeans();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
@@ -90,7 +90,7 @@ namespace EagleLib
         cv::cuda::HostMem dest;
     public:
         SegmentMeanShift();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
@@ -104,7 +104,7 @@ namespace EagleLib
         cv::cuda::GpuMat mask;
     public:
         ManualMask();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 	class SLaT : public Node
@@ -119,7 +119,7 @@ namespace EagleLib
 		boost::shared_ptr<Solver> solver;
 	public:
 		SLaT();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
 	};
     }

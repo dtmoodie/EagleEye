@@ -13,7 +13,7 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void register_to_reference::Init(bool firstInit)
+void register_to_reference::NodeInit(bool firstInit)
 {
     d_matcher = cv::cuda::DescriptorMatcher::createBFMatcher(cv::NORM_HAMMING);
     d_orb = cv::cuda::ORB::create(500, 1.2, 8, 31, 0, 2, cv::cuda::ORB::HARRIS_SCORE, 31, 20, true);

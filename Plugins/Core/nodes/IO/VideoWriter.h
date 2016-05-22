@@ -22,7 +22,7 @@ namespace EagleLib
     public:
         VideoWriter();
         VideoWriter(std::string fileName);
-        void Init(bool firstInit);
+        void NodeInit(bool firstInit);
         void Serialize(ISimpleSerializer *pSerializer);
         ~VideoWriter();
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());

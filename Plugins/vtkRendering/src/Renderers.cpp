@@ -123,10 +123,7 @@ void vtkPlotter::Serialize(ISimpleSerializer *pSerializer)
 	SERIALIZE(renderer);
 }
 
-void vtkPlotter::Init(bool firstInit)
-{
-	QtPlotter::Init(firstInit);
-}
+
 
 REGISTERCLASS(vtkPlotter);
 

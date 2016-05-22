@@ -6,9 +6,9 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void ConvertToGrey::Init(bool firstInit)
+void ConvertToGrey::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
+    
 }
 
 cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -28,16 +28,16 @@ cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     return grey;
 }
 
-void ConvertToHSV::Init(bool firstInit)
+void ConvertToHSV::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
+    
 }
 
 cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 	return img;
 }
-void ConvertColorspace::Init(bool firstInit)
+void ConvertColorspace::NodeInit(bool firstInit)
 {
 	Parameters::EnumParameter param;
 	param.addEnum(ENUM(cv::COLOR_BGR2BGRA));
@@ -123,7 +123,7 @@ cv::cuda::GpuMat ConvertColorspace::doProcess(cv::cuda::GpuMat& img, cv::cuda::S
 }
 
 
-void Magnitude::Init(bool firstInit)
+void Magnitude::NodeInit(bool firstInit)
 {
 
 }
@@ -133,9 +133,8 @@ cv::cuda::GpuMat Magnitude::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 	return magnitude; 
 }
 
-void ExtractChannels::Init(bool firstInit)
+void ExtractChannels::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter("Output Channel", int(0));
@@ -167,9 +166,8 @@ cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     else
         return (*channels)[0];
 }
-void ConvertDataType::Init(bool firstInit)
+void ConvertDataType::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
 		Parameters::EnumParameter dataType;
@@ -184,18 +182,22 @@ void ConvertDataType::Init(bool firstInit)
         updateParameter("Alpha", 255.0);
         updateParameter("Beta", 0.0);
     }
+	updateParameter<bool>("Continuous", false);
 }
 
 cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat output;
+	if(*getParameter<bool>("Continuous")->Data())
+	{
+		cv::cuda::createContinuous(img.size(), getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection, output);
+	}
     img.convertTo(output, getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection, *getParameter<double>(1)->Data(), *getParameter<double>(2)->Data(),stream);
     return output;
 }
 
-void Merge::Init(bool firstInit)
+void Merge::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         addInputParameter<cv::cuda::GpuMat>("Channel1")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
@@ -251,7 +253,7 @@ cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
     cv::cuda::merge(channels, mergedChannels,stream);
     return mergedChannels;
 }
-void Reshape::Init(bool firstInit)
+void Reshape::NodeInit(bool firstInit)
 {
     updateParameter("Channels", int(0));
     updateParameter("Rows", int(0));

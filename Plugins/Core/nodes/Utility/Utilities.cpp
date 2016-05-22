@@ -18,7 +18,7 @@ bool functionQualifier(Parameters::Parameter* parameter)
 	return false;
 }
 
-void SyncFunctionCall::Init(bool firstInit)
+void SyncFunctionCall::NodeInit(bool firstInit)
 {
     updateParameter<boost::function<void(void)>>("Call all input functions", boost::bind(&SyncFunctionCall::call, this));
     if(firstInit)

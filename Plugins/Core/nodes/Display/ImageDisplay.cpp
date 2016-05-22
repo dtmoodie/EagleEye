@@ -29,7 +29,7 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(OGLImageDisplay, Image, Sink, Display)
 
 
 
-void QtImageDisplay::Init(bool firstInit)
+void QtImageDisplay::NodeInit(bool firstInit)
 {
 
 }
@@ -114,9 +114,8 @@ void QtImageDisplay::doProcess(const cv::Mat& mat, double timestamp, int frame_n
 }
 
 
-void OGLImageDisplay::Init(bool firstInit)
+void OGLImageDisplay::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
 		updateParameter("Default Name", std::string("Default Name"))->SetTooltip("Set name for window");
@@ -162,9 +161,8 @@ cv::Mat KeyPointDisplay::uicallback()
     return cv::Mat();
 }
 
-void KeyPointDisplay::Init(bool firstInit)
+void KeyPointDisplay::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         addInputParameter<cv::cuda::GpuMat>("Device keypoints");
@@ -253,9 +251,8 @@ void FlowVectorDisplay::Serialize(ISimpleSerializer *pSerializer)
     Node::Serialize(pSerializer);
 }
 
-void FlowVectorDisplay::Init(bool firstInit)
+void FlowVectorDisplay::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         addInputParameter<cv::cuda::GpuMat>("Device initial poitns");
@@ -378,9 +375,8 @@ void HistogramDisplay::displayHistogram()
 
 }
 
-void HistogramDisplay::Init(bool firstInit)
+void HistogramDisplay::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         addInputParameter<cv::cuda::GpuMat>("Input");
@@ -438,7 +434,7 @@ void DetectionDisplay::displayCallback()
 	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), getFullTreeName(), h_img));
 }
 
-void DetectionDisplay::Init(bool firstInit)
+void DetectionDisplay::NodeInit(bool firstInit)
 {
     addInputParameter<DetectedObject>("Input detections");
 }

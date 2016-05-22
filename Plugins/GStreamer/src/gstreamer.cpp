@@ -90,10 +90,9 @@ gstreamer_sink_base::~gstreamer_sink_base()
     cleanup();
 }
 
-void gstreamer_sink_base::Init(bool firstInit)
+void gstreamer_sink_base::NodeInit(bool firstInit)
 {
     LOG(trace);
-    Node::Init(firstInit);
     if(!firstInit)
     {
         
@@ -568,7 +567,7 @@ void RTSP_server::setup(std::string pipeOverride)
 	CV_Assert(ret != GST_STATE_CHANGE_FAILURE); 
 }
 
-void RTSP_server::Init(bool firstInit)
+void RTSP_server::NodeInit(bool firstInit)
 {
 	if (!firstInit)
 	{
@@ -862,10 +861,9 @@ void new_client_handler(GstRTSPServer *server, GstRTSPClient *client, EagleLib::
 }
 
 
-void RTSP_server_new::Init(bool firstInit)
+void RTSP_server_new::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
-	if (firstInit)
+    if (firstInit)
 	{
 		GstRTSPMountPoints *mounts = nullptr;
 		gst_debug_set_active(1);

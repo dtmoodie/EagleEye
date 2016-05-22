@@ -18,6 +18,8 @@ public:
     void addWidget(QGraphicsProxyWidget* widget, size_t stream_id);
     QGraphicsProxyWidget* getWidget(ObjectId id);
     QGraphicsProxyWidget* getWidget(size_t id);
+	
+	void removeWidget(ObjectId id);
     void mousePressEvent(QMouseEvent* event);
     void mouseMoveEvent(QMouseEvent* event);
     void mouseReleaseEvent(QMouseEvent* event);

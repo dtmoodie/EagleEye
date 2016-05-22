@@ -14,10 +14,9 @@ VideoWriter::~VideoWriter()
 {
 
 }
-void VideoWriter::Init(bool firstInit)
+void VideoWriter::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
-	if (firstInit)
+    if (firstInit)
 	{
 		Parameters::EnumParameter param;
         param.addEnum(cv::VideoWriter::fourcc('X','2','6','4'), "X264");

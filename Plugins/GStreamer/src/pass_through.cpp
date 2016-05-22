@@ -4,7 +4,7 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void h264_pass_through::Init(bool firstInit)
+void h264_pass_through::NodeInit(bool firstInit)
 {
 	if (firstInit)
 	{
@@ -18,17 +18,24 @@ TS<SyncedMemory> h264_pass_through::doProcess(TS<SyncedMemory> img, cv::cuda::St
 	if (_parameters[0]->changed)
 	{
 		create_pipeline(*getParameter<std::string>(0)->Data());
-		_parameters[0]->changed = false;
-	}
-	if (*getParameter<bool>(1)->Data())
-	{
 		if (get_pipeline_state() != GST_STATE_PLAYING && _pipeline)
 			start_pipeline();
+		_parameters[0]->changed = false;
 	}
-	else
+	if(getParameter(1)->changed)
 	{
-		pause_pipeline();
+		if (*getParameter<bool>(1)->Data())
+		{
+			if (get_pipeline_state() != GST_STATE_PLAYING && _pipeline)
+				start_pipeline();
+		}
+		else
+		{
+			pause_pipeline();
+		}
+		getParameter(1)->changed = false;
 	}
+	
 
 	return img;
 }

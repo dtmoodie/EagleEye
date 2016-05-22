@@ -17,7 +17,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudastereo")
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void StereoBM::Init(bool firstInit)
+void StereoBM::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -66,7 +66,7 @@ cv::cuda::GpuMat StereoBM::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &st
     return buf->data;
 }
 
-void StereoBilateralFilter::Init(bool firstInit)
+void StereoBilateralFilter::NodeInit(bool firstInit)
 {
 
 }
@@ -77,7 +77,7 @@ cv::cuda::GpuMat StereoBilateralFilter::doProcess(cv::cuda::GpuMat &img, cv::cud
     return img;
 }
 
-void StereoBeliefPropagation::Init(bool firstInit)
+void StereoBeliefPropagation::NodeInit(bool firstInit)
 {
     bp = cv::cuda::createStereoBeliefPropagation();
 }
@@ -88,7 +88,7 @@ cv::cuda::GpuMat StereoBeliefPropagation::doProcess(cv::cuda::GpuMat &img, cv::c
     return img;
 }
 
-void StereoConstantSpaceBP::Init(bool firstInit)
+void StereoConstantSpaceBP::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -138,7 +138,7 @@ cv::cuda::GpuMat StereoConstantSpaceBP::doProcess(cv::cuda::GpuMat &img, cv::cud
     csbp->compute(*left, *right,disp);
     return disp;
 }
-void UndistortStereo::Init(bool firstInit)
+void UndistortStereo::NodeInit(bool firstInit)
 {
     if(firstInit)
     {

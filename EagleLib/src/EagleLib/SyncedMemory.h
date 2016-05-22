@@ -36,7 +36,7 @@ namespace EagleLib
 
 	class EAGLE_EXPORTS SyncedMemory
 	{
-		enum
+		enum SYNC_STATE
 		{
 			SYNCED = 0,
 			HOST_UPDATED,
@@ -44,7 +44,7 @@ namespace EagleLib
 		};
 		std::vector<cv::Mat> h_data;
 		std::vector<cv::cuda::GpuMat> d_data;
-		std::vector<int> sync_flags;
+		std::vector<SYNC_STATE> sync_flags;
 	public:
 		SyncedMemory();
         SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat);
@@ -65,6 +65,7 @@ namespace EagleLib
 
 		const std::vector<cv::cuda::GpuMat>&		GetGpuMatVec(cv::cuda::Stream& stream);
 		std::vector<cv::cuda::GpuMat>&			GetGpuMatVecMutable(cv::cuda::Stream& stream);
+		void Synchronize();
 		int GetNumMats() const;
         bool empty() const;
 		void ResizeNumMats(int new_size = 1);

@@ -14,7 +14,7 @@ IPerModuleInterface* GetModule()
     return PerModuleInterface::GetInstance();
 }
 SETUP_PROJECT_IMPL
-void FindCheckerboard::Init(bool firstInit)
+void FindCheckerboard::NodeInit(bool firstInit)
 {
 	
 	if (firstInit)
@@ -130,7 +130,7 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 		imagePoints.clear();
 	return img;
 }
-void LoadCameraCalibration::Init(bool firstInit)
+void LoadCameraCalibration::NodeInit(bool firstInit)
 {
 
 }
@@ -140,7 +140,7 @@ cv::cuda::GpuMat LoadCameraCalibration::doProcess(cv::cuda::GpuMat &img, cv::cud
 }
 
 
-void CalibrateCamera::Init(bool firstInit)
+void CalibrateCamera::NodeInit(bool firstInit)
 {
     updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateCamera::clear, this));					// 0
     updateParameter<boost::function<void(void)>>("Force calibration", boost::bind(&CalibrateCamera::calibrate, this));	// 1
@@ -265,7 +265,7 @@ void CalibrateCamera::calibrate()
     lastCalibration = objectPointCollection.size();
 }
 
-void CalibrateStereoPair::Init(bool firstInit)
+void CalibrateStereoPair::NodeInit(bool firstInit)
 {
 	updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateStereoPair::clear, this));
 	if (firstInit)
@@ -442,7 +442,7 @@ cv::cuda::GpuMat CalibrateStereoPair::doProcess(cv::cuda::GpuMat &img, cv::cuda:
     return img;
 }
 
-void ReadStereoCalibration::Init(bool firstInit)
+void ReadStereoCalibration::NodeInit(bool firstInit)
 {
     updateParameter("Calibration file", Parameters::ReadFile("StereoCalibration.yml"));
     updateParameter("K1", K1);
@@ -496,7 +496,7 @@ cv::cuda::GpuMat ReadStereoCalibration::doProcess(cv::cuda::GpuMat &img, cv::cud
     return img;
 }
 
-void ReadCameraCalibration::Init(bool firstInit)
+void ReadCameraCalibration::NodeInit(bool firstInit)
 {
     updateParameter("Calibration file", Parameters::ReadFile("CameraCalibration.yml"));
     updateParameter("Camera Matrix", K);

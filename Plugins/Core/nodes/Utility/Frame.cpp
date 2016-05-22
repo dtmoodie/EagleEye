@@ -6,7 +6,7 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-void FrameRate::Init(bool firstInit)
+void FrameRate::NodeInit(bool firstInit)
 {
 
 }
@@ -20,7 +20,7 @@ cv::cuda::GpuMat FrameRate::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     return img;
 }
 
-void FrameLimiter::Init(bool firstInit)
+void FrameLimiter::NodeInit(bool firstInit)
 {
 	updateParameter<double>("Framerate", 60.0);
 }
@@ -38,7 +38,7 @@ cv::cuda::GpuMat FrameLimiter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
 	}
 	return img;
 }
-void CreateMat::Init(bool firstInit)
+void CreateMat::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -82,7 +82,7 @@ cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     }
     return img;
 }
-void SetMatrixValues::Init(bool firstInit)
+void SetMatrixValues::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -120,7 +120,7 @@ cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     }
     return *input;
 }
-void Resize::Init(bool firstInit)
+void Resize::NodeInit(bool firstInit)
 {
 	updateParameter("Width", int(224));
 	updateParameter("Height", int(224));
@@ -131,7 +131,7 @@ cv::cuda::GpuMat Resize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stre
 	cv::cuda::resize(img, buf->data, cv::Size(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data()), 0.0, 0.0, 1, stream);
 	return buf->data;
 }
-void Subtract::Init(bool firstInit)
+void Subtract::NodeInit(bool firstInit)
 {
 	updateParameter("Value to subtract", cv::Scalar(0, 0, 0));
 }
