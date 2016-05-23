@@ -18,9 +18,8 @@ using namespace EagleLib::Nodes;
 
 SETUP_PROJECT_IMPL
 
-void MorphologyFilter::Init(bool firstInit)
+void MorphologyFilter::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
 		Parameters::EnumParameter structuringElement;
@@ -78,9 +77,8 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 }
 
 
-void FindContours::Init(bool firstInit)
+void FindContours::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
 		Parameters::EnumParameter mode;
@@ -97,35 +95,32 @@ void FindContours::Init(bool firstInit)
         updateParameter("Mode", mode);      // 0
         updateParameter("Method", method);  // 1
         updateParameter<std::vector<std::vector<cv::Point>>>("Contours", std::vector<std::vector<cv::Point>>())->type = Parameters::Parameter::Output; // 2
-        updateParameter<std::vector<cv::Vec4i>>("Hierarchy", std::vector<cv::Vec4i>()); // 3
+        updateParameter<std::vector<cv::Vec4i>>("Hierarchy", std::vector<cv::Vec4i>())->type = Parameters::Parameter::Output; // 3
         updateParameter<bool>("Calculate contour Area", false); // 4
         updateParameter<bool>("Calculate Moments", false);  // 5
 		updateParameter<bool>("Async", false);
     }
 }
-struct FindContoursCallbackData
-{
-	FindContours* node;
-	cv::cuda::HostMem data;
-};
-void FindContoursCallback(int status, void* user_data)
-{
-	auto data = static_cast<FindContoursCallbackData*>(user_data);
 
-	data->node->findContours(data->data);
-	delete data;
-}
-void FindContours::findContours(cv::cuda::HostMem h_img)
+TS<SyncedMemory> FindContours::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
 {
-	std::vector<std::vector<cv::Point> >* ptr = getParameter<std::vector<std::vector<cv::Point>>>(2)->Data();
-	cv::findContours(h_img,
-		*ptr,
+	cv::Mat h_mat = img.GetMat(stream).clone();
+	std::vector<std::vector<cv::Point>> contours;
+	std::vector<cv::Vec4i> hierarchy;
+	if(cv::countNonZero(h_mat) <= 1)
+	{
+		getParameter<std::vector<cv::Vec4i>>(3)->Data()->clear();
+		return img;
+	}
+	cv::findContours(h_mat,
+		contours,
 		*getParameter<std::vector<cv::Vec4i>>(3)->Data(),
 		getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
 		getParameter<Parameters::EnumParameter>(1)->Data()->currentSelection);
-	updateParameter<int>("Contours found", ptr->size())->type =  Parameters::Parameter::State;
-	_parameters[2]->changed = true;
-	_parameters[3]->changed = true;
+	
+	updateParameter<int>("Contours found", contours.size())->type =  Parameters::Parameter::State;
+	updateParameter("Contours", contours)->type = Parameters::Parameter::Output;
+	updateParameter("Hierarchy", hierarchy)->type = Parameters::Parameter::Output;
 	if (*getParameter<bool>(4)->Data())
 	{
 		if (_parameters[4]->changed)
@@ -143,10 +138,10 @@ void FindContours::findContours(cv::cuda::HostMem h_img)
 		}
 		auto areaPtr = getParameter<std::vector<std::pair<int, double>>>("Contour Area")->Data();
 		bool oriented = *getParameter<bool>("Oriented Area")->Data();
-		areaPtr->resize(ptr->size());
-		for (size_t i = 0; i < ptr->size(); ++i)
+		areaPtr->resize(contours.size());
+		for (size_t i = 0; i < contours.size(); ++i)
 		{
-			(*areaPtr)[i] = std::pair<int, double>(int(i), cv::contourArea((*ptr)[i], oriented));
+			(*areaPtr)[i] = std::pair<int, double>(int(i), cv::contourArea(contours[i], oriented));
 		}
 		auto thresholdParam = getParameter<double>("Filter threshold");
 		if (thresholdParam != nullptr && thresholdParam->Data() != nullptr)
@@ -167,27 +162,12 @@ void FindContours::findContours(cv::cuda::HostMem h_img)
 			}
 		}
 	}
-}
-cv::cuda::GpuMat FindContours::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    cv::cuda::HostMem h_img;
-    img.download(h_img, stream);
-	if (*getParameter<bool>("Async")->Data())
-	{
-
-	}
-	else
-	{
-		stream.waitForCompletion();
-		findContours(h_img);
-	}
-    
-    return img;
+	return img;
 }
 
-void ContourBoundingBox::Init(bool firstInit)
+
+void ContourBoundingBox::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         addInputParameter<std::vector<std::vector<cv::Point>>>("Contours");
@@ -201,7 +181,7 @@ void ContourBoundingBox::Init(bool firstInit)
 
 }
 
-cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+TS<SyncedMemory> ContourBoundingBox::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
 {
     auto contourPtr = getParameter<std::vector<std::vector<cv::Point>>>(0)->Data();
     if(!contourPtr)
@@ -239,11 +219,11 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
         }
     }
 
-    cv::cuda::HostMem h_img;
-    img.download(h_img,stream);
+    cv::Mat h_img = img.GetMat(stream);
     stream.waitForCompletion();
+	h_img = h_img.clone();
     cv::Scalar replace;
-    if(img.channels() == 3)
+    if(h_img.channels() == 3)
         replace = *getParameter<cv::Scalar>(2)->Data();
     else
         replace = cv::Scalar(128,0,0);
@@ -263,14 +243,13 @@ cv::cuda::GpuMat ContourBoundingBox::doProcess(cv::cuda::GpuMat &img, cv::cuda::
             cv::rectangle(h_img, boxes[i].tl(), boxes[i].br(),replace, lineWidth);
         }
     }
-    img.upload(h_img,stream);
-    return img;
+    
+    return TS<SyncedMemory>(img.timestamp, img.frame_number, h_img);
 }
 
 
-void HistogramThreshold::Init(bool firstInit)
+void HistogramThreshold::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
 		Parameters::EnumParameter param;
@@ -373,6 +352,59 @@ cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::
     return output;
 }
 
+void PruneContours::NodeInit(bool firstInit)
+{
+	if(firstInit)
+	{
+		addInputParameter<std::vector<std::vector<cv::Point>>>("Input Contours");
+	}
+}
+
+TS<SyncedMemory> PruneContours::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
+{
+	auto input = getParameter<std::vector<std::vector<cv::Point>>>("Input Contours")->Data();
+	if(input)
+	{
+		std::vector<std::vector<cv::Point>> output;
+		for(auto& contour : *input)
+		{
+			if((contour.size() > min_area || min_area == -1) && (contour.size() < max_area || max_area == -1))
+			{
+				output.push_back(contour);
+			}
+		}
+		updateParameter("Pruned Contours", output)->type = Parameters::Parameter::Output;
+		updateParameter("Num Pruned Contours", output.size())->type = Parameters::Parameter::State;
+	}
+	return img;
+}
+void DrawContours::NodeInit(bool firstInit)
+{
+	if(firstInit)
+	{
+		addInputParameter<std::vector<std::vector<cv::Point>>>("Input Contours");	
+	}	
+}
+TS<SyncedMemory> DrawContours::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
+{
+	auto input = getParameter<std::vector<std::vector<cv::Point>>>("Input Contours")->Data();
+	if(input)
+	{
+		cv::Mat h_mat = img.GetMat(stream);
+		//cv::drawContours(h_mat, *input, -1, 
+	}
+	return img;
+}
+void DrawRects::NodeInit(bool firstInit)
+{
+}
+cv::cuda::GpuMat DrawRects::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+{
+	return img;
+}
+
+
+NODE_DEFAULT_CONSTRUCTOR_IMPL(PruneContours, Contours);
 NODE_DEFAULT_CONSTRUCTOR_IMPL(MorphologyFilter, Image, Processing)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(FindContours, Image, Extractor)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ContourBoundingBox, Image, Processing)

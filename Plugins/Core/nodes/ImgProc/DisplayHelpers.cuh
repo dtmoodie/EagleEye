@@ -4,11 +4,10 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include <opencv2/core/cuda.hpp>
+#include "EagleLib/Project_defs.hpp"
 
-RUNTIME_MODIFIABLE_INCLUDE
-RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("DisplayHelpers", ".cu");
 
-struct ColorScale
+struct PLUGIN_EXPORTS ColorScale
 {
 	__host__ __device__ ColorScale(double start_ = 0, double slope_ = 1, bool symmetric_ = false);
 	// Defines where this color starts to take effect, between zero and 1000
@@ -25,7 +24,7 @@ struct ColorScale
 
 };
 
-struct color_mapper
+struct PLUGIN_EXPORTS color_mapper
 {
 	// if resolution == -1, calculate the exact mapping every time
     void setMapping(ColorScale red, ColorScale green, ColorScale blue, double min, double max);

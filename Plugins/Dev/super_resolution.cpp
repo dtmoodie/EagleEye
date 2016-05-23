@@ -23,7 +23,7 @@ void my_frame_source::input_frame(TS<SyncedMemory>& image, cv::cuda::Stream& str
     current_stream = &stream;
 }
 
-void super_resolution::Init(bool firstInit)
+void super_resolution::NodeInit(bool firstInit)
 {
     frame_source.reset(new my_frame_source());
     super_res = cv::superres::createSuperResolution_BTVL1_CUDA();

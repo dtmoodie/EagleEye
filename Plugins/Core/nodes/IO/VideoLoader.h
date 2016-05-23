@@ -24,7 +24,7 @@ namespace EagleLib
         void ReadThread();
         VideoLoader();
         ~VideoLoader();
-        void Init(bool firstInit);
+        void NodeInit(bool firstInit);
         void loadFile();
         void restartVideo();
         virtual void Serialize(ISimpleSerializer *pSerializer);

@@ -18,9 +18,8 @@ VideoLoader::~VideoLoader()
 }
 
 void 
-VideoLoader::Init(bool firstInit)
+VideoLoader::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
 		updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/trailer.mp4"))->SetTooltip("Path to video file");

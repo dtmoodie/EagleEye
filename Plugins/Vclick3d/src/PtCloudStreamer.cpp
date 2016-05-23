@@ -36,7 +36,7 @@ void ServerHandler::send()
 		connections[i]->write(buffer); 
 	}
 }
-void Server::Init(bool firstInit)
+void Server::NodeInit(bool firstInit)
 {
 	handler.reset(new ServerHandler); 
 }

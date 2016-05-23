@@ -21,9 +21,10 @@ namespace EagleLib
 		openni::VideoFrameRef _frame;
 		std::shared_ptr<openni::Device> _device;
 		std::shared_ptr<openni::VideoStream> _depth;
-		boost::circular_buffer<TS<SyncedMemory>> _buffer;
+		//boost::circular_buffer<TS<SyncedMemory>> _buffer;
 	public:
 		frame_grabber_openni2();
+		~frame_grabber_openni2();
 		
 		virtual bool LoadFile(const std::string& file_path);
 		virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();

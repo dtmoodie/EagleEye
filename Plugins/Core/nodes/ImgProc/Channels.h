@@ -14,7 +14,7 @@ namespace EagleLib
     {
     public:
         ConvertToGrey();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 
@@ -22,14 +22,14 @@ namespace EagleLib
     {
     public:
         ConvertToHSV();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 	class ConvertToLab : public Node
 	{
 	public:
 		ConvertToLab();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
 	};
 	class ConvertColorspace : public Node
@@ -37,7 +37,7 @@ namespace EagleLib
 		BufferPool<cv::cuda::GpuMat, EventPolicy> resultBuffer;
 	public:
 		ConvertColorspace();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
 	};
 	class Magnitude : public Node
@@ -45,7 +45,7 @@ namespace EagleLib
 		cv::cuda::GpuMat magnitude;
 	public:
 		Magnitude();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 	};
     class ExtractChannels: public Node
@@ -55,14 +55,14 @@ namespace EagleLib
         //std::vector<cv::cuda::GpuMat> channels;
     public:
         ExtractChannels();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     class ConvertDataType: public Node
     {
     public:
         ConvertDataType();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
     class Merge: public Node
@@ -71,14 +71,14 @@ namespace EagleLib
         cv::cuda::GpuMat mergedChannels;
     public:
         Merge();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
     class Reshape: public Node
     {
     public:
         Reshape();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     }

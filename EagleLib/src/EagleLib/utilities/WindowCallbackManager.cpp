@@ -17,7 +17,7 @@ void WindowCallbackHandlerManager::Serialize(ISimpleSerializer* pSerializer)
 {
     SERIALIZE(instances);
 }
-void WindowCallbackHandlerManager::Init(bool firstInit)
+void WindowCallbackHandlerManager::NodeInit(bool firstInit)
 {
     if (firstInit)
     {

@@ -70,7 +70,7 @@ void QtPlotterImpl::OnParameterUpdate(cv::cuda::Stream* stream)
 	}
 	converter->Update(param.get(), stream);
 }
-void HistoryPlotter::Init(bool firstInit)
+void HistoryPlotter::PlotInit(bool firstInit)
 {
 	if (firstInit)
 	{

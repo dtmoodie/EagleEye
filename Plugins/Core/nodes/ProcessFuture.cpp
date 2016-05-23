@@ -1,6 +1,8 @@
 #include "ProcessFuture.h"
 #include "EagleLib/DataStreamManager.h"
 #include "Remotery.h"
+#include <EagleLib/frame_grabber_base.h>
+#include "EagleLib/Signals.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -15,7 +17,7 @@ ProcessFuture::~ProcessFuture()
     _thread.join();
 }
 
-void ProcessFuture::Init(bool firstInit)
+void ProcessFuture::NodeInit(bool firstInit)
 {
     updateParameter("Num Frames Ahead", 5);
     _thread = boost::thread(boost::bind(&ProcessFuture::process_ahead, this));

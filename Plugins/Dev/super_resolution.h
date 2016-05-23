@@ -25,7 +25,7 @@ namespace EagleLib
 
         public:
             super_resolution();
-            virtual void Init(bool firstInit);
+            virtual void NodeInit(bool firstInit);
             virtual void doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
         };
     }

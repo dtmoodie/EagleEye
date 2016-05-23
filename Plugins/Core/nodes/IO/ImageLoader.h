@@ -16,7 +16,7 @@ namespace EagleLib
     public:
         ImageLoader();
         virtual bool SkipEmpty() const;
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     class DirectoryLoader: public Node
@@ -28,7 +28,7 @@ namespace EagleLib
         void restart();
         DirectoryLoader();
         virtual bool SkipEmpty() const;
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     }

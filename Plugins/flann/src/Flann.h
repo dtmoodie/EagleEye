@@ -4,10 +4,13 @@
 #include <EagleLib/Defs.hpp>
 #include <EagleLib/utilities/CudaUtils.hpp>
 #include <EagleLib/Project_defs.hpp>
+#include "RuntimeLinkLibrary.h"
+
 
 #define FLANN_USE_CUDA
 #include "flann/flann.hpp"
-SETUP_PROJECT_DEF
+SETUP_PROJECT_DEF;
+
 RUNTIME_COMPILER_LINKLIBRARY("cudart_static.lib")
 RUNTIME_COMPILER_LINKLIBRARY("cublas.lib")
 #ifdef _DEBUG
@@ -25,21 +28,12 @@ namespace EagleLib
     
 	class ForegroundEstimate : public Node
 	{
-		cv::cuda::GpuMat input;
-		BufferPool<cv::cuda::GpuMat> inputBuffer;
-		BufferPool<cv::cuda::GpuMat> idxBuffer;
-		BufferPool<cv::cuda::GpuMat> distBuffer;
-		BufferPool<cv::cuda::GpuMat> sizeBuffer;
-		BufferPool<std::pair<cv::cuda::GpuMat, cv::cuda::HostMem>> outputBuffer;
-		cv::cuda::GpuMat count;
-		void BuildModel();
-        bool MapInput(cv::cuda::GpuMat img = cv::cuda::GpuMat());
-
+		bool _build_model;
+		void BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& stream);
 		std::shared_ptr<flann::GpuIndex<flann::L2<float>>> nnIndex;
 	public:
-		void updateOutput();
 		ForegroundEstimate();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
 	};
     }

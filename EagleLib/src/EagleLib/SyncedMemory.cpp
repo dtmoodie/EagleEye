@@ -47,7 +47,10 @@ const cv::Mat&
 SyncedMemory::GetMat(cv::cuda::Stream& stream, int index)
 {
 	if (sync_flags[index] == DEVICE_UPDATED)
+	{
 		d_data[index].download(h_data[index], stream);
+		sync_flags[index] = SYNCED;
+	}	
 	return h_data[index];
 }
 
@@ -64,7 +67,11 @@ const cv::cuda::GpuMat&
 SyncedMemory::GetGpuMat(cv::cuda::Stream& stream, int index)
 {
 	if (sync_flags[index] == HOST_UPDATED)
+	{
 		d_data[index].upload(h_data[index], stream);
+		sync_flags[index] = SYNCED;
+	}
+	
 	return d_data[index];
 }
 
@@ -152,4 +159,14 @@ bool SyncedMemory::empty() const
     if(h_data.size())
         return h_data[0].empty();
     return true;
+}
+void SyncedMemory::Synchronize()
+{
+	for(int i = 0; i < h_data.size(); ++i)
+	{
+		if(sync_flags[i] == HOST_UPDATED)
+			d_data[i].upload(h_data[i]);
+		else if(sync_flags[i] == DEVICE_UPDATED)
+			d_data[i].download(h_data[i]);
+	}
 }

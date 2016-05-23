@@ -293,7 +293,7 @@ namespace EagleLib
 
         
         void RegisterSignalConnection(std::shared_ptr<Signals::connection> connection);
-        //virtual void onUpdate(cv::cuda::Stream* stream);
+        
 
         
         // ****************************************************************************************************************
@@ -312,6 +312,7 @@ namespace EagleLib
         virtual Node *swap(Node *other);
 
         virtual void Init(bool firstInit = true);
+		virtual void NodeInit(bool firstInit = true);
         /**
          * @brief Init [DEPRICATED], would be used to load the configuration of this node froma  file
          * @param configFile

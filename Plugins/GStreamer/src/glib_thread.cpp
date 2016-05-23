@@ -64,6 +64,7 @@ void glib_thread::start_thread()
     if(g_main_loop_is_running(_main_loop))
     {
         LOG(debug) << "glib main loop already running";
+		return;
     }
     _thread = boost::thread(boost::bind(&glib_thread::loop, this));
 }

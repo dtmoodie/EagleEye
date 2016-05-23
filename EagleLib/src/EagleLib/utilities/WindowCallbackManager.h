@@ -16,7 +16,7 @@ namespace EagleLib
     public:
         WindowCallbackHandler* instance(size_t stream_id = 0);
         WindowCallbackHandlerManager();
-        void Init(bool firstInit);
+        void NodeInit(bool firstInit);
         void Serialize(ISimpleSerializer* pSerializer);
     };
 }

@@ -35,7 +35,7 @@ void ImageWriter::writeImage()
     ++frameCount;
 }
 
-void ImageWriter::Init(bool firstInit)
+void ImageWriter::NodeInit(bool firstInit)
 {
     writeRequested = false;
     frameCount = 0;

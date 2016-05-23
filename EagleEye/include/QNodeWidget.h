@@ -32,6 +32,7 @@ class IQNodeProxy;
 class QInputProxy;
 
 // Class for UI elements relavent to finding valid input parameters
+// TODO update in case input parameter is deleted on object recompile
 class QInputProxy : public QWidget
 {
 	Q_OBJECT
@@ -40,8 +41,10 @@ class QInputProxy : public QWidget
 public:
 	Parameters::InputParameter* inputParameter;
 	QInputProxy(Parameters::Parameter* parameter, EagleLib::Nodes::Node::Ptr node_, QWidget* parent);
+	void updateParameter(Parameters::Parameter* parameter);
 	virtual void updateUi(bool init = false);
 	virtual QWidget* getWidget(int num = 0);
+	bool eventFilter(QObject* obj, QEvent* event);
 private slots:
 	void on_valueChanged(int);
 private:
@@ -83,16 +86,16 @@ private:
     QLineEdit* warningDisplay;
     QLineEdit* errorDisplay;
 
-
+	void on_object_recompile(EagleLib::ParameteredIObject* obj);
 	std::map<QWidget*, Parameters::Parameter*> widgetParamMap;
 	Ui::QNodeWidget* ui;
     EagleLib::Nodes::Node::Ptr node;
-	std::vector<Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
-	std::vector<QInputProxy*> inputProxies;
-    //std::vector<boost::shared_ptr<IQNodeInterop>> interops;
+	std::map<std::string, Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
+	std::map<std::string, std::shared_ptr<QInputProxy>> inputProxies;
     QNodeWidget* parentWidget;
     std::vector<QNodeWidget*> childWidgets;
     std::shared_ptr<Signals::connection> log_connection;
+	std::shared_ptr<Signals::connection> _recompile_connection;
 };
 
 class CV_EXPORTS DataStreamWidget: public QWidget
@@ -113,7 +116,7 @@ private:
     EagleLib::DataStream::Ptr _dataStream;
     Ui::DataStreamWidget* ui;
     std::vector<QInputProxy*> inputProxies;
-    std::vector<Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
+    std::map<std::string, Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
     std::map<QWidget*, Parameters::Parameter*> widgetParamMap;
 };
 

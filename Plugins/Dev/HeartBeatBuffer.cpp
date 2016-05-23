@@ -36,7 +36,7 @@ using namespace EagleLib::Nodes;
     NODE_LOG(error) << "Unknown exception";                                 \
 }
 
-void HeartBeatBuffer::Init(bool firstInit)
+void HeartBeatBuffer::NodeInit(bool firstInit)
 {
 	if (firstInit)
 	{

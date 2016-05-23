@@ -133,7 +133,7 @@ namespace rcc
 	    {
 		    return r.get() != m_object;
 	    }
-        void reset(T* r)
+        void reset(T* r = nullptr)
         {
             decrement();
             m_object = r;
@@ -178,6 +178,10 @@ namespace rcc
         {
             return m_object != nullptr;
         }
+		ObjectId get_id() const
+		{
+			return m_objectId;
+		}
     };
 
     template<typename T> class weak_ptr: public IObjectNotifiable

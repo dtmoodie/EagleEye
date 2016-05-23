@@ -30,7 +30,6 @@ namespace EagleLib
         virtual bool h_LoadFile(const std::string& file_path);
         virtual int GetNumFrames();
         virtual void Serialize(ISimpleSerializer* pSerializer);
-        virtual void Init(bool firstInit);
 
     protected:
         virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream);

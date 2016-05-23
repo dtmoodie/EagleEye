@@ -11,7 +11,7 @@ frame_grabber_directory::frame_grabber_directory()
     
 
 }
-void frame_grabber_directory::Init(bool firstInit)
+void frame_grabber_directory::NodeInit(bool firstInit)
 {
     updateParameter("Frame Index", 0);
     updateParameter("Loaded file", std::string(""));

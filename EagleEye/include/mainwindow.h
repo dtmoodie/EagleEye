@@ -134,7 +134,7 @@ private:
     QWindow*                                            processing_thread_upload_window;
     std::shared_ptr<Signals::connection>                new_parameter_connection;
     std::shared_ptr<Signals::connection>                dirty_flag_connection;
-    std::vector<std::shared_ptr<EagleLib::DataStream>>  data_streams;
+    std::vector<rcc::shared_ptr<EagleLib::DataStream>>  data_streams;
     std::shared_ptr<Signals::connection>                logging_connection;
     std::string file_load_path;
     std::string dir_load_path;
@@ -143,6 +143,8 @@ private:
 	SIGNALS_BEGIN(MainWindow)
 		SIG_SEND(StartThreads);
 		SIG_SEND(StopThreads);
+        SIG_SEND(PauseThreads);
+        SIG_SEND(ResumeThreads);
 	SIGNALS_END
 	// All signals from the user get directed through this manager so that 
 	// they can all be attached to a serialization sink for recording user interaction

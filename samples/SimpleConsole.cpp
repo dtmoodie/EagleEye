@@ -6,6 +6,7 @@
 #include <EagleLib/DataStreamManager.h>
 #include <EagleLib/Logging.h>
 #include <EagleLib/rcc/ObjectManager.h>
+#include <EagleLib/frame_grabber_base.h>
 #include <signal.h>
 #include <signals/logging.hpp>
 #include <parameters/Persistence/TextSerializer.hpp>
@@ -193,7 +194,7 @@ int main(int argc, char* argv[])
         stream->process();
     }else
     {
-        std::vector<std::shared_ptr<EagleLib::DataStream>> _dataStreams;
+        std::vector<rcc::shared_ptr<EagleLib::DataStream>> _dataStreams;
         EagleLib::DataStream* current_stream = nullptr;
         EagleLib::Nodes::Node* current_node = nullptr;
 
@@ -264,7 +265,7 @@ int main(int argc, char* argv[])
                 auto stream = EagleLib::DataStreamManager::instance()->create_stream();
                 if(stream->LoadDocument(doc))
                 {
-					stream->LaunchProcess();
+					stream->StartThread();
                     _dataStreams.push_back(stream);
                 }else
                 {

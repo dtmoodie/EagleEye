@@ -21,7 +21,7 @@ namespace EagleLib
 			void detect(const cv::cuda::GpuMat& img, int frame_number, const cv::cuda::GpuMat& mask, cv::cuda::Stream& stream);
 		public:
 			GoodFeaturesToTrack();
-			virtual void Init(bool firstInit);
+			virtual void NodeInit(bool firstInit);
 			virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 		};
 
@@ -31,7 +31,7 @@ namespace EagleLib
 
 		public:
 			FastFeatureDetector();
-			virtual void Init(bool firstInit);
+			virtual void NodeInit(bool firstInit);
 			virtual void Serialize(ISimpleSerializer *pSerializer);
 			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 		};
@@ -41,7 +41,7 @@ namespace EagleLib
 			cv::Ptr<cv::cuda::ORB> detector;
 		public:
 			ORBFeatureDetector();
-			virtual void Init(bool firstInit);
+			virtual void NodeInit(bool firstInit);
 			virtual void Serialize(ISimpleSerializer *pSerializer);
 			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 		};
@@ -52,7 +52,7 @@ namespace EagleLib
 			void updateLevels(int type);
 		public:
 			HistogramRange();
-			virtual void Init(bool firstInit);
+			virtual void NodeInit(bool firstInit);
 			virtual void Serialize(ISimpleSerializer *pSerializer);
 			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
 		};
@@ -62,7 +62,7 @@ namespace EagleLib
 			cv::Ptr<cv::cuda::CornernessCriteria> detector;
 		public:
 			CornerHarris();
-			virtual void Init(bool firstInit);
+			virtual void NodeInit(bool firstInit);
 			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
 		};
 		class CornerMinEigenValue : public Node
@@ -70,7 +70,7 @@ namespace EagleLib
 			cv::Ptr<cv::cuda::CornernessCriteria> detector;
 		public:
 			CornerMinEigenValue();
-			virtual void Init(bool firstInit);
+			virtual void NodeInit(bool firstInit);
 			virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
 		};
 	}

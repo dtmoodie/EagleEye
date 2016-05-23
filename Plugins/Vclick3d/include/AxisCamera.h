@@ -73,7 +73,7 @@ namespace EagleLib
 	public:
 		AxisCamera();
 		~AxisCamera();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual void Serialize(ISimpleSerializer* pSerializer);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 		virtual bool SkipEmpty() const;

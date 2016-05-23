@@ -26,7 +26,7 @@ namespace EagleLib
 
     public:
         KeyFrameTracker();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 		virtual void reset();
     };
@@ -36,7 +36,7 @@ namespace EagleLib
 
     public:
         CMTTracker();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 
     };
@@ -45,7 +45,7 @@ namespace EagleLib
     {
     public:
         TLDTracker();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     }

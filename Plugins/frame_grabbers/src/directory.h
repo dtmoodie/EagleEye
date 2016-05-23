@@ -30,7 +30,7 @@ namespace EagleLib
 		virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
 
         virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
     private:
         cv::cuda::GpuMat                d_image;

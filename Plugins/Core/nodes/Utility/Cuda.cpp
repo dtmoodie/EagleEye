@@ -8,7 +8,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lcudart")
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void SetDevice::Init(bool firstInit)
+void SetDevice::NodeInit(bool firstInit)
 {
 	if (firstInit)
 	{
@@ -63,7 +63,7 @@ bool StreamDispatcher::SkipEmpty() const
 {
     return false;
 }
-void StreamDispatcher::Init(bool firstInit)
+void StreamDispatcher::NodeInit(bool firstInit)
 {
     if(firstInit)
     {

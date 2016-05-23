@@ -15,7 +15,7 @@ using namespace EagleLib;
     }
     return inst;
 }*/
-void ogl_allocator::Init(bool firstInit)
+void ogl_allocator::NodeInit(bool firstInit)
 {
     if(!firstInit)
     {

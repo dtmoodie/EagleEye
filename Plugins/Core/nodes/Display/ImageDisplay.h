@@ -16,7 +16,7 @@ namespace EagleLib
     public:
         QtImageDisplay();
         virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         virtual void doProcess(const cv::Mat& mat, double timestamp, int frame_number, cv::cuda::Stream& stream);
     };
@@ -27,7 +27,7 @@ namespace EagleLib
         OGLImageDisplay();
 
 		
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 
     };
@@ -38,7 +38,7 @@ namespace EagleLib
     public:
 
         KeyPointDisplay();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         TS<SyncedMemory> doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         cv::Mat uicallback();
@@ -52,7 +52,7 @@ namespace EagleLib
     public:
         std::string displayName;
         FlowVectorDisplay();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         //cv::Mat uicallback();
         virtual void Serialize(ISimpleSerializer *pSerializer);
@@ -65,7 +65,7 @@ namespace EagleLib
         ConstBuffer<cv::cuda::HostMem> histograms;
         void displayHistogram();
         HistogramDisplay();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     class DetectionDisplay: public Node
@@ -74,7 +74,7 @@ namespace EagleLib
         ConstBuffer<std::pair<cv::cuda::HostMem, std::vector<DetectedObject>>> hostData;
         void displayCallback();
         DetectionDisplay();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     };
     } // namespace Nodes

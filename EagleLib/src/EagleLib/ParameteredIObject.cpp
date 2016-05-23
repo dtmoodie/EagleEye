@@ -11,12 +11,9 @@ void ParameteredIObject::Serialize(ISimpleSerializer* pSerializer)
 {
 	IObject::Serialize(pSerializer);
 	SerializeAllParams(pSerializer);
-	SERIALIZE(_parameters);
-	//SERIALIZE(_sig_parameter_updated);
-	//SERIALIZE(_sig_parameter_added);
+	SERIALIZE(_implicit_parameters);
 	SERIALIZE(_variable_manager);
 }
-
 void ParameteredIObject::SerializeAllParams(ISimpleSerializer* pSerializer)
 {
 
@@ -30,16 +27,26 @@ void ParameteredIObject::Init(const cv::FileNode& configNode)
 void ParameteredIObject::Init(bool firstInit)
 {
 	IObject::Init(firstInit);
+	RegisterAllParams();
 	if (firstInit)
 	{
-
 	}
 	else
 	{
+		_parameters.clear();
+		for(auto& param : _implicit_parameters)
+		{
+			_parameters.push_back(param.get());
+		}
+		for(auto& param : _explicit_parameters)
+		{
+			_parameters.push_back(param);
+		}
 		for (auto& param : _parameters)
 		{
 			RegisterParameterCallback(param, std::bind(&ParameteredIObject::onUpdate, this, param, std::placeholders::_1));
 			DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param), debug);
 		}
+		sig_object_recompiled(this);
 	}
 }

@@ -50,7 +50,7 @@ namespace EagleLib
 		virtual void _sendPointCloud();
 		void on_msgReceived(std::string& msg);
 		XmppClient();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream /* = cv::cuda::Stream::Null() */);
 	};
     }

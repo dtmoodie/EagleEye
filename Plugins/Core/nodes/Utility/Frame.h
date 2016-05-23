@@ -15,7 +15,7 @@ namespace EagleLib
 
     public:
         FrameRate();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 	
@@ -24,7 +24,7 @@ namespace EagleLib
 		boost::posix_time::ptime lastTime;
 	public:
 		FrameLimiter();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 	};
 
@@ -33,7 +33,7 @@ namespace EagleLib
         cv::cuda::GpuMat createdMat;
     public:
         CreateMat();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     class SetMatrixValues: public Node
@@ -41,7 +41,7 @@ namespace EagleLib
         bool qualifiersSetup;
     public:
         SetMatrixValues();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
 	class Resize : public Node
@@ -49,14 +49,14 @@ namespace EagleLib
 		BufferPool<cv::cuda::GpuMat, EventPolicy> bufferPool;
 	public:
 		Resize();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 	};
 	class Subtract : public Node
 	{
 	public:
 		Subtract();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 	};
     }

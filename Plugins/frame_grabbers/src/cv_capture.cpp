@@ -156,10 +156,7 @@ void frame_grabber_cv::Serialize(ISimpleSerializer* pSerializer)
     SERIALIZE(d_cam);
     //SERIALIZE(current_frame);
 }
-void frame_grabber_cv::Init(bool firstInit)
-{
-    FrameGrabberBuffered::Init(firstInit);
-}
+
 std::string frame_grabber_cv_info::GetObjectName()
 {
 	return "frame_grabber_cv";

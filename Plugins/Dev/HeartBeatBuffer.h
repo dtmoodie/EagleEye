@@ -14,7 +14,7 @@ namespace EagleLib
 		void onActivation();
 	public:
 		HeartBeatBuffer();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
         TS<SyncedMemory> process(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
 		//virtual cv::cuda::GpuMat process(cv::cuda::GpuMat& img, cv::cuda::Stream& steam );
 	};

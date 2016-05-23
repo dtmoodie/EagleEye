@@ -6,9 +6,8 @@
 #include <parameters/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-void FastMumfordShah::Init(bool firstInit)
+void FastMumfordShah::NodeInit(bool firstInit)
 {
-	Node::Init(firstInit);
 	if (firstInit)
 	{
 		updateParameter("Lambda", double(0.1))->SetTooltip("For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities")->type;

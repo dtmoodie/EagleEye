@@ -49,9 +49,8 @@ Camera::~Camera()
     read_thread.join();
 }
 
-void Camera::Init(bool firstInit)
+void Camera::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter<int>("Camera Number", 0);
@@ -113,9 +112,8 @@ bool Camera::SkipEmpty() const
 {
     return false;
 }
-void GStreamerCamera::Init(bool firstInit)
+void GStreamerCamera::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         Parameters::EnumParameter param;
@@ -259,10 +257,9 @@ bool GStreamerCamera::SkipEmpty() const
 {
     return false;
 }
-void RTSPCamera::Init(bool firstInit)
+void RTSPCamera::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
-    currentNewestFrame = nullptr;
+	currentNewestFrame = nullptr;
     bufferSize = 5;
     putItr = 0;
     if(firstInit)

@@ -73,7 +73,7 @@ TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
 	_reconnect = true;
     return TS<SyncedMemory>();
 }
-void frame_grabber_rtsp::Init(bool firstInit)
+void frame_grabber_rtsp::NodeInit(bool firstInit)
 {
     frame_grabber_cv::Init(firstInit);
     _reconnect = false;
@@ -93,7 +93,7 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 #ifdef JETSON
     std::string gstreamer_string = "rtspsrc location=" + file_path + " ! rtph264depay ! h264parse ! omxh264dec ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
 #else
-    std::string gstreamer_string = "rtspsrc location=" + file_to_load + " ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
+    std::string gstreamer_string = "rtspsrc location=" + file_to_load + " ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw ! appsink";
 #endif
 	
 	h_cam.release();
@@ -122,6 +122,18 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 	{
 	}
 	return false;
+}
+
+void frame_grabber_rtsp::seek_relative_msec(double msec)
+{
+    if(h_cam)
+    {
+        double current = h_cam->get(cv::CAP_PROP_POS_MSEC);
+        if(!h_cam->set(cv::CAP_PROP_POS_MSEC, current + msec))
+        {
+            LOG(debug) << "Failed to seek by (" << msec << " ms) from " << current << " ms";
+        }
+    }
 }
 
 rcc::shared_ptr<ICoordinateManager> frame_grabber_rtsp::GetCoordinateManager()

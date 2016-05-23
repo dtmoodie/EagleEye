@@ -4,15 +4,18 @@
 
 #include "EagleLib/Defs.hpp"
 #include "EagleLib/rcc/shared_ptr.hpp"
-
+#include "EagleLib/ParameteredIObject.h"
+#include "EagleLib/frame_grabber_base.h"
+#include "EagleLib/nodes/Node.h"
 #include "IViewManager.h"
 #include "ICoordinateManager.h"
 #include "rendering/RenderingEngine.h"
 #include "tracking/ITrackManager.h"
-#include "frame_grabber_base.h"
-#include "nodes/Node.h"
-#include "EagleLib/Signals.h"
-#include <signals/signaler.h>
+
+
+
+#include <opencv2/core/cuda.hpp>
+#include <boost/thread.hpp>
 
 namespace Parameters
 {
@@ -21,6 +24,10 @@ namespace Parameters
 
 namespace EagleLib
 {
+	namespace Nodes
+	{
+		class Node;
+	}
 	class IViewManager;
 	class ICoordinateManager;
 	class IRenderEngine;
@@ -30,11 +37,10 @@ namespace EagleLib
     class SignalManager;
 	class IParameterBuffer;
 
-	class EAGLE_EXPORTS DataStream: public Signals::signaler
+	class EAGLE_EXPORTS DataStream: public TInterface<IID_DataStream, ParameteredIObject>
 	{
 	public:
-		//typedef EagleLib::SignalManager manager;
-        typedef std::shared_ptr<DataStream> Ptr;
+        typedef rcc::shared_ptr<DataStream> Ptr;
         static bool CanLoadDocument(const std::string& document);
 		DataStream();
         ~DataStream();
@@ -54,7 +60,7 @@ namespace EagleLib
         // Handles actual loading of the image, etc
         rcc::shared_ptr<IFrameGrabber>           GetFrameGrabber();
 
-		std::shared_ptr<Parameters::IVariableManager>		GetVariableManager();
+		Parameters::IVariableManager*		GetVariableManager();
 
         SignalManager*							GetSignalManager();
 
@@ -70,16 +76,17 @@ namespace EagleLib
         void AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node);
         void RemoveNode(rcc::shared_ptr<Nodes::Node> node);
         
-        void LaunchProcess();
-        void StopProcess();
-        void PauseProcess();
-        void ResumeProcess();
+        void StartThread();
+        void StopThread();
+        void PauseThread();
+        void ResumeThread();
         void process();
         
     protected:
         friend class DataStreamManager;
         // members
         int stream_id;
+		size_t _thread_id;
         rcc::shared_ptr<IViewManager>							view_manager;
         rcc::shared_ptr<ICoordinateManager>						coordinate_manager;
         rcc::shared_ptr<IRenderEngine>							rendering_engine;
@@ -105,7 +112,7 @@ namespace EagleLib
     {
     public:
         static DataStreamManager* instance();
-        std::shared_ptr<DataStream> create_stream();
+        rcc::shared_ptr<DataStream> create_stream();
         DataStream* get_stream(size_t id = 0);
         void destroy_stream(DataStream* stream);
 
@@ -113,6 +120,6 @@ namespace EagleLib
         DataStreamManager();
         ~DataStreamManager();
 
-        std::vector<std::shared_ptr<DataStream>>    streams;    
+        std::vector<rcc::shared_ptr<DataStream>>    streams;    
     };
 }

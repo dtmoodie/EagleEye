@@ -1,8 +1,8 @@
-#include "NodeManager.h"
-#include "EagleLib/rcc/ObjectManager.h"
 #include "EagleLib/DataStreamManager.h"
+#include "NodeManager.h"
+#include <EagleLib/frame_grabber_base.h>
+#include "EagleLib/rcc/ObjectManager.h"
 #include "Node.h"
-
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 using namespace EagleLib;
@@ -162,7 +162,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 				constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
 			}
 		}
-		auto dependent_variable_nodes = node_info->CheckDependentVariables(parentStream->GetVariableManager().get());
+		auto dependent_variable_nodes = node_info->CheckDependentVariables(parentStream->GetVariableManager());
 		for (auto& dependent_variable_node : dependent_variable_nodes)
 		{
 			auto added_nodes = addNode(dependent_variable_node, parentStream);

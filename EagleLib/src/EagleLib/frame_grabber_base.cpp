@@ -7,7 +7,7 @@
 using namespace EagleLib;
 IFrameGrabber::IFrameGrabber()
 {
-    update_signal = nullptr;
+    //update_signal = nullptr;
     parent_stream = nullptr;
 }
 
@@ -22,8 +22,8 @@ void IFrameGrabber::InitializeFrameGrabber(DataStream* stream)
     if(stream)
     {
 		setup_signals(stream->GetSignalManager());
-		update_signal = stream->GetSignalManager()->get_signal<void()>("update", this);
-        SetupVariableManager(stream->GetVariableManager().get());
+		//update_signal = stream->GetSignalManager()->get_signal<void()>("update", this);
+        SetupVariableManager(stream->GetVariableManager());
     }
 }
 void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
@@ -32,33 +32,12 @@ void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
     SERIALIZE(loaded_document);
     SERIALIZE(parent_stream);
 }
-void IFrameGrabber::Init(bool firstInit)
-{
-    if(!firstInit)
-    {
-        update_signal = parent_stream->GetSignalManager()->get_signal<void()>("update", this);
-    }
-}
 FrameGrabberBuffered::FrameGrabberBuffered()
 {
     buffer_begin_frame_number = 0;
     buffer_end_frame_number = 0;
     playback_frame_number = 0;
 	_is_stream = false;
-}
-void FrameGrabberBuffered::InitializeFrameGrabber(DataStream* stream)
-{
-    IFrameGrabber::InitializeFrameGrabber(stream);
-    
-}
-void FrameGrabberThreaded::InitializeFrameGrabber(DataStream* stream)
-{
-	FrameGrabberBuffered::InitializeFrameGrabber(stream);
-	if (stream)
-	{
-		_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberThreaded::LaunchBufferThread, this), this));
-		_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberThreaded::StopBufferThread, this), this));
-	}
 }
 FrameGrabberBuffered::~FrameGrabberBuffered()
 {
@@ -123,13 +102,24 @@ TS<SyncedMemory> FrameGrabberBuffered::GetNextFrame(cv::cuda::Stream& stream)
             LOG(trace) << "Found next frame in frame buffer with frame index (" << desired_frame << ") at buffer index (" << index << ")";
             playback_frame_number = desired_frame;
             // Found the next frame
-            if (update_signal)
-                (*update_signal)();
+            //if (update_signal)
+                //(*update_signal)();
+            sig_update();
             return itr;
         }
         ++index;
     }
     // If we get to this point, perhaps a frame was dropped. look for the next valid frame number in the frame buffer
+   if(_is_stream)
+   {
+		if(desired_frame < buffer_begin_frame_number)
+		{
+			// If this is a live stream and we've fallen behind, rail desired frame and return back of frame buffer
+			playback_frame_number = frame_buffer.begin()->frame_number;
+			sig_update();
+			return *frame_buffer.begin();		
+		}   
+   }
     LOG(trace) << "Unable to find desired frame (" << desired_frame << ") in frame buffer [" << buffer_begin_frame_number << "," << buffer_end_frame_number << "]";
     for(int i = 0; i < frame_buffer.size(); ++i)
     {
@@ -168,7 +158,27 @@ int FrameGrabberBuffered::GetFrameNumber()
 {
     return playback_frame_number;
 }
+void FrameGrabberBuffered::PushFrame(TS<SyncedMemory>& frame, bool blocking)
+{
+	boost::mutex::scoped_lock bLock(buffer_mtx);
 
+	// Waiting for the reading thread to catch up
+	if(blocking)
+	{
+		while(((buffer_begin_frame_number + 5 > playback_frame_number && frame_buffer.size() == frame_buffer.capacity()) && !_is_stream))
+		{
+			LOG(trace) << "Frame buffer is full and playback frame (" << playback_frame_number << ") is too close to the beginning of the frame buffer (" << buffer_begin_frame_number << ")";
+			frame_read_cv.wait_for(bLock, boost::chrono::milliseconds(10));
+		}
+	}
+	
+	buffer_end_frame_number = frame.frame_number;
+	frame_buffer.push_back(frame);
+	if(frame_buffer.size())
+		buffer_begin_frame_number = frame_buffer[0].frame_number;
+	frame_grabbed_cv.notify_all();
+	sig_update();
+}
 void FrameGrabberThreaded::Buffer()
 {
     cv::cuda::Stream read_stream;
@@ -176,6 +186,8 @@ void FrameGrabberThreaded::Buffer()
     LOG(info) << "Starting buffer thread";
     while(!boost::this_thread::interruption_requested())
     {   
+        while(_pause)
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
         try
         {
             TS<SyncedMemory> frame;
@@ -186,31 +198,7 @@ void FrameGrabberThreaded::Buffer()
             }            
             if (!frame.empty())
             {
-                boost::mutex::scoped_lock bLock(buffer_mtx);
-
-                // Waiting for the reading thread to catch up
-                while((buffer_begin_frame_number + 5 > playback_frame_number && frame_buffer.size() == frame_buffer.capacity()) && !_is_stream)
-                {
-                    LOG(trace) << "Frame buffer is full and playback frame (" << playback_frame_number << ") is too close to the beginning of the frame buffer (" << buffer_begin_frame_number << ")";
-                    if(update_signal)
-                        (*update_signal)();
-                    frame_read_cv.wait_for(bLock, boost::chrono::milliseconds(10));
-					/*if (playback_frame_number < buffer_begin_frame_number)
-					{
-						playback_frame_number = buffer_begin_frame_number;
-					}
-					if (playback_frame_number > buffer_end_frame_number)
-					{
-						playback_frame_number = buffer_end_frame_number;
-					}*/						
-                }
-                buffer_end_frame_number = frame.frame_number;
-                if(frame_buffer.size())
-                    buffer_begin_frame_number = frame_buffer[0].frame_number;
-                frame_buffer.push_back(frame);
-                frame_grabbed_cv.notify_all();
-				if (update_signal)
-					(*update_signal)();
+				PushFrame(frame, true);
             }else
             {
                 LOG(trace) << "Read empty frame from frame grabber";
@@ -223,18 +211,31 @@ void FrameGrabberThreaded::Buffer()
     LOG(info) << "Shutting down buffer thread";
 }
 
-void FrameGrabberThreaded::LaunchBufferThread()
+void EagleLib::FrameGrabberThreaded::StartThreads()
 {
+    if(_pause)
+    {
+        _pause = false;
+        return;
+    }
     LOG(info);
-    StopBufferThread();
+    StopThreads();
     buffer_thread = boost::thread(boost::bind(&FrameGrabberThreaded::Buffer, this));
 }
 
-void FrameGrabberThreaded::StopBufferThread()
+void EagleLib::FrameGrabberThreaded::StopThreads()
 {
     LOG(info);
     buffer_thread.interrupt();
     DOIF_LOG_FAIL(buffer_thread.joinable(), buffer_thread.join(), warning);
+}
+void EagleLib::FrameGrabberThreaded::PauseThreads()
+{
+    _pause = true;
+}
+void EagleLib::FrameGrabberThreaded::ResumeThreads()
+{
+    _pause = false;
 }
 std::string FrameGrabberInfo::GetObjectTooltip()
 {
@@ -283,13 +284,7 @@ void FrameGrabberThreaded::Init(bool firstInit)
 	FrameGrabberBuffered::Init(firstInit);
 	if(!firstInit)
 	{
-		if (parent_stream)
-		{
-			_callback_connections.push_back(parent_stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&FrameGrabberThreaded::LaunchBufferThread, this), this));
-			_callback_connections.push_back(parent_stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&FrameGrabberThreaded::StopBufferThread, this), this));
-		}
-
-		LaunchBufferThread();
+        StartThreads();
 	}	
 }
 void FrameGrabberBuffered::Serialize(ISimpleSerializer* pSerializer)

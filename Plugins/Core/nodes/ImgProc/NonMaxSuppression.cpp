@@ -4,7 +4,7 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-void MinMax::Init(bool firstInit)
+void MinMax::NodeInit(bool firstInit)
 {
     updateParameter<double>("Min value", 0.0)->type = Parameters::Parameter::Output;
 	updateParameter<double>("Max value", 0.0)->type = Parameters::Parameter::Output;
@@ -19,7 +19,7 @@ cv::cuda::GpuMat MinMax::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stre
 	updateParameter(1, maxValue);
     return img;
 }
-void Threshold::Init(bool firstInit)
+void Threshold::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -105,7 +105,7 @@ cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 	return img;
 }
 
-void NonMaxSuppression::Init(bool firstInit)
+void NonMaxSuppression::NodeInit(bool firstInit)
 {
     if(firstInit)
     {

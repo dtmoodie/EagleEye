@@ -24,9 +24,8 @@ namespace EagleLib
         {
 
         }
-		void Init(bool firstInit)
+		void PlotInit(bool firstInit)
 		{
-			QtPlotterImpl::Init(firstInit);
 			if (firstInit)
 			{
 				parameters.push_back(new Parameters::TypedParameter<unsigned int>("Row", 0));

@@ -26,7 +26,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_highgui")
 
 #endif
 
-void KeyFrameTracker::Init(bool firstInit)
+void KeyFrameTracker::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -254,7 +254,7 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     return img;
 }
 
-void CMTTracker::Init(bool firstInit)
+void CMTTracker::NodeInit(bool firstInit)
 {
 
 }
@@ -264,7 +264,7 @@ cv::cuda::GpuMat CMTTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& 
     return img;
 }
 
-void TLDTracker::Init(bool firstInit)
+void TLDTracker::NodeInit(bool firstInit)
 {
 
 }

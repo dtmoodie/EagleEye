@@ -19,7 +19,7 @@ namespace EagleLib
 		boost::shared_ptr<Solver> solver;
 	public:
 		FastMumfordShah();
-		virtual void Init(bool firstInit);
+		virtual void NodeInit(bool firstInit);
 		virtual void Serialize(ISimpleSerializer* serializer);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
 	};

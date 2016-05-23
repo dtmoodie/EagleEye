@@ -108,7 +108,7 @@ void CpuDelayedDeallocationPool::cleanup(bool force)
 	auto time = clock();
 	if (force)
 		time = 0;
-	for (auto itr = deallocate_pool.begin(); itr != deallocate_pool.end(); ++itr)
+	for (auto itr = deallocate_pool.begin(); itr != deallocate_pool.end();)
 	{
 		if((time - std::get<1>(*itr)) > deallocation_delay)
 		{
@@ -118,6 +118,9 @@ void CpuDelayedDeallocationPool::cleanup(bool force)
 				<< " ms. Total usage: " << total_usage / (1024 * 1024) << " MB";
 			cudaFreeHost((void*)std::get<0>(*itr));
 			itr = deallocate_pool.erase(itr);
+		}else
+		{
+			++itr;
 		}
 	}
 }

@@ -43,6 +43,10 @@ QGraphicsProxyWidget* NodeView::getWidget(ObjectId id)
         return itr->second;
     else return nullptr;
 }
+void NodeView::removeWidget(ObjectId id)
+{
+	widgetMap.erase(id);
+}
 QGraphicsProxyWidget* NodeView::getWidget(size_t id)
 {
     auto itr = dataStreamWidget.find(id);
@@ -116,13 +120,14 @@ void NodeView::on_deleteNode()
     if(auto streamWidget = dynamic_cast<DataStreamWidget*>(currentWidget->widget()))
     {
         auto stream = streamWidget->GetStream();
-        stream->StopProcess();
+        stream->StartThread();
         emit widgetDeleted(streamWidget);
-        
+		dataStreamWidget.erase(streamWidget->GetStream()->get_stream_id());
     }
     scene()->removeItem(currentWidget);
     delete currentWidget;
     currentWidget = nullptr;
+	
     return;
 }
 void NodeView::on_displayImage()

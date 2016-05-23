@@ -12,9 +12,8 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void GoodFeaturesToTrack::Init(bool firstInit)
+void GoodFeaturesToTrack::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter("Max corners",			int(1000));
@@ -92,7 +91,7 @@ TS<SyncedMemory> GoodFeaturesToTrack::doProcess(TS<SyncedMemory> img, cv::cuda::
     return img;
 }
 
-void FastFeatureDetector::Init(bool firstInit)
+void FastFeatureDetector::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -148,7 +147,7 @@ cv::cuda::GpuMat FastFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda:
 /// *****************************************************************************************
 
 
-void ORBFeatureDetector::Init(bool firstInit)
+void ORBFeatureDetector::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -235,7 +234,7 @@ void HistogramRange::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(levels)
 }
 
-void HistogramRange::Init(bool firstInit)
+void HistogramRange::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -299,9 +298,8 @@ void HistogramRange::updateLevels(int type)
     levels.upload(h_mat);
     updateParameter("Histogram bins", h_mat)->type =  Parameters::Parameter::Output;
 }
-void CornerHarris::Init(bool firstInit)
+void CornerHarris::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter("Block size", 3);
@@ -324,9 +322,8 @@ cv::cuda::GpuMat CornerHarris::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     updateParameter("Corner score", score, &stream)->type = Parameters::Parameter::Output;
     return img;
 }
-void CornerMinEigenValue::Init(bool firstInit)
+void CornerMinEigenValue::NodeInit(bool firstInit)
 {
-    Node::Init(firstInit);
     if(firstInit)
     {
         updateParameter("Block size", 3);

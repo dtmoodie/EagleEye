@@ -11,14 +11,14 @@ namespace EagleLib
         BufferPool<cv::cuda::GpuMat, EventPolicy> disparityBuf;
     public:
         StereoBM();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     class StereoBilateralFilter: public Node
     {
     public:
         StereoBilateralFilter();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
@@ -27,7 +27,7 @@ namespace EagleLib
         cv::Ptr<cv::cuda::StereoBeliefPropagation> bp;
     public:
         StereoBeliefPropagation();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
@@ -36,7 +36,7 @@ namespace EagleLib
         cv::Ptr<cv::cuda::StereoConstantSpaceBP> csbp;
     public:
         StereoConstantSpaceBP();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     class UndistortStereo: public Node
@@ -46,7 +46,7 @@ namespace EagleLib
 
     public:
         UndistortStereo();
-        virtual void Init(bool firstInit);
+        virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     }

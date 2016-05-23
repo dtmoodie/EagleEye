@@ -123,6 +123,7 @@ ELSE()
 ENDIF()
 
 ADD_SUBDIRECTORY("RCC")
+#add_subdirectory("cuda_utils")
 
 INCLUDE_DIRECTORIES(${RCC_INCLUDE_DIRS})
 
@@ -253,10 +254,10 @@ TARGET_LINK_LIBRARIES(EagleLib
         RuntimeObjectSystem
         RuntimeCompiler
 		${LINK_LIBS}
+		#cuda_utils
 )
 if(${MXNET_FOUND})
   TARGET_LINK_LIBRARIES(EagleLib ${MXNET_LIBRARY})
-
 endif()
 if(WIN32)
     target_link_libraries(EagleLib OpenGL32)
@@ -272,6 +273,7 @@ ADD_DEPENDENCIES(EagleLib
 	signals
     RuntimeObjectSystem
     RuntimeCompiler
+	#cuda_utils
 	)
 
 install(TARGETS EagleLib

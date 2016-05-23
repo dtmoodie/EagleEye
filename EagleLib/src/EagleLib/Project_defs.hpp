@@ -1,11 +1,15 @@
 #pragma once
+
+// Guard this file from being compiled by nvcc
+#ifndef __CUDACC__
 #include "EagleLib/rcc/ObjectManager.h"
 #include "Defs.hpp"
+#endif
 
 #ifdef PLUGIN_NAME
 #include "RuntimeLinkLibrary.h"
-#ifdef _MSC_VER // Windows
-#define PLUGIN_EXPORTS __declspec(dllexport) 
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
+#define PLUGIN_EXPORTS __declspec(dllexport)
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY(STRINGIFY(PLUGIN_NAME) "d.lib")
 #else
@@ -20,7 +24,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-l" STRINGIFY(PLUGIN_NAME) )
 RUNTIME_COMPILER_LINKLIBRARY("-l" STRINGIFY(PLUGIN_NAME) "d")
 #endif
 #endif
-#else
+#else // PLUGIN_NAME
 #define PLUGIN_EXPORTS
 #endif
 
@@ -72,3 +76,4 @@ void SetupIncludes(){																					\
 		EagleLib::ObjectManager::Instance().addLinkDirs(PROJECT_LIB_DIRS, id);							\
 		EagleLib::ObjectManager::Instance().addDefinitions(PROJECT_DEFINITIONS, id);					\
 }
+

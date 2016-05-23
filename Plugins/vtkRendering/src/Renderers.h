@@ -170,7 +170,7 @@ namespace EagleLib
 		virtual QWidget* GetControlWidget(QWidget* parent);
 		
 		virtual void Serialize(ISimpleSerializer *pSerializer);
-		virtual void Init(bool firstInit);
+		
 	};
 
 	class vtkImageViewer : public vtkPlotter
