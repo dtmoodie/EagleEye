@@ -5,6 +5,12 @@
 
 #include <EagleLib/Defs.hpp>
 #include <EagleLib/Project_defs.hpp>
+std::vector<std::string> plugins;
+std::vector<std::string> EagleLib::ListLoadedPlugins()
+{
+  return plugins;
+}
+
 #ifdef _MSC_VER
 #include "Windows.h"
 std::string GetLastErrorAsString()
@@ -26,11 +32,11 @@ std::string GetLastErrorAsString()
 	return message;
 }
 
-std::vector<std::string> plugins;
-std::vector<std::string> EagleLib::ListLoadedPlugins()
-{
-	return plugins;
-}
+//std::vector<std::string> plugins;
+//std::vector<std::string> EagleLib::ListLoadedPlugins()
+//{
+//	return plugins;
+//}
 
 bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
