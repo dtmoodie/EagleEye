@@ -83,9 +83,7 @@ namespace EagleLib
 
 		
         SIGNALS_BEGIN(IFrameGrabber, ParameteredIObject);
-    protected:
             SIG_SEND(update);
-    public:
         SIGNALS_END;
         
     protected:

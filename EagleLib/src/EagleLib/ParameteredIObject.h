@@ -30,9 +30,21 @@
 	void SerializeSignals(ISimpleSerializer* pSerializer, Signals::_counter_<N_> dummy){}
 
 #else
+
+#define SERIALIZE_SIGNAL(N, name, ...) \
+    void SerializeSignals(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy) \
+    { \
+        SERIALIZE(COMBINE(_sig_##name##_, N)); \
+        SerializeSignals(pSerializer, Signals::_counter_<N-1>()); \
+    }
+
+#define SIG_SEND__(N, ...) \
+    BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, N) \
+    SERIALIZE_SIGNAL(N, __VA_ARGS__)
+
 #define SIGNALS_BEGIN__(N_, ...)	\
 	BOOST_PP_OVERLOAD(SIGNALS_BEGIN_, __VA_ARGS__)(__VA_ARGS__, N_) \
-	template<int N> void SerializeSignals(ISimpleSerializer* pSerializer, Signals::_counter_<N-1> dummy) \
+    template<int N> void SerializeSignals(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy) \
 	{ \
 		SerializeSignals(pSerializer, Signals::_counter_<N-1>()); \
 	} \
@@ -72,7 +84,7 @@ namespace EagleLib
 	}
 	template<class T> void _serialize_parent_signals(ISimpleSerializer* pSerializer, T* This, typename std::enable_if<Signals::has_parent<T>::value, int>::type)
 	{
-		_serialize_parent_signals_helper<T::PARENT_CLASS>(pSerializer, This, 0);
+        _serialize_parent_signals_helper<typename T::PARENT_CLASS>(pSerializer, This, 0);
 	}
 	// Class doesn't even define it's parent class, thus no reason to check if parent has a serialize signals function
 	template<class T> void _serialize_parent_signals(ISimpleSerializer* pSerializer, T* This, long) 

@@ -6,6 +6,7 @@ if(Qt5_FOUND)
   if(PYTHONINTERP_FOUND)
 	project(PythonInteractive)
 	set(_python_qt_name Qt5Python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR})
+        unset(PYTHON_LIBRARY)
 	find_package(${_python_qt_name}_QtAll QUIET)
 	if(${_python_qt_name}_QtAll_FOUND)
     

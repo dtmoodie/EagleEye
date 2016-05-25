@@ -102,6 +102,7 @@ namespace EagleLib
         boost::thread											processing_thread;
         volatile bool											dirty_flag;
         std::vector<std::shared_ptr<Signals::connection>>		connections;
+    public:
 		SIGNALS_BEGIN(DataStream)
 			SIG_SEND(StartThreads);
 			SIG_SEND(StopThreads);
