@@ -198,19 +198,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	_sig_manager = EagleLib::SignalManager::get_instance();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    table->SetSingleton(_sig_manager);
     if (table)
     {
-        auto signal_manager = table->GetSingleton<EagleLib::SignalManager>();
-        if(!signal_manager)
-        {
-            table->SetSingleton<EagleLib::SignalManager>(EagleLib::SignalManager::get_instance());
-            signal_manager = table->GetSingleton<EagleLib::SignalManager>();
-            Signals::signal_manager::set_instance(signal_manager);
-        }            
-
-        auto signal = signal_manager->get_signal<void(EagleLib::Nodes::Node*)>("ParameterAdded");
+        auto signal = _sig_manager->get_signal<void(EagleLib::Nodes::Node*)>("ParameterAdded");
         new_parameter_connection = signal->connect(boost::bind(&MainWindow::newParameter, this, _1));
-        auto dirtySignal = signal_manager->get_signal<void(EagleLib::Nodes::Node*)>("NodeUpdated");
+        auto dirtySignal = _sig_manager->get_signal<void(EagleLib::Nodes::Node*)>("NodeUpdated");
         dirty_flag_connection = dirtySignal->connect(boost::bind(&MainWindow::on_nodeUpdate, this, _1));
     }
     startProcessingThread();

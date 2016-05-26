@@ -5,9 +5,13 @@
 using namespace EagleLib;
 SignalManager* SignalManager::get_instance()
 {
-	auto system_table = PerModuleInterface::GetInstance()->GetSystemTable();
-	static SignalManager* g_instance = nullptr;
-	if (g_instance == nullptr)
+    static SignalManager g_instance;
+    auto system_table = PerModuleInterface::GetInstance()->GetSystemTable();
+    if(system_table)
+    {
+        system_table->SetSingleton<SignalManager>(&g_instance);
+    }
+    /*if (g_instance == nullptr)
 	{
 		if (system_table)
 		{
@@ -18,6 +22,6 @@ SignalManager* SignalManager::get_instance()
 			g_instance = new SignalManager();
 			system_table->SetSingleton<SignalManager>(g_instance);
 		}
-	}
-	return g_instance;	
+    }*/
+    return &g_instance;
 }

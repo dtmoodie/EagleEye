@@ -116,7 +116,7 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
     protected:
-		virtual void PushFrame(TS<SyncedMemory>& frame, bool blocking = true);
+        virtual void PushFrame(TS<SyncedMemory> frame, bool blocking = true);
 
         boost::circular_buffer<TS<SyncedMemory>> frame_buffer;
         
