@@ -123,7 +123,7 @@ BOOST_PYTHON_MODULE(EaglePython)
 	boost::python::def("ListDevices", &ListDevices);
 
 
-	boost::python::class_<EagleLib::DataStream, std::shared_ptr<EagleLib::DataStream>, boost::noncopyable>("DataStream", boost::python::no_init)
+	boost::python::class_<EagleLib::DataStream, rcc::shared_ptr<EagleLib::DataStream>, boost::noncopyable>("DataStream", boost::python::no_init)
 		.def("__init__", boost::python::make_constructor(&open_datastream))
 		.def("GetName", &EagleLib::Nodes::Node::getName)
 		.def("GetFullName", &EagleLib::Nodes::Node::getFullTreeName)
