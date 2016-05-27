@@ -7,6 +7,7 @@
 
 #include <parameters/ParameteredObjectImpl.hpp>
 #include <parameters/UI/InterThread.hpp>
+#include "EagleLib/rcc/ObjectManager.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 IPerModuleInterface* GetModule()

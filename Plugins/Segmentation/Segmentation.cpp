@@ -5,7 +5,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudalegacy.hpp>
 #include <parameters/ParameteredObjectImpl.hpp>
 #include "RuntimeLinkLibrary.h"
-
+#include <EagleLib/rcc/ObjectManager.h>
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
 #else

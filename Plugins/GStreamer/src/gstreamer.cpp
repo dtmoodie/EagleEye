@@ -11,7 +11,7 @@
 #include "../remotery/lib/Remotery.h"
 
 #include <QtNetwork/qnetworkinterface.h>
-
+#include "EagleLib/rcc/ObjectManager.h"
 
 
 

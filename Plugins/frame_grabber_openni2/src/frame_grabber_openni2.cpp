@@ -1,6 +1,7 @@
 #include "frame_grabber_openni2.h"
 #include "openni2_initializer.h"
 #include <EagleLib/ICoordinateManager.h>
+#include "EagleLib/rcc/ObjectManager.h"
 using namespace EagleLib;
 SETUP_PROJECT_IMPL
 
@@ -147,7 +148,7 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
 			}
 		}
 		
-		PushFrame(TS<SyncedMemory>(double(ts), fn, XYZ), false);
+        FrameGrabberBuffered::PushFrame(TS<SyncedMemory>(double(ts), fn, XYZ), false);
 		break;
 	}
 }

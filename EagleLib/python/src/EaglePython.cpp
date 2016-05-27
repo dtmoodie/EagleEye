@@ -107,12 +107,25 @@ namespace boost
 		{
 			return a_P.get();
 		}
+        template<typename T> T* get_pointer(const rcc::shared_ptr<EagleLib::DataStream>& a_P)
+        {
+            return a_P.get();
+        }
 		template<typename T> struct pointee<rcc::shared_ptr<T>>
 		{
 			typedef T type;
 		};
 	}
 }
+namespace rcc
+{
+    template<typename T> T* get_pointer(rcc::shared_ptr<T> const& p)
+    {
+        return p.get();
+    }
+
+}
+
 
 BOOST_PYTHON_MODULE(EaglePython)
 {
@@ -123,21 +136,21 @@ BOOST_PYTHON_MODULE(EaglePython)
 	boost::python::def("ListDevices", &ListDevices);
 
 
-	boost::python::class_<EagleLib::DataStream, rcc::shared_ptr<EagleLib::DataStream>, boost::noncopyable>("DataStream", boost::python::no_init)
-		.def("__init__", boost::python::make_constructor(&open_datastream))
-		.def("GetName", &EagleLib::Nodes::Node::getName)
-		.def("GetFullName", &EagleLib::Nodes::Node::getFullTreeName)
-		.def("GetParameters", &EagleLib::Nodes::Node::getParameters);
+    //boost::python::class_<EagleLib::DataStream, rcc::shared_ptr<EagleLib::DataStream>, boost::noncopyable>("DataStream", boost::python::no_init)
+        //.def("__init__", boost::python::make_constructor(&open_datastream))
+        //.def("GetName", &EagleLib::Nodes::Node::getName)
+        //.def("GetFullName", &EagleLib::Nodes::Node::getFullTreeName);
+        //.def("GetParameters", &EagleLib::Nodes::Node::getParameters);
 
 	boost::python::class_<EagleLib::Nodes::Node, rcc::shared_ptr<EagleLib::Nodes::Node>, boost::noncopyable>("Node", boost::python::no_init)
 		.def("__init__", boost::python::make_constructor(&create_node));
 
 
-	//boost::python::class_<Parameters::Parameter, boost::noncopyable>("Parameter", boost::python::no_init)
-		//.def("GetName", &Parameters::Parameter::GetName);
+    boost::python::class_<Parameters::Parameter, boost::noncopyable>("Parameter", boost::python::no_init)
+        .def("GetName", &Parameters::Parameter::GetName);
 		
 	
-	boost::python::register_ptr_to_python<std::shared_ptr<EagleLib::DataStream>>();
+    //boost::python::register_ptr_to_python<rcc::shared_ptr<EagleLib::DataStream>>();
 
 	boost::python::register_ptr_to_python<rcc::shared_ptr<EagleLib::Nodes::Node>>();
 
