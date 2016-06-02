@@ -10,7 +10,9 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 find_package(CUDA REQUIRED)
   include_directories(${CUDA_TOOLKIT_INCLUDE})
-  set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+  if(NOT MSVC)
+    set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+  endif()
 
 find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo videoio)
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)

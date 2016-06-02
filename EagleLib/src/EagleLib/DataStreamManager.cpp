@@ -78,7 +78,8 @@ DataStream::DataStream()
 DataStream::~DataStream()
 {
 	StopThread();
-
+	top_level_nodes.clear();
+	frame_grabber.reset();
 }
 
 int DataStream::get_stream_id()
@@ -341,7 +342,6 @@ void DataStream::ResumeThread()
 
 void DataStream::process()
 {
-    cv::cuda::Stream streams[2];
     dirty_flag = true;
     int iteration_count = 0;
 	Signals::thread_registry::get_instance()->register_thread(Signals::ANY);

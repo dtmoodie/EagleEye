@@ -16,6 +16,34 @@ template<typename T> QTableWidgetItem* readItems(T* data, const int channels)
 
 namespace EagleLib
 {
+	struct MatrixViewInfo: public PlotterInfo
+	{
+		virtual Plotter::PlotterType GetPlotType()
+		{
+			return Plotter::QT_Plotter;
+		}
+		virtual bool AcceptsParameter(Parameters::Parameter* param)
+		{
+			auto tmp_converter = Parameters::Converters::Double::Factory::Create(param, nullptr);
+			if (tmp_converter == nullptr)
+				return false;
+			delete tmp_converter;
+			return true;
+		}
+		virtual std::string GetObjectName()
+		{
+			return "MatrixViewPlotter";
+		}
+		virtual std::string GetObjectTooltip()
+		{
+			return "Display matrix elements in table format";
+		}
+		virtual std::string GetObjectHelp()
+		{
+			return "Input must be a parameter that can be converted to a matrix, it is then plotted as a table";
+		}
+	};
+
     class MatrixView: public QtPlotterImpl, public StaticPlotPolicy
     {
         //QVector<QTableWidget*> plots;
@@ -44,9 +72,9 @@ namespace EagleLib
             return widget;
         }
 
-        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param)
+        virtual bool AcceptsParameter(Parameters::Parameter* param)
         {
-			auto tmp_converter = Parameters::Converters::Double::Factory::Create(param.get(), &plottingStream);
+			auto tmp_converter = Parameters::Converters::Double::Factory::Create(param, &plottingStream);
 			if (tmp_converter == nullptr)
 				return false;
 			delete tmp_converter;
@@ -106,7 +134,7 @@ namespace EagleLib
                 return;
         }
 
-        virtual void SetInput(Parameters::Parameter::Ptr param_)
+        virtual void SetInput(Parameters::Parameter* param_)
         {
 			QtPlotterImpl::SetInput(param_);
 			OnParameterUpdate(nullptr);

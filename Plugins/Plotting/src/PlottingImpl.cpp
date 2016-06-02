@@ -58,17 +58,17 @@ void QtPlotterImpl::OnParameterUpdate(cv::cuda::Stream* stream)
 		stream = &plottingStream;
 	if (converter == nullptr)
 	{
-		converter = Parameters::Converters::Double::Factory::Create(param.get(), stream);
-		converter->Update(param.get(), stream);
+		converter = Parameters::Converters::Double::Factory::Create(param, stream);
+		converter->Update(param, stream);
 		return;
 	}
 	CV_Assert(converter);
 	if (converter->GetTypeInfo() != param->GetTypeInfo())
 	{
-		converter = Parameters::Converters::Double::Factory::Create(param.get(), stream);
+		converter = Parameters::Converters::Double::Factory::Create(param, stream);
 		return;
 	}
-	converter->Update(param.get(), stream);
+	converter->Update(param, stream);
 }
 void HistoryPlotter::PlotInit(bool firstInit)
 {

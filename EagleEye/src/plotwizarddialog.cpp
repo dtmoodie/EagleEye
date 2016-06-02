@@ -4,6 +4,8 @@
 #include "plotwizarddialog.h"
 #include "ui_plotwizarddialog.h"
 
+#include <qsplitter.h>
+
 
 PlotWizardDialog::PlotWizardDialog(QWidget *parent) :
     QDialog(parent),
@@ -23,6 +25,12 @@ void PlotWizardDialog::setup()
     }
     previewPlots.clear();
     previewPlotters.clear();
+	QSplitter* plot_splitter = new QSplitter(this);
+	QSplitter* plot_setting_splitter = new QSplitter(this);
+	plot_splitter->setOrientation(Qt::Vertical);
+	plot_setting_splitter->setOrientation(Qt::Vertical);
+	ui->plotPreviewLayout->addWidget(plot_splitter, 0,0);
+	ui->plotPreviewLayout->addWidget(plot_setting_splitter, 0, 1);
     auto plotters = EagleLib::PlotManager::getInstance().getAvailablePlots();
     for(size_t i = 0; i < plotters.size(); ++i)
     {
@@ -32,20 +40,18 @@ void PlotWizardDialog::setup()
             if(plotter->Type() == EagleLib::Plotter::QT_Plotter)
             {
                 rcc::shared_ptr<EagleLib::QtPlotter> qtPlotter(plotter);
-                //plotter->setCallback(boost::bind(&PlotWizardDialog::onUpdate, this, (int)previewPlots.size()));
-
                 QWidget* plot = qtPlotter->CreatePlot(this);
                 plot->installEventFilter(this);
                 qtPlotter->AddPlot(plot);
 				auto control_widget = qtPlotter->GetControlWidget(this);
-				ui->plotPreviewLayout->addWidget(plot, i, 0);
+				//ui->plotPreviewLayout->addWidget(plot, i, 0);
+				plot_splitter->addWidget(plot);
 				if (control_widget)
 				{
-					ui->plotPreviewLayout->addWidget(control_widget, i, 1);
+					//ui->plotPreviewLayout->addWidget(control_widget, i, 1);
+					plot_setting_splitter->addWidget(control_widget);
 					previewPlotControllers[plot] = control_widget;
 				}
-					
-
                 previewPlots.push_back(plot);
                 previewPlotters.push_back(qtPlotter);
 
@@ -73,7 +79,7 @@ bool PlotWizardDialog::eventFilter(QObject *obj, QEvent *ev)
                 break;
             }
         }
-        if(found == false)
+		/*        if(found == false)
             return false;
         QMouseEvent* mev = dynamic_cast<QMouseEvent*>(ev);
         if(mev->button() == Qt::MiddleButton)
@@ -84,7 +90,7 @@ bool PlotWizardDialog::eventFilter(QObject *obj, QEvent *ev)
             drag->setMimeData(data);
             drag->exec();
             return true;
-        }
+        }*/
     }
     return false;
 }
@@ -109,7 +115,7 @@ void PlotWizardDialog::handleUpdate(int idx)
     //previewPlotters[idx]->doUpdate();
 }
 
-void PlotWizardDialog::plotParameter(Parameters::Parameter::Ptr param)
+void PlotWizardDialog::plotParameter(Parameters::Parameter* param)
 {
     this->show();
     //ui->tabWidget->setCurrentIndex(0);

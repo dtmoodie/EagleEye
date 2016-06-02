@@ -1,6 +1,7 @@
 #include "PlotManager.h"
 #include "EagleLib/rcc/ObjectManager.h"
 
+
 using namespace EagleLib;
 
 
@@ -61,6 +62,27 @@ std::vector<std::string> PlotManager::getAvailablePlots()
 	{
 		if (constructors[i]->GetInterfaceId() == IID_Plotter)
 			output.push_back(constructors[i]->GetName());
+	}
+	return output;
+}
+std::vector<std::string> PlotManager::getAcceptablePlotters(Parameters::Parameter* param)
+{
+	auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_Plotter);
+	std::vector<std::string> output;
+	for(auto& constructor : constructors)
+	{
+		auto object_info = constructor->GetObjectInfo();
+		if(object_info)
+		{
+			auto plot_info = dynamic_cast<PlotterInfo*>(object_info);
+			if(plot_info)
+			{
+				if(plot_info->AcceptsParameter(param))
+				{
+					output.push_back(constructor->GetName());
+				}
+			}
+		}
 	}
 	return output;
 }

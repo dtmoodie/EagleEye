@@ -6,7 +6,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_imgproc.hpp>
 #include <parameters/ParameteredObjectImpl.hpp>
-//#include "flann.cuh"
+#include "EagleLib/rcc/ObjectManager.h"
 #include "RuntimeSourceDependency.h"
 SETUP_PROJECT_IMPL
 

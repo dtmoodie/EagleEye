@@ -103,14 +103,6 @@ namespace boost
 {
 	namespace python
 	{
-		template<typename T> T* get_pointer(rcc::shared_ptr<T> const& a_P)
-		{
-			return a_P.get();
-		}
-        template<typename T> T* get_pointer(const rcc::shared_ptr<EagleLib::DataStream>& a_P)
-        {
-            return a_P.get();
-        }
 		template<typename T> struct pointee<rcc::shared_ptr<T>>
 		{
 			typedef T type;
@@ -146,8 +138,8 @@ BOOST_PYTHON_MODULE(EaglePython)
 		.def("__init__", boost::python::make_constructor(&create_node));
 
 
-    boost::python::class_<Parameters::Parameter, boost::noncopyable>("Parameter", boost::python::no_init)
-        .def("GetName", &Parameters::Parameter::GetName);
+    //boost::python::class_<Parameters::Parameter, boost::noncopyable>("Parameter", boost::python::no_init)
+      //  .def("GetName", &Parameters::Parameter::GetName);
 		
 	
     //boost::python::register_ptr_to_python<rcc::shared_ptr<EagleLib::DataStream>>();

@@ -24,6 +24,7 @@ NodeView::NodeView(QGraphicsScene *scene, QWidget *parent):
     connect(actions[0], SIGNAL(triggered()), this, SLOT(on_deleteNode()));
     connect(actions[1], SIGNAL(triggered()), this, SLOT(on_displayImage()));
     connect(actions[2], SIGNAL(triggered()), this, SLOT(on_plotData()));
+	currentParam = nullptr;
 
 }
 void NodeView::addWidget(QGraphicsProxyWidget * widget, ObjectId id)
@@ -54,7 +55,7 @@ QGraphicsProxyWidget* NodeView::getWidget(size_t id)
         return itr->second;
     else return nullptr;
 }
-void NodeView::on_parameter_clicked(Parameters::Parameter::Ptr param, QPoint pos)
+void NodeView::on_parameter_clicked(Parameters::Parameter* param, QPoint pos)
 {
 	// Spawn the right click dialog
 	if (param != nullptr)

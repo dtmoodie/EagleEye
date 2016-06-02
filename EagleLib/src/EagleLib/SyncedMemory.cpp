@@ -170,3 +170,26 @@ void SyncedMemory::Synchronize()
 			d_data[i].download(h_data[i]);
 	}
 }
+
+cv::Size SyncedMemory::GetSize(int index) const
+{
+	CV_Assert(index >= 0 && index < d_data.size());
+	return d_data[index].size();
+}
+
+std::vector<int> SyncedMemory::GetShape() const
+{
+	std::vector<int> output;
+	output.push_back(d_data.size());
+	if(d_data.empty())
+		return output;
+	output.push_back(d_data[0].rows);
+	output.push_back(d_data[0].cols);
+	output.push_back(d_data[0].channels());
+	return output;
+}
+int SyncedMemory::GetDepth() const
+{
+	CV_Assert(d_data.size());
+	return d_data[0].depth();
+}

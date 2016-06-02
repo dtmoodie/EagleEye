@@ -35,7 +35,7 @@ signals:
     void update(int idx);
 public slots:
     void setup();
-    void plotParameter(Parameters::Parameter::Ptr param);
+    void plotParameter(Parameters::Parameter* param);
     void onUpdate(int idx);
     void handleUpdate(int idx);
 private slots:

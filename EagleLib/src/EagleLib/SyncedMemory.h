@@ -54,20 +54,24 @@ namespace EagleLib
 		SyncedMemory(cv::MatAllocator* cpu_allocator, cv::cuda::GpuMat::Allocator* gpu_allocator);
         SyncedMemory clone(cv::cuda::Stream& stream);
 
-		const cv::Mat&				GetMat(cv::cuda::Stream& stream, int = 0);
-		cv::Mat&					GetMatMutable(cv::cuda::Stream& stream, int = 0);
+		const cv::Mat&						 GetMat(cv::cuda::Stream& stream, int = 0);
+		cv::Mat&							 GetMatMutable(cv::cuda::Stream& stream, int = 0);
 
-		const cv::cuda::GpuMat&		GetGpuMat(cv::cuda::Stream& stream, int = 0);
-		cv::cuda::GpuMat&			GetGpuMatMutable(cv::cuda::Stream& stream, int = 0);
+		const cv::cuda::GpuMat&				 GetGpuMat(cv::cuda::Stream& stream, int = 0);
+		cv::cuda::GpuMat&					 GetGpuMatMutable(cv::cuda::Stream& stream, int = 0);
 
-		const std::vector<cv::Mat>&				GetMatVec(cv::cuda::Stream& stream);
-		std::vector<cv::Mat>&		GetMatVecMutable(cv::cuda::Stream& stream);
+		const std::vector<cv::Mat>&			 GetMatVec(cv::cuda::Stream& stream);
+		std::vector<cv::Mat>&				 GetMatVecMutable(cv::cuda::Stream& stream);
 
-		const std::vector<cv::cuda::GpuMat>&		GetGpuMatVec(cv::cuda::Stream& stream);
-		std::vector<cv::cuda::GpuMat>&			GetGpuMatVecMutable(cv::cuda::Stream& stream);
+		const std::vector<cv::cuda::GpuMat>& GetGpuMatVec(cv::cuda::Stream& stream);
+		std::vector<cv::cuda::GpuMat>&		 GetGpuMatVecMutable(cv::cuda::Stream& stream);
+
 		void Synchronize();
 		int GetNumMats() const;
         bool empty() const;
 		void ResizeNumMats(int new_size = 1);
+		cv::Size GetSize(int index = 0) const;
+		std::vector<int> GetShape() const;
+		int GetDepth() const;
 	};
 }

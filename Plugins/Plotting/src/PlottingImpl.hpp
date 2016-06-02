@@ -113,16 +113,16 @@ namespace EagleLib
 
 
 
-template<typename T> T* getParameterPtr(Parameters::Parameter::Ptr param)
+template<typename T> T* getParameterPtr(Parameters::Parameter* param)
 {
-	auto typedParam = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(param);
+	auto typedParam = dynamic_cast<Parameters::ITypedParameter<T>*>(param);
 	if (typedParam)
 		return typedParam->Data();
 	return nullptr;
 }
 
 
-cv::Size inline getSize(Parameters::Parameter::Ptr param)
+cv::Size inline getSize(Parameters::Parameter* param)
 {
     //auto gpuParam = EagleLib::getParameterPtr<cv::cuda::GpuMat>(param);
 	auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
@@ -137,7 +137,7 @@ cv::Size inline getSize(Parameters::Parameter::Ptr param)
 
     return cv::Size(0,0);
 }
-int inline getChannels(Parameters::Parameter::Ptr param)
+int inline getChannels(Parameters::Parameter* param)
 {
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
     if(gpuParam)
@@ -187,7 +187,7 @@ QVector<double> inline getParamArrayDataHelper(cv::Mat h_data, int channel)
     return output;
 }
 
-QVector<double> inline getParamArrayData(Parameters::Parameter::Ptr param, int channel)
+QVector<double> inline getParamArrayData(Parameters::Parameter* param, int channel)
 {
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
     if(gpuParam)
@@ -203,7 +203,7 @@ QVector<double> inline getParamArrayData(Parameters::Parameter::Ptr param, int c
         return getParamArrayDataHelper(cv::Mat(*vecParam), 0);
     return QVector<double>();
 }
-template<typename T> bool inline getData(Parameters::Parameter::Ptr param, double& data)
+template<typename T> bool inline getData(Parameters::Parameter* param, double& data)
 {
     auto ptr = getParameterPtr<T>(param);
     if(ptr)
@@ -213,7 +213,7 @@ template<typename T> bool inline getData(Parameters::Parameter::Ptr param, doubl
     }
     return false;
 }
-template<typename T> bool inline getDataVec(Parameters::Parameter::Ptr param, int channel, double& data)
+template<typename T> bool inline getDataVec(Parameters::Parameter* param, int channel, double& data)
 {
     auto ptr = getParameterPtr<T>(param);
     if(ptr)
@@ -224,7 +224,7 @@ template<typename T> bool inline getDataVec(Parameters::Parameter::Ptr param, in
     return false;
 }
 
-double inline getParamData(Parameters::Parameter::Ptr data, int channel)
+double inline getParamData(Parameters::Parameter* data, int channel)
 {
     double output;
     if(getData<double>(data, output))
@@ -319,7 +319,7 @@ struct DefaultTypePolicy
 
 template<typename T> struct TypePolicy
 {
-    static bool acceptsType(Parameters::Parameter::Ptr param)
+    static bool acceptsType(Parameters::Parameter* param)
     {
 	return Loki::TypeInfo(typeid(T)) == param->GetTypeInfo();
     }
@@ -329,7 +329,7 @@ struct StaticPlotPolicy
     int size;
     int channel;
     QVector<double> data;
-    void addPlotData(Parameters::Parameter::Ptr param, cv::cuda::Stream* stream)
+    void addPlotData(Parameters::Parameter* param, cv::cuda::Stream* stream)
     {
         data = getParamArrayData(param, channel);
     }
@@ -354,7 +354,7 @@ struct SlidingWindowPlotPolicy
     int channel;
 
     boost::circular_buffer<double> plotData;
-    void addPlotData(Parameters::Parameter::Ptr param)
+    void addPlotData(Parameters::Parameter* param)
     {
         plotData.push_back(getParamData(param, channel));
     }

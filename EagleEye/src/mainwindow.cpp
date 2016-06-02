@@ -121,7 +121,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(bookmarks, SIGNAL(open_file(QString)), this, SLOT(load_file(QString)));
 	QObject::connect(persistence_timer, SIGNAL(timeout()), this, SLOT(on_persistence_timeout()));
 	QObject::connect(this, &MainWindow::uiCallback, this, &MainWindow::on_uiCallback, Qt::QueuedConnection);
-	QObject::connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter::Ptr)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter::Ptr)));
+	QObject::connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter*)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter*)));
 	QObject::connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
 	QObject::connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
 	QObject::connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
@@ -544,7 +544,7 @@ void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
 	DOIF_LOG_PASS(nodeGraphView->getWidget(node->GetObjectId()), return, debug);
 	
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
-	QObject::connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter::Ptr, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter::Ptr, QPoint)));
+	QObject::connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter*, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter*, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
 
     auto itr = positionMap.find(node->getFullTreeName());
@@ -686,7 +686,14 @@ void MainWindow::onUiUpdate()
 {
     //EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
 	rmt_ScopedCPUSample(onUiUpdate);
-    Signals::thread_specific_queue::run_once();
+	try
+	{
+		Signals::thread_specific_queue::run_once();
+	}catch(...)
+	{
+	
+	}
+    
 }
 
 void

@@ -15,7 +15,7 @@ namespace EagleLib
         HistogramPlotter();
         virtual QWidget* CreatePlot(QWidget* parent);
         
-        virtual bool AcceptsParameter(Parameters::Parameter::Ptr param);
+        virtual bool AcceptsParameter(Parameters::Parameter* param);
         virtual std::string PlotName() const;
 
         virtual QWidget* GetControlWidget(QWidget* parent);
@@ -24,7 +24,7 @@ namespace EagleLib
 
 		virtual void UpdatePlots(bool rescale = false); // called from ui thread
 
-        virtual void SetInput(Parameters::Parameter::Ptr param_);
+        virtual void SetInput(Parameters::Parameter* param_);
 
 		virtual void OnParameterUpdate(cv::cuda::Stream* stream);
 		virtual void Serialize(ISimpleSerializer *pSerializer)
@@ -38,7 +38,33 @@ namespace EagleLib
 
 		}
     };
+	struct HistogramPlotterInfo: public PlotterInfo
+	{
+		virtual Plotter::PlotterType GetPlotType()
+		{
+			return Plotter::QT_Plotter;
+		}
+		virtual bool AcceptsParameter(Parameters::Parameter* param)
+		{
+			return VectorSizePolicy::acceptsSize(getSize(param));
+		}
+		virtual std::string GetObjectName()
+		{
+			return "HistogramPlotter";
+		}
+		virtual std::string GetObjectTooltip()
+		{
+			return "Used for plotting histograms, input must be a calculated histogram";
+		}
+		virtual std::string GetObjectHelp()
+		{
+			return "Input must be a parameter that can be converted to a vector, it is then plotted as a histogram";
+		}
+	};
 }
+
+HistogramPlotterInfo hist_info;
+
 HistogramPlotter::HistogramPlotter() :
 	QtPlotterImpl()
 {
@@ -56,9 +82,9 @@ QWidget* HistogramPlotter::CreatePlot(QWidget* parent)
 }
 
 
-bool HistogramPlotter::AcceptsParameter(Parameters::Parameter::Ptr param)
+bool HistogramPlotter::AcceptsParameter(Parameters::Parameter* param)
 {
-    return VectorSizePolicy::acceptsSize(getSize(param));
+    return hist_info.AcceptsParameter(param);
 }
 std::string HistogramPlotter::PlotName() const
 {
@@ -89,7 +115,7 @@ void HistogramPlotter::AddPlot(QWidget *plot_)
     hists.push_back(hist);
 }
 
-void HistogramPlotter::SetInput(Parameters::Parameter::Ptr param_)
+void HistogramPlotter::SetInput(Parameters::Parameter* param_)
 {
     Plotter::SetInput(param_);
 	OnParameterUpdate(nullptr);
@@ -160,5 +186,5 @@ void HistogramPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
 			
 	}
 }
-REGISTERCLASS(HistogramPlotter)
+REGISTERCLASS(HistogramPlotter, &hist_info)
 

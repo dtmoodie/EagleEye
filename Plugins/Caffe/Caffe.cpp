@@ -6,7 +6,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
-
+#include "EagleLib/rcc/ObjectManager.h"
 #include <parameters/ParameteredObjectImpl.hpp>
 
 
