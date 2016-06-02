@@ -6,7 +6,7 @@
 #include "Remotery.h"
 #include "parameters/VariableManager.h"
 #include "ParameterBuffer.h"
-
+#include "IVariableSink.h"
 #include <opencv2/core.hpp>
 
 #include <boost/chrono.hpp>
@@ -312,7 +312,15 @@ void DataStream::RemoveNode(rcc::shared_ptr<Nodes::Node> node)
         top_level_nodes.erase(itr);
     }
 }
+void DataStream::AddVariableSink(IVariableSink* sink)
+{
+    variable_sinks.push_back(sink);
+}
 
+void DataStream::RemoveVariableSink(IVariableSink* sink)
+{
+    std::remove_if(variable_sinks.begin(), variable_sinks.end(), [sink](IVariableSink* other)->bool{return other == sink;});
+}
 void DataStream::StartThread()
 {
 	StopThread();
@@ -399,6 +407,10 @@ void DataStream::process()
                     {
                         if(node->pre_check(current_frame))
                             node->process(current_frame, streams[iteration_count % 2]);
+                    }
+                    for(auto sink : variable_sinks)
+                    {
+                        sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
                     }
                     ++iteration_count;
                     if(!dirty_flag)

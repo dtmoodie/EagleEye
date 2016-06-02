@@ -36,6 +36,7 @@ namespace EagleLib
     class IFrameGrabber;
     class SignalManager;
 	class IParameterBuffer;
+    class IVariableSink;
 
 	class EAGLE_EXPORTS DataStream: public TInterface<IID_DataStream, ParameteredIObject>
 	{
@@ -82,6 +83,9 @@ namespace EagleLib
         void ResumeThread();
         void process();
         
+        void AddVariableSink(IVariableSink* sink);
+        void RemoveVariableSink(IVariableSink* sink);
+
     protected:
         friend class DataStreamManager;
         // members
@@ -103,6 +107,7 @@ namespace EagleLib
         volatile bool											dirty_flag;
         std::vector<std::shared_ptr<Signals::connection>>		connections;
 		cv::cuda::Stream										streams[2];
+        std::vector<IVariableSink*>                             variable_sinks;
     public:
 		SIGNALS_BEGIN(DataStream)
 			SIG_SEND(StartThreads);
