@@ -33,12 +33,29 @@ FIND_PACKAGE(Qt5 REQUIRED Core Widgets OpenGL)
 
 FIND_PACKAGE(OpenCV QUIET COMPONENTS core viz)
 
+find_package(PCL QUIET COMPONENTS visualization)
+  if(PCL_FOUND)
+    message("Building with PCL visualization support")
+	add_definitions(-DHAVE_PCL)
+	include_directories(${PCL_INCLUDE_DIRS})
+  endif()
+set(link_libs_ 
+  EagleLib
+  ${OpenCV_LIBS}
+  ${VTK_LIBRARIES}
+  Qt5::Core
+  Qt5::Widgets
+  Qt5::OpenGL)
+
 ADD_DEFINITIONS(${DEFS})
 LINK_DIRECTORIES(${LINK_DIRS})
 INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
-#ADD_DEFINITIONS(-DPROJECT_INCLUDS="${VTK_INCLUDE_DIRS}")
-#ADD_DEFINITIONS(-DPROJECT_LIB_DIRS="${vtk_lib_dir}")
+if(Plugin_point_clouds_INCLUDES)
+	include_directories(${Plugin_point_clouds_INCLUDES})
+	add_definitions(-DHAVE_PLUGIN_POINT_CLOUDS)
+	list(APPEND link_libs_ point_clouds)
+endif()
 
 SET(VTK_BIN_DIR "" CACHE PATH "")
 SET(VTK_BIN_DIR_DBG ${VTK_BIN_DIR} CACHE PATH "" FORCE)
@@ -66,19 +83,16 @@ MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
   ELSE(MSVC)
   ENDIF(MSVC)
 ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
-#SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-std=c++11")
 
 ADD_LIBRARY(vtkRendering SHARED ${src} ${hdr} ${knl})
 
 ADD_DEPENDENCIES(vtkRendering EagleLib)
 RCC_LINK_LIB(vtkRendering
-  EagleLib
-  ${OpenCV_LIBS}
-  ${VTK_LIBRARIES}
-  Qt5::Core
-  Qt5::Widgets
-  Qt5::OpenGL
+  ${link_libs_}
 )
+if(Plugin_point_clouds_INCLUDES)
+  add_dependencies(vtkRendering point_clouds)
+endif()
 IF(WIN32)
   RCC_LINK_LIB(vtkRendering opengl32)
 ELSE(WIN32)
