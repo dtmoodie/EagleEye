@@ -158,7 +158,7 @@ int FrameGrabberBuffered::GetFrameNumber()
 {
     return playback_frame_number;
 }
-void FrameGrabberBuffered::PushFrame(TS<SyncedMemory>& frame, bool blocking)
+void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
 {
 	boost::mutex::scoped_lock bLock(buffer_mtx);
 

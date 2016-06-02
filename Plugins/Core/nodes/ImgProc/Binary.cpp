@@ -7,6 +7,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudalegacy.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaobjdetect.hpp>
+#include <EagleLib/rcc/ObjectManager.h>
 
 #include <algorithm>
 #include <utility>

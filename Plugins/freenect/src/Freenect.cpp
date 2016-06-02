@@ -2,6 +2,7 @@
 #include "libfreenect/libfreenect.hpp"
 #include "freenect.cuh"
 #include "EagleLib/rcc/SystemTable.hpp"
+#include "EagleLib/rcc/ObjectManager.h"
 #include <boost/lexical_cast.hpp>
 SETUP_PROJECT_IMPL
 using namespace EagleLib;

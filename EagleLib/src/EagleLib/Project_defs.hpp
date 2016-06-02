@@ -2,7 +2,7 @@
 
 // Guard this file from being compiled by nvcc
 #ifndef __CUDACC__
-#include "EagleLib/rcc/ObjectManager.h"
+//#include "EagleLib/rcc/ObjectManager.h"
 #include "Defs.hpp"
 #endif
 

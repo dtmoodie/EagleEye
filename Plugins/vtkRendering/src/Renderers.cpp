@@ -32,7 +32,7 @@
 #include <vtkPolygon.h>
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <parameters/ParameteredObjectImpl.hpp>
-
+#include "EagleLib/rcc/ObjectManager.h"
 
 SETUP_PROJECT_IMPL
 using namespace EagleLib;
