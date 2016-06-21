@@ -136,7 +136,7 @@ Parameters::IVariableManager* DataStream::GetVariableManager()
     return variable_manager.get();
 }
 
-bool DataStream::LoadDocument(const std::string& document)
+bool DataStream::LoadDocument(const std::string& document, const std::string& prefered_loader)
 {
     std::string file_to_load = document;
     if(file_to_load.size() == 0)
@@ -181,6 +181,18 @@ bool DataStream::LoadDocument(const std::string& document)
     // Pick the frame grabber with highest priority
     
     auto idx = sort_index_descending(frame_grabber_priorities);
+	if(prefered_loader.size())
+	{
+		for(int i = 0; i < valid_frame_grabbers.size(); ++i)
+		{
+			if(prefered_loader == valid_frame_grabbers[i]->GetName())
+			{
+				idx.insert(idx.begin(), i);
+				break;
+			}
+		}
+	}
+
     for(int i = 0; i < idx.size(); ++i)
     {
         auto fg = rcc::shared_ptr<IFrameGrabber>(valid_frame_grabbers[idx[i]]->Construct());
@@ -277,7 +289,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::GetNodes()
 
 void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
-	if (boost::this_thread::get_id() != processing_thread.get_id() && !paused)
+	if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
 	{
         Signals::thread_specific_queue::push(std::bind(&DataStream::AddNode, this, node), _thread_id);
 		return;
@@ -290,9 +302,9 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 }
 void DataStream::AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> nodes)
 {
-	if (boost::this_thread::get_id() != processing_thread.get_id())
+	if (boost::this_thread::get_id() != processing_thread.get_id() && _thread_id != 0 && !paused)
 	{
-        Signals::thread_specific_queue::push(std::bind(&DataStream::AddNodes, this, nodes), Signals::get_thread_id(processing_thread.get_id()));
+        Signals::thread_specific_queue::push(std::bind(&DataStream::AddNodes, this, nodes), _thread_id);
 		return;
 	}
     for(auto& node: nodes)
@@ -333,6 +345,7 @@ void DataStream::StopThread()
     processing_thread.interrupt();
     processing_thread.join();
 	sig_StopThreads();
+	LOG(trace);
 }
 
 
@@ -340,12 +353,14 @@ void DataStream::PauseThread()
 {
     paused = true;
 	sig_StopThreads();
+	LOG(trace);
 }
 
 void DataStream::ResumeThread()
 {
     paused = false;
 	sig_StartThreads();
+	LOG(trace);
 }
 
 void DataStream::process()
@@ -378,8 +393,10 @@ void DataStream::process()
 		{
 			dirty_flag = true;
 		}, std::placeholders::_1), this);
+
 	if(_thread_id == 0)
 		_thread_id = Signals::get_this_thread();
+
     LOG(info) << "Starting stream thread";
     while(!boost::this_thread::interruption_requested())
     {
@@ -387,44 +404,42 @@ void DataStream::process()
         {
             Signals::thread_specific_queue::run(_thread_id);
 
-            if (frame_grabber != nullptr)
-            {
-                if (dirty_flag)
-                {
-                    dirty_flag = false;
-                    TS<SyncedMemory> current_frame;
-                    std::vector<rcc::shared_ptr<Nodes::Node>> current_nodes;
-                    {
-                        try
-                        {
-                            std::lock_guard<std::mutex> lock(nodes_mtx);
-                            rmt_ScopedCPUSample(GrabbingFrame);
-                            current_frame = frame_grabber->GetNextFrame(streams[iteration_count % 2]);
-                            current_nodes = top_level_nodes;
-                        }CATCH_MACRO
-                    }
-                    for (auto& node : current_nodes)
-                    {
-                        if(node->pre_check(current_frame))
-                            node->process(current_frame, streams[iteration_count % 2]);
-                    }
-                    for(auto sink : variable_sinks)
-                    {
-                        sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
-                    }
-                    ++iteration_count;
-                    if(!dirty_flag)
-                        LOG(trace) << "Dirty flag not set and end of iteration " << iteration_count << " with frame number " << current_frame.frame_number;
-                }
-                else
-                {
-                    // No update to parameters or variables since last run
-                }
-            }
-            else
-            {
-                // Thread was launched without a frame grabber
-            }
+			if(dirty_flag)
+			{
+				dirty_flag = false;
+				TS<SyncedMemory> current_frame;
+				std::vector<rcc::shared_ptr<Nodes::Node>> current_nodes;
+				{
+					std::lock_guard<std::mutex> lock(nodes_mtx);
+					current_nodes = top_level_nodes;
+				}
+				if (frame_grabber != nullptr)
+				{
+					try
+					{
+						rmt_ScopedCPUSample(GrabbingFrame);
+						current_frame = frame_grabber->GetNextFrame(streams[iteration_count % 2]);
+								
+					}CATCH_MACRO		
+				}
+				for (auto& node : current_nodes)
+				{
+					if(node->pre_check(current_frame))
+					{
+						try
+						{
+							node->process(current_frame, streams[iteration_count % 2]);
+						}CATCH_MACRO
+					}
+				}
+				for(auto sink : variable_sinks)
+				{
+					sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
+				}
+				++iteration_count;
+				if(!dirty_flag)
+					LOG(trace) << "Dirty flag not set and end of iteration " << iteration_count << " with frame number " << current_frame.frame_number;
+			}
         }else
         {
             boost::this_thread::sleep_for(boost::chrono::milliseconds(100));

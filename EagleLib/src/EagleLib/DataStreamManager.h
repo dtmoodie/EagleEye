@@ -69,7 +69,7 @@ namespace EagleLib
 
         std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes();
 
-        bool LoadDocument(const std::string& document);
+        bool LoadDocument(const std::string& document, const std::string& prefered_loader = "");
         
         int get_stream_id();
 
@@ -109,7 +109,7 @@ namespace EagleLib
 		cv::cuda::Stream										streams[2];
         std::vector<IVariableSink*>                             variable_sinks;
     public:
-		SIGNALS_BEGIN(DataStream)
+		SIGNALS_BEGIN(DataStream);
 			SIG_SEND(StartThreads);
 			SIG_SEND(StopThreads);
 		SIGNALS_END

@@ -102,10 +102,9 @@ namespace EagleLib
     {
     public:
         FrameGrabberBuffered();
-        ~FrameGrabberBuffered();
+        virtual ~FrameGrabberBuffered();
         
 		virtual int GetFrameNumber();
-        virtual int GetNumFrames() = 0;
         
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
         virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
@@ -146,14 +145,14 @@ namespace EagleLib
 		virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
 		virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
 	public:
-		~FrameGrabberThreaded();
+		virtual ~FrameGrabberThreaded();
 		virtual void Init(bool firstInit);
 		
 		SIGNALS_BEGIN(FrameGrabberThreaded, FrameGrabberBuffered);
-			AUTO_SLOT(StartThreads, void)
-			AUTO_SLOT(StopThreads, void)
-			AUTO_SLOT(PauseThreads, void)
-			AUTO_SLOT(ResumeThreads, void)
+			AUTO_SLOT(void, StartThreads)
+			AUTO_SLOT(void, StopThreads)
+			AUTO_SLOT(void, PauseThreads)
+			AUTO_SLOT(void, ResumeThreads)
 		SIGNALS_END
 	};
 
