@@ -88,3 +88,12 @@ TS<SyncedMemory> tcpserver::doProcess(TS<SyncedMemory> img, cv::cuda::Stream &st
 
 static EagleLib::Nodes::NodeInfo g_registerer_tcpserver_sink("tcpserver", { "Image", "Sink" });
 REGISTERCLASS(tcpserver, &g_registerer_tcpserver_sink);
+
+
+
+
+void BufferedHeartbeatRtsp::NodeInit(bool firstInit)
+{
+
+}
+

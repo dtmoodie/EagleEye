@@ -26,7 +26,8 @@ namespace EagleLib
         virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
 
         SIGNALS_BEGIN(frame_grabber_rtsp, frame_grabber_gstreamer)
-            SLOT_DEF(seek_relative_msec, void, double);
+			SLOT_DEF(void, seek_relative_msec, double);
+			REGISTER_SLOT(seek_relative_msec);
         SIGNALS_END
         
     protected:

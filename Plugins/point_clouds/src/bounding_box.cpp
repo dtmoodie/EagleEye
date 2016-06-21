@@ -48,7 +48,7 @@ void bounding_box::contains(cv::InputArray points, cv::InputOutputArray mask, cv
 	CV_Assert(points.depth() == CV_32F);
 	if(points.type() == cv::_InputArray::CUDA_GPU_MAT)
 	{
-		detail::contains_kernel(points.getGpuMat(), mask.getGpuMatRef(), _transform, _size, stream);
+		//detail::contains_kernel(points.getGpuMat(), mask.getGpuMatRef(), _transform, _size, stream);
 	}else
 	{
 		cv::Mat _points = points.getMat();

@@ -58,13 +58,53 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
 
 namespace EagleLib
 {
+	class PLUGIN_EXPORTS gstreamer_base
+	{
+	protected:
+		// The gstreamer pipeline
+		GstElement*     _pipeline;
+		GstClockTime    _timestamp;
+		time_t          _prevTime;
+		time_t          _delta;
+		virtual void cleanup();
+		bool _caps_set;
+
+	public:
+		gstreamer_base();
+		virtual ~gstreamer_base();
+		virtual bool create_pipeline(const std::string& pipeline_);
+		virtual bool start_pipeline();
+		virtual bool stop_pipeline();
+		virtual bool pause_pipeline();
+		virtual GstState get_pipeline_state();
+
+
+		static std::vector<std::string> get_interfaces();
+		static std::vector<std::string> get_gstreamer_features(const std::string& filter = "");
+		static bool check_feature(const std::string& feature_name);
+	};
+	// used to feed data into EagleEye from gstreamer, use when creating frame grabbers
+	class PLUGIN_EXPORTS gstreamer_src_base: public gstreamer_base
+	{
+	protected:
+		GstElement* _appsink;
+		guint           _new_sample_id;
+		guint           _new_preroll_id;
+	public:
+		virtual ~gstreamer_src_base();
+		virtual bool create_pipeline(const std::string& pipeline_);
+		// Called when data is ready to be pulled from the appsink
+		virtual GstFlowReturn on_pull() = 0;
+	};
+
+
     namespace Nodes
     {
-        class PLUGIN_EXPORTS gstreamer_sink_base: public Node
+		// Used to feed a gstreamer pipeline from EagleEye
+        class PLUGIN_EXPORTS gstreamer_sink_base: public gstreamer_base, public Node
         {
         protected:
-            // The gstreamer pipeline
-            GstElement*     _pipeline;
+            
             // The output of EagleLib's processing pipeline and the input to the gstreamer pipeline
             GstElement*     _source;
             // id for the need data signal
@@ -72,33 +112,21 @@ namespace EagleLib
             // id for the enough data signal
 		    guint           _enough_data_id;
 
-            GstClockTime    _timestamp;
-		    time_t          _prevTime;
-		    time_t          _delta;
-
-            void cleanup();
-            bool _feed_enabled;
-            bool _caps_set;
+			bool _feed_enabled;
+			virtual void cleanup();
         public:
 
             gstreamer_sink_base();
-            ~gstreamer_sink_base();
-            virtual void NodeInit(bool firstInit);
-            virtual void Serialize(ISimpleSerializer* pSerializer);
-        
-            virtual bool create_pipeline(const std::string& pipeline_);
-            virtual bool set_caps(cv::Size image_size, int channels, int depth = CV_8U);
+            virtual ~gstreamer_sink_base();
+            
+			
+			virtual bool create_pipeline(const std::string& pipeline_);
+			virtual bool set_caps(cv::Size image_size, int channels, int depth = CV_8U);
 
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
+			// Used for gstreamer to indicate that the appsrc needs to either feed data or stop feeding data
             virtual void start_feed();
             virtual void stop_feed();
-            virtual bool start_pipeline();
-            virtual bool stop_pipeline();
-            virtual bool pause_pipeline();
-			virtual GstState get_pipeline_state();
-            static std::vector<std::string> get_interfaces();
-            static std::vector<std::string> get_gstreamer_features(const std::string& filter = "");
-            static bool check_feature(const std::string& feature_name);
         };
 
 

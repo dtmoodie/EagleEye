@@ -96,19 +96,22 @@ bool vtkPointCloudPlotter::AcceptsParameter(Parameters::Parameter* param)
 
 void vtkPointCloudPlotter::SetInput(Parameters::Parameter* param_)
 {
-	auto type = param_->GetTypeInfo();
-	if(type == Loki::TypeInfo(typeid(cv::cuda::GpuMat)))
+	if(param_)
 	{
-		vtkPlotter::SetInput(param_);
-		_connections[&param_->update_signal] = param_->update_signal.connect(std::bind(&vtkPointCloudPlotter::OnGpuMatParameterUpdate, this, std::placeholders::_1));
-		
-	}else if(type == Loki::TypeInfo(typeid(cv::Mat)))
-	{
-	
-	}else if(type == Loki::TypeInfo(typeid(EagleLib::SyncedMemory)))
-	{
-	
-	}
+		auto type = param_->GetTypeInfo();
+		if(type == Loki::TypeInfo(typeid(cv::cuda::GpuMat)))
+		{
+			vtkPlotter::SetInput(param_);
+			_connections[&param_->update_signal] = param_->update_signal.connect(std::bind(&vtkPointCloudPlotter::OnGpuMatParameterUpdate, this, std::placeholders::_1));
+
+		}else if(type == Loki::TypeInfo(typeid(cv::Mat)))
+		{
+
+		}else if(type == Loki::TypeInfo(typeid(EagleLib::SyncedMemory)))
+		{
+
+		}
+	}	
 }
 
 void vtkPointCloudPlotter::OnMatParameterUpdate(cv::cuda::Stream* stream)

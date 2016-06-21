@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gstreamer.hpp"
+
 namespace EagleLib
 {
 	namespace Nodes
@@ -16,6 +17,5 @@ namespace EagleLib
 			virtual void NodeInit(bool firstInit);
 			virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
 		};
-
 	}
 }
