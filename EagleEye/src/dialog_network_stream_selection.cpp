@@ -9,7 +9,7 @@ dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent
     updateParameterPtr("url history", &url_history);
     variable_storage::instance().load_parameters(this);
     ui->list_url_history->installEventFilter(this);
-    connect(ui->list_url_history, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(on_item_clicked(QListWidgetItem*)));
+    QObject::connect(ui->list_url_history, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(on_item_clicked(QListWidgetItem*)));
     refresh_history();
 }
 
@@ -18,7 +18,7 @@ dialog_network_stream_selection::~dialog_network_stream_selection()
     url_history.clear();
     for(int i = 0; i < ui->list_url_history->count(); ++i)
     {
-        url_history.insert(ui->list_url_history->item(i)->text().toStdString());
+        url_history.insert(std::make_pair(ui->list_url_history->item(i)->text().toStdString(),std::string("")));
     }
     variable_storage::instance().save_parameters(this);
     delete ui;
@@ -27,8 +27,9 @@ dialog_network_stream_selection::~dialog_network_stream_selection()
 void dialog_network_stream_selection::accept()
 {
     url = ui->txt_url_entry->toPlainText();
-    url_history.insert(url.toStdString());
-    ui->list_url_history->addItem(new QListWidgetItem(url));
+	preferred_loader = ui->txt_frame_grabber_overload->toPlainText();
+    url_history.insert(std::make_pair(url.toStdString(), preferred_loader.toStdString()));
+	ui->list_url_history->addItem(new QListWidgetItem(url));
     refresh_history();
     this->close();
 }
@@ -43,7 +44,7 @@ void dialog_network_stream_selection::refresh_history()
     ui->list_url_history->clear();
     for(auto& itr : url_history)
     {
-        ui->list_url_history->addItem(new QListWidgetItem(QString::fromStdString(itr)));
+        ui->list_url_history->addItem(new QListWidgetItem(QString::fromStdString(itr.first)));
     }
 }
 void dialog_network_stream_selection::on_item_clicked(QListWidgetItem* item)

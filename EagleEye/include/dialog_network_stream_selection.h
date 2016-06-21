@@ -16,6 +16,7 @@ public:
     explicit dialog_network_stream_selection(QWidget *parent = 0);
     ~dialog_network_stream_selection();
     QString url;
+	QString preferred_loader;
     bool eventFilter(QObject *object, QEvent *event);
 public slots:
     void accept();
@@ -27,7 +28,7 @@ signals:
 private:
     void refresh_history();
     Ui::dialog_network_stream_selection *ui;
-    std::set<std::string> url_history;
+    std::set<std::pair<std::string, std::string>> url_history;
 };
 
 #endif // DIALOG_NETWORK_STREAM_SELECTION_H

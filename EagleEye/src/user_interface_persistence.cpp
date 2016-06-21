@@ -1,5 +1,5 @@
-#ifndef OPENCV_FOUND
-#define OPENCV_FOUND
+#ifndef HAVE_OPENCV
+#define HAVE_OPENCV
 #endif
 #include "parameters/Persistence/OpenCV.hpp"
 #include "user_interface_persistence.h"

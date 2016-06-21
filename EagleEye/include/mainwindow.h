@@ -88,7 +88,7 @@ private slots:
 
     void on_btnStop_clicked();
     void on_nodeUpdate(EagleLib::Nodes::Node* node);
-    void load_file(QString file);
+    void load_file(QString file, QString preferred_loader = "");
     void on_persistence_timeout();
 
 signals:

@@ -1,5 +1,5 @@
 #define PARAMETERS_GENERATE_UI
-#define OPENCV_FOUND
+#define HAVE_OPENCV
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <../remotery/lib/Remotery.h>
@@ -429,12 +429,12 @@ void MainWindow::onLoadDirectoryClicked()
         dir_load_path = std_filename;
     load_file(filename);
 }
-void MainWindow::load_file(QString filename)
+void MainWindow::load_file(QString filename, QString preferred_loader)
 {
     if (EagleLib::DataStream::CanLoadDocument(filename.toStdString()))
     {
         auto stream = EagleLib::DataStreamManager::instance()->create_stream();
-        if(stream->LoadDocument(filename.toStdString()))
+        if(stream->LoadDocument(filename.toStdString(), preferred_loader.toStdString()))
         {
             data_streams.push_back(stream);
             stream->StartThread();
@@ -828,7 +828,7 @@ void MainWindow::on_actionOpen_Network_triggered()
     dlg.exec();
     if(dlg.url.size())
     {
-        load_file(dlg.url);
+        load_file(dlg.url, dlg.preferred_loader);
     }
 }
 

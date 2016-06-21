@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OPENCV_FOUND
-#define OPENCV_FOUND
+#ifndef HAVE_OPENCV
+#define HAVE_OPENCV
 #endif
 #ifndef PARAMTERS_GENERATE_PERSISTENCE
 #define PARAMTERS_GENERATE_PERSISTENCE
