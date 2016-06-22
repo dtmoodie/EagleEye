@@ -204,7 +204,7 @@ namespace rcc
 		typedef T element_type;
 		template<class U> weak_ptr(const shared_ptr<U>& other):
 			IObjectNotifiable(),
-			m_object(dynamic_cast<T*>(other.get())), refCount(other.refCount)
+			m_object(dynamic_cast<T*>(other.m_object)), refCount(other.refCount)
 		{
 		
 		}
@@ -255,6 +255,12 @@ namespace rcc
 	    }
         weak_ptr& operator=(IObject * r)
         {
+            if(r == nullptr)
+            {
+                m_object = nullptr;
+                m_objectId.SetInvalid();
+                return *this;
+            }
             m_object = dynamic_cast<T*>(r);
             m_objectId = m_object->GetObjectId();
             return *this;
@@ -291,6 +297,19 @@ namespace rcc
             if(m_object)
                 m_objectId = m_object->GetObjectId();
 	    }
+        void reset(T* r = nullptr)
+        {
+            m_object = r;
+            if(r)
+            {
+                m_objectId = r->GetObjectId();
+            }
+            else
+            {
+                m_objectId.SetInvalid();
+            }
+            refCount = nullptr;
+        }
 	    T* get()
 	    {
 		    assert(m_object != nullptr);

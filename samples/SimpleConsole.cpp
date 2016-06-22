@@ -196,8 +196,8 @@ int main(int argc, char* argv[])
     }else
     {
         std::vector<rcc::shared_ptr<EagleLib::IDataStream>> _dataStreams;
-        EagleLib::IDataStream* current_stream = nullptr;
-        EagleLib::Nodes::Node* current_node = nullptr;
+        rcc::weak_ptr<EagleLib::IDataStream> current_stream;
+        rcc::weak_ptr<EagleLib::Nodes::Node> current_node;
 		Parameters::Parameter* current_param = nullptr;
 
         auto print_options = []()->void
@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
 				"    parameters      -- prints all parameters of current node or stream\n"
 				"    current         -- prints what is currently selected (default)\n"  
 				"    signals         -- prints current signal map\n"
-				"    inputs          -- prints possible inputs"
+				"    inputs          -- prints possible inputs\n"
 				" - set              -- Set a parameters value\n"
 				"    name value      -- name value pair to be applied to parameter\n"
 				" - select           -- Select object\n"
@@ -233,7 +233,10 @@ int main(int argc, char* argv[])
                 " - help             -- Print this help\n"
                 " - quit             -- Close program and cleanup\n"
                 " - log              -- change logging level\n"
-			    " - recompile        -- checks if any files need to be recompiled\n";
+                " - link             -- add link directory\n"
+			    " - recompile        \n"
+                "   check            -- checks if any files need to be recompiled\n"
+                "   swap             -- swaps any objects that were recompiled\n";
         };
 
         std::map<std::string, std::function<void(std::string)>> function_map;
@@ -265,11 +268,16 @@ int main(int argc, char* argv[])
 		};
         function_map["load_file"] = [&_dataStreams](std::string doc)->void
         {
+            if(doc.size() == 0)
+            {
+                auto stream = EagleLib::IDataStream::create("");
+                _dataStreams.push_back(stream);
+            }
             if(EagleLib::IDataStream::CanLoadDocument(doc))
             {
                 LOG(debug) << "Found a frame grabber which can load " << doc;
                 auto stream = EagleLib::IDataStream::create(doc);
-                if(stream->LoadDocument(doc))
+                if(stream)
                 {
 					stream->StartThread();
                     _dataStreams.push_back(stream);
@@ -307,7 +315,7 @@ int main(int argc, char* argv[])
                 }
                 else if(current_node)
                 {
-                    PrintNodeTree(current_node, 0);
+                    PrintNodeTree(current_node.get(), 0);
                 }
             }
             if(what == "parameters")
@@ -319,7 +327,8 @@ int main(int argc, char* argv[])
                 }
                 if(current_stream)
                 {
-                    parameters = current_stream->GetFrameGrabber()->getParameters();
+                    if(auto fg = current_stream->GetFrameGrabber())
+                        parameters = fg->getParameters();
                 }
                 for(auto& itr : parameters)
                 {
@@ -338,7 +347,10 @@ int main(int argc, char* argv[])
             {
                 if(current_stream)
                 {
-                    std::cout << " - Current stream: " << current_stream->GetFrameGrabber()->GetSourceFilename() << "\n";
+                    if(auto fg = current_stream->GetFrameGrabber())
+                        std::cout << " - Current stream: " << fg->GetSourceFilename() << "\n";
+                    else
+                        std::cout << " - Current stream: " << current_stream->GetPerTypeId() << "\n";
                     return;
                 }
                 if(current_node)
@@ -396,6 +408,26 @@ int main(int argc, char* argv[])
 					LOG(info) << ss.str();
 				}
 			}
+            if(what == "projects")
+            {
+                auto project_count = EagleLib::ObjectManager::Instance().getProjectCount();
+                std::stringstream ss;
+                for(int i = 0; i < project_count; ++i)
+                {
+                    ss << i << " - " << EagleLib::ObjectManager::Instance().getProjectName(i) << "\n";
+                }
+                LOG(info) << ss.str();
+            }
+            if(what == "plugins")
+            {
+                auto plugins = EagleLib::ListLoadedPlugins();
+                std::stringstream ss;
+                for(auto& plugin : plugins)
+                {
+                    ss << plugin << "\n";
+                }
+                LOG(info) << ss.str();
+            }
 		};
         function_map["select"] = [&_dataStreams,&current_stream, &current_node, &current_param](std::string what)
         {
@@ -418,11 +450,15 @@ int main(int argc, char* argv[])
                 LOG(info) << "Selecting stream " << idx;
                 for(auto& itr : _dataStreams)
                 {
-                    if(itr->GetPerTypeId() == idx)
+                    if(itr != nullptr)
                     {
-                        current_stream = itr.get();
-                        current_node = nullptr;
-                        return;
+                        if(itr->GetPerTypeId() == idx)
+                        {
+                            current_stream = itr.get();
+                            current_node.reset();
+                            current_param = nullptr;
+                            return;
+                        }
                     }
                 }
             }
@@ -434,8 +470,9 @@ int main(int argc, char* argv[])
                 {
                     if(node->getTreeName() == what)
                     {
-                        current_stream = nullptr;
+                        current_stream.reset();
                         current_node = node.get();
+                        current_param = nullptr;
                         return;
                     }
                 }
@@ -447,7 +484,7 @@ int main(int argc, char* argv[])
 				if(child)
 				{
 					current_node = child.get();
-					current_stream = nullptr;
+					current_stream.reset();
 					current_param = nullptr;
 				}else
 				{
@@ -457,7 +494,7 @@ int main(int argc, char* argv[])
 						if(param->GetName().find(what) != std::string::npos)
 						{
 							current_param = param;
-							current_stream = nullptr;
+							current_stream.reset();
 						}
 					}
 				}
@@ -467,11 +504,11 @@ int main(int argc, char* argv[])
 		{
 			if(current_stream)
 			{
-				auto itr = std::find(_dataStreams.begin(), _dataStreams.end(), current_stream);
+				auto itr = std::find(_dataStreams.begin(), _dataStreams.end(), current_stream.get());
 				if(itr != _dataStreams.end())
 				{
 					_dataStreams.erase(itr);
-					current_stream = nullptr;
+					current_stream.reset();
 					LOG(info) << "Sucessfully deleted stream";
 					return;
 				}
@@ -479,14 +516,14 @@ int main(int argc, char* argv[])
 			{
 				if(auto parent = current_node->getParent())
 				{
-					parent->removeChild(current_node);
-					current_node = nullptr;
+					parent->removeChild(current_node.get());
+					current_node.reset();
 					LOG(info) << "Sucessfully removed node from parent node";
 					return;
 				}else if(auto stream = current_node->GetDataStream())
 				{
-					stream->RemoveNode(current_node);
-					current_node = nullptr;
+					stream->RemoveNode(current_node.get());
+					current_node.reset();
 					LOG(info) << "Sucessfully removed node from datastream";
 					return;
 				}
@@ -532,7 +569,7 @@ int main(int argc, char* argv[])
 			}
 			if(current_node)
 			{
-				EagleLib::NodeManager::getInstance().addNode(name, current_node);
+				EagleLib::NodeManager::getInstance().addNode(name, current_node.get());
 			}
         };
 		function_map["set"] = [&current_node, &current_stream, &current_param](std::string value)->void
@@ -549,7 +586,13 @@ int main(int argc, char* argv[])
 			}
 			if(current_param)
 			{
-				Parameters::Persistence::Text::DeSerialize(&value, current_param);
+                auto pos = value.find(current_param->GetName());
+                if(pos != std::string::npos)
+                {
+                    value = value.substr(current_param->GetName().size());
+                }
+				if(Parameters::Persistence::Text::DeSerialize(&value, current_param))
+                    return;
 			}
 			if (current_node)
 			{
@@ -557,11 +600,11 @@ int main(int argc, char* argv[])
 				for(auto& param : params)
 				{
 					auto pos = value.find(param->GetName());
-					if(pos != std::string::npos)
+					if(pos != std::string::npos && value.size() > param->GetName().size() + 1 && value[param->GetName().size()] == ' ')
 					{
-						LOG(info) << "Setting value for parameter " << param->GetName() << " to " << value.substr(pos);
+						LOG(info) << "Setting value for parameter " << param->GetName() << " to " << value.substr(pos + param->GetName().size() + 1);
 						std::stringstream ss;
-						ss << value.substr(pos);
+						ss << value.substr(pos + param->GetName().size() + 1);
 						Parameters::Persistence::Text::DeSerialize(&ss, param);
 						return;
 					}
@@ -635,8 +678,6 @@ int main(int argc, char* argv[])
                 proxy->send(signals[idx], "");
 				delete proxy;
             }
-			
-			
 		};
         function_map["log"] = [](std::string level)
         {
@@ -653,36 +694,52 @@ int main(int argc, char* argv[])
 		if (level == "fatal")
 			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
         };
-		bool swap_required = false;
-		function_map["recompile"] = [&swap_required, &_dataStreams](std::string null)
+		function_map["link"] = [](std::string directory)
+        {
+            int idx = 0;
+            if(auto pos = directory.find(',') != std::string::npos)
+            {
+                idx = boost::lexical_cast<int>(directory.substr(0, pos));
+                directory = directory.substr(pos + 1);
+            }
+            EagleLib::ObjectManager::Instance().addLinkDir(directory, idx);
+        };
+        
+        
+        bool swap_required = false;
+		function_map["recompile"] = [&current_param, &current_node, &current_stream, &swap_required, &_dataStreams](std::string action)
 		{
-			if(swap_required)
-			{
-				if(EagleLib::ObjectManager::Instance().CheckRecompile(true))
-				{
-					LOG(info) << "Still compiling";
-				}else
-				{
-					LOG(info) << "Recompile complete";
-					swap_required = false;
-					for(auto& stream : _dataStreams)
-					{
-						stream->StartThread();
-					}
-				}
-			}else
-			{
-			
-			}
-			if(EagleLib::ObjectManager::Instance().CheckRecompile(false))
-			{
-				swap_required = true;
-				for(auto& stream : _dataStreams)
+            if(action == "check")
+            {
+                EagleLib::ObjectManager::Instance().CheckRecompile();
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+                if(EagleLib::ObjectManager::Instance().CheckIsCompiling())
+                {
+                    LOG(info) << "Recompiling...";
+                }
+            }
+            if(action == "swap")
+            {
+                for(auto& stream : _dataStreams)
 				{
 					stream->StopThread();
 				}
-				LOG(info) << "Recompiling.....";
-			}
+                if(EagleLib::ObjectManager::Instance().PerformSwap())
+                {
+                    LOG(info) << "Recompile complete";
+                }
+                for(auto& stream : _dataStreams)
+				{
+					stream->StartThread();
+				}
+                current_param = nullptr;
+                current_stream.reset();
+                current_node.reset();
+            }
+            if(action == "abort")
+            {
+                EagleLib::ObjectManager::Instance().abort_compilation();
+            }
 		};
 		if (vm.count("file"))
 		{
@@ -690,7 +747,7 @@ int main(int argc, char* argv[])
 		}
 		
 		print_options();
-        
+        EagleLib::ObjectManager::Instance().CheckRecompile();
 		while(!quit)
         {
             std::string command_line;
@@ -704,7 +761,14 @@ int main(int argc, char* argv[])
                 std::string rest;
 				std::getline(ss, rest);
                 LOG(debug) << "Executing command (" << command << ") with arguments: " << rest;
-                function_map[command](rest);
+                try
+                {
+                    function_map[command](rest);
+                }catch(...)
+                {
+                    LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed miserably";
+                }
+                
             }else
             {
                 LOG(warning) << "Invalid command: " << command_line;

@@ -555,6 +555,8 @@ void DataStream::process()
 IDataStream::Ptr IDataStream::create(const std::string& document, const std::string& preferred_frame_grabber)
 {
 	auto stream = ObjectManager::Instance().GetObject<IDataStream, IID_DataStream>("DataStream");
+    if(document.size() == 0)
+        return stream;
 	if(stream->LoadDocument(document, preferred_frame_grabber))
 	{
 		return stream;

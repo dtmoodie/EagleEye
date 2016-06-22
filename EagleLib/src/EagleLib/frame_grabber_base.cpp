@@ -294,4 +294,5 @@ void FrameGrabberThreaded::Init(bool firstInit)
 void FrameGrabberBuffered::Serialize(ISimpleSerializer* pSerializer)
 {
     IFrameGrabber::Serialize(pSerializer);
+    SERIALIZE(frame_buffer);
 }

@@ -379,7 +379,7 @@ namespace EagleLib
 	protected:
 		IDataStream*     								                        _dataStream;
 		long long																_current_timestamp;
-        std::shared_ptr<Parameters::IVariableManager>								        _variable_manager;
+        std::shared_ptr<Parameters::IVariableManager>						    _variable_manager;
 
         rcc::weak_ptr<Node>                                                     parent;
         // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1

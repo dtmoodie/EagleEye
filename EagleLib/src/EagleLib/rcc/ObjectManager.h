@@ -77,6 +77,7 @@ namespace EagleLib
         IObject* GetObject(ObjectId oid);
         rcc::weak_ptr<IObject> GetSingleton(const std::string& object_name);
 		static ObjectManager& Instance();
+
 		void addIncludeDir(const std::string& dir, unsigned short projId = 0);
 		void addDefinitions(const std::string& defs, unsigned short projId = 0);
 		void addSourceFile(const std::string& file);
@@ -86,13 +87,19 @@ namespace EagleLib
 		int parseProjectConfig(const std::string& file);
 		std::vector<std::string> getLinkDirs(unsigned short projId = 0);
 		std::vector<std::string> getIncludeDirs(unsigned short projId = 0);
-		virtual bool TestRuntimeCompilation();
+		
+        virtual bool TestRuntimeCompilation();
 		RCppOptimizationLevel getOptimizationLevel();
 		void setOptimizationLevel(RCppOptimizationLevel level);
-		int getNumLoadedModules();
+		
+        int getNumLoadedModules();
 		void setCompileCallback(std::function<void(const std::string&, int)> & f);
 		void RegisterConstructorAddedCallback(std::function<void(void)> f);
-		virtual bool CheckRecompile(bool swapAllowed = true);
+		
+        virtual bool CheckRecompile(bool swapAllowed = true);
+        virtual bool CheckRecompile() const;
+        virtual bool PerformSwap();
+        virtual bool CheckIsCompiling() const;
         virtual void abort_compilation();
 		void setupModule(IPerModuleInterface* pPerModuleInterface);
 		std::vector<std::pair<std::string, int>> getObjectList();

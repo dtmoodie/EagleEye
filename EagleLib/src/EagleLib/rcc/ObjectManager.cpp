@@ -367,6 +367,30 @@ ObjectManager::CheckRecompile(bool swapAllowed)
 	}
 	return false;
 }
+bool ObjectManager::CheckRecompile() const
+{
+    m_pRuntimeObjectSystem->GetFileChangeNotifier()->Update(float(100));
+    return CheckIsCompiling();
+}
+bool ObjectManager::PerformSwap()
+{
+    if (m_pRuntimeObjectSystem->GetIsCompiledComplete())
+	{
+		m_pRuntimeObjectSystem->LoadCompiledModule();
+        std::lock_guard<std::mutex> lock(mtx);
+        for(auto itr = m_sharedPtrs.begin(); itr !=  m_sharedPtrs.end(); ++itr)
+        {
+            (*itr)->notify_swap();    
+        }
+        return true;
+	}
+    return false;
+}
+bool ObjectManager::CheckIsCompiling() const
+{
+    return m_pRuntimeObjectSystem->GetIsCompiling();
+}
+
 void ObjectManager::RegisterConstructorAddedCallback(std::function<void(void)> f)
 {
 	if (f)
