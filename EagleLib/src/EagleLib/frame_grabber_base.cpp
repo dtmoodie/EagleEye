@@ -15,7 +15,7 @@ std::string IFrameGrabber::GetSourceFilename()
 {
     return loaded_document;
 }
-void IFrameGrabber::InitializeFrameGrabber(DataStream* stream)
+void IFrameGrabber::InitializeFrameGrabber(IDataStream* stream)
 {
     parent_stream = stream;
 	
@@ -32,7 +32,8 @@ void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
     SERIALIZE(loaded_document);
     SERIALIZE(parent_stream);
 }
-FrameGrabberBuffered::FrameGrabberBuffered()
+FrameGrabberBuffered::FrameGrabberBuffered():
+	IFrameGrabber()
 {
     buffer_begin_frame_number = 0;
     buffer_end_frame_number = 0;

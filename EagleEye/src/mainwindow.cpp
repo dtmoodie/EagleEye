@@ -431,16 +431,16 @@ void MainWindow::onLoadDirectoryClicked()
 }
 void MainWindow::load_file(QString filename, QString preferred_loader)
 {
-    if (EagleLib::DataStream::CanLoadDocument(filename.toStdString()))
+    if (EagleLib::IDataStream::CanLoadDocument(filename.toStdString()))
     {
-        auto stream = EagleLib::DataStreamManager::instance()->create_stream();
-        if(stream->LoadDocument(filename.toStdString(), preferred_loader.toStdString()))
+        auto stream = EagleLib::IDataStream::create(filename.toStdString(), preferred_loader.toStdString());
+        if(stream)
         {
             data_streams.push_back(stream);
             stream->StartThread();
             auto data_stream_widget = new DataStreamWidget(0, stream);
             auto proxyWidget = nodeGraph->addWidget(data_stream_widget);
-            nodeGraphView->addWidget(proxyWidget, stream->get_stream_id());
+            nodeGraphView->addWidget(proxyWidget, stream.get());
             current_stream = stream;
             data_streams.push_back(stream);
             data_stream_widgets.push_back(data_stream_widget);
@@ -673,7 +673,6 @@ void MainWindow::onWidgetDeleted(DataStreamWidget* widget)
     auto itr2 = std::find(data_streams.begin(), data_streams.end(), stream);
     if(itr2 != data_streams.end())
         data_streams.erase(itr2);
-    EagleLib::DataStreamManager::instance()->destroy_stream(stream.get());
 	if(current_stream.get() == stream.get())
 		current_stream.reset();
 }

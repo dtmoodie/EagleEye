@@ -33,9 +33,9 @@ void NodeView::addWidget(QGraphicsProxyWidget * widget, ObjectId id)
     // If this widget has a parent, draw a line to it
     drawLine2Parent(widget);
 }
-void NodeView::addWidget(QGraphicsProxyWidget* widget, size_t stream_id)
+void NodeView::addWidget(QGraphicsProxyWidget* widget, EagleLib::IDataStream* stream_)
 {
-    dataStreamWidget[stream_id] = widget;
+    dataStreamWidget[stream_] = widget;
 }
 QGraphicsProxyWidget* NodeView::getWidget(ObjectId id)
 {
@@ -48,7 +48,7 @@ void NodeView::removeWidget(ObjectId id)
 {
 	widgetMap.erase(id);
 }
-QGraphicsProxyWidget* NodeView::getWidget(size_t id)
+QGraphicsProxyWidget* NodeView::getWidget(EagleLib::IDataStream* id)
 {
     auto itr = dataStreamWidget.find(id);
     if (itr != dataStreamWidget.end())
@@ -123,7 +123,7 @@ void NodeView::on_deleteNode()
         auto stream = streamWidget->GetStream();
         stream->StartThread();
         emit widgetDeleted(streamWidget);
-		dataStreamWidget.erase(streamWidget->GetStream()->get_stream_id());
+		dataStreamWidget.erase(stream.get());
     }
     scene()->removeItem(currentWidget);
     delete currentWidget;
@@ -344,8 +344,7 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
             }
         }else
         {
-            auto id = node->GetDataStream()->get_stream_id();
-            auto streamWidget = getWidget(id);
+            auto streamWidget = getWidget(node->GetDataStream());
             if(streamWidget)
             {
                 auto center = streamWidget->pos() += QPointF(streamWidget->size().width() / 2, streamWidget->size().height() / 2);
@@ -366,7 +365,7 @@ QGraphicsProxyWidget* NodeView::getParent(EagleLib::Nodes::Node::Ptr child)
     }
     return nullptr;
 }
-QGraphicsProxyWidget* NodeView::getStream(size_t stream_id)
+QGraphicsProxyWidget* NodeView::getStream(EagleLib::IDataStream* stream_id)
 {
     auto itr = dataStreamWidget.find(stream_id);
     if(itr != dataStreamWidget.end())

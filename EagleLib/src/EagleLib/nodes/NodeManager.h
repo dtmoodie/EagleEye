@@ -17,7 +17,7 @@ namespace EagleLib
     {
         class Node;
     }
-	class DataStream;
+	class IDataStream;
 
 	class EAGLE_EXPORTS NodeManager
 	{
@@ -31,7 +31,7 @@ namespace EagleLib
 		rcc::shared_ptr<Nodes::Node> addNode(const std::string& nodeName);
 
 		// Adds a node by name to the data stream or the parent node.  
-		std::vector<rcc::shared_ptr<Nodes::Node>> addNode(const std::string& nodeName, DataStream* parentStream);
+		std::vector<rcc::shared_ptr<Nodes::Node>> addNode(const std::string& nodeName, IDataStream* parentStream);
 		std::vector<rcc::shared_ptr<Nodes::Node>> addNode(const std::string& nodeName, Nodes::Node* parentNode);
 
 

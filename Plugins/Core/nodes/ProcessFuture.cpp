@@ -66,7 +66,7 @@ void ProcessFuture::process_ahead()
         process(frame, stream);
     }
 }
-void ProcessFuture::SetDataStream(DataStream* stream)
+void ProcessFuture::SetDataStream(IDataStream* stream)
 {
 	Node::SetDataStream(stream);
 	_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&ProcessFuture::start_thread, this), this));

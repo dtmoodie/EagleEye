@@ -27,7 +27,7 @@
 
 namespace EagleLib
 {
-    class DataStream;
+    class IDataStream;
 }
 
 namespace Ui {
@@ -119,7 +119,7 @@ private:
 	QGraphicsProxyWidget*                               currentSelectedNodeWidget;
     QGraphicsProxyWidget*                               currentSelectedStreamWidget;
     EagleLib::Nodes::Node::Ptr                          currentNode;
-    EagleLib::DataStream::Ptr                           current_stream;
+    EagleLib::IDataStream::Ptr                          current_stream;
     
     std::vector<EagleLib::Nodes::Node::Ptr>             parentList;
     boost::timed_mutex                                  parentMtx;
@@ -134,7 +134,7 @@ private:
     QWindow*                                            processing_thread_upload_window;
     std::shared_ptr<Signals::connection>                new_parameter_connection;
     std::shared_ptr<Signals::connection>                dirty_flag_connection;
-    std::vector<rcc::shared_ptr<EagleLib::DataStream>>  data_streams;
+    std::vector<rcc::shared_ptr<EagleLib::IDataStream>>  data_streams;
     std::shared_ptr<Signals::connection>                logging_connection;
     std::string file_load_path;
     std::string dir_load_path;

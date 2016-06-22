@@ -19,7 +19,7 @@ RUNTIME_MODIFIABLE_INCLUDE;
 RUNTIME_COMPILER_SOURCEDEPENDENCY;
 namespace EagleLib
 {
-    class DataStream;
+    class IDataStream;
     class ICoordinateManager;
 
     class EAGLE_EXPORTS FrameGrabberInfo: public IObjectInfo
@@ -77,7 +77,7 @@ namespace EagleLib
 		virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream) = 0;
 
         virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager() = 0;
-        virtual void InitializeFrameGrabber(DataStream* stream);
+        virtual void InitializeFrameGrabber(IDataStream* stream);
 
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
@@ -90,7 +90,7 @@ namespace EagleLib
         
 		//Signals::typed_signal_base<void()>* update_signal;
         std::string loaded_document;
-        DataStream* parent_stream;
+        IDataStream* parent_stream;
     };
 
     //   [ 0 ,1, 2, 3, 4, 5 ....... N-5, N-4, N-3, N-2, N-1, N]

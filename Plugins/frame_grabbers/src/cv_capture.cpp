@@ -5,7 +5,8 @@
 using namespace EagleLib;
 
 
-frame_grabber_cv::frame_grabber_cv()
+frame_grabber_cv::frame_grabber_cv():
+	FrameGrabberThreaded()
 {
     playback_frame_number = -1;
 }

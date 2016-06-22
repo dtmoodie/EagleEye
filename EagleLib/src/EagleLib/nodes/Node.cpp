@@ -304,12 +304,16 @@ Node::addChild(Node::Ptr child)
 Node::Ptr
 Node::getChild(const std::string& treeName)
 {
-	
     for(size_t i = 0; i < children.size(); ++i)
     {
         if(children[i]->treeName == treeName)
             return children[i];
     }
+	for(size_t i = 0; i < children.size(); ++i)
+	{
+		if(children[i]->getName() == treeName)
+			return children[i];
+	}
     return Node::Ptr();
 }
 
@@ -640,7 +644,7 @@ bool Node::pre_check(const TS<SyncedMemory>& input)
 {
     return !input.empty() && enabled;
 }
-void Node::SetDataStream(DataStream* stream_)
+void Node::SetDataStream(IDataStream* stream_)
 {
 	
 	if (_dataStream)
@@ -662,7 +666,7 @@ void Node::SetDataStream(DataStream* stream_)
 		child->SetDataStream(_dataStream);
 	}
 }
-DataStream* Node::GetDataStream()
+IDataStream* Node::GetDataStream()
 {
 	if (parent && _dataStream == nullptr)
 	{
@@ -671,8 +675,7 @@ DataStream* Node::GetDataStream()
 	}
 	if (parent == nullptr && _dataStream == nullptr)
 	{
-        NODE_LOG(debug) << "No datastream set, creating";
-        _dataStream = DataStreamManager::instance()->create_stream().get();
+        
 	}	
 	return _dataStream;
 }
