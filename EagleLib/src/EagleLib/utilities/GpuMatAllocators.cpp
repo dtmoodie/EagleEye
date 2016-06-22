@@ -115,7 +115,7 @@ namespace EagleLib
 		}
 		// If we get to this point, then no memory was found, need to allocate new memory
 		blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(std::max(initialBlockSize_ / 2, sizeNeeded))));
-		LOG(debug) << "[GPU] Expanding memory pool by " <<  std::max(initialBlockSize_ / 2, sizeNeeded) / (1024 * 1024) << " MB";
+		LOG(trace) << "[GPU] Expanding memory pool by " <<  std::max(initialBlockSize_ / 2, sizeNeeded) / (1024 * 1024) << " MB";
 		if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, elemSize))
 		{
 			mat->data = ptr;
@@ -144,7 +144,7 @@ namespace EagleLib
         }
         // If we get to this point, then no memory was found, need to allocate new memory
         blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(std::max(initialBlockSize_ / 2, sizeNeeded))));
-		LOG(debug) << "[GPU] Expanding memory pool by " << std::max(initialBlockSize_ / 2, sizeNeeded) / (1024 * 1024) << " MB";
+		LOG(trace) << "[GPU] Expanding memory pool by " << std::max(initialBlockSize_ / 2, sizeNeeded) / (1024 * 1024) << " MB";
         if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, 1))
         {
             memoryUsage += sizeNeeded;
@@ -224,14 +224,14 @@ namespace EagleLib
 			CV_CUDEV_SAFE_CALL(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows));
 			memoryUsage += mat->step*rows;
 			Increment(mat->data, mat->step*rows);
-			LOG(debug) << "[GPU] Allocating block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
+			LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") " << mat->step * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
 		}
 		else
 		{
 			CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
 			memoryUsage += elemSize*cols*rows;
 			Increment(mat->data, elemSize*cols*rows);
-			LOG(debug) << "[GPU] Allocating block of size (" << rows << "," << cols << ") " << cols * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
+			LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") " << cols * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
 			mat->step = elemSize * cols;
 		}
 		mat->refcount = (int*)cv::fastMalloc(sizeof(int));
@@ -294,7 +294,7 @@ namespace EagleLib
 			if((time - std::get<1>(*itr)) > deallocateDelay)
 			{
 				memoryUsage -= std::get<2>(*itr);
-				LOG(debug) << "[GPU] Deallocating block of size " << std::get<2>(*itr) /(1024*1024) << "MB. Which was stale for " << time - std::get<1>(*itr) << " ms";
+				LOG(trace) << "[GPU] Deallocating block of size " << std::get<2>(*itr) /(1024*1024) << "MB. Which was stale for " << time - std::get<1>(*itr) << " ms";
 				CV_CUDEV_SAFE_CALL(cudaFree(std::get<0>(*itr)));
 				itr = deallocateList.erase(itr);
 			}

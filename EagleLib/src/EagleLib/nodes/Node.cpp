@@ -169,7 +169,6 @@ Node::Node():
 	profile = false;
     enabled = true;
 	externalDisplay = false;
-    //parent = nullptr;
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {

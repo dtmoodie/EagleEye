@@ -45,17 +45,17 @@ void CompileLogger::log(int level, const char *format, va_list args)
 	{
 	case 0:
 	{
-		LOG(info) << "[RCC] " << m_buff;
+		LOG(trace) << "[RCC] " << m_buff;
 		break;
 	}
 	case 1:
 	{
-		LOG(warning) << "[RCC] " << m_buff;
+		LOG(debug) << "[RCC] " << m_buff;
 		break;
 	}
 	case 2:
 	{
-		LOG(error) << "[RCC] " << m_buff;
+		LOG(info) << "[RCC] " << m_buff;
 		break;
 	}
 	}

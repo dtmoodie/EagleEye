@@ -66,10 +66,12 @@ namespace EagleLib
 		const std::vector<cv::cuda::GpuMat>& GetGpuMatVec(cv::cuda::Stream& stream);
 		std::vector<cv::cuda::GpuMat>&		 GetGpuMatVecMutable(cv::cuda::Stream& stream);
 
-		void Synchronize();
+		void Synchronize(cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        void ResizeNumMats(int new_size = 1);
+        void ReleaseGpu(cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+
 		int GetNumMats() const;
         bool empty() const;
-		void ResizeNumMats(int new_size = 1);
 		cv::Size GetSize(int index = 0) const;
 		std::vector<int> GetShape() const;
 		int GetDepth() const;

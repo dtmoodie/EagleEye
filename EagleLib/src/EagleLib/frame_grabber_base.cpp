@@ -77,10 +77,13 @@ TS<SyncedMemory> FrameGrabberBuffered::GetNextFrame(cv::cuda::Stream& stream)
 
     boost::mutex::scoped_lock bLock(buffer_mtx);
     // Waiting on the grabbing thread to load frames
+    int attempts = 0;
     while(playback_frame_number > buffer_end_frame_number - 5 )
     {
         LOG(trace) << "Playback frame number (" << playback_frame_number << ") is too close to end of frame buffer (" << buffer_end_frame_number << ") - waiting for new frame to be read";
         frame_grabbed_cv.wait_for(bLock, boost::chrono::milliseconds(10));
+        if(attempts > 500)
+            return TS<SyncedMemory>();
     }
     int index = 0;
 	int desired_frame;
@@ -227,7 +230,7 @@ void EagleLib::FrameGrabberThreaded::StopThreads()
 {
     LOG(info);
     buffer_thread.interrupt();
-    DOIF_LOG_FAIL(buffer_thread.joinable(), buffer_thread.join(), warning);
+    DOIF_LOG_FAIL(buffer_thread.joinable(), buffer_thread.join(), trace);
 }
 void EagleLib::FrameGrabberThreaded::PauseThreads()
 {

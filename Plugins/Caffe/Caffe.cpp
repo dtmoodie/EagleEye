@@ -96,7 +96,6 @@ namespace EagleLib
 		cv::Mat wrapped_output;
 		cv::Scalar channel_mean;
 	public:
-		CaffeImageClassifier();
 		virtual void Serialize(ISimpleSerializer* pSerializer);
 		virtual void NodeInit(bool firstInit);
 		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
@@ -418,5 +417,5 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     TIME
     return img;
 }
-
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CaffeImageClassifier, Image, Extractor, ObjectClassification)
+static EagleLib::Nodes::NodeInfo g_registerer_CaffeImageClassifier("CaffeImageClassifier", { "Image", "Extractor", "ObjectClassification" });
+REGISTERCLASS(CaffeImageClassifier, &g_registerer_CaffeImageClassifier)

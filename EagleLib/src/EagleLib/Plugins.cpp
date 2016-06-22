@@ -51,7 +51,7 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 	if (handle == nullptr)
 	{
 		auto err = GetLastError();
-		LOG(error) << "Failed to load " << plugin_name <<  " due to: [" << err << "] " << GetLastErrorAsString();
+		LOG(debug) << "Failed to load " << plugin_name <<  " due to: [" << err << "] " << GetLastErrorAsString();
 		plugins.push_back(fullPluginPath + " - failed");
 		return false;
 	}
@@ -61,14 +61,14 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 	{
 		if (buildLevel() != BUILD_TYPE)
 		{
-			LOG(info) << "Library debug level does not match";
+			LOG(debug) << "Library debug level does not match";
 			plugins.push_back(fullPluginPath + " - failed");
 			return false;
 		}
 	}
 	else
 	{
-		LOG(warning) << "Build level not defined in library, attempting to load anyways";
+		LOG(debug) << "Build level not defined in library, attempting to load anyways";
 	}
 
 	typedef void(*includeFunctor)();
@@ -76,7 +76,7 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 	if (functor)
 		functor();
 	else
-		LOG(warning) << "Setup Includes not found in plugin " << plugin_name;
+		LOG(debug) << "Setup Includes not found in plugin " << plugin_name;
         
 	typedef IPerModuleInterface* (*moduleFunctor)();
 	moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetPerModuleInterface");
@@ -88,7 +88,7 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 		
 	else
 	{
-		LOG(warning) << "GetPerModuleInterface not found in plugin " << plugin_name;
+		LOG(debug) << "GetPerModuleInterface not found in plugin " << plugin_name;
 		module = (moduleFunctor)GetProcAddress(handle, "GetModule");
 		if (module)
 		{
@@ -97,7 +97,7 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 		}
 		else
 		{
-			LOG(warning) << "GetModule not found in plugin " << plugin_name;
+			LOG(debug) << "GetModule not found in plugin " << plugin_name;
 			FreeLibrary(handle);
 		}	
 	}

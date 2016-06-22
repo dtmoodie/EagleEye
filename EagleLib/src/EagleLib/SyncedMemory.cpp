@@ -1,4 +1,6 @@
 #include "SyncedMemory.h"
+#include <EagleLib/utilities/GpuMatAllocators.h>
+#include <EagleLib/utilities/CudaCallbacks.hpp>
 #ifdef HAVE_MXNET
 
 
@@ -160,15 +162,42 @@ bool SyncedMemory::empty() const
         return h_data[0].empty();
     return true;
 }
-void SyncedMemory::Synchronize()
+void SyncedMemory::Synchronize(cv::cuda::Stream& stream)
 {
 	for(int i = 0; i < h_data.size(); ++i)
 	{
 		if(sync_flags[i] == HOST_UPDATED)
-			d_data[i].upload(h_data[i]);
+			d_data[i].upload(h_data[i], stream);
 		else if(sync_flags[i] == DEVICE_UPDATED)
-			d_data[i].download(h_data[i]);
+			d_data[i].download(h_data[i], stream);
+        sync_flags[i] = SYNCED;
 	}
+}
+
+
+void SyncedMemory::ReleaseGpu(cv::cuda::Stream& stream)
+{
+    for(int i = 0; i < d_data.size(); ++i)
+    {
+        if(sync_flags[i] == DEVICE_UPDATED)
+            d_data[i].download(h_data[i], stream);
+    }
+    if(dynamic_cast<DelayedDeallocator*>(cv::cuda::GpuMat::defaultAllocator()))
+    {
+        EagleLib::cuda::enqueue_callback([this]
+        {
+            for(int i = 0; i < d_data.size(); ++i)
+            {
+                d_data[i].release();
+            }
+        }, stream);
+    }else
+    {
+        for(int i = 0; i < d_data.size(); ++i)
+        {
+            d_data[i].release();
+        }
+    }
 }
 
 cv::Size SyncedMemory::GetSize(int index) const

@@ -54,7 +54,7 @@ void CpuDelayedDeallocationPool::allocate(void** ptr, size_t total, size_t elemS
 			}
             ++index;
 		}
-		LOG(debug) << "Creating new block of page locked memory for allocation.";
+		LOG(trace) << "Creating new block of page locked memory for allocation.";
 		blocks.push_back(
 			std::shared_ptr<CpuMemoryBlock>(
 				new CpuMemoryBlock(std::max(_initial_block_size / 2, total))));
@@ -79,7 +79,7 @@ void CpuDelayedDeallocationPool::allocate(void** ptr, size_t total, size_t elemS
 		}
 	}
 	total_usage += total;
-	LOG(info) << "[CPU] Allocating block of size " << total / (1024 * 1024) << " MB. Total usage: " << total_usage / (1024 * 1024) << " MB";
+	LOG(trace) << "[CPU] Allocating block of size " << total / (1024 * 1024) << " MB. Total usage: " << total_usage / (1024 * 1024) << " MB";
 	cudaSafeCall(cudaMallocHost(ptr, total));
 }
 
@@ -113,7 +113,7 @@ void CpuDelayedDeallocationPool::cleanup(bool force)
 		if((time - std::get<1>(*itr)) > deallocation_delay)
 		{
 			total_usage -= std::get<2>(*itr);
-			LOG(info) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
+			LOG(trace) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
 				<< " MB. Which was stale for " << time - std::get<1>(*itr)
 				<< " ms. Total usage: " << total_usage / (1024 * 1024) << " MB";
 			cudaFreeHost((void*)std::get<0>(*itr));
