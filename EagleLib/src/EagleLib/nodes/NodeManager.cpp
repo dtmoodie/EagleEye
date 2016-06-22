@@ -5,6 +5,7 @@
 #include "Node.h"
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
+
 using namespace EagleLib;
 
 NodeManager& NodeManager::getInstance()
@@ -109,7 +110,7 @@ rcc::shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
 	return rcc::shared_ptr<Nodes::Node>();
 }
 // WIP needs to be tested for complex dependency trees
-std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string& nodeName, DataStream* parentStream)
+std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string& nodeName, IDataStream* parentStream)
 {
 	IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
 	std::vector<rcc::shared_ptr<Nodes::Node>> constructed_nodes;

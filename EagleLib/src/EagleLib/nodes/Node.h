@@ -89,7 +89,7 @@ namespace EagleLib
         class NodeImpl;
     }
     class NodeManager;
-	class DataStream;
+	class IDataStream;
 }
 
 
@@ -256,8 +256,8 @@ namespace EagleLib
         virtual std::vector<Node*>		getNodesInScope();
         virtual Node *					getNodeInScope(const std::string& name);
         virtual void					getNodesInScope(std::vector<Node*>& nodes);
-		virtual void					SetDataStream(DataStream* stream);
-		virtual DataStream*             GetDataStream();
+		virtual void					SetDataStream(IDataStream* stream);
+		virtual IDataStream*            GetDataStream();
 		
 		// ****************************************************************************************************************
 		//
@@ -377,7 +377,7 @@ namespace EagleLib
         void Clock(int line_num);
 		
 	protected:
-		DataStream*     								                        _dataStream;
+		IDataStream*     								                        _dataStream;
 		long long																_current_timestamp;
         std::shared_ptr<Parameters::IVariableManager>								        _variable_manager;
 

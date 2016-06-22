@@ -1,22 +1,10 @@
 #pragma once
-#include <vector>
-#include <memory>
-
 #include "EagleLib/Defs.hpp"
 #include "EagleLib/rcc/shared_ptr.hpp"
 #include "EagleLib/ParameteredIObject.h"
-#include "EagleLib/frame_grabber_base.h"
-#include "EagleLib/nodes/Node.h"
-#include "IViewManager.h"
-#include "ICoordinateManager.h"
-#include "rendering/RenderingEngine.h"
-#include "tracking/ITrackManager.h"
 
-
-
-#include <opencv2/core/cuda.hpp>
-#include <boost/thread.hpp>
-
+#include <vector>
+#include <memory>
 namespace Parameters
 {
 	class IVariableManager;
@@ -32,101 +20,58 @@ namespace EagleLib
 	class ICoordinateManager;
 	class IRenderEngine;
     class ITrackManager;
-    class DataStreamManager;
     class IFrameGrabber;
     class SignalManager;
 	class IParameterBuffer;
     class IVariableSink;
 
-	class EAGLE_EXPORTS DataStream: public TInterface<IID_DataStream, ParameteredIObject>
+	class EAGLE_EXPORTS IDataStream: public TInterface<IID_DataStream, ParameteredIObject>
 	{
 	public:
-        typedef rcc::shared_ptr<DataStream> Ptr;
+        typedef rcc::shared_ptr<IDataStream> Ptr;
+		static Ptr create(const std::string& document, const std::string& preferred_frame_grabber = "");
         static bool CanLoadDocument(const std::string& document);
-		DataStream();
-        ~DataStream();
+
+        virtual ~IDataStream();
 
         // Handles user interactions such as moving the viewport, user interface callbacks, etc
-        rcc::shared_ptr<IViewManager>            GetViewManager();
+        virtual rcc::weak_ptr<IViewManager>            GetViewManager() = 0;
 
         // Handles conversion of coordinate systems, such as to and from image coordinates, world coordinates, render scene coordinates, etc.
-        rcc::shared_ptr<ICoordinateManager>      GetCoordinateManager();
+        virtual rcc::weak_ptr<ICoordinateManager>      GetCoordinateManager() = 0;
         
         // Handles actual rendering of data.  Use for adding extra objects to the scene
-        rcc::shared_ptr<IRenderEngine>           GetRenderingEngine();
+        virtual rcc::weak_ptr<IRenderEngine>           GetRenderingEngine() = 0;
         
         // Handles tracking objects within a stream and communicating with the global track manager to track across multiple data streams
-        rcc::shared_ptr<ITrackManager>            GetTrackManager();
+        virtual rcc::weak_ptr<ITrackManager>            GetTrackManager() = 0;
 
         // Handles actual loading of the image, etc
-        rcc::shared_ptr<IFrameGrabber>           GetFrameGrabber();
+        virtual rcc::weak_ptr<IFrameGrabber>           GetFrameGrabber() = 0;
 
-		Parameters::IVariableManager*		GetVariableManager();
+		virtual Parameters::IVariableManager*			GetVariableManager() = 0;
 
-        SignalManager*							GetSignalManager();
+        virtual SignalManager*							GetSignalManager() = 0;
 
-		IParameterBuffer*						GetParameterBuffer();
+		virtual IParameterBuffer*						GetParameterBuffer() = 0;
 
-        std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes();
+        virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes() = 0;
 
-        bool LoadDocument(const std::string& document, const std::string& prefered_loader = "");
+        virtual bool LoadDocument(const std::string& document, const std::string& prefered_loader = "") = 0;
+
+		virtual std::vector<rcc::shared_ptr<Nodes::Node>> AddNode(const std::string& nodeName) = 0;
+        virtual void AddNode(rcc::shared_ptr<Nodes::Node> node) = 0;
+        virtual void AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node) = 0;
+        virtual void RemoveNode(rcc::shared_ptr<Nodes::Node> node) = 0;
+		virtual void RemoveNode(Nodes::Node* node) = 0;
         
-        int get_stream_id();
-
-        void AddNode(rcc::shared_ptr<Nodes::Node> node);
-        void AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node);
-        void RemoveNode(rcc::shared_ptr<Nodes::Node> node);
+        virtual void StartThread() = 0;
+        virtual void StopThread() = 0;
+		virtual void PauseThread() = 0;
+		virtual void ResumeThread() = 0;
+		virtual void process() = 0;
         
-        void StartThread();
-        void StopThread();
-        void PauseThread();
-        void ResumeThread();
-        void process();
-        
-        void AddVariableSink(IVariableSink* sink);
-        void RemoveVariableSink(IVariableSink* sink);
-
-    protected:
-        friend class DataStreamManager;
-        // members
-        int stream_id;
-		size_t _thread_id;
-        rcc::shared_ptr<IViewManager>							view_manager;
-        rcc::shared_ptr<ICoordinateManager>						coordinate_manager;
-        rcc::shared_ptr<IRenderEngine>							rendering_engine;
-        rcc::shared_ptr<ITrackManager>							track_manager;
-        rcc::shared_ptr<IFrameGrabber>							frame_grabber;
-		std::shared_ptr<Parameters::IVariableManager>			variable_manager;
-		std::shared_ptr<SignalManager>							signal_manager;
-        std::vector<rcc::shared_ptr<Nodes::Node>>				top_level_nodes;
-		std::shared_ptr<IParameterBuffer>						_parameter_buffer;
-        std::mutex    											nodes_mtx;
-        bool													paused;
-        cv::cuda::Stream										cuda_stream;
-        boost::thread											processing_thread;
-        volatile bool											dirty_flag;
-        std::vector<std::shared_ptr<Signals::connection>>		connections;
-		cv::cuda::Stream										streams[2];
-        std::vector<IVariableSink*>                             variable_sinks;
-    public:
-		SIGNALS_BEGIN(DataStream);
-			SIG_SEND(StartThreads);
-			SIG_SEND(StopThreads);
-		SIGNALS_END
+		virtual void AddVariableSink(IVariableSink* sink) = 0;
+		virtual void RemoveVariableSink(IVariableSink* sink) = 0;
 	};
-
-    class EAGLE_EXPORTS DataStreamManager
-    {
-    public:
-        static DataStreamManager* instance();
-        rcc::shared_ptr<DataStream> create_stream();
-        DataStream* get_stream(size_t id = 0);
-        void destroy_stream(DataStream* stream);
-
-    private:
-        DataStreamManager();
-        ~DataStreamManager();
-
-        std::vector<rcc::shared_ptr<DataStream>>    streams;    
-    };
 }

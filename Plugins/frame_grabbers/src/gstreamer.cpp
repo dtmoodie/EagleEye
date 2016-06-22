@@ -24,7 +24,7 @@ int frame_grabber_gstreamer::frame_grabber_gstreamer_info::CanLoadDocument(const
     // oooor a gstreamer pipeline.... 
     std::string appsink = "appsink";
     if(document.find(appsink) != std::string::npos)
-        return 10;
+        return 9;
     if(boost::filesystem::is_regular_file(path))
         return 2;
     return 0;

@@ -4,16 +4,25 @@
 #include "utilities/sorting.hpp"
 #include "EagleLib/Logging.h"
 #include "Remotery.h"
-#include "parameters/VariableManager.h"
+
 #include "ParameterBuffer.h"
 #include "IVariableSink.h"
-#include <opencv2/core.hpp>
-
-#include <boost/chrono.hpp>
-#include <boost/thread.hpp>
-#include <signals/boost_thread.h>
+#include "IViewManager.h"
+#include "ICoordinateManager.h"
+#include "rendering/RenderingEngine.h"
+#include "tracking/ITrackManager.h"
 #include "frame_grabber_base.h"
 #include "nodes/Node.h"
+#include "nodes/NodeManager.h"
+
+#include <opencv2/core.hpp>
+#include <boost/chrono.hpp>
+#include <boost/thread.hpp>
+
+#include <signals/boost_thread.h>
+#include <parameters/VariableManager.h>
+
+
 using namespace EagleLib;
 
 #define CATCH_MACRO                                                         \
@@ -48,12 +57,100 @@ catch (...)                                                                 \
 {                                                                           \
     LOG(error) << "Unknown exception";                                 \
 }
+
+
+IDataStream::~IDataStream()
+{
+
+}
+namespace EagleLib
+{
+	class DataStream: public IDataStream
+	{
+	public:
+		DataStream();
+		virtual ~DataStream();
+
+		// Handles user interactions such as moving the viewport, user interface callbacks, etc
+		virtual rcc::weak_ptr<IViewManager>            GetViewManager();
+
+		// Handles conversion of coordinate systems, such as to and from image coordinates, world coordinates, render scene coordinates, etc.
+		virtual rcc::weak_ptr<ICoordinateManager>      GetCoordinateManager();
+
+		// Handles actual rendering of data.  Use for adding extra objects to the scene
+		virtual rcc::weak_ptr<IRenderEngine>           GetRenderingEngine();
+
+		// Handles tracking objects within a stream and communicating with the global track manager to track across multiple data streams
+		virtual rcc::weak_ptr<ITrackManager>            GetTrackManager();
+
+		// Handles actual loading of the image, etc
+		virtual rcc::weak_ptr<IFrameGrabber>           GetFrameGrabber();
+
+		virtual Parameters::IVariableManager*		GetVariableManager();
+
+		virtual SignalManager*							GetSignalManager();
+
+		virtual IParameterBuffer*						GetParameterBuffer();
+
+		virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes();
+
+		virtual bool LoadDocument(const std::string& document, const std::string& prefered_loader = "");
+	
+		virtual std::vector<rcc::shared_ptr<Nodes::Node>> AddNode(const std::string& nodeName);
+		virtual void AddNode(rcc::shared_ptr<Nodes::Node> node);
+		virtual void AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node);
+		virtual void RemoveNode(rcc::shared_ptr<Nodes::Node> node);
+		virtual void RemoveNode(Nodes::Node* node);
+		//void StartThread();
+		//void StopThread();
+		//void PauseThread();
+		//void ResumeThread();
+		void process();
+
+		void AddVariableSink(IVariableSink* sink);
+		void RemoveVariableSink(IVariableSink* sink);
+
+	protected:
+		int stream_id;
+		size_t _thread_id;
+		rcc::shared_ptr<IViewManager>							view_manager;
+		rcc::shared_ptr<ICoordinateManager>						coordinate_manager;
+		rcc::shared_ptr<IRenderEngine>							rendering_engine;
+		rcc::shared_ptr<ITrackManager>							track_manager;
+		rcc::shared_ptr<IFrameGrabber>							frame_grabber;
+		std::shared_ptr<Parameters::IVariableManager>			variable_manager;
+		std::shared_ptr<SignalManager>							signal_manager;
+		std::vector<rcc::shared_ptr<Nodes::Node>>				top_level_nodes;
+		std::shared_ptr<IParameterBuffer>						_parameter_buffer;
+		std::mutex    											nodes_mtx;
+		bool													paused;
+		cv::cuda::Stream										cuda_stream;
+		boost::thread											processing_thread;
+		volatile bool											dirty_flag;
+		std::vector<std::shared_ptr<Signals::connection>>		connections;
+		cv::cuda::Stream										streams[2];
+		std::vector<IVariableSink*>                             variable_sinks;
+	public:
+		SIGNALS_BEGIN(DataStream, IDataStream);
+			SIG_SEND(StartThreads);
+			SIG_SEND(StopThreads);
+			SLOT_DEF(void, StartThread);
+			REGISTER_SLOT(StartThread);
+			SLOT_DEF(void, StopThread);
+			REGISTER_SLOT(StopThread);
+			SLOT_DEF(void, PauseThread);
+			REGISTER_SLOT(PauseThread);
+			SLOT_DEF(void, ResumeThread);
+			REGISTER_SLOT(ResumeThread);
+		SIGNALS_END
+	};
+}
+
 // **********************************************************************
 //              DataStream
 // **********************************************************************
 DataStream::DataStream()
 {
-	
 	_sig_manager = GetSignalManager();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
@@ -70,6 +167,7 @@ DataStream::DataStream()
 		connections.push_back(global_signal_manager->connect<void(void)>("PauseThreads", std::bind(&DataStream::PauseThread, this), this));
 		connections.push_back(global_signal_manager->connect<void(void)>("ResumeThreads", std::bind(&DataStream::ResumeThread, this), this));
     }
+	this->setup_signals(GetSignalManager());
     paused = false;
     stream_id = 0;
 	_thread_id = 0;
@@ -82,36 +180,31 @@ DataStream::~DataStream()
 	frame_grabber.reset();
 }
 
-int DataStream::get_stream_id()
-{
-    return stream_id;
-}
-
-rcc::shared_ptr<IViewManager> DataStream::GetViewManager()
+rcc::weak_ptr<IViewManager> DataStream::GetViewManager()
 {
     return view_manager;
 }
 
 // Handles conversion of coordinate systems, such as to and from image coordinates, world coordinates, render scene coordinates, etc.
-rcc::shared_ptr<ICoordinateManager> DataStream::GetCoordinateManager()
+rcc::weak_ptr<ICoordinateManager> DataStream::GetCoordinateManager()
 {
     return coordinate_manager;
 }
 
 // Handles actual rendering of data.  Use for adding extra objects to the scene
-rcc::shared_ptr<IRenderEngine> DataStream::GetRenderingEngine()
+rcc::weak_ptr<IRenderEngine> DataStream::GetRenderingEngine()
 {
     return rendering_engine;
 }
 
 // Handles tracking objects within a stream and communicating with the global track manager to track across multiple data streams
-rcc::shared_ptr<ITrackManager> DataStream::GetTrackManager()
+rcc::weak_ptr<ITrackManager> DataStream::GetTrackManager()
 {
     return track_manager;
 }
 
 // Handles actual loading of the image, etc
-rcc::shared_ptr<IFrameGrabber> DataStream::GetFrameGrabber()
+rcc::weak_ptr<IFrameGrabber> DataStream::GetFrameGrabber()
 {
     return frame_grabber;
 }
@@ -244,7 +337,7 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
     }
     return false;
 }
-bool DataStream::CanLoadDocument(const std::string& document)
+bool IDataStream::CanLoadDocument(const std::string& document)
 {
     std::string doc_to_load = document;
     if(doc_to_load.size() == 0)
@@ -286,12 +379,15 @@ std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::GetNodes()
 {
     return top_level_nodes;
 }
-
+std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::AddNode(const std::string& nodeName)
+{
+	return EagleLib::NodeManager::getInstance().addNode(nodeName, this);
+}
 void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
 	if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
 	{
-        Signals::thread_specific_queue::push(std::bind(&DataStream::AddNode, this, node), _thread_id);
+        Signals::thread_specific_queue::push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNode), this, node), _thread_id);
 		return;
 	}
 
@@ -314,7 +410,15 @@ void DataStream::AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> nodes)
     }
     dirty_flag = true;
 }
-
+void DataStream::RemoveNode(Nodes::Node* node)
+{
+	std::lock_guard<std::mutex> lock(nodes_mtx);
+	auto itr = std::find(top_level_nodes.begin(), top_level_nodes.end(), node);
+	if(itr != top_level_nodes.end())
+	{
+		top_level_nodes.erase(itr);
+	}
+}
 void DataStream::RemoveNode(rcc::shared_ptr<Nodes::Node> node)
 {
     std::lock_guard<std::mutex> lock(nodes_mtx);
@@ -448,51 +552,14 @@ void DataStream::process()
     LOG(info) << "Stream thread shutting down";
 }
 
-// **********************************************************************
-//              DataStreamManager
-// **********************************************************************
-DataStreamManager* DataStreamManager::instance()
+IDataStream::Ptr IDataStream::create(const std::string& document, const std::string& preferred_frame_grabber)
 {
-    static DataStreamManager* inst;
-    if (inst == nullptr)
-        inst = new DataStreamManager();
-    return inst;
-}
-
-DataStreamManager::DataStreamManager()
-{
-
-}
-
-DataStreamManager::~DataStreamManager()
-{
-
-}
-
-rcc::shared_ptr<DataStream> DataStreamManager::create_stream()
-{
-    //std::shared_ptr<DataStream> stream(new DataStream);
-	auto stream = ObjectManager::Instance().GetObject<DataStream, IID_DataStream>("DataStream");
-    stream->stream_id = streams.size();
-    streams.push_back(stream);
-    return stream;
-}
-void DataStreamManager::destroy_stream(DataStream* stream)
-{
-    for(auto itr = streams.begin(); itr != streams.end(); ++itr)
-    {
-        if(itr->get() == stream)
-        {
-            streams.erase(itr);
-            return;
-        }        
-    }
-}
-
-DataStream* DataStreamManager::get_stream(size_t id)
-{
-    CV_Assert(id < streams.size());
-    return streams[id].get();
+	auto stream = ObjectManager::Instance().GetObject<IDataStream, IID_DataStream>("DataStream");
+	if(stream->LoadDocument(document, preferred_frame_grabber))
+	{
+		return stream;
+	}
+	return IDataStream::Ptr();
 }
 
 REGISTERCLASS(DataStream)

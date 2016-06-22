@@ -16,6 +16,10 @@ void rcc::shared_ptr<IObject>::notify_swap()
     if(obj)
         m_object = obj;
 }
+void rcc::shared_ptr<IObject>::notify_delete()
+{
+
+}
 void rcc::shared_ptr<IObject>::updateObject(IObject *ptr)
 {
     m_object = static_cast<IObject*>(ptr);
@@ -56,10 +60,10 @@ void rcc::shared_ptr<IObject>::increment()
 }
 
 
- rcc::shared_ptr<IObject>::shared_ptr() : m_object(nullptr), refCount(nullptr)
+ rcc::shared_ptr<IObject>::shared_ptr(): IObjectNotifiable(), m_object(nullptr), refCount(nullptr)
 {
 }
- rcc::shared_ptr<IObject>::shared_ptr(IObject* ptr) :
+ rcc::shared_ptr<IObject>::shared_ptr(IObject* ptr) : IObjectNotifiable(),
     m_object(ptr),
     refCount(new int)
 {
@@ -127,15 +131,15 @@ void rcc::shared_ptr<IObject>::increment()
  }
 
 
-weak_ptr<IObject>::weak_ptr() : m_object(nullptr)
+weak_ptr<IObject>::weak_ptr() :IObjectNotifiable(), m_object(nullptr)
 {
 }
-weak_ptr<IObject>::weak_ptr(IObject* ptr) :
+weak_ptr<IObject>::weak_ptr(IObject* ptr) :IObjectNotifiable(),
     m_object(ptr)
 {
     
 }
-weak_ptr<IObject>::weak_ptr(weak_ptr<IObject> const & ptr) :
+weak_ptr<IObject>::weak_ptr(weak_ptr<IObject> const & ptr) :IObjectNotifiable(),
     m_object(nullptr)
 {
     swap(ptr);
@@ -150,6 +154,10 @@ void weak_ptr<IObject>::notify_swap()
     auto obj = get_object(m_objectId);
     if(obj)
         m_object = obj;
+}
+void rcc::weak_ptr<IObject>::notify_delete()
+{
+	m_object = nullptr;
 }
 IObject* weak_ptr<IObject>::operator->()
 {

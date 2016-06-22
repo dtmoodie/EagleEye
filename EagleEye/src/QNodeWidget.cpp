@@ -9,6 +9,8 @@
 #include "EagleLib/logger.hpp"
 #include "parameters/IVariableManager.h"
 #include <signals/logging.hpp>
+#include <EagleLib/frame_grabber_base.h>
+
 IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
     QWidget(parent),
     parameter(parameter_),
@@ -432,7 +434,7 @@ void QNodeWidget::setSelected(bool state)
     setPalette(pal);
 }
 
-DataStreamWidget::DataStreamWidget(QWidget* parent, EagleLib::DataStream::Ptr stream):
+DataStreamWidget::DataStreamWidget(QWidget* parent, EagleLib::IDataStream::Ptr stream):
     QWidget(parent), 
     _dataStream(stream),
     ui(new Ui::DataStreamWidget())
@@ -440,7 +442,7 @@ DataStreamWidget::DataStreamWidget(QWidget* parent, EagleLib::DataStream::Ptr st
     ui->setupUi(this);
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     ui->lbl_loaded_document->setText(QString::fromStdString(stream->GetFrameGrabber()->GetSourceFilename()));
-    ui->lbl_stream_id->setText(QString::number(stream->get_stream_id()));
+    //ui->lbl_stream_id->setText(QString::number(stream->get_stream_id()));
     update_ui();
 }
 void DataStreamWidget::update_ui()
@@ -478,7 +480,7 @@ DataStreamWidget::~DataStreamWidget()
 
 }
 
-EagleLib::DataStream::Ptr DataStreamWidget::GetStream()
+EagleLib::IDataStream::Ptr DataStreamWidget::GetStream()
 {
     return _dataStream;
 }

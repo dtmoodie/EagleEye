@@ -15,9 +15,9 @@ public:
 
     NodeView(QGraphicsScene *scene, QWidget *parent = 0);
     void addWidget(QGraphicsProxyWidget * widget, ObjectId id);
-    void addWidget(QGraphicsProxyWidget* widget, size_t stream_id);
+    void addWidget(QGraphicsProxyWidget* widget, EagleLib::IDataStream* stream_);
     QGraphicsProxyWidget* getWidget(ObjectId id);
-    QGraphicsProxyWidget* getWidget(size_t id);
+    QGraphicsProxyWidget* getWidget(EagleLib::IDataStream* stream_);
 	
 	void removeWidget(ObjectId id);
     void mousePressEvent(QMouseEvent* event);
@@ -26,7 +26,7 @@ public:
     void wheelEvent(QWheelEvent* event);
     QGraphicsLineItem* drawLine2Parent(QGraphicsProxyWidget* child);
     QGraphicsProxyWidget* getParent(EagleLib::Nodes::Node::Ptr child);
-    QGraphicsProxyWidget* getStream(size_t stream_id);
+    QGraphicsProxyWidget* getStream(EagleLib::IDataStream* stream_id);
 
 signals:
 	void selectionChanged(QGraphicsProxyWidget* widget);
@@ -47,7 +47,7 @@ private:
 	QGraphicsProxyWidget* currentWidget;
 	QPoint mousePressPosition;
 	std::map<ObjectId, QGraphicsProxyWidget*> widgetMap;
-    std::map<size_t, QGraphicsProxyWidget*> dataStreamWidget;
+    std::map<EagleLib::IDataStream*, QGraphicsProxyWidget*> dataStreamWidget;
     bool resize = false;
     int resizeGrabSize;
     QPointF grabPoint;

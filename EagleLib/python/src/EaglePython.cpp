@@ -72,13 +72,13 @@ std::vector<std::string> ListHistory()
 	return std::vector<std::string>();
 }
 
-rcc::shared_ptr<DataStream> open_datastream(string source)
+rcc::shared_ptr<IDataStream> open_datastream(string source)
 {
 	std::string doc = source;
-	if(EagleLib::DataStream::CanLoadDocument(doc))
+	if(EagleLib::IDataStream::CanLoadDocument(doc))
 	{
 		LOG(debug) << "Found a frame grabber which can load " << doc;
-		auto stream = EagleLib::DataStreamManager::instance()->create_stream();
+		auto stream = EagleLib::IDataStream::create(doc);
 		if(stream->LoadDocument(doc))
 		{
 			stream->StartThread();
@@ -91,7 +91,7 @@ rcc::shared_ptr<DataStream> open_datastream(string source)
 	{
 		LOG(warning) << "Unable to find a frame grabber which can load " << doc;
 	}
-	return rcc::shared_ptr<DataStream>();
+	return rcc::shared_ptr<IDataStream>();
 }
 
 rcc::shared_ptr<Nodes::Node> create_node(string name)

@@ -11,6 +11,7 @@
 namespace rcc
 {
     EAGLE_EXPORTS IObject* get_object(ObjectId id);
+	template<typename T> class weak_ptr;
     template<typename T> class shared_ptr: public IObjectNotifiable
     {
 	    T* m_object;
@@ -40,10 +41,11 @@ namespace rcc
 	    }
     public:
 		typedef T element_type;
-	    shared_ptr() : m_object(nullptr), refCount(nullptr)
+	    shared_ptr() :IObjectNotifiable(), m_object(nullptr), refCount(nullptr)
 	    {
 	    }
 	    shared_ptr(IObject* ptr) :
+			IObjectNotifiable(),
 		    m_object(dynamic_cast<T*>(ptr)),
 		    refCount(new int)
 	    {
@@ -51,6 +53,7 @@ namespace rcc
 		    m_objectId = m_object->GetObjectId();
 	    }
 	    shared_ptr(T* ptr) :
+			IObjectNotifiable(),
 		    m_object(ptr),
 		    refCount(new int)
 	    {
@@ -58,12 +61,14 @@ namespace rcc
             m_objectId = m_object->GetObjectId();
 	    }
 	    shared_ptr(shared_ptr const& ptr) :
+			IObjectNotifiable(),
 		    m_object(ptr.m_object), refCount(ptr.refCount), m_objectId(ptr.m_objectId)
 	    {
 		    increment();
 	    }
 
 	    template<typename V> shared_ptr(shared_ptr<V> & ptr) :
+			IObjectNotifiable(),
 		    m_object(dynamic_cast<T*>(ptr.m_object)), refCount(ptr.refCount), m_objectId(ptr.m_objectId)
 	    {
 		    increment();
@@ -81,6 +86,10 @@ namespace rcc
             if(obj)
                 m_object = dynamic_cast<T*>(obj);
         }
+		virtual void notify_delete()
+		{
+			// This should never happen
+		}
 
 	    T* operator->()
 	    {
@@ -187,26 +196,36 @@ namespace rcc
     template<typename T> class weak_ptr: public IObjectNotifiable
     {
 	    T* m_object;
+		int* refCount;
         ObjectId m_objectId;
 	    friend struct IObject;
 	    friend class shared_ptr<T>;
     public:
 		typedef T element_type;
-	    weak_ptr() : m_object(nullptr)
+		template<class U> weak_ptr(const shared_ptr<U>& other):
+			IObjectNotifiable(),
+			m_object(dynamic_cast<T*>(other.get())), refCount(other.refCount)
+		{
+		
+		}
+	    weak_ptr() :IObjectNotifiable(), m_object(nullptr), refCount(nullptr)
 	    {
 	    }
 	    weak_ptr(IObject* ptr) :
-		    m_object(dynamic_cast<T*>(ptr))
+			IObjectNotifiable(),
+		    m_object(dynamic_cast<T*>(ptr)), refCount(nullptr)
 	    {
             m_objectId = m_object->GetObjectId();
 	    }
 	    weak_ptr(T* ptr) :
-		    m_object(ptr)
+			IObjectNotifiable(),
+		    m_object(ptr), refCount(nullptr)
 	    {
             m_objectId = m_object->GetObjectId();
 	    }
 	    weak_ptr(weak_ptr const & ptr) :
-		    m_object(nullptr)
+			IObjectNotifiable(),
+		    m_object(nullptr), refCount(nullptr)
 	    {
 		    swap(ptr);
 	    }
@@ -220,6 +239,10 @@ namespace rcc
             if(obj)
                 m_object = dynamic_cast<T*>(obj);
         }
+		virtual void notify_delete()
+		{
+			m_object = nullptr;
+		}
 	    T* operator->()
 	    {
 		    assert(m_object != nullptr);
@@ -306,6 +329,7 @@ namespace rcc
         }
         ~shared_ptr();
         virtual void notify_swap();
+		virtual void notify_delete();
         IObject* operator->();
         template<typename U> U* staticCast()
         {
@@ -364,6 +388,7 @@ namespace rcc
         weak_ptr(weak_ptr<IObject> const & ptr);
         ~weak_ptr();
         virtual void notify_swap();
+		virtual void notify_delete();
         IObject* operator->();
         weak_ptr<IObject>& operator=(weak_ptr const & r);
         bool operator ==(IObject* p);

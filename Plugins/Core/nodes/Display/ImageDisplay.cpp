@@ -37,12 +37,11 @@ TS<SyncedMemory> QtImageDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::Str
 {
     cv::Mat img = input.GetMat(stream);
     std::string display_name = getFullTreeName();
-//    EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
 	if (auto table = PerModuleInterface::GetInstance()->GetSystemTable())
 	{
 		if (auto manager = table->GetSingleton<WindowCallbackHandlerManager>())
 		{
-			if (auto instance = manager->instance(GetDataStream()->get_stream_id()))
+			if (auto instance = manager->instance())
 			{
                 cuda::enqueue_callback_async(
 					[instance, display_name, img]()->void
@@ -54,7 +53,7 @@ TS<SyncedMemory> QtImageDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::Str
 			}
 			else
 			{
-				LOG(warning) << "Unable tog et instance of WindowCallbackHandler for stream " << GetDataStream()->get_stream_id();
+				LOG(warning) << "Unable to get instance of WindowCallbackHandler for stream";
 			}
 		}
 		else
@@ -90,7 +89,7 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
         
-        auto instance = manager->instance(GetDataStream()->get_stream_id());
+        auto instance = manager->instance();
         instance->imshow(display_name, host_mat);
 	}, stream);
     
@@ -108,7 +107,7 @@ void QtImageDisplay::doProcess(const cv::Mat& mat, double timestamp, int frame_n
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
 
-        auto instance = manager->instance(GetDataStream()->get_stream_id());
+        auto instance = manager->instance();
         instance->imshow(getFullTreeName(), mat);
     }, stream);
 }
@@ -201,8 +200,11 @@ TS<SyncedMemory> KeyPointDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::St
 			{
 				cv::circle(h_img, cv::Point(ptr->val[0], ptr->val[1]), radius, color, 1);
 			}
-			Parameters::UI::UiCallbackService::Instance()->post(
-				boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), displayName, h_img));
+			auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+			auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
+
+			auto instance = manager->instance();
+			instance->imshow(displayName, h_img);
 		}, stream);
 		TIME
         return input;

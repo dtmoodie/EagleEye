@@ -102,10 +102,10 @@ class CV_EXPORTS DataStreamWidget: public QWidget
 {
     Q_OBJECT
 public:
-    DataStreamWidget(QWidget* parent = nullptr, EagleLib::DataStream::Ptr stream = EagleLib::DataStream::Ptr());
+    DataStreamWidget(QWidget* parent = nullptr, EagleLib::IDataStream::Ptr stream = EagleLib::IDataStream::Ptr());
     ~DataStreamWidget();
 
-    EagleLib::DataStream::Ptr GetStream();
+    EagleLib::IDataStream::Ptr GetStream();
     void SetSelected(bool state);
     void update_ui();
 
@@ -113,7 +113,7 @@ signals:
 
 
 private:
-    EagleLib::DataStream::Ptr _dataStream;
+    EagleLib::IDataStream::Ptr _dataStream;
     Ui::DataStreamWidget* ui;
     std::vector<QInputProxy*> inputProxies;
     std::map<std::string, Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
