@@ -66,11 +66,12 @@ int main(int argc, char* argv[])
     
     Signals::thread_registry::get_instance()->register_thread(Signals::GUI);
     desc.add_options()
-        ("file", boost::program_options::value<std::string>(), "Required - File to load for processing")
-        ("config", boost::program_options::value<std::string>(), "Required - File containing node structure")
+        ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
+        ("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")
         ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")
 		("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")
         ("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")
+		("script", boost::program_options::value<std::string>(), "Text file with scripting commands")
         ;
 
     boost::program_options::variables_map vm;
@@ -128,22 +129,26 @@ int main(int argc, char* argv[])
     currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
 #endif
     boost::filesystem::directory_iterator end_itr;
-
-    for(boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr)
-    {
-        if(boost::filesystem::is_regular_file(itr->path()))
-        {
+	if(boost::filesystem::is_directory(currentDir))
+	{
+	
+	
+		for(boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr)
+		{
+			if(boost::filesystem::is_regular_file(itr->path()))
+			{
 #ifdef _MSC_VER
-            if(itr->path().extension() == ".dll")
+				if(itr->path().extension() == ".dll")
 #else
-            if(itr->path().extension() == ".so")
+				if(itr->path().extension() == ".so")
 #endif
-            {
-                std::string file = itr->path().string();
-                EagleLib::loadPlugin(file);
-            }
-        }
-    }
+				{
+					std::string file = itr->path().string();
+					EagleLib::loadPlugin(file);
+				}
+			}
+		}
+	}
     boost::thread gui_thread([]
     {
         Signals::thread_registry::get_instance()->register_thread(Signals::GUI);
@@ -153,7 +158,7 @@ int main(int argc, char* argv[])
             cv::waitKey(1);
         }
     });
-
+	Signals::signal_manager manager;
     if(vm.count("plugins"))
     {
         currentDir = boost::filesystem::path(vm["plugins"].as<boost::filesystem::path>());
@@ -238,9 +243,9 @@ int main(int argc, char* argv[])
                 "   check            -- checks if any files need to be recompiled\n"
                 "   swap             -- swaps any objects that were recompiled\n";
         };
-
-        std::map<std::string, std::function<void(std::string)>> function_map;
-		function_map["list_devices"] = [](std::string null)->void
+		std::vector<std::shared_ptr<Signals::connection>> connections;
+        //std::map<std::string, std::function<void(std::string)>> function_map;
+		connections.push_back(manager.connect<void(std::string)>("list_devices",[](std::string null)->void
 		{
 			auto constructors = EagleLib::ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
 			for(auto constructor : constructors)
@@ -265,8 +270,8 @@ int main(int argc, char* argv[])
 					}
 				}
 			}
-		};
-        function_map["load_file"] = [&_dataStreams](std::string doc)->void
+		}));
+		connections.push_back(manager.connect<void(std::string)>("load_file", [&_dataStreams](std::string doc)->void
         {
             if(doc.size() == 0)
             {
@@ -289,77 +294,78 @@ int main(int argc, char* argv[])
             {
                 LOG(warning) << "Unable to find a frame grabber which can load " << doc;
             }
-        };
-        function_map["quit"] = [](std::string)->void
+        }));
+		connections.push_back(manager.connect<void(std::string)>("quit", [](std::string)->void
         {
             quit = true;
-        };
-        function_map["print"] = [&_dataStreams, &current_stream, &current_node, &current_param](std::string what)->void
-        {
-            if(what == "streams")
-            {
-                for(auto& itr : _dataStreams)
-                {
-                    std::cout << " - " << itr->GetPerTypeId() << " - " << itr->GetFrameGrabber()->GetSourceFilename() << "\n";
-                }
-            }
-            if(what == "nodes")
-            {
-                if(current_stream)
-                {
-                    auto nodes = current_stream->GetNodes();
-                    for(auto& node : nodes)
-                    {
-                        PrintNodeTree(node.get(), 0);
-                    }
-                }
-                else if(current_node)
-                {
-                    PrintNodeTree(current_node.get(), 0);
-                }
-            }
-            if(what == "parameters")
-            {
-                std::vector<Parameters::Parameter*> parameters;
-                if(current_node)
-                {
-                    parameters = current_node->getParameters();
-                }
-                if(current_stream)
-                {
-                    if(auto fg = current_stream->GetFrameGrabber())
-                        parameters = fg->getParameters();
-                }
-                for(auto& itr : parameters)
-                {
-                    std::stringstream ss;
-                    try
-                    {
-                        Parameters::Persistence::Text::Serialize(&ss, itr);   
-                        std::cout << " - " << itr->GetTreeName() << ": " << ss.str() << "\n";
-                    }catch(...)
-                    {
-                        std::cout << " - " << itr->GetTreeName() << "\n";
-                    }
-                }
-            }
-            if(what == "current" || what.empty())
-            {
-                if(current_stream)
-                {
-                    if(auto fg = current_stream->GetFrameGrabber())
-                        std::cout << " - Current stream: " << fg->GetSourceFilename() << "\n";
-                    else
-                        std::cout << " - Current stream: " << current_stream->GetPerTypeId() << "\n";
-                    return;
-                }
-                if(current_node)
-                {
-                    std::cout << " - Current node: " << current_node->getFullTreeName() << "\n";
-                    return;
-                }
-                std::cout << "Nothing currently selected\n";
-            }
+        }));
+		
+		auto func = [&_dataStreams, &current_stream, &current_node, &current_param](std::string what)->void
+		{
+			if(what == "streams")
+			{
+				for(auto& itr : _dataStreams)
+				{
+					std::cout << " - " << itr->GetPerTypeId() << " - " << itr->GetFrameGrabber()->GetSourceFilename() << "\n";
+				}
+			}
+			if(what == "nodes")
+			{
+				if(current_stream)
+				{
+					auto nodes = current_stream->GetNodes();
+					for(auto& node : nodes)
+					{
+						PrintNodeTree(node.get(), 0);
+					}
+				}
+				else if(current_node)
+				{
+					PrintNodeTree(current_node.get(), 0);
+				}
+			}
+			if(what == "parameters")
+			{
+				std::vector<Parameters::Parameter*> parameters;
+				if(current_node)
+				{
+					parameters = current_node->getParameters();
+				}
+				if(current_stream)
+				{
+					if(auto fg = current_stream->GetFrameGrabber())
+						parameters = fg->getParameters();
+				}
+				for(auto& itr : parameters)
+				{
+					std::stringstream ss;
+					try
+					{
+						Parameters::Persistence::Text::Serialize(&ss, itr);   
+						std::cout << " - " << itr->GetTreeName() << ": " << ss.str() << "\n";
+					}catch(...)
+					{
+						std::cout << " - " << itr->GetTreeName() << "\n";
+					}
+				}
+			}
+			if(what == "current" || what.empty())
+			{
+				if(current_stream)
+				{
+					if(auto fg = current_stream->GetFrameGrabber())
+						std::cout << " - Current stream: " << fg->GetSourceFilename() << "\n";
+					else
+						std::cout << " - Current stream: " << current_stream->GetPerTypeId() << "\n";
+					return;
+				}
+				if(current_node)
+				{
+					std::cout << " - Current node: " << current_node->getFullTreeName() << "\n";
+					return;
+				}
+				std::cout << "Nothing currently selected\n";
+			}
 			if(what == "signals")
 			{
 				if (current_node)
@@ -408,28 +414,30 @@ int main(int argc, char* argv[])
 					LOG(info) << ss.str();
 				}
 			}
-            if(what == "projects")
-            {
-                auto project_count = EagleLib::ObjectManager::Instance().getProjectCount();
-                std::stringstream ss;
-                for(int i = 0; i < project_count; ++i)
-                {
-                    ss << i << " - " << EagleLib::ObjectManager::Instance().getProjectName(i) << "\n";
-                }
-                LOG(info) << ss.str();
-            }
-            if(what == "plugins")
-            {
-                auto plugins = EagleLib::ListLoadedPlugins();
-                std::stringstream ss;
-                for(auto& plugin : plugins)
-                {
-                    ss << plugin << "\n";
-                }
-                LOG(info) << ss.str();
-            }
+			if(what == "projects")
+			{
+				auto project_count = EagleLib::ObjectManager::Instance().getProjectCount();
+				std::stringstream ss;
+				for(int i = 0; i < project_count; ++i)
+				{
+					ss << i << " - " << EagleLib::ObjectManager::Instance().getProjectName(i) << "\n";
+				}
+				LOG(info) << ss.str();
+			}
+			if(what == "plugins")
+			{
+				auto plugins = EagleLib::ListLoadedPlugins();
+				std::stringstream ss;
+				for(auto& plugin : plugins)
+				{
+					ss << plugin << "\n";
+				}
+				LOG(info) << ss.str();
+			}
 		};
-        function_map["select"] = [&_dataStreams,&current_stream, &current_node, &current_param](std::string what)
+		connections.push_back(manager.connect<void(std::string)>("print", func));
+		connections.push_back(manager.connect<void(std::string)>("ls", func));
+		connections.push_back(manager.connect<void(std::string)>("select", [&_dataStreams,&current_stream, &current_node, &current_param](std::string what)
         {
             int idx = -1;
             std::string name;
@@ -499,8 +507,8 @@ int main(int argc, char* argv[])
 					}
 				}
 			}
-        };
-        function_map["delete"] = [&_dataStreams,&current_stream, &current_node](std::string what)
+        }));
+		connections.push_back(manager.connect<void(std::string)>("delete", [&_dataStreams,&current_stream, &current_node](std::string what)
 		{
 			if(current_stream)
 			{
@@ -529,9 +537,9 @@ int main(int argc, char* argv[])
 				}
 			}
 			LOG(info) << "Unable to delete item";
-		};
-		function_map["help"] = [&print_options](std::string)->void{print_options();};
-        function_map["list"] = [](std::string filter)->void
+		}));
+		connections.push_back(manager.connect<void(std::string)>("help", [&print_options](std::string)->void{print_options();}));
+		connections.push_back(manager.connect<void(std::string)>("list", [](std::string filter)->void
         {
             auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
             for(auto& node : nodes)
@@ -548,8 +556,8 @@ int main(int argc, char* argv[])
                 }
                 
             }
-        };
-		function_map["plugins"] = [](std::string null)->void
+        }));
+		connections.push_back(manager.connect<void(std::string)>("plugins", [](std::string null)->void
 		{
 			auto plugins = EagleLib::ListLoadedPlugins();
 			std::stringstream ss;
@@ -559,8 +567,8 @@ int main(int argc, char* argv[])
 				ss << "  " << plugin << "\n";
 			}
 			LOG(info) << ss.str();
-		};
-        function_map["add"] = [&current_node, &current_stream](std::string name)->void
+		}));
+		connections.push_back(manager.connect<void(std::string)>("add", [&current_node, &current_stream](std::string name)->void
         {
 			if(current_stream)
 			{
@@ -571,8 +579,8 @@ int main(int argc, char* argv[])
 			{
 				EagleLib::NodeManager::getInstance().addNode(name, current_node.get());
 			}
-        };
-		function_map["set"] = [&current_node, &current_stream, &current_param](std::string value)->void
+        }));
+		connections.push_back(manager.connect<void(std::string)>("set", [&current_node, &current_stream, &current_param](std::string value)->void
 		{
 			if(current_param && current_node && current_param->type & Parameters::Parameter::Input)
 			{
@@ -628,9 +636,10 @@ int main(int argc, char* argv[])
 				}
 				LOG(info) << "Unable to find parameter by name for set string: " << value;
 			}
-		};
-		function_map["ls"] = [&function_map](std::string str)->void {function_map["print"](str); };
-		function_map["emit"] = [&current_node, &current_stream](std::string name)
+		}));
+		//connections.push_back(manager.connect<void(std::string)>("ls", [&function_map](std::string str)->void {function_map["print"](str); }));
+		
+		connections.push_back(manager.connect<void(std::string)>("emit", [&current_node, &current_stream](std::string name)
 		{
 			EagleLib::SignalManager* mgr = nullptr;
 			if (current_node)
@@ -678,8 +687,8 @@ int main(int argc, char* argv[])
                 proxy->send(signals[idx], "");
 				delete proxy;
             }
-		};
-        function_map["log"] = [](std::string level)
+		}));
+		connections.push_back(manager.connect<void(std::string)>("log", [](std::string level)
         {
         if (level == "trace")
 			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
@@ -693,8 +702,8 @@ int main(int argc, char* argv[])
 			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error);
 		if (level == "fatal")
 			boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
-        };
-		function_map["link"] = [](std::string directory)
+        }));
+		connections.push_back(manager.connect<void(std::string)>("link", [](std::string directory)
         {
             int idx = 0;
             if(auto pos = directory.find(',') != std::string::npos)
@@ -703,11 +712,11 @@ int main(int argc, char* argv[])
                 directory = directory.substr(pos + 1);
             }
             EagleLib::ObjectManager::Instance().addLinkDir(directory, idx);
-        };
-        
+        }));
+        connections.push_back(manager.connect<void(std::string)>("wait", [](std::string ms) {boost::this_thread::sleep_for(boost::chrono::milliseconds(boost::lexical_cast<int>(ms)));}));
         
         bool swap_required = false;
-		function_map["recompile"] = [&current_param, &current_node, &current_stream, &swap_required, &_dataStreams](std::string action)
+		connections.push_back(manager.connect<void(std::string)>("recompile", [&current_param, &current_node, &current_stream, &swap_required, &_dataStreams](std::string action)
 		{
             if(action == "check")
             {
@@ -740,30 +749,60 @@ int main(int argc, char* argv[])
             {
                 EagleLib::ObjectManager::Instance().abort_compilation();
             }
-		};
+		}));
 		if (vm.count("file"))
 		{
-			function_map["load_file"](vm["file"].as<std::string>());
+			(*manager.get_signal<void(std::string)>("load_file"))(vm["file"].as<std::string>());
 		}
 		
 		print_options();
         EagleLib::ObjectManager::Instance().CheckRecompile();
+		std::vector<std::string> command_list;
+		if(vm.count("script"))
+		{
+			std::ifstream ifs(vm["script"].as<std::string>());
+			if(ifs.is_open())
+			{
+				std::string line;
+				while(std::getline(ifs, line))
+				{
+					command_list.push_back(line);
+				}
+				if(command_list.size())
+					std::reverse(command_list.begin(), command_list.end());
+			}
+		}
 		while(!quit)
         {
             std::string command_line;
-            std::getline(std::cin, command_line);
+			if(command_list.size())
+			{
+				command_line = command_list.back();
+				command_list.pop_back();
+			}else
+			{
+				std::getline(std::cin, command_line);
+			}
+            
 	        std::stringstream ss;
             ss << command_line;
             std::string command;
             std::getline(ss, command, ' ');
-            if(function_map.count(command))
+			auto signals = manager.get_signals(command);
+            if(signals.size() == 1)
             {
                 std::string rest;
 				std::getline(ss, rest);
                 LOG(debug) << "Executing command (" << command << ") with arguments: " << rest;
                 try
                 {
-                    function_map[command](rest);
+					LOG(debug) << "Attempting to send signal with name \"" << command << "\" and signature: " << signals[0]->get_signal_type().name();
+					auto proxy = Signals::serialization::text::factory::instance()->get_proxy(signals[0]);
+					if(proxy)
+					{
+						proxy->send(signals[0], rest);
+						delete proxy;
+					}
                 }catch(...)
                 {
                     LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed miserably";

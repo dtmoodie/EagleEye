@@ -222,3 +222,15 @@ int SyncedMemory::GetDepth() const
 	CV_Assert(d_data.size());
 	return d_data[0].depth();
 }
+int SyncedMemory::GetDim(int dim) const
+{
+    if(dim == 0)
+        return d_data.size();
+    if(dim == 1 && d_data.size())
+        return d_data[0].rows;
+    if(dim == 2 && d_data.size())
+        return d_data[0].cols;
+    if(dim == 3 && d_data.size())
+        return d_data[0].channels();
+    return 0;
+}

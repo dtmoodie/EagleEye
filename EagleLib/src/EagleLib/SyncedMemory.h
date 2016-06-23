@@ -74,6 +74,7 @@ namespace EagleLib
         bool empty() const;
 		cv::Size GetSize(int index = 0) const;
 		std::vector<int> GetShape() const;
+        int GetDim(int dim) const;
 		int GetDepth() const;
 	};
 }

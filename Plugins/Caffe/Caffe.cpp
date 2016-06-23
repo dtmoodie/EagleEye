@@ -1,3 +1,5 @@
+#define PARAMTERS_GENERATE_PERSISTENCE
+
 #include "Caffe.h"
 #include "caffe_init.h"
 
@@ -20,10 +22,10 @@
 #include <signals/logging.hpp>
 #ifdef _MSC_VER
   #ifdef _DEBUG
-	RUNTIME_COMPILER_LINKLIBRARY("libcaffe_SHARED-d.lib");
+	RUNTIME_COMPILER_LINKLIBRARY("libcaffe-d.lib");
 	RUNTIME_COMPILER_LINKLIBRARY("libglog.lib")
   #else
-    RUNTIME_COMPILER_LINKLIBRARY("libcaffe_SHARED.lib")
+    RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib")
   #endif
 #else
 #endif
