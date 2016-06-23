@@ -12,6 +12,7 @@
     RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib");
     RUNTIME_COMPILER_LINKLIBRARY("proto.lib");
     RUNTIME_COMPILER_LINKLIBRARY("libprotobuf.lib");
+    RUNTIME_COMPILER_LINKLIBRARY("libglob.lib");
   #endif
 #else
 #endif
@@ -141,11 +142,10 @@ TS<SyncedMemory> caffe_solver::doProcess(TS<SyncedMemory> input, cv::cuda::Strea
     {
         caffe::SolverParameter solver_params;
     }
-	if(solver && input_blobs_param.subscribers)
+	if(solver && (input_blobs_param.subscribers || input_blobs.empty()))
 	{
 		sig_fill_blobs();
 		solver->Step(steps_per_iteration);
-	
 	}
     return input;
 }

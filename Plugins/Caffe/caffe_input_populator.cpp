@@ -89,7 +89,7 @@ void caffe_input_populator::NodeInit(bool firstInit)
 	}
 	auto f = [this](cv::cuda::Stream* stream)
 	{
-		auto input = getParameter<std::vector<caffe::Blob<float>*>>("network input blobs")->Data();
+		auto input = getParameter<std::vector<std::vector<std::vector<cv::Mat>>>>("network input blobs")->Data();
 		auto names = getParameter<std::vector<std::string>>("input blob names")->Data();
 		if( input && names && input->size() == names->size())
 		{

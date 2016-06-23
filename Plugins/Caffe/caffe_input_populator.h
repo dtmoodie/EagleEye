@@ -23,7 +23,7 @@ namespace EagleLib
 
 			SIGNALS_BEGIN(caffe_input_populator, Node);
 				SLOT_DEF(void, fill_blobs);
-				REGISTER_SLOT(fill_bolbs);
+				REGISTER_SLOT(fill_blobs);
 			SIGNALS_END;
 		};
 	}

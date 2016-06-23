@@ -183,16 +183,16 @@ int main(int argc, char* argv[])
     {
         quit = false;
         std::string document = vm["file"].as<std::string>();
-        LOG(info) << "Loading file: " << document;
+        std::cout  << "Loading file: " << document << std::endl;
         std::string configFile = vm["config"].as<std::string>();
-        LOG(info) << "Loading config file " << configFile;
+        std::cout << "Loading config file " << configFile << std::endl;
     
         auto stream = EagleLib::IDataStream::create(document);
     
         auto nodes = EagleLib::NodeManager::getInstance().loadNodes(configFile);
         stream->AddNodes(nodes);
 
-        LOG(info) << "Loaded " << nodes.size() << " top level nodes";
+        std::cout  << "Loaded " << nodes.size() << " top level nodes\n";
         for(int i = 0; i < nodes.size(); ++i)
         {
             PrintNodeTree(nodes[i].get(), 1);
@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
 							{
 								ss << "    " << device;
 							}
-							LOG(info) << ss.str();
+							std::cout << ss.str() << std::endl;
 						}
 					}
 				}
@@ -306,8 +306,13 @@ int main(int argc, char* argv[])
 			{
 				for(auto& itr : _dataStreams)
 				{
-					std::cout << " - " << itr->GetPerTypeId() << " - " << itr->GetFrameGrabber()->GetSourceFilename() << "\n";
+                    if(auto fg = itr->GetFrameGrabber())
+					    std::cout << " - " << itr->GetPerTypeId() << " - " << fg->GetSourceFilename() << "\n";
+                    else
+                        std::cout << " - " << itr->GetPerTypeId() << "\n";
 				}
+                if(_dataStreams.empty())
+                    std::cout << "No streams exist\n";
 			}
 			if(what == "nodes")
 			{
@@ -342,12 +347,14 @@ int main(int argc, char* argv[])
 					try
 					{
 						Parameters::Persistence::Text::Serialize(&ss, itr);   
-						std::cout << " - " << itr->GetTreeName() << ": " << ss.str() << "\n";
+						std::cout << " - " << ss.str() << "\n";
 					}catch(...)
 					{
 						std::cout << " - " << itr->GetTreeName() << "\n";
 					}
 				}
+                if(parameters.empty())
+                    std::cout << "No parameters exist\n";
 			}
 			if(what == "current" || what.empty())
 			{
@@ -357,14 +364,17 @@ int main(int argc, char* argv[])
 						std::cout << " - Current stream: " << fg->GetSourceFilename() << "\n";
 					else
 						std::cout << " - Current stream: " << current_stream->GetPerTypeId() << "\n";
-					return;
 				}
 				if(current_node)
 				{
 					std::cout << " - Current node: " << current_node->getFullTreeName() << "\n";
-					return;
 				}
-				std::cout << "Nothing currently selected\n";
+                if(current_param)
+                {
+                    std::cout << " - Current parameter: " << current_param->GetTreeName() << "\n";
+                }
+                if(!current_node && !current_param && !current_stream)
+				    std::cout << "Nothing currently selected\n";
 			}
 			if(what == "signals")
 			{
@@ -390,10 +400,10 @@ int main(int argc, char* argv[])
 						{
 							ss << " - " << input->GetName() << "\n";
 						}
-						LOG(info) << ss.str();
+						std::cout << ss.str() << std::endl;
 						return;
 					}
-					LOG(info) << "Unable to find any matching inputs for variable with name: " << current_param->GetName() << " with type: " << current_param->GetTypeInfo().name();
+					std::cout << "Unable to find any matching inputs for variable with name: " << current_param->GetName() << " with type: " << current_param->GetTypeInfo().name() << std::endl;
 				}
 				if(current_node)
 				{
@@ -411,28 +421,32 @@ int main(int argc, char* argv[])
 							}
 						}
 					}
-					LOG(info) << ss.str();
+					std::cout << ss.str() << std::endl;
 				}
 			}
 			if(what == "projects")
 			{
 				auto project_count = EagleLib::ObjectManager::Instance().getProjectCount();
 				std::stringstream ss;
+                ss << "\n";
 				for(int i = 0; i < project_count; ++i)
 				{
 					ss << i << " - " << EagleLib::ObjectManager::Instance().getProjectName(i) << "\n";
 				}
-				LOG(info) << ss.str();
+				std::cout << ss.str() << std::endl;
 			}
 			if(what == "plugins")
 			{
 				auto plugins = EagleLib::ListLoadedPlugins();
 				std::stringstream ss;
+                ss << "\n";
 				for(auto& plugin : plugins)
 				{
 					ss << plugin << "\n";
 				}
-				LOG(info) << ss.str();
+                if(plugins.empty())
+                    ss << "No plugins loaded\n";
+				std::cout << ss.str() << std::endl;
 			}
 		};
 		connections.push_back(manager.connect<void(std::string)>("print", func));
@@ -455,7 +469,7 @@ int main(int argc, char* argv[])
             }
             if(idx != -1)
             {
-                LOG(info) << "Selecting stream " << idx;
+                std::cout << "Selecting stream " << idx << std::endl;
                 for(auto& itr : _dataStreams)
                 {
                     if(itr != nullptr)
@@ -469,6 +483,7 @@ int main(int argc, char* argv[])
                         }
                     }
                 }
+                std::cout << "No stream found by given index\n";
             }
             if(current_stream)
             {
@@ -484,6 +499,7 @@ int main(int argc, char* argv[])
                         return;
                     }
                 }
+                std::cout << "No node found with given name" << std::endl;
                 // parse name and try to find absolute path to node
             }
 			if(current_node)
@@ -494,6 +510,7 @@ int main(int argc, char* argv[])
 					current_node = child.get();
 					current_stream.reset();
 					current_param = nullptr;
+                    return;
 				}else
 				{
 					auto params = current_node->getParameters();
@@ -503,8 +520,10 @@ int main(int argc, char* argv[])
 						{
 							current_param = param;
 							current_stream.reset();
+                            return;
 						}
 					}
+                    std::cout << "No parameter found with given name\n";
 				}
 			}
         }));
@@ -517,7 +536,7 @@ int main(int argc, char* argv[])
 				{
 					_dataStreams.erase(itr);
 					current_stream.reset();
-					LOG(info) << "Sucessfully deleted stream";
+					std::cout << "Sucessfully deleted stream\n";
 					return;
 				}
 			}else if(current_node)
@@ -526,17 +545,17 @@ int main(int argc, char* argv[])
 				{
 					parent->removeChild(current_node.get());
 					current_node.reset();
-					LOG(info) << "Sucessfully removed node from parent node";
+					std::cout << "Sucessfully removed node from parent node\n";
 					return;
 				}else if(auto stream = current_node->GetDataStream())
 				{
 					stream->RemoveNode(current_node.get());
 					current_node.reset();
-					LOG(info) << "Sucessfully removed node from datastream";
+					std::cout << "Sucessfully removed node from datastream\n";
 					return;
 				}
 			}
-			LOG(info) << "Unable to delete item";
+			std::cout << "Unable to delete item\n";
 		}));
 		connections.push_back(manager.connect<void(std::string)>("help", [&print_options](std::string)->void{print_options();}));
 		connections.push_back(manager.connect<void(std::string)>("list", [](std::string filter)->void
@@ -566,7 +585,7 @@ int main(int argc, char* argv[])
 			{
 				ss << "  " << plugin << "\n";
 			}
-			LOG(info) << ss.str();
+			std::cout << ss.str() << std::endl;;
 		}));
 		connections.push_back(manager.connect<void(std::string)>("add", [&current_node, &current_stream](std::string name)->void
         {
@@ -610,14 +629,14 @@ int main(int argc, char* argv[])
 					auto pos = value.find(param->GetName());
 					if(pos != std::string::npos && value.size() > param->GetName().size() + 1 && value[param->GetName().size()] == ' ')
 					{
-						LOG(info) << "Setting value for parameter " << param->GetName() << " to " << value.substr(pos + param->GetName().size() + 1);
+						std::cout << "Setting value for parameter " << param->GetName() << " to " << value.substr(pos + param->GetName().size() + 1) << std::endl;
 						std::stringstream ss;
 						ss << value.substr(pos + param->GetName().size() + 1);
 						Parameters::Persistence::Text::DeSerialize(&ss, param);
 						return;
 					}
 				}
-				LOG(info) << "Unable to find parameter by name for set string: " << value;
+				std::cout << "Unable to find parameter by name for set string: " << value << std::endl;
 			}else if(current_stream)
 			{
 				auto params = current_stream->GetFrameGrabber()->getParameters();
@@ -627,14 +646,14 @@ int main(int argc, char* argv[])
 					if(pos != std::string::npos)
 					{
 						auto len = param->GetName().size() + 1;
-						LOG(info) << "Setting value for parameter " << param->GetName() << " to " << value.substr(len);
+						std::cout << "Setting value for parameter " << param->GetName() << " to " << value.substr(len) << std::endl;
 						std::stringstream ss;
 						ss << value.substr(len);
 						Parameters::Persistence::Text::DeSerialize(&ss, param);
 						return;
 					}
 				}
-				LOG(info) << "Unable to find parameter by name for set string: " << value;
+				std::cout << "Unable to find parameter by name for set string: " << value << std::endl;
 			}
 		}));
 		//connections.push_back(manager.connect<void(std::string)>("ls", [&function_map](std::string str)->void {function_map["print"](str); }));
@@ -667,7 +686,7 @@ int main(int argc, char* argv[])
 			}
 			if (signals.size() == 0)
 			{
-				LOG(info) << "No signals found with name: " << name;
+				std::cout << "No signals found with name: " << name << std::endl;
 				return;
 			}
 			int idx = 0;
@@ -680,7 +699,6 @@ int main(int argc, char* argv[])
 				}
 				std::cin >> idx;
 			}
-			LOG(info) << "Attempting to send signal with name \"" << name << "\" and signature: " << signals[idx]->get_signal_type().name();
             auto proxy = Signals::serialization::text::factory::instance()->get_proxy(signals[idx]);
             if(proxy)
             {
@@ -724,7 +742,7 @@ int main(int argc, char* argv[])
                 boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
                 if(EagleLib::ObjectManager::Instance().CheckIsCompiling())
                 {
-                    LOG(info) << "Recompiling...";
+                    std::cout << "Recompiling...\n";
                 }
             }
             if(action == "swap")
@@ -735,7 +753,7 @@ int main(int argc, char* argv[])
 				}
                 if(EagleLib::ObjectManager::Instance().PerformSwap())
                 {
-                    LOG(info) << "Recompile complete";
+                    std::cout << "Recompile complete\n";
                 }
                 for(auto& stream : _dataStreams)
 				{
@@ -793,10 +811,8 @@ int main(int argc, char* argv[])
             {
                 std::string rest;
 				std::getline(ss, rest);
-                LOG(debug) << "Executing command (" << command << ") with arguments: " << rest;
                 try
                 {
-					LOG(debug) << "Attempting to send signal with name \"" << command << "\" and signature: " << signals[0]->get_signal_type().name();
 					auto proxy = Signals::serialization::text::factory::instance()->get_proxy(signals[0]);
 					if(proxy)
 					{
@@ -816,7 +832,7 @@ int main(int argc, char* argv[])
             for(int i = 0; i < 20; ++i)
                 Signals::thread_specific_queue::run_once();
         }
-        LOG(info) << "Shutting down";
+        std::cout << "Shutting down\n";
     }
     gui_thread.interrupt();
     gui_thread.join();

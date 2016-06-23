@@ -2,33 +2,37 @@
 #define OPENCV_FOUND
 #endif
 #include "Node.h"
+#include "NodeManager.h"
+#include <EagleLib/frame_grabber_base.h>
+#include <EagleLib/DataStreamManager.h>
+#include "EagleLib/logger.hpp"
+#include <EagleLib/rcc/external_includes/cv_videoio.hpp>
+#include <EagleLib/rcc/SystemTable.hpp>
+#include <EagleLib/utilities/GpuMatAllocators.h>
+#include "EagleLib/Signals.h"
+#include "EagleLib/profiling.h"
+
+#include "../RuntimeObjectSystem/ISimpleSerializer.h"
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+#include "signals/logging.hpp"
 #include "parameters/Persistence/OpenCV.hpp"
-#include <regex>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
 #include <boost/log/trivial.hpp>
-#include "EagleLib/logger.hpp"
-#include <EagleLib/rcc/external_includes/cv_videoio.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/rolling_mean.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <EagleLib/rcc/SystemTable.hpp>
-#include <EagleLib/utilities/GpuMatAllocators.h>
-#include "NodeManager.h"
-#include <EagleLib/DataStreamManager.h>
-#include "../RuntimeObjectSystem/ISimpleSerializer.h"
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
+
 #include "remotery/lib/Remotery.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
-#include "EagleLib/Signals.h"
-#include "EagleLib/profiling.h"
-#include "signals/logging.hpp"
-#include <EagleLib/frame_grabber_base.h>
+
+#include <regex>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -758,6 +762,7 @@ Node::Init(bool firstInit)
     ui_collector::set_node_name(getFullTreeName());
 	// Node init should be called first because it is where implicit parameters should be setup
 	// Then in ParmaeteredIObject, the implicit parameters will be added back to the _parameter vector
+    RegisterAllParams();
 	NodeInit(firstInit); 
     ParameteredIObject::Init(firstInit);
 }
