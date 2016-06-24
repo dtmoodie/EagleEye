@@ -4,25 +4,15 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <caffe/util/upgrade_proto.hpp>
 #include <algorithm>
-
-#ifdef _MSC_VER
-  #ifdef _DEBUG
-	RUNTIME_COMPILER_LINKLIBRARY("libcaffe-d.lib");
-  #else
-    RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib");
-    RUNTIME_COMPILER_LINKLIBRARY("proto.lib");
-    RUNTIME_COMPILER_LINKLIBRARY("libprotobuf.lib");
-    RUNTIME_COMPILER_LINKLIBRARY("libglob.lib");
-  #endif
-#else
-#endif
-
+#include "caffe_include.h"
+#include "caffe_init.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 caffe_solver::caffe_solver():
     Node()
 {
-
+    //caffe_init_singleton::inst();
+    ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
 }
 void caffe_solver::NodeInit(bool firstInit)
 {
@@ -145,7 +135,9 @@ TS<SyncedMemory> caffe_solver::doProcess(TS<SyncedMemory> input, cv::cuda::Strea
 	if(solver && (input_blobs_param.subscribers || input_blobs.empty()))
 	{
 		sig_fill_blobs();
+        
 		solver->Step(steps_per_iteration);
+        //solver->Solve();
 	}
     return input;
 }

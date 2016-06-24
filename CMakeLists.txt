@@ -40,11 +40,30 @@ MACRO(RCC_LINK_LIB TARGET)
                     GET_FILENAME_COMPONENT(deb_ ${deb} DIRECTORY)
                     SET(LINK_DIRS_DEBUG "${LINK_DIRS_DEBUG};${deb_}")
                     SET(LINK_DIRS_RELEASE "${LINK_DIRS_RELEASE};${rel_}")
+					GET_TARGET_PROPERTY(imp_libs_rel ${lib} IMPORTED_LINK_INTERFACE_LIBRARIES_RELWITHDEBINFO)
+					GET_TARGET_PROPERTY(imp_libs_deb ${lib} IMPORTED_LINK_INTERFACE_LIBRARIES_DEBUG)
+					foreach(imp_lib ${imp_libs_rel})
+						if(EXISTS ${imp_lib})
+							GET_FILENAME_COMPONENT(dir ${imp_lib} DIRECTORY)
+							SET(LINK_DIRS_RELEASE "${LINK_DIRS_RELEASE};${dir}")
+						endif()
+					endforeach()
+					foreach(imp_lib ${imp_libs_deb})
+						if(EXISTS ${imp_lib})
+							GET_FILENAME_COMPONENT(dir ${imp_lib} DIRECTORY)
+							SET(LINK_DIRS_DEBUG "${LINK_DIRS_DEBUG};${dir}")
+						endif()
+					endforeach()
                 ENDIF(TARGET ${lib})
+				
 			ENDIF(EXISTS ${lib})
             
+
+
+
+
 			TARGET_LINK_LIBRARIES(${TARGET} ${PREFIX}${lib})
-            #MESSAGE("Linking ${PREFIX}${lib} to ${TARGET}")
+            
 		ENDIF(${SKIP} STREQUAL "0")
 	ENDFOREACH(lib)
 	LIST(REMOVE_DUPLICATES LINK_DIRS_DEBUG)

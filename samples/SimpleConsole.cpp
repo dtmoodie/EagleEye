@@ -775,6 +775,15 @@ int main(int argc, char* argv[])
 		
 		print_options();
         EagleLib::ObjectManager::Instance().CheckRecompile();
+        std::function<void(const std::string& str, int)> f = [](const std::string& str, int level)
+        {
+            std::string search("Complete");
+            if(str.find(search) != std::string::npos)
+            {
+                std::cout << str;
+            }
+        };
+        EagleLib::ObjectManager::Instance().setCompileCallback(f);
 		std::vector<std::string> command_list;
 		if(vm.count("script"))
 		{

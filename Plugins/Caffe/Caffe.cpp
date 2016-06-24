@@ -10,7 +10,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
 #include "EagleLib/rcc/ObjectManager.h"
 #include <parameters/ParameteredObjectImpl.hpp>
-
+#include "caffe_include.h"
 
 #include <boost/tokenizer.hpp>
 
@@ -20,15 +20,6 @@
 #include "caffe/caffe.hpp"
 #undef LOG
 #include <signals/logging.hpp>
-#ifdef _MSC_VER
-  #ifdef _DEBUG
-	RUNTIME_COMPILER_LINKLIBRARY("libcaffe-d.lib");
-	RUNTIME_COMPILER_LINKLIBRARY("libglog.lib")
-  #else
-    RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib")
-  #endif
-#else
-#endif
 
 SETUP_PROJECT_IMPL;
 
