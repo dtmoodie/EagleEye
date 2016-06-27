@@ -49,8 +49,6 @@ namespace EagleLib
         // Handles actual loading of the image, etc
         virtual rcc::weak_ptr<IFrameGrabber>           GetFrameGrabber() = 0;
 
-		virtual Parameters::IVariableManager*			GetVariableManager() = 0;
-
         virtual SignalManager*							GetSignalManager() = 0;
 
 		virtual IParameterBuffer*						GetParameterBuffer() = 0;

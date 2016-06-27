@@ -163,7 +163,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 				constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
 			}
 		}
-		auto dependent_variable_nodes = node_info->CheckDependentVariables(parentStream->GetVariableManager());
+		auto dependent_variable_nodes = node_info->CheckDependentVariables(parentStream->GetVariableManager().get());
 		for (auto& dependent_variable_node : dependent_variable_nodes)
 		{
 			auto added_nodes = addNode(dependent_variable_node, parentStream);
@@ -259,7 +259,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 				constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
 			}
 		}
-		auto dependent_variable_nodes = node_info->CheckDependentVariables(parentNode->GetVariableManager());
+		auto dependent_variable_nodes = node_info->CheckDependentVariables(parentNode->GetVariableManager().get());
 		for (auto& dependent_variable_node : dependent_variable_nodes)
 		{
 			auto added_nodes = addNode(dependent_variable_node, parentNode);

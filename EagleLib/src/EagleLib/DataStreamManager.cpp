@@ -86,7 +86,7 @@ namespace EagleLib
 		// Handles actual loading of the image, etc
 		virtual rcc::weak_ptr<IFrameGrabber>           GetFrameGrabber();
 
-		virtual Parameters::IVariableManager*		GetVariableManager();
+		virtual std::shared_ptr<Parameters::IVariableManager> GetVariableManager();
 
 		virtual SignalManager*							GetSignalManager();
 
@@ -118,7 +118,7 @@ namespace EagleLib
 		rcc::shared_ptr<IRenderEngine>							rendering_engine;
 		rcc::shared_ptr<ITrackManager>							track_manager;
 		rcc::shared_ptr<IFrameGrabber>							frame_grabber;
-		std::shared_ptr<Parameters::IVariableManager>			variable_manager;
+		//std::shared_ptr<Parameters::IVariableManager>			variable_manager;
 		std::shared_ptr<SignalManager>							signal_manager;
 		std::vector<rcc::shared_ptr<Nodes::Node>>				top_level_nodes;
 		std::shared_ptr<IParameterBuffer>						_parameter_buffer;
@@ -222,11 +222,11 @@ IParameterBuffer* DataStream::GetParameterBuffer()
 	return _parameter_buffer.get();
 
 }
-Parameters::IVariableManager* DataStream::GetVariableManager()
+std::shared_ptr<Parameters::IVariableManager> DataStream::GetVariableManager()
 {
-    if(variable_manager == nullptr)
-        variable_manager.reset(new Parameters::VariableManager());
-    return variable_manager.get();
+    if(_variable_manager == nullptr)
+        _variable_manager.reset(new Parameters::VariableManager());
+	return _variable_manager;
 }
 
 bool DataStream::LoadDocument(const std::string& document, const std::string& prefered_loader)
@@ -385,19 +385,23 @@ std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::AddNode(const std::string&
 }
 void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
+	node->SetDataStream(this);
+	node->Init(true);
 	if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
 	{
         Signals::thread_specific_queue::push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNode), this, node), _thread_id);
 		return;
 	}
-
-    node->SetDataStream(this);
-    node->Init(true);
     top_level_nodes.push_back(node);
     dirty_flag = true;
 }
 void DataStream::AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> nodes)
 {
+	for (auto& node : nodes)
+	{
+		node->SetDataStream(this);
+		node->Init(true);
+	}
 	if (boost::this_thread::get_id() != processing_thread.get_id() && _thread_id != 0 && !paused)
 	{
         Signals::thread_specific_queue::push(std::bind(&DataStream::AddNodes, this, nodes), _thread_id);
@@ -405,7 +409,6 @@ void DataStream::AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> nodes)
 	}
     for(auto& node: nodes)
     {
-        node->SetDataStream(this);
         top_level_nodes.push_back(node);
     }
     dirty_flag = true;
@@ -538,7 +541,7 @@ void DataStream::process()
 				}
 				for(auto sink : variable_sinks)
 				{
-					sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
+					sink->SerializeVariables(current_frame.frame_number, _variable_manager.get());
 				}
 				++iteration_count;
 				if(!dirty_flag)

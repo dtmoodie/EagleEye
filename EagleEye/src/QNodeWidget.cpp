@@ -185,7 +185,21 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
 			}
 		}
         log_connection = EagleLib::ui_collector::get_object_log_handler(node->getFullTreeName()).connect(std::bind(&QNodeWidget::on_logReceive, this, std::placeholders::_1, std::placeholders::_2));
-		_recompile_connection = node->GetDataStream()->GetSignalManager()->connect<void(EagleLib::ParameteredIObject*)>("object_recompiled", std::bind(&QNodeWidget::on_object_recompile, this, std::placeholders::_1), this);
+		if (auto stream = node->GetDataStream())
+		{
+			if (auto sig_mgr = stream->GetSignalManager())
+			{
+				_recompile_connection = sig_mgr->connect<void(EagleLib::ParameteredIObject*)>("object_recompiled", std::bind(&QNodeWidget::on_object_recompile, this, std::placeholders::_1), this);
+			}
+			else
+			{
+				LOG(debug) << "stream->GetSignalManager() failed";
+			}
+		}
+		else
+		{
+			LOG(debug) << "No stream attached to node";
+		}
 	}
 }
 void QNodeWidget::on_object_recompile(EagleLib::ParameteredIObject* obj)

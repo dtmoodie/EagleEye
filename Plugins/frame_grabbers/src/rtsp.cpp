@@ -28,7 +28,7 @@ int frame_grabber_rtsp::frame_grabber_rtsp_info::CanLoadDocument(const std::stri
 
 int frame_grabber_rtsp::frame_grabber_rtsp_info::LoadTimeout() const
 {
-    return 3000;
+    return 10000;
 }
 
 int frame_grabber_rtsp::frame_grabber_rtsp_info::Priority() const
