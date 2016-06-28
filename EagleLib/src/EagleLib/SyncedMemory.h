@@ -6,17 +6,17 @@
 
 namespace EagleLib
 {
-	template<typename T> struct FN : public T
-	{
-		template<class...U> FN(int frame_number_ = 0) : frame_number(frame_number_) {}
-		template<class...U> FN(int frame_number_, const U&... args) : frame_number(frame_number_), T(args...) {}
-		FN& operator=(const T& other)
-		{
-			T::operator=(other);
-			return *this;
-		}
-		int frame_number;
-	};
+    template<typename T> struct FN : public T
+    {
+        template<class...U> FN(int frame_number_ = 0) : frame_number(frame_number_) {}
+        template<class...U> FN(int frame_number_, const U&... args) : frame_number(frame_number_), T(args...) {}
+        FN& operator=(const T& other)
+        {
+            T::operator=(other);
+            return *this;
+        }
+        int frame_number;
+    };
     template<typename T> struct TS: public T
     {
         template<class...U> TS(U...args):T(args...)
@@ -34,47 +34,47 @@ namespace EagleLib
     };
 
 
-	class EAGLE_EXPORTS SyncedMemory
-	{
-		enum SYNC_STATE
-		{
-			SYNCED = 0,
-			HOST_UPDATED,
-			DEVICE_UPDATED
-		};
-		std::vector<cv::Mat> h_data;
-		std::vector<cv::cuda::GpuMat> d_data;
-		std::vector<SYNC_STATE> sync_flags;
-	public:
-		SyncedMemory();
+    class EAGLE_EXPORTS SyncedMemory
+    {
+        enum SYNC_STATE
+        {
+            SYNCED = 0,
+            HOST_UPDATED,
+            DEVICE_UPDATED
+        };
+        std::vector<cv::Mat> h_data;
+        std::vector<cv::cuda::GpuMat> d_data;
+        std::vector<SYNC_STATE> sync_flags;
+    public:
+        SyncedMemory();
         SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat);
         SyncedMemory(const cv::Mat& h_mat);
         SyncedMemory(const cv::cuda::GpuMat& d_mat);
         SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat);
-		SyncedMemory(cv::MatAllocator* cpu_allocator, cv::cuda::GpuMat::Allocator* gpu_allocator);
+        SyncedMemory(cv::MatAllocator* cpu_allocator, cv::cuda::GpuMat::Allocator* gpu_allocator);
         SyncedMemory clone(cv::cuda::Stream& stream);
 
-		const cv::Mat&						 GetMat(cv::cuda::Stream& stream, int = 0);
-		cv::Mat&							 GetMatMutable(cv::cuda::Stream& stream, int = 0);
+        const cv::Mat&                         GetMat(cv::cuda::Stream& stream, int = 0);
+        cv::Mat&                             GetMatMutable(cv::cuda::Stream& stream, int = 0);
 
-		const cv::cuda::GpuMat&				 GetGpuMat(cv::cuda::Stream& stream, int = 0);
-		cv::cuda::GpuMat&					 GetGpuMatMutable(cv::cuda::Stream& stream, int = 0);
+        const cv::cuda::GpuMat&                 GetGpuMat(cv::cuda::Stream& stream, int = 0);
+        cv::cuda::GpuMat&                     GetGpuMatMutable(cv::cuda::Stream& stream, int = 0);
 
-		const std::vector<cv::Mat>&			 GetMatVec(cv::cuda::Stream& stream);
-		std::vector<cv::Mat>&				 GetMatVecMutable(cv::cuda::Stream& stream);
+        const std::vector<cv::Mat>&             GetMatVec(cv::cuda::Stream& stream);
+        std::vector<cv::Mat>&                 GetMatVecMutable(cv::cuda::Stream& stream);
 
-		const std::vector<cv::cuda::GpuMat>& GetGpuMatVec(cv::cuda::Stream& stream);
-		std::vector<cv::cuda::GpuMat>&		 GetGpuMatVecMutable(cv::cuda::Stream& stream);
+        const std::vector<cv::cuda::GpuMat>& GetGpuMatVec(cv::cuda::Stream& stream);
+        std::vector<cv::cuda::GpuMat>&         GetGpuMatVecMutable(cv::cuda::Stream& stream);
 
-		void Synchronize(cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        void Synchronize(cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         void ResizeNumMats(int new_size = 1);
         void ReleaseGpu(cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 
-		int GetNumMats() const;
+        int GetNumMats() const;
         bool empty() const;
-		cv::Size GetSize(int index = 0) const;
-		std::vector<int> GetShape() const;
+        cv::Size GetSize(int index = 0) const;
+        std::vector<int> GetShape() const;
         int GetDim(int dim) const;
-		int GetDepth() const;
-	};
+        int GetDepth() const;
+    };
 }

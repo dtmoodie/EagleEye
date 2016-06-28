@@ -22,14 +22,14 @@ void ImageWriter::requestWrite()
 
 void ImageWriter::writeImage()
 {
-	rmt_ScopedCPUSample(ImageWriter_writeImage);
+    rmt_ScopedCPUSample(ImageWriter_writeImage);
     try
     {
         cv::imwrite(baseName +"-"+ boost::lexical_cast<std::string>(frameCount) + extension, h_buf);
     }catch(cv::Exception &e)
     {
         //log(Error, e.what());
-		NODE_LOG(error) << e.what();
+        NODE_LOG(error) << e.what();
         return;
     }
     ++frameCount;
@@ -41,7 +41,7 @@ void ImageWriter::NodeInit(bool firstInit)
     frameCount = 0;
     frameSkip = 0;
     baseName = "Image";
-	Parameters::EnumParameter param;
+    Parameters::EnumParameter param;
     param.addEnum(ENUM(jpg));
     param.addEnum(ENUM(png));
     param.addEnum(ENUM(tiff));
@@ -51,7 +51,7 @@ void ImageWriter::NodeInit(bool firstInit)
     updateParameter("Extension", param);
     updateParameter("Frequency", -1);
     updateParameter<boost::function<void(void)>>("Save image", boost::bind(&ImageWriter::requestWrite, this))->type = Parameters::Parameter::Output;
-	updateParameter<Parameters::WriteDirectory>("Save Directory", Parameters::WriteDirectory("F:/temp"));
+    updateParameter<Parameters::WriteDirectory>("Save Directory", Parameters::WriteDirectory("F:/temp"));
     if(firstInit)
     {
         addInputParameter<cv::cuda::GpuMat>("Input image device");
@@ -63,17 +63,17 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 {
     if(_parameters[0]->changed)
     {
-		std::string& tmp = *getParameter<std::string>(0)->Data();
-		if (tmp.size())
-			baseName = tmp;
-		else
-		{
-			NODE_LOG(warning) << "Empty base name passed in";
-		}
+        std::string& tmp = *getParameter<std::string>(0)->Data();
+        if (tmp.size())
+            baseName = tmp;
+        else
+        {
+            NODE_LOG(warning) << "Empty base name passed in";
+        }
     }
     if(_parameters[1]->changed || extension.size() == 0)
     {
-		Extensions ext = (Extensions)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
+        Extensions ext = (Extensions)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
         switch (ext)
         {
         case jpg:
@@ -93,7 +93,7 @@ cv::cuda::GpuMat ImageWriter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
             break;
         }
     }
-	int freq = *getParameter<int>(2)->Data();
+    int freq = *getParameter<int>(2)->Data();
     if((writeRequested || (frameSkip >= freq && freq != -1)) && baseName.size() && extension.size())
     {
         img.download(h_buf, stream);

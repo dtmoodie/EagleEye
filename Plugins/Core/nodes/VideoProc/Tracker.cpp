@@ -50,7 +50,7 @@ void KeyFrameTracker::NodeInit(bool firstInit)
 }
 void KeyFrameTracker::reset()
 {
-	trackedFrames.clear();
+    trackedFrames.clear();
 }
 
 void KeyFrameTracker_findHomographyCallback(int status, void* userData)
@@ -122,7 +122,7 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
 {
     std::pair<cv::cuda::GpuMat*, std::string>* data = (std::pair<cv::cuda::GpuMat*, std::string>*)userData;
     boost::function<void(void)> f = boost::bind(displayCallback, *data->first, data->second);
-	Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, Loki::TypeInfo(typeid(EagleLib::Nodes::Node))));
+    Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, Loki::TypeInfo(typeid(EagleLib::Nodes::Node))));
     delete data;
 }
 
@@ -145,7 +145,7 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
             nonWarpedMask.setTo(cv::Scalar(1), stream);
         }
     }
-	int* index = getParameter<int>("Index")->Data();
+    int* index = getParameter<int>("Index")->Data();
     static int frameCount = 0;
     if(index)
         frameCount = *index;
@@ -208,12 +208,12 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
             }
             if(results[i]->calculated)
             {
-				if (results[i]->quality < *getParameter<double>(2)->Data())
+                if (results[i]->quality < *getParameter<double>(2)->Data())
                     addKeyFrame = true;
-				if (i == trackedFrames.size() - 1 && results[i]->quality <*getParameter<double>(1)->Data())
+                if (i == trackedFrames.size() - 1 && results[i]->quality <*getParameter<double>(1)->Data())
                     addKeyFrame = true;
             }
-			if (*getParameter<bool>("Display")->Data() == true)
+            if (*getParameter<bool>("Display")->Data() == true)
             {
                 cv::cuda::GpuMat* warpBuffer = warpedImageBuffer.getFront();
                 cv::cuda::GpuMat* maskBuffer = warpedMaskBuffer.getFront();
@@ -239,7 +239,7 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     if(addKeyFrame)
     {
         //log(Status, "Adding key frame " + boost::lexical_cast<std::string>(frameCount));
-		NODE_LOG(info) << "Adding key frame " + frameCount;
+        NODE_LOG(info) << "Adding key frame " + frameCount;
         TrackedFrame tf(img,frameCount);
         cv::cuda::GpuMat& keyPoints = tf.keyFrame.getKeyPoints();
         (*detector)(img,
@@ -247,7 +247,7 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
                     keyPoints,
                     tf.keyFrame.getDescriptors(),
                     stream);
-		if (keyPoints.cols > *getParameter<int>(3)->Data())
+        if (keyPoints.cols > *getParameter<int>(3)->Data())
             trackedFrames.push_back(tf);
     }
     ++frameCount;

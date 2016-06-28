@@ -18,14 +18,14 @@ INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
-	
+    
 )
 
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
 
 IF(WIN32)
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 ELSE()
     #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
 ENDIF()
@@ -34,9 +34,9 @@ cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})
 
 add_dependencies(Dev EagleLib)
 RCC_LINK_LIB(Dev 
-	${OpenCV_LIBS}
-	${CUDA_CUBLAS_LIBRARIES} 
-	EagleLib
+    ${OpenCV_LIBS}
+    ${CUDA_CUBLAS_LIBRARIES} 
+    EagleLib
 )
 
 INCLUDE(../PluginTemplate.cmake)

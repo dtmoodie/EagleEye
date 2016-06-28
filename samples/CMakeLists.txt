@@ -3,7 +3,7 @@
 project(samples)
 CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
-	CMAKE_POLICY(SET CMP0053 OLD)
+    CMAKE_POLICY(SET CMP0053 OLD)
 ENDIF()
 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono program_options log log_setup)
@@ -21,9 +21,9 @@ LINK_DIRECTORIES(${LINK_DIRS})
 find_package(CUDA REQUIRED)
   
 INCLUDE_DIRECTORIES(
-	${EagleLib_INCLUDE_DIRECTORIES}
-	${OpenCV_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIRS}
+    ${EagleLib_INCLUDE_DIRECTORIES}
+    ${OpenCV_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
 )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -45,5 +45,5 @@ target_link_libraries(SimpleConsole
 )
 add_subdirectory(PythonInteractive)
 
-	
-	
+    
+    

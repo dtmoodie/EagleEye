@@ -31,10 +31,10 @@ cmake_policy(SET CMP0012 NEW)
 
 IF(WIN32)
     SET(CUDA_DEVRT ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/cudadevrt.lib)
-	SET(CUDA_LIB_DIR ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/)
+    SET(CUDA_LIB_DIR ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/)
 ELSE(WIN32)
     SET(CUDA_DEVRT ${CUDA_TOOLKIT_ROOT_DIR}/lib64/cudadevrt)
-	SET(CUDA_LIB_DIR ${CUDA_TOOLKIT_ROOT_DIR}/lib64/)
+    SET(CUDA_LIB_DIR ${CUDA_TOOLKIT_ROOT_DIR}/lib64/)
 ENDIF(WIN32)
 SET(LINK_LIBS "")
 ADD_DEFINITIONS(-DCVAPI_EXPORTS)
@@ -58,7 +58,7 @@ LIST(APPEND defs_ ${Parameters_DEFS})
 LIST(APPEND defs_ -DRMT_USE_CUDA)
 LIST(APPEND defs_ -DRMT_USE_OPENGL)
 IF(${EagleLib_JETSON})
-	LIST(APPEND defs_ "-DJETSON")
+    LIST(APPEND defs_ "-DJETSON")
 ENDIF(${EagleLib_JETSON})
 IF(NOT WIN32)
         set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex log log_setup atomic)
@@ -115,9 +115,9 @@ SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 SET(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIR};${CUDA_INCLUDE_DIRS};${CMAKE_CURRENT_SOURCE_DIR}/src;${Parameters_INCLUDE};${PPLX_INCLUDE_DIRS};${CMAKE_CURRENT_SOURCE_DIR}/signals;${CMAKE_CURRENT_SOURCE_DIR}/remotery/lib")
 
 IF(WIN32)
-	SET(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64;${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}/../Debug")
-	SET(RCC_LIBRARY_DIRS_RELEASE "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64;${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}/../Release;")
-	SET(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64;${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}/../RelWithDebInfo")
+    SET(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64;${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}/../Debug")
+    SET(RCC_LIBRARY_DIRS_RELEASE "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64;${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}/../Release;")
+    SET(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64;${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}/../RelWithDebInfo")
 ELSE()
     SET(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib64;${LIBRARY_OUTPUT_PATH};${Parameters_LIB_DIRS_DEBUG}")
     SET(RCC_LIBRARY_DIRS_RELEASE "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib64;${LIBRARY_OUTPUT_PATH};${Parameters_LIB_DIRS_RELEASE}")
@@ -143,7 +143,7 @@ ENDIF()
 
 
 #
-#				Export variables for other projects to use
+#                Export variables for other projects to use
 #
 SET(LIB_BUILD_DIR_RELEASE "")
 SET(LIB_BUILD_DIR_DEBUG "")
@@ -175,7 +175,7 @@ LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIR})
 # Reporting section
 IF(Parameters_UI_qt)
-	message(STATUS "Parameters built with QT support, so linking into EagleLib")
+    message(STATUS "Parameters built with QT support, so linking into EagleLib")
 ENDIF()
 message(STATUS
 "================ EagleLib ===============
@@ -190,7 +190,7 @@ message(STATUS
     Libs: ${EagleLib_LIBRARIES}
 
     Lib dirs:
-	${EagleLib_LIB_DIRS_DEBUG}
+    ${EagleLib_LIB_DIRS_DEBUG}
 
     ${EagleLib_LIB_DIRS_RELEASE}
 
@@ -214,8 +214,8 @@ message(STATUS
     PCL_LIB_DIR: ${PCL_LIBRARY_DIRS}
     Eigen inc: ${EIGEN3_INCLUDE_DIR}
 ++++++++++++ Parameters ++++++++++++++++++++
-	Includes: ${Parameters_INCLUDE}
-	UI: ${Parameters_UI_qt}
+    Includes: ${Parameters_INCLUDE}
+    UI: ${Parameters_UI_qt}
 ")
 
 ADD_DEFINITIONS(${defs_})
@@ -224,7 +224,7 @@ ADD_DEFINITIONS(${defs_})
 macro(GroupSources curdir)
 file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
     foreach(child ${children})
-		if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+        if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
             GroupSources(${curdir}/${child})
         else()
             string(REPLACE "/" "\\" groupname ${curdir})
@@ -236,10 +236,10 @@ endmacro()
 GroupSources(include)
 GroupSources(src)
 cuda_add_library(EagleLib SHARED
-	${src}  
-	${hdr}
-	${knl}
-	${RuntimeObjectSystem_SRCS}
+    ${src}  
+    ${hdr}
+    ${knl}
+    ${RuntimeObjectSystem_SRCS}
 )
 SOURCE_GROUP("Header Files\\External" FILES ${ext_inc})
 
@@ -254,8 +254,8 @@ TARGET_LINK_LIBRARIES(EagleLib
         signals
         RuntimeObjectSystem
         RuntimeCompiler
-		${LINK_LIBS}
-		#cuda_utils
+        ${LINK_LIBS}
+        #cuda_utils
 )
 if(${MXNET_FOUND})
   TARGET_LINK_LIBRARIES(EagleLib ${MXNET_LIBRARY})
@@ -269,35 +269,35 @@ else(WIN32)
 endif(WIN32)
 
 ADD_DEPENDENCIES(EagleLib
-	parameters
-	pplx
-	signals
+    parameters
+    pplx
+    signals
     RuntimeObjectSystem
     RuntimeCompiler
-	#cuda_utils
-	)
+    #cuda_utils
+    )
 
 install(TARGETS EagleLib
-		RUNTIME DESTINATION bin
-		LIBRARY DESTINATION lib
-		ARCHIVE DESTINATION lib)
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
 
 install(DIRECTORY src/ 
-		DESTINATION include
+        DESTINATION include
         FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY src/
-		DESTINATION include
-		FILES_MATCHING PATTERN "*.hpp")
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.hpp")
 install(FILES ${CMAKE_BINARY_DIR}/EagleLibConfig.cmake
-		DESTINATION ./)
+        DESTINATION ./)
 
 if(WIN32)
-	install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/
-		DESTINATION bin
-		FILES_MATCHING PATTERN "*.pdb")
-	install(DIRECTORY ${CMAKE_BINARY_DIR}/RelWithDebInfo/
-		DESTINATION bin
-		FILES_MATCHING PATTERN "*.pdb")
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/
+        DESTINATION bin
+        FILES_MATCHING PATTERN "*.pdb")
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/RelWithDebInfo/
+        DESTINATION bin
+        FILES_MATCHING PATTERN "*.pdb")
 endif(WIN32)
 
 

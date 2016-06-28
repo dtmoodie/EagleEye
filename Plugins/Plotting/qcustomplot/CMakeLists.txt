@@ -16,7 +16,7 @@ INCLUDE_DIRECTORIES(
     ${Qt5Core_INCLUDE_DIRS}
     ${Qt5Widgets_INCLUDE_DIRS}
     ${Qt5PrintSupport_INCLUDE_DIRS}
-	${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_definitions(-DQCUSTOMPLOT_COMPILE_LIBRARY)
@@ -27,8 +27,8 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_library(QCustomPlot SHARED ${qcustomplot} ${MOC})
 TARGET_LINK_LIBRARIES(QCustomPlot 
     Qt5::Core 
-	Qt5::Widgets 
-	Qt5::OpenGL
-	Qt5::PrintSupport)
+    Qt5::Widgets 
+    Qt5::OpenGL
+    Qt5::PrintSupport)
 
 ENDIF(Qt5_FOUND)

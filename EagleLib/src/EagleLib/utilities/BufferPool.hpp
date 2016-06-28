@@ -9,24 +9,24 @@
 
 namespace EagleLib
 {
-	void scoped_buffer_dallocator_callback(int status, void* user_data);
-	class EAGLE_EXPORTS scoped_buffer
-	{
-	public:
-		class EAGLE_EXPORTS GarbageCollector
-		{
-		public:
-			GarbageCollector();
-			static void Run();
-		};
-		scoped_buffer(cv::cuda::Stream stream);
-		~scoped_buffer();
-		cv::cuda::GpuMat& GetMat();
-	private:
-		friend void scoped_buffer_dallocator_callback(int status, void* user_data);
-		cv::cuda::GpuMat* data;
-		cv::cuda::Stream stream;
-		static boost::lockfree::queue<cv::cuda::GpuMat*> deallocateQueue;
-		
-	};
+    void scoped_buffer_dallocator_callback(int status, void* user_data);
+    class EAGLE_EXPORTS scoped_buffer
+    {
+    public:
+        class EAGLE_EXPORTS GarbageCollector
+        {
+        public:
+            GarbageCollector();
+            static void Run();
+        };
+        scoped_buffer(cv::cuda::Stream stream);
+        ~scoped_buffer();
+        cv::cuda::GpuMat& GetMat();
+    private:
+        friend void scoped_buffer_dallocator_callback(int status, void* user_data);
+        cv::cuda::GpuMat* data;
+        cv::cuda::Stream stream;
+        static boost::lockfree::queue<cv::cuda::GpuMat*> deallocateQueue;
+        
+    };
 }

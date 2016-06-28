@@ -16,9 +16,9 @@ void GoodFeaturesToTrack::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
-        updateParameter("Max corners",			int(1000));
+        updateParameter("Max corners",            int(1000));
         updateParameter("Quality Level",        double(0.01));
-        updateParameter("Min Distance",			double(0.0))->SetTooltip("The minimum distance between detected points");
+        updateParameter("Min Distance",            double(0.0))->SetTooltip("The minimum distance between detected points");
         updateParameter("Block Size",           int(3));
         updateParameter("Use harris",           false);
         ParameteredObject::updateParameter("Harris K", 0.04, 0.01, 1.0);
@@ -28,66 +28,66 @@ void GoodFeaturesToTrack::NodeInit(bool firstInit)
 
 void GoodFeaturesToTrack::detect(const cv::cuda::GpuMat& img, int frame_number, const cv::cuda::GpuMat& mask, cv::cuda::Stream& stream)
 {
-	cv::cuda::GpuMat key_points;
-	cv::cuda::GpuMat grey_img;
-	if (img.channels() != 1)
-	{
-		if (!GetDataStream()->GetParameterBuffer()->GetParameter(grey_img, "gray_image", frame_number))
-		{
-			cv::cuda::cvtColor(img, grey_img, cv::COLOR_BGR2GRAY, 0, stream);
-			GetDataStream()->GetParameterBuffer()->SetParameter(grey_img, "gray_image", frame_number);
-		}
-	}
-	else
-	{
-		grey_img = img;
-	}
-	
-	detector->detect(grey_img, key_points, mask, stream);
-	
-	updateParameter("Detected Corners", key_points)->type = Parameters::Parameter::Output;
-	updateParameter("Num corners", key_points.cols)->type = Parameters::Parameter::State;
+    cv::cuda::GpuMat key_points;
+    cv::cuda::GpuMat grey_img;
+    if (img.channels() != 1)
+    {
+        if (!GetDataStream()->GetParameterBuffer()->GetParameter(grey_img, "gray_image", frame_number))
+        {
+            cv::cuda::cvtColor(img, grey_img, cv::COLOR_BGR2GRAY, 0, stream);
+            GetDataStream()->GetParameterBuffer()->SetParameter(grey_img, "gray_image", frame_number);
+        }
+    }
+    else
+    {
+        grey_img = img;
+    }
+    
+    detector->detect(grey_img, key_points, mask, stream);
+    
+    updateParameter("Detected Corners", key_points)->type = Parameters::Parameter::Output;
+    updateParameter("Num corners", key_points.cols)->type = Parameters::Parameter::State;
 }
 
 void GoodFeaturesToTrack::update_detector(int depth)
 {
-	int numCorners = *getParameter<int>(0)->Data();
-	double qualityLevel = *getParameter<double>(1)->Data();
-	double minDistance = *getParameter<double>(2)->Data();
-	int blockSize = *getParameter<int>(3)->Data();
-	bool useHarris = *getParameter<bool>(4)->Data();
-	double harrisK = *getParameter<double>(5)->Data();
+    int numCorners = *getParameter<int>(0)->Data();
+    double qualityLevel = *getParameter<double>(1)->Data();
+    double minDistance = *getParameter<double>(2)->Data();
+    int blockSize = *getParameter<int>(3)->Data();
+    bool useHarris = *getParameter<bool>(4)->Data();
+    double harrisK = *getParameter<double>(5)->Data();
 
-	detector = cv::cuda::createGoodFeaturesToTrackDetector(depth,
-		numCorners, qualityLevel, minDistance, blockSize, useHarris, harrisK);
+    detector = cv::cuda::createGoodFeaturesToTrackDetector(depth,
+        numCorners, qualityLevel, minDistance, blockSize, useHarris, harrisK);
 
 
-	NODE_LOG(info) << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
-		<< " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
+    NODE_LOG(info) << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
+        << " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
 
-	_parameters[0]->changed = false;
-	_parameters[1]->changed = false;
-	_parameters[2]->changed = false;
-	_parameters[3]->changed = false;
-	_parameters[4]->changed = false;
-	_parameters[5]->changed = false;
-	_parameters[6]->changed = false;
+    _parameters[0]->changed = false;
+    _parameters[1]->changed = false;
+    _parameters[2]->changed = false;
+    _parameters[3]->changed = false;
+    _parameters[4]->changed = false;
+    _parameters[5]->changed = false;
+    _parameters[6]->changed = false;
 }
 
 TS<SyncedMemory> GoodFeaturesToTrack::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
 {
-	cv::cuda::GpuMat d_img = img.GetGpuMat(stream);
+    cv::cuda::GpuMat d_img = img.GetGpuMat(stream);
     if(_parameters[1]->changed || _parameters[2]->changed ||
        _parameters[3]->changed || _parameters[4]->changed ||
        _parameters[5]->changed || _parameters[6]->changed || detector == nullptr)
     {
-		update_detector(d_img.depth());
+        update_detector(d_img.depth());
     }
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
-	if (mask)
-		detect(img.GetGpuMat(stream), img.frame_number, *mask, stream);
-	else
-		detect(img.GetGpuMat(stream), img.frame_number, cv::cuda::GpuMat(), stream);
+    if (mask)
+        detect(img.GetGpuMat(stream), img.frame_number, *mask, stream);
+    else
+        detect(img.GetGpuMat(stream), img.frame_number, cv::cuda::GpuMat(), stream);
     return img;
 }
 
@@ -97,7 +97,7 @@ void FastFeatureDetector::NodeInit(bool firstInit)
     {
         updateParameter("Threshold", int(10));
         updateParameter("Use nonmax suppression", true);
-		Parameters::EnumParameter param;
+        Parameters::EnumParameter param;
         param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_5_8));
         param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_7_12));
         param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_9_16));
@@ -109,8 +109,8 @@ void FastFeatureDetector::NodeInit(bool firstInit)
 }
 void FastFeatureDetector::Serialize(ISimpleSerializer *pSerializer)
 {
-	Node::Serialize(pSerializer);
-	SERIALIZE(detector);
+    Node::Serialize(pSerializer);
+    SERIALIZE(detector);
 }
 cv::cuda::GpuMat FastFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
@@ -119,27 +119,27 @@ cv::cuda::GpuMat FastFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda:
        _parameters[2]->changed ||
        _parameters[3]->changed)
     {
-		detector = cv::cuda::FastFeatureDetector::create(
-			*getParameter<int>(1)->Data(),
-			*getParameter<bool>(2)->Data(),
-			getParameter<Parameters::EnumParameter>(3)->Data()->getValue(),
-			*getParameter<int>(4)->Data());
+        detector = cv::cuda::FastFeatureDetector::create(
+            *getParameter<int>(1)->Data(),
+            *getParameter<bool>(2)->Data(),
+            getParameter<Parameters::EnumParameter>(3)->Data()->getValue(),
+            *getParameter<int>(4)->Data());
         _parameters[0]->changed = false;
         _parameters[1]->changed = false;
         _parameters[2]->changed = false;
         _parameters[3]->changed = false;
     }
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
-	cv::cuda::GpuMat key_points(BlockMemoryAllocator::Instance());
+    cv::cuda::GpuMat key_points(BlockMemoryAllocator::Instance());
     if(mask)
     {
-		detector->detectAsync(img, key_points, *mask, stream);
+        detector->detectAsync(img, key_points, *mask, stream);
     }else
     {
-		detector->detectAsync(img, key_points, cv::cuda::GpuMat(), stream);
+        detector->detectAsync(img, key_points, cv::cuda::GpuMat(), stream);
     }
-	if (!key_points.empty())
-		updateParameter("Detected Key Points", key_points);
+    if (!key_points.empty())
+        updateParameter("Detected Key Points", key_points);
     return img;
 }
 /// *****************************************************************************************
@@ -151,14 +151,14 @@ void ORBFeatureDetector::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
-		detector = cv::cuda::ORB::create();
+        detector = cv::cuda::ORB::create();
         updateParameter("Number of features", int(500));    //1
         updateParameter("Scale Factor", float(1.2));        //2
         updateParameter("Num Levels", int(8));              //3
         updateParameter("Edge Threshold", int(31));         //4
         updateParameter("First Level", int(0));             //5
         updateParameter("WTA_K", int(2));                   //6
-		Parameters::EnumParameter param;
+        Parameters::EnumParameter param;
         param.addEnum(ENUM(cv::ORB::kBytes));
         param.addEnum(ENUM(cv::ORB::HARRIS_SCORE));
         param.addEnum(ENUM(cv::ORB::FAST_SCORE));
@@ -173,8 +173,8 @@ void ORBFeatureDetector::NodeInit(bool firstInit)
 }
 void ORBFeatureDetector::Serialize(ISimpleSerializer* pSerializer)
 {
-	Node::Serialize(pSerializer);
-	SERIALIZE(detector);
+    Node::Serialize(pSerializer);
+    SERIALIZE(detector);
 }
 cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
@@ -190,16 +190,16 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
        _parameters[0]->changed || detector == nullptr)
     {
         detector = cv::cuda::ORB::create(
-					*getParameter<int>(0)->Data(),
-					*getParameter<float>(1)->Data(),
-					*getParameter<int>(2)->Data(),
-					*getParameter<int>(3)->Data(),
-					*getParameter<int>(4)->Data(),
-					*getParameter<int>(5)->Data(),
-					getParameter<Parameters::EnumParameter>(6)->Data()->getValue(),
-					*getParameter<int>(7)->Data(),
-					*getParameter<int>(8)->Data(),
-					*getParameter<bool>(9)->Data());
+                    *getParameter<int>(0)->Data(),
+                    *getParameter<float>(1)->Data(),
+                    *getParameter<int>(2)->Data(),
+                    *getParameter<int>(3)->Data(),
+                    *getParameter<int>(4)->Data(),
+                    *getParameter<int>(5)->Data(),
+                    getParameter<Parameters::EnumParameter>(6)->Data()->getValue(),
+                    *getParameter<int>(7)->Data(),
+                    *getParameter<int>(8)->Data(),
+                    *getParameter<bool>(9)->Data());
 
        _parameters[1]->changed = false;
        _parameters[2]->changed = false;
@@ -212,20 +212,20 @@ cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::
        _parameters[9]->changed = false;
        _parameters[0]->changed = false;
     }
-	cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
-	
-	cv::cuda::GpuMat key_points(BlockMemoryAllocator::Instance()), point_descriptors(BlockMemoryAllocator::Instance());
-	if (detector == nullptr)
-		return img;
+    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
+    
+    cv::cuda::GpuMat key_points(BlockMemoryAllocator::Instance()), point_descriptors(BlockMemoryAllocator::Instance());
+    if (detector == nullptr)
+        return img;
     if(mask)
     {
-		detector->detectAndComputeAsync(img, *mask, key_points, point_descriptors, false, stream);
+        detector->detectAndComputeAsync(img, *mask, key_points, point_descriptors, false, stream);
     }else
     {
-		detector->detectAndComputeAsync(img, cv::cuda::GpuMat(), key_points, point_descriptors, false, stream);
+        detector->detectAndComputeAsync(img, cv::cuda::GpuMat(), key_points, point_descriptors, false, stream);
     }
-	updateParameter("Detected Points", key_points)->type = Parameters::Parameter::Output;
-	updateParameter("Point Descriptors", point_descriptors)->type = Parameters::Parameter::Output;
+    updateParameter("Detected Points", key_points)->type = Parameters::Parameter::Output;
+    updateParameter("Point Descriptors", point_descriptors)->type = Parameters::Parameter::Output;
     return img;
 }
 void HistogramRange::Serialize(ISimpleSerializer *pSerializer)
@@ -270,16 +270,16 @@ cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
         return hist;
     }else
     {
-		NODE_LOG(warning) << "Multi channel histograms not supported for " + boost::lexical_cast<std::string>(img.channels()) + " channels";
+        NODE_LOG(warning) << "Multi channel histograms not supported for " + boost::lexical_cast<std::string>(img.channels()) + " channels";
     }
     return img;
 }
 
 void HistogramRange::updateLevels(int type)
 {
-	double lower = *getParameter<double>(0)->Data();
-	double upper = *getParameter<double>(1)->Data();
-	int bins = *getParameter<int>(2)->Data();
+    double lower = *getParameter<double>(0)->Data();
+    double upper = *getParameter<double>(1)->Data();
+    int bins = *getParameter<int>(2)->Data();
     cv::Mat h_mat;
     if(type == CV_32F)
         h_mat = cv::Mat(1, bins, CV_32F);

@@ -107,21 +107,21 @@ namespace EagleLib
         virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
-	class SLaT : public Node
-	{
-		cv::cuda::HostMem imageBuffer;
-		cv::Mat lab;
-		cv::Mat smoothed_32f;
-		cv::Mat lab_32f;
-		cv::Mat tensor;
-		cv::Mat labels;
-		cv::Mat centers;
-		boost::shared_ptr<Solver> solver;
-	public:
-		SLaT();
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-	};
+    class SLaT : public Node
+    {
+        cv::cuda::HostMem imageBuffer;
+        cv::Mat lab;
+        cv::Mat smoothed_32f;
+        cv::Mat lab_32f;
+        cv::Mat tensor;
+        cv::Mat labels;
+        cv::Mat centers;
+        boost::shared_ptr<Solver> solver;
+    public:
+        SLaT();
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    };
     }
 
 }

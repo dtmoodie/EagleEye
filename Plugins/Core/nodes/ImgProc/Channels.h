@@ -25,29 +25,29 @@ namespace EagleLib
         virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
-	class ConvertToLab : public Node
-	{
-	public:
-		ConvertToLab();
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-	};
-	class ConvertColorspace : public Node
-	{
-		BufferPool<cv::cuda::GpuMat, EventPolicy> resultBuffer;
-	public:
-		ConvertColorspace();
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-	};
-	class Magnitude : public Node
-	{
-		cv::cuda::GpuMat magnitude;
-	public:
-		Magnitude();
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-	};
+    class ConvertToLab : public Node
+    {
+    public:
+        ConvertToLab();
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+    };
+    class ConvertColorspace : public Node
+    {
+        BufferPool<cv::cuda::GpuMat, EventPolicy> resultBuffer;
+    public:
+        ConvertColorspace();
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+    };
+    class Magnitude : public Node
+    {
+        cv::cuda::GpuMat magnitude;
+    public:
+        Magnitude();
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+    };
     class ExtractChannels: public Node
     {
         int channelNum;

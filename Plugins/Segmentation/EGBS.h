@@ -71,10 +71,10 @@ namespace EagleLib
     
     class SegmentEGBS: public Node
     {
-		EGBS egbs;
-		cv::cuda::HostMem h_buf;
+        EGBS egbs;
+        cv::cuda::HostMem h_buf;
     public:
-		SegmentEGBS();
+        SegmentEGBS();
         virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };

@@ -2,8 +2,8 @@
 
 namespace EagleLib
 {
-	class RenderManager
-	{
+    class RenderManager
+    {
 
-	};
+    };
 }

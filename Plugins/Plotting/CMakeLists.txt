@@ -31,9 +31,9 @@ add_dependencies(Plotting QCustomPlot)
 set_target_properties(QCustomPlot PROPERTIES FOLDER Dependencies)
 
 RCC_LINK_LIB(Plotting 
-	EagleLib 
+    EagleLib 
     QCustomPlot
-	)
+    )
 INCLUDE(../PluginTemplate.cmake)
 
 

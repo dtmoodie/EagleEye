@@ -48,7 +48,7 @@ TS<SyncedMemory> frame_grabber_image::GetNextFrame(cv::cuda::Stream& stream)
 }
 TS<SyncedMemory> frame_grabber_image::GetFrameRelative(int index, cv::cuda::Stream& stream)
 {
-	return GetFrame(0, stream);
+    return GetFrame(0, stream);
 }
 rcc::shared_ptr<ICoordinateManager> frame_grabber_image::GetCoordinateManager()
 {
@@ -74,7 +74,7 @@ int frame_grabber_image::frame_grabber_image_info::CanLoadDocument(const std::st
 {
     auto path = boost::filesystem::path(document);
     auto ext = path.extension().string();
-	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
     return (ext == ".jpg" || ext == ".png" || ext == ".tif") ? 3 : 0;
 }
 int frame_grabber_image::frame_grabber_image_info::Priority() const

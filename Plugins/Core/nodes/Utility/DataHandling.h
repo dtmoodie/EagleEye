@@ -49,25 +49,25 @@ namespace EagleLib
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
         virtual void NodeInit(bool firstInit);
     };
-	class LagBuffer : public Node
-	{
-		std::vector<cv::cuda::GpuMat> imageBuffer;
-		unsigned int putItr;
-		unsigned int getItr;
-		unsigned int lagFrames;
-	public:
-		LagBuffer();
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-		virtual void NodeInit(bool firstInit);
-	};
+    class LagBuffer : public Node
+    {
+        std::vector<cv::cuda::GpuMat> imageBuffer;
+        unsigned int putItr;
+        unsigned int getItr;
+        unsigned int lagFrames;
+    public:
+        LagBuffer();
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+        virtual void NodeInit(bool firstInit);
+    };
 
-	class CameraSync : public Node
-	{
-	public:
-		CameraSync();
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-		virtual void NodeInit(bool firstInit);
-		bool SkipEmpty() const;
-	};
+    class CameraSync : public Node
+    {
+    public:
+        CameraSync();
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+        virtual void NodeInit(bool firstInit);
+        bool SkipEmpty() const;
+    };
     } // namespace nodes
 }

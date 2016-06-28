@@ -12,9 +12,9 @@ INCLUDE_DIRECTORIES(
 cuda_add_library(video SHARED ${src})
 
 RCC_LINK_LIB(video
-	${OpenCV_LIBS}
-	${CUDA_CUBLAS_LIBRARIES} 
-	EagleLib
+    ${OpenCV_LIBS}
+    ${CUDA_CUBLAS_LIBRARIES} 
+    EagleLib
 )
 
 INCLUDE(../PluginTemplate.cmake)

@@ -20,11 +20,11 @@ namespace EagleLib
     class Colormap: public Node
     {
     protected:
-		cv::cuda::GpuMat color_mapped_image;
-		color_mapper mapper;
+        cv::cuda::GpuMat color_mapped_image;
+        color_mapper mapper;
     public:
-		void Rescale();
-		bool rescale;
+        void Rescale();
+        bool rescale;
         Colormap();
         virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());

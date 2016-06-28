@@ -22,42 +22,42 @@ static void on_mouse_click(int event, int x, int y, int flags, void* callback_ha
 
 void WindowCallbackHandler::imshow(const std::string& window_name, cv::Mat img, int flags)
 {
-	auto gui_thread_id = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
+    auto gui_thread_id = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
     if (Signals::get_this_thread() != gui_thread_id)
-	{
-		Signals::thread_specific_queue::push(std::bind(&WindowCallbackHandler::imshow, this, window_name, img, flags), gui_thread_id);
-		return;
-	}
-	// The below code should only execute if this is on the GUI thread, thus it doesn't need locking
-	auto itr = windows.find(window_name);
-	if (itr == windows.end())
-	{
-		cv::namedWindow(window_name, flags);
-		windows[window_name] = this;
-		auto itr = windows.find(window_name);
-		cv::setMouseCallback(window_name, on_mouse_click, &(*itr));
-	}
-	if (!dragging[window_name])
-		cv::imshow(window_name, img);
+    {
+        Signals::thread_specific_queue::push(std::bind(&WindowCallbackHandler::imshow, this, window_name, img, flags), gui_thread_id);
+        return;
+    }
+    // The below code should only execute if this is on the GUI thread, thus it doesn't need locking
+    auto itr = windows.find(window_name);
+    if (itr == windows.end())
+    {
+        cv::namedWindow(window_name, flags);
+        windows[window_name] = this;
+        auto itr = windows.find(window_name);
+        cv::setMouseCallback(window_name, on_mouse_click, &(*itr));
+    }
+    if (!dragging[window_name])
+        cv::imshow(window_name, img);
 }
 void WindowCallbackHandler::imshowd(const std::string& window_name, cv::cuda::GpuMat img, int flags)
 {
-	auto gui_thread_id = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
+    auto gui_thread_id = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
     if (Signals::get_this_thread() != gui_thread_id)
-	{
-		Signals::thread_specific_queue::push(std::bind(&WindowCallbackHandler::imshowd, this, window_name, img, flags), gui_thread_id);
-		return;
-	}
-	auto itr = windows.find(window_name);
-	if (itr == windows.end())
-	{
-		cv::namedWindow(window_name, flags);
-		windows[window_name] = this;
-		auto itr = windows.find(window_name);
-		cv::setMouseCallback(window_name, on_mouse_click, &(*itr));
-	}
-	if (!dragging[window_name])
-		cv::imshow(window_name, img);
+    {
+        Signals::thread_specific_queue::push(std::bind(&WindowCallbackHandler::imshowd, this, window_name, img, flags), gui_thread_id);
+        return;
+    }
+    auto itr = windows.find(window_name);
+    if (itr == windows.end())
+    {
+        cv::namedWindow(window_name, flags);
+        windows[window_name] = this;
+        auto itr = windows.find(window_name);
+        cv::setMouseCallback(window_name, on_mouse_click, &(*itr));
+    }
+    if (!dragging[window_name])
+        cv::imshow(window_name, img);
 }
 void WindowCallbackHandler::set_stream(size_t stream)
 {

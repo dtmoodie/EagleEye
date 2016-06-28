@@ -48,7 +48,7 @@ private:
     QVector<IPlotWindow*> plotWindows;
     // These are all the
     QVector<QWidget*> previewPlots;
-	std::map<QWidget*, QWidget*> previewPlotControllers;
+    std::map<QWidget*, QWidget*> previewPlotControllers;
     // These are all the ploters which generate data from parameters that go into the plot window
     QVector<rcc::shared_ptr<EagleLib::QtPlotter>> previewPlotters;
     QVector<rcc::shared_ptr<EagleLib::QtPlotter>> plotters;

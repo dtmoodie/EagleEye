@@ -1,11 +1,11 @@
 #pragma once
 
 #define CATCH_MACRO                                                         \
-	catch(Signals::ExceptionWithCallStack<cv::Exception>& e)				\
-{																			\
-	NODE_LOG(error) << e.what() << "\n" << e.CallStack();					\
-}																			\
-catch (boost::thread_resource_error& err)									\
+    catch(Signals::ExceptionWithCallStack<cv::Exception>& e)                \
+{                                                                            \
+    NODE_LOG(error) << e.what() << "\n" << e.CallStack();                    \
+}                                                                            \
+catch (boost::thread_resource_error& err)                                    \
 {                                                                           \
     NODE_LOG(error) << err.what();                                          \
 }                                                                           \
@@ -30,7 +30,7 @@ catch (boost::thread_exception& err)                                        \
 }                                                                           \
 catch (std::exception &err)                                                 \
 {                                                                           \
-    NODE_LOG(error) << err.what();										    \
+    NODE_LOG(error) << err.what();                                            \
 }                                                                           \
 catch (...)                                                                 \
 {                                                                           \

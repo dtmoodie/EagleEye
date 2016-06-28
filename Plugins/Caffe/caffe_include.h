@@ -3,7 +3,7 @@
 #include "RuntimeLinkLibrary.h"
 #ifdef _MSC_VER
   #ifdef _DEBUG
-	RUNTIME_COMPILER_LINKLIBRARY("libcaffe-d.lib");
+    RUNTIME_COMPILER_LINKLIBRARY("libcaffe-d.lib");
     RUNTIME_COMPILER_LINKLIBRARY("proto-d.lib");
     RUNTIME_COMPILER_LINKLIBRARY("libprotobufd.lib");
     RUNTIME_COMPILER_LINKLIBRARY("libglog.lib");

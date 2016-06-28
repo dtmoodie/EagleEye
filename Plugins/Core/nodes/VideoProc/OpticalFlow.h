@@ -15,9 +15,9 @@ namespace EagleLib
     {
         cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> optFlow;
         std::vector<cv::cuda::GpuMat> prev_grey;
-		//cv::cuda::GpuMat prev_grey;
-		cv::cuda::GpuMat prev_key_points;
-		void set_reference(cv::cuda::GpuMat& ref_image, cv::cuda::GpuMat& ref_points, size_t frame_number, cv::cuda::Stream& stream);
+        //cv::cuda::GpuMat prev_grey;
+        cv::cuda::GpuMat prev_key_points;
+        void set_reference(cv::cuda::GpuMat& ref_image, cv::cuda::GpuMat& ref_points, size_t frame_number, cv::cuda::Stream& stream);
 
 
     public:
@@ -27,18 +27,18 @@ namespace EagleLib
         virtual void Serialize(ISimpleSerializer *pSerializer);
     };
 
-	class DensePyrLKOpticalFlow : public Node
-	{
-		cv::Ptr<cv::cuda::DensePyrLKOpticalFlow> opt_flow;
-		cv::cuda::GpuMat prevGreyImg;
-		cv::cuda::GpuMat greyImg;
-		cv::cuda::GpuMat flow;
-	public:
+    class DensePyrLKOpticalFlow : public Node
+    {
+        cv::Ptr<cv::cuda::DensePyrLKOpticalFlow> opt_flow;
+        cv::cuda::GpuMat prevGreyImg;
+        cv::cuda::GpuMat greyImg;
+        cv::cuda::GpuMat flow;
+    public:
 
-		DensePyrLKOpticalFlow();
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-	};
+        DensePyrLKOpticalFlow();
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+    };
 
 
 

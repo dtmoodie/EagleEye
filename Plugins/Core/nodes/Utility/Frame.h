@@ -18,15 +18,15 @@ namespace EagleLib
         virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
-	
-	class FrameLimiter : public Node
-	{
-		boost::posix_time::ptime lastTime;
-	public:
-		FrameLimiter();
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-	};
+    
+    class FrameLimiter : public Node
+    {
+        boost::posix_time::ptime lastTime;
+    public:
+        FrameLimiter();
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+    };
 
     class CreateMat: public Node
     {
@@ -44,20 +44,20 @@ namespace EagleLib
         virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
-	class Resize : public Node
-	{
-		BufferPool<cv::cuda::GpuMat, EventPolicy> bufferPool;
-	public:
-		Resize();
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-	};
-	class Subtract : public Node
-	{
-	public:
-		Subtract();
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-	};
+    class Resize : public Node
+    {
+        BufferPool<cv::cuda::GpuMat, EventPolicy> bufferPool;
+    public:
+        Resize();
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+    };
+    class Subtract : public Node
+    {
+    public:
+        Subtract();
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+    };
     }
 }

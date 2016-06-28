@@ -27,8 +27,8 @@ PlotWindow::~PlotWindow()
 }
 void PlotWindow::addPlotter(rcc::shared_ptr<EagleLib::QtPlotter> plotter)
 {
-	plotter->AddPlot(plot);
-	plots.push_back(plotter);
+    plotter->AddPlot(plot);
+    plots.push_back(plotter);
 }
 void PlotWindow::on_resizePlot_activated()
 {

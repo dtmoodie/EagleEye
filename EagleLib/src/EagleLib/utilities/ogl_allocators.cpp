@@ -134,9 +134,9 @@ cv::cuda::GpuMat ogl_allocator::createMat(int rows, int cols, int type, cv::cuda
                 _pool.erase(itr);
                 return mat;
             }
-	    }
+        }
     }
-	cv::ogl::Buffer* buffer = new cv::ogl::Buffer(rows, cols, type, cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+    cv::ogl::Buffer* buffer = new cv::ogl::Buffer(rows, cols, type, cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
     auto mat = buffer->mapDevice(stream);
     mapped_buffers[mat.data] = buffer;
     return mat;

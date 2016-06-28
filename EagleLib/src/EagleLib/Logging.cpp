@@ -35,80 +35,80 @@
 
 int static_errorHandler(int status, const char* func_name, const char* err_msg, const char* file_name, int line, void* userdata)
 {
-	std::stringstream ss;
-	LOG(debug) << "Exception at" << Signals::print_callstack(0, true, ss) << "[" << file_name << ":" << line << " " << func_name << "] " << err_msg;
-	throw Signals::ExceptionWithCallStack<cv::Exception>(cv::Exception(status, err_msg, func_name, file_name, line), ss.str());
-	return 0;
+    std::stringstream ss;
+    LOG(debug) << "Exception at" << Signals::print_callstack(0, true, ss) << "[" << file_name << ":" << line << " " << func_name << "] " << err_msg;
+    throw Signals::ExceptionWithCallStack<cv::Exception>(cv::Exception(status, err_msg, func_name, file_name, line), ss.str());
+    return 0;
 }
 
 boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>> log_sink;
 
 void EagleLib::SetupLogging()
 {
-	cv::redirectError(&static_errorHandler);
+    cv::redirectError(&static_errorHandler);
 #ifdef _DEBUG
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
 #else
-	boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+    boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
 #endif
-	boost::log::add_common_attributes();
-	if (!boost::filesystem::exists("./logs") || !boost::filesystem::is_directory("./logs"))
-	{
-		boost::filesystem::create_directory("./logs");
-	}
-	boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
-	// https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
+    boost::log::add_common_attributes();
+    if (!boost::filesystem::exists("./logs") || !boost::filesystem::is_directory("./logs"))
+    {
+        boost::filesystem::create_directory("./logs");
+    }
+    boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
+    // https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
 
-	auto consoleFmtTimeStamp = boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%M:%S.%f");
+    auto consoleFmtTimeStamp = boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%M:%S.%f");
 
-	auto fmtThreadId = boost::log::expressions::attr<boost::log::attributes::current_thread_id::value_type>("ThreadID");
+    auto fmtThreadId = boost::log::expressions::attr<boost::log::attributes::current_thread_id::value_type>("ThreadID");
 
-	auto fmtSeverity = boost::log::expressions::attr<boost::log::trivial::severity_level>("Severity");
+    auto fmtSeverity = boost::log::expressions::attr<boost::log::trivial::severity_level>("Severity");
 
-	auto fmtScope = boost::log::expressions::format_named_scope("Scope",
-		boost::log::keywords::format = "%n(%f:%l)",
-		boost::log::keywords::iteration = boost::log::expressions::reverse,
-		boost::log::keywords::depth = 2);
+    auto fmtScope = boost::log::expressions::format_named_scope("Scope",
+        boost::log::keywords::format = "%n(%f:%l)",
+        boost::log::keywords::iteration = boost::log::expressions::reverse,
+        boost::log::keywords::depth = 2);
 
-	boost::log::formatter consoleFmt =
-		boost::log::expressions::format("%1%<%2%,%3%> %4%")
-		% consoleFmtTimeStamp					// 1
-		% fmtThreadId							// 2
-		% fmtSeverity							// 3
-		% boost::log::expressions::smessage;	// 4
+    boost::log::formatter consoleFmt =
+        boost::log::expressions::format("%1%<%2%,%3%> %4%")
+        % consoleFmtTimeStamp                    // 1
+        % fmtThreadId                            // 2
+        % fmtSeverity                            // 3
+        % boost::log::expressions::smessage;    // 4
 
-	auto consoleSink = boost::log::add_console_log(std::clog);
-	consoleSink->set_formatter(consoleFmt);
-
-
-	auto fmtTimeStamp = boost::log::expressions::
-		format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
-
-	// File sink 
-	boost::log::formatter logFmt =
-		boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%] %5%")
-		% fmtTimeStamp
-		% fmtThreadId
-		% fmtSeverity
-		% fmtScope
-		% boost::log::expressions::smessage;
+    auto consoleSink = boost::log::add_console_log(std::clog);
+    consoleSink->set_formatter(consoleFmt);
 
 
-	auto fsSink = boost::log::add_file_log(
-		boost::log::keywords::file_name = "./logs/%Y-%m-%d_%H-%M-%S.%N.log",
-		boost::log::keywords::rotation_size = 10 * 1024 * 1024,
-		boost::log::keywords::min_free_space = 30 * 1024 * 1024,
-		boost::log::keywords::open_mode = std::ios_base::app);
-	fsSink->set_formatter(logFmt);
-	fsSink->locked_backend()->auto_flush(true);
-	
-	log_sink.reset(new boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>());
+    auto fmtTimeStamp = boost::log::expressions::
+        format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
 
-	boost::log::core::get()->add_sink(log_sink);
+    // File sink 
+    boost::log::formatter logFmt =
+        boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%] %5%")
+        % fmtTimeStamp
+        % fmtThreadId
+        % fmtSeverity
+        % fmtScope
+        % boost::log::expressions::smessage;
+
+
+    auto fsSink = boost::log::add_file_log(
+        boost::log::keywords::file_name = "./logs/%Y-%m-%d_%H-%M-%S.%N.log",
+        boost::log::keywords::rotation_size = 10 * 1024 * 1024,
+        boost::log::keywords::min_free_space = 30 * 1024 * 1024,
+        boost::log::keywords::open_mode = std::ios_base::app);
+    fsSink->set_formatter(logFmt);
+    fsSink->locked_backend()->auto_flush(true);
+    
+    log_sink.reset(new boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>());
+
+    boost::log::core::get()->add_sink(log_sink);
 }
 void EagleLib::ShutdownLogging()
 {
-	log_sink->flush();
-	log_sink->stop();
-	log_sink.reset();
+    log_sink->flush();
+    log_sink->stop();
+    log_sink.reset();
 }

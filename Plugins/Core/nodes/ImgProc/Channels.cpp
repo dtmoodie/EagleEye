@@ -20,8 +20,8 @@ cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
         cv::cuda::cvtColor(img, grey, cv::COLOR_BGR2GRAY, 0, stream);
     }catch(cv::Exception &err)
     {
-		// log(Error, err.what());
-		NODE_LOG(error) << err.what();
+        // log(Error, err.what());
+        NODE_LOG(error) << err.what();
         return img;
     }
     TIME
@@ -35,91 +35,91 @@ void ConvertToHSV::NodeInit(bool firstInit)
 
 cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-	return img;
+    return img;
 }
 void ConvertColorspace::NodeInit(bool firstInit)
 {
-	Parameters::EnumParameter param;
-	param.addEnum(ENUM(cv::COLOR_BGR2BGRA));
-	param.addEnum(ENUM(cv::COLOR_RGB2RGBA));
-	param.addEnum(ENUM(cv::COLOR_BGRA2BGR));
-	param.addEnum(ENUM(cv::COLOR_RGBA2RGB));
-	param.addEnum(ENUM(cv::COLOR_BGR2RGBA));
-	param.addEnum(ENUM(cv::COLOR_RGB2BGRA));
-	param.addEnum(ENUM(cv::COLOR_RGBA2BGR));
-	param.addEnum(ENUM(cv::COLOR_BGRA2RGB));
-	param.addEnum(ENUM(cv::COLOR_BGR2RGB));
-	param.addEnum(ENUM(cv::COLOR_RGB2BGR));
-	param.addEnum(ENUM(cv::COLOR_BGRA2RGBA));
-	param.addEnum(ENUM(cv::COLOR_RGBA2BGRA));
-	param.addEnum(ENUM(cv::COLOR_BGR2GRAY));
-	param.addEnum(ENUM(cv::COLOR_GRAY2BGR));
-	param.addEnum(ENUM(cv::COLOR_GRAY2RGB));
-	param.addEnum(ENUM(cv::COLOR_GRAY2BGRA));
-	param.addEnum(ENUM(cv::COLOR_GRAY2RGBA));
-	param.addEnum(ENUM(cv::COLOR_BGRA2GRAY));
-	param.addEnum(ENUM(cv::COLOR_RGBA2GRAY));
-	param.addEnum(ENUM(cv::COLOR_BGR2BGR565));
-	param.addEnum(ENUM(cv::COLOR_RGB2BGR565));
-	param.addEnum(ENUM(cv::COLOR_BGR5652BGR));
-	param.addEnum(ENUM(cv::COLOR_BGR5652RGB));
-	param.addEnum(ENUM(cv::COLOR_BGRA2BGR565));
-	param.addEnum(ENUM(cv::COLOR_RGBA2BGR565));
-	param.addEnum(ENUM(cv::COLOR_BGR5652BGRA));
-	param.addEnum(ENUM(cv::COLOR_BGR5652RGBA));
-	param.addEnum(ENUM(cv::COLOR_GRAY2BGR565));
+    Parameters::EnumParameter param;
+    param.addEnum(ENUM(cv::COLOR_BGR2BGRA));
+    param.addEnum(ENUM(cv::COLOR_RGB2RGBA));
+    param.addEnum(ENUM(cv::COLOR_BGRA2BGR));
+    param.addEnum(ENUM(cv::COLOR_RGBA2RGB));
+    param.addEnum(ENUM(cv::COLOR_BGR2RGBA));
+    param.addEnum(ENUM(cv::COLOR_RGB2BGRA));
+    param.addEnum(ENUM(cv::COLOR_RGBA2BGR));
+    param.addEnum(ENUM(cv::COLOR_BGRA2RGB));
+    param.addEnum(ENUM(cv::COLOR_BGR2RGB));
+    param.addEnum(ENUM(cv::COLOR_RGB2BGR));
+    param.addEnum(ENUM(cv::COLOR_BGRA2RGBA));
+    param.addEnum(ENUM(cv::COLOR_RGBA2BGRA));
+    param.addEnum(ENUM(cv::COLOR_BGR2GRAY));
+    param.addEnum(ENUM(cv::COLOR_GRAY2BGR));
+    param.addEnum(ENUM(cv::COLOR_GRAY2RGB));
+    param.addEnum(ENUM(cv::COLOR_GRAY2BGRA));
+    param.addEnum(ENUM(cv::COLOR_GRAY2RGBA));
+    param.addEnum(ENUM(cv::COLOR_BGRA2GRAY));
+    param.addEnum(ENUM(cv::COLOR_RGBA2GRAY));
+    param.addEnum(ENUM(cv::COLOR_BGR2BGR565));
+    param.addEnum(ENUM(cv::COLOR_RGB2BGR565));
+    param.addEnum(ENUM(cv::COLOR_BGR5652BGR));
+    param.addEnum(ENUM(cv::COLOR_BGR5652RGB));
+    param.addEnum(ENUM(cv::COLOR_BGRA2BGR565));
+    param.addEnum(ENUM(cv::COLOR_RGBA2BGR565));
+    param.addEnum(ENUM(cv::COLOR_BGR5652BGRA));
+    param.addEnum(ENUM(cv::COLOR_BGR5652RGBA));
+    param.addEnum(ENUM(cv::COLOR_GRAY2BGR565));
 
-	param.addEnum(ENUM(cv::COLOR_BGR5652GRAY));
-	param.addEnum(ENUM(cv::COLOR_BGR2BGR555));
-	param.addEnum(ENUM(cv::COLOR_RGB2BGR555));
-	param.addEnum(ENUM(cv::COLOR_BGR5552BGR));
-	param.addEnum(ENUM(cv::COLOR_BGR5552RGB));
-	param.addEnum(ENUM(cv::COLOR_BGRA2BGR555));
-	param.addEnum(ENUM(cv::COLOR_RGBA2BGR555));
-	param.addEnum(ENUM(cv::COLOR_BGR5552BGRA));
-	param.addEnum(ENUM(cv::COLOR_BGR5552RGBA));
+    param.addEnum(ENUM(cv::COLOR_BGR5652GRAY));
+    param.addEnum(ENUM(cv::COLOR_BGR2BGR555));
+    param.addEnum(ENUM(cv::COLOR_RGB2BGR555));
+    param.addEnum(ENUM(cv::COLOR_BGR5552BGR));
+    param.addEnum(ENUM(cv::COLOR_BGR5552RGB));
+    param.addEnum(ENUM(cv::COLOR_BGRA2BGR555));
+    param.addEnum(ENUM(cv::COLOR_RGBA2BGR555));
+    param.addEnum(ENUM(cv::COLOR_BGR5552BGRA));
+    param.addEnum(ENUM(cv::COLOR_BGR5552RGBA));
 
-	param.addEnum(ENUM(cv::COLOR_GRAY2BGR555));
-	param.addEnum(ENUM(cv::COLOR_BGR5552GRAY));
+    param.addEnum(ENUM(cv::COLOR_GRAY2BGR555));
+    param.addEnum(ENUM(cv::COLOR_BGR5552GRAY));
 
-	param.addEnum(ENUM(cv::COLOR_BGR2XYZ));
-	param.addEnum(ENUM(cv::COLOR_RGB2XYZ));
-	param.addEnum(ENUM(cv::COLOR_XYZ2BGR));
-	param.addEnum(ENUM(cv::COLOR_XYZ2RGB));
+    param.addEnum(ENUM(cv::COLOR_BGR2XYZ));
+    param.addEnum(ENUM(cv::COLOR_RGB2XYZ));
+    param.addEnum(ENUM(cv::COLOR_XYZ2BGR));
+    param.addEnum(ENUM(cv::COLOR_XYZ2RGB));
 
-	param.addEnum(ENUM(cv::COLOR_BGR2YCrCb));
-	param.addEnum(ENUM(cv::COLOR_RGB2YCrCb));
-	param.addEnum(ENUM(cv::COLOR_YCrCb2BGR));
-	param.addEnum(ENUM(cv::COLOR_YCrCb2RGB));
+    param.addEnum(ENUM(cv::COLOR_BGR2YCrCb));
+    param.addEnum(ENUM(cv::COLOR_RGB2YCrCb));
+    param.addEnum(ENUM(cv::COLOR_YCrCb2BGR));
+    param.addEnum(ENUM(cv::COLOR_YCrCb2RGB));
 
-	param.addEnum(ENUM(cv::COLOR_BGR2HSV));
-	param.addEnum(ENUM(cv::COLOR_RGB2HSV));
+    param.addEnum(ENUM(cv::COLOR_BGR2HSV));
+    param.addEnum(ENUM(cv::COLOR_RGB2HSV));
 
-	param.addEnum(ENUM(cv::COLOR_BGR2Lab));
-	param.addEnum(ENUM(cv::COLOR_RGB2Lab));
+    param.addEnum(ENUM(cv::COLOR_BGR2Lab));
+    param.addEnum(ENUM(cv::COLOR_RGB2Lab));
 
-	param.addEnum(ENUM(cv::COLOR_BGR2Luv));
-	param.addEnum(ENUM(cv::COLOR_RGB2Luv));
-	param.addEnum(ENUM(cv::COLOR_BGR2HLS));
-	param.addEnum(ENUM(cv::COLOR_RGB2HLS));
+    param.addEnum(ENUM(cv::COLOR_BGR2Luv));
+    param.addEnum(ENUM(cv::COLOR_RGB2Luv));
+    param.addEnum(ENUM(cv::COLOR_BGR2HLS));
+    param.addEnum(ENUM(cv::COLOR_RGB2HLS));
 
-	param.addEnum(ENUM(cv::COLOR_HSV2BGR));
-	param.addEnum(ENUM(cv::COLOR_HSV2RGB));
+    param.addEnum(ENUM(cv::COLOR_HSV2BGR));
+    param.addEnum(ENUM(cv::COLOR_HSV2RGB));
 
-	param.addEnum(ENUM(cv::COLOR_Lab2BGR));
-	param.addEnum(ENUM(cv::COLOR_Lab2RGB));
-	param.addEnum(ENUM(cv::COLOR_Luv2BGR));
-	param.addEnum(ENUM(cv::COLOR_Luv2RGB));
-	param.addEnum(ENUM(cv::COLOR_HLS2BGR));
-	param.addEnum(ENUM(cv::COLOR_HLS2RGB));
+    param.addEnum(ENUM(cv::COLOR_Lab2BGR));
+    param.addEnum(ENUM(cv::COLOR_Lab2RGB));
+    param.addEnum(ENUM(cv::COLOR_Luv2BGR));
+    param.addEnum(ENUM(cv::COLOR_Luv2RGB));
+    param.addEnum(ENUM(cv::COLOR_HLS2BGR));
+    param.addEnum(ENUM(cv::COLOR_HLS2RGB));
 
-	updateParameter("Conversion Code", param);
+    updateParameter("Conversion Code", param);
 }
 cv::cuda::GpuMat ConvertColorspace::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-	auto buf =  resultBuffer.getFront();
-	cv::cuda::cvtColor(img, buf->data, getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), 0, stream);
-	return buf->data;
+    auto buf =  resultBuffer.getFront();
+    cv::cuda::cvtColor(img, buf->data, getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), 0, stream);
+    return buf->data;
 }
 
 
@@ -129,8 +129,8 @@ void Magnitude::NodeInit(bool firstInit)
 }
 cv::cuda::GpuMat Magnitude::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-	cv::cuda::magnitude(img, magnitude, stream);
-	return magnitude; 
+    cv::cuda::magnitude(img, magnitude, stream);
+    return magnitude; 
 }
 
 void ExtractChannels::NodeInit(bool firstInit)
@@ -170,7 +170,7 @@ void ConvertDataType::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
-		Parameters::EnumParameter dataType;
+        Parameters::EnumParameter dataType;
         dataType.addEnum(ENUM(CV_8U));
         dataType.addEnum(ENUM(CV_8S));
         dataType.addEnum(ENUM(CV_16U));
@@ -182,16 +182,16 @@ void ConvertDataType::NodeInit(bool firstInit)
         updateParameter("Alpha", 255.0);
         updateParameter("Beta", 0.0);
     }
-	updateParameter<bool>("Continuous", false);
+    updateParameter<bool>("Continuous", false);
 }
 
 cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat output;
-	if(*getParameter<bool>("Continuous")->Data())
-	{
-		cv::cuda::createContinuous(img.size(), getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection, output);
-	}
+    if(*getParameter<bool>("Continuous")->Data())
+    {
+        cv::cuda::createContinuous(img.size(), getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection, output);
+    }
     img.convertTo(output, getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection, *getParameter<double>(1)->Data(), *getParameter<double>(2)->Data(),stream);
     return output;
 }

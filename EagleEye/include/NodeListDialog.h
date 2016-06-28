@@ -21,9 +21,9 @@ public:
     void show();
     ~NodeListDialog();
 
-	SIGNALS_BEGIN(NodeListDialog)
-		SIG_SEND(add_node, std::string);
-	SIGNALS_END
+    SIGNALS_BEGIN(NodeListDialog)
+        SIG_SEND(add_node, std::string);
+    SIGNALS_END
 
 signals:
     void nodeConstructed(EagleLib::Nodes::Node::Ptr node);
@@ -34,7 +34,7 @@ private slots:
 
 private:
     Ui::NodeListDialog *ui;
-	
+    
 };
 
 #endif // NODELISTDIALOG_H

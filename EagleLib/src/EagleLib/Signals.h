@@ -13,7 +13,7 @@ namespace EagleLib
     {
     public:
 
-		static	SignalManager* get_instance();
+        static    SignalManager* get_instance();
     };
 
 

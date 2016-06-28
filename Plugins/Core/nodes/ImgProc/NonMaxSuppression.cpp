@@ -7,16 +7,16 @@ using namespace EagleLib::Nodes;
 void MinMax::NodeInit(bool firstInit)
 {
     updateParameter<double>("Min value", 0.0)->type = Parameters::Parameter::Output;
-	updateParameter<double>("Max value", 0.0)->type = Parameters::Parameter::Output;
+    updateParameter<double>("Max value", 0.0)->type = Parameters::Parameter::Output;
 }
 
 cv::cuda::GpuMat MinMax::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     stream.waitForCompletion();
-	double minValue, maxValue;
+    double minValue, maxValue;
     cv::cuda::minMax(img, &minValue, &maxValue);
-	updateParameter(0, minValue);
-	updateParameter(1, maxValue);
+    updateParameter(0, minValue);
+    updateParameter(1, maxValue);
     return img;
 }
 void Threshold::NodeInit(bool firstInit)
@@ -26,14 +26,14 @@ void Threshold::NodeInit(bool firstInit)
         addInputParameter<double>("Input max"); // 0
         addInputParameter<double>("Input min"); // 1
         updateParameter<double>("Replace Value", 255.0); // 2
-		updateParameter<double>("Max", 0.0)->type =  Parameters::Parameter::Control; // 3
-		updateParameter<double>("Min", 0.0)->type =  Parameters::Parameter::Control; // 4
-		updateParameter<bool>("Two sided", false)->SetTooltip("If true, min and max are used to define a threshold range")->type = Parameters::Parameter::Control;
-		updateParameter<bool>("Truncate", false)->SetTooltip("If true, threshold to threshold value instead of replace value or src value")->type = Parameters::Parameter::Control;
-		updateParameter<bool>("Inverse", false)->SetTooltip("If true, inverse threshold is applied, ie values greater than max and less than min pass")->type = Parameters::Parameter::Control;
-		updateParameter<bool>("Source value", true)->SetTooltip("If true, threshold to original source value")->type = Parameters::Parameter::Control;
-		updateParameter<cv::cuda::GpuMat>("Mask", cv::cuda::GpuMat())->type = Parameters::Parameter::Output;
-		updateParameter<double>("Input %", 0.9)->type = Parameters::Parameter::Control;
+        updateParameter<double>("Max", 0.0)->type =  Parameters::Parameter::Control; // 3
+        updateParameter<double>("Min", 0.0)->type =  Parameters::Parameter::Control; // 4
+        updateParameter<bool>("Two sided", false)->SetTooltip("If true, min and max are used to define a threshold range")->type = Parameters::Parameter::Control;
+        updateParameter<bool>("Truncate", false)->SetTooltip("If true, threshold to threshold value instead of replace value or src value")->type = Parameters::Parameter::Control;
+        updateParameter<bool>("Inverse", false)->SetTooltip("If true, inverse threshold is applied, ie values greater than max and less than min pass")->type = Parameters::Parameter::Control;
+        updateParameter<bool>("Source value", true)->SetTooltip("If true, threshold to original source value")->type = Parameters::Parameter::Control;
+        updateParameter<cv::cuda::GpuMat>("Mask", cv::cuda::GpuMat())->type = Parameters::Parameter::Output;
+        updateParameter<double>("Input %", 0.9)->type = Parameters::Parameter::Control;
         updateParameter<bool>("Output mask", false);
     }
 
@@ -43,7 +43,7 @@ cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 {
     cv::cuda::GpuMat mask, upperMask, lowerMask;
     bool inverse = getParameter<bool>(7)->Data();
-	bool truncate = getParameter<bool>(6)->Data();
+    bool truncate = getParameter<bool>(6)->Data();
     bool sourceValue = *getParameter<bool>(8)->Data();
     double* inputMax = getParameter<double>(0)->Data();
     double inputRatio = *getParameter<double>(10)->Data();
@@ -73,21 +73,21 @@ cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     }
     if(truncate)
     {
-		cv::cuda::threshold(img, lowerMask, *getParameter<double>(4)->Data(), *getParameter<double>(2)->Data(), 2, stream);
+        cv::cuda::threshold(img, lowerMask, *getParameter<double>(4)->Data(), *getParameter<double>(2)->Data(), 2, stream);
     }else
     {
         if(sourceValue)
         {
             if(inverse)
-				cv::cuda::threshold(img, lowerMask, *getParameter<double>(4)->Data(), 0.0, 4, stream);
+                cv::cuda::threshold(img, lowerMask, *getParameter<double>(4)->Data(), 0.0, 4, stream);
             else
-				cv::cuda::threshold(img, lowerMask, *getParameter<double>(4)->Data(), 0.0, 3, stream);
+                cv::cuda::threshold(img, lowerMask, *getParameter<double>(4)->Data(), 0.0, 3, stream);
         }else
         {
             if(inverse)
-				cv::cuda::threshold(img, lowerMask, *getParameter<double>(4)->Data(), *getParameter<double>(2)->Data(), 1, stream);
+                cv::cuda::threshold(img, lowerMask, *getParameter<double>(4)->Data(), *getParameter<double>(2)->Data(), 1, stream);
             else
-				cv::cuda::threshold(img, lowerMask, *getParameter<double>(4)->Data(), *getParameter<double>(2)->Data(), 0, stream);
+                cv::cuda::threshold(img, lowerMask, *getParameter<double>(4)->Data(), *getParameter<double>(2)->Data(), 0, stream);
         }
     }
     if(upperMask.empty())
@@ -102,7 +102,7 @@ cv::cuda::GpuMat Threshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     updateParameter<cv::cuda::GpuMat>("Mask", mask)->type = Parameters::Parameter::Output;
     if(*getParameter<bool>("Output mask")->Data())
         return mask;
-	return img;
+    return img;
 }
 
 void NonMaxSuppression::NodeInit(bool firstInit)

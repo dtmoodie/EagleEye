@@ -20,8 +20,8 @@ void FFT::NodeInit(bool firstInit)
         updateParameter("Desired output", param);
         //updateParameter("Desired output", int(-1));     // 4
         updateParameter("Log scale", true);             // 5
-		updateParameter<cv::cuda::GpuMat>("Magnitude", cv::cuda::GpuMat())->type =Parameters::Parameter::Output;  // 6
-		updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat())->type =  Parameters::Parameter::Output;      // 7
+        updateParameter<cv::cuda::GpuMat>("Magnitude", cv::cuda::GpuMat())->type =Parameters::Parameter::Output;  // 6
+        updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat())->type =  Parameters::Parameter::Output;      // 7
     }
     updateParameter("Use optimized size",false);
     destBuf.resize(5);
@@ -48,7 +48,7 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         ss << "Too many channels, can only handle 1 or 2 channel input. Input has ";
         ss << img.channels() << " channels.";
         log(Warning, ss.str());*/
-		NODE_LOG(warning) << "Too many channels, can only handle 1 or 2 channel input. Input has " << img.channels() << " channels.";
+        NODE_LOG(warning) << "Too many channels, can only handle 1 or 2 channel input. Input has " << img.channels() << " channels.";
         return img;
     }
     TIME
@@ -73,20 +73,20 @@ cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     cv::cuda::GpuMat dest = *destPtr; // This is done to make sure the destBuf gets allocated correctly and doesn't get de-allocated.
     TIME
     int channel = getParameter<Parameters::EnumParameter>(4)->Data()->getValue();
-	updateParameter("Coefficients", dest)->type =  Parameters::Parameter::Output;
+    updateParameter("Coefficients", dest)->type =  Parameters::Parameter::Output;
     TIME
     if(_parameters[4]->changed)
     {
         //log(Status, channel == 0 ? "Magnitude" : "Phase");
-		if (channel == 0)
-		{
-			NODE_LOG(info) <<"Magnitude";
-		}
-		else
-		{
-			NODE_LOG(info) <<"Phase";
-		}
-		
+        if (channel == 0)
+        {
+            NODE_LOG(info) <<"Magnitude";
+        }
+        else
+        {
+            NODE_LOG(info) <<"Phase";
+        }
+        
         _parameters[4]->changed = false;
     }
     TIME

@@ -35,9 +35,9 @@ RUNTIME_COMPILER_LINKLIBRARY("-l" STRINGIFY(PLUGIN_NAME) "d")
 
 // *************** SETUP_PROJECT_DEF ********************
 #ifdef __cplusplus
-#define SETUP_PROJECT_DEF extern "C"{	\
-EAGLE_EXPORTS void SetupIncludes();		\
-EAGLE_EXPORTS int GetBuildType();		\
+#define SETUP_PROJECT_DEF extern "C"{    \
+EAGLE_EXPORTS void SetupIncludes();        \
+EAGLE_EXPORTS int GetBuildType();        \
 }
 #else
 #define SETUP_PROJECT_DEF EAGLE_EXPORTS void SetupIncludes();
@@ -68,12 +68,12 @@ EAGLE_EXPORTS int GetBuildType();		\
 #endif
 #endif
 
-#define SETUP_PROJECT_IMPL	int GetBuildType() {return BUILD_TYPE; }									\
-void SetupIncludes(){																					\
-		int id = EagleLib::ObjectManager::Instance().parseProjectConfig(PROJECT_CONFIG_FILE);			\
-		PerModuleInterface::GetInstance()->SetProjectIdForAllConstructors(id);							\
-		EagleLib::ObjectManager::Instance().addIncludeDirs(PROJECT_INCLUDES, id);						\
-		EagleLib::ObjectManager::Instance().addLinkDirs(PROJECT_LIB_DIRS, id);							\
-		EagleLib::ObjectManager::Instance().addDefinitions(PROJECT_DEFINITIONS, id);					\
+#define SETUP_PROJECT_IMPL    int GetBuildType() {return BUILD_TYPE; }                                    \
+void SetupIncludes(){                                                                                    \
+        int id = EagleLib::ObjectManager::Instance().parseProjectConfig(PROJECT_CONFIG_FILE);            \
+        PerModuleInterface::GetInstance()->SetProjectIdForAllConstructors(id);                            \
+        EagleLib::ObjectManager::Instance().addIncludeDirs(PROJECT_INCLUDES, id);                        \
+        EagleLib::ObjectManager::Instance().addLinkDirs(PROJECT_LIB_DIRS, id);                            \
+        EagleLib::ObjectManager::Instance().addDefinitions(PROJECT_DEFINITIONS, id);                    \
 }
 

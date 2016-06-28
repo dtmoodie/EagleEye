@@ -11,32 +11,32 @@ bool Camera::changeStream(int device)
     getParameter<std::string>("Gstreamer stream")->Data()->clear();
     try
     {
-		NODE_LOG(info) << "Setting camera to device: " << device;
+        NODE_LOG(info) << "Setting camera to device: " << device;
         cam.release();
         cam = cv::VideoCapture(device);
-		read_thread = boost::thread(boost::bind(&Camera::read_image, this));
+        read_thread = boost::thread(boost::bind(&Camera::read_image, this));
         return cam.isOpened();
     }catch(cv::Exception &e)
     {
-		NODE_LOG(error) << e.what();
+        NODE_LOG(error) << e.what();
         return false;
     }
 }
 bool Camera::changeStream(const std::string &gstreamParams)
 {
-	if (!gstreamParams.size())
-		return false;
+    if (!gstreamParams.size())
+        return false;
     try
     {
-		NODE_LOG(info) << "Setting camera with gstreamer settings: " << gstreamParams;
+        NODE_LOG(info) << "Setting camera with gstreamer settings: " << gstreamParams;
         cam.release();
         cam = cv::VideoCapture(gstreamParams);
-		read_thread = boost::thread(boost::bind(&Camera::read_image, this));
+        read_thread = boost::thread(boost::bind(&Camera::read_image, this));
         return cam.isOpened(); 
     }catch(cv::Exception &e)
     {
         //log(Error, e.what());
-		NODE_LOG(error) << e.what();
+        NODE_LOG(error) << e.what();
         return false;
     }
 
@@ -66,27 +66,27 @@ void Camera::Serialize(ISimpleSerializer *pSerializer)
 }
 void Camera::read_image()
 {
-	cv::cuda::Stream upload_stream;
-	bool firstRun = true;
-	while (!boost::this_thread::interruption_requested() && cam.isOpened())
-	{
-		cv::Mat img;
-		if (cam.read(img))
-		{
-			if (firstRun)
-			{
-				size_t total = cv::getElemSize(img.depth())*size_t(img.size().area()) / 2;
-				EagleLib::CombinedAllocator::Instance()->_threshold_level = total;
-				EagleLib::CpuDelayedDeallocationPool::instance()->_threshold_level = total;
-				firstRun = false;
-			}
-			cv::cuda::GpuMat d_img;
-			d_img.upload(img, upload_stream);
-			upload_stream.waitForCompletion();
-			notifier.push(d_img);
-			onUpdate(nullptr);
-		}
-	}
+    cv::cuda::Stream upload_stream;
+    bool firstRun = true;
+    while (!boost::this_thread::interruption_requested() && cam.isOpened())
+    {
+        cv::Mat img;
+        if (cam.read(img))
+        {
+            if (firstRun)
+            {
+                size_t total = cv::getElemSize(img.depth())*size_t(img.size().area()) / 2;
+                EagleLib::CombinedAllocator::Instance()->_threshold_level = total;
+                EagleLib::CpuDelayedDeallocationPool::instance()->_threshold_level = total;
+                firstRun = false;
+            }
+            cv::cuda::GpuMat d_img;
+            d_img.upload(img, upload_stream);
+            upload_stream.waitForCompletion();
+            notifier.push(d_img);
+            onUpdate(nullptr);
+        }
+    }
 }
 cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
@@ -100,12 +100,12 @@ cv::cuda::GpuMat Camera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stre
         _parameters[1]->changed = false;
         changeStream(*getParameter<std::string>(1)->Data());
     }
-	cv::cuda::GpuMat popped_image;
-	if (notifier.try_pop(popped_image))
-	{
-		updateParameter("Output", popped_image, &stream)->type =  Parameters::Parameter::Output;
-		return popped_image;
-	}
+    cv::cuda::GpuMat popped_image;
+    if (notifier.try_pop(popped_image))
+    {
+        updateParameter("Output", popped_image, &stream)->type =  Parameters::Parameter::Output;
+        return popped_image;
+    }
     return cv::cuda::GpuMat();
 }
 bool Camera::SkipEmpty() const
@@ -118,7 +118,7 @@ void GStreamerCamera::NodeInit(bool firstInit)
     {
         Parameters::EnumParameter param;
         param.addEnum(ENUM(v4l2src));
-		Parameters::EnumParameter type;
+        Parameters::EnumParameter type;
         type.addEnum(ENUM(h264));
         updateParameter("Source type", param);
         updateParameter("Source encoding", type);
@@ -206,19 +206,19 @@ void GStreamerCamera::setString()
     }catch(cv::Exception &e)
     {
         //log(Error, e.what());
-		NODE_LOG(error) << e.what();
+        NODE_LOG(error) << e.what();
         return;
     }
 
-	if (cam.isOpened())
-	{
-		NODE_LOG(info) << "Successfully opened camera";
-	}
-	else
-	{
-		NODE_LOG(error) << "Failed to open camera";
-	}
-		
+    if (cam.isOpened())
+    {
+        NODE_LOG(info) << "Successfully opened camera";
+    }
+    else
+    {
+        NODE_LOG(error) << "Failed to open camera";
+    }
+        
 
     for(size_t i = 0; i < _parameters.size(); ++i)
     {
@@ -247,7 +247,7 @@ cv::cuda::GpuMat GStreamerCamera::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         if(cam.read(hostBuf))
         {
             img.upload(hostBuf,stream);
-			updateParameter("Output", img)->type =  Parameters::Parameter::Output;
+            updateParameter("Output", img)->type =  Parameters::Parameter::Output;
         }
     }
     
@@ -259,14 +259,14 @@ bool GStreamerCamera::SkipEmpty() const
 }
 void RTSPCamera::NodeInit(bool firstInit)
 {
-	currentNewestFrame = nullptr;
+    currentNewestFrame = nullptr;
     bufferSize = 5;
     putItr = 0;
     if(firstInit)
     {
-		Parameters::EnumParameter param;
+        Parameters::EnumParameter param;
         param.addEnum(ENUM(rtspsrc));
-		Parameters::EnumParameter type;
+        Parameters::EnumParameter type;
         type.addEnum(ENUM(h264));
         updateParameter("Source type", param);
         updateParameter("Source encoding", type);
@@ -279,40 +279,40 @@ void RTSPCamera::NodeInit(bool firstInit)
         updateParameter<unsigned short>("Height", 1080);
         updateParameter("Output", cv::cuda::GpuMat())->type =  Parameters::Parameter::Output;
     }
-	for (auto itr = _parameters.begin(); itr != _parameters.end(); ++itr)
-	{
-		(*itr)->changed = false;
-	}
+    for (auto itr = _parameters.begin(); itr != _parameters.end(); ++itr)
+    {
+        (*itr)->changed = false;
+    }
 }
 void RTSPCamera::readImage_thread()
 {
-	while (!boost::this_thread::interruption_requested())
-	{
-		if (cam.isOpened())
-		{
-			rmt_ScopedCPUSample(RTSPCamera_readImage);
-			try
-			{
+    while (!boost::this_thread::interruption_requested())
+    {
+        if (cam.isOpened())
+        {
+            rmt_ScopedCPUSample(RTSPCamera_readImage);
+            try
+            {
                 cv::Mat h_img;
-				cam.read(h_img);
-				if (h_img.empty())
-				{
-					NODE_LOG(debug) << "Read empty image";
+                cam.read(h_img);
+                if (h_img.empty())
+                {
+                    NODE_LOG(debug) << "Read empty image";
                     continue;
-				}
-				notifier.push(h_img);
-				onUpdate(nullptr);
+                }
+                notifier.push(h_img);
+                onUpdate(nullptr);
             }
             catch (cv::Exception &e)
             {
                 LOG(error) << "Error in reading image " << e.what();
             }
-			catch (...)
-			{
-				LOG(error) << "Error in reading image";
-			}
-		}
-	}    
+            catch (...)
+            {
+                LOG(error) << "Error in reading image";
+            }
+        }
+    }    
 }
 RTSPCamera::~RTSPCamera()
 {
@@ -324,17 +324,17 @@ void RTSPCamera::setString()
 {
     processingThread.interrupt();
 //    log(Status, "Setting up RTSP Camera");
-	NODE_LOG(info) << "Setting up RTSP camera";
+    NODE_LOG(info) << "Setting up RTSP camera";
     std::stringstream str;
     SourceType src = (SourceType)getParameter<Parameters::EnumParameter>(0)->Data()->getValue();
     VideoType encoding = (VideoType)getParameter<Parameters::EnumParameter>(1)->Data()->getValue();
     std::string result;
-	//rtspsrc location=rtsp://root:12369pp@192.168.1.52:554/axis-media/media.amp ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink
+    //rtspsrc location=rtsp://root:12369pp@192.168.1.52:554/axis-media/media.amp ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink
     if(src == rtspsrc)
     {
         if(encoding == h264)
         {
-			std::string userName = *getParameter<std::string>("Username")->Data();
+            std::string userName = *getParameter<std::string>("Username")->Data();
             std::string pw = *getParameter<std::string>("Password")->Data();
             str << "rtspsrc location=rtsp://";
             if(userName.size())
@@ -373,22 +373,22 @@ void RTSPCamera::setString()
     cam.release();
     try
     {
-		cam = cv::VideoCapture(result, CV_CAP_GSTREAMER);
+        cam = cv::VideoCapture(result, CV_CAP_GSTREAMER);
     }catch(cv::Exception &e)
     {
-		NODE_LOG(error) << e.what();
+        NODE_LOG(error) << e.what();
         return;
     }
 
     if(cam.isOpened())
     {
-		NODE_LOG(info) << "Successfully opened camera";
+        NODE_LOG(info) << "Successfully opened camera";
         processingThread = boost::thread(boost::bind(&RTSPCamera::readImage_thread, this));
     }
-	else
-	{
-		NODE_LOG(error) << "Failed to open camera";
-	}
+    else
+    {
+        NODE_LOG(error) << "Failed to open camera";
+    }
 
     for(size_t i = 0; i < _parameters.size(); ++i)
     {
@@ -407,14 +407,14 @@ cv::cuda::GpuMat RTSPCamera::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         setString();
     }
     cv::Mat h_img;
-	cv::cuda::GpuMat output;
-	if (notifier.try_pop(h_img) && !h_img.empty())
+    cv::cuda::GpuMat output;
+    if (notifier.try_pop(h_img) && !h_img.empty())
     {
         output.upload(h_img, stream);
         updateParameter("Output", output, &stream)->type =  Parameters::Parameter::Output;
         return output;
     }
-	//onUpdate(&stream);
+    //onUpdate(&stream);
     return cv::cuda::GpuMat();
 }
 

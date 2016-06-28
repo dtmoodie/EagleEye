@@ -16,17 +16,17 @@ namespace boost
 }
 namespace EagleLib
 {
-	namespace cuda
-	{
+    namespace cuda
+    {
 
-		struct EAGLE_EXPORTS scoped_stream_timer
-		{
-			std::string _scope_name;
-			cv::cuda::Stream _stream;
+        struct EAGLE_EXPORTS scoped_stream_timer
+        {
+            std::string _scope_name;
+            cv::cuda::Stream _stream;
             boost::posix_time::ptime* start_time;
             scoped_stream_timer(cv::cuda::Stream& stream, const std::string& scope_name = "");
             ~scoped_stream_timer();
-		};
+        };
         struct EAGLE_EXPORTS scoped_event_stream_timer
         {
             static EagleLib::pool::ObjectPool<cv::cuda::Event> eventPool;
@@ -38,44 +38,44 @@ namespace EagleLib
             ~scoped_event_stream_timer();
         };
 
-		struct EAGLE_EXPORTS ICallback
-		{
-			static void cb_func_async(int status, void* user_data);
-			static void cb_func(int status, void* user_data);
-			virtual ~ICallback();
-			virtual void run() = 0;
-		};
-		
-		template<typename T, typename C> 
-		auto enqueue_callback_async(
-			const T& user_data, 
-			cv::cuda::Stream& stream) -> void
-		{
-			static_assert(std::is_base_of<ICallback, C>::value, "Template class argument must inherit from ICallback");
-			stream.enqueueHostCallback(ICallback::cb_func_async, new C(user_data));
-		}
-		template<typename T, typename C>
-		auto enqueue_callback(
-			const T& user_data,
-			cv::cuda::Stream& stream) -> void
-		{
-			static_assert(std::is_base_of<ICallback, C>::value, "Template class argument must inherit from ICallback");
-			stream.enqueueHostCallback(ICallback::cb_func, new C(user_data));
-		}
+        struct EAGLE_EXPORTS ICallback
+        {
+            static void cb_func_async(int status, void* user_data);
+            static void cb_func(int status, void* user_data);
+            virtual ~ICallback();
+            virtual void run() = 0;
+        };
+        
+        template<typename T, typename C> 
+        auto enqueue_callback_async(
+            const T& user_data, 
+            cv::cuda::Stream& stream) -> void
+        {
+            static_assert(std::is_base_of<ICallback, C>::value, "Template class argument must inherit from ICallback");
+            stream.enqueueHostCallback(ICallback::cb_func_async, new C(user_data));
+        }
+        template<typename T, typename C>
+        auto enqueue_callback(
+            const T& user_data,
+            cv::cuda::Stream& stream) -> void
+        {
+            static_assert(std::is_base_of<ICallback, C>::value, "Template class argument must inherit from ICallback");
+            stream.enqueueHostCallback(ICallback::cb_func, new C(user_data));
+        }
 
 
-		template<typename T, typename R>
-		struct FunctionCallback : public ICallback
-		{
-			std::function<R(T)> func;
-			T data;
-			std::promise<R> promise;
-			
-			FunctionCallback(const T& d, const std::function<R(T)> f) : func(f), data(d) {}
-			virtual ~FunctionCallback() {}
-			virtual void run();
-		};
-		template<typename T> struct FunctionCallback<T, void>: public ICallback
+        template<typename T, typename R>
+        struct FunctionCallback : public ICallback
+        {
+            std::function<R(T)> func;
+            T data;
+            std::promise<R> promise;
+            
+            FunctionCallback(const T& d, const std::function<R(T)> f) : func(f), data(d) {}
+            virtual ~FunctionCallback() {}
+            virtual void run();
+        };
+        template<typename T> struct FunctionCallback<T, void>: public ICallback
         {
             std::function<void(T)> func;
             std::promise<void> promise;
@@ -84,88 +84,88 @@ namespace EagleLib
             virtual ~FunctionCallback() {}
             virtual void run();
         };
-		template<typename _return_type> 
-		struct EAGLE_EXPORTS LambdaCallback: public ICallback
-		{
-			std::function<_return_type()> func;
-			std::promise<_return_type> promise;
-			
-			LambdaCallback(const std::function<_return_type()>& f) : func(f) {}
-			~LambdaCallback() {}
-			virtual void run();
-		};
-		template<> struct EAGLE_EXPORTS LambdaCallback<void> : public ICallback
-		{
-			std::function<void()> func;
-			std::promise<void> promise;
+        template<typename _return_type> 
+        struct EAGLE_EXPORTS LambdaCallback: public ICallback
+        {
+            std::function<_return_type()> func;
+            std::promise<_return_type> promise;
+            
+            LambdaCallback(const std::function<_return_type()>& f) : func(f) {}
+            ~LambdaCallback() {}
+            virtual void run();
+        };
+        template<> struct EAGLE_EXPORTS LambdaCallback<void> : public ICallback
+        {
+            std::function<void()> func;
+            std::promise<void> promise;
 
-			LambdaCallback(const std::function<void()>& f);
-			~LambdaCallback();
-			virtual void run();
-		};
+            LambdaCallback(const std::function<void()>& f);
+            ~LambdaCallback();
+            virtual void run();
+        };
 
-		// Lambda functions
-		template<typename _Ty> auto
-			enqueue_callback_async(_Ty function,cv::cuda::Stream& stream)->std::future<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>
-		{
-			auto fc = new LambdaCallback<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>(function);
-			auto future = fc->promise.get_future();
-			stream.enqueueHostCallback(&ICallback::cb_func_async, fc);
-			return future;
-		}
-		template<typename _Ty> auto
-			enqueue_callback(_Ty function, cv::cuda::Stream& stream)->std::future<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>
-		{
-			auto fc = new LambdaCallback<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>(function);
-			auto future = fc->promise.get_future();
-			stream.enqueueHostCallback(&ICallback::cb_func, fc);
-			return future;
-		}
-
-
-		template<typename T, typename R> std::future<R>
-			enqueue_callback_async(const T& data, const std::function<R(T)>& function, cv::cuda::Stream& stream)
-		{
-			auto fc = new FunctionCallback<T,R>(data, function);
-			stream.enqueueHostCallback(&ICallback::cb_func_async, fc);
-			return fc->promise.get_future();
-		}
-
-		template<typename T, typename R> std::future<R>
-			enqueue_callback(const T& data, const std::function<R(T)>& function, cv::cuda::Stream& stream)
-		{
-			auto fc = new FunctionCallback<T, R>(data, function);
-			stream.enqueueHostCallback(&ICallback::cb_func, fc);
-			return fc->promise.get_future();
-		}
-
-		template<typename T> class Callback: public ICallback
-		{
-			Callback(const T& data);
-			virtual void run();
-		};
+        // Lambda functions
+        template<typename _Ty> auto
+            enqueue_callback_async(_Ty function,cv::cuda::Stream& stream)->std::future<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>
+        {
+            auto fc = new LambdaCallback<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>(function);
+            auto future = fc->promise.get_future();
+            stream.enqueueHostCallback(&ICallback::cb_func_async, fc);
+            return future;
+        }
+        template<typename _Ty> auto
+            enqueue_callback(_Ty function, cv::cuda::Stream& stream)->std::future<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>
+        {
+            auto fc = new LambdaCallback<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>(function);
+            auto future = fc->promise.get_future();
+            stream.enqueueHostCallback(&ICallback::cb_func, fc);
+            return future;
+        }
 
 
-		// Implementations
-		template<typename T> void LambdaCallback<T>::run()
-		{
-			promise.set_value(func());
-		}
-		template<typename T, typename R> void FunctionCallback<T, R>::run()
-		{
-			promise.set_value(func(data));
-		}
+        template<typename T, typename R> std::future<R>
+            enqueue_callback_async(const T& data, const std::function<R(T)>& function, cv::cuda::Stream& stream)
+        {
+            auto fc = new FunctionCallback<T,R>(data, function);
+            stream.enqueueHostCallback(&ICallback::cb_func_async, fc);
+            return fc->promise.get_future();
+        }
+
+        template<typename T, typename R> std::future<R>
+            enqueue_callback(const T& data, const std::function<R(T)>& function, cv::cuda::Stream& stream)
+        {
+            auto fc = new FunctionCallback<T, R>(data, function);
+            stream.enqueueHostCallback(&ICallback::cb_func, fc);
+            return fc->promise.get_future();
+        }
+
+        template<typename T> class Callback: public ICallback
+        {
+            Callback(const T& data);
+            virtual void run();
+        };
+
+
+        // Implementations
+        template<typename T> void LambdaCallback<T>::run()
+        {
+            promise.set_value(func());
+        }
+        template<typename T, typename R> void FunctionCallback<T, R>::run()
+        {
+            promise.set_value(func(data));
+        }
         template<typename T> void FunctionCallback<T, void>::run()
         {
             func(data);
             promise.set_value();
             //promise.set_value(func(data));
         }
-		template<typename T> void Callback<T>::run()
-		{
+        template<typename T> void Callback<T>::run()
+        {
 
-		}
-	}
+        }
+    }
 }
 
 

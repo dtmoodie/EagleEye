@@ -47,24 +47,24 @@ namespace rcc
 // IIDs
 enum InterfaceIDEnum
 {
-	IID_IOBJECT,
+    IID_IOBJECT,
     IID_NodeObject,
     IID_Plotter,
-	IID_SignalHandler,
-	IID_RenderEngine,
-	IID_RenderScene,
-	IID_RenderObject,
-	IID_RenderObjectConstructor,
-	IID_RenderInteractor,
-	IID_RenderObjectFactory,
+    IID_SignalHandler,
+    IID_RenderEngine,
+    IID_RenderScene,
+    IID_RenderObject,
+    IID_RenderObjectConstructor,
+    IID_RenderInteractor,
+    IID_RenderObjectFactory,
     IID_Algorithm,
-	IID_CudaAlgorithm,
+    IID_CudaAlgorithm,
     IID_ViewManager,
     IID_CoordinateManager,
     IID_TrackManager,
     IID_FrameGrabber,
-	IID_DataStream,
-	IID_ENDInterfaceID
+    IID_DataStream,
+    IID_ENDInterfaceID
 };
 
 typedef unsigned int InterfaceID;
@@ -72,7 +72,7 @@ typedef unsigned int InterfaceID;
 // Template to help with IIDs
 template< InterfaceID Tiid, typename TSuper> struct TInterface : public TSuper
 {
-	static const InterfaceID s_interfaceID = Tiid;
+    static const InterfaceID s_interfaceID = Tiid;
     virtual IObject* GetInterface( InterfaceID _iid)
     {
         switch(_iid)
@@ -116,7 +116,7 @@ struct IObject
     IObject() : _isRuntimeDelete(false) {}
     virtual ~IObject()
     {
-		
+        
     }
 
     // Perform any object initialization
@@ -152,10 +152,10 @@ struct IObject
         
 
     }
-	void SerializeNotifiers(ISimpleSerializer* pSerializer)
-	{
-		
-	}
+    void SerializeNotifiers(ISimpleSerializer* pSerializer)
+    {
+        
+    }
     virtual const char* GetTypeName() const = 0;
 
     

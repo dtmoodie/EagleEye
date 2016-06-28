@@ -5,12 +5,12 @@
 
 namespace EagleLib
 {
-	class EAGLE_EXPORTS PlotManager
-	{
-	public:
-		static PlotManager& getInstance();
-		rcc::shared_ptr<Plotter> getPlot(const std::string& plotName);
-		std::vector<std::string> getAvailablePlots();
-		std::vector<std::string> getAcceptablePlotters(Parameters::Parameter* param);
-	};
+    class EAGLE_EXPORTS PlotManager
+    {
+    public:
+        static PlotManager& getInstance();
+        rcc::shared_ptr<Plotter> getPlot(const std::string& plotName);
+        std::vector<std::string> getAvailablePlots();
+        std::vector<std::string> getAcceptablePlotters(Parameters::Parameter* param);
+    };
 }

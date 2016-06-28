@@ -30,29 +30,29 @@ namespace EagleLib
     {
     
     
-	class XmppClient : public Node, MessageSessionHandler, ConnectionListener, LogHandler,
-		MessageEventHandler, MessageHandler, ChatStateHandler
-	{
-		std::shared_ptr<gloox::Client> xmpp_client;
-		std::list<MessageSession*> m_session;
-		MessageEventFilter* m_messageEventFilter;
-		ChatStateFilter* m_chatStateFilter;
-	public:
-		virtual void onConnect();
-		virtual void onDisconnect(ConnectionError e);
-		virtual bool onTLSConnect(const CertInfo& info);
-		virtual void handleMessage(const Message& msg, MessageSession * session);
-		virtual void handleMessageEvent(const JID& from, MessageEventType messageEvent);
-		virtual void handleChatState(const JID& from, ChatStateType state);
-		virtual void handleMessageSession(MessageSession *session);
-		virtual void handleLog(LogLevel level, LogArea area, const std::string& message);
-		virtual void sendPointCloud();
-		virtual void _sendPointCloud();
-		void on_msgReceived(std::string& msg);
-		XmppClient();
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream /* = cv::cuda::Stream::Null() */);
-	};
+    class XmppClient : public Node, MessageSessionHandler, ConnectionListener, LogHandler,
+        MessageEventHandler, MessageHandler, ChatStateHandler
+    {
+        std::shared_ptr<gloox::Client> xmpp_client;
+        std::list<MessageSession*> m_session;
+        MessageEventFilter* m_messageEventFilter;
+        ChatStateFilter* m_chatStateFilter;
+    public:
+        virtual void onConnect();
+        virtual void onDisconnect(ConnectionError e);
+        virtual bool onTLSConnect(const CertInfo& info);
+        virtual void handleMessage(const Message& msg, MessageSession * session);
+        virtual void handleMessageEvent(const JID& from, MessageEventType messageEvent);
+        virtual void handleChatState(const JID& from, ChatStateType state);
+        virtual void handleMessageSession(MessageSession *session);
+        virtual void handleLog(LogLevel level, LogArea area, const std::string& message);
+        virtual void sendPointCloud();
+        virtual void _sendPointCloud();
+        void on_msgReceived(std::string& msg);
+        XmppClient();
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream /* = cv::cuda::Stream::Null() */);
+    };
     }
 }
 #endif

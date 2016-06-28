@@ -2,7 +2,7 @@
 #include <boost/preprocessor.hpp>
 #include "RuntimeLinkLibrary.h"
 #define STRINGIFY_1(ARG1) #ARG1
-#define STRINGIFY_2(ARG1, ARG2)	#ARG1, #ARG2
+#define STRINGIFY_2(ARG1, ARG2)    #ARG1, #ARG2
 #define STRINGIFY_3(ARG1, ARG2, ARG3) #ARG1, #ARG2, #ARG3
 #define STRINGIFY_4(ARG1, ARG2, ARG3, ARG4) #ARG1, #ARG2, #ARG3, #ARG4
 #define STRINGIFY_5(ARG1, ARG2, ARG3, ARG4, ARG5) #ARG1, #ARG2, #ARG3, #ARG4, #ARG5
@@ -12,9 +12,9 @@
 #endif
 
 #ifdef _MSC_VER
-#define STRINGIFY(...) 	BOOST_PP_CAT( BOOST_PP_OVERLOAD( STRINGIFY_, __VA_ARGS__ )(__VA_ARGS__), BOOST_PP_EMPTY() )
+#define STRINGIFY(...)     BOOST_PP_CAT( BOOST_PP_OVERLOAD( STRINGIFY_, __VA_ARGS__ )(__VA_ARGS__), BOOST_PP_EMPTY() )
 #else
-#define STRINGIFY(...) 	BOOST_PP_OVERLOAD( STRINGIFY_, __VA_ARGS__ )(__VA_ARGS__)
+#define STRINGIFY(...)     BOOST_PP_OVERLOAD( STRINGIFY_, __VA_ARGS__ )(__VA_ARGS__)
 #endif
 
 
@@ -52,16 +52,16 @@ RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib");
 #endif
 #endif
 
-																									
+                                                                                                    
 
 namespace EagleLib
 {
-	enum PlaybackState
-	{
-		PLAYING,
-		PAUSED,
-		FAST_FORWARD,
-		FAST_BACKWARD,
-		STOP
-	};
+    enum PlaybackState
+    {
+        PLAYING,
+        PAUSED,
+        FAST_FORWARD,
+        FAST_BACKWARD,
+        STOP
+    };
 }

@@ -13,24 +13,24 @@ void ImageLoader::NodeInit(bool firstInit)
 }
 void ImageLoader::load()
 {
-	auto path = getParameter<Parameters::ReadFile>(0);
+    auto path = getParameter<Parameters::ReadFile>(0);
     if(path)
     {
-		if (boost::filesystem::exists(*path->Data()))
+        if (boost::filesystem::exists(*path->Data()))
         {
-			cv::Mat h_img = cv::imread(path->Data()->string());
-			if (!h_img.empty())
-			{
-				d_img.upload(h_img);
-			}
-			else
-			{
-				NODE_LOG(error) << "Loaded empty image";
-			}
+            cv::Mat h_img = cv::imread(path->Data()->string());
+            if (!h_img.empty())
+            {
+                d_img.upload(h_img);
+            }
+            else
+            {
+                NODE_LOG(error) << "Loaded empty image";
+            }
         }else
         {
             //log(Status, "File doesn't exist");
-			NODE_LOG(warning) << "File doesn't exist";
+            NODE_LOG(warning) << "File doesn't exist";
         }
     }
 }
@@ -45,7 +45,7 @@ cv::cuda::GpuMat ImageLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream&
         updateParameter("Loaded image", d_img, &stream);
     }
     TIME
-	
+    
     return img;
 }
 
@@ -74,7 +74,7 @@ cv::cuda::GpuMat DirectoryLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
 {
     if(_parameters[0]->changed)
     {
-		boost::filesystem::path& path = *getParameter<Parameters::ReadDirectory>(0)->Data();
+        boost::filesystem::path& path = *getParameter<Parameters::ReadDirectory>(0)->Data();
         files.clear();
         if(boost::filesystem::is_directory(path))
         {
@@ -91,21 +91,21 @@ cv::cuda::GpuMat DirectoryLoader::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         {
             cv::Mat h_img = cv::imread(files[fileIdx]);
             updateParameter("Current file", files[fileIdx]);
-			if (!h_img.empty())
-			{
-				img.upload(h_img, stream);
-				++fileIdx;
-			}				
+            if (!h_img.empty())
+            {
+                img.upload(h_img, stream);
+                ++fileIdx;
+            }                
         }
-		
-			if (fileIdx == files.size())
-			{
-				//log(Status, "End of directory reached");
-				NODE_LOG(info) << "End of directory reached";
-				if (*getParameter<bool>(1)->Data())
-					fileIdx = 0;
+        
+            if (fileIdx == files.size())
+            {
+                //log(Status, "End of directory reached");
+                NODE_LOG(info) << "End of directory reached";
+                if (*getParameter<bool>(1)->Data())
+                    fileIdx = 0;
 
-			}
+            }
                 
     }
     return img;

@@ -1,11 +1,11 @@
 PROJECT(Segmentation)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
-	CMAKE_POLICY(SET CMP0053 OLD)
+    CMAKE_POLICY(SET CMP0053 OLD)
 ENDIF()
 CMAKE_POLICY(SET CMP0020 NEW)
 
 IF(NOT WIN32)
-	set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
+    set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 ENDIF(NOT WIN32)
 
 find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
@@ -36,20 +36,20 @@ add_dependencies(Segmentation EagleLib)
 RCC_LINK_LIB(Segmentation
     EagleLib
     ${OpenCV_LIBS}
-	${Boost_LIBRARIES}
+    ${Boost_LIBRARIES}
 )
 
 
 IF(TARGET fastms)
     
-	add_dependencies(Segmentation fastms)
+    add_dependencies(Segmentation fastms)
     RCC_LINK_LIB(Segmentation fastms ${fastms_LIBS})
-	TARGET_LINK_LIBRARIES(Segmentation fastms)
+    TARGET_LINK_LIBRARIES(Segmentation fastms)
     add_definitions(-DFASTMS_FOUND)
     add_definitions(-DFASTMS_INCLUDE=${fastms_INCLUDE_DIRECTORIES})
-	LIST(APPEND DEFS -DFASTMS_FOUND)
+    LIST(APPEND DEFS -DFASTMS_FOUND)
     INCLUDE_DIRECTORIES(${fastms_INCLUDE_DIRECTORIES})
-	message(STATUS "FastMS include: ${fastms_INCLUDE_DIRECTORIES}") 
+    message(STATUS "FastMS include: ${fastms_INCLUDE_DIRECTORIES}") 
 
 ENDIF()
 INCLUDE(../PluginTemplate.cmake)

@@ -21,7 +21,7 @@ namespace EagleLib
 
     class Canny: public Node
     {
-		cv::Ptr<cv::cuda::CannyEdgeDetector> detector;
+        cv::Ptr<cv::cuda::CannyEdgeDetector> detector;
     public:
         Canny();
         virtual void NodeInit(bool firstInit);

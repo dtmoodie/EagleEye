@@ -8,10 +8,10 @@ FIND_PACKAGE(CUDA REQUIRED)
 
 
 INCLUDE_DIRECTORIES(
-	${INCLUDE_DIRS}
-	"${CMAKE_CURRENT_SOURCE_DIR}/include"
-	${Qt5Network_INCLUDE_DIRS}
-	${Qt5Core_INCLUDE_DIRS}
+    ${INCLUDE_DIRS}
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    ${Qt5Network_INCLUDE_DIRS}
+    ${Qt5Core_INCLUDE_DIRS}
 )
 
 FILE(GLOB_RECURSE hdrs "include/*.h")
@@ -28,14 +28,14 @@ IF(GLOOX_INCLUDE_DIR AND GLOOX_LIBRARY)
   add_definitions(-DHAVE_GLOOX)
 endif()
 RCC_LINK_LIB(Vclick3d 
-	${OpenCV_LIBS}
-	Qt5::Network
+    ${OpenCV_LIBS}
+    Qt5::Network
     Qt5::Core
-	EagleLib
-	${LINK_LIBS} 
-	${GLOOX_LIBRARY} 
-	${EagleLib_LIBRARIES}
-	)
+    EagleLib
+    ${LINK_LIBS} 
+    ${GLOOX_LIBRARY} 
+    ${EagleLib_LIBRARIES}
+    )
 
 
 INCLUDE(../PluginTemplate.cmake)

@@ -8,14 +8,14 @@ using namespace EagleLib::cuda;
 void EagleLib::cuda::ICallback::cb_func_async(int status, void* user_data)
 {
 #ifdef _MSC_VER
-	pplx::create_task([user_data]()->void
-	{
+    pplx::create_task([user_data]()->void
+    {
         auto cb = static_cast<ICallback*>(user_data);
         auto start = clock();
         cb->run();
         LOG(trace) << "Callback execution time: " << clock() - start << " ms";
         delete cb;
-	});
+    });
 #else
     auto cb = static_cast<ICallback*>(user_data);
     auto start = clock();
@@ -27,8 +27,8 @@ void EagleLib::cuda::ICallback::cb_func_async(int status, void* user_data)
 void EagleLib::cuda::ICallback::cb_func(int status, void* user_data)
 {
     auto cb = static_cast<ICallback*>(user_data);
-	cb->run();
-	delete cb;
+    cb->run();
+    delete cb;
 }
 ICallback::~ICallback()
 {
@@ -46,18 +46,18 @@ scoped_stream_timer::scoped_stream_timer(cv::cuda::Stream& stream, const std::st
 }
 struct scoped_event_timer_data
 {
-	std::string scope_name;
+    std::string scope_name;
     boost::posix_time::ptime* start_time;
 };
 scoped_stream_timer::~scoped_stream_timer()
 {
-	scoped_event_timer_data data;
-	data.scope_name = _scope_name;
-	data.start_time = start_time;
+    scoped_event_timer_data data;
+    data.scope_name = _scope_name;
+    data.start_time = start_time;
     EagleLib::cuda::enqueue_callback<scoped_event_timer_data, void>(data, [](scoped_event_timer_data data)
     {
-		LOG(trace) << "[" << data.scope_name << "] executed in " <<
-			boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - *data.start_time).total_microseconds() << " us";
+        LOG(trace) << "[" << data.scope_name << "] executed in " <<
+            boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - *data.start_time).total_microseconds() << " us";
         delete data.start_time;
     }, _stream);
 }
@@ -88,12 +88,12 @@ scoped_event_stream_timer::~scoped_event_stream_timer()
     EagleLib::cuda::enqueue_callback_async<scoped_event_data, void>(data, 
         [](scoped_event_data data)->void
     {
-		LOG(trace) << "[" << data._scope_name << "] executed in " << cv::cuda::Event::elapsedTime((*data.startEvent.get()), (*data.endEvent.get())) << " ms";
+        LOG(trace) << "[" << data._scope_name << "] executed in " << cv::cuda::Event::elapsedTime((*data.startEvent.get()), (*data.endEvent.get())) << " ms";
     }, _stream);
 }
 
 LambdaCallback<void>::LambdaCallback(const std::function<void()>& f): 
-	func(f) 
+    func(f) 
 {
 
 }
@@ -103,6 +103,6 @@ LambdaCallback<void>::~LambdaCallback()
 }
 void LambdaCallback<void>::run()
 {
-	func();
-	promise.set_value();
+    func();
+    promise.set_value();
 }

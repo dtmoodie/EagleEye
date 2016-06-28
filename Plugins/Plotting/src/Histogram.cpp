@@ -22,51 +22,51 @@ namespace EagleLib
 
         virtual void AddPlot(QWidget *plot_);
 
-		virtual void UpdatePlots(bool rescale = false); // called from ui thread
+        virtual void UpdatePlots(bool rescale = false); // called from ui thread
 
         virtual void SetInput(Parameters::Parameter* param_);
 
-		virtual void OnParameterUpdate(cv::cuda::Stream* stream);
-		virtual void Serialize(ISimpleSerializer *pSerializer)
-		{
-			QtPlotterImpl::Serialize(pSerializer);
-			SERIALIZE(hists);
-			SERIALIZE(bins);
-		}
-		virtual void RescalePlots()
-		{
+        virtual void OnParameterUpdate(cv::cuda::Stream* stream);
+        virtual void Serialize(ISimpleSerializer *pSerializer)
+        {
+            QtPlotterImpl::Serialize(pSerializer);
+            SERIALIZE(hists);
+            SERIALIZE(bins);
+        }
+        virtual void RescalePlots()
+        {
 
-		}
+        }
     };
-	struct HistogramPlotterInfo: public PlotterInfo
-	{
-		virtual Plotter::PlotterType GetPlotType()
-		{
-			return Plotter::QT_Plotter;
-		}
-		virtual bool AcceptsParameter(Parameters::Parameter* param)
-		{
-			return VectorSizePolicy::acceptsSize(getSize(param));
-		}
-		virtual std::string GetObjectName()
-		{
-			return "HistogramPlotter";
-		}
-		virtual std::string GetObjectTooltip()
-		{
-			return "Used for plotting histograms, input must be a calculated histogram";
-		}
-		virtual std::string GetObjectHelp()
-		{
-			return "Input must be a parameter that can be converted to a vector, it is then plotted as a histogram";
-		}
-	};
+    struct HistogramPlotterInfo: public PlotterInfo
+    {
+        virtual Plotter::PlotterType GetPlotType()
+        {
+            return Plotter::QT_Plotter;
+        }
+        virtual bool AcceptsParameter(Parameters::Parameter* param)
+        {
+            return VectorSizePolicy::acceptsSize(getSize(param));
+        }
+        virtual std::string GetObjectName()
+        {
+            return "HistogramPlotter";
+        }
+        virtual std::string GetObjectTooltip()
+        {
+            return "Used for plotting histograms, input must be a calculated histogram";
+        }
+        virtual std::string GetObjectHelp()
+        {
+            return "Input must be a parameter that can be converted to a vector, it is then plotted as a histogram";
+        }
+    };
 }
 
 HistogramPlotterInfo hist_info;
 
 HistogramPlotter::HistogramPlotter() :
-	QtPlotterImpl()
+    QtPlotterImpl()
 {
 
 }
@@ -77,7 +77,7 @@ QWidget* HistogramPlotter::CreatePlot(QWidget* parent)
 {
     QCustomPlot* plot = new QCustomPlot(parent);
     plot->setInteractions((QCP::Interaction)255);
-	AddPlot(plot);
+    AddPlot(plot);
     return plot;
 }
 
@@ -118,73 +118,73 @@ void HistogramPlotter::AddPlot(QWidget *plot_)
 void HistogramPlotter::SetInput(Parameters::Parameter* param_)
 {
     Plotter::SetInput(param_);
-	OnParameterUpdate(nullptr);
+    OnParameterUpdate(nullptr);
 }
 
 void HistogramPlotter::UpdatePlots(bool rescale)
 {
-	{
-		rmt_ScopedCPUSample(HistogramPlotter_UpdatePlots_setData);
-		data.resize(converter->NumCols());
-		for (int i = 0; i < converter->NumCols(); ++i)
-		{
-			data[i] = converter->GetValue(0, i);
-		}
-		for (auto hist : hists)
-		{
-			hist->setData(bins, data);
-		}
-	}
-	{
-		rmt_ScopedCPUSample(HistogramPlotter_UpdatePlots_replot);
+    {
+        rmt_ScopedCPUSample(HistogramPlotter_UpdatePlots_setData);
+        data.resize(converter->NumCols());
+        for (int i = 0; i < converter->NumCols(); ++i)
+        {
+            data[i] = converter->GetValue(0, i);
+        }
+        for (auto hist : hists)
+        {
+            hist->setData(bins, data);
+        }
+    }
+    {
+        rmt_ScopedCPUSample(HistogramPlotter_UpdatePlots_replot);
 
-		for (auto plot : plot_widgets)
-		{
-			if (plot->isVisible() || rescale)
-			{
-				auto qcp = dynamic_cast<QCustomPlot*>(plot);
-				qcp->replot();
-				if (rescale)
-					qcp->rescaleAxes();
-				
-			}
-		}
-	}
+        for (auto plot : plot_widgets)
+        {
+            if (plot->isVisible() || rescale)
+            {
+                auto qcp = dynamic_cast<QCustomPlot*>(plot);
+                qcp->replot();
+                if (rescale)
+                    qcp->rescaleAxes();
+                
+            }
+        }
+    }
 }
 void HistogramPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
 {
-	bool rescale = stream == nullptr;
-	if (rescale)
-		stream = &plottingStream;
-	if (param == nullptr)
-		return;
-	bool shown = false;
-	for (auto itr : plot_widgets)
-	{
-		if (itr->isVisible())
-		{
-			shown = true;
-			break;
-		}
-	}
-	if (shown || rescale)
-	{
-		QtPlotterImpl::OnParameterUpdate(stream);
-		if (bins.size() != converter->NumCols())
-		{
-			bins.resize(converter->NumCols());
-			for (int i = 0; i < converter->NumCols(); ++i)
-			{
-				bins[i] = i;
-			}
-		}
-		EagleLib::cuda::enqueue_callback_async(
-			[this, rescale]()->void
-		{
+    bool rescale = stream == nullptr;
+    if (rescale)
+        stream = &plottingStream;
+    if (param == nullptr)
+        return;
+    bool shown = false;
+    for (auto itr : plot_widgets)
+    {
+        if (itr->isVisible())
+        {
+            shown = true;
+            break;
+        }
+    }
+    if (shown || rescale)
+    {
+        QtPlotterImpl::OnParameterUpdate(stream);
+        if (bins.size() != converter->NumCols())
+        {
+            bins.resize(converter->NumCols());
+            for (int i = 0; i < converter->NumCols(); ++i)
+            {
+                bins[i] = i;
+            }
+        }
+        EagleLib::cuda::enqueue_callback_async(
+            [this, rescale]()->void
+        {
             Parameters::UI::UiCallbackService::Instance()->post(std::bind(&HistogramPlotter::UpdatePlots, this, rescale));
-		}, *stream);
-			
-	}
+        }, *stream);
+            
+    }
 }
 REGISTERCLASS(HistogramPlotter, &hist_info)
 

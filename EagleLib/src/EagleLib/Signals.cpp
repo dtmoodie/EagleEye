@@ -12,16 +12,16 @@ SignalManager* SignalManager::get_instance()
         system_table->SetSingleton<SignalManager>(&g_instance);
     }
     /*if (g_instance == nullptr)
-	{
-		if (system_table)
-		{
-			g_instance = system_table->GetSingleton<SignalManager>();
-		}
-		if (g_instance == nullptr)
-		{
-			g_instance = new SignalManager();
-			system_table->SetSingleton<SignalManager>(g_instance);
-		}
+    {
+        if (system_table)
+        {
+            g_instance = system_table->GetSingleton<SignalManager>();
+        }
+        if (g_instance == nullptr)
+        {
+            g_instance = new SignalManager();
+            system_table->SetSingleton<SignalManager>(g_instance);
+        }
     }*/
     return &g_instance;
 }

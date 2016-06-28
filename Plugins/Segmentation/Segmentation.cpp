@@ -30,7 +30,7 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
     if(img.channels() != 1)
     {
         //log(Error, "Currently only support single channel images!");
-		NODE_LOG(warning) << "Currently only support single channel images!";
+        NODE_LOG(warning) << "Currently only support single channel images!";
         return img;
     }
     cv::cuda::GpuMat hist;
@@ -56,13 +56,13 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
         if(bins == nullptr)
         {
             //log(Error, "Histogram provided but range not provided");
-			NODE_LOG(error) << "Histogram provided but range not provided";
+            NODE_LOG(error) << "Histogram provided but range not provided";
             return img;
         }
         if(bins->channels() != 1)
         {
             //log(Error, "Currently only support equal bins accross all histograms");
-			NODE_LOG(error) << "Currently only support equal bins accross all histograms";
+            NODE_LOG(error) << "Currently only support equal bins accross all histograms";
             return img;
         }
         hist = *histogram;
@@ -159,7 +159,7 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
         }else
         {
             //log(Error, "Incompatible channel count");
-			NODE_LOG(error) << "Incompatible channel count";
+            NODE_LOG(error) << "Incompatible channel count";
         }
     }
     for(int i = 0; i < optValue.size(); ++i)
@@ -271,7 +271,7 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
         if(mode == cv::GC_INIT_WITH_MASK)
         {
             //log(Error, "Mode set to initialize with mask, but no mask provided");
-			NODE_LOG(error) << "Mode set to initialize with mask, but no mask provided";
+            NODE_LOG(error) << "Mode set to initialize with mask, but no mask provided";
             return img;
         }
         maskExists = false;
@@ -289,7 +289,7 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     if(mode == cv::GC_INIT_WITH_MASK && mask.size() != h_img.size())
     {
         //log(Error, "Mask size does not match image size");
-		NODE_LOG(error) << "Mask size does not match image size";
+        NODE_LOG(error) << "Mask size does not match image size";
         return img;
     }
 
@@ -297,7 +297,7 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     if(!roi && mode == cv::GC_INIT_WITH_RECT)
     {
         //log(Error, "Mode set to initialize with rect, but no rect provided");
-		NODE_LOG(error) << "Mode set to initialize with rect, but no rect provided";
+        NODE_LOG(error) << "Mode set to initialize with rect, but no rect provided";
         return img;
     }
     cv::Rect rect;
@@ -377,13 +377,13 @@ cv::cuda::GpuMat SegmentMeanShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     if(img.depth() != CV_8U)
     {
         //log(Error, "Image not CV_8U type");
-		NODE_LOG(error) << "Image not CV_8U type";
+        NODE_LOG(error) << "Image not CV_8U type";
         return img;
     }
     if(img.channels() != 4)
     {
         //log(Warning, "Image doesn't have 4 channels, appending blank image");
-		NODE_LOG(warning) << "Image doesn't have 4 channels, appending blank image";
+        NODE_LOG(warning) << "Image doesn't have 4 channels, appending blank image";
         if(blank.size() != img.size())
         {
             blank.create(img.size(), CV_8U);
@@ -466,54 +466,54 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
 
 void SLaT::NodeInit(bool firstInit)
 {
-	updateParameter("Lambda", double(0.1))->SetTooltip( "For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities");
-	updateParameter("Alpha", double(20.0))->SetTooltip("For bigger values, solution will be more flat, for smaller values, solution will be more rough.");
-	updateParameter("Temporal", double(0.0))->SetTooltip("For bigger values, solution will be driven to be similar to the previous frame, smaller values will allow for more interframe independence");
-	updateParameter("Iterations", int(10000))->SetTooltip("Max number of iterations to perform");
-	updateParameter("Epsilon", double(5e-5));
-	updateParameter("Stop K", int(10))->SetTooltip("How often epsilon should be evaluated and checked");
-	updateParameter("Adapt Params", false)->SetTooltip("If true: lambda and alpha will be adapted so that the solution will look more or less the same, for one and the same input image and for different scalings.");
-	updateParameter("Weight", false)->SetTooltip("If true: The regularizer will be adjust to smooth less at pixels with high edge probability");
-	updateParameter("Overlay edges", false);
-	updateParameter("K segments", int(10));
-	updateParameter("KMeans iterations", int(5));
-	updateParameter("KMeans epsilon", 1e-5);
-	solver.reset(new Solver());
+    updateParameter("Lambda", double(0.1))->SetTooltip( "For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities");
+    updateParameter("Alpha", double(20.0))->SetTooltip("For bigger values, solution will be more flat, for smaller values, solution will be more rough.");
+    updateParameter("Temporal", double(0.0))->SetTooltip("For bigger values, solution will be driven to be similar to the previous frame, smaller values will allow for more interframe independence");
+    updateParameter("Iterations", int(10000))->SetTooltip("Max number of iterations to perform");
+    updateParameter("Epsilon", double(5e-5));
+    updateParameter("Stop K", int(10))->SetTooltip("How often epsilon should be evaluated and checked");
+    updateParameter("Adapt Params", false)->SetTooltip("If true: lambda and alpha will be adapted so that the solution will look more or less the same, for one and the same input image and for different scalings.");
+    updateParameter("Weight", false)->SetTooltip("If true: The regularizer will be adjust to smooth less at pixels with high edge probability");
+    updateParameter("Overlay edges", false);
+    updateParameter("K segments", int(10));
+    updateParameter("KMeans iterations", int(5));
+    updateParameter("KMeans epsilon", 1e-5);
+    solver.reset(new Solver());
 }
 cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-	// First we apply the mumford and shah algorithm to smooth the input image
-	img.download(imageBuffer, stream);
-	
-	Par param;
-	param.lambda = *getParameter<double>(0)->Data();
-	param.alpha = *getParameter<double>(1)->Data();
-	param.temporal = *getParameter<double>(2)->Data();
-	param.iterations = *getParameter<int>(3)->Data();
-	param.stop_eps = *getParameter<double>(4)->Data();
-	param.stop_k = *getParameter<int>(5)->Data();
-	param.adapt_params = *getParameter<bool>(6)->Data();
-	param.weight = *getParameter<bool>(7)->Data();
-	param.edges = *getParameter<bool>(8)->Data();
-	stream.waitForCompletion();
-	cv::Mat result = solver->run(imageBuffer.createMatHeader(), param);
+    // First we apply the mumford and shah algorithm to smooth the input image
+    img.download(imageBuffer, stream);
+    
+    Par param;
+    param.lambda = *getParameter<double>(0)->Data();
+    param.alpha = *getParameter<double>(1)->Data();
+    param.temporal = *getParameter<double>(2)->Data();
+    param.iterations = *getParameter<int>(3)->Data();
+    param.stop_eps = *getParameter<double>(4)->Data();
+    param.stop_k = *getParameter<int>(5)->Data();
+    param.adapt_params = *getParameter<bool>(6)->Data();
+    param.weight = *getParameter<bool>(7)->Data();
+    param.edges = *getParameter<bool>(8)->Data();
+    stream.waitForCompletion();
+    cv::Mat result = solver->run(imageBuffer.createMatHeader(), param);
 
-	int rows = img.size().area();
-	cv::cvtColor(result, lab, cv::COLOR_BGR2Lab);
-	lab.convertTo(lab_32f, CV_32F);
-	result.convertTo(smoothed_32f, CV_32F);
-	tensor.create(rows, 6, CV_32F);
-	smoothed_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(0, 3)));
-	lab_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(3, 6)));
-	
+    int rows = img.size().area();
+    cv::cvtColor(result, lab, cv::COLOR_BGR2Lab);
+    lab.convertTo(lab_32f, CV_32F);
+    result.convertTo(smoothed_32f, CV_32F);
+    tensor.create(rows, 6, CV_32F);
+    smoothed_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(0, 3)));
+    lab_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(3, 6)));
+    
     cv::kmeans(tensor, *getParameter<int>(9)->Data(), labels,
-		cv::TermCriteria(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, *getParameter<int>(10)->Data(), *getParameter<double>(11)->Data()),
-		1, cv::KMEANS_RANDOM_CENTERS, centers);
+        cv::TermCriteria(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, *getParameter<int>(10)->Data(), *getParameter<double>(11)->Data()),
+        1, cv::KMEANS_RANDOM_CENTERS, centers);
 
-	labels = labels.reshape(1, img.rows);
-	updateParameter("Labels", labels);
-	updateParameter("Centers", centers); 
-	return img;
+    labels = labels.reshape(1, img.rows);
+    updateParameter("Labels", labels);
+    updateParameter("Centers", centers); 
+    return img;
 }
 
 

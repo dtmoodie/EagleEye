@@ -11,7 +11,7 @@
 using namespace EagleLib;
 SyncedMemory::SyncedMemory()
 {
-	sync_flags.resize(1, SYNCED);
+    sync_flags.resize(1, SYNCED);
 }
 SyncedMemory::SyncedMemory(const cv::Mat& h_mat)
 {
@@ -40,97 +40,97 @@ SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<
 }
 
 SyncedMemory::SyncedMemory(cv::MatAllocator* cpu_allocator, cv::cuda::GpuMat::Allocator* gpu_allocator):
-	h_data(1, cv::Mat()), d_data(1, cv::cuda::GpuMat(gpu_allocator)), sync_flags(1, SYNCED)
+    h_data(1, cv::Mat()), d_data(1, cv::cuda::GpuMat(gpu_allocator)), sync_flags(1, SYNCED)
 {
-	h_data[0].allocator = cpu_allocator;
+    h_data[0].allocator = cpu_allocator;
 }
 
-const cv::Mat&				
+const cv::Mat&                
 SyncedMemory::GetMat(cv::cuda::Stream& stream, int index)
 {
-	if (sync_flags[index] == DEVICE_UPDATED)
-	{
-		d_data[index].download(h_data[index], stream);
-		sync_flags[index] = SYNCED;
-	}	
-	return h_data[index];
+    if (sync_flags[index] == DEVICE_UPDATED)
+    {
+        d_data[index].download(h_data[index], stream);
+        sync_flags[index] = SYNCED;
+    }    
+    return h_data[index];
 }
 
-cv::Mat&					
+cv::Mat&                    
 SyncedMemory::GetMatMutable(cv::cuda::Stream& stream, int index)
 {
-	if (sync_flags[index] == DEVICE_UPDATED)
-		d_data[index].download(h_data[index], stream);
-	sync_flags[index] = HOST_UPDATED;
-	return h_data[index];
+    if (sync_flags[index] == DEVICE_UPDATED)
+        d_data[index].download(h_data[index], stream);
+    sync_flags[index] = HOST_UPDATED;
+    return h_data[index];
 }
 
-const cv::cuda::GpuMat&		
+const cv::cuda::GpuMat&        
 SyncedMemory::GetGpuMat(cv::cuda::Stream& stream, int index)
 {
-	if (sync_flags[index] == HOST_UPDATED)
-	{
-		d_data[index].upload(h_data[index], stream);
-		sync_flags[index] = SYNCED;
-	}
-	
-	return d_data[index];
+    if (sync_flags[index] == HOST_UPDATED)
+    {
+        d_data[index].upload(h_data[index], stream);
+        sync_flags[index] = SYNCED;
+    }
+    
+    return d_data[index];
 }
 
-cv::cuda::GpuMat&			
+cv::cuda::GpuMat&            
 SyncedMemory::GetGpuMatMutable(cv::cuda::Stream& stream, int index)
 {
-	if (sync_flags[index] == HOST_UPDATED)
-		d_data[index].upload(h_data[index], stream);
-	sync_flags[index] = DEVICE_UPDATED;
-	return d_data[index];
+    if (sync_flags[index] == HOST_UPDATED)
+        d_data[index].upload(h_data[index], stream);
+    sync_flags[index] = DEVICE_UPDATED;
+    return d_data[index];
 }
 
 const std::vector<cv::Mat>&
 SyncedMemory::GetMatVec(cv::cuda::Stream& stream)
 {
-	for (int i = 0; i < sync_flags.size(); ++i)
-	{
-		if (sync_flags[i] == DEVICE_UPDATED)
-			d_data[i].download(h_data[i], stream);
-	}
-	return h_data;
+    for (int i = 0; i < sync_flags.size(); ++i)
+    {
+        if (sync_flags[i] == DEVICE_UPDATED)
+            d_data[i].download(h_data[i], stream);
+    }
+    return h_data;
 }
 
 std::vector<cv::Mat>&
 SyncedMemory::GetMatVecMutable(cv::cuda::Stream& stream)
 {
-	for (int i = 0; i < sync_flags.size(); ++i)
-	{
-		if (sync_flags[i] == DEVICE_UPDATED)
-			d_data[i].download(h_data[i], stream);
-		sync_flags[i] = HOST_UPDATED;
-	}
-	
-	return h_data;
+    for (int i = 0; i < sync_flags.size(); ++i)
+    {
+        if (sync_flags[i] == DEVICE_UPDATED)
+            d_data[i].download(h_data[i], stream);
+        sync_flags[i] = HOST_UPDATED;
+    }
+    
+    return h_data;
 }
 
 const std::vector<cv::cuda::GpuMat>&
 SyncedMemory::GetGpuMatVec(cv::cuda::Stream& stream)
 {
-	for (int i = 0; i < sync_flags.size(); ++i)
-	{
-		if (sync_flags[i] == HOST_UPDATED)
-			d_data[i].upload(h_data[i], stream);
-	}
-	return d_data;
+    for (int i = 0; i < sync_flags.size(); ++i)
+    {
+        if (sync_flags[i] == HOST_UPDATED)
+            d_data[i].upload(h_data[i], stream);
+    }
+    return d_data;
 }
 
 std::vector<cv::cuda::GpuMat>&
 SyncedMemory::GetGpuMatVecMutable(cv::cuda::Stream& stream)
 {
-	for (int i = 0; i < sync_flags.size(); ++i)
-	{
-		if (sync_flags[i] == HOST_UPDATED)
-			d_data[i].upload(h_data[i], stream);
-		sync_flags[i] = DEVICE_UPDATED;
-	}
-	return d_data;
+    for (int i = 0; i < sync_flags.size(); ++i)
+    {
+        if (sync_flags[i] == HOST_UPDATED)
+            d_data[i].upload(h_data[i], stream);
+        sync_flags[i] = DEVICE_UPDATED;
+    }
+    return d_data;
 }
 void SyncedMemory::ResizeNumMats(int new_size)
 {
@@ -164,14 +164,14 @@ bool SyncedMemory::empty() const
 }
 void SyncedMemory::Synchronize(cv::cuda::Stream& stream)
 {
-	for(int i = 0; i < h_data.size(); ++i)
-	{
-		if(sync_flags[i] == HOST_UPDATED)
-			d_data[i].upload(h_data[i], stream);
-		else if(sync_flags[i] == DEVICE_UPDATED)
-			d_data[i].download(h_data[i], stream);
+    for(int i = 0; i < h_data.size(); ++i)
+    {
+        if(sync_flags[i] == HOST_UPDATED)
+            d_data[i].upload(h_data[i], stream);
+        else if(sync_flags[i] == DEVICE_UPDATED)
+            d_data[i].download(h_data[i], stream);
         sync_flags[i] = SYNCED;
-	}
+    }
 }
 
 
@@ -202,25 +202,25 @@ void SyncedMemory::ReleaseGpu(cv::cuda::Stream& stream)
 
 cv::Size SyncedMemory::GetSize(int index) const
 {
-	CV_Assert(index >= 0 && index < d_data.size());
-	return d_data[index].size();
+    CV_Assert(index >= 0 && index < d_data.size());
+    return d_data[index].size();
 }
 
 std::vector<int> SyncedMemory::GetShape() const
 {
-	std::vector<int> output;
-	output.push_back(d_data.size());
-	if(d_data.empty())
-		return output;
-	output.push_back(d_data[0].rows);
-	output.push_back(d_data[0].cols);
-	output.push_back(d_data[0].channels());
-	return output;
+    std::vector<int> output;
+    output.push_back(d_data.size());
+    if(d_data.empty())
+        return output;
+    output.push_back(d_data[0].rows);
+    output.push_back(d_data[0].cols);
+    output.push_back(d_data[0].channels());
+    return output;
 }
 int SyncedMemory::GetDepth() const
 {
-	CV_Assert(d_data.size());
-	return d_data[0].depth();
+    CV_Assert(d_data.size());
+    return d_data[0].depth();
 }
 int SyncedMemory::GetDim(int dim) const
 {

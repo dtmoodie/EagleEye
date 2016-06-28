@@ -27,9 +27,9 @@ namespace EagleLib
         virtual bool changeStream(int device);
         cv::VideoCapture cam;
         
-		virtual void read_image();
-		boost::thread read_thread;
-		EagleLib::concurrent_notifier<cv::cuda::GpuMat> notifier;
+        virtual void read_image();
+        boost::thread read_thread;
+        EagleLib::concurrent_notifier<cv::cuda::GpuMat> notifier;
     public:
         Camera();
         ~Camera();

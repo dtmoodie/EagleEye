@@ -71,11 +71,11 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     if(index >= files_on_disk.size())
         index = files_on_disk.size() - 1;
     std::string file_name = files_on_disk[index];
-	if (index != *getParameter<int>("Frame Index")->Data())
-	{
-		updateParameter("Frame Index", index);
-		updateParameter("Loaded file", file_name);
-	}
+    if (index != *getParameter<int>("Frame Index")->Data())
+    {
+        updateParameter("Frame Index", index);
+        updateParameter("Loaded file", file_name);
+    }
     
     for(auto& itr : loaded_images)
     {
@@ -94,17 +94,17 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
 }
 TS<SyncedMemory> frame_grabber_directory::GetNextFrame(cv::cuda::Stream& stream)
 {
-	if (frame_index == files_on_disk.size() - 1)
-		return GetCurrentFrame(stream);
+    if (frame_index == files_on_disk.size() - 1)
+        return GetCurrentFrame(stream);
     return GetFrame(frame_index++, stream);
 }
 
 TS<SyncedMemory> frame_grabber_directory::GetFrameRelative(int index, cv::cuda::Stream& stream)
 {
-	index = frame_index + index;
-	index = std::max((int)files_on_disk.size() - 1, index);
-	index = std::min(0, index);
-	return GetFrame(index, stream);
+    index = frame_index + index;
+    index = std::max((int)files_on_disk.size() - 1, index);
+    index = std::min(0, index);
+    return GetFrame(index, stream);
 }
 
 rcc::shared_ptr<ICoordinateManager> frame_grabber_directory::GetCoordinateManager()

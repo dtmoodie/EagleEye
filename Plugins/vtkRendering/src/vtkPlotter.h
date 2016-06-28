@@ -120,31 +120,31 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib")
 #endif
 namespace EagleLib
 {
-	namespace Plotting
-	{
-		struct PLUGIN_EXPORTS vtkPlotterInfo: public PlotterInfo
-		{
-			virtual Plotter::PlotterType GetPlotType();
-		};
-		class PLUGIN_EXPORTS vtkPlotter : public QtPlotter
-		{
-		protected:
-			std::list<QVTKWidget2*> render_widgets;
-			vtkSmartPointer<vtkRenderer> renderer;
-		public:
-			vtkPlotter();
-			virtual ~vtkPlotter();
-			virtual bool AcceptsParameter(Parameters::Parameter* param);
-			virtual void SetInput(Parameters::Parameter* param_ = nullptr);
-			virtual void OnParameterUpdate(cv::cuda::Stream* stream);
-			virtual std::string PlotName() const;
-			virtual void Init(bool firstInit);
-			virtual void AddPlot(QWidget* plot_);
+    namespace Plotting
+    {
+        struct PLUGIN_EXPORTS vtkPlotterInfo: public PlotterInfo
+        {
+            virtual Plotter::PlotterType GetPlotType();
+        };
+        class PLUGIN_EXPORTS vtkPlotter : public QtPlotter
+        {
+        protected:
+            std::list<QVTKWidget2*> render_widgets;
+            vtkSmartPointer<vtkRenderer> renderer;
+        public:
+            vtkPlotter();
+            virtual ~vtkPlotter();
+            virtual bool AcceptsParameter(Parameters::Parameter* param);
+            virtual void SetInput(Parameters::Parameter* param_ = nullptr);
+            virtual void OnParameterUpdate(cv::cuda::Stream* stream);
+            virtual std::string PlotName() const;
+            virtual void Init(bool firstInit);
+            virtual void AddPlot(QWidget* plot_);
 
-			virtual QWidget* CreatePlot(QWidget* parent);
-			virtual QWidget* GetControlWidget(QWidget* parent);
+            virtual QWidget* CreatePlot(QWidget* parent);
+            virtual QWidget* GetControlWidget(QWidget* parent);
 
-			virtual void Serialize(ISimpleSerializer *pSerializer);
-		};
-	}
+            virtual void Serialize(ISimpleSerializer *pSerializer);
+        };
+    }
 }

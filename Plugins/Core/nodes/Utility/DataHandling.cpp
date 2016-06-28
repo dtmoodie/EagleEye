@@ -17,23 +17,23 @@ cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     if(input == nullptr)
     {
         //log(Status, "Input not defined");
-		//NODE_LOG(info) << "Input not defined";
+        //NODE_LOG(info) << "Input not defined";
         return img;
     }
     if(input->empty())
     {
         //log(Status, "Input is empty");
-		//NODE_LOG(info) << "Input is empty";
+        //NODE_LOG(info) << "Input is empty";
         return img;
     }
     return *input;
 }
 cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-	{
-		rmt_ScopedCPUSample(ExportInputImage_updateParameter);
-		updateParameter("Output image", img, &stream);
-	}
+    {
+        rmt_ScopedCPUSample(ExportInputImage_updateParameter);
+        updateParameter("Output image", img, &stream);
+    }
     
     return img;
 }
@@ -45,7 +45,7 @@ void ExportInputImage::NodeInit(bool firstInit)
 
 void ImageInfo::NodeInit(bool firstInit)
 {
-	Parameters::EnumParameter dataType;
+    Parameters::EnumParameter dataType;
     dataType.addEnum(ENUM(CV_8U));
     dataType.addEnum(ENUM(CV_8S));
     dataType.addEnum(ENUM(CV_16U));
@@ -68,19 +68,19 @@ cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     //std::stringstream str;
     //str << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
     //log(Status, str.str());
-	//NODE_LOG(info) << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
-	updateParameter<int>("Depth", img.depth())->type = Parameters::Parameter::State;
-	updateParameter<int>("Rows", img.rows)->type = Parameters::Parameter::State;
-	updateParameter<int>("Cols", img.cols)->type = Parameters::Parameter::State;
-	updateParameter<int>("Channels", img.channels())->type = Parameters::Parameter::State;
-	updateParameter<int>("Step", img.step)->type = Parameters::Parameter::State;
-	updateParameter<int>("Ref count", *img.refcount)->type = Parameters::Parameter::State;
-	updateParameter<bool>("Continuous", img.isContinuous());
+    //NODE_LOG(info) << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
+    updateParameter<int>("Depth", img.depth())->type = Parameters::Parameter::State;
+    updateParameter<int>("Rows", img.rows)->type = Parameters::Parameter::State;
+    updateParameter<int>("Cols", img.cols)->type = Parameters::Parameter::State;
+    updateParameter<int>("Channels", img.channels())->type = Parameters::Parameter::State;
+    updateParameter<int>("Step", img.step)->type = Parameters::Parameter::State;
+    updateParameter<int>("Ref count", *img.refcount)->type = Parameters::Parameter::State;
+    updateParameter<bool>("Continuous", img.isContinuous());
     return img;
 }
 void Mat2Tensor::NodeInit(bool firstInit)
 {
-	Parameters::EnumParameter dataType;
+    Parameters::EnumParameter dataType;
     dataType.addEnum(ENUM(CV_8U));
     dataType.addEnum(ENUM(CV_8S));
     dataType.addEnum(ENUM(CV_16U));
@@ -99,74 +99,74 @@ cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& 
     if(position)
         newCols += 2;
     int rows = img.size().area();
-	cv::cuda::GpuMat typed, continuous;
-	if(img.type() == type)
-	{
-		typed = img;
-	}	
-	else
-	{
-		cv::cuda::createContinuous(img.size(), type, typed);
-		img.convertTo(typed, type, stream);
-	}
-	if(!typed.isContinuous())
-	{
-		cv::cuda::createContinuous(typed.size(), typed.type(), continuous);
-	}else
-	{
-		continuous = typed;
-	}
-	cv::cuda::GpuMat output;
-	cv::cuda::createContinuous(rows, newCols, type, output);
-	if((position && positionMat.empty()) || _parameters[0]->changed)
-	{
-		cv::Mat h_positionMat(img.size().area(), 2, type);
-		int row = 0;
-		for(int y = 0; y < img.rows; ++y)
-		{
-			for(int x = 0; x < img.cols; ++x, ++row)
-			{
-				if(type == CV_8U)
-				{
-					h_positionMat.at<uchar>(row,0) = x;
-					h_positionMat.at<uchar>(row,1) = y;
-				}
-				if(type == CV_8S)
-				{
-					h_positionMat.at<char>(row,0) = x;
-					h_positionMat.at<char>(row,1) = y;
-				}
-				if(type == CV_16U)
-				{
-					h_positionMat.at<unsigned short>(row,0) = x;
-					h_positionMat.at<unsigned short>(row,1) = y;
-				}
-				if(type == CV_32S)
-				{
-					h_positionMat.at<int>(row,0) = x;
-					h_positionMat.at<int>(row,1) = y;
-				}
-				if(type == CV_32F)
-				{
-					h_positionMat.at<float>(row,0) = x;
-					h_positionMat.at<float>(row,1) = y;
-				}
-				if(type == CV_64F)
-				{
-					h_positionMat.at<double>(row,0) = x;
-					h_positionMat.at<double>(row,1) = y;
-				}
-			}
-		}
-		positionMat.upload(h_positionMat, stream);
-		_parameters[0]->changed = false;
-	}
-	if(position)
-	{
-		positionMat.copyTo(output.colRange(img.channels(), output.cols), stream);
-	}
-	continuous.reshape(1, rows).copyTo(output.colRange(0, img.channels()), stream);
-	return output;
+    cv::cuda::GpuMat typed, continuous;
+    if(img.type() == type)
+    {
+        typed = img;
+    }    
+    else
+    {
+        cv::cuda::createContinuous(img.size(), type, typed);
+        img.convertTo(typed, type, stream);
+    }
+    if(!typed.isContinuous())
+    {
+        cv::cuda::createContinuous(typed.size(), typed.type(), continuous);
+    }else
+    {
+        continuous = typed;
+    }
+    cv::cuda::GpuMat output;
+    cv::cuda::createContinuous(rows, newCols, type, output);
+    if((position && positionMat.empty()) || _parameters[0]->changed)
+    {
+        cv::Mat h_positionMat(img.size().area(), 2, type);
+        int row = 0;
+        for(int y = 0; y < img.rows; ++y)
+        {
+            for(int x = 0; x < img.cols; ++x, ++row)
+            {
+                if(type == CV_8U)
+                {
+                    h_positionMat.at<uchar>(row,0) = x;
+                    h_positionMat.at<uchar>(row,1) = y;
+                }
+                if(type == CV_8S)
+                {
+                    h_positionMat.at<char>(row,0) = x;
+                    h_positionMat.at<char>(row,1) = y;
+                }
+                if(type == CV_16U)
+                {
+                    h_positionMat.at<unsigned short>(row,0) = x;
+                    h_positionMat.at<unsigned short>(row,1) = y;
+                }
+                if(type == CV_32S)
+                {
+                    h_positionMat.at<int>(row,0) = x;
+                    h_positionMat.at<int>(row,1) = y;
+                }
+                if(type == CV_32F)
+                {
+                    h_positionMat.at<float>(row,0) = x;
+                    h_positionMat.at<float>(row,1) = y;
+                }
+                if(type == CV_64F)
+                {
+                    h_positionMat.at<double>(row,0) = x;
+                    h_positionMat.at<double>(row,1) = y;
+                }
+            }
+        }
+        positionMat.upload(h_positionMat, stream);
+        _parameters[0]->changed = false;
+    }
+    if(position)
+    {
+        positionMat.copyTo(output.colRange(img.channels(), output.cols), stream);
+    }
+    continuous.reshape(1, rows).copyTo(output.colRange(0, img.channels()), stream);
+    return output;
 
 }
 cv::cuda::GpuMat ConcatTensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
@@ -219,85 +219,85 @@ void ConcatTensor::NodeInit(bool firstInit)
 {
     updateParameter("Include Input", true);
     addInputParameter<cv::cuda::GpuMat>("Input 0");
-	
+    
 }
 cv::cuda::GpuMat LagBuffer::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-	if (_parameters[0]->changed)
-	{
-		putItr = 0;
-		getItr = 0;
-		imageBuffer.resize(lagFrames);
-		_parameters[0]->changed = false;
-	}
-	if (lagFrames == 0)
-		return img;
-	imageBuffer[putItr % lagFrames] = img;
-	++putItr;
-	{
-		if (putItr > 1000 && getItr > 1000)
-		{
-			putItr -= 1000;
-			getItr -= 1000;
-		}
-	}
-	if ((putItr - getItr) == lagFrames)
-	{
-		cv::cuda::GpuMat out = imageBuffer[getItr % lagFrames];
-		++getItr;
-		return out;
-	}
-	return cv::cuda::GpuMat();
+    if (_parameters[0]->changed)
+    {
+        putItr = 0;
+        getItr = 0;
+        imageBuffer.resize(lagFrames);
+        _parameters[0]->changed = false;
+    }
+    if (lagFrames == 0)
+        return img;
+    imageBuffer[putItr % lagFrames] = img;
+    ++putItr;
+    {
+        if (putItr > 1000 && getItr > 1000)
+        {
+            putItr -= 1000;
+            getItr -= 1000;
+        }
+    }
+    if ((putItr - getItr) == lagFrames)
+    {
+        cv::cuda::GpuMat out = imageBuffer[getItr % lagFrames];
+        ++getItr;
+        return out;
+    }
+    return cv::cuda::GpuMat();
 }
 void LagBuffer::NodeInit(bool firstInit)
 {
-	imageBuffer.resize(20);
-	putItr = 0;
-	getItr = 0;
-	lagFrames = 20;
-	_parameters.push_back(new Parameters::TypedInputParameterCopy<unsigned int>("Lag frames", 
-								&lagFrames, Parameters::Parameter::ParameterType(Parameters::Parameter::Input | Parameters::Parameter::Control), 
-								"Number of frames for this video stream to lag behind"));
+    imageBuffer.resize(20);
+    putItr = 0;
+    getItr = 0;
+    lagFrames = 20;
+    _parameters.push_back(new Parameters::TypedInputParameterCopy<unsigned int>("Lag frames", 
+                                &lagFrames, Parameters::Parameter::ParameterType(Parameters::Parameter::Input | Parameters::Parameter::Control), 
+                                "Number of frames for this video stream to lag behind"));
 
-	//	updateParameter<unsigned int>("Lag frames", &lagFrames, Parameters::Parameter::Control, "Number of frames for this video stream to lag behind");
+    //    updateParameter<unsigned int>("Lag frames", &lagFrames, Parameters::Parameter::Control, "Number of frames for this video stream to lag behind");
 }
 cv::cuda::GpuMat CameraSync::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
-	if (_parameters[0]->changed)
-	{
-		int offset = *getParameter<int>(0)->Data();
-		if (offset == 0)
-		{
-			updateParameter<unsigned int>("Camera 1 offset", 0)->type =  Parameters::Parameter::Output;
-			updateParameter<unsigned int>("Camera 2 offset", 0)->type =  Parameters::Parameter::Output;
-		}
-		else
-		{
-			if (offset < 0)
-			{
-				updateParameter<unsigned int>("Camera 1 offset", abs(offset))->type =  Parameters::Parameter::Output;
-				updateParameter<unsigned int>("Camera 2 offset", 0)->type =  Parameters::Parameter::Output;
-			}
-			else
-			{
-				updateParameter<unsigned int>("Camera 1 offset", 0)->type = Parameters::Parameter::Output;
-				updateParameter<unsigned int>("Camera 2 offset", abs(offset))->type =  Parameters::Parameter::Output;
-			}
-		}	
-		_parameters[0]->changed = false;
-	}
-	return img;
+    if (_parameters[0]->changed)
+    {
+        int offset = *getParameter<int>(0)->Data();
+        if (offset == 0)
+        {
+            updateParameter<unsigned int>("Camera 1 offset", 0)->type =  Parameters::Parameter::Output;
+            updateParameter<unsigned int>("Camera 2 offset", 0)->type =  Parameters::Parameter::Output;
+        }
+        else
+        {
+            if (offset < 0)
+            {
+                updateParameter<unsigned int>("Camera 1 offset", abs(offset))->type =  Parameters::Parameter::Output;
+                updateParameter<unsigned int>("Camera 2 offset", 0)->type =  Parameters::Parameter::Output;
+            }
+            else
+            {
+                updateParameter<unsigned int>("Camera 1 offset", 0)->type = Parameters::Parameter::Output;
+                updateParameter<unsigned int>("Camera 2 offset", abs(offset))->type =  Parameters::Parameter::Output;
+            }
+        }    
+        _parameters[0]->changed = false;
+    }
+    return img;
 }
 bool CameraSync::SkipEmpty() const
 {
-	return false;
+    return false;
 }
 void CameraSync::NodeInit(bool firstInit)
 {
-	updateParameter<int>("Camera offset", 0);
-	updateParameter<unsigned int>("Camera 1 offset", 0)->type =  Parameters::Parameter::Output;
-	updateParameter<unsigned int>("Camera 2 offset", 0)->type = Parameters::Parameter::Output;
-	
+    updateParameter<int>("Camera offset", 0);
+    updateParameter<unsigned int>("Camera 1 offset", 0)->type =  Parameters::Parameter::Output;
+    updateParameter<unsigned int>("Camera 2 offset", 0)->type = Parameters::Parameter::Output;
+    
 }
 
 

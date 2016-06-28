@@ -46,15 +46,15 @@ template<typename Data>
                 the_condition_variable.wait(lock);
             }
         }
-		void wait_push(Data const& data)
-		{
-			boost::mutex::scoped_lock lock(the_mutex);
-			while (!the_data.empty()) // Wait till the consumer pulls data from the queue
-			{
-				the_condition_variable.wait(lock);
-			}
-			the_data.push_back(data);
-		}
+        void wait_push(Data const& data)
+        {
+            boost::mutex::scoped_lock lock(the_mutex);
+            while (!the_data.empty()) // Wait till the consumer pulls data from the queue
+            {
+                the_condition_variable.wait(lock);
+            }
+            the_data.push_back(data);
+        }
 
         void push(Data const& data)
         {
@@ -121,15 +121,15 @@ template<typename Data>
                 the_condition_variable.wait(lock);
             }
         }
-		void wait_push(Data const& data)
-		{
-			boost::mutex::scoped_lock lock(the_mutex);
-			while (!the_queue.empty()) // Wait till the consumer pulls data from the queue
-			{
-				the_condition_variable.wait(lock);
-			}
-			the_queue.push_back(data);
-		}
+        void wait_push(Data const& data)
+        {
+            boost::mutex::scoped_lock lock(the_mutex);
+            while (!the_queue.empty()) // Wait till the consumer pulls data from the queue
+            {
+                the_condition_variable.wait(lock);
+            }
+            the_queue.push_back(data);
+        }
         void push(Data const& data)
         {
             boost::mutex::scoped_lock lock(the_mutex);
@@ -230,8 +230,8 @@ template<typename Data>
             return false;
         }
     };
-	
-	template<typename...> struct Buffer;
+    
+    template<typename...> struct Buffer;
 
     template<typename T>
     struct Buffer<T>
@@ -248,38 +248,38 @@ template<typename Data>
         bool record(cv::cuda::Stream& stream)
         {            return true;        }
     };
-	template<typename T, typename P1>
-	struct Buffer<T,P1> : public P1
-	{
-		T data;
-		Buffer() {}
-		Buffer(const T& init) : data(init) {}
-		~Buffer()
-		{			cleanup(data);		}
-		bool ready()
-		{			return P1::ready();		}
-		bool wait()
-		{			return P1::wait();		}
-		bool record(cv::cuda::Stream& stream)
-		{			return P1::record(stream);		}
-	};
-	template<typename T, typename P1, typename P2>
-	struct Buffer<T,P1,P2> : public P1, public P2
-	{
-		T data;
-		Buffer() {}
-		Buffer(const T& init) : data(init) {}
-		~Buffer()
-		{			cleanup(data);		}
-		bool ready()
-		{			return P1::ready() && P2::ready();		}
-		bool wait()
-		{			return P1::wait() && P2::wait();		}
-		bool record(cv::cuda::Stream& stream)
-		{			return P1::record(stream) || P2::record(stream);		}
-	};
+    template<typename T, typename P1>
+    struct Buffer<T,P1> : public P1
+    {
+        T data;
+        Buffer() {}
+        Buffer(const T& init) : data(init) {}
+        ~Buffer()
+        {            cleanup(data);        }
+        bool ready()
+        {            return P1::ready();        }
+        bool wait()
+        {            return P1::wait();        }
+        bool record(cv::cuda::Stream& stream)
+        {            return P1::record(stream);        }
+    };
+    template<typename T, typename P1, typename P2>
+    struct Buffer<T,P1,P2> : public P1, public P2
+    {
+        T data;
+        Buffer() {}
+        Buffer(const T& init) : data(init) {}
+        ~Buffer()
+        {            cleanup(data);        }
+        bool ready()
+        {            return P1::ready() && P2::ready();        }
+        bool wait()
+        {            return P1::wait() && P2::wait();        }
+        bool record(cv::cuda::Stream& stream)
+        {            return P1::record(stream) || P2::record(stream);        }
+    };
 
-	template<typename...> class BufferPool;
+    template<typename...> class BufferPool;
 
     template<typename T> class BufferPool<T>
     {
@@ -290,40 +290,40 @@ template<typename Data>
         boost::recursive_mutex mtx;
     public:
         BufferPool<T>():getItr(0), putItr(0), size(10), buffer(10){}
-		BufferPool<T>(size_t size_) :
+        BufferPool<T>(size_t size_) :
             buffer(size_), size(size_), getItr(0), putItr(0){}
-		BufferPool<T>(size_t size_, const T& init) :
+        BufferPool<T>(size_t size_, const T& init) :
             buffer(size_, Buffer<T>(init)), size(size_), getItr(0), putItr(0){}
-		BufferPool<T>(const BufferPool<T>& other) :
+        BufferPool<T>(const BufferPool<T>& other) :
             buffer(other.buffer), getItr(other.getItr), putItr(other.putItr), size(other.size){}
         Buffer<T>* getFront()
         {
             boost::recursive_mutex::scoped_lock lock(mtx);
             if(size == 0)
                 return nullptr;
-			auto itr = putItr++%size;
-			if (!buffer[itr].ready())
-			{
+            auto itr = putItr++%size;
+            if (!buffer[itr].ready())
+            {
 #ifndef __NVCC__
-				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
+                LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
-				resize(buffer.size() + 1);
-			}
+                resize(buffer.size() + 1);
+            }
             return &buffer[itr];
         }
         Buffer<T>* getBack()
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			auto itr = getItr++%size;
-			if (!buffer[itr].ready())
-			{
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            auto itr = getItr++%size;
+            if (!buffer[itr].ready())
+            {
 #ifndef __NVCC__
-				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
+                LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
-				resize(buffer.size() + 1);
-			}
-			return &buffer[itr];
-		}
+                resize(buffer.size() + 1);
+            }
+            return &buffer[itr];
+        }
         Buffer<T>* waitBack()
         {
             boost::recursive_mutex::scoped_lock lock(mtx);
@@ -351,146 +351,146 @@ template<typename Data>
             return *this;
         }
     };
-	template<typename T, typename P1> class BufferPool<T,P1>
-	{
-		size_t getItr;
-		size_t putItr;
-		size_t size;
-		std::vector<Buffer<T, P1>> buffer;
-		boost::recursive_mutex mtx;
-	public:
-		BufferPool() :getItr(0), putItr(0), size(10), buffer(10) {}
-		BufferPool(size_t size_) :
-			buffer(size_), size(size_), getItr(0), putItr(0) {}
-		BufferPool(size_t size_, const T& init) :
-			buffer(size_, Buffer<T, P1>(init)), size(size_), getItr(0), putItr(0) {}
-		BufferPool(const BufferPool<T, P1>& other) :
-			buffer(other.buffer), getItr(other.getItr), putItr(other.putItr), size(other.size) {}
-		Buffer<T, P1>* getFront()
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			if (size == 0)
-				return nullptr;
-			auto itr = putItr++%size;
-			if (!buffer[itr].ready())
-			{
+    template<typename T, typename P1> class BufferPool<T,P1>
+    {
+        size_t getItr;
+        size_t putItr;
+        size_t size;
+        std::vector<Buffer<T, P1>> buffer;
+        boost::recursive_mutex mtx;
+    public:
+        BufferPool() :getItr(0), putItr(0), size(10), buffer(10) {}
+        BufferPool(size_t size_) :
+            buffer(size_), size(size_), getItr(0), putItr(0) {}
+        BufferPool(size_t size_, const T& init) :
+            buffer(size_, Buffer<T, P1>(init)), size(size_), getItr(0), putItr(0) {}
+        BufferPool(const BufferPool<T, P1>& other) :
+            buffer(other.buffer), getItr(other.getItr), putItr(other.putItr), size(other.size) {}
+        Buffer<T, P1>* getFront()
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            if (size == 0)
+                return nullptr;
+            auto itr = putItr++%size;
+            if (!buffer[itr].ready())
+            {
 #ifndef __NVCC__
-				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
+                LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
-				resize(buffer.size() + 1);
-			}
-			return &buffer[itr];
-		}
-		Buffer<T, P1>* getBack()
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			auto itr = getItr++%size;
-			if (!buffer[itr].ready())
-			{
+                resize(buffer.size() + 1);
+            }
+            return &buffer[itr];
+        }
+        Buffer<T, P1>* getBack()
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            auto itr = getItr++%size;
+            if (!buffer[itr].ready())
+            {
 #ifndef __NVCC__
-				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
+                LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
-				resize(buffer.size() + 1);
-			}			
-			return &buffer[itr];
-		}
-		Buffer<T, P1>* waitBack()
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			buffer[getItr%size].wait();
-			return &buffer[getItr++%size];
-		}
-		Buffer<T, P1>* waitFront()
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			buffer[putItr%size].wait();
-			return &buffer[putItr++%size];
-		}
-		void resize(size_t size_)
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			size = size_;
-			buffer.resize(size);
-		}
-		BufferPool& operator =(const BufferPool<T, P1>& rhs)
-		{
-			getItr = rhs.getItr;
-			putItr = rhs.putItr;
-			size = rhs.size;
-			buffer = rhs.buffer;
-			return *this;
-		}
-	};
-	template<typename T, typename P1, typename P2> class BufferPool<T,P1,P2>
-	{
-		size_t getItr;
-		size_t putItr;
-		size_t size;
-		std::vector<Buffer<T, P1, P2>> buffer;
-		boost::recursive_mutex mtx;
-	public:
-		BufferPool() :getItr(0), putItr(0), size(10), buffer(10) {}
-		BufferPool(size_t size_) :
-			buffer(size_), size(size_), getItr(0), putItr(0) {}
-		BufferPool(size_t size_, const T& init) :
-			buffer(size_, Buffer<T, P1, P2>(init)), size(size_), getItr(0), putItr(0) {}
-		BufferPool(const BufferPool<T, P1, P2>& other) :
-			buffer(other.buffer), getItr(other.getItr), putItr(other.putItr), size(other.size) {}
-		Buffer<T, P1, P2>* getFront()
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			if (size == 0)
-				return nullptr;
-			auto itr = putItr++%size;
-			if (!buffer[itr].ready())
-			{
+                resize(buffer.size() + 1);
+            }            
+            return &buffer[itr];
+        }
+        Buffer<T, P1>* waitBack()
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            buffer[getItr%size].wait();
+            return &buffer[getItr++%size];
+        }
+        Buffer<T, P1>* waitFront()
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            buffer[putItr%size].wait();
+            return &buffer[putItr++%size];
+        }
+        void resize(size_t size_)
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            size = size_;
+            buffer.resize(size);
+        }
+        BufferPool& operator =(const BufferPool<T, P1>& rhs)
+        {
+            getItr = rhs.getItr;
+            putItr = rhs.putItr;
+            size = rhs.size;
+            buffer = rhs.buffer;
+            return *this;
+        }
+    };
+    template<typename T, typename P1, typename P2> class BufferPool<T,P1,P2>
+    {
+        size_t getItr;
+        size_t putItr;
+        size_t size;
+        std::vector<Buffer<T, P1, P2>> buffer;
+        boost::recursive_mutex mtx;
+    public:
+        BufferPool() :getItr(0), putItr(0), size(10), buffer(10) {}
+        BufferPool(size_t size_) :
+            buffer(size_), size(size_), getItr(0), putItr(0) {}
+        BufferPool(size_t size_, const T& init) :
+            buffer(size_, Buffer<T, P1, P2>(init)), size(size_), getItr(0), putItr(0) {}
+        BufferPool(const BufferPool<T, P1, P2>& other) :
+            buffer(other.buffer), getItr(other.getItr), putItr(other.putItr), size(other.size) {}
+        Buffer<T, P1, P2>* getFront()
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            if (size == 0)
+                return nullptr;
+            auto itr = putItr++%size;
+            if (!buffer[itr].ready())
+            {
 #ifndef __NVCC__
-				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
+                LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
-				resize(buffer.size() + 1);
-			}
-			return &buffer[itr];
-		}
-		Buffer<T, P1, P2>* getBack()
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			auto itr = getItr++%size;
-			if (!buffer[itr].ready())
-			{
+                resize(buffer.size() + 1);
+            }
+            return &buffer[itr];
+        }
+        Buffer<T, P1, P2>* getBack()
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            auto itr = getItr++%size;
+            if (!buffer[itr].ready())
+            {
 #ifndef __NVCC__
-				LOG(warning) << "Buffer not ready, increasing size of buffer pool";
+                LOG(warning) << "Buffer not ready, increasing size of buffer pool";
 #endif
-				resize(buffer.size() + 1);
-			}
-			return &buffer[itr];
-		}
-		Buffer<T, P1, P2>* waitBack()
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			buffer[getItr%size].wait();
-			return &buffer[getItr++%size];
-		}
-		Buffer<T, P1, P2>* waitFront()
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			buffer[putItr%size].wait();
-			return &buffer[putItr++%size];
-		}
-		void resize(size_t size_)
-		{
-			boost::recursive_mutex::scoped_lock lock(mtx);
-			size = size_;
-			buffer.resize(size);
-		}
-		BufferPool& operator =(const BufferPool<T, P1, P2>& rhs)
-		{
-			getItr = rhs.getItr;
-			putItr = rhs.putItr;
-			size = rhs.size;
-			buffer = rhs.buffer;
-			return *this;
-		}
-	};
+                resize(buffer.size() + 1);
+            }
+            return &buffer[itr];
+        }
+        Buffer<T, P1, P2>* waitBack()
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            buffer[getItr%size].wait();
+            return &buffer[getItr++%size];
+        }
+        Buffer<T, P1, P2>* waitFront()
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            buffer[putItr%size].wait();
+            return &buffer[putItr++%size];
+        }
+        void resize(size_t size_)
+        {
+            boost::recursive_mutex::scoped_lock lock(mtx);
+            size = size_;
+            buffer.resize(size);
+        }
+        BufferPool& operator =(const BufferPool<T, P1, P2>& rhs)
+        {
+            getItr = rhs.getItr;
+            putItr = rhs.putItr;
+            size = rhs.size;
+            buffer = rhs.buffer;
+            return *this;
+        }
+    };
 
 
     template<typename T> struct EventBuffer
@@ -582,7 +582,7 @@ template<typename Data>
             putItr = rhs.putItr;
             size = rhs.size;
             buffer = rhs.buffer;
-			return *this;
+            return *this;
         }
     };
 
@@ -637,7 +637,7 @@ template<typename Data>
             putItr = rhs.putItr;
             size = rhs.size;
             buffer = rhs.buffer;
-			return *this;
+            return *this;
         }
     };
 

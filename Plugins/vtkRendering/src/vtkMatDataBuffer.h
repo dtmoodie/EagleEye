@@ -5,34 +5,34 @@
 class PLUGIN_EXPORTS vtkMatDataBuffer: public vtkTextureObject
 {
 public:
-	static vtkMatDataBuffer* New();
-	vtkTypeMacro(vtkMatDataBuffer, vtkTextureObject);
+    static vtkMatDataBuffer* New();
+    vtkTypeMacro(vtkMatDataBuffer, vtkTextureObject);
 
-	
+    
 #ifdef AUTO_BUFFERS
-	EagleLib::pool::Ptr<cv::ogl::Buffer> data_buffer;
+    EagleLib::pool::Ptr<cv::ogl::Buffer> data_buffer;
 #else
-	cv::ogl::Buffer data_buffer;
+    cv::ogl::Buffer data_buffer;
 #endif
 protected:
-	vtkMatDataBuffer();
+    vtkMatDataBuffer();
 };
 
 class PLUGIN_EXPORTS vtkTextureDataBuffer: public vtkMatDataBuffer
 {
 public:
-	static vtkTextureDataBuffer* New();
-	vtkTypeMacro(vtkTextureDataBuffer, vtkMatDataBuffer);
-	void compile_texture();
+    static vtkTextureDataBuffer* New();
+    vtkTypeMacro(vtkTextureDataBuffer, vtkMatDataBuffer);
+    void compile_texture();
 protected:
-	vtkTextureDataBuffer();
+    vtkTextureDataBuffer();
 };
 
 class PLUGIN_EXPORTS vtkVertexDataBuffer: public vtkMatDataBuffer
 {
 public:
-	static vtkVertexDataBuffer* New();
-	vtkTypeMacro(vtkVertexDataBuffer, vtkMatDataBuffer);
+    static vtkVertexDataBuffer* New();
+    vtkTypeMacro(vtkVertexDataBuffer, vtkMatDataBuffer);
 protected:
-	vtkVertexDataBuffer();
+    vtkVertexDataBuffer();
 };

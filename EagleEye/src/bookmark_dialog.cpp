@@ -12,7 +12,7 @@ bookmark_dialog::bookmark_dialog(QWidget *parent) :
     variable_storage::instance().load_parameters(this);
     update();
     QObject::connect(ui->list_bookmarks, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(on_file_selected(QListWidgetItem*)));
-	QObject::connect(ui->list_history, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this,SLOT(on_file_selected(QListWidgetItem*)));
+    QObject::connect(ui->list_history, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this,SLOT(on_file_selected(QListWidgetItem*)));
     
 }
 

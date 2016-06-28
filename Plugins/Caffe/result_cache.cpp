@@ -14,7 +14,7 @@ TS<SyncedMemory> result_cache::process(TS<SyncedMemory>& input, cv::cuda::Stream
     std::vector<Node::Ptr>  children_;
     {
         // Prevents adding of children while running, debatable how much this is needed
-		std::lock_guard<std::recursive_mutex> lock(mtx);
+        std::lock_guard<std::recursive_mutex> lock(mtx);
         children_ = children;
     }
     TS<SyncedMemory> result = output;

@@ -26,15 +26,15 @@ namespace EagleLib
     namespace Nodes
     {
     
-	class ForegroundEstimate : public Node
-	{
-		bool _build_model;
-		void BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& stream);
-		std::shared_ptr<flann::GpuIndex<flann::L2<float>>> nnIndex;
-	public:
-		ForegroundEstimate();
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-	};
+    class ForegroundEstimate : public Node
+    {
+        bool _build_model;
+        void BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& stream);
+        std::shared_ptr<flann::GpuIndex<flann::L2<float>>> nnIndex;
+    public:
+        ForegroundEstimate();
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+    };
     }
 }

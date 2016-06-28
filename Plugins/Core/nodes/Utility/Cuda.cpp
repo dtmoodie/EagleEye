@@ -10,16 +10,16 @@ using namespace EagleLib::Nodes;
 
 void SetDevice::NodeInit(bool firstInit)
 {
-	if (firstInit)
-	{
+    if (firstInit)
+    {
         updateParameter<unsigned int>("Device Number", uint32_t(0));
-		updateParameter<std::string>("Device name", "")->type = Parameters::Parameter::State;
-		firstRun = true;
+        updateParameter<std::string>("Device name", "")->type = Parameters::Parameter::State;
+        firstRun = true;
         currentDevice = cv::cuda::getDevice();
         maxDevice = cv::cuda::getCudaEnabledDeviceCount();
         auto deviceInfo = cv::cuda::DeviceInfo(currentDevice);
         updateParameter<std::string>("Device name", deviceInfo.name());
-	}    
+    }    
 }
 
 cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -51,7 +51,7 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
     }
 
 
-	return img;
+    return img;
 }
 bool SetDevice::SkipEmpty() const
 {

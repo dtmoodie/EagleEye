@@ -14,20 +14,20 @@ cv::cuda::GpuMat Sobel::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
 return img;
 }
 
-void Canny::NodeInit(bool firstInit)	
+void Canny::NodeInit(bool firstInit)    
 {
     
-	updateParameter("Low thresh", 0.0);
-	updateParameter("High thresh", 20.0);
-	updateParameter("Aperature size", int(3));
-	updateParameter("L2 Gradient", false);
-	detector = cv::cuda::createCannyEdgeDetector(0, 20, 3, false);
+    updateParameter("Low thresh", 0.0);
+    updateParameter("High thresh", 20.0);
+    updateParameter("Aperature size", int(3));
+    updateParameter("L2 Gradient", false);
+    detector = cv::cuda::createCannyEdgeDetector(0, 20, 3, false);
 }
 
 cv::cuda::GpuMat Canny::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-	
-	return img;
+    
+    return img;
 }
 
 void Laplacian::NodeInit(bool firstInit)

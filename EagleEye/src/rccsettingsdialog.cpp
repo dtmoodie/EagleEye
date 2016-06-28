@@ -16,7 +16,7 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
     ui->comboBox->addItem(RCppOptimizationLevelStrings[2]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[3]);
     ui->comboBox->setCurrentIndex(EagleLib::ObjectManager::Instance().getOptimizationLevel());
-	updateDisplay();
+    updateDisplay();
 }
 void RCCSettingsDialog::updateDisplay()
 {
@@ -58,7 +58,7 @@ void RCCSettingsDialog::updateDisplay()
 
 
 
-	
+    
     auto objects = EagleLib::ObjectManager::Instance().getObjectList();
     ui->linkTree->clear();
     ui->linkTree->setColumnCount(2);
@@ -100,57 +100,57 @@ void RCCSettingsDialog::on_comboBox_currentIndexChanged(int index)
 }
 void RCCSettingsDialog::on_btnAddIncludeDir_clicked()
 {
-	QString dir = ui->includeDir->text();
-	if (dir.size() == 0)
-	{
-		dir = QFileDialog::getExistingDirectory(this, "Select include directory");
-	}
-	if (dir.size() == 0)
-		return;
+    QString dir = ui->includeDir->text();
+    if (dir.size() == 0)
+    {
+        dir = QFileDialog::getExistingDirectory(this, "Select include directory");
+    }
+    if (dir.size() == 0)
+        return;
 
-	auto item = ui->incDirs->currentItem();
-	int projectId = 0;
-	if (item)
-	{
-		if (item->parent() != nullptr)
-		{
-			item = item->parent();
-		}
-		projectId = ui->incDirs->indexOfTopLevelItem(item);
-	}
-		
-	EagleLib::ObjectManager::Instance().addIncludeDir(dir.toStdString(), projectId);
-	ui->includeDir->clear();
-	updateDisplay();
+    auto item = ui->incDirs->currentItem();
+    int projectId = 0;
+    if (item)
+    {
+        if (item->parent() != nullptr)
+        {
+            item = item->parent();
+        }
+        projectId = ui->incDirs->indexOfTopLevelItem(item);
+    }
+        
+    EagleLib::ObjectManager::Instance().addIncludeDir(dir.toStdString(), projectId);
+    ui->includeDir->clear();
+    updateDisplay();
 }
 
 void RCCSettingsDialog::on_btnAddLinkDir_clicked()
 {
-	QString dir = ui->linkDir->text();
-	if (dir.size() == 0)
-	{
-		dir = QFileDialog::getExistingDirectory(this, "Select link directory");
-	}
-	if (dir.size() == 0)
-		return;
-	auto item = ui->linkDirs->currentItem();
-	int projectId = 0;
-	if (item)
-	{
-		while (item->parent() != nullptr)
-		{
-			item = item->parent();
-		}
-		projectId = ui->linkDirs->indexOfTopLevelItem(item);
-	}
-	if (projectId == -1)
-	{
-		LOG(warning) << "Unable to determine correct project";
-		return;
-	}
-	EagleLib::ObjectManager::Instance().addLinkDir(dir.toStdString(), projectId);
-	ui->linkDir->clear();
-	updateDisplay();
+    QString dir = ui->linkDir->text();
+    if (dir.size() == 0)
+    {
+        dir = QFileDialog::getExistingDirectory(this, "Select link directory");
+    }
+    if (dir.size() == 0)
+        return;
+    auto item = ui->linkDirs->currentItem();
+    int projectId = 0;
+    if (item)
+    {
+        while (item->parent() != nullptr)
+        {
+            item = item->parent();
+        }
+        projectId = ui->linkDirs->indexOfTopLevelItem(item);
+    }
+    if (projectId == -1)
+    {
+        LOG(warning) << "Unable to determine correct project";
+        return;
+    }
+    EagleLib::ObjectManager::Instance().addLinkDir(dir.toStdString(), projectId);
+    ui->linkDir->clear();
+    updateDisplay();
 }
 void RCCSettingsDialog::on_btnTestRcc_clicked()
 {

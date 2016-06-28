@@ -22,15 +22,15 @@ VideoLoader::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
-		updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/trailer.mp4"))->SetTooltip("Path to video file");
-		updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader)->type = Parameters::Parameter::Output;
-		updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader)->type =  Parameters::Parameter::Output;
+        updateParameter<Parameters::ReadFile>("Filename", Parameters::ReadFile("/home/dmoodie/Downloads/trailer.mp4"))->SetTooltip("Path to video file");
+        updateParameter<cv::Ptr<cv::cudacodec::VideoReader>>("GPU video reader", d_videoReader)->type = Parameters::Parameter::Output;
+        updateParameter<cv::Ptr<cv::VideoCapture>>("CPU video reader", h_videoReader)->type =  Parameters::Parameter::Output;
         
         updateParameter<bool>("Loop",true);
-		updateParameter<bool>("End of video", false)->type = Parameters::Parameter::Output;
+        updateParameter<bool>("End of video", false)->type = Parameters::Parameter::Output;
         load = false;
     }
-	updateParameter<boost::function<void(void)>>("Restart Video", boost::bind(&VideoLoader::restartVideo, this));
+    updateParameter<boost::function<void(void)>>("Restart Video", boost::bind(&VideoLoader::restartVideo, this));
     h_img.resize(20);
 }
 void VideoLoader::Serialize(ISimpleSerializer *pSerializer)
@@ -89,7 +89,7 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
     bool firstLoad = false;
     if (_parameters[0]->changed || load)
     {
-		loadFile();
+        loadFile();
         readThread = boost::thread(boost::bind(&VideoLoader::ReadThread, this));
         firstLoad = true;
         load = false;
@@ -97,52 +97,52 @@ VideoLoader::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
     notifier.wait_and_pop(img);
     return img;
 
-	TIME
+    TIME
     if(d_videoReader)
     {
         d_videoReader->nextFrame(img);
     }else if(h_videoReader)
     {
         auto buffer = h_img.getFront();
-		TIME
+        TIME
         if(!h_videoReader->read(*buffer))
         {
             updateParameter<bool>(5, true);
             //log(Status, "End of video reached");
-			NODE_LOG(info) << "End of video reached";
+            NODE_LOG(info) << "End of video reached";
             auto reload = getParameter<bool>("Loop");
-			TIME
-            if(reload && *reload->Data())	
-			{
-				//resetSignal();
-				loadFile();
-			}
+            TIME
+            if(reload && *reload->Data())    
+            {
+                //resetSignal();
+                loadFile();
+            }
                     
-			TIME
+            TIME
             return img;
         }
        if(buffer->empty())
            return cv::cuda::GpuMat();
-	   TIME
+       TIME
        try
        {
            img.upload(*buffer, stream);
-		   TIME
+           TIME
        }catch(cv::Exception &err)
        {
            //log(Error, err.what());
-		   NODE_LOG(error) << err.what();
+           NODE_LOG(error) << err.what();
            return img;
        }
-		   updateParameter<double>("Timestamp", h_videoReader->get(cv::CAP_PROP_POS_MSEC))->type = Parameters::Parameter::State;
-		   updateParameter<int>("Frame index", (int)h_videoReader->get(cv::CAP_PROP_POS_FRAMES))->type = Parameters::Parameter::Output;
-		   updateParameter<double>("% Complete", h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO))->type =  Parameters::Parameter::State;
-		   updateParameter("Source Image", img)->type = Parameters::Parameter::Output;
-	   TIME
+           updateParameter<double>("Timestamp", h_videoReader->get(cv::CAP_PROP_POS_MSEC))->type = Parameters::Parameter::State;
+           updateParameter<int>("Frame index", (int)h_videoReader->get(cv::CAP_PROP_POS_FRAMES))->type = Parameters::Parameter::Output;
+           updateParameter<double>("% Complete", h_videoReader->get(cv::CAP_PROP_POS_AVI_RATIO))->type =  Parameters::Parameter::State;
+           updateParameter("Source Image", img)->type = Parameters::Parameter::Output;
+       TIME
     }
     if(firstLoad && !img.empty())
     {
-		NODE_LOG(info) << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
+        NODE_LOG(info) << "File loaded successfully! Resolution: " << img.size() << " channels: " << img.channels();
     }
     return img;
 }
@@ -155,12 +155,12 @@ VideoLoader::loadFile()
     if(fileName == nullptr)
         return;
     //log(Status, "Loading file: " + fileName->Data()->string());
-	NODE_LOG(info) << "Loading file: " + fileName->Data()->string();
+    NODE_LOG(info) << "Loading file: " + fileName->Data()->string();
 
-	if (!boost::filesystem::exists(*fileName->Data()))
+    if (!boost::filesystem::exists(*fileName->Data()))
     {
-		//log(Warning, fileName->Data()->string() + " doesn't exist");
-		NODE_LOG(warning) << fileName->Data()->string() + " doesn't exist";
+        //log(Warning, fileName->Data()->string() + " doesn't exist");
+        NODE_LOG(warning) << fileName->Data()->string() + " doesn't exist";
         return;
     }
 #ifdef GPU_DECODE_ENABLED
@@ -172,14 +172,14 @@ VideoLoader::loadFile()
     {
         // no luck with the GPU decoder, try CPU decoder
         //log(Error, "Failed to create GPU decoder, falling back to CPU decoder");
-		NODE_LOG(error) << "Failed to create GPU decoder, falling back to CPU decoder";
+        NODE_LOG(error) << "Failed to create GPU decoder, falling back to CPU decoder";
         h_videoReader.reset(new cv::VideoCapture);
         try
         {
-			h_videoReader->open(fileName->Data()->string());
+            h_videoReader->open(fileName->Data()->string());
         }catch(cv::Exception &e)
         {
-			NODE_LOG(error) << "Failed to fallback on CPU decoder";
+            NODE_LOG(error) << "Failed to fallback on CPU decoder";
         }
 
         /*
@@ -214,75 +214,75 @@ VideoLoader::loadFile()
     }
 
     if (d_videoReader)
-	{
+    {
         auto info = d_videoReader->format();
-		std::string chromaFormat;
-		switch (info.chromaFormat)
-		{
-		case cv::cudacodec::Monochrome:
-			chromaFormat = "Monochrome";
-			break;
-		case cv::cudacodec::YUV420:
-			chromaFormat = "YUV420";
-			break;
-		case cv::cudacodec::YUV422:
-			chromaFormat = "YUV422";
-			break;
-		case cv::cudacodec::YUV444:
-			chromaFormat = "YUV444";
-			break;
-		}
-		
+        std::string chromaFormat;
+        switch (info.chromaFormat)
+        {
+        case cv::cudacodec::Monochrome:
+            chromaFormat = "Monochrome";
+            break;
+        case cv::cudacodec::YUV420:
+            chromaFormat = "YUV420";
+            break;
+        case cv::cudacodec::YUV422:
+            chromaFormat = "YUV422";
+            break;
+        case cv::cudacodec::YUV444:
+            chromaFormat = "YUV444";
+            break;
+        }
+        
         std::string resolution = "Width: " + boost::lexical_cast<std::string>(info.width) +
                 " Height: " + boost::lexical_cast<std::string>(info.height);
-		std::string codec;
-		switch (info.codec)
-		{
-		case cv::cudacodec::MPEG1:
-			codec = "MPEG1";
-			break;
-		case cv::cudacodec::MPEG2:
-			codec = "MPEG2";
-			break;
-		case cv::cudacodec::MPEG4:
-			codec = "MPEG4";
-			break;
-		case cv::cudacodec::VC1:
-			codec = "VC1";
-			break;
-		case cv::cudacodec::H264:
-			codec = "H264";
-			break;
-		case cv::cudacodec::JPEG:
-			codec = "JPEG";
-			break;
-		case cv::cudacodec::H264_SVC:
-			codec = "H264_SVC";
-			break;
-		case cv::cudacodec::H264_MVC:
-			codec = "H264_MVC";
-			break;
-		case cv::cudacodec::Uncompressed_YUV420:
-			codec = "Uncompressed_YUV420";
-			break;
-		case cv::cudacodec::Uncompressed_YV12:
-			codec = "Uncompressed_YV12";
-			break;
-		case cv::cudacodec::Uncompressed_NV12:
-			codec = "Uncompressed_NV12";
-			break;
-		case cv::cudacodec::Uncompressed_YUYV:
-			codec = "Uncompressed_YUYV";
-			break;
-		case cv::cudacodec::Uncompressed_UYVY:
-			codec = "Uncompressed_UYVY";
-			break;
-		}
-		
-		updateParameter<std::string>("Codec", codec)->type = Parameters::Parameter::State;
-		updateParameter<std::string>("Video Chroma Format", chromaFormat)->type =  Parameters::Parameter::State;
-		updateParameter<std::string>("Resolution", resolution)->type =  Parameters::Parameter::State;
-	}
+        std::string codec;
+        switch (info.codec)
+        {
+        case cv::cudacodec::MPEG1:
+            codec = "MPEG1";
+            break;
+        case cv::cudacodec::MPEG2:
+            codec = "MPEG2";
+            break;
+        case cv::cudacodec::MPEG4:
+            codec = "MPEG4";
+            break;
+        case cv::cudacodec::VC1:
+            codec = "VC1";
+            break;
+        case cv::cudacodec::H264:
+            codec = "H264";
+            break;
+        case cv::cudacodec::JPEG:
+            codec = "JPEG";
+            break;
+        case cv::cudacodec::H264_SVC:
+            codec = "H264_SVC";
+            break;
+        case cv::cudacodec::H264_MVC:
+            codec = "H264_MVC";
+            break;
+        case cv::cudacodec::Uncompressed_YUV420:
+            codec = "Uncompressed_YUV420";
+            break;
+        case cv::cudacodec::Uncompressed_YV12:
+            codec = "Uncompressed_YV12";
+            break;
+        case cv::cudacodec::Uncompressed_NV12:
+            codec = "Uncompressed_NV12";
+            break;
+        case cv::cudacodec::Uncompressed_YUYV:
+            codec = "Uncompressed_YUYV";
+            break;
+        case cv::cudacodec::Uncompressed_UYVY:
+            codec = "Uncompressed_UYVY";
+            break;
+        }
+        
+        updateParameter<std::string>("Codec", codec)->type = Parameters::Parameter::State;
+        updateParameter<std::string>("Video Chroma Format", chromaFormat)->type =  Parameters::Parameter::State;
+        updateParameter<std::string>("Resolution", resolution)->type =  Parameters::Parameter::State;
+    }
     fileName->changed = false;
     updateParameter<bool>(5, false);
 

@@ -1,15 +1,15 @@
 PROJECT(vtkRendering)
 CMAKE_POLICY(SET CMP0020 NEW)
 find_package(VTK COMPONENTS 
-				 vtkInteractionStyle 
-				 vtkRenderingLOD 
-				 vtkIOPLY 
-				 vtkFiltersTexture 
-				 vtkRenderingFreeType 
-				 vtkIOExport 
-				 vtkRenderingOpenGL2 
-				 vtkRenderingQt
-				 vtkGUISupportQt
+                 vtkInteractionStyle 
+                 vtkRenderingLOD 
+                 vtkIOPLY 
+                 vtkFiltersTexture 
+                 vtkRenderingFreeType 
+                 vtkIOExport 
+                 vtkRenderingOpenGL2 
+                 vtkRenderingQt
+                 vtkGUISupportQt
                  vtkGUISupportQtOpenGL
                  vtkRenderingAnnotation)
 
@@ -36,8 +36,8 @@ FIND_PACKAGE(OpenCV QUIET COMPONENTS core viz)
 find_package(PCL QUIET COMPONENTS visualization)
   if(PCL_FOUND)
     message("Building with PCL visualization support")
-	add_definitions(-DHAVE_PCL)
-	include_directories(${PCL_INCLUDE_DIRS})
+    add_definitions(-DHAVE_PCL)
+    include_directories(${PCL_INCLUDE_DIRS})
   endif()
 set(link_libs_ 
   EagleLib
@@ -52,9 +52,9 @@ LINK_DIRECTORIES(${LINK_DIRS})
 INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 if(Plugin_point_clouds_INCLUDES)
-	include_directories(${Plugin_point_clouds_INCLUDES})
-	add_definitions(-DHAVE_PLUGIN_POINT_CLOUDS)
-	list(APPEND link_libs_ point_clouds)
+    include_directories(${Plugin_point_clouds_INCLUDES})
+    add_definitions(-DHAVE_PLUGIN_POINT_CLOUDS)
+    list(APPEND link_libs_ point_clouds)
 endif()
 
 SET(VTK_BIN_DIR "" CACHE PATH "")

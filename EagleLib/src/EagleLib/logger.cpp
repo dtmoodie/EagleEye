@@ -37,8 +37,8 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
 {
     auto severity = rec.attribute_values()[boost::log::aux::default_attribute_names::severity()].extract<boost::log::trivial::severity_level>();
     
-	if (rec.attribute_values().count("NodeName"))
-	{
+    if (rec.attribute_values().count("NodeName"))
+    {
         auto name = rec.attribute_values()[NodeName].get();
         if(name.size())
         {
@@ -52,8 +52,8 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
             }
             object_signal(severity.get(), name, message);
             return;
-		}
-	}
+        }
+    }
     generic_signal(severity.get(), message);
 }
 
@@ -62,7 +62,7 @@ Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string
 {
     auto& sig = object_specific_signals[name];
     if(!sig)
-		sig.reset(new Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>());
+        sig.reset(new Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>());
     return (*sig);
 }
 Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string, std::string)>& ui_collector::get_object_log_handler()

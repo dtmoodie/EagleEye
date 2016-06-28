@@ -57,26 +57,26 @@ cuda_add_library(frame_grabbers SHARED ${src} ${hdr} ${knl})
 
 add_dependencies(frame_grabbers EagleLib)
 RCC_LINK_LIB(frame_grabbers 
-		EagleLib 
-		${OpenCV_LIBS} 
-		${CUDA_CUBLAS_LIBRARIES} 
-		${GSTREAMER_gstapp_LIBRARY}
-		${GSTREAMER_gstaudio_LIBRARY}
-		${GSTREAMER_gstbase_LIBRARY}
-		${GSTREAMER_gstcontroller_LIBRARY}
-		${GSTREAMER_gstnet_LIBRARY}
-		${GSTREAMER_gstpbutils_LIBRARY}
-		${GSTREAMER_gstreamer_LIBRARY}
-		${GSTREAMER_gstriff_LIBRARY}
-		${GSTREAMER_gstrtp_LIBRARY}
-		${GSTREAMER_gstrtsp_LIBRARY}
-		${GSTREAMER_gstsdp_LIBRARY}
-		${GSTREAMER_gsttag_LIBRARY}
-		${GSTREAMER_gstvideo_LIBRARY}
-		${Glib_LIBRARY}
-		${GLIB_LIBRARY}
-		${GOBJECT_LIBRARY})
-		#${GSTREAMER_gstrtspserver_LIBRARY})
+        EagleLib 
+        ${OpenCV_LIBS} 
+        ${CUDA_CUBLAS_LIBRARIES} 
+        ${GSTREAMER_gstapp_LIBRARY}
+        ${GSTREAMER_gstaudio_LIBRARY}
+        ${GSTREAMER_gstbase_LIBRARY}
+        ${GSTREAMER_gstcontroller_LIBRARY}
+        ${GSTREAMER_gstnet_LIBRARY}
+        ${GSTREAMER_gstpbutils_LIBRARY}
+        ${GSTREAMER_gstreamer_LIBRARY}
+        ${GSTREAMER_gstriff_LIBRARY}
+        ${GSTREAMER_gstrtp_LIBRARY}
+        ${GSTREAMER_gstrtsp_LIBRARY}
+        ${GSTREAMER_gstsdp_LIBRARY}
+        ${GSTREAMER_gsttag_LIBRARY}
+        ${GSTREAMER_gstvideo_LIBRARY}
+        ${Glib_LIBRARY}
+        ${GLIB_LIBRARY}
+        ${GOBJECT_LIBRARY})
+        #${GSTREAMER_gstrtspserver_LIBRARY})
 
 INCLUDE(../PluginTemplate.cmake)
 

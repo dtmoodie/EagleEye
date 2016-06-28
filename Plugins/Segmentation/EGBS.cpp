@@ -183,20 +183,20 @@ void SegmentEGBS::NodeInit(bool firstInit)
     updateParameter("Sigma", float(0.5));;
     updateParameter("Threshold", float(1500));
     updateParameter("Min component size", int(20));
-	updateParameter("Recolor", false);
+    updateParameter("Recolor", false);
 }
 cv::cuda::GpuMat SegmentEGBS::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-	float sigma = *getParameter<float>(0)->Data();
-	float thresh = *getParameter<float>(1)->Data();
+    float sigma = *getParameter<float>(0)->Data();
+    float thresh = *getParameter<float>(1)->Data();
     int minSize = *getParameter<int>(2)->Data();
-	img.download(h_buf, stream);
-	stream.waitForCompletion();
+    img.download(h_buf, stream);
+    stream.waitForCompletion();
     cv::Mat mat = h_buf.createMatHeader();
     egbs.applySegmentation(mat, sigma, thresh, minSize);
-	cv::Mat result = egbs.recolor(*getParameter<bool>(3)->Data());
-	img.upload(result, stream);
-	return img; 
+    cv::Mat result = egbs.recolor(*getParameter<bool>(3)->Data());
+    img.upload(result, stream);
+    return img; 
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentEGBS, Image, Processing, Segmentation)

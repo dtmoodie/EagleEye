@@ -13,12 +13,12 @@ find_path(CUDNN_INCLUDE_DIR cudnn.h HINTS "${CUDNN_DIR}/include")
 find_path(CUDNN_BIN_DIR cudnn64_4.dll cudnn64_3.dll HINTS "${CUDNN_DIR}/bin")
 
 set_target_properties(
-	opencv_core opencv_calib3d opencv_cudaarithm opencv_cudabgsegm opencv_cudacodec opencv_cudafeatures2d 
-	opencv_cudafilters opencv_cudaobjdetect opencv_cudaoptflow opencv_cudastereo opencv_cudawarping 
-	opencv_cudev opencv_features2d opencv_flann	opencv_highgui opencv_imgcodecs opencv_imgproc 
-	opencv_ml opencv_objdetect opencv_photo opencv_shape opencv_stitching opencv_superres 
-	opencv_ts opencv_video opencv_videoio opencv_videostab 
-	PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+    opencv_core opencv_calib3d opencv_cudaarithm opencv_cudabgsegm opencv_cudacodec opencv_cudafeatures2d 
+    opencv_cudafilters opencv_cudaobjdetect opencv_cudaoptflow opencv_cudastereo opencv_cudawarping 
+    opencv_cudev opencv_features2d opencv_flann    opencv_highgui opencv_imgcodecs opencv_imgproc 
+    opencv_ml opencv_objdetect opencv_photo opencv_shape opencv_stitching opencv_superres 
+    opencv_ts opencv_video opencv_videoio opencv_videostab 
+    PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
@@ -43,7 +43,7 @@ set_target_properties(libcaffe PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO REL
 IF(WIN32)
   RCC_LINK_LIB(Caffe
       EagleLib
-	  ${CUDA_LIBRARIES}
+      ${CUDA_LIBRARIES}
       ${CUDA_CUFFT_LIBRARIES}
       ${CUDA_CUBLAS_LIBRARIES}
       ${CUDA_cupti_LIBRARY}
@@ -53,9 +53,9 @@ IF(WIN32)
       ${CUDA_nppc_LIBRARY}
       ${CUDA_nppc_LIBRARY}
       ${CUDA_npps_LIBRARY}
-	  libcaffe
-	  ${GLOG_LIBRARY}
-	  ${CUDNN_LIBRARY}
+      libcaffe
+      ${GLOG_LIBRARY}
+      ${CUDNN_LIBRARY}
     )
 ELSE(WIN32)
     RCC_LINK_LIB(Caffe

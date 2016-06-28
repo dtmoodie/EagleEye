@@ -25,12 +25,12 @@ void PlotWizardDialog::setup()
     }
     previewPlots.clear();
     previewPlotters.clear();
-	QSplitter* plot_splitter = new QSplitter(this);
-	QSplitter* plot_setting_splitter = new QSplitter(this);
-	plot_splitter->setOrientation(Qt::Vertical);
-	plot_setting_splitter->setOrientation(Qt::Vertical);
-	ui->plotPreviewLayout->addWidget(plot_splitter, 0,0);
-	ui->plotPreviewLayout->addWidget(plot_setting_splitter, 0, 1);
+    QSplitter* plot_splitter = new QSplitter(this);
+    QSplitter* plot_setting_splitter = new QSplitter(this);
+    plot_splitter->setOrientation(Qt::Vertical);
+    plot_setting_splitter->setOrientation(Qt::Vertical);
+    ui->plotPreviewLayout->addWidget(plot_splitter, 0,0);
+    ui->plotPreviewLayout->addWidget(plot_setting_splitter, 0, 1);
     auto plotters = EagleLib::PlotManager::getInstance().getAvailablePlots();
     for(size_t i = 0; i < plotters.size(); ++i)
     {
@@ -43,15 +43,15 @@ void PlotWizardDialog::setup()
                 QWidget* plot = qtPlotter->CreatePlot(this);
                 plot->installEventFilter(this);
                 qtPlotter->AddPlot(plot);
-				auto control_widget = qtPlotter->GetControlWidget(this);
-				//ui->plotPreviewLayout->addWidget(plot, i, 0);
-				plot_splitter->addWidget(plot);
-				if (control_widget)
-				{
-					//ui->plotPreviewLayout->addWidget(control_widget, i, 1);
-					plot_setting_splitter->addWidget(control_widget);
-					previewPlotControllers[plot] = control_widget;
-				}
+                auto control_widget = qtPlotter->GetControlWidget(this);
+                //ui->plotPreviewLayout->addWidget(plot, i, 0);
+                plot_splitter->addWidget(plot);
+                if (control_widget)
+                {
+                    //ui->plotPreviewLayout->addWidget(control_widget, i, 1);
+                    plot_setting_splitter->addWidget(control_widget);
+                    previewPlotControllers[plot] = control_widget;
+                }
                 previewPlots.push_back(plot);
                 previewPlotters.push_back(qtPlotter);
 
@@ -79,7 +79,7 @@ bool PlotWizardDialog::eventFilter(QObject *obj, QEvent *ev)
                 break;
             }
         }
-		/*        if(found == false)
+        /*        if(found == false)
             return false;
         QMouseEvent* mev = dynamic_cast<QMouseEvent*>(ev);
         if(mev->button() == Qt::MiddleButton)
@@ -125,22 +125,22 @@ void PlotWizardDialog::plotParameter(Parameters::Parameter* param)
         if(previewPlotters[i]->AcceptsParameter(param))
         {
             previewPlotters[i]->SetInput(param);
-			previewPlots[i]->show();
-			previewPlots[i]->setMinimumHeight(200);
-			auto itr = previewPlotControllers.find(previewPlots[i]);
-			if (itr != previewPlotControllers.end())
-			{
-				itr->second->show();
-			}
+            previewPlots[i]->show();
+            previewPlots[i]->setMinimumHeight(200);
+            auto itr = previewPlotControllers.find(previewPlots[i]);
+            if (itr != previewPlotControllers.end())
+            {
+                itr->second->show();
+            }
         }else
         {
             previewPlotters[i]->SetInput();
-			previewPlots[i]->hide();
-			auto itr = previewPlotControllers.find(previewPlots[i]);
-			if (itr != previewPlotControllers.end())
-			{
-				itr->second->hide();
-			}
+            previewPlots[i]->hide();
+            auto itr = previewPlotControllers.find(previewPlots[i]);
+            if (itr != previewPlotControllers.end())
+            {
+                itr->second->hide();
+            }
         }
     }
 }
