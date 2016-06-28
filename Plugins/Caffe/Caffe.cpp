@@ -79,21 +79,21 @@ std::vector<size_t> sort_indexes(const T* begin, const T* end) {
 
 namespace EagleLib
 {
-	class CaffeImageClassifier : public Node
-	{
-		caffe::Blob<float>* input_layer;
-		boost::shared_ptr<caffe::Net<float>> NN;
-		bool weightsLoaded;
-		boost::shared_ptr< std::vector< std::string > > labels;
-		std::vector<std::vector<cv::cuda::GpuMat>> wrappedInputs;
-		cv::Mat wrapped_output;
-		cv::Scalar channel_mean;
-	public:
-		virtual void Serialize(ISimpleSerializer* pSerializer);
-		virtual void NodeInit(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-		virtual void WrapInput();
-		virtual void WrapOutput();
+    class CaffeImageClassifier : public Node
+    {
+        caffe::Blob<float>* input_layer;
+        boost::shared_ptr<caffe::Net<float>> NN;
+        bool weightsLoaded;
+        boost::shared_ptr< std::vector< std::string > > labels;
+        std::vector<std::vector<cv::cuda::GpuMat>> wrappedInputs;
+        cv::Mat wrapped_output;
+        cv::Scalar channel_mean;
+    public:
+        virtual void Serialize(ISimpleSerializer* pSerializer);
+        virtual void NodeInit(bool firstInit);
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+        virtual void WrapInput();
+        virtual void WrapOutput();
         };
 }
 
@@ -137,7 +137,7 @@ void CaffeImageClassifier::WrapOutput()
 {
     if (NN == nullptr)
     {
-		BOOST_LOG_TRIVIAL(error) << "Neural network not defined";
+        BOOST_LOG_TRIVIAL(error) << "Neural network not defined";
         return;
     }
     if (NN->num_inputs() == 0)
@@ -160,7 +160,7 @@ void CaffeImageClassifier::Serialize(ISimpleSerializer* pSerializer)
 
 void CaffeImageClassifier::NodeInit(bool firstInit)
 {
-	EagleLib::caffe_init_singleton::inst();
+    EagleLib::caffe_init_singleton::inst();
     caffe::Caffe::set_mode(caffe::Caffe::GPU);
     
     if(firstInit)
@@ -169,11 +169,11 @@ void CaffeImageClassifier::NodeInit(bool firstInit)
         updateParameter("NN weights file", Parameters::ReadFile());
         updateParameter("Label file", Parameters::ReadFile());
         updateParameter("Mean file", Parameters::ReadFile());
-		updateParameter("Scale", 0.00390625f)->SetTooltip("Scale factor to multiply the image by, after mean subtraction");
-		updateParameter("Subtraction required", false);
+        updateParameter("Scale", 0.00390625f)->SetTooltip("Scale factor to multiply the image by, after mean subtraction");
+        updateParameter("Subtraction required", false);
         updateParameter("Num classifications", 5);
         addInputParameter<std::vector<cv::Rect>>("Bounding boxes");
-		
+        
         weightsLoaded = false;
         input_layer = nullptr;
     }
@@ -214,7 +214,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
             updateParameter("Loaded layers", layerNames);
         }else
         {
-			BOOST_LOG_TRIVIAL(debug) << "Weight file does not exist";
+            BOOST_LOG_TRIVIAL(debug) << "Weight file does not exist";
         }
     }
     if(_parameters[2]->changed)
@@ -294,7 +294,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     }
     if(NN == nullptr || weightsLoaded == false)
     {
-		BOOST_LOG_TRIVIAL(trace) << "Model not loaded";
+        BOOST_LOG_TRIVIAL(trace) << "Model not loaded";
         return img;
     }
     /*if(img.size() != cv::Size(input_layer->width(), input_layer->height()))
@@ -304,22 +304,22 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         img = resized;
         BOOST_LOG_TRIVIAL(info) <<  "Resize required";
     }*/
-	cv::cuda::GpuMat float_image;
+    cv::cuda::GpuMat float_image;
     if(img.depth() != CV_32F)
     {
         img.convertTo(float_image, CV_32F,stream);
-	}
-	else
-	{
-		float_image = img;
-	}
+    }
+    else
+    {
+        float_image = img;
+    }
 
     if(*getParameter<bool>("Subtraction required")->Data())
     {
         cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, stream);
     }
-	cv::cuda::multiply(float_image, cv::Scalar::all(*getParameter<float>("Scale")->Data()), float_image, 1.0, -1, stream);
-	cv::Mat tmp(float_image);
+    cv::cuda::multiply(float_image, cv::Scalar::all(*getParameter<float>("Scale")->Data()), float_image, 1.0, -1, stream);
+    cv::Mat tmp(float_image);
     std::vector<cv::Rect> defaultROI;
     defaultROI.push_back(cv::Rect(cv::Point(), img.size()));
     std::vector<cv::Rect>* inputROIs = getParameter<std::vector<cv::Rect>>("Bounding boxes")->Data();
@@ -330,7 +330,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 
     if(inputROIs->size() > wrappedInputs.size())
     {
-		BOOST_LOG_TRIVIAL(warning) <<  "Too many input Regions of interest to handle in one pass, this network can only handle " << wrappedInputs.size() <<" inputs at a time";
+        BOOST_LOG_TRIVIAL(warning) <<  "Too many input Regions of interest to handle in one pass, this network can only handle " << wrappedInputs.size() <<" inputs at a time";
     }
     cv::Size input_size(input_layer->width(), input_layer->height());
     for(int i = 0; i < inputROIs->size() && i < wrappedInputs.size(); ++i)
@@ -343,24 +343,24 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
         {
             resized = float_image((*inputROIs)[i]);
         }
-		cv::Mat tmp(resized);
+        cv::Mat tmp(resized);
         cv::cuda::split(resized, wrappedInputs[i], stream);
     }
     // Check if channels are still wrapping correctly
-	const float* blob_data = input_layer->gpu_data();
-	int channels = input_layer->channels();
-	for (int i = 0; i < wrappedInputs.size(); ++i)
-	{
-		for (int j = 0; j < wrappedInputs[i].size(); ++j)
-		{
-			if (reinterpret_cast<float*>(wrappedInputs[i][j].data) != blob_data + input_size.area() * j + i*input_size.area() * channels)
-			{
-				BOOST_LOG_TRIVIAL(debug) << "GPU mat not mapping input blob";
-				WrapInput();
-				break;
-			}
-		}
-	}
+    const float* blob_data = input_layer->gpu_data();
+    int channels = input_layer->channels();
+    for (int i = 0; i < wrappedInputs.size(); ++i)
+    {
+        for (int j = 0; j < wrappedInputs[i].size(); ++j)
+        {
+            if (reinterpret_cast<float*>(wrappedInputs[i][j].data) != blob_data + input_size.area() * j + i*input_size.area() * channels)
+            {
+                BOOST_LOG_TRIVIAL(debug) << "GPU mat not mapping input blob";
+                WrapInput();
+                break;
+            }
+        }
+    }
 
     stream.waitForCompletion();
     TIME
@@ -379,7 +379,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
 
     if(begin != (const float*)wrapped_output.data)
     {
-		BOOST_LOG_TRIVIAL(debug) << "Output not wrapped to mat";
+        BOOST_LOG_TRIVIAL(debug) << "Output not wrapped to mat";
         WrapOutput();
     }
     int numClassifications = *getParameter<int>("Num classifications")->Data();
@@ -402,7 +402,7 @@ cv::cuda::GpuMat CaffeImageClassifier::doProcess(cv::cuda::GpuMat& img, cv::cuda
     updateParameter("Detections", objects)->type =  Parameters::Parameter::Output;
     updateParameter("Highest scoring class", objects[0].detections[0].classNumber);
     updateParameter("Highest score", objects[0].detections[0].confidence);
-	updateParameter("Probability distribution", wrapped_output);
+    updateParameter("Probability distribution", wrapped_output);
     if(labels)
     {
         updateParameter("Highest scoring label", objects[0].detections[0].label);

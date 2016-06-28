@@ -40,7 +40,7 @@ frame_grabber_rtsp::frame_grabber_rtsp():
 {
     frame_count = 0;
     _reconnect = false;
-	_is_stream = true;
+    _is_stream = true;
 }
 TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
 {
@@ -70,7 +70,7 @@ TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
     {
     
     }
-	_reconnect = true;
+    _reconnect = true;
     return TS<SyncedMemory>();
 }
 void frame_grabber_rtsp::NodeInit(bool firstInit)
@@ -95,33 +95,33 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 #else
     std::string gstreamer_string = "rtspsrc location=" + file_to_load + " ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw ! appsink";
 #endif
-	
-	h_cam.release();
-	LOG(info) << "Attemping to load " << file_to_load;
+    
+    h_cam.release();
+    LOG(info) << "Attemping to load " << file_to_load;
     LOG(debug) << "Gstreamer string: " << gstreamer_string;
     _reconnect = false;
     playback_frame_number = 0;
-	try
-	{
-		h_cam.reset(new cv::VideoCapture());
-		if (h_cam)
-		{
+    try
+    {
+        h_cam.reset(new cv::VideoCapture());
+        if (h_cam)
+        {
             if (h_cam->open(gstreamer_string, cv::CAP_GSTREAMER))
-			{
-				loaded_document = file_to_load;
-				playback_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES) + 1;
-				LOG(info) << "Load success, first frame number: " << playback_frame_number;
-				frame_buffer.clear();
+            {
+                loaded_document = file_to_load;
+                playback_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES) + 1;
+                LOG(info) << "Load success, first frame number: " << playback_frame_number;
+                frame_buffer.clear();
                 buffer_begin_frame_number = playback_frame_number.load();
                 buffer_end_frame_number = playback_frame_number.load();
-				return true;
-			}
-		}
-	}
-	catch (cv::Exception& e)
-	{
-	}
-	return false;
+                return true;
+            }
+        }
+    }
+    catch (cv::Exception& e)
+    {
+    }
+    return false;
 }
 
 void frame_grabber_rtsp::seek_relative_msec(double msec)

@@ -28,7 +28,7 @@ AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         double scaleFactor = 255.0 / (maxVal - minVal);
         channels[i].convertTo(channels[0], CV_8U, scaleFactor, minVal*scaleFactor);
         updateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal)->type =  Parameters::Parameter::State;
-		updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->type =  Parameters::Parameter::State;
+        updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->type =  Parameters::Parameter::State;
     }
     cv::cuda::merge(channels,img);
     return img;
@@ -39,11 +39,11 @@ Colormap::NodeInit(bool firstInit)
 {
     rescale = true;
     updateParameter("Colormapping scheme", int(0));
-	updateParameter<boost::function<void(void)>>("Rescale colormap", boost::bind(&Colormap::Rescale, this));
+    updateParameter<boost::function<void(void)>>("Rescale colormap", boost::bind(&Colormap::Rescale, this));
 }
 void Colormap::Rescale()
 {
-	rescale = true;
+    rescale = true;
 }
 
 cv::cuda::GpuMat
@@ -51,18 +51,18 @@ Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     if(img.channels() != 1)
     {
-		NODE_LOG(warning) << "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels";
+        NODE_LOG(warning) << "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels";
         return img;
     }
-	if (rescale)
-	{
-		double min, max;
-		cv::cuda::minMax(img, &min, &max);
-		mapper.setMapping(ColorScale(50, 255 / 25, true), ColorScale(50 / 3, 255 / 25, true), ColorScale(0, 255 / 25, true), min, max);
-		rescale = false;
-	}
-	mapper.colormap_image(img, color_mapped_image, stream); 
-	return color_mapped_image;
+    if (rescale)
+    {
+        double min, max;
+        cv::cuda::minMax(img, &min, &max);
+        mapper.setMapping(ColorScale(50, 255 / 25, true), ColorScale(50 / 3, 255 / 25, true), ColorScale(0, 255 / 25, true), min, max);
+        rescale = false;
+    }
+    mapper.colormap_image(img, color_mapped_image, stream); 
+    return color_mapped_image;
 }
 
 
@@ -74,7 +74,7 @@ QtColormapDisplay::QtColormapDisplay():
 void QtColormapDisplayCallback(int status, void* data)
 {
     QtColormapDisplay* node = static_cast<QtColormapDisplay*>(data);
-	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtColormapDisplay::display, node),
+    Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtColormapDisplay::display, node),
         std::make_pair(data, Loki::TypeInfo(typeid(EagleLib::Nodes::Node))));
 }
 
@@ -91,18 +91,18 @@ cv::cuda::GpuMat QtColormapDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 {
     if(img.channels() != 1)
     {
-		NODE_LOG(warning) << "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels";
+        NODE_LOG(warning) << "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels";
         return img;
     }
-	Colormap::doProcess(img, stream);
-	//color_mapped_image.download()
+    Colormap::doProcess(img, stream);
+    //color_mapped_image.download()
 
     return img;
 }
 
 void Normalize::NodeInit(bool firstInit)
 {
-	Parameters::EnumParameter param;
+    Parameters::EnumParameter param;
     param.addEnum(ENUM(CV_MINMAX));
     param.addEnum(ENUM(cv::NORM_L2));
     param.addEnum(ENUM(cv::NORM_L1));
@@ -120,29 +120,29 @@ cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 {
     cv::cuda::GpuMat normalized;
     cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>(3)->Data();
-	if(img.channels() == 1)
-	{
-		cv::cuda::normalize(img,normalized,
-			*getParameter<double>(1)->Data(),
-			*getParameter<double>(2)->Data(),
-			getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.depth(),
-			mask == NULL ? cv::noArray(): *mask,
-			stream);
-	}else
-	{
-		std::vector<cv::cuda::GpuMat> channels;
-		cv::cuda::split(img, channels, stream);
-		for(int i = 0; i < channels.size(); ++i)
-		{
-			cv::cuda::normalize(channels[i], channels[i],
-				*getParameter<double>(1)->Data(),
-				*getParameter<double>(2)->Data(),
-				getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.depth(),
-				mask == NULL ? cv::noArray(): *mask,
-				stream);
-		}
-		cv::cuda::merge(channels, normalized);
-	}   
+    if(img.channels() == 1)
+    {
+        cv::cuda::normalize(img,normalized,
+            *getParameter<double>(1)->Data(),
+            *getParameter<double>(2)->Data(),
+            getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.depth(),
+            mask == NULL ? cv::noArray(): *mask,
+            stream);
+    }else
+    {
+        std::vector<cv::cuda::GpuMat> channels;
+        cv::cuda::split(img, channels, stream);
+        for(int i = 0; i < channels.size(); ++i)
+        {
+            cv::cuda::normalize(channels[i], channels[i],
+                *getParameter<double>(1)->Data(),
+                *getParameter<double>(2)->Data(),
+                getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.depth(),
+                mask == NULL ? cv::noArray(): *mask,
+                stream);
+        }
+        cv::cuda::merge(channels, normalized);
+    }   
     return normalized; 
 }
 

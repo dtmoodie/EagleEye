@@ -6,7 +6,7 @@ using namespace EagleLib;
 
 
 frame_grabber_cv::frame_grabber_cv():
-	FrameGrabberThreaded()
+    FrameGrabberThreaded()
 {
     playback_frame_number = -1;
 }
@@ -56,40 +56,40 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
     try
     {
         h_cam.reset(new cv::VideoCapture());
-		if (h_cam)
-		{
-			int index = -1;
-			try
-			{
-				index = boost::lexical_cast<int>(file_path);
-			}
-			catch (boost::bad_lexical_cast e)
-			{
-				index = -1;
-			}
-			if (index == -1)
-			{
-				if (h_cam->open(file_path))
-				{
-					loaded_document = file_path;
-					playback_frame_number = 0;
-					return true;
-				}
-			}
-			else
-			{
-				if (h_cam->open(index))
-				{
-					loaded_document = file_path;
-					playback_frame_number = 0;
-					return true;
-				}
-			}
+        if (h_cam)
+        {
+            int index = -1;
+            try
+            {
+                index = boost::lexical_cast<int>(file_path);
+            }
+            catch (boost::bad_lexical_cast e)
+            {
+                index = -1;
+            }
+            if (index == -1)
+            {
+                if (h_cam->open(file_path))
+                {
+                    loaded_document = file_path;
+                    playback_frame_number = 0;
+                    return true;
+                }
+            }
+            else
+            {
+                if (h_cam->open(index))
+                {
+                    loaded_document = file_path;
+                    playback_frame_number = 0;
+                    return true;
+                }
+            }
         }
     }
     catch (cv::Exception& e)
     {
-		LOG(debug) << "Unable to load " << file_path << " due to " << e.what();
+        LOG(debug) << "Unable to load " << file_path << " due to " << e.what();
     }
     return false;
 }
@@ -160,22 +160,22 @@ void frame_grabber_cv::Serialize(ISimpleSerializer* pSerializer)
 
 std::string frame_grabber_cv_info::GetObjectName()
 {
-	return "frame_grabber_cv";
+    return "frame_grabber_cv";
 }
 int frame_grabber_cv_info::CanLoadDocument(const std::string& document) const
 {
-	try
-	{
-		int index = boost::lexical_cast<int>(document);
-		return 5;
-	}catch(boost::bad_lexical_cast e)
-	{
-		(void)e;
-	}
-	return 0;
-	
+    try
+    {
+        int index = boost::lexical_cast<int>(document);
+        return 5;
+    }catch(boost::bad_lexical_cast e)
+    {
+        (void)e;
+    }
+    return 0;
+    
 }
 int frame_grabber_cv_info::Priority() const
 {
-	return 0;
+    return 0;
 }

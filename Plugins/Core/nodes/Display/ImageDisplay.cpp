@@ -37,73 +37,73 @@ TS<SyncedMemory> QtImageDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::Str
 {
     cv::Mat img = input.GetMat(stream);
     std::string display_name = getFullTreeName();
-	if (auto table = PerModuleInterface::GetInstance()->GetSystemTable())
-	{
-		if (auto manager = table->GetSingleton<WindowCallbackHandlerManager>())
-		{
-			if (auto instance = manager->instance())
-			{
+    if (auto table = PerModuleInterface::GetInstance()->GetSystemTable())
+    {
+        if (auto manager = table->GetSingleton<WindowCallbackHandlerManager>())
+        {
+            if (auto instance = manager->instance())
+            {
                 cuda::enqueue_callback_async(
-					[instance, display_name, img]()->void
-				{
+                    [instance, display_name, img]()->void
+                {
                     rmt_ScopedCPUSample(QtImageDisplay_displayImage);
                     PROFILE_FUNCTION;
                     instance->imshow(display_name, img);
                 }, stream);
-			}
-			else
-			{
-				LOG(warning) << "Unable to get instance of WindowCallbackHandler for stream";
-			}
-		}
-		else
-		{
-			LOG(warning) << "Unable to get instance of WindowCallbackHandlerManager";
-		}
-	}
-	else
-	{
-		LOG(warning) << "Unable to get SystemTable";
-	}
-	
+            }
+            else
+            {
+                LOG(warning) << "Unable to get instance of WindowCallbackHandler for stream";
+            }
+        }
+        else
+        {
+            LOG(warning) << "Unable to get instance of WindowCallbackHandlerManager";
+        }
+    }
+    else
+    {
+        LOG(warning) << "Unable to get SystemTable";
+    }
+    
     return input;
 }
 cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     if(img.channels() != 1 && img.channels() != 3)
     {
-		NODE_LOG(warning) << "Image has " << img.channels() << " channels! Cannot display!";
+        NODE_LOG(warning) << "Image has " << img.channels() << " channels! Cannot display!";
         return img;
     }
-	cv::Mat host_mat;
-	std::string display_name;
-	display_name = getFullTreeName();
+    cv::Mat host_mat;
+    std::string display_name;
+    display_name = getFullTreeName();
 
     img.download(host_mat, stream);
     EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
-	cuda::enqueue_callback_async(
-		[this, display_name, host_mat]()->void
-	{
-		rmt_ScopedCPUSample(QtImageDisplay_displayImage);
-		PROFILE_FUNCTION;
+    cuda::enqueue_callback_async(
+        [this, display_name, host_mat]()->void
+    {
+        rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+        PROFILE_FUNCTION;
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
         
         auto instance = manager->instance();
         instance->imshow(display_name, host_mat);
-	}, stream);
+    }, stream);
     
     return img;
 }
 void QtImageDisplay::doProcess(const cv::Mat& mat, double timestamp, int frame_number, cv::cuda::Stream& stream)
 {
-	PROFILE_FUNCTION
+    PROFILE_FUNCTION
     EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
     cuda::enqueue_callback_async(
         [this, mat]()->void
     {
         rmt_ScopedCPUSample(QtImageDisplay_displayImage);
-		PROFILE_FUNCTION;
+        PROFILE_FUNCTION;
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
 
@@ -117,10 +117,10 @@ void OGLImageDisplay::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
-		updateParameter("Default Name", std::string("Default Name"))->SetTooltip("Set name for window");
+        updateParameter("Default Name", std::string("Default Name"))->SetTooltip("Set name for window");
     }
-	prevName = *getParameter<std::string>(0)->Data();
-	cv::namedWindow("Default Name", cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
+    prevName = *getParameter<std::string>(0)->Data();
+    cv::namedWindow("Default Name", cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
 }
 
 
@@ -134,23 +134,23 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
         _parameters[0]->changed = false;
         cv::namedWindow(prevName, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
     }
-	std::string display_name = *getParameter<std::string>(0)->Data();
-	cv::cuda::GpuMat display_buffer;
-	img.copyTo(display_buffer, stream);
-	cuda::enqueue_callback_async(
-		[display_buffer, display_name]()->void
-	{
-		//cv::namedWindow(display_name, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
+    std::string display_name = *getParameter<std::string>(0)->Data();
+    cv::cuda::GpuMat display_buffer;
+    img.copyTo(display_buffer, stream);
+    cuda::enqueue_callback_async(
+        [display_buffer, display_name]()->void
+    {
+        //cv::namedWindow(display_name, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
         auto instance = manager->instance(0);
         Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&WindowCallbackHandler::imshowd, instance, display_name, display_buffer, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO));
         //WindowCallbackHandler::instance()->imshow(display_name, display_buffer);
-		//Parameters::UI::UiCallbackService::Instance()->post(
-//			boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), 
-					//display_name, display_buffer));
+        //Parameters::UI::UiCallbackService::Instance()->post(
+//            boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), 
+                    //display_name, display_buffer));
 
-	}, stream);
+    }, stream);
     return img;
 }
 
@@ -180,33 +180,33 @@ void KeyPointDisplay::Serialize(ISimpleSerializer *pSerializer)
 TS<SyncedMemory> KeyPointDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat* d_mat = getParameter<cv::cuda::GpuMat>(0)->Data();
-	TIME
+    TIME
     if(d_mat && !d_mat->empty())
     {
-		cv::Scalar color = *getParameter<cv::Scalar>(3)->Data();
-		int radius = *getParameter<int>(2)->Data();
-		std::string displayName = getFullTreeName();
-		cv::Mat h_img, pts;
-		TIME
-		h_img = input.GetMat(stream);
+        cv::Scalar color = *getParameter<cv::Scalar>(3)->Data();
+        int radius = *getParameter<int>(2)->Data();
+        std::string displayName = getFullTreeName();
+        cv::Mat h_img, pts;
+        TIME
+        h_img = input.GetMat(stream);
         pts.create(1, 1000, CV_32FC2);
-		d_mat->download(pts, stream);
-		TIME
-		EagleLib::cuda::enqueue_callback_async(
-			[h_img, pts, radius, color, displayName]()->void
-		{
-			const cv::Vec2f* ptr = pts.ptr<cv::Vec2f>(0);
-			for (int i = 0; i < pts.cols; ++i, ++ptr)
-			{
-				cv::circle(h_img, cv::Point(ptr->val[0], ptr->val[1]), radius, color, 1);
-			}
-			auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-			auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
+        d_mat->download(pts, stream);
+        TIME
+        EagleLib::cuda::enqueue_callback_async(
+            [h_img, pts, radius, color, displayName]()->void
+        {
+            const cv::Vec2f* ptr = pts.ptr<cv::Vec2f>(0);
+            for (int i = 0; i < pts.cols; ++i, ++ptr)
+            {
+                cv::circle(h_img, cv::Point(ptr->val[0], ptr->val[1]), radius, color, 1);
+            }
+            auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+            auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
 
-			auto instance = manager->instance();
-			instance->imshow(displayName, h_img);
-		}, stream);
-		TIME
+            auto instance = manager->instance();
+            instance->imshow(displayName, h_img);
+        }, stream);
+        TIME
         return input;
     }
     return input;
@@ -214,30 +214,30 @@ TS<SyncedMemory> KeyPointDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::St
 cv::cuda::GpuMat KeyPointDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     cv::cuda::GpuMat* d_mat = getParameter<cv::cuda::GpuMat>(0)->Data();
-	TIME
+    TIME
     if(d_mat && !d_mat->empty())
     {
-		cv::Scalar color = *getParameter<cv::Scalar>(3)->Data();
-		int radius = *getParameter<int>(2)->Data();
-		std::string displayName = getFullTreeName();
-		cv::Mat h_img, pts;
-		TIME
-		img.download(h_img, stream);
+        cv::Scalar color = *getParameter<cv::Scalar>(3)->Data();
+        int radius = *getParameter<int>(2)->Data();
+        std::string displayName = getFullTreeName();
+        cv::Mat h_img, pts;
+        TIME
+        img.download(h_img, stream);
         pts.create(1, 1000, CV_32FC2);
-		d_mat->download(pts, stream);
-		TIME
-		EagleLib::cuda::enqueue_callback_async(
-			[h_img, pts, radius, color, displayName]()->void
-		{
-			const cv::Vec2f* ptr = pts.ptr<cv::Vec2f>(0);
-			for (int i = 0; i < pts.cols; ++i, ++ptr)
-			{
-				cv::circle(h_img, cv::Point(ptr->val[0], ptr->val[1]), radius, color, 1);
-			}
-			Parameters::UI::UiCallbackService::Instance()->post(
-				boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), displayName, h_img));
-		}, stream);
-		TIME
+        d_mat->download(pts, stream);
+        TIME
+        EagleLib::cuda::enqueue_callback_async(
+            [h_img, pts, radius, color, displayName]()->void
+        {
+            const cv::Vec2f* ptr = pts.ptr<cv::Vec2f>(0);
+            for (int i = 0; i < pts.cols; ++i, ++ptr)
+            {
+                cv::circle(h_img, cv::Point(ptr->val[0], ptr->val[1]), radius, color, 1);
+            }
+            Parameters::UI::UiCallbackService::Instance()->post(
+                boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), displayName, h_img));
+        }, stream);
+        TIME
         return img;
     }
     auto h_mat = getParameter<cv::Mat>(1)->Data();
@@ -272,47 +272,47 @@ cv::cuda::GpuMat FlowVectorDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
     cv::cuda::GpuMat* d_mask = getParameter<cv::cuda::GpuMat>(2)->Data();
     if(d_initial && !d_initial->empty() && d_final && !d_final->empty())
     {
-		cv::Scalar goodColor = *getParameter<cv::Scalar>(3)->Data();
-		cv::Scalar badColor = *getParameter<cv::Scalar>(4)->Data();
-		cv::Mat h_img;
-		img.download(h_img, stream);
-		std::string displayName = getFullTreeName();
-		if (d_mask)
-		{
-			cv::Mat h_initial, h_final, h_mask;
-			d_initial->download(h_initial, stream);
-			d_final->download(h_final, stream);
-			d_mask->download(h_mask, stream);
-			EagleLib::cuda::enqueue_callback_async(
-				[h_img, h_initial, h_final, h_mask, goodColor, badColor, displayName]()->void
-			{
-				const cv::Vec2f* p1 = h_initial.ptr<cv::Vec2f>();
-				const cv::Vec2f* p2 = h_final.ptr<cv::Vec2f>();
-				const uchar* mask = h_mask.ptr<uchar>();
-				for (int i = 0; i < h_initial.cols; ++i)
-				{
-					cv::line(h_img, cv::Point(p1[i].val[0], p1[i].val[1]), cv::Point(p2[i].val[0], p2[i].val[1]), mask[i] ? goodColor : badColor);
-				}
-				cv::imshow(displayName, h_img);
-			}, stream);
-		}
-		else
-		{
-			cv::Mat h_initial, h_final;
-			d_initial->download(h_initial, stream);
-			d_final->download(h_final, stream);
-			EagleLib::cuda::enqueue_callback_async(
-				[h_img, h_initial, h_final, goodColor, displayName]()->void
-			{
-				const cv::Vec2f* p1 = h_initial.ptr<cv::Vec2f>();
-				const cv::Vec2f* p2 = h_final.ptr<cv::Vec2f>();
-				for (int i = 0; i < h_initial.cols; ++i)
-				{
-					cv::line(h_img, cv::Point(p1[i].val[0], p1[i].val[1]), cv::Point(p2[i].val[0], p2[i].val[1]), goodColor);
-				}
-				cv::imshow(displayName, h_img);
-			}, stream);
-		}
+        cv::Scalar goodColor = *getParameter<cv::Scalar>(3)->Data();
+        cv::Scalar badColor = *getParameter<cv::Scalar>(4)->Data();
+        cv::Mat h_img;
+        img.download(h_img, stream);
+        std::string displayName = getFullTreeName();
+        if (d_mask)
+        {
+            cv::Mat h_initial, h_final, h_mask;
+            d_initial->download(h_initial, stream);
+            d_final->download(h_final, stream);
+            d_mask->download(h_mask, stream);
+            EagleLib::cuda::enqueue_callback_async(
+                [h_img, h_initial, h_final, h_mask, goodColor, badColor, displayName]()->void
+            {
+                const cv::Vec2f* p1 = h_initial.ptr<cv::Vec2f>();
+                const cv::Vec2f* p2 = h_final.ptr<cv::Vec2f>();
+                const uchar* mask = h_mask.ptr<uchar>();
+                for (int i = 0; i < h_initial.cols; ++i)
+                {
+                    cv::line(h_img, cv::Point(p1[i].val[0], p1[i].val[1]), cv::Point(p2[i].val[0], p2[i].val[1]), mask[i] ? goodColor : badColor);
+                }
+                cv::imshow(displayName, h_img);
+            }, stream);
+        }
+        else
+        {
+            cv::Mat h_initial, h_final;
+            d_initial->download(h_initial, stream);
+            d_final->download(h_final, stream);
+            EagleLib::cuda::enqueue_callback_async(
+                [h_img, h_initial, h_final, goodColor, displayName]()->void
+            {
+                const cv::Vec2f* p1 = h_initial.ptr<cv::Vec2f>();
+                const cv::Vec2f* p2 = h_final.ptr<cv::Vec2f>();
+                for (int i = 0; i < h_initial.cols; ++i)
+                {
+                    cv::line(h_img, cv::Point(p1[i].val[0], p1[i].val[1]), cv::Point(p2[i].val[0], p2[i].val[1]), goodColor);
+                }
+                cv::imshow(displayName, h_img);
+            }, stream);
+        }
 
         //display(img, *d_initial, *d_final, d_mask ? *d_mask : cv::cuda::GpuMat(), fullTreeName, stream);
     }
@@ -344,7 +344,7 @@ cv::cuda::GpuMat FlowVectorDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 void histogramDisplayCallback(int status, void* userData)
 {
     HistogramDisplay* node = (HistogramDisplay*)userData;
-	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&HistogramDisplay::displayHistogram, node));
+    Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&HistogramDisplay::displayHistogram, node));
 
 }
 void HistogramDisplay::displayHistogram()
@@ -354,17 +354,17 @@ void HistogramDisplay::displayHistogram()
     if(data.channels() != 1)
     {
         //log(Error, "Currently only supports 1 channel histograms, input has " + boost::lexical_cast<std::string>(data.channels()) + " channels");
-		NODE_LOG(error) << "Currently only supports 1 channel histograms, input has " << data.channels() << " channels";
+        NODE_LOG(error) << "Currently only supports 1 channel histograms, input has " << data.channels() << " channels";
         return;
     }
     double minVal, maxVal;
     int minIdx, maxIdx;
     cv::minMaxIdx(data, &minVal, &maxVal, &minIdx, &maxIdx);
     cv::Mat img(100, data.cols*5,CV_8U, cv::Scalar(0));
-	updateParameter("Min value", minVal)->type =  Parameters::Parameter::State;
+    updateParameter("Min value", minVal)->type =  Parameters::Parameter::State;
     updateParameter("Min bin", minIdx)->type = Parameters::Parameter::State;
-	updateParameter("Max value", maxVal)->type = Parameters::Parameter::State;
-	updateParameter("Max bin", maxIdx)->type =  Parameters::Parameter::State;
+    updateParameter("Max value", maxVal)->type = Parameters::Parameter::State;
+    updateParameter("Max bin", maxIdx)->type =  Parameters::Parameter::State;
     for(int i = 0; i < data.cols; ++i)
     {
         double height = data.at<int>(i);
@@ -433,7 +433,7 @@ void DetectionDisplay::displayCallback()
                 pos.y = h_img.rows - 100;
         }
     }
-	Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), getFullTreeName(), h_img));
+    Parameters::UI::UiCallbackService::Instance()->post(boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), getFullTreeName(), h_img));
 }
 
 void DetectionDisplay::NodeInit(bool firstInit)

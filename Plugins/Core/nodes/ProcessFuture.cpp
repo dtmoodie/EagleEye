@@ -8,7 +8,7 @@ using namespace EagleLib::Nodes;
 
 ProcessFuture::ProcessFuture()
 {
-	_pause = false;
+    _pause = false;
 }
 
 ProcessFuture::~ProcessFuture()
@@ -34,14 +34,14 @@ TS<SyncedMemory> ProcessFuture::process(TS<SyncedMemory>& input, cv::cuda::Strea
 }
 TS<SyncedMemory> ProcessFuture::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 {
-	return input;
+    return input;
 }
 
 void ProcessFuture::process_ahead()
 {
     std::unique_lock<std::recursive_mutex> lock(mtx);
     auto frame_grabber = GetDataStream()->GetFrameGrabber();
-	rmt_SetCurrentThreadName("ProcessFuture_thread");
+    rmt_SetCurrentThreadName("ProcessFuture_thread");
     if(!frame_grabber)
     {
         LOG(debug) << "No valid frame grabber";
@@ -51,14 +51,14 @@ void ProcessFuture::process_ahead()
     
     while(!boost::this_thread::interruption_requested())
     {
-		TS<SyncedMemory> frame;
-		while (_pause)
-		{
-			_cv.wait(lock);
-		}
+        TS<SyncedMemory> frame;
+        while (_pause)
+        {
+            _cv.wait(lock);
+        }
         while(frame.empty())
         {
-			int num_frames_ahead = *getParameter<int>("Num Frames Ahead")->Data();
+            int num_frames_ahead = *getParameter<int>("Num Frames Ahead")->Data();
             _cv.wait_for(lock, std::chrono::milliseconds(100));
             frame = frame_grabber->GetFrameRelative(num_frames_ahead,stream);
         }
@@ -68,31 +68,31 @@ void ProcessFuture::process_ahead()
 }
 void ProcessFuture::SetDataStream(IDataStream* stream)
 {
-	Node::SetDataStream(stream);
-	_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&ProcessFuture::start_thread, this), this));
-	_callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&ProcessFuture::stop_thread, this), this));
+    Node::SetDataStream(stream);
+    _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&ProcessFuture::start_thread, this), this));
+    _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&ProcessFuture::stop_thread, this), this));
 }
 void ProcessFuture::stop_thread()
 {
-	_pause = true;
+    _pause = true;
 }
 void ProcessFuture::start_thread()
 {
-	_pause = false;
-	_cv.notify_all();
+    _pause = false;
+    _cv.notify_all();
 }
 
 ProcessFuture::ProcessFutureInfo::ProcessFutureInfo():
-	NodeInfo("ProcessFuture", { "Utilities" })
+    NodeInfo("ProcessFuture", { "Utilities" })
 {
 }
 std::string ProcessFuture::ProcessFutureInfo::GetObjectTooltip()
 {
-	return "";
+    return "";
 }
 std::string ProcessFuture::ProcessFutureInfo::GetObjectHelp()
 {
-	return "";
+    return "";
 }
 
 

@@ -14,13 +14,13 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("cv_capture", ".cpp");
 
 namespace EagleLib
 {
-	class PLUGIN_EXPORTS frame_grabber_cv_info : public FrameGrabberInfo
-	{
-	public:
-		virtual std::string GetObjectName();
-		virtual int CanLoadDocument(const std::string& document) const;
-		virtual int Priority() const;
-	};
+    class PLUGIN_EXPORTS frame_grabber_cv_info : public FrameGrabberInfo
+    {
+    public:
+        virtual std::string GetObjectName();
+        virtual int CanLoadDocument(const std::string& document) const;
+        virtual int Priority() const;
+    };
     class PLUGIN_EXPORTS frame_grabber_cv: public FrameGrabberThreaded
     {
     public:

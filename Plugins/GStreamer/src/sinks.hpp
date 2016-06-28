@@ -18,14 +18,14 @@ namespace EagleLib
         };
     }
 
-	class PLUGIN_EXPORTS BufferedHeartbeatRtsp: public FrameGrabberBuffered, public gstreamer_src_base
-	{
-	public:
-		virtual void NodeInit(bool firstInit);
+    class PLUGIN_EXPORTS BufferedHeartbeatRtsp: public FrameGrabberBuffered, public gstreamer_src_base
+    {
+    public:
+        virtual void NodeInit(bool firstInit);
 
-	protected:
-		
-	};
+    protected:
+        
+    };
 
 
 }

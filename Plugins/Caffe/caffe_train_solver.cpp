@@ -41,15 +41,15 @@ void caffe_solver::NodeInit(bool firstInit)
     updateParameter("learning rate policy", lr_policy);
 }
 void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
-	std::vector<std::string> model_names;
-	boost::split(model_names, model_list, boost::is_any_of(","));
-	for (int i = 0; i < model_names.size(); ++i) {
-		LOG(info) << "Finetuning from " << model_names[i];
-		solver->net()->CopyTrainedLayersFrom(model_names[i]);
-		for (int j = 0; j < solver->test_nets().size(); ++j) {
-			solver->test_nets()[j]->CopyTrainedLayersFrom(model_names[i]);
-		}
-	}
+    std::vector<std::string> model_names;
+    boost::split(model_names, model_list, boost::is_any_of(","));
+    for (int i = 0; i < model_names.size(); ++i) {
+        LOG(info) << "Finetuning from " << model_names[i];
+        solver->net()->CopyTrainedLayersFrom(model_names[i]);
+        for (int j = 0; j < solver->test_nets().size(); ++j) {
+            solver->test_nets()[j]->CopyTrainedLayersFrom(model_names[i]);
+        }
+    }
 }
 TS<SyncedMemory> caffe_solver::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
@@ -74,71 +74,71 @@ TS<SyncedMemory> caffe_solver::doProcess(TS<SyncedMemory> input, cv::cuda::Strea
             if(solver_params.has_gamma())
                 gamma = solver_params.gamma();
             neural_network = solver->net();
-			auto idx = neural_network->input_blob_indices();
-			auto names = neural_network->blob_names();
-			std::vector<std::string> input_names;
-			for(auto i : idx)
-			{
-				input_names.push_back(names[i]);
-			}
+            auto idx = neural_network->input_blob_indices();
+            auto names = neural_network->blob_names();
+            std::vector<std::string> input_names;
+            for(auto i : idx)
+            {
+                input_names.push_back(names[i]);
+            }
             auto input_blobs_ = neural_network->input_blobs();
-			// map input blobs
-			
-			for(int i = 0; i < input_blobs_.size(); ++i)
-			{
-				float* data = input_blobs_[i]->mutable_cpu_data();
-				int rows = input_blobs_[i]->height();
-				int cols = input_blobs_[i]->width();
-				// for each blob
-				std::vector<std::vector<cv::Mat>> blob;
-				for(int j = 0; j < input_blobs_[i]->num(); ++j) // for each sample
-				{
-					std::vector<cv::Mat> channels;
-					for(int k = 0; k < input_blobs_[i]->channels(); ++k) // for each channel
-					{
-						cv::Mat mat(rows, cols, CV_32F, data);
-						channels.push_back(mat);
-						data += rows*cols;
-					}
-					blob.push_back(channels);
-				}
-				input_blobs.push_back(blob);
-			}
-			input_blobs_param.type = Parameters::Parameter::Output;
-			updateParameter("input blob names", input_names)->type = Parameters::Parameter::Output;
+            // map input blobs
+            
+            for(int i = 0; i < input_blobs_.size(); ++i)
+            {
+                float* data = input_blobs_[i]->mutable_cpu_data();
+                int rows = input_blobs_[i]->height();
+                int cols = input_blobs_[i]->width();
+                // for each blob
+                std::vector<std::vector<cv::Mat>> blob;
+                for(int j = 0; j < input_blobs_[i]->num(); ++j) // for each sample
+                {
+                    std::vector<cv::Mat> channels;
+                    for(int k = 0; k < input_blobs_[i]->channels(); ++k) // for each channel
+                    {
+                        cv::Mat mat(rows, cols, CV_32F, data);
+                        channels.push_back(mat);
+                        data += rows*cols;
+                    }
+                    blob.push_back(channels);
+                }
+                input_blobs.push_back(blob);
+            }
+            input_blobs_param.type = Parameters::Parameter::Output;
+            updateParameter("input blob names", input_names)->type = Parameters::Parameter::Output;
         }
         if(weight_files.size())
-		{
-			std::stringstream ss;
-			for(int i = 0; i < weight_files.size(); ++i)
-			{
-				if(boost::filesystem::is_regular_file(weight_files[i]))
-				{
-					if(i != 0)
-						ss << ",";
-					ss << weight_files[i];
-				}				
-			}
-			//CopyLayers(solver.get(), ss.str());
-		}
-		if(previous_solver_state.size())
-		{
-			if(boost::filesystem::is_regular_file(previous_solver_state))
-				solver->Restore(previous_solver_state.string().c_str());
-		}
-		solver_description_param.changed = false;
+        {
+            std::stringstream ss;
+            for(int i = 0; i < weight_files.size(); ++i)
+            {
+                if(boost::filesystem::is_regular_file(weight_files[i]))
+                {
+                    if(i != 0)
+                        ss << ",";
+                    ss << weight_files[i];
+                }                
+            }
+            //CopyLayers(solver.get(), ss.str());
+        }
+        if(previous_solver_state.size())
+        {
+            if(boost::filesystem::is_regular_file(previous_solver_state))
+                solver->Restore(previous_solver_state.string().c_str());
+        }
+        solver_description_param.changed = false;
     }
     if(!solver)
     {
         caffe::SolverParameter solver_params;
     }
-	if(solver && (input_blobs_param.subscribers || input_blobs.empty()))
-	{
-		sig_fill_blobs();
+    if(solver && (input_blobs_param.subscribers || input_blobs.empty()))
+    {
+        sig_fill_blobs();
         
-		solver->Step(steps_per_iteration);
+        solver->Step(steps_per_iteration);
         //solver->Solve();
-	}
+    }
     return input;
 }
 bool caffe_solver::pre_check(const TS<SyncedMemory>& input)

@@ -40,44 +40,44 @@
 
 void sig_handler(int s)
 {
-	LOG(error) << "Caught signal " << s << " with callstack:\n" << Signals::print_callstack(0,true);
-	if (s == 2)
-		exit(EXIT_FAILURE);
+    LOG(error) << "Caught signal " << s << " with callstack:\n" << Signals::print_callstack(0,true);
+    if (s == 2)
+        exit(EXIT_FAILURE);
 }
 static void process(std::vector<EagleLib::Nodes::Node::Ptr>* parentList, boost::timed_mutex *mtx);
 MainWindow::MainWindow(QWidget *parent) :
-	QMainWindow(parent),
-	ui(new Ui::MainWindow),
-	rccSettings(new RCCSettingsDialog(this)),
-	plotWizardDialog(new PlotWizardDialog(this)),
-	settingsDialog(new SettingDialog(this))
+    QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    rccSettings(new RCCSettingsDialog(this)),
+    plotWizardDialog(new PlotWizardDialog(this)),
+    settingsDialog(new SettingDialog(this))
 {
-	signal(SIGINT, sig_handler);
-	signal(SIGILL, sig_handler);
-	signal(SIGTERM, sig_handler);
-	signal(SIGSEGV, sig_handler);
-	rmt_SetCurrentThreadName("GUI_thread");
+    signal(SIGINT, sig_handler);
+    signal(SIGILL, sig_handler);
+    signal(SIGTERM, sig_handler);
+    signal(SIGSEGV, sig_handler);
+    rmt_SetCurrentThreadName("GUI_thread");
     // Create the processing thread opengl context for creating buffers and uploading them
     processing_thread_context = nullptr;
     processing_thread_upload_window = nullptr;
     updateParameterPtr("file load path", &file_load_path);
     variable_storage::instance().load_parameters(this);
-	
+    
     cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
 
-	EagleLib::CpuDelayedDeallocationPool::instance()->deallocation_delay = 1000;
-	
-	EagleLib::SetupLogging();
-	//EagleLib::ui_collector::addGenericCallbackHandler(boost::bind(&MainWindow::process_log_message, this, _1, _2));
+    EagleLib::CpuDelayedDeallocationPool::instance()->deallocation_delay = 1000;
+    
+    EagleLib::SetupLogging();
+    //EagleLib::ui_collector::addGenericCallbackHandler(boost::bind(&MainWindow::process_log_message, this, _1, _2));
     logging_connection = EagleLib::ui_collector::get_log_handler().connect(std::bind(&MainWindow::process_log_message, this, std::placeholders::_1, std::placeholders::_2));
-	
+    
 
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<cv::cuda::GpuMat>("cv::cuda::GpuMat");
     qRegisterMetaType<cv::Mat>("cv::Mat");
     qRegisterMetaType<EagleLib::Nodes::Node::Ptr>("EagleLib::Nodes::Node::Ptr");
     qRegisterMetaType<EagleLib::Nodes::Node*>("EagleLib::Nodes::Node*");
-	qRegisterMetaType<boost::log::trivial::severity_level>("boost::log::trivial::severity_level");
+    qRegisterMetaType<boost::log::trivial::severity_level>("boost::log::trivial::severity_level");
     qRegisterMetaType<boost::function<cv::Mat(void)>>("boost::function<cv::Mat(void)>");
     qRegisterMetaType<boost::function<void(void)>>("boost::function<void(void)>");
     qRegisterMetaType<boost::function<void()>>("boost::function<void()>");
@@ -89,20 +89,20 @@ MainWindow::MainWindow(QWidget *parent) :
 
     fileMonitorTimer = new QTimer(this);
     fileMonitorTimer->start(1000);
-	QObject::connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+    QObject::connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
     nodeListDialog = new NodeListDialog(this);
     nodeListDialog->hide();
-	nodeListDialog->setup_signals(&_ui_manager);
-	_signal_connections.push_back(_ui_manager.connect<void(std::string)>("add_node", std::bind(&MainWindow::onNodeAdd, this, std::placeholders::_1), this, Signals::get_this_thread(), "Main user interface"));
+    nodeListDialog->setup_signals(&_ui_manager);
+    _signal_connections.push_back(_ui_manager.connect<void(std::string)>("add_node", std::bind(&MainWindow::onNodeAdd, this, std::placeholders::_1), this, Signals::get_this_thread(), "Main user interface"));
 
     /*connect(nodeListDialog, SIGNAL(nodeConstructed(EagleLib::Nodes::Node::Ptr)),
         this, SLOT(onNodeAdd(EagleLib::Nodes::Node::Ptr)));*/
-	
-	nodeGraph = new QGraphicsScene(this);
+    
+    nodeGraph = new QGraphicsScene(this);
     //connect(nodeGraph, SIGNAL(selectionChanged()), this, SLOT(on_selectionChanged()));
-	nodeGraphView = new NodeView(nodeGraph);
-	QObject::connect(nodeGraphView, SIGNAL(selectionChanged(QGraphicsProxyWidget*)), this, SLOT(onSelectionChanged(QGraphicsProxyWidget*)));
-	nodeGraphView->setInteractive(true);
+    nodeGraphView = new NodeView(nodeGraph);
+    QObject::connect(nodeGraphView, SIGNAL(selectionChanged(QGraphicsProxyWidget*)), this, SLOT(onSelectionChanged(QGraphicsProxyWidget*)));
+    nodeGraphView->setInteractive(true);
     nodeGraphView->setViewport(new QGLWidget());
     nodeGraphView->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->gridLayout->addWidget(nodeGraphView, 2, 0, 1,4);
@@ -119,46 +119,46 @@ MainWindow::MainWindow(QWidget *parent) :
     persistence_timer = new QTimer(this);
     persistence_timer->start(500); // save setting every half second
     QObject::connect(bookmarks, SIGNAL(open_file(QString)), this, SLOT(load_file(QString)));
-	QObject::connect(persistence_timer, SIGNAL(timeout()), this, SLOT(on_persistence_timeout()));
-	QObject::connect(this, &MainWindow::uiCallback, this, &MainWindow::on_uiCallback, Qt::QueuedConnection);
-	QObject::connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter*)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter*)));
-	QObject::connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
-	QObject::connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
-	QObject::connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
-	QObject::connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
-	QObject::connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
-	QObject::connect(nodeGraphView, SIGNAL(widgetDeleted(QNodeWidget*)), this, SLOT(onWidgetDeleted(QNodeWidget*)));
-	QObject::connect(nodeGraphView, SIGNAL(widgetDeleted(DataStreamWidget*)), this, SLOT(onWidgetDeleted(DataStreamWidget*)));
-	QObject::connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(onSaveClicked()));
-	QObject::connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
-	QObject::connect(ui->actionOpen_file, SIGNAL(triggered()), this, SLOT(onLoadFileClicked()));
-	QObject::connect(ui->actionOpen_directory, SIGNAL(triggered()), this, SLOT(onLoadDirectoryClicked()));
-	QObject::connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
-	QObject::connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
+    QObject::connect(persistence_timer, SIGNAL(timeout()), this, SLOT(on_persistence_timeout()));
+    QObject::connect(this, &MainWindow::uiCallback, this, &MainWindow::on_uiCallback, Qt::QueuedConnection);
+    QObject::connect(nodeGraphView, SIGNAL(plotData(Parameters::Parameter*)), plotWizardDialog, SLOT(plotParameter(Parameters::Parameter*)));
+    QObject::connect(this, SIGNAL(eLog(QString)), this, SLOT(log(QString)), Qt::QueuedConnection);
+    QObject::connect(this, SIGNAL(oglDisplayImage(std::string,cv::cuda::GpuMat)), this, SLOT(onOGLDisplay(std::string,cv::cuda::GpuMat)), Qt::QueuedConnection);
+    QObject::connect(this, SIGNAL(qtDisplayImage(std::string,cv::Mat)), this, SLOT(onQtDisplay(std::string,cv::Mat)), Qt::QueuedConnection);
+    QObject::connect(nodeGraphView, SIGNAL(startThread()), this, SLOT(startProcessingThread()));
+    QObject::connect(nodeGraphView, SIGNAL(stopThread()), this, SLOT(stopProcessingThread()));
+    QObject::connect(nodeGraphView, SIGNAL(widgetDeleted(QNodeWidget*)), this, SLOT(onWidgetDeleted(QNodeWidget*)));
+    QObject::connect(nodeGraphView, SIGNAL(widgetDeleted(DataStreamWidget*)), this, SLOT(onWidgetDeleted(DataStreamWidget*)));
+    QObject::connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(onSaveClicked()));
+    QObject::connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(onLoadClicked()));
+    QObject::connect(ui->actionOpen_file, SIGNAL(triggered()), this, SLOT(onLoadFileClicked()));
+    QObject::connect(ui->actionOpen_directory, SIGNAL(triggered()), this, SLOT(onLoadDirectoryClicked()));
+    QObject::connect(ui->actionLoad_Plugin, SIGNAL(triggered()), this, SLOT(onLoadPluginClicked()));
+    QObject::connect(this, SIGNAL(uiNeedsUpdate()), this, SLOT(onUiUpdate()), Qt::QueuedConnection);
     //connect(ui->actionBookmarks, SIGNAL(triggered()), this, SLOT()
-	QObject::connect(this, SIGNAL(onNewParameter(EagleLib::Nodes::Node*)), this, SLOT(on_NewParameter(EagleLib::Nodes::Node*)), Qt::QueuedConnection);
+    QObject::connect(this, SIGNAL(onNewParameter(EagleLib::Nodes::Node*)), this, SLOT(on_NewParameter(EagleLib::Nodes::Node*)), Qt::QueuedConnection);
 
-	QObject::connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
+    QObject::connect(ui->actionRCC_settings, SIGNAL(triggered()), this, SLOT(displayRCCSettings()));
     //connect(plotWizardDialog, SIGNAL(on_plotAdded(PlotWindow*)), this, SLOT(onPlotAdd(PlotWindow*)));
-	QObject::connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
+    QObject::connect(this, SIGNAL(pluginLoaded()), plotWizardDialog, SLOT(setup()));
 #ifdef _MSC_VER
 #ifdef _DEBUG
-	LOG(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Debug mode.";
+    LOG(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Debug mode.";
 #else
-	LOG(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Release mode.";
+    LOG(info) << "EagleEye log messages, built with msvc version " << _MSC_VER << " in Release mode.";
 #endif
 #else
 
 #endif
-	/* Instantiate several useful types since compilation is currently setup to not compile against the types used in eagle lib */
+    /* Instantiate several useful types since compilation is currently setup to not compile against the types used in eagle lib */
     Parameters::TypedParameter<Parameters::WriteDirectory>("Instantiation");
     Parameters::TypedParameter<Parameters::WriteFile>("Instantiation");
     Parameters::TypedParameter<Parameters::ReadDirectory>("Instantiation");
     Parameters::TypedParameter<Parameters::ReadFile>("Instantiation");
     Parameters::TypedParameter<Parameters::EnumParameter>("Instantiation");
-	Parameters::TypedParameter<boost::filesystem::path>("Instantiation");
-	Parameters::TypedParameter<std::function<void(void)>>("Instantiation");
-	Parameters::TypedParameter<bool>("Instantiation");
+    Parameters::TypedParameter<boost::filesystem::path>("Instantiation");
+    Parameters::TypedParameter<std::function<void(void)>>("Instantiation");
+    Parameters::TypedParameter<bool>("Instantiation");
 
     //EagleLib::UIThreadCallback::getInstance().setUINotifier(boost::bind(&MainWindow::uiNotifier, this));
     std::function<void(const std::string&, int)> f = std::bind(&MainWindow::onCompileLog, this, std::placeholders::_1, std::placeholders::_2);
@@ -166,16 +166,16 @@ MainWindow::MainWindow(QWidget *parent) :
     QDir dir(QDir::currentPath());
 
 #ifdef _MSC_VER
-	std::string str = dir.absolutePath().toStdString();
+    std::string str = dir.absolutePath().toStdString();
 #ifdef _DEBUG
-	dir.cd("../Debug");
+    dir.cd("../Debug");
 #else
-	dir.cd("../RelWithDebInfo");
+    dir.cd("../RelWithDebInfo");
 #endif
-	str = dir.absolutePath().toStdString();
-	QFileInfoList files = dir.entryInfoList(QStringList("*.dll"));
+    str = dir.absolutePath().toStdString();
+    QFileInfoList files = dir.entryInfoList(QStringList("*.dll"));
 #else
-	dir.cd("Plugins");
+    dir.cd("Plugins");
     QFileInfoList files = dir.entryInfoList(QStringList("lib*.so"));
 #endif
     for(int i = 0; i < files.size(); ++i)
@@ -194,9 +194,9 @@ MainWindow::MainWindow(QWidget *parent) :
         cv::cuda::GpuMat::setDefaultAllocator(allocator);
     }*/
     cv::cuda::GpuMat::setDefaultAllocator(EagleLib::CombinedAllocator::Instance(100000000, 500000));
-	rccSettings->updateDisplay();
-	
-	_sig_manager = EagleLib::SignalManager::get_instance();
+    rccSettings->updateDisplay();
+    
+    _sig_manager = EagleLib::SignalManager::get_instance();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     table->SetSingleton(_sig_manager);
     if (table)
@@ -216,9 +216,9 @@ MainWindow::~MainWindow()
 {
     variable_storage::instance().save_parameters(this);
     delete bookmarks;
-	stopProcessingThread();
-	cv::destroyAllWindows();
-	EagleLib::ShutdownLogging();
+    stopProcessingThread();
+    cv::destroyAllWindows();
+    EagleLib::ShutdownLogging();
     delete ui;
 }
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -234,8 +234,8 @@ void MainWindow::displayRCCSettings()
 
 void MainWindow::onCompileLog(const std::string& msg, int level)
 {
-	emit eLog(QString::fromStdString(msg));
-	//ui->console->appendPlainText(QString::fromStdString(msg));
+    emit eLog(QString::fromStdString(msg));
+    //ui->console->appendPlainText(QString::fromStdString(msg));
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -303,24 +303,24 @@ MainWindow::onSaveClicked()
 
 void MainWindow::on_uiCallback(boost::function<void()> f, std::pair<void*, Loki::TypeInfo> source)
 {
-	static boost::posix_time::ptime last_end;
-	try
-	{
-		rmt_ScopedCPUSample(on_uiCallback);
+    static boost::posix_time::ptime last_end;
+    try
+    {
+        rmt_ScopedCPUSample(on_uiCallback);
         if (f)
         {
             if(Parameters::UI::InvalidCallbacks::check_valid(source.first))
                 f();
         }
-	}
-	catch (cv::Exception &e)
-	{
-		LOG(error) << e.what();
-	}
-	catch (...)
-	{
+    }
+    catch (cv::Exception &e)
+    {
+        LOG(error) << e.what();
+    }
+    catch (...)
+    {
 
-	}
+    }
     
 }
 
@@ -339,15 +339,15 @@ MainWindow::onLoadClicked()
     stopProcessingThread();
     std::vector<EagleLib::Nodes::Node::Ptr> nodes = EagleLib::NodeManager::getInstance().loadNodes(file.toStdString());
     cv::FileStorage fs;
-	try
-	{
-		fs.open(file.toStdString(), cv::FileStorage::READ);
-	}
-	catch (cv::Exception &e)
-	{
-		LOG(error) << "Failed to load file " << file.toStdString() << " " << e.what();
-		return;
-	}
+    try
+    {
+        fs.open(file.toStdString(), cv::FileStorage::READ);
+    }
+    catch (cv::Exception &e)
+    {
+        LOG(error) << "Failed to load file " << file.toStdString() << " " << e.what();
+        return;
+    }
     
     positionMap.clear();
     try
@@ -397,7 +397,7 @@ void MainWindow::onLoadPluginClicked()
 #endif
     if(filename.size() == 0)
         return;
-	filename = QDir::toNativeSeparators(filename);
+    filename = QDir::toNativeSeparators(filename);
     //if(EagleLib::NodeManager::getInstance().loadModule(filename.toStdString()))
     if(EagleLib::loadPlugin(filename.toStdString()))
     {
@@ -462,10 +462,10 @@ void MainWindow::newParameter(EagleLib::Nodes::Node* node)
 }
 void MainWindow::onTimeout()
 {
-	rmt_ScopedCPUSample(onTimeout);
+    rmt_ScopedCPUSample(onTimeout);
     static bool swapRequired = false;
 
-	
+    
     for(size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->updateUi(false);
@@ -481,16 +481,16 @@ void MainWindow::onTimeout()
             return;
         }else
         {
-			LOG(info) << "Processing thread joined";
+            LOG(info) << "Processing thread joined";
             joined = true;
         }*/
         if(EagleLib::ObjectManager::Instance().CheckRecompile(true))
         {
            // Still compiling
-			LOG(info) << "Still compiling";
+            LOG(info) << "Still compiling";
         }else
         {
-			LOG(info) << "Recompile complete";
+            LOG(info) << "Recompile complete";
             //processingThread = boost::thread(boost::bind(&MainWindow::processThread, this));
             startProcessingThread();
             swapRequired = false;
@@ -499,7 +499,7 @@ void MainWindow::onTimeout()
     }
     if(EagleLib::ObjectManager::Instance().CheckRecompile(false))
     {
-		LOG(info) << "Recompiling.....";
+        LOG(info) << "Recompiling.....";
         swapRequired = true;
         stopProcessingThread();
         return;
@@ -540,11 +540,11 @@ void MainWindow::onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::
 }
 void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
 {
-	// Check if this node already exists
-	DOIF_LOG_PASS(nodeGraphView->getWidget(node->GetObjectId()), return, debug);
-	
+    // Check if this node already exists
+    DOIF_LOG_PASS(nodeGraphView->getWidget(node->GetObjectId()), return, debug);
+    
     QNodeWidget* nodeWidget = new QNodeWidget(0, node);
-	QObject::connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter*, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter*, QPoint)));
+    QObject::connect(nodeWidget, SIGNAL(parameterClicked(Parameters::Parameter*, QPoint)), nodeGraphView, SLOT(on_parameter_clicked(Parameters::Parameter*, QPoint)));
     auto proxyWidget = nodeGraph->addWidget(nodeWidget);
 
     auto itr = positionMap.find(node->getFullTreeName());
@@ -610,7 +610,7 @@ void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
     {
         currentSelectedNodeWidget = prevWidget;
     }
-	startProcessingThread(); // need to do something to prevent calling this from adding children
+    startProcessingThread(); // need to do something to prevent calling this from adding children
 }
 void MainWindow::updateLines()
 {
@@ -619,51 +619,51 @@ void MainWindow::updateLines()
 
 void 
 MainWindow::onNodeAdd(std::string node_name)
-{	
-	rmt_ScopedCPUSample(adding_node);
+{    
+    rmt_ScopedCPUSample(adding_node);
     EagleLib::Nodes::Node::Ptr prevNode = currentNode;
-	stopProcessingThread();
-	std::vector<rcc::shared_ptr<EagleLib::Nodes::Node>> added_nodes;
-	if(currentNode != nullptr)
+    stopProcessingThread();
+    std::vector<rcc::shared_ptr<EagleLib::Nodes::Node>> added_nodes;
+    if(currentNode != nullptr)
     {
         std::lock_guard<std::recursive_mutex> lock(currentNode->mtx);
-		added_nodes = EagleLib::NodeManager::getInstance().addNode(node_name, currentNode.get());
+        added_nodes = EagleLib::NodeManager::getInstance().addNode(node_name, currentNode.get());
         //currentNode->addChild(node);
     }else
     {
         if(current_stream != nullptr)
         {
             //current_stream->AddNode(node);
-			added_nodes = EagleLib::NodeManager::getInstance().addNode(node_name, current_stream.get());
-		}
-		else
-		{
-			// Node added without a parent node or data stream, node top level node in returned tree is a new parent node
-		}
-	}
-	for (auto& node : added_nodes)
-	{
-		addNode(node);
-	}
+            added_nodes = EagleLib::NodeManager::getInstance().addNode(node_name, current_stream.get());
+        }
+        else
+        {
+            // Node added without a parent node or data stream, node top level node in returned tree is a new parent node
+        }
+    }
+    for (auto& node : added_nodes)
+    {
+        addNode(node);
+    }
     dirty = true;
 }
 void MainWindow::onWidgetDeleted(QNodeWidget* widget)
 {
-	nodeGraphView->removeWidget(widget->getNode()->GetObjectId());
-	auto itr = std::find(widgets.begin(), widgets.end(), widget);
+    nodeGraphView->removeWidget(widget->getNode()->GetObjectId());
+    auto itr = std::find(widgets.begin(), widgets.end(), widget);
     if(itr != widgets.end())
         widgets.erase(itr);
     boost::mutex::scoped_lock(parentMtx);
     auto parentItr = std::find(parentList.begin(), parentList.end(), widget->getNode());
     if(parentItr != parentList.end())
         parentList.erase(parentItr);
-	
+    
 }
 void MainWindow::onWidgetDeleted(DataStreamWidget* widget)
 {
-	if(currentSelectedStreamWidget)
-		if(currentSelectedStreamWidget->widget() == widget)
-			currentSelectedStreamWidget = nullptr;
+    if(currentSelectedStreamWidget)
+        if(currentSelectedStreamWidget->widget() == widget)
+            currentSelectedStreamWidget = nullptr;
 
     auto itr = std::find(data_stream_widgets.begin(), data_stream_widgets.end(), widget);
     
@@ -673,8 +673,8 @@ void MainWindow::onWidgetDeleted(DataStreamWidget* widget)
     auto itr2 = std::find(data_streams.begin(), data_streams.end(), stream);
     if(itr2 != data_streams.end())
         data_streams.erase(itr2);
-	if(current_stream.get() == stream.get())
-		current_stream.reset();
+    if(current_stream.get() == stream.get())
+        current_stream.reset();
 }
 void
 MainWindow::uiNotifier()
@@ -684,14 +684,14 @@ MainWindow::uiNotifier()
 void MainWindow::onUiUpdate()
 {
     //EagleLib::UIThreadCallback::getInstance().processAllCallbacks();
-	rmt_ScopedCPUSample(onUiUpdate);
-	try
-	{
-		Signals::thread_specific_queue::run_once();
-	}catch(...)
-	{
-	
-	}
+    rmt_ScopedCPUSample(onUiUpdate);
+    try
+    {
+        Signals::thread_specific_queue::run_once();
+    }catch(...)
+    {
+    
+    }
     
 }
 
@@ -752,9 +752,9 @@ void process(std::vector<EagleLib::Nodes::Node::Ptr>* nodes, boost::timed_mutex*
 
 void MainWindow::processThread()
 {
-	//auto handle = GetDC(0);
-	//wglCreateContext(handle);
-	LOG(info) << "Processing thread started" << std::endl;
+    //auto handle = GetDC(0);
+    //wglCreateContext(handle);
+    LOG(info) << "Processing thread started" << std::endl;
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta;
@@ -773,34 +773,34 @@ void MainWindow::processThread()
     {
         try
         {
-			//EagleLib::ProcessingThreadCallback::Run();
-			Parameters::UI::ProcessingThreadCallbackService::run();
+            //EagleLib::ProcessingThreadCallback::Run();
+            Parameters::UI::ProcessingThreadCallbackService::run();
             if (dirty)
             {
                 dirty = false;
                 process(&parentList, &parentMtx);
             }            
-			end = boost::posix_time::microsec_clock::universal_time();
-			delta = end - start;
-			start = end;
-			rmt_ScopedCPUSample(Idle);
-			EagleLib::scoped_buffer::GarbageCollector::Run();
-			if (delta.total_milliseconds() < 15 || parentList.size() == 0)
-				boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
+            end = boost::posix_time::microsec_clock::universal_time();
+            delta = end - start;
+            start = end;
+            rmt_ScopedCPUSample(Idle);
+            EagleLib::scoped_buffer::GarbageCollector::Run();
+            if (delta.total_milliseconds() < 15 || parentList.size() == 0)
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(15 - delta.total_milliseconds()));
         }catch(boost::thread_interrupted& err)
         {
             (void)err;
-			LOG(info) << "Processing thread interrupted";
+            LOG(info) << "Processing thread interrupted";
             break;
         }
         
     }
-	LOG(info) << "Interrupt requested, processing thread ended";
+    LOG(info) << "Interrupt requested, processing thread ended";
 }
 void MainWindow::process_log_message(boost::log::trivial::severity_level severity, std::string message)
 {
-	emit eLog(QString::fromStdString(message));
-	//ui->console->appendPlainText();
+    emit eLog(QString::fromStdString(message));
+    //ui->console->appendPlainText();
 }
 void MainWindow::startProcessingThread()
 {
@@ -813,7 +813,7 @@ void MainWindow::startProcessingThread()
 void MainWindow::stopProcessingThread()
 {
     sig_StopThreads();
-	processingThreadActive = false;
+    processingThreadActive = false;
 }
 
 void MainWindow::on_actionLog_settings_triggered()

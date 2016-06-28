@@ -16,7 +16,7 @@ public:
     explicit dialog_network_stream_selection(QWidget *parent = 0);
     ~dialog_network_stream_selection();
     QString url;
-	QString preferred_loader;
+    QString preferred_loader;
     bool eventFilter(QObject *object, QEvent *event);
 public slots:
     void accept();

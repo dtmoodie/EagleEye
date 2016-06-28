@@ -48,12 +48,12 @@ public:
     void onCompileLog(const std::string& msg, int level);
     virtual void closeEvent(QCloseEvent *event);
     void processingThread_uiCallback(boost::function<void(void)> f, std::pair<void*, Loki::TypeInfo> source);
-	void process_log_message(boost::log::trivial::severity_level severity, std::string message);
+    void process_log_message(boost::log::trivial::severity_level severity, std::string message);
 private slots:
     void on_pushButton_clicked();
     void onTimeout();
     
-	void onSelectionChanged(QGraphicsProxyWidget* widget);
+    void onSelectionChanged(QGraphicsProxyWidget* widget);
     void log(QString message);
     void onOGLDisplay(std::string name, cv::cuda::GpuMat img);
     void onQtDisplay(std::string name, cv::Mat img);
@@ -103,7 +103,7 @@ signals:
 
 
 private:
-	void onNodeAdd(std::string name);
+    void onNodeAdd(std::string name);
     void onError(const std::string& error);
     void onStatus(const std::string& status);
     void processThread();
@@ -114,9 +114,9 @@ private:
     Ui::MainWindow *                                    ui;
     QTimer*                                             fileMonitorTimer;
     NodeListDialog*                                     nodeListDialog;
-	QGraphicsScene*                                     nodeGraph;
-	NodeView*	                                        nodeGraphView;
-	QGraphicsProxyWidget*                               currentSelectedNodeWidget;
+    QGraphicsScene*                                     nodeGraph;
+    NodeView*                                            nodeGraphView;
+    QGraphicsProxyWidget*                               currentSelectedNodeWidget;
     QGraphicsProxyWidget*                               currentSelectedStreamWidget;
     EagleLib::Nodes::Node::Ptr                          currentNode;
     EagleLib::IDataStream::Ptr                          current_stream;
@@ -129,7 +129,7 @@ private:
     RCCSettingsDialog*                                  rccSettings;
     std::map<std::string, cv::Vec2f>                    positionMap;
     PlotWizardDialog*                                   plotWizardDialog;
-	SettingDialog*                                      settingsDialog;
+    SettingDialog*                                      settingsDialog;
     QOpenGLContext*                                     processing_thread_context;
     QWindow*                                            processing_thread_upload_window;
     std::shared_ptr<Signals::connection>                new_parameter_connection;
@@ -140,16 +140,16 @@ private:
     std::string dir_load_path;
 
     QTimer* persistence_timer;
-	SIGNALS_BEGIN(MainWindow)
-		SIG_SEND(StartThreads);
-		SIG_SEND(StopThreads);
+    SIGNALS_BEGIN(MainWindow)
+        SIG_SEND(StartThreads);
+        SIG_SEND(StopThreads);
         SIG_SEND(PauseThreads);
         SIG_SEND(ResumeThreads);
-	SIGNALS_END
-	// All signals from the user get directed through this manager so that 
-	// they can all be attached to a serialization sink for recording user interaction
-	Signals::signal_manager								_ui_manager;
-	std::vector<std::shared_ptr<Signals::connection>>   _signal_connections;
+    SIGNALS_END
+    // All signals from the user get directed through this manager so that 
+    // they can all be attached to a serialization sink for recording user interaction
+    Signals::signal_manager                                _ui_manager;
+    std::vector<std::shared_ptr<Signals::connection>>   _signal_connections;
 };
 
 #endif // MAINWINDOW_H

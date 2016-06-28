@@ -58,49 +58,49 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
 
 namespace EagleLib
 {
-	class PLUGIN_EXPORTS gstreamer_base
-	{
-	protected:
-		// The gstreamer pipeline
-		GstElement*     _pipeline;
-		GstClockTime    _timestamp;
-		time_t          _prevTime;
-		time_t          _delta;
-		virtual void cleanup();
-		bool _caps_set;
+    class PLUGIN_EXPORTS gstreamer_base
+    {
+    protected:
+        // The gstreamer pipeline
+        GstElement*     _pipeline;
+        GstClockTime    _timestamp;
+        time_t          _prevTime;
+        time_t          _delta;
+        virtual void cleanup();
+        bool _caps_set;
 
-	public:
-		gstreamer_base();
-		virtual ~gstreamer_base();
-		virtual bool create_pipeline(const std::string& pipeline_);
-		virtual bool start_pipeline();
-		virtual bool stop_pipeline();
-		virtual bool pause_pipeline();
-		virtual GstState get_pipeline_state();
+    public:
+        gstreamer_base();
+        virtual ~gstreamer_base();
+        virtual bool create_pipeline(const std::string& pipeline_);
+        virtual bool start_pipeline();
+        virtual bool stop_pipeline();
+        virtual bool pause_pipeline();
+        virtual GstState get_pipeline_state();
 
 
-		static std::vector<std::string> get_interfaces();
-		static std::vector<std::string> get_gstreamer_features(const std::string& filter = "");
-		static bool check_feature(const std::string& feature_name);
-	};
-	// used to feed data into EagleEye from gstreamer, use when creating frame grabbers
-	class PLUGIN_EXPORTS gstreamer_src_base: public gstreamer_base
-	{
-	protected:
-		GstElement* _appsink;
-		guint           _new_sample_id;
-		guint           _new_preroll_id;
-	public:
-		virtual ~gstreamer_src_base();
-		virtual bool create_pipeline(const std::string& pipeline_);
-		// Called when data is ready to be pulled from the appsink
-		virtual GstFlowReturn on_pull() = 0;
-	};
+        static std::vector<std::string> get_interfaces();
+        static std::vector<std::string> get_gstreamer_features(const std::string& filter = "");
+        static bool check_feature(const std::string& feature_name);
+    };
+    // used to feed data into EagleEye from gstreamer, use when creating frame grabbers
+    class PLUGIN_EXPORTS gstreamer_src_base: public gstreamer_base
+    {
+    protected:
+        GstElement* _appsink;
+        guint           _new_sample_id;
+        guint           _new_preroll_id;
+    public:
+        virtual ~gstreamer_src_base();
+        virtual bool create_pipeline(const std::string& pipeline_);
+        // Called when data is ready to be pulled from the appsink
+        virtual GstFlowReturn on_pull() = 0;
+    };
 
 
     namespace Nodes
     {
-		// Used to feed a gstreamer pipeline from EagleEye
+        // Used to feed a gstreamer pipeline from EagleEye
         class PLUGIN_EXPORTS gstreamer_sink_base: public gstreamer_base, public Node
         {
         protected:
@@ -110,21 +110,21 @@ namespace EagleLib
             // id for the need data signal
             guint           _need_data_id;
             // id for the enough data signal
-		    guint           _enough_data_id;
+            guint           _enough_data_id;
 
-			bool _feed_enabled;
-			virtual void cleanup();
+            bool _feed_enabled;
+            virtual void cleanup();
         public:
 
             gstreamer_sink_base();
             virtual ~gstreamer_sink_base();
             
-			
-			virtual bool create_pipeline(const std::string& pipeline_);
-			virtual bool set_caps(cv::Size image_size, int channels, int depth = CV_8U);
+            
+            virtual bool create_pipeline(const std::string& pipeline_);
+            virtual bool set_caps(cv::Size image_size, int channels, int depth = CV_8U);
 
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
-			// Used for gstreamer to indicate that the appsrc needs to either feed data or stop feeding data
+            // Used for gstreamer to indicate that the appsrc needs to either feed data or stop feeding data
             virtual void start_feed();
             virtual void stop_feed();
         };
@@ -132,65 +132,65 @@ namespace EagleLib
 
         class PLUGIN_EXPORTS RTSP_server: public Node
         {
-		    GstClockTime timestamp;
-		    time_t prevTime;
-		    time_t delta;
+            GstClockTime timestamp;
+            time_t prevTime;
+            time_t delta;
         public:
-		    enum ServerType
-		    {
-			    TCP = 0,
-			    UDP = 1
-		    };
-		    bool feed_enabled;
-		    GstElement* source_OpenCV;
-		    GstElement* pipeline;
-		    GMainLoop* glib_MainLoop;
-		    cv::Size imgSize;
-		    boost::thread glibThread;
-		    ConstBuffer<cv::cuda::HostMem> bufferPool;
-		
-		    guint need_data_id;
-		    guint enough_data_id;
+            enum ServerType
+            {
+                TCP = 0,
+                UDP = 1
+            };
+            bool feed_enabled;
+            GstElement* source_OpenCV;
+            GstElement* pipeline;
+            GMainLoop* glib_MainLoop;
+            cv::Size imgSize;
+            boost::thread glibThread;
+            ConstBuffer<cv::cuda::HostMem> bufferPool;
+        
+            guint need_data_id;
+            guint enough_data_id;
 
-		    void gst_loop();
-		    void Serialize(ISimpleSerializer* pSerializer);
-		    void push_image();
-		    void onPipeChange();
+            void gst_loop();
+            void Serialize(ISimpleSerializer* pSerializer);
+            void push_image();
+            void onPipeChange();
             void setup(std::string pipeOverride = std::string());
             RTSP_server();
-		    ~RTSP_server();
+            ~RTSP_server();
             virtual void NodeInit(bool firstInit);
             virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
         };
 #ifdef HAVE_GST_RTSPSERVER
-	    class PLUGIN_EXPORTS RTSP_server_new : public Node
-	    {
-	    public:
-		    GstClockTime timestamp;
-		    time_t prevTime;
-		    time_t delta;
-		    GMainLoop *loop;
-		    GstRTSPServer *server;
-		    int clientCount;
-		    bool connected;
-		    bool first_run;
-		    guint server_id;
-		    GstRTSPMediaFactory *factory;
-		    GstElement *pipeline, *appsrc;
+        class PLUGIN_EXPORTS RTSP_server_new : public Node
+        {
+        public:
+            GstClockTime timestamp;
+            time_t prevTime;
+            time_t delta;
+            GMainLoop *loop;
+            GstRTSPServer *server;
+            int clientCount;
+            bool connected;
+            bool first_run;
+            guint server_id;
+            GstRTSPMediaFactory *factory;
+            GstElement *pipeline, *appsrc;
 
-		    boost::thread glib_thread;
-		    void glibThread();
-		    concurrent_notifier<cv::Mat> notifier;
-		    cv::cuda::HostMem* currentNewestFrame;
-		    RTSP_server_new();
-		    void push_image();
-		    void onPipeChange();
-		    void setup(std::string pipeOverride = std::string());
-		    ~RTSP_server_new();
-		    virtual void NodeInit(bool firstInit);
+            boost::thread glib_thread;
+            void glibThread();
+            concurrent_notifier<cv::Mat> notifier;
+            cv::cuda::HostMem* currentNewestFrame;
+            RTSP_server_new();
+            void push_image();
+            void onPipeChange();
+            void setup(std::string pipeOverride = std::string());
+            ~RTSP_server_new();
+            virtual void NodeInit(bool firstInit);
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
-		    cv::Size imgSize;
-	    };
+            cv::Size imgSize;
+        };
 #endif
     }
 }

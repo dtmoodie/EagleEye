@@ -8,7 +8,7 @@
 #include <EagleLib/rcc/shared_ptr.hpp>
 class NodeView : public QGraphicsView
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
 
     NodeView(QWidget* parent = 0);
@@ -18,8 +18,8 @@ public:
     void addWidget(QGraphicsProxyWidget* widget, EagleLib::IDataStream* stream_);
     QGraphicsProxyWidget* getWidget(ObjectId id);
     QGraphicsProxyWidget* getWidget(EagleLib::IDataStream* stream_);
-	
-	void removeWidget(ObjectId id);
+    
+    void removeWidget(ObjectId id);
     void mousePressEvent(QMouseEvent* event);
     void mouseMoveEvent(QMouseEvent* event);
     void mouseReleaseEvent(QMouseEvent* event);
@@ -29,7 +29,7 @@ public:
     QGraphicsProxyWidget* getStream(EagleLib::IDataStream* stream_id);
 
 signals:
-	void selectionChanged(QGraphicsProxyWidget* widget);
+    void selectionChanged(QGraphicsProxyWidget* widget);
     void stopThread();
     void startThread();
     void widgetDeleted(QNodeWidget*);
@@ -44,9 +44,9 @@ private slots:
     bool eventFilter(QObject *object, QEvent *event);
 private:
     Parameters::Parameter* currentParam;
-	QGraphicsProxyWidget* currentWidget;
-	QPoint mousePressPosition;
-	std::map<ObjectId, QGraphicsProxyWidget*> widgetMap;
+    QGraphicsProxyWidget* currentWidget;
+    QPoint mousePressPosition;
+    std::map<ObjectId, QGraphicsProxyWidget*> widgetMap;
     std::map<EagleLib::IDataStream*, QGraphicsProxyWidget*> dataStreamWidget;
     bool resize = false;
     int resizeGrabSize;

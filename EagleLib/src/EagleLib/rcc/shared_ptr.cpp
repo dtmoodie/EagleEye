@@ -157,7 +157,7 @@ void weak_ptr<IObject>::notify_swap()
 }
 void rcc::weak_ptr<IObject>::notify_delete()
 {
-	m_object = nullptr;
+    m_object = nullptr;
 }
 IObject* weak_ptr<IObject>::operator->()
 {

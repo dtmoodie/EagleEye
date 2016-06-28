@@ -24,7 +24,7 @@ NodeView::NodeView(QGraphicsScene *scene, QWidget *parent):
     connect(actions[0], SIGNAL(triggered()), this, SLOT(on_deleteNode()));
     connect(actions[1], SIGNAL(triggered()), this, SLOT(on_displayImage()));
     connect(actions[2], SIGNAL(triggered()), this, SLOT(on_plotData()));
-	currentParam = nullptr;
+    currentParam = nullptr;
 
 }
 void NodeView::addWidget(QGraphicsProxyWidget * widget, ObjectId id)
@@ -46,7 +46,7 @@ QGraphicsProxyWidget* NodeView::getWidget(ObjectId id)
 }
 void NodeView::removeWidget(ObjectId id)
 {
-	widgetMap.erase(id);
+    widgetMap.erase(id);
 }
 QGraphicsProxyWidget* NodeView::getWidget(EagleLib::IDataStream* id)
 {
@@ -57,38 +57,38 @@ QGraphicsProxyWidget* NodeView::getWidget(EagleLib::IDataStream* id)
 }
 void NodeView::on_parameter_clicked(Parameters::Parameter* param, QPoint pos)
 {
-	// Spawn the right click dialog
-	if (param != nullptr)
-	{
-		if (param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat*)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat&)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat*)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat&)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<int>)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<float>)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<double>)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2b>)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2f>)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2d>)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3b>)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3f>)) ||
-			param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3d>)))
-		{
-			actions[1]->setEnabled(true);
-			actions[2]->setEnabled(true);
-			actions[1]->setText("Display as image (" + QString::fromStdString(param->GetName()) + ")");
-			actions[2]->setText("Plot (" + QString::fromStdString(param->GetName()) + ")");
-			currentParam = param;
-		}
-	}
-	else
-	{
-		actions[1]->setEnabled(false);
-		actions[2]->setEnabled(false);
-	}
-	//rightClickMenu->popup(mapToGlobal(pos));
+    // Spawn the right click dialog
+    if (param != nullptr)
+    {
+        if (param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat*)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat&)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat*)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat&)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<int>)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<float>)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<double>)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2b>)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2f>)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2d>)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3b>)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3f>)) ||
+            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3d>)))
+        {
+            actions[1]->setEnabled(true);
+            actions[2]->setEnabled(true);
+            actions[1]->setText("Display as image (" + QString::fromStdString(param->GetName()) + ")");
+            actions[2]->setText("Plot (" + QString::fromStdString(param->GetName()) + ")");
+            currentParam = param;
+        }
+    }
+    else
+    {
+        actions[1]->setEnabled(false);
+        actions[2]->setEnabled(false);
+    }
+    //rightClickMenu->popup(mapToGlobal(pos));
 }
 
 void NodeView::on_deleteNode()
@@ -123,12 +123,12 @@ void NodeView::on_deleteNode()
         auto stream = streamWidget->GetStream();
         stream->StartThread();
         emit widgetDeleted(streamWidget);
-		dataStreamWidget.erase(stream.get());
+        dataStreamWidget.erase(stream.get());
     }
     scene()->removeItem(currentWidget);
     delete currentWidget;
     currentWidget = nullptr;
-	
+    
     return;
 }
 void NodeView::on_displayImage()
@@ -164,9 +164,9 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                 QDrag* drag = new QDrag(this);
                 QMimeData* mimeData = new QMimeData();
                 QList<QUrl> urls;
-				urls << QUrl::fromLocalFile(QString::fromStdString(fileName));
+                urls << QUrl::fromLocalFile(QString::fromStdString(fileName));
                 mimeData->setUrls(urls);
-				mimeData->setData("application/x-qt-windows-mime;value=\"FileName\"",QByteArray(fileName.c_str()));
+                mimeData->setData("application/x-qt-windows-mime;value=\"FileName\"",QByteArray(fileName.c_str()));
 
                 drag->setMimeData(mimeData);
                 drag->exec();
@@ -207,10 +207,10 @@ void NodeView::mousePressEvent(QMouseEvent* event)
             {
                 if(event->button() == Qt::RightButton)
                 {
-					actions[1]->setEnabled(false);
-					actions[2]->setEnabled(false);	
-					auto pos = event->pos();
-					rightClickMenu->popup(mapToGlobal(pos));
+                    actions[1]->setEnabled(false);
+                    actions[2]->setEnabled(false);    
+                    auto pos = event->pos();
+                    rightClickMenu->popup(mapToGlobal(pos));
                     QGraphicsView::mousePressEvent(event);
 
                 }

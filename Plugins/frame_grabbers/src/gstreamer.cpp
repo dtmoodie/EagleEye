@@ -40,10 +40,10 @@ frame_grabber_gstreamer::frame_grabber_gstreamer():
 {
     if (!gst_is_initialized())
     {
-	    char** argv;
-	    argv = new char*{ "-vvv" };
-	    int argc = 1;
-	    gst_init(&argc, &argv);
+        char** argv;
+        argv = new char*{ "-vvv" };
+        int argc = 1;
+        gst_init(&argc, &argv);
     }
 }
 

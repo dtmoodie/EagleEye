@@ -68,17 +68,17 @@
 #ifdef _MSC_VER
 
 #define NODE_LOG(severity)                                                                                                                              \
-    /*BOOST_LOG_SCOPED_THREAD_ATTR("NodeName", boost::log::attributes::mutable_constant<std::string>(fullTreeName));*/			                            \
-    /*BOOST_LOG_SCOPED_THREAD_ATTR("Node", boost::log::attributes::mutable_constant<const Node*>(this));*/													\
-	LOG(severity)
+    /*BOOST_LOG_SCOPED_THREAD_ATTR("NodeName", boost::log::attributes::mutable_constant<std::string>(fullTreeName));*/                                        \
+    /*BOOST_LOG_SCOPED_THREAD_ATTR("Node", boost::log::attributes::mutable_constant<const Node*>(this));*/                                                    \
+    LOG(severity)
 
 #else
-#define NODE_LOG(severity) 	LOG(severity)
+#define NODE_LOG(severity)     LOG(severity)
 #endif
 
 namespace Parameters
 {
-	class IVariableManager;
+    class IVariableManager;
 }
 
 namespace EagleLib
@@ -89,14 +89,14 @@ namespace EagleLib
         class NodeImpl;
     }
     class NodeManager;
-	class IDataStream;
+    class IDataStream;
 }
 
 
 #define NODE_DEFAULT_CONSTRUCTOR_IMPL(NodeName, ...) \
 NodeName::NodeName()                            \
 {                                               \
-}												\
+}                                                \
 static NodeInfo g_registerer_##NodeName(#NodeName, {STRINGIFY(__VA_ARGS__) });\
 REGISTERCLASS(NodeName, &g_registerer_##NodeName)
 
@@ -110,11 +110,11 @@ namespace EagleLib
     {
     
     
-	struct EAGLE_EXPORTS NodeInfoRegisterer
-	{
-		NodeInfoRegisterer(const char* nodeName, const char** nodeInfo);
-		NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo);
-	};
+    struct EAGLE_EXPORTS NodeInfoRegisterer
+    {
+        NodeInfoRegisterer(const char* nodeName, const char** nodeInfo);
+        NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo);
+    };
 
     struct EAGLE_EXPORTS NodeInfo: public IObjectInfo
     {
@@ -123,17 +123,17 @@ namespace EagleLib
         virtual std::string GetObjectName();
         virtual std::string GetObjectTooltip();
         virtual std::string GetObjectHelp();
-		// Get the organizational hierarchy of this node, ie Image -> Processing -> ConvertToGrey
+        // Get the organizational hierarchy of this node, ie Image -> Processing -> ConvertToGrey
         virtual std::vector<const char*> GetNodeHierarchy();
-		
-		// List of nodes that need to be in the direct parental tree of this node, in required order
-		virtual std::vector<std::vector<std::string>> GetParentalDependencies() const;
-		
-		// List of nodes that must exist in this data stream, but do not need to be in the direct parental tree of this node
-		virtual std::vector<std::vector<std::string>> GetNonParentalDependencies() const;
+        
+        // List of nodes that need to be in the direct parental tree of this node, in required order
+        virtual std::vector<std::vector<std::string>> GetParentalDependencies() const;
+        
+        // List of nodes that must exist in this data stream, but do not need to be in the direct parental tree of this node
+        virtual std::vector<std::vector<std::string>> GetNonParentalDependencies() const;
 
-		// Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
-		virtual std::vector<std::string> CheckDependentVariables(Parameters::IVariableManager* var_manager_) const;
+        // Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
+        virtual std::vector<std::string> CheckDependentVariables(Parameters::IVariableManager* var_manager_) const;
 
         std::string node_name;
         std::string node_tooltip;
@@ -148,9 +148,9 @@ namespace EagleLib
     {
     public:
         typedef rcc::shared_ptr<Node> Ptr;
-		
-		Node();
-		virtual ~Node();
+        
+        Node();
+        virtual ~Node();
         /**
          * @brief process Gets called by processing threads and parent nodes.  Process should be left alone because
          * @brief it is where all of the exception handling occurs
@@ -159,7 +159,7 @@ namespace EagleLib
          * @return output image
          */
         virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img, cv::cuda::Stream& steam = cv::cuda::Stream::Null());
-		virtual TS<SyncedMemory>		process(TS<SyncedMemory>& input, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        virtual TS<SyncedMemory>        process(TS<SyncedMemory>& input, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         virtual bool pre_check(const TS<SyncedMemory>& input);
         /**
          * @brief doProcess this is the most used node and where the bulk of the work is performed.
@@ -167,129 +167,129 @@ namespace EagleLib
          * @param stream input stream
          * @return output image
          */
-        virtual cv::cuda::GpuMat		doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-		virtual TS<SyncedMemory>		doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
-		virtual void					reset();
+        virtual cv::cuda::GpuMat        doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        virtual TS<SyncedMemory>        doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
+        virtual void                    reset();
 
         virtual Parameters::Parameter* addParameter(Parameters::Parameter::Ptr param);
-		template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream = nullptr)
-		{
-			return ParameteredIObject::updateParameterPtr(name, data, GetTimestamp(), stream);
-		}
+        template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream = nullptr)
+        {
+            return ParameteredIObject::updateParameterPtr(name, data, GetTimestamp(), stream);
+        }
 
-		template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, long long timestamp, cv::cuda::Stream* stream = nullptr)
-		{
-			return ParameteredIObject::updateParameterPtr(name, data, timestamp, stream);
-		}
-		
-		template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, cv::cuda::Stream* stream = nullptr)
-		{
-			return ParameteredIObject::updateParameter(name, data, GetTimestamp(), stream);
-		}
-		template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, long long timestamp, cv::cuda::Stream* stream = nullptr)
-		{
-			return ParameteredIObject::updateParameter(name, data, timestamp, stream);
-		}
-		
-		template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, cv::cuda::Stream* stream = nullptr)
-		{
-			return ParameteredIObject::updateParameter(idx, data, GetTimestamp(), stream);
-		}
-		template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, long long timestamp, cv::cuda::Stream* stream = nullptr)
-		{
-			return ParameteredIObject::updateParameter(idx, data, timestamp, stream);
-		}
+        template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, long long timestamp, cv::cuda::Stream* stream = nullptr)
+        {
+            return ParameteredIObject::updateParameterPtr(name, data, timestamp, stream);
+        }
+        
+        template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, cv::cuda::Stream* stream = nullptr)
+        {
+            return ParameteredIObject::updateParameter(name, data, GetTimestamp(), stream);
+        }
+        template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, long long timestamp, cv::cuda::Stream* stream = nullptr)
+        {
+            return ParameteredIObject::updateParameter(name, data, timestamp, stream);
+        }
+        
+        template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, cv::cuda::Stream* stream = nullptr)
+        {
+            return ParameteredIObject::updateParameter(idx, data, GetTimestamp(), stream);
+        }
+        template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, long long timestamp, cv::cuda::Stream* stream = nullptr)
+        {
+            return ParameteredIObject::updateParameter(idx, data, timestamp, stream);
+        }
         /**
          * @brief getName depricated?  Idea was to recursively go through parent nodes and rebuild my tree name, useful I guess once
          * @brief node swapping and moving is implemented
          * @return
          */
-		std::string						getName() const;
-		std::string						getTreeName();
+        std::string                        getName() const;
+        std::string                        getTreeName();
         std::string                     getFullTreeName();
         Node *getParent();
         /**
          * @brief getInputs [DEPRICATED]
          */
-		virtual void					getInputs();
+        virtual void                    getInputs();
         /**
          * @brief log internally used to log node status, warnings, and errors
          * @param level
          * @param msg
          */
-		//virtual void                    log(boost::log::trivial::severity_level level, const std::string& msg);
+        //virtual void                    log(boost::log::trivial::severity_level level, const std::string& msg);
 
         virtual void updateParent();
 
 
 
-		// ****************************************************************************************************************
-		//
-		//									Display functions
-		//
-		// ****************************************************************************************************************
-		// Register a function for displaying CPU images
+        // ****************************************************************************************************************
+        //
+        //                                    Display functions
+        //
+        // ****************************************************************************************************************
+        // Register a function for displaying CPU images
          virtual void registerDisplayCallback(boost::function<void(cv::Mat, Node*)>& f);
-		// Register a function for displaying GPU images
+        // Register a function for displaying GPU images
          virtual void registerDisplayCallback(boost::function<void(cv::cuda::GpuMat, Node*)>& f);
-		// Spawn an external display just for this node, with name = treeName
-		 virtual void spawnDisplay();
-		// Kill any spawned external displays
-		 virtual void killDisplay();
+        // Spawn an external display just for this node, with name = treeName
+         virtual void spawnDisplay();
+        // Kill any spawned external displays
+         virtual void killDisplay();
 
-		// ****************************************************************************************************************
-		//
-        //									Child adding and deleting
-		//
-		// ****************************************************************************************************************
+        // ****************************************************************************************************************
+        //
+        //                                    Child adding and deleting
+        //
+        // ****************************************************************************************************************
         virtual Node::Ptr               addChild(Node* child);
         virtual Node::Ptr               addChild(Node::Ptr child);
         virtual Node::Ptr               getChild(const std::string& treeName);
         virtual Node::Ptr               getChild(const int& index);
-        virtual Node*					getChildRecursive(std::string treeName_);
-        virtual void					removeChild(const std::string& name);
-        virtual void					removeChild(Node::Ptr node);
-        virtual void					removeChild(int idx);
+        virtual Node*                    getChildRecursive(std::string treeName_);
+        virtual void                    removeChild(const std::string& name);
+        virtual void                    removeChild(Node::Ptr node);
+        virtual void                    removeChild(int idx);
         virtual void                    swapChildren(int idx1, int idx2);
         virtual void                    swapChildren(const std::string& name1, const std::string& name2);
         virtual void                    swapChildren(Node::Ptr child1, Node::Ptr child2);
-        virtual std::vector<Node*>		getNodesInScope();
-        virtual Node *					getNodeInScope(const std::string& name);
-        virtual void					getNodesInScope(std::vector<Node*>& nodes);
-		virtual void					SetDataStream(IDataStream* stream);
-		virtual IDataStream*            GetDataStream();
-		
-		// ****************************************************************************************************************
-		//
-		//									Name and accessing functions
-		//
-		// ****************************************************************************************************************
+        virtual std::vector<Node*>        getNodesInScope();
+        virtual Node *                    getNodeInScope(const std::string& name);
+        virtual void                    getNodesInScope(std::vector<Node*>& nodes);
+        virtual void                    SetDataStream(IDataStream* stream);
+        virtual IDataStream*            GetDataStream();
+        
+        // ****************************************************************************************************************
+        //
+        //                                    Name and accessing functions
+        //
+        // ****************************************************************************************************************
         /**
          * @brief setTreeName
          * @param name
          */
-		virtual void setTreeName(const std::string& name);
+        virtual void setTreeName(const std::string& name);
         /**
          * @brief setFullTreeName
          * @param name
          */
-		virtual void setFullTreeName(const std::string& name);
+        virtual void setFullTreeName(const std::string& name);
         /**
          * @brief setParent
          * @param parent
          */
         virtual void setParent(Node *parent);
-		
+        
 
 
         //******************************************************************************************************************
-		//
-		//									Parameter updating, getting and searching
-		//
+        //
+        //                                    Parameter updating, getting and searching
+        //
         
-		virtual std::vector<std::string> listInputs();
+        virtual std::vector<std::string> listInputs();
 
-		virtual std::vector<std::string> listParameters();
+        virtual std::vector<std::string> listParameters();
 
         
         void RegisterSignalConnection(std::shared_ptr<Signals::connection> connection);
@@ -298,7 +298,7 @@ namespace EagleLib
         
         // ****************************************************************************************************************
         //
-        //									Dynamic reloading and persistence
+        //                                    Dynamic reloading and persistence
         //
         // ****************************************************************************************************************
 
@@ -312,7 +312,7 @@ namespace EagleLib
         virtual Node *swap(Node *other);
 
         virtual void Init(bool firstInit = true);
-		virtual void NodeInit(bool firstInit = true);
+        virtual void NodeInit(bool firstInit = true);
         /**
          * @brief Init [DEPRICATED], would be used to load the configuration of this node froma  file
          * @param configFile
@@ -345,56 +345,56 @@ namespace EagleLib
          */
         virtual bool SkipEmpty() const;
 
-		long long GetTimestamp() const;
+        long long GetTimestamp() const;
 
-		std::vector<std::pair<time_t, int>> GetProfileTimings() const;
+        std::vector<std::pair<time_t, int>> GetProfileTimings() const;
 
         // ****************************************************************************************************************
         //
-        //									Members
+        //                                    Members
         //
         // ****************************************************************************************************************
         // Vector of child nodes
         std::vector<Node::Ptr>                                              children;
 
-		// Constant name that describes the node ie: Sobel
-        //std::string															nodeName;
-		
+        // Constant name that describes the node ie: Sobel
+        //std::string                                                            nodeName;
+        
         // Vector of parameters for this node
-        //std::vector< Parameters::Parameter::Ptr >							parameters;
+        //std::vector< Parameters::Parameter::Ptr >                            parameters;
 
-		/* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
-		bool																externalDisplay;
+        /* True if spawnDisplay has been called, in which case results should be drawn and displayed on a window with the name treeName */
+        bool                                                                externalDisplay;
         // Toggling this disables a node's doProcess code from ever being called
         bool                                                                enabled;
 
         bool                                                                profile;
 
         
-		
+        
         void onParameterAdded();
         double GetProcessingTime() const;
         void Clock(int line_num);
-		
-	protected:
-		IDataStream*     								                        _dataStream;
-		long long																_current_timestamp;
-        std::shared_ptr<Parameters::IVariableManager>						    _variable_manager;
+        
+    protected:
+        IDataStream*                                                             _dataStream;
+        long long                                                                _current_timestamp;
+        std::shared_ptr<Parameters::IVariableManager>                            _variable_manager;
 
         rcc::weak_ptr<Node>                                                     parent;
         // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
-        std::string															    fullTreeName;
+        std::string                                                                fullTreeName;
         // Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
-        std::string															    treeName;
-	private:
+        std::string                                                                treeName;
+    private:
         friend class EagleLib::NodeManager;
 
         void ClearProcessingTime();
         void EndProcessingTime();
         
         std::shared_ptr<NodeImpl>                                               pImpl_;
-		unsigned int                                                            rmt_hash;
-		unsigned int                                                            rmt_cuda_hash;
+        unsigned int                                                            rmt_hash;
+        unsigned int                                                            rmt_cuda_hash;
     };
     } // namespace Nodes
 } // namespace EagleLib

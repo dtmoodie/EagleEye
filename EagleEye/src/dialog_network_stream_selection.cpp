@@ -27,9 +27,9 @@ dialog_network_stream_selection::~dialog_network_stream_selection()
 void dialog_network_stream_selection::accept()
 {
     url = ui->txt_url_entry->toPlainText();
-	preferred_loader = ui->txt_frame_grabber_overload->toPlainText();
+    preferred_loader = ui->txt_frame_grabber_overload->toPlainText();
     url_history.insert(std::make_pair(url.toStdString(), preferred_loader.toStdString()));
-	ui->list_url_history->addItem(new QListWidgetItem(url));
+    ui->list_url_history->addItem(new QListWidgetItem(url));
     refresh_history();
     this->close();
 }

@@ -39,11 +39,11 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
 #define CATCH_MACRO                                                         \
-	catch(Signals::ExceptionWithCallStack<cv::Exception>& e)				\
-{																			\
-	NODE_LOG(error) << e.what() << "\n" << e.CallStack();					\
-}																			\
-catch (boost::thread_resource_error& err)									\
+    catch(Signals::ExceptionWithCallStack<cv::Exception>& e)                \
+{                                                                            \
+    NODE_LOG(error) << e.what() << "\n" << e.CallStack();                    \
+}                                                                            \
+catch (boost::thread_resource_error& err)                                    \
 {                                                                           \
     NODE_LOG(error) << err.what();                                          \
 }                                                                           \
@@ -68,7 +68,7 @@ catch (boost::thread_exception& err)                                        \
 }                                                                           \
 catch (std::exception &err)                                                 \
 {                                                                           \
-    NODE_LOG(error) << err.what();										    \
+    NODE_LOG(error) << err.what();                                            \
 }                                                                           \
 catch (...)                                                                 \
 {                                                                           \
@@ -108,19 +108,19 @@ std::vector<const char*> Nodes::NodeInfo::GetNodeHierarchy()
 
 std::vector<std::vector<std::string>> Nodes::NodeInfo::GetParentalDependencies() const
 {
-	return std::vector<std::vector<std::string>>();
+    return std::vector<std::vector<std::string>>();
 }
 
 
 std::vector<std::vector<std::string>> Nodes::NodeInfo::GetNonParentalDependencies() const
 {
-	return std::vector<std::vector<std::string>>();
+    return std::vector<std::vector<std::string>>();
 }
 
 
 std::vector<std::string> Nodes::NodeInfo::CheckDependentVariables(Parameters::IVariableManager* var_manager_) const
 {
-	return std::vector<std::string>();
+    return std::vector<std::string>();
 }
 
 namespace EagleLib
@@ -141,38 +141,38 @@ namespace EagleLib
                     for (auto itr2 : itr.second)
                     {
                         //itr2.disconnect();
-						itr2.reset();
+                        itr2.reset();
                     }
                 }
             }
 
             boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
             std::vector<std::pair<time_t, int>>                                                     timings;
-            std::shared_ptr<Signals::connection>											        resetConnection;
-            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<Signals::connection>>> 	callbackConnections;
-            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<Signals::connection>>>	    callbackConnections2;
+            std::shared_ptr<Signals::connection>                                                    resetConnection;
+            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<Signals::connection>>>     callbackConnections;
+            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<Signals::connection>>>        callbackConnections2;
             Signals::typed_signal_base<void(Nodes::Node*)>*                                                    update_signal;
-			Signals::typed_signal_base<void(Nodes::Node*)>*                                                    g_update_signal;
+            Signals::typed_signal_base<void(Nodes::Node*)>*                                                    g_update_signal;
             boost::recursive_mutex                                                                  mtx;
         };
     }    
 }
 Nodes::NodeInfoRegisterer::NodeInfoRegisterer(const char* name, const char** hierarchy)
 {
-	
+    
 }
 Nodes::NodeInfoRegisterer::NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo)
 {
-	std::vector<char const*> nodeInfoHierarchy(nodeInfo.begin(), nodeInfo.end());
-	EagleLib::NodeManager::getInstance().RegisterNodeInfo(nodeName, nodeInfoHierarchy);
+    std::vector<char const*> nodeInfoHierarchy(nodeInfo.begin(), nodeInfo.end());
+    EagleLib::NodeManager::getInstance().RegisterNodeInfo(nodeName, nodeInfoHierarchy);
 }
 
 Node::Node():
     pImpl_(new NodeImpl())
 {
-	profile = false;
+    profile = false;
     enabled = true;
-	externalDisplay = false;
+    externalDisplay = false;
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {
@@ -181,8 +181,8 @@ Node::Node():
         boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
         pImpl_->resetConnection = signal->connect(boost::bind(&Node::reset, this));
     }
-	rmt_hash = 0;
-	NODE_LOG(trace) << " Constructor";
+    rmt_hash = 0;
+    NODE_LOG(trace) << " Constructor";
     _dataStream = nullptr;
 }
 
@@ -209,15 +209,15 @@ Parameters::Parameter* Node::addParameter(Parameters::Parameter::Ptr param)
 Node::~Node()
 {
     boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-	auto& connections = pImpl_->callbackConnections[this];
-	for (auto itr : connections)
-	{
-		itr.reset();
-	}
+    auto& connections = pImpl_->callbackConnections[this];
+    for (auto itr : connections)
+    {
+        itr.reset();
+    }
     auto itr = pImpl_->callbackConnections2.find(this);
     if(itr != pImpl_->callbackConnections2.end())
         pImpl_->callbackConnections2.erase(itr);
-	NODE_LOG(trace) << "Disconnected " <<connections.size() << " boost signals";
+    NODE_LOG(trace) << "Disconnected " <<connections.size() << " boost signals";
 }
 
 void Node::ClearProcessingTime()
@@ -230,17 +230,17 @@ void Node::EndProcessingTime()
 {
     TIME;
     boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-	double total = pImpl_->timings[pImpl_->timings.size() - 1].first - pImpl_->timings[0].first;
-	if (profile)
-	{
-		std::stringstream ss;
-		for (int i = 1; i < pImpl_->timings.size(); ++i)
-		{
-			ss << pImpl_->timings[i - 1].second << "," << pImpl_->timings[i].second << "(" << pImpl_->timings[i].first - pImpl_->timings[i - 1].first << ")";
-		}
-		ss << " Total: " << total;
-		NODE_LOG(trace) << ss.str();
-	}
+    double total = pImpl_->timings[pImpl_->timings.size() - 1].first - pImpl_->timings[0].first;
+    if (profile)
+    {
+        std::stringstream ss;
+        for (int i = 1; i < pImpl_->timings.size(); ++i)
+        {
+            ss << pImpl_->timings[i - 1].second << "," << pImpl_->timings[i].second << "(" << pImpl_->timings[i].first - pImpl_->timings[i - 1].first << ")";
+        }
+        ss << " Total: " << total;
+        NODE_LOG(trace) << ss.str();
+    }
     pImpl_->averageFrameTime(total);
 }
 
@@ -256,13 +256,13 @@ double Node::GetProcessingTime() const
 }
 std::vector<std::pair<time_t, int>> Node::GetProfileTimings() const
 {
-	boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-	return pImpl_->timings;
+    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
+    return pImpl_->timings;
 }
 void Node::reset()
 {
-	
-	Init(false);
+    
+    Init(false);
 }
 
 void Node::updateParent()
@@ -272,7 +272,7 @@ void Node::updateParent()
 void
 Node::getInputs()
 {
-	
+    
 }
 Node::Ptr
 Node::addChild(Node* child)
@@ -282,7 +282,7 @@ Node::addChild(Node* child)
 Node::Ptr
 Node::addChild(Node::Ptr child)
 {
-	
+    
     if (child == nullptr)
         return child;
     if(std::find(children.begin(), children.end(), child) != children.end())
@@ -293,14 +293,14 @@ Node::addChild(Node::Ptr child)
         if(children[i]->getName() == child->getName())
             ++count;
     }
-	
-	child->SetDataStream(GetDataStream());
+    
+    child->SetDataStream(GetDataStream());
     child->setParent(this);
     std::string node_name = child->GetTypeName();
     child->setTreeName(node_name + "-" + boost::lexical_cast<std::string>(count));
     child->Init(true);
     children.push_back(child);
-	LOG(trace) << "[ " << fullTreeName << " ]" << " Adding child " << child->treeName;
+    LOG(trace) << "[ " << fullTreeName << " ]" << " Adding child " << child->treeName;
     return child;
 }
 
@@ -312,11 +312,11 @@ Node::getChild(const std::string& treeName)
         if(children[i]->treeName == treeName)
             return children[i];
     }
-	for(size_t i = 0; i < children.size(); ++i)
-	{
-		if(children[i]->getName() == treeName)
-			return children[i];
-	}
+    for(size_t i = 0; i < children.size(); ++i)
+    {
+        if(children[i]->getName() == treeName)
+            return children[i];
+    }
     return Node::Ptr();
 }
 
@@ -324,20 +324,20 @@ Node::getChild(const std::string& treeName)
 Node::Ptr
 Node::getChild(const int& index)
 {
-	
+    
     return children[index];
 }
 void
 Node::swapChildren(int idx1, int idx2)
 {
-	
+    
     std::iter_swap(children.begin() + idx1, children.begin() + idx2);
 }
 
 void
 Node::swapChildren(const std::string& name1, const std::string& name2)
 {
-	
+    
     auto itr1 = children.begin();
     auto itr2 = children.begin();
     for(; itr1 != children.begin(); ++itr1)
@@ -356,7 +356,7 @@ Node::swapChildren(const std::string& name1, const std::string& name2)
 void
 Node::swapChildren(Node::Ptr child1, Node::Ptr child2)
 {
-	
+    
     auto itr1 = std::find(children.begin(),children.end(), child1);
     if(itr1 == children.end())
         return;
@@ -367,7 +367,7 @@ Node::swapChildren(Node::Ptr child1, Node::Ptr child2)
 }
 std::vector<Node*> Node::getNodesInScope()
 {
-	
+    
     std::vector<Node*> nodes;
     if(parent)
         parent->getNodesInScope(nodes);
@@ -376,7 +376,7 @@ std::vector<Node*> Node::getNodesInScope()
 Node*
 Node::getNodeInScope(const std::string& name)
 {
-	
+    
     // Check if this is a child node of mine, if not go up
     int ret = name.compare(0, fullTreeName.length(), fullTreeName);
     if(ret == 0)
@@ -397,8 +397,8 @@ Node::getNodeInScope(const std::string& name)
 void
 Node::getNodesInScope(std::vector<Node*> &nodes)
 {
-	// Perhaps not thread safe?
-	
+    // Perhaps not thread safe?
+    
     // First travel to the root node
 
     if(nodes.size() == 0)
@@ -422,29 +422,29 @@ Node::getNodesInScope(std::vector<Node*> &nodes)
 
 std::vector<std::string> Node::listParameters()
 {
-	
-	std::vector<std::string> paramList;
+    
+    std::vector<std::string> paramList;
     for (size_t i = 0; i < _parameters.size(); ++i)
-	{
-		paramList.push_back(_parameters[i]->GetName());
-	}
-	return paramList;
+    {
+        paramList.push_back(_parameters[i]->GetName());
+    }
+    return paramList;
 }
 std::vector<std::string> Node::listInputs()
 {
-	
-	std::vector<std::string> paramList;
+    
+    std::vector<std::string> paramList;
     for (size_t i = 0; i < _parameters.size(); ++i)
-	{
-		if (_parameters[i]->type & Parameters::Parameter::Input)
-			paramList.push_back(_parameters[i]->GetName());
-	}
-	return paramList;
+    {
+        if (_parameters[i]->type & Parameters::Parameter::Input)
+            paramList.push_back(_parameters[i]->GetName());
+    }
+    return paramList;
 }
 Node*
 Node::getChildRecursive(std::string treeName_)
 {
-	
+    
 
     // TODO tree structure parsing and correct directing of the search
     // Find the common base between this node and treeName
@@ -456,7 +456,7 @@ Node::getChildRecursive(std::string treeName_)
 void
 Node::removeChild(Node::Ptr node)
 {
-	
+    
     for(auto itr = children.begin(); itr != children.end(); ++itr)
     {
         if(*itr == node)
@@ -469,14 +469,14 @@ Node::removeChild(Node::Ptr node)
 void
 Node::removeChild(int idx)
 {
-	
+    
     children.erase(children.begin() + idx);
 }
 
 void
 Node::removeChild(const std::string &name)
 {
-	
+    
     for(auto itr = children.begin(); itr != children.end(); ++itr)
     {
         if((*itr)->treeName == name)
@@ -497,98 +497,98 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     
     if(img.empty() && SkipEmpty())
     {
-		NODE_LOG(trace) << " Skipped due to empty input";
+        NODE_LOG(trace) << " Skipped due to empty input";
     }else
     {
-		try
-		{
-			// Used for debugging which nodes have started, thus if a segfault occurs you can know which node caused it
-			NODE_LOG(trace) << " process enabled: " << enabled;
-			if (enabled)
-			{
-				ClearProcessingTime();
-				std::lock_guard<std::recursive_mutex> lock(mtx);
+        try
+        {
+            // Used for debugging which nodes have started, thus if a segfault occurs you can know which node caused it
+            NODE_LOG(trace) << " process enabled: " << enabled;
+            if (enabled)
+            {
+                ClearProcessingTime();
+                std::lock_guard<std::recursive_mutex> lock(mtx);
                 auto allocator = dynamic_cast<PitchedAllocator*>(cv::cuda::GpuMat::defaultAllocator());
                 if(allocator)
                 {
                     allocator->SetScope(this->getTreeName());
                 }
 
-				// Do I lock each parameters mutex or do I just lock each node?
-				// I should only lock each node, but then I need to make sure the UI keeps track of the node
-				// to access the node's mutex while accessing a parameter, for now this works though.
-			    /*std::vector<boost::recursive_mutex::scoped_lock> locks;
-				for (size_t i = 0; i < _parameters.size(); ++i)
-				{
-					locks.push_back(boost::recursive_mutex::scoped_lock(_parameters[i]->mtx));
-				}*/
-				TIME
-				_rmt_BeginCPUSample(fullTreeName.c_str(), &rmt_hash);
-				_rmt_BeginCUDASample(fullTreeName.c_str(), &rmt_cuda_hash, cv::cuda::StreamAccessor::getStream(stream));
-				PROFILE_OBJ(fullTreeName.c_str());
-				img = doProcess(img, stream);
-				rmt_EndCPUSample();
-				rmt_EndCUDASample(cv::cuda::StreamAccessor::getStream(stream));
+                // Do I lock each parameters mutex or do I just lock each node?
+                // I should only lock each node, but then I need to make sure the UI keeps track of the node
+                // to access the node's mutex while accessing a parameter, for now this works though.
+                /*std::vector<boost::recursive_mutex::scoped_lock> locks;
+                for (size_t i = 0; i < _parameters.size(); ++i)
+                {
+                    locks.push_back(boost::recursive_mutex::scoped_lock(_parameters[i]->mtx));
+                }*/
+                TIME
+                _rmt_BeginCPUSample(fullTreeName.c_str(), &rmt_hash);
+                _rmt_BeginCUDASample(fullTreeName.c_str(), &rmt_cuda_hash, cv::cuda::StreamAccessor::getStream(stream));
+                PROFILE_OBJ(fullTreeName.c_str());
+                img = doProcess(img, stream);
+                rmt_EndCPUSample();
+                rmt_EndCUDASample(cv::cuda::StreamAccessor::getStream(stream));
                 EndProcessingTime();
-			}
-			NODE_LOG(trace) << "End:   " << fullTreeName;
-		}CATCH_MACRO
+            }
+            NODE_LOG(trace) << "End:   " << fullTreeName;
+        }CATCH_MACRO
     }
-	try
-	{
-		if (children.size() == 0)
-			return img;
+    try
+    {
+        if (children.size() == 0)
+            return img;
 
-		cv::cuda::GpuMat childResult;
-		if (!img.empty())
-			img.copyTo(childResult, stream);
-		NODE_LOG(trace) << " Executing " << children.size() << " child nodes";
-		std::vector<Node::Ptr>  children_;
-		children_.reserve(children.size());
-		{
-			// Prevents adding of children while running, debatable how much this is needed
-			std::lock_guard<std::recursive_mutex> lock(mtx);
-			for (int i = 0; i < children.size(); ++i)
-			{
-				children_.push_back(children[i]);
-			}
-		}
-		for (size_t i = 0; i < children_.size(); ++i)
-		{
-			if (children_[i] != nullptr)
-			{
-				try
-				{
-					childResult = children_[i]->process(childResult, stream);
-				}CATCH_MACRO
-			}
-			else
-			{
+        cv::cuda::GpuMat childResult;
+        if (!img.empty())
+            img.copyTo(childResult, stream);
+        NODE_LOG(trace) << " Executing " << children.size() << " child nodes";
+        std::vector<Node::Ptr>  children_;
+        children_.reserve(children.size());
+        {
+            // Prevents adding of children while running, debatable how much this is needed
+            std::lock_guard<std::recursive_mutex> lock(mtx);
+            for (int i = 0; i < children.size(); ++i)
+            {
+                children_.push_back(children[i]);
+            }
+        }
+        for (size_t i = 0; i < children_.size(); ++i)
+        {
+            if (children_[i] != nullptr)
+            {
+                try
+                {
+                    childResult = children_[i]->process(childResult, stream);
+                }CATCH_MACRO
+            }
+            else
+            {
                 ui_collector::set_node_name(getFullTreeName());
-				NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
-			}
-		}
+                NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
+            }
+        }
         ui_collector::set_node_name(getFullTreeName());
-		// So here is the debate of is a node's output the output of it, or the output of its children....
-		// img = childResults;
+        // So here is the debate of is a node's output the output of it, or the output of its children....
+        // img = childResults;
     }CATCH_MACRO;
     ui_collector::set_node_name("");
-	
+    
     return img;
 }
 TS<SyncedMemory> Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 {
-	TS < SyncedMemory> output = input;
+    TS < SyncedMemory> output = input;
     if(pre_check(input))
     {
-		_current_timestamp = input.frame_number;
+        _current_timestamp = input.frame_number;
         if (boost::this_thread::interruption_requested())
             return output;
         ui_collector::set_node_name(getFullTreeName());
         try
         {
                 ClearProcessingTime();
-				std::lock_guard<std::recursive_mutex> lock(mtx);
+                std::lock_guard<std::recursive_mutex> lock(mtx);
                 auto allocator = dynamic_cast<PitchedAllocator*>(cv::cuda::GpuMat::defaultAllocator());
                 if (allocator)
                 {
@@ -606,7 +606,7 @@ TS<SyncedMemory> Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream
                 TIME
                 _rmt_BeginCPUSample(fullTreeName.c_str(), &rmt_hash);
                 _rmt_BeginCUDASample(fullTreeName.c_str(), &rmt_cuda_hash, cv::cuda::StreamAccessor::getStream(stream));
-				PROFILE_OBJ(fullTreeName.c_str());
+                PROFILE_OBJ(fullTreeName.c_str());
                 output = doProcess(input, stream);
                 rmt_EndCPUSample();
                 rmt_EndCUDASample(cv::cuda::StreamAccessor::getStream(stream));
@@ -619,7 +619,7 @@ TS<SyncedMemory> Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream
             std::vector<Node::Ptr>  children_;
             {
                 // Prevents adding of children while running, debatable how much this is needed
-				std::lock_guard<std::recursive_mutex> lock(mtx);
+                std::lock_guard<std::recursive_mutex> lock(mtx);
                 children_ = children;
             }
             for (size_t i = 0; i < children_.size(); ++i)
@@ -641,7 +641,7 @@ TS<SyncedMemory> Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream
         }CATCH_MACRO;
         ui_collector::set_node_name("");
     }
-	return output;
+    return output;
 }
 bool Node::pre_check(const TS<SyncedMemory>& input)
 {
@@ -649,38 +649,38 @@ bool Node::pre_check(const TS<SyncedMemory>& input)
 }
 void Node::SetDataStream(IDataStream* stream_)
 {
-	
-	if (_dataStream)
-	{
-		
-		NODE_LOG(debug) << "Updating stream manager to a new manager";
-	}	
-	else
-	{
-		NODE_LOG(debug) << "Setting stream manager";
-	}
+    
+    if (_dataStream)
+    {
+        
+        NODE_LOG(debug) << "Updating stream manager to a new manager";
+    }    
+    else
+    {
+        NODE_LOG(debug) << "Setting stream manager";
+    }
     _dataStream = stream_;
-	setup_signals(_dataStream->GetSignalManager());
+    setup_signals(_dataStream->GetSignalManager());
     SetupVariableManager(_dataStream->GetVariableManager());
     pImpl_->update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
-	//pImpl_->g_update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
-	for (auto& child : children)
-	{
-		child->SetDataStream(_dataStream);
-	}
+    //pImpl_->g_update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
+    for (auto& child : children)
+    {
+        child->SetDataStream(_dataStream);
+    }
 }
 IDataStream* Node::GetDataStream()
 {
-	if (parent && _dataStream == nullptr)
-	{
+    if (parent && _dataStream == nullptr)
+    {
         NODE_LOG(debug) << "Setting data stream from parent";
-		SetDataStream(parent->GetDataStream());
-	}
-	if (parent == nullptr && _dataStream == nullptr)
-	{
+        SetDataStream(parent->GetDataStream());
+    }
+    if (parent == nullptr && _dataStream == nullptr)
+    {
         
-	}	
-	return _dataStream;
+    }    
+    return _dataStream;
 }
 cv::cuda::GpuMat
 Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )
@@ -689,9 +689,9 @@ Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )
 }
 TS<SyncedMemory> Node::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
-	TS<SyncedMemory> output = input;
+    TS<SyncedMemory> output = input;
     output.GetGpuMatMutable(stream) = doProcess(input.GetGpuMatMutable(stream), stream);
-	return output;
+    return output;
 }
 
 
@@ -708,15 +708,15 @@ Node::registerDisplayCallback(boost::function<void(cv::cuda::GpuMat, Node*)>& f)
 
 void
 Node::spawnDisplay()
-{	
-	cv::namedWindow(treeName);
-	externalDisplay = true;
+{    
+    cv::namedWindow(treeName);
+    externalDisplay = true;
 }
 void
 Node::killDisplay()
-{	
-	if (externalDisplay)
-		cv::destroyWindow(treeName);
+{    
+    if (externalDisplay)
+        cv::destroyWindow(treeName);
 }
 std::string
 Node::getName() const
@@ -726,7 +726,7 @@ Node::getName() const
 std::string
 Node::getTreeName()
 {
-	if(!treeName.size())
+    if(!treeName.size())
     {
         treeName = getName();
         fullTreeName = getName();
@@ -753,17 +753,17 @@ Node*
 Node::swap(Node* other)
 {
     // By moving ownership of all parameters to the new node, all
-	
+    
     return other;
 }
 void
 Node::Init(bool firstInit)
 {
     ui_collector::set_node_name(getFullTreeName());
-	// Node init should be called first because it is where implicit parameters should be setup
-	// Then in ParmaeteredIObject, the implicit parameters will be added back to the _parameter vector
+    // Node init should be called first because it is where implicit parameters should be setup
+    // Then in ParmaeteredIObject, the implicit parameters will be added back to the _parameter vector
     RegisterAllParams();
-	NodeInit(firstInit); 
+    NodeInit(firstInit); 
     ParameteredIObject::Init(firstInit);
 }
 void Node::NodeInit(bool firstInit)
@@ -775,7 +775,7 @@ void
 Node::Init(const std::string &configFile)
 {
     ui_collector::set_node_name(getFullTreeName());
-	
+    
 }
 
 
@@ -789,7 +789,7 @@ void
 Node::Init(const cv::FileNode& configNode)
 {
     ui_collector::set_node_name(getFullTreeName());
-	NODE_LOG(trace) << " Initializing from file";
+    NODE_LOG(trace) << " Initializing from file";
     //configNode["NodeName"] >> nodeName;
     configNode["NodeTreeName"] >> treeName;
     configNode["FullTreeName"] >> fullTreeName;
@@ -802,16 +802,16 @@ Node::Init(const cv::FileNode& configNode)
         cv::FileNode childNode = childrenFS["Node-" + boost::lexical_cast<std::string>(i)];
         std::string name = (std::string)childNode["NodeName"];
         auto node = ::EagleLib::NodeManager::getInstance().addNode(name);
-		if (node != nullptr)
-		{
-			addChild(node);
-			node->Init(childNode);
+        if (node != nullptr)
+        {
+            addChild(node);
+            node->Init(childNode);
             ui_collector::set_node_name(getFullTreeName());
-		}
-		else
-		{
-			NODE_LOG(error) << "No node found with the name " << name;
-		}
+        }
+        else
+        {
+            NODE_LOG(error) << "No node found with the name " << name;
+        }
     }
     cv::FileNode paramNode = configNode["Parameters"];
     for (size_t i = 0; i < _parameters.size(); ++i)
@@ -857,11 +857,11 @@ Node::Init(const cv::FileNode& configNode)
 void
 Node::Serialize(ISimpleSerializer *pSerializer)
 {
-	NODE_LOG(trace) << " Serializing";
+    NODE_LOG(trace) << " Serializing";
     ParameteredIObject::Serialize(pSerializer);
     SERIALIZE(children);
     SERIALIZE(treeName);
-	SERIALIZE(fullTreeName);
+    SERIALIZE(fullTreeName);
     SERIALIZE(parent);
     SERIALIZE(externalDisplay);
     SERIALIZE(enabled);
@@ -872,7 +872,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
 void
 Node::Serialize(cv::FileStorage& fs)
 {
-	NODE_LOG(trace) << " Serializing to file";
+    NODE_LOG(trace) << " Serializing to file";
     if(fs.isOpened())
     {
         fs << "NodeName" << GetTypeName();
@@ -893,41 +893,41 @@ Node::Serialize(cv::FileStorage& fs)
         fs << "Parameters" << "{";
         for(size_t i = 0; i < _parameters.size(); ++i)
         {
-			if (_parameters[i]->type & Parameters::Parameter::Input)
-			{
-				auto inputParam = dynamic_cast<Parameters::InputParameter*>(_parameters[i]);
-				if (inputParam)
-				{
-					auto input = inputParam->GetInput();
-					if (input)
-					{
-						fs << _parameters[i]->GetName().c_str() << "{";
-						fs << "TreeName" << _parameters[i]->GetTreeName();
-						fs << "InputParameter" << input->GetTreeName();
-						fs << "Type" << _parameters[i]->GetTypeInfo().name();
-						auto toolTip = _parameters[i]->GetTooltip();
-						if (toolTip.size())
-							fs << "ToolTip" << toolTip;
-						fs << "}";
-					}
-				}
-			}
-			else
-			{
-				if (_parameters[i]->type & Parameters::Parameter::Control)
-				{
-					// TODO
-					try
-					{
-						Parameters::Persistence::cv::Serialize(&fs, _parameters[i]);
-					}
-					catch (cv::Exception &e)
-					{
-						NODE_LOG(warning) << e.what();
-						continue;
-					}
-				}
-			}            
+            if (_parameters[i]->type & Parameters::Parameter::Input)
+            {
+                auto inputParam = dynamic_cast<Parameters::InputParameter*>(_parameters[i]);
+                if (inputParam)
+                {
+                    auto input = inputParam->GetInput();
+                    if (input)
+                    {
+                        fs << _parameters[i]->GetName().c_str() << "{";
+                        fs << "TreeName" << _parameters[i]->GetTreeName();
+                        fs << "InputParameter" << input->GetTreeName();
+                        fs << "Type" << _parameters[i]->GetTypeInfo().name();
+                        auto toolTip = _parameters[i]->GetTooltip();
+                        if (toolTip.size())
+                            fs << "ToolTip" << toolTip;
+                        fs << "}";
+                    }
+                }
+            }
+            else
+            {
+                if (_parameters[i]->type & Parameters::Parameter::Control)
+                {
+                    // TODO
+                    try
+                    {
+                        Parameters::Persistence::cv::Serialize(&fs, _parameters[i]);
+                    }
+                    catch (cv::Exception &e)
+                    {
+                        NODE_LOG(warning) << e.what();
+                        continue;
+                    }
+                }
+            }            
         }
         fs << "}"; // end parameters
 
@@ -938,12 +938,12 @@ void
 Node::setTreeName(const std::string& name)
 {
     treeName = name;
-	std::string fullTreeName_;
+    std::string fullTreeName_;
     if (parent == nullptr)
         fullTreeName_ = treeName;
-	else
+    else
         fullTreeName_ = parent->getFullTreeName() + "." + treeName;
-	setFullTreeName(fullTreeName_);
+    setFullTreeName(fullTreeName_);
     for(size_t i = 0; i < children.size(); ++i)
     {
         children[i]->setTreeName(children[i]->treeName);
@@ -952,12 +952,12 @@ Node::setTreeName(const std::string& name)
 void
 Node::setFullTreeName(const std::string& name)
 {
-	
+    
     for (size_t i = 0; i < _parameters.size(); ++i)
-	{
-		_parameters[i]->SetTreeRoot(name);
-	}
-	fullTreeName = name;
+    {
+        _parameters[i]->SetTreeRoot(name);
+    }
+    fullTreeName = name;
 }
 
 void
@@ -974,5 +974,5 @@ bool Node::SkipEmpty() const
 
 long long Node::GetTimestamp() const
 {
-	return _current_timestamp;
+    return _current_timestamp;
 }

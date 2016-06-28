@@ -55,9 +55,9 @@ namespace EagleLib
          */
         virtual int LoadTimeout() const;
 
-		// Function used for listing what documents are available for loading, used in cases of connected devices to list what
-		// devices have been enumerated
-		virtual std::vector<std::string> ListLoadableDocuments();
+        // Function used for listing what documents are available for loading, used in cases of connected devices to list what
+        // devices have been enumerated
+        virtual std::vector<std::string> ListLoadableDocuments();
     };
     
     // Interface class for the base level of features frame grabber
@@ -73,22 +73,22 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream) = 0;
         virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream) = 0;
         virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream) = 0;
-		// Get a frame relative to the current frame.  Index can be positive and negative
-		virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream) = 0;
+        // Get a frame relative to the current frame.  Index can be positive and negative
+        virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream) = 0;
 
         virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager() = 0;
         virtual void InitializeFrameGrabber(IDataStream* stream);
 
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
-		
+        
         SIGNALS_BEGIN(IFrameGrabber, ParameteredIObject);
             SIG_SEND(update);
         SIGNALS_END;
         
     protected:
         
-		//Signals::typed_signal_base<void()>* update_signal;
+        //Signals::typed_signal_base<void()>* update_signal;
         std::string loaded_document;
         IDataStream* parent_stream;
     };
@@ -104,12 +104,12 @@ namespace EagleLib
         FrameGrabberBuffered();
         virtual ~FrameGrabberBuffered();
         
-		virtual int GetFrameNumber();
+        virtual int GetFrameNumber();
         
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
         virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
         virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
-		virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
+        virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
         
 
         virtual void Init(bool firstInit);
@@ -131,29 +131,29 @@ namespace EagleLib
         // If the read thread is too far ahead of the buffer thread, then it will wait on this
         // condition variable for a notification of grabbing of a new image
         boost::condition_variable                  frame_grabbed_cv;
-		bool _is_stream;
+        bool _is_stream;
     };
-	class EAGLE_EXPORTS FrameGrabberThreaded: public FrameGrabberBuffered
-	{
-	private:
-		void                                     Buffer();
-		boost::thread                            buffer_thread;
+    class EAGLE_EXPORTS FrameGrabberThreaded: public FrameGrabberBuffered
+    {
+    private:
+        void                                     Buffer();
+        boost::thread                            buffer_thread;
         
-	protected:
-		bool _pause = false;
-		// Should only ever be called from the buffer thread
-		virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
-		virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
-	public:
-		virtual ~FrameGrabberThreaded();
-		virtual void Init(bool firstInit);
-		
-		SIGNALS_BEGIN(FrameGrabberThreaded, FrameGrabberBuffered);
-			AUTO_SLOT(void, StartThreads)
-			AUTO_SLOT(void, StopThreads)
-			AUTO_SLOT(void, PauseThreads)
-			AUTO_SLOT(void, ResumeThreads)
-		SIGNALS_END
-	};
+    protected:
+        bool _pause = false;
+        // Should only ever be called from the buffer thread
+        virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
+        virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
+    public:
+        virtual ~FrameGrabberThreaded();
+        virtual void Init(bool firstInit);
+        
+        SIGNALS_BEGIN(FrameGrabberThreaded, FrameGrabberBuffered);
+            AUTO_SLOT(void, StartThreads)
+            AUTO_SLOT(void, StopThreads)
+            AUTO_SLOT(void, PauseThreads)
+            AUTO_SLOT(void, ResumeThreads)
+        SIGNALS_END
+    };
 
 }
