@@ -431,7 +431,7 @@ void MainWindow::onLoadDirectoryClicked()
 }
 void MainWindow::load_file(QString filename, QString preferred_loader)
 {
-    if (EagleLib::IDataStream::CanLoadDocument(filename.toStdString()))
+    if (EagleLib::IDataStream::CanLoadDocument(filename.toStdString()) || filename.size() == 0)
     {
         auto stream = EagleLib::IDataStream::create(filename.toStdString(), preferred_loader.toStdString());
         if(stream)
@@ -825,7 +825,7 @@ void MainWindow::on_actionOpen_Network_triggered()
 {
     dialog_network_stream_selection dlg;
     dlg.exec();
-    if(dlg.url.size())
+    if(dlg.accepted)
     {
         load_file(dlg.url, dlg.preferred_loader);
     }

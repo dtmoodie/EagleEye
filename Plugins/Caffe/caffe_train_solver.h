@@ -47,6 +47,7 @@ namespace EagleLib
 
             SIGNALS_BEGIN(caffe_solver, Node)
                 SIG_SEND(fill_blobs);
+                SIG_SEND(update);
             SIGNALS_END;
 
         };

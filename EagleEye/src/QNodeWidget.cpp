@@ -455,7 +455,8 @@ DataStreamWidget::DataStreamWidget(QWidget* parent, EagleLib::IDataStream::Ptr s
 {
     ui->setupUi(this);
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    ui->lbl_loaded_document->setText(QString::fromStdString(stream->GetFrameGrabber()->GetSourceFilename()));
+    if(auto fg = stream->GetFrameGrabber())
+        ui->lbl_loaded_document->setText(QString::fromStdString(fg->GetSourceFilename()));
     //ui->lbl_stream_id->setText(QString::number(stream->get_stream_id()));
     update_ui();
 }

@@ -40,10 +40,18 @@ RUNTIME_MODIFIABLE_INCLUDE
 
 #define CATCH_MACRO                                                         \
     catch(Signals::ExceptionWithCallStack<cv::Exception>& e)                \
-{                                                                            \
-    NODE_LOG(error) << e.what() << "\n" << e.CallStack();                    \
-}                                                                            \
-catch (boost::thread_resource_error& err)                                    \
+{                                                                           \
+    NODE_LOG(error) << e.what() << "\n" << e.CallStack();                   \
+}                                                                           \
+    catch(Signals::ExceptionWithCallStack<std::string>& e)                  \
+{                                                                           \
+    NODE_LOG(error) << std::string(e) << "\n" << e.CallStack();                   \
+}                                                                           \
+catch(Signals::IExceptionWithCallStackBase& e)                              \
+{                                                                           \
+    NODE_LOG(error) << "Exception thrown with callstack: \n" << e.CallStack(); \
+}                                                                           \
+catch (boost::thread_resource_error& err)                                   \
 {                                                                           \
     NODE_LOG(error) << err.what();                                          \
 }                                                                           \

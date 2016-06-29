@@ -53,19 +53,32 @@ void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
 }
 TS<SyncedMemory> caffe_solver::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
+    if(::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
+                ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
     if(solver_description_param.changed && solver_description.size())
     {
         if(boost::filesystem::is_regular_file(solver_description))
         {
             caffe::SolverParameter solver_params;
-            caffe::ReadSolverParamsFromTextFileOrDie(solver_description.string(), &solver_params);
-            if(snapshot_prefix.size())
+            try
             {
-                //solver_params.clear_snapshot_prefix();
-                //*solver_params.mutable_snapshot_prefix() = snapshot_prefix;
+                caffe::ReadSolverParamsFromTextFileOrDie(solver_description.string(), &solver_params);
+                
+                if(snapshot_prefix.size())
+                {
+                    //solver_params.clear_snapshot_prefix();
+                    //*solver_params.mutable_snapshot_prefix() = snapshot_prefix;
+                }
+                solver.reset(caffe::SolverRegistry<float>::CreateSolver(solver_params));
+            }catch(caffe::ExceptionWithCallStack<std::string>& e)
+            {
+                throw Signals::ExceptionWithCallStack<std::string>(std::string(e), e.CallStack());
+            }
+            catch(caffe::IExceptionWithCallStackBase& e)
+            {
+                throw Signals::ExceptionWithCallStack<std::string>(std::string(""), e.CallStack());
             }
             
-            solver.reset(caffe::SolverRegistry<float>::CreateSolver(solver_params));
             solver_param.type = Parameters::Parameter::Output;
             if(solver_params.has_test_interval())
                 test_interval = solver_params.test_interval();
@@ -137,7 +150,8 @@ TS<SyncedMemory> caffe_solver::doProcess(TS<SyncedMemory> input, cv::cuda::Strea
         sig_fill_blobs();
         
         solver->Step(steps_per_iteration);
-        //solver->Solve();
+        if(input_blobs.empty())
+            sig_update();
     }
     return input;
 }

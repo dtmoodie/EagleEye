@@ -17,6 +17,7 @@ public:
     ~dialog_network_stream_selection();
     QString url;
     QString preferred_loader;
+    bool accepted;
     bool eventFilter(QObject *object, QEvent *event);
 public slots:
     void accept();

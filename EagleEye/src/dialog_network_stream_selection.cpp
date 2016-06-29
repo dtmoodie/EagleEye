@@ -31,12 +31,14 @@ void dialog_network_stream_selection::accept()
     url_history.insert(std::make_pair(url.toStdString(), preferred_loader.toStdString()));
     ui->list_url_history->addItem(new QListWidgetItem(url));
     refresh_history();
+    this->accepted = true;
     this->close();
 }
 
 void dialog_network_stream_selection::cancel()
 {
-    
+    this->accepted = false;
+    this->close();
 }
 
 void dialog_network_stream_selection::refresh_history()
