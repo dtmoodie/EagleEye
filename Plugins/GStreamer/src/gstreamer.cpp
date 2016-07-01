@@ -421,6 +421,10 @@ bool gstreamer_base::check_feature(const std::string& feature_name)
     }
     return false;
 }
+bool gstreamer_base::is_pipeline(const std::string& string)
+{
+    
+}
 // ---------------------------------------------------------------------------
 
 

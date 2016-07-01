@@ -81,18 +81,14 @@ namespace EagleLib
 
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
-        
         SIGNALS_BEGIN(IFrameGrabber, ParameteredIObject);
             SIG_SEND(update);
         SIGNALS_END;
         
     protected:
-        
-        //Signals::typed_signal_base<void()>* update_signal;
         std::string loaded_document;
         IDataStream* parent_stream;
     };
-
     //   [ 0 ,1, 2, 3, 4, 5 ....... N-5, N-4, N-3, N-2, N-1, N]
     //    buffer begin                                  buffer end
     //            |      safe playback frames          |
@@ -127,11 +123,11 @@ namespace EagleLib
         std::atomic_llong                        playback_frame_number;
         // If the buffering thread is too far ahead, it will wait on this condition variable
         // until the read thread reads an image from the frame buffer
-        boost::condition_variable                  frame_read_cv;
+        boost::condition_variable                frame_read_cv;
         // If the read thread is too far ahead of the buffer thread, then it will wait on this
         // condition variable for a notification of grabbing of a new image
-        boost::condition_variable                  frame_grabbed_cv;
-        bool _is_stream;
+        boost::condition_variable                frame_grabbed_cv;
+        bool                                     _is_stream;
     };
     class EAGLE_EXPORTS FrameGrabberThreaded: public FrameGrabberBuffered
     {

@@ -82,6 +82,8 @@ namespace EagleLib
         static std::vector<std::string> get_interfaces();
         static std::vector<std::string> get_gstreamer_features(const std::string& filter = "");
         static bool check_feature(const std::string& feature_name);
+        // Attempt to detect if a string is a valid gstreamer pipeline
+        static bool is_pipeline(const std::string& string);
     };
     // used to feed data into EagleEye from gstreamer, use when creating frame grabbers
     class PLUGIN_EXPORTS gstreamer_src_base: public gstreamer_base

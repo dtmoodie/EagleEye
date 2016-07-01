@@ -366,7 +366,7 @@ bool IDataStream::CanLoadDocument(const std::string& document)
                 int priority = fg_info->CanLoadDocument(doc_to_load);
                 if (priority != 0)
                 {
-                    LOG(trace) << fg_info->GetObjectName() << " can load document";
+                    LOG(debug) << fg_info->GetObjectName() << " can load document";
                     valid_frame_grabbers.push_back(constructor);
                     frame_grabber_priorities.push_back(priority);
                 }

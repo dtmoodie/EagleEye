@@ -39,7 +39,7 @@ namespace EagleLib
         std::string                     loaded_file;
         std::vector<std::string>        files_on_disk;
         int frame_index;
-        boost::circular_buffer<std::tuple<std::string, cv::Mat, cv::cuda::GpuMat>> loaded_images;
-        
+        boost::circular_buffer<std::tuple<std::string, TS<SyncedMemory>>> loaded_images;
+        rcc::shared_ptr<IFrameGrabber> fg; // internal frame grabber used for loading the actual files
     };
 }
