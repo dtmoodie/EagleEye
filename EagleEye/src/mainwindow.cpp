@@ -93,7 +93,7 @@ MainWindow::MainWindow(QWidget *parent) :
     nodeListDialog = new NodeListDialog(this);
     nodeListDialog->hide();
     nodeListDialog->setup_signals(&_ui_manager);
-    _signal_connections.push_back(_ui_manager.connect<void(std::string)>("add_node", std::bind(&MainWindow::onNodeAdd, this, std::placeholders::_1), this, Signals::get_this_thread(), "Main user interface"));
+    _signal_connections.push_back(_ui_manager.connect<void(std::string)>("add_node", std::bind(&MainWindow::onNodeAdd, this, std::placeholders::_1), this, Signals::get_this_thread()));
 
     /*connect(nodeListDialog, SIGNAL(nodeConstructed(EagleLib::Nodes::Node::Ptr)),
         this, SLOT(onNodeAdd(EagleLib::Nodes::Node::Ptr)));*/

@@ -670,8 +670,7 @@ void Node::SetDataStream(IDataStream* stream_)
     _dataStream = stream_;
     setup_signals(_dataStream->GetSignalManager());
     SetupVariableManager(_dataStream->GetVariableManager());
-    pImpl_->update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
-    //pImpl_->g_update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated", this);
+    pImpl_->update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated");
     for (auto& child : children)
     {
         child->SetDataStream(_dataStream);

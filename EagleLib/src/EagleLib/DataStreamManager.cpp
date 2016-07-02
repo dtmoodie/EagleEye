@@ -137,12 +137,19 @@ namespace EagleLib
             SIG_SEND(StopThreads);
             SLOT_DEF(void, StartThread);
             REGISTER_SLOT(StartThread);
+            //DESCRIBE_SLOT(ResumeThread, "Starts background processing thread");
+
             SLOT_DEF(void, StopThread);
             REGISTER_SLOT(StopThread);
+           // DESCRIBE_SLOT(ResumeThread, "Stops background processing thread");
+
             SLOT_DEF(void, PauseThread);
             REGISTER_SLOT(PauseThread);
+           // DESCRIBE_SLOT(ResumeThread, "Pauses background processing thread");
+
             SLOT_DEF(void, ResumeThread);
             REGISTER_SLOT(ResumeThread);
+            //DESCRIBE_SLOT(ResumeThread, "Resumes background processing thread");
         SIGNALS_END
     };
 }
@@ -167,6 +174,10 @@ DataStream::DataStream()
         connections.push_back(global_signal_manager->connect<void(void)>("StartThreads", std::bind(&DataStream::StartThread, this), this));
         connections.push_back(global_signal_manager->connect<void(void)>("PauseThreads", std::bind(&DataStream::PauseThread, this), this));
         connections.push_back(global_signal_manager->connect<void(void)>("ResumeThreads", std::bind(&DataStream::ResumeThread, this), this));
+        global_signal_manager->register_receiver<void(void)>("StopThreads", this);
+        global_signal_manager->register_receiver<void(void)>("StartThreads", this);
+        global_signal_manager->register_receiver<void(void)>("PauseThreads", this);
+        global_signal_manager->register_receiver<void(void)>("ResumeThreads", this);
     }
     this->setup_signals(GetSignalManager());
     paused = false;
@@ -179,6 +190,8 @@ DataStream::~DataStream()
     StopThread();
     top_level_nodes.clear();
     frame_grabber.reset();
+    signal_manager.reset();
+    _sig_manager = nullptr;
 }
 
 rcc::weak_ptr<IViewManager> DataStream::GetViewManager()
@@ -482,33 +495,36 @@ void DataStream::process()
     int iteration_count = 0;
     Signals::thread_registry::get_instance()->register_thread(Signals::ANY);
     
+    if(_thread_id == 0)
+        _thread_id = Signals::get_this_thread();
+
     rmt_SetCurrentThreadName("DataStreamThread");
+
     auto node_update_connection = signal_manager->connect<void(EagleLib::Nodes::Node*)>("NodeUpdated",
         std::bind([this](EagleLib::Nodes::Node* node)->void
         {
             dirty_flag = true;
-        }, std::placeholders::_1), this);
+        }, std::placeholders::_1), this, _thread_id );
 
     auto update_connection = signal_manager->connect<void()>("update",
         std::bind([this]()->void
         {
             dirty_flag = true;
-        }), this);
+        }), this, Signals::get_this_thread());
 
     auto object_update_connection = signal_manager->connect<void(Parameters::ParameteredObject*)>("parameter_updated",
         std::bind([this](Parameters::ParameteredObject*)->void
         {
             dirty_flag = true;
-        }, std::placeholders::_1), this);
+        }, std::placeholders::_1), this, _thread_id );
 
     auto parameter_added_connection = signal_manager->connect<void(Parameters::ParameteredObject*)>("parameter_added",
         std::bind([this](Parameters::ParameteredObject*)->void
         {
             dirty_flag = true;
-        }, std::placeholders::_1), this);
+        }, std::placeholders::_1), this, _thread_id );
 
-    if(_thread_id == 0)
-        _thread_id = Signals::get_this_thread();
+    
 
     LOG(info) << "Starting stream thread";
     while(!boost::this_thread::interruption_requested())

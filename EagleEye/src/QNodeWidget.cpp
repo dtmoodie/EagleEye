@@ -189,7 +189,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
         {
             if (auto sig_mgr = stream->GetSignalManager())
             {
-                _recompile_connection = sig_mgr->connect<void(EagleLib::ParameteredIObject*)>("object_recompiled", std::bind(&QNodeWidget::on_object_recompile, this, std::placeholders::_1), this);
+                _recompile_connection = sig_mgr->connect<void(EagleLib::ParameteredIObject*)>("object_recompiled", std::bind(&QNodeWidget::on_object_recompile, this, std::placeholders::_1));
             }
             else
             {

@@ -8,7 +8,25 @@ using namespace EagleLib::Nodes;
 void GetOutputImage::NodeInit(bool firstInit)
 {
     if(firstInit)
-        addInputParameter<cv::cuda::GpuMat>("Input");
+        addInputParameter<cv::cuda::GpuMat>("GpuInput");
+    addInputParameter<TS<SyncedMemory>>("SyncedInput");
+    addInputParameter<cv::Mat>("CpuInput");
+}
+TS<SyncedMemory> GetOutputImage::doProcess(TS<SyncedMemory>& img, cv::cuda::Stream& stream)
+{
+    auto synced_input = getParameter<TS<SyncedMemory>>("SyncedInput")->Data();
+    if(synced_input)
+    {
+        return *synced_input;
+    }
+    //auto gpu_input = getParameter<TS<cv::cuda::GpuMat>("GpuInput")
+
+    auto cpu_input = getParameter<cv::Mat>("CpuInput")->Data();
+    if(cpu_input)
+    {
+        return TS<SyncedMemory>(*cpu_input);
+    }
+    return img;
 }
 
 cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -16,18 +34,20 @@ cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat>("Input")->Data();
     if(input == nullptr)
     {
-        //log(Status, "Input not defined");
-        //NODE_LOG(info) << "Input not defined";
         return img;
     }
     if(input->empty())
     {
-        //log(Status, "Input is empty");
-        //NODE_LOG(info) << "Input is empty";
         return img;
     }
     return *input;
 }
+TS<SyncedMemory> ExportInputImage::doProcess(TS<SyncedMemory>& img, cv::cuda::Stream& stream)
+{
+    updateParameter("Output image", img, &stream);
+    return img;
+}
+
 cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     {
