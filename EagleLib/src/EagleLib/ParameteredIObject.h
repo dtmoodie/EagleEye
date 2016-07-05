@@ -1,6 +1,7 @@
 #pragma once
 #include "EagleLib/Defs.hpp"
 #include "IObject.h"
+#include "IObjectInfo.h"
 #include <parameters/ParameteredObject.h>
 
 #undef SIG_SEND
@@ -94,6 +95,10 @@ namespace EagleLib
     class EAGLE_EXPORTS ParameteredIObject : public IObject, public Parameters::ParameteredObject
     {
     public:
+        class EAGLE_EXPORTS ParameteredIObjectInfo: public IObjectInfo
+        {
+            
+        };
         ParameteredIObject();
         virtual void Serialize(ISimpleSerializer* pSerializer);
         virtual void Init(const cv::FileNode& configNode);

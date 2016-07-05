@@ -27,9 +27,10 @@ void ParameteredIObject::Init(const cv::FileNode& configNode)
 void ParameteredIObject::Init(bool firstInit)
 {
     IObject::Init(firstInit);
-    RegisterAllParams();
+    
     if (firstInit)
     {
+        InitializeExplicitParamsToDefault();
     }
     else
     {
@@ -49,4 +50,5 @@ void ParameteredIObject::Init(bool firstInit)
         }
         sig_object_recompiled(this);
     }
+    WrapExplicitParams();
 }

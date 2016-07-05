@@ -112,6 +112,10 @@ namespace EagleLib
         void RemoveVariableSink(IVariableSink* sink);
 
     protected:
+        virtual std::unique_ptr<ISingleton>& GetSingleton(Loki::TypeInfo type);
+        virtual std::unique_ptr<ISingleton>& GetIObjectSingleton(Loki::TypeInfo type);
+        std::map<Loki::TypeInfo, std::unique_ptr<ISingleton>> _singletons;
+        std::map<Loki::TypeInfo, std::unique_ptr<ISingleton>> _iobject_singletons;
         int stream_id;
         size_t _thread_id;
         rcc::shared_ptr<IViewManager>                            view_manager;
@@ -588,5 +592,12 @@ IDataStream::Ptr IDataStream::create(const std::string& document, const std::str
     }
     return IDataStream::Ptr();
 }
-
+std::unique_ptr<ISingleton>& DataStream::GetSingleton(Loki::TypeInfo type)
+{
+    return _singletons[type];
+}
+std::unique_ptr<ISingleton>& DataStream::GetIObjectSingleton(Loki::TypeInfo type)
+{
+    return _iobject_singletons[type];
+}
 REGISTERCLASS(DataStream)

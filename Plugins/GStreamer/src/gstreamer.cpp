@@ -191,11 +191,19 @@ static GstFlowReturn gstreamer_src_base_new_sample(GstElement * pipeline, gstrea
 {
     return     obj->on_pull();
 }
-
+gstreamer_src_base::gstreamer_src_base()
+{
+    _appsink = nullptr;
+    _new_sample_id = 0;
+    _new_preroll_id = 0;
+}
 gstreamer_src_base::~gstreamer_src_base()
 {
-    g_signal_handler_disconnect(_appsink, _new_sample_id);
-    g_signal_handler_disconnect(_appsink, _new_preroll_id);
+    if(_appsink)
+    {
+        g_signal_handler_disconnect(_appsink, _new_sample_id);
+        g_signal_handler_disconnect(_appsink, _new_preroll_id);
+    }
 }
 bool gstreamer_src_base::create_pipeline(const std::string& pipeline_)
 {

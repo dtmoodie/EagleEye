@@ -93,6 +93,7 @@ namespace EagleLib
         guint           _new_sample_id;
         guint           _new_preroll_id;
     public:
+        gstreamer_src_base();
         virtual ~gstreamer_src_base();
         virtual bool create_pipeline(const std::string& pipeline_);
         // Called when data is ready to be pulled from the appsink

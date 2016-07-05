@@ -12,6 +12,13 @@
 #include <list>
 #include <mutex>
 
+#define RCC_CREATE_IMPL(TYPE) \
+rcc::shared_ptr<TYPE> TYPE::create() \
+{ \
+    return EagleLib::ObjectManager::Instance().GetObject(#TYPE); \
+} 
+
+
 struct SystemTable;
 struct IRuntimeObjectSystem;
 namespace EagleLib

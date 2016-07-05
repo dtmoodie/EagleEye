@@ -37,7 +37,18 @@ TS<SyncedMemory> QtImageDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::Str
 {
     cv::Mat img = input.GetMat(stream);
     std::string display_name = getFullTreeName();
-    if (auto table = PerModuleInterface::GetInstance()->GetSystemTable())
+    auto callback_handler = GetDataStream()->GetIObjectSingleton<WindowCallbackHandler>();
+    if(callback_handler)
+    {
+        cuda::enqueue_callback_async(
+            [callback_handler, display_name, img]()->void
+        {
+            rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+            PROFILE_FUNCTION;
+            callback_handler->imshow(display_name, img);
+        }, stream);
+    }
+    /*if (auto table = PerModuleInterface::GetInstance()->GetSystemTable())
     {
         if (auto manager = table->GetSingleton<WindowCallbackHandlerManager>())
         {
@@ -64,7 +75,7 @@ TS<SyncedMemory> QtImageDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::Str
     else
     {
         LOG(warning) << "Unable to get SystemTable";
-    }
+    }*/
     
     return input;
 }
@@ -81,17 +92,17 @@ cv::cuda::GpuMat QtImageDisplay::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stre
 
     img.download(host_mat, stream);
     EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
-    cuda::enqueue_callback_async(
-        [this, display_name, host_mat]()->void
+    auto callback_handler = GetDataStream()->GetIObjectSingleton<WindowCallbackHandler>();
+    if(callback_handler)
     {
-        rmt_ScopedCPUSample(QtImageDisplay_displayImage);
-        PROFILE_FUNCTION;
-        auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-        auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
-        
-        auto instance = manager->instance();
-        instance->imshow(display_name, host_mat);
-    }, stream);
+        cuda::enqueue_callback_async(
+            [callback_handler, display_name, host_mat]()->void
+        {
+            rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+            PROFILE_FUNCTION;
+            callback_handler->imshow(display_name, host_mat);
+        }, stream);
+    }
     
     return img;
 }
@@ -99,17 +110,19 @@ void QtImageDisplay::doProcess(const cv::Mat& mat, double timestamp, int frame_n
 {
     PROFILE_FUNCTION
     EagleLib::cuda::scoped_event_stream_timer timer(stream, "QtImageDisplayTime");
-    cuda::enqueue_callback_async(
-        [this, mat]()->void
+    std::string display_name;
+    display_name = getFullTreeName();
+    auto callback_handler = GetDataStream()->GetIObjectSingleton<WindowCallbackHandler>();
+    if(callback_handler)
     {
-        rmt_ScopedCPUSample(QtImageDisplay_displayImage);
-        PROFILE_FUNCTION;
-        auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-        auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
-
-        auto instance = manager->instance();
-        instance->imshow(getFullTreeName(), mat);
-    }, stream);
+        cuda::enqueue_callback_async(
+            [callback_handler, display_name, mat]()->void
+        {
+            rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+            PROFILE_FUNCTION;
+            callback_handler->imshow(display_name, mat);
+        }, stream);
+    }
 }
 
 
@@ -137,20 +150,17 @@ cv::cuda::GpuMat OGLImageDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     std::string display_name = *getParameter<std::string>(0)->Data();
     cv::cuda::GpuMat display_buffer;
     img.copyTo(display_buffer, stream);
-    cuda::enqueue_callback_async(
-        [display_buffer, display_name]()->void
+    auto callback_handler = GetDataStream()->GetIObjectSingleton<WindowCallbackHandler>();
+    if(callback_handler)
     {
-        //cv::namedWindow(display_name, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO);
-        auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-        auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
-        auto instance = manager->instance(0);
-        Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&WindowCallbackHandler::imshowd, instance, display_name, display_buffer, cv::WINDOW_OPENGL | cv::WINDOW_KEEPRATIO));
-        //WindowCallbackHandler::instance()->imshow(display_name, display_buffer);
-        //Parameters::UI::UiCallbackService::Instance()->post(
-//            boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), 
-                    //display_name, display_buffer));
-
-    }, stream);
+        cuda::enqueue_callback_async(
+            [callback_handler, display_name, display_buffer]()->void
+        {
+            rmt_ScopedCPUSample(QtImageDisplay_displayImage);
+            PROFILE_FUNCTION;
+            callback_handler->imshowd(display_name, display_buffer);
+        }, stream);
+    }
     return img;
 }
 
@@ -192,8 +202,9 @@ TS<SyncedMemory> KeyPointDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::St
         pts.create(1, 1000, CV_32FC2);
         d_mat->download(pts, stream);
         TIME
+        auto callback_handler = GetDataStream()->GetIObjectSingleton<WindowCallbackHandler>();
         EagleLib::cuda::enqueue_callback_async(
-            [h_img, pts, radius, color, displayName]()->void
+            [h_img, pts, radius, color, displayName, callback_handler]()->void
         {
             const cv::Vec2f* ptr = pts.ptr<cv::Vec2f>(0);
             for (int i = 0; i < pts.cols; ++i, ++ptr)
@@ -202,9 +213,7 @@ TS<SyncedMemory> KeyPointDisplay::doProcess(TS<SyncedMemory> input, cv::cuda::St
             }
             auto table = PerModuleInterface::GetInstance()->GetSystemTable();
             auto manager = table->GetSingleton<WindowCallbackHandlerManager>();
-
-            auto instance = manager->instance();
-            instance->imshow(displayName, h_img);
+            callback_handler->imshow(displayName, h_img);
         }, stream);
         TIME
         return input;

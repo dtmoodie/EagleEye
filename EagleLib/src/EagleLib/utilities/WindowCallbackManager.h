@@ -8,15 +8,16 @@
 namespace EagleLib
 {
     class WindowCallbackHandler;
+    class SignalManager;
     // Manages instances of handler for each stream
-    class EAGLE_EXPORTS WindowCallbackHandlerManager : public TInterface<IID_IOBJECT, IObject>
+    /*class EAGLE_EXPORTS WindowCallbackHandlerManager : public TInterface<IID_IOBJECT, IObject>
     {
-        std::map<size_t, rcc::shared_ptr<WindowCallbackHandler>> instances;
+        std::map<int, rcc::shared_ptr<WindowCallbackHandler>> instances;
         std::mutex mtx;
     public:
-        WindowCallbackHandler* instance(size_t stream_id = 0);
+        WindowCallbackHandler* instance(SignalManager* mgr);
         WindowCallbackHandlerManager();
-        void NodeInit(bool firstInit);
+        void Init(bool firstInit);
         void Serialize(ISimpleSerializer* pSerializer);
-    };
+    };*/
 }

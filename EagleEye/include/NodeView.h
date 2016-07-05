@@ -6,6 +6,7 @@
 #include <QNodeWidget.h>
 #include <QMenu>
 #include <EagleLib/rcc/shared_ptr.hpp>
+class signal_dialog;
 class NodeView : public QGraphicsView
 {
     Q_OBJECT
@@ -41,6 +42,7 @@ private slots:
     void on_deleteNode();
     void on_displayImage();
     void on_plotData();
+    void on_display_signals();
     bool eventFilter(QObject *object, QEvent *event);
 private:
     Parameters::Parameter* currentParam;
@@ -55,5 +57,6 @@ private:
     std::map<QGraphicsProxyWidget*, QGraphicsLineItem*> parentLineMap;
     QMenu* rightClickMenu;
     QList<QAction*> actions;
+    signal_dialog* _signal_dialog;
 };
 

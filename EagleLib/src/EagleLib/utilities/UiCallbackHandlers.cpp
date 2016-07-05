@@ -59,25 +59,8 @@ void WindowCallbackHandler::imshowd(const std::string& window_name, cv::cuda::Gp
     if (!dragging[window_name])
         cv::imshow(window_name, img);
 }
-void WindowCallbackHandler::set_stream(size_t stream)
-{
-    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    table->SetSingleton<WindowCallbackHandler>(this);
-    if (table)
-    {
-        auto signalHandler = table->GetSingleton<EagleLib::SignalManager>(stream);
 
-        sig_click_right = signalHandler->get_signal<void(std::string, cv::Point, int)>("click_right");
-        sig_click_left = signalHandler->get_signal<void(std::string, cv::Point, int)>("click_left");
-        sig_click_middle = signalHandler->get_signal<void(std::string, cv::Point, int)>("click_middle");
-        sig_move_mouse = signalHandler->get_signal<void(std::string, cv::Point, int)>("move_mouse");
-
-        sig_click = signalHandler->get_signal<void(std::string, cv::Point, int)>("click");
-        sig_select_rect = signalHandler->get_signal<void(std::string, cv::Rect, int)>("rect_select");
-        sig_select_points = signalHandler->get_signal<void(std::string, std::vector<cv::Point>, int)>("points_select");
-    }
-}
-void WindowCallbackHandler::NodeInit(bool firstInit)
+void WindowCallbackHandler::Init(bool firstInit)
 {
     if(firstInit)
     {
@@ -94,15 +77,11 @@ void WindowCallbackHandler::NodeInit(bool firstInit)
 
 WindowCallbackHandler::WindowCallbackHandler()
 {
-    sig_click_right = nullptr;
-    sig_click_left = nullptr;
-    sig_click_middle = nullptr;
-    sig_move_mouse = nullptr;
-    sig_click = nullptr;
-    sig_select_rect = nullptr;
-    sig_select_points = nullptr;
-
 }
+
+RCC_CREATE_IMPL(WindowCallbackHandler);
+
+
 void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, const std::string& win_name)
 {
     cv::Point pt(x, y);
@@ -112,8 +91,8 @@ void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, con
     {
         if(flags & cv::EVENT_FLAG_LBUTTON)
             dragged_points[win_name].push_back(pt);
-        (*sig_move_mouse)(win_name, pt, flags);
-        (*sig_click)(win_name, pt, flags);
+        sig_move_mouse(win_name, pt, flags);
+        sig_click(win_name, pt, flags);
         break;
     }
     case cv::EVENT_LBUTTONDOWN:
@@ -122,24 +101,24 @@ void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, con
         drag_start[win_name] = pt;
         dragged_points[win_name].clear();
         dragged_points[win_name].push_back(pt);
-        (*sig_click_left)(win_name, pt, flags);
-        (*sig_click)(win_name, pt, flags);
+        sig_click_left(win_name, pt, flags);
+        sig_click(win_name, pt, flags);
         break;
     }
     case cv::EVENT_RBUTTONDOWN:
     {
         dragging[win_name] = true;
         drag_start[win_name] = cv::Point(x, y);
-        (*sig_click_right)(win_name, pt, flags);
-        (*sig_click)(win_name, pt, flags);
+        sig_click_right(win_name, pt, flags);
+        sig_click(win_name, pt, flags);
         break;
     }
     case cv::EVENT_MBUTTONDOWN:
     {
         dragging[win_name] = true;
         drag_start[win_name] = cv::Point(x, y);
-        (*sig_click_middle)(win_name, pt, flags);
-        (*sig_click)(win_name, pt, flags);
+        sig_click_middle(win_name, pt, flags);
+        sig_click(win_name, pt, flags);
         break;
     }
     case cv::EVENT_LBUTTONUP:
@@ -147,8 +126,8 @@ void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, con
         dragging[win_name] = false;
         cv::Rect rect(drag_start[win_name], cv::Point(x, y));
         if(rect.width != 0 && rect.height != 0)
-            (*sig_select_rect)(win_name, rect, flags);
-        (*sig_select_points)(win_name, dragged_points[win_name], flags);
+            sig_select_rect(win_name, rect, flags);
+        sig_select_points(win_name, dragged_points[win_name], flags);
         dragged_points[win_name].clear();
         break;
     }
@@ -157,7 +136,7 @@ void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, con
         dragging[win_name] = false;
         cv::Rect rect(drag_start[win_name], cv::Point(x, y));
         if (rect.width != 0 && rect.height != 0)
-            (*sig_select_rect)(win_name, rect, flags);
+            sig_select_rect(win_name, rect, flags);
         break;
     }
     case cv::EVENT_MBUTTONUP:
@@ -165,25 +144,25 @@ void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, con
         dragging[win_name] = false;
         cv::Rect rect(drag_start[win_name], cv::Point(x, y));
         if (rect.width != 0 && rect.height != 0)
-            (*sig_select_rect)(win_name, rect, flags);
+            sig_select_rect(win_name, rect, flags);
         break;
     }
     case cv::EVENT_LBUTTONDBLCLK:
     {
         flags += 64;
-        (*sig_click_left)(win_name, pt, flags);
+        sig_click_left(win_name, pt, flags);
         break;
     }
     case cv::EVENT_RBUTTONDBLCLK:
     {
         flags += 64;
-        (*sig_click_right)(win_name, pt, flags);
+        sig_click_right(win_name, pt, flags);
         break;
     }
     case cv::EVENT_MBUTTONDBLCLK:
     {
         flags += 64;
-        (*sig_click_middle)(win_name, pt, flags);
+        sig_click_middle(win_name, pt, flags);
         break;
     }
     case cv::EVENT_MOUSEWHEEL:

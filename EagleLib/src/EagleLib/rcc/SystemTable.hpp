@@ -1,41 +1,54 @@
 #pragma once
-
+#include "EagleLib/rcc/shared_ptr.hpp"
 #include <parameters/LokiTypeInfo.h>
 #include <map>
-namespace EagleLib
+#include <memory>
+struct ISingleton
 {
-    class EventHandler;
-}
+    virtual ~ISingleton(){}
+};
+
+template<typename T> struct Singleton: public ISingleton
+{
+    Singleton(T* ptr_): ptr(ptr_){}
+    ~Singleton()
+    {
+        delete ptr;
+    }
+    T* ptr;
+    operator T*() const {return ptr;}
+};
+template<typename T> struct IObjectSingleton: public ISingleton
+{
+    rcc::shared_ptr<T> ptr;
+    IObjectSingleton(T* ptr_): ptr(ptr_){}
+    IObjectSingleton(const rcc::shared_ptr<T>& ptr_): ptr(ptr_){}
+    operator T*() const {return ptr.get(); }
+};
 struct SystemTable
 {
     SystemTable();
-
-    EagleLib::EventHandler* eventHandler;
     // These are per stream singletons
-    std::map<Loki::TypeInfo, std::map<int,void*>> singletons;
-    // These are global single instance singletons
-    std::map<Loki::TypeInfo, void*> g_singletons;
-
-    template<typename T> T* GetSingleton(int stream_id = 0)
+    template<typename T> T* GetSingleton()
     {
-        // Check global singletons first regardless of stream_id
         auto g_itr = g_singletons.find(Loki::TypeInfo(typeid(T)));
         if(g_itr != g_singletons.end())
         {
-            return static_cast<T*>(g_itr->second);
-        }
-        auto& stream_map = singletons[Loki::TypeInfo(typeid(T))];
-        auto itr = stream_map.find(stream_id);
-        if (itr != stream_map.end())
-        {
-            return static_cast<T*>(itr->second);
+            return static_cast<Singleton<T>*>(g_itr->second.get())->ptr;
         }
         return nullptr;
     }
-    template<typename T> T* SetSingleton(T* singleton)
+    template<typename T> T* SetSingleton(T* singleton, int stream_id = -1)
     {
-        g_singletons[Loki::TypeInfo(typeid(T))] = singleton;
-        return singleton;   
+        
+        g_singletons[Loki::TypeInfo(typeid(T))] = std::unique_ptr<ISingleton>(new Singleton<T>(singleton));
+        return singleton;
     }
-
+    void DeleteSingleton(Loki::TypeInfo type);
+    template<typename T> void DeleteSingleton()
+    {
+        DeleteSingleton(Loki::TypeInfo(typeid(T)));
+   }
+private:
+    std::map<Loki::TypeInfo, std::unique_ptr<ISingleton>> g_singletons;
 };

@@ -2,7 +2,9 @@
 #include "EagleLib/Defs.hpp"
 #include "EagleLib/rcc/shared_ptr.hpp"
 #include "EagleLib/ParameteredIObject.h"
+#include "EagleLib/rcc/SystemTable.hpp"
 
+#include <type_traits>
 #include <vector>
 #include <memory>
 namespace Parameters
@@ -28,6 +30,8 @@ namespace EagleLib
     class EAGLE_EXPORTS IDataStream: public TInterface<IID_DataStream, ParameteredIObject>
     {
     public:
+
+
         typedef rcc::shared_ptr<IDataStream> Ptr;
         static Ptr create(const std::string& document, const std::string& preferred_frame_grabber = "");
         static bool CanLoadDocument(const std::string& document);
@@ -71,5 +75,50 @@ namespace EagleLib
         
         virtual void AddVariableSink(IVariableSink* sink) = 0;
         virtual void RemoveVariableSink(IVariableSink* sink) = 0;
+        
+        // Get or create singleton for this datastream
+        template<typename T> T* GetSingleton()
+        {
+            auto& ptr_ref = GetSingleton(Loki::TypeInfo(typeid(T)));
+            if(ptr_ref)
+            {
+                return static_cast<Singleton<T>*>(ptr_ref.get())->ptr;
+            }else
+            {
+                ptr_ref.reset(new Singleton<T>(new T()));
+            }
+        }
+
+        template<typename T> rcc::weak_ptr<T> GetIObjectSingleton()
+        {
+            auto& ptr_ref = GetIObjectSingleton(Loki::TypeInfo(typeid(T)));
+            if(ptr_ref)
+            {
+                return static_cast<IObjectSingleton<T>*>(ptr_ref.get())->ptr;
+            }else
+            {
+                auto ptr = new IObjectSingleton<T>(T::create());
+                ptr_ref.reset(ptr);
+                return ptr->ptr;
+            }
+        }
+
+        // Transfers ownership to the datastream
+        template<typename T> T* SetSingleton(typename std::enable_if<!std::is_base_of<IObject, T>::value, T>* singleton)
+        {
+            auto& ptr_ref = GetSingleton(Loki::TypeInfo(typeid(T)));
+            ptr_ref.reset(new Singleton<T>(singleton));
+            return singleton;
+        }
+        template<typename T> rcc::weak_ptr<T> SetSingleton(typename std::enable_if<std::is_base_of<IObject, T>::value, T>* singleton)
+        {
+            auto& ptr_ref = GetIObjectSingleton(Loki::TypeInfo(typeid(T)));
+            auto sig_ptr = new IObjectSingleton<T>(singleton);
+            ptr_ref.reset(sig_ptr);
+            return sig_ptr->ptr;;
+        }
+    protected:
+        virtual std::unique_ptr<ISingleton>& GetSingleton(Loki::TypeInfo type) = 0;
+        virtual std::unique_ptr<ISingleton>& GetIObjectSingleton(Loki::TypeInfo type) = 0;
     };
 }

@@ -248,6 +248,11 @@ namespace rcc
             assert(m_object != nullptr);
             return m_object;
         }
+        T* operator->() const
+        {
+            assert(m_object != nullptr);
+            return m_object;
+        }
         weak_ptr& operator=(weak_ptr const & r)
         {
             swap(r);

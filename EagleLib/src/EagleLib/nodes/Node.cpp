@@ -769,7 +769,7 @@ Node::Init(bool firstInit)
     ui_collector::set_node_name(getFullTreeName());
     // Node init should be called first because it is where implicit parameters should be setup
     // Then in ParmaeteredIObject, the implicit parameters will be added back to the _parameter vector
-    RegisterAllParams();
+    
     NodeInit(firstInit); 
     ParameteredIObject::Init(firstInit);
 }

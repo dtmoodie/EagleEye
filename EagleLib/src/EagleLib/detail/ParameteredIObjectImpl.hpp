@@ -14,64 +14,30 @@
 #undef END_PARAMS
 
 
-#define BEGIN_PARAM_1(DERIVED, N_) \
-protected: \
-    typedef DERIVED PARAM_THIS_CLASS; \
-    typedef ParameteredIObject PARAM_PARENT; \
-    void call_parent(ISimpleSerializer* pSerializer){ ParameteredIObject::SerializeAllParams(pSerializer); } \
-    void init_parent() {ParameteredIObject::RegisterAllParams(); } \
+#define BEGIN_PARAMS__1(DERIVED, N_) \
+    BEGIN_PARAMS_1(DERIVED, N_); \
     template<int N> void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy) \
     { \
         SerializeParams(pSerializer, Signals::_counter_<N-1>()); \
     } \
-    template<int N> void InitializeParams(Signals::_counter_<N> dummy) \
-    { \
-        InitializeParams(Signals::_counter_<N-1>()); \
-    } \
-    void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N_> dummy){} \
-    void InitializeParams(Signals::_counter_<N_> dummy){}
+    void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N_> dummy){}
 
-#define BEGIN_PARAM_2(DERIVED, BASE, N) \
-    typedef DERIVED PARAM_THIS_CLASS; \
-    typedef BASE PARAM_PARENT; \
-    void call_parent(ISimpleSerializer* pSerializer){ BASE::SerializeParams(pSerializer); } \
-    void init_parent() {BASE::RegisterAllParams(); } \
+
+#define BEGIN_PARAMS__2(DERIVED, BASE, N) \
+    BEGIN_PARAMS_2(DERIVED, BASE, N) \
     template<int N> void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy) \
     { \
         SerializeParams(pSerializer, Signals::_counter_<N-1>()); \
     } \
-    template<int N> void InitializeParams(Signals::_counter_<N> dummy) \
-    { \
-        InitializeParams(Signals::_counter_<N-1>()); \
-    } \
     void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N_> dummy){} \
-    void InitializeParams(Signals::_counter_<N_> dummy){}
+    
 
 
-
-#define END_PARAMS_(N) \
-public: \
-    void SerializeAllParams(ISimpleSerializer* pSerializer) \
-    { \
-        call_parent(pSerializer); \
-        SerializeParams(pSerializer, Signals::_counter_<N-1>()); \
-    } \
-    void RegisterAllParams() \
-    { \
-        init_parent(); \
-        InitializeParams(Signals::_counter_<N-1>()); \
-    }
 
 #define PARAM_(type, name, init, N) \
-    type name = init; \
+    DEFINE_PARAM_4(type, name, initial_value, N); \
+    type name; \
     Parameters::TypedParameterPtr<type> name##_param; \
-    void InitializeParams(Signals::_counter_<N> dummy) \
-    { \
-        name##_param.SetName(#name); \
-        name##_param.UpdateData(&name); \
-        ParameteredObject::addParameter(&name##_param); \
-        InitializeParams(Signals::_counter_<N-1>()); \
-    } \
     void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy) \
     { \
         SERIALIZE(name); \
@@ -79,8 +45,8 @@ public: \
     }
 
 #define RANGED_PARAM_(type, name, init, min, max, N) \
-    type name = init; \
-    Parameters::RangedParameterPtr<type> name##_param; \
+    DEFINE_PARAM_5(type, name, min, max, N); \
+    type name; Parameters::RangedParameterPtr<type> name##_param; \
     void InitializeParams(Signals::_counter_<N> dummy) \
     { \
         name##_param.SetName(#name); \
@@ -92,5 +58,14 @@ public: \
     void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy) \
     { \
         SERIALIZE(name); \
+        SerializeParams(pSerializer, Signals::_counter_<N-1>()); \
+    }
+
+#define END_PARAMS__(N) \
+    END_PARAMS_(N); \
+public: \
+    void SerializeAllParams(ISimpleSerializer* pSerializer) \
+    { \
+        call_parent(pSerializer); \
         SerializeParams(pSerializer, Signals::_counter_<N-1>()); \
     }

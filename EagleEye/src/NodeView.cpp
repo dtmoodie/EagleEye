@@ -3,6 +3,8 @@
 #include "qdrag.h"
 #include <qmimedata.h>
 #include <EagleLib/nodes/NodeManager.h>
+#include <EagleLib/Signals.h>
+#include "signal_dialog.h"
 
 NodeView::NodeView(QWidget* parent) :
     QGraphicsView(parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
@@ -12,20 +14,24 @@ NodeView::NodeView(QGraphicsScene *scene, QWidget *parent):
     QGraphicsView(scene, parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
 {
     actions.push_back(new QAction("Delete Node / stream", rightClickMenu));
+    actions.push_back(new QAction("Display Signals", rightClickMenu));
     actions.push_back(new QAction("Display as image", rightClickMenu));
     actions.push_back(new QAction("Plot", rightClickMenu));
-    actions[1]->setEnabled(false);
+    
     actions[2]->setEnabled(false);
+    actions[3]->setEnabled(false);
     rightClickMenu->addActions(actions);
     rightClickMenu->installEventFilter(this);
     actions[0]->installEventFilter(this);
     actions[1]->installEventFilter(this);
     actions[2]->installEventFilter(this);
+    actions[3]->installEventFilter(this);
     connect(actions[0], SIGNAL(triggered()), this, SLOT(on_deleteNode()));
-    connect(actions[1], SIGNAL(triggered()), this, SLOT(on_displayImage()));
-    connect(actions[2], SIGNAL(triggered()), this, SLOT(on_plotData()));
+    connect(actions[1], SIGNAL(triggered()), this, SLOT(on_display_signals()));
+    connect(actions[2], SIGNAL(triggered()), this, SLOT(on_displayImage()));
+    connect(actions[3], SIGNAL(triggered()), this, SLOT(on_plotData()));
     currentParam = nullptr;
-
+    _signal_dialog = nullptr;
 }
 void NodeView::addWidget(QGraphicsProxyWidget * widget, ObjectId id)
 {
@@ -76,17 +82,17 @@ void NodeView::on_parameter_clicked(Parameters::Parameter* param, QPoint pos)
             param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3f>)) ||
             param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3d>)))
         {
-            actions[1]->setEnabled(true);
             actions[2]->setEnabled(true);
-            actions[1]->setText("Display as image (" + QString::fromStdString(param->GetName()) + ")");
-            actions[2]->setText("Plot (" + QString::fromStdString(param->GetName()) + ")");
+            actions[3]->setEnabled(true);
+            actions[2]->setText("Display as image (" + QString::fromStdString(param->GetName()) + ")");
+            actions[3]->setText("Plot (" + QString::fromStdString(param->GetName()) + ")");
             currentParam = param;
         }
     }
     else
     {
-        actions[1]->setEnabled(false);
         actions[2]->setEnabled(false);
+        actions[3]->setEnabled(false);
     }
     //rightClickMenu->popup(mapToGlobal(pos));
 }
@@ -142,6 +148,37 @@ void NodeView::on_plotData()
     currentWidget = nullptr;
     if(currentParam != nullptr)
         emit plotData(currentParam);
+}
+void NodeView::on_display_signals()
+{
+    if(currentWidget)
+    {
+        auto widget = currentWidget->widget();
+        if(auto node_widget = dynamic_cast<QNodeWidget*>(widget))
+        {
+            auto node = node_widget->getNode();
+            if(_signal_dialog)
+            {
+                _signal_dialog->update(dynamic_cast<Signals::signal_manager*>(node->GetDataStream()->GetSignalManager()));
+            }else
+            {
+                _signal_dialog = new signal_dialog(dynamic_cast<Signals::signal_manager*>(node->GetDataStream()->GetSignalManager()), this);
+            }
+            _signal_dialog->show();
+        }
+        if(auto stream_widget = dynamic_cast<DataStreamWidget*>(widget))
+        {
+            auto stream = stream_widget->GetStream();
+            if(_signal_dialog)
+            {
+                _signal_dialog->update(dynamic_cast<Signals::signal_manager*>(stream->GetSignalManager()));
+            }else
+            {
+                _signal_dialog = new signal_dialog(dynamic_cast<Signals::signal_manager*>(stream->GetSignalManager()), this);
+            }
+            _signal_dialog->show();
+        }
+    }
 }
 
 void NodeView::mousePressEvent(QMouseEvent* event)
@@ -207,8 +244,8 @@ void NodeView::mousePressEvent(QMouseEvent* event)
             {
                 if(event->button() == Qt::RightButton)
                 {
-                    actions[1]->setEnabled(false);
-                    actions[2]->setEnabled(false);    
+                    actions[2]->setEnabled(false);
+                    actions[3]->setEnabled(false);    
                     auto pos = event->pos();
                     rightClickMenu->popup(mapToGlobal(pos));
                     QGraphicsView::mousePressEvent(event);
