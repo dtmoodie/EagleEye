@@ -5,6 +5,7 @@
 #include <EagleLib/nodes/NodeManager.h>
 #include <EagleLib/Signals.h>
 #include "signal_dialog.h"
+#include <EagleLib/plotters/PlotManager.h>
 
 NodeView::NodeView(QWidget* parent) :
     QGraphicsView(parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
@@ -66,21 +67,7 @@ void NodeView::on_parameter_clicked(Parameters::Parameter* param, QPoint pos)
     // Spawn the right click dialog
     if (param != nullptr)
     {
-        if (param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat*)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::cuda::GpuMat&)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat*)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(cv::Mat&)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<int>)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<float>)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<double>)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2b>)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2f>)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec2d>)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3b>)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3f>)) ||
-            param->GetTypeInfo() == Loki::TypeInfo(typeid(std::vector<cv::Vec3d>)))
+        if (EagleLib::PlotManager::getInstance().canPlotParameter(param))
         {
             actions[2]->setEnabled(true);
             actions[3]->setEnabled(true);

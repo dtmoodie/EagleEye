@@ -12,5 +12,6 @@ namespace EagleLib
         rcc::shared_ptr<Plotter> getPlot(const std::string& plotName);
         std::vector<std::string> getAvailablePlots();
         std::vector<std::string> getAcceptablePlotters(Parameters::Parameter* param);
+        bool canPlotParameter(Parameters::Parameter* param);
     };
 }

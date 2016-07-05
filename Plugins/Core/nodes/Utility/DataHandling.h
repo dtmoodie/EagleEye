@@ -15,7 +15,7 @@ namespace EagleLib
     {
     public:
         GetOutputImage();
-        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory>& img, cv::cuda::Stream& stream);
+        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         virtual void NodeInit(bool firstInit);
     };
@@ -23,7 +23,7 @@ namespace EagleLib
     {
     public:
         ExportInputImage();
-        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory>& img, cv::cuda::Stream& stream);
+        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         virtual void NodeInit(bool firstInit);
     };

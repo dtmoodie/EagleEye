@@ -7,7 +7,7 @@
 #define BEGIN_PARAMS(...) BOOST_PP_OVERLOAD(BEGIN_PARAMS__, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__)
 #endif
 
-#define PARAM(type, name, init) PARAM_(type, name, init, __COUNTER__);
+
 #define RANGED_PARAM(type, name, init, min, max) RANGED_PARAM_(type, name, init, min, max, __COUNTER__);
 
 #define END_PARAMS END_PARAMS__(__COUNTER__);

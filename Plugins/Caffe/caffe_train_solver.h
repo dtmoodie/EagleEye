@@ -30,7 +30,7 @@ namespace EagleLib
             BEGIN_PARAMS(caffe_solver);
                 PARAM(Parameters::ReadFile, solver_description, "");
                 PARAM(Parameters::ReadFile, network_description, "");
-                PARAM(Parameters::ReadFile, previous_solver_state, "");
+                PARAM(Parameters::ReadFile, previous_solver_state);
                 PARAM(std::vector<Parameters::ReadFile>, weight_files, std::vector<Parameters::ReadFile>());
                 PARAM(int, test_interval, 1000);
                 PARAM(double, base_learning_rate, 0.001);

@@ -345,3 +345,4 @@ void vtkPointCloudPlotter::OnGpuMatParameterUpdate(cv::cuda::Stream* stream)
     
 }
 REGISTERCLASS(vtkPointCloudPlotter, &g_info)
+

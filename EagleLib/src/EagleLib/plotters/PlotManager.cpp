@@ -86,3 +86,23 @@ std::vector<std::string> PlotManager::getAcceptablePlotters(Parameters::Paramete
     }
     return output;
 }
+bool PlotManager::canPlotParameter(Parameters::Parameter* param)
+{
+    auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_Plotter);
+    for(auto& constructor : constructors)
+    {
+        auto object_info = constructor->GetObjectInfo();
+        if(object_info)
+        {
+            auto plot_info = dynamic_cast<PlotterInfo*>(object_info);
+            if(plot_info)
+            {
+                if(plot_info->AcceptsParameter(param))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}

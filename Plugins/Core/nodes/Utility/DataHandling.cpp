@@ -12,7 +12,7 @@ void GetOutputImage::NodeInit(bool firstInit)
     addInputParameter<TS<SyncedMemory>>("SyncedInput");
     addInputParameter<cv::Mat>("CpuInput");
 }
-TS<SyncedMemory> GetOutputImage::doProcess(TS<SyncedMemory>& img, cv::cuda::Stream& stream)
+TS<SyncedMemory> GetOutputImage::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
 {
     auto synced_input = getParameter<TS<SyncedMemory>>("SyncedInput")->Data();
     if(synced_input)
@@ -42,9 +42,9 @@ cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     }
     return *input;
 }
-TS<SyncedMemory> ExportInputImage::doProcess(TS<SyncedMemory>& img, cv::cuda::Stream& stream)
+TS<SyncedMemory> ExportInputImage::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
 {
-    updateParameter("Output image", img, &stream);
+    updateParameter("Output image", img, &stream)->type = Parameters::Parameter::Output;
     return img;
 }
 
@@ -52,7 +52,7 @@ cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 {
     {
         rmt_ScopedCPUSample(ExportInputImage_updateParameter);
-        updateParameter("Output image", img, &stream);
+        updateParameter("Output GPU image", img, &stream);
     }
     
     return img;
@@ -60,7 +60,7 @@ cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 
 void ExportInputImage::NodeInit(bool firstInit)
 {
-    updateParameter("Output image", cv::cuda::GpuMat())->type = Parameters::Parameter::Output;
+    updateParameter("Output GPU image", cv::cuda::GpuMat())->type = Parameters::Parameter::Output;
 }
 
 void ImageInfo::NodeInit(bool firstInit)

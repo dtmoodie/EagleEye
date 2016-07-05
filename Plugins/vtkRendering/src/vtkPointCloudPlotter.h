@@ -38,5 +38,7 @@ namespace EagleLib
             vtkSmartPointer<vtkIdTypeArray> initcells;
             vtkSmartPointer<vtkLODActor> actor;
         };
+
+
     }
 }

@@ -26,6 +26,14 @@ void IFrameGrabber::InitializeFrameGrabber(IDataStream* stream)
         SetupVariableManager(stream->GetVariableManager());
     }
 }
+void IFrameGrabber::Init(bool firstInit)
+{
+    ParameteredIObject::Init(firstInit);
+    if(!firstInit)
+    {
+        //LoadFile(loaded_document); // each implementation should know if it needs to reload the file on recompile
+    }
+}
 void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
 {
     ParameteredIObject::Serialize(pSerializer);

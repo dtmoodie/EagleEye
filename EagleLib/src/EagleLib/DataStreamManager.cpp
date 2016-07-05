@@ -527,7 +527,12 @@ void DataStream::process()
         {
             dirty_flag = true;
         }, std::placeholders::_1), this, _thread_id );
-
+    bool run_continuously = false;
+    auto run_continuously_connection = signal_manager->connect<void(bool)>("run_continuously",
+        std::bind([&run_continuously](bool value)
+    {
+        run_continuously = value;
+    }, std::placeholders::_1), this, _thread_id);
     
 
     LOG(info) << "Starting stream thread";
@@ -537,7 +542,7 @@ void DataStream::process()
         {
             Signals::thread_specific_queue::run(_thread_id);
 
-            if(dirty_flag)
+            if(dirty_flag || run_continuously == true)
             {
                 dirty_flag = false;
                 TS<SyncedMemory> current_frame;

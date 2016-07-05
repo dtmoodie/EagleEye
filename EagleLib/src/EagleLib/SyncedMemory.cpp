@@ -209,12 +209,28 @@ cv::Size SyncedMemory::GetSize(int index) const
 std::vector<int> SyncedMemory::GetShape() const
 {
     std::vector<int> output;
-    output.push_back(d_data.size());
-    if(d_data.empty())
+    output.push_back(std::max(d_data.size(), h_data.size()));
+    if(d_data.empty() && h_data.empty())
         return output;
-    output.push_back(d_data[0].rows);
-    output.push_back(d_data[0].cols);
-    output.push_back(d_data[0].channels());
+    if(d_data.empty())
+    {
+        output.push_back(h_data[0].rows);
+        output.push_back(h_data[0].cols);
+        output.push_back(h_data[0].channels());
+    }else
+    {
+        if(h_data.empty())
+        {
+            output.push_back(d_data[0].rows);
+            output.push_back(d_data[0].cols);
+            output.push_back(d_data[0].channels());
+        }else
+        {
+            output.push_back(std::max(d_data[0].rows, h_data[0].rows));
+            output.push_back(std::max(d_data[0].cols, h_data[0].cols));
+            output.push_back(std::max(d_data[0].channels(), h_data[0].channels()));
+        }
+    }
     return output;
 }
 int SyncedMemory::GetDepth() const

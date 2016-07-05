@@ -78,7 +78,7 @@ namespace EagleLib
 
         virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager() = 0;
         virtual void InitializeFrameGrabber(IDataStream* stream);
-
+        virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
         SIGNALS_BEGIN(IFrameGrabber, ParameteredIObject);
