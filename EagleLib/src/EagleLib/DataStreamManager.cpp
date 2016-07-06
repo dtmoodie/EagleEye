@@ -135,6 +135,8 @@ namespace EagleLib
         std::vector<std::shared_ptr<Signals::connection>>        connections;
         cv::cuda::Stream                                        streams[2];
         std::vector<IVariableSink*>                             variable_sinks;
+        // These are threads for attempted connections
+        std::vector<boost::thread*> connection_threads;
     public:
         SIGNALS_BEGIN(DataStream, IDataStream);
             SIG_SEND(StartThreads);
@@ -196,6 +198,11 @@ DataStream::~DataStream()
     frame_grabber.reset();
     signal_manager.reset();
     _sig_manager = nullptr;
+    for(auto thread : connection_threads)
+    {
+        thread->join();
+        delete thread;
+    }
 }
 
 rcc::weak_ptr<IViewManager> DataStream::GetViewManager()
@@ -303,7 +310,7 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
             }
         }
     }
-
+    
     for(int i = 0; i < idx.size(); ++i)
     {
         auto fg = rcc::shared_ptr<IFrameGrabber>(valid_frame_grabbers[idx[i]]->Construct());
@@ -325,7 +332,7 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
         obj->fg = fg;
         obj->document = file_to_load;
         auto future = obj->promise.get_future();
-        boost::thread connection_thread = boost::thread([obj]()->void{
+        boost::thread* connection_thread = new boost::thread([obj]()->void{
             try
             {
                 obj->load();
@@ -336,12 +343,13 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
             
             delete obj;
         });
-        if(connection_thread.timed_join(boost::posix_time::milliseconds(fg_info->LoadTimeout())))
+        if(connection_thread->timed_join(boost::posix_time::milliseconds(fg_info->LoadTimeout())))
         {
             if(future.get())
             {
                 frame_grabber = fg;
                 LOG(info) << "Loading " << file_to_load << " with frame_grabber: " << fg->GetTypeName() << " with priority: " << frame_grabber_priorities[idx[i]];
+                delete connection_thread;
                 return true; // successful load
             }else // unsuccessful load
             {
@@ -351,6 +359,7 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
         else // timeout        
         {
             LOG(warning) << "Timeout while loading " << file_to_load << " with " << fg_info->GetObjectName() << " after waiting " << fg_info->LoadTimeout() << " ms";
+            connection_threads.push_back(connection_thread);
         }
     }
     return false;

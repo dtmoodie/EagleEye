@@ -49,6 +49,8 @@ public:
     virtual void closeEvent(QCloseEvent *event);
     void processingThread_uiCallback(boost::function<void(void)> f, std::pair<void*, Loki::TypeInfo> source);
     void process_log_message(boost::log::trivial::severity_level severity, std::string message);
+public slots:
+    void load_file(QString file, QString preferred_loader = "");
 private slots:
     void on_pushButton_clicked();
     void onTimeout();
@@ -88,7 +90,7 @@ private slots:
 
     void on_btnStop_clicked();
     void on_nodeUpdate(EagleLib::Nodes::Node* node);
-    void load_file(QString file, QString preferred_loader = "");
+    
     void on_persistence_timeout();
 
 signals:

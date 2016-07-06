@@ -8,6 +8,7 @@
 #include <vtkColorTransferFunction.h>
 #include <vtkVolumeProperty.h>
 #include <vtkUnsignedShortArray.h>
+#include <vtkPiecewiseFunction.h>
 
 using namespace EagleLib;
 using namespace EagleLib::Plotting;
@@ -90,11 +91,11 @@ void vtkVolumetricPlotter::SetInput(Parameters::Parameter* param_)
                     }
                 }
                 size_t size = extent[1] * extent[3] * extent[5];
-
+                renderer->SetBackground(0.1,0.4,0.2);
                 vtkSmartPointer<vtkStructuredPoints> dataset = vtkSmartPointer<vtkStructuredPoints>::New();
                 dataset->SetExtent(extent);
                 dataset->SetOrigin(0,0,0);
-                dataset->SetSpacing(0,0,0);
+                dataset->SetSpacing(1,1,1);
                 auto points = dataset->GetPointData();
                 vtkUnsignedShortArray *scalars = vtkUnsignedShortArray::New();
                 
@@ -112,23 +113,33 @@ void vtkVolumetricPlotter::SetInput(Parameters::Parameter* param_)
                 }
                 scalars->DataChanged();
                 points->SetScalars(scalars);
-                vtkSmartPointer<vtkSmartVolumeMapper> mapper = vtkSmartPointer<vtkSmartVolumeMapper>::New();
-                mapper->SetInputData(dataset);
-
-                vtkSmartPointer<vtkVolumeProperty> volumeProperty = vtkSmartPointer<vtkVolumeProperty>::New();
-                volumeProperty->ShadeOff();
-                volumeProperty->SetInterpolationType(VTK_LINEAR_INTERPOLATION);
-
-
-                vtkSmartPointer<vtkColorTransferFunction> color =  vtkSmartPointer<vtkColorTransferFunction>::New();
-                color->AddRGBPoint(0,    0.0, 0.0, 1.0);
-                color->AddRGBPoint(1024, 1.0, 0.0, 0.0);
-                color->AddRGBPoint(2048, 1.0, 1.0, 1.0);
-                volumeProperty->SetColor(color);
-
+                
                 vtkSmartPointer<vtkVolume> volume = vtkSmartPointer<vtkVolume>::New();
-                volume->SetMapper(mapper);
-                volume->SetProperty(volumeProperty);
+
+                    vtkSmartPointer<vtkSmartVolumeMapper> mapper = vtkSmartPointer<vtkSmartVolumeMapper>::New();
+                        mapper->SetBlendModeToComposite(); // composite first
+                        mapper->SetInputData(dataset);
+                        volume->SetMapper(mapper);
+
+                    vtkSmartPointer<vtkVolumeProperty> volumeProperty = vtkSmartPointer<vtkVolumeProperty>::New();
+                        volumeProperty->ShadeOff();
+                        volumeProperty->SetInterpolationType(VTK_LINEAR_INTERPOLATION);
+
+                        vtkSmartPointer<vtkPiecewiseFunction> compositeOpacity = vtkSmartPointer<vtkPiecewiseFunction>::New();
+                            compositeOpacity->AddPoint(0.0,0.0);
+                            compositeOpacity->AddPoint(80.0,1.0);
+                            compositeOpacity->AddPoint(80.1,1.0);
+                            compositeOpacity->AddPoint(255.0,1.0);
+                            volumeProperty->SetScalarOpacity(compositeOpacity); // composite first.
+
+                        vtkSmartPointer<vtkColorTransferFunction> color =  vtkSmartPointer<vtkColorTransferFunction>::New();
+                            color->AddRGBPoint(0,    0.0, 0.0, 1.0);
+                            color->AddRGBPoint(1024, 1.0, 0.0, 0.0);
+                            color->AddRGBPoint(2048, 1.0, 1.0, 1.0);
+                            volumeProperty->SetColor(color);
+
+                        volume->SetProperty(volumeProperty);
+
                 renderer->AddViewProp(volume);
             }
         }

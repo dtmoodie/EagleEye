@@ -16,7 +16,9 @@ int main(int argc, char *argv[])
     boost::program_options::options_description desc("Allowed options");
     desc.add_options()
         ("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")
-        ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load");
+        ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")
+        ("file", boost::program_options::value<std::string>(), "Path to file to initialize with")
+        ("preferred_loader", boost::program_options::value<std::string>(), "Preferred loader to initialize with");
 
     boost::program_options::variables_map vm;
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
@@ -43,6 +45,17 @@ int main(int argc, char *argv[])
     }
 
     MainWindow w;
+    if(vm.count("file"))
+    {
+        if(vm.count("preferred_loader"))
+        {
+            w.load_file(QString::fromStdString(vm["file"].as<std::string>()), QString::fromStdString(vm["preferred_loader"].as<std::string>()));
+        }else
+        {
+            w.load_file(QString::fromStdString(vm["file"].as<std::string>()));
+        }
+    }
+    
     w.show();
 
     return a.exec();
