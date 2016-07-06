@@ -1,5 +1,6 @@
 #include "vtkVolumetricPlotter.h"
 #include <EagleLib/SyncedMemory.h>
+#include <EagleLib/utilities/ColorMapping.hpp>
 #include <vtkDataReader.h>
 #include <vtkStructuredPoints.h>
 #include <vtkErrorCode.h>
@@ -114,33 +115,45 @@ void vtkVolumetricPlotter::SetInput(Parameters::Parameter* param_)
                 scalars->DataChanged();
                 points->SetScalars(scalars);
                 
-                vtkSmartPointer<vtkVolume> volume = vtkSmartPointer<vtkVolume>::New();
+                _volume = vtkSmartPointer<vtkVolume>::New();
 
-                    vtkSmartPointer<vtkSmartVolumeMapper> mapper = vtkSmartPointer<vtkSmartVolumeMapper>::New();
-                        mapper->SetBlendModeToComposite(); // composite first
-                        mapper->SetInputData(dataset);
-                        volume->SetMapper(mapper);
+                    _mapper = vtkSmartPointer<vtkSmartVolumeMapper>::New();
+                        _mapper->SetBlendModeToComposite(); // composite first
+                        _mapper->SetInputData(dataset);
+                        _volume->SetMapper(_mapper);
 
-                    vtkSmartPointer<vtkVolumeProperty> volumeProperty = vtkSmartPointer<vtkVolumeProperty>::New();
-                        volumeProperty->ShadeOff();
-                        volumeProperty->SetInterpolationType(VTK_LINEAR_INTERPOLATION);
+                    _volumeProperty = vtkSmartPointer<vtkVolumeProperty>::New();
+                        _volumeProperty->ShadeOff();
+                        _volumeProperty->SetInterpolationType(VTK_LINEAR_INTERPOLATION);
 
-                        vtkSmartPointer<vtkPiecewiseFunction> compositeOpacity = vtkSmartPointer<vtkPiecewiseFunction>::New();
-                            compositeOpacity->AddPoint(0.0,0.0);
-                            compositeOpacity->AddPoint(80.0,1.0);
-                            compositeOpacity->AddPoint(80.1,1.0);
-                            compositeOpacity->AddPoint(255.0,1.0);
-                            volumeProperty->SetScalarOpacity(compositeOpacity); // composite first.
+                        _compositeOpacity = vtkSmartPointer<vtkPiecewiseFunction>::New();
+                            _compositeOpacity->AddPoint(0.0,0.0);
+                            _compositeOpacity->AddPoint(80.0,1.0);
+                            _compositeOpacity->AddPoint(80.1,1.0);
+                            _compositeOpacity->AddPoint(255.0,1.0);
+                            _volumeProperty->SetScalarOpacity(_compositeOpacity); // composite first.
 
-                        vtkSmartPointer<vtkColorTransferFunction> color =  vtkSmartPointer<vtkColorTransferFunction>::New();
-                            color->AddRGBPoint(0,    0.0, 0.0, 1.0);
-                            color->AddRGBPoint(1024, 1.0, 0.0, 0.0);
-                            color->AddRGBPoint(2048, 1.0, 1.0, 1.0);
-                            volumeProperty->SetColor(color);
+                        _color =  vtkSmartPointer<vtkColorTransferFunction>::New();
+                            auto scheme = ColorMapperFactory::Instance()->Create(colormapping_scheme.enumerations[colormapping_scheme.currentSelection]);
+                            if(scheme)
+                            {
+                                cv::Mat_<float> lut = scheme->GetMat(0, opacity_max_value, 50);
+                                for(int i = 0; i < lut.rows; ++i)
+                                {
+                                    _color->AddRGBPoint(lut(i, 0), lut(i, 1), lut(i, 2), lut(i, 3));
+                                }
+                                _volumeProperty->SetColor(_color);
+                            }else
+                            {
+                                _color->AddRGBPoint(0,    0.0, 0.0, 1.0);
+                                _color->AddRGBPoint(1024, 1.0, 0.0, 0.0);
+                                _color->AddRGBPoint(2048, 1.0, 1.0, 1.0);
+                            }
+                            _volumeProperty->SetColor(_color);
 
-                        volume->SetProperty(volumeProperty);
+                        _volume->SetProperty(_volumeProperty);
 
-                renderer->AddViewProp(volume);
+                AddAutoRemoveProp(_volume);
             }
         }
     }
@@ -160,6 +173,41 @@ void vtkVolumetricPlotter::OnSyncedMemUpdate(cv::cuda::Stream* stream)
 std::string vtkVolumetricPlotter::PlotName() const
 {
     return "vtkVolumetricPlotter";
+}
+void vtkVolumetricPlotter::PlotInit(bool firstInit)
+{
+    vtkPlotter::PlotInit(firstInit);
+    colormapping_scheme.enumerations = ColorMapperFactory::Instance()->ListSchemes();
+    colormapping_scheme.values.clear();
+    for(int i = 0; i < colormapping_scheme.enumerations.size(); ++i)
+        colormapping_scheme.values.push_back(i);
+    if(firstInit)
+        colormapping_scheme.currentSelection = 0;
+}
+void vtkVolumetricPlotter::onUpdate(Parameters::Parameter* param, cv::cuda::Stream* stream)
+{
+    vtkPlotter::onUpdate(param, stream);
+    if(param == &opacity_max_value_param || param == &opacity_sharpness_param || param == &opacity_min_value_param)
+    {
+        _compositeOpacity = vtkSmartPointer<vtkPiecewiseFunction>::New();
+        _compositeOpacity->AddPoint(opacity_min_value, 0.0);
+        _compositeOpacity->AddPoint(opacity_max_value, 1.0);
+        _volumeProperty->SetScalarOpacity(_compositeOpacity); // composite first.
+    }
+    if(param == &colormapping_scheme_param)
+    {
+        auto scheme = ColorMapperFactory::Instance()->Create(colormapping_scheme.enumerations[colormapping_scheme.currentSelection]);
+        if(scheme)
+        {
+            cv::Mat_<float> lut = scheme->GetMat(0, opacity_max_value, 50);
+            _color =  vtkSmartPointer<vtkColorTransferFunction>::New();
+            for(int i = 0; i < lut.rows; ++i)
+            {
+                _color->AddRGBPoint(lut(i, 0), lut(i, 1), lut(i, 2), lut(i, 3));
+            }
+            _volumeProperty->SetColor(_color);
+        }
+    }
 }
 
 REGISTERCLASS(vtkVolumetricPlotter, &g_volumeInfo)

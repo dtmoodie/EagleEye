@@ -57,15 +57,19 @@ namespace EagleLib
 
     class CV_EXPORTS QtPlotter : public Plotter
     {
+        class impl;
+        std::shared_ptr<impl> _pimpl;
     protected:
         std::list<QWidget*> plot_widgets;
     public:
+        virtual Parameters::Parameter* addParameter(Parameters::Parameter* param);
+        virtual Parameters::Parameter* addParameter(std::shared_ptr<Parameters::Parameter> param);
         virtual void AddPlot(QWidget* plot_) = 0;
         virtual void Serialize(ISimpleSerializer *pSerializer);
         virtual PlotterType Type() const;
 
         virtual QWidget* CreatePlot(QWidget* parent) = 0;
-        virtual QWidget* GetControlWidget(QWidget* parent) = 0;
+        virtual QWidget* GetControlWidget(QWidget* parent);
     };
 
 

@@ -3,10 +3,16 @@
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkAxesActor.h>
+
 #include <QVTKWidget2.h>
+
 #include <qopengl.h>
-#include "QtOpenGL/QGLContext"
 #include <QOpenGLContext>
+#include "QtOpenGL/QGLContext"
+#include <qgridlayout.h>
+
+#include <parameters/UI/Qt.hpp>
+
 using namespace EagleLib;
 using namespace EagleLib::Plotting;
 
@@ -24,6 +30,10 @@ vtkPlotter::vtkPlotter():
 vtkPlotter::~vtkPlotter()
 {
     Signals::thread_specific_queue::remove_from_queue(this);
+    for(auto prop : _auto_remove_props)
+    {
+        renderer->RemoveViewProp(prop);
+    }
 }
 bool vtkPlotter::AcceptsParameter(Parameters::Parameter* param)
 {
@@ -72,20 +82,15 @@ QWidget* vtkPlotter::CreatePlot(QWidget* parent)
 
     return widget;
 }
-void vtkPlotter::Init(bool firstInit)
+void vtkPlotter::PlotInit(bool firstInit)
 {
-    QtPlotter::Init(firstInit);
+    QtPlotter::PlotInit(firstInit);
     if(firstInit)
     {
         vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
 
         this->renderer->AddActor(axes);
     }    
-}
-
-QWidget* vtkPlotter::GetControlWidget(QWidget* parent)
-{
-    return nullptr;
 }
 
 void vtkPlotter::Serialize(ISimpleSerializer *pSerializer)
@@ -95,4 +100,28 @@ void vtkPlotter::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(renderer);
 }
 
+vtkRenderer* vtkPlotter::GetRenderer()
+{
+    return renderer;
+}
+void vtkPlotter::AddViewProp(vtkProp* prop)
+{
+    renderer->AddViewProp(prop);
+}
+void vtkPlotter::AddAutoRemoveProp(vtkProp* prop)
+{
+    renderer->AddViewProp(prop);
+    _auto_remove_props.push_back(prop);
+}
+void vtkPlotter::RemoveViewProp(vtkProp* prop)
+{
+    renderer->RemoveViewProp(prop);
+}
+void vtkPlotter::RenderAll()
+{
+    for (auto itr : this->render_widgets)
+    {
+        itr->GetRenderWindow()->Render();
+    }
+}
 REGISTERCLASS(vtkPlotter);

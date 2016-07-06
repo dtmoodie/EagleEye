@@ -1,5 +1,5 @@
 #include "nodes/ImgProc/DisplayHelpers.h"
-#include "DisplayHelpers.cuh"
+//#include "DisplayHelpers.cuh"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -34,7 +34,7 @@ AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
     return img;
 }
 
-void
+/*void
 Colormap::NodeInit(bool firstInit)
 {
     rescale = true;
@@ -99,7 +99,7 @@ cv::cuda::GpuMat QtColormapDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
 
     return img;
 }
-
+*/
 void Normalize::NodeInit(bool firstInit)
 {
     Parameters::EnumParameter param;
@@ -147,7 +147,7 @@ cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(AutoScale, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Colormap, Image, Processing)
+//NODE_DEFAULT_CONSTRUCTOR_IMPL(Colormap, Image, Processing)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Normalize, Image, Processing)
-static EagleLib::Nodes::NodeInfo g_registerer_QtColormapDisplay("QtColormapDisplay", { "Image", "Sink" });
-REGISTERCLASS(QtColormapDisplay, &g_registerer_QtColormapDisplay)
+//static EagleLib::Nodes::NodeInfo g_registerer_QtColormapDisplay("QtColormapDisplay", { "Image", "Sink" });
+//REGISTERCLASS(QtColormapDisplay, &g_registerer_QtColormapDisplay)

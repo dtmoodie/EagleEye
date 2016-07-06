@@ -172,6 +172,7 @@ namespace EagleLib
         virtual void                    reset();
 
         virtual Parameters::Parameter* addParameter(Parameters::Parameter::Ptr param);
+        virtual Parameters::Parameter* addParameter(Parameters::Parameter* param);
         template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream = nullptr)
         {
             return ParameteredIObject::updateParameterPtr(name, data, GetTimestamp(), stream);

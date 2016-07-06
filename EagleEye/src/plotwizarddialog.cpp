@@ -26,11 +26,11 @@ void PlotWizardDialog::setup()
     previewPlots.clear();
     previewPlotters.clear();
     QSplitter* plot_splitter = new QSplitter(this);
-    QSplitter* plot_setting_splitter = new QSplitter(this);
+    
     plot_splitter->setOrientation(Qt::Vertical);
-    plot_setting_splitter->setOrientation(Qt::Vertical);
+    
     ui->plotPreviewLayout->addWidget(plot_splitter, 0,0);
-    ui->plotPreviewLayout->addWidget(plot_setting_splitter, 0, 1);
+    
     auto plotters = EagleLib::PlotManager::getInstance().getAvailablePlots();
     for(size_t i = 0; i < plotters.size(); ++i)
     {
@@ -44,17 +44,20 @@ void PlotWizardDialog::setup()
                 plot->installEventFilter(this);
                 qtPlotter->AddPlot(plot);
                 auto control_widget = qtPlotter->GetControlWidget(this);
-                //ui->plotPreviewLayout->addWidget(plot, i, 0);
-                plot_splitter->addWidget(plot);
                 if (control_widget)
                 {
-                    //ui->plotPreviewLayout->addWidget(control_widget, i, 1);
-                    plot_setting_splitter->addWidget(control_widget);
+                    QSplitter* setting_splitter= new QSplitter(this);
+                    setting_splitter->setOrientation(Qt::Horizontal);
+                    setting_splitter->addWidget(plot);
+                    setting_splitter->addWidget(control_widget);
                     previewPlotControllers[plot] = control_widget;
+                    plot_splitter->addWidget(setting_splitter);
+                }else
+                {
+                    plot_splitter->addWidget(plot);
                 }
                 previewPlots.push_back(plot);
                 previewPlotters.push_back(qtPlotter);
-
             }
         }
     }

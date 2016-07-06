@@ -208,11 +208,17 @@ void Node::onParameterAdded()
 Parameters::Parameter* Node::addParameter(Parameters::Parameter::Ptr param)
 {
     param->SetTreeRoot(getFullTreeName());
-    ParameteredObject::addParameter(param);
+    ParameteredIObject::addParameter(param);
     onParameterAdded();
     return param.get();
 }
-
+Parameters::Parameter* Node::addParameter(Parameters::Parameter* param)
+{
+    param->SetTreeRoot(getFullTreeName());
+    ParameteredIObject::addParameter(param);
+    onParameterAdded();
+    return param;
+}
 
 Node::~Node()
 {

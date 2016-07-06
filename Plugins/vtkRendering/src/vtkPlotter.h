@@ -61,7 +61,6 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5OpenGLd.lib");
 RUNTIME_COMPILER_LINKLIBRARY("OpenGL32.lib")
 
 #else
-RUNTIME_COMPILER_LINKLIBRARY("libParameter.lib")
 RUNTIME_COMPILER_LINKLIBRARY("vtkInteractionStyle-" VTK_VERSION_ ".lib");
 RUNTIME_COMPILER_LINKLIBRARY("vtkFiltersExtraction-" VTK_VERSION_ ".lib");
 RUNTIME_COMPILER_LINKLIBRARY("vtkCommonDataModel-" VTK_VERSION_ ".lib");
@@ -115,8 +114,6 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib")
 #endif
 
 #else
-
-
 #endif
 namespace EagleLib
 {
@@ -128,9 +125,16 @@ namespace EagleLib
         };
         class PLUGIN_EXPORTS vtkPlotter : public QtPlotter
         {
+            std::list<vtkProp*> _auto_remove_props;
         protected:
-            std::list<QVTKWidget2*> render_widgets;
             vtkSmartPointer<vtkRenderer> renderer;
+            std::list<QVTKWidget2*> render_widgets;
+            
+            vtkRenderer* GetRenderer();
+            void AddViewProp(vtkProp* prop);
+            void AddAutoRemoveProp(vtkProp* prop);
+            void RemoveViewProp(vtkProp* prop);
+            void RenderAll();
         public:
             vtkPlotter();
             virtual ~vtkPlotter();
@@ -138,11 +142,10 @@ namespace EagleLib
             virtual void SetInput(Parameters::Parameter* param_ = nullptr);
             virtual void OnParameterUpdate(cv::cuda::Stream* stream);
             virtual std::string PlotName() const;
-            virtual void Init(bool firstInit);
+            virtual void PlotInit(bool firstInit);
             virtual void AddPlot(QWidget* plot_);
 
             virtual QWidget* CreatePlot(QWidget* parent);
-            virtual QWidget* GetControlWidget(QWidget* parent);
 
             virtual void Serialize(ISimpleSerializer *pSerializer);
         };

@@ -31,9 +31,11 @@ void ParameteredIObject::Init(bool firstInit)
     if (firstInit)
     {
         InitializeExplicitParamsToDefault();
+        WrapExplicitParams();
     }
     else
     {
+        WrapExplicitParams();
         _parameters.clear();
         for(auto& param : _implicit_parameters)
         {
@@ -50,5 +52,5 @@ void ParameteredIObject::Init(bool firstInit)
         }
         sig_object_recompiled(this);
     }
-    WrapExplicitParams();
+    
 }

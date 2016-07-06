@@ -15,7 +15,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
 { \
     name##_param.SetName(#name); \
     name##_param.UpdateData(&name); \
-    ParameteredObject::addParameter(&name##_param); \
+    this->addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
@@ -41,7 +41,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
 { \
     name##_param.SetName(#name); \
     name##_param.UpdateData(&name); \
-    ParameteredObject::addParameter(&name##_param); \
+    this->addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
@@ -63,7 +63,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
     name##_param.SetName(#name); \
     name##_param.UpdateData(&name); \
     name##_param.SetRange(min, max); \
-    ParameteredObject::addParameter(&name##_param); \
+    this->addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
@@ -90,7 +90,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
     name##_param.SetName(#name); \
     name##_param.UpdateData(&name); \
     name##_param.SetRange(min, max); \
-    ParameteredObject::addParameter(&name##_param); \
+    this->addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
@@ -105,19 +105,7 @@ void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy
     SerializeParams(pSerializer, --dummy); \
 }
 
-#ifdef _MSC_VER
-//#define PARAM(TYPE, NAME, ...)  \
-//    TYPE NAME; \
-//    BOOST_PP_CAT( BOOST_PP_OVERLOAD(PARAM__, TYPE, NAME VA_ARGS(__VA_ARGS__) )(__COUNTER__, TYPE, NAME, ##__VA_ARGS__), BOOST_PP_EMPTY() )
 
-#define PARAM(TYPE, NAME, INIT) \
-    TYPE NAME = TYPE(INIT); \
-    PARAM__3(__COUNTER__, TYPE, NAME, INIT)
-                
-#else
-#define PARAM(...) BOOST_PP_OVERLOAD(PARAM_, __VA_ARGS__ )(__VA_ARGS__) \
-                   BOOST_PP_OVERLOAD(SERIALIZE_PARAM_, __VA_ARGS__ )(__VA_ARGS__)
-#endif
 
 
 #define BEGIN_PARAMS__1(DERIVED, N_) \
@@ -130,9 +118,9 @@ void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy
     void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N_> dummy){}
 
 
-#define BEGIN_PARAMS__2(DERIVED, BASE, N) \
-    BEGIN_PARAMS_2(DERIVED, BASE, N) \
-    void SerializeParentParams(ISimpleSerializer* pSerializer) { BASE::SerializeParams(pSerializer); } \
+#define BEGIN_PARAMS__2(DERIVED, BASE, N_) \
+    BEGIN_PARAMS_2(DERIVED, BASE, N_) \
+    void SerializeParentParams(ISimpleSerializer* pSerializer) { BASE::SerializeAllParams(pSerializer); } \
     template<int N> void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy) \
     { \
         SerializeParams(pSerializer, Signals::_counter_<N-1>()); \
@@ -148,7 +136,7 @@ void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy
         name##_param.SetName(#name); \
         name##_param.UpdateData(&name); \
         name##_param.SetRange(min, max); \
-        ParameteredObject::addParameter(&name##_param); \
+        this->addParameter(&name##_param); \
         InitializeParams(Signals::_counter_<N-1>()); \
     } \
     void SerializeParams(ISimpleSerializer* pSerializer, Signals::_counter_<N> dummy) \

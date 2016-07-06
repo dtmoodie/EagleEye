@@ -332,15 +332,12 @@ void vtkPointCloudPlotter::OnGpuMatParameterUpdate(cv::cuda::Stream* stream)
         convertPointCloudToVTKPolyData(*typed->Data(), polydata, initcells, stream ? *stream : cv::cuda::Stream::Null());
         createActorFromVTKDataSet(polydata, actor, false);
         if(new_actor)
-            renderer->AddActor(actor);
+            AddAutoRemoveProp(actor);
         actor->Modified();
     }
     {
         rmt_ScopedCPUSample(render);
-        for (auto itr : this->render_widgets)
-        {
-            itr->GetRenderWindow()->Render();
-        }
+        RenderAll();
     }
     
 }

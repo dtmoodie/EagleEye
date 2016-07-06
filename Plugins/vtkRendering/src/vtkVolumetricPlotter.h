@@ -1,10 +1,12 @@
 #pragma once
 #include "vtkPlotter.h"
 #include "vtkMatDataBuffer.h"
+#include <EagleLib/ParameteredIObjectImpl.hpp>
 
 #include <vtkPolyData.h>
 #include <vtkIdTypeArray.h>
 #include <vtkLODActor.h>
+
 #ifdef _MSC_VER
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("vtkRenderingVolume-" VTK_VERSION_ "d.lib")
@@ -15,6 +17,11 @@ RUNTIME_COMPILER_LINKLIBRARY("vtkRenderingVolume-" VTK_VERSION_ ".lib")
 #else
 
 #endif
+
+class vtkSmartVolumeMapper;
+class vtkVolumeProperty;
+class vtkPiecewiseFunction;
+class vtkColorTransferFunction;
 namespace EagleLib
 {
     namespace Plotting
@@ -29,6 +36,12 @@ namespace EagleLib
 
         class PLUGIN_EXPORTS vtkVolumetricPlotter : public vtkPlotter
         {
+        protected:
+            vtkSmartPointer<vtkVolume> _volume;
+            vtkSmartPointer<vtkSmartVolumeMapper> _mapper;
+            vtkSmartPointer<vtkVolumeProperty> _volumeProperty;
+            vtkSmartPointer<vtkPiecewiseFunction> _compositeOpacity;
+            vtkSmartPointer<vtkColorTransferFunction> _color;
         public:
             virtual ~vtkVolumetricPlotter();
             virtual bool AcceptsParameter(Parameters::Parameter* param);
@@ -38,6 +51,16 @@ namespace EagleLib
             virtual void OnGpuMatParameterUpdate(cv::cuda::Stream* stream);
             virtual void OnSyncedMemUpdate(cv::cuda::Stream* stream);
             virtual std::string PlotName() const;
+            virtual void onUpdate(Parameters::Parameter* param = nullptr, cv::cuda::Stream* stream = nullptr);
+            virtual void PlotInit(bool firstInit);
+            
+            BEGIN_PARAMS(vtkVolumetricPlotter, vtkPlotter);
+                PARAM(cv::Rect, region_of_interest, cv::Rect(0,0, 10, 10));
+                PARAM(float, opacity_max_value, 2048 );
+                PARAM(float, opacity_min_value, 50 );
+                PARAM(float, opacity_sharpness, 0.5);
+                PARAM(Parameters::EnumParameter, colormapping_scheme, Parameters::EnumParameter());
+            END_PARAMS;
         };
     }
 }
