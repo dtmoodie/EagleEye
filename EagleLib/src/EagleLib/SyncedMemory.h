@@ -15,6 +15,12 @@ namespace EagleLib
             T::operator=(other);
             return *this;
         }
+        template<class A> void serialize(A& ar)
+        {
+            ar(frame_number);
+            ar(*static_cast<T*>(this));
+        }
+
         int frame_number;
     };
     template<typename T> struct TS: public T
@@ -29,6 +35,13 @@ namespace EagleLib
             timestamp = ts;
             this->frame_number = frame_number;
         }
+        template<class A> void serialize(A& ar)
+        {
+            ar(frame_number);
+            ar(timestamp);
+            ar(*static_cast<T*>(this));
+        }
+
         double timestamp;
         int frame_number;
     };
@@ -76,5 +89,13 @@ namespace EagleLib
         std::vector<int> GetShape() const;
         int GetDim(int dim) const;
         int GetDepth() const;
+        template<typename A> void load(A& ar)
+        {
+            
+        }
+        template<typename A> void save(A& ar)
+        {
+            
+        }
     };
 }

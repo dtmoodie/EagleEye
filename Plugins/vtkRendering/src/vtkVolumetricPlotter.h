@@ -1,4 +1,8 @@
 #pragma once
+#define Qt5_FOUND
+#define HAVE_OPENCV
+#define PARAMETERS_GENERATE_UI
+
 #include "vtkPlotter.h"
 #include "vtkMatDataBuffer.h"
 #include <EagleLib/ParameteredIObjectImpl.hpp>
@@ -6,6 +10,9 @@
 #include <vtkPolyData.h>
 #include <vtkIdTypeArray.h>
 #include <vtkLODActor.h>
+
+
+
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
@@ -22,6 +29,9 @@ class vtkSmartVolumeMapper;
 class vtkVolumeProperty;
 class vtkPiecewiseFunction;
 class vtkColorTransferFunction;
+class vtkClipVolume;
+class vtkBox;
+class vtkBoxWidget;
 namespace EagleLib
 {
     namespace Plotting
@@ -42,6 +52,8 @@ namespace EagleLib
             vtkSmartPointer<vtkVolumeProperty> _volumeProperty;
             vtkSmartPointer<vtkPiecewiseFunction> _compositeOpacity;
             vtkSmartPointer<vtkColorTransferFunction> _color;
+            vtkSmartPointer<vtkClipVolume> _clipping_volume;
+            vtkSmartPointer<vtkBoxWidget> _clipping_function;
         public:
             virtual ~vtkVolumetricPlotter();
             virtual bool AcceptsParameter(Parameters::Parameter* param);

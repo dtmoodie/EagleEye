@@ -83,7 +83,11 @@ if(${MXNET_FOUND})
   add_definitions(-DMSHADOW_USE_MKL=0)
   add_definitions(-DMSHADOW_USE_CUDNN=1)
 endif()
-
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(cereal QUIET)
+if(cereal_FOUND)
+    include_directories(${cereal_INCLUDE_DIRS})
+endif()
 
 
 INCLUDE_DIRECTORIES(

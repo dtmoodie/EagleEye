@@ -16,6 +16,8 @@ Plotter::~Plotter()
 
 void Plotter::Init(bool firstInit)
 {
+    PlotInit(firstInit);
+    ParameteredIObject::Init(firstInit);
     if (!firstInit)
     {
         SetInput(param);
@@ -24,8 +26,6 @@ void Plotter::Init(bool firstInit)
             param->RegisterNotifier(std::bind(&Plotter::OnParameterUpdate, this, std::placeholders::_1));
         }
     }
-    PlotInit(firstInit);
-    ParameteredIObject::Init(firstInit);
 }
 void Plotter::PlotInit(bool firstInit)
 {

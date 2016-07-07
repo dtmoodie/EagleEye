@@ -35,7 +35,7 @@
 
 #include <signals/logging.hpp>
 #include <signal.h>
-
+#include <EagleLib/utilities/ColorMapping.hpp>
 
 
 void sig_handler(int s)
@@ -52,6 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
     plotWizardDialog(new PlotWizardDialog(this)),
     settingsDialog(new SettingDialog(this))
 {
+    EagleLib::ColorMapperFactory::Instance()->Save("test.xml");
     signal(SIGINT, sig_handler);
     signal(SIGILL, sig_handler);
     signal(SIGTERM, sig_handler);

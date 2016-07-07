@@ -1,6 +1,6 @@
 #include "vtkVolumetricPlotter.h"
 #include <EagleLib/SyncedMemory.h>
-#include <EagleLib/utilities/ColorMapping.hpp>
+#include <EagleLib/utilities/ColorMapperFactory.hpp>
 #include <vtkDataReader.h>
 #include <vtkStructuredPoints.h>
 #include <vtkErrorCode.h>
@@ -10,9 +10,41 @@
 #include <vtkVolumeProperty.h>
 #include <vtkUnsignedShortArray.h>
 #include <vtkPiecewiseFunction.h>
+#include <vtkClipVolume.h>
+#include <vtkBox.h>
+#include <vtkBoxWidget.h>
+#include <vtkPlanes.h>
+#include <vtkProperty.h>
+#include <QVTKInteractor.h>
 
 using namespace EagleLib;
 using namespace EagleLib::Plotting;
+
+class vtkBoxWidgetCallback : public vtkCommand
+{
+public:
+    static vtkBoxWidgetCallback *New()
+    { return new vtkBoxWidgetCallback; }
+    virtual void Execute(vtkObject *caller, unsigned long, void*)
+    {
+        vtkBoxWidget *widget = reinterpret_cast<vtkBoxWidget*>(caller);
+        if (this->Mapper)
+        {
+        vtkPlanes *planes = vtkPlanes::New();
+        widget->GetPlanes(planes);
+        this->Mapper->SetClippingPlanes(planes);
+        planes->Delete();
+        }
+    }
+    void SetMapper(vtkSmartVolumeMapper* m)
+    { this->Mapper = m; }
+   
+protected:
+    vtkBoxWidgetCallback()
+    { this->Mapper = 0; }
+   
+    vtkSmartVolumeMapper *Mapper;
+};
 
 bool vtkVolumetricPlotterInfo::AcceptsParameter(Parameters::Parameter* param)
 {
@@ -59,6 +91,10 @@ static vtkVolumetricPlotterInfo g_volumeInfo;
 
 vtkVolumetricPlotter::~vtkVolumetricPlotter()
 {
+    if(_mapper)
+    {
+        _mapper->RemoveAllClippingPlanes();
+    }
 }
 bool vtkVolumetricPlotter::AcceptsParameter(Parameters::Parameter* param)
 {
@@ -119,6 +155,23 @@ void vtkVolumetricPlotter::SetInput(Parameters::Parameter* param_)
 
                     _mapper = vtkSmartPointer<vtkSmartVolumeMapper>::New();
                         _mapper->SetBlendModeToComposite(); // composite first
+                            _clipping_function = vtkSmartPointer<vtkBoxWidget>::New();
+                            for(auto widget : render_widgets)
+                            {
+                                auto interactor = widget->GetInteractor();
+                                _clipping_function->SetInteractor(interactor);
+                            }
+                            _clipping_function->SetPlaceFactor(1.01);
+                            _clipping_function->SetInputData(dataset);
+                            _clipping_function->SetInsideOut(true);
+                            _clipping_function->PlaceWidget();
+                            
+                            vtkBoxWidgetCallback *callback = vtkBoxWidgetCallback::New();
+                            callback->SetMapper(_mapper);
+                            _clipping_function->AddObserver(vtkCommand::InteractionEvent, callback);
+                            callback->Delete();
+                            _clipping_function->EnabledOn();
+                            _clipping_function->GetSelectedFaceProperty()->SetOpacity(0.0);
                         _mapper->SetInputData(dataset);
                         _volume->SetMapper(_mapper);
 
@@ -134,7 +187,7 @@ void vtkVolumetricPlotter::SetInput(Parameters::Parameter* param_)
                             _volumeProperty->SetScalarOpacity(_compositeOpacity); // composite first.
 
                         _color =  vtkSmartPointer<vtkColorTransferFunction>::New();
-                            auto scheme = ColorMapperFactory::Instance()->Create(colormapping_scheme.enumerations[colormapping_scheme.currentSelection]);
+                            auto scheme = ColorMapperFactory::Instance()->Create(colormapping_scheme.enumerations[colormapping_scheme.currentSelection], opacity_min_value, opacity_max_value);
                             if(scheme)
                             {
                                 cv::Mat_<float> lut = scheme->GetMat(0, opacity_max_value, 50);
@@ -196,7 +249,7 @@ void vtkVolumetricPlotter::onUpdate(Parameters::Parameter* param, cv::cuda::Stre
     }
     if(param == &colormapping_scheme_param)
     {
-        auto scheme = ColorMapperFactory::Instance()->Create(colormapping_scheme.enumerations[colormapping_scheme.currentSelection]);
+        auto scheme = ColorMapperFactory::Instance()->Create(colormapping_scheme.enumerations[colormapping_scheme.currentSelection], 0, 2048);
         if(scheme)
         {
             cv::Mat_<float> lut = scheme->GetMat(0, opacity_max_value, 50);

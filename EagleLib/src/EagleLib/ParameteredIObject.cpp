@@ -26,6 +26,7 @@ void ParameteredIObject::Init(const cv::FileNode& configNode)
 
 void ParameteredIObject::Init(bool firstInit)
 {
+    _callback_connections.clear();
     IObject::Init(firstInit);
     
     if (firstInit)
