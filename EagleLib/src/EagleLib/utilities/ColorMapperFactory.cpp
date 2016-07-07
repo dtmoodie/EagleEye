@@ -1,8 +1,15 @@
 #include "ColorMapperFactory.hpp"
 #include "ColorScale.hpp"
 #include <boost/filesystem.hpp>
-#include <cereal/archives/xml.hpp>
+#if defined(EAGLELIB_HAVE_CEREAL)
 #include <cereal/cereal.hpp>
+#include <cereal/archives/xml.hpp>
+#include <cereal/types/map.hpp>
+#include <cereal/types/tuple.hpp>
+#include <parameters/Persistence/cereal.hpp>
+#include "LinearColormapper.hpp"
+#endif
+
 using namespace EagleLib;
 
 
@@ -30,21 +37,36 @@ void ColorMapperFactory::Load(std::string definition_file_xml)
 {
     if(boost::filesystem::is_regular_file(definition_file_xml))
     {
+#ifdef EAGLELIB_HAVE_CEREAL
         std::ifstream ifs(definition_file_xml);
         cereal::XMLInputArchive ar(ifs);
         std::map<std::string, std::tuple<ColorScale, ColorScale, ColorScale>> color_scales;
         ar(CEREAL_NVP(color_scales));
+        for(auto & scheme : color_scales)
+        {
+            ColorMapperFactory::Instance()->Register(scheme.first,
+                [scheme](float alpha, float beta)->IColorMapper*
+            {
+                ColorScale red = std::get<0>(scheme.second);
+                ColorScale green = std::get<1>(scheme.second);
+                ColorScale blue = std::get<2>(scheme.second);
+                red.Rescale(alpha, beta);
+                green.Rescale(alpha, beta);
+                blue.Rescale(alpha, beta);
+                return new LinearColorMapper(red, green, blue);
+            });
+        }
+#endif
     }
 }
 
 void ColorMapperFactory::Save(std::string definition_file_xml)
 {
+#ifdef EAGLELIB_HAVE_CEREAL
     std::ofstream ofs(definition_file_xml);
     cereal::XMLOutputArchive ar(ofs);
-    std::map<std::string, std::tuple<ColorScale, ColorScale, ColorScale>> color_scales;
-    color_scales["example1"] = std::tuple<ColorScale, ColorScale, ColorScale>();
-    color_scales["example2"] = std::tuple<ColorScale, ColorScale, ColorScale>();
-    ar(CEREAL_NVP(color_scales));
+    
+#endif
 }
 std::vector<std::string> ColorMapperFactory::ListSchemes()
 {

@@ -55,6 +55,7 @@ void QtPlotter::Serialize(ISimpleSerializer *pSerializer)
 {
     Plotter::Serialize(pSerializer);
     SERIALIZE(plot_widgets);
+    SERIALIZE(_pimpl);
 }
 
 void QtPlotter::AddPlot(QWidget* plot_)
@@ -73,7 +74,7 @@ QtPlotter::PlotterType QtPlotter::Type() const
 class QtPlotter::impl
 {
 public:
-    std::list<std::shared_ptr<Parameters::UI::qt::IParameterProxy>> parameter_proxies;
+    std::map<std::string, std::shared_ptr<Parameters::UI::qt::IParameterProxy>> parameter_proxies;
     QGridLayout* control_layout;
     QWidget* parent;
 };
@@ -94,7 +95,7 @@ QWidget* QtPlotter::GetControlWidget(QWidget* parent)
             auto proxy = Parameters::UI::qt::WidgetFactory::Createhandler(param);
             auto param_widget = proxy->GetParameterWidget(parent);
             layout->addWidget(param_widget);
-            _pimpl->parameter_proxies.push_back(proxy);
+            _pimpl->parameter_proxies[param->GetTreeName()] = proxy;
         }
         _pimpl->control_layout = layout;
         _pimpl->parent = parent;
@@ -110,20 +111,16 @@ Parameters::Parameter* QtPlotter::addParameter(Parameters::Parameter* param)
     auto ret = Plotter::addParameter(param);
     if(_pimpl)
     {
-        bool found = false;
-        for(auto& proxy : _pimpl->parameter_proxies)
-        {
-            if(proxy->CheckParameter(param))
-            {
-                found = true;
-            }
-        }
-        if(!found)
+        auto itr = _pimpl->parameter_proxies.find(param->GetTreeName());
+        if(itr == _pimpl->parameter_proxies.end())
         {
             auto proxy = Parameters::UI::qt::WidgetFactory::Createhandler(param);
             auto param_widget = proxy->GetParameterWidget(_pimpl->parent);
             _pimpl->control_layout->addWidget(param_widget);
-            _pimpl->parameter_proxies.push_back(proxy);
+            _pimpl->parameter_proxies[param->GetTreeName()] = proxy;
+        }else
+        {
+            itr->second->SetParameter(param);
         }
     }
     return ret;
@@ -134,20 +131,16 @@ Parameters::Parameter* QtPlotter::addParameter(std::shared_ptr<Parameters::Param
     auto ret = Plotter::addParameter(param);
     if(_pimpl)
     {
-        bool found = false;
-        for(auto& proxy : _pimpl->parameter_proxies)
-        {
-            if(proxy->CheckParameter(param.get()))
-            {
-                found = true;
-            }
-        }
-        if(!found)
+        auto itr = _pimpl->parameter_proxies.find(param->GetTreeName());
+        if(itr == _pimpl->parameter_proxies.end())
         {
             auto proxy = Parameters::UI::qt::WidgetFactory::Createhandler(param.get());
             auto param_widget = proxy->GetParameterWidget(_pimpl->parent);
             _pimpl->control_layout->addWidget(param_widget);
-            _pimpl->parameter_proxies.push_back(proxy);
+            _pimpl->parameter_proxies[param->GetTreeName()] = proxy;
+        }else
+        {
+            itr->second->SetParameter(param.get());
         }
     }
     return ret;

@@ -16,10 +16,13 @@
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
-RUNTIME_COMPILER_LINKLIBRARY("vtkRenderingVolume-" VTK_VERSION_ "d.lib")
-RUNTIME_COMPILER_LINKLIBRARY("vtkRenderingVolumeOpenGL2-" VTK_VERSION_ "d.lib")
+RUNTIME_COMPILER_LINKLIBRARY("vtkRenderingVolume-" VTK_VERSION_ "d.lib");
+RUNTIME_COMPILER_LINKLIBRARY("vtkRenderingVolumeOpenGL2-" VTK_VERSION_ "d.lib");
+RUNTIME_COMPILER_LINKLIBRARY("vtkInteractionWidgets-" VTK_VERSION_ "d.lib");
 #else
-RUNTIME_COMPILER_LINKLIBRARY("vtkRenderingVolume-" VTK_VERSION_ ".lib")
+RUNTIME_COMPILER_LINKLIBRARY("vtkRenderingVolume-" VTK_VERSION_ ".lib");
+RUNTIME_COMPILER_LINKLIBRARY("vtkRenderingVolumeOpenGL2-" VTK_VERSION_ ".lib");
+RUNTIME_COMPILER_LINKLIBRARY("vtkInteractionWidgets-" VTK_VERSION_ ".lib");
 #endif
 #else
 
@@ -32,6 +35,7 @@ class vtkColorTransferFunction;
 class vtkClipVolume;
 class vtkBox;
 class vtkBoxWidget;
+class vtkBoxWidgetCallback;
 namespace EagleLib
 {
     namespace Plotting
@@ -54,7 +58,9 @@ namespace EagleLib
             vtkSmartPointer<vtkColorTransferFunction> _color;
             vtkSmartPointer<vtkClipVolume> _clipping_volume;
             vtkSmartPointer<vtkBoxWidget> _clipping_function;
+            vtkBoxWidgetCallback* _callback;
         public:
+            vtkVolumetricPlotter();
             virtual ~vtkVolumetricPlotter();
             virtual bool AcceptsParameter(Parameters::Parameter* param);
             virtual void SetInput(Parameters::Parameter* param_ = nullptr);

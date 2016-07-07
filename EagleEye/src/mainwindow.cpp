@@ -32,10 +32,11 @@
 #include "EagleLib/logger.hpp"
 #include "EagleLib/Plugins.h"
 #include <EagleLib/nodes/Node.h>
+#include <EagleLib/utilities/ColorMapperFactory.hpp>
 
 #include <signals/logging.hpp>
 #include <signal.h>
-#include <EagleLib/utilities/ColorMapping.hpp>
+
 
 
 void sig_handler(int s)

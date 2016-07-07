@@ -1,6 +1,7 @@
 #include "vtkVolumetricPlotter.h"
 #include <EagleLib/SyncedMemory.h>
 #include <EagleLib/utilities/ColorMapperFactory.hpp>
+#include <EagleLib/utilities/IColorMapper.hpp>
 #include <vtkDataReader.h>
 #include <vtkStructuredPoints.h>
 #include <vtkErrorCode.h>
@@ -16,7 +17,9 @@
 #include <vtkPlanes.h>
 #include <vtkProperty.h>
 #include <QVTKInteractor.h>
-
+#include <QVTKWidget2.h>
+#include <vtkGenericOpenGLRenderWindow.h>
+#include <signals/inter_thread.h>
 using namespace EagleLib;
 using namespace EagleLib::Plotting;
 
@@ -25,7 +28,7 @@ class vtkBoxWidgetCallback : public vtkCommand
 public:
     static vtkBoxWidgetCallback *New()
     { return new vtkBoxWidgetCallback; }
-    virtual void Execute(vtkObject *caller, unsigned long, void*)
+    virtual void Execute(vtkObject *caller, unsigned long, void* ptr)
     {
         vtkBoxWidget *widget = reinterpret_cast<vtkBoxWidget*>(caller);
         if (this->Mapper)
@@ -87,10 +90,15 @@ std::string vtkVolumetricPlotterInfo::GetObjectHelp()
 }
 
 static vtkVolumetricPlotterInfo g_volumeInfo;
-
+vtkVolumetricPlotter::vtkVolumetricPlotter()
+{
+    _callback = nullptr;
+}
 
 vtkVolumetricPlotter::~vtkVolumetricPlotter()
 {
+    if(_clipping_function && _callback)
+        _clipping_function->RemoveObserver(_callback);
     if(_mapper)
     {
         _mapper->RemoveAllClippingPlanes();
@@ -166,10 +174,10 @@ void vtkVolumetricPlotter::SetInput(Parameters::Parameter* param_)
                             _clipping_function->SetInsideOut(true);
                             _clipping_function->PlaceWidget();
                             
-                            vtkBoxWidgetCallback *callback = vtkBoxWidgetCallback::New();
-                            callback->SetMapper(_mapper);
-                            _clipping_function->AddObserver(vtkCommand::InteractionEvent, callback);
-                            callback->Delete();
+                            _callback = vtkBoxWidgetCallback::New();
+                            _callback->SetMapper(_mapper);
+                            _clipping_function->AddObserver(vtkCommand::InteractionEvent, _callback);
+                            
                             _clipping_function->EnabledOn();
                             _clipping_function->GetSelectedFaceProperty()->SetOpacity(0.0);
                         _mapper->SetInputData(dataset);
@@ -187,7 +195,7 @@ void vtkVolumetricPlotter::SetInput(Parameters::Parameter* param_)
                             _volumeProperty->SetScalarOpacity(_compositeOpacity); // composite first.
 
                         _color =  vtkSmartPointer<vtkColorTransferFunction>::New();
-                            auto scheme = ColorMapperFactory::Instance()->Create(colormapping_scheme.enumerations[colormapping_scheme.currentSelection], opacity_min_value, opacity_max_value);
+                            auto scheme = ColorMapperFactory::Instance()->Create(colormapping_scheme.enumerations[colormapping_scheme.currentSelection], opacity_max_value - opacity_min_value, opacity_min_value);
                             if(scheme)
                             {
                                 cv::Mat_<float> lut = scheme->GetMat(0, opacity_max_value, 50);
@@ -249,7 +257,7 @@ void vtkVolumetricPlotter::onUpdate(Parameters::Parameter* param, cv::cuda::Stre
     }
     if(param == &colormapping_scheme_param)
     {
-        auto scheme = ColorMapperFactory::Instance()->Create(colormapping_scheme.enumerations[colormapping_scheme.currentSelection], 0, 2048);
+        auto scheme = ColorMapperFactory::Instance()->Create(colormapping_scheme.enumerations[colormapping_scheme.currentSelection], opacity_max_value - opacity_min_value, opacity_min_value);
         if(scheme)
         {
             cv::Mat_<float> lut = scheme->GetMat(0, opacity_max_value, 50);
@@ -261,6 +269,14 @@ void vtkVolumetricPlotter::onUpdate(Parameters::Parameter* param, cv::cuda::Stre
             _volumeProperty->SetColor(_color);
         }
     }
+    Signals::thread_specific_queue::push(
+        [this]()->void
+    {
+        for (auto itr : this->render_widgets)
+        {
+            itr->GetRenderWindow()->Render();
+        }
+    }, Signals::thread_registry::get_instance()->get_instance()->get_thread(Signals::GUI), this);
 }
 
 REGISTERCLASS(vtkVolumetricPlotter, &g_volumeInfo)

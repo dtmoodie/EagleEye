@@ -87,6 +87,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(cereal QUIET)
 if(cereal_FOUND)
     include_directories(${cereal_INCLUDE_DIRS})
+	add_definitions(-DEAGLELIB_HAVE_CEREAL)
 endif()
 
 

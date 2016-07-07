@@ -2,6 +2,7 @@ PROJECT(vtkRendering)
 CMAKE_POLICY(SET CMP0020 NEW)
 find_package(VTK COMPONENTS 
                  vtkInteractionStyle 
+				 vtkInteractionWidgets
                  vtkRenderingLOD 
                  vtkIOPLY 
                  vtkFiltersTexture 
