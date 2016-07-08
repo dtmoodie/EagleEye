@@ -120,8 +120,8 @@ private:
     NodeView*                                            nodeGraphView;
     QGraphicsProxyWidget*                               currentSelectedNodeWidget;
     QGraphicsProxyWidget*                               currentSelectedStreamWidget;
-    EagleLib::Nodes::Node::Ptr                          currentNode;
-    EagleLib::IDataStream::Ptr                          current_stream;
+    rcc::weak_ptr<EagleLib::Nodes::Node>                          currentNode;
+    rcc::weak_ptr<EagleLib::IDataStream>                          current_stream;
     
     std::vector<EagleLib::Nodes::Node::Ptr>             parentList;
     boost::timed_mutex                                  parentMtx;

@@ -4,6 +4,7 @@
 #define OPENCV_FOUND
 #include "parameters/UI/Qt.hpp"
 #include <parameters/ParameteredObjectImpl.hpp>
+#include <parameters/UI/Qt/IParameterProxy.hpp>
 using namespace EagleLib;
 
 QtPlotterImpl::QtPlotterImpl()
@@ -27,7 +28,7 @@ QWidget* QtPlotterImpl::GetControlWidget(QWidget* parent)
         int row = 0;
         for (auto param : parameters)
         {
-            auto proxy = Parameters::UI::qt::WidgetFactory::Createhandler(param);
+            auto proxy = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(param);
             if (proxy)
             {
                 parameterProxies.push_back(proxy);

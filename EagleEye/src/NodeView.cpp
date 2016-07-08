@@ -337,7 +337,7 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
     QNodeWidget* nodeWidget = dynamic_cast<QNodeWidget*>(child->widget());
     if(nodeWidget == nullptr)
         return nullptr;
-    EagleLib::Nodes::Node::Ptr node = nodeWidget->getNode();
+    auto node = nodeWidget->getNode();
     if(node == nullptr)
         return nullptr;
     // First check if this child's line already exists

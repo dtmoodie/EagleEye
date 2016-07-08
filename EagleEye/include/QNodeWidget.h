@@ -21,7 +21,7 @@
 #include <parameters/UI/Qt.hpp>
 #include <EagleLib/rcc/shared_ptr.hpp>
 #include <EagleLib/DataStreamManager.h>
-
+#include <parameters/UI/Qt/IParameterProxy.hpp>
 namespace Ui {
     class QNodeWidget;
     class DataStreamWidget;
@@ -40,7 +40,7 @@ class QInputProxy : public QWidget
     void onParamDelete(Parameters::Parameter* parameter);
 public:
     Parameters::InputParameter* inputParameter;
-    QInputProxy(Parameters::Parameter* parameter, EagleLib::Nodes::Node::Ptr node_, QWidget* parent);
+    QInputProxy(Parameters::Parameter* parameter, rcc::weak_ptr<EagleLib::Nodes::Node> node_, QWidget* parent);
     void updateParameter(Parameters::Parameter* parameter);
     virtual void updateUi(bool init = false);
     virtual QWidget* getWidget(int num = 0);
@@ -50,7 +50,7 @@ private slots:
 private:
     std::shared_ptr<Signals::connection> bc;
     std::shared_ptr<Signals::connection> dc;
-    EagleLib::Nodes::Node::Ptr node;
+    rcc::weak_ptr<EagleLib::Nodes::Node> node;
     QComboBox* box;
 };
 
@@ -58,9 +58,9 @@ class CV_EXPORTS QNodeWidget : public QWidget
 {
     Q_OBJECT
 public:
-    QNodeWidget(QWidget* parent = nullptr, EagleLib::Nodes::Node::Ptr node = EagleLib::Nodes::Node::Ptr());
+    QNodeWidget(QWidget* parent = nullptr, rcc::weak_ptr<EagleLib::Nodes::Node> node = rcc::weak_ptr<EagleLib::Nodes::Node>());
     ~QNodeWidget();
-    EagleLib::Nodes::Node::Ptr getNode();
+    rcc::weak_ptr<EagleLib::Nodes::Node> getNode();
     void setSelected(bool state);
     void updateUi(bool parameterUpdate = false, EagleLib::Nodes::Node* node = nullptr);
     // Used for thread safety
@@ -72,7 +72,6 @@ public:
 private slots:
     void on_enableClicked(bool state);
     void on_profileClicked(bool state);
-
 
     void log(boost::log::trivial::severity_level verb, const std::string& msg);
 signals:
@@ -89,7 +88,7 @@ private:
     void on_object_recompile(EagleLib::ParameteredIObject* obj);
     std::map<QWidget*, Parameters::Parameter*> widgetParamMap;
     Ui::QNodeWidget* ui;
-    EagleLib::Nodes::Node::Ptr node;
+    rcc::weak_ptr<EagleLib::Nodes::Node> node;
     std::map<std::string, Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
     std::map<std::string, std::shared_ptr<QInputProxy>> inputProxies;
     QNodeWidget* parentWidget;
@@ -105,7 +104,7 @@ public:
     DataStreamWidget(QWidget* parent = nullptr, EagleLib::IDataStream::Ptr stream = EagleLib::IDataStream::Ptr());
     ~DataStreamWidget();
 
-    EagleLib::IDataStream::Ptr GetStream();
+    rcc::weak_ptr<EagleLib::IDataStream> GetStream();
     void SetSelected(bool state);
     void update_ui();
 
@@ -143,7 +142,7 @@ public:
     {        return new QLabel(QString::fromStdString(parameter->GetTypeInfo().name()));    }
     boost::shared_ptr<Parameters::Parameter> parameter;
 };
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, Parameters::Parameter::Ptr parameter, EagleLib::Nodes::Node::Ptr node);
+IQNodeProxy* dispatchParameter(IQNodeInterop* parent, Parameters::Parameter::Ptr parameter, rcc::weak_ptr<EagleLib::Nodes::Node> node);
 
 
 // Interface class for the interop class
@@ -151,7 +150,7 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 {
     Q_OBJECT
 public:
-    IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent = nullptr, EagleLib::Nodes::Node::Ptr node_= EagleLib::Nodes::Node::Ptr());
+    IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent = nullptr, rcc::weak_ptr<EagleLib::Nodes::Node> node_= rcc::weak_ptr<EagleLib::Nodes::Node>());
     virtual ~IQNodeInterop();
 
     IQNodeProxy* proxy;
@@ -173,6 +172,6 @@ signals:
 protected:
     QLabel* nameElement;    
     QGridLayout* layout;
-    EagleLib::Nodes::Node::Ptr node;
+    rcc::weak_ptr<EagleLib::Nodes::Node> node;
 };
 

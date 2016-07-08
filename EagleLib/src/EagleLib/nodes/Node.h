@@ -250,6 +250,8 @@ namespace EagleLib
         virtual Node*                    getChildRecursive(std::string treeName_);
         virtual void                    removeChild(const std::string& name);
         virtual void                    removeChild(Node::Ptr node);
+        virtual void                    removeChild(Node* node);
+        virtual void                    removeChild(rcc::weak_ptr<Node> node);
         virtual void                    removeChild(int idx);
         virtual void                    swapChildren(int idx1, int idx2);
         virtual void                    swapChildren(const std::string& name1, const std::string& name2);

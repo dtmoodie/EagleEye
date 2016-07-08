@@ -71,6 +71,7 @@ QtPlotter::PlotterType QtPlotter::Type() const
 #define Qt5_FOUND
 #define HAVE_OPENCV
 #include <parameters/UI/Qt.hpp>
+#include <parameters/UI/Qt/IParameterProxy.hpp>
 class QtPlotter::impl
 {
 public:
@@ -92,7 +93,7 @@ QWidget* QtPlotter::GetControlWidget(QWidget* parent)
         control_widget->setLayout(layout);
         for(auto param : parameters)
         {
-            auto proxy = Parameters::UI::qt::WidgetFactory::Createhandler(param);
+            auto proxy = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(param);
             auto param_widget = proxy->GetParameterWidget(parent);
             layout->addWidget(param_widget);
             _pimpl->parameter_proxies[param->GetTreeName()] = proxy;
@@ -114,7 +115,7 @@ Parameters::Parameter* QtPlotter::addParameter(Parameters::Parameter* param)
         auto itr = _pimpl->parameter_proxies.find(param->GetTreeName());
         if(itr == _pimpl->parameter_proxies.end())
         {
-            auto proxy = Parameters::UI::qt::WidgetFactory::Createhandler(param);
+            auto proxy = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(param);
             auto param_widget = proxy->GetParameterWidget(_pimpl->parent);
             _pimpl->control_layout->addWidget(param_widget);
             _pimpl->parameter_proxies[param->GetTreeName()] = proxy;
@@ -134,7 +135,7 @@ Parameters::Parameter* QtPlotter::addParameter(std::shared_ptr<Parameters::Param
         auto itr = _pimpl->parameter_proxies.find(param->GetTreeName());
         if(itr == _pimpl->parameter_proxies.end())
         {
-            auto proxy = Parameters::UI::qt::WidgetFactory::Createhandler(param.get());
+            auto proxy = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(param.get());
             auto param_widget = proxy->GetParameterWidget(_pimpl->parent);
             _pimpl->control_layout->addWidget(param_widget);
             _pimpl->parameter_proxies[param->GetTreeName()] = proxy;

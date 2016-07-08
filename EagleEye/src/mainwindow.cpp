@@ -564,7 +564,7 @@ void MainWindow::addNode(EagleLib::Nodes::Node::Ptr node)
                 auto parentNode = currentNode->getParent();
                 if(parentNode)
                 {
-                    auto itr = std::find(parentNode->children.begin(), parentNode->children.end(), node);
+                    auto itr = std::find(parentNode->children.begin(), parentNode->children.end(), node.get());
                     if(itr != parentNode->children.end())
                     {
                         auto idx = std::distance(itr, parentNode->children.begin());
@@ -623,19 +623,17 @@ void
 MainWindow::onNodeAdd(std::string node_name)
 {    
     rmt_ScopedCPUSample(adding_node);
-    EagleLib::Nodes::Node::Ptr prevNode = currentNode;
+    //rcc::weak_ptr<EagleLib::Nodes::Node> prevNode = currentNode;
     stopProcessingThread();
     std::vector<rcc::shared_ptr<EagleLib::Nodes::Node>> added_nodes;
     if(currentNode != nullptr)
     {
         std::lock_guard<std::recursive_mutex> lock(currentNode->mtx);
         added_nodes = EagleLib::NodeManager::getInstance().addNode(node_name, currentNode.get());
-        //currentNode->addChild(node);
     }else
     {
         if(current_stream != nullptr)
         {
-            //current_stream->AddNode(node);
             added_nodes = EagleLib::NodeManager::getInstance().addNode(node_name, current_stream.get());
         }
         else
@@ -656,7 +654,7 @@ void MainWindow::onWidgetDeleted(QNodeWidget* widget)
     if(itr != widgets.end())
         widgets.erase(itr);
     boost::mutex::scoped_lock(parentMtx);
-    auto parentItr = std::find(parentList.begin(), parentList.end(), widget->getNode());
+    auto parentItr = std::find(parentList.begin(), parentList.end(), widget->getNode().get());
     if(parentItr != parentList.end())
         parentList.erase(parentItr);
     
@@ -672,7 +670,7 @@ void MainWindow::onWidgetDeleted(DataStreamWidget* widget)
     if(itr != data_stream_widgets.end())
         data_stream_widgets.erase(itr);
     auto stream = widget->GetStream();
-    auto itr2 = std::find(data_streams.begin(), data_streams.end(), stream);
+    auto itr2 = std::find(data_streams.begin(), data_streams.end(), stream.get());
     if(itr2 != data_streams.end())
         data_streams.erase(itr2);
     if(current_stream.get() == stream.get())

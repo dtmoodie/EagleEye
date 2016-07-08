@@ -8,10 +8,12 @@
 #include "qevent.h"
 #include "EagleLib/logger.hpp"
 #include "parameters/IVariableManager.h"
+#include <parameters/UI/Qt/IParameterProxy.hpp>
 #include <signals/logging.hpp>
 #include <EagleLib/frame_grabber_base.h>
 
-IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
+
+IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, rcc::weak_ptr<EagleLib::Nodes::Node> node_) :
     QWidget(parent),
     parameter(parameter_),
     node(node_)
@@ -121,7 +123,7 @@ void DraggableLabel::dragMoveEvent(QDragMoveEvent* event)
     return;
 }
 
-QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
+QNodeWidget::QNodeWidget(QWidget* parent, rcc::weak_ptr<EagleLib::Nodes::Node> node_) :
     mainWindow(parent),
     ui(new Ui::QNodeWidget()),
     node(node_)
@@ -173,7 +175,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, EagleLib::Nodes::Node::Ptr node_) :
             
             if(parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::State || parameters[i]->type & Parameters::Parameter::Output)
             {
-                auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(parameters[i]);
+                auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
                 if (interop)
                 {
                     parameterProxies[parameters[i]->GetTreeName()] = interop;
@@ -239,7 +241,7 @@ void QNodeWidget::on_object_recompile(EagleLib::ParameteredIObject* obj)
 
             if (param->type & Parameters::Parameter::Control || param->type & Parameters::Parameter::State  || param->type & Parameters::Parameter::Output)
             {
-                auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(param);
+                auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(param);
                 if (interop)
                 {
                     parameterProxies[param->GetTreeName()] = interop;
@@ -339,7 +341,7 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
 
                     if (parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::State  || parameters[i]->type & Parameters::Parameter::Output)
                     {
-                        auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(parameters[i]);
+                        auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
                         if (interop)
                         {
                             parameterProxies[parameters[i]->GetTreeName()] = interop;
@@ -431,7 +433,7 @@ void QNodeWidget::on_profileClicked(bool state)
     
 }
 
-EagleLib::Nodes::Node::Ptr QNodeWidget::getNode()
+rcc::weak_ptr<EagleLib::Nodes::Node> QNodeWidget::getNode()
 {
     return node;
 }
@@ -476,7 +478,7 @@ void DataStreamWidget::update_ui()
 
             if (parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::State || parameters[i]->type & Parameters::Parameter::Output)
             {
-                auto interop = Parameters::UI::qt::WidgetFactory::Createhandler(parameters[i]);
+                auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
                 if (interop)
                 {
                     parameterProxies[parameters[i]->GetTreeName()] = interop;
@@ -495,7 +497,7 @@ DataStreamWidget::~DataStreamWidget()
 
 }
 
-EagleLib::IDataStream::Ptr DataStreamWidget::GetStream()
+rcc::weak_ptr<EagleLib::IDataStream> DataStreamWidget::GetStream()
 {
     return _dataStream;
 }
@@ -512,7 +514,7 @@ void DataStreamWidget::SetSelected(bool state)
 
 
 
-QInputProxy::QInputProxy(Parameters::Parameter* parameter_, EagleLib::Nodes::Node::Ptr node_, QWidget* parent):
+QInputProxy::QInputProxy(Parameters::Parameter* parameter_, rcc::weak_ptr<EagleLib::Nodes::Node> node_, QWidget* parent):
     node(node_), QWidget(parent)
 {
     box = new QComboBox(this);

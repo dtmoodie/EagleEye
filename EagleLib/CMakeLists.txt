@@ -238,7 +238,7 @@ file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR
    endforeach()
 endmacro()
  
-GroupSources(include)
+GroupSources(hdr)
 GroupSources(src)
 cuda_add_library(EagleLib SHARED
     ${src}  

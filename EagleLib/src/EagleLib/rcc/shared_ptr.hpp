@@ -324,6 +324,10 @@ namespace rcc
         {
             return m_object != nullptr;
         }
+        ObjectId get_id() const
+        {
+            return m_objectId;
+        }
     };
 
 
@@ -396,6 +400,10 @@ namespace rcc
         {
             return m_object != nullptr;
         }
+        ObjectId get_id() const
+        {
+            return m_objectId;
+        }
     };
 
     template<> class weak_ptr<IObject> : public IObjectNotifiable
@@ -426,6 +434,10 @@ namespace rcc
         explicit operator bool() const
         {
             return m_object != nullptr;
+        }
+        ObjectId get_id() const
+        {
+            return m_objectId;
         }
     };
 }

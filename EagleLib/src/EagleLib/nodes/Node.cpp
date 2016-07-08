@@ -483,7 +483,6 @@ Node::removeChild(Node::Ptr node)
 void
 Node::removeChild(int idx)
 {
-    
     children.erase(children.begin() + idx);
 }
 
@@ -500,7 +499,22 @@ Node::removeChild(const std::string &name)
         }
     }
 }
-
+void Node::removeChild(Node* node)
+{
+    auto itr = std::find(children.begin(), children.end(), node);
+    if(itr != children.end())
+    {
+        children.erase(itr);
+    }
+}
+void Node::removeChild(rcc::weak_ptr<Node> node)
+{
+    auto itr = std::find(children.begin(), children.end(), node.get());
+    if(itr != children.end())
+    {
+        children.erase(itr);
+    }
+}
 cv::cuda::GpuMat
 Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
