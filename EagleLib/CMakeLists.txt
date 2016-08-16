@@ -66,12 +66,11 @@ ENDIF(NOT WIN32)
 find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 
 FILE(GLOB_RECURSE src "src/*.cpp" "remotery/lib/*.c")
-FILE(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "remotery/lib/*.h")
+FILE(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "remotery/lib/*.h" "include/*.hpp")
 FILE(GLOB_RECURSE ext_inc "include/EagleLib/rcc/external_includes")
 FILE(GLOB_RECURSE knl "src/*.cu")
-ADD_SUBDIRECTORY("parameters")
-ADD_SUBDIRECTORY("signals")
-    include_directories("signals")
+ADD_SUBDIRECTORY("MetaObject")
+  include_directories(${RCC_INCLUDE_DIRS})
 ADD_SUBDIRECTORY("pplx")
 
 find_package(mxnet QUIET)
@@ -107,38 +106,8 @@ INCLUDE_DIRECTORIES(
     )
 
 
-
-# for RCC to be able to recompile modules
-LIST(GET OpenCV_INCLUDE_DIRS 0 OpenCV_INCLUDE_DIR)
-LIST(GET OpenCV_LIB_DIR 0 CV_LIB_DIR)
-if(${CV_LIB_DIR} MATCHES NOTFOUND)
- message("OpenCV_LIB_DIR not set, attempting to find library dir")
-endif()
-
-SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-
-SET(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIR};${CUDA_INCLUDE_DIRS};${CMAKE_CURRENT_SOURCE_DIR}/src;${Parameters_INCLUDE};${PPLX_INCLUDE_DIRS};${CMAKE_CURRENT_SOURCE_DIR}/signals;${CMAKE_CURRENT_SOURCE_DIR}/remotery/lib")
-
-IF(WIN32)
-    SET(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64;${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}/../Debug")
-    SET(RCC_LIBRARY_DIRS_RELEASE "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64;${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}/../Release;")
-    SET(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib/x64;${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}/../RelWithDebInfo")
-ELSE()
-    SET(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib64;${LIBRARY_OUTPUT_PATH};${Parameters_LIB_DIRS_DEBUG}")
-    SET(RCC_LIBRARY_DIRS_RELEASE "${Boost_LIBRARY_DIR};${CV_LIB_DIR};${CUDA_TOOLKIT_ROOT_DIR}/lib64;${LIBRARY_OUTPUT_PATH};${Parameters_LIB_DIRS_RELEASE}")
-ENDIF()
-
-ADD_SUBDIRECTORY("RCC")
-#add_subdirectory("cuda_utils")
-
-INCLUDE_DIRECTORIES(${RCC_INCLUDE_DIRS})
-
-
 set_target_properties(pplx PROPERTIES FOLDER Dependencies)
-set_target_properties(signals PROPERTIES FOLDER Dependencies)
-set_target_properties(parameters PROPERTIES FOLDER Dependencies)
-set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
-set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
+set_target_properties(MetaObject PROPERTIES FOLDER Dependencies)
 IF(NOT WIN32)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")

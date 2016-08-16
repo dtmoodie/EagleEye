@@ -4,7 +4,7 @@
 #include "IRuntimeObjectSystem.h"
 #include "shared_ptr.hpp"
 
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 
 #include <memory>
 #include <functional>

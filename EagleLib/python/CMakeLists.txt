@@ -56,7 +56,6 @@ target_link_libraries(EaglePython
     ${CUDA_cufft_LIBRARY}
     ${CUDA_npps_LIBRARY}
     ${CUDA_CUDART_LIBRARY}
-    ${PYTHON_LIBRARY}
-    ${PYTHON_DEBUG_LIBRARY})
+    ${PYTHON_LIBRARY})
 message(${includes_})
 set(EaglePython_INCLUDE "${includes_}" CACHE PATH "" FORCE)

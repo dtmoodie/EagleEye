@@ -1,6 +1,6 @@
 #pragma once
+#include "MetaObject/Detail/TypeInfo.h"
 
-#include <parameters/LokiTypeInfo.h>
 #include <boost/any.hpp>
 #include <signals/logging.hpp>
 
@@ -10,11 +10,11 @@ namespace EagleLib
     {
     public:
         virtual void SetBufferSize(int size) = 0;
-        virtual boost::any& GetParameter(Loki::TypeInfo, const std::string& name, int frameNumber) = 0;
+        virtual boost::any& GetParameter(mo::TypeInfo, const std::string& name, int frameNumber) = 0;
 
         template<typename T> bool GetParameter(T& param, const std::string& name, int frameNumber)
         {
-            auto& parameter = GetParameter(Loki::TypeInfo(typeid(T)), name, frameNumber);
+            auto& parameter = GetParameter(mo::TypeInfo(typeid(T)), name, frameNumber);
             if (parameter.empty())
                 return false;
             try
@@ -30,7 +30,7 @@ namespace EagleLib
         }
         template<typename T> bool SetParameter(T& param, const std::string& name, int frameNumber)
         {
-            auto& parameter = GetParameter(Loki::TypeInfo(typeid(T)), name, frameNumber);
+            auto& parameter = GetParameter(mo::TypeInfo(typeid(T)), name, frameNumber);
             parameter = param;
             return true;
         }

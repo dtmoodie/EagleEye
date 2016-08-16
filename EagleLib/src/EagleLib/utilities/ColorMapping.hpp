@@ -3,9 +3,7 @@
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
 #include "IColorMapper.hpp"
 #include "ColorScale.hpp"
-#include <parameters/Persistence/cereal.hpp>
 #include <opencv2/core/cuda.hpp>
-
 
 #include <functional>
 #include <map>

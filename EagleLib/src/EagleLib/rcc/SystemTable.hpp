@@ -1,6 +1,6 @@
 #pragma once
-#include "EagleLib/rcc/shared_ptr.hpp"
-#include <parameters/LokiTypeInfo.h>
+#include <shared_ptr.hpp>
+#include <MetaObject/Detail/TypeInfo.h>
 #include <map>
 #include <memory>
 struct ISingleton
@@ -41,14 +41,14 @@ struct SystemTable
     template<typename T> T* SetSingleton(T* singleton, int stream_id = -1)
     {
         
-        g_singletons[Loki::TypeInfo(typeid(T))] = std::unique_ptr<ISingleton>(new Singleton<T>(singleton));
+        g_singletons[mo::TypeInfo(typeid(T))] = std::unique_ptr<ISingleton>(new Singleton<T>(singleton));
         return singleton;
     }
-    void DeleteSingleton(Loki::TypeInfo type);
+    void DeleteSingleton(mo::TypeInfo type);
     template<typename T> void DeleteSingleton()
     {
-        DeleteSingleton(Loki::TypeInfo(typeid(T)));
+        DeleteSingleton(mo::TypeInfo(typeid(T)));
    }
 private:
-    std::map<Loki::TypeInfo, std::unique_ptr<ISingleton>> g_singletons;
+    std::map<mo::TypeInfo, std::unique_ptr<ISingleton>> g_singletons;
 };
