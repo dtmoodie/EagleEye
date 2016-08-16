@@ -22,3 +22,6 @@
 [submodule "EagleLib/signals"]
 	path = EagleLib/signals
 	url = https://github.com/dtmoodie/signals
+[submodule "EagleLib/MetaObject"]
+	path = EagleLib/MetaObject
+	url = http://github.com/dtmoodie/MetaObject
