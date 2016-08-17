@@ -1,14 +1,14 @@
 #pragma once
 
-namespace Parameters
+namespace mo
 {
     class IVariableManager;
 }
 namespace EagleLib
 {
     class IVariableSink
-{
-public:
-    virtual void SerializeVariables(unsigned long long frame_number, Parameters::IVariableManager* manager) = 0;
-};
+    {
+    public:
+        virtual void SerializeVariables(unsigned long long frame_number, mo::IVariableManager* manager) = 0;
+    };
 }

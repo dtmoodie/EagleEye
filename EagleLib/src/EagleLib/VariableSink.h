@@ -12,7 +12,7 @@ namespace EagleLib
     public:
         VariableSink();
         virtual ~VariableSink();
-        virtual void SerializeVariables(unsigned long long frame_number, Parameters::IVariableManager* manager);
+        virtual void SerializeVariables(unsigned long long frame_number, mo::IVariableManager* manager);
     };
 
     class CSV_VariableSink: public IVariableSink
@@ -21,11 +21,11 @@ namespace EagleLib
         CSV_VariableSink(const std::string& output_file);
         virtual ~CSV_VariableSink();
         
-        virtual void SerializeVariables(unsigned long long frame_number, Parameters::IVariableManager* manager);
+        virtual void SerializeVariables(unsigned long long frame_number, mo::IVariableManager* manager);
 
-        std::string SerializeExample(unsigned long long frame_number, Parameters::IVariableManager* manager);
+        std::string SerializeExample(unsigned long long frame_number, mo::IVariableManager* manager);
 
-        std::vector<std::string> ListSerializableVariables(Parameters::IVariableManager* manager);
+        std::vector<std::string> ListSerializableVariables(mo::IVariableManager* manager);
         void AddVariable(const std::string& name);
         void SetLayout(const std::vector<std::string>& layout);
         std::vector<std::string> GetLayout();

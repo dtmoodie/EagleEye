@@ -15,6 +15,12 @@
 #include "nodes/Node.h"
 #include "nodes/NodeManager.h"
 
+#include "MetaObject/Signals/TypedSlot.hpp"
+#include "MetaObject/Signals/RelayManager.hpp"
+#include "MetaObject/Parameters/VariableManager.h"
+#include "MetaObject/Thread/InterThread.hpp"
+
+
 #include <opencv2/core.hpp>
 #include <boost/chrono.hpp>
 #include <boost/thread.hpp>
@@ -88,7 +94,7 @@ namespace EagleLib
 
         virtual std::shared_ptr<mo::IVariableManager> GetVariableManager();
 
-        virtual SignalManager*                            GetSignalManager();
+        virtual mo::RelayManager*                            GetRelayManager();
 
         virtual IParameterBuffer*                        GetParameterBuffer();
 
@@ -102,10 +108,7 @@ namespace EagleLib
         virtual void AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node);
         virtual void RemoveNode(rcc::shared_ptr<Nodes::Node> node);
         virtual void RemoveNode(Nodes::Node* node);
-        //void StartThread();
-        //void StopThread();
-        //void PauseThread();
-        //void ResumeThread();
+        
         void process();
 
         void AddVariableSink(IVariableSink* sink);
@@ -118,45 +121,36 @@ namespace EagleLib
         std::map<mo::TypeInfo, std::unique_ptr<ISingleton>> _iobject_singletons;
         int stream_id;
         size_t _thread_id;
-        rcc::shared_ptr<IViewManager>                            view_manager;
-        rcc::shared_ptr<ICoordinateManager>                        coordinate_manager;
+        rcc::shared_ptr<IViewManager>                             view_manager;
+        rcc::shared_ptr<ICoordinateManager>                       coordinate_manager;
         rcc::shared_ptr<IRenderEngine>                            rendering_engine;
         rcc::shared_ptr<ITrackManager>                            track_manager;
         rcc::shared_ptr<IFrameGrabber>                            frame_grabber;
-        //std::shared_ptr<Parameters::IVariableManager>            variable_manager;
-        std::shared_ptr<SignalManager>                            signal_manager;
-        std::vector<rcc::shared_ptr<Nodes::Node>>                top_level_nodes;
-        std::shared_ptr<IParameterBuffer>                        _parameter_buffer;
+        std::shared_ptr<mo::IVariableManager>                     variable_manager;
+        std::shared_ptr<mo::RelayManager>                         relay_manager;
+        std::vector<rcc::shared_ptr<Nodes::Node>>                 top_level_nodes;
+        std::shared_ptr<IParameterBuffer>                         _parameter_buffer;
         std::mutex                                                nodes_mtx;
         bool                                                    paused;
         cv::cuda::Stream                                        cuda_stream;
         boost::thread                                            processing_thread;
         volatile bool                                            dirty_flag;
-        std::vector<std::shared_ptr<Signals::connection>>        connections;
+        //std::vector<std::shared_ptr<Signals::connection>>        connections;
         cv::cuda::Stream                                        streams[2];
         std::vector<IVariableSink*>                             variable_sinks;
         // These are threads for attempted connections
         std::vector<boost::thread*> connection_threads;
     public:
-        SIGNALS_BEGIN(DataStream, IDataStream);
-            SIG_SEND(StartThreads);
-            SIG_SEND(StopThreads);
-            SLOT_DEF(void, StartThread);
-            REGISTER_SLOT(StartThread);
-            //DESCRIBE_SLOT(ResumeThread, "Starts background processing thread");
+        MO_BEGIN(DataStream, IDataStream);
+            MO_SIGNAL(void, StartThreads);
+            MO_SIGNAL(void, StopThreads);
 
-            SLOT_DEF(void, StopThread);
-            REGISTER_SLOT(StopThread);
-           // DESCRIBE_SLOT(ResumeThread, "Stops background processing thread");
-
-            SLOT_DEF(void, PauseThread);
-            REGISTER_SLOT(PauseThread);
-           // DESCRIBE_SLOT(ResumeThread, "Pauses background processing thread");
-
-            SLOT_DEF(void, ResumeThread);
-            REGISTER_SLOT(ResumeThread);
-            //DESCRIBE_SLOT(ResumeThread, "Resumes background processing thread");
-        SIGNALS_END
+            MO_SLOT(void, StartThread);
+            MO_SLOT(void, StopThread);
+            MO_SLOT(void, PauseThread);
+            MO_SLOT(void, ResumeThread);
+            //REGISTER_SLOT(ResumeThread);
+        MO_END
     };
 }
 
@@ -165,27 +159,21 @@ namespace EagleLib
 // **********************************************************************
 DataStream::DataStream()
 {
-    _sig_manager = GetSignalManager();
+    _sig_manager = GetRelayManager();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {
-        auto global_signal_manager = table->GetSingleton<SignalManager>();
+        mo::RelayManager* global_signal_manager = table->GetSingleton<mo::RelayManager>();
         if (!global_signal_manager)
         {
-            global_signal_manager  = SignalManager::get_instance();
-            table->SetSingleton<SignalManager>(global_signal_manager);
-            Signals::signal_manager::set_instance(global_signal_manager);
+            global_signal_manager  = mo::RelayManager::Instance();
+            table->SetSingleton<mo::RelayManager>(global_signal_manager);
         }
-        connections.push_back(global_signal_manager->connect<void(void)>("StopThreads", std::bind(&DataStream::StopThread, this), this));
-        connections.push_back(global_signal_manager->connect<void(void)>("StartThreads", std::bind(&DataStream::StartThread, this), this));
-        connections.push_back(global_signal_manager->connect<void(void)>("PauseThreads", std::bind(&DataStream::PauseThread, this), this));
-        connections.push_back(global_signal_manager->connect<void(void)>("ResumeThreads", std::bind(&DataStream::ResumeThread, this), this));
-        global_signal_manager->register_receiver<void(void)>("StopThreads", this);
-        global_signal_manager->register_receiver<void(void)>("StartThreads", this);
-        global_signal_manager->register_receiver<void(void)>("PauseThreads", this);
-        global_signal_manager->register_receiver<void(void)>("ResumeThreads", this);
+        global_signal_manager->ConnectSlots(this);
+        global_signal_manager->ConnectSignals(this);
     }
-    this->setup_signals(GetSignalManager());
+    GetRelayManager()->ConnectSlots(this);
+    GetRelayManager()->ConnectSignals(this);
     paused = false;
     stream_id = 0;
     _thread_id = 0;
@@ -196,7 +184,7 @@ DataStream::~DataStream()
     StopThread();
     top_level_nodes.clear();
     frame_grabber.reset();
-    signal_manager.reset();
+    relay_manager.reset();
     _sig_manager = nullptr;
     for(auto thread : connection_threads)
     {
@@ -234,11 +222,12 @@ rcc::weak_ptr<IFrameGrabber> DataStream::GetFrameGrabber()
     return frame_grabber;
 }
 
-SignalManager* DataStream::GetSignalManager()
+
+mo::RelayManager* DataStream::GetRelayManager()
 {
-    if (signal_manager == nullptr)
-        signal_manager.reset(new SignalManager());
-    return signal_manager.get();
+    if (relay_manager == nullptr)
+        relay_manager.reset(new mo::RelayManager());
+    return relay_manager.get();
 }
 IParameterBuffer* DataStream::GetParameterBuffer()
 {
@@ -247,11 +236,11 @@ IParameterBuffer* DataStream::GetParameterBuffer()
     return _parameter_buffer.get();
 
 }
-std::shared_ptr<Parameters::IVariableManager> DataStream::GetVariableManager()
+std::shared_ptr<mo::IVariableManager> DataStream::GetVariableManager()
 {
-    if(_variable_manager == nullptr)
-        _variable_manager.reset(new Parameters::VariableManager());
-    return _variable_manager;
+    if(variable_manager == nullptr)
+        variable_manager.reset(new mo::VariableManager());
+    return variable_manager;
 }
 
 bool DataStream::LoadDocument(const std::string& document, const std::string& prefered_loader)
@@ -416,7 +405,8 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
     node->Init(true);
     if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
     {
-        Signals::thread_specific_queue::push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node), _thread_id);
+        //Signals::thread_specific_queue::push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node), _thread_id);
+        mo::ThreadSpecificQueue::Push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node), _thread_id);
         return;
     }
     top_level_nodes.push_back(node);
@@ -436,7 +426,8 @@ void DataStream::AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> nodes)
     }
     if (boost::this_thread::get_id() != processing_thread.get_id() && _thread_id != 0 && !paused)
     {
-        Signals::thread_specific_queue::push(std::bind(&DataStream::AddNodes, this, nodes), _thread_id);
+        //Signals::thread_specific_queue::push(std::bind(&DataStream::AddNodes, this, nodes), _thread_id);
+        mo::ThreadSpecificQueue::Push(std::bind(&DataStream::AddNodes, this, nodes), _thread_id);
         return;
     }
     for(auto& node: nodes)
@@ -506,50 +497,61 @@ void DataStream::process()
 {
     dirty_flag = true;
     int iteration_count = 0;
-    Signals::thread_registry::get_instance()->register_thread(Signals::ANY);
+    //Signals::thread_registry::get_instance()->register_thread(Signals::ANY);
+    mo::ThreadRegistry::Instance()->RegisterThread(mo::ThreadRegistry::ANY);
     
     if(_thread_id == 0)
-        _thread_id = Signals::get_this_thread();
+        _thread_id = mo::GetThisThread();
 
     rmt_SetCurrentThreadName("DataStreamThread");
 
-    auto node_update_connection = signal_manager->connect<void(EagleLib::Nodes::Node*)>("NodeUpdated",
+    mo::TypedSlot<void(EagleLib::Nodes::Node*)> node_update_slot(
         std::bind([this](EagleLib::Nodes::Node* node)->void
         {
             dirty_flag = true;
-        }, std::placeholders::_1), this, _thread_id );
+        }, std::placeholders::_1));
+    _sig_manager->Connect(&node_update_slot, "node_updated");
 
-    auto update_connection = signal_manager->connect<void()>("update",
+    mo::TypedSlot<void()> update_slot(
         std::bind([this]()->void
         {
             dirty_flag = true;
-        }), this, Signals::get_this_thread());
+        }));
+    _sig_manager->Connect(&update_slot, "update");
 
-    auto object_update_connection = signal_manager->connect<void(Parameters::ParameteredObject*)>("parameter_updated",
-        std::bind([this](Parameters::ParameteredObject*)->void
+
+    mo::TypedSlot<void(mo::Context*, mo::IParameter*)> parameter_update_slot(
+        std::bind([this](mo::IMetaObject*, mo::IParameter*)
         {
             dirty_flag = true;
-        }, std::placeholders::_1), this, _thread_id );
+        }, std::placeholders::_1, std::placeholders::_2));
+    _sig_manager->Connect(&parameter_update_slot, "parameter_updated");
 
-    auto parameter_added_connection = signal_manager->connect<void(Parameters::ParameteredObject*)>("parameter_added",
-        std::bind([this](Parameters::ParameteredObject*)->void
+    mo::TypedSlot<void(mo::Context*, mo::IParameter*)> parameter_added_slot(
+        std::bind([this](mo::Context*, mo::IParameter*)
         {
             dirty_flag = true;
-        }, std::placeholders::_1), this, _thread_id );
+        }, std::placeholders::_1, std::placeholders::_2));
+    _sig_manager->Connect(&parameter_added_slot, "parameter_added");
+    
+
     bool run_continuously = false;
-    auto run_continuously_connection = signal_manager->connect<void(bool)>("run_continuously",
+    mo::TypedSlot<void(bool)> run_continuously_slot(
         std::bind([&run_continuously](bool value)
     {
         run_continuously = value;
-    }, std::placeholders::_1), this, _thread_id);
+    }, std::placeholders::_1));
     
+    _sig_manager->Connect(&run_continuously_slot, "run_continuously");
+
 
     LOG(info) << "Starting stream thread";
     while(!boost::this_thread::interruption_requested())
     {
         if(!paused)
         {
-            Signals::thread_specific_queue::run(_thread_id);
+            //Signals::thread_specific_queue::run(_thread_id);
+            mo::ThreadSpecificQueue::Run(_thread_id);
 
             if(dirty_flag || run_continuously == true)
             {
@@ -581,7 +583,7 @@ void DataStream::process()
                 }
                 for(auto sink : variable_sinks)
                 {
-                    sink->SerializeVariables(current_frame.frame_number, _variable_manager.get());
+                    sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
                 }
                 ++iteration_count;
                 if(!dirty_flag)
@@ -614,4 +616,4 @@ std::unique_ptr<ISingleton>& DataStream::GetIObjectSingleton(mo::TypeInfo type)
 {
     return _iobject_singletons[type];
 }
-REGISTERCLASS(DataStream)
+MO_REGISTER_OBJECT(DataStream)

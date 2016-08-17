@@ -13,7 +13,7 @@ CSV_VariableSink::~CSV_VariableSink()
     _ofs.close();
 }
         
-void CSV_VariableSink::SerializeVariables(unsigned long long frame_number, Parameters::IVariableManager* manager)
+void CSV_VariableSink::SerializeVariables(unsigned long long frame_number, mo::IVariableManager* manager)
 {
     if(_serialization_layout.size())
     {
@@ -32,7 +32,7 @@ void CSV_VariableSink::SerializeVariables(unsigned long long frame_number, Param
     }
 }
 
-std::string CSV_VariableSink::SerializeExample(unsigned long long frame_number, Parameters::IVariableManager* manager)
+std::string CSV_VariableSink::SerializeExample(unsigned long long frame_number, mo::IVariableManager* manager)
 {
     std::stringstream example;
     if(_serialization_layout.size())
@@ -43,25 +43,27 @@ std::string CSV_VariableSink::SerializeExample(unsigned long long frame_number, 
             auto param = manager->GetOutputParameter(var_name);
             if(param)
             {
-                if(Parameters::Persistence::Text::InterpreterRegistry::Exists(param->GetTypeInfo()))
+                // #TODO move to new implementation
+                /*if(Parameters::Persistence::Text::InterpreterRegistry::Exists(param->GetTypeInfo()))
                 {
                     example << ", ";
                     Parameters::Persistence::Text::SerializeValue(&example, param);
-                }
+                }*/
             }
         }
     }
     return example.str();
 }
 
-std::vector<std::string> CSV_VariableSink::ListSerializableVariables(Parameters::IVariableManager* manager)
+std::vector<std::string> CSV_VariableSink::ListSerializableVariables(mo::IVariableManager* manager)
 {
     auto params = manager->GetAllParmaeters();
     std::vector<std::string> output;
     for(auto param : params)
     {
-        if(Parameters::Persistence::Text::InterpreterRegistry::Exists(param->GetTypeInfo()))
-            output.push_back(param->GetTreeName());
+        // #TODO new implementation
+        /*if(Parameters::Persistence::Text::InterpreterRegistry::Exists(param->GetTypeInfo()))
+            output.push_back(param->GetTreeName());*/
     }
     return output;
 }

@@ -16,7 +16,7 @@
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 #include <MetaObject/Logging/Log.hpp>
-#include "parameters/Persistence/OpenCV.hpp"
+//#include "parameters/Persistence/OpenCV.hpp"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -139,8 +139,8 @@ namespace EagleLib
         {
             NodeImpl() :averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
             {
-                update_signal = nullptr;
-                g_update_signal = nullptr;
+                //update_signal = nullptr;
+                //g_update_signal = nullptr;
             }
             ~NodeImpl()
             {
@@ -156,11 +156,11 @@ namespace EagleLib
 
             boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
             std::vector<std::pair<time_t, int>>                                                     timings;
-            std::shared_ptr<Signals::connection>                                                    resetConnection;
-            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<Signals::connection>>>     callbackConnections;
-            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<Signals::connection>>>        callbackConnections2;
-            mo::TypeInfo<void(Nodes::Node*)>*                                                    update_signal;
-            mo::TypeInfo<void(Nodes::Node*)>*                                                    g_update_signal;
+            std::shared_ptr<mo::connection>                                                    resetConnection;
+            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<mo::connection>>>     callbackConnections;
+            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<mo::connection>>>        callbackConnections2;
+            mo::TypedSignal<void(Nodes::Node*)>*                                                    update_signal;
+            mo::TypedSignal<void(Nodes::Node*)>*                                                    g_update_signal;
             boost::recursive_mutex                                                                  mtx;
         };
     }    

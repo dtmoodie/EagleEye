@@ -24,7 +24,6 @@ namespace EagleLib
     class IRenderEngine;
     class ITrackManager;
     class IFrameGrabber;
-    class SignalManager;
     class IParameterBuffer;
     class IVariableSink;
 

@@ -2,6 +2,7 @@
 #include "NodeManager.h"
 #include <EagleLib/frame_grabber_base.h>
 #include "EagleLib/rcc/ObjectManager.h"
+#include <MetaObject/Parameters/InputParameter.hpp>
 #include "Node.h"
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
@@ -54,9 +55,9 @@ NodeManager::OnConstructorsAdded()
         auto parameters = newNodes[i]->GetDisplayParameters();
         for (size_t j = 0; j < parameters.size(); ++j)
         {
-            if (parameters[j]->type & mo::IParameter::Input_e)
+            if (parameters[j]->CheckFlags(mo::Input_e))
             {
-                auto inputParam = dynamic_cast<Parameters::InputParameter*>(parameters[j]);
+                auto inputParam = dynamic_cast<mo::InputParameter*>(parameters[j]);
                 if(inputParam)
                     inputParam->SetInput(std::string());
             }
