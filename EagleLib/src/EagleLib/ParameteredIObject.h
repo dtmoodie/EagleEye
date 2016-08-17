@@ -4,7 +4,9 @@
 #include "IObjectInfo.h"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
+#include "MetaObject/Signals/TypedSignal.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
+
 namespace cv
 {
     class FileNode;

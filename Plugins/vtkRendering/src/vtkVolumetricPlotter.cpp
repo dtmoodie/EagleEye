@@ -52,7 +52,7 @@ protected:
 bool vtkVolumetricPlotterInfo::AcceptsParameter(Parameters::Parameter* param)
 {
     auto type = param->GetTypeInfo();
-    if(type == Loki::TypeInfo(typeid(TS<SyncedMemory>)))
+    if(type == mo::TypeInfo(typeid(TS<SyncedMemory>)))
     {
         auto typed = dynamic_cast<Parameters::ITypedParameter<TS<SyncedMemory>>*>(param);
         if(typed)
@@ -113,7 +113,7 @@ void vtkVolumetricPlotter::SetInput(Parameters::Parameter* param_)
     if(param_)
     {
         auto type = param_->GetTypeInfo();
-        if(type == Loki::TypeInfo(typeid(TS<SyncedMemory>)))
+        if(type == mo::TypeInfo(typeid(TS<SyncedMemory>)))
         {
             vtkPlotter::SetInput(param_);
             _connections[&param_->update_signal] = param_->update_signal.connect(std::bind(&vtkVolumetricPlotter::OnSyncedMemUpdate, this, std::placeholders::_1));

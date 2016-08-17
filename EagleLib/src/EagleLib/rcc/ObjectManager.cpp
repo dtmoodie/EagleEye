@@ -5,7 +5,7 @@
 
 #include "parameters/Parameter_def.hpp"
 
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 
 #include <boost/tokenizer.hpp>
 #include <boost/foreach.hpp>

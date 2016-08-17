@@ -1,7 +1,7 @@
 #pragma once
 #include "../Defs.hpp"
 #include "Plotter.h"
-#include "EagleLib/rcc/shared_ptr.hpp"
+#include <shared_ptr.hpp>
 
 namespace EagleLib
 {

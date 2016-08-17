@@ -321,7 +321,7 @@ template<typename T> struct TypePolicy
 {
     static bool acceptsType(Parameters::Parameter* param)
     {
-    return Loki::TypeInfo(typeid(T)) == param->GetTypeInfo();
+    return mo::TypeInfo(typeid(T)) == param->GetTypeInfo();
     }
 };
 struct StaticPlotPolicy

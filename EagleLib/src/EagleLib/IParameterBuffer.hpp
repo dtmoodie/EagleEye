@@ -2,7 +2,7 @@
 #include "MetaObject/Detail/TypeInfo.h"
 
 #include <boost/any.hpp>
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 
 namespace EagleLib
 {

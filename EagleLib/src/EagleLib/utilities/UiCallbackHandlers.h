@@ -8,7 +8,7 @@
 #include <memory>
 #include "EagleLib/Signals.h"
 #include "IObject.h"
-#include "EagleLib/rcc/shared_ptr.hpp"
+#include <shared_ptr.hpp>
 #include "EagleLib/ParameteredIObject.h"
 
 namespace EagleLib

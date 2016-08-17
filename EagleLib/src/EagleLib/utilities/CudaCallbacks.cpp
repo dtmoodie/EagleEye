@@ -2,7 +2,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/microsec_time_clock.hpp>
 #include <boost/date_time/time_duration.hpp>
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 using namespace EagleLib::cuda;
 
 void EagleLib::cuda::ICallback::cb_func_async(int status, void* user_data)

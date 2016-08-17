@@ -24,7 +24,7 @@ bool vtkPointCloudPlotterInfo::AcceptsParameter(Parameters::Parameter* param)
     cv::Size size;
     int depth = 0;
     int channels = 0;
-    if(type == Loki::TypeInfo(typeid(cv::cuda::GpuMat)))
+    if(type == mo::TypeInfo(typeid(cv::cuda::GpuMat)))
     {
         auto typed = dynamic_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>*>(param);
         if(typed)
@@ -33,7 +33,7 @@ bool vtkPointCloudPlotterInfo::AcceptsParameter(Parameters::Parameter* param)
             size = typed->Data()->size();
             depth = typed->Data()->depth();
         }                    
-    }else if(type == Loki::TypeInfo(typeid(cv::Mat)))
+    }else if(type == mo::TypeInfo(typeid(cv::Mat)))
     {
         auto typed = dynamic_cast<Parameters::ITypedParameter<cv::Mat>*>(param);
         if(typed)
@@ -42,7 +42,7 @@ bool vtkPointCloudPlotterInfo::AcceptsParameter(Parameters::Parameter* param)
             size = typed->Data()->size();
             depth = typed->Data()->depth();
         }
-    }else if(type == Loki::TypeInfo(typeid(EagleLib::SyncedMemory)))
+    }else if(type == mo::TypeInfo(typeid(EagleLib::SyncedMemory)))
     {
         auto typed = dynamic_cast<Parameters::ITypedParameter<EagleLib::SyncedMemory>*>(param);
         if(typed)
@@ -99,15 +99,15 @@ void vtkPointCloudPlotter::SetInput(Parameters::Parameter* param_)
     if(param_)
     {
         auto type = param_->GetTypeInfo();
-        if(type == Loki::TypeInfo(typeid(cv::cuda::GpuMat)))
+        if(type == mo::TypeInfo(typeid(cv::cuda::GpuMat)))
         {
             vtkPlotter::SetInput(param_);
             _connections[&param_->update_signal] = param_->update_signal.connect(std::bind(&vtkPointCloudPlotter::OnGpuMatParameterUpdate, this, std::placeholders::_1));
 
-        }else if(type == Loki::TypeInfo(typeid(cv::Mat)))
+        }else if(type == mo::TypeInfo(typeid(cv::Mat)))
         {
 
-        }else if(type == Loki::TypeInfo(typeid(EagleLib::SyncedMemory)))
+        }else if(type == mo::TypeInfo(typeid(EagleLib::SyncedMemory)))
         {
 
         }

@@ -9,7 +9,7 @@
 #include "EagleLib/logger.hpp"
 #include "parameters/IVariableManager.h"
 #include <parameters/UI/Qt/IParameterProxy.hpp>
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 #include <EagleLib/frame_grabber_base.h>
 
 

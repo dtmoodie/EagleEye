@@ -1,7 +1,7 @@
 #include "vtkLogRedirect.h"
 #include "ObjectInterfacePerModule.h"
 #include "EagleLib/rcc/SystemTable.hpp"
-#include "signals/logging.hpp"
+#include <MetaObject/Logging/Log.hpp>
 
 
 void vtkLogRedirect::init()

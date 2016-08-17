@@ -98,8 +98,8 @@
 //    QLabel* lbl = new QLabel("Histogram bins: ", widget);
 //    layout->addWidget(lbl, 0,0);
 //    QComboBox* comboBox = new QComboBox(widget);
-//    boost::function<bool(Loki::TypeInfo&)> f(
-//                [](Loki::TypeInfo& type)->bool{
+//    boost::function<bool(mo::TypeInfo&)> f(
+//                [](mo::TypeInfo& type)->bool{
 //                    return EagleLib::acceptsType<cv::Mat>(type) ||
 //                            EagleLib::acceptsType<cv::cuda::GpuMat>(type) ||
 //                            EagleLib::acceptsType<cv::cuda::HostMem>(type);});

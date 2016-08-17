@@ -3,12 +3,13 @@
 #include "IObject.h"
 #include "IObjectInfo.h"
 #include "ParameteredIObject.h"
-#include "EagleLib/rcc/shared_ptr.hpp"
+#include <shared_ptr.hpp>
 #include "EagleLib/Signals.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 #include "SyncedMemory.h"
-
+#include <MetaObject/Signals/detail/SlotMacros.hpp>
+#include "MetaObject/Parameters/ParameterMacros.hpp"
 #include <boost/circular_buffer.hpp>
 #include <boost/thread.hpp>
 
@@ -81,9 +82,9 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
-        SIGNALS_BEGIN(IFrameGrabber, ParameteredIObject);
-            SIG_SEND(update);
-        SIGNALS_END;
+        MO_BEGIN(IFrameGrabber, ParameteredIObject);
+            MO_SIGNAL(void, update);
+        MO_END;
         
     protected:
         std::string loaded_document;
@@ -110,10 +111,17 @@ namespace EagleLib
 
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
+
+        MO_BEGIN(FrameGrabberBuffered, IFrameGrabber)
+            PARAM(int, frame_buffer_size, 10);
+            PARAM(boost::circular_buffer<TS<SyncedMemory>>, frame_buffer, boost::circular_buffer<TS<SyncedMemory>>());
+        MO_END;
+
+
     protected:
         virtual void PushFrame(TS<SyncedMemory> frame, bool blocking = true);
 
-        boost::circular_buffer<TS<SyncedMemory>> frame_buffer;
+        //boost::circular_buffer<TS<SyncedMemory>> frame_buffer;
         
         boost::mutex                             buffer_mtx;
         boost::mutex                             grabber_mtx;
@@ -144,12 +152,12 @@ namespace EagleLib
         virtual ~FrameGrabberThreaded();
         virtual void Init(bool firstInit);
         
-        SIGNALS_BEGIN(FrameGrabberThreaded, FrameGrabberBuffered);
-            AUTO_SLOT(void, StartThreads)
-            AUTO_SLOT(void, StopThreads)
-            AUTO_SLOT(void, PauseThreads)
-            AUTO_SLOT(void, ResumeThreads)
-        SIGNALS_END
+        MO_BEGIN(FrameGrabberThreaded, FrameGrabberBuffered);
+            MO_SLOT(void, StartThreads);
+            MO_SLOT(void, StopThreads);
+            MO_SLOT(void, PauseThreads);
+            MO_SLOT(void, ResumeThreads);
+        MO_END
     };
 
 }

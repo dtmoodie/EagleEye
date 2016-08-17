@@ -25,17 +25,17 @@ public:
         static variable_storage& instance();
         void save_parameters(const std::string& file_name = "user_preferences.yml");
         void load_parameters(const std::string& file_name = "user_preferences.yml");
-        void load_parameters(Parameters::ParameteredObject* This, Loki::TypeInfo type);
-        void save_parameters(Parameters::ParameteredObject* This, Loki::TypeInfo type);
+        void load_parameters(Parameters::ParameteredObject* This, mo::TypeInfo type);
+        void save_parameters(Parameters::ParameteredObject* This, mo::TypeInfo type);
 
         template<typename T> void load_parameters(T* This)
         {
-            load_parameters(This, Loki::TypeInfo(typeid(T)));
+            load_parameters(This, mo::TypeInfo(typeid(T)));
         }
         
         template<typename T> void save_parameters(T* This)
         {
-            save_parameters(This, Loki::TypeInfo(typeid(T)));
+            save_parameters(This, mo::TypeInfo(typeid(T)));
         }
     };
     user_interface_persistence();

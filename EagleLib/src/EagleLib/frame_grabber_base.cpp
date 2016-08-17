@@ -2,8 +2,8 @@
 #include "EagleLib/Logging.h"
 #include "EagleLib/DataStreamManager.h"
 #include "Remotery.h"
-#include "parameters/ParameteredObjectImpl.hpp"
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
+#include "ISimpleSerializer.h"
 using namespace EagleLib;
 IFrameGrabber::IFrameGrabber()
 {
@@ -21,9 +21,9 @@ void IFrameGrabber::InitializeFrameGrabber(IDataStream* stream)
     
     if(stream)
     {
-        setup_signals(stream->GetSignalManager());
+        SetupSignals(stream->GetRelayManager());
         //update_signal = stream->GetSignalManager()->get_signal<void()>("update", this);
-        SetupVariableManager(stream->GetVariableManager());
+        SetupVariableManager(stream->GetVariableManager().get());
     }
 }
 void IFrameGrabber::Init(bool firstInit)
@@ -262,10 +262,7 @@ int FrameGrabberInfo::LoadTimeout() const
 {
     return 1000;
 }
-int FrameGrabberInfo::GetObjectInfoType()
-{
-    return IObjectInfo::ObjectInfoType::frame_grabber;
-}
+
 std::vector<std::string> FrameGrabberInfo::ListLoadableDocuments()
 {
     return std::vector<std::string>();
@@ -275,20 +272,20 @@ void FrameGrabberBuffered::Init(bool firstInit)
     IFrameGrabber::Init(firstInit);
     if(firstInit)
     {
-        updateParameter<int>("Frame buffer size", 50);
+        UpdateParameter<int>("Frame buffer size", 50);
     }else
     {
         
     }
-    frame_buffer.set_capacity(*getParameter<int>("Frame buffer size")->Data());
-    updateParameterPtr<boost::circular_buffer<TS<SyncedMemory>>>("Frame buffer", &frame_buffer)->type = Parameters::Parameter::Output;
+    frame_buffer.set_capacity(GetParameter<int>("Frame buffer size")->GetData());
+    //updateParameterPtr<boost::circular_buffer<TS<SyncedMemory>>>("Frame buffer", &frame_buffer)->type = Parameters::Parameter::Output;
     
     boost::function<void(cv::cuda::Stream*)> f =[&](cv::cuda::Stream*)
     {
         boost::mutex::scoped_lock lock(buffer_mtx);
-        frame_buffer.set_capacity(*getParameter<int>("Frame buffer size")->Data());
+        frame_buffer.set_capacity(frame_buffer_size);
     };
-    RegisterParameterCallback("Frame buffer size", f, true, true);
+    //RegisterParameterCallback("Frame buffer size", f, true, true);
 }
 
 void FrameGrabberThreaded::Init(bool firstInit)

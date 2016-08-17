@@ -75,7 +75,7 @@ void QtColormapDisplayCallback(int status, void* data)
 {
     QtColormapDisplay* node = static_cast<QtColormapDisplay*>(data);
     Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtColormapDisplay::display, node),
-        std::make_pair(data, Loki::TypeInfo(typeid(EagleLib::Nodes::Node))));
+        std::make_pair(data, mo::TypeInfo(typeid(EagleLib::Nodes::Node))));
 }
 
 void QtColormapDisplay::display()

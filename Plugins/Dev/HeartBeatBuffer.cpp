@@ -1,5 +1,5 @@
 #include "HeartBeatBuffer.h"
-#include "EagleLib/rcc/shared_ptr.hpp"
+#include <shared_ptr.hpp>
 #include <parameters/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

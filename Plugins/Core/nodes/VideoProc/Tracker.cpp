@@ -122,7 +122,7 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
 {
     std::pair<cv::cuda::GpuMat*, std::string>* data = (std::pair<cv::cuda::GpuMat*, std::string>*)userData;
     boost::function<void(void)> f = boost::bind(displayCallback, *data->first, data->second);
-    Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, Loki::TypeInfo(typeid(EagleLib::Nodes::Node))));
+    Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, mo::TypeInfo(typeid(EagleLib::Nodes::Node))));
     delete data;
 }
 

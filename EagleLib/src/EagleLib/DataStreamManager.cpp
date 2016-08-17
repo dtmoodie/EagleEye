@@ -19,8 +19,8 @@
 #include <boost/chrono.hpp>
 #include <boost/thread.hpp>
 
-#include <signals/boost_thread.h>
-#include <parameters/VariableManager.h>
+//#include <signals/boost_thread.h>
+#include <MetaObject/Parameters/VariableManager.h>
 
 
 using namespace EagleLib;
@@ -86,7 +86,7 @@ namespace EagleLib
         // Handles actual loading of the image, etc
         virtual rcc::weak_ptr<IFrameGrabber>           GetFrameGrabber();
 
-        virtual std::shared_ptr<Parameters::IVariableManager> GetVariableManager();
+        virtual std::shared_ptr<mo::IVariableManager> GetVariableManager();
 
         virtual SignalManager*                            GetSignalManager();
 
@@ -112,10 +112,10 @@ namespace EagleLib
         void RemoveVariableSink(IVariableSink* sink);
 
     protected:
-        virtual std::unique_ptr<ISingleton>& GetSingleton(Loki::TypeInfo type);
-        virtual std::unique_ptr<ISingleton>& GetIObjectSingleton(Loki::TypeInfo type);
-        std::map<Loki::TypeInfo, std::unique_ptr<ISingleton>> _singletons;
-        std::map<Loki::TypeInfo, std::unique_ptr<ISingleton>> _iobject_singletons;
+        virtual std::unique_ptr<ISingleton>& GetSingleton(mo::TypeInfo type);
+        virtual std::unique_ptr<ISingleton>& GetIObjectSingleton(mo::TypeInfo type);
+        std::map<mo::TypeInfo, std::unique_ptr<ISingleton>> _singletons;
+        std::map<mo::TypeInfo, std::unique_ptr<ISingleton>> _iobject_singletons;
         int stream_id;
         size_t _thread_id;
         rcc::shared_ptr<IViewManager>                            view_manager;
@@ -606,11 +606,11 @@ IDataStream::Ptr IDataStream::create(const std::string& document, const std::str
     }
     return IDataStream::Ptr();
 }
-std::unique_ptr<ISingleton>& DataStream::GetSingleton(Loki::TypeInfo type)
+std::unique_ptr<ISingleton>& DataStream::GetSingleton(mo::TypeInfo type)
 {
     return _singletons[type];
 }
-std::unique_ptr<ISingleton>& DataStream::GetIObjectSingleton(Loki::TypeInfo type)
+std::unique_ptr<ISingleton>& DataStream::GetIObjectSingleton(mo::TypeInfo type)
 {
     return _iobject_singletons[type];
 }

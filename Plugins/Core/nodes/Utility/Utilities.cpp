@@ -9,7 +9,7 @@ using namespace EagleLib::Nodes;
 
 bool functionQualifier(Parameters::Parameter* parameter)
 {
-    if (parameter->GetTypeInfo() == Loki::TypeInfo(typeid(boost::function<void(void)>)))
+    if (parameter->GetTypeInfo() == mo::TypeInfo(typeid(boost::function<void(void)>)))
     {
         if (parameter->type & Parameters::Parameter::Output || parameter->type & Parameters::Parameter::Control)
             return true;

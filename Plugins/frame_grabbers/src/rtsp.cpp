@@ -1,6 +1,6 @@
 #include "rtsp.h"
 #include "ObjectInterfacePerModule.h"
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 #include "parameters/ParameteredObjectImpl.hpp"
 using namespace EagleLib;
 

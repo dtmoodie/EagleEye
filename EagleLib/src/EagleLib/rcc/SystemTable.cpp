@@ -4,7 +4,7 @@ SystemTable::SystemTable()
 {
 
 }
-void SystemTable::DeleteSingleton(Loki::TypeInfo type)
+void SystemTable::DeleteSingleton(mo::TypeInfo type)
 {
     g_singletons.erase(type);
 }

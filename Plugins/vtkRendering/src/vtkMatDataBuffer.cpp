@@ -1,5 +1,5 @@
 #include "vtkMatDataBuffer.h"
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 #include <vtkOpenGLRenderWindow.h>
 #ifdef _MSC_VER
 #include <Windows.h>

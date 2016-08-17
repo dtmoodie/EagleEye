@@ -15,7 +15,7 @@
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
-#include "signals/logging.hpp"
+#include <MetaObject/Logging/Log.hpp>
 #include "parameters/Persistence/OpenCV.hpp"
 
 #include <boost/lexical_cast.hpp>
@@ -159,8 +159,8 @@ namespace EagleLib
             std::shared_ptr<Signals::connection>                                                    resetConnection;
             std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<Signals::connection>>>     callbackConnections;
             std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<Signals::connection>>>        callbackConnections2;
-            Signals::typed_signal_base<void(Nodes::Node*)>*                                                    update_signal;
-            Signals::typed_signal_base<void(Nodes::Node*)>*                                                    g_update_signal;
+            mo::TypeInfo<void(Nodes::Node*)>*                                                    update_signal;
+            mo::TypeInfo<void(Nodes::Node*)>*                                                    g_update_signal;
             boost::recursive_mutex                                                                  mtx;
         };
     }    

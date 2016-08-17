@@ -35,7 +35,7 @@ using namespace EagleLib::Plotting;
 bool vtkImageViewerInfo::AcceptsParameter(Parameters::Parameter* param)
 {
     auto type = param->GetTypeInfo();
-    if(type == Loki::TypeInfo(typeid(cv::cuda::GpuMat)))
+    if(type == mo::TypeInfo(typeid(cv::cuda::GpuMat)))
     {
         auto typed = static_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>*>(param);
         auto mat = typed->Data();

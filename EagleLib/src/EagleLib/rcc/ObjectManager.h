@@ -117,8 +117,6 @@ namespace EagleLib
         void addConstructors(IAUDynArray<IObjectConstructor*> & constructors);
         std::vector<IObjectConstructor*> GetConstructorsForInterface(int interface_id);
         void set_build_directory(const std::string& build_directory);
-        void register_notifier(IObjectNotifiable* obj);
-        void remove_notifier(IObjectNotifiable* obj);
     private:
         ObjectManager();
         friend class PlotManager;
@@ -131,7 +129,6 @@ namespace EagleLib
         std::vector<std::function<void(void)>>            onConstructorsAddedCallbacks;
         std::map<int, std::string>                          m_projectNames;
         std::string build_dir;
-        std::list<IObjectNotifiable*>                       m_sharedPtrs;
         std::mutex mtx;
     };// class ObjectManager
 }

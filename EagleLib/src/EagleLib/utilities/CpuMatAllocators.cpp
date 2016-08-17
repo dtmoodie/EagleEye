@@ -4,7 +4,7 @@
 
 #include <opencv2/core/cuda/common.hpp>
 #include <opencv2/core/core_c.h>
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 
 #include "MemoryBlock.h"
 using namespace EagleLib;

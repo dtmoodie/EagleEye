@@ -67,9 +67,9 @@ void signal_dialog::on_item_select(QTreeWidgetItem* item, int column)
         auto all_signals = _manager->get_signals(item->text(0).toStdString());
         for(auto signal : all_signals)
         {
-            if(signal->get_signal_type() == Loki::TypeInfo(typeid(void(void))))
+            if(signal->get_signal_type() == mo::TypeInfo(typeid(void(void))))
             {
-                (*static_cast<Signals::typed_signal_base<void(void)>*>(signal))();
+                (*static_cast<mo::TypeInfo<void(void)>*>(signal))();
             }else
             {
                 std::unique_ptr<Signals::serialization::text::serialization_proxy_base> proxy(factory->get_proxy(signal->get_signal_type()));
@@ -82,9 +82,9 @@ void signal_dialog::on_item_select(QTreeWidgetItem* item, int column)
         auto signal = _manager->get_signal_optional(item->parent()->text(0).toStdString(), item->text(2).toStdString());
         if(signal)
         {
-            if(signal->get_signal_type() == Loki::TypeInfo(typeid(void(void))))
+            if(signal->get_signal_type() == mo::TypeInfo(typeid(void(void))))
             {
-                (*static_cast<Signals::typed_signal_base<void(void)>*>(signal))();
+                (*static_cast<mo::TypeInfo<void(void)>*>(signal))();
             }else
             {
                 std::unique_ptr<Signals::serialization::text::serialization_proxy_base> proxy(factory->get_proxy(signal->get_signal_type()));

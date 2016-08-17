@@ -5,7 +5,7 @@
 #include "user_interface_persistence.h"
 
 
-void user_interface_persistence::variable_storage::load_parameters(Parameters::ParameteredObject* This, Loki::TypeInfo type)
+void user_interface_persistence::variable_storage::load_parameters(Parameters::ParameteredObject* This, mo::TypeInfo type)
 {
     auto& params = loaded_parameters[type.name()];
     for (auto& param : params)
@@ -17,7 +17,7 @@ void user_interface_persistence::variable_storage::load_parameters(Parameters::P
         }
     }
 }
-void user_interface_persistence::variable_storage::save_parameters(Parameters::ParameteredObject* This, Loki::TypeInfo type)
+void user_interface_persistence::variable_storage::save_parameters(Parameters::ParameteredObject* This, mo::TypeInfo type)
 {
     auto& params = loaded_parameters[type.name()];
     auto all_params = This->getParameters();

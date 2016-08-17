@@ -1,9 +1,3 @@
-[submodule "EagleLib/RCC"]
-	path = EagleLib/RCC
-	url = https://dtmoodie@github.com/dtmoodie/RuntimeCompiledCPlusPlus
-[submodule "EagleLib/parameters"]
-	path = EagleLib/parameters
-	url = https://github.com/dtmoodie/parameters
 [submodule "Plugins/Segmentation/fastms"]
 	path = Plugins/Segmentation/fastms
 	url = http://github.com/dtmoodie/fastms
@@ -19,9 +13,6 @@
 [submodule "Plugins/SLAM/lsd_slam"]
 	path = Plugins/SLAM/lsd_slam
 	url = https://github.com/dtmoodie/lsd_slam
-[submodule "EagleLib/signals"]
-	path = EagleLib/signals
-	url = https://github.com/dtmoodie/signals
 [submodule "EagleLib/MetaObject"]
 	path = EagleLib/MetaObject
 	url = http://github.com/dtmoodie/MetaObject

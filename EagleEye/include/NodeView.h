@@ -5,7 +5,7 @@
 #include <EagleLib/nodes/Node.h>
 #include <QNodeWidget.h>
 #include <QMenu>
-#include <EagleLib/rcc/shared_ptr.hpp>
+#include <shared_ptr.hpp>
 class signal_dialog;
 class NodeView : public QGraphicsView
 {

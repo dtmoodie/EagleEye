@@ -2,7 +2,7 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <boost/log/trivial.hpp>
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 #include "EagleLib/Logging.h"
 
 int main()

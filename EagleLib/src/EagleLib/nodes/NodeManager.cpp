@@ -51,10 +51,10 @@ NodeManager::OnConstructorsAdded()
     }
     for (size_t i = 0; i < newNodes.size(); ++i)
     {
-        auto parameters = newNodes[i]->getParameters();
+        auto parameters = newNodes[i]->GetDisplayParameters();
         for (size_t j = 0; j < parameters.size(); ++j)
         {
-            if (parameters[j]->type & Parameters::Parameter::Input)
+            if (parameters[j]->type & mo::IParameter::Input_e)
             {
                 auto inputParam = dynamic_cast<Parameters::InputParameter*>(parameters[j]);
                 if(inputParam)
@@ -527,7 +527,7 @@ NodeManager::getConstructableNodes()
     return output;
 }
 
-std::vector<std::string> NodeManager::getParametersOfType(std::function<bool(Loki::TypeInfo)> selector)
+std::vector<std::string> NodeManager::getParametersOfType(std::function<bool(mo::TypeInfo)> selector)
 {
     
     std::vector<std::string> parameters;

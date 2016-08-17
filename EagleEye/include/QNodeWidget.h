@@ -19,7 +19,7 @@
 #include <parameters/type.h>
 #include <boost/thread/recursive_mutex.hpp>
 #include <parameters/UI/Qt.hpp>
-#include <EagleLib/rcc/shared_ptr.hpp>
+#include <shared_ptr.hpp>
 #include <EagleLib/DataStreamManager.h>
 #include <parameters/UI/Qt/IParameterProxy.hpp>
 namespace Ui {

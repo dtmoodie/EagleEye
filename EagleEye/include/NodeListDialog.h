@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include "EagleLib/nodes/Node.h"
-#include <EagleLib/rcc/shared_ptr.hpp>
+#include <shared_ptr.hpp>
 
 #include <signals/signaler.h>
 

@@ -23,9 +23,9 @@ boost::log::attributes::mutable_constant<std::string>    attr(std::string(""));
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(NodeName,"NodeName",std::string);
 
-std::map<std::string, std::shared_ptr<Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>>> object_specific_signals;
-Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>                                         generic_signal;
-Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string, std::string)>                            object_signal;
+std::map<std::string, std::shared_ptr<mo::TypedSignal<void(boost::log::trivial::severity_level, std::string)>>> object_specific_signals;
+mo::TypedSignal<void(boost::log::trivial::severity_level, std::string)>                                         generic_signal;
+mo::TypedSignal<void(boost::log::trivial::severity_level, std::string, std::string)>                            object_signal;
 
 ui_collector::ui_collector(object_log_handler_t olh, log_handler_t lh)
 {
@@ -58,18 +58,18 @@ void ui_collector::consume(boost::log::record_view const& rec, string_type const
 }
 
 
-Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>& ui_collector::get_object_log_handler(std::string name)
+mo::TypedSignal<void(boost::log::trivial::severity_level, std::string)>& ui_collector::get_object_log_handler(std::string name)
 {
     auto& sig = object_specific_signals[name];
     if(!sig)
-        sig.reset(new Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>());
+        sig.reset(new mo::TypedSignal<void(boost::log::trivial::severity_level, std::string)>());
     return (*sig);
 }
-Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string, std::string)>& ui_collector::get_object_log_handler()
+mo::TypedSignal<void(boost::log::trivial::severity_level, std::string, std::string)>& ui_collector::get_object_log_handler()
 {
     return object_signal;
 }
-Signals::typed_signal_base<void(boost::log::trivial::severity_level, std::string)>& ui_collector::get_log_handler()
+mo::TypedSignal<void(boost::log::trivial::severity_level, std::string)>& ui_collector::get_log_handler()
 {
     return generic_signal;
 }

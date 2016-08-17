@@ -1,5 +1,5 @@
 
-#include <EagleLib/rcc/shared_ptr.hpp>
+#include <shared_ptr.hpp>
 #include <EagleLib/nodes/NodeManager.h>
 #include "EagleLib/nodes/Node.h"
 #include "EagleLib/Plugins.h"
@@ -10,7 +10,7 @@
 #include <EagleLib/DataStreamManager.h>
 
 #include <signal.h>
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 #include <parameters/Persistence/TextSerializer.hpp>
 #include <parameters/IVariableManager.h>
 #include <boost/program_options.hpp>

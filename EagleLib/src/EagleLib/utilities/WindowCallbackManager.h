@@ -3,7 +3,7 @@
 #include "IObject.h"
 #include <map>
 #include <mutex>
-#include "EagleLib/rcc/shared_ptr.hpp"
+#include <shared_ptr.hpp>
 
 namespace EagleLib
 {

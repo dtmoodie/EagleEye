@@ -1,8 +1,8 @@
 #pragma once
 #include "EagleLib/Defs.hpp"
-#include "EagleLib/rcc/shared_ptr.hpp"
+#include <shared_ptr.hpp>
 #include <IObject.h>
-#include <parameters/Parameters.hpp>
+
 
 #include <opencv2/core/persistence.hpp>
 
@@ -63,7 +63,7 @@ namespace EagleLib
         Nodes::Node* getParent(const std::string& sourceNode);
 
         std::vector<std::string> getConstructableNodes();
-        std::vector<std::string> getParametersOfType(std::function<bool(Loki::TypeInfo)> selector);
+        std::vector<std::string> getParametersOfType(std::function<bool(mo::TypeInfo)> selector);
         virtual void OnConstructorsAdded();
     private:
         NodeManager();

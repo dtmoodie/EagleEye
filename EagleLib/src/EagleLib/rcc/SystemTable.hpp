@@ -31,7 +31,7 @@ struct SystemTable
     // These are per stream singletons
     template<typename T> T* GetSingleton()
     {
-        auto g_itr = g_singletons.find(Loki::TypeInfo(typeid(T)));
+        auto g_itr = g_singletons.find(mo::TypeInfo(typeid(T)));
         if(g_itr != g_singletons.end())
         {
             return static_cast<Singleton<T>*>(g_itr->second.get())->ptr;

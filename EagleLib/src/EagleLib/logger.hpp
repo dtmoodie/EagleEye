@@ -5,7 +5,7 @@
 #include <EagleLib/Defs.hpp>
 #include <boost/log/trivial.hpp>
 #include "ObjectInterface.h"
-#include "EagleLib/Signals.h"
+#include <MetaObject/Signals/TypedSignal.hpp>
 
 namespace EagleLib
 {

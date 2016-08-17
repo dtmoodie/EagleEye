@@ -10,19 +10,22 @@ namespace EagleLib
     public:
         virtual void Render() = 0;
     };
+
     class IRenderObjectConstructor : public TInterface<IID_RenderObjectConstructor, IObject>
     {
     public:
-        virtual std::shared_ptr<IRenderObject> Construct(std::shared_ptr<Parameters::Parameter> param) = 0;
+        virtual std::shared_ptr<IRenderObject> Construct(std::shared_ptr<mo::IParameter> param) = 0;
     };
+
     class IRenderObjectFactory : public TInterface<IID_RenderObject, IObject>
     {
     public:
-        virtual std::shared_ptr<IRenderObject> Create(std::shared_ptr<Parameters::Parameter> param) = 0;
+        virtual std::shared_ptr<IRenderObject> Create(std::shared_ptr<mo::IParameter> param) = 0;
         static void RegisterConstructorStatic(std::shared_ptr<IRenderObjectConstructor> constructor);
 
         virtual void RegisterConstructor(std::shared_ptr<IRenderObjectConstructor> constructor) = 0;
     };
+
     // Render scene holds all objects in a scene, enables / disables specific objects, etc.
     class IRenderScene : public TInterface<IID_RenderScene, IObject>
     {

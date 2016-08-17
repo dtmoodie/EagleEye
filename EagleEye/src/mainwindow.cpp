@@ -23,7 +23,7 @@
 #include <EagleLib/utilities/ogl_allocators.h>
 #include "EagleLib/utilities/CpuMatAllocators.h"
 #include <EagleLib/Logging.h>
-#include <EagleLib/rcc/shared_ptr.hpp>
+#include <shared_ptr.hpp>
 #include "EagleLib/utilities/BufferPool.hpp"
 #include <EagleLib/nodes/NodeManager.h>
 #include <EagleLib/rcc/ObjectManager.h>
@@ -34,7 +34,7 @@
 #include <EagleLib/nodes/Node.h>
 #include <EagleLib/utilities/ColorMapperFactory.hpp>
 
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 #include <signal.h>
 
 
@@ -85,7 +85,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<boost::function<void()>>("boost::function<void()>");
     qRegisterMetaType<Parameters::Parameter::Ptr>("Parameters::Parameter::Ptr");
     qRegisterMetaType<size_t>("size_t");
-    qRegisterMetaType<std::pair<void*,Loki::TypeInfo>>("std::pair<void*,Loki::TypeInfo>");
+    qRegisterMetaType<std::pair<void*,mo::TypeInfo>>("std::pair<void*,mo::TypeInfo>");
 
     ui->setupUi(this);
 
@@ -303,7 +303,7 @@ MainWindow::onSaveClicked()
     startProcessingThread();
 }
 
-void MainWindow::on_uiCallback(boost::function<void()> f, std::pair<void*, Loki::TypeInfo> source)
+void MainWindow::on_uiCallback(boost::function<void()> f, std::pair<void*, mo::TypeInfo> source)
 {
     static boost::posix_time::ptime last_end;
     try
@@ -327,7 +327,7 @@ void MainWindow::on_uiCallback(boost::function<void()> f, std::pair<void*, Loki:
 }
 
 
-void MainWindow::processingThread_uiCallback(boost::function<void ()> f, std::pair<void*, Loki::TypeInfo> source)
+void MainWindow::processingThread_uiCallback(boost::function<void ()> f, std::pair<void*, mo::TypeInfo> source)
 {
     emit uiCallback(f, source);
 }

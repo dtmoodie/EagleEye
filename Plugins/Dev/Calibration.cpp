@@ -76,7 +76,7 @@ cv::cuda::GpuMat FindCheckerboard::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                 prevFramePoints.copyTo(currentFramePoints, stream);
                 cv::drawChessboardCorners(h_img, cv::Size(numX, numY), imagePoints, found);
                 Parameters::UI::UiCallbackService::Instance()->post(
-                    boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), getFullTreeName(), h_img), std::make_pair((void*)this, Loki::TypeInfo(typeid(EagleLib::Nodes::Node))));
+                    boost::bind(static_cast<void(*)(const cv::String&, const cv::_InputArray&)>(&cv::imshow), getFullTreeName(), h_img), std::make_pair((void*)this, mo::TypeInfo(typeid(EagleLib::Nodes::Node))));
                 prevGreyFrame = currentGreyFrame;
                 TIME
             }

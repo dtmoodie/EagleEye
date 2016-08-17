@@ -4,7 +4,7 @@ ParameterBuffer::ParameterBuffer(int size)
 {
     _initial_size = size;
 }
-boost::any& ParameterBuffer::GetParameter(Loki::TypeInfo type, const std::string& name, int frameNumber)
+boost::any& ParameterBuffer::GetParameter(mo::TypeInfo type, const std::string& name, int frameNumber)
 {
     std::lock_guard<std::mutex> lock(mtx);
     auto& param_buffer = _parameter_map[type][name];

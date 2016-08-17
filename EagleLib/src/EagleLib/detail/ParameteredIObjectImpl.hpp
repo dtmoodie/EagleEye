@@ -20,7 +20,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
-    static Parameters::ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    static Parameters::ParameterInfo s_info{mo::TypeInfo(typeid(type)), #name}; \
     info.push_back(&s_info); \
     getParameterInfo_(info, --dummy); \
 } \
@@ -46,7 +46,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
-    static Parameters::ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    static Parameters::ParameterInfo s_info{mo::TypeInfo(typeid(type)), #name}; \
     info.push_back(&s_info); \
     getParameterInfo_(info, --dummy); \
 } \
@@ -68,7 +68,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
-    static Parameters::ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    static Parameters::ParameterInfo s_info{mo::TypeInfo(typeid(type)), #name}; \
     info.push_back(&s_info); \
     getParameterInfo_(info, --dummy); \
 } \
@@ -95,7 +95,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
-    static Parameters::ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    static Parameters::ParameterInfo s_info{mo::TypeInfo(typeid(type)), #name}; \
     info.push_back(&s_info); \
     getParameterInfo_(info, --dummy); \
 } \

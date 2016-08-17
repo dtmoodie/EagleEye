@@ -3,7 +3,7 @@
 
 #include "ObjectInterfacePerModule.h"
 
-#include <signals/logging.hpp>
+#include <MetaObject/Logging/Log.hpp>
 
 glib_thread::glib_thread()
 {

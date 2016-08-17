@@ -41,13 +41,13 @@
 #include <IObjectInfo.h>
 #include <ObjectInterfacePerModule.h>
 #include <RuntimeLinkLibrary.h>
-#include "EagleLib/rcc/shared_ptr.hpp"
+#include <shared_ptr.hpp>
 
 // Dependent in house libraries
-#include <parameters/LokiTypeInfo.h>
-#include <parameters/Parameters.hpp>
-#include <parameters/Types.hpp>
-#include <signals/connection.h>
+
+
+
+
 
 // Dependent 3rd party libraries
 #include <opencv2/core/cuda.hpp>
@@ -171,32 +171,32 @@ namespace EagleLib
         virtual TS<SyncedMemory>        doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
         virtual void                    reset();
 
-        virtual Parameters::Parameter* addParameter(Parameters::Parameter::Ptr param);
-        virtual Parameters::Parameter* addParameter(Parameters::Parameter* param);
-        template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream = nullptr)
+        virtual mo::IParameter* addParameter(std::shared_ptr<mo::IParameter> param);
+        virtual mo::IParameter* addParameter(mo::IParameter* param);
+        template<typename T> mo::IParameter* updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream = nullptr)
         {
             return ParameteredIObject::updateParameterPtr(name, data, GetTimestamp(), stream);
         }
 
-        template<typename T> Parameters::Parameter* updateParameterPtr(const std::string& name, T* data, long long timestamp, cv::cuda::Stream* stream = nullptr)
+        template<typename T> mo::IParameter* updateParameterPtr(const std::string& name, T* data, long long timestamp, cv::cuda::Stream* stream = nullptr)
         {
             return ParameteredIObject::updateParameterPtr(name, data, timestamp, stream);
         }
         
-        template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, cv::cuda::Stream* stream = nullptr)
+        template<typename T> mo::IParameter* updateParameter(const std::string& name, const T& data, cv::cuda::Stream* stream = nullptr)
         {
             return ParameteredIObject::updateParameter(name, data, GetTimestamp(), stream);
         }
-        template<typename T> Parameters::Parameter* updateParameter(const std::string& name, const T& data, long long timestamp, cv::cuda::Stream* stream = nullptr)
+        template<typename T> mo::IParameter* updateParameter(const std::string& name, const T& data, long long timestamp, cv::cuda::Stream* stream = nullptr)
         {
             return ParameteredIObject::updateParameter(name, data, timestamp, stream);
         }
         
-        template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, cv::cuda::Stream* stream = nullptr)
+        template<typename T> mo::IParameter* updateParameter(size_t idx, const T data, cv::cuda::Stream* stream = nullptr)
         {
             return ParameteredIObject::updateParameter(idx, data, GetTimestamp(), stream);
         }
-        template<typename T> Parameters::Parameter* updateParameter(size_t idx, const T data, long long timestamp, cv::cuda::Stream* stream = nullptr)
+        template<typename T> mo::IParameter* updateParameter(size_t idx, const T data, long long timestamp, cv::cuda::Stream* stream = nullptr)
         {
             return ParameteredIObject::updateParameter(idx, data, timestamp, stream);
         }
@@ -295,7 +295,7 @@ namespace EagleLib
         virtual std::vector<std::string> listParameters();
 
         
-        void RegisterSignalConnection(std::shared_ptr<Signals::connection> connection);
+        //void RegisterSignalConnection(std::shared_ptr<Signals::connection> connection);
         
 
         
