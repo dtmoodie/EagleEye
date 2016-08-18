@@ -1,4 +1,4 @@
-#include "DisplayHelpers.cuh"
+#include "EagleLib/utilities/DisplayHelpers.cuh"
 
 #include <opencv2/core/cuda/vec_traits.hpp>
 #include <opencv2/core/cuda_stream_accessor.hpp> 

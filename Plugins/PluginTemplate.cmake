@@ -29,9 +29,9 @@ ADD_DEFINITIONS(-DPROJECT_CONFIG_FILE=\"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NA
 ADD_DEFINITIONS(-DPLUGIN_NAME=${PROJECT_NAME})
 
 if(WIN32)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FI\"EagleLib/Project_defs.hpp\"")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FI\"EagleLib/Detail/PluginExports.hpp\"")
 else(WIN32)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include \"EagleLib/Project_defs.hpp\"")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include \"EagleLib/Detail/PluginExport.hpp\"")
 
 endif(WIN32)
 

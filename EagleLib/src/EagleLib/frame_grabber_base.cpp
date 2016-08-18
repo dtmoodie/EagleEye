@@ -251,6 +251,11 @@ void EagleLib::FrameGrabberThreaded::ResumeThreads()
 {
     _pause = false;
 }
+int FrameGrabberInfo::GetInterfaceId()
+{
+    return IID_FrameGrabber;
+}
+
 std::string FrameGrabberInfo::GetObjectTooltip()
 {
     return "";

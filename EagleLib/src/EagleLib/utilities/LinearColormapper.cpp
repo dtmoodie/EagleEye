@@ -1,5 +1,5 @@
-#include "LinearColormapper.hpp"
-#include "ColorMapperFactory.hpp"
+#include "EagleLib/utilities/LinearColormapper.hpp"
+#include "EagleLib/utilities/ColorMapperFactory.hpp"
 using namespace EagleLib;
 
 LinearColorMapper::LinearColorMapper(const ColorScale& red, const ColorScale& green, const ColorScale& blue):

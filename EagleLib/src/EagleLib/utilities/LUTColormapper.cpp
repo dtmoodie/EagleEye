@@ -1,5 +1,6 @@
-#include "LUTColormapper.hpp"
-#include "ColorMapperFactory.hpp"
+#include "EagleLib/utilities/LUTColormapper.hpp"
+#include "EagleLib/utilities/ColorMapperFactory.hpp"
+
 using namespace EagleLib;
 LUTColorMapper::LUTColorMapper()
 {

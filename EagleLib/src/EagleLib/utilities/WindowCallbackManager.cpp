@@ -1,5 +1,5 @@
-#include "WindowCallbackManager.h"
-#include "UiCallbackHandlers.h"
+#include "EagleLib/utilities/WindowCallbackManager.h"
+#include "EagleLib/utilities/UiCallbackHandlers.h"
 #include "ObjectInterfacePerModule.h"
 //#include "EagleLib/rcc/ObjectManager.h"
 #include "EagleLib/rcc/SystemTable.hpp"

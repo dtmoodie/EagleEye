@@ -1,12 +1,12 @@
-#include "CpuMatAllocators.h"
-
+#include "EagleLib/utilities/CpuMatAllocators.h"
+#include "EagleLib/utilities/MemoryBlock.h"
 #include <cuda_runtime_api.h>
 
 #include <opencv2/core/cuda/common.hpp>
 #include <opencv2/core/core_c.h>
 #include <MetaObject/Logging/Log.hpp>
 
-#include "MemoryBlock.h"
+
 using namespace EagleLib;
 
 

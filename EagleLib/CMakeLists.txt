@@ -58,9 +58,20 @@ LIST(APPEND defs_ -DRMT_USE_OPENGL)
 IF(${EagleLib_JETSON})
     LIST(APPEND defs_ "-DJETSON")
 ENDIF(${EagleLib_JETSON})
-IF(NOT WIN32)
-        set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono regex log log_setup atomic)
-ENDIF(NOT WIN32)
+
+set(BOOST_REQUIRED_MODULES 
+	system 
+	filesystem 
+	thread 
+	date_time 
+	iostreams 
+	chrono 
+	regex 
+	log 
+	log_setup 
+	atomic 
+	unit_test_framework)
+
 find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 
 FILE(GLOB_RECURSE src "src/*.cpp" "remotery/lib/*.c")
@@ -276,4 +287,23 @@ if(UNIX)
 endif()
 if(${USE_PYTHON})
 add_subdirectory("python")
+endif()
+
+if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+  message("Creating tests for EagleLib")
+  include(CTest)
+  enable_testing()
+  SUBDIRLIST(tests "${CMAKE_CURRENT_LIST_DIR}/tests")
+  foreach(test ${tests})
+    file(GLOB_RECURSE test_srcs "tests/${test}/*.cpp")
+      add_executable(${test} ${test_srcs})
+      TARGET_LINK_LIBRARIES(${test} MetaObject EagleLib ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+      ADD_DEPENDENCIES(${test} MetaObject EagleLib)
+      set_target_properties(${test} PROPERTIES FOLDER Tests/EagleLib)
+      
+      add_test(${test} ${test})
+      if(MSVC)
+        CONFIGURE_FILE("tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/${test}.vcxproj.user @ONLY)
+      endif()
+  endforeach()
 endif()

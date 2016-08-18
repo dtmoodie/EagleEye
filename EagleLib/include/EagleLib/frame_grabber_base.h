@@ -32,7 +32,7 @@ namespace EagleLib
          * \brief GetObjectInfoType indicates that this is a FrameGrabberInfo object
          * \return IObjectInfo::ObjectInfoType::frame_grabber
          */
-        virtual int GetObjectInfoType();
+        virtual int GetInterfaceId();
 
         /*!
          * \brief GetObjectName return the factory producible name for this object
@@ -84,7 +84,7 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
-        MO_BEGIN(IFrameGrabber, mo::IMetaObject);
+        MO_BEGIN(IFrameGrabber);
             MO_SIGNAL(void, update);
         MO_END;
         

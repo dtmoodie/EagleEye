@@ -37,6 +37,12 @@ void Plotter::PlotInit(bool firstInit)
 
 }
 
+void Plotter::on_parameter_update(mo::Context* ctx, mo::IParameter* param)
+{
+
+}
+
+
 void Plotter::Serialize(ISimpleSerializer *pSerializer)
 {
     IObject::Serialize(pSerializer);

@@ -39,7 +39,7 @@ namespace EagleLib
         virtual void SetInput(mo::IParameter* param_ = nullptr);
 
         virtual bool AcceptsParameter(mo::IParameter* param) = 0;
-        MO_BEGIN(Plotter, mo::IMetaObject)
+        MO_BEGIN(Plotter)
             MO_SLOT(void, on_parameter_update, mo::Context*, mo::IParameter*);
             MO_SLOT(void, on_parameter_delete, mo::IParameter const*);
         MO_END;
@@ -47,7 +47,6 @@ namespace EagleLib
 
         virtual std::string PlotName() const = 0;
         virtual PlotterType Type() const = 0;
-        virtual void on_param_delete(mo::IParameter* param);
     protected:
         mo::IParameter* param;
     };

@@ -1,9 +1,7 @@
 #pragma once
-
-
 #include <MetaObject/IMetaObject.hpp>
-
 #include <shared_ptr.hpp>
+
 
 namespace EagleLib
 {

@@ -1,4 +1,4 @@
-#include "Tracking.hpp"
+#include "EagleLib/nodes/VideoProc/Tracking.hpp"
 
 using namespace EagleLib;
 

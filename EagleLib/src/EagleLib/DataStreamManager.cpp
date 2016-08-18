@@ -140,7 +140,7 @@ namespace EagleLib
         // These are threads for attempted connections
         std::vector<boost::thread*> connection_threads;
     public:
-        MO_BEGIN(DataStream, IDataStream);
+        MO_BEGIN(DataStream);
             MO_SIGNAL(void, StartThreads);
             MO_SIGNAL(void, StopThreads);
 
@@ -148,7 +148,6 @@ namespace EagleLib
             MO_SLOT(void, StopThread);
             MO_SLOT(void, PauseThread);
             MO_SLOT(void, ResumeThread);
-            //REGISTER_SLOT(ResumeThread);
         MO_END
     };
 }

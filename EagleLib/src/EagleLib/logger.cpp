@@ -1,5 +1,5 @@
 #include "EagleLib/logger.hpp"
-#include "nodes/Node.h"
+#include "EagleLib/nodes/Node.h"
 
 #include <boost/log/utility/value_ref.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>

@@ -1,4 +1,4 @@
-#include "Extraction.h"
+#include "EagleLib/nodes/Extraction.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

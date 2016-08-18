@@ -1,13 +1,14 @@
-#include "ColorMapperFactory.hpp"
-#include "ColorScale.hpp"
+#include "EagleLib/utilities/ColorMapperFactory.hpp"
+#include "EagleLib/utilities/ColorScale.hpp"
 #include <boost/filesystem.hpp>
 #if defined(EAGLELIB_HAVE_CEREAL)
+#include "EagleLib/utilities/LinearColormapper.hpp"
 #include <cereal/cereal.hpp>
 #include <cereal/archives/xml.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/tuple.hpp>
 #include <MetaObject/Parameters/IO/Policy.hpp>
-#include "LinearColormapper.hpp"
+
 #endif
 
 using namespace EagleLib;

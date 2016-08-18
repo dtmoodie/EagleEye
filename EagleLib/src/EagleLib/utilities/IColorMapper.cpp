@@ -1,4 +1,4 @@
-#include "IColorMapper.hpp"
+#include "EagleLib/utilities/IColorMapper.hpp"
 using namespace EagleLib;
 
 IColorMapper::~IColorMapper()

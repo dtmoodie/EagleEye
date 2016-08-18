@@ -1,23 +1,28 @@
 #pragma once
+#include <MetaObject/IMetaObject.hpp>
 #include <memory>
-#include "IObject.h"
+
+namespace mo
+{
+    class IParameter;
+}
 
 namespace EagleLib
 {
     // Render objects are objects that are rendered inside of a scene
-    class IRenderObject : public TInterface<IID_RenderObject, IObject>
+    class IRenderObject : public TInterface<IID_RenderObject, mo::IMetaObject>
     {
     public:
         virtual void Render() = 0;
     };
 
-    class IRenderObjectConstructor : public TInterface<IID_RenderObjectConstructor, IObject>
+    class IRenderObjectConstructor : public TInterface<IID_RenderObjectConstructor, mo::IMetaObject>
     {
     public:
         virtual std::shared_ptr<IRenderObject> Construct(std::shared_ptr<mo::IParameter> param) = 0;
     };
 
-    class IRenderObjectFactory : public TInterface<IID_RenderObject, IObject>
+    class IRenderObjectFactory : public TInterface<IID_RenderObject, mo::IMetaObject>
     {
     public:
         virtual std::shared_ptr<IRenderObject> Create(std::shared_ptr<mo::IParameter> param) = 0;

@@ -1,9 +1,10 @@
 #include "EagleLib/DataStreamManager.h"
-#include "NodeManager.h"
+#include "EagleLib/nodes/NodeManager.h"
+#include "EagleLib/nodes/Node.h"
 #include <EagleLib/frame_grabber_base.h>
 #include <MetaObject/MetaObjectFactory.hpp>
 #include <MetaObject/Parameters/InputParameter.hpp>
-#include "Node.h"
+
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include "AUArray.h"

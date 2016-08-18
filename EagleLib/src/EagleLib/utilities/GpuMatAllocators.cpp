@@ -1,10 +1,12 @@
-#include "GpuMatAllocators.h"
+#include "EagleLib/utilities/GpuMatAllocators.h"
+#include "EagleLib/utilities/MemoryBlock.h"
+#include "EagleLib/logger.hpp"
+
 #include <boost/log/trivial.hpp>
-#include <EagleLib/logger.hpp>
-#include "MemoryBlock.h"
+#include <boost/thread.hpp>
 #include <opencv2/cudev/common.hpp>
 #include <cuda_runtime.h>
-#include <boost/thread.hpp>
+
 namespace EagleLib
 {
     unsigned char* alignMemory(unsigned char* ptr, int elemSize)

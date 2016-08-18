@@ -1,8 +1,8 @@
 #ifndef OPENCV_FOUND
 #define OPENCV_FOUND
 #endif
-#include "Node.h"
-#include "NodeManager.h"
+#include "EagleLib/nodes/Node.h"
+#include "EagleLib/nodes/NodeManager.h"
 #include <EagleLib/frame_grabber_base.h>
 #include <EagleLib/DataStreamManager.h>
 #include "EagleLib/logger.hpp"

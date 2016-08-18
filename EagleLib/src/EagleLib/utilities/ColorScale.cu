@@ -1,4 +1,5 @@
-#include "ColorScale.hpp"
+#include "EagleLib/utilities/ColorScale.hpp"
+
 using namespace EagleLib;
 __host__ __device__ ColorScale::ColorScale(double start_, double slope_, bool symmetric_)
 {
