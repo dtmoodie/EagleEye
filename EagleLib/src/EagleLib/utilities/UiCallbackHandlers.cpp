@@ -3,11 +3,10 @@
 #include "ObjectInterfacePerModule.h"
 #include "EagleLib/rcc/external_includes/cv_core.hpp"
 #include "EagleLib/rcc/external_includes/cv_highgui.hpp"
-#include "EagleLib/rcc/ObjectManager.h"
 #include "EagleLib/rcc/SystemTable.hpp"
 
-#include <signals/signal_manager.h>
-#include <signals/thread_registry.h>
+#include <MetaObject/Thread/ThreadRegistry.hpp>
+#include <MetaObject/Thread/InterThread.hpp>
 
 #include <boost/thread/mutex.hpp>
 
@@ -22,10 +21,11 @@ static void on_mouse_click(int event, int x, int y, int flags, void* callback_ha
 
 void WindowCallbackHandler::imshow(const std::string& window_name, cv::Mat img, int flags)
 {
-    auto gui_thread_id = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
-    if (Signals::get_this_thread() != gui_thread_id)
+    //auto gui_thread_id = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
+    auto gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
+    if (mo::GetThisThread() != gui_thread_id)
     {
-        Signals::thread_specific_queue::push(std::bind(&WindowCallbackHandler::imshow, this, window_name, img, flags), gui_thread_id);
+        mo::ThreadSpecificQueue::Push(std::bind(&WindowCallbackHandler::imshow, this, window_name, img, flags), gui_thread_id);
         return;
     }
     // The below code should only execute if this is on the GUI thread, thus it doesn't need locking
@@ -42,10 +42,10 @@ void WindowCallbackHandler::imshow(const std::string& window_name, cv::Mat img, 
 }
 void WindowCallbackHandler::imshowd(const std::string& window_name, cv::cuda::GpuMat img, int flags)
 {
-    auto gui_thread_id = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
-    if (Signals::get_this_thread() != gui_thread_id)
+    auto gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
+    if (mo::GetThisThread() != gui_thread_id)
     {
-        Signals::thread_specific_queue::push(std::bind(&WindowCallbackHandler::imshowd, this, window_name, img, flags), gui_thread_id);
+        mo::ThreadSpecificQueue::Push(std::bind(&WindowCallbackHandler::imshowd, this, window_name, img, flags), gui_thread_id);
         return;
     }
     auto itr = windows.find(window_name);
@@ -79,12 +79,13 @@ WindowCallbackHandler::WindowCallbackHandler()
 {
 }
 
-RCC_CREATE_IMPL(WindowCallbackHandler);
+MO_REGISTER_OBJECT(WindowCallbackHandler);
 
 
-void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, const std::string& win_name)
+void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, const std::string& win_name_)
 {
     cv::Point pt(x, y);
+    std::string win_name = win_name_;
     switch (event)
     {
     case cv::EVENT_MOUSEMOVE:
@@ -178,5 +179,5 @@ void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, con
     }
 }
 
-REGISTERCLASS(WindowCallbackHandler, nullptr)
+
 

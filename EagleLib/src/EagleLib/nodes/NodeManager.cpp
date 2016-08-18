@@ -1,12 +1,12 @@
 #include "EagleLib/DataStreamManager.h"
 #include "NodeManager.h"
 #include <EagleLib/frame_grabber_base.h>
-#include "EagleLib/rcc/ObjectManager.h"
+#include <MetaObject/MetaObjectFactory.hpp>
 #include <MetaObject/Parameters/InputParameter.hpp>
 #include "Node.h"
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-
+#include "AUArray.h"
 using namespace EagleLib;
 
 NodeManager& NodeManager::getInstance()
@@ -17,7 +17,7 @@ NodeManager& NodeManager::getInstance()
 
 NodeManager::NodeManager()
 {
-    ObjectManager::Instance().RegisterConstructorAddedCallback(boost::bind(&NodeManager::OnConstructorsAdded, this));
+    //ObjectManager::Instance().RegisterConstructorAddedCallback(boost::bind(&NodeManager::OnConstructorsAdded, this));
 }
 
 NodeManager::~NodeManager()
@@ -26,14 +26,13 @@ NodeManager::~NodeManager()
 }
 
 
-void
-NodeManager::OnConstructorsAdded()
+void NodeManager::OnConstructorsAdded()
 {
-    
-    AUDynArray<IObjectConstructor*> constructors;
-    ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_NodeObject);
+    //AUDynArray<IObjectConstructor*> constructors;
+    //ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
     std::vector<Nodes::Node*> newNodes;
-    for (size_t i = 0; i < constructors.Size(); ++i)
+    for (size_t i = 0; i < constructors.size(); ++i)
     {
         size_t numObjects = constructors[i]->GetNumberConstructedObjects();
         for (size_t j = 0; j < numObjects; ++j)
@@ -59,7 +58,7 @@ NodeManager::OnConstructorsAdded()
             {
                 auto inputParam = dynamic_cast<mo::InputParameter*>(parameters[j]);
                 if(inputParam)
-                    inputParam->SetInput(std::string());
+                    inputParam->SetInput();
             }
         }
     }
@@ -67,7 +66,7 @@ NodeManager::OnConstructorsAdded()
 
 rcc::shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
 {
-    IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
+    auto pConstructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
 
     if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
     {
@@ -113,7 +112,7 @@ rcc::shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
 // WIP needs to be tested for complex dependency trees
 std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string& nodeName, IDataStream* parentStream)
 {
-    IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
+    IObjectConstructor* pConstructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
     std::vector<rcc::shared_ptr<Nodes::Node>> constructed_nodes;
     if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
     {
@@ -129,7 +128,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
             {
                 if (parent_node)
                 {
-                    auto parent_nodes = addNode(parent_dep[0], parent_node.get());
+                    auto parent_nodes = addNode(parent_dep[0], parent_node.Get());
                     constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
                     parent_node = parent_nodes.back();
                 }
@@ -199,7 +198,7 @@ bool check_parent_exists(Nodes::Node* node, const std::string& name)
 
 std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string& nodeName, Nodes::Node* parentNode)
 {
-    IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
+    IObjectConstructor* pConstructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
     std::vector<rcc::shared_ptr<Nodes::Node>> constructed_nodes;
     if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
     {
@@ -225,7 +224,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
                 {
                     if (parent_node)
                     {
-                        auto parent_nodes = addNode(parent_dep[0], parent_node.get());
+                        auto parent_nodes = addNode(parent_dep[0], parent_node.Get());
                         constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
                     }
                     else
@@ -260,7 +259,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
                 constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
             }
         }
-        auto dependent_variable_nodes = node_info->CheckDependentVariables(parentNode->GetVariableManager().get());
+        auto dependent_variable_nodes = node_info->CheckDependentVariables(parentNode->GetDataStream()->GetVariableManager().get());
         for (auto& dependent_variable_node : dependent_variable_nodes)
         {
             auto added_nodes = addNode(dependent_variable_node, parentNode);
@@ -336,10 +335,8 @@ bool NodeManager::removeNode(const std::string& nodeName)
 }
 std::string NodeManager::getNodeFile(const ObjectId& id)
 {
-    
-    AUDynArray<IObjectConstructor*> constructors;
-    ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
-    if (constructors.Size() > id.m_ConstructorId)
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors();
+    if (constructors.size() > id.m_ConstructorId)
     {
         return std::string(constructors[id.m_ConstructorId]->GetFileName());
     }
@@ -357,13 +354,13 @@ void NodeManager::RegisterNodeInfo(const char* nodeName, std::vector<char const*
 }
 std::vector<const char*> NodeManager::GetNodeInfo(std::string& nodeName)
 {
-    auto constructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(nodeName.c_str());
+    auto constructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
     if (constructor)
     {
         auto obj_info = constructor->GetObjectInfo();
         if (obj_info)
         {
-            if (obj_info->GetObjectInfoType() == 1)
+            if (obj_info->GetInterfaceId() == IID_NodeObject)
             {
                 auto node_info = dynamic_cast<EagleLib::Nodes::NodeInfo*>(obj_info);
                 if (node_info)
@@ -375,13 +372,7 @@ std::vector<const char*> NodeManager::GetNodeInfo(std::string& nodeName)
         }
     }
     return std::vector<const char*>();
-    //return m_nodeInfoMap[nodeName];
 }
-
-
-
-
-
 
 void NodeManager::saveTree(const std::string &fileName)
 {
@@ -396,12 +387,10 @@ NodeManager::onNodeRecompile(Nodes::Node *node)
 Nodes::Node*
 NodeManager::getNode(const ObjectId& id)
 {
-    
-    AUDynArray<IObjectConstructor*> constructors;
-    ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors();
     if (!id.IsValid())
         return nullptr;
-    if (id.m_ConstructorId >= constructors.Size())
+    if (id.m_ConstructorId >= constructors.size())
         return nullptr;
     if (id.m_PerTypeId >= constructors[id.m_ConstructorId]->GetNumberConstructedObjects())
         return nullptr;
@@ -424,7 +413,7 @@ NodeManager::getNode(const std::string &treeName)
         {
             if (nodes[i]->getFullTreeName() == treeName)
             {
-                return nodes[i].get();
+                return nodes[i].Get();
             }
         }
     }
@@ -455,7 +444,7 @@ void printTreeHelper(std::stringstream& tree, int level, Nodes::Node* node)
     tree << node->getFullTreeName() << std::endl;
     for (size_t i = 0; i < node->children.size(); ++i)
     {
-        printTreeHelper(tree, level + 1, node->children[i].get());
+        printTreeHelper(tree, level + 1, node->children[i].Get());
     }
 }
 
@@ -477,7 +466,7 @@ void NodeManager::printNodeTree(std::string* ret)
     }
     for (size_t i = 0; i < parentNodes.size(); ++i)
     {
-        printTreeHelper(tree, 0, parentNodes[i].get());
+        printTreeHelper(tree, 0, parentNodes[i].Get());
     }
     if (ret)
     {
@@ -509,11 +498,9 @@ void NodeManager::getAccessibleNodes(const std::string& sourceNode, std::vector<
 std::vector<std::string>
 NodeManager::getConstructableNodes()
 {
-    
-    AUDynArray<IObjectConstructor*> constructors;
-    ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors();
     std::vector<std::string> output;
-    for (size_t i = 0; i < constructors.Size(); ++i)
+    for (size_t i = 0; i < constructors.size(); ++i)
     {
         if (constructors[i])
         {
@@ -534,7 +521,7 @@ std::vector<std::string> NodeManager::getParametersOfType(std::function<bool(mo:
     std::vector<std::string> parameters;
     for (size_t i = 0; i < nodes.size(); ++i)
     {
-        auto node_params = nodes[i]->getParameters();
+        auto node_params = nodes[i]->GetParameters();
         for (size_t j = 0; j < node_params.size(); ++j)
         {
             if (selector(node_params[j]->GetTypeInfo()))

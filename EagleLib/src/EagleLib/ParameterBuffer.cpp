@@ -1,4 +1,4 @@
-#include "ParameterBuffer.h"
+#include "EagleLib/ParameterBuffer.h"
 using namespace EagleLib;
 ParameterBuffer::ParameterBuffer(int size)
 {

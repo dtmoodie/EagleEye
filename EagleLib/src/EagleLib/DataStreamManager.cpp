@@ -1,25 +1,24 @@
-#include "DataStreamManager.h"
-#include "rcc/SystemTable.hpp"
-#include "rcc/ObjectManager.h"
-#include "utilities/sorting.hpp"
+#include "EagleLib/DataStreamManager.h"
+#include "EagleLib/rcc/SystemTable.hpp"
+#include "EagleLib/utilities/sorting.hpp"
 #include "EagleLib/Logging.h"
 #include "Remotery.h"
 
-#include "ParameterBuffer.h"
-#include "IVariableSink.h"
-#include "IViewManager.h"
-#include "ICoordinateManager.h"
-#include "rendering/RenderingEngine.h"
-#include "tracking/ITrackManager.h"
-#include "frame_grabber_base.h"
-#include "nodes/Node.h"
-#include "nodes/NodeManager.h"
+#include "EagleLib/ParameterBuffer.h"
+#include "EagleLib/IVariableSink.h"
+#include "EagleLib/IViewManager.h"
+#include "EagleLib/ICoordinateManager.h"
+#include "EagleLib/rendering/RenderingEngine.h"
+#include "EagleLib/tracking/ITrackManager.h"
+#include "EagleLib/frame_grabber_base.h"
+#include "EagleLib/nodes/Node.h"
+#include "EagleLib/nodes/NodeManager.h"
 
 #include "MetaObject/Signals/TypedSlot.hpp"
 #include "MetaObject/Signals/RelayManager.hpp"
 #include "MetaObject/Parameters/VariableManager.h"
 #include "MetaObject/Thread/InterThread.hpp"
-
+#include "MetaObject/MetaObjectFactory.hpp"
 
 #include <opencv2/core.hpp>
 #include <boost/chrono.hpp>
@@ -254,7 +253,8 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
     }
     std::lock_guard<std::mutex> lock(nodes_mtx);
     
-    auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
+    //auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
     std::vector<IObjectConstructor*> valid_frame_grabbers;
     std::vector<int> frame_grabber_priorities;
     if(constructors.empty())
@@ -362,7 +362,8 @@ bool IDataStream::CanLoadDocument(const std::string& document)
     {
         doc_to_load = doc_to_load.substr(1, doc_to_load.size() - 2);
     }
-    auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
+    //auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
     std::vector<IObjectConstructor*> valid_frame_grabbers;
     std::vector<int> frame_grabber_priorities;
     if (constructors.empty())
@@ -520,15 +521,15 @@ void DataStream::process()
     _sig_manager->Connect(&update_slot, "update");
 
 
-    mo::TypedSlot<void(mo::Context*, mo::IParameter*)> parameter_update_slot(
+    mo::TypedSlot<void(mo::IMetaObject*, mo::IParameter*)> parameter_update_slot(
         std::bind([this](mo::IMetaObject*, mo::IParameter*)
         {
             dirty_flag = true;
         }, std::placeholders::_1, std::placeholders::_2));
     _sig_manager->Connect(&parameter_update_slot, "parameter_updated");
 
-    mo::TypedSlot<void(mo::Context*, mo::IParameter*)> parameter_added_slot(
-        std::bind([this](mo::Context*, mo::IParameter*)
+    mo::TypedSlot<void(mo::IMetaObject*, mo::IParameter*)> parameter_added_slot(
+        std::bind([this](mo::IMetaObject*, mo::IParameter*)
         {
             dirty_flag = true;
         }, std::placeholders::_1, std::placeholders::_2));
@@ -599,7 +600,7 @@ void DataStream::process()
 
 IDataStream::Ptr IDataStream::create(const std::string& document, const std::string& preferred_frame_grabber)
 {
-    auto stream = ObjectManager::Instance().GetObject<IDataStream, IID_DataStream>("DataStream");
+    auto stream = mo::MetaObjectFactory::Instance()->Create<IDataStream>("DataStream");
     if(document.size() == 0)
         return stream;
     if(stream->LoadDocument(document, preferred_frame_grabber))

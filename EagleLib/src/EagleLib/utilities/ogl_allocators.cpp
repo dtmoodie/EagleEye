@@ -3,6 +3,7 @@
 #include "EagleLib/rcc/SystemTable.hpp"
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
 #include <QOpenGLContext>
+#include <ISimpleSerializer.h>
 #include <qwindow.h>
 
 using namespace EagleLib;

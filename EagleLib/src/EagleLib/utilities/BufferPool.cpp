@@ -2,7 +2,7 @@
 #include <time.h>
 #include <iostream>
 
-#include "parameters/UI/InterThread.hpp"
+#include "MetaObject/Thread/InterThread.hpp"
 
 using namespace EagleLib;
 

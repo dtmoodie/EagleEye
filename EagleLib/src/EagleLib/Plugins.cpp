@@ -1,5 +1,5 @@
-#include "Plugins.h"
-#include <EagleLib/rcc/ObjectManager.h>
+#include "EagleLib/Plugins.h"
+
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 
@@ -83,7 +83,8 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
     if (module)
     {
         auto moduleInterface = module();
-        ObjectManager::Instance().setupModule(moduleInterface);
+        //ObjectManager::Instance().setupModule(moduleInterface);
+        mo::MetaObjectFactory::Instance()->SetupObjectConstructors(moduleInterface);
     }
         
     else
@@ -93,7 +94,7 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
         if (module)
         {
             auto moduleInterface = module();
-            ObjectManager::Instance().setupModule(moduleInterface);
+            mo::MetaObjectFactory::Instance()->SetupObjectConstructors(moduleInterface);
         }
         else
         {

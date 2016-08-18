@@ -1,4 +1,4 @@
-#include "profiling.h"
+#include "EagleLib/profiling.h"
 #include <string>
 #include <sstream>
 #ifdef USE_NVTX

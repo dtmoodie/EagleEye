@@ -1,4 +1,4 @@
-#include "SystemTable.hpp"
+#include "EagleLib/rcc/SystemTable.hpp"
 
 SystemTable::SystemTable()
 {

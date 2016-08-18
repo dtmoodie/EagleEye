@@ -1,4 +1,4 @@
-#include "logger.hpp"
+#include "EagleLib/logger.hpp"
 #include "nodes/Node.h"
 
 #include <boost/log/utility/value_ref.hpp>

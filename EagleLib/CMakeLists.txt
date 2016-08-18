@@ -64,7 +64,7 @@ ENDIF(NOT WIN32)
 find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 
 FILE(GLOB_RECURSE src "src/*.cpp" "remotery/lib/*.c")
-FILE(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "remotery/lib/*.h" "include/*.hpp")
+FILE(GLOB_RECURSE hdr "remotery/lib/*.h" "include/*.hpp" "include/*.h")
 FILE(GLOB_RECURSE ext_inc "include/EagleLib/rcc/external_includes")
 FILE(GLOB_RECURSE knl "src/*.cu")
 ADD_SUBDIRECTORY("MetaObject")
@@ -93,7 +93,7 @@ INCLUDE_DIRECTORIES(
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
     ${Qt5Core_INCLUDE_DIRS}
-    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include"
     ${Parameters_INCLUDE}
     ${Qt5Gui_INCLUDE_DIRS} 
     ${Qt5Widgets_INCLUDE_DIRS}
@@ -144,6 +144,7 @@ CONFIGURE_FILE(EagleLibConfig.cmake.in ${CMAKE_BINARY_DIR}/EagleLibConfig.cmake 
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIR})
+LINK_DIRECTORIES(${Boost_LIBRARY_DIR_RELEASE})
 # Reporting section
 IF(Parameters_UI_qt)
     message(STATUS "Parameters built with QT support, so linking into EagleLib")
@@ -204,8 +205,9 @@ file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR
    endforeach()
 endmacro()
  
-GroupSources(hdr)
+GroupSources(include)
 GroupSources(src)
+
 cuda_add_library(EagleLib SHARED
     ${src}  
     ${hdr}
@@ -225,6 +227,7 @@ TARGET_LINK_LIBRARIES(EagleLib
         RuntimeObjectSystem
         RuntimeCompiler
         ${LINK_LIBS}
+		MetaObject
         #cuda_utils
 )
 if(${MXNET_FOUND})

@@ -1,7 +1,7 @@
 #include "WindowCallbackManager.h"
 #include "UiCallbackHandlers.h"
 #include "ObjectInterfacePerModule.h"
-#include "EagleLib/rcc/ObjectManager.h"
+//#include "EagleLib/rcc/ObjectManager.h"
 #include "EagleLib/rcc/SystemTable.hpp"
 using namespace EagleLib;
 

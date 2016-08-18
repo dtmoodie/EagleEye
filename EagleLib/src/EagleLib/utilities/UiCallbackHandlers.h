@@ -9,14 +9,15 @@
 #include "EagleLib/Signals.h"
 #include "IObject.h"
 #include <shared_ptr.hpp>
-#include "EagleLib/ParameteredIObject.h"
-
+#include <MetaObject/IMetaObject.hpp>
+#include <MetaObject/Detail/MetaObjectMacros.hpp>
+#include <MetaObject/Signals/detail/SignalMacros.hpp>
 namespace EagleLib
 {
     class IDataStream;
     class WindowCallbackHandlerManager;
     // Single instance per stream
-    class EAGLE_EXPORTS WindowCallbackHandler: public TInterface<IID_IOBJECT,ParameteredIObject>
+    class EAGLE_EXPORTS WindowCallbackHandler: public TInterface<IID_IOBJECT,mo::IMetaObject>
     {
         friend class WindowCallbackHandlerManager;
     public:
@@ -33,15 +34,15 @@ namespace EagleLib
         void imshow(const std::string& window_name, cv::Mat img, int flags = 0);
         void imshowd(const std::string& window_name, cv::cuda::GpuMat img, int flags = 0);
 
-        SIGNALS_BEGIN(WindowCallbackHandler, ParameteredIObject)
-            SIG_SEND(click_right, std::string, cv::Point, int);
-            SIG_SEND(click_left, std::string, cv::Point, int);
-            SIG_SEND(click_middle, std::string, cv::Point, int);
-            SIG_SEND(move_mouse, std::string, cv::Point, int);
-            SIG_SEND(click, std::string, cv::Point, int);
-            SIG_SEND(select_rect, std::string, cv::Rect, int);
-            SIG_SEND(select_points, std::string, std::vector<cv::Point>, int);
-        SIGNALS_END;
+        MO_BEGIN(WindowCallbackHandler, mo::IMetaObject);
+            MO_SIGNAL(void, click_right, std::string, cv::Point, int);
+            MO_SIGNAL(void, click_left, std::string, cv::Point, int);
+            MO_SIGNAL(void, click_middle, std::string, cv::Point, int);
+            MO_SIGNAL(void, move_mouse, std::string, cv::Point, int);
+            MO_SIGNAL(void, click, std::string, cv::Point, int);
+            MO_SIGNAL(void, select_rect, std::string, cv::Rect, int);
+            MO_SIGNAL(void, select_points, std::string, std::vector<cv::Point>, int);
+        MO_END;
 
     private:
         std::map<std::string, bool> dragging;

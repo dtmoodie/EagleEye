@@ -1,4 +1,4 @@
-#include "Logging.h"
+#include "EagleLib/Logging.h"
 #include "MetaObject/Logging/Log.hpp"
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>

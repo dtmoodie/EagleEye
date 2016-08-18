@@ -1,20 +1,20 @@
-#include "PlotManager.h"
-#include "EagleLib/rcc/ObjectManager.h"
-
+#include "EagleLib/plotters/PlotManager.h"
+#include "IObjectState.hpp"
+#include <MetaObject/Logging/Log.hpp>
 
 using namespace EagleLib;
 
 
-PlotManager& PlotManager::getInstance()
+PlotManager* PlotManager::Instance()
 {
     static PlotManager instance;
-    return instance;
+    return &instance;
 }
 
-rcc::shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
+rcc::shared_ptr<Plotter> PlotManager::GetPlot(const std::string& plotName)
 {
-    
-    IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(plotName.c_str());
+    auto pConstructor = mo::MetaObjectFactory::Instance()->GetConstructor(plotName.c_str());
+    //IObjectConstructor* pConstructor = ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetConstructor(plotName.c_str());
     if (pConstructor && pConstructor->GetInterfaceId() == IID_Plotter)
     {
         IObject* obj = pConstructor->Construct();
@@ -52,22 +52,20 @@ rcc::shared_ptr<Plotter> PlotManager::getPlot(const std::string& plotName)
     return rcc::shared_ptr<Plotter>();
 }
 
-std::vector<std::string> PlotManager::getAvailablePlots()
+std::vector<std::string> PlotManager::GetAvailablePlots()
 {
-    
-    AUDynArray<IObjectConstructor*> constructors;
-    ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_Plotter);
     std::vector<std::string> output;
-    for (size_t i = 0; i < constructors.Size(); ++i)
+    for (size_t i = 0; i < constructors.size(); ++i)
     {
-        if (constructors[i]->GetInterfaceId() == IID_Plotter)
-            output.push_back(constructors[i]->GetName());
+        output.push_back(constructors[i]->GetName());
     }
     return output;
 }
-std::vector<std::string> PlotManager::getAcceptablePlotters(Parameters::Parameter* param)
+std::vector<std::string> PlotManager::GetAcceptablePlotters(mo::IParameter* param)
 {
-    auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_Plotter);
+    //auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_Plotter);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_Plotter);
     std::vector<std::string> output;
     for(auto& constructor : constructors)
     {
@@ -86,9 +84,10 @@ std::vector<std::string> PlotManager::getAcceptablePlotters(Parameters::Paramete
     }
     return output;
 }
-bool PlotManager::canPlotParameter(Parameters::Parameter* param)
+bool PlotManager::CanPlotParameter(mo::IParameter* param)
 {
-    auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_Plotter);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_Plotter);
+    //auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_Plotter);
     for(auto& constructor : constructors)
     {
         auto object_info = constructor->GetObjectInfo();

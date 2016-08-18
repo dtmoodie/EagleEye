@@ -1,9 +1,11 @@
-#include "frame_grabber_base.h"
+#include "EagleLib/frame_grabber_base.h"
 #include "EagleLib/Logging.h"
 #include "EagleLib/DataStreamManager.h"
 #include "Remotery.h"
 #include <MetaObject/Logging/Log.hpp>
+#include <MetaObject/Detail/IMetaObjectImpl.hpp>
 #include "ISimpleSerializer.h"
+
 using namespace EagleLib;
 IFrameGrabber::IFrameGrabber()
 {
@@ -28,7 +30,7 @@ void IFrameGrabber::InitializeFrameGrabber(IDataStream* stream)
 }
 void IFrameGrabber::Init(bool firstInit)
 {
-    ParameteredIObject::Init(firstInit);
+    IMetaObject::Init(firstInit);
     if(!firstInit)
     {
         //LoadFile(loaded_document); // each implementation should know if it needs to reload the file on recompile
@@ -36,7 +38,7 @@ void IFrameGrabber::Init(bool firstInit)
 }
 void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
 {
-    ParameteredIObject::Serialize(pSerializer);
+    IMetaObject::Serialize(pSerializer);
     SERIALIZE(loaded_document);
     SERIALIZE(parent_stream);
 }

@@ -6,7 +6,7 @@
 #include <cereal/archives/xml.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/tuple.hpp>
-#include <parameters/Persistence/cereal.hpp>
+#include <MetaObject/Parameters/IO/Policy.hpp>
 #include "LinearColormapper.hpp"
 #endif
 

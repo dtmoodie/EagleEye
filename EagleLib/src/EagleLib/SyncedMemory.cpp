@@ -1,4 +1,4 @@
-#include "SyncedMemory.h"
+#include "EagleLib/SyncedMemory.h"
 #include <EagleLib/utilities/GpuMatAllocators.h>
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #ifdef HAVE_MXNET

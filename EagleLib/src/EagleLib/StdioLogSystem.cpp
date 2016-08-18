@@ -15,7 +15,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "StdioLogSystem.h"
+#include "EagleLib/StdioLogSystem.h"
 
 // Currently we create the file on first real output, and only close it on shutdown
 

@@ -44,10 +44,10 @@
 #include <shared_ptr.hpp>
 
 // Dependent in house libraries
-
-
-
-
+#include <MetaObject/Signals/TypedSlot.hpp>
+#include <MetaObject/Signals/detail/SlotMacros.hpp>
+#include <MetaObject/Signals/detail/SignalMacros.hpp>
+#include <MetaObject/Detail/MetaObjectMacros.hpp>
 
 // Dependent 3rd party libraries
 #include <opencv2/core/cuda.hpp>
@@ -133,7 +133,7 @@ namespace EagleLib
         virtual std::vector<std::vector<std::string>> GetNonParentalDependencies() const;
 
         // Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
-        virtual std::vector<std::string> CheckDependentVariables(Parameters::IVariableManager* var_manager_) const;
+        virtual std::vector<std::string> CheckDependentVariables(mo::IVariableManager* var_manager_) const;
 
         std::string node_name;
         std::string node_tooltip;
@@ -144,7 +144,7 @@ namespace EagleLib
 
 
 
-    class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, ParameteredIObject>
+    class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, mo::IMetaObject>
     {
     public:
         typedef rcc::shared_ptr<Node> Ptr;
@@ -169,37 +169,9 @@ namespace EagleLib
          */
         virtual cv::cuda::GpuMat        doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         virtual TS<SyncedMemory>        doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
-        virtual void                    reset();
-
-        virtual mo::IParameter* addParameter(std::shared_ptr<mo::IParameter> param);
-        virtual mo::IParameter* addParameter(mo::IParameter* param);
-        template<typename T> mo::IParameter* updateParameterPtr(const std::string& name, T* data, cv::cuda::Stream* stream = nullptr)
-        {
-            return ParameteredIObject::updateParameterPtr(name, data, GetTimestamp(), stream);
-        }
-
-        template<typename T> mo::IParameter* updateParameterPtr(const std::string& name, T* data, long long timestamp, cv::cuda::Stream* stream = nullptr)
-        {
-            return ParameteredIObject::updateParameterPtr(name, data, timestamp, stream);
-        }
         
-        template<typename T> mo::IParameter* updateParameter(const std::string& name, const T& data, cv::cuda::Stream* stream = nullptr)
-        {
-            return ParameteredIObject::updateParameter(name, data, GetTimestamp(), stream);
-        }
-        template<typename T> mo::IParameter* updateParameter(const std::string& name, const T& data, long long timestamp, cv::cuda::Stream* stream = nullptr)
-        {
-            return ParameteredIObject::updateParameter(name, data, timestamp, stream);
-        }
+
         
-        template<typename T> mo::IParameter* updateParameter(size_t idx, const T data, cv::cuda::Stream* stream = nullptr)
-        {
-            return ParameteredIObject::updateParameter(idx, data, GetTimestamp(), stream);
-        }
-        template<typename T> mo::IParameter* updateParameter(size_t idx, const T data, long long timestamp, cv::cuda::Stream* stream = nullptr)
-        {
-            return ParameteredIObject::updateParameter(idx, data, timestamp, stream);
-        }
         /**
          * @brief getName depricated?  Idea was to recursively go through parent nodes and rebuild my tree name, useful I guess once
          * @brief node swapping and moving is implemented
@@ -375,10 +347,15 @@ namespace EagleLib
 
         
         
-        void onParameterAdded();
+        
         double GetProcessingTime() const;
         void Clock(int line_num);
         
+        MO_BEGIN(Node)
+            MO_SLOT(void, reset);
+            MO_SIGNAL(void, node_updated, Node*);
+        MO_END
+
     protected:
         IDataStream*                                                             _dataStream;
         long long                                                                _current_timestamp;

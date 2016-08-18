@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/Defs.hpp"
+#include <EagleLib/Defs.hpp>
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
 #include "IColorMapper.hpp"
 #include "ColorScale.hpp"

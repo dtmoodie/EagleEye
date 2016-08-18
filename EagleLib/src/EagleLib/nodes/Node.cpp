@@ -16,7 +16,8 @@
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 #include <MetaObject/Logging/Log.hpp>
-//#include "parameters/Persistence/OpenCV.hpp"
+#include <MetaObject/Signals/Connection.hpp>
+
 
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -39,15 +40,15 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
 #define CATCH_MACRO                                                         \
-    catch(Signals::ExceptionWithCallStack<cv::Exception>& e)                \
+    catch(mo::ExceptionWithCallStack<cv::Exception>& e)                \
 {                                                                           \
     NODE_LOG(error) << e.what() << "\n" << e.CallStack();                   \
 }                                                                           \
-    catch(Signals::ExceptionWithCallStack<std::string>& e)                  \
+    catch(mo::ExceptionWithCallStack<std::string>& e)                  \
 {                                                                           \
     NODE_LOG(error) << std::string(e) << "\n" << e.CallStack();                   \
 }                                                                           \
-catch(Signals::IExceptionWithCallStackBase& e)                              \
+catch(mo::IExceptionWithCallStackBase& e)                              \
 {                                                                           \
     NODE_LOG(error) << "Exception thrown with callstack: \n" << e.CallStack(); \
 }                                                                           \
@@ -126,7 +127,7 @@ std::vector<std::vector<std::string>> Nodes::NodeInfo::GetNonParentalDependencie
 }
 
 
-std::vector<std::string> Nodes::NodeInfo::CheckDependentVariables(Parameters::IVariableManager* var_manager_) const
+std::vector<std::string> Nodes::NodeInfo::CheckDependentVariables(mo::IVariableManager* var_manager_) const
 {
     return std::vector<std::string>();
 }
@@ -156,9 +157,9 @@ namespace EagleLib
 
             boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
             std::vector<std::pair<time_t, int>>                                                     timings;
-            std::shared_ptr<mo::connection>                                                    resetConnection;
-            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<mo::connection>>>     callbackConnections;
-            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<mo::connection>>>        callbackConnections2;
+            std::shared_ptr<mo::Connection>                                                    resetConnection;
+            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<mo::Connection>>>     callbackConnections;
+            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<mo::Connection>>>        callbackConnections2;
             mo::TypedSignal<void(Nodes::Node*)>*                                                    update_signal;
             mo::TypedSignal<void(Nodes::Node*)>*                                                    g_update_signal;
             boost::recursive_mutex                                                                  mtx;
@@ -184,41 +185,14 @@ Node::Node():
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {
-        auto signal_manager = table->GetSingleton<EagleLib::SignalManager>();
-        auto signal = signal_manager->get_signal<void(void)>("ResetSignal");
-        boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-        pImpl_->resetConnection = signal->connect(boost::bind(&Node::reset, this));
+        auto signal_manager = table->GetSingleton<mo::RelayManager>();
+        signal_manager->ConnectSlots(this, "reset");
     }
     rmt_hash = 0;
     NODE_LOG(trace) << " Constructor";
     _dataStream = nullptr;
 }
 
-void Node::onParameterAdded()
-{
-    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    if (table)
-    {
-        auto signal_manager = table->GetSingleton<EagleLib::SignalManager>();
-        auto signal = signal_manager->get_signal<void(Node*)>("ParameterAdded");
-        (*signal)(this);
-    }
-}
-
-Parameters::Parameter* Node::addParameter(Parameters::Parameter::Ptr param)
-{
-    param->SetTreeRoot(getFullTreeName());
-    ParameteredIObject::addParameter(param);
-    onParameterAdded();
-    return param.get();
-}
-Parameters::Parameter* Node::addParameter(Parameters::Parameter* param)
-{
-    param->SetTreeRoot(getFullTreeName());
-    ParameteredIObject::addParameter(param);
-    onParameterAdded();
-    return param;
-}
 
 Node::~Node()
 {
@@ -401,7 +375,7 @@ Node::getNodeInScope(const std::string& name)
         std::string childName = name.substr(fullTreeName.size() + 1);
         auto child = getChild(childName);
         if(child != nullptr)
-            return child.get();
+            return child.Get();
     }
     if(parent)
         return parent->getNodeInScope(name);
@@ -420,7 +394,7 @@ Node::getNodesInScope(std::vector<Node*> &nodes)
         Node* node = this;
         while(node->parent != nullptr)
         {
-            node = node->parent.get();
+            node = node->parent.Get();
         }
         nodes.push_back(node);
         node->getNodesInScope(nodes);
@@ -434,27 +408,7 @@ Node::getNodesInScope(std::vector<Node*> &nodes)
     }
 }
 
-std::vector<std::string> Node::listParameters()
-{
-    
-    std::vector<std::string> paramList;
-    for (size_t i = 0; i < _parameters.size(); ++i)
-    {
-        paramList.push_back(_parameters[i]->GetName());
-    }
-    return paramList;
-}
-std::vector<std::string> Node::listInputs()
-{
-    
-    std::vector<std::string> paramList;
-    for (size_t i = 0; i < _parameters.size(); ++i)
-    {
-        if (_parameters[i]->type & Parameters::Parameter::Input)
-            paramList.push_back(_parameters[i]->GetName());
-    }
-    return paramList;
-}
+
 Node*
 Node::getChildRecursive(std::string treeName_)
 {
@@ -509,7 +463,7 @@ void Node::removeChild(Node* node)
 }
 void Node::removeChild(rcc::weak_ptr<Node> node)
 {
-    auto itr = std::find(children.begin(), children.end(), node.get());
+    auto itr = std::find(children.begin(), children.end(), node.Get());
     if(itr != children.end())
     {
         children.erase(itr);
@@ -535,7 +489,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
             if (enabled)
             {
                 ClearProcessingTime();
-                std::lock_guard<std::recursive_mutex> lock(mtx);
+                std::lock_guard<std::recursive_mutex> lock(_mtx);
                 auto allocator = dynamic_cast<PitchedAllocator*>(cv::cuda::GpuMat::defaultAllocator());
                 if(allocator)
                 {
@@ -575,7 +529,7 @@ Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
         children_.reserve(children.size());
         {
             // Prevents adding of children while running, debatable how much this is needed
-            std::lock_guard<std::recursive_mutex> lock(mtx);
+            std::lock_guard<std::recursive_mutex> lock(_mtx);
             for (int i = 0; i < children.size(); ++i)
             {
                 children_.push_back(children[i]);
@@ -616,7 +570,7 @@ TS<SyncedMemory> Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream
         try
         {
                 ClearProcessingTime();
-                std::lock_guard<std::recursive_mutex> lock(mtx);
+                std::lock_guard<std::recursive_mutex> lock(_mtx);
                 auto allocator = dynamic_cast<PitchedAllocator*>(cv::cuda::GpuMat::defaultAllocator());
                 if (allocator)
                 {
@@ -647,7 +601,7 @@ TS<SyncedMemory> Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream
             std::vector<Node::Ptr>  children_;
             {
                 // Prevents adding of children while running, debatable how much this is needed
-                std::lock_guard<std::recursive_mutex> lock(mtx);
+                std::lock_guard<std::recursive_mutex> lock(_mtx);
                 children_ = children;
             }
             for (size_t i = 0; i < children_.size(); ++i)
@@ -688,9 +642,9 @@ void Node::SetDataStream(IDataStream* stream_)
         NODE_LOG(debug) << "Setting stream manager";
     }
     _dataStream = stream_;
-    setup_signals(_dataStream->GetSignalManager());
-    SetupVariableManager(_dataStream->GetVariableManager());
-    pImpl_->update_signal = stream_->GetSignalManager()->get_signal<void(Node*)>("NodeUpdated");
+    SetupSignals(_dataStream->GetRelayManager());
+    SetupVariableManager(_dataStream->GetVariableManager().get());
+    //pImpl_->update_signal = stream_->GetRelayManager()->get_signal<void(Node*)>("NodeUpdated");
     for (auto& child : children)
     {
         child->SetDataStream(_dataStream);
@@ -771,7 +725,7 @@ Node*
 Node::getParent()
 {
     if(parent)
-        return parent.get();
+        return parent.Get();
     return nullptr;
 }
 
@@ -791,7 +745,7 @@ Node::Init(bool firstInit)
     // Then in ParmaeteredIObject, the implicit parameters will be added back to the _parameter vector
     
     NodeInit(firstInit); 
-    ParameteredIObject::Init(firstInit);
+    IMetaObject::Init(firstInit);
 }
 void Node::NodeInit(bool firstInit)
 {
@@ -805,12 +759,6 @@ Node::Init(const std::string &configFile)
     
 }
 
-
-void Node::RegisterSignalConnection(std::shared_ptr<Signals::connection> connection)
-{
-    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-    pImpl_->callbackConnections2[this].push_back(connection);
-}
 
 void
 Node::Init(const cv::FileNode& configNode)
@@ -841,7 +789,8 @@ Node::Init(const cv::FileNode& configNode)
         }
     }
     cv::FileNode paramNode = configNode["Parameters"];
-    for (size_t i = 0; i < _parameters.size(); ++i)
+    // #TODO proper serialization with cereal
+    /*for (size_t i = 0; i < _parameters.size(); ++i)
     {
         try
         {
@@ -861,7 +810,7 @@ Node::Init(const cv::FileNode& configNode)
                         auto param = node->getParameter(paramName);
                         if (param)
                         {
-                            auto inputParam = dynamic_cast<Parameters::InputParameter*>(_parameters[i]);
+                            auto inputParam = dynamic_cast<mo::InputParameter*>(_parameters[i]);
                             inputParam->SetInput(param);
                         }
                     }
@@ -870,7 +819,8 @@ Node::Init(const cv::FileNode& configNode)
             }
             else
             {
-                if (_parameters[i]->type & Parameters::Parameter::Control)
+                // #TODO update to new api
+                if (_parameters[i]->CheckFlags(mo::Control_e))
                     Parameters::Persistence::cv::DeSerialize(&paramNode, _parameters[i]);
             }
         }
@@ -878,14 +828,14 @@ Node::Init(const cv::FileNode& configNode)
         {
             LOG(error) << "Deserialization failed for " << _parameters[i]->GetName() << " with type " << _parameters[i]->GetTypeInfo().name() << std::endl;
         }
-    }
+    }*/
 }
 
 void
 Node::Serialize(ISimpleSerializer *pSerializer)
 {
     NODE_LOG(trace) << " Serializing";
-    ParameteredIObject::Serialize(pSerializer);
+    IMetaObject::Serialize(pSerializer);
     SERIALIZE(children);
     SERIALIZE(treeName);
     SERIALIZE(fullTreeName);
@@ -899,7 +849,7 @@ Node::Serialize(ISimpleSerializer *pSerializer)
 void
 Node::Serialize(cv::FileStorage& fs)
 {
-    NODE_LOG(trace) << " Serializing to file";
+    /*NODE_LOG(trace) << " Serializing to file";
     if(fs.isOpened())
     {
         fs << "NodeName" << GetTypeName();
@@ -959,6 +909,7 @@ Node::Serialize(cv::FileStorage& fs)
         fs << "}"; // end parameters
 
     }
+    */
 }
 
 void
@@ -979,11 +930,7 @@ Node::setTreeName(const std::string& name)
 void
 Node::setFullTreeName(const std::string& name)
 {
-    
-    for (size_t i = 0; i < _parameters.size(); ++i)
-    {
-        _parameters[i]->SetTreeRoot(name);
-    }
+    SetParameterRoot(name);
     fullTreeName = name;
 }
 

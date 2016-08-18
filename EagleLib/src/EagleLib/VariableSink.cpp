@@ -1,6 +1,7 @@
-#include "VariableSink.h"
-#include <parameters/IVariableManager.h>
-#include <parameters/Persistence/TextSerializer.hpp>
+#include "EagleLib/VariableSink.h"
+#include <MetaObject/Parameters/IVariableManager.h>
+#include <sstream>
+//#include <MetaObject/Parameters/IO/TextSerializer.hpp>
 using namespace EagleLib;
 
 CSV_VariableSink::CSV_VariableSink(const std::string& output_file)
@@ -21,12 +22,12 @@ void CSV_VariableSink::SerializeVariables(unsigned long long frame_number, mo::I
         std::stringstream ss;
         for(auto& var_name : _serialization_layout)
         {
-            auto param = manager->GetOutputParameter(var_name);
+            /*auto param = manager->GetOutputParameter(var_name);
             if(param && Parameters::Persistence::Text::InterpreterRegistry::Exists(param->GetTypeInfo()))
             {
                 ss << ", ";
                 Parameters::Persistence::Text::SerializeValue(&ss, param);
-            }
+            }*/
         }
         _ofs << ss.str();
     }
