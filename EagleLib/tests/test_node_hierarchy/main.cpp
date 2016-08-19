@@ -12,6 +12,7 @@
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 struct node_a: public Nodes::Node
 {
@@ -23,8 +24,7 @@ struct node_b: public Nodes::Node
 
 };
 
-MO_REGISTER_OBJECT(node_a);
-MO_REGISTER_OBJECT(node_b);
+
 
 BOOST_AUTO_TEST_CASE(no_branching)
 {

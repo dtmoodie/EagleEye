@@ -2,7 +2,7 @@
 
 
 #include <boost/log/sinks/basic_sink_backend.hpp>
-#include <EagleLib/Defs.hpp>
+#include "EagleLib/Detail/Export.hpp"
 #include <boost/log/trivial.hpp>
 #include "ObjectInterface.h"
 #include <MetaObject/Signals/TypedSignal.hpp>

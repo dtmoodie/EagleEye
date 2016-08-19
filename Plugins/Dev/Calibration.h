@@ -1,7 +1,7 @@
 #pragma once
 #include "EagleLib/nodes/Node.h"
 #include <boost/circular_buffer.hpp>
-#include "EagleLib/Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 #include <EagleLib/Project_defs.hpp>
 #ifdef __cplusplus
 extern "C"{

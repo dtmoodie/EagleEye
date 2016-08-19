@@ -2,8 +2,7 @@
 
 // Guard this file from being compiled by nvcc
 #ifndef __CUDACC__
-//#include "EagleLib/rcc/ObjectManager.h"
-#include "Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 #endif
 
 #ifdef PLUGIN_NAME

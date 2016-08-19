@@ -1,7 +1,7 @@
 #pragma once
 
 #include "EagleLib/nodes/Node.h"
-#include <EagleLib/Defs.hpp>
+#include "EagleLib/Detail/Export.hpp"
 #include <EagleLib/utilities/CudaUtils.hpp>
 #include <EagleLib/Project_defs.hpp>
 #include "RuntimeLinkLibrary.h"

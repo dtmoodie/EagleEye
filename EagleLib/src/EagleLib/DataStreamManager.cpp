@@ -12,7 +12,7 @@
 #include "EagleLib/tracking/ITrackManager.h"
 #include "EagleLib/frame_grabber_base.h"
 #include "EagleLib/nodes/Node.h"
-#include "EagleLib/nodes/NodeManager.h"
+#include "EagleLib/nodes/NodeFactory.h"
 
 #include "MetaObject/Signals/TypedSlot.hpp"
 #include "MetaObject/Signals/RelayManager.hpp"
@@ -397,7 +397,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::GetNodes()
 }
 std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::AddNode(const std::string& nodeName)
 {
-    return EagleLib::NodeManager::getInstance().addNode(nodeName, this);
+    return EagleLib::NodeFactory::Instance()->AddNode(nodeName, this);
 }
 void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
@@ -573,13 +573,13 @@ void DataStream::process()
                 }
                 for (auto& node : current_nodes)
                 {
-                    if(node->pre_check(current_frame))
+                    /*if(node->pre_check(current_frame))
                     {
                         try
                         {
                             node->process(current_frame, streams[iteration_count % 2]);
                         }CATCH_MACRO
-                    }
+                    }*/
                 }
                 for(auto sink : variable_sinks)
                 {

@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 #include <functional>
-#include "EagleLib/Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 namespace EagleLib
 {
     int alignmentOffset(unsigned char* ptr, int elemSize);

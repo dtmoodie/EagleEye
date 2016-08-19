@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 #include <cuda.h>
 #include <cuda_runtime.h>
 

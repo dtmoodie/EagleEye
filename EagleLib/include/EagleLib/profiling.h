@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 struct EAGLE_EXPORTS scoped_profile
 {
     scoped_profile(const char* name);

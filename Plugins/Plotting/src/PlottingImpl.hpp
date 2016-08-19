@@ -6,7 +6,7 @@
 #include <opencv2/core/cuda.hpp>
 #include "boost/circular_buffer.hpp"
 #include <mutex>
-#include "EagleLib/Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 #include "Plotting.h"
 #include <memory>
 #include "RuntimeInclude.h"

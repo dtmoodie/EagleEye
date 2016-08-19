@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 
 #include <opencv2/core/cuda.hpp>
 #include <opencv2/core/opengl.hpp>

@@ -1,5 +1,5 @@
 #include <EagleLib/nodes/Node.h>
-#include "EagleLib/Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 #include <EagleLib/Project_defs.hpp>
 SETUP_PROJECT_DEF
 

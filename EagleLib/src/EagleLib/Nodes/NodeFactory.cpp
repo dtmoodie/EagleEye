@@ -1,5 +1,5 @@
 #include "EagleLib/DataStreamManager.h"
-#include "EagleLib/nodes/NodeManager.h"
+#include "EagleLib/nodes/NodeFactory.h"
 #include "EagleLib/nodes/Node.h"
 #include <EagleLib/frame_grabber_base.h>
 #include <MetaObject/MetaObjectFactory.hpp>
@@ -10,28 +10,25 @@
 #include "AUArray.h"
 using namespace EagleLib;
 
-NodeManager& NodeManager::getInstance()
+NodeFactory* NodeFactory::Instance()
 {
-    static NodeManager instance;
-    return instance;
+    static NodeFactory instance;
+    return &instance;
 }
 
-NodeManager::NodeManager()
+NodeFactory::NodeFactory()
 {
-    //ObjectManager::Instance().RegisterConstructorAddedCallback(boost::bind(&NodeManager::OnConstructorsAdded, this));
 }
 
-NodeManager::~NodeManager()
+NodeFactory::~NodeFactory()
 {
 
 }
 
 
-void NodeManager::OnConstructorsAdded()
+void NodeFactory::onConstructorsAdded()
 {
     auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_NodeObject);
-    //AUDynArray<IObjectConstructor*> constructors;
-    //ObjectManager::Instance().m_pRuntimeObjectSystem->GetObjectFactorySystem()->GetAll(constructors);
     std::vector<Nodes::Node*> newNodes;
     for (size_t i = 0; i < constructors.size(); ++i)
     {
@@ -65,7 +62,7 @@ void NodeManager::OnConstructorsAdded()
     }
 }
 
-rcc::shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
+rcc::shared_ptr<Nodes::Node> NodeFactory::AddNode(const std::string &nodeName)
 {
     auto pConstructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
 
@@ -111,7 +108,7 @@ rcc::shared_ptr<Nodes::Node> NodeManager::addNode(const std::string &nodeName)
     return rcc::shared_ptr<Nodes::Node>();
 }
 // WIP needs to be tested for complex dependency trees
-std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string& nodeName, IDataStream* parentStream)
+std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string& nodeName, IDataStream* parentStream)
 {
     IObjectConstructor* pConstructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
     std::vector<rcc::shared_ptr<Nodes::Node>> constructed_nodes;
@@ -129,13 +126,13 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
             {
                 if (parent_node)
                 {
-                    auto parent_nodes = addNode(parent_dep[0], parent_node.Get());
+                    auto parent_nodes = AddNode(parent_dep[0], parent_node.Get());
                     constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
                     parent_node = parent_nodes.back();
                 }
                 else
                 {
-                    auto parent_nodes = addNode(parent_dep[0], parentStream);
+                    auto parent_nodes = AddNode(parent_dep[0], parentStream);
                     constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
                     parent_node = parent_nodes.back();
                 }
@@ -150,7 +147,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
             {
                 for (auto& dep : non_parent_dep)
                 {
-                    if (existing_node->getName() == dep)
+                    if (existing_node->GetName() == dep)
                     {
                         found = true;
                         break;
@@ -160,14 +157,14 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
             // No qualified parental dependency was found, add first best candidate
             if (!found)
             {
-                auto added_nodes = addNode(non_parent_dep[0], parentStream);
+                auto added_nodes = AddNode(non_parent_dep[0], parentStream);
                 constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
             }
         }
         auto dependent_variable_nodes = node_info->CheckDependentVariables(parentStream->GetVariableManager().get());
         for (auto& dependent_variable_node : dependent_variable_nodes)
         {
-            auto added_nodes = addNode(dependent_variable_node, parentStream);
+            auto added_nodes = AddNode(dependent_variable_node, parentStream);
             constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
         }
         // All dependencies have been handled, construct node
@@ -177,7 +174,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
         constructed_nodes.push_back(node);
         if (parent_node)
         {
-            parent_node->addChild(node);
+            parent_node->AddChild(node);
         }
         else
         {
@@ -190,14 +187,14 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
 // recursively checks if a node exists in the parent hierarchy
 bool check_parent_exists(Nodes::Node* node, const std::string& name)
 {
-    if (node->getName() == name)
+    if (node->GetName() == name)
         return true;
-    if (auto parent = node->getParent())
-        return check_parent_exists(parent, name);
+    /*if (auto parent = node->getParent())
+        return check_parent_exists(parent, name);*/
     return false;
 }
 
-std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string& nodeName, Nodes::Node* parentNode)
+std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string& nodeName, Nodes::Node* parentNode)
 {
     IObjectConstructor* pConstructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
     std::vector<rcc::shared_ptr<Nodes::Node>> constructed_nodes;
@@ -225,12 +222,12 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
                 {
                     if (parent_node)
                     {
-                        auto parent_nodes = addNode(parent_dep[0], parent_node.Get());
+                        auto parent_nodes = AddNode(parent_dep[0], parent_node.Get());
                         constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
                     }
                     else
                     {
-                        auto parent_nodes = addNode(parent_dep[0], parentNode);
+                        auto parent_nodes = AddNode(parent_dep[0], parentNode);
                         constructed_nodes.insert(constructed_nodes.end(), parent_nodes.begin(), parent_nodes.end());
                         parent_node = parent_nodes.back();
                     }
@@ -246,7 +243,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
             {
                 for (auto& dep : non_parent_dep)
                 {
-                    if (existing_node->getName() == dep)
+                    if (existing_node->GetName() == dep)
                     {
                         found = true;
                         break;
@@ -256,25 +253,25 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::addNode(const std::string
             // No qualified parental dependency was found, add first best candidate
             if (!found)
             {
-                auto added_nodes = addNode(non_parent_dep[0], parentNode);
+                auto added_nodes = AddNode(non_parent_dep[0], parentNode);
                 constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
             }
         }
         auto dependent_variable_nodes = node_info->CheckDependentVariables(parentNode->GetDataStream()->GetVariableManager().get());
         for (auto& dependent_variable_node : dependent_variable_nodes)
         {
-            auto added_nodes = addNode(dependent_variable_node, parentNode);
+            auto added_nodes = AddNode(dependent_variable_node, parentNode);
             constructed_nodes.insert(constructed_nodes.end(), added_nodes.begin(), added_nodes.end());
         }
 
         rcc::shared_ptr<Nodes::Node> node(pConstructor->Construct());
-        parentNode->addChild(node);
+        parentNode->AddChild(node);
         constructed_nodes.push_back(node);
     }
     return constructed_nodes;    
 }
 
-std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::loadNodes(const std::string& saveFile)
+std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::LoadNodes(const std::string& saveFile)
 {
     
     boost::filesystem::path path(saveFile);
@@ -302,21 +299,21 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeManager::loadNodes(const std::stri
     {
         auto nodeFS = fs["Node-" + boost::lexical_cast<std::string>(i)];
         std::string name = (std::string)nodeFS["NodeName"];
-        Nodes::Node::Ptr node = addNode(name);
+        Nodes::Node::Ptr node = AddNode(name);
         node->Init(nodeFS);
         nodes.push_back(node);
     }
     return nodes;
 }
 
-void NodeManager::saveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, const std::string& fileName)
+void NodeFactory::SaveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, const std::string& fileName)
 {
     cv::FileStorage fs;
     fs.open(fileName, cv::FileStorage::WRITE);
-    saveNodes(topLevelNodes, fs);
+    SaveNodes(topLevelNodes, fs);
     fs.release();
 }
-void NodeManager::saveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, cv::FileStorage fs)
+void NodeFactory::SaveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, cv::FileStorage fs)
 {
     
     fs << "TopLevelNodeCount" << (int)topLevelNodes.size();
@@ -329,12 +326,12 @@ void NodeManager::saveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelN
     }
 }
 
-bool NodeManager::removeNode(const std::string& nodeName)
-{
-    
+bool NodeFactory::RemoveNode(const std::string& nodeName)
+{    
     return false;
 }
-std::string NodeManager::getNodeFile(const ObjectId& id)
+
+std::string NodeFactory::GetNodeFile(const ObjectId& id)
 {
     auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors();
     if (constructors.size() > id.m_ConstructorId)
@@ -344,16 +341,17 @@ std::string NodeManager::getNodeFile(const ObjectId& id)
     return std::string();
 }
 
-bool NodeManager::removeNode(ObjectId oid)
+bool NodeFactory::RemoveNode(ObjectId oid)
 {
-    
     return false;
 }
-void NodeManager::RegisterNodeInfo(const char* nodeName, std::vector<char const*>& nodeInfo)
+
+void NodeFactory::RegisterNodeInfo(const char* nodeName, std::vector<char const*>& nodeInfo)
 {
     m_nodeInfoMap[nodeName] = nodeInfo;
 }
-std::vector<const char*> NodeManager::GetNodeInfo(std::string& nodeName)
+
+std::vector<const char*> NodeFactory::GetNodeInfo(std::string& nodeName)
 {
     auto constructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
     if (constructor)
@@ -375,18 +373,17 @@ std::vector<const char*> NodeManager::GetNodeInfo(std::string& nodeName)
     return std::vector<const char*>();
 }
 
-void NodeManager::saveTree(const std::string &fileName)
+void NodeFactory::SaveTree(const std::string &fileName)
 {
     
 }
 
 void
-NodeManager::onNodeRecompile(Nodes::Node *node)
+NodeFactory::onNodeRecompile(Nodes::Node *node)
 {
 }
 
-Nodes::Node*
-NodeManager::getNode(const ObjectId& id)
+Nodes::Node* NodeFactory::GetNode(const ObjectId& id)
 {
     auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors();
     if (!id.IsValid())
@@ -404,15 +401,13 @@ NodeManager::getNode(const ObjectId& id)
     return static_cast<Nodes::Node*>(pObj);
 }
 
-Nodes::Node*
-NodeManager::getNode(const std::string &treeName)
+Nodes::Node* NodeFactory::GetNode(const std::string &treeName)
 {
-    
     for (size_t i = 0; i < nodes.size(); ++i)
     {
         if (nodes[i] != nullptr)
         {
-            if (nodes[i]->getFullTreeName() == treeName)
+            if (nodes[i]->GetTreeName() == treeName)
             {
                 return nodes[i].Get();
             }
@@ -421,37 +416,34 @@ NodeManager::getNode(const std::string &treeName)
     return nullptr;
 }
 
-void
-NodeManager::updateTreeName(Nodes::Node* node, const std::string& prevTreeName)
+void NodeFactory::UpdateTreeName(Nodes::Node* node, const std::string& prevTreeName)
 {
     
     
 }
 
 
-void
-NodeManager::getSiblingNodes(const std::string& sourceNode, std::vector<Nodes::Node*>& output)
+void NodeFactory::GetSiblingNodes(const std::string& sourceNode, std::vector<Nodes::Node*>& output)
 {
     
 }
 
-void printTreeHelper(std::stringstream& tree, int level, Nodes::Node* node)
+void NodeFactory::printTreeHelper(std::stringstream& tree, int level, Nodes::Node* node)
 {
     
     for (int i = 0; i < level; ++i)
     {
         tree << "+";
     }
-    tree << node->getFullTreeName() << std::endl;
+    tree << node->GetTreeName() << std::endl;
     for (size_t i = 0; i < node->children.size(); ++i)
     {
         printTreeHelper(tree, level + 1, node->children[i].Get());
     }
 }
 
-void NodeManager::printNodeTree(std::string* ret)
+void NodeFactory::PrintNodeTree(std::string* ret)
 {
-    
     std::stringstream tree;
     std::vector<rcc::weak_ptr<Nodes::Node>> parentNodes;
     // First get the top level nodes for the tree
@@ -459,10 +451,8 @@ void NodeManager::printNodeTree(std::string* ret)
     {
         if (nodes[i] != nullptr)
         {
-            if (nodes[i]->parent == nullptr)
-            {
-                parentNodes.push_back(nodes[i]);
-            }
+            auto parent_nodes = nodes[i]->GetParents();
+            parentNodes.insert(parentNodes.begin(), parent_nodes.begin(), parent_nodes.end());
         }
     }
     for (size_t i = 0; i < parentNodes.size(); ++i)
@@ -479,25 +469,24 @@ void NodeManager::printNodeTree(std::string* ret)
     }
 }
 
-Nodes::Node*
-NodeManager::getParent(const std::string& sourceNode)
+Nodes::Node* NodeFactory::GetParent(const std::string& sourceNode)
 {
     
     return nullptr;
 }
-void NodeManager::getParentNodes(const std::string& sourceNode, std::vector<Nodes::Node*>& output)
+void NodeFactory::GetParentNodes(const std::string& sourceNode, std::vector<Nodes::Node*>& output)
 {
     
 }
 
-void NodeManager::getAccessibleNodes(const std::string& sourceNode, std::vector<Nodes::Node*>& output)
+void NodeFactory::GetAccessibleNodes(const std::string& sourceNode, std::vector<Nodes::Node*>& output)
 {
     
-    getSiblingNodes(sourceNode, output);
-    getParentNodes(sourceNode, output);
+    GetSiblingNodes(sourceNode, output);
+    GetParentNodes(sourceNode, output);
 }
-std::vector<std::string>
-NodeManager::getConstructableNodes()
+
+std::vector<std::string> NodeFactory::GetConstructableNodes()
 {
     auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors();
     std::vector<std::string> output;
@@ -516,7 +505,7 @@ NodeManager::getConstructableNodes()
     return output;
 }
 
-std::vector<std::string> NodeManager::getParametersOfType(std::function<bool(mo::TypeInfo)> selector)
+std::vector<std::string> NodeFactory::GetParametersOfType(std::function<bool(mo::TypeInfo)> selector)
 {
     
     std::vector<std::string> parameters;

@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 #include "IObject.h"
 #include <map>
 #include <mutex>

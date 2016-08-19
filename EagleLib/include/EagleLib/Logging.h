@@ -1,5 +1,5 @@
 #pragma once
-#include <EagleLib/Defs.hpp>
+#include "EagleLib/Detail/Export.hpp"
 #include <string>
 #include <boost/log/trivial.hpp>
 //#define LOG(severity) BOOST_LOG(severity) << "[" << __FUNCTION__ << "] " 

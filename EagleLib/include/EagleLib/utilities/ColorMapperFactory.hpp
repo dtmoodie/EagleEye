@@ -1,4 +1,4 @@
-#include "EagleLib/Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 #include <functional>
 #include <map>
 #include <vector>

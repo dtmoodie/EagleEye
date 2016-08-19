@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 #include "EagleLib/rcc/SystemTable.hpp"
 #include <MetaObject/IMetaObject.hpp>
 

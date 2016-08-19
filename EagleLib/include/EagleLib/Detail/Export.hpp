@@ -12,11 +12,9 @@
   #ifndef EagleLib_EXPORTS
     #ifdef _DEBUG
       #pragma comment(lib, "EagleLibd.lib")
-      #pragma comment(lib, "signalsd.lib")
       #pragma comment(lib, "pplx_2_7d.lib")
     #else
       #pragma comment(lib, "EagleLib.lib")
-      #pragma comment(lib, "signals.lib")
       #pragma comment(lib, "pplx_2_7.lib")
     #endif
   #endif

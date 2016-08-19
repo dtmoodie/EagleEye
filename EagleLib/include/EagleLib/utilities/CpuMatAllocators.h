@@ -1,6 +1,6 @@
 #pragma once
 #include <opencv2/core/mat.hpp>
-#include "../Defs.hpp"
+#include "EagleLib/Detail/Export.hpp"
 #include <map>
 #include <list>
 #include <tuple>

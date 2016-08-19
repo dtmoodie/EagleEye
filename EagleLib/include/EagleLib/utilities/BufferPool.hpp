@@ -3,7 +3,7 @@
 // Meant to be a replacement for the shitty buffer implementation that currently exists
 
 #include <opencv2/core/cuda.hpp>
-#include <EagleLib/Defs.hpp>
+#include "EagleLib/Detail/Export.hpp"
 #include "GpuMatAllocators.h"
 #include <boost/lockfree/queue.hpp>
 

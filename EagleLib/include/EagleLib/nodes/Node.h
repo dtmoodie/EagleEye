@@ -47,7 +47,8 @@
 #include <MetaObject/Signals/detail/SlotMacros.hpp>
 #include <MetaObject/Signals/detail/SignalMacros.hpp>
 #include <MetaObject/Detail/MetaObjectMacros.hpp>
-
+#include <MetaObject/IMetaObject.hpp>
+#include <MetaObject/IMetaObjectInfo.hpp>
 
 // Dependent 3rd party libraries
 #include <opencv2/core/cuda.hpp>
@@ -74,8 +75,8 @@ namespace EagleLib
         class Node;
         class NodeImpl;
     }
-    class NodeManager;
     class IDataStream;
+    class NodeFactory;
 }
 
 
@@ -100,15 +101,16 @@ namespace EagleLib
         NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo);
     };
 
-    struct EAGLE_EXPORTS NodeInfo: public IObjectInfo
+    struct EAGLE_EXPORTS NodeInfo: public mo::IMetaObjectInfo
     {
         NodeInfo(const char* name, std::initializer_list<char const*> nodeInfo);
-        virtual int GetObjectInfoType();
-        virtual std::string GetObjectName();
-        virtual std::string GetObjectTooltip();
-        virtual std::string GetObjectHelp();
+        int GetInterfaceId() const;
+        std::string GetObjectName() const;
+        std::string GetObjectTooltip() const;
+        std::string GetObjectHelp() const;
+        std::string Print() const;
         // Get the organizational hierarchy of this node, ie Image -> Processing -> ConvertToGrey
-        virtual std::vector<const char*> GetNodeHierarchy();
+        virtual std::vector<const char*> GetNodeHierarchy() const;
         
         // List of nodes that need to be in the direct parental tree of this node, in required order
         virtual std::vector<std::vector<std::string>> GetParentalDependencies() const;
@@ -125,65 +127,58 @@ namespace EagleLib
         std::vector<const char*> node_hierarchy;
     };
 
-    class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, mo::IMetaObject>
+    class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, Algorithm>
     {
     public:
         typedef rcc::shared_ptr<Node> Ptr;
 
         Node();
         virtual ~Node();
-        virtual cv::cuda::GpuMat        process(cv::cuda::GpuMat& img, cv::cuda::Stream& steam = cv::cuda::Stream::Null());
-        virtual TS<SyncedMemory>        process(TS<SyncedMemory>& input, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-        virtual bool                    pre_check(const TS<SyncedMemory>& input);
-        virtual cv::cuda::GpuMat        doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-        virtual TS<SyncedMemory>        doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
-        std::string                     getName() const;
-        std::string                     getTreeName();
-        std::string                     getFullTreeName();
-        Node *                          getParent();
-        virtual void                    getInputs();
-        virtual void                    updateParent();
-        virtual void                    registerDisplayCallback(boost::function<void(cv::Mat, Node*)>& f);
-        virtual void                    registerDisplayCallback(boost::function<void(cv::cuda::GpuMat, Node*)>& f);
-        virtual void                    spawnDisplay();
-        virtual void                    killDisplay();
-        virtual Node::Ptr               addChild(Node* child);
-        virtual Node::Ptr               addChild(Node::Ptr child);
-        virtual Node::Ptr               getChild(const std::string& treeName);
-        virtual Node::Ptr               getChild(const int& index);
-        virtual Node*                   getChildRecursive(std::string treeName_);
-        virtual void                    removeChild(const std::string& name);
-        virtual void                    removeChild(Node::Ptr node);
-        virtual void                    removeChild(Node* node);
-        virtual void                    removeChild(rcc::weak_ptr<Node> node);
-        virtual void                    removeChild(int idx);
-        virtual void                    swapChildren(int idx1, int idx2);
-        virtual void                    swapChildren(const std::string& name1, const std::string& name2);
-        virtual void                    swapChildren(Node::Ptr child1, Node::Ptr child2);
-        virtual std::vector<Node*>      getNodesInScope();
-        virtual Node *                  getNodeInScope(const std::string& name);
-        virtual void                    getNodesInScope(std::vector<Node*>& nodes);
+
+        std::string                     GetName() const;
+        std::vector<rcc::weak_ptr<Node>>              GetParents();
+        
+        virtual Node::Ptr               AddChild(Node* child);
+        virtual Node::Ptr               AddChild(Node::Ptr child);
+        virtual Node::Ptr               GetChild(const std::string& treeName);
+        virtual Node::Ptr               GetChild(const int& index);
+        virtual void                    RemoveChild(const std::string& name);
+        virtual void                    RemoveChild(Node::Ptr node);
+        virtual void                    RemoveChild(Node* node);
+        virtual void                    RemoveChild(rcc::weak_ptr<Node> node);
+        virtual void                    RemoveChild(int idx);
+
+        virtual void                    SwapChildren(int idx1, int idx2);
+        virtual void                    SwapChildren(const std::string& name1, const std::string& name2);
+        virtual void                    SwapChildren(Node::Ptr child1, Node::Ptr child2);
+
+        virtual std::vector<Node*>      GetNodesInScope();
+        virtual Node *                  GetNodeInScope(const std::string& name);
+        virtual void                    GetNodesInScope(std::vector<Node*>& nodes);
+        
         virtual void                    SetDataStream(IDataStream* stream);
         virtual IDataStream*            GetDataStream();
 
-        virtual void                    setTreeName(const std::string& name);
-        virtual void                    setFullTreeName(const std::string& name);
-        virtual void                    setParent(Node *parent);
-        virtual Node*                   swap(Node *other);
-        virtual void                    Init(bool firstInit = true);
-        virtual void                    NodeInit(bool firstInit = true);
+        void                            SetTreeName(const std::string& name);
+        std::string                     GetTreeName() const;
+        void                            SetTreeRoot(const std::string& name);
+        std::string                     GetTreeRoot() const;
+        virtual void                    AddParent(Node *parent);
+        
+        virtual void                    Init(bool firstInit);
+        virtual void                    NodeInit(bool firstInit);
+
         virtual void                    Init(const std::string& configFile);
         virtual void                    Init(const cv::FileNode& configNode);
+
         virtual void                    Serialize(ISimpleSerializer *pSerializer);
         virtual void                    Serialize(cv::FileStorage& fs);
-        virtual bool                    SkipEmpty() const;
-        long long                       GetTimestamp() const;
-        std::vector<std::pair<time_t, int>> GetProfileTimings() const;
-        std::vector<Node::Ptr>                                              children;
+
+        
+        
         bool                                                                externalDisplay;
         bool                                                                enabled;
-        bool                                                                profile;
-        double                           GetProcessingTime() const;
+        
         void                             Clock(int line_num);
         
         MO_BEGIN(Node)
@@ -192,17 +187,17 @@ namespace EagleLib
         MO_END
 
     protected:
+        friend class NodeFactory;
         IDataStream*                                                             _dataStream;
         long long                                                                _current_timestamp;
         std::shared_ptr<mo::IVariableManager>                                    _variable_manager;
-
-        rcc::weak_ptr<Node>                                                     parent;
+        std::vector<Node::Ptr>                                              children;
+        std::vector<rcc::weak_ptr<Node>>                                                     _parents;
         // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
-        std::string                                                                fullTreeName;
+        std::string                                                                treeRoot;
         // Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
         std::string                                                                treeName;
     private:
-        friend class EagleLib::NodeManager;
 
         void ClearProcessingTime();
         void EndProcessingTime();

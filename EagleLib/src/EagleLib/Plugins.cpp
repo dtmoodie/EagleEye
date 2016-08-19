@@ -3,7 +3,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 
-#include <EagleLib/Defs.hpp>
+#include "EagleLib/Detail/Export.hpp"
 #include <EagleLib/Project_defs.hpp>
 std::vector<std::string> plugins;
 std::vector<std::string> EagleLib::ListLoadedPlugins()
