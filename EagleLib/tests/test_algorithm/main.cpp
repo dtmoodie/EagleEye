@@ -7,11 +7,13 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
-
+#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
+#include "MetaObject/Parameters/Buffers/BufferPolicy.hpp"
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "EagleLibNodes"
 
 #include <boost/test/unit_test.hpp>
+#include <boost/thread.hpp>
 #include <iostream>
 using namespace EagleLib;
 
@@ -42,22 +44,38 @@ public:
     MO_END;
     int value;
 };
+
 class synced_input: public Algorithm
 {
 public:
     void ProcessImpl()
     {
-    
+        BOOST_REQUIRE_EQUAL(timestamp, input_param.GetTimestamp());
     }
     MO_BEGIN(synced_input);
         INPUT(int, input, nullptr);
+    MO_END;
+    int timestamp;
+};
+
+class multi_input: public Algorithm
+{
+public:
+    void ProcessImpl()
+    {
+        BOOST_REQUIRE_EQUAL(*input1, *input2);
+    }
+
+    MO_BEGIN(multi_input)
+        INPUT(int, input1, nullptr);
+        INPUT(int, input2, nullptr);
     MO_END;
 };
 
 
 MO_REGISTER_OBJECT(int_output);
 MO_REGISTER_OBJECT(int_input);
-
+MO_REGISTER_OBJECT(multi_input);
 
 BOOST_AUTO_TEST_CASE(initialize)
 {
@@ -106,13 +124,111 @@ BOOST_AUTO_TEST_CASE(test_synced_input)
     output.UpdateData(10, 0);
     auto input = rcc::shared_ptr<int_input>::Create();
     input->input_param.SetInput(&output);
-    input->SetSyncInput(&input->input_param);
+    input->SetSyncInput("input");
 
     for(int i = 0; i < 100; ++i)
     {
         output.UpdateData(i+ 1, i);
         BOOST_REQUIRE(input->CheckInputs());
         input->Process();
-        BOOST_REQUIRE_EQUAL(input->value, output.GetData(i));
+        BOOST_REQUIRE_EQUAL(input->value, output.GetData((long long)i));
     }
+}
+
+BOOST_AUTO_TEST_CASE(test_threaded_input)
+{
+    mo::Context ctx;
+    mo::TypedParameter<int> output("test", 0, mo::Control_e, 0, &ctx);
+
+    auto obj = rcc::shared_ptr<int_input>::Create();
+    boost::thread thread([&obj, &output]()->void
+    {
+        mo::Context _ctx;
+        obj->SetContext(&_ctx);
+        BOOST_REQUIRE(obj->ConnectInput("input", &output));
+        int success_count = 0;
+        while(success_count < 999)
+        {
+            if(obj->CheckInputs())
+            {
+                obj->Process();
+                ++success_count;
+            }
+        }
+    });
+
+    for(int i = 0; i < 1000; ++i)
+    {
+        output.UpdateData(i, i, &ctx);
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    }
+
+
+    thread.join();
+}
+
+BOOST_AUTO_TEST_CASE(test_desynced_nput)
+{
+    mo::Context ctx;
+    mo::TypedParameter<int> fast_output("test", 0, mo::Control_e, 0, &ctx);
+    mo::TypedParameter<int> slow_output("test2", 0, mo::Control_e, 0, &ctx);
+    int* addr1 = fast_output.GetDataPtr();
+    int* addr2 = slow_output.GetDataPtr();
+
+    auto obj = rcc::shared_ptr<multi_input>::Create();
+
+    bool thread1_done = false;
+    bool thread2_done = false;
+
+    boost::thread thread([&obj, &fast_output, &slow_output, &thread1_done, addr1, addr2]()->void
+    {
+        mo::Context _ctx;
+        obj->SetContext(&_ctx);
+        BOOST_REQUIRE(obj->ConnectInput("input1", &fast_output));
+        BOOST_REQUIRE(obj->ConnectInput("input2", &slow_output));
+
+        int success_count = 0;
+        while(success_count < 999)
+        {
+            if(obj->CheckInputs())
+            {
+                obj->Process();
+                ++success_count;
+                if(boost::this_thread::interruption_requested())
+                    break;
+            }
+        }
+        thread1_done = true;
+    });
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+    boost::thread slow_thread(
+        [&slow_output, &thread2_done]()->void
+    {
+        mo::Context _ctx;
+        for(int i = 1; i < 1000; ++i)
+        {
+            slow_output.UpdateData(i, i, &_ctx);
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+            if(boost::this_thread::interruption_requested())
+                break;
+        }
+        thread2_done = true;
+    });
+    
+
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+    for(int i = 1; i < 1000; ++i)
+    {
+        fast_output.UpdateData(i, i, &ctx);
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    }
+    while(thread2_done == false)
+    {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    }
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    BOOST_REQUIRE(thread1_done);
+    BOOST_REQUIRE(thread2_done);
+    slow_thread.join();
+    thread.join();
 }

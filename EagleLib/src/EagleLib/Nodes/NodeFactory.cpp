@@ -147,7 +147,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string
             {
                 for (auto& dep : non_parent_dep)
                 {
-                    if (existing_node->GetName() == dep)
+                    if (existing_node->GetTypeName() == dep)
                     {
                         found = true;
                         break;
@@ -187,7 +187,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string
 // recursively checks if a node exists in the parent hierarchy
 bool check_parent_exists(Nodes::Node* node, const std::string& name)
 {
-    if (node->GetName() == name)
+    if (node->GetTypeName() == name)
         return true;
     /*if (auto parent = node->getParent())
         return check_parent_exists(parent, name);*/
@@ -243,7 +243,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string
             {
                 for (auto& dep : non_parent_dep)
                 {
-                    if (existing_node->GetName() == dep)
+                    if (existing_node->GetTypeName() == dep)
                     {
                         found = true;
                         break;
@@ -436,9 +436,9 @@ void NodeFactory::printTreeHelper(std::stringstream& tree, int level, Nodes::Nod
         tree << "+";
     }
     tree << node->GetTreeName() << std::endl;
-    for (size_t i = 0; i < node->children.size(); ++i)
+    for (size_t i = 0; i < node->_children.size(); ++i)
     {
-        printTreeHelper(tree, level + 1, node->children[i].Get());
+        printTreeHelper(tree, level + 1, node->_children[i].Get());
     }
 }
 

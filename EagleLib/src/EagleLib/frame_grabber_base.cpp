@@ -279,7 +279,8 @@ void FrameGrabberBuffered::Init(bool firstInit)
     IFrameGrabber::Init(firstInit);
     if(firstInit)
     {
-        UpdateParameter<int>("Frame buffer size", 50);
+        int size = 50;
+        UpdateParameter<int>("Frame buffer size", size);
     }else
     {
         

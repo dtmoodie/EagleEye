@@ -60,13 +60,13 @@ bool Algorithm::CheckInputs()
         return true;
     if(_pimpl->sync_input != nullptr)
     {
-        _pimpl->ts = reinterpret_cast<IParameter*>(_pimpl->sync_input)->GetTimestamp();
+        _pimpl->ts = dynamic_cast<IParameter*>(_pimpl->sync_input)->GetTimestamp();
     }
     if(_pimpl->ts == -1)
     {
         for(auto input : inputs)
         {
-            long long ts = reinterpret_cast<IParameter*>(input)->GetTimestamp();
+            long long ts = dynamic_cast<IParameter*>(input)->GetTimestamp();
             if(ts != -1)
             {
                 if(_pimpl->ts == -1)
@@ -96,7 +96,8 @@ long long Algorithm::GetTimestamp()
     return _pimpl->ts;
 }
 
-void Algorithm::SetSyncInput(mo::InputParameter* input)
+void Algorithm::SetSyncInput(const std::string& name)
 {
-    _pimpl->sync_input = input;
+
+    _pimpl->sync_input = GetInput(name);
 }

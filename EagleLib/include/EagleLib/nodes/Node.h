@@ -55,14 +55,6 @@
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
 #include <EagleLib/rcc/external_includes/cv_highgui.hpp>
 
-#include <boost/function.hpp>
-#include <boost/log/attributes/scoped_attribute.hpp>
-#include <boost/log/expressions/keyword.hpp>
-#include <boost/log/attributes/mutable_constant.hpp>
-
-// stl
-#include <vector>
-#include <type_traits>
 
 namespace mo
 {
@@ -78,15 +70,6 @@ namespace EagleLib
     class IDataStream;
     class NodeFactory;
 }
-
-
-#define NODE_DEFAULT_CONSTRUCTOR_IMPL(NodeName, ...) \
-NodeName::NodeName()                            \
-{                                               \
-}                                                \
-static NodeInfo g_registerer_##NodeName(#NodeName, {STRINGIFY(__VA_ARGS__) });\
-REGISTERCLASS(NodeName, &g_registerer_##NodeName)
-
 
 #define SET_NODE_TOOLTIP(name, tooltip) g_registerer_##name.node_tooltip = std::string(tooltip);
 #define SET_NODE_HELP(name, help) g_registerer_##name.node_help = std::string(help);
@@ -131,54 +114,45 @@ namespace EagleLib
     {
     public:
         typedef rcc::shared_ptr<Node> Ptr;
+        typedef rcc::weak_ptr<Node>   WeakPtr;
 
         Node();
         virtual ~Node();
 
-        std::string                     GetName() const;
-        std::vector<rcc::weak_ptr<Node>>              GetParents();
-        
-        virtual Node::Ptr               AddChild(Node* child);
-        virtual Node::Ptr               AddChild(Node::Ptr child);
-        virtual Node::Ptr               GetChild(const std::string& treeName);
-        virtual Node::Ptr               GetChild(const int& index);
-        virtual void                    RemoveChild(const std::string& name);
-        virtual void                    RemoveChild(Node::Ptr node);
-        virtual void                    RemoveChild(Node* node);
-        virtual void                    RemoveChild(rcc::weak_ptr<Node> node);
-        virtual void                    RemoveChild(int idx);
+        virtual void                     AddParent(Node *parent);
+        std::vector<rcc::weak_ptr<Node>> GetParents();
+        virtual Node::Ptr                AddChild(Node* child);
+        virtual Node::Ptr                AddChild(Node::Ptr child);
+        virtual Node::Ptr                GetChild(const std::string& treeName);
+        virtual Node::Ptr                GetChild(const int& index);
+        virtual void                     RemoveChild(const std::string& name);
+        virtual void                     RemoveChild(Node::Ptr node);
+        virtual void                     RemoveChild(Node* node);
+        virtual void                     RemoveChild(rcc::weak_ptr<Node> node);
+        virtual void                     RemoveChild(int idx);
 
-        virtual void                    SwapChildren(int idx1, int idx2);
-        virtual void                    SwapChildren(const std::string& name1, const std::string& name2);
-        virtual void                    SwapChildren(Node::Ptr child1, Node::Ptr child2);
+        virtual void                     SwapChildren(int idx1, int idx2);
+        virtual void                     SwapChildren(const std::string& name1, const std::string& name2);
+        virtual void                     SwapChildren(Node::Ptr child1, Node::Ptr child2);
 
-        virtual std::vector<Node*>      GetNodesInScope();
-        virtual Node *                  GetNodeInScope(const std::string& name);
-        virtual void                    GetNodesInScope(std::vector<Node*>& nodes);
+        virtual std::vector<Node*>       GetNodesInScope();
+        virtual Node *                   GetNodeInScope(const std::string& name);
+        virtual void                     GetNodesInScope(std::vector<Node*>& nodes);
         
-        virtual void                    SetDataStream(IDataStream* stream);
-        virtual IDataStream*            GetDataStream();
+        virtual void                     SetDataStream(IDataStream* stream);
+        virtual IDataStream*             GetDataStream();
 
-        void                            SetTreeName(const std::string& name);
-        std::string                     GetTreeName() const;
-        void                            SetTreeRoot(const std::string& name);
-        std::string                     GetTreeRoot() const;
-        virtual void                    AddParent(Node *parent);
+        void                             SetUniqueId(int id);
+        std::string                      GetTreeName() const;
         
-        virtual void                    Init(bool firstInit);
-        virtual void                    NodeInit(bool firstInit);
+        virtual void                     Init(bool firstInit);
+        virtual void                     NodeInit(bool firstInit);
 
-        virtual void                    Init(const std::string& configFile);
-        virtual void                    Init(const cv::FileNode& configNode);
+        virtual void                     Init(const std::string& configFile);
+        virtual void                     Init(const cv::FileNode& configNode);
 
-        virtual void                    Serialize(ISimpleSerializer *pSerializer);
-        virtual void                    Serialize(cv::FileStorage& fs);
-
-        
-        
-        bool                                                                externalDisplay;
-        bool                                                                enabled;
-        
+        virtual void                     Serialize(ISimpleSerializer *pSerializer);
+        virtual void                     Serialize(cv::FileStorage& fs);
         void                             Clock(int line_num);
         
         MO_BEGIN(Node)
@@ -188,23 +162,33 @@ namespace EagleLib
 
     protected:
         friend class NodeFactory;
-        IDataStream*                                                             _dataStream;
-        long long                                                                _current_timestamp;
-        std::shared_ptr<mo::IVariableManager>                                    _variable_manager;
-        std::vector<Node::Ptr>                                              children;
-        std::vector<rcc::weak_ptr<Node>>                                                     _parents;
-        // Name as placed in the tree ie: RootNode/SerialStack/Sobel-1
-        std::string                                                                treeRoot;
-        // Name as it is stored in the children map, should be unique at this point in the tree. IE: Sobel-1
-        std::string                                                                treeName;
-    private:
 
-        void ClearProcessingTime();
-        void EndProcessingTime();
-        
-        std::shared_ptr<NodeImpl>                                               pImpl_;
-        unsigned int                                                            rmt_hash;
-        unsigned int                                                            rmt_cuda_hash;
+        // The data stream is kinda the graph owner, it produces data and pushes
+        // It also calls Process for all of the children of the data stream
+        // it onto the graph.
+        IDataStream*                          _dataStream;
+
+        // Current timestamp of the frame that this node is processing / processed last
+        long long                             _current_timestamp;
+
+        // The variable manager is one object shared within a processing graph
+        // that has knowledge of all inputs and outputs within the graph
+        // It handles creating buffers, setting up contexts and all connecting nodes
+        std::shared_ptr<mo::IVariableManager> _variable_manager;
+
+        // The children of a node are all nodes accepting inputs
+        // from this node
+        std::vector<rcc::weak_ptr<Node>>      _children;
+        // The parents of a node are all nodes with outputs
+        // that this node accepts as inputs
+        std::vector<rcc::weak_ptr<Node>>      _parents;
+        // Unique name in each processing graph. GetTypeName() + unique index
+        int                                   _unique_id;
+    private:
+        std::shared_ptr<NodeImpl>             pImpl_;
+        // These are used for profiling
+        unsigned int                          rmt_hash;
+        unsigned int                          rmt_cuda_hash;
     };
     } // namespace Nodes
 } // namespace EagleLib

@@ -1,6 +1,3 @@
-#ifndef OPENCV_FOUND
-#define OPENCV_FOUND
-#endif
 #include "EagleLib/nodes/Node.h"
 #include "EagleLib/nodes/NodeFactory.h"
 #include <EagleLib/frame_grabber_base.h>
@@ -183,9 +180,6 @@ Nodes::NodeInfoRegisterer::NodeInfoRegisterer(const char* nodeName, std::initial
 Node::Node():
     pImpl_(new NodeImpl())
 {
-    
-    enabled = true;
-    externalDisplay = false;
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table)
     {
@@ -212,28 +206,7 @@ Node::~Node()
     LOG(trace) << "Disconnected " <<connections.size() << " boost signals";
 }
 
-void Node::ClearProcessingTime()
-{
-    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-    pImpl_->timings.clear();
-}
 
-void Node::EndProcessingTime()
-{
-    
-    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-    double total = pImpl_->timings[pImpl_->timings.size() - 1].first - pImpl_->timings[0].first;
-    
-    std::stringstream ss;
-    for (int i = 1; i < pImpl_->timings.size(); ++i)
-    {
-        ss << pImpl_->timings[i - 1].second << "," << pImpl_->timings[i].second << "(" << pImpl_->timings[i].first - pImpl_->timings[i - 1].first << ")";
-    }
-    ss << " Total: " << total;
-    LOG(trace) << ss.str();
-    
-    pImpl_->averageFrameTime(total);
-}
 
 void Node::Clock(int line_num)
 {
@@ -260,36 +233,36 @@ Node::Ptr Node::AddChild(Node::Ptr child)
     
     if (child == nullptr)
         return child;
-    if(std::find(children.begin(), children.end(), child) != children.end())
+    if(std::find(_children.begin(), _children.end(), child) != _children.end())
         return child;
     int count = 0;
-    for(size_t i = 0; i < children.size(); ++i)
+    for(size_t i = 0; i < _children.size(); ++i)
     {
-        if(children[i]->GetName() == child->GetName())
+        if(_children[i]->GetTypeName() == child->GetTypeName())
             ++count;
     }
     
     child->SetDataStream(GetDataStream());
     child->AddParent(this);
     std::string node_name = child->GetTypeName();
-    //child->setTreeName(node_name + "-" + boost::lexical_cast<std::string>(count));
+    child->SetUniqueId(count);
     child->Init(true);
-    children.push_back(child);
-    LOG(trace) << "[ " << GetTreeName() << " ]" << " Adding child " << child->treeName;
+    _children.push_back(child);
+    LOG(trace) << "[ " << GetTreeName() << " ]" << " Adding child " << child->GetTreeName();
     return child;
 }
 
 Node::Ptr Node::GetChild(const std::string& treeName)
 {
-    for(size_t i = 0; i < children.size(); ++i)
+    for(size_t i = 0; i < _children.size(); ++i)
     {
-        if(children[i]->treeName == treeName)
-            return children[i];
+        if(_children[i]->GetTreeName()== treeName)
+            return _children[i];
     }
-    for(size_t i = 0; i < children.size(); ++i)
+    for(size_t i = 0; i < _children.size(); ++i)
     {
-        if(children[i]->GetName() == treeName)
-            return children[i];
+        if(_children[i]->GetTreeName() == treeName)
+            return _children[i];
     }
     return Node::Ptr();
 }
@@ -297,56 +270,54 @@ Node::Ptr Node::GetChild(const std::string& treeName)
 
 Node::Ptr Node::GetChild(const int& index)
 {
-    
-    return children[index];
+    return _children[index];
 }
 void Node::SwapChildren(int idx1, int idx2)
 {
     
-    std::iter_swap(children.begin() + idx1, children.begin() + idx2);
+    std::iter_swap(_children.begin() + idx1, _children.begin() + idx2);
 }
 
 void Node::SwapChildren(const std::string& name1, const std::string& name2)
 {
     
-    auto itr1 = children.begin();
-    auto itr2 = children.begin();
-    for(; itr1 != children.begin(); ++itr1)
+    auto itr1 = _children.begin();
+    auto itr2 = _children.begin();
+    for(; itr1 != _children.begin(); ++itr1)
     {
-        if((*itr1)->treeName == name1)
+        if((*itr1)->GetTreeName() == name1)
             break;
     }
-    for(; itr2 != children.begin(); ++itr2)
+    for(; itr2 != _children.begin(); ++itr2)
     {
-        if((*itr2)->treeName == name2)
+        if((*itr2)->GetTreeName() == name2)
             break;
     }
-    if(itr1 != children.end() && itr2 != children.end())
+    if(itr1 != _children.end() && itr2 != _children.end())
         std::iter_swap(itr1,itr2);
 }
 void Node::SwapChildren(Node::Ptr child1, Node::Ptr child2)
 {
     
-    auto itr1 = std::find(children.begin(),children.end(), child1);
-    if(itr1 == children.end())
+    auto itr1 = std::find(_children.begin(),_children.end(), child1);
+    if(itr1 == _children.end())
         return;
-    auto itr2 = std::find(children.begin(), children.end(), child2);
-    if(itr2 == children.end())
+    auto itr2 = std::find(_children.begin(), _children.end(), child2);
+    if(itr2 == _children.end())
         return;
     std::iter_swap(itr1,itr2);
 }
 
 std::vector<Node*> Node::GetNodesInScope()
 {
-    
     std::vector<Node*> nodes;
     if(_parents.size())
         _parents[0]->GetNodesInScope(nodes);
     return nodes;
 }
+
 Node* Node::GetNodeInScope(const std::string& name)
 {
-    
     // Check if this is a child node of mine, if not go up
     auto fullTreeName = GetTreeName();
     int ret = name.compare(0, fullTreeName.length(), fullTreeName);
@@ -383,10 +354,10 @@ void Node::GetNodesInScope(std::vector<Node*> &nodes)
         return;
     }
     nodes.push_back(this);
-    for(size_t i = 0; i < children.size(); ++i)
+    for(size_t i = 0; i < _children.size(); ++i)
     {
-        if(children[i] != nullptr)
-            children[i]->GetNodesInScope(nodes);
+        if(_children[i] != nullptr)
+            _children[i]->GetNodesInScope(nodes);
     }
 }
 
@@ -405,28 +376,27 @@ void Node::GetNodesInScope(std::vector<Node*> &nodes)
 void Node::RemoveChild(Node::Ptr node)
 {
     
-    for(auto itr = children.begin(); itr != children.end(); ++itr)
+    for(auto itr = _children.begin(); itr != _children.end(); ++itr)
     {
         if(*itr == node)
         {
-            children.erase(itr);
+            _children.erase(itr);
                     return;
         }
     }
 }
 void Node::RemoveChild(int idx)
 {
-    children.erase(children.begin() + idx);
+    _children.erase(_children.begin() + idx);
 }
 
 void Node::RemoveChild(const std::string &name)
 {
-    
-    for(auto itr = children.begin(); itr != children.end(); ++itr)
+    for(auto itr = _children.begin(); itr != _children.end(); ++itr)
     {
-        if((*itr)->treeName == name)
+        if((*itr)->GetTreeName() == name)
         {
-            children.erase(itr);
+            _children.erase(itr);
             return;
         }
     }
@@ -434,19 +404,19 @@ void Node::RemoveChild(const std::string &name)
 
 void Node::RemoveChild(Node* node)
 {
-    auto itr = std::find(children.begin(), children.end(), node);
-    if(itr != children.end())
+    auto itr = std::find(_children.begin(), _children.end(), node);
+    if(itr != _children.end())
     {
-        children.erase(itr);
+        _children.erase(itr);
     }
 }
 
 void Node::RemoveChild(rcc::weak_ptr<Node> node)
 {
-    auto itr = std::find(children.begin(), children.end(), node.Get());
-    if(itr != children.end())
+    auto itr = std::find(_children.begin(), _children.end(), node.Get());
+    if(itr != _children.end())
     {
-        children.erase(itr);
+        _children.erase(itr);
     }
 }
 /*cv::cuda::GpuMat Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
@@ -622,7 +592,7 @@ void Node::SetDataStream(IDataStream* stream_)
     SetupSignals(_dataStream->GetRelayManager());
     SetupVariableManager(_dataStream->GetVariableManager().get());
     //pImpl_->update_signal = stream_->GetRelayManager()->get_signal<void(Node*)>("NodeUpdated");
-    for (auto& child : children)
+    for (auto& child : _children)
     {
         child->SetDataStream(_dataStream);
     }
@@ -641,48 +611,13 @@ IDataStream* Node::GetDataStream()
     }    
     return _dataStream;
 }
-/*cv::cuda::GpuMat
-Node::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream )
-{
-    return img;
-}
-TS<SyncedMemory> Node::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
-{
-    TS<SyncedMemory> output = input;
-    output.GetGpuMatMutable(stream) = doProcess(input.GetGpuMatMutable(stream), stream);
-    return output;
-}*/
 
-
-
-
-std::string Node::GetName() const
-{
-    return treeName;
-}
 
 std::string Node::GetTreeName() const
 {
-    return treeRoot + ":" + treeName;
+    return GetTypeName() + boost::lexical_cast<std::string>(_unique_id);
 }
 
-
-/*std::string Node::GetTreeName()
-{
-    if(!treeName.size())
-    {
-        treeName = getName();
-        fullTreeName = getName();
-    }
-        
-    return treeName;
-}*/
-/*std::string Node::GetTreeRoot()
-{
-    if(!fullTreeName.size())
-        fullTreeName = getName();
-    return fullTreeName;
-}*/
 
 std::vector<rcc::weak_ptr<Node>> Node::GetParents()
 {
@@ -716,11 +651,8 @@ void Node::Init(const cv::FileNode& configNode)
 {
     //ui_collector::set_node_name(getFullTreeName());
     LOG(trace) << " Initializing from file";
-    //configNode["NodeName"] >> nodeName;
-    configNode["NodeTreeName"] >> treeName;
-    configNode["TreeRoot"] >> treeRoot;
-    configNode["Enabled"] >> enabled;
-    configNode["ExternalDisplay"] >> externalDisplay;
+    
+    
     cv::FileNode childrenFS = configNode["Children"];
     int childCount = (int)childrenFS["Count"];
     for(int i = 0; i < childCount; ++i)
@@ -786,12 +718,9 @@ void Node::Serialize(ISimpleSerializer *pSerializer)
 {
     LOG(trace) << " Serializing";
     IMetaObject::Serialize(pSerializer);
-    SERIALIZE(children);
-    SERIALIZE(treeName);
-    SERIALIZE(treeRoot);
+    SERIALIZE(_children);
     SERIALIZE(_parents);
-    SERIALIZE(externalDisplay);
-    SERIALIZE(enabled);
+    
     SERIALIZE(pImpl_);
     SERIALIZE(_dataStream);
 }
@@ -862,25 +791,6 @@ Node::Serialize(cv::FileStorage& fs)
     */
 }
 
-void Node::SetTreeName(const std::string& name)
-{
-    treeName = name;
-    /*std::string fullTreeName_;
-    if (parent == nullptr)
-        fullTreeName_ = treeName;
-    else
-        fullTreeName_ = parent->getFullTreeName() + "." + treeName;
-    setFullTreeName(fullTreeName_);
-    for(size_t i = 0; i < children.size(); ++i)
-    {
-        children[i]->setTreeName(children[i]->treeName);
-    }*/
-}
-/*void Node::setFullTreeName(const std::string& name)
-{
-    SetParameterRoot(name);
-    //fullTreeName = name;
-}*/
 
 void Node::AddParent(Node* parent_)
 {

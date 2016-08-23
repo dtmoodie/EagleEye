@@ -3,7 +3,6 @@
 #include <MetaObject/IMetaObject.hpp>
 #include <shared_ptr.hpp>
 
-
 namespace EagleLib
 {
     class EAGLE_EXPORTS Algorithm : public TInterface<IID_Algorithm, mo::IMetaObject>
@@ -23,13 +22,12 @@ namespace EagleLib
 
         virtual long long  GetTimestamp();
 
-        void SetSyncInput(mo::InputParameter* input);
+        void SetSyncInput(const std::string& name);
     protected:
         virtual void ProcessImpl() = 0;
         void Clock(int line_number);
         bool _enabled;
     private:
-        
         struct impl;
         impl* _pimpl;
     };
