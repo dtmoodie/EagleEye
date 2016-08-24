@@ -30,10 +30,8 @@ namespace EagleLib
     class EAGLE_EXPORTS IDataStream: public TInterface<IID_DataStream, mo::IMetaObject>
     {
     public:
-
-
         typedef rcc::shared_ptr<IDataStream> Ptr;
-        static Ptr create(const std::string& document, const std::string& preferred_frame_grabber = "");
+        static Ptr Create(const std::string& document = "", const std::string& preferred_frame_grabber = "");
         static bool CanLoadDocument(const std::string& document);
 
         virtual ~IDataStream();

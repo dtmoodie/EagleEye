@@ -188,7 +188,6 @@ Node::Node():
     }
     rmt_hash = 0;
     LOG(trace) << " Constructor";
-    _dataStream = nullptr;
 }
 
 
@@ -206,7 +205,32 @@ Node::~Node()
     LOG(trace) << "Disconnected " <<connections.size() << " boost signals";
 }
 
+bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_name, const std::string& output_name, mo::ParameterTypeFlags type)
+{
+    auto output = node->GetOutput(output_name);
+    auto input = this->GetInput(input_name);
+    if(output && input)
+    {
+        if(this->IMetaObject::ConnectInput(input, output, type))
+        {
+            AddParent(node.Get());
+            return true;
+        }
+    }
+    return false;
+}
 
+void Node::Process()
+{
+    Algorithm::Process();
+    for(rcc::weak_ptr<Node>& child : _children)
+    {
+        if(child->CheckInputs())
+        {
+            child->Process();
+        }
+    }
+}
 
 void Node::Clock(int line_num)
 {
@@ -217,7 +241,6 @@ void Node::Clock(int line_num)
 
 void Node::reset()
 {
-    
     Init(false);
 }
 
@@ -230,7 +253,6 @@ Node::Ptr Node::AddChild(Node* child)
 }
 Node::Ptr Node::AddChild(Node::Ptr child)
 {
-    
     if (child == nullptr)
         return child;
     if(std::find(_children.begin(), _children.end(), child) != _children.end())
@@ -594,7 +616,7 @@ void Node::SetDataStream(IDataStream* stream_)
     //pImpl_->update_signal = stream_->GetRelayManager()->get_signal<void(Node*)>("NodeUpdated");
     for (auto& child : _children)
     {
-        child->SetDataStream(_dataStream);
+        child->SetDataStream(_dataStream.Get());
     }
 }
 
@@ -607,9 +629,9 @@ IDataStream* Node::GetDataStream()
     }
     if (_parents.size() == 0 && _dataStream == nullptr)
     {
-        
+        _dataStream = IDataStream::Create();
     }    
-    return _dataStream;
+    return _dataStream.Get();
 }
 
 
@@ -795,8 +817,12 @@ Node::Serialize(cv::FileStorage& fs)
 void Node::AddParent(Node* parent_)
 {
     _parents.push_back(parent_);
+    parent_->AddChild(this);
 }
 
-
+void Node::SetUniqueId(int id)
+{
+    _unique_id = id;
+}
 
 

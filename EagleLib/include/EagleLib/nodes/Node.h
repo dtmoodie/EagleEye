@@ -118,9 +118,10 @@ namespace EagleLib
 
         Node();
         virtual ~Node();
-
+        virtual void                     Process();
         virtual void                     AddParent(Node *parent);
         std::vector<rcc::weak_ptr<Node>> GetParents();
+        bool ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_name, const std::string& output_name, mo::ParameterTypeFlags type = mo::StreamBuffer_e);
         virtual Node::Ptr                AddChild(Node* child);
         virtual Node::Ptr                AddChild(Node::Ptr child);
         virtual Node::Ptr                GetChild(const std::string& treeName);
@@ -166,7 +167,7 @@ namespace EagleLib
         // The data stream is kinda the graph owner, it produces data and pushes
         // It also calls Process for all of the children of the data stream
         // it onto the graph.
-        IDataStream*                          _dataStream;
+        rcc::shared_ptr<IDataStream>                          _dataStream;
 
         // Current timestamp of the frame that this node is processing / processed last
         long long                             _current_timestamp;

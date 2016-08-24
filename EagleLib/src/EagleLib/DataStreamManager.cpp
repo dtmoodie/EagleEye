@@ -597,7 +597,7 @@ void DataStream::process()
     LOG(info) << "Stream thread shutting down";
 }
 
-IDataStream::Ptr IDataStream::create(const std::string& document, const std::string& preferred_frame_grabber)
+IDataStream::Ptr IDataStream::Create(const std::string& document, const std::string& preferred_frame_grabber)
 {
     auto stream = mo::MetaObjectFactory::Instance()->Create<IDataStream>("DataStream");
     if(document.size() == 0)
