@@ -5,6 +5,7 @@
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "EagleLib/Detail/Export.hpp"
 #include <EagleLib/Project_defs.hpp>
+#include "EagleLib/rcc/SystemTable.hpp"
 std::vector<std::string> plugins;
 std::vector<std::string> EagleLib::ListLoadedPlugins()
 {
@@ -147,7 +148,11 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 
 
 #endif
-void EagleLib::Init()
+struct init_struct
 {
-    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
-}
+    init_struct()
+    {
+        mo::MetaObjectFactory::Instance(new SystemTable())->RegisterTranslationUnit();
+    }
+};
+static init_struct g_init;

@@ -18,12 +18,11 @@ namespace EagleLib
         virtual void       SetEnabled(bool value);
         bool               IsEnabled() const;
 
-        virtual bool       CheckInputs();
-
         virtual long long  GetTimestamp();
 
         void SetSyncInput(const std::string& name);
     protected:
+        virtual bool CheckInputs();
         virtual void ProcessImpl() = 0;
         void Clock(int line_number);
         bool _enabled;

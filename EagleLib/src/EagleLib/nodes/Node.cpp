@@ -223,12 +223,10 @@ bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_nam
 void Node::Process()
 {
     Algorithm::Process();
-    for(rcc::weak_ptr<Node>& child : _children)
+    for(rcc::shared_ptr<Node>& child : _children)
     {
-        if(child->CheckInputs())
-        {
+        if(child->_ctx == this->_ctx)
             child->Process();
-        }
     }
 }
 

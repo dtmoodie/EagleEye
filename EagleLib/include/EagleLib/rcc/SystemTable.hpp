@@ -18,6 +18,7 @@ template<typename T> struct Singleton: public ISingleton
     T* ptr;
     operator T*() const {return ptr;}
 };
+
 template<typename T> struct IObjectSingleton: public ISingleton
 {
     rcc::shared_ptr<T> ptr;
@@ -25,6 +26,7 @@ template<typename T> struct IObjectSingleton: public ISingleton
     IObjectSingleton(const rcc::shared_ptr<T>& ptr_): ptr(ptr_){}
     operator T*() const {return ptr.get(); }
 };
+
 struct SystemTable
 {
     SystemTable();
@@ -38,17 +40,21 @@ struct SystemTable
         }
         return nullptr;
     }
-    template<typename T> T* SetSingleton(T* singleton, int stream_id = -1)
+    
+    template<typename T> 
+    T* SetSingleton(T* singleton, int stream_id = -1)
     {
-        
         g_singletons[mo::TypeInfo(typeid(T))] = std::unique_ptr<ISingleton>(new Singleton<T>(singleton));
         return singleton;
     }
+    
     void DeleteSingleton(mo::TypeInfo type);
-    template<typename T> void DeleteSingleton()
+
+    template<typename T> 
+    void DeleteSingleton()
     {
         DeleteSingleton(mo::TypeInfo(typeid(T)));
-   }
+    }
 private:
     std::map<mo::TypeInfo, std::unique_ptr<ISingleton>> g_singletons;
 };

@@ -119,13 +119,22 @@ namespace EagleLib
         Node();
         virtual ~Node();
         virtual void                     Process();
+
         virtual void                     AddParent(Node *parent);
+
         std::vector<rcc::weak_ptr<Node>> GetParents();
-        bool ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_name, const std::string& output_name, mo::ParameterTypeFlags type = mo::StreamBuffer_e);
+
+        virtual bool                     ConnectInput(rcc::shared_ptr<Node> node, 
+                                                      const std::string& input_name, 
+                                                      const std::string& output_name, 
+                                                      mo::ParameterTypeFlags type = mo::StreamBuffer_e);
+
         virtual Node::Ptr                AddChild(Node* child);
         virtual Node::Ptr                AddChild(Node::Ptr child);
+
         virtual Node::Ptr                GetChild(const std::string& treeName);
         virtual Node::Ptr                GetChild(const int& index);
+
         virtual void                     RemoveChild(const std::string& name);
         virtual void                     RemoveChild(Node::Ptr node);
         virtual void                     RemoveChild(Node* node);
@@ -179,7 +188,7 @@ namespace EagleLib
 
         // The children of a node are all nodes accepting inputs
         // from this node
-        std::vector<rcc::weak_ptr<Node>>      _children;
+        std::vector<rcc::shared_ptr<Node>>      _children;
         // The parents of a node are all nodes with outputs
         // that this node accepts as inputs
         std::vector<rcc::weak_ptr<Node>>      _parents;

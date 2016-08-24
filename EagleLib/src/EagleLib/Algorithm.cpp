@@ -46,7 +46,10 @@ void Algorithm::Process()
 {
     if(_enabled == false)
         return;
-    
+    if(!CheckInputs())
+    {
+        return;
+    }
     ProcessImpl();
 
     if(_pimpl->sync_input == nullptr && _pimpl->ts != -1)
@@ -60,13 +63,14 @@ bool Algorithm::CheckInputs()
         return true;
     if(_pimpl->sync_input != nullptr)
     {
-        _pimpl->ts = dynamic_cast<IParameter*>(_pimpl->sync_input)->GetTimestamp();
+        _pimpl->ts = _pimpl->sync_input->GetTimestamp();
+        LOG(trace) << "Timestamp updated to " << _pimpl->ts;
     }
     if(_pimpl->ts == -1)
     {
         for(auto input : inputs)
         {
-            long long ts = dynamic_cast<IParameter*>(input)->GetTimestamp();
+            long long ts = input->GetTimestamp();
             if(ts != -1)
             {
                 if(_pimpl->ts == -1)
@@ -75,11 +79,13 @@ bool Algorithm::CheckInputs()
                     _pimpl->ts = std::min(_pimpl->ts, ts);
             }
         }
+        LOG(trace) << "Timestamp updated to " << _pimpl->ts;
     }
     for(auto input : inputs)
     {
         if(!input->GetInput(_pimpl->ts))
         {
+            LOG(trace) << input->GetTreeName() << " failed to get input at timestamp: " << _pimpl->ts;
             return false;
         }
     }
@@ -88,7 +94,7 @@ bool Algorithm::CheckInputs()
 
 void Algorithm::Clock(int line_number)
 {
-        
+    
 }
 
 long long Algorithm::GetTimestamp() 
@@ -98,6 +104,5 @@ long long Algorithm::GetTimestamp()
 
 void Algorithm::SetSyncInput(const std::string& name)
 {
-
     _pimpl->sync_input = GetInput(name);
 }
