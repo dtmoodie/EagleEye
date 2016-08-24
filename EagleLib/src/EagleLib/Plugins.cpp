@@ -2,7 +2,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
-
+#include "MetaObject/MetaObjectFactory.hpp"
 #include "EagleLib/Detail/Export.hpp"
 #include <EagleLib/Project_defs.hpp>
 std::vector<std::string> plugins;
@@ -147,3 +147,7 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 
 
 #endif
+void EagleLib::Init()
+{
+    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+}

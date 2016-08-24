@@ -263,13 +263,12 @@ Node::Ptr Node::AddChild(Node::Ptr child)
         if(_children[i]->GetTypeName() == child->GetTypeName())
             ++count;
     }
-    
+    _children.push_back(child);
     child->SetDataStream(GetDataStream());
     child->AddParent(this);
     std::string node_name = child->GetTypeName();
     child->SetUniqueId(count);
     child->Init(true);
-    _children.push_back(child);
     LOG(trace) << "[ " << GetTreeName() << " ]" << " Adding child " << child->GetTreeName();
     return child;
 }

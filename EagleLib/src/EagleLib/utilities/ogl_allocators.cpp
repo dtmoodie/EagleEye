@@ -48,7 +48,9 @@ void ogl_allocator::Serialize(ISimpleSerializer* pSerializer)
 ogl_allocator::ogl_allocator():
     CombinedAllocator(10000000, 1000000), is_default_allocator(false)
 {
-    PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton<ogl_allocator>(this);
+    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    if(table)
+        table->SetSingleton<ogl_allocator>(this);
 }
 bool ogl_allocator::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
 {

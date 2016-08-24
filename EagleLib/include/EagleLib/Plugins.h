@@ -2,6 +2,7 @@
 
 namespace EagleLib
 {
-    bool CV_EXPORTS loadPlugin(const std::string& fullPluginPath);
+    bool EAGLE_EXPORTS loadPlugin(const std::string& fullPluginPath);
     std::vector<std::string> EAGLE_EXPORTS ListLoadedPlugins();
+    void EAGLE_EXPORTS Init();
 }

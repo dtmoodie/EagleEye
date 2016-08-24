@@ -7,7 +7,7 @@
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
-
+#include "EagleLib/Plugins.h"
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "EagleLibNodes"
 
@@ -54,7 +54,9 @@ struct node_c: public Nodes::Node
     void ProcessImpl()
     {
         BOOST_REQUIRE_EQUAL(*in_a, *in_b);
+        count += *in_a + *in_b;
     }
+    int count = 0;
 };
 
 MO_REGISTER_CLASS(node_a);
@@ -65,13 +67,15 @@ MO_REGISTER_CLASS(node_c);
 BOOST_AUTO_TEST_CASE(no_branching)
 {
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+    EagleLib::Init();
     auto a = rcc::shared_ptr<node_a>::Create();
     auto b = rcc::shared_ptr<node_b>::Create();
     auto c = rcc::shared_ptr<node_c>::Create();
     c->ConnectInput(a, "in_a", "out_a");
-    a->AddChild(b);
     c->ConnectInput(b, "in_b", "out_b");
     a->Process();
+    b->Process();
+    BOOST_REQUIRE_EQUAL(c->count, 2);
 }
 
 BOOST_AUTO_TEST_CASE(branching)
@@ -91,7 +95,9 @@ BOOST_AUTO_TEST_CASE(diamond)
     auto c = rcc::shared_ptr<node_c>::Create();
     
     
-    a->Process();
+    a->AddChild(b1);
+    a->AddChild(b2);
+    //c->ConnectInput(b1, "in_a", )
 }
 
 BOOST_AUTO_TEST_CASE(delete_node)
