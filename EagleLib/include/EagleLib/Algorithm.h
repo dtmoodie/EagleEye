@@ -26,8 +26,9 @@ namespace EagleLib
         virtual void ProcessImpl() = 0;
         void Clock(int line_number);
         bool _enabled;
-    private:
         struct impl;
         impl* _pimpl;
+    private:
+        
     };
 }

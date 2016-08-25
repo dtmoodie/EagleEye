@@ -8,8 +8,8 @@
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
-
-#include "EagleLib/Plugins.h"
+#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
+#include "EagleLib/Logging.h"
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "EagleLibNodes"
 
@@ -30,6 +30,7 @@ struct node_a: public Nodes::Node
     {
         ++ts;
         out_a_param.UpdateData(ts, ts);
+        _modified = true;
     }
     int ts = 0;
 };
@@ -44,6 +45,7 @@ struct node_b: public Nodes::Node
     {
         ++ts;
         out_b_param.UpdateData(ts, ts);
+        _modified = true;
     }
     int ts = 0;
 };
@@ -69,6 +71,7 @@ MO_REGISTER_CLASS(node_c);
 
 BOOST_AUTO_TEST_CASE(branching)
 {
+    EagleLib::SetupLogging();
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
     
     auto a = rcc::shared_ptr<node_a>::Create();
@@ -79,6 +82,8 @@ BOOST_AUTO_TEST_CASE(branching)
     a->AddChild(b);
     a->Process();
     BOOST_REQUIRE_EQUAL(c->count, 2);
+    
+    
 }
 
 
@@ -90,6 +95,7 @@ BOOST_AUTO_TEST_CASE(merging)
     BOOST_REQUIRE(c->ConnectInput(a, "in_a", "out_a"));
     BOOST_REQUIRE(c->ConnectInput(b, "in_b", "out_b"));
     a->Process();
+    BOOST_REQUIRE_EQUAL(c->count, 0);
     b->Process();
     BOOST_REQUIRE_EQUAL(c->count, 2);
 }
@@ -120,15 +126,21 @@ BOOST_AUTO_TEST_CASE(threaded_child)
     auto a = rcc::shared_ptr<node_a>::Create();
     auto b = rcc::shared_ptr<node_b>::Create();
     auto c = rcc::shared_ptr<node_c>::Create();
-    auto thread = rcc::shared_ptr<EagleLib::ThreadedNode>::Create();
+    auto thread = rcc::shared_ptr<EagleLib::Nodes::ThreadedNode>::Create();
+    mo::Context ctx;
+    a->SetContext(&ctx);
+    b->SetContext(&ctx);
     thread->AddChild(c);
     BOOST_REQUIRE(c->ConnectInput(b, "in_b", "out_b"));
     BOOST_REQUIRE(c->ConnectInput(a, "in_a", "out_a"));
 
     
-
+    c->SetSyncInput("in_b");
     a->Process();
     b->Process();
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+    thread->StopThread();
+    BOOST_REQUIRE_EQUAL(c->count, 2);
 }
 
 BOOST_AUTO_TEST_CASE(threaded_parent)

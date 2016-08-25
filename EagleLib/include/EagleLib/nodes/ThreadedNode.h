@@ -28,7 +28,7 @@ namespace EagleLib
                 MO_SLOT(void, StartThread);
             MO_END;
         protected:
-
+            void ProcessImpl(){}
         private:
             void processingFunction();
             mo::Context _thread_context;

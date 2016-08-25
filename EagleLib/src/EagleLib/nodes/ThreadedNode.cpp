@@ -14,7 +14,7 @@ ThreadedNode::ThreadedNode()
 
 ThreadedNode::~ThreadedNode()
 {
-
+    StopThread();
 }
 
 void ThreadedNode::StopThread()
@@ -35,7 +35,7 @@ void ThreadedNode::ResumeThread()
 
 void ThreadedNode::StartThread()
 {
-
+    _processing_thread = boost::thread(boost::bind(&ThreadedNode::processingFunction, this));
 }
 
 void ThreadedNode::Process()

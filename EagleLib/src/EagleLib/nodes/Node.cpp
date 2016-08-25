@@ -7,6 +7,7 @@
 #include <EagleLib/utilities/GpuMatAllocators.h>
 #include "EagleLib/Signals.h"
 #include "EagleLib/profiling.h"
+#include "EagleLib/Detail/AlgorithmImpl.hpp"
 
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #include "RuntimeInclude.h"
@@ -187,7 +188,7 @@ Node::Node():
         signal_manager->ConnectSlots(this, "reset");
     }
     rmt_hash = 0;
-    LOG(trace) << " Constructor";
+    _modified = true;
 }
 
 
@@ -219,10 +220,37 @@ bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_nam
     }
     return false;
 }
+bool Node::CheckInputs()
+{
+    if(_modified == false)
+        return false;
+    return Algorithm::CheckInputs();
+}
+
+void Node::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
+{
+    IMetaObject::onParameterUpdate(ctx, param);
+    if(param->CheckFlags(mo::Control_e) || param->CheckFlags(mo::Input_e))
+    {
+        _modified = true;
+    }
+}
 
 void Node::Process()
 {
-    Algorithm::Process();
+    if(_enabled == false)
+        return;
+    if(CheckInputs())
+    {
+        ProcessImpl();   
+        if(_pimpl->sync_input == nullptr && _pimpl->ts != -1)
+            ++_pimpl->ts;
+        _pimpl->last_ts = _pimpl->ts;
+        _modified = false;
+    }
+    
+    
+
     for(rcc::shared_ptr<Node>& child : _children)
     {
         if(child->_ctx == this->_ctx)

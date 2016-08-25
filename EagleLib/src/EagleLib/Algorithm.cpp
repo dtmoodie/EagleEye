@@ -1,4 +1,5 @@
 #include "EagleLib/Algorithm.h"
+#include "EagleLib/Detail/AlgorithmImpl.hpp"
 #include <MetaObject/Parameters/InputParameter.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
@@ -8,12 +9,6 @@
 using namespace mo;
 using namespace EagleLib;
 
-
-struct Algorithm::impl
-{
-    long long ts = -1;    
-    mo::InputParameter* sync_input = nullptr;
-};
 
 Algorithm::Algorithm()
 {
@@ -54,6 +49,7 @@ void Algorithm::Process()
 
     if(_pimpl->sync_input == nullptr && _pimpl->ts != -1)
         ++_pimpl->ts;
+    _pimpl->last_ts = _pimpl->ts;
 }
 
 bool Algorithm::CheckInputs()
@@ -81,6 +77,8 @@ bool Algorithm::CheckInputs()
         }
         LOG(trace) << "Timestamp updated to " << _pimpl->ts;
     }
+    if(_pimpl->ts == _pimpl->last_ts && _pimpl->last_ts != -1)
+        return false;
     for(auto input : inputs)
     {
         if(!input->GetInput(_pimpl->ts))
