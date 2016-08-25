@@ -1,6 +1,6 @@
 #include "EagleLib/nodes/Node.h"
 #include "EagleLib/nodes/NodeFactory.h"
-#include <EagleLib/frame_grabber_base.h>
+#include <EagleLib/IFrameGrabber.hpp>
 #include <EagleLib/DataStreamManager.h>
 #include <EagleLib/rcc/external_includes/cv_videoio.hpp>
 #include <EagleLib/rcc/SystemTable.hpp>
@@ -222,14 +222,20 @@ bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_nam
 }
 bool Node::CheckInputs()
 {
+    if(_pimpl->_sync_method == Algorithm::SyncEvery && _pimpl->_ts_processing_queue.size() != 0)
+        _modified = true;
     if(_modified == false)
+    {
+        LOG(trace) << "_modified == false for " << GetTreeName();
         return false;
+    }
+    
     return Algorithm::CheckInputs();
 }
 
 void Node::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
 {
-    IMetaObject::onParameterUpdate(ctx, param);
+    Algorithm::onParameterUpdate(ctx, param);
     if(param->CheckFlags(mo::Control_e) || param->CheckFlags(mo::Input_e))
     {
         _modified = true;
@@ -240,16 +246,13 @@ void Node::Process()
 {
     if(_enabled == false)
         return;
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     if(CheckInputs())
     {
-        ProcessImpl();   
-        if(_pimpl->sync_input == nullptr && _pimpl->ts != -1)
-            ++_pimpl->ts;
-        _pimpl->last_ts = _pimpl->ts;
         _modified = false;
+        ProcessImpl();
+        _pimpl->last_ts = _pimpl->ts;
     }
-    
-    
 
     for(rcc::shared_ptr<Node>& child : _children)
     {
@@ -270,13 +273,11 @@ void Node::reset()
     Init(false);
 }
 
-
-
-
 Node::Ptr Node::AddChild(Node* child)
 {
     return AddChild(Node::Ptr(child));
 }
+
 Node::Ptr Node::AddChild(Node::Ptr child)
 {
     if (child == nullptr)
@@ -294,7 +295,6 @@ Node::Ptr Node::AddChild(Node::Ptr child)
     child->AddParent(this);
     std::string node_name = child->GetTypeName();
     child->SetUniqueId(count);
-    child->Init(true);
     LOG(trace) << "[ " << GetTreeName() << " ]" << " Adding child " << child->GetTreeName();
     return child;
 }
@@ -319,6 +319,7 @@ Node::Ptr Node::GetChild(const int& index)
 {
     return _children[index];
 }
+
 void Node::SwapChildren(int idx1, int idx2)
 {
     
@@ -343,6 +344,7 @@ void Node::SwapChildren(const std::string& name1, const std::string& name2)
     if(itr1 != _children.end() && itr2 != _children.end())
         std::iter_swap(itr1,itr2);
 }
+
 void Node::SwapChildren(Node::Ptr child1, Node::Ptr child2)
 {
     
@@ -629,11 +631,11 @@ void Node::SetDataStream(IDataStream* stream_)
 {
     if (_dataStream)
     {
-        LOG(debug) << "Updating stream manager to a new manager";
+        //LOG(debug) << "Updating stream manager to a new manager";
     }    
     else
     {
-        LOG(debug) << "Setting stream manager";
+        //LOG(debug) << "Setting stream manager";
     }
     _dataStream = stream_;
     SetupSignals(_dataStream->GetRelayManager());

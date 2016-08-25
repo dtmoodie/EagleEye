@@ -70,10 +70,7 @@
 
 #define SETUP_PROJECT_IMPL    int GetBuildType() {return BUILD_TYPE; }                                  \
 void SetupIncludes(){                                                                                   \
-        int id = EagleLib::ObjectManager::Instance().parseProjectConfig(PROJECT_CONFIG_FILE);           \
+        auto id = mo::MetaObjectFactory::Instance()->GetObjectSystem()->ParseConfigFile(PROJECT_CONFIG_FILE);     \
         PerModuleInterface::GetInstance()->SetProjectIdForAllConstructors(id);                          \
-        EagleLib::ObjectManager::Instance().addIncludeDirs(PROJECT_INCLUDES, id);                       \
-        EagleLib::ObjectManager::Instance().addLinkDirs(PROJECT_LIB_DIRS, id);                          \
-        EagleLib::ObjectManager::Instance().addDefinitions(PROJECT_DEFINITIONS, id);                    \
 }
 

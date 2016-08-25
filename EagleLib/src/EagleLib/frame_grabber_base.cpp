@@ -1,4 +1,4 @@
-#include "EagleLib/frame_grabber_base.h"
+#include "EagleLib/IFrameGrabber.hpp"
 #include "EagleLib/Logging.h"
 #include "EagleLib/DataStreamManager.h"
 #include "Remotery.h"
@@ -7,6 +7,8 @@
 #include "ISimpleSerializer.h"
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
+
 IFrameGrabber::IFrameGrabber()
 {
     //update_signal = nullptr;
@@ -225,7 +227,7 @@ void FrameGrabberThreaded::Buffer()
     LOG(info) << "Shutting down buffer thread";
 }
 
-void EagleLib::FrameGrabberThreaded::StartThreads()
+void FrameGrabberThreaded::StartThreads()
 {
     if(_pause)
     {
@@ -237,17 +239,19 @@ void EagleLib::FrameGrabberThreaded::StartThreads()
     buffer_thread = boost::thread(boost::bind(&FrameGrabberThreaded::Buffer, this));
 }
 
-void EagleLib::FrameGrabberThreaded::StopThreads()
+void FrameGrabberThreaded::StopThreads()
 {
     LOG(info);
     buffer_thread.interrupt();
     DOIF_LOG_FAIL(buffer_thread.joinable(), buffer_thread.join(), trace);
 }
-void EagleLib::FrameGrabberThreaded::PauseThreads()
+
+void FrameGrabberThreaded::PauseThreads()
 {
     _pause = true;
 }
-void EagleLib::FrameGrabberThreaded::ResumeThreads()
+
+void FrameGrabberThreaded::ResumeThreads()
 {
     _pause = false;
 }

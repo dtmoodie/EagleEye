@@ -1,6 +1,7 @@
 #include "EagleLib/nodes/ThreadedNode.h"
 #include <MetaObject/Thread/InterThread.hpp>
 #include <MetaObject/Thread/BoostThread.h>
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -43,19 +44,10 @@ void ThreadedNode::Process()
 
 }
 
-/*bool ThreadedNode::ConnectInput(rcc::shared_ptr<Node> node, 
-                                const std::string& input_name, 
-                                const std::string& output_name, 
-                                mo::ParameterTypeFlags type)
-{
-
-}*/
-
 Node::Ptr ThreadedNode::AddChild(Node* child)
 {
     auto ptr = Node::AddChild(child);
     child->SetContext(&_thread_context);
-
     return ptr;
 }
 

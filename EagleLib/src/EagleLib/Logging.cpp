@@ -46,11 +46,12 @@ boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>>
 void EagleLib::SetupLogging()
 {
     cv::redirectError(&static_errorHandler);
-#ifdef _DEBUG
+/*#ifdef _DEBUG
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
 #else
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
-#endif
+#endif*/
+    boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
     boost::log::add_common_attributes();
     if (!boost::filesystem::exists("./logs") || !boost::filesystem::is_directory("./logs"))
     {

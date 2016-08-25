@@ -10,7 +10,7 @@
 #include "EagleLib/ICoordinateManager.h"
 #include "EagleLib/rendering/RenderingEngine.h"
 #include "EagleLib/tracking/ITrackManager.h"
-#include "EagleLib/frame_grabber_base.h"
+#include "EagleLib/IFrameGrabber.hpp"
 #include "EagleLib/nodes/Node.h"
 #include "EagleLib/nodes/NodeFactory.h"
 
@@ -29,7 +29,7 @@
 
 
 using namespace EagleLib;
-
+using namespace EagleLib::Nodes;
 #define CATCH_MACRO                                                         \
     catch (boost::thread_resource_error& err)                               \
 {                                                                           \
@@ -88,14 +88,11 @@ namespace EagleLib
         // Handles tracking objects within a stream and communicating with the global track manager to track across multiple data streams
         virtual rcc::weak_ptr<ITrackManager>            GetTrackManager();
 
-        // Handles actual loading of the image, etc
-        virtual rcc::weak_ptr<IFrameGrabber>           GetFrameGrabber();
+        virtual std::shared_ptr<mo::IVariableManager>   GetVariableManager();
 
-        virtual std::shared_ptr<mo::IVariableManager> GetVariableManager();
+        virtual mo::RelayManager*                       GetRelayManager();
 
-        virtual mo::RelayManager*                            GetRelayManager();
-
-        virtual IParameterBuffer*                        GetParameterBuffer();
+        virtual IParameterBuffer*                       GetParameterBuffer();
 
         virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes();
 
@@ -124,7 +121,6 @@ namespace EagleLib
         rcc::shared_ptr<ICoordinateManager>                       coordinate_manager;
         rcc::shared_ptr<IRenderEngine>                            rendering_engine;
         rcc::shared_ptr<ITrackManager>                            track_manager;
-        rcc::shared_ptr<IFrameGrabber>                            frame_grabber;
         std::shared_ptr<mo::IVariableManager>                     variable_manager;
         std::shared_ptr<mo::RelayManager>                         relay_manager;
         std::vector<rcc::shared_ptr<Nodes::Node>>                 top_level_nodes;
@@ -181,7 +177,6 @@ DataStream::~DataStream()
 {
     StopThread();
     top_level_nodes.clear();
-    frame_grabber.reset();
     relay_manager.reset();
     _sig_manager = nullptr;
     for(auto thread : connection_threads)
@@ -214,11 +209,7 @@ rcc::weak_ptr<ITrackManager> DataStream::GetTrackManager()
     return track_manager;
 }
 
-// Handles actual loading of the image, etc
-rcc::weak_ptr<IFrameGrabber> DataStream::GetFrameGrabber()
-{
-    return frame_grabber;
-}
+
 
 
 mo::RelayManager* DataStream::GetRelayManager()
@@ -266,7 +257,7 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
         auto info = constructor->GetObjectInfo();
         if(info)
         {
-            auto fg_info = dynamic_cast<FrameGrabberInfo*>(info);
+            auto fg_info = dynamic_cast<Nodes::FrameGrabberInfo*>(info);
             if(fg_info)
             {
                 int priority = fg_info->CanLoadDocument(file_to_load);
@@ -335,7 +326,7 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
         {
             if(future.get())
             {
-                frame_grabber = fg;
+                top_level_nodes.emplace_back(fg);
                 LOG(info) << "Loading " << file_to_load << " with frame_grabber: " << fg->GetTypeName() << " with priority: " << frame_grabber_priorities[idx[i]];
                 delete connection_thread;
                 return true; // successful load
@@ -556,38 +547,19 @@ void DataStream::process()
             if(dirty_flag || run_continuously == true)
             {
                 dirty_flag = false;
-                TS<SyncedMemory> current_frame;
-                std::vector<rcc::shared_ptr<Nodes::Node>> current_nodes;
+                
+                for(auto& node : top_level_nodes)
                 {
-                    std::lock_guard<std::mutex> lock(nodes_mtx);
-                    current_nodes = top_level_nodes;
+                    node->Process();
                 }
-                if (frame_grabber != nullptr)
-                {
-                    try
-                    {
-                        rmt_ScopedCPUSample(GrabbingFrame);
-                        current_frame = frame_grabber->GetNextFrame(streams[iteration_count % 2]);
-                                
-                    }CATCH_MACRO        
-                }
-                for (auto& node : current_nodes)
-                {
-                    /*if(node->pre_check(current_frame))
-                    {
-                        try
-                        {
-                            node->process(current_frame, streams[iteration_count % 2]);
-                        }CATCH_MACRO
-                    }*/
-                }
+
                 for(auto sink : variable_sinks)
                 {
-                    sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
+                    //sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
                 }
                 ++iteration_count;
-                if(!dirty_flag)
-                    LOG(trace) << "Dirty flag not set and end of iteration " << iteration_count << " with frame number " << current_frame.frame_number;
+                //if(!dirty_flag)
+                  //  LOG(trace) << "Dirty flag not set and end of iteration " << iteration_count << " with frame number " << current_frame.frame_number;
             }
         }else
         {

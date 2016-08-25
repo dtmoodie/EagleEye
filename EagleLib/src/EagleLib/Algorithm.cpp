@@ -14,6 +14,7 @@ Algorithm::Algorithm()
 {
     _pimpl = new impl();
     _enabled = true;
+    _pimpl->_sync_method = SyncEvery;
 }
 
 Algorithm::~Algorithm()
@@ -39,6 +40,7 @@ bool Algorithm::IsEnabled() const
 
 void Algorithm::Process()
 {
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     if(_enabled == false)
         return;
     if(!CheckInputs())
@@ -47,9 +49,9 @@ void Algorithm::Process()
     }
     ProcessImpl();
 
+    _pimpl->last_ts = _pimpl->ts;
     if(_pimpl->sync_input == nullptr && _pimpl->ts != -1)
         ++_pimpl->ts;
-    _pimpl->last_ts = _pimpl->ts;
 }
 
 bool Algorithm::CheckInputs()
@@ -57,11 +59,7 @@ bool Algorithm::CheckInputs()
     auto inputs = this->GetInputs();
     if(inputs.size() == 0)
         return true;
-    if(_pimpl->sync_input != nullptr)
-    {
-        _pimpl->ts = _pimpl->sync_input->GetTimestamp();
-        LOG(trace) << "Timestamp updated to " << _pimpl->ts;
-    }
+    long long ts = -1;
     if(_pimpl->ts == -1)
     {
         for(auto input : inputs)
@@ -76,14 +74,28 @@ bool Algorithm::CheckInputs()
             }
         }
         LOG(trace) << "Timestamp updated to " << _pimpl->ts;
+        ts = _pimpl->ts;
     }
-    if(_pimpl->ts == _pimpl->last_ts && _pimpl->last_ts != -1)
-        return false;
+    if(_pimpl->_sync_method == SyncEvery && _pimpl->sync_input)
+    {
+        if(_pimpl->_ts_processing_queue.size() != 0)
+        {
+            ts = _pimpl->_ts_processing_queue.front();
+            _pimpl->_ts_processing_queue.pop();
+        }else
+        {
+            return false; // no new data to be processed
+        }
+    }else if(_pimpl->_sync_method == SyncNewest && _pimpl->sync_input)
+    {
+        ts = _pimpl->ts;
+    }
+    
     for(auto input : inputs)
     {
-        if(!input->GetInput(_pimpl->ts))
+        if(!input->GetInput(ts))
         {
-            LOG(trace) << input->GetTreeName() << " failed to get input at timestamp: " << _pimpl->ts;
+            LOG(trace) << input->GetTreeName() << " failed to get input at timestamp: " << ts;
             return false;
         }
     }
@@ -103,4 +115,41 @@ long long Algorithm::GetTimestamp()
 void Algorithm::SetSyncInput(const std::string& name)
 {
     _pimpl->sync_input = GetInput(name);
+}
+
+void Algorithm::SetSyncMethod(SyncMethod _method)
+{
+    if(_pimpl->_sync_method == SyncEvery && _method != SyncEvery)
+    {
+        std::swap(_pimpl->_ts_processing_queue, std::queue<long long>());
+    }
+    _pimpl->_sync_method = _method;
+    
+}
+void Algorithm::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
+{
+    mo::IMetaObject::onParameterUpdate(ctx, param);
+    if(_pimpl->_sync_method == SyncEvery)
+    {
+        if(param == _pimpl->sync_input)
+        {
+            long long ts= param->GetTimestamp();
+#ifdef _DEBUG
+            if(_pimpl->_ts_processing_queue.size() && ts != (_pimpl->_ts_processing_queue.back() + 1))
+                LOG(debug) << "Timestamp not monotonically incrementing";
+            auto itr = std::find(_pimpl->_ts_processing_queue._Get_container().begin(), _pimpl->_ts_processing_queue._Get_container().end(), ts);
+            if(itr != _pimpl->_ts_processing_queue._Get_container().end())
+            {
+                LOG(debug) << "Timestamp exists in processing queue.";
+            }
+#endif
+            _pimpl->_ts_processing_queue.push(ts);
+        }
+    }else if (_pimpl->_sync_method == SyncNewest)
+    {
+        if(param == _pimpl->sync_input)
+        {
+            _pimpl->ts = param->GetTimestamp();
+        }
+    }
 }

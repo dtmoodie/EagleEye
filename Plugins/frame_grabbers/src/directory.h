@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EagleLib/frame_grabber_base.h"
+#include "EagleLib/IFrameGrabber.hpp"
 #include "EagleLib/ICoordinateManager.h"
 
 namespace EagleLib

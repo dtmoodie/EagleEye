@@ -1,10 +1,6 @@
 #include "directory.h"
-#include <EagleLib/rcc/ObjectManager.h>
 #include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
-
 #include "ObjectInterfacePerModule.h"
-#include <parameters/ParameteredObjectImpl.hpp>
-
 #include <boost/filesystem.hpp>
 
 using namespace EagleLib;

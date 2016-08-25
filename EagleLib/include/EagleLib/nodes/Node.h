@@ -165,10 +165,10 @@ namespace EagleLib
         virtual void                     Serialize(cv::FileStorage& fs);
         void                             Clock(int line_num);
         
-        MO_BEGIN(Node)
+        MO_BEGIN(Node);
             MO_SLOT(void, reset);
             MO_SIGNAL(void, node_updated, Node*);
-        MO_END
+        MO_END;
 
     protected:
         friend class NodeFactory;

@@ -1,17 +1,17 @@
 #pragma once
-
+#include "EagleLib/nodes/Node.h"
 #include "IObject.h"
 #include "IObjectInfo.h"
 #include <shared_ptr.hpp>
-#include "EagleLib/Signals.h"
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
 #include "SyncedMemory.h"
 #include <MetaObject/Signals/detail/SlotMacros.hpp>
 #include "MetaObject/Parameters/ParameterMacros.hpp"
 #include <MetaObject/Detail/MetaObjectMacros.hpp>
 #include <MetaObject/Signals/detail/SignalMacros.hpp>
 #include <MetaObject/IMetaObject.hpp>
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
+
 #include <boost/circular_buffer.hpp>
 #include <boost/thread.hpp>
 
@@ -24,8 +24,10 @@ namespace EagleLib
 {
     class IDataStream;
     class ICoordinateManager;
-
-    class EAGLE_EXPORTS FrameGrabberInfo: public IObjectInfo
+    namespace Nodes
+    {
+    
+    class EAGLE_EXPORTS FrameGrabberInfo: public NodeInfo
     {
     public:
         /*!
@@ -64,7 +66,7 @@ namespace EagleLib
     };
     
     // Interface class for the base level of features frame grabber
-    class EAGLE_EXPORTS IFrameGrabber: public TInterface<IID_FrameGrabber, mo::IMetaObject>
+    class EAGLE_EXPORTS IFrameGrabber: public TInterface<IID_FrameGrabber, Node>
     {
     public:
         IFrameGrabber();
@@ -159,7 +161,7 @@ namespace EagleLib
             MO_SLOT(void, StopThreads);
             MO_SLOT(void, PauseThreads);
             MO_SLOT(void, ResumeThreads);
-        MO_END
+        MO_END;
     };
-
+    }
 }

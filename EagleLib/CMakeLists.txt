@@ -79,7 +79,7 @@ FILE(GLOB_RECURSE hdr "remotery/lib/*.h" "include/*.hpp" "include/*.h")
 FILE(GLOB_RECURSE ext_inc "include/EagleLib/rcc/external_includes")
 FILE(GLOB_RECURSE knl "src/*.cu")
 ADD_SUBDIRECTORY("MetaObject")
-  include_directories(${RCC_INCLUDE_DIRS})
+include_directories(${RCC_INCLUDE_DIRS})
 ADD_SUBDIRECTORY("pplx")
 
 find_package(mxnet QUIET)
@@ -138,7 +138,7 @@ ELSE(WIN32)
     SET(LIB_BUILD_DIR_DEBUG "${CMAKE_CURRENT_BINARY_DIR}/Debug/Plugins")
 ENDIF(WIN32)
 
-set(EagleLib_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/src;${CMAKE_CURRENT_SOURCE_DIR}/remotery/lib;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS};${Qt5Gui_INCLUDE_DIRS};${Qt5Widgets_INCLUDE_DIRS};${Qt5Network_INCLUDE_DIRS};${PPLX_INCLUDE_DIRS}" PARENT_SCOPE)
+set(EagleLib_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/MetaObject/dependencies/cereal/include;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/remotery/lib;${Boost_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS};${RCC_INCLUDE_DIRS};${Qt5Gui_INCLUDE_DIRS};${Qt5Widgets_INCLUDE_DIRS};${Qt5Network_INCLUDE_DIRS};${PPLX_INCLUDE_DIRS}" PARENT_SCOPE)
 set(EagleLib_LIBRARIES "EagleLib;${Boost_LIBRARIES};${Parameters_LIBRARIES};pplx" PARENT_SCOPE)
 
 set(EagleLib_LIBS "EagleLib;${Parameters_LIBRARIES};pplx")
@@ -147,9 +147,6 @@ SET(EagleLib_LIB_DIRS_RELEASE "${LIB_BUILD_DIR_RELEASE};${Boost_LIBRARY_DIR};${P
 SET(EagleLib_DEFS "${defs_}" PARENT_SCOPE)
 
 CONFIGURE_FILE(EagleLibConfig.cmake.in ${CMAKE_BINARY_DIR}/EagleLibConfig.cmake @ONLY)
-#CONFIGURE_FILE(EagleLibConfig.cmake.in ${CMAKE_INSTALL_PREFIX}/EagleLibConfig.cmake @ONLY)
-
-
 
 # Link directories
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})
@@ -238,12 +235,13 @@ TARGET_LINK_LIBRARIES(EagleLib
         RuntimeObjectSystem
         RuntimeCompiler
         ${LINK_LIBS}
-		MetaObject
-        #cuda_utils
+    		MetaObject
 )
+
 if(${MXNET_FOUND})
   TARGET_LINK_LIBRARIES(EagleLib ${MXNET_LIBRARY})
 endif()
+
 if(WIN32)
     target_link_libraries(EagleLib OpenGL32)
 else(WIN32)

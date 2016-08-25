@@ -82,8 +82,6 @@ BOOST_AUTO_TEST_CASE(branching)
     a->AddChild(b);
     a->Process();
     BOOST_REQUIRE_EQUAL(c->count, 2);
-    
-    
 }
 
 
@@ -121,7 +119,7 @@ BOOST_AUTO_TEST_CASE(diamond)
     BOOST_REQUIRE_EQUAL(c->count, 2);
 }
 
-BOOST_AUTO_TEST_CASE(threaded_child)
+BOOST_AUTO_TEST_CASE(threaded_child_sync_every)
 {
     auto a = rcc::shared_ptr<node_a>::Create();
     auto b = rcc::shared_ptr<node_b>::Create();
@@ -134,22 +132,72 @@ BOOST_AUTO_TEST_CASE(threaded_child)
     BOOST_REQUIRE(c->ConnectInput(b, "in_b", "out_b"));
     BOOST_REQUIRE(c->ConnectInput(a, "in_a", "out_a"));
 
-    
     c->SetSyncInput("in_b");
+    int sum = 0;
+
     a->Process();
     b->Process();
+    sum += a->out_a;
+    sum += b->out_b;
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+    BOOST_REQUIRE_EQUAL(c->count, 2);
+    
+    for(int i = 0; i < 100; ++i)
+    {
+        a->Process();
+        b->Process();
+        sum += a->out_a;
+        sum += b->out_b;
+    }
     boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
     thread->StopThread();
-    BOOST_REQUIRE_EQUAL(c->count, 2);
+    std::cout << "Dropped " << 1.0 -  double(c->count) / (double)sum << " % of data\n";
+    BOOST_REQUIRE_EQUAL(c->count, sum);
+    
 }
+
+BOOST_AUTO_TEST_CASE(threaded_child_sync_newest)
+{
+    auto a = rcc::shared_ptr<node_a>::Create();
+    auto b = rcc::shared_ptr<node_b>::Create();
+    auto c = rcc::shared_ptr<node_c>::Create();
+    auto thread = rcc::shared_ptr<EagleLib::Nodes::ThreadedNode>::Create();
+    mo::Context ctx;
+    a->SetContext(&ctx);
+    b->SetContext(&ctx);
+    thread->AddChild(c);
+    BOOST_REQUIRE(c->ConnectInput(b, "in_b", "out_b"));
+    BOOST_REQUIRE(c->ConnectInput(a, "in_a", "out_a"));
+
+    c->SetSyncInput("in_b");
+    c->SetSyncMethod(Algorithm::SyncNewest);
+    int sum = 0;
+
+    a->Process();
+    b->Process();
+    sum += a->out_a;
+    sum += b->out_b;
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+    BOOST_REQUIRE_EQUAL(c->count, 2);
+
+    for(int i = 0; i < 100; ++i)
+    {
+        a->Process();
+        b->Process();
+        sum += a->out_a;
+        sum += b->out_b;
+    }
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+    thread->StopThread();
+    BOOST_REQUIRE_LE(c->count, sum);
+    std::cout << "Dropped " << 1.0 -  double(c->count) / (double)sum << " % of data\n";
+}
+
 
 BOOST_AUTO_TEST_CASE(threaded_parent)
 {
     auto a = rcc::shared_ptr<node_a>::Create();
     auto b = rcc::shared_ptr<node_b>::Create();
     auto c = rcc::shared_ptr<node_c>::Create();
-    
-
-
 }
 

@@ -8,6 +8,11 @@ namespace EagleLib
     class EAGLE_EXPORTS Algorithm : public TInterface<IID_Algorithm, mo::IMetaObject>
     {
     public:
+        enum SyncMethod
+        {
+            SyncEvery = 0, // Require every timestamp to be processed
+            SyncNewest     // Process data according to the newest timestamp
+        };
         Algorithm();
         virtual ~Algorithm();
         
@@ -21,10 +26,13 @@ namespace EagleLib
         virtual long long  GetTimestamp();
 
         void SetSyncInput(const std::string& name);
+        void SetSyncMethod(SyncMethod method);
     protected:
         virtual bool CheckInputs();
         virtual void ProcessImpl() = 0;
         void Clock(int line_number);
+
+        void onParameterUpdate(mo::Context* ctx, mo::IParameter* param);
         bool _enabled;
         struct impl;
         impl* _pimpl;

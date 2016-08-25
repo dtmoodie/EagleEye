@@ -18,12 +18,13 @@ namespace EagleLib
     namespace Nodes
     {
         class Node;
+        class IFrameGrabber;
     }
     class IViewManager;
     class ICoordinateManager;
     class IRenderEngine;
     class ITrackManager;
-    class IFrameGrabber;
+    
     class IParameterBuffer;
     class IVariableSink;
 
@@ -48,13 +49,11 @@ namespace EagleLib
         // Handles tracking objects within a stream and communicating with the global track manager to track across multiple data streams
         virtual rcc::weak_ptr<ITrackManager>            GetTrackManager() = 0;
 
-        // Handles actual loading of the image, etc
-        virtual rcc::weak_ptr<IFrameGrabber>           GetFrameGrabber() = 0;
 
-        virtual mo::RelayManager*                            GetRelayManager() = 0;
-        virtual std::shared_ptr<mo::IVariableManager> GetVariableManager() = 0;
+        virtual mo::RelayManager*                       GetRelayManager() = 0;
+        virtual std::shared_ptr<mo::IVariableManager>   GetVariableManager() = 0;
 
-        virtual IParameterBuffer*                        GetParameterBuffer() = 0;
+        virtual IParameterBuffer*                       GetParameterBuffer() = 0;
 
         virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes() = 0;
 

@@ -1,7 +1,7 @@
 #include "EagleLib/DataStreamManager.h"
 #include "EagleLib/nodes/NodeFactory.h"
 #include "EagleLib/nodes/Node.h"
-#include <EagleLib/frame_grabber_base.h>
+#include <EagleLib/IFrameGrabber.hpp>
 #include <MetaObject/MetaObjectFactory.hpp>
 #include <MetaObject/Parameters/InputParameter.hpp>
 
