@@ -10,7 +10,7 @@
 #include "EagleLib/ICoordinateManager.h"
 #include "EagleLib/rendering/RenderingEngine.h"
 #include "EagleLib/tracking/ITrackManager.h"
-#include "EagleLib/IFrameGrabber.hpp"
+#include "EagleLib/nodes/IFrameGrabber.hpp"
 #include "EagleLib/nodes/Node.h"
 #include "EagleLib/nodes/NodeFactory.h"
 

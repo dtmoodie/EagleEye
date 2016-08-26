@@ -86,26 +86,27 @@ namespace EagleLib
 
     struct EAGLE_EXPORTS NodeInfo: virtual public mo::IMetaObjectInfo
     {
-        NodeInfo(const char* name, std::initializer_list<char const*> nodeInfo);
+        //NodeInfo(const char* name, std::initializer_list<char const*> nodeInfo);
         std::string Print() const;
         // Get the organizational hierarchy of this node, ie Image -> Processing -> ConvertToGrey
-        virtual std::vector<const char*> GetNodeHierarchy() const;
+        virtual std::vector<std::string> GetNodeCategory() const = 0;
         
         // List of nodes that need to be in the direct parental tree of this node, in required order
-        virtual std::vector<std::vector<std::string>> GetParentalDependencies() const;
+        virtual std::vector<std::vector<std::string>> GetParentalDependencies() const = 0;
         
         // List of nodes that must exist in this data stream, but do not need to be in the direct parental tree of this node
-        virtual std::vector<std::vector<std::string>> GetNonParentalDependencies() const;
+        virtual std::vector<std::vector<std::string>> GetNonParentalDependencies() const = 0;
 
         // Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
-        virtual std::vector<std::string> CheckDependentVariables(mo::IVariableManager* var_manager_) const;
+        virtual std::vector<std::string> CheckDependentVariables(mo::IVariableManager* var_manager_) const = 0;
 
-        std::vector<const char*> node_hierarchy;
+        
     };
 
     class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, Algorithm>
     {
     public:
+        typedef NodeInfo InterfaceInfo;
         typedef rcc::shared_ptr<Node> Ptr;
         typedef rcc::weak_ptr<Node>   WeakPtr;
 

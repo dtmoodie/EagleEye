@@ -1,7 +1,7 @@
 #include "EagleLib/DataStreamManager.h"
 #include "EagleLib/nodes/NodeFactory.h"
 #include "EagleLib/nodes/Node.h"
-#include <EagleLib/IFrameGrabber.hpp>
+
 #include <MetaObject/MetaObjectFactory.hpp>
 #include <MetaObject/Parameters/InputParameter.hpp>
 
@@ -351,7 +351,7 @@ void NodeFactory::RegisterNodeInfo(const char* nodeName, std::vector<char const*
     m_nodeInfoMap[nodeName] = nodeInfo;
 }
 
-std::vector<const char*> NodeFactory::GetNodeInfo(std::string& nodeName)
+Nodes::NodeInfo* NodeFactory::GetNodeInfo(std::string& nodeName)
 {
     auto constructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
     if (constructor)
@@ -364,13 +364,13 @@ std::vector<const char*> NodeFactory::GetNodeInfo(std::string& nodeName)
                 auto node_info = dynamic_cast<EagleLib::Nodes::NodeInfo*>(obj_info);
                 if (node_info)
                 {
-                    return node_info->GetNodeHierarchy();
+                    return node_info;
                 }
                 
             }
         }
     }
-    return std::vector<const char*>();
+    return nullptr;
 }
 
 void NodeFactory::SaveTree(const std::string &fileName)

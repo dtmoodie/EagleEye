@@ -1,6 +1,6 @@
 #include "EagleLib/nodes/Node.h"
 #include "EagleLib/nodes/NodeFactory.h"
-#include <EagleLib/IFrameGrabber.hpp>
+
 #include <EagleLib/DataStreamManager.h>
 #include <EagleLib/rcc/external_includes/cv_videoio.hpp>
 #include <EagleLib/rcc/SystemTable.hpp>
@@ -9,9 +9,11 @@
 #include "EagleLib/profiling.h"
 #include "EagleLib/Detail/AlgorithmImpl.hpp"
 
+
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
+#include <MetaObject/Parameters/IParameter.hpp>
 #include <MetaObject/Logging/Log.hpp>
 #include <MetaObject/Signals/Connection.hpp>
 #include <MetaObject/Logging/Log.hpp>
@@ -81,40 +83,12 @@ catch (...)                                                                 \
     NODE_LOG(error) << "Unknown exception";                                 \
 }
 
-Nodes::NodeInfo::NodeInfo(const char* name, std::initializer_list<char const*> nodeInfo)
-{
-    for (auto itr : nodeInfo)
-    {
-        node_hierarchy.push_back(itr);
-    }
-}
 
 std::string NodeInfo::Print() const
 {
     return mo::IMetaObjectInfo::Print();
 }
 
-std::vector<const char*> Nodes::NodeInfo::GetNodeHierarchy() const
-{
-    return node_hierarchy;
-}
-
-std::vector<std::vector<std::string>> Nodes::NodeInfo::GetParentalDependencies() const
-{
-    return std::vector<std::vector<std::string>>();
-}
-
-
-std::vector<std::vector<std::string>> Nodes::NodeInfo::GetNonParentalDependencies() const
-{
-    return std::vector<std::vector<std::string>>();
-}
-
-
-std::vector<std::string> Nodes::NodeInfo::CheckDependentVariables(mo::IVariableManager* var_manager_) const
-{
-    return std::vector<std::string>();
-}
 
 namespace EagleLib
 {

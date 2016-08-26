@@ -1,4 +1,5 @@
 #include "EagleLib/nodes/ThreadedNode.h"
+#include "EagleLib/nodes/NodeInfo.hpp"
 #include <MetaObject/Thread/InterThread.hpp>
 #include <MetaObject/Thread/BoostThread.h>
 

@@ -1,4 +1,4 @@
-#include "EagleLib/IFrameGrabber.hpp"
+#include "EagleLib/nodes/IFrameGrabber.hpp"
 #include "EagleLib/Logging.h"
 #include "EagleLib/DataStreamManager.h"
 #include "Remotery.h"
@@ -260,11 +260,6 @@ void FrameGrabberThreaded::ResumeThreads()
 }
 
 
-int FrameGrabberInfo::LoadTimeout() const
-{
-    return 1000;
-}
-
 std::string FrameGrabberInfo::Print() const
 {
     std::stringstream ss;
@@ -278,13 +273,11 @@ std::string FrameGrabberInfo::Print() const
             ss << doc << "\n";
         }
     }
+    ss << "Load timeout: " << LoadTimeout();
     return ss.str();
 }
 
-std::vector<std::string> FrameGrabberInfo::ListLoadableDocuments() const
-{
-    return std::vector<std::string>();
-}
+
 void FrameGrabberBuffered::Init(bool firstInit)
 {
     IFrameGrabber::Init(firstInit);

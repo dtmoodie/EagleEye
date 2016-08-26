@@ -3,8 +3,9 @@
 
 #include "EagleLib/nodes/Node.h"
 #include "EagleLib/nodes/ThreadedNode.h"
-#include "EagleLib/IFrameGrabber.hpp"
+#include "EagleLib/nodes/IFrameGrabber.hpp"
 #include "EagleLib/Logging.h"
+#include "EagleLib/nodes/FrameGrabberInfo.hpp"
 
 #include "MetaObject/Parameters/ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
@@ -77,6 +78,15 @@ struct test_framegrabber: public IFrameGrabber
     MO_END;
     int ts = 0;
     cv::Mat current;
+    
+    static int CanLoadDocument(const std::string& doc)
+    {
+        return 1;
+    }
+    static int LoadTimeout()
+    {
+        return 1;
+    }
 };
 
 struct img_node: public Node
@@ -93,7 +103,7 @@ struct img_node: public Node
     }
 };
 
-REGISTER_FRAMEGRABBER(test_framegrabber);
+MO_REGISTER_CLASS(test_framegrabber);
 MO_REGISTER_CLASS(img_node);
 
 BOOST_AUTO_TEST_CASE(test_dummy_output)
@@ -101,10 +111,10 @@ BOOST_AUTO_TEST_CASE(test_dummy_output)
     EagleLib::SetupLogging();
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
     auto info = mo::MetaObjectFactory::Instance()->GetObjectInfo("test_framegrabber");
-    bool val = std::is_base_of<EagleLib::Nodes::IFrameGrabber, test_framegrabber>::value;
-    std::enable_if<std::is_base_of<EagleLib::Nodes::IFrameGrabber, test_framegrabber>::value, bool>::type test = true;
     BOOST_REQUIRE(info);
-    
+    auto fg_info = dynamic_cast<EagleLib::Nodes::FrameGrabberInfo*>(info);
+    BOOST_REQUIRE(fg_info);
+    std::cout << fg_info->Print();
     
     auto fg = rcc::shared_ptr<test_framegrabber>::Create();
     auto node = rcc::shared_ptr<img_node>::Create();

@@ -3,7 +3,7 @@
 #include "IObject.h"
 #include "IObjectInfo.h"
 
-#include "SyncedMemory.h"
+#include "EagleLib/SyncedMemory.h"
 
 #include <MetaObject/Signals/detail/SlotMacros.hpp>
 #include <MetaObject/Parameters/ParameterMacros.hpp>
@@ -33,6 +33,8 @@ namespace EagleLib
     }
 }
 
+
+
 namespace EagleLib
 {
     class IDataStream;
@@ -54,36 +56,24 @@ namespace EagleLib
          * \brief LoadTimeout returns the ms that should be allowed for the frame grabber's LoadFile function before a timeout condition
          * \return timeout in ms
          */
-        virtual int LoadTimeout() const;
+        virtual int LoadTimeout() const = 0;
 
         // Function used for listing what documents are available for loading, used in cases of connected devices to list what
         // devices have been enumerated
-        virtual std::vector<std::string> ListLoadableDocuments() const;
+        virtual std::vector<std::string> ListLoadableDocuments() const = 0;
 
         std::string Print() const;
     };
-    template<class T, int N, typename Enable = void>
-    class TFrameGrabberInfo: virtual public FrameGrabberInfo, virtual public mo::MetaObjectInfo<T, N, void>
-    {
-        int CanLoadDocument(const std::string& document) const
-        {
-            return T::CanLoadDocument(document);
-        }
-        int LoadTimeout() const
-        {
-            return T::LoadTimeout();
-        }
-        std::vector<std::string> ListLoadableDocuments() const
-        {
-            return T::ListLoadableDocuments();
-        }
-    };
+
 
     
     // Interface class for the base level of features frame grabber
     class EAGLE_EXPORTS IFrameGrabber: public TInterface<IID_FrameGrabber, Node>
     {
     public:
+        typedef FrameGrabberInfo InterfaceInfo;
+        typedef IFrameGrabber Interface;
+
         IFrameGrabber();
         virtual bool LoadFile(const std::string& file_path) = 0;
         virtual int GetFrameNumber() = 0;
@@ -184,12 +174,3 @@ namespace EagleLib
     };
     }
 }
-#define REGISTER_FRAMEGRABBER(TYPE) \
-static mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy; \
-static EagleLib::Nodes::TFrameGrabberInfo<TActual<TYPE>, __COUNTER__, void> TYPE##_info; \
-rcc::shared_ptr<TYPE> TYPE::Create() \
-{ \
-    auto obj = mo::MetaObjectFactory::Instance()->Create(#TYPE); \
-    return rcc::shared_ptr<TYPE>(obj); \
-} \
-REGISTERCLASS(TYPE, &TYPE##_info);

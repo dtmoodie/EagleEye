@@ -16,6 +16,7 @@ namespace EagleLib
     namespace Nodes
     {
         class Node;
+        class NodeInfo;
     }
     class IDataStream;
 
@@ -26,7 +27,7 @@ namespace EagleLib
 
         void RegisterNodeInfo(const char* nodeName, std::vector<char const*>& nodeInfo);
 
-        std::vector<char const*> GetNodeInfo(std::string& nodeName);
+        Nodes::NodeInfo* GetNodeInfo(std::string& nodeName);
 
         rcc::shared_ptr<Nodes::Node> AddNode(const std::string& nodeName);
 
