@@ -84,13 +84,9 @@ namespace EagleLib
         NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo);
     };
 
-    struct EAGLE_EXPORTS NodeInfo: public mo::IMetaObjectInfo
+    struct EAGLE_EXPORTS NodeInfo: virtual public mo::IMetaObjectInfo
     {
         NodeInfo(const char* name, std::initializer_list<char const*> nodeInfo);
-        int GetInterfaceId() const;
-        std::string GetObjectName() const;
-        std::string GetObjectTooltip() const;
-        std::string GetObjectHelp() const;
         std::string Print() const;
         // Get the organizational hierarchy of this node, ie Image -> Processing -> ConvertToGrey
         virtual std::vector<const char*> GetNodeHierarchy() const;
@@ -104,9 +100,6 @@ namespace EagleLib
         // Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
         virtual std::vector<std::string> CheckDependentVariables(mo::IVariableManager* var_manager_) const;
 
-        std::string node_name;
-        std::string node_tooltip;
-        std::string node_help;
         std::vector<const char*> node_hierarchy;
     };
 

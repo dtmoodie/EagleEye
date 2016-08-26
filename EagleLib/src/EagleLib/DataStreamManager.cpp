@@ -293,7 +293,7 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
     for(int i = 0; i < idx.size(); ++i)
     {
         auto fg = rcc::shared_ptr<IFrameGrabber>(valid_frame_grabbers[idx[i]]->Construct());
-        auto fg_info = static_cast<FrameGrabberInfo*>(valid_frame_grabbers[idx[i]]->GetObjectInfo());
+        auto fg_info = dynamic_cast<FrameGrabberInfo*>(valid_frame_grabbers[idx[i]]->GetObjectInfo());
         fg->InitializeFrameGrabber(this);
         fg->Init(true);
         //std::promise<bool> promise;

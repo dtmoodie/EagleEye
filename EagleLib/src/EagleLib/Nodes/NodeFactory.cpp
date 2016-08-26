@@ -201,7 +201,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string
     if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
     {
         auto obj_info = pConstructor->GetObjectInfo();
-        auto node_info = static_cast<Nodes::NodeInfo*>(obj_info);
+        auto node_info = dynamic_cast<Nodes::NodeInfo*>(obj_info);
         auto parental_deps = node_info->GetParentalDependencies();
         rcc::shared_ptr<Nodes::Node> parent_node;
         for (auto& parent_dep : parental_deps)

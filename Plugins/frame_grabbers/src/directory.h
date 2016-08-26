@@ -5,6 +5,8 @@
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
     class PLUGIN_EXPORTS frame_grabber_directory: public IFrameGrabber
     {
     public:
@@ -32,6 +34,10 @@ namespace EagleLib
         virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
         virtual void NodeInit(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
+        MO_BEGIN(frame_grabber_directory, IFrameGrabber)
+            MO_SLOT(void, Restart);
+        MO_END;
+
     private:
         cv::cuda::GpuMat                d_image;
         cv::Mat                         h_image;
@@ -42,4 +48,5 @@ namespace EagleLib
         boost::circular_buffer<std::tuple<std::string, TS<SyncedMemory>>> loaded_images;
         rcc::shared_ptr<IFrameGrabber> fg; // internal frame grabber used for loading the actual files
     };
+    }
 }

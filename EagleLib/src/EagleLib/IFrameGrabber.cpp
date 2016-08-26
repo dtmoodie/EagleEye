@@ -11,14 +11,16 @@ using namespace EagleLib::Nodes;
 
 IFrameGrabber::IFrameGrabber()
 {
-    //update_signal = nullptr;
     parent_stream = nullptr;
+    this->_ctx = &ctx;
+    ctx.stream = &stream;
 }
 
 std::string IFrameGrabber::GetSourceFilename()
 {
     return loaded_document;
 }
+
 void IFrameGrabber::InitializeFrameGrabber(IDataStream* stream)
 {
     parent_stream = stream;
@@ -56,16 +58,17 @@ FrameGrabberBuffered::~FrameGrabberBuffered()
 {
     
 }
+
 FrameGrabberThreaded::~FrameGrabberThreaded()
 {
     buffer_thread.interrupt();
     buffer_thread.join();
 }
 
-TS<SyncedMemory> FrameGrabberBuffered::GetCurrentFrame(cv::cuda::Stream& stream)
+/*TS<SyncedMemory> FrameGrabberBuffered::GetCurrentFrame(cv::cuda::Stream& stream)
 {
     return GetFrame(playback_frame_number, stream);
-}
+}*/
 
 TS<SyncedMemory> FrameGrabberBuffered::GetFrame(int index, cv::cuda::Stream& stream)
 {
@@ -255,26 +258,30 @@ void FrameGrabberThreaded::ResumeThreads()
 {
     _pause = false;
 }
-int FrameGrabberInfo::GetInterfaceId()
-{
-    return IID_FrameGrabber;
-}
 
-std::string FrameGrabberInfo::GetObjectTooltip()
-{
-    return "";
-}
 
-std::string FrameGrabberInfo::GetObjectHelp()
-{
-    return "";
-}
 int FrameGrabberInfo::LoadTimeout() const
 {
     return 1000;
 }
 
-std::vector<std::string> FrameGrabberInfo::ListLoadableDocuments()
+std::string FrameGrabberInfo::Print() const
+{
+    std::stringstream ss;
+    ss << NodeInfo::Print();
+    auto documents = ListLoadableDocuments();
+    if(documents.size())
+    {
+        ss << "---------------------------\n";
+        for(auto& doc : documents)
+        {
+            ss << doc << "\n";
+        }
+    }
+    return ss.str();
+}
+
+std::vector<std::string> FrameGrabberInfo::ListLoadableDocuments() const
 {
     return std::vector<std::string>();
 }

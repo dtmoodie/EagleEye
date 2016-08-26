@@ -2,15 +2,19 @@
 #include "EagleLib/nodes/Node.h"
 #include "IObject.h"
 #include "IObjectInfo.h"
-#include <shared_ptr.hpp>
+
 #include "SyncedMemory.h"
+
 #include <MetaObject/Signals/detail/SlotMacros.hpp>
-#include "MetaObject/Parameters/ParameterMacros.hpp"
+#include <MetaObject/Parameters/ParameterMacros.hpp>
 #include <MetaObject/Detail/MetaObjectMacros.hpp>
 #include <MetaObject/Signals/detail/SignalMacros.hpp>
+#include <MetaObject/Context.hpp>
 #include <MetaObject/IMetaObject.hpp>
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
+
+#include <RuntimeInclude.h>
+#include <RuntimeSourceDependency.h>
+#include <shared_ptr.hpp>
 
 #include <boost/circular_buffer.hpp>
 #include <boost/thread.hpp>
@@ -19,7 +23,16 @@
 #include <string>
 
 RUNTIME_MODIFIABLE_INCLUDE;
-RUNTIME_COMPILER_SOURCEDEPENDENCY;
+RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("../../src/EagleLib/IFrameGrabber", ".cpp");
+namespace EagleLib
+{
+    namespace Nodes
+    {
+        class IFrameGrabber;
+        class FrameGrabberInfo;
+    }
+}
+
 namespace EagleLib
 {
     class IDataStream;
@@ -27,27 +40,10 @@ namespace EagleLib
     namespace Nodes
     {
     
-    class EAGLE_EXPORTS FrameGrabberInfo: public NodeInfo
+    class EAGLE_EXPORTS FrameGrabberInfo: virtual public NodeInfo
     {
     public:
-        /*!
-         * \brief GetObjectInfoType indicates that this is a FrameGrabberInfo object
-         * \return IObjectInfo::ObjectInfoType::frame_grabber
-         */
-        virtual int GetInterfaceId();
 
-        /*!
-         * \brief GetObjectName return the factory producible name for this object
-         */
-        virtual std::string GetObjectName() = 0;
-        /*!
-         * \brief GetObjectTooltip
-         */
-        virtual std::string GetObjectTooltip();
-        /*!
-         * \brief GetObjectHelp return detailed help information for this framegrabber type
-         */
-        virtual std::string GetObjectHelp();
         /*!
          * \brief CanLoadDocument determines if the frame grabber associated with this info object can load an input document
          * \param document is a string descibing a file / path / URI to load
@@ -62,8 +58,27 @@ namespace EagleLib
 
         // Function used for listing what documents are available for loading, used in cases of connected devices to list what
         // devices have been enumerated
-        virtual std::vector<std::string> ListLoadableDocuments();
+        virtual std::vector<std::string> ListLoadableDocuments() const;
+
+        std::string Print() const;
     };
+    template<class T, int N, typename Enable = void>
+    class TFrameGrabberInfo: virtual public FrameGrabberInfo, virtual public mo::MetaObjectInfo<T, N, void>
+    {
+        int CanLoadDocument(const std::string& document) const
+        {
+            return T::CanLoadDocument(document);
+        }
+        int LoadTimeout() const
+        {
+            return T::LoadTimeout();
+        }
+        std::vector<std::string> ListLoadableDocuments() const
+        {
+            return T::ListLoadableDocuments();
+        }
+    };
+
     
     // Interface class for the base level of features frame grabber
     class EAGLE_EXPORTS IFrameGrabber: public TInterface<IID_FrameGrabber, Node>
@@ -88,11 +103,14 @@ namespace EagleLib
 
         MO_BEGIN(IFrameGrabber);
             MO_SIGNAL(void, update);
+            OUTPUT(SyncedMemory, current_frame, SyncedMemory());
         MO_END;
         
     protected:
         std::string loaded_document;
         IDataStream* parent_stream;
+        cv::cuda::Stream stream;
+        mo::Context ctx;
     };
     //   [ 0 ,1, 2, 3, 4, 5 ....... N-5, N-4, N-3, N-2, N-1, N]
     //    buffer begin                                  buffer end
@@ -107,29 +125,31 @@ namespace EagleLib
         
         virtual int GetFrameNumber();
         
-        virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
-        virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
-        virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
-        virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
+        //virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
+        //virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
+        //virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
+        //virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
         
 
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
+        SyncedMemory get_frame(int ts, cv::cuda::Stream& stream);
+
         MO_BEGIN(FrameGrabberBuffered, IFrameGrabber)
             PARAM(int, frame_buffer_size, 10);
-            PARAM(boost::circular_buffer<TS<SyncedMemory>>, frame_buffer, boost::circular_buffer<TS<SyncedMemory>>());
+            OUTPUT(boost::circular_buffer<TS<SyncedMemory>>, frame_buffer, boost::circular_buffer<TS<SyncedMemory>>());
+            MO_SLOT(TS<SyncedMemory>, GetFrame, int, cv::cuda::Stream&);
+            MO_SLOT(TS<SyncedMemory>, GetNextFrame, cv::cuda::Stream&);
+            MO_SLOT(TS<SyncedMemory>, GetFrameRelative, int, cv::cuda::Stream&);
         MO_END;
 
 
     protected:
         virtual void PushFrame(TS<SyncedMemory> frame, bool blocking = true);
 
-        //boost::circular_buffer<TS<SyncedMemory>> frame_buffer;
-        
         boost::mutex                             buffer_mtx;
         boost::mutex                             grabber_mtx;
-        //std::vector<std::shared_ptr<Signals::connection>> connections;
         std::atomic_llong                        buffer_begin_frame_number;
         std::atomic_llong                        buffer_end_frame_number;
         std::atomic_llong                        playback_frame_number;
@@ -143,15 +163,6 @@ namespace EagleLib
     };
     class EAGLE_EXPORTS FrameGrabberThreaded: public FrameGrabberBuffered
     {
-    private:
-        void                                     Buffer();
-        boost::thread                            buffer_thread;
-        
-    protected:
-        bool _pause = false;
-        // Should only ever be called from the buffer thread
-        virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
-        virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
     public:
         virtual ~FrameGrabberThreaded();
         virtual void Init(bool firstInit);
@@ -162,6 +173,23 @@ namespace EagleLib
             MO_SLOT(void, PauseThreads);
             MO_SLOT(void, ResumeThreads);
         MO_END;
+    protected:
+        bool _pause = false;
+        // Should only ever be called from the buffer thread
+        virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
+        virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
+    private:
+        void                                     Buffer();
+        boost::thread                            buffer_thread;
     };
     }
 }
+#define REGISTER_FRAMEGRABBER(TYPE) \
+static mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy; \
+static EagleLib::Nodes::TFrameGrabberInfo<TActual<TYPE>, __COUNTER__, void> TYPE##_info; \
+rcc::shared_ptr<TYPE> TYPE::Create() \
+{ \
+    auto obj = mo::MetaObjectFactory::Instance()->Create(#TYPE); \
+    return rcc::shared_ptr<TYPE>(obj); \
+} \
+REGISTERCLASS(TYPE, &TYPE##_info);

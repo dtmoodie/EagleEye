@@ -81,30 +81,12 @@ catch (...)                                                                 \
     NODE_LOG(error) << "Unknown exception";                                 \
 }
 
-Nodes::NodeInfo::NodeInfo(const char* name, std::initializer_list<char const*> nodeInfo):
-    node_name(name)
+Nodes::NodeInfo::NodeInfo(const char* name, std::initializer_list<char const*> nodeInfo)
 {
     for (auto itr : nodeInfo)
     {
         node_hierarchy.push_back(itr);
     }
-}
-
-int Nodes::NodeInfo::GetInterfaceId() const
-{
-    return IID_NodeObject;
-}
-std::string Nodes::NodeInfo::GetObjectName() const
-{
-    return node_name;
-}
-std::string Nodes::NodeInfo::GetObjectTooltip() const
-{
-    return node_tooltip;
-}
-std::string Nodes::NodeInfo::GetObjectHelp() const
-{
-    return node_help;
 }
 
 std::string NodeInfo::Print() const
@@ -256,8 +238,16 @@ void Node::Process()
 
     for(rcc::shared_ptr<Node>& child : _children)
     {
-        if(child->_ctx == this->_ctx)
+        if(child->_ctx && this->_ctx)
+        {
+            if(child->_ctx->thread_id == this->_ctx->thread_id)
+            {
+                child->Process();
+            }
+        }else
+        {
             child->Process();
+        }
     }
 }
 
@@ -293,6 +283,7 @@ Node::Ptr Node::AddChild(Node::Ptr child)
     _children.push_back(child);
     child->SetDataStream(GetDataStream());
     child->AddParent(this);
+    child->SetContext(this->_ctx);
     std::string node_name = child->GetTypeName();
     child->SetUniqueId(count);
     LOG(trace) << "[ " << GetTreeName() << " ]" << " Adding child " << child->GetTreeName();

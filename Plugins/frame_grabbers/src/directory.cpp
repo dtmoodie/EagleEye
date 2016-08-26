@@ -12,13 +12,13 @@ frame_grabber_directory::frame_grabber_directory()
 }
 void frame_grabber_directory::NodeInit(bool firstInit)
 {
-    updateParameter("Frame Index", 0);
-    updateParameter("Loaded file", std::string(""));
-    updateParameter<boost::function<void(void)>>("Restart", [this]()->void
+    //updateParameter("Frame Index", 0);
+    //updateParameter("Loaded file", std::string(""));
+    /*updateParameter<boost::function<void(void)>>("Restart", [this]()->void
     {
         frame_index = 0;
         updateParameter("Frame Index", 0);
-    });
+    });*/
 }
 void frame_grabber_directory::Serialize(ISimpleSerializer* pSerializer)
 {
