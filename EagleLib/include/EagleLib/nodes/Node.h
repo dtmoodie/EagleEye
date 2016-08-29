@@ -158,7 +158,8 @@ namespace EagleLib
         virtual void                     Serialize(ISimpleSerializer *pSerializer);
         virtual void                     Serialize(cv::FileStorage& fs);
         void                             Clock(int line_num);
-        
+        bool CheckInputs();
+
         MO_BEGIN(Node);
             MO_SLOT(void, reset);
             MO_SIGNAL(void, node_updated, Node*);
@@ -166,7 +167,7 @@ namespace EagleLib
 
     protected:
         friend class NodeFactory;
-        bool CheckInputs();
+        
         void onParameterUpdate(mo::Context* ctx, mo::IParameter* param);
         // The data stream is kinda the graph owner, it produces data and pushes
         // It also calls Process for all of the children of the data stream

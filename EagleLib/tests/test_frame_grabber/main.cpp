@@ -37,11 +37,11 @@ struct test_framegrabber: public IFrameGrabber
     {
         return true;
     }
-    int GetFrameNumber()
+    long long GetFrameNumber()
     {
         return ts;
     }
-    int GetNumFrames()
+    long long GetNumFrames()
     {
         return 255;
     }

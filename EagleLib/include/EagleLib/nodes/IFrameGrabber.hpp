@@ -76,8 +76,8 @@ namespace EagleLib
 
         IFrameGrabber();
         virtual bool LoadFile(const std::string& file_path) = 0;
-        virtual int GetFrameNumber() = 0;
-        virtual int GetNumFrames() = 0;
+        virtual long long GetFrameNumber() = 0;
+        virtual long long GetNumFrames() = 0;
         virtual std::string GetSourceFilename();
         
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream) = 0;
@@ -113,7 +113,7 @@ namespace EagleLib
         FrameGrabberBuffered();
         virtual ~FrameGrabberBuffered();
         
-        virtual int GetFrameNumber();
+        virtual long long GetFrameNumber();
         
         //virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
         //virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
@@ -126,7 +126,7 @@ namespace EagleLib
 
         SyncedMemory get_frame(int ts, cv::cuda::Stream& stream);
 
-        MO_BEGIN(FrameGrabberBuffered, IFrameGrabber)
+        MO_DERIVE(FrameGrabberBuffered, IFrameGrabber)
             PARAM(int, frame_buffer_size, 10);
             OUTPUT(boost::circular_buffer<TS<SyncedMemory>>, frame_buffer, boost::circular_buffer<TS<SyncedMemory>>());
             MO_SLOT(TS<SyncedMemory>, GetFrame, int, cv::cuda::Stream&);
@@ -157,7 +157,7 @@ namespace EagleLib
         virtual ~FrameGrabberThreaded();
         virtual void Init(bool firstInit);
         
-        MO_BEGIN(FrameGrabberThreaded, FrameGrabberBuffered);
+        MO_DERIVE(FrameGrabberThreaded, FrameGrabberBuffered);
             MO_SLOT(void, StartThreads);
             MO_SLOT(void, StopThreads);
             MO_SLOT(void, PauseThreads);

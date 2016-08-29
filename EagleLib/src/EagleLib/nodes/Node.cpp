@@ -17,6 +17,7 @@
 #include <MetaObject/Logging/Log.hpp>
 #include <MetaObject/Signals/Connection.hpp>
 #include <MetaObject/Logging/Log.hpp>
+#include <MetaObject/Signals/RelayManager.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -94,8 +95,9 @@ namespace EagleLib
 {
     namespace Nodes
     {
-        struct NodeImpl
+        class NodeImpl
         {
+        public:
             NodeImpl() :averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
             {
                 //update_signal = nullptr;

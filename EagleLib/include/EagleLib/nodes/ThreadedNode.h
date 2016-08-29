@@ -21,7 +21,7 @@ namespace EagleLib
                                    const std::string& output_name, 
                                    mo::ParameterTypeFlags type = mo::StreamBuffer_e);*/
 
-            MO_BEGIN(ThreadedNode, Node);
+            MO_DERIVE(ThreadedNode, Node);
                 MO_SLOT(void, StopThread);
                 MO_SLOT(void, PauseThread);
                 MO_SLOT(void, ResumeThread);

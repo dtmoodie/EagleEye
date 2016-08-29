@@ -16,7 +16,7 @@ namespace EagleLib
     namespace Nodes
     {
         class Node;
-        class NodeInfo;
+        struct NodeInfo;
     }
     class IDataStream;
 

@@ -102,7 +102,7 @@ TS<SyncedMemory> FrameGrabberBuffered::GetNextFrame(cv::cuda::Stream& stream)
             return TS<SyncedMemory>();
     }
     int index = 0;
-    int desired_frame;
+    long long desired_frame;
     if (_is_stream)
     {
         desired_frame = std::max(int(buffer_end_frame_number - 5), int(buffer_begin_frame_number));
@@ -173,7 +173,7 @@ TS<SyncedMemory> FrameGrabberBuffered::GetFrameRelative(int index, cv::cuda::Str
     return TS<SyncedMemory>();
 }
 
-int FrameGrabberBuffered::GetFrameNumber()
+long long FrameGrabberBuffered::GetFrameNumber()
 {
     return playback_frame_number;
 }

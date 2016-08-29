@@ -27,8 +27,8 @@ namespace EagleLib
 
         void SetSyncInput(const std::string& name);
         void SetSyncMethod(SyncMethod method);
-    protected:
         virtual bool CheckInputs();
+    protected:
         virtual void ProcessImpl() = 0;
         void Clock(int line_number);
 

@@ -2,7 +2,7 @@
 #define BOOST_TEST_MAIN
 #include "EagleLib/nodes/Node.h"
 #include "EagleLib/nodes/ThreadedNode.h"
-
+#include "EagleLib/Nodes/NodeInfo.hpp"
 #include "MetaObject/Parameters/ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
