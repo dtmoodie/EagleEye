@@ -111,8 +111,7 @@ namespace EagleLib
         typedef rcc::weak_ptr<Node>   WeakPtr;
 
         Node();
-        virtual ~Node();
-        virtual void                     Process();
+        virtual bool                     Process();
 
         virtual void                     AddParent(Node *parent);
 
@@ -157,7 +156,7 @@ namespace EagleLib
 
         virtual void                     Serialize(ISimpleSerializer *pSerializer);
         virtual void                     Serialize(cv::FileStorage& fs);
-        void                             Clock(int line_num);
+        
         bool CheckInputs();
 
         MO_BEGIN(Node);

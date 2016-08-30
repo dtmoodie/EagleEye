@@ -16,7 +16,7 @@ namespace EagleLib
         Algorithm();
         virtual ~Algorithm();
         
-        virtual void       Process();
+        virtual bool       Process();
         
         double             GetAverageProcessingTime() const;
 
@@ -25,11 +25,12 @@ namespace EagleLib
 
         virtual long long  GetTimestamp();
 
-        void SetSyncInput(const std::string& name);
-        void SetSyncMethod(SyncMethod method);
-        virtual bool CheckInputs();
+        void               SetSyncInput(const std::string& name);
+        void               SetSyncMethod(SyncMethod method);
+        
     protected:
-        virtual void ProcessImpl() = 0;
+        virtual bool CheckInputs();
+        virtual bool ProcessImpl() = 0;
         void Clock(int line_number);
 
         void onParameterUpdate(mo::Context* ctx, mo::IParameter* param);

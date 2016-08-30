@@ -9,6 +9,7 @@
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
+#include "EagleLib/Detail/AlgorithmImpl.hpp"
 #include "EagleLib/Logging.h"
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "EagleLibNodes"
@@ -26,11 +27,12 @@ struct node_a: public Nodes::Node
         OUTPUT(int, out_a, 0);
     MO_END;
 
-    void ProcessImpl()
+    bool ProcessImpl()
     {
         ++ts;
         out_a_param.UpdateData(ts, ts);
         _modified = true;
+        return true;
     }
     int ts = 0;
 };
@@ -41,11 +43,12 @@ struct node_b: public Nodes::Node
         OUTPUT(int, out_b, 0);
     MO_END;
 
-    void ProcessImpl()
+    bool ProcessImpl()
     {
         ++ts;
         out_b_param.UpdateData(ts, ts);
         _modified = true;
+        return true;
     }
     int ts = 0;
 };
@@ -57,10 +60,16 @@ struct node_c: public Nodes::Node
         INPUT(int, in_b, nullptr);
     MO_END;
 
-    void ProcessImpl()
+    bool ProcessImpl()
     {
         BOOST_REQUIRE_EQUAL(*in_a, *in_b);
         count += *in_a + *in_b;
+        return true;
+    }
+    void check_timestamps()
+    {
+        Algorithm::impl* impl = _pimpl;
+        LOG(debug) << impl->_ts_processing_queue.size() << " frames left to process";
     }
     int count = 0;
 };
@@ -148,12 +157,16 @@ BOOST_AUTO_TEST_CASE(threaded_child_sync_every)
         b->Process();
         sum += a->out_a;
         sum += b->out_b;
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     }
     boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
     thread->StopThread();
+    if(c->count != sum)
+    {
+        c->check_timestamps();
+    }
     std::cout << "Dropped " << 1.0 -  double(c->count) / (double)sum << " % of data\n";
     BOOST_REQUIRE_EQUAL(c->count, sum);
-    
 }
 
 BOOST_AUTO_TEST_CASE(threaded_child_sync_newest)
@@ -186,6 +199,7 @@ BOOST_AUTO_TEST_CASE(threaded_child_sync_newest)
         b->Process();
         sum += a->out_a;
         sum += b->out_b;
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     }
     boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
     thread->StopThread();

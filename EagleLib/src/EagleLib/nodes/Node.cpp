@@ -98,31 +98,11 @@ namespace EagleLib
         class NodeImpl
         {
         public:
-            NodeImpl() :averageFrameTime(boost::accumulators::tag::rolling_window::window_size = 10)
-            {
-                //update_signal = nullptr;
-                //g_update_signal = nullptr;
-            }
-            ~NodeImpl()
-            {
-                for (auto itr : callbackConnections)
-                {
-                    for (auto itr2 : itr.second)
-                    {
-                        //itr2.disconnect();
-                        itr2.reset();
-                    }
-                }
-            }
-
-            boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::rolling_mean> > averageFrameTime;
-            std::vector<std::pair<time_t, int>>                                                     timings;
-            std::shared_ptr<mo::Connection>                                                    resetConnection;
-            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<mo::Connection>>>     callbackConnections;
-            std::map<EagleLib::Nodes::Node*, std::vector<std::shared_ptr<mo::Connection>>>        callbackConnections2;
-            mo::TypedSignal<void(Nodes::Node*)>*                                                    update_signal;
-            mo::TypedSignal<void(Nodes::Node*)>*                                                    g_update_signal;
-            boost::recursive_mutex                                                                  mtx;
+            
+            
+#ifdef _DEBUG
+            std::vector<long long> timestamps;
+#endif
         };
     }    
 }
@@ -135,33 +115,9 @@ Nodes::NodeInfoRegisterer::NodeInfoRegisterer(const char* nodeName, std::initial
     std::vector<char const*> nodeInfoHierarchy(nodeInfo.begin(), nodeInfo.end());
     //EagleLib::NodeManager::getInstance().RegisterNodeInfo(nodeName, nodeInfoHierarchy);
 }
-
-Node::Node():
-    pImpl_(new NodeImpl())
+Node::Node()
 {
-    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    if (table)
-    {
-        auto signal_manager = table->GetSingleton<mo::RelayManager>();
-        signal_manager->ConnectSlots(this, "reset");
-    }
-    rmt_hash = 0;
     _modified = true;
-}
-
-
-Node::~Node()
-{
-    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-    auto& connections = pImpl_->callbackConnections[this];
-    for (auto itr : connections)
-    {
-        itr.reset();
-    }
-    auto itr = pImpl_->callbackConnections2.find(this);
-    if(itr != pImpl_->callbackConnections2.end())
-        pImpl_->callbackConnections2.erase(itr);
-    LOG(trace) << "Disconnected " <<connections.size() << " boost signals";
 }
 
 bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_name, const std::string& output_name, mo::ParameterTypeFlags type)
@@ -174,7 +130,18 @@ bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_nam
         {
             AddParent(node.Get());
             return true;
+        }else
+        {
+            return false;
         }
+    }
+    if(output == nullptr)
+    {
+        LOG(debug) << "Unable to find output with name \"" << output_name << "\" in node \"" << node->GetTreeName() << "\"";
+    }
+    if(input == nullptr)
+    {
+        LOG(debug) << "Unable to find input with name \"" << input_name << "\" in node \"" << this->GetTreeName() << "\"";
     }
     return false;
 }
@@ -200,18 +167,37 @@ void Node::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
     }
 }
 
-void Node::Process()
+bool Node::Process()
 {
     if(_enabled == false)
-        return;
+        return false;
+    if(_modified == false)
+        return false;
+
     boost::recursive_mutex::scoped_lock lock(_mtx);
-    if(CheckInputs())
+
+    if(!CheckInputs())
     {
-        _modified = false;
-        ProcessImpl();
-        _pimpl->last_ts = _pimpl->ts;
+        return false;
     }
 
+    _modified = false;
+    
+    if(!ProcessImpl())
+        return false;
+    
+    _pimpl->last_ts = _pimpl->ts;
+    if(_pimpl->sync_input == nullptr && _pimpl->ts != -1)
+        ++_pimpl->ts;
+    if(_pimpl->_sync_method == SyncEvery && _pimpl->sync_input)
+    {
+        boost::recursive_mutex::scoped_lock lock(_pimpl->_mtx);
+        if(_pimpl->ts == _pimpl->_ts_processing_queue.front())
+        {
+            _pimpl->_ts_processing_queue.pop();
+        }
+    }
+    
     for(rcc::shared_ptr<Node>& child : _children)
     {
         if(child->_ctx && this->_ctx)
@@ -225,14 +211,8 @@ void Node::Process()
             child->Process();
         }
     }
+    return true;
 }
-
-void Node::Clock(int line_num)
-{
-    boost::recursive_mutex::scoped_lock lock(pImpl_->mtx);
-    pImpl_->timings.push_back(std::make_pair(clock(), line_num));
-}
-
 
 void Node::reset()
 {
@@ -246,6 +226,7 @@ Node::Ptr Node::AddChild(Node* child)
 
 Node::Ptr Node::AddChild(Node::Ptr child)
 {
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     if (child == nullptr)
         return child;
     if(std::find(_children.begin(), _children.end(), child) != _children.end())
@@ -259,7 +240,7 @@ Node::Ptr Node::AddChild(Node::Ptr child)
     _children.push_back(child);
     child->SetDataStream(GetDataStream());
     child->AddParent(this);
-    child->SetContext(this->_ctx);
+    child->SetContext(this->_ctx, false);
     std::string node_name = child->GetTypeName();
     child->SetUniqueId(count);
     LOG(trace) << "[ " << GetTreeName() << " ]" << " Adding child " << child->GetTreeName();
@@ -268,6 +249,7 @@ Node::Ptr Node::AddChild(Node::Ptr child)
 
 Node::Ptr Node::GetChild(const std::string& treeName)
 {
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     for(size_t i = 0; i < _children.size(); ++i)
     {
         if(_children[i]->GetTreeName()== treeName)
@@ -326,6 +308,7 @@ void Node::SwapChildren(Node::Ptr child1, Node::Ptr child2)
 
 std::vector<Node*> Node::GetNodesInScope()
 {
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     std::vector<Node*> nodes;
     if(_parents.size())
         _parents[0]->GetNodesInScope(nodes);
@@ -334,6 +317,7 @@ std::vector<Node*> Node::GetNodesInScope()
 
 Node* Node::GetNodeInScope(const std::string& name)
 {
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     // Check if this is a child node of mine, if not go up
     auto fullTreeName = GetTreeName();
     int ret = name.compare(0, fullTreeName.length(), fullTreeName);
@@ -357,7 +341,7 @@ void Node::GetNodesInScope(std::vector<Node*> &nodes)
     // Perhaps not thread safe?
     
     // First travel to the root node
-
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     if(nodes.size() == 0)
     {
         Node* node = this;
@@ -391,7 +375,7 @@ void Node::GetNodesInScope(std::vector<Node*> &nodes)
 
 void Node::RemoveChild(Node::Ptr node)
 {
-    
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     for(auto itr = _children.begin(); itr != _children.end(); ++itr)
     {
         if(*itr == node)
@@ -596,6 +580,7 @@ bool Node::pre_check(const TS<SyncedMemory>& input)
 
 void Node::SetDataStream(IDataStream* stream_)
 {
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     if (_dataStream)
     {
         //LOG(debug) << "Updating stream manager to a new manager";
@@ -810,6 +795,7 @@ Node::Serialize(cv::FileStorage& fs)
 
 void Node::AddParent(Node* parent_)
 {
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     _parents.push_back(parent_);
     parent_->AddChild(this);
 }

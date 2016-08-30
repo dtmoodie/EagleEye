@@ -12,7 +12,7 @@ namespace EagleLib
             ThreadedNode();
             ~ThreadedNode();
             
-            void Process();
+            bool Process();
             
             Node::Ptr AddChild(Node* child);
             Node::Ptr AddChild(Node::Ptr child);
@@ -28,7 +28,7 @@ namespace EagleLib
                 MO_SLOT(void, StartThread);
             MO_END;
         protected:
-            void ProcessImpl(){}
+            bool ProcessImpl(){ return true; }
         private:
             void processingFunction();
             mo::Context _thread_context;

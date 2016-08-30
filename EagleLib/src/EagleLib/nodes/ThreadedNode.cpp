@@ -40,15 +40,15 @@ void ThreadedNode::StartThread()
     _processing_thread = boost::thread(boost::bind(&ThreadedNode::processingFunction, this));
 }
 
-void ThreadedNode::Process()
+bool ThreadedNode::Process()
 {
-
+    return true;
 }
 
 Node::Ptr ThreadedNode::AddChild(Node* child)
 {
     auto ptr = Node::AddChild(child);
-    child->SetContext(&_thread_context);
+    child->SetContext(&_thread_context, true);
     return ptr;
 }
 
@@ -67,6 +67,7 @@ void ThreadedNode::processingFunction()
         if(_run)
         {
             mo::ThreadSpecificQueue::Run(_thread_context.thread_id);
+            boost::recursive_mutex::scoped_lock lock(_mtx);
             for(auto& child : _children)
             {
                 child->Process();

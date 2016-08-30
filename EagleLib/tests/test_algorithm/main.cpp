@@ -21,9 +21,10 @@ using namespace EagleLib;
 class int_output: public Algorithm
 {
 public:
-    void ProcessImpl()
+    bool ProcessImpl()
     {
         ++value;
+        return true;
     }
     MO_BEGIN(int_output);
         OUTPUT(int, value, 0);
@@ -33,10 +34,11 @@ public:
 class int_input: public Algorithm
 {
 public:
-    void ProcessImpl()
+    bool ProcessImpl()
     {
         if(input)
             value = *input;
+        return true;
     }
 
     MO_BEGIN(int_input);
@@ -48,9 +50,10 @@ public:
 class synced_input: public Algorithm
 {
 public:
-    void ProcessImpl()
+    bool ProcessImpl()
     {
         BOOST_REQUIRE_EQUAL(timestamp, input_param.GetTimestamp());
+        return true;
     }
     MO_BEGIN(synced_input);
         INPUT(int, input, nullptr);
@@ -61,9 +64,10 @@ public:
 class multi_input: public Algorithm
 {
 public:
-    void ProcessImpl()
+    bool ProcessImpl()
     {
         BOOST_REQUIRE_EQUAL(*input1, *input2);
+        return true;
     }
 
     MO_BEGIN(multi_input)
@@ -88,7 +92,6 @@ BOOST_AUTO_TEST_CASE(test_no_input)
     auto obj = rcc::shared_ptr<int_output>::Create();
     for(int i = 0; i < 100; ++i)
     {
-        obj->CheckInputs();
         obj->Process();
     }
     
@@ -106,14 +109,8 @@ BOOST_AUTO_TEST_CASE(test_counting_input)
     BOOST_REQUIRE(input_param->SetInput(output_param));
     for(int i = 0; i < 100; ++i)
     {
-        if(output->CheckInputs())
-        {
-            output->Process();
-        }
-        if(input->CheckInputs())
-        {
-            input->Process();
-        }
+        output->Process();
+        input->Process();
         BOOST_REQUIRE_EQUAL(output->value, *input->input);
     }
 }
@@ -129,8 +126,7 @@ BOOST_AUTO_TEST_CASE(test_synced_input)
     for(int i = 0; i < 100; ++i)
     {
         output.UpdateData(i+ 1, i);
-        BOOST_REQUIRE(input->CheckInputs());
-        input->Process();
+        BOOST_REQUIRE(input->Process());
         BOOST_REQUIRE_EQUAL(input->value, output.GetData((long long)i));
     }
 }
@@ -147,14 +143,14 @@ BOOST_AUTO_TEST_CASE(test_threaded_input)
         obj->SetContext(&_ctx);
         BOOST_REQUIRE(obj->ConnectInput("input", &output));
         int success_count = 0;
-        while(success_count < 999)
+        while(success_count < 1000)
         {
-            if(obj->CheckInputs())
+            if(obj->Process())
             {
-                obj->Process();
                 ++success_count;
             }
         }
+        obj->SetContext(nullptr);
     });
 
     for(int i = 0; i < 1000; ++i)
@@ -162,7 +158,6 @@ BOOST_AUTO_TEST_CASE(test_threaded_input)
         output.UpdateData(i, i, &ctx);
         boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     }
-
 
     thread.join();
 }
@@ -190,21 +185,22 @@ BOOST_AUTO_TEST_CASE(test_desynced_nput)
         int success_count = 0;
         while(success_count < 999)
         {
-            if(obj->CheckInputs())
+            if(obj->Process())
             {
-                obj->Process();
                 ++success_count;
                 if(boost::this_thread::interruption_requested())
                     break;
             }
         }
         thread1_done = true;
+        obj->SetContext(nullptr);
     });
     boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
     boost::thread slow_thread(
         [&slow_output, &thread2_done]()->void
     {
         mo::Context _ctx;
+        slow_output.SetContext(&_ctx);
         for(int i = 1; i < 1000; ++i)
         {
             slow_output.UpdateData(i, i, &_ctx);
@@ -213,6 +209,7 @@ BOOST_AUTO_TEST_CASE(test_desynced_nput)
                 break;
         }
         thread2_done = true;
+        slow_output.SetContext(nullptr);
     });
     
 
@@ -231,4 +228,9 @@ BOOST_AUTO_TEST_CASE(test_desynced_nput)
     BOOST_REQUIRE(thread2_done);
     slow_thread.join();
     thread.join();
+}
+
+BOOST_AUTO_TEST_CASE(cleanup)
+{
+    
 }

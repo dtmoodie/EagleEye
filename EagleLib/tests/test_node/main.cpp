@@ -30,7 +30,7 @@ struct test_node: public Node
         return {"test1", "test2"};
     }
 
-    void ProcessImpl()
+    bool ProcessImpl()
     {
     }
 
