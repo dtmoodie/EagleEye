@@ -23,7 +23,7 @@
 #include <string>
 
 RUNTIME_MODIFIABLE_INCLUDE;
-RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("../../src/EagleLib/IFrameGrabber", ".cpp");
+RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("../../../src/EagleLib/nodes/IFrameGrabber", ".cpp");
 namespace EagleLib
 {
     namespace Nodes
