@@ -18,6 +18,7 @@
 #include <MetaObject/Signals/Connection.hpp>
 #include <MetaObject/Logging/Log.hpp>
 #include <MetaObject/Signals/RelayManager.hpp>
+#include <MetaObject/Parameters/InputParameter.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -137,11 +138,31 @@ bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_nam
     }
     if(output == nullptr)
     {
-        LOG(debug) << "Unable to find output with name \"" << output_name << "\" in node \"" << node->GetTreeName() << "\"";
+        auto outputs = node->GetOutputs();
+        auto f = [&outputs]() ->std::string
+        {
+            std::stringstream ss;
+            for(auto& output : outputs)
+            {
+                ss << output->GetName() << " ";
+            }
+            return ss.str();
+        };
+        LOG(debug) << "Unable to find output with name \"" << output_name << "\" in node \"" << node->GetTreeName() << "\".  Existing outputs: " << f();;
     }
     if(input == nullptr)
     {
-        LOG(debug) << "Unable to find input with name \"" << input_name << "\" in node \"" << this->GetTreeName() << "\"";
+        auto outputs = node->GetInputs();
+        auto f = [&outputs]()->std::string
+        {
+            std::stringstream ss;
+            for(auto& output : outputs)
+            {
+                ss << output->GetName() << " ";
+            }
+            return ss.str();
+        };
+        LOG(debug) << "Unable to find input with name \"" << input_name << "\" in node \"" << this->GetTreeName() << "\". Existing inputs: " << f();
     }
     return false;
 }
@@ -174,7 +195,7 @@ bool Node::Process()
     if(_modified == false)
         return false;
 
-    boost::recursive_mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(*_mtx);
 
     if(!CheckInputs())
     {
@@ -226,7 +247,7 @@ Node::Ptr Node::AddChild(Node* child)
 
 Node::Ptr Node::AddChild(Node::Ptr child)
 {
-    boost::recursive_mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(*_mtx);
     if (child == nullptr)
         return child;
     if(std::find(_children.begin(), _children.end(), child) != _children.end())
@@ -249,7 +270,7 @@ Node::Ptr Node::AddChild(Node::Ptr child)
 
 Node::Ptr Node::GetChild(const std::string& treeName)
 {
-    boost::recursive_mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(*_mtx);
     for(size_t i = 0; i < _children.size(); ++i)
     {
         if(_children[i]->GetTreeName()== treeName)
@@ -308,7 +329,7 @@ void Node::SwapChildren(Node::Ptr child1, Node::Ptr child2)
 
 std::vector<Node*> Node::GetNodesInScope()
 {
-    boost::recursive_mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(*_mtx);
     std::vector<Node*> nodes;
     if(_parents.size())
         _parents[0]->GetNodesInScope(nodes);
@@ -317,7 +338,7 @@ std::vector<Node*> Node::GetNodesInScope()
 
 Node* Node::GetNodeInScope(const std::string& name)
 {
-    boost::recursive_mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(*_mtx);
     // Check if this is a child node of mine, if not go up
     auto fullTreeName = GetTreeName();
     int ret = name.compare(0, fullTreeName.length(), fullTreeName);
@@ -341,7 +362,7 @@ void Node::GetNodesInScope(std::vector<Node*> &nodes)
     // Perhaps not thread safe?
     
     // First travel to the root node
-    boost::recursive_mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(*_mtx);
     if(nodes.size() == 0)
     {
         Node* node = this;
@@ -375,7 +396,7 @@ void Node::GetNodesInScope(std::vector<Node*> &nodes)
 
 void Node::RemoveChild(Node::Ptr node)
 {
-    boost::recursive_mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(*_mtx);
     for(auto itr = _children.begin(); itr != _children.end(); ++itr)
     {
         if(*itr == node)
@@ -580,7 +601,7 @@ bool Node::pre_check(const TS<SyncedMemory>& input)
 
 void Node::SetDataStream(IDataStream* stream_)
 {
-    boost::recursive_mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(*_mtx);
     if (_dataStream)
     {
         //LOG(debug) << "Updating stream manager to a new manager";
@@ -795,7 +816,7 @@ Node::Serialize(cv::FileStorage& fs)
 
 void Node::AddParent(Node* parent_)
 {
-    boost::recursive_mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(*_mtx);
     _parents.push_back(parent_);
     parent_->AddChild(this);
 }

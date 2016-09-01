@@ -40,7 +40,7 @@ bool Algorithm::IsEnabled() const
 
 bool Algorithm::Process()
 {
-    boost::recursive_mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(*_mtx);
     if(_enabled == false)
         return false;
     if(!CheckInputs())

@@ -32,6 +32,7 @@ struct test_node: public Node
 
     bool ProcessImpl()
     {
+        return true;
     }
 
     MO_BEGIN(test_node, Node)

@@ -26,12 +26,13 @@ using namespace EagleLib::Nodes;
 
 struct test_framegrabber: public IFrameGrabber
 {
-    void ProcessImpl()
+    bool ProcessImpl()
     {
         current.create(128,128, CV_8U);
         ++ts;
         current.setTo(ts);
         current_frame_param.UpdateData(current.clone(), ts, _ctx);
+        return true;
     }
     bool LoadFile(const std::string&)
     {
@@ -95,11 +96,12 @@ struct img_node: public Node
         INPUT(SyncedMemory, input, nullptr);
     MO_END;
 
-    void ProcessImpl()
+    bool ProcessImpl()
     {
         BOOST_REQUIRE(input);
         auto mat = input->GetMat(*(this->_ctx->stream));
         BOOST_REQUIRE_EQUAL(mat.at<uchar>(0), input_param.GetTimestamp());
+        return true;
     }
 };
 

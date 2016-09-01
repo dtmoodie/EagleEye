@@ -67,7 +67,7 @@ void ThreadedNode::processingFunction()
         if(_run)
         {
             mo::ThreadSpecificQueue::Run(_thread_context.thread_id);
-            boost::recursive_mutex::scoped_lock lock(_mtx);
+            boost::recursive_mutex::scoped_lock lock(*_mtx);
             for(auto& child : _children)
             {
                 child->Process();
