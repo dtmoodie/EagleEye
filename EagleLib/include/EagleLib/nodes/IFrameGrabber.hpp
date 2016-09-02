@@ -97,6 +97,8 @@ namespace EagleLib
         MO_END;
         
     protected:
+        IFrameGrabber(const IFrameGrabber&) = delete;
+        IFrameGrabber& operator=(const IFrameGrabber&) = delete;
         std::string loaded_document;
         IDataStream* parent_stream;
         cv::cuda::Stream stream;

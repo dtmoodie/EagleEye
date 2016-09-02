@@ -35,7 +35,7 @@ struct test_node: public Node
         return true;
     }
 
-    MO_BEGIN(test_node, Node)
+    MO_DERIVE(test_node, Node)
         MO_SLOT(void, node_slot, int);
         MO_SIGNAL(void, node_signal, int);
         PARAM(int, test_param, 5);

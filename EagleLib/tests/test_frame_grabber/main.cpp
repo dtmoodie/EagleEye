@@ -75,7 +75,7 @@ struct test_framegrabber: public IFrameGrabber
         return rcc::shared_ptr<EagleLib::ICoordinateManager>();
     }
 
-    MO_BEGIN(test_framegrabber, IFrameGrabber);
+    MO_DERIVE(test_framegrabber, IFrameGrabber);
     MO_END;
     int ts = 0;
     cv::Mat current;
@@ -92,7 +92,7 @@ struct test_framegrabber: public IFrameGrabber
 
 struct img_node: public Node
 {
-    MO_BEGIN(img_node, Node);
+    MO_DERIVE(img_node, Node);
         INPUT(SyncedMemory, input, nullptr);
     MO_END;
 

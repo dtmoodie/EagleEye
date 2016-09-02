@@ -150,7 +150,8 @@ BOOST_AUTO_TEST_CASE(test_threaded_input)
                 ++success_count;
             }
         }
-        obj->SetContext(nullptr);
+        obj->SetContext(nullptr, true);
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
     });
 
     for(int i = 0; i < 1000; ++i)
@@ -193,7 +194,7 @@ BOOST_AUTO_TEST_CASE(test_desynced_nput)
             }
         }
         thread1_done = true;
-        obj->SetContext(nullptr);
+        obj->SetContext(nullptr, true);
     });
     boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
     boost::thread slow_thread(
