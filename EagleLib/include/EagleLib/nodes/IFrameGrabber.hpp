@@ -45,24 +45,23 @@ namespace EagleLib
     class EAGLE_EXPORTS FrameGrabberInfo: virtual public NodeInfo
     {
     public:
-
         /*!
          * \brief CanLoadDocument determines if the frame grabber associated with this info object can load an input document
          * \param document is a string descibing a file / path / URI to load
          * \return 0 if the document cannot be loaded, priority of the frame grabber otherwise.  Higher value means higher compatibility with this document
          */
-        virtual int CanLoadDocument(const std::string& document) const = 0;
+        virtual int CanLoadDocument(const ::std::string& document) const = 0;
         /*!
          * \brief LoadTimeout returns the ms that should be allowed for the frame grabber's LoadFile function before a timeout condition
          * \return timeout in ms
          */
-        virtual int LoadTimeout() const = 0;
+        virtual int LoadTimeout() const;
 
         // Function used for listing what documents are available for loading, used in cases of connected devices to list what
         // devices have been enumerated
-        virtual std::vector<std::string> ListLoadableDocuments() const = 0;
+        virtual ::std::vector<::std::string> ListLoadableDocuments() const;
 
-        std::string Print() const;
+        ::std::string Print() const;
     };
 
 
@@ -75,10 +74,10 @@ namespace EagleLib
         typedef IFrameGrabber Interface;
 
         IFrameGrabber();
-        virtual bool LoadFile(const std::string& file_path) = 0;
+        virtual bool LoadFile(const ::std::string& file_path) = 0;
         virtual long long GetFrameNumber() = 0;
         virtual long long GetNumFrames() = 0;
-        virtual std::string GetSourceFilename();
+        virtual ::std::string GetSourceFilename();
         
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream) = 0;
         virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream) = 0;
@@ -91,15 +90,18 @@ namespace EagleLib
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
+        
         MO_BEGIN(IFrameGrabber);
             MO_SIGNAL(void, update);
             OUTPUT(SyncedMemory, current_frame, SyncedMemory());
         MO_END;
         
     protected:
+        bool ProcessImpl();
+
         IFrameGrabber(const IFrameGrabber&) = delete;
         IFrameGrabber& operator=(const IFrameGrabber&) = delete;
-        std::string loaded_document;
+        ::std::string loaded_document;
         IDataStream* parent_stream;
         cv::cuda::Stream stream;
         mo::Context ctx;

@@ -9,6 +9,16 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
+int FrameGrabberInfo::LoadTimeout() const
+{
+    return 1000;
+}
+
+std::vector<std::string> FrameGrabberInfo::ListLoadableDocuments() const
+{
+    return std::vector<std::string>();
+}
+
 IFrameGrabber::IFrameGrabber()
 {
     parent_stream = nullptr;
@@ -39,6 +49,16 @@ void IFrameGrabber::Init(bool firstInit)
     {
         //LoadFile(loaded_document); // each implementation should know if it needs to reload the file on recompile
     }
+}
+bool IFrameGrabber::ProcessImpl()
+{
+    auto frame = GetNextFrame(*_ctx->stream);
+    if (!frame.empty())
+    {
+        this->current_frame_param.UpdateData(frame, frame.frame_number, _ctx);
+        return true;
+    }
+    return false;
 }
 void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
 {

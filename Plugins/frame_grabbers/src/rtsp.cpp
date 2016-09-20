@@ -1,22 +1,14 @@
 #include "rtsp.h"
 #include "ObjectInterfacePerModule.h"
 #include <MetaObject/Logging/Log.hpp>
-#include "parameters/ParameteredObjectImpl.hpp"
-using namespace EagleLib;
+#include "MetaObject/Detail/IMetaObjectImpl.hpp"
+#include "EagleLib/Nodes/FrameGrabberInfo.hpp"
 
-std::string frame_grabber_rtsp::frame_grabber_rtsp_info::GetObjectName()
-{
-    return "frame_grabber_rtsp";
-}
-std::string frame_grabber_rtsp::frame_grabber_rtsp_info::GetObjectTooltip()
-{
-    return "";
-}
-std::string frame_grabber_rtsp::frame_grabber_rtsp_info::GetObjectHelp()
-{
-    return "";
-}
-int frame_grabber_rtsp::frame_grabber_rtsp_info::CanLoadDocument(const std::string& document) const
+using namespace EagleLib;
+using namespace EagleLib::Nodes;
+
+
+int frame_grabber_rtsp::CanLoadDocument(const std::string& document) const
 {
     std::string rtsp("rtsp");
     if(document.compare(0, rtsp.length(), rtsp) == 0)
@@ -26,15 +18,11 @@ int frame_grabber_rtsp::frame_grabber_rtsp_info::CanLoadDocument(const std::stri
     return 0;
 }
 
-int frame_grabber_rtsp::frame_grabber_rtsp_info::LoadTimeout() const
+int frame_grabber_rtsp::LoadTimeout()
 {
     return 10000;
 }
 
-int frame_grabber_rtsp::frame_grabber_rtsp_info::Priority() const
-{
-    return 9;
-}
 frame_grabber_rtsp::frame_grabber_rtsp():
     frame_grabber_gstreamer()
 {
@@ -42,6 +30,7 @@ frame_grabber_rtsp::frame_grabber_rtsp():
     _reconnect = false;
     _is_stream = true;
 }
+
 TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
 {
     if(_reconnect)
@@ -77,7 +66,7 @@ void frame_grabber_rtsp::NodeInit(bool firstInit)
 {
     frame_grabber_cv::Init(firstInit);
     _reconnect = false;
-    updateParameter<std::function<void(void)>>("Reconnect", [this]()->void
+    UpdateParameter<std::function<void(void)>>("Reconnect", [this]()->void
     {
         this->_reconnect = true;
     });
@@ -140,5 +129,5 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_rtsp::GetCoordinateManager()
 {
     return coordinate_manager;
 }
-static frame_grabber_rtsp::frame_grabber_rtsp_info info;
-REGISTERCLASS(frame_grabber_rtsp, &info);
+
+MO_REGISTER_CLASS(frame_grabber_rtsp);

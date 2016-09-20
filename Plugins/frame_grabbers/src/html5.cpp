@@ -1,6 +1,9 @@
 #include "html5.h"
-using namespace EagleLib;
+#include <MetaObject/MetaObjectInfo.hpp>
+#include <EagleLib/Nodes/FrameGrabberInfo.hpp>
 
+using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
 frame_grabber_html5::frame_grabber_html5()
 {
@@ -31,23 +34,16 @@ bool frame_grabber_html5::LoadFile(const std::string& file_path)
 
 rcc::shared_ptr<ICoordinateManager> frame_grabber_html5::GetCoordinateManager()
 {
-    return coordinate_manager;
+    return rcc::shared_ptr<ICoordinateManager>();
 }
 
-std::string frame_grabber_html5::frame_grabber_html5_info::GetObjectName()
-{
-    return "frame_grabber_html5";
-}
-int frame_grabber_html5::frame_grabber_html5_info::CanLoadDocument(const std::string& document) const
+
+int frame_grabber_html5::CanLoadDocument(const std::string& document) const
 {
     std::string http("http://");
     if (document.compare(0, http.length(), http) == 0)
     {
         return 10;
     }
-    return 0;
-}
-int frame_grabber_html5::frame_grabber_html5_info::Priority() const
-{
     return 0;
 }

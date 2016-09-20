@@ -7,6 +7,9 @@ ENDIF()
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 
 find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
+  link_directories(${BOOST_LIBRARYDIR})
+  link_directories(${Boost_LIBRARY_DIR_DEBUG})
+  link_directories(${Boost_LIBRARY_DIR_RELEASE})
 
 find_package(CUDA REQUIRED)
 

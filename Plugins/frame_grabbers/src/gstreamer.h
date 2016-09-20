@@ -22,20 +22,19 @@ RUNTIME_COMPILER_LINKLIBRARY("glib-2.0.lib")
 
 namespace EagleLib
 {
+    namespace Nodes
+    {
     class PLUGIN_EXPORTS frame_grabber_gstreamer: public frame_grabber_cv
     {
     public:
-        class PLUGIN_EXPORTS frame_grabber_gstreamer_info: public FrameGrabberInfo
-        {
-            virtual std::string GetObjectName();
-            virtual std::string GetObjectTooltip();
-            virtual std::string GetObjectHelp();
-            virtual int CanLoadDocument(const std::string& document) const;
-            virtual int Priority() const;
-        };
+        MO_DERIVE(frame_grabber_gstreamer, frame_grabber_cv)
+        MO_END;
+
         frame_grabber_gstreamer();
         virtual bool LoadFile(const std::string& file_path);
         virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
+
+        static int CanLoadDocument(const std::string& document);
     protected:
 
         cv::Ptr<cv::VideoCapture> h_cam;
@@ -43,4 +42,5 @@ namespace EagleLib
         std::string                             loaded_file;
         TS<SyncedMemory>                        current_frame;
     };
+    }
 }

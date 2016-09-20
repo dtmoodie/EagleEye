@@ -1,15 +1,33 @@
 #include "directory.h"
 #include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
+#include "EagleLib/Nodes/FrameGrabberInfo.hpp"
+#include <MetaObject/MetaObjectInfo.hpp>
+#include <MetaObject/Detail/IMetaObjectImpl.hpp>
 #include "ObjectInterfacePerModule.h"
 #include <boost/filesystem.hpp>
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
+
 frame_grabber_directory::frame_grabber_directory()
 {
     frame_index = 0;
-    
+}
+bool frame_grabber_directory::ProcessImpl()
+{
+    auto frame = GetNextFrame(*_ctx->stream);
+    if(!frame.empty())
+    {
+        this->current_frame_param.UpdateData(frame, frame.frame_number, _ctx);
+        return true;
+    }
+    return false;
+}
+void frame_grabber_directory::Restart()
+{
 
 }
+
 void frame_grabber_directory::NodeInit(bool firstInit)
 {
     //updateParameter("Frame Index", 0);
@@ -42,7 +60,7 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
                 files.push_back(itr->path().string());
             }
         }
-        auto constructors = EagleLib::ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
+        auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
         std::vector<int> load_count(constructors.size(), 0);
         std::vector<int> priorities(constructors.size(), 0);
         for(int i = 0; i < constructors.size(); ++i)
@@ -63,8 +81,8 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
         auto itr = std::max_element(load_count.begin(), load_count.end());
         if(itr != load_count.end() && (*itr) != 0)
         {
-            int idx = itr - load_count.begin();
-            fg = constructors[idx]->Construct();
+            long long idx = itr - load_count.begin();
+            this->fg = constructors[idx]->Construct();
             auto info = dynamic_cast<FrameGrabberInfo*>(constructors[idx]->GetObjectInfo());
             for(auto& file : files)
             {
@@ -79,14 +97,15 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
     return false;
 }
 
-int frame_grabber_directory::GetFrameNumber()
+long long frame_grabber_directory::GetFrameNumber()
 {
     return frame_index;
 }
-int frame_grabber_directory::GetNumFrames()
+long long frame_grabber_directory::GetNumFrames()
 {
     return files_on_disk.size();
 }
+
 std::string frame_grabber_directory::GetSourceFilename()
 {
     return files_on_disk[frame_index];
@@ -103,12 +122,13 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     if(files_on_disk.empty())
         return TS<SyncedMemory>(0.0, 0);
     if(index >= files_on_disk.size())
-        index = files_on_disk.size() - 1;
+        index = static_cast<int>(files_on_disk.size() - 1);
     std::string file_name = files_on_disk[index];
-    if (index != *getParameter<int>("Frame Index")->Data())
+    
+    if (index != this->GetParameterValue<int>("Frame Index"))
     {
-        updateParameter("Frame Index", index);
-        updateParameter("Loaded file", file_name);
+        UpdateParameter("Frame Index", index);
+        UpdateParameter("Loaded file", file_name);
     }
     
     for(auto& itr : loaded_images)
@@ -145,47 +165,32 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_directory::GetCoordinateManage
     return coordinate_manager;
 }
 
-std::string frame_grabber_directory::frame_grabber_directory_info::GetObjectName()
-{
-    return "frame_grabber_directory";
-}
-
-std::string frame_grabber_directory::frame_grabber_directory_info::GetObjectTooltip()
-{
-    return "";
-}
-
-std::string frame_grabber_directory::frame_grabber_directory_info::GetObjectHelp()
-{
-    return "Frame grabber for static image files in a directory";
-}
-
-int frame_grabber_directory::frame_grabber_directory_info::CanLoadDocument(const std::string& document) const
+int frame_grabber_directory::CanLoadDocument(const std::string& document)
 {
     auto path = boost::filesystem::path(document);
-    if(boost::filesystem::exists(path) && boost::filesystem::is_directory(path))
+    if (boost::filesystem::exists(path) && boost::filesystem::is_directory(path))
     {
         boost::filesystem::directory_iterator end_itr;
         std::vector<std::string> files;
         // cycle through the directory
         for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr)
         {
-            if (is_regular_file(itr->path())) 
+            if (is_regular_file(itr->path()))
             {
                 files.push_back(itr->path().string());
             }
         }
-        auto constructors = EagleLib::ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
+        auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
         std::vector<int> load_count(constructors.size(), 0);
         std::vector<int> priorities(constructors.size(), 0);
-        for(int i = 0; i < constructors.size(); ++i)
+        for (int i = 0; i < constructors.size(); ++i)
         {
-            if(auto info = dynamic_cast<FrameGrabberInfo*>(constructors[i]->GetObjectInfo()))
+            if (auto info = dynamic_cast<FrameGrabberInfo*>(constructors[i]->GetObjectInfo()))
             {
-                for(auto& file : files)
+                for (auto& file : files)
                 {
                     int priority = info->CanLoadDocument(file);
-                    if(priority > 0)
+                    if (priority > 0)
                     {
                         ++load_count[i];
                         priorities[i] = priority;
@@ -194,18 +199,14 @@ int frame_grabber_directory::frame_grabber_directory_info::CanLoadDocument(const
             }
         }
         auto itr = std::max_element(load_count.begin(), load_count.end());
-        if(itr != load_count.end())
+        if (itr != load_count.end())
         {
-            int idx = itr - load_count.begin();
+            long long idx = itr - load_count.begin();
             return priorities[idx];
         }
     }
     return 0;
 }
-int frame_grabber_directory::frame_grabber_directory_info::Priority() const
-{
-    return 0;
-}
-static frame_grabber_directory::frame_grabber_directory_info info;
 
-REGISTERCLASS(frame_grabber_directory, &info);
+
+MO_REGISTER_CLASS(frame_grabber_directory);

@@ -1,16 +1,9 @@
 #include "openni2.h"
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
-frame_grabber_openni2_info::frame_grabber_openni2_info()
-{
-
-}
-std::string frame_grabber_openni2_info::GetObjectName()
-{
-    return "frame_grabber_openni2";
-}
-int frame_grabber_openni2_info::CanLoadDocument(const std::string& document) const
+int frame_grabber_openni2::CanLoadDocument(const std::string& document)
 {
     std::string doc = document;
     std::transform(doc.begin(), doc.end(), doc.begin(), ::tolower);
@@ -32,11 +25,7 @@ int frame_grabber_openni2_info::CanLoadDocument(const std::string& document) con
     return 0;
 }
 
-int frame_grabber_openni2_info::Priority() const
-{
-    return 0;
-}
-int frame_grabber_openni2_info::LoadTimeout() const
+int frame_grabber_openni2::LoadTimeout()
 {
     return 10000;
 }
@@ -47,7 +36,7 @@ bool frame_grabber_openni2::LoadFile(const std::string& file_path)
     std::transform(doc.begin(), doc.end(), doc.begin(), ::tolower);
     if (doc == "openni2")
     {
-        return h_LoadFile("1600");
+        return this->h_LoadFile("1600");
     }
     try
     {
@@ -91,6 +80,6 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_openni2::GetCoordinateManager(
 {
     return _coordinate_manager;
 }
-static frame_grabber_openni2_info g_info;
 
-//REGISTERCLASS(frame_grabber_openni2, &g_info);
+
+//MO_REGISTER_CLASS(frame_grabber_openni2);

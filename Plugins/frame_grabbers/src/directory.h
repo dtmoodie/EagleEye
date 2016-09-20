@@ -1,6 +1,5 @@
 #pragma once
-
-#include "EagleLib/IFrameGrabber.hpp"
+#include "EagleLib/Nodes/IFrameGrabber.hpp"
 #include "EagleLib/ICoordinateManager.h"
 
 namespace EagleLib
@@ -10,20 +9,10 @@ namespace EagleLib
     class PLUGIN_EXPORTS frame_grabber_directory: public IFrameGrabber
     {
     public:
-
-        class PLUGIN_EXPORTS frame_grabber_directory_info: public FrameGrabberInfo
-        {
-        public:
-            virtual std::string GetObjectName();
-            virtual std::string GetObjectTooltip();
-            virtual std::string GetObjectHelp();
-            virtual int CanLoadDocument(const std::string& document) const;
-            virtual int Priority() const;
-        };
         frame_grabber_directory();
         virtual bool LoadFile(const std::string& file_path);
-        virtual int GetFrameNumber();
-        virtual int GetNumFrames();
+        virtual long long GetFrameNumber();
+        virtual long long GetNumFrames();
         virtual std::string GetSourceFilename();
 
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
@@ -32,11 +21,19 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
 
         virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
+        
         virtual void NodeInit(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
-        MO_BEGIN(frame_grabber_directory, IFrameGrabber)
+        
+        MO_DERIVE(frame_grabber_directory, IFrameGrabber)
             MO_SLOT(void, Restart);
         MO_END;
+        
+        static int CanLoadDocument(const std::string& doc);
+        
+    protected:
+        bool ProcessImpl();
+
 
     private:
         cv::cuda::GpuMat                d_image;

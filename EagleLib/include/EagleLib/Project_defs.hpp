@@ -4,7 +4,7 @@
 #ifndef __CUDACC__
 #include "EagleLib/Detail/Export.hpp"
 #endif
-
+#include "MetaObject/Detail/HelperMacros.hpp"
 #ifdef PLUGIN_NAME
 #include "RuntimeLinkLibrary.h"
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)

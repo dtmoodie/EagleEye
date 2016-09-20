@@ -1,24 +1,17 @@
 #include "gstreamer.h"
 #include "ObjectInterfacePerModule.h"
+#include "EagleLib/Nodes/FrameGrabberInfo.hpp"
+#include <MetaObject/MetaObjectInfo.hpp>
+
 #include <boost/filesystem.hpp>
 #include <gst/video/video.h>
 #include <gst/app/gstappsrc.h>
 
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 
-std::string frame_grabber_gstreamer::frame_grabber_gstreamer_info::GetObjectName()
-{
-    return "frame_grabber_gstreamer";
-}
-std::string frame_grabber_gstreamer::frame_grabber_gstreamer_info::GetObjectTooltip()
-{
-    return "";
-}
-std::string frame_grabber_gstreamer::frame_grabber_gstreamer_info::GetObjectHelp()
-{
-    return "";
-}
-int frame_grabber_gstreamer::frame_grabber_gstreamer_info::CanLoadDocument(const std::string& document) const
+
+int frame_grabber_gstreamer::CanLoadDocument(const std::string& document) const
 {
     boost::filesystem::path path(document);
     // oooor a gstreamer pipeline.... 
@@ -29,10 +22,7 @@ int frame_grabber_gstreamer::frame_grabber_gstreamer_info::CanLoadDocument(const
         return 2;
     return 0;
 }
-int frame_grabber_gstreamer::frame_grabber_gstreamer_info::Priority() const
-{
-    return 2;
-}
+
 
 
 frame_grabber_gstreamer::frame_grabber_gstreamer():
@@ -57,6 +47,6 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_gstreamer::GetCoordinateManage
     return coordinate_manager;
 }
 
-static frame_grabber_gstreamer::frame_grabber_gstreamer_info info;
 
-REGISTERCLASS(frame_grabber_gstreamer, &info);
+
+MO_REGISTER_CLASS(frame_grabber_gstreamer, &info);

@@ -3,7 +3,7 @@
 #include <boost/lexical_cast.hpp>
 
 using namespace EagleLib;
-
+using namespace EagleLib::Nodes;
 
 frame_grabber_cv::frame_grabber_cv():
     FrameGrabberThreaded()
@@ -94,7 +94,7 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
     return false;
 }
 
-int frame_grabber_cv::GetNumFrames()
+long long frame_grabber_cv::GetNumFrames()
 {
     if (d_cam)
     {
@@ -107,10 +107,10 @@ int frame_grabber_cv::GetNumFrames()
     return -1;
 }
 
-/*TS<SyncedMemory> frame_grabber_cv::GetCurrentFrame(cv::cuda::Stream& stream)
+TS<SyncedMemory> frame_grabber_cv::GetCurrentFrame(cv::cuda::Stream& stream)
 {
     return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
-}*/
+}
 
 TS<SyncedMemory> frame_grabber_cv::GetFrameImpl(int index, cv::cuda::Stream& stream)
 {
