@@ -1,0 +1,49 @@
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MAIN
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE "EagleLib/frame_grabbers/test_gstreamer"
+#include <boost/test/unit_test.hpp>
+
+#include <boost/thread.hpp>
+#include <EagleLib/Nodes/IFrameGrabber.hpp>
+#include <MetaObject/MetaObjectFactory.hpp>
+#include <MetaObject/Parameters/ITypedParameter.hpp>
+
+BOOST_AUTO_TEST_CASE(gstreamer_load)
+{
+    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+    mo::MetaObjectFactory::Instance()->LoadPlugins("");
+    auto plugins = mo::MetaObjectFactory::Instance()->ListLoadedPlugins();
+    bool found = false;
+    for(const auto& plugin : plugins)
+    {
+        if(plugin.find_first_of("frame_grabber") != std::string::npos)
+        {
+            if(plugin.find_first_of("success") != std::string::npos)
+                found = true;
+        }
+    }
+    BOOST_REQUIRE(found);
+}
+
+BOOST_AUTO_TEST_CASE(gstreamer_construct_static)
+{
+    
+}
+
+BOOST_AUTO_TEST_CASE(gstreamer_construct_dynamic)
+{
+    rcc::shared_ptr<EagleLib::Nodes::IFrameGrabber> obj = mo::MetaObjectFactory::Instance()->Create("frame_grabber_gstreamer");
+    BOOST_REQUIRE(obj);
+}
+
+BOOST_AUTO_TEST_CASE(gstreamer_videotestsrc)
+{
+    auto fg = EagleLib::Nodes::IFrameGrabber::Create("videotestsrc ! appsink", "frame_grabber_gstreamer");
+    BOOST_REQUIRE(fg);
+    auto output = fg->GetOutput("current_frame");
+    mo::ITypedParameter<EagleLib::SyncedMemory>* typed = dynamic_cast<mo::ITypedParameter<EagleLib::SyncedMemory>*>(output);
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    fg->Process();
+    BOOST_REQUIRE(!typed->GetDataPtr()->empty());
+}

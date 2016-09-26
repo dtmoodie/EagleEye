@@ -10,11 +10,15 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
   link_directories(${BOOST_LIBRARYDIR})
   link_directories(${Boost_LIBRARY_DIR_DEBUG})
   link_directories(${Boost_LIBRARY_DIR_RELEASE})
+  include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(CUDA REQUIRED)
+    include_directories(${CUDA_INCLUDE_DIRS})
 
 find_package(OpenCV 3.0 QUIET COMPONENTS core imgcodecs cudacodec)
-set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+
 if(WIN32)
     FIND_PACKAGE(GStreamerWindows)
 else(WIN32)
@@ -23,42 +27,36 @@ else(WIN32)
     INCLUDE_DIRECTORIES("/usr/lib/arm-linux-gnueabihf/glib-2.0/include")
     INCLUDE_DIRECTORIES("/usr/include/glib-2.0")
 endif(WIN32)
+
 INCLUDE_DIRECTORIES(${GSTREAMER_gst_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${GSTREAMER_gstconfig_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${GSTREAMER_glibconfig_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${GSTREAMER_glib_INCLUDE_DIR})
+
 LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_gst_INCLUDE_DIR})
 LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_gstconfig_INCLUDE_DIR})
 LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glibconfig_INCLUDE_DIR})
 LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glib_INCLUDE_DIR})
+
 ADD_DEFINITIONS(${DEFS})
+
 INCLUDE_DIRECTORIES(
     ${INCLUDE_DIRS}
-    ${OpenCV_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
-    ${CUDA_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 ADD_DEFINITIONS(-DPROJECT_INCLUDES="${CMAKE_CURRENT_SOURCE_DIR}")
 
-SET(knl "")
 
-IF(WIN32)
-    file(GLOB_RECURSE knl "*.cu")
-ENDIF(WIN32)
-file(GLOB_RECURSE src "*.cpp")
-file(GLOB_RECURSE hdr "*.h" "*.hpp")
+file(GLOB_RECURSE knl "src/*.cu")
+file(GLOB_RECURSE src "src/*.cpp")
+file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp")
 
-IF(WIN32)
-
-ELSE()
-    #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
-ENDIF()
 
 cuda_add_library(frame_grabbers SHARED ${src} ${hdr} ${knl})
 
 add_dependencies(frame_grabbers EagleLib)
+
 RCC_LINK_LIB(frame_grabbers 
         EagleLib 
         ${OpenCV_LIBS} 
@@ -78,8 +76,13 @@ RCC_LINK_LIB(frame_grabbers
         ${GSTREAMER_gstvideo_LIBRARY}
         ${Glib_LIBRARY}
         ${GLIB_LIBRARY}
-        ${GOBJECT_LIBRARY})
-        #${GSTREAMER_gstrtspserver_LIBRARY})
+        ${GOBJECT_LIBRARY}
+)
+
+# ------------- tests
+add_subdirectory("tests")
+
+
 
 INCLUDE(../PluginTemplate.cmake)
 

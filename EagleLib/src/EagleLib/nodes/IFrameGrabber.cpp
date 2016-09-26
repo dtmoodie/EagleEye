@@ -1,9 +1,12 @@
 #include "EagleLib/nodes/IFrameGrabber.hpp"
 #include "EagleLib/Logging.h"
 #include "EagleLib/DataStreamManager.h"
+#include "EagleLib/utilities/sorting.hpp"
 #include "Remotery.h"
 #include <MetaObject/Logging/Log.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
+#include <MetaObject/MetaObjectFactory.hpp>
+
 #include "ISimpleSerializer.h"
 
 using namespace EagleLib;
@@ -18,6 +21,122 @@ std::vector<std::string> FrameGrabberInfo::ListLoadableDocuments() const
 {
     return std::vector<std::string>();
 }
+::std::vector<::std::string> IFrameGrabber::ListAllLoadableDocuments()
+{
+    std::vector<std::string> output;
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
+    for(auto constructor : constructors)
+    {
+        auto info = constructor->GetObjectInfo();
+        if(auto fg_info = dynamic_cast<FrameGrabberInfo*>(info))
+        {
+            auto devices = fg_info->ListLoadableDocuments();
+            output.insert(output.end(), devices.begin(), devices.end());
+        }
+    }
+    return output;
+}
+
+rcc::shared_ptr<IFrameGrabber> IFrameGrabber::Create(const std::string& uri, const std::string& preferred_loader)
+{
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
+    std::vector<IObjectConstructor*> valid_constructors;
+    std::vector<int> valid_constructor_priority;
+    for(auto constructor : constructors)
+    {
+        auto info = constructor->GetObjectInfo();
+        if(auto fg_info = dynamic_cast<FrameGrabberInfo*>(info))
+        {
+            int priority = fg_info->CanLoadDocument(uri);
+            if(priority != 0)
+            {
+                valid_constructors.push_back(constructor);
+                valid_constructor_priority.push_back(priority);
+            }
+        }
+    }
+    if (valid_constructors.empty())
+    {
+        LOG(warning) << "No valid frame grabbers for " << uri;
+        return rcc::shared_ptr<IFrameGrabber>();
+    }
+
+    auto idx = sort_index_descending(valid_constructor_priority);
+    if (preferred_loader.size())
+    {
+        for (int i = 0; i < valid_constructors.size(); ++i)
+        {
+            if (preferred_loader == valid_constructors[i]->GetName())
+            {
+                idx.insert(idx.begin(), i);
+                break;
+            }
+        }
+    }
+
+    for (int i = 0; i < idx.size(); ++i)
+    {
+        auto fg = rcc::shared_ptr<IFrameGrabber>(valid_constructors[idx[i]]->Construct());
+        auto fg_info = dynamic_cast<FrameGrabberInfo*>(valid_constructors[idx[i]]->GetObjectInfo());
+        //fg->InitializeFrameGrabber(this);
+        fg->Init(true);
+        
+        struct thread_load_object
+        {
+            std::promise<bool> promise;
+            rcc::shared_ptr<IFrameGrabber> fg;
+            std::string document;
+            void load()
+            {
+                promise.set_value(fg->LoadFile(document));
+            }
+        };
+        
+        auto obj = new thread_load_object();
+        obj->fg = fg;
+        obj->document = uri;
+        auto future = obj->promise.get_future();
+        static std::vector<boost::thread*> connection_threads;
+        // TODO cleanup the connection threads
+
+
+        boost::thread* connection_thread = new boost::thread([obj]()->void {
+            try
+            {
+                obj->load();
+            }
+            catch (cv::Exception&e)
+            {
+                LOG(debug) << e.what();
+            }
+
+            delete obj;
+        });
+        
+        if (connection_thread->timed_join(boost::posix_time::milliseconds(fg_info->LoadTimeout())))
+        {
+            if (future.get())
+            {
+                //top_level_nodes.emplace_back(fg);
+                LOG(info) << "Loading " << uri << " with frame_grabber: " << fg->GetTypeName() << " with priority: " << valid_constructor_priority[idx[i]];
+                delete connection_thread;
+                return fg; // successful load
+            }
+            else // unsuccessful load
+            {
+                LOG(warning) << "Unable to load " << uri << " with " << fg_info->GetObjectName();
+            }
+        }
+        else // timeout        
+        {
+            LOG(warning) << "Timeout while loading " << uri << " with " << fg_info->GetObjectName() << " after waiting " << fg_info->LoadTimeout() << " ms";
+            connection_threads.push_back(connection_thread);
+        }
+    }
+    return rcc::shared_ptr<IFrameGrabber>();
+}
+
+
 
 IFrameGrabber::IFrameGrabber()
 {
@@ -287,13 +406,13 @@ std::string FrameGrabberInfo::Print() const
     auto documents = ListLoadableDocuments();
     if(documents.size())
     {
-        ss << "---------------------------\n";
+        ss << "\n------- Loadable Documents ---------\n";
         for(auto& doc : documents)
         {
-            ss << doc << "\n";
+            ss << "  " << doc << "\n";
         }
     }
-    ss << "Load timeout: " << LoadTimeout();
+    ss << "Load timeout: " << LoadTimeout() << "\n";
     return ss.str();
 }
 
@@ -301,32 +420,21 @@ std::string FrameGrabberInfo::Print() const
 void FrameGrabberBuffered::Init(bool firstInit)
 {
     IFrameGrabber::Init(firstInit);
-    if(firstInit)
-    {
-        int size = 50;
-        UpdateParameter<int>("Frame buffer size", size);
-    }else
-    {
-        
-    }
-    frame_buffer.set_capacity(GetParameter<int>("Frame buffer size")->GetData());
-    //updateParameterPtr<boost::circular_buffer<TS<SyncedMemory>>>("Frame buffer", &frame_buffer)->type = Parameters::Parameter::Output;
     
-    boost::function<void(cv::cuda::Stream*)> f =[&](cv::cuda::Stream*)
+    frame_buffer.set_capacity(frame_buffer_size);
+    
+    /*boost::function<void(cv::cuda::Stream*)> f =[&](cv::cuda::Stream*)
     {
         boost::mutex::scoped_lock lock(buffer_mtx);
         frame_buffer.set_capacity(frame_buffer_size);
-    };
+    };*/
     //RegisterParameterCallback("Frame buffer size", f, true, true);
 }
 
 void FrameGrabberThreaded::Init(bool firstInit)
 {
     FrameGrabberBuffered::Init(firstInit);
-    if(!firstInit)
-    {
-        StartThreads();
-    }    
+    StartThreads();
 }
 void FrameGrabberBuffered::Serialize(ISimpleSerializer* pSerializer)
 {

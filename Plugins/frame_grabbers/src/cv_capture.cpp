@@ -2,9 +2,100 @@
 #include "EagleLib/Logging.h"
 #include <boost/lexical_cast.hpp>
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+#ifdef _MSC_VER
+#include <new>
+#include <windows.h>
+#include <mfobjects.h>
+#include <mfapi.h>
+#include <mfidl.h>
+#include <mfreadwrite.h>
+#include <Wmcodecdsp.h>
+#include <assert.h>
+#include <Dbt.h>
+#include <shlwapi.h>
+#include <mfplay.h>
+#pragma comment(lib, "Mfplat.lib")
+#pragma comment(lib, "Mf.lib")
+#else
 
+#endif
+
+using namespace ::EagleLib;
+using namespace ::EagleLib::Nodes;
+template <class T> void SafeRelease(T **ppT)
+{
+    if (*ppT)
+    {
+        (*ppT)->Release();
+        *ppT = NULL;
+    }
+}
+::std::vector<::std::string> frame_grabber_cv::EnumerateDevices()
+{
+    ::std::vector<::std::string> output;
+#ifdef _MSC_VER
+    MFStartup(MF_VERSION);
+    HRESULT hr = S_OK;
+    IMFAttributes *pAttributes = NULL;
+    UINT32      m_cDevices; // contains the number of devices
+    IMFActivate **m_ppDevices = NULL; // contains properties about each device
+
+    // Initialize an attribute store. We will use this to
+    // specify the enumeration parameters.
+    
+    hr = MFCreateAttributes(&pAttributes, 1);
+
+    // Ask for source type = video capture devices
+    if (SUCCEEDED(hr))
+    {
+        hr = pAttributes->SetGUID(
+            MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
+            MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID
+            );
+    }
+    // Enumerate devices.
+    if (SUCCEEDED(hr))
+    {
+        hr = MFEnumDeviceSources(pAttributes, &m_ppDevices, &m_cDevices);
+    }
+    for(int i = 0; i < m_cDevices; ++i)
+    {
+        HRESULT hr = S_OK;
+        wchar_t* ppszName = nullptr;
+        hr = m_ppDevices[i]->GetAllocatedString(
+            MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,
+            &ppszName,
+            NULL
+            );
+        std::wstring wstring(ppszName);
+        output.push_back(std::string(wstring.begin(), wstring.end()));
+    }
+
+
+    SafeRelease(&pAttributes);
+
+    for (UINT32 i = 0; i < m_cDevices; i++)
+    {
+        SafeRelease(&m_ppDevices[i]);
+    }
+    CoTaskMemFree(m_ppDevices);
+    m_ppDevices = NULL;
+
+    m_cDevices = 0;
+
+
+#else
+
+
+
+#endif
+    return output;
+}
+
+std::vector<std::string> frame_grabber_cv::ListLoadableDocuments()
+{
+    return EnumerateDevices();
+}
 frame_grabber_cv::frame_grabber_cv():
     FrameGrabberThreaded()
 {

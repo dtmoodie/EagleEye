@@ -143,7 +143,8 @@ LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
 LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
 INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
 
+add_subdirectory(EagleEye)
 add_subdirectory(Plugins)
 add_subdirectory(samples)
 add_subdirectory(tests)
-add_subdirectory(EagleEye)
+

@@ -23,9 +23,12 @@ namespace EagleLib
             virtual int CanLoadDocument(const std::string& document) const;
             virtual int Priority() const;
         };
+
         class PLUGIN_EXPORTS frame_grabber_cv: public FrameGrabberThreaded
         {
         public:
+            static std::vector<std::string> EnumerateDevices();
+            static std::vector<std::string> ListLoadableDocuments();
             frame_grabber_cv();
             virtual bool LoadFile(const std::string& file_path);
             virtual bool d_LoadFile(const std::string& file_path);

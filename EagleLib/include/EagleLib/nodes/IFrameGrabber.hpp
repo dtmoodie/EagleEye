@@ -73,6 +73,9 @@ namespace EagleLib
         typedef FrameGrabberInfo InterfaceInfo;
         typedef IFrameGrabber Interface;
 
+        static rcc::shared_ptr<IFrameGrabber> Create(const ::std::string& uri, const ::std::string& preferred_loader = "");
+        static ::std::vector<::std::string> ListAllLoadableDocuments();
+
         IFrameGrabber();
         virtual bool LoadFile(const ::std::string& file_path) = 0;
         virtual long long GetFrameNumber() = 0;

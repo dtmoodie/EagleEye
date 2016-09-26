@@ -112,6 +112,7 @@ BOOST_AUTO_TEST_CASE(test_dummy_output)
 {
     EagleLib::SetupLogging();
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+    mo::MetaObjectFactory::Instance()->LoadPlugins("");
     auto info = mo::MetaObjectFactory::Instance()->GetObjectInfo("test_framegrabber");
     BOOST_REQUIRE(info);
     auto fg_info = dynamic_cast<EagleLib::Nodes::FrameGrabberInfo*>(info);
@@ -125,4 +126,9 @@ BOOST_AUTO_TEST_CASE(test_dummy_output)
     {
         fg->Process();
     }
+}
+BOOST_AUTO_TEST_CASE(test_enumeration)
+{
+    //auto all_docs = EagleLib::Nodes::IFrameGrabber::ListAllLoadableDocuments();
+    std::cout << mo::MetaObjectFactory::Instance()->PrintAllObjectInfo();
 }
