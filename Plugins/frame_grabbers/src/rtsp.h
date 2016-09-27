@@ -1,4 +1,5 @@
 #pragma once
+#ifdef HAVE_GSTREAMER
 #include "gstreamer.h"
 #include "EagleLib/ICoordinateManager.h"
 
@@ -31,3 +32,4 @@ namespace EagleLib
     };
     }
 }
+#endif // HAVE_GSTREAMER

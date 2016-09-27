@@ -1,6 +1,6 @@
+#ifdef HAVE_GSTREAMER
 #include "html5.h"
-#include <MetaObject/MetaObjectInfo.hpp>
-#include <EagleLib/Nodes/FrameGrabberInfo.hpp>
+#include "precompiled.hpp"
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -47,3 +47,5 @@ int frame_grabber_html5::CanLoadDocument(const std::string& document) const
     }
     return 0;
 }
+
+#endif // HAVE_GSTREAMER

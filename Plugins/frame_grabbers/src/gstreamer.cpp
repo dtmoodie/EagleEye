@@ -1,11 +1,6 @@
+#ifdef HAVE_GSTREAMER
 #include "gstreamer.h"
-#include "ObjectInterfacePerModule.h"
-#include "EagleLib/Nodes/FrameGrabberInfo.hpp"
-#include <MetaObject/MetaObjectInfo.hpp>
-
-#include <boost/filesystem.hpp>
-#include <gst/video/video.h>
-#include <gst/app/gstappsrc.h>
+#include "precompiled.hpp"
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -50,3 +45,4 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_gstreamer::GetCoordinateManage
 
 
 MO_REGISTER_CLASS(frame_grabber_gstreamer, &info);
+#endif // HAVE_GSTREAMER

@@ -221,7 +221,9 @@ cuda_add_library(EagleLib SHARED
     ${hdr}
     ${knl}
     ${RuntimeObjectSystem_SRCS}
+	src/precompiled.hpp
 )
+ocv_add_precompiled_header_to_target(EagleLib src/precompiled.hpp)
 SOURCE_GROUP("Header Files\\External" FILES ${ext_inc})
 
 
@@ -235,7 +237,7 @@ TARGET_LINK_LIBRARIES(EagleLib
         RuntimeObjectSystem
         RuntimeCompiler
         ${LINK_LIBS}
-    		MetaObject
+    	MetaObject
 )
 
 if(${MXNET_FOUND})

@@ -1,6 +1,6 @@
 #include "HeartBeatBuffer.h"
 #include <shared_ptr.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 #define CATCH_MACRO                                                         \

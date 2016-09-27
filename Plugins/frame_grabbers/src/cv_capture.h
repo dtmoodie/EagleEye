@@ -16,19 +16,11 @@ namespace EagleLib
 {
     namespace Nodes
     {
-        class PLUGIN_EXPORTS frame_grabber_cv_info : public FrameGrabberInfo
-        {
-        public:
-            virtual std::string GetObjectName();
-            virtual int CanLoadDocument(const std::string& document) const;
-            virtual int Priority() const;
-        };
-
         class PLUGIN_EXPORTS frame_grabber_cv: public FrameGrabberThreaded
         {
         public:
-            static std::vector<std::string> EnumerateDevices();
-            static std::vector<std::string> ListLoadableDocuments();
+            
+            
             frame_grabber_cv();
             virtual bool LoadFile(const std::string& file_path);
             virtual bool d_LoadFile(const std::string& file_path);
@@ -46,6 +38,16 @@ namespace EagleLib
             cv::Ptr<cv::cudacodec::VideoReader>     d_cam;
             TS<SyncedMemory>                        current_frame;
 
+        };
+        class PLUGIN_EXPORTS frame_grabber_camera: public frame_grabber_cv
+        {
+        public:
+            MO_DERIVE(frame_grabber_camera, frame_grabber_cv);
+            MO_END;
+
+            static std::vector<std::string> ListLoadableDocuments();
+            static int CanLoadDocument(const std::string& doc);
+            rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
         };
     }
 }

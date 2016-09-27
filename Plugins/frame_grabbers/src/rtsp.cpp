@@ -1,8 +1,7 @@
+#ifdef HAVE_GSTREAMER
 #include "rtsp.h"
-#include "ObjectInterfacePerModule.h"
-#include <MetaObject/Logging/Log.hpp>
-#include "MetaObject/Detail/IMetaObjectImpl.hpp"
-#include "EagleLib/Nodes/FrameGrabberInfo.hpp"
+#include "precompiled.hpp"
+
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -131,3 +130,5 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_rtsp::GetCoordinateManager()
 }
 
 MO_REGISTER_CLASS(frame_grabber_rtsp);
+
+#endif

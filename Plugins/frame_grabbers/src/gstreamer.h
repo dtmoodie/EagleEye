@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef HAVE_GSTREAMER
 #include "cv_capture.h"
 #include "EagleLib/ICoordinateManager.h"
 #include "RuntimeLinkLibrary.h"
@@ -44,3 +44,4 @@ namespace EagleLib
     };
     }
 }
+#endif // HAVE_GSTREAMER

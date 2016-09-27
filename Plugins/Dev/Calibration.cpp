@@ -5,7 +5,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 
-#include <parameters/ParameteredObjectImpl.hpp>
+
 #include <parameters/UI/InterThread.hpp>
 #include "EagleLib/rcc/ObjectManager.h"
 using namespace EagleLib;
