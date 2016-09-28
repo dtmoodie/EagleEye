@@ -1,63 +1,58 @@
 #pragma once
 #include "EagleLib/nodes/Node.h"
-#include "EagleLib/utilities/CudaUtils.hpp"
+#include <MetaObject/Parameters/ParameterMacros.hpp>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
+
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace EagleLib
 {
-    namespace Nodes
-    {
+namespace Nodes
+{
     class FrameRate: public Node
     {
-        boost::posix_time::ptime prevTime;
-
     public:
-        FrameRate();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        MO_DERIVE(FrameRate, Node);
+            MO_PARAM(double, framerate, 30.0);
+        MO_END;
+    protected:
+        bool ProcessImpl();  
     };
     
     class FrameLimiter : public Node
     {
-        boost::posix_time::ptime lastTime;
     public:
-        FrameLimiter();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        
+    protected:
+        bool ProcessImpl();
     };
 
     class CreateMat: public Node
     {
-        cv::cuda::GpuMat createdMat;
     public:
-        CreateMat();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+    protected:
+        bool ProcessImpl();
+        
     };
     class SetMatrixValues: public Node
     {
-        bool qualifiersSetup;
     public:
-        SetMatrixValues();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+
+    protected:
+        bool ProcessImpl();
+        
     };
     class Resize : public Node
     {
-        BufferPool<cv::cuda::GpuMat, EventPolicy> bufferPool;
-    public:
-        Resize();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+    protected:
+        bool ProcessImpl();
     };
     class Subtract : public Node
     {
     public:
-        Subtract();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+    protected:
+        bool ProcessImpl();
     };
-    }
+}
 }

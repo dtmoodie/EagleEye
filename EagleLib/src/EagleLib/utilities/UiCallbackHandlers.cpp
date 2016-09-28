@@ -21,7 +21,6 @@ static void on_mouse_click(int event, int x, int y, int flags, void* callback_ha
 
 void WindowCallbackHandler::imshow(const std::string& window_name, cv::Mat img, int flags)
 {
-    //auto gui_thread_id = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
     auto gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
     if (mo::GetThisThread() != gui_thread_id)
     {

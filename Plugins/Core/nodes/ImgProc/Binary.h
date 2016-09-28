@@ -1,9 +1,17 @@
 #include "EagleLib/nodes/Node.h"
 #include "EagleLib/Detail/Export.hpp"
-#include <EagleLib/Project_defs.hpp>
+#include "EagleLib/Detail/PluginExport.hpp"
+#include <EagleLib/rcc/external_includes/cv_cudafilters.hpp>
+
+#include <MetaObject/Detail/MetaObjectMacros.hpp>
+#include <MetaObject/Parameters/ParameterMacros.hpp>
+#include <MetaObject/Parameters/Types.hpp>
+#include <MetaObject/Parameters/Types.hpp>
+#include <MetaObject/Parameters/TypedInputParameter.hpp>
+
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
-#include <EagleLib/ParameteredIObjectImpl.hpp>
+
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
@@ -13,14 +21,44 @@ namespace EagleLib
 {
     namespace Nodes
     {
-    
+        
     class MorphologyFilter: public Node
     {
     public:
-        MorphologyFilter();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
-
+        static ::mo::EnumParameter StructuringTypes()
+        {
+            ::mo::EnumParameter ret;
+            ret.addEnum(ENUM(cv::MORPH_RECT));
+            ret.addEnum(ENUM(cv::MORPH_CROSS));
+            ret.addEnum(ENUM(cv::MORPH_ELLIPSE));
+            return ret;
+        }
+        static ::mo::EnumParameter MorphTypes()
+        {
+            ::mo::EnumParameter ret;
+            ret.addEnum(ENUM(cv::MORPH_ERODE));
+            ret.addEnum(ENUM(cv::MORPH_DILATE));
+            ret.addEnum(ENUM(cv::MORPH_OPEN));
+            ret.addEnum(ENUM(cv::MORPH_CLOSE));
+            ret.addEnum(ENUM(cv::MORPH_GRADIENT));
+            ret.addEnum(ENUM(cv::MORPH_TOPHAT));
+            ret.addEnum(ENUM(cv::MORPH_BLACKHAT));
+            return ret;
+        }
+        MO_DERIVE(MorphologyFilter, Node);
+            INPUT(SyncedMemory, input_image, nullptr);
+            OUTPUT(SyncedMemory, output, SyncedMemory());
+            PARAM(mo::EnumParameter, structuring_element_type, StructuringTypes());
+            PARAM(mo::EnumParameter, morphology_type, MorphTypes());
+            PARAM(int, iterations, 1);
+            PARAM(cv::Mat, structuring_element, cv::getStructuringElement(0, cv::Size(5,5)));
+            PARAM(cv::Point, anchor_point, cv::Point(-1,-1));
+            PARAM(int, structuring_element_size, 5);
+        MO_END;
+        
+    protected:
+        bool ProcessImpl();
+        cv::Ptr<cv::cuda::Filter> filter;
     };
 
     class FindContours: public Node
@@ -35,10 +73,10 @@ namespace EagleLib
     class PruneContours: public Node
     {
     public:
-        BEGIN_PARAMS(PruneContours)
+        MO_DERIVE(PruneContours, Node)
             PARAM(int, min_area, 20)
             PARAM(int, max_area, 500)
-        END_PARAMS;
+        MO_END;
         PruneContours();
 
         virtual void NodeInit(bool firstInit);
@@ -78,10 +116,10 @@ namespace EagleLib
     class DrawContours: public Node
     {
     public:
-        BEGIN_PARAMS(DrawContours)
+        MO_DERIVE(DrawContours, Node)
             PARAM(cv::Scalar, draw_color, cv::Scalar(0,0,255))
             PARAM(int, draw_thickness, 8);
-        END_PARAMS;
+        MO_END;
 
         DrawContours();
         virtual void NodeInit(bool firstInit);

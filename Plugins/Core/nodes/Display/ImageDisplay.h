@@ -1,81 +1,73 @@
 #include "EagleLib/nodes/Sink.h"
-
 #include <EagleLib/rcc/external_includes/cv_highgui.hpp>
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
-#include <opencv2/core/opengl.hpp>
 #include <EagleLib/utilities/CudaUtils.hpp>
 #include <EagleLib/ObjectDetection.hpp>
 
+#include <MetaObject/Parameters/ParameterMacros.hpp>
+#include <MetaObject/Parameters/TypedInputParameter.hpp>
+
+#include <opencv2/core/opengl.hpp>
 namespace EagleLib
 {
-    namespace Nodes
+namespace Nodes
+{
+    class QtImageDisplay: public Node
     {
-    class QtImageDisplay: public CpuSink
-    {
-        std::string prevName;
     public:
-        QtImageDisplay();
-        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-        virtual void doProcess(const cv::Mat& mat, double timestamp, int frame_number, cv::cuda::Stream& stream);
+        MO_DERIVE(QtImageDisplay, Node);
+            INPUT(TS<SyncedMemory>, image, nullptr);
+            INPUT(cv::Mat, cpu_mat, nullptr);
+        MO_END;
+    protected:
+        bool ProcessImpl();
     };
     class OGLImageDisplay: public Node
     {
-        std::string prevName;
     public:
-        OGLImageDisplay();
-
-        
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-
+        MO_DERIVE(OGLImageDisplay, Node);
+            INPUT(TS<SyncedMemory>, image, nullptr);
+        MO_END;
+        bool ProcessImpl();
     };
     class KeyPointDisplay: public Node
     {
-        //ConstEventBuffer<std::pair<cv::cuda::HostMem, cv::cuda::HostMem>> hostData;
-        int displayType;
     public:
-
-        KeyPointDisplay();
-        virtual void NodeInit(bool firstInit);
-        TS<SyncedMemory> doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-        cv::Mat uicallback();
-        virtual void Serialize(ISimpleSerializer *pSerializer);
+        MO_DERIVE(KeyPointDisplay, Node);
+            INPUT(TS<SyncedMemory>, image, nullptr);
+            INPUT(TS<SyncedMemory>, synced_points,  nullptr);
+            INPUT(cv::cuda::GpuMat, gpu_points, nullptr);
+            INPUT(cv::Mat, cpu_points, nullptr);
+        MO_END;
+    protected:
+        bool ProcessImpl();
     };
     class FlowVectorDisplay: public Node
     {
-        // First buffer is the image, second is a pair of the points to be used
-        //ConstEventBuffer<cv::cuda::HostMem[4]> hostData;
-        //void display(cv::cuda::GpuMat img, cv::cuda::GpuMat initial, cv::cuda::GpuMat final, cv::cuda::GpuMat mask, std::string& name, cv::cuda::Stream);
     public:
-        std::string displayName;
-        FlowVectorDisplay();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-        //cv::Mat uicallback();
-        virtual void Serialize(ISimpleSerializer *pSerializer);
+        MO_DERIVE(FlowVectorDisplay, Node);
+            INPUT(TS<SyncedMemory>, image, nullptr);
+        MO_END;
+    protected:
+        bool ProcessImpl();
     };
 
     class HistogramDisplay: public Node
     {
-
     public:
-        ConstBuffer<cv::cuda::HostMem> histograms;
-        void displayHistogram();
-        HistogramDisplay();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        MO_DERIVE(HistogramDisplay, Node);
+        MO_END;
+    protected:
+        bool ProcessImpl();
     };
     class DetectionDisplay: public Node
     {
     public:
-        ConstBuffer<std::pair<cv::cuda::HostMem, std::vector<DetectedObject>>> hostData;
-        void displayCallback();
-        DetectionDisplay();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+        MO_DERIVE(DetectionDisplay, Node);
+        INPUT(TS<SyncedMemory>, image, nullptr);
+        MO_END;
+    protected:
+        bool ProcessImpl();
     };
-    } // namespace Nodes
+} // namespace Nodes
 } // namespace EagleLib

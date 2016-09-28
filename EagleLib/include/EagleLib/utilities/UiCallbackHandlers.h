@@ -13,23 +13,17 @@
 #include <set>
 #include <memory>
 
-
-
-
 namespace EagleLib
 {
     class IDataStream;
-    class WindowCallbackHandlerManager;
     // Single instance per stream
     class EAGLE_EXPORTS WindowCallbackHandler: public TInterface<IID_IOBJECT,mo::IMetaObject>
     {
-        friend class WindowCallbackHandlerManager;
     public:
         enum 
         {
             PAUSE_DRAG = 1 << 31
         };
-        static rcc::shared_ptr<WindowCallbackHandler> create();
         WindowCallbackHandler();
 
         void Init(bool firstInit);

@@ -1,5 +1,3 @@
-
-#include <EagleLib/rcc/ObjectManager.h>
 #include <EagleLib/nodes/NodeManager.h>
 #include <EagleLib/nodes/Node.h>
 #include <EagleLib/frame_grabber_base.h>

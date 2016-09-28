@@ -71,13 +71,10 @@ namespace EagleLib
     class NodeFactory;
 }
 
-#define SET_NODE_TOOLTIP(name, tooltip) g_registerer_##name.node_tooltip = std::string(tooltip);
-#define SET_NODE_HELP(name, help) g_registerer_##name.node_help = std::string(help);
-
 namespace EagleLib
 {
-    namespace Nodes
-    {
+namespace Nodes
+{
     struct EAGLE_EXPORTS NodeInfoRegisterer
     {
         NodeInfoRegisterer(const char* nodeName, const char** nodeInfo);
@@ -86,7 +83,6 @@ namespace EagleLib
 
     struct EAGLE_EXPORTS NodeInfo: virtual public mo::IMetaObjectInfo
     {
-        //NodeInfo(const char* name, std::initializer_list<char const*> nodeInfo);
         std::string Print() const;
         // Get the organizational hierarchy of this node, ie Image -> Processing -> ConvertToGrey
         virtual std::vector<std::string> GetNodeCategory() const = 0;
@@ -99,8 +95,6 @@ namespace EagleLib
 
         // Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
         virtual std::vector<std::string> CheckDependentVariables(mo::IVariableManager* var_manager_) const = 0;
-
-        
     };
 
     class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, Algorithm>
@@ -194,5 +188,5 @@ namespace EagleLib
         unsigned int                          rmt_hash;
         unsigned int                          rmt_cuda_hash;
     };
-    } // namespace Nodes
+} // namespace Nodes
 } // namespace EagleLib

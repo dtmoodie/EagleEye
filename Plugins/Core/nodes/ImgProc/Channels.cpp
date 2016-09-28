@@ -1,7 +1,7 @@
 #include "nodes/ImgProc/Channels.h"
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
+
 #include <EagleLib/Qualifiers.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

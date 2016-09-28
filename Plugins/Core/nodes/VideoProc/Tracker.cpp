@@ -5,50 +5,21 @@
 #include <EagleLib/rcc/external_includes/cv_calib3d.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <parameters/UI/InterThread.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
+#include <EagleLib/Nodes/NodeInfo.hpp>
+
+#include <MetaObject/Thread/InterThread.hpp>
+
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(KeyFrameTracker, Image, Extractor)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CMTTracker, Image, Extractor)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(TLDTracker, Image, Extractor)
+MO_REGISTER_CLASS(KeyFrameTracker);
+MO_REGISTER_CLASS(CMT);
+MO_REGISTER_CLASS(TLD);
 
 
-
-#ifdef _MSC_VER
-
-
-#else
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudawarping")
-RUNTIME_COMPILER_LINKLIBRARY("-lopencv_highgui")
-
-#endif
-
-void KeyFrameTracker::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        updateParameter("Number of key frames to track", int(5));   // 0
-        updateParameter("Tracking Upper qualty", double(0.7));      // 1
-        updateParameter("Tracking lower quality", double(0.4));     // 2
-        updateParameter("Min key points", int(200));                // 3
-        addInputParameter<DetectAndComputeFunctor>("Detector");     // 4
-        addInputParameter<TrackSparseFunctor>("Tracker");
-        addInputParameter<cv::cuda::GpuMat>("Mask");
-        addInputParameter<int>("Index");
-        addInputParameter<boost::function<void(cv::cuda::GpuMat, cv::cuda::GpuMat,
-                                               cv::cuda::GpuMat, cv::cuda::GpuMat,
-                                               std::string&, cv::cuda::Stream)>>("Display functor");
-
-    }
-    updateParameter("Display", true);
-    homographyBuffer.resize(20, nullptr);
-    trackedFrames.set_capacity(5);
-    warpedImageBuffer.resize(20);
-}
-void KeyFrameTracker::reset()
+/*void KeyFrameTracker::reset()
 {
     trackedFrames.clear();
 }
@@ -125,8 +96,13 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
     Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, mo::TypeInfo(typeid(EagleLib::Nodes::Node))));
     delete data;
 }
+*/
+bool KeyFrameTracker::ProcessImpl()
+{
 
-cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+    return false;
+}
+/*cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
 
     if(_parameters[0]->changed)
@@ -252,24 +228,13 @@ cv::cuda::GpuMat KeyFrameTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Str
     }
     ++frameCount;
     return img;
-}
+}*/
 
-void CMTTracker::NodeInit(bool firstInit)
+bool CMT::ProcessImpl()
 {
-
+    return false;
 }
-
-cv::cuda::GpuMat CMTTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+bool TLD::ProcessImpl()
 {
-    return img;
-}
-
-void TLDTracker::NodeInit(bool firstInit)
-{
-
-}
-
-cv::cuda::GpuMat TLDTracker::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    return img;
+    return false;
 }
