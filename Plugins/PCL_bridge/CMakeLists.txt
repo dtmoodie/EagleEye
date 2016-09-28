@@ -19,7 +19,7 @@ FIND_PACKAGE(CUDA REQUIRED)
 FIND_PACKAGE(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
 	set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
-FIND_PACKAGE(PCL COMPONENTS common visualization)
+FIND_PACKAGE(PCL COMPONENTS common visualization QUIET)
 
 IF(PCL_FOUND)
 	LINK_DIRECTORIES(${LINK_DIRS})

@@ -1,10 +1,6 @@
 #include "directory.h"
 #include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
-#include "EagleLib/Nodes/FrameGrabberInfo.hpp"
-#include <MetaObject/MetaObjectInfo.hpp>
-#include <MetaObject/Detail/IMetaObjectImpl.hpp>
-#include "ObjectInterfacePerModule.h"
-#include <boost/filesystem.hpp>
+#include "precompiled.hpp"
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

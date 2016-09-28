@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef HAVE_GSTREAMER
 #include "gstreamer.h"
 
 namespace EagleLib
@@ -17,3 +17,4 @@ namespace EagleLib
     };
     }
 }
+#endif // HAVE_GSTREAMER

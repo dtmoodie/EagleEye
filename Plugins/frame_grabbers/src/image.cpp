@@ -1,9 +1,7 @@
 #include "image.h"
-#include <MetaObject/MetaObjectInfo.hpp>
-#include <EagleLib/Nodes/FrameGrabberInfo.hpp>
-#include "ObjectInterfacePerModule.h"
+#include "precompiled.hpp"
 #include <opencv2/imgcodecs.hpp>
-#include <boost/filesystem.hpp>
+
 
 using namespace ::EagleLib;
 using namespace ::EagleLib::Nodes;

@@ -38,7 +38,7 @@ namespace EagleLib
         //typedef boost::property_tree::basic_ptree<std::string, EagleLib::Parameter::Ptr> ParameterTree;
 
         //ParameterTree KeyFrameParameters;
-        std::map<int, std::map<KeyFrameParameter, Parameters::Parameter::Ptr> > KeyFrameParameters;
+        std::map<int, std::map<KeyFrameParameter, m::Parameter::Ptr> > KeyFrameParameters;
 
         typedef boost::function<bool(int, KeyFrameParameter, const cv::cuda::GpuMat&)>              d_ParameterSetFunctor;
         typedef boost::function<bool(int, KeyFrameParameter, const cv::Mat&)>                       h_ParameterSetFunctor;

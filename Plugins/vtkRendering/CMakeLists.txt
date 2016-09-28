@@ -2,7 +2,7 @@ PROJECT(vtkRendering)
 CMAKE_POLICY(SET CMP0020 NEW)
 find_package(VTK COMPONENTS 
                  vtkInteractionStyle 
-				 vtkInteractionWidgets
+				         vtkInteractionWidgets
                  vtkRenderingLOD 
                  vtkIOPLY 
                  vtkFiltersTexture 
@@ -13,9 +13,11 @@ find_package(VTK COMPONENTS
                  vtkGUISupportQt
                  vtkGUISupportQtOpenGL
                  vtkRenderingAnnotation
-				 vtkRenderingVolume
-				 vtkRenderingVolumeOpenGL2)
-
+				         vtkRenderingVolume
+				         vtkRenderingVolumeOpenGL2
+                 QUIET
+                 )
+if(VTK_FOUND)
 
   include(${VTK_USE_FILE})
   GET_TARGET_PROPERTY(vtk_core vtkCommonCore IMPORTED_IMPLIB_RELEASE)
@@ -103,3 +105,4 @@ ELSE(WIN32)
 ENDIF(WIN32)
 
 INCLUDE(../PluginTemplate.cmake)
+endif(VTK_FOUND)
