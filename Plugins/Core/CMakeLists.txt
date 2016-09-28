@@ -43,7 +43,7 @@ ELSE()
 ENDIF()
 
 cuda_add_library(Core SHARED ${src} ${hdr} ${knl})
-
+ocv_add_precompiled_header_to_target(Core nodes/precompiled.hpp)
 add_dependencies(Core EagleLib)
 RCC_LINK_LIB(Core EagleLib ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES})
 #RCC_LINK_LIB(Core EagleLib)
