@@ -58,7 +58,7 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_image::GetCoordinateManager()
     return coordinate_manager;
 }
 
-int frame_grabber_image::CanLoadDocument(const std::string& document) const
+int frame_grabber_image::CanLoadDocument(const std::string& document)
 {
     auto path = boost::filesystem::path(document);
     auto ext = path.extension().string();

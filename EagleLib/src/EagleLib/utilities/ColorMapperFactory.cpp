@@ -7,8 +7,8 @@
 #include <cereal/archives/xml.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/tuple.hpp>
-#include <MetaObject/Parameters/IO/Policy.hpp>
-
+#include <MetaObject/Parameters/IO/CerealPolicy.hpp>
+#include <MetaObject/Parameters/IO/TextPolicy.hpp>
 #endif
 
 using namespace EagleLib;

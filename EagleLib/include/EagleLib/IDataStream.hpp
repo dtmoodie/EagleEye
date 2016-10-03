@@ -37,6 +37,8 @@ namespace EagleLib
 
         virtual ~IDataStream();
 
+        virtual std::vector<rcc::weak_ptr<Nodes::Node>> GetTopLevelNodes() = 0;
+
         // Handles user interactions such as moving the viewport, user interface callbacks, etc
         virtual rcc::weak_ptr<IViewManager>            GetViewManager() = 0;
 

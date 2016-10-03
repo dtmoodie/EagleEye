@@ -38,7 +38,7 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_html5::GetCoordinateManager()
 }
 
 
-int frame_grabber_html5::CanLoadDocument(const std::string& document) const
+int frame_grabber_html5::CanLoadDocument(const std::string& document)
 {
     std::string http("http://");
     if (document.compare(0, http.length(), http) == 0)

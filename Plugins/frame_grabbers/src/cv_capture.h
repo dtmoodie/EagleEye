@@ -19,8 +19,6 @@ namespace EagleLib
         class PLUGIN_EXPORTS frame_grabber_cv: public FrameGrabberThreaded
         {
         public:
-            
-            
             frame_grabber_cv();
             virtual bool LoadFile(const std::string& file_path);
             virtual bool d_LoadFile(const std::string& file_path);

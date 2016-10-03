@@ -17,64 +17,24 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudastereo")
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void StereoBM::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        updateParameter("Num disparities", int(64));
-        updateParameter("Block size", int(19));
-        addInputParameter<cv::cuda::GpuMat>("Left image");
-        addInputParameter<cv::cuda::GpuMat>("Right image");
-    }
-    stereoBM = cv::cuda::createStereoBM(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
-}
 
-cv::cuda::GpuMat StereoBM::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+bool StereoBM::ProcessImpl()
 {
-    if(_parameters[0]->changed || _parameters[1]->changed)
+    if(!stereoBM || num_disparities_param.modified || block_size_param.modified)
     {
-        stereoBM = cv::cuda::createStereoBM(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
+        stereoBM = cv::cuda::createStereoBM(num_disparities, block_size);
+        block_size_param.modified = false;
+        num_disparities_param.modified = false;
     }
-    cv::cuda::GpuMat* left = getParameter<cv::cuda::GpuMat>(2)->Data();
-    cv::cuda::GpuMat* right = getParameter<cv::cuda::GpuMat>(3)->Data();
-    if(left == nullptr)
-    {
-        left = &img;
-    }
-    if(right == nullptr)
-    {
-        //log(Error, "No input selected for right image");
-        NODE_LOG(error) << "No input selected for right image";
-        return img;
-    }
-    if(left->size() != right->size())
+    if (left_image->GetSize() != right_image->GetSize())
     {
         //log(Error, "Images are of mismatched size");
-        NODE_LOG(error) << "Images are of mismatched size";
-        return img;
+        LOG(debug) << "Images are of mismatched size";
+        return false;
     }
-    if(left->channels() != right->channels())
-    {
-        //log(Error, "Images are of mismatched channels");
-        NODE_LOG(error) << "Images are of mismatched channels";
-        return img;
-    }
-    auto buf = disparityBuf.getFront();
-
-    stereoBM->compute(*left,*right,buf->data, stream);
-    buf->record(stream);
-    return buf->data;
-}
-
-void StereoBilateralFilter::NodeInit(bool firstInit)
-{
-
-}
-
-cv::cuda::GpuMat StereoBilateralFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-
-    return img;
+    cv::cuda::GpuMat disparity;
+    stereoBM->compute(left_image->GetGpuMat(*_ctx->stream), right_image->GetGpuMat(*_ctx->stream),disparity, *_ctx->stream);
+    this->disparity_param.UpdateData(disparity, left_image_param.GetTimestamp(), _ctx);
 }
 
 void StereoBeliefPropagation::NodeInit(bool firstInit)
@@ -110,34 +70,25 @@ void StereoConstantSpaceBP::NodeInit(bool firstInit)
     }
 
 }
-
-cv::cuda::GpuMat StereoConstantSpaceBP::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+bool StereoConstantSpaceBP::ProcessImpl()
 {
-    if(_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed || _parameters[3]->changed || _parameters[4]->changed)
+    if(num_levels_param.modified || nr_plane_param.modified || 
+        num_disparities_param.modified || num_iterations_param.modified || !csbp)
     {
-        csbp = cv::cuda::createStereoConstantSpaceBP(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data(), *getParameter<int>(2)->Data(), *getParameter<int>(3)->Data(), getParameter<Parameters::EnumParameter>(4)->Data()->getValue());
+        csbp = cv::cuda::createStereoConstantSpaceBP(
+            num_disparities, 
+            num_iterations, 
+            num_levels, nr_plane, message_type.getValue());
+        num_levels_param.modified = false;
+        nr_plane_param.modified =  false;
+        num_disparities_param.modified = false;
+        num_iterations_param.modified = false;
     }
-    if(csbp == nullptr)
-    {
-        //log(Error, "Stereo constant space bp == nullptr");
-        NODE_LOG(error) << "Stereo constant space bp == nullptr";
-        return img;
-    }
-    cv::cuda::GpuMat* left, *right;
-    left = getParameter<cv::cuda::GpuMat>("Left image")->Data();
-    right = getParameter<cv::cuda::GpuMat>("Right image")->Data();
-    if(left == nullptr)
-        left = & img;
-    if(right == nullptr)
-    {
-        //log(Error, "Right image input not defined");
-        NODE_LOG(error) << "Right image input not defined";
-        return img;
-    }
-    cv::cuda::GpuMat disp;
-    csbp->compute(*left, *right,disp);
-    return disp;
+    cv::cuda::GpuMat disparity;
+    csbp->compute(left_image->GetGpuMat(*_ctx->stream), right_image->GetGpuMat(*_ctx->stream),disparity, *_ctx->stream);
+    this->disparity_param.UpdateData(disparity, left_image_param.GetTimestamp(), _ctx);
 }
+
 void UndistortStereo::NodeInit(bool firstInit)
 {
     if(firstInit)
@@ -150,7 +101,22 @@ void UndistortStereo::NodeInit(bool firstInit)
         updateParameter<cv::cuda::GpuMat>("mapY", cv::cuda::GpuMat());
     }
 }
-
+bool UndistortStereo::ProcessImpl()
+{
+    if(camera_matrix_param.modified || distortion_matrix_param.modified ||
+        rotation_matrix_param.modified || projection_matrix_param.modified)
+    {
+        cv::Mat X, Y;
+        cv::initUndistortRectifyMap(*camera_matrix, *distortion_matrix,
+            *rotation_matrix, *projection_matrix, input->GetSize(), CV_32FC1, X, Y);
+        mapX_param.UpdateData(X, -1, _ctx);
+        mapY_param.UpdateData(Y, -1, _ctx);
+    }
+    cv::cuda::remap(input->GetGpuMat(*_ctx->stream), input->GetGpuMatMutable(*_ctx->stream), 
+        mapX.GetGpuMat(*_ctx->stream), mapY.GetGpuMat(*_ctx->stream), 
+        CV_INTER_CUBIC, cv::BORDER_REPLICATE, cv::Scalar(), *_ctx->stream);
+    return true;
+}
 cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
     if(_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed || _parameters[3]->changed)

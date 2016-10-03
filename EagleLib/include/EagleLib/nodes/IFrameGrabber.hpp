@@ -1,9 +1,10 @@
 #pragma once
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/SyncedMemory.h"
+#include "EagleLib/Nodes/Node.h"
+#include "EagleLib/Nodes/NodeInfo.hpp"
 #include "IObject.h"
 #include "IObjectInfo.h"
 
-#include "EagleLib/SyncedMemory.h"
 
 #include <MetaObject/Signals/detail/SlotMacros.hpp>
 #include <MetaObject/Parameters/ParameterMacros.hpp>

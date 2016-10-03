@@ -1,4 +1,4 @@
-#include "EagleLib/DataStreamManager.h"
+#include "EagleLib/IDataStream.hpp"
 #include "EagleLib/rcc/SystemTable.hpp"
 #include "EagleLib/utilities/sorting.hpp"
 #include "EagleLib/Logging.h"
@@ -77,6 +77,7 @@ namespace EagleLib
         virtual ~DataStream();
 
         // Handles user interactions such as moving the viewport, user interface callbacks, etc
+        std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> GetTopLevelNodes();
         virtual rcc::weak_ptr<IViewManager>            GetViewManager();
 
         // Handles conversion of coordinate systems, such as to and from image coordinates, world coordinates, render scene coordinates, etc.
@@ -185,7 +186,15 @@ DataStream::~DataStream()
         delete thread;
     }
 }
-
+std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> DataStream::GetTopLevelNodes()
+{
+    std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> output;
+    for(auto& itr : top_level_nodes)
+    {
+        output.emplace_back(itr);
+    }
+    return output;
+}
 rcc::weak_ptr<IViewManager> DataStream::GetViewManager()
 {
     return view_manager;

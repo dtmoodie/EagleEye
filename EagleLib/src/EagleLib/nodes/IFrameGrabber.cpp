@@ -1,6 +1,6 @@
 #include "EagleLib/nodes/IFrameGrabber.hpp"
 #include "EagleLib/Logging.h"
-#include "EagleLib/DataStreamManager.h"
+#include "EagleLib/IDataStream.hpp"
 #include "EagleLib/utilities/sorting.hpp"
 #include "Remotery.h"
 #include <MetaObject/Logging/Log.hpp>

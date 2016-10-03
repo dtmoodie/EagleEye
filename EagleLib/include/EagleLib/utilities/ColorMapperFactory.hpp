@@ -1,3 +1,4 @@
+#pragma once
 #include "EagleLib/Detail/Export.hpp"
 #include <functional>
 #include <map>

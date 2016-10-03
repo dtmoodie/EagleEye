@@ -1,3 +1,4 @@
+#include "src/precompile.hpp"
 #include "EagleLib/nodes/Sink.h"
 #include "src/precompiled.hpp"
 
