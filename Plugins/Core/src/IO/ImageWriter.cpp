@@ -1,11 +1,7 @@
-#include "nodes/IO/ImageWriter.h"
-#include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
+#include "ImageWriter.h"
+
 #include "../remotery/lib/Remotery.h"
-#include "EagleLib/utilities/CudaCallbacks.hpp"
-#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
-#include <boost/lexical_cast.hpp>
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

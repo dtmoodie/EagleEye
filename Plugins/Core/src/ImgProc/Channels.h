@@ -1,85 +1,113 @@
 #pragma once
-#include "EagleLib/nodes/Node.h"
-#include <EagleLib/utilities/CudaUtils.hpp>
+#include "src/precompiled.hpp"
+
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
+
 namespace EagleLib
 {
     namespace Nodes
     {
-    
-    class ConvertToGrey: public Node
-    {
-    public:
-        ConvertToGrey();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-    };
+        class ConvertToGrey: public ::EagleLib::Nodes::Node
+        {
+        public:
+            MO_DERIVE(ConvertToGrey, ::EagleLib::Nodes::Node);
+                INPUT(SyncedMemory, input_image, nullptr);
+                OUTPUT(SyncedMemory, grey_image, SyncedMemory());
+            MO_END;
+        protected:
+            bool ProcessImpl();
+        };
 
-    class ConvertToHSV: public Node
-    {
-    public:
-        ConvertToHSV();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-    };
-    class ConvertToLab : public Node
-    {
-    public:
-        ConvertToLab();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-    };
-    class ConvertColorspace : public Node
-    {
-        BufferPool<cv::cuda::GpuMat, EventPolicy> resultBuffer;
-    public:
-        ConvertColorspace();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-    };
-    class Magnitude : public Node
-    {
-        cv::cuda::GpuMat magnitude;
-    public:
-        Magnitude();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-    };
-    class ExtractChannels: public Node
-    {
-        int channelNum;
-        ConstBuffer<std::vector<cv::cuda::GpuMat>> channelsBuffer;
-        //std::vector<cv::cuda::GpuMat> channels;
-    public:
-        ExtractChannels();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-    };
-    class ConvertDataType: public Node
-    {
-    public:
-        ConvertDataType();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
-    };
-    class Merge: public Node
-    {
-        bool qualifiersSet;
-        cv::cuda::GpuMat mergedChannels;
-    public:
-        Merge();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
-    };
-    class Reshape: public Node
-    {
-    public:
-        Reshape();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };
+        class ConvertToHSV: public ::EagleLib::Nodes::Node
+        {
+        public:
+            MO_DERIVE(ConvertToHSV, ::EagleLib::Nodes::Node);
+            INPUT(SyncedMemory, input_image, nullptr);
+            OUTPUT(SyncedMemory, hsv_image, SyncedMemory());
+            MO_END;
+        protected:
+            bool ProcessImpl();
+        };
+        class ConvertToLab : public ::EagleLib::Nodes::Node
+        {
+        public:
+            MO_DERIVE(ConvertToLab, ::EagleLib::Nodes::Node);
+            INPUT(SyncedMemory, input_image, nullptr);
+            OUTPUT(SyncedMemory, lab_image, SyncedMemory());
+            MO_END;
+        protected:
+            bool ProcessImpl();
+        };
+        class ConvertColorspace : public ::EagleLib::Nodes::Node
+        {
+        
+        public:
+            MO_DERIVE(ConvertColorspace, ::EagleLib::Nodes::Node);
+            INPUT(SyncedMemory, input_image, nullptr);
+            OUTPUT(SyncedMemory, output_image, SyncedMemory());
+            MO_END;
+        protected:
+            bool ProcessImpl();
+        };
+        class Magnitude : public ::EagleLib::Nodes::Node
+        {
+        public:
+            MO_DERIVE(Magnitude, ::EagleLib::Nodes::Node);
+            INPUT(SyncedMemory, input_image, nullptr);
+            OUTPUT(SyncedMemory, output_magnitude, SyncedMemory());
+            MO_END;
+        protected:
+            bool ProcessImpl();
+        };
+        class SplitChannels: public ::EagleLib::Nodes::Node
+        {
+        public:
+            MO_DERIVE(SplitChannels, ::EagleLib::Nodes::Node);
+                INPUT(SyncedMemory, input_image, nullptr);
+                OUTPUT(SyncedMemory, channels, SyncedMemory());
+            MO_END;
+        protected:
+            bool ProcessImpl();
+        };
+        class ConvertDataType: public ::EagleLib::Nodes::Node
+        {
+        public:
+            MO_DERIVE(ConvertDataType, ::EagleLib::Nodes::Node);
+            INPUT(SyncedMemory, input_image, nullptr);
+            OUTPUT(SyncedMemory, output_image, SyncedMemory());
+            ENUM_PARAM(data_type, CV_8U, CV_8S, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F);
+            PARAM(double, alpha, 255.0);
+            PARAM(double, beta, 0.0);
+            PARAM(bool, continuous, false);
+            MO_END;
+        protected:
+            bool ProcessImpl();
+        };
+        class MergeChannels: public ::EagleLib::Nodes::Node
+        {
+        public:
+            MO_DERIVE(MergeChannels, ::EagleLib::Nodes::Node);
+                INPUT(SyncedMemory, input_image, nullptr);
+                OUTPUT(SyncedMemory, merged_image, SyncedMemory());
+            MO_END;
+        protected:
+            bool ProcessImpl();
+        };
+        class Reshape: public ::EagleLib::Nodes::Node
+        {
+        public:
+            MO_DERIVE(Reshape, ::EagleLib::Nodes::Node);
+                INPUT(SyncedMemory, input_image, nullptr);
+                OUTPUT(SyncedMemory, reshaped_image, SyncedMemory());
+                PARAM(int, channels, 0);
+                PARAM(int, rows, 0);
+            MO_END;
+        protected:
+            bool ProcessImpl();
+        
+        };
     }
 }

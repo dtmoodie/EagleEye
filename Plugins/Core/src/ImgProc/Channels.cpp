@@ -1,45 +1,36 @@
-#include "nodes/ImgProc/Channels.h"
+#include "Channels.h"
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-
 #include <EagleLib/Qualifiers.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void ConvertToGrey::NodeInit(bool firstInit)
-{
-    
-}
 
-cv::cuda::GpuMat ConvertToGrey::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+bool ConvertToGrey::ProcessImpl()
 {
-    cv::cuda::GpuMat grey;
-    try
+    if(input_image)
     {
-        TIME
-        cv::cuda::cvtColor(img, grey, cv::COLOR_BGR2GRAY, 0, stream);
-    }catch(cv::Exception &err)
-    {
-        // log(Error, err.what());
-        NODE_LOG(error) << err.what();
-        return img;
+        ::cv::cuda::GpuMat grey;
+        ::cv::cuda::cvtColor(input_image->GetGpuMat(*this->_ctx->stream), grey, cv::COLOR_BGR2GRAY, 0, *this->_ctx->stream);
+        grey_image_param.UpdateData(grey, input_image_param.GetTimestamp(), _ctx);
+        return true;
     }
-    TIME
-    return grey;
+    return false;
 }
 
-void ConvertToHSV::NodeInit(bool firstInit)
+bool ConvertToHSV::ProcessImpl()
 {
-    
+    if (input_image)
+    {
+        ::cv::cuda::GpuMat hsv;
+        ::cv::cuda::cvtColor(input_image->GetGpuMat(*this->_ctx->stream), hsv, cv::COLOR_BGR2HSV, 0, *this->_ctx->stream);
+        hsv_image_param.UpdateData(hsv, input_image_param.GetTimestamp(), this->_ctx);
+        return true;
+    }
+    return false;
 }
-
-cv::cuda::GpuMat ConvertToHSV::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+/*void ConvertColorspace::NodeInit(bool firstInit)
 {
-    return img;
-}
-void ConvertColorspace::NodeInit(bool firstInit)
-{
-    Parameters::EnumParameter param;
+    mo::EnumParameter param;
     param.addEnum(ENUM(cv::COLOR_BGR2BGRA));
     param.addEnum(ENUM(cv::COLOR_RGB2RGBA));
     param.addEnum(ENUM(cv::COLOR_BGRA2BGR));
@@ -114,89 +105,55 @@ void ConvertColorspace::NodeInit(bool firstInit)
     param.addEnum(ENUM(cv::COLOR_HLS2RGB));
 
     updateParameter("Conversion Code", param);
-}
-cv::cuda::GpuMat ConvertColorspace::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+}*/
+/*cv::cuda::GpuMat ConvertColorspace::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     auto buf =  resultBuffer.getFront();
     cv::cuda::cvtColor(img, buf->data, getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), 0, stream);
     return buf->data;
-}
+}*/
 
 
-void Magnitude::NodeInit(bool firstInit)
+
+bool Magnitude::ProcessImpl()
 {
-
-}
-cv::cuda::GpuMat Magnitude::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    cv::cuda::magnitude(img, magnitude, stream);
-    return magnitude; 
-}
-
-void ExtractChannels::NodeInit(bool firstInit)
-{
-    if(firstInit)
+    if(input_image)
     {
-        updateParameter("Output Channel", int(0));
+        ::cv::cuda::GpuMat magnitude;
+        ::cv::cuda::magnitude(input_image->GetGpuMat(*_ctx->stream), magnitude, *_ctx->stream);
+        output_magnitude_param.UpdateData(magnitude, input_image_param.GetTimestamp(), _ctx);
+        return true;
     }
-
-    channelsBuffer.resize(5);
+    return false;
 }
 
-cv::cuda::GpuMat ExtractChannels::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+bool SplitChannels::ProcessImpl()
 {
-    TIME
-    channelNum = *getParameter<int>(0)->Data();
-    std::vector<cv::cuda::GpuMat>* channels = channelsBuffer.getFront();
-    TIME
-    cv::cuda::split(img,*channels,stream);
-    TIME
-    for(size_t i = 0; i < channels->size(); ++i)
+    if(input_image)
     {
-        updateParameter("Channel " + std::to_string(i), (*channels)[i])->type = Parameters::Parameter::Output;
+        std::vector<cv::cuda::GpuMat> _channels;
+        ::cv::cuda::split(input_image->GetGpuMat(*_ctx->stream), _channels, *_ctx->stream);
+        channels_param.UpdateData(_channels, input_image_param.GetTimestamp(), _ctx);
+        return true;
     }
-    TIME
-    if(_parameters[0]->changed)
-        channelNum = *getParameter<int>(0)->Data();
-    TIME
-    if(channelNum == -1)
-        return img;
-    if(channelNum < channels->size())
-        return (*channels)[channelNum];
-    else
-        return (*channels)[0];
-}
-void ConvertDataType::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        Parameters::EnumParameter dataType;
-        dataType.addEnum(ENUM(CV_8U));
-        dataType.addEnum(ENUM(CV_8S));
-        dataType.addEnum(ENUM(CV_16U));
-        dataType.addEnum(ENUM(CV_16S));
-        dataType.addEnum(ENUM(CV_32S));
-        dataType.addEnum(ENUM(CV_32F));
-        dataType.addEnum(ENUM(CV_64F));
-        updateParameter("Data type", dataType);
-        updateParameter("Alpha", 255.0);
-        updateParameter("Beta", 0.0);
-    }
-    updateParameter<bool>("Continuous", false);
+    return false;
 }
 
-cv::cuda::GpuMat ConvertDataType::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+bool ConvertDataType::ProcessImpl()
 {
-    cv::cuda::GpuMat output;
-    if(*getParameter<bool>("Continuous")->Data())
+    if(input_image)
     {
-        cv::cuda::createContinuous(img.size(), getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection, output);
+        ::cv::cuda::GpuMat output;
+        if (continuous)
+        {
+            ::cv::cuda::createContinuous(input_image->GetSize(), data_type.currentSelection, output);
+        }
+        input_image->GetGpuMat(*_ctx->stream).convertTo(output, data_type.currentSelection, alpha, beta, *_ctx->stream);
     }
-    img.convertTo(output, getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection, *getParameter<double>(1)->Data(), *getParameter<double>(2)->Data(),stream);
-    return output;
+    return false;
 }
 
-void Merge::NodeInit(bool firstInit)
+/*void Merge::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -206,9 +163,9 @@ void Merge::NodeInit(bool firstInit)
         addInputParameter<cv::cuda::GpuMat>("Channel4")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
     }
     qualifiersSet = false;
-}
+}*/
 
-cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+/*cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     auto chan1 = getParameter<cv::cuda::GpuMat>(0);
     auto chan2 = getParameter<cv::cuda::GpuMat>(1);
@@ -252,27 +209,25 @@ cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& strea
         channels.push_back(*chan4->Data());
     cv::cuda::merge(channels, mergedChannels,stream);
     return mergedChannels;
-}
-void Reshape::NodeInit(bool firstInit)
+}*/
+
+
+
+bool Reshape::ProcessImpl()
 {
-    updateParameter("Channels", int(0));
-    updateParameter("Rows", int(0));
-}
-
-cv::cuda::GpuMat Reshape::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-    return img.reshape(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
+    reshaped_image_param.UpdateData(input_image->GetGpuMat(*_ctx->stream).reshape(channels, rows), input_image_param.GetTimestamp(), _ctx);
+    return true;
 }
 
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToGrey, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertToHSV, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertColorspace, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ExtractChannels, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ConvertDataType, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Merge, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Reshape, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Magnitude, Image, Processing)
+MO_REGISTER_CLASS(ConvertToGrey)
+MO_REGISTER_CLASS(ConvertToHSV)
+MO_REGISTER_CLASS(ConvertColorspace)
+MO_REGISTER_CLASS(SplitChannels)
+MO_REGISTER_CLASS(ConvertDataType)
+MO_REGISTER_CLASS(MergeChannels)
+MO_REGISTER_CLASS(Reshape)
+MO_REGISTER_CLASS(Magnitude)
 
 

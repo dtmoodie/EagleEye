@@ -1,37 +1,25 @@
-#include "nodes/ImgProc/DisplayHelpers.h"
-//#include "DisplayHelpers.cuh"
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+#include "DisplayHelpers.h"
 
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-#include <EagleLib/rcc/external_includes/cv_highgui.hpp>
-
-#include <MetaObject/Thread/InterThread.hpp>
+using namespace ::EagleLib;
+using namespace ::EagleLib::Nodes;
 
 
-
-void
-AutoScale::NodeInit(bool firstInit)
+bool AutoScale::ProcessImpl()
 {
-    
-}
 
-cv::cuda::GpuMat
-AutoScale::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
     std::vector<cv::cuda::GpuMat> channels;
-    cv::cuda::split(img,channels);
+    cv::cuda::split(input_image->GetGpuMat(*_ctx->stream), channels, *_ctx->stream);
     for(size_t i = 0; i < channels.size(); ++i)
     {
         double minVal, maxVal;
         cv::cuda::minMax(channels[i], &minVal, &maxVal);
         double scaleFactor = 255.0 / (maxVal - minVal);
         channels[i].convertTo(channels[0], CV_8U, scaleFactor, minVal*scaleFactor);
-        updateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal)->type =  Parameters::Parameter::State;
-        updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->type =  Parameters::Parameter::State;
+        UpdateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal)->SetFlags(mo::State_e);
+        UpdateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->SetFlags(mo::State_e);
     }
-    cv::cuda::merge(channels,img);
-    return img;
+    cv::cuda::merge(channels,output_image.GetGpuMat(*_ctx->stream), *_ctx->stream);
+    return true;
 }
 
 /*void
@@ -100,54 +88,60 @@ cv::cuda::GpuMat QtColormapDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::S
     return img;
 }
 */
-void Normalize::NodeInit(bool firstInit)
-{
-    Parameters::EnumParameter param;
-    param.addEnum(ENUM(CV_MINMAX));
-    param.addEnum(ENUM(cv::NORM_L2));
-    param.addEnum(ENUM(cv::NORM_L1));
-    param.addEnum(ENUM(cv::NORM_INF));
-    updateParameter("Norm type", param);
-    updateParameter<double>("Alpha", 0);
-    updateParameter<double>("Beta", 1);
-    if(firstInit)
-    {
-        addInputParameter<cv::cuda::GpuMat>("Mask");
-    }
-}
 
-cv::cuda::GpuMat Normalize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+
+bool Normalize::ProcessImpl()
 {
     cv::cuda::GpuMat normalized;
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>(3)->Data();
-    if(img.channels() == 1)
+    
+    if(input_image->GetChannels() == 1)
     {
-        cv::cuda::normalize(img,normalized,
-            *getParameter<double>(1)->Data(),
-            *getParameter<double>(2)->Data(),
-            getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.depth(),
-            mask == NULL ? cv::noArray(): *mask,
-            stream);
+        cv::cuda::normalize(input_image->GetGpuMat(*_ctx->stream), 
+            normalized,
+            alpha,
+            beta,
+            norm_type.currentSelection, input_image->GetDepth(),
+            mask == NULL ? cv::noArray(): mask->GetGpuMat(*_ctx->stream),
+            *_ctx->stream);
+        normalized_output_param.UpdateData(normalized, input_image_param.GetTimestamp(), _ctx);
+        return true;
     }else
     {
         std::vector<cv::cuda::GpuMat> channels;
-        cv::cuda::split(img, channels, stream);
+        
+        if (input_image->GetNumMats() == 1)
+        {
+            cv::cuda::split(input_image->GetGpuMat(*_ctx->stream), channels, *_ctx->stream);
+        }else
+        {
+            channels = input_image->GetGpuMatVec(*_ctx->stream);
+        }
+        std::vector<cv::cuda::GpuMat> normalized_channels;
+        normalized_channels.resize(channels.size());
         for(int i = 0; i < channels.size(); ++i)
         {
-            cv::cuda::normalize(channels[i], channels[i],
-                *getParameter<double>(1)->Data(),
-                *getParameter<double>(2)->Data(),
-                getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), img.depth(),
-                mask == NULL ? cv::noArray(): *mask,
-                stream);
+            cv::cuda::normalize(channels[i], normalized_channels,
+                alpha,
+                beta,
+                norm_type.getValue(), input_image->GetDepth(),
+                mask == NULL ? cv::noArray() : mask->GetGpuMat(*_ctx->stream),
+                *_ctx->stream);
         }
-        cv::cuda::merge(channels, normalized);
+        if(input_image->GetNumMats() == 1)
+        {
+            cv::cuda::merge(channels, normalized, *_ctx->stream);
+            normalized_output_param.UpdateData(normalized, input_image_param.GetTimestamp(), _ctx);
+        }else
+        {
+            normalized_output_param.UpdateData(normalized_channels, input_image_param.GetTimestamp(), _ctx);
+        }
+        return true;
     }   
-    return normalized; 
+    return false;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(AutoScale, Image, Processing)
+MO_REGISTER_CLASS(AutoScale)
 //NODE_DEFAULT_CONSTRUCTOR_IMPL(Colormap, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Normalize, Image, Processing)
+MO_REGISTER_CLASS(Normalize, Image, Processing)
 //static EagleLib::Nodes::NodeInfo g_registerer_QtColormapDisplay("QtColormapDisplay", { "Image", "Sink" });
 //REGISTERCLASS(QtColormapDisplay, &g_registerer_QtColormapDisplay)

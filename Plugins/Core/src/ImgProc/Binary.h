@@ -1,112 +1,129 @@
+#include "src/precompiled.hpp"
+using namespace ::EagleLib;
+using namespace ::EagleLib::Nodes;
 
+class MorphologyFilter: public Node
+{
+public:
+    MO_DERIVE(MorphologyFilter, Node);
+        INPUT(SyncedMemory, input_image, nullptr);
+        OUTPUT(SyncedMemory, output, SyncedMemory());
+        ENUM_PARAM(structuring_element_type, cv::MORPH_RECT, cv::MORPH_CROSS, cv::MORPH_ELLIPSE);
+        ENUM_PARAM(morphology_type, cv::MORPH_ERODE, cv::MORPH_DILATE, cv::MORPH_OPEN, cv::MORPH_CLOSE, cv::MORPH_GRADIENT, cv::MORPH_TOPHAT, cv::MORPH_BLACKHAT);
+        PARAM(int, iterations, 1);
+        PARAM(cv::Mat, structuring_element, cv::getStructuringElement(0, cv::Size(5,5)));
+        PARAM(cv::Point, anchor_point, cv::Point(-1,-1));
+        PARAM(int, structuring_element_size, 5);
+    MO_END;
+        
+protected:
+    bool ProcessImpl();
+    ::cv::Ptr<::cv::cuda::Filter> filter;
+};
 
+class FindContours: public Node
+{
+public:
+    MO_DERIVE(FindContours, Node)
+        INPUT(SyncedMemory, input_image, nullptr);
+        OUTPUT(SyncedMemory, output, SyncedMemory());
+        ENUM_PARAM(mode, cv::RETR_EXTERNAL, cv::RETR_LIST, cv::RETR_CCOMP, cv::RETR_TREE, cv::RETR_FLOODFILL);
+        ENUM_PARAM(method, cv::CHAIN_APPROX_NONE, cv::CHAIN_APPROX_SIMPLE, cv::CHAIN_APPROX_TC89_L1, cv::CHAIN_APPROX_TC89_KCOS);
+        OUTPUT(std::vector<std::vector<cv::Point>>, contours, std::vector<std::vector<cv::Point>>());
+        OUTPUT(std::vector<cv::Vec4i>, hierarchy, std::vector<cv::Vec4i>());
 
+        PARAM(bool, calculate_contour_area, false);
+        PARAM(bool, calculate_moments, false);
+        STATUS(int, num_contours, 0);
 
+    MO_END;
 
+protected:
+    bool ProcessImpl();
+        
+    //virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
+};
 
+class PruneContours: public Node
+{
+public:
+    MO_DERIVE(PruneContours, Node)
+        PARAM(int, min_area, 20)
+        PARAM(int, max_area, 500)
+    MO_END;
+    PruneContours();
 
-#include "src/precompile.hpp"
+    virtual void NodeInit(bool firstInit);
+    virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
+};
+
+class ContourBoundingBox: public Node
+{
+public:
+    typedef std::vector<std::pair<int, double>> contour_area_t;
+    MO_DERIVE(ContourBoundingBox, Node);
+    INPUT(SyncedMemory, input_image, nullptr);
+    INPUT(std::vector<std::vector<cv::Point>>, contours, nullptr);
+    INPUT(std::vector<cv::Vec4i>, hierarchy, nullptr);
+    PARAM(cv::Scalar, box_color, (cv::Scalar(0, 0, 255)));
+    PARAM(int, line_thickness, 2);
+    PARAM(bool, use_filtered_area, false);
+    PARAM(bool, merge_contours, false);
+    PARAM(int, separation_distance, false);
+    OUTPUT(contour_area_t, contour_area, contour_area_t());
+    MO_END;
+protected:
+    bool ProcessImpl();
+    ContourBoundingBox();
+    virtual void NodeInit(bool firstInit);
+    virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
+};
+
+class HistogramThreshold: public Node
+{
+    cv::cuda::GpuMat* inputHistogram;
+    cv::cuda::GpuMat* inputImage;
+    cv::cuda::GpuMat* inputMask;
+    cv::cuda::Stream _stream;
+    cv::cuda::GpuMat lowerMask;
+    cv::cuda::GpuMat upperMask;
+    enum ThresholdType
+    {
+        KeepCenter = 0,
+        SuppressCenter
+    };
+    ThresholdType type;
+public:
+
+    HistogramThreshold();
+    virtual void NodeInit(bool firstInit);
+    virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+    void runFilter();
+};
+
+class DrawContours: public Node
+{
+public:
+    MO_DERIVE(DrawContours, Node)
+        PARAM(cv::Scalar, draw_color, cv::Scalar(0,0,255))
+        PARAM(int, draw_thickness, 8);
+    MO_END;
+
+    DrawContours();
+    virtual void NodeInit(bool firstInit);
+    virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
+};
+
+class DrawRects: public Node
+{
+public:
+    DrawRects();
+    virtual void NodeInit(bool firstInit);
+    virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+};
+
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
 SETUP_PROJECT_DEF
-
-namespace EagleLib
-{
-    namespace Nodes
-    {
-        
-    class MorphologyFilter: public Node
-    {
-    public:
-        MO_DERIVE(MorphologyFilter, Node);
-            INPUT(SyncedMemory, input_image, nullptr);
-            OUTPUT(SyncedMemory, output, SyncedMemory());
-            ENUM_PARAM(mo::EnumParameter, structuring_element_type, cv::MORPH_RECT, cv::MORPH_CROSS, cv::MORPH_ELLIPSE);
-            ENUM_PARAM(mo::EnumParameter, morphology_type, cv::MORPH_ERODE, cv::MORPH_DILATE, cv::MORPH_OPEN, cv::MORPH_CLOSE, cv::MORPH_GRADIENT, cv::MORPH_TOPHAT, cv::MORPH_BLACKHAT);
-            PARAM(int, iterations, 1);
-            PARAM(cv::Mat, structuring_element, cv::getStructuringElement(0, cv::Size(5,5)));
-            PARAM(cv::Point, anchor_point, cv::Point(-1,-1));
-            PARAM(int, structuring_element_size, 5);
-        MO_END;
-        
-    protected:
-        bool ProcessImpl();
-        cv::Ptr<cv::cuda::Filter> filter;
-    };
-
-    class FindContours: public Node
-    {
-    public:
-        FindContours();
-        virtual void NodeInit(bool firstInit);
-        //virtual void findContours(cv::cuda::HostMem img);
-        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
-    };
-
-    class PruneContours: public Node
-    {
-    public:
-        MO_DERIVE(PruneContours, Node)
-            PARAM(int, min_area, 20)
-            PARAM(int, max_area, 500)
-        MO_END;
-        PruneContours();
-
-        virtual void NodeInit(bool firstInit);
-        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
-    };
-
-    class ContourBoundingBox: public Node
-    {
-    public:
-        ContourBoundingBox();
-        virtual void NodeInit(bool firstInit);
-        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
-    };
-
-    class HistogramThreshold: public Node
-    {
-        cv::cuda::GpuMat* inputHistogram;
-        cv::cuda::GpuMat* inputImage;
-        cv::cuda::GpuMat* inputMask;
-        cv::cuda::Stream _stream;
-        cv::cuda::GpuMat lowerMask;
-        cv::cuda::GpuMat upperMask;
-        enum ThresholdType
-        {
-            KeepCenter = 0,
-            SuppressCenter
-        };
-        ThresholdType type;
-    public:
-
-        HistogramThreshold();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
-        void runFilter();
-    };
-
-    class DrawContours: public Node
-    {
-    public:
-        MO_DERIVE(DrawContours, Node)
-            PARAM(cv::Scalar, draw_color, cv::Scalar(0,0,255))
-            PARAM(int, draw_thickness, 8);
-        MO_END;
-
-        DrawContours();
-        virtual void NodeInit(bool firstInit);
-        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
-    };
-
-    class DrawRects: public Node
-    {
-    public:
-        DrawRects();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
-    };
-    }
-}

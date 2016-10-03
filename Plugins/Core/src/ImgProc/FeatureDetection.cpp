@@ -1,8 +1,5 @@
-#include "nodes/ImgProc/FeatureDetection.h"
+#include "FeatureDetection.h"
 
-#include <EagleLib/rcc/external_includes/cv_cudafilters.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaoptflow.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include "EagleLib/nodes/VideoProc/Tracking.hpp"
 #include "EagleLib/utilities/GpuMatAllocators.h"
 #include <parameters/ParameteredObjectImpl.hpp>

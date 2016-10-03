@@ -1,13 +1,6 @@
 #include "EagleLib/nodes/Sink.h"
-#include <EagleLib/rcc/external_includes/cv_highgui.hpp>
-#include <EagleLib/rcc/external_includes/cv_core.hpp>
-#include <EagleLib/utilities/CudaUtils.hpp>
-#include <EagleLib/ObjectDetection.hpp>
+#include "src/precompiled.hpp"
 
-#include <MetaObject/Parameters/ParameterMacros.hpp>
-#include <MetaObject/Parameters/TypedInputParameter.hpp>
-
-#include <opencv2/core/opengl.hpp>
 namespace EagleLib
 {
 namespace Nodes

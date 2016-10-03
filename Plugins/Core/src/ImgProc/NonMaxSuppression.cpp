@@ -1,6 +1,6 @@
-#include "nodes/ImgProc/NonMaxSuppression.h"
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
+#include "NonMaxSuppression.h"
+
+
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
