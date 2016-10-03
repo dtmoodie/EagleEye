@@ -7,7 +7,7 @@ using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
 
-int frame_grabber_rtsp::CanLoadDocument(const std::string& document) const
+int frame_grabber_rtsp::CanLoadDocument(const std::string& document)
 {
     std::string rtsp("rtsp");
     if(document.compare(0, rtsp.length(), rtsp) == 0)

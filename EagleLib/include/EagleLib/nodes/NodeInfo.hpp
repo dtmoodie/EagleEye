@@ -1,7 +1,10 @@
 #pragma once
+#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <EagleLib/Detail/Export.hpp>
 
 #include <MetaObject/Detail/HelperMacros.hpp>
 #include <MetaObject/MetaObjectInfo.hpp>
+
 #include <vector>
 #include <string>
 
@@ -13,13 +16,27 @@ namespace EagleLib
 {
     namespace Nodes
     {
-        class NodeInfo;
+        struct EAGLE_EXPORTS NodeInfo : virtual public mo::IMetaObjectInfo
+        {
+            std::string Print() const;
+            // Get the organizational hierarchy of this node, ie Image -> Processing -> ConvertToGrey
+            virtual std::vector<std::string> GetNodeCategory() const = 0;
+
+            // List of nodes that need to be in the direct parental tree of this node, in required order
+            virtual std::vector<std::vector<std::string>> GetParentalDependencies() const = 0;
+
+            // List of nodes that must exist in this data stream, but do not need to be in the direct parental tree of this node
+            virtual std::vector<std::vector<std::string>> GetNonParentalDependencies() const = 0;
+
+            // Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
+            virtual std::vector<std::string> CheckDependentVariables(mo::IVariableManager* var_manager_) const = 0;
+        };
     }
 }
 
 template<class T> struct GetNodeCategoryHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasNodeCategory, T::GetNodeCategory, std::vector<std::string>(*)(void));
+    DEFINE_HAS_STATIC_FUNCTION(HasNodeCategory, V::GetNodeCategory, std::vector<std::string>(*)(void));
     template<class U> 
     static std::vector<std::string> helper(typename std::enable_if<HasNodeCategory<U>::value, void>::type* = 0)
     { 
@@ -39,7 +56,7 @@ template<class T> struct GetNodeCategoryHelper
 
 template<class T> struct GetParentDepsHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasParentDeps, T::GetParentalDependencies, std::vector<std::vector<std::string>>(*)(void));
+    DEFINE_HAS_STATIC_FUNCTION(HasParentDeps, V::GetParentalDependencies, std::vector<std::vector<std::string>>(*)(void));
     template<class U> 
     static std::vector<std::vector<std::string>> helper(typename std::enable_if<HasParentDeps<U>::value, void>::type* = 0)
     { 
@@ -59,7 +76,7 @@ template<class T> struct GetParentDepsHelper
 
 template<class T> struct GetNonParentDepsHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasNonParentDeps, T::GetNonParentalDependencies, std::vector<std::vector<std::string>>(*)(void));
+    DEFINE_HAS_STATIC_FUNCTION(HasNonParentDeps, V::GetNonParentalDependencies, std::vector<std::vector<std::string>>(*)(void));
     template<class U> 
     static std::vector<std::vector<std::string>> helper(typename std::enable_if<HasNonParentDeps<U>::value, void>::type* = 0)
     { 
@@ -80,7 +97,7 @@ template<class T> struct GetNonParentDepsHelper
 
 template<class T> struct GetDepVarHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasDepVar, T::CheckDependentVariables, std::vector<std::string>(*)(mo::IVariableManager*));
+    DEFINE_HAS_STATIC_FUNCTION(HasDepVar, V::CheckDependentVariables, std::vector<std::string>(*)(mo::IVariableManager*));
     template<class U> 
     static std::vector<std::vector<std::string>> helper(mo::IVariableManager* mgr, typename std::enable_if<HasDepVar<U>::value, void>::type* = 0)
     { 

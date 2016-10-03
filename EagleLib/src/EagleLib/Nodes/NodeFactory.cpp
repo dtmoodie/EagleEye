@@ -1,6 +1,7 @@
-#include "EagleLib/DataStreamManager.h"
-#include "EagleLib/nodes/NodeFactory.h"
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/IDataStream.hpp"
+#include "EagleLib/Nodes/NodeFactory.h"
+#include "EagleLib/Nodes/Node.h"
+#include "EagleLib/Nodes/NodeInfo.hpp"
 
 #include <MetaObject/MetaObjectFactory.hpp>
 #include <MetaObject/Parameters/InputParameter.hpp>

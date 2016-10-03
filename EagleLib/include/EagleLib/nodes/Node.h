@@ -75,28 +75,8 @@ namespace EagleLib
 {
 namespace Nodes
 {
-    struct EAGLE_EXPORTS NodeInfoRegisterer
-    {
-        NodeInfoRegisterer(const char* nodeName, const char** nodeInfo);
-        NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo);
-    };
-
-    struct EAGLE_EXPORTS NodeInfo: virtual public mo::IMetaObjectInfo
-    {
-        std::string Print() const;
-        // Get the organizational hierarchy of this node, ie Image -> Processing -> ConvertToGrey
-        virtual std::vector<std::string> GetNodeCategory() const = 0;
-        
-        // List of nodes that need to be in the direct parental tree of this node, in required order
-        virtual std::vector<std::vector<std::string>> GetParentalDependencies() const = 0;
-        
-        // List of nodes that must exist in this data stream, but do not need to be in the direct parental tree of this node
-        virtual std::vector<std::vector<std::string>> GetNonParentalDependencies() const = 0;
-
-        // Given the variable manager for a datastream, look for missing dependent variables and return a list of candidate nodes that provide those variables
-        virtual std::vector<std::string> CheckDependentVariables(mo::IVariableManager* var_manager_) const = 0;
-    };
-
+    struct NodeInfo;
+    
     class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, Algorithm>
     {
     public:
@@ -121,6 +101,7 @@ namespace Nodes
 
         virtual Node::Ptr                GetChild(const std::string& treeName);
         virtual Node::Ptr                GetChild(const int& index);
+        virtual std::vector<Node::Ptr>   GetChildren();
 
         virtual void                     RemoveChild(const std::string& name);
         virtual void                     RemoveChild(Node::Ptr node);

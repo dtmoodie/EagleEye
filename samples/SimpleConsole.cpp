@@ -1,18 +1,13 @@
 
-#include <shared_ptr.hpp>
-#include <EagleLib/nodes/NodeManager.h>
-#include "EagleLib/nodes/Node.h"
-#include "EagleLib/Plugins.h"
-#include <EagleLib/DataStreamManager.h>
-#include <EagleLib/Logging.h>
-#include <EagleLib/rcc/ObjectManager.h>
-#include <EagleLib/frame_grabber_base.h>
-#include <EagleLib/DataStreamManager.h>
+#include <EagleLib/EagleLib.hpp>
 
-#include <signal.h>
-#include <MetaObject/Logging/Log.hpp>
-#include <parameters/Persistence/TextSerializer.hpp>
-#include <parameters/IVariableManager.h>
+#include <EagleLib/Nodes/NodeFactory.h>
+
+#include <MetaObject/MetaObject.hpp>
+#include <MetaObject/Signals/RelayManager.hpp>
+#include <MetaObject/Parameters/IVariableManager.h>
+#include <RuntimeObjectSystem.h>
+
 #include <boost/program_options.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
@@ -25,6 +20,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 #include <boost/tokenizer.hpp>
+#include <signal.h> // SIGINT, etc
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -36,10 +32,11 @@ void PrintNodeTree(EagleLib::Nodes::Node* node, int depth)
     {
         std::cout << "=";
     }
-    std::cout << node->getFullTreeName() << std::endl;
-    for(int i = 0; i < node->children.size(); ++i)
+    std::cout << node->GetTreeName() << std::endl;
+    auto children = node->GetChildren();
+    for(int i = 0; i < children.size(); ++i)
     {
-        PrintNodeTree(node->children[i].get(), depth + 1);
+        PrintNodeTree(children[i].Get(), depth + 1);
     }
 }
 static volatile bool quit;
@@ -62,9 +59,10 @@ int main(int argc, char* argv[])
     boost::program_options::options_description desc("Allowed options");
     
     //boost::log::add_file_log(boost::log::keywords::file_name = "SimpleConsole%N.log", boost::log::keywords::rotation_size = 10 * 1024 * 1024);
-    EagleLib::SetupLogging();
     
-    Signals::thread_registry::get_instance()->register_thread(Signals::GUI);
+    
+    //Signals::thread_registry::get_instance()->register_thread(Signals::GUI);
+    //mo::ThreadRegistry::Instance()->RegisterThread(mo::ThreadRegistry::GUI);
     desc.add_options()
         ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
         ("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")
@@ -144,21 +142,22 @@ int main(int argc, char* argv[])
 #endif
                 {
                     std::string file = itr->path().string();
-                    EagleLib::loadPlugin(file);
+                    mo::MetaObjectFactory::Instance()->LoadPlugin(file);
                 }
             }
         }
     }
     boost::thread gui_thread([]
     {
-        Signals::thread_registry::get_instance()->register_thread(Signals::GUI);
+        mo::ThreadRegistry::Instance()->RegisterThread(mo::ThreadRegistry::GUI);
         while(!boost::this_thread::interruption_requested())
         {
-            Signals::thread_specific_queue::run();
+            mo::ThreadSpecificQueue::Run();
             cv::waitKey(1);
         }
     });
-    Signals::signal_manager manager;
+    mo::RelayManager manager;
+    
     if(vm.count("plugins"))
     {
         currentDir = boost::filesystem::path(vm["plugins"].as<boost::filesystem::path>());
@@ -173,7 +172,7 @@ int main(int argc, char* argv[])
 #endif
                 {
                     std::string file = itr->path().string();
-                    EagleLib::loadPlugin(file);
+                    mo::MetaObjectFactory::Instance()->LoadPlugin(file);
                 }
             }
         }
@@ -186,16 +185,16 @@ int main(int argc, char* argv[])
         std::cout  << "Loading file: " << document << std::endl;
         std::string configFile = vm["config"].as<std::string>();
         std::cout << "Loading config file " << configFile << std::endl;
-    
-        auto stream = EagleLib::IDataStream::create(document);
-    
-        auto nodes = EagleLib::NodeManager::getInstance().loadNodes(configFile);
+        
+        auto stream = EagleLib::IDataStream::Create(document);
+        
+        auto nodes = EagleLib::NodeFactory::Instance()->LoadNodes(configFile);
         stream->AddNodes(nodes);
 
         std::cout  << "Loaded " << nodes.size() << " top level nodes\n";
         for(int i = 0; i < nodes.size(); ++i)
         {
-            PrintNodeTree(nodes[i].get(), 1);
+            PrintNodeTree(nodes[i].Get(), 1);
         }
         stream->process();
     }else
@@ -203,7 +202,7 @@ int main(int argc, char* argv[])
         std::vector<rcc::shared_ptr<EagleLib::IDataStream>> _dataStreams;
         rcc::weak_ptr<EagleLib::IDataStream> current_stream;
         rcc::weak_ptr<EagleLib::Nodes::Node> current_node;
-        Parameters::Parameter* current_param = nullptr;
+        mo::IParameter* current_param = nullptr;
 
         auto print_options = []()->void
         {
@@ -243,73 +242,65 @@ int main(int argc, char* argv[])
                 "   check            -- checks if any files need to be recompiled\n"
                 "   swap             -- swaps any objects that were recompiled\n";
         };
-        std::vector<std::shared_ptr<Signals::connection>> connections;
+        std::vector<std::shared_ptr<mo::Connection>> connections;
         //std::map<std::string, std::function<void(std::string)>> function_map;
-        connections.push_back(manager.connect<void(std::string)>("list_devices",[](std::string null)->void
-        {
-            auto constructors = EagleLib::ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
-            for(auto constructor : constructors)
+        std::vector<std::shared_ptr<mo::ISlot>> slots;
+        
+        mo::TypedSlot<void(std::string)>* slot;
+        slot = new mo::TypedSlot<void(std::string)>(
+            std::bind([](std::string null)->void
             {
-                auto info = constructor->GetObjectInfo();
-                if(info)
+                auto documents = EagleLib::Nodes::IFrameGrabber::ListAllLoadableDocuments();
+                for(auto document : documents)
                 {
-                    auto fg_info = dynamic_cast<EagleLib::FrameGrabberInfo*>(info);
-                    if(fg_info)
-                    {
-                        auto devices = fg_info->ListLoadableDocuments();
-                        if(devices.size())
-                        {
-                            std::stringstream ss;
-                            ss << fg_info->GetObjectName() << " can load:\n";
-                            for(auto& device : devices)
-                            {
-                                ss << "    " << device;
-                            }
-                            std::cout << ss.str() << std::endl;
-                        }
-                    }
+                    std::cout << "  " << document << "\n";
                 }
-            }
-        }));
-        connections.push_back(manager.connect<void(std::string)>("load_file", [&_dataStreams](std::string doc)->void
+            }, std::placeholders::_1));
+        slots.emplace_back(slot);
+        connections.push_back(manager.Connect(slot, "list_devices"));
+
+        
+        slot = new mo::TypedSlot<void(std::string)>(
+            std::bind([&_dataStreams](std::string doc)->void
         {
-            if(doc.size() == 0)
+            auto fg = EagleLib::Nodes::IFrameGrabber::Create(doc);
+            if(fg)
             {
-                auto stream = EagleLib::IDataStream::create("");
-                _dataStreams.push_back(stream);
+                _dataStreams.push_back(rcc::shared_ptr<EagleLib::IDataStream>(fg->GetDataStream()));
             }
-            if(EagleLib::IDataStream::CanLoadDocument(doc))
-            {
-                LOG(debug) << "Found a frame grabber which can load " << doc;
-                auto stream = EagleLib::IDataStream::create(doc);
-                if(stream)
-                {
-                    stream->StartThread();
-                    _dataStreams.push_back(stream);
-                }else
-                {
-                    LOG(warning) << "Unable to load document";
-                }
-            }else
-            {
-                LOG(warning) << "Unable to find a frame grabber which can load " << doc;
-            }
-        }));
-        connections.push_back(manager.connect<void(std::string)>("quit", [](std::string)->void
+        }, std::placeholders::_1));
+        slots.emplace_back(slot);
+        connections.push_back(manager.Connect(slot, "load_file"));
+
+
+        slot = new mo::TypedSlot<void(std::string)>(
+            std::bind([](std::string)->void
         {
             quit = true;
-        }));
-        
+        }, std::placeholders::_1));
+        slots.emplace_back(slot);
+        connections.push_back(manager.Connect(slot, "quit"));
+
+
         auto func = [&_dataStreams, &current_stream, &current_node, &current_param](std::string what)->void
         {
             if(what == "streams")
             {
                 for(auto& itr : _dataStreams)
                 {
-                    if(auto fg = itr->GetFrameGrabber())
-                        std::cout << " - " << itr->GetPerTypeId() << " - " << fg->GetSourceFilename() << "\n";
-                    else
-                        std::cout << " - " << itr->GetPerTypeId() << "\n";
+                    auto fgs = itr->GetTopLevelNodes();
+                    for(auto& fg : fgs)
+                    {
+                        if(auto frame_grabber = fg.DynamicCast<EagleLib::Nodes::IFrameGrabber>())
+                        {
+                            std::cout << " - " << frame_grabber->GetPerTypeId() << " - " << frame_grabber->GetSourceFilename() << "\n";
+                        }
+                        else
+                        {
+                            
+                        }
+                    }
+
                 }
                 if(_dataStreams.empty())
                     std::cout << "No streams exist\n";
@@ -321,32 +312,32 @@ int main(int argc, char* argv[])
                     auto nodes = current_stream->GetNodes();
                     for(auto& node : nodes)
                     {
-                        PrintNodeTree(node.get(), 0);
+                        PrintNodeTree(node.Get(), 0);
                     }
                 }
                 else if(current_node)
                 {
-                    PrintNodeTree(current_node.get(), 0);
+                    PrintNodeTree(current_node.Get(), 0);
                 }
             }
             if(what == "parameters")
             {
-                std::vector<Parameters::Parameter*> parameters;
+                std::vector<mo::IParameter*> parameters;
                 if(current_node)
                 {
-                    parameters = current_node->getParameters();
+                    parameters = current_node->GetParameters();
                 }
                 if(current_stream)
                 {
-                    if(auto fg = current_stream->GetFrameGrabber())
-                        parameters = fg->getParameters();
+                    
                 }
                 for(auto& itr : parameters)
                 {
                     std::stringstream ss;
                     try
                     {
-                        Parameters::Persistence::Text::Serialize(&ss, itr);   
+                        THROW(debug) << "Needs to be reimplemented";
+                        //mo::IO::Text::Serialize(&ss, itr);
                         std::cout << " - " << ss.str() << "\n";
                     }catch(...)
                     {
@@ -360,14 +351,18 @@ int main(int argc, char* argv[])
             {
                 if(current_stream)
                 {
-                    if(auto fg = current_stream->GetFrameGrabber())
-                        std::cout << " - Current stream: " << fg->GetSourceFilename() << "\n";
-                    else
-                        std::cout << " - Current stream: " << current_stream->GetPerTypeId() << "\n";
+                    auto fgs = current_stream->GetTopLevelNodes();
+                    for(auto& fg : fgs)
+                    {
+                        if(auto f_g = fg.DynamicCast<EagleLib::Nodes::IFrameGrabber>())
+                        {
+                            std::cout << " - Datasource: " << f_g->GetSourceFilename() << "\n";
+                        }
+                    }
                 }
                 if(current_node)
                 {
-                    std::cout << " - Current node: " << current_node->getFullTreeName() << "\n";
+                    std::cout << " - Current node: " << current_node->GetTreeName() << "\n";
                 }
                 if(current_param)
                 {
@@ -380,18 +375,18 @@ int main(int argc, char* argv[])
             {
                 if (current_node)
                 {
-                    current_node->GetDataStream()->GetSignalManager()->print_signal_map();
+                    //current_node->GetDataStream()->GetRelayManager()->print_signal_map();
                 }
                 if (current_stream)
                 {
-                    current_stream->GetSignalManager()->print_signal_map();
+                    //current_stream->GetSignalManager()->print_signal_map();
                 }
             }
             if(what == "inputs")
             {
                 if(current_param && current_node)
                 {
-                    auto potential_inputs = current_node->GetVariableManager()->GetOutputParameters(current_param->GetTypeInfo());
+                    auto potential_inputs = current_node->GetDataStream()->GetVariableManager()->GetOutputParameters(current_param->GetTypeInfo());
                     std::stringstream ss;
                     if(potential_inputs.size())
                     {
@@ -407,14 +402,14 @@ int main(int argc, char* argv[])
                 }
                 if(current_node)
                 {
-                    auto params = current_node->getParameters();
+                    auto params = current_node->GetParameters();
                     std::stringstream ss;
                     for(auto param : params)
                     {
-                        if(param->type & Parameters::Parameter::Input)
+                        if(param->CheckFlags(mo::Input_e))
                         {
                             ss << " -- " << param->GetName() << " [ " << param->GetTypeInfo().name() << " ]\n";
-                            auto potential_inputs = current_node->GetVariableManager()->GetOutputParameters(param->GetTypeInfo());
+                            auto potential_inputs = current_node->GetDataStream()->GetVariableManager()->GetOutputParameters(param->GetTypeInfo());
                             for(auto& input : potential_inputs)
                             {
                                 ss << " - " << input->GetTreeName();
@@ -426,18 +421,19 @@ int main(int argc, char* argv[])
             }
             if(what == "projects")
             {
-                auto project_count = EagleLib::ObjectManager::Instance().getProjectCount();
-                std::stringstream ss;
+                THROW(debug) << "Needs to be reimplemented";
+                //auto project_count = EagleLib::ObjectManager::Instance().getProjectCount();
+                /*std::stringstream ss;
                 ss << "\n";
                 for(int i = 0; i < project_count; ++i)
                 {
                     ss << i << " - " << EagleLib::ObjectManager::Instance().getProjectName(i) << "\n";
                 }
-                std::cout << ss.str() << std::endl;
+                std::cout << ss.str() << std::endl;*/
             }
             if(what == "plugins")
             {
-                auto plugins = EagleLib::ListLoadedPlugins();
+                auto plugins = mo::MetaObjectFactory::Instance()->ListLoadedPlugins();
                 std::stringstream ss;
                 ss << "\n";
                 for(auto& plugin : plugins)
@@ -449,9 +445,13 @@ int main(int argc, char* argv[])
                 std::cout << ss.str() << std::endl;
             }
         };
-        connections.push_back(manager.connect<void(std::string)>("print", func));
-        connections.push_back(manager.connect<void(std::string)>("ls", func));
-        connections.push_back(manager.connect<void(std::string)>("select", [&_dataStreams,&current_stream, &current_node, &current_param](std::string what)
+        slot = new mo::TypedSlot<void(std::string)>(std::bind(func, std::placeholders::_1));
+        slots.emplace_back(slot);
+        connections.push_back(manager.Connect(slot, "print"));
+        connections.push_back(manager.Connect(slot, "ls"));
+            
+        slot = new mo::TypedSlot<void(std::string)>(
+            std::bind([&_dataStreams,&current_stream, &current_node, &current_param](std::string what)
         {
             int idx = -1;
             std::string name;
@@ -476,7 +476,7 @@ int main(int argc, char* argv[])
                     {
                         if(itr->GetPerTypeId() == idx)
                         {
-                            current_stream = itr.get();
+                            current_stream = itr.Get();
                             current_node.reset();
                             current_param = nullptr;
                             return;
@@ -491,10 +491,10 @@ int main(int argc, char* argv[])
                 auto nodes = current_stream->GetNodes();
                 for(auto& node : nodes)
                 {
-                    if(node->getTreeName() == what)
+                    if(node->GetTreeName() == what)
                     {
                         current_stream.reset();
-                        current_node = node.get();
+                        current_node = node.Get();
                         current_param = nullptr;
                         return;
                     }
@@ -504,16 +504,16 @@ int main(int argc, char* argv[])
             }
             if(current_node)
             {
-                auto child = current_node->getChild(what);
+                auto child = current_node->GetChild(what);
                 if(child)
                 {
-                    current_node = child.get();
+                    current_node = child.Get();
                     current_stream.reset();
                     current_param = nullptr;
                     return;
                 }else
                 {
-                    auto params = current_node->getParameters();
+                    auto params = current_node->GetParameters();
                     for(auto& param : params)
                     {
                         if(param->GetName().find(what) != std::string::npos)
@@ -526,12 +526,18 @@ int main(int argc, char* argv[])
                     std::cout << "No parameter found with given name\n";
                 }
             }
-        }));
-        connections.push_back(manager.connect<void(std::string)>("delete", [&_dataStreams,&current_stream, &current_node](std::string what)
+        }, std::placeholders::_1));
+
+
+        connections.push_back(manager.Connect(slot,"select"));
+
+        
+        slot = new mo::TypedSlot<void(std::string)>(
+            std::bind([&_dataStreams,&current_stream, &current_node](std::string what)
         {
             if(current_stream)
             {
-                auto itr = std::find(_dataStreams.begin(), _dataStreams.end(), current_stream.get());
+                auto itr = std::find(_dataStreams.begin(), _dataStreams.end(), current_stream.Get());
                 if(itr != _dataStreams.end())
                 {
                     _dataStreams.erase(itr);
@@ -541,26 +547,36 @@ int main(int argc, char* argv[])
                 }
             }else if(current_node)
             {
-                if(auto parent = current_node->getParent())
+                auto parents = current_node->GetParents();
+                if(parents.size())
                 {
-                    parent->removeChild(current_node.get());
+                    for(auto parent : parents)
+                    {
+                        parent->RemoveChild(current_node.Get());
+                    }
                     current_node.reset();
                     std::cout << "Sucessfully removed node from parent node\n";
                     return;
-                }else if(auto stream = current_node->GetDataStream())
+                }else if (auto stream = current_node->GetDataStream())
                 {
-                    stream->RemoveNode(current_node.get());
+                    stream->RemoveNode(current_node.Get());
                     current_node.reset();
                     std::cout << "Sucessfully removed node from datastream\n";
                     return;
                 }
             }
             std::cout << "Unable to delete item\n";
-        }));
-        connections.push_back(manager.connect<void(std::string)>("help", [&print_options](std::string)->void{print_options();}));
-        connections.push_back(manager.connect<void(std::string)>("list", [](std::string filter)->void
+        }, std::placeholders::_1));
+
+        connections.push_back(manager.Connect(slot, "delete"));
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([&print_options](std::string)->void {print_options(); }, std::placeholders::_1));
+
+        connections.push_back(manager.Connect(slot,"help" ));
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string filter)->void
         {
-            auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
+            auto nodes = EagleLib::NodeFactory::Instance()->GetConstructableNodes();
             for(auto& node : nodes)
             {
                 if(filter.size())
@@ -575,10 +591,12 @@ int main(int argc, char* argv[])
                 }
                 
             }
-        }));
-        connections.push_back(manager.connect<void(std::string)>("plugins", [](std::string null)->void
+        }, std::placeholders::_1));
+        connections.push_back(manager.Connect(slot, "list"));
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string null)->void
         {
-            auto plugins = EagleLib::ListLoadedPlugins();
+            auto plugins = mo::MetaObjectFactory::Instance()->ListLoadedPlugins();
             std::stringstream ss;
             ss << "Loaded / failed plugins:\n";
             for(auto& plugin: plugins)
@@ -586,8 +604,12 @@ int main(int argc, char* argv[])
                 ss << "  " << plugin << "\n";
             }
             std::cout << ss.str() << std::endl;;
-        }));
-        connections.push_back(manager.connect<void(std::string)>("add", [&current_node, &current_stream](std::string name)->void
+        }, std::placeholders::_1));
+
+
+        connections.push_back(manager.Connect(slot, "plugins"));
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_node, &current_stream](std::string name)->void
         {
             if(current_stream)
             {
@@ -596,14 +618,17 @@ int main(int argc, char* argv[])
             }
             if(current_node)
             {
-                EagleLib::NodeManager::getInstance().addNode(name, current_node.get());
+                EagleLib::NodeFactory::Instance()->AddNode(name, current_node.Get());
             }
-        }));
-        connections.push_back(manager.connect<void(std::string)>("set", [&current_node, &current_stream, &current_param](std::string value)->void
+        }, std::placeholders::_1));
+        connections.push_back(manager.Connect(slot, "add"));
+
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_node, &current_stream, &current_param](std::string value)->void
         {
-            if(current_param && current_node && current_param->type & Parameters::Parameter::Input)
+            if(current_param && current_node && current_param->CheckFlags(mo::Input_e))
             {
-                auto variable_manager = current_node->GetVariableManager();
+                auto variable_manager = current_node->GetDataStream()->GetVariableManager();
                 auto output = variable_manager->GetOutputParameter(value);
                 if(output)
                 {
@@ -618,12 +643,12 @@ int main(int argc, char* argv[])
                 {
                     value = value.substr(current_param->GetName().size());
                 }
-                if(Parameters::Persistence::Text::DeSerialize(&value, current_param))
-                    return;
+                //if(Parameters::Persistence::Text::DeSerialize(&value, current_param))
+                  //  return;
             }
             if (current_node)
             {
-                auto params = current_node->getParameters();
+                auto params = current_node->GetParameters();
                 for(auto& param : params)
                 {
                     auto pos = value.find(param->GetName());
@@ -632,14 +657,14 @@ int main(int argc, char* argv[])
                         std::cout << "Setting value for parameter " << param->GetName() << " to " << value.substr(pos + param->GetName().size() + 1) << std::endl;
                         std::stringstream ss;
                         ss << value.substr(pos + param->GetName().size() + 1);
-                        Parameters::Persistence::Text::DeSerialize(&ss, param);
+                        //Parameters::Persistence::Text::DeSerialize(&ss, param);
                         return;
                     }
                 }
                 std::cout << "Unable to find parameter by name for set string: " << value << std::endl;
             }else if(current_stream)
             {
-                auto params = current_stream->GetFrameGrabber()->getParameters();
+                /*auto params = current_stream->GetFrameGrabber()->getParameters();
                 for(auto& param : params)
                 {
                     auto pos = value.find(param->GetName());
@@ -653,60 +678,65 @@ int main(int argc, char* argv[])
                         return;
                     }
                 }
-                std::cout << "Unable to find parameter by name for set string: " << value << std::endl;
+                std::cout << "Unable to find parameter by name for set string: " << value << std::endl;*/
             }
-        }));
-        //connections.push_back(manager.connect<void(std::string)>("ls", [&function_map](std::string str)->void {function_map["print"](str); }));
+        }, std::placeholders::_1));
+        connections.push_back(manager.Connect(slot, "set"));
         
-        connections.push_back(manager.connect<void(std::string)>("emit", [&current_node, &current_stream](std::string name)
+        
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_node, &current_stream](std::string name)
         {
-            EagleLib::SignalManager* mgr = nullptr;
+            mo::RelayManager* mgr = nullptr;
             if (current_node)
             {
-                mgr = current_node->GetDataStream()->GetSignalManager();
+                mgr = current_node->GetDataStream()->GetRelayManager();
             }
             if (current_stream)
             {
-                mgr = current_stream->GetSignalManager();
+                mgr = current_stream->GetRelayManager();
             }
-            std::vector<Signals::signal_base*> signals;
+            std::vector<std::shared_ptr<mo::ISignalRelay>> relays;
             if (mgr)
             {
-                signals = mgr->get_signals(name);
+                relays = mgr->GetRelays(name);
             }
             auto table = PerModuleInterface::GetInstance()->GetSystemTable();
             if (table)
             {
-                auto global_signal_manager = table->GetSingleton<EagleLib::SignalManager>();
+                auto global_signal_manager = table->GetSingleton<mo::RelayManager>();
                 if(global_signal_manager)
                 {
-                    auto global_signals = global_signal_manager->get_signals(name);
-                    signals.insert(signals.end(), global_signals.begin(), global_signals.end());
+                    auto global_relays = global_signal_manager->GetRelays(name);
+                    relays.insert(relays.end(), global_relays.begin(), global_relays.end());
                 }
             }
-            if (signals.size() == 0)
+            if (relays.size() == 0)
             {
                 std::cout << "No signals found with name: " << name << std::endl;
                 return;
             }
             int idx = 0;
-            if (signals.size() > 1)
+            if (relays.size() > 1)
             {
-                for (auto signal : signals)
+                for (auto relay : relays)
                 {
-                    std::cout << idx << " - " << signal->get_signal_type().name();
+                    std::cout << idx << " - " << relay->GetSignature().name();
                     ++idx;
                 }
                 std::cin >> idx;
             }
-            auto proxy = Signals::serialization::text::factory::instance()->get_proxy(signals[idx]);
+            THROW(debug) << "Signal serialization needs to be reimplemented";
+            /*auto proxy = Signals::serialization::text::factory::instance()->get_proxy(signals[idx]);
             if(proxy)
             {
                 proxy->send(signals[idx], "");
                 delete proxy;
-            }
-        }));
-        connections.push_back(manager.connect<void(std::string)>("log", [](std::string level)
+            }*/
+        }, std::placeholders::_1));
+        connections.push_back(manager.Connect(slot, "emit"));
+
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string level)
         {
         if (level == "trace")
             boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
@@ -720,8 +750,11 @@ int main(int argc, char* argv[])
             boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error);
         if (level == "fatal")
             boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
-        }));
-        connections.push_back(manager.connect<void(std::string)>("link", [](std::string directory)
+        }, std::placeholders::_1));
+        connections.push_back(manager.Connect(slot, "log"));
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind(
+        [](std::string directory)
         {
             int idx = 0;
             if(auto pos = directory.find(',') != std::string::npos)
@@ -729,18 +762,27 @@ int main(int argc, char* argv[])
                 idx = boost::lexical_cast<int>(directory.substr(0, pos));
                 directory = directory.substr(pos + 1);
             }
-            EagleLib::ObjectManager::Instance().addLinkDir(directory, idx);
-        }));
-        connections.push_back(manager.connect<void(std::string)>("wait", [](std::string ms) {boost::this_thread::sleep_for(boost::chrono::milliseconds(boost::lexical_cast<int>(ms)));}));
+            mo::MetaObjectFactory::Instance()->GetObjectSystem()->AddLibraryDir(directory.c_str(), idx);            
+        }, std::placeholders::_1));
+
+        connections.push_back(manager.Connect(slot, "link"));
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string ms)
+        {
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(boost::lexical_cast<int>(ms)));
+        }, std::placeholders::_1));
+
+        connections.push_back(manager.Connect(slot, "wait"));
         
         bool swap_required = false;
-        connections.push_back(manager.connect<void(std::string)>("recompile", [&current_param, &current_node, &current_stream, &swap_required, &_dataStreams](std::string action)
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_param, &current_node, &current_stream, &swap_required, &_dataStreams](std::string action)
         {
             if(action == "check")
             {
-                EagleLib::ObjectManager::Instance().CheckRecompile();
+                //EagleLib::ObjectManager::Instance().CheckRecompile();
+                mo::MetaObjectFactory::Instance()->CheckCompile();
                 boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-                if(EagleLib::ObjectManager::Instance().CheckIsCompiling())
+                if(mo::MetaObjectFactory::Instance()->IsCurrentlyCompiling())
                 {
                     std::cout << "Recompiling...\n";
                 }
@@ -751,7 +793,7 @@ int main(int argc, char* argv[])
                 {
                     stream->StopThread();
                 }
-                if(EagleLib::ObjectManager::Instance().PerformSwap())
+                if(mo::MetaObjectFactory::Instance()->SwapObjects())
                 {
                     std::cout << "Recompile complete\n";
                 }
@@ -765,25 +807,28 @@ int main(int argc, char* argv[])
             }
             if(action == "abort")
             {
-                EagleLib::ObjectManager::Instance().abort_compilation();
+                mo::MetaObjectFactory::Instance()->AbortCompilation();
             }
-        }));
+        }, std::placeholders::_1));
+        connections.push_back(manager.Connect(slot, "recompile"));
+
         if (vm.count("file"))
         {
-            (*manager.get_signal<void(std::string)>("load_file"))(vm["file"].as<std::string>());
+
+            //(*manager.get_signal<void(std::string)>("load_file"))(vm["file"].as<std::string>());
         }
         
         print_options();
-        EagleLib::ObjectManager::Instance().CheckRecompile();
-        std::function<void(const std::string& str, int)> f = [](const std::string& str, int level)
+        mo::MetaObjectFactory::Instance()->CheckCompile();
+        /*std::function<void(const std::string& str, int)> f = [](const std::string& str, int level)
         {
             std::string search("Complete");
             if(str.find(search) != std::string::npos)
             {
                 std::cout << str;
             }
-        };
-        EagleLib::ObjectManager::Instance().setCompileCallback(f);
+        };*/
+        //EagleLib::ObjectManager::Instance().setCompileCallback(f);
         std::vector<std::string> command_list;
         if(vm.count("script"))
         {
@@ -815,31 +860,31 @@ int main(int argc, char* argv[])
             ss << command_line;
             std::string command;
             std::getline(ss, command, ' ');
-            auto signals = manager.get_signals(command);
-            if(signals.size() == 1)
+            auto relay = manager.GetRelay<void(std::string)>(command);
+            if(relay)
             {
                 std::string rest;
                 std::getline(ss, rest);
                 try
                 {
-                    auto proxy = Signals::serialization::text::factory::instance()->get_proxy(signals[0]);
+                    (*relay)(rest);
+                    /*auto proxy = Signals::serialization::text::factory::instance()->get_proxy(signals[0]);
                     if(proxy)
                     {
                         proxy->send(signals[0], rest);
                         delete proxy;
-                    }
+                    }*/
                 }catch(...)
                 {
                     LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed miserably";
                 }
-                
             }else
             {
                 LOG(warning) << "Invalid command: " << command_line;
                 print_options();
             }
             for(int i = 0; i < 20; ++i)
-                Signals::thread_specific_queue::run_once();
+                mo::ThreadSpecificQueue::RunOnce();
         }
         std::cout << "Shutting down\n";
     }

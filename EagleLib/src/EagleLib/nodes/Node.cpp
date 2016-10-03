@@ -1,7 +1,7 @@
-#include "EagleLib/nodes/Node.h"
-#include "EagleLib/nodes/NodeFactory.h"
-
-#include <EagleLib/DataStreamManager.h>
+#include "EagleLib/Nodes/Node.h"
+#include "EagleLib/Nodes/NodeFactory.h"
+#include "EagleLib/Nodes/NodeInfo.hpp"
+#include "EagleLib/IDataStream.hpp"
 #include <EagleLib/rcc/external_includes/cv_videoio.hpp>
 #include <EagleLib/rcc/SystemTable.hpp>
 #include <EagleLib/utilities/GpuMatAllocators.h>
@@ -107,15 +107,7 @@ namespace EagleLib
         };
     }    
 }
-Nodes::NodeInfoRegisterer::NodeInfoRegisterer(const char* name, const char** hierarchy)
-{
-    
-}
-Nodes::NodeInfoRegisterer::NodeInfoRegisterer(const char* nodeName, std::initializer_list<char const*> nodeInfo)
-{
-    std::vector<char const*> nodeInfoHierarchy(nodeInfo.begin(), nodeInfo.end());
-    //EagleLib::NodeManager::getInstance().RegisterNodeInfo(nodeName, nodeInfoHierarchy);
-}
+
 Node::Node()
 {
     _modified = true;
@@ -288,6 +280,10 @@ Node::Ptr Node::GetChild(const std::string& treeName)
 Node::Ptr Node::GetChild(const int& index)
 {
     return _children[index];
+}
+std::vector<Node::Ptr>   Node::GetChildren()
+{
+    return _children;
 }
 
 void Node::SwapChildren(int idx1, int idx2)

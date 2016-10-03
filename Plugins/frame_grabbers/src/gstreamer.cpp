@@ -6,7 +6,7 @@ using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
 
-int frame_grabber_gstreamer::CanLoadDocument(const std::string& document) const
+int frame_grabber_gstreamer::CanLoadDocument(const std::string& document)
 {
     boost::filesystem::path path(document);
     // oooor a gstreamer pipeline.... 

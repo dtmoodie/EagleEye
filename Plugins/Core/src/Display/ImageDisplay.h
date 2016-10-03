@@ -1,3 +1,4 @@
+#include "src/precompile.hpp"
 #include "EagleLib/nodes/Sink.h"
 #include <EagleLib/rcc/external_includes/cv_highgui.hpp>
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
