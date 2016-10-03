@@ -63,6 +63,8 @@ namespace EagleLib
         SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat);
         SyncedMemory(const cv::Mat& h_mat);
         SyncedMemory(const cv::cuda::GpuMat& d_mat);
+        SyncedMemory(const std::vector<cv::cuda::GpuMat> & d_mats);
+        SyncedMemory(const std::vector<cv::Mat>& h_mats);
         SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat);
         SyncedMemory(cv::MatAllocator* cpu_allocator, cv::cuda::GpuMat::Allocator* gpu_allocator);
         SyncedMemory clone(cv::cuda::Stream& stream);
@@ -85,7 +87,8 @@ namespace EagleLib
 
         int GetNumMats() const;
         bool empty() const;
-        cv::Size GetSize(int index = 0) const;
+        cv::Size GetSize() const;
+        int GetChannels() const;
         std::vector<int> GetShape() const;
         int GetDim(int dim) const;
         int GetDepth() const;

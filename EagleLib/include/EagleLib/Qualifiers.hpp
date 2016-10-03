@@ -36,7 +36,7 @@ namespace EagleLib
     template<typename T> class MatQualifier
     {
     public:
-        static boost::function<bool(mo::Parameter*)> get(int width = -1, int height = -1, int channels = -1, int type = -1)
+        static boost::function<bool(mo::IParameter*)> get(int width = -1, int height = -1, int channels = -1, int type = -1)
         {
             return boost::bind(qualifier<T>,_1,width,height,channels, type);
         }

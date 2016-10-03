@@ -32,6 +32,18 @@ SyncedMemory::SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat)
     sync_flags.resize(1, SYNCED);
 }
 
+SyncedMemory::SyncedMemory(const std::vector<cv::cuda::GpuMat> & d_mats):
+    d_data(d_mats)
+{
+    sync_flags.resize(d_mats.size(), DEVICE_UPDATED);
+}
+
+SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mats):
+    h_data(h_mats)
+{
+    sync_flags.resize(h_mats.size(), HOST_UPDATED);
+}
+
 SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat):
     h_data(h_mat), d_data(d_mat)
 {
@@ -200,10 +212,21 @@ void SyncedMemory::ReleaseGpu(cv::cuda::Stream& stream)
     }
 }
 
-cv::Size SyncedMemory::GetSize(int index) const
+cv::Size SyncedMemory::GetSize() const
 {
-    CV_Assert(index >= 0 && index < d_data.size());
-    return d_data[index].size();
+    if(d_data.empty())
+        return cv::Size();
+    return d_data[0].size();
+}
+
+int SyncedMemory::GetChannels() const
+{
+    if(d_data.empty())
+        return 0;
+    if(d_data.size() == 1)
+        return d_data[0].channels();
+    CV_Assert(d_data[0].channels() == 1);
+    return d_data.size();
 }
 
 std::vector<int> SyncedMemory::GetShape() const

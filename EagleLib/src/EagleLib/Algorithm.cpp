@@ -107,7 +107,7 @@ bool Algorithm::CheckInputs()
     
     for(auto input : inputs)
     {
-        if(!input->GetInput(ts))
+        if(!input->GetInput(ts) && !input->CheckFlags(Optional_e))
         {
             LOG(trace) << input->GetTreeName() << " failed to get input at timestamp: " << ts;
             return false;
