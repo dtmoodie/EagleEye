@@ -18,21 +18,23 @@ namespace EagleLib
             tiff,
             bmp
         };
-
-        std::string baseName;
-        std::string extension;
-        int frameCount;
+        
         bool writeRequested;
-        cv::cuda::HostMem h_buf;
         int frameSkip;
     public:
-        ImageWriter();
-        void requestWrite();
-        void writeImage();
-
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-        virtual void doProcess(TS<SyncedMemory> &img, cv::cuda::Stream &stream);
+        
+        MO_DERIVE(ImageWriter, Node)
+            INPUT(SyncedMemory, input_image, nullptr)
+            PARAM(std::string, base_name, "Image-")
+            ENUM_PARAM(extension, jpg, png, tiff, bmp)
+            PARAM(int, frequency, -1)
+            PARAM(mo::WriteDirectory, save_directory, mo::WriteDirectory("C:/tmp"))
+            STATUS(int, frame_count, 0);
+            PARAM(bool, request_write, false);
+        MO_END;
+    protected:
+        bool ProcessImpl();
+        
     };
     }
 }

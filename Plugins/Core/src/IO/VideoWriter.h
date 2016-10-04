@@ -1,5 +1,5 @@
 #pragma once
-#include <EagleLib/nodes/Node.h>
+#include <src/precompiled.hpp>
 #include <EagleLib/rcc/external_includes/cv_videoio.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudacodec.hpp>
 #include "RuntimeInclude.h"
@@ -13,23 +13,19 @@ namespace EagleLib
     
     class VideoWriter : public Node
     {
-        bool gpuWriter;
-        bool restart;
-        cv::Size size;
-        cv::Ptr<cv::cudacodec::VideoWriter> d_writer;
-        cv::Ptr<cv::VideoWriter>    h_writer;
-        bool writeOut;
     public:
-        VideoWriter();
-        VideoWriter(std::string fileName);
-        void NodeInit(bool firstInit);
-        void Serialize(ISimpleSerializer *pSerializer);
-        ~VideoWriter();
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-        void writeImg(cv::cuda::GpuMat& img);
-        void startWrite();
-        void restartFunc();
-        void endWrite();
+        MO_BEGIN(VideoWriter, Node)
+            INPUT(SyncedMemory, image, nullptr);
+            PROPERTY(cv::Ptr<cv::cudacodec::VideoWriter>, d_writer, cv::Ptr<cv::cudacodec::VideoWriter>())
+            PROPERTY(cv::Ptr<cv::VideoWriter>, h_writer, cv::Ptr<cv::VideoWriter>())
+            PARAM(mo::EnumParameter, codec, mo::EnumParameter());
+            PARAM(mo::WriteFile, filename, mo::WriteFile("video.mp4"));
+            STATUS(bool, using_gpu_writer, true);
+            MO_SLOT(void, write_out);
+        MO_END;
+
+    protected:
+        bool ProcessImpl();
         
     };
     }

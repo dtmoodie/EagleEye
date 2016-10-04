@@ -5,107 +5,72 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void FFT::NodeInit(bool firstInit)
+bool FFT::ProcessImpl()
 {
-    if(firstInit)
+    cv::cuda::GpuMat padded;
+    if(input->GetChannels() > 2)
     {
-        Parameters::EnumParameter param;
-        param.addEnum(ENUM(Coefficients));
-        param.addEnum(ENUM(Magnitude));
-        param.addEnum(ENUM(Phase));
-        updateParameter("DFT rows flag", false);        // 0
-        updateParameter("DFT scale flag", false);       // 1
-        updateParameter("DFT inverse flag", false);     // 2
-        updateParameter("DFT real output flag", false); // 3
-        updateParameter("Desired output", param);
-        //updateParameter("Desired output", int(-1));     // 4
-        updateParameter("Log scale", true);             // 5
-        updateParameter<cv::cuda::GpuMat>("Magnitude", cv::cuda::GpuMat())->type =Parameters::Parameter::Output;  // 6
-        updateParameter<cv::cuda::GpuMat>("Phase", cv::cuda::GpuMat())->type =  Parameters::Parameter::Output;      // 7
+        LOG(debug) << "Too many channels, can only handle 1 or 2 channel input. Input has " << input->GetChannels() << " channels.";
+        return false;
     }
-    updateParameter("Use optimized size",false);
-    destBuf.resize(5);
-    floatBuf.resize(5);
+    if(use_optimized_size)
+    {
+        int in_rows = input->GetSize().height;
+        int in_cols = input->GetSize().width;
+        int rows = cv::getOptimalDFTSize(in_rows);
+        int cols = cv::getOptimalDFTSize(in_cols);
+        cv::cuda::copyMakeBorder(input->GetGpuMat(*_ctx->stream), padded, 0, rows - in_rows, 0, cols - in_cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), *_ctx->stream);
+    }else
+    {
+        padded = input->GetGpuMat(*_ctx->stream);
+    }
+    if(padded.depth() != CV_32F)
+    {
+        cv::cuda::GpuMat float_img;
+        padded.convertTo(float_img, CV_MAKETYPE(CV_32F, padded.channels()), *_ctx->stream);
+        padded = float_img;
+    }
+    int flags = 0;
+    if (dft_rows)
+        flags = flags | cv::DFT_ROWS;
+    if (dft_scale)
+        flags = flags | cv::DFT_SCALE;
+    if (dft_inverse)
+        flags = flags | cv::DFT_INVERSE;
+    if (dft_real_output)
+        flags = flags | cv::DFT_REAL_OUTPUT;
+    cv::cuda::GpuMat result;
+    cv::cuda::dft(padded, result, input->GetSize(),flags, *_ctx->stream);
+    coefficients_param.UpdateData(result, input_param.GetTimestamp(), _ctx);
+    if(magnitude_param.HasSubscriptions())
+    {
+        cv::cuda::GpuMat magnitude;
+        cv::cuda::magnitude(result,magnitude, *_ctx->stream);
+        
+        if(log_scale)
+        {
+            cv::cuda::add(magnitude, cv::Scalar::all(1), magnitude, cv::noArray(), -1, *_ctx->stream);
+            cv::cuda::log(magnitude, magnitude, *_ctx->stream);
+        }
+        this->magnitude_param.UpdateData(magnitude, input_param.GetTimestamp(), _ctx);
+    }
+    if(phase_param.HasSubscriptions())
+    {
+        std::vector<cv::cuda::GpuMat> channels;
+        cv::cuda::split(result, channels, Stream());
+        cv::cuda::GpuMat phase;
+        cv::cuda::phase(channels[0], channels[1], phase, false, Stream());
+        this->phase_param.UpdateData()
+
+    }
 }
 
 cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
-    if(img.empty())
-        return img;
-    TIME
-    int rows = cv::getOptimalDFTSize(img.rows);
-    int cols = cv::getOptimalDFTSize(img.cols);
-    cv::cuda::GpuMat padded;
-    if(*getParameter<bool>("Use optimized size")->Data())
-        cv::cuda::copyMakeBorder(img,padded, 0, rows - img.rows, 0, cols - img.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), stream);
-    else
-        padded = img;
-    TIME
-    img = padded;
-    if(img.channels() > 2)
-    {
-/*        std::stringstream ss;
-        ss << "Too many channels, can only handle 1 or 2 channel input. Input has ";
-        ss << img.channels() << " channels.";
-        log(Warning, ss.str());*/
-        NODE_LOG(warning) << "Too many channels, can only handle 1 or 2 channel input. Input has " << img.channels() << " channels.";
-        return img;
-    }
-    TIME
-    cv::cuda::GpuMat* floatImg = floatBuf.getFront();
-    if(img.depth() != CV_32F)
-        img.convertTo(*floatImg,CV_MAKETYPE(CV_32F,img.channels()), stream);
-    else
-        *floatImg = img;
-    TIME
-    cv::cuda::GpuMat* destPtr = destBuf.getFront();
-    int flags = 0;
-    if(*getParameter<bool>(0)->Data())
-        flags = flags | cv::DFT_ROWS;
-    if(*getParameter<bool>(1)->Data())
-        flags = flags | cv::DFT_SCALE;
-    if(*getParameter<bool>(2)->Data())
-        flags = flags | cv::DFT_INVERSE;
-    if(*getParameter<bool>(3)->Data())
-        flags = flags | cv::DFT_REAL_OUTPUT;
-    TIME
-    cv::cuda::dft(*floatImg,*destPtr,img.size(),flags, stream);
-    cv::cuda::GpuMat dest = *destPtr; // This is done to make sure the destBuf gets allocated correctly and doesn't get de-allocated.
-    TIME
-    int channel = getParameter<Parameters::EnumParameter>(4)->Data()->getValue();
-    updateParameter("Coefficients", dest)->type =  Parameters::Parameter::Output;
-    TIME
-    if(_parameters[4]->changed)
-    {
-        //log(Status, channel == 0 ? "Magnitude" : "Phase");
-        if (channel == 0)
-        {
-            NODE_LOG(info) <<"Magnitude";
-        }
-        else
-        {
-            NODE_LOG(info) <<"Phase";
-        }
-        
-        _parameters[4]->changed = false;
-    }
-    TIME
+    
     cv::cuda::GpuMat magnitude, phase;
-//    magnitude = *magBuffer.getFront();
-//    phase = *phaseBuffer.getFront();
-    if(channel == 0 || _parameters[6]->subscribers != 0)
-    {
-        cv::cuda::magnitude(dest,magnitude, stream);
-        if(*getParameter<bool>(5)->Data())
-        {
-            // Convert to log scale
-            cv::cuda::add(magnitude,cv::Scalar::all(1), magnitude, cv::noArray(), -1, stream);
-            cv::cuda::log(magnitude,magnitude, stream);
-        }
 
-        updateParameter(6,magnitude);
-    }
-    TIME
+    
     if(channel == 1 || _parameters[7]->subscribers != 0)
     {
         std::vector<cv::cuda::GpuMat> channels;

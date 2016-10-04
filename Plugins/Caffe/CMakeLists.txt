@@ -10,7 +10,7 @@ if(Caffe_FOUND)
   find_path(CUDNN_LIB_DIR cudnn.lib HINTS "${CUDNN_DIR}/lib/x64")
   find_path(CUDNN_INCLUDE_DIR cudnn.h HINTS "${CUDNN_DIR}/include")
   find_path(CUDNN_BIN_DIR cudnn64_4.dll cudnn64_3.dll HINTS "${CUDNN_DIR}/bin")
-
+  if(CUDNN_LIBRARY AND CUDNN_INCLUDE_DIR AND CUDNN_LIB_DIR AND CUDNN_BIN_DIR)
   include_directories(
    ${Caffe_INCLUDE_DIRS}
    ${EagleLib_INCLUDE_DIRECTORIES}
@@ -63,4 +63,5 @@ if(Caffe_FOUND)
       )
   ENDIF(WIN32)
   INCLUDE(../PluginTemplate.cmake)
+  endif()
 endif()

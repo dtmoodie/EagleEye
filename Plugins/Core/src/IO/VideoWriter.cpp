@@ -1,155 +1,62 @@
-#include <nodes/IO/VideoWriter.h>
+#include "VideoWriter.h"
 #include <boost/filesystem.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
 
-VideoWriter::VideoWriter(std::string fileName)
-{
-    updateParameter(0, boost::filesystem::path(fileName));
-}
 
-VideoWriter::~VideoWriter()
+bool VideoWriter::ProcessImpl()
 {
-
-}
-void VideoWriter::NodeInit(bool firstInit)
-{
-    if (firstInit)
+    if(h_writer == nullptr && d_writer == nullptr)
     {
-        Parameters::EnumParameter param;
-        param.addEnum(cv::VideoWriter::fourcc('X','2','6','4'), "X264");
-        param.addEnum(cv::VideoWriter::fourcc('Y','U','V','9'), "YUV9");
-        param.addEnum(cv::VideoWriter::fourcc('Y','U','Y','V'), "YUYV");
-        param.addEnum(cv::VideoWriter::fourcc('M','J','P','G'), "MPJG");
-        updateParameter("Codec", param);
-        updateParameter("Filename", Parameters::WriteFile(""));
-        writeOut = false;
+        if (boost::filesystem::exists(filename.string()))
+        {
+            LOG(info) << "File exists, overwriting";
+        }
+        // Attempt to initialize the device writer first
+        cv::cudacodec::EncoderParams params;
+        try
+        {
+            d_writer = cv::cudacodec::createVideoWriter(filename.string(), image->GetSize(), 30, params);
+        }catch(...)
+        {
+            using_gpu_writer_param.UpdateData(false);
+        }
+        if(using_gpu_writer)
+        {
+            h_writer.reset(new cv::VideoWriter);
+            if(!h_writer->open(filename.string(), codec.getValue(), 30, image->GetSize(), image->GetChannels() == 3))
+            {
+                LOG(debug) << "Failed to open video writer with codec " << codec.getEnum() << " falling back on defaults";
+                if(!h_writer->open(filename.string(), -1, 30, image->GetSize(), image->GetChannels() == 3))
+                {
+                    LOG(warning) << "Unable to fallback on default video writer parameters";
+                }
+            }
+        }
     }
-    updateParameter<boost::function<void(void)>>("Restart Functor", boost::bind(&VideoWriter::restartFunc, this));
-    updateParameter<boost::function<void(void)>>("Stop Functor", boost::bind(&VideoWriter::endWrite, this));
-    restart = false;
-
-}
-void VideoWriter::restartFunc()
-{
-    restart = true;
-}
-void VideoWriter::endWrite()
-{
-    writeOut = true;
-}
-
-void VideoWriter::Serialize(ISimpleSerializer *pSerializer)
-{
-    Node::Serialize(pSerializer);
-    SERIALIZE(d_writer);
-    SERIALIZE(h_writer);
-}
-
-cv::cuda::GpuMat 
-VideoWriter::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
-{
-    size = img.size();
-    if(_parameters[0]->changed || _parameters[1]->changed || restart)
-        startWrite();
-    if(d_writer != nullptr || h_writer != nullptr)
-        writeImg(img);
-    if (writeOut)
-    {
-        if (h_writer)
-            h_writer.release();
-        if (d_writer)
-            d_writer.release();
-        writeOut = false;
-    }
-    return img;
-}
-void 
-VideoWriter::writeImg(cv::cuda::GpuMat& img)
-{
     if(d_writer)
     {
-        d_writer->write(img);
-        return;
+        d_writer->write(image->GetGpuMat(*_ctx->stream));
     }
     if(h_writer)
     {
-        cv::Mat h_img(img);
-        h_writer->write(h_img);
-    }
-}
-void
-VideoWriter::startWrite()
-{
-    //log(Status, "Starting write");
-    NODE_LOG(info) << "Starting write";
-    auto param = getParameter<Parameters::WriteFile>(1);
-    if(param == nullptr)
-        return;
-    if (boost::filesystem::exists(param->Data()->string()))
-    {
-        NODE_LOG(info) << "File exists, overwriting";
-    }
-        
-    if(h_writer == nullptr)
-    {
-        try
+        if(image->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
         {
-            cv::cudacodec::EncoderParams params;
-            d_writer = cv::cudacodec::createVideoWriter(param->Data()->string(), size, 30, params);
-            //log(Status, "Using GPU encoder");
-            NODE_LOG(info) << "Using GPU encoder";
-        }catch(cv::Exception &e)
-        {
-            h_writer = cv::Ptr<cv::VideoWriter>(new cv::VideoWriter);
-            auto codec = getParameter<Parameters::EnumParameter>(0);
-            bool success;
-            if(codec)
-            {
-                success = h_writer->open(param->Data()->string(),codec->Data()->currentSelection,30,size);
-            }else
-            {
-                success = h_writer->open(param->Data()->string(), -1, 30, size);
-            }
-            if (success)
-            {
-                NODE_LOG(info) << "Using CPU encoder";
-            }
-            else
-            {
-                NODE_LOG(info) << "Unable to open file";
-            }
-
-        }
-    }else
-    {
-        h_writer = cv::Ptr<cv::VideoWriter>(new cv::VideoWriter);
-        auto codec = getParameter<Parameters::EnumParameter>(0);
-        bool success;
-        if(codec)
-        {
-            success = h_writer->open(param->Data()->string(),codec->Data()->currentSelection,30,size);
+            h_writer->write(image->GetMat(*_ctx->stream));
         }else
         {
-            success = h_writer->open(param->Data()->string(), -1, 30, size);
+            cv::Mat mat = image->GetMat(*_ctx->stream);
+            cuda::enqueue_callback_async([mat, this]()->void
+            {
+                this->h_writer->write(mat);
+            }, *_ctx->stream);
         }
-        if (success)
-        {
-            NODE_LOG(info) << "Using CPU encoder";
-        }            
-        else
-        {
-            NODE_LOG(info) << "Unable to open file";
-        }
-            
     }
-    _parameters[0]->changed = false;
-    _parameters[1]->changed = false;
-    restart = false;
-
+    return true;
 }
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(VideoWriter, Image, Sink);
+
+MO_REGISTER_CLASS(VideoWriter);

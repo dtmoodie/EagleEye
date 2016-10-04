@@ -1,5 +1,5 @@
 #pragma once
-
+#include <src/precompiled.hpp>
 #include <EagleLib/nodes/Node.h>
 #include "EagleLib/utilities/CudaUtils.hpp"
 #include "RuntimeInclude.h"
@@ -13,18 +13,20 @@ namespace EagleLib
     
     class FFT: public Node
     {
-        enum output
-        {
-            Coefficients = -1,
-            Magnitude = 0,
-            Phase = 1
-        };
-        ConstBuffer<cv::cuda::GpuMat> destBuf;
-        ConstBuffer<cv::cuda::GpuMat> floatBuf;
     public:
-        FFT();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        MO_DERIVE(FFT, Node)
+            INPUT(SyncedMemory, input, nullptr);
+            PARAM(bool, dft_rows, false);
+            PARAM(bool, dft_scale, false);
+            PARAM(bool, dft_inverse, false);
+            PARAM(bool, dft_real_output, false);
+            PARAM(bool, log_scale, true);
+            PARAM(bool, use_optimized_size, false);
+            OUTPUT(SyncedMemory, magnitude, SyncedMemory());
+            OUTPUT(SyncedMemory, phase, SyncedMemory());
+            OUTPUT(SyncedMemory, coefficients, SyncedMemory());
+    protected:
+        bool ProcessImpl();
     };
 
     class FFTPreShiftImage: public Node

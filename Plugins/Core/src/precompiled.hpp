@@ -3,7 +3,7 @@
 #include <EagleLib/Nodes/Node.h>
 #include <EagleLib/Nodes/NodeInfo.hpp>
 #include "EagleLib/Detail/PluginExport.hpp"
-#include "EagleLib/DataStreamManager.h"
+#include "EagleLib/IDataStream.hpp"
 #include <EagleLib/ObjectDetection.hpp>
 #include <EagleLib/utilities/CudaUtils.hpp>
 #include "EagleLib/utilities/CudaCallbacks.hpp"
