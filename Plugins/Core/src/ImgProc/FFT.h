@@ -25,6 +25,7 @@ namespace EagleLib
             OUTPUT(SyncedMemory, magnitude, SyncedMemory());
             OUTPUT(SyncedMemory, phase, SyncedMemory());
             OUTPUT(SyncedMemory, coefficients, SyncedMemory());
+        MO_END;
     protected:
         bool ProcessImpl();
     };
@@ -33,18 +34,26 @@ namespace EagleLib
     {
         cv::cuda::GpuMat d_shiftMat;
     public:
-        FFTPreShiftImage();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        MO_DERIVE(FFTPreShiftImage, Node);
+            INPUT(SyncedMemory, input, nullptr);
+            OUTPUT(SyncedMemory, output, SyncedMemory());
+        MO_END;
+    protected:
+        bool ProcessImpl();
     };
 
     class FFTPostShift: public Node
     {
         cv::cuda::GpuMat d_shiftMat;
     public:
-        FFTPostShift();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        MO_DERIVE(FFTPostShift, Node);
+            INPUT(SyncedMemory, input, nullptr);
+            OUTPUT(SyncedMemory, output, SyncedMemory());
+        MO_END;
+    protected:
+        bool ProcessImpl();
+        //FFTPostShift();
+        //virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     }
 }

@@ -258,8 +258,18 @@ std::vector<int> SyncedMemory::GetShape() const
 }
 int SyncedMemory::GetDepth() const
 {
-    CV_Assert(d_data.size());
-    return d_data[0].depth();
+    CV_Assert(d_data.size() || h_data.size());
+    if(d_data.size())
+        return d_data[0].depth();
+    return h_data[0].depth();
+}
+
+int SyncedMemory::GetType() const
+{
+    CV_Assert(d_data.size() || h_data.size());
+    if (d_data.size())
+        return d_data[0].type();
+    return h_data[0].type();
 }
 int SyncedMemory::GetDim(int dim) const
 {

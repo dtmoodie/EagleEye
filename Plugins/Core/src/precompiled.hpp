@@ -14,7 +14,8 @@
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Types.hpp>
 #include <IRuntimeObjectSystem.h>
-
+#include "RuntimeInclude.h"
+#include "RuntimeSourceDependency.h"
 
 
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
@@ -29,6 +30,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudalegacy.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaobjdetect.hpp>
+#include <EagleLib/rcc/external_includes/cv_cudaoptflow.hpp>
 #include <opencv2/core/opengl.hpp>
 
 #include <boost/lexical_cast.hpp>

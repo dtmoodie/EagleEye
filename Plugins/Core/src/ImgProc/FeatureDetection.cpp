@@ -1,290 +1,147 @@
 #include "FeatureDetection.h"
 
-#include "EagleLib/nodes/VideoProc/Tracking.hpp"
-#include "EagleLib/utilities/GpuMatAllocators.h"
-#include <parameters/ParameteredObjectImpl.hpp>
-#include <EagleLib/DataStreamManager.h>
-#include <EagleLib/IParameterBuffer.hpp>
+
+
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-void GoodFeaturesToTrack::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        updateParameter("Max corners",            int(1000));
-        updateParameter("Quality Level",        double(0.01));
-        updateParameter("Min Distance",            double(0.0))->SetTooltip("The minimum distance between detected points");
-        updateParameter("Block Size",           int(3));
-        updateParameter("Use harris",           false);
-        ParameteredObject::updateParameter("Harris K", 0.04, 0.01, 1.0);
-        addInputParameter<cv::cuda::GpuMat>("Mask");
-    }
-}
 
-void GoodFeaturesToTrack::detect(const cv::cuda::GpuMat& img, int frame_number, const cv::cuda::GpuMat& mask, cv::cuda::Stream& stream)
+bool GoodFeaturesToTrack::ProcessImpl()
 {
-    cv::cuda::GpuMat key_points;
-    cv::cuda::GpuMat grey_img;
-    if (img.channels() != 1)
+    cv::cuda::GpuMat grey;
+    if(input->GetChannels() != 1)
     {
-        if (!GetDataStream()->GetParameterBuffer()->GetParameter(grey_img, "gray_image", frame_number))
-        {
-            cv::cuda::cvtColor(img, grey_img, cv::COLOR_BGR2GRAY, 0, stream);
-            GetDataStream()->GetParameterBuffer()->SetParameter(grey_img, "gray_image", frame_number);
-        }
+        cv::cuda::cvtColor(input->GetGpuMat(Stream()), grey, cv::COLOR_BGR2GRAY, 0, Stream());
+    }else
+    {
+        grey = input->GetGpuMat(Stream());
+    }
+    if(!detector || max_corners_param.modified || quality_level_param.modified || min_distance_param.modified || block_size_param.modified
+        || use_harris_param.modified/* || harris_K_param.modified*/)
+    {
+        detector = cv::cuda::createGoodFeaturesToTrackDetector(input->GetDepth(), max_corners, quality_level, min_distance, block_size, use_harris);
+        max_corners_param.modified = false;
+        quality_level_param.modified  = false;
+        min_distance_param.modified = false; 
+        block_size_param.modified = false;
+        use_harris_param.modified = false;
+    }
+    cv::cuda::GpuMat keypoints;
+    if(mask)
+    {
+        detector->detect(grey, keypoints, mask->GetGpuMat(Stream()), Stream());
     }
     else
     {
-        grey_img = img;
+        detector->detect(grey, keypoints, cv::noArray(), Stream());
     }
-    
-    detector->detect(grey_img, key_points, mask, stream);
-    
-    updateParameter("Detected Corners", key_points)->type = Parameters::Parameter::Output;
-    updateParameter("Num corners", key_points.cols)->type = Parameters::Parameter::State;
+    key_points_param.UpdateData(keypoints, input_param.GetTimestamp(), _ctx);
+    num_corners_param.UpdateData(keypoints.cols, input_param.GetTimestamp(), _ctx);
+    return true;
 }
 
-void GoodFeaturesToTrack::update_detector(int depth)
+
+
+bool FastFeatureDetector::ProcessImpl()
 {
-    int numCorners = *getParameter<int>(0)->Data();
-    double qualityLevel = *getParameter<double>(1)->Data();
-    double minDistance = *getParameter<double>(2)->Data();
-    int blockSize = *getParameter<int>(3)->Data();
-    bool useHarris = *getParameter<bool>(4)->Data();
-    double harrisK = *getParameter<double>(5)->Data();
-
-    detector = cv::cuda::createGoodFeaturesToTrackDetector(depth,
-        numCorners, qualityLevel, minDistance, blockSize, useHarris, harrisK);
-
-
-    NODE_LOG(info) << "Good features to track detector parameters updated: " << numCorners << " " << qualityLevel
-        << " " << minDistance << " " << blockSize << " " << useHarris << " " << harrisK;
-
-    _parameters[0]->changed = false;
-    _parameters[1]->changed = false;
-    _parameters[2]->changed = false;
-    _parameters[3]->changed = false;
-    _parameters[4]->changed = false;
-    _parameters[5]->changed = false;
-    _parameters[6]->changed = false;
-}
-
-TS<SyncedMemory> GoodFeaturesToTrack::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
-{
-    cv::cuda::GpuMat d_img = img.GetGpuMat(stream);
-    if(_parameters[1]->changed || _parameters[2]->changed ||
-       _parameters[3]->changed || _parameters[4]->changed ||
-       _parameters[5]->changed || _parameters[6]->changed || detector == nullptr)
+    if(threshold_param.modified ||
+        use_nonmax_suppression_param.modified ||
+        fast_type_param.modified ||
+        max_points_param.modified ||
+        detector == nullptr)
     {
-        update_detector(d_img.depth());
+        detector = cv::cuda::FastFeatureDetector::create(threshold, use_nonmax_suppression, fast_type.getValue(), max_points);
     }
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
-    if (mask)
-        detect(img.GetGpuMat(stream), img.frame_number, *mask, stream);
-    else
-        detect(img.GetGpuMat(stream), img.frame_number, cv::cuda::GpuMat(), stream);
-    return img;
-}
-
-void FastFeatureDetector::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        updateParameter("Threshold", int(10));
-        updateParameter("Use nonmax suppression", true);
-        Parameters::EnumParameter param;
-        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_5_8));
-        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_7_12));
-        param.addEnum(ENUM(cv::cuda::FastFeatureDetector::TYPE_9_16));
-        param.currentSelection = 2;
-        updateParameter("Type", param);
-        updateParameter("Max detected points", int(5000));
-        addInputParameter<cv::cuda::GpuMat>("Mask");
-    }
-}
-void FastFeatureDetector::Serialize(ISimpleSerializer *pSerializer)
-{
-    Node::Serialize(pSerializer);
-    SERIALIZE(detector);
-}
-cv::cuda::GpuMat FastFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
-{
-    if(_parameters[0]->changed ||
-       _parameters[1]->changed ||
-       _parameters[2]->changed ||
-       _parameters[3]->changed)
-    {
-        detector = cv::cuda::FastFeatureDetector::create(
-            *getParameter<int>(1)->Data(),
-            *getParameter<bool>(2)->Data(),
-            getParameter<Parameters::EnumParameter>(3)->Data()->getValue(),
-            *getParameter<int>(4)->Data());
-        _parameters[0]->changed = false;
-        _parameters[1]->changed = false;
-        _parameters[2]->changed = false;
-        _parameters[3]->changed = false;
-    }
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
-    cv::cuda::GpuMat key_points(BlockMemoryAllocator::Instance());
+    cv::cuda::GpuMat keypoints;
     if(mask)
     {
-        detector->detectAsync(img, key_points, *mask, stream);
+        detector->detectAsync(input->GetGpuMat(Stream()), keypoints, mask->GetGpuMat(Stream()), Stream());
     }else
     {
-        detector->detectAsync(img, key_points, cv::cuda::GpuMat(), stream);
+        detector->detectAsync(input->GetGpuMat(Stream()), keypoints, cv::noArray(), Stream());
     }
-    if (!key_points.empty())
-        updateParameter("Detected Key Points", key_points);
-    return img;
-}
-/// *****************************************************************************************
-/// *****************************************************************************************
-/// *****************************************************************************************
-
-
-void ORBFeatureDetector::NodeInit(bool firstInit)
-{
-    if(firstInit)
+    if(!keypoints.empty())
     {
-        detector = cv::cuda::ORB::create();
-        updateParameter("Number of features", int(500));    //1
-        updateParameter("Scale Factor", float(1.2));        //2
-        updateParameter("Num Levels", int(8));              //3
-        updateParameter("Edge Threshold", int(31));         //4
-        updateParameter("First Level", int(0));             //5
-        updateParameter("WTA_K", int(2));                   //6
-        Parameters::EnumParameter param;
-        param.addEnum(ENUM(cv::ORB::kBytes));
-        param.addEnum(ENUM(cv::ORB::HARRIS_SCORE));
-        param.addEnum(ENUM(cv::ORB::FAST_SCORE));
-        param.currentSelection = 1;
-        updateParameter("Score Type", param);               //7
-        updateParameter("Patch Size", int(31));             //8
-        updateParameter("Fast Threshold", int(20));         //9
-        updateParameter("Blur for Descriptors", true);      //10
-        addInputParameter<cv::cuda::GpuMat>("Mask");
+        keypoints_param.UpdateData(keypoints, input_param.GetTimestamp(), _ctx);
     }
-    
+    return true;
 }
-void ORBFeatureDetector::Serialize(ISimpleSerializer* pSerializer)
-{
-    Node::Serialize(pSerializer);
-    SERIALIZE(detector);
-}
-cv::cuda::GpuMat ORBFeatureDetector::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
-{
-    if(_parameters[1]->changed ||
-       _parameters[2]->changed ||
-       _parameters[3]->changed ||
-       _parameters[4]->changed ||
-       _parameters[5]->changed ||
-       _parameters[6]->changed ||
-       _parameters[7]->changed ||
-       _parameters[8]->changed ||
-       _parameters[9]->changed ||
-       _parameters[0]->changed || detector == nullptr)
-    {
-        detector = cv::cuda::ORB::create(
-                    *getParameter<int>(0)->Data(),
-                    *getParameter<float>(1)->Data(),
-                    *getParameter<int>(2)->Data(),
-                    *getParameter<int>(3)->Data(),
-                    *getParameter<int>(4)->Data(),
-                    *getParameter<int>(5)->Data(),
-                    getParameter<Parameters::EnumParameter>(6)->Data()->getValue(),
-                    *getParameter<int>(7)->Data(),
-                    *getParameter<int>(8)->Data(),
-                    *getParameter<bool>(9)->Data());
 
-       _parameters[1]->changed = false;
-       _parameters[2]->changed = false;
-       _parameters[3]->changed = false;
-       _parameters[4]->changed = false;
-       _parameters[5]->changed = false;
-       _parameters[6]->changed = false;
-       _parameters[7]->changed = false;
-       _parameters[8]->changed = false;
-       _parameters[9]->changed = false;
-       _parameters[0]->changed = false;
+
+/// *****************************************************************************************
+/// *****************************************************************************************
+/// *****************************************************************************************
+
+
+
+
+bool ORBFeatureDetector::ProcessImpl()
+{
+    if(num_features_param.modified || scale_factor_param.modified ||
+        num_levels_param.modified || edge_threshold_param.modified ||
+        first_level_param.modified || WTA_K_param.modified || score_type_param.modified ||
+        patch_size_param.modified || fast_threshold_param.modified || blur_for_descriptor_param.modified ||
+        detector == nullptr)
+    {
+        detector = cv::cuda::ORB::create(num_features, scale_factor, num_levels, edge_threshold, first_level,
+            WTA_K, score_type.getValue(), patch_size, fast_threshold, blur_for_descriptor);
+        num_features_param.modified = false;
+        scale_factor_param.modified = false;
+        num_levels_param.modified = false;
+        edge_threshold_param.modified = false;
+        first_level_param.modified = false;
+        WTA_K_param.modified = false;
+        score_type_param.modified = false;
+        patch_size_param.modified = false;
+        fast_threshold_param.modified = false;
+        blur_for_descriptor_param.modified = false;
     }
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>("Mask")->Data();
-    
-    cv::cuda::GpuMat key_points(BlockMemoryAllocator::Instance()), point_descriptors(BlockMemoryAllocator::Instance());
-    if (detector == nullptr)
-        return img;
+    cv::cuda::GpuMat keypoints;
+    cv::cuda::GpuMat descriptors;
     if(mask)
     {
-        detector->detectAndComputeAsync(img, *mask, key_points, point_descriptors, false, stream);
+        detector->detectAndComputeAsync(input->GetGpuMat(Stream()), mask->GetGpuMat(Stream()), keypoints, descriptors, false, Stream());
     }else
     {
-        detector->detectAndComputeAsync(img, cv::cuda::GpuMat(), key_points, point_descriptors, false, stream);
+        detector->detectAndComputeAsync(input->GetGpuMat(Stream()), cv::noArray(), keypoints, descriptors, false, Stream());
     }
-    updateParameter("Detected Points", key_points)->type = Parameters::Parameter::Output;
-    updateParameter("Point Descriptors", point_descriptors)->type = Parameters::Parameter::Output;
-    return img;
-}
-void HistogramRange::Serialize(ISimpleSerializer *pSerializer)
-{
-    Node::Serialize(pSerializer);
-    SERIALIZE(levels)
+    keypoints_param.UpdateData(keypoints, input_param.GetTimestamp(), _ctx);
+    descriptors_param.UpdateData(descriptors, input_param.GetTimestamp(), _ctx);
+    return true;
 }
 
-void HistogramRange::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        updateParameter<double>("Lower bound", 0.0);
-        updateParameter<double>("Upper bound", 1.0);
-        updateParameter<int>("Bins", 100);
-        updateParameter<cv::cuda::GpuMat>("Histogram", cv::cuda::GpuMat())->type =  Parameters::Parameter::Output;
-        updateLevels(CV_8U);
-    }
-}
 
-cv::cuda::GpuMat HistogramRange::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+bool HistogramRange::ProcessImpl()
 {
-    if(_parameters[0]->changed ||
-       _parameters[1]->changed ||
-       _parameters[2]->changed)
+    if(lower_bound_param.modified || upper_bound_param.modified || bins_param.modified)
     {
-        updateLevels(img.type());
-        _parameters[0]->changed = false;
-        _parameters[1]->changed = false;
-        _parameters[2]->changed = false;
+        updateLevels(input->GetDepth());
+        lower_bound_param.modified = false;
+        upper_bound_param.modified = false;
+        bins_param.modified = false;
     }
-    if(img.channels() == 1 || img.channels() == 4)
+    if(input->GetChannels() == 1 || input->GetChannels() == 4)
     {
-        TIME
         cv::cuda::GpuMat hist;
-        cv::cuda::histRange(img, hist, levels, stream);
-        TIME
-        updateParameter(3, hist, &stream);
-        TIME
-        if(_parameters[3]->subscribers > 0)
-            return img;
-        return hist;
-    }else
-    {
-        NODE_LOG(warning) << "Multi channel histograms not supported for " + boost::lexical_cast<std::string>(img.channels()) + " channels";
+        cv::cuda::histRange(input->GetGpuMat(Stream()), hist, levels.GetGpuMat(Stream()), Stream());
+        histogram_param.UpdateData(hist, input_param.GetTimestamp(), _ctx);
+        return true;
     }
-    return img;
+    return false;
 }
+
 
 void HistogramRange::updateLevels(int type)
 {
-    double lower = *getParameter<double>(0)->Data();
-    double upper = *getParameter<double>(1)->Data();
-    int bins = *getParameter<int>(2)->Data();
     cv::Mat h_mat;
     if(type == CV_32F)
         h_mat = cv::Mat(1, bins, CV_32F);
     else
         h_mat = cv::Mat(1, bins, CV_32S);
-    double step = (upper - lower) / double(bins);
+    double step = (upper_bound - lower_bound) / double(bins);
 
-    double val = lower;
+    double val = lower_bound;
     for(int i = 0; i < bins; ++i, val += step)
     {
         if(type == CV_32F)
@@ -292,61 +149,41 @@ void HistogramRange::updateLevels(int type)
         if(type == CV_8U)
             h_mat.at<int>(i) = val;
     }
-    levels.upload(h_mat);
-    updateParameter("Histogram bins", h_mat)->type =  Parameters::Parameter::Output;
+    levels_param.UpdateData(h_mat);
 }
-void CornerHarris::NodeInit(bool firstInit)
+
+bool CornerHarris::ProcessImpl()
 {
-    if(firstInit)
+    if(block_size_param.modified || sobel_aperature_size_param.modified || harris_free_parameter_param.modified || detector == nullptr)
     {
-        updateParameter("Block size", 3);
-        updateParameter("Sobel aperature size", 5);
-        updateParameter("Harris free parameter", 1.0);
-    }
-    
-}
-cv::cuda::GpuMat CornerHarris::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-    if(_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed || detector == nullptr)
-    {
-        detector = cv::cuda::createHarrisCorner(img.type(),*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data(), *getParameter<double>(2)->Data());
-        _parameters[0]->changed = false;
-        _parameters[1]->changed = false;
-        _parameters[2]->changed = false;
+        detector = cv::cuda::createHarrisCorner(input->GetType(), block_size, sobel_aperature_size, harris_free_parameter);
     }
     cv::cuda::GpuMat score;
-    detector->compute(img, score, stream);
-    updateParameter("Corner score", score, &stream)->type = Parameters::Parameter::Output;
-    return img;
+    detector->compute(input->GetGpuMat(Stream()), score, Stream());
+    score_param.UpdateData(score, input_param.GetTimestamp(), _ctx);
+    return true;
 }
-void CornerMinEigenValue::NodeInit(bool firstInit)
+
+
+
+bool CornerMinEigenValue::ProcessImpl()
 {
-    if(firstInit)
+    if (block_size_param.modified || sobel_aperature_size_param.modified || harris_free_parameter_param.modified || detector == nullptr)
     {
-        updateParameter("Block size", 3);
-        updateParameter("Sobel aperature size", 5);
-        updateParameter("Harris free parameter", 1.0);
-    }
-    
-}
-cv::cuda::GpuMat CornerMinEigenValue::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-    if (_parameters[0]->changed || _parameters[1]->changed || detector == nullptr)
-    {
-        detector = cv::cuda::createMinEigenValCorner(img.type(), *getParameter<int>(0)->Data(), *getParameter<int>(1)->Data());
+        detector = cv::cuda::createMinEigenValCorner(input->GetType(), block_size, sobel_aperature_size, harris_free_parameter);
     }
     cv::cuda::GpuMat score;
-    detector->compute(img, score, stream);
-    updateParameter("Corner score", score, &stream)->type = Parameters::Parameter::Output;
-    return img;
+    detector->compute(input->GetGpuMat(Stream()), score, Stream());
+    score_param.UpdateData(score, input_param.GetTimestamp(), _ctx);
+    return true;
 }
 
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(GoodFeaturesToTrack, Image, Extractor, KeypointDetection);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ORBFeatureDetector, Image, Extractor, KeypointDetection);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FastFeatureDetector, Image, Extractor, KeypointDetection);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(HistogramRange, Image, Extractor);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CornerHarris, Image, Extractor, KeypointDetection);
+MO_REGISTER_CLASS(GoodFeaturesToTrack);
+MO_REGISTER_CLASS(ORBFeatureDetector);
+MO_REGISTER_CLASS(FastFeatureDetector);
+MO_REGISTER_CLASS(HistogramRange);
+MO_REGISTER_CLASS(CornerHarris);
 
 

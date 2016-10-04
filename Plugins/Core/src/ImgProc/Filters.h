@@ -1,4 +1,4 @@
-#include "EagleLib/nodes/Node.h"
+#include "src/precompiled.hpp"
 #include <EagleLib/rcc/external_includes/cv_cudafeatures3d.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include "RuntimeInclude.h"
@@ -13,9 +13,7 @@ namespace EagleLib
     class Sobel: public Node
     {
     public:
-        Sobel();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+
 
     };
 
@@ -23,45 +21,42 @@ namespace EagleLib
     {
         cv::Ptr<cv::cuda::CannyEdgeDetector> detector;
     public:
-        Canny();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+        MO_DERIVE(Canny, Node);
+            PARAM(double, low_thresh, 0.0);
+            PARAM(double, high_thresh, 20.0);
+            PARAM(int, aperature_size, 3);
+            PARAM(bool, L2_gradient, false);
+            INPUT(SyncedMemory, input, nullptr);
+            OUTPUT(SyncedMemory, edges, SyncedMemory());
+        MO_END;
+    protected:
+        bool ProcessImpl();
     };
 
     class Laplacian: public Node
     {
     public:
-        Laplacian();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+    
     };
     class BiLateral: public Node
     {
     public:
-        BiLateral();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+    
     };
     class MeanShiftFilter: public Node
     {
     public:
-        MeanShiftFilter();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+    
     };
     class MeanShiftProc: public Node
     {
     public:
-        MeanShiftProc();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+    
     };
     class MeanShiftSegmentation: public Node
     {
     public:
-        MeanShiftSegmentation();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
+    
     };
     }
 }

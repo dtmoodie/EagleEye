@@ -90,6 +90,7 @@ namespace EagleLib
         std::vector<int> GetShape() const;
         int GetDim(int dim) const;
         int GetDepth() const;
+        int GetType() const;
         template<typename A> void load(A& ar)
         {
             

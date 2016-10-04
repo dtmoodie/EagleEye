@@ -60,32 +60,11 @@ bool FFT::ProcessImpl()
         cv::cuda::split(result, channels, Stream());
         cv::cuda::GpuMat phase;
         cv::cuda::phase(channels[0], channels[1], phase, false, Stream());
-        this->phase_param.UpdateData()
-
+        this->phase_param.UpdateData(phase, input_param.GetTimestamp(), _ctx);
     }
+    return true;
 }
 
-cv::cuda::GpuMat FFT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    
-    cv::cuda::GpuMat magnitude, phase;
-
-    
-    if(channel == 1 || _parameters[7]->subscribers != 0)
-    {
-        std::vector<cv::cuda::GpuMat> channels;
-        cv::cuda::split(dest,channels, stream);
-        cv::cuda::phase(channels[0],channels[1],phase, false, stream);
-        updateParameter(7, phase);
-    }
-    TIME
-    if(channel == 1)
-        dest = phase;
-    if(channel == 0)
-        dest = magnitude;
-    TIME
-    return dest;
-}
 cv::Mat getShiftMat(cv::Size matSize)
 {
     cv::Mat shift(matSize, CV_32F);
@@ -100,41 +79,33 @@ cv::Mat getShiftMat(cv::Size matSize)
     return shift;
 }
 
-void FFTPreShiftImage::NodeInit(bool firstInit)
+bool FFTPreShiftImage::ProcessImpl()
 {
-    
-}
-
-cv::cuda::GpuMat FFTPreShiftImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    if(d_shiftMat.size() != img.size())
+    if (d_shiftMat.size() != input->GetSize())
     {
-        d_shiftMat.upload(getShiftMat(img.size()), stream);
+        d_shiftMat.upload(getShiftMat(input->GetSize()), Stream());
     }
     cv::cuda::GpuMat result;
-    cv::cuda::multiply(d_shiftMat,img, result,1,-1,stream);
-    return result;
-}
-void FFTPostShift::NodeInit(bool firstInit)
-{
-    
+    cv::cuda::multiply(d_shiftMat, input->GetGpuMat(Stream()), result, 1, -1, Stream());
+    output_param.UpdateData(result, input_param.GetTimestamp(), _ctx);
+    return true;
 }
 
-cv::cuda::GpuMat FFTPostShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+bool FFTPostShift::ProcessImpl()
 {
-    if(d_shiftMat.size() != img.size())
+    if (d_shiftMat.size() != input->GetSize())
     {
-        d_shiftMat.upload(getShiftMat(img.size()), stream);
+        d_shiftMat.upload(getShiftMat(input->GetSize()), Stream());
         std::vector<cv::cuda::GpuMat> channels;
         channels.push_back(d_shiftMat);
         channels.push_back(d_shiftMat);
-        cv::cuda::merge(channels, d_shiftMat, stream);
+        cv::cuda::merge(channels, d_shiftMat, Stream());
     }
     cv::cuda::GpuMat result;
-    cv::cuda::multiply(d_shiftMat,img, result, 1 / float(img.size().area()), -1, stream);
-    return result;
+    cv::cuda::multiply(d_shiftMat, input->GetGpuMat(Stream()), result, 1 / float(input->GetSize().area()), -1, Stream());
+    return true;
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FFT, Image, Processing);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FFTPreShiftImage, Image, Processing);
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FFTPostShift, Image, Processing);
+MO_REGISTER_CLASS(FFT);
+MO_REGISTER_CLASS(FFTPreShiftImage);
+MO_REGISTER_CLASS(FFTPostShift);

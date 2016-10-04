@@ -8,7 +8,7 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-#include "../RuntimeObjectSystem/ObjectInterfacePerModule.h"
+#include "ObjectInterfacePerModule.h"
 #if __linux
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cudaoptflow")
 #endif
