@@ -49,16 +49,13 @@ namespace EagleLib
 
     class EAGLE_EXPORTS SyncedMemory
     {
+    public:
         enum SYNC_STATE
         {
             SYNCED = 0,
             HOST_UPDATED,
             DEVICE_UPDATED
         };
-        std::vector<cv::Mat> h_data;
-        std::vector<cv::cuda::GpuMat> d_data;
-        std::vector<SYNC_STATE> sync_flags;
-    public:
         SyncedMemory();
         SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat);
         SyncedMemory(const cv::Mat& h_mat);
@@ -70,16 +67,17 @@ namespace EagleLib
         SyncedMemory clone(cv::cuda::Stream& stream);
 
         const cv::Mat&                         GetMat(cv::cuda::Stream& stream, int = 0);
-        cv::Mat&                             GetMatMutable(cv::cuda::Stream& stream, int = 0);
+        cv::Mat&                               GetMatMutable(cv::cuda::Stream& stream, int = 0);
 
         const cv::cuda::GpuMat&                 GetGpuMat(cv::cuda::Stream& stream, int = 0);
-        cv::cuda::GpuMat&                     GetGpuMatMutable(cv::cuda::Stream& stream, int = 0);
+        cv::cuda::GpuMat&                       GetGpuMatMutable(cv::cuda::Stream& stream, int = 0);
 
         const std::vector<cv::Mat>&             GetMatVec(cv::cuda::Stream& stream);
-        std::vector<cv::Mat>&                 GetMatVecMutable(cv::cuda::Stream& stream);
+        std::vector<cv::Mat>&                   GetMatVecMutable(cv::cuda::Stream& stream);
 
-        const std::vector<cv::cuda::GpuMat>& GetGpuMatVec(cv::cuda::Stream& stream);
+        const std::vector<cv::cuda::GpuMat>&   GetGpuMatVec(cv::cuda::Stream& stream);
         std::vector<cv::cuda::GpuMat>&         GetGpuMatVecMutable(cv::cuda::Stream& stream);
+        SYNC_STATE                             GetSyncState(int index = 0) const;
 
         void Synchronize(cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         void ResizeNumMats(int new_size = 1);
@@ -100,5 +98,9 @@ namespace EagleLib
         {
             
         }
+    private:
+        std::vector<cv::Mat> h_data;
+        std::vector<cv::cuda::GpuMat> d_data;
+        std::vector<SYNC_STATE> sync_flags;
     };
 }

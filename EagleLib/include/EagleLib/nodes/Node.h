@@ -131,6 +131,10 @@ namespace Nodes
 
         virtual void                     Serialize(ISimpleSerializer *pSerializer);
         virtual void                     Serialize(cv::FileStorage& fs);
+        inline cv::cuda::Stream&                Stream()
+        {
+            return *_ctx->stream;
+        }
         
         bool CheckInputs();
 

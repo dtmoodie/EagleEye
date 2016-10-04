@@ -273,3 +273,7 @@ int SyncedMemory::GetDim(int dim) const
         return d_data[0].channels();
     return 0;
 }
+SyncedMemory::SYNC_STATE SyncedMemory::GetSyncState(int index) const
+{
+    return sync_flags[index];
+}
