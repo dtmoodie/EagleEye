@@ -7,7 +7,7 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-
+/*
 void register_to_reference::NodeInit(bool firstInit)
 {
     d_matcher = cv::cuda::DescriptorMatcher::createBFMatcher(cv::NORM_HAMMING);
@@ -128,4 +128,4 @@ void register_to_reference::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream&
 }
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(register_to_reference);
+NODE_DEFAULT_CONSTRUCTOR_IMPL(register_to_reference);*/

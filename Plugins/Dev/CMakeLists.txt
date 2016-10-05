@@ -21,8 +21,8 @@ INCLUDE_DIRECTORIES(
     
 )
 
-file(GLOB_RECURSE src "*.cpp")
-file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
+file(GLOB_RECURSE src "src/*.cpp")
+file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
 
 IF(WIN32)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")

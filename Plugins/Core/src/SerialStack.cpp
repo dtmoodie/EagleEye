@@ -1,4 +1,4 @@
-#include "nodes/SerialStack.h"
+/*#include "nodes/SerialStack.h"
 
 #include <parameters/ParameteredObjectImpl.hpp>
 using namespace EagleLib;
@@ -21,3 +21,4 @@ bool SerialStack::SkipEmpty() const
 {
     return false;
 }
+*/

@@ -1,4 +1,4 @@
-#include "ProcessFuture.h"
+/*#include "ProcessFuture.h"
 #include "EagleLib/DataStreamManager.h"
 #include "Remotery.h"
 #include <EagleLib/frame_grabber_base.h>
@@ -82,21 +82,6 @@ void ProcessFuture::start_thread()
     _cv.notify_all();
 }
 
-ProcessFuture::ProcessFutureInfo::ProcessFutureInfo():
-    NodeInfo("ProcessFuture", { "Utilities" })
-{
-}
-std::string ProcessFuture::ProcessFutureInfo::GetObjectTooltip()
-{
-    return "";
-}
-std::string ProcessFuture::ProcessFutureInfo::GetObjectHelp()
-{
-    return "";
-}
 
 
-ProcessFuture::ProcessFutureInfo s_process_future_info;
-
-
-REGISTERCLASS(ProcessFuture, &s_process_future_info)
+REGISTERCLASS(ProcessFuture, &s_process_future_info)*/

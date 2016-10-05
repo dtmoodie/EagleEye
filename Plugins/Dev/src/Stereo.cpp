@@ -89,18 +89,6 @@ bool StereoConstantSpaceBP::ProcessImpl()
     this->disparity_param.UpdateData(disparity, left_image_param.GetTimestamp(), _ctx);
 }
 
-void UndistortStereo::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        addInputParameter<cv::Mat>("Camera Matrix");
-        addInputParameter<cv::Mat>("Distortion Matrix");
-        addInputParameter<cv::Mat>("Rotation Matrix");
-        addInputParameter<cv::Mat>("Projection Matrix");
-        updateParameter<cv::cuda::GpuMat>("mapX", cv::cuda::GpuMat());
-        updateParameter<cv::cuda::GpuMat>("mapY", cv::cuda::GpuMat());
-    }
-}
 bool UndistortStereo::ProcessImpl()
 {
     if(camera_matrix_param.modified || distortion_matrix_param.modified ||
@@ -114,91 +102,13 @@ bool UndistortStereo::ProcessImpl()
     }
     cv::cuda::remap(input->GetGpuMat(*_ctx->stream), input->GetGpuMatMutable(*_ctx->stream), 
         mapX.GetGpuMat(*_ctx->stream), mapY.GetGpuMat(*_ctx->stream), 
-        CV_INTER_CUBIC, cv::BORDER_REPLICATE, cv::Scalar(), *_ctx->stream);
+        interpolation_method.getValue(), boarder_mode.getValue(), cv::Scalar(), *_ctx->stream);
     return true;
 }
-cv::cuda::GpuMat UndistortStereo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-    if(_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed || _parameters[3]->changed)
-    {
-        cv::Mat* K = getParameter<cv::Mat>(0)->Data();
-        if(K == nullptr)
-        {
-            //log(Warning, "Camera matrix undefined");
-            NODE_LOG(warning) << "Camera matrix undefined";
-            return img;
-        }
-        cv::Mat* D = getParameter<cv::Mat>(1)->Data();
-        if(D == nullptr)
-        {
-            //log(Warning, "Distortion matrix undefined");
-            NODE_LOG(warning) << "Distortion matrix undefined";
-            return img;
-        }
-        cv::Mat* R = getParameter<cv::Mat>(2)->Data();
-        if(R == nullptr)
-        {
-            //log(Warning, "Rotation matrix undefined");
-            NODE_LOG(warning) << "Rotation matrix undefined";
-            return img;
-        }
-        cv::Mat* P = getParameter<cv::Mat>(3)->Data();
-        if(P == nullptr)
-        {
-            //log(Warning, "Projection matrix undefined");
-            NODE_LOG(warning) << "Projection matrix undefined";
-            return img;
-        }
-        if(K->empty())
-        {
-            //log(Warning, "Camera matrix empty");
-            NODE_LOG(warning) << "Camera matrix empty";
-            return img;
-        }
-        if(D->empty())
-        {
-            //log(Warning, "Distortion matrix empty");
-            NODE_LOG(warning) << "Distortion matrix empty";
-            return img;
-        }
-        if(R->empty())
-        {
-            //log(Warning, "Rotation matrix empty");
-            NODE_LOG(warning) << "Rotation matrix empty";
-            return img;
-        }
-        if(P->empty())
-        {
-            //log(Warning, "Projection matrix empty");
-            NODE_LOG(warning) << "Projection matrix empty";
-            return img;
-        }
-
-        //log(Status, "Calculating image rectification");
-        NODE_LOG(info) << "Calculating image rectification";
-        cv::initUndistortRectifyMap(*K,*D, *R, *P, img.size(), CV_32FC1, X, Y);
-        mapX.upload(X, stream);
-        mapY.upload(Y,stream);
-        //log(Status, "Undistortion maps calculated");
-        NODE_LOG(info) << "Undistortion maps calculated";
-        _parameters[0]->changed = false;
-        _parameters[1]->changed = false;
-        _parameters[2]->changed = false;
-        _parameters[3]->changed = false;
-        updateParameter("mapX", mapX);
-        updateParameter("mapY", mapY);
-
-    }
-    if(!mapX.empty() && !mapY.empty())
-    {
-        cv::cuda::remap(img,img,mapX,mapY, CV_INTER_CUBIC, cv::BORDER_REPLICATE, cv::Scalar(), stream);
-    }
-    return img;
-}
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBM, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBilateralFilter, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoBeliefPropagation, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(StereoConstantSpaceBP, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(UndistortStereo, Image, Processing)
+MO_REGISTER_CLASS(StereoBM, Image, Processing)
+MO_REGISTER_CLASS(StereoBilateralFilter, Image, Processing)
+MO_REGISTER_CLASS(StereoBeliefPropagation, Image, Processing)
+MO_REGISTER_CLASS(StereoConstantSpaceBP, Image, Processing)
+MO_REGISTER_CLASS(UndistortStereo, Image, Processing)

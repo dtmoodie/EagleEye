@@ -6,37 +6,37 @@ using namespace EagleLib::Nodes;
 #define CATCH_MACRO                                                         \
     catch (boost::thread_resource_error& err)                               \
 {                                                                           \
-    NODE_LOG(error) << err.what();                                          \
+    LOG(error) << err.what();                                               \
 }                                                                           \
     catch (boost::thread_interrupted& err)                                  \
 {                                                                           \
-    NODE_LOG(error) << "Thread interrupted";                                \
+    LOG(error) << "Thread interrupted";                                     \
     /* Needs to pass this back up to the chain to the processing thread.*/  \
     /* That way it knowns it needs to exit this thread */                   \
     throw err;                                                              \
 }                                                                           \
     catch (boost::thread_exception& err)                                    \
 {                                                                           \
-    NODE_LOG(error) << err.what();                                          \
+    LOG(error) << err.what();                                               \
 }                                                                           \
     catch (cv::Exception &err)                                              \
 {                                                                           \
-    NODE_LOG(error) << err.what();                                          \
+    LOG(error) << err.what();                                               \
 }                                                                           \
     catch (boost::exception &err)                                           \
 {                                                                           \
-    NODE_LOG(error) << "Boost error";                                       \
+    LOG(error) << "Boost error";                                            \
 }                                                                           \
     catch (std::exception &err)                                             \
 {                                                                           \
-    NODE_LOG(error) << err.what();                                            \
+    LOG(error) << err.what();                                               \
 }                                                                           \
     catch (...)                                                             \
 {                                                                           \
-    NODE_LOG(error) << "Unknown exception";                                 \
+    LOG(error) << "Unknown exception";                                      \
 }
 
-void HeartBeatBuffer::NodeInit(bool firstInit)
+/*void HeartBeatBuffer::NodeInit(bool firstInit)
 {
     if (firstInit)
     {
@@ -53,15 +53,15 @@ void HeartBeatBuffer::NodeInit(bool firstInit)
 void HeartBeatBuffer::onActivation()
 {
     activated = true;
-}
-TS<SyncedMemory> HeartBeatBuffer::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
+}*/
+/*TS<SyncedMemory> HeartBeatBuffer::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 {
     if (boost::this_thread::interruption_requested())
         return input;
 
     if (input.empty() && SkipEmpty())
     {
-        NODE_LOG(trace) << " Skipped due to empty input";
+        LOG(trace) << " Skipped due to empty input";
     }
     else
     {
@@ -76,7 +76,7 @@ TS<SyncedMemory> HeartBeatBuffer::process(TS<SyncedMemory>& input, cv::cuda::Str
             {
                 for (auto itr : image_buffer)
                 {
-                    for (auto childItr : children)
+                    for (auto childItr : _children)
                     {
                         itr = childItr->doProcess(itr, stream);
                     }
@@ -85,7 +85,8 @@ TS<SyncedMemory> HeartBeatBuffer::process(TS<SyncedMemory>& input, cv::cuda::Str
                 image_buffer.clear();
             }
             auto currentTime = clock();
-            if ((double(currentTime) - double(lastTime)) / 1000 > *getParameter<double>(1)->Data() || *getParameter<bool>(2)->Data())
+            if ((double(currentTime) - double(lastTime)) / 1000 > *getParameter<double>(1)->Data() || 
+                *getParameter<bool>(2)->Data())
             {
                 lastTime = currentTime;
                 // Send heartbeat
@@ -101,8 +102,8 @@ TS<SyncedMemory> HeartBeatBuffer::process(TS<SyncedMemory>& input, cv::cuda::Str
         }CATCH_MACRO
     }
     return input;
-}
+}*/
 
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(HeartBeatBuffer, Utility)
+//NODE_DEFAULT_CONSTRUCTOR_IMPL(HeartBeatBuffer, Utility)

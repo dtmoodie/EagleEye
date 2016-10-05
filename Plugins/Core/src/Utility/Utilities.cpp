@@ -1,9 +1,9 @@
-#include "nodes/Utility/Utilities.h"
+#include "Utilities.h"
 #include <boost/lexical_cast.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
 
 
 
+/*
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -62,3 +62,4 @@ cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SyncFunctionCall, Utility)
+*/

@@ -1,5 +1,7 @@
+#include "precompiled.hpp"
 #include "EagleLib/nodes/Node.h"
 #include <MetaObject/MetaObject.hpp>
+
 #include "opencv2/cudastereo.hpp"
 #include "EagleLib/utilities/CudaUtils.hpp"
 namespace EagleLib
@@ -66,6 +68,8 @@ namespace EagleLib
             INPUT(cv::Mat, distortion_matrix, nullptr);
             INPUT(cv::Mat, rotation_matrix, nullptr);
             INPUT(cv::Mat, projection_matrix, nullptr);
+            ENUM_PARAM(interpolation_method, cv::INTER_NEAREST, cv::INTER_LINEAR, cv::INTER_CUBIC, cv::INTER_AREA, cv::INTER_LANCZOS4, cv::INTER_MAX );
+            ENUM_PARAM(boarder_mode, cv::BORDER_CONSTANT, cv::BORDER_REPLICATE, cv::BORDER_REFLECT, cv::BORDER_WRAP, cv::BORDER_REFLECT_101, cv::BORDER_ISOLATED);
             OUTPUT(SyncedMemory, mapX, SyncedMemory());
             OUTPUT(SyncedMemory, mapY, SyncedMemory());
         MO_END;

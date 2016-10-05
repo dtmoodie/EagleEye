@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/nodes/Node.h"
+#include <src/precompiled.hpp>
 
 #include <boost/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
@@ -14,12 +14,6 @@ namespace EagleLib
             std::condition_variable_any _cv;
             bool _pause;
         public:
-            struct ProcessFutureInfo: public NodeInfo
-            {
-                ProcessFutureInfo();
-                virtual std::string GetObjectTooltip();
-                virtual std::string GetObjectHelp();
-            };
 
             ProcessFuture();
             ~ProcessFuture();

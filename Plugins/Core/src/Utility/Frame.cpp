@@ -1,4 +1,4 @@
-#include "nodes/Utility/Frame.h"
+#include "Frame.h"
 #include "EagleLib/rcc/external_includes/cv_cudawarping.hpp"
 #include "EagleLib/rcc/external_includes/cv_cudaarithm.hpp"
 #include <EagleLib/Qualifiers.hpp>
@@ -8,140 +8,86 @@ using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
 
-cv::cuda::GpuMat FrameRate::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+bool FrameRate::ProcessImpl()
 {
     boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta = currentTime - prevTime;
     prevTime = currentTime;
-    updateParameter<double>("Framerate", 1000.0/delta.total_milliseconds())->type =  Parameters::Parameter::State;
-    return img;
+    framerate_param.UpdateData(1000.0 / delta.total_milliseconds());
+    return true;
 }
 
-void FrameLimiter::NodeInit(bool firstInit)
-{
-    updateParameter<double>("Framerate", 60.0);
-}
-
-cv::cuda::GpuMat FrameLimiter::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+bool FrameLimiter::ProcessImpl()
 {
     auto currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta(currentTime - lastTime);
     lastTime = currentTime;
-    int goalTime = 1000.0 / *getParameter<double>(0)->Data();
+    int goalTime = 1000.0 / desired_framerate;
     if (delta.total_milliseconds() < goalTime)
     {
-        //boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
         boost::this_thread::sleep_for(boost::chrono::milliseconds(goalTime - delta.total_milliseconds()));
     }
-    return img;
-}
-void CreateMat::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        Parameters::EnumParameter dataType;
-        dataType.addEnum(ENUM(CV_8U));
-        dataType.addEnum(ENUM(CV_8S));
-        dataType.addEnum(ENUM(CV_16U));
-        dataType.addEnum(ENUM(CV_16S));
-        dataType.addEnum(ENUM(CV_32S));
-        dataType.addEnum(ENUM(CV_32F));
-        dataType.addEnum(ENUM(CV_64F));
-        updateParameter("Datatype", dataType);
-        updateParameter("Channels", int(1));
-        updateParameter("Width", 1920);
-        updateParameter("Height", 1080);
-        updateParameter("Fill", cv::Scalar::all(0));
-    }
-    _parameters[0]->changed = true;
+    return true;
 }
 
-cv::cuda::GpuMat CreateMat::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+bool CreateMat::ProcessImpl()
 {
-    if(_parameters[0]->changed ||
-       _parameters[1]->changed ||
-       _parameters[2]->changed ||
-       _parameters[3]->changed ||
-       _parameters[4]->changed )
+    if(data_type_param.modified || channels_param.modified || width_param.modified || height_param.modified || fill_param.modified)
     {
-        auto typeParam = getParameter<Parameters::EnumParameter>(0);
-        int selection = typeParam->Data()->currentSelection;
-        int dtype = typeParam->Data()->values[selection];
-        createdMat = cv::cuda::GpuMat(*getParameter<int>(3)->Data(),
-                    *getParameter<int>(2)->Data(),
-                    dtype, *getParameter<cv::Scalar>(4)->Data());
-        updateParameter("Output", createdMat)->type = Parameters::Parameter::Output;
-        _parameters[0]->changed = false;
-        _parameters[1]->changed = false;
-        _parameters[2]->changed = false;
-        _parameters[3]->changed = false;
-        _parameters[4]->changed = false;
+        cv::cuda::GpuMat mat;
+        mat.create(height, width, CV_MAKETYPE(data_type.getValue(), channels));
+        output_param.UpdateData(mat);
+        data_type_param.modified = false;
+        channels_param.modified = false;
+        width_param.modified = false;
+        height_param.modified = false; 
+        fill_param.modified = false;
     }
-    return img;
-}
-void SetMatrixValues::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        addInputParameter<cv::cuda::GpuMat>("Input image");
-        addInputParameter<cv::cuda::GpuMat>("Input mask");
-        updateParameter("Replace value", cv::Scalar(0,0,0));
-    }
-    qualifiersSetup = false;
+    output.GetGpuMatMutable(Stream()).setTo(fill, Stream());
+    return true;
 }
 
-cv::cuda::GpuMat SetMatrixValues::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+bool SetMatrixValues::ProcessImpl()
 {
-    TIME
-        cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat>(0)->Data();
-    if(input == nullptr)
-        input = &img;
-    TIME
-    if(_parameters[0]->changed || qualifiersSetup == false)
+    if(mask)
     {
-        boost::function<bool(Parameters::Parameter*)> f = GpuMatQualifier::get(input->cols, input->rows, 1, CV_8U);
-        updateInputQualifier<cv::cuda::GpuMat>(1, f);
-    }
-    cv::cuda::GpuMat* mask = getParameter<cv::cuda::GpuMat>(1)->Data();
-
-    if(mask && mask->size() == input->size())
-    {
-        TIME
-            input->setTo(*getParameter<cv::Scalar>(2)->Data(), *mask, stream);
-        TIME
+        input->GetGpuMatMutable(Stream()).setTo(replace_value, mask->GetGpuMat(Stream()), Stream());
     }else
     {
-        TIME
-        input->setTo(*getParameter<cv::Scalar>(2)->Data(), stream);
-        TIME
+        input->GetGpuMatMutable(Stream()).setTo(replace_value, Stream());
     }
-    return *input;
+    return true;
 }
-void Resize::NodeInit(bool firstInit)
+
+bool Resize::ProcessImpl()
 {
-    updateParameter("Width", int(224));
-    updateParameter("Height", int(224));
+    if(input->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
+    {
+        cv::resize(input->GetMat(Stream()), output.GetMatMutable(Stream()), cv::Size(height, width), 0.0, 0.0, interpolation_method.getValue());
+    }else
+    {
+        cv::cuda::resize(input->GetGpuMat(Stream()), output.GetGpuMutable(Stream()), cv::Size(height, width), 0.0, 0.0, interpolation_method.getValue(), Stream());
+    }
+    return true;
 }
-cv::cuda::GpuMat Resize::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+
+bool Subtract::ProcessImpl()
 {
-    auto buf = bufferPool.getFront();
-    cv::cuda::resize(img, buf->data, cv::Size(*getParameter<int>(0)->Data(), *getParameter<int>(1)->Data()), 0.0, 0.0, 1, stream);
-    return buf->data;
-}
-void Subtract::NodeInit(bool firstInit)
-{
-    updateParameter("Value to subtract", cv::Scalar(0, 0, 0));
-}
-cv::cuda::GpuMat Subtract::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    cv::cuda::subtract(img, *getParameter<cv::Scalar>(0)->Data(), img, cv::noArray(), -1, stream);
-    return img;
+    if (input->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
+    {
+        cv::subtract(input->GetMat(Stream()), value, output.GetMatMutable(Stream()), mask ? mask->GetMat(Stream()) : cv::noArray(),  dtype.getValue());
+    }else
+    {
+        cv::cuda::subtract(input->GetGpuMat(Stream()), value, output.GetGpuMatMutable(Stream()), mask ? mask->GetGpuMat(Stream()) : cv::noArray(), dtype.getValue(), Stream());
+    }
+    return true;
 }
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SetMatrixValues, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameRate, Utility)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(FrameLimiter, Utility)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(CreateMat, Image, Source)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Resize, Image, Processing)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Subtract, Image, Processing)
+
+MO_REGISTER_CLASS(SetMatrixValues)
+MO_REGISTER_CLASS(FrameRate)
+MO_REGISTER_CLASS(FrameLimiter)
+MO_REGISTER_CLASS(CreateMat)
+MO_REGISTER_CLASS(Resize)
+MO_REGISTER_CLASS(Subtract)

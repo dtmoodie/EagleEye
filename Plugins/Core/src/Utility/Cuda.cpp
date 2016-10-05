@@ -1,7 +1,7 @@
-#include "nodes/Utility/Cuda.h"
+#include "Cuda.h"
 #include <cuda.h>
 #include <cuda_runtime_api.h>
-#include <parameters/ParameteredObjectImpl.hpp>
+
 
 
 RUNTIME_COMPILER_LINKLIBRARY("-lcudart")
@@ -31,7 +31,7 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
         if(device >= maxDevice)
         {
             //log(Status, "Desired device greater than max allowed device index, max index: " + boost::lexical_cast<std::string>(maxDevice - 1));
-            NODE_LOG(info) << "Desired device greater than max allowed device index, max index: "  << maxDevice - 1;
+            LOG(info) << "Desired device greater than max allowed device index, max index: "  << maxDevice - 1;
             return cv::cuda::GpuMat();
         }
         cudaDeviceProp prop;
@@ -39,7 +39,7 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
         if(currentDevice != device)
         {
             //log(Status, "Switching device from " + boost::lexical_cast<std::string>(currentDevice) + " to " + boost::lexical_cast<std::string>(device) + " " + prop.name + " async engines: " + boost::lexical_cast<std::string>(prop.asyncEngineCount));
-            NODE_LOG(info) << "Switching device from " << currentDevice << " to " << device << " " << prop.name << " async engines: " << prop.asyncEngineCount;
+            LOG(info) << "Switching device from " << currentDevice << " to " << device << " " << prop.name << " async engines: " << prop.asyncEngineCount;
             updateParameter<std::string>("Device name", cv::cuda::DeviceInfo(device).name());
             //if(onUpdate)
             //    onUpdate(this);
