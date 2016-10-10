@@ -1,23 +1,24 @@
 #pragma once
 
-#include "EagleLib/frame_grabber_base.h"
+#include "EagleLib/Nodes/IFrameGrabber.hpp"
 #include "gstreamer.hpp"
 
 namespace EagleLib
 {
-    class PLUGIN_EXPORTS chunked_file_sink: public gstreamer_src_base, public FrameGrabberBuffered
+    class PLUGIN_EXPORTS chunked_file_sink: public gstreamer_src_base, public Nodes::FrameGrabberBuffered
     {
     protected:
         GstElement* _filesink;
     public:
-        class PLUGIN_EXPORTS chunked_file_sink_info: public FrameGrabberInfo
-        {
-            virtual int CanLoadDocument(const std::string& document) const;
-            virtual std::string GetObjectName();
-            virtual int LoadTimeout() const;
-        };
+        MO_DERIVE(chunked_file_sink, Nodes::FrameGrabberBuffered)
+            PARAM(size_t, chunk_size, 10 * 1024 * 1024);
+        MO_END;
+
+        static int CanLoadDocument(const std::string& doc);
+        static int LoadTimeout();
+
         virtual bool LoadFile(const std::string& file_path);
-        virtual int GetNumFrames();
+        virtual long long GetNumFrames();
         virtual rcc::shared_ptr<EagleLib::ICoordinateManager> GetCoordinateManager();
         virtual void Init(bool firstInit);
         virtual GstFlowReturn on_pull();

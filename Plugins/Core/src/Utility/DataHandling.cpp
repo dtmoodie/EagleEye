@@ -1,117 +1,34 @@
 #include "DataHandling.h"
 #include "Remotery.h"
-#include <parameters/ParameteredObjectImpl.hpp>
+
 #include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
+MO_REGISTER_CLASS(ImageInfo);
 
-void GetOutputImage::NodeInit(bool firstInit)
+bool ImageInfo::ProcessImpl()
 {
-    if(firstInit)
-        addInputParameter<cv::cuda::GpuMat>("GpuInput");
-    addInputParameter<TS<SyncedMemory>>("SyncedInput");
-    addInputParameter<cv::Mat>("CpuInput");
+    long long ts = input_param.GetTimestamp();
+    auto shape = input->GetShape();
+    count_param.UpdateData(shape[0], ts, _ctx);
+    height_param.UpdateData(shape[1], ts, _ctx);
+    width_param.UpdateData(shape[2], ts, _ctx);
+    channels_param.UpdateData(shape[3], ts, _ctx);
+    return true;
 }
-TS<SyncedMemory> GetOutputImage::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
+
+bool Mat2Tensor::ProcessImpl()
 {
-    auto synced_input = getParameter<TS<SyncedMemory>>("SyncedInput")->Data();
-    if(synced_input)
+    int new_channels = input->GetChannels();
+    if(include_position)
     {
-        return *synced_input;
+        new_channels += 2;
     }
-    //auto gpu_input = getParameter<TS<cv::cuda::GpuMat>("GpuInput")
-
-    auto cpu_input = getParameter<cv::Mat>("CpuInput")->Data();
-    if(cpu_input)
-    {
-        return TS<SyncedMemory>(*cpu_input);
-    }
-    return img;
+    return false;
 }
 
-cv::cuda::GpuMat GetOutputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    cv::cuda::GpuMat* input = getParameter<cv::cuda::GpuMat>("Input")->Data();
-    if(input == nullptr)
-    {
-        return img;
-    }
-    if(input->empty())
-    {
-        return img;
-    }
-    return *input;
-}
-TS<SyncedMemory> ExportInputImage::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
-{
-    updateParameter("Output image", img, &stream)->type = Parameters::Parameter::Output;
-    return img;
-}
 
-cv::cuda::GpuMat ExportInputImage::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    {
-        rmt_ScopedCPUSample(ExportInputImage_updateParameter);
-        updateParameter("Output GPU image", img, &stream);
-    }
-    
-    return img;
-}
-
-void ExportInputImage::NodeInit(bool firstInit)
-{
-    updateParameter("Output GPU image", cv::cuda::GpuMat())->type = Parameters::Parameter::Output;
-}
-
-void ImageInfo::NodeInit(bool firstInit)
-{
-    Parameters::EnumParameter dataType;
-    dataType.addEnum(ENUM(CV_8U));
-    dataType.addEnum(ENUM(CV_8S));
-    dataType.addEnum(ENUM(CV_16U));
-    dataType.addEnum(ENUM(CV_16S));
-    dataType.addEnum(ENUM(CV_32S));
-    dataType.addEnum(ENUM(CV_32F));
-    dataType.addEnum(ENUM(CV_64F));
-    updateParameter<Parameters::EnumParameter>("Type",dataType)->type = Parameters::Parameter::State;
-}
-cv::cuda::GpuMat ImageInfo::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-
-    auto param = getParameter<Parameters::EnumParameter>(0);
-    if(param->Data()->currentSelection != img.type())
-    {
-        param->Data()->currentSelection = img.type();
-        _parameters[0]->changed = true;
-        param->update_signal(&stream);
-    }
-    //std::stringstream str;
-    //str << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
-    //log(Status, str.str());
-    //NODE_LOG(info) << "[" << img.cols << "x" << img.rows << "x" << img.channels() << "]" << " " << img.depth();
-    updateParameter<int>("Depth", img.depth())->type = Parameters::Parameter::State;
-    updateParameter<int>("Rows", img.rows)->type = Parameters::Parameter::State;
-    updateParameter<int>("Cols", img.cols)->type = Parameters::Parameter::State;
-    updateParameter<int>("Channels", img.channels())->type = Parameters::Parameter::State;
-    updateParameter<int>("Step", img.step)->type = Parameters::Parameter::State;
-    updateParameter<int>("Ref count", *img.refcount)->type = Parameters::Parameter::State;
-    updateParameter<bool>("Continuous", img.isContinuous());
-    return img;
-}
-void Mat2Tensor::NodeInit(bool firstInit)
-{
-    Parameters::EnumParameter dataType;
-    dataType.addEnum(ENUM(CV_8U));
-    dataType.addEnum(ENUM(CV_8S));
-    dataType.addEnum(ENUM(CV_16U));
-    dataType.addEnum(ENUM(CV_16S));
-    dataType.addEnum(ENUM(CV_32S));
-    dataType.addEnum(ENUM(CV_32F));
-    dataType.addEnum(ENUM(CV_64F));
-    updateParameter<Parameters::EnumParameter>("Tensor Type",dataType);
-    updateParameter("Include Position", true);
-}
-cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+/*cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
     int type = getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection;
     bool position = *getParameter<bool>(1)->Data();
@@ -329,3 +246,4 @@ NODE_DEFAULT_CONSTRUCTOR_IMPL(ConcatTensor, Tensor, Processing)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(LagBuffer, Utility)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(CameraSync, Utility)
 
+*/

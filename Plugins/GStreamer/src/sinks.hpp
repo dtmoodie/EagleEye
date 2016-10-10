@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gstreamer.hpp"
-#include "EagleLib/frame_grabber_base.h"
+#include "EagleLib/Nodes/IFrameGrabber.hpp"
 
 namespace EagleLib
 {
@@ -18,7 +18,7 @@ namespace EagleLib
         };
     }
 
-    class PLUGIN_EXPORTS BufferedHeartbeatRtsp: public FrameGrabberBuffered, public gstreamer_src_base
+    class PLUGIN_EXPORTS BufferedHeartbeatRtsp: public Nodes::FrameGrabberBuffered, public gstreamer_src_base
     {
     public:
         virtual void NodeInit(bool firstInit);

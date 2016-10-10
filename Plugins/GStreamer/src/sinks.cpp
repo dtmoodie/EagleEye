@@ -1,6 +1,6 @@
 #include "sinks.hpp"
 #include <gst/gst.h>
-#include "parameters/ParameteredObjectImpl.hpp"
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

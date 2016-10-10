@@ -614,6 +614,7 @@ void Node::SetDataStream(IDataStream* stream_)
     {
         child->SetDataStream(_dataStream.Get());
     }
+    
 }
 
 IDataStream* Node::GetDataStream()
@@ -626,6 +627,7 @@ IDataStream* Node::GetDataStream()
     if (_parents.size() == 0 && _dataStream == nullptr)
     {
         _dataStream = IDataStream::Create();
+        _dataStream->AddNode(this);
     }    
     return _dataStream.Get();
 }

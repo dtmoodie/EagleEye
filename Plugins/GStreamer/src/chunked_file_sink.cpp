@@ -1,27 +1,19 @@
 #include "chunked_file_sink.h"
 #include <EagleLib/ICoordinateManager.h>
-#include <parameters/ParameteredObjectImpl.hpp>
 #include <gst/base/gstbasesink.h>
 using namespace EagleLib;
 
 
-int chunked_file_sink::chunked_file_sink_info::CanLoadDocument(const std::string& document) const
+int chunked_file_sink::CanLoadDocument(const std::string& document)
 {
     return 0; // Currently needs to be manually specified
 }
-int chunked_file_sink::chunked_file_sink_info::LoadTimeout() const
+int chunked_file_sink::LoadTimeout()
 {
     return 3000;
 }
 
-std::string chunked_file_sink::chunked_file_sink_info::GetObjectName()
-{
-    return "chunked_file_sink";
-}
-void chunked_file_sink::Init(bool firstInit)
-{
-    updateParameter("chunk size", 10*1024*1024);
-}
+
 
 GstFlowReturn chunked_file_sink::on_pull()
 {
@@ -74,7 +66,7 @@ bool chunked_file_sink::LoadFile(const std::string& file_path)
     }
     return false;
 }
-int chunked_file_sink::GetNumFrames()
+long long chunked_file_sink::GetNumFrames()
 {
     return -1;
 }
@@ -85,5 +77,5 @@ rcc::shared_ptr<EagleLib::ICoordinateManager> chunked_file_sink::GetCoordinateMa
 }
 
 
-static chunked_file_sink::chunked_file_sink_info g_info;
-REGISTERCLASS(chunked_file_sink, &g_info);
+
+MO_REGISTER_CLASS(chunked_file_sink);

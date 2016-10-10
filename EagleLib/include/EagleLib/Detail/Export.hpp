@@ -28,3 +28,11 @@
     RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib");
   #endif
 #endif
+
+#ifndef BUILD_TYPE
+#ifdef _DEBUG
+#define BUILD_TYPE 0
+#else
+#define BUILD_TYPE 1
+#endif
+#endif

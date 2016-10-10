@@ -57,6 +57,10 @@ bool VideoWriter::ProcessImpl()
     return true;
 }
 
-
+void VideoWriter::write_out()
+{
+    d_writer.release();
+    h_writer.release();
+}
 
 MO_REGISTER_CLASS(VideoWriter);

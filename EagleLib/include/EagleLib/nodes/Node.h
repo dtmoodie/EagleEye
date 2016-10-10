@@ -31,6 +31,7 @@
 
 // In library includes
 #include "EagleLib/Detail/Export.hpp"
+#include "EagleLib/IDataStream.hpp"
 #include "EagleLib/Algorithm.h"
 #include "EagleLib/SyncedMemory.h"
 #include "EagleLib/utilities/CudaUtils.hpp"

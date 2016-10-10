@@ -60,13 +60,6 @@
 #ifndef PROJECT_CONFIG_FILE
   #define PROJECT_CONFIG_FILE ""
 #endif
-#ifndef BUILD_TYPE
-  #ifdef _DEBUG
-    #define BUILD_TYPE 0
-  #else
-    #define BUILD_TYPE 1
-  #endif
-#endif
 
 #define SETUP_PROJECT_IMPL    int GetBuildType() {return BUILD_TYPE; }                                  \
 void SetupIncludes(){                                                                                   \

@@ -2,7 +2,7 @@
 #include "glib_thread.h"
 
 #include <EagleLib/rcc/SystemTable.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
+
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 
 #include <gst/video/video.h>
@@ -11,7 +11,7 @@
 #include "../remotery/lib/Remotery.h"
 
 #include <QtNetwork/qnetworkinterface.h>
-#include "EagleLib/rcc/ObjectManager.h"
+
 
 
 

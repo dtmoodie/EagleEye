@@ -210,7 +210,15 @@ bool ConvertDataType::ProcessImpl()
     cv::cuda::merge(channels, mergedChannels,stream);
     return mergedChannels;
 }*/
+bool ConvertColorspace::ProcessImpl()
+{
+    return false;
+}
 
+bool MergeChannels::ProcessImpl()
+{
+    return false;
+}
 
 
 bool Reshape::ProcessImpl()

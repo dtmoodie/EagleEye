@@ -10,7 +10,7 @@ namespace Nodes
     {
     public:
         MO_DERIVE(QtImageDisplay, Node);
-            INPUT(TS<SyncedMemory>, image, nullptr);
+            INPUT(SyncedMemory, image, nullptr);
             INPUT(cv::Mat, cpu_mat, nullptr);
         MO_END;
     protected:

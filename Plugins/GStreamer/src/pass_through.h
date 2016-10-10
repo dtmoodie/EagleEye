@@ -1,5 +1,5 @@
 #pragma once
-
+#include <MetaObject/MetaObject.hpp>
 #include "gstreamer.hpp"
 
 namespace EagleLib
@@ -9,12 +9,12 @@ namespace EagleLib
         class PLUGIN_EXPORTS h264_pass_through: public gstreamer_sink_base
         {
         public:
-            class h264_pass_through_info : public Nodes::NodeInfo
-            {
-            public:
-                h264_pass_through_info();
-            };
-            virtual void NodeInit(bool firstInit);
+            MO_DERIVE(h264_pass_through, gstreamer_sink_base)
+                PARAM(std::string, gstreamer_string, "");
+                PARAM(bool, active, false);
+            MO_END;
+        protected:
+            bool ProcessImpl();
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
         };
     }

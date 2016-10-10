@@ -164,7 +164,6 @@ void frame_grabber_cv::Serialize(ISimpleSerializer* pSerializer)
     FrameGrabberBuffered::Serialize(pSerializer);
     SERIALIZE(h_cam);
     SERIALIZE(d_cam);
-    //SERIALIZE(current_frame);
 }
 
 ::std::vector<::std::string> frame_grabber_camera::ListLoadableDocuments()
@@ -205,7 +204,7 @@ void frame_grabber_cv::Serialize(ISimpleSerializer* pSerializer)
             NULL
             );
         std::wstring wstring(ppszName);
-        output.push_back(std::string(wstring.begin(), wstring.end()));
+        output.push_back(boost::lexical_cast<std::string>(i) + " - " + std::string(wstring.begin(), wstring.end()));
     }
 
 
@@ -230,6 +229,27 @@ void frame_grabber_cv::Serialize(ISimpleSerializer* pSerializer)
 }
 int frame_grabber_camera::CanLoadDocument(const std::string& doc)
 {
+    auto pos = doc.find(" - ");
+    if(pos != std::string::npos)
+    {
+        try
+        {
+            int index = boost::lexical_cast<int>(doc.substr(pos));
+            return 10;
+        }catch(...)
+        {
+        }
+    }else
+    {
+        try
+        {
+            int index = boost::lexical_cast<int>(doc);
+            return 10;
+        }
+        catch (...)
+        {
+        }
+    }
     auto cameras = ListLoadableDocuments();
     for(const auto& camera : cameras)
     {

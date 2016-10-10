@@ -1,5 +1,5 @@
 #include "DisplayHelpers.h"
-
+#include <MetaObject/Detail/IMetaObjectImpl.hpp>
 using namespace ::EagleLib;
 using namespace ::EagleLib::Nodes;
 

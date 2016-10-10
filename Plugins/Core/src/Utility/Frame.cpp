@@ -66,7 +66,7 @@ bool Resize::ProcessImpl()
         cv::resize(input->GetMat(Stream()), output.GetMatMutable(Stream()), cv::Size(height, width), 0.0, 0.0, interpolation_method.getValue());
     }else
     {
-        cv::cuda::resize(input->GetGpuMat(Stream()), output.GetGpuMutable(Stream()), cv::Size(height, width), 0.0, 0.0, interpolation_method.getValue(), Stream());
+        cv::cuda::resize(input->GetGpuMat(Stream()), output.GetGpuMatMutable(Stream()), cv::Size(height, width), 0.0, 0.0, interpolation_method.getValue(), Stream());
     }
     return true;
 }

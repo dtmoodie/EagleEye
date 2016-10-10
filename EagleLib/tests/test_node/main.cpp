@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(test_node_reflection)
     auto node_info = dynamic_cast<NodeInfo*>(info);
     BOOST_REQUIRE(node_info);
     BOOST_REQUIRE_EQUAL(node_info->GetNodeCategory().size(), 2);
-    BOOST_REQUIRE_EQUAL(node_info->ListParameters().size(), 1);
-    BOOST_REQUIRE_EQUAL(node_info->ListSignalInfo().size(), 2);
-    BOOST_REQUIRE_EQUAL(node_info->ListSlotInfo().size(), 2);
+    BOOST_REQUIRE_EQUAL(node_info->GetParameterInfo().size(), 1);
+    BOOST_REQUIRE_EQUAL(node_info->GetSignalInfo().size(), 2);
+    BOOST_REQUIRE_EQUAL(node_info->GetSlotInfo().size(), 2);
 }

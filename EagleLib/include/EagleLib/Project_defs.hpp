@@ -1,5 +1,5 @@
 #pragma once
-
+/*
 // Guard this file from being compiled by nvcc
 #ifndef __CUDACC__
 #include "EagleLib/Detail/Export.hpp"
@@ -76,3 +76,4 @@ void SetupIncludes(){                                                           
         EagleLib::ObjectManager::Instance().addDefinitions(PROJECT_DEFINITIONS, id);                    \
 }
 
+*/

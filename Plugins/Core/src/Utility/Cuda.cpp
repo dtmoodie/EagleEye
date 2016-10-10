@@ -4,7 +4,7 @@
 
 
 
-RUNTIME_COMPILER_LINKLIBRARY("-lcudart")
+/*RUNTIME_COMPILER_LINKLIBRARY("-lcudart")
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -59,28 +59,6 @@ bool SetDevice::SkipEmpty() const
 }
 
 
-bool StreamDispatcher::SkipEmpty() const
-{
-    return false;
-}
-void StreamDispatcher::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        updateParameter("Number of streams", int(20));
-    }
-}
 
-cv::cuda::GpuMat StreamDispatcher::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    if(_parameters[0]->changed)
-    {
-        streams.resize(*getParameter<int>(0)->Data());
-    }
-    stream = *streams.getFront();
-    return img;
-}
-
-
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SetDevice, Utility)
+MO_REGISTER_CLASS(SetDevice, Utility)*/
 
