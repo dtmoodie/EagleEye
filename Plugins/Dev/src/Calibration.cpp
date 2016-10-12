@@ -5,7 +5,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 
-
+#include <IRuntimeObjectSystem.h>
 
 
 using namespace EagleLib;
@@ -53,7 +53,7 @@ void CalibrateCamera::Save()
     if (fs.isOpened())
     {
         fs << "Camera Matrix" << camera_matrix;
-        fs << "Distortion Matrix" << distrotion_matrix;
+        fs << "Distortion Matrix" << distortion_matrix;
     }
  
 }
@@ -64,7 +64,14 @@ void CalibrateCamera::Clear()
     image_point_collection.clear();
 }
 
+void CalibrateCamera::ForceCalibration()
+{
 
+}
+void CalibrateCamera::SaveCalibration()
+{
+
+}
 bool CalibrateCamera::ProcessImpl()
 {
     if(image_points->size() != object_points->size())
@@ -118,33 +125,6 @@ bool CalibrateCamera::ProcessImpl()
 }
 
 
-
-void CalibrateStereoPair::NodeInit(bool firstInit)
-{
-    updateParameter<boost::function<void(void)>>("Clear", boost::bind(&CalibrateStereoPair::clear, this));
-    if (firstInit)
-    {
-        addInputParameter<ImagePoints>("Camera 1 points");
-        addInputParameter<ImagePoints>("Camera 2 points");
-        addInputParameter<ObjectPoints>("Object points 3d");
-
-        addInputParameter<cv::Mat>("Camera 1 Matrix");
-        addInputParameter<cv::Mat>("Camera 2 matrix");
-
-        addInputParameter<cv::Mat>("Distortion matrix 1");
-        addInputParameter<cv::Mat>("Distortion matrix 2");
-    }
-    //updateParameter<Parameters::WriteFile>("Save file", Parameters::WriteFile("Stereo_calibration.yml"));
-    //RegisterParameterCallback("Save file", boost::bind(&CalibrateStereoPair::save, this));
-    updateParameter<boost::function<void(void)>>("Save calibration", boost::bind(&CalibrateStereoPair::save, this));
-    updateParameterPtr("Rotation matrix", &Rot);
-    updateParameterPtr("Translation matrix", &Trans);
-    updateParameterPtr("Essential matrix", &Ess);
-    updateParameterPtr("Fundamental matrix", &Fun);
-    lastCalibration = 0;
-    centroidHistory1.set_capacity(20);
-    centroidHistory2.set_capacity(20);
-}
 void CalibrateStereoPair::Clear()
 {
 
@@ -276,11 +256,11 @@ void ReadStereoCalibration::OnCalibrationFileChange(mo::Context* ctx, mo::IParam
     P2_param.Commit();
     Q_param.Commit();
 }
-void ReadStereoCalibration::NodeInit(bool firstInit)
-{
-    calibration_file_param.RegisterUpdateNotifier(this->GetSlot<void(mo::Context*, IParameter*)>("OnCalibrationFileChange"));
-}
 
+bool ReadStereoCalibration::ProcessImpl()
+{
+    return true;
+}
 
 /*cv::cuda::GpuMat ReadCameraCalibration::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {

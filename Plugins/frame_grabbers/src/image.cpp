@@ -43,7 +43,7 @@ TS<SyncedMemory> frame_grabber_image::GetFrame(int index, cv::cuda::Stream& stre
     cv::Mat h_out;
     d_image.copyTo(d_out, stream);
     h_image.copyTo(h_out);
-    return TS<SyncedMemory>(0.0, 0, h_out, d_out);
+    return TS<SyncedMemory>(0.0, (long long)0, h_out, d_out);
 }
 TS<SyncedMemory> frame_grabber_image::GetNextFrame(cv::cuda::Stream& stream)
 {

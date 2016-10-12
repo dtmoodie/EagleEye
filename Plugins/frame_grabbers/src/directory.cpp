@@ -116,7 +116,7 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
 {
     // First check if this has already been loaded in the frame buffer
     if(files_on_disk.empty())
-        return TS<SyncedMemory>(0.0, 0);
+        return TS<SyncedMemory>(0.0, (long long)0);
     if(index >= files_on_disk.size())
         index = static_cast<int>(files_on_disk.size() - 1);
     std::string file_name = files_on_disk[index];
@@ -136,7 +136,7 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     }
     cv::Mat h_out = cv::imread(file_name);
     if(h_out.empty())
-        return TS<SyncedMemory>(0.0, 0);
+        return TS<SyncedMemory>(0.0, (long long)0);
     loaded_images.push_back(std::make_tuple(file_name, TS<SyncedMemory>(h_out)));
     return TS<SyncedMemory>(h_out);
 }

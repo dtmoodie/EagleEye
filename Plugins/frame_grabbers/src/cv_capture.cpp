@@ -152,7 +152,7 @@ TS<SyncedMemory> frame_grabber_cv::GetNextFrameImpl(cv::cuda::Stream& stream)
             {
                 cv::cuda::GpuMat d_mat;
                 d_mat.upload(h_mat, stream);
-                return TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (int)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
+                return TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (long long)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
             }
         }
     }
@@ -165,7 +165,10 @@ void frame_grabber_cv::Serialize(ISimpleSerializer* pSerializer)
     SERIALIZE(h_cam);
     SERIALIZE(d_cam);
 }
-
+frame_grabber_camera::frame_grabber_camera()
+{
+    this->_is_stream = true;
+}
 ::std::vector<::std::string> frame_grabber_camera::ListLoadableDocuments()
 {
     ::std::vector<::std::string> output;
@@ -262,5 +265,25 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_camera::GetCoordinateManager()
 {
     return rcc::shared_ptr<ICoordinateManager>();
 }
+TS<SyncedMemory> frame_grabber_camera::GetNextFrameImpl(cv::cuda::Stream& stream)
+{
+    if (d_cam)
+    {
 
+    }
+    if (h_cam)
+    {
+        cv::Mat h_mat;
+        if (h_cam->read(h_mat))
+        {
+            if (!h_mat.empty())
+            {
+                cv::cuda::GpuMat d_mat;
+                d_mat.upload(h_mat, stream);
+                return TS<SyncedMemory>(0.0, current_timestamp++, h_mat, d_mat);
+            }
+        }
+    }
+    return TS<SyncedMemory>();
+}
 MO_REGISTER_CLASS(frame_grabber_camera);

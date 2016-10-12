@@ -323,7 +323,9 @@ void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
     // Waiting for the reading thread to catch up
     if(blocking)
     {
-        while(((buffer_begin_frame_number + 5 > playback_frame_number && frame_buffer.size() == frame_buffer.capacity()) && !_is_stream))
+        while((buffer_begin_frame_number + 5 > playback_frame_number && 
+            frame_buffer.size() == frame_buffer.capacity()) && 
+            !_is_stream)
         {
             LOG(trace) << "Frame buffer is full and playback frame (" << playback_frame_number << ") is too close to the beginning of the frame buffer (" << buffer_begin_frame_number << ")";
             frame_read_cv.wait_for(bLock, boost::chrono::milliseconds(10));
@@ -336,6 +338,7 @@ void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
         buffer_begin_frame_number = frame_buffer[0].frame_number;
     frame_grabbed_cv.notify_all();
     sig_update();
+    _modified = true;
 }
 void FrameGrabberThreaded::Buffer()
 {

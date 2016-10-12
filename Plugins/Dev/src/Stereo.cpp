@@ -37,18 +37,30 @@ bool StereoBM::ProcessImpl()
     this->disparity_param.UpdateData(disparity, left_image_param.GetTimestamp(), _ctx);
 }
 
-void StereoBeliefPropagation::NodeInit(bool firstInit)
+bool StereoBeliefPropagation::ProcessImpl()
 {
-    bp = cv::cuda::createStereoBeliefPropagation();
+    if(bp == nullptr ||
+        num_iters_param.modified ||
+        num_disparities_param.modified ||
+        num_levels_param.modified,
+        message_type_param.modified)
+    {
+        bp = cv::cuda::createStereoBeliefPropagation(num_disparities, num_iters, num_levels, message_type.getValue());
+
+        num_iters_param.modified = true;
+        num_disparities_param.modified = true;
+        num_levels_param.modified = true;
+        message_type_param.modified = true;
+    }
+    cv::cuda::GpuMat disparity;
+    bp->compute(left_image->GetGpuMat(Stream()), right_image->GetGpuMat(Stream()), disparity, Stream());
+    disparity_param.UpdateData(disparity, left_image_param.GetTimestamp(), _ctx);
+    return true;
 }
 
-cv::cuda::GpuMat StereoBeliefPropagation::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
 
-    return img;
-}
 
-void StereoConstantSpaceBP::NodeInit(bool firstInit)
+/*void StereoConstantSpaceBP::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -68,8 +80,7 @@ void StereoConstantSpaceBP::NodeInit(bool firstInit)
     {
         _parameters[0]->changed = true;
     }
-
-}
+}*/
 bool StereoConstantSpaceBP::ProcessImpl()
 {
     if(num_levels_param.modified || nr_plane_param.modified || 
@@ -87,6 +98,7 @@ bool StereoConstantSpaceBP::ProcessImpl()
     cv::cuda::GpuMat disparity;
     csbp->compute(left_image->GetGpuMat(*_ctx->stream), right_image->GetGpuMat(*_ctx->stream),disparity, *_ctx->stream);
     this->disparity_param.UpdateData(disparity, left_image_param.GetTimestamp(), _ctx);
+    return true;
 }
 
 bool UndistortStereo::ProcessImpl()

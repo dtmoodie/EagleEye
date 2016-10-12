@@ -40,12 +40,16 @@ namespace EagleLib
         class PLUGIN_EXPORTS frame_grabber_camera: public frame_grabber_cv
         {
         public:
+            frame_grabber_camera();
             MO_DERIVE(frame_grabber_camera, frame_grabber_cv);
+                PROPERTY(long long, current_timestamp, 0);
             MO_END;
 
             static std::vector<std::string> ListLoadableDocuments();
             static int CanLoadDocument(const std::string& doc);
+            virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
             rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
+        protected:
         };
     }
 }

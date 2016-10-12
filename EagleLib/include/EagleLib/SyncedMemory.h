@@ -30,7 +30,7 @@ namespace EagleLib
             timestamp = 0.0;
             frame_number = 0;
         }
-        template<class...U> TS(double ts, int frame_number, U...args) : T(args...)
+        template<class...U> TS(double ts, long long frame_number, U...args) : T(args...)
         {
             timestamp = ts;
             this->frame_number = frame_number;
@@ -43,7 +43,7 @@ namespace EagleLib
         }
 
         double timestamp;
-        int frame_number;
+        long long frame_number;
     };
 
 

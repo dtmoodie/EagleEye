@@ -69,7 +69,7 @@ TS<SyncedMemory> frame_grabber_openni2::GetNextFrameImpl(cv::cuda::Stream& strea
             if (!point_cloud.empty())
             {
                 double ts = h_cam->get(cv::CAP_PROP_POS_MSEC);
-                int fn = h_cam->get(cv::CAP_PROP_POS_FRAMES);
+                long long fn = h_cam->get(cv::CAP_PROP_POS_FRAMES);
                 return TS<SyncedMemory>(ts, fn, point_cloud);
             }
         }

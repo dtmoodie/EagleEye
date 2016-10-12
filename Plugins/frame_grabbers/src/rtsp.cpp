@@ -45,7 +45,7 @@ TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
                 {
                     cv::cuda::GpuMat d_mat;
                     d_mat.upload(h_mat, stream);
-                    current_frame = TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (int)frame_count++, h_mat, d_mat);
+                    current_frame = TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (long long)frame_count++, h_mat, d_mat);
                     return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
                 }
             }

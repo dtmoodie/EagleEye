@@ -1,8 +1,10 @@
 #include "precompiled.hpp"
 #include "EagleLib/nodes/Node.h"
 #include <MetaObject/MetaObject.hpp>
-
+#include <MetaObject/Parameters/ParameterMacros.hpp>
+#include <MetaObject/Parameters/Types.hpp>
 #include "opencv2/cudastereo.hpp"
+#include <opencv2/imgproc.hpp>
 #include "EagleLib/utilities/CudaUtils.hpp"
 namespace EagleLib
 {
@@ -14,32 +16,42 @@ namespace EagleLib
             MO_DERIVE(StereoBase, Node)
                 INPUT(SyncedMemory, left_image, nullptr);
                 INPUT(SyncedMemory, right_image, nullptr);
-                OUTPUT(SyncedMemory, disparity, SyncedMemory);
+                OUTPUT(SyncedMemory, disparity, SyncedMemory());
                 PARAM(int, num_disparities, 64)
             MO_END;
         };
     class StereoBM: public StereoBase
     {
-        cv::Ptr<cv::cuda::StereoBM> stereoBM;
     public:
         MO_DERIVE(StereoBM, StereoBase)
             PARAM(int, block_size, 19);
         MO_END;
     protected:
         bool ProcessImpl();
+        cv::Ptr<cv::cuda::StereoBM> stereoBM;
     };
     class StereoBilateralFilter: public Node
     {
     public:
+        MO_DERIVE(StereoBilateralFilter, Node)
+
+        MO_END;
+    protected:
+        bool ProcessImpl(){return false;}
     };
 
-    class StereoBeliefPropagation: public Node
+    class StereoBeliefPropagation: public StereoBase
     {
-        cv::Ptr<cv::cuda::StereoBeliefPropagation> bp;
     public:
-        StereoBeliefPropagation();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        MO_DERIVE(StereoBeliefPropagation, Node)
+            PARAM(int, num_iters, 5);
+            PARAM(int, num_levels, 5);
+            ENUM_PARAM(message_type, CV_16S, CV_32F);
+        MO_END;
+        
+    protected:
+        bool ProcessImpl();
+        cv::Ptr<cv::cuda::StereoBeliefPropagation> bp;
     };
 
     class StereoConstantSpaceBP: public StereoBase
@@ -55,11 +67,9 @@ namespace EagleLib
     protected:
         bool ProcessImpl();
     };
+
     class UndistortStereo: public Node
     {
-        cv::cuda::GpuMat mapY, mapX;
-        cv::cuda::HostMem X, Y;
-
     public:
         MO_DERIVE(UndistortStereo, Node)
             INPUT(SyncedMemory, input, nullptr);
@@ -69,15 +79,12 @@ namespace EagleLib
             INPUT(cv::Mat, rotation_matrix, nullptr);
             INPUT(cv::Mat, projection_matrix, nullptr);
             ENUM_PARAM(interpolation_method, cv::INTER_NEAREST, cv::INTER_LINEAR, cv::INTER_CUBIC, cv::INTER_AREA, cv::INTER_LANCZOS4, cv::INTER_MAX );
-            ENUM_PARAM(boarder_mode, cv::BORDER_CONSTANT, cv::BORDER_REPLICATE, cv::BORDER_REFLECT, cv::BORDER_WRAP, cv::BORDER_REFLECT_101, cv::BORDER_ISOLATED);
+            ENUM_PARAM(boarder_mode, cv::BORDER_CONSTANT, cv::BORDER_REPLICATE, cv::BORDER_REFLECT, cv::BORDER_WRAP, cv::BORDER_REFLECT_101, cv::BORDER_ISOLATED );
             OUTPUT(SyncedMemory, mapX, SyncedMemory());
             OUTPUT(SyncedMemory, mapY, SyncedMemory());
         MO_END;
     protected:
         bool ProcessImpl();
-        UndistortStereo();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     }
 }

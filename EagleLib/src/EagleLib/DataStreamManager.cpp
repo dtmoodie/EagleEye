@@ -172,6 +172,7 @@ DataStream::DataStream()
     paused = false;
     stream_id = 0;
     _thread_id = 0;
+    StartThread();
 }
 
 DataStream::~DataStream()
@@ -401,8 +402,8 @@ std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::AddNode(const std::string&
 }
 void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
-    node->SetDataStream(this);
     node->Init(true);
+    node->SetDataStream(this);
     if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
     {
         //Signals::thread_specific_queue::push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node), _thread_id);
@@ -421,8 +422,8 @@ void DataStream::AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> nodes)
 {
     for (auto& node : nodes)
     {
-        node->SetDataStream(this);
         node->Init(true);
+        node->SetDataStream(this);
     }
     if (boost::this_thread::get_id() != processing_thread.get_id() && _thread_id != 0 && !paused)
     {
@@ -567,8 +568,10 @@ void DataStream::process()
                     //sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
                 }
                 ++iteration_count;
-                //if(!dirty_flag)
-                  //  LOG(trace) << "Dirty flag not set and end of iteration " << iteration_count << " with frame number " << current_frame.frame_number;
+#ifdef _DEBUG
+                if(!dirty_flag)
+                    LOG(trace) << "Dirty flag not set and end of iteration " << iteration_count;
+#endif
             }
         }else
         {

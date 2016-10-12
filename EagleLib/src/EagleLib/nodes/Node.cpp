@@ -607,6 +607,7 @@ void Node::SetDataStream(IDataStream* stream_)
         //LOG(debug) << "Setting stream manager";
     }
     _dataStream = stream_;
+    this->SetContext(stream_->GetContext());
     SetupSignals(_dataStream->GetRelayManager());
     SetupVariableManager(_dataStream->GetVariableManager().get());
     //pImpl_->update_signal = stream_->GetRelayManager()->get_signal<void(Node*)>("NodeUpdated");

@@ -23,9 +23,6 @@ namespace EagleLib
             cv::Ptr<cv::superres::SuperResolution> super_res;
             cv::Ptr<my_frame_source> frame_source;
         public:
-            super_resolution();
-            virtual void NodeInit(bool firstInit);
-            virtual void doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
             MO_DERIVE(super_resolution, Node)
                 INPUT(SyncedMemory, input, nullptr);
                 PARAM(int, scale, 2);
