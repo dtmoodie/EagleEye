@@ -118,6 +118,9 @@ namespace EagleLib
             return sig_ptr->ptr;;
         }
     protected:
+        friend class Nodes::Node;
+        virtual void AddChildNode(rcc::shared_ptr<Nodes::Node> node) = 0;
+        virtual void RemoveChildNode(rcc::shared_ptr<Nodes::Node> node) = 0;
         virtual std::unique_ptr<ISingleton>& GetSingleton(mo::TypeInfo type) = 0;
         virtual std::unique_ptr<ISingleton>& GetIObjectSingleton(mo::TypeInfo type) = 0;
     };

@@ -113,7 +113,7 @@ Node::Node()
     _modified = true;
 }
 
-bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_name, const std::string& output_name, mo::ParameterTypeFlags type)
+bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& output_name, const std::string& input_name, mo::ParameterTypeFlags type)
 {
     auto output = node->GetOutput(output_name);
     auto input = this->GetInput(input_name);
@@ -158,6 +158,19 @@ bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& input_nam
     }
     return false;
 }
+bool Node::ConnectInput(rcc::shared_ptr<Node> output_node,    mo::IParameter* output_param,    mo::InputParameter* input_param,    mo::ParameterTypeFlags type)
+{
+    if (this->IMetaObject::ConnectInput(input_param, output_param, type))
+    {
+        AddParent(output_node.Get());
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 bool Node::CheckInputs()
 {
     if(_pimpl->_sync_method == Algorithm::SyncEvery && _pimpl->_ts_processing_queue.size() != 0)
@@ -600,17 +613,13 @@ void Node::SetDataStream(IDataStream* stream_)
     boost::recursive_mutex::scoped_lock lock(*_mtx);
     if (_dataStream)
     {
-        //LOG(debug) << "Updating stream manager to a new manager";
-    }    
-    else
-    {
-        //LOG(debug) << "Setting stream manager";
+        _dataStream->RemoveNode(this);
     }
     _dataStream = stream_;
     this->SetContext(stream_->GetContext());
     SetupSignals(_dataStream->GetRelayManager());
     SetupVariableManager(_dataStream->GetVariableManager().get());
-    //pImpl_->update_signal = stream_->GetRelayManager()->get_signal<void(Node*)>("NodeUpdated");
+    _dataStream->AddChildNode(this);
     for (auto& child : _children)
     {
         child->SetDataStream(_dataStream.Get());
@@ -823,6 +832,7 @@ void Node::AddParent(Node* parent_)
 void Node::SetUniqueId(int id)
 {
     _unique_id = id;
+    SetParameterRoot(GetTreeName());
 }
 
 

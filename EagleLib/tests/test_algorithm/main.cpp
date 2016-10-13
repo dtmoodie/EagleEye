@@ -10,7 +10,7 @@
 #include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
 #include "MetaObject/Parameters/Buffers/BufferPolicy.hpp"
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE "EagleLibNodes"
+#define BOOST_TEST_MODULE "EagleLibAlgorithm"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>

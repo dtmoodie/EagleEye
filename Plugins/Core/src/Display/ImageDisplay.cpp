@@ -15,7 +15,7 @@ bool QtImageDisplay::ProcessImpl()
     cv::Mat mat;
     if(image)
     {
-        cv::Mat mat = image->GetMat(*_ctx->stream);
+        mat = image->GetMat(*_ctx->stream);
     }
     if(cpu_mat)
     {
@@ -25,11 +25,17 @@ bool QtImageDisplay::ProcessImpl()
     std::string name = GetTreeName();
     if(!mat.empty())
     {
-        EagleLib::cuda::enqueue_callback(
+        /*EagleLib::cuda::enqueue_callback(
             [mat, name]()->void
         {
             cv::imshow(name, mat);
-        }, *_ctx->stream);
+        }, *_ctx->stream);*/
+        size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
+        EagleLib::cuda::enqueue_callback_async(
+            [mat, name]()->void
+        {
+            cv::imshow(name, mat);
+        },gui_thread_id, *_ctx->stream);
     }
     
     return true;

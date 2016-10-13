@@ -4,13 +4,9 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-caffe_input_populator::caffe_input_populator():
-    Node()
-{
-    sample_index_param.type = Parameters::Parameter::State;
-}
 
-void caffe_input_populator::fill_blobs()
+
+/*void caffe_input_populator::fill_blobs()
 {
     auto fb = getParameter<std::vector<TS<SyncedMemory>>>("frame cache")->Data();
     auto roi = getParameter<std::map<int, std::vector<std::pair<cv::Rect, int>>>>("regions of interest")->Data();
@@ -114,4 +110,4 @@ bool caffe_input_populator::pre_check(const TS<SyncedMemory>& input)
 }
 
 static EagleLib::Nodes::NodeInfo g_registerer_caffe_input_populator("caffe_input_populator", { "caffe"});
-REGISTERCLASS(caffe_input_populator, &g_registerer_caffe_input_populator);
+REGISTERCLASS(caffe_input_populator, &g_registerer_caffe_input_populator);*/

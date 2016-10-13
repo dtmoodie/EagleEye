@@ -8,38 +8,8 @@
 #include "caffe_init.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-caffe_solver::caffe_solver():
-    Node()
-{
-    //caffe_init_singleton::inst();
-    ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
-}
-void caffe_solver::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        addInputParameter<boost::shared_ptr<caffe::Net<float>>>("network");
-    }
-    Parameters::EnumParameter solver_type;
-    solver_type.addEnum(ENUM(caffe::SolverParameter::ADADELTA));
-    solver_type.addEnum(ENUM(caffe::SolverParameter::ADAGRAD));
-    solver_type.addEnum(ENUM(caffe::SolverParameter::ADAM));
-    solver_type.addEnum(ENUM(caffe::SolverParameter::SGD));
-    solver_type.addEnum(ENUM(caffe::SolverParameter::NESTEROV));
-    solver_type.addEnum(ENUM(caffe::SolverParameter::RMSPROP));
-    solver_type.currentSelection = 3;
-    updateParameter("solver type", solver_type);
-    Parameters::EnumParameter lr_policy;
-    lr_policy.addEnum(ENUM(fixed));
-    lr_policy.addEnum(ENUM(step));
-    lr_policy.addEnum(ENUM(exponential));
-    lr_policy.addEnum(ENUM(inverse));
-    lr_policy.addEnum(ENUM(multistep));
-    lr_policy.addEnum(ENUM(poly));
-    lr_policy.addEnum(ENUM(sigmoid));
-    lr_policy.currentSelection = 1;
-    updateParameter("learning rate policy", lr_policy);
-}
+
+
 void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
     std::vector<std::string> model_names;
     boost::split(model_names, model_list, boost::is_any_of(","));
@@ -51,11 +21,11 @@ void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
         }
     }
 }
-TS<SyncedMemory> caffe_solver::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
+bool caffe_solver::ProcessImpl()
 {
     if(::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
-                ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
-    if(solver_description_param.changed && solver_description.size())
+        ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
+    if(solver_description_param.modified && solver_description.size())
     {
         if(boost::filesystem::is_regular_file(solver_description))
         {
@@ -72,14 +42,14 @@ TS<SyncedMemory> caffe_solver::doProcess(TS<SyncedMemory> input, cv::cuda::Strea
                 solver.reset(caffe::SolverRegistry<float>::CreateSolver(solver_params));
             }catch(caffe::ExceptionWithCallStack<std::string>& e)
             {
-                throw Signals::ExceptionWithCallStack<std::string>(std::string(e), e.CallStack());
+                throw mo::ExceptionWithCallStack<std::string>(std::string(e), e.CallStack());
             }
             catch(caffe::IExceptionWithCallStackBase& e)
             {
-                throw Signals::ExceptionWithCallStack<std::string>(std::string(""), e.CallStack());
+                throw mo::ExceptionWithCallStack<std::string>(std::string(""), e.CallStack());
             }
             
-            solver_param.type = Parameters::Parameter::Output;
+            
             if(solver_params.has_test_interval())
                 test_interval = solver_params.test_interval();
             if(solver_params.has_base_lr())

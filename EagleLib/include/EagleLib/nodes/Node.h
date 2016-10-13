@@ -92,10 +92,15 @@ namespace Nodes
 
         std::vector<rcc::weak_ptr<Node>> GetParents();
 
-        virtual bool                     ConnectInput(rcc::shared_ptr<Node> node, 
-                                                      const std::string& input_name, 
+        virtual bool                     ConnectInput(rcc::shared_ptr<Node> output_node, 
                                                       const std::string& output_name, 
+                                                      const std::string& input_name, 
                                                       mo::ParameterTypeFlags type = mo::StreamBuffer_e);
+        virtual bool                     ConnectInput(rcc::shared_ptr<Node> output_node,
+                                                      mo::IParameter* output_param,
+                                                      mo::InputParameter* input_param,
+                                                      mo::ParameterTypeFlags type = mo::StreamBuffer_e);
+
 
         virtual Node::Ptr                AddChild(Node* child);
         virtual Node::Ptr                AddChild(Node::Ptr child);

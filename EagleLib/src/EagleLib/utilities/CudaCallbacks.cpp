@@ -3,7 +3,18 @@
 #include <boost/date_time/microsec_time_clock.hpp>
 #include <boost/date_time/time_duration.hpp>
 #include <MetaObject/Logging/Log.hpp>
+#include <MetaObject/Thread/InterThread.hpp>
 using namespace EagleLib::cuda;
+
+void EagleLib::cuda::ICallback::cb_func_async_event_loop(int status, void* user_data)
+{
+    auto cb = static_cast<ICallbackEventLoop*>(user_data);
+    mo::ThreadSpecificQueue::Push([cb]()
+    {
+        cb->run();
+        delete cb;
+    }, cb->event_loop_thread_id);
+}
 
 void EagleLib::cuda::ICallback::cb_func_async(int status, void* user_data)
 {
@@ -102,6 +113,20 @@ LambdaCallback<void>::~LambdaCallback()
 
 }
 void LambdaCallback<void>::run()
+{
+    func();
+    promise.set_value();
+}
+LambdaCallbackEvent<void>::LambdaCallbackEvent(const std::function<void()>& f) :
+    func(f)
+{
+    this->event_loop_thread_id = 0;
+}
+LambdaCallbackEvent<void>::~LambdaCallbackEvent()
+{
+
+}
+void LambdaCallbackEvent<void>::run()
 {
     func();
     promise.set_value();

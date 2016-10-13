@@ -40,12 +40,17 @@ namespace EagleLib
 
         struct EAGLE_EXPORTS ICallback
         {
+            static void cb_func_async_event_loop(int status, void* user_data);
             static void cb_func_async(int status, void* user_data);
             static void cb_func(int status, void* user_data);
+            
             virtual ~ICallback();
             virtual void run() = 0;
         };
-        
+        struct EAGLE_EXPORTS ICallbackEventLoop: virtual public ICallback
+        {
+            size_t event_loop_thread_id;
+        };
         template<typename T, typename C> 
         auto enqueue_callback_async(
             const T& user_data, 
@@ -94,6 +99,17 @@ namespace EagleLib
             ~LambdaCallback() {}
             virtual void run();
         };
+        template<typename _return_type>
+        struct EAGLE_EXPORTS LambdaCallbackEvent: public ICallbackEventLoop
+        {
+            std::function<_return_type()> func;
+            std::promise<_return_type> promise;
+
+            LambdaCallbackEvent(const std::function<_return_type()>& f) : func(f) {}
+            ~LambdaCallbackEvent() {}
+            virtual void run();
+        };
+
         template<> struct EAGLE_EXPORTS LambdaCallback<void> : public ICallback
         {
             std::function<void()> func;
@@ -103,10 +119,18 @@ namespace EagleLib
             ~LambdaCallback();
             virtual void run();
         };
+        template<> struct EAGLE_EXPORTS LambdaCallbackEvent<void> : public ICallbackEventLoop
+        {
+            std::function<void()> func;
+            std::promise<void> promise;
 
+            LambdaCallbackEvent(const std::function<void()>& f);
+            ~LambdaCallbackEvent();
+            virtual void run();
+        };
         // Lambda functions
         template<typename _Ty> auto
-            enqueue_callback_async(_Ty function,cv::cuda::Stream& stream)->std::future<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>
+            enqueue_callback_async(_Ty function, cv::cuda::Stream& stream)->std::future<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>
         {
             auto fc = new LambdaCallback<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>(function);
             auto future = fc->promise.get_future();
@@ -122,7 +146,16 @@ namespace EagleLib
             return future;
         }
 
-
+        template<typename _Ty> 
+        auto enqueue_callback_async(_Ty function, size_t thread, cv::cuda::Stream& stream)->std::future<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>
+        {
+            auto fc = new LambdaCallbackEvent<typename pplx::details::_TaskTypeFromParam<_Ty>::_Type>(function);
+            fc->event_loop_thread_id = thread;
+            auto future = fc->promise.get_future();
+            stream.enqueueHostCallback(&ICallback::cb_func_async_event_loop, fc);
+            return future;
+        }
+        
         template<typename T, typename R> std::future<R>
             enqueue_callback_async(const T& data, const std::function<R(T)>& function, cv::cuda::Stream& stream)
         {
@@ -151,6 +184,10 @@ namespace EagleLib
         {
             promise.set_value(func());
         }
+        template<typename T> void LambdaCallbackEvent<T>::run()
+        {
+            promise.set_value(func());
+        }
         template<typename T, typename R> void FunctionCallback<T, R>::run()
         {
             promise.set_value(func(data));
@@ -159,7 +196,6 @@ namespace EagleLib
         {
             func(data);
             promise.set_value();
-            //promise.set_value(func(data));
         }
         template<typename T> void Callback<T>::run()
         {

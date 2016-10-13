@@ -77,7 +77,7 @@ rcc::shared_ptr<Nodes::Node> NodeFactory::AddNode(const std::string &nodeName)
             Nodes::Node* node = static_cast<Nodes::Node*>(interface);
             try
             {
-                //node->Init(true);
+                node->Init(true);
             }
             catch (cv::Exception &e)
             {
@@ -170,6 +170,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string
         }
         // All dependencies have been handled, construct node
         auto pNode = static_cast<EagleLib::Nodes::Node*>(pConstructor->Construct());
+        pNode->Init(true);
         nodes.push_back(rcc::weak_ptr<Nodes::Node>(pNode));
         rcc::shared_ptr<Nodes::Node> node(pNode);
         constructed_nodes.push_back(node);
@@ -266,6 +267,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string
         }
 
         rcc::shared_ptr<Nodes::Node> node(pConstructor->Construct());
+        node->Init(true);
         parentNode->AddChild(node);
         constructed_nodes.push_back(node);
     }
@@ -301,6 +303,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::LoadNodes(const std::stri
         auto nodeFS = fs["Node-" + boost::lexical_cast<std::string>(i)];
         std::string name = (std::string)nodeFS["NodeName"];
         Nodes::Node::Ptr node = AddNode(name);
+        node->Init(true);
         node->Init(nodeFS);
         nodes.push_back(node);
     }

@@ -152,9 +152,28 @@ int main(int argc, char* argv[])
         mo::ThreadRegistry::Instance()->RegisterThread(mo::ThreadRegistry::GUI);
         while(!boost::this_thread::interruption_requested())
         {
-            mo::ThreadSpecificQueue::Run();
-            cv::waitKey(1);
+            try
+            {
+                mo::ThreadSpecificQueue::Run();
+            }catch(...)
+            {
+                LOG(debug) << "Unknown / unhandled exception thrown in gui thread event handler";
+            }
+            try
+            {
+                cv::waitKey(1);
+            }catch(mo::ExceptionWithCallStack<cv::Exception>& e)
+            {
+
+            }catch(cv::Exception&e)
+            {
+            
+            }catch(...)
+            {
+
+            }
         }
+        LOG(info) << "Gui thread shutting down naturally";
     });
     mo::RelayManager manager;
     
@@ -336,12 +355,13 @@ int main(int argc, char* argv[])
                     std::stringstream ss;
                     try
                     {
-                        THROW(debug) << "Needs to be reimplemented";
+                        std::cout << " - " << itr->GetTreeName() << "\n";
+                        //THROW(debug) << "Needs to be reimplemented";
                         //mo::IO::Text::Serialize(&ss, itr);
-                        std::cout << " - " << ss.str() << "\n";
+                        //std::cout << " - " << ss.str() << "\n";
                     }catch(...)
                     {
-                        std::cout << " - " << itr->GetTreeName() << "\n";
+                        //std::cout << " - " << itr->GetTreeName() << "\n";
                     }
                 }
                 if(parameters.empty())
@@ -628,13 +648,34 @@ int main(int argc, char* argv[])
         {
             if(current_param && current_node && current_param->CheckFlags(mo::Input_e))
             {
-                auto variable_manager = current_node->GetDataStream()->GetVariableManager();
+                auto token_index = value.find(':');
+                if(token_index != std::string::npos)
+                {
+                    auto output_node = current_node->GetNodeInScope(value.substr(0, token_index));
+                    if(output_node)
+                    {
+                        auto output_param = output_node->GetOutput(value.substr(token_index + 1));
+                        if(output_param)
+                        {
+                            auto input_param = dynamic_cast<mo::InputParameter*>(current_param);
+                            if(input_param)
+                            {
+                                if(current_node->ConnectInput(output_node, output_param, input_param))
+                                {
+                                    return;
+                                }
+                            }
+                        }
+                        
+                    }
+                }
+                /*auto variable_manager = current_node->GetDataStream()->GetVariableManager();
                 auto output = variable_manager->GetOutputParameter(value);
                 if(output)
                 {
                     variable_manager->LinkParameters(output, current_param);
                     return;
-                }
+                }*/
             }
             if(current_param)
             {
@@ -785,6 +826,9 @@ int main(int argc, char* argv[])
                 if(mo::MetaObjectFactory::Instance()->IsCurrentlyCompiling())
                 {
                     std::cout << "Recompiling...\n";
+                }else
+                {
+                    std::cout << "No changes detected\n";
                 }
             }
             if(action == "swap")
@@ -807,6 +851,7 @@ int main(int argc, char* argv[])
             }
             if(action == "abort")
             {
+                std::cout << "Aborting current compilation\n";
                 mo::MetaObjectFactory::Instance()->AbortCompilation();
             }
         }, std::placeholders::_1));

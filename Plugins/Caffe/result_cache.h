@@ -1,6 +1,6 @@
 #pragma once
 #include <EagleLib/nodes/Node.h>
-#include <EagleLib/ParameteredIObjectImpl.hpp>
+
 namespace EagleLib
 {
     namespace Nodes

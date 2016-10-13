@@ -3,6 +3,7 @@
 // Guard this file from being compiled by nvcc
 #ifndef __CUDACC__
 #include "Export.hpp"
+#include "IRuntimeObjectSystem.h"
 #endif
 
 #define TOKEN_TO_STRING(token) #token

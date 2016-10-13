@@ -73,70 +73,6 @@ namespace EagleLib
     class DataStream: public IDataStream
     {
     public:
-        DataStream();
-        virtual ~DataStream();
-
-        // Handles user interactions such as moving the viewport, user interface callbacks, etc
-        std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> GetTopLevelNodes();
-        virtual rcc::weak_ptr<IViewManager>            GetViewManager();
-
-        // Handles conversion of coordinate systems, such as to and from image coordinates, world coordinates, render scene coordinates, etc.
-        virtual rcc::weak_ptr<ICoordinateManager>      GetCoordinateManager();
-
-        // Handles actual rendering of data.  Use for adding extra objects to the scene
-        virtual rcc::weak_ptr<IRenderEngine>           GetRenderingEngine();
-
-        // Handles tracking objects within a stream and communicating with the global track manager to track across multiple data streams
-        virtual rcc::weak_ptr<ITrackManager>            GetTrackManager();
-
-        virtual std::shared_ptr<mo::IVariableManager>   GetVariableManager();
-
-        virtual mo::RelayManager*                       GetRelayManager();
-
-        virtual IParameterBuffer*                       GetParameterBuffer();
-
-        virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes();
-
-        virtual bool LoadDocument(const std::string& document, const std::string& prefered_loader = "");
-    
-        virtual std::vector<rcc::shared_ptr<Nodes::Node>> AddNode(const std::string& nodeName);
-        virtual void AddNode(rcc::shared_ptr<Nodes::Node> node);
-        virtual void AddNodeNoInit(rcc::shared_ptr<Nodes::Node> node);
-        virtual void AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node);
-        virtual void RemoveNode(rcc::shared_ptr<Nodes::Node> node);
-        virtual void RemoveNode(Nodes::Node* node);
-        
-        void process();
-
-        void AddVariableSink(IVariableSink* sink);
-        void RemoveVariableSink(IVariableSink* sink);
-
-    protected:
-        virtual std::unique_ptr<ISingleton>& GetSingleton(mo::TypeInfo type);
-        virtual std::unique_ptr<ISingleton>& GetIObjectSingleton(mo::TypeInfo type);
-        std::map<mo::TypeInfo, std::unique_ptr<ISingleton>> _singletons;
-        std::map<mo::TypeInfo, std::unique_ptr<ISingleton>> _iobject_singletons;
-        int stream_id;
-        size_t _thread_id;
-        rcc::shared_ptr<IViewManager>                             view_manager;
-        rcc::shared_ptr<ICoordinateManager>                       coordinate_manager;
-        rcc::shared_ptr<IRenderEngine>                            rendering_engine;
-        rcc::shared_ptr<ITrackManager>                            track_manager;
-        std::shared_ptr<mo::IVariableManager>                     variable_manager;
-        std::shared_ptr<mo::RelayManager>                         relay_manager;
-        std::vector<rcc::shared_ptr<Nodes::Node>>                 top_level_nodes;
-        std::shared_ptr<IParameterBuffer>                         _parameter_buffer;
-        std::mutex                                                nodes_mtx;
-        bool                                                    paused;
-        cv::cuda::Stream                                        cuda_stream;
-        boost::thread                                            processing_thread;
-        volatile bool                                            dirty_flag;
-        //std::vector<std::shared_ptr<Signals::connection>>        connections;
-        cv::cuda::Stream                                        streams[2];
-        std::vector<IVariableSink*>                             variable_sinks;
-        // These are threads for attempted connections
-        std::vector<boost::thread*> connection_threads;
-    public:
         MO_BEGIN(DataStream);
             MO_SIGNAL(void, StartThreads);
             MO_SIGNAL(void, StopThreads);
@@ -146,6 +82,59 @@ namespace EagleLib
             MO_SLOT(void, PauseThread);
             MO_SLOT(void, ResumeThread);
         MO_END
+
+        DataStream();
+        virtual ~DataStream();
+        std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> GetTopLevelNodes();
+        virtual rcc::weak_ptr<IViewManager>               GetViewManager();
+        virtual rcc::weak_ptr<ICoordinateManager>         GetCoordinateManager();
+        virtual rcc::weak_ptr<IRenderEngine>              GetRenderingEngine();
+        virtual rcc::weak_ptr<ITrackManager>              GetTrackManager();
+        virtual std::shared_ptr<mo::IVariableManager>     GetVariableManager();
+        virtual mo::RelayManager*                         GetRelayManager();
+        virtual IParameterBuffer*                         GetParameterBuffer();
+        virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes();
+        virtual bool                                      LoadDocument(const std::string& document, const std::string& prefered_loader = "");
+        virtual std::vector<rcc::shared_ptr<Nodes::Node>> AddNode(const std::string& nodeName);
+        virtual void                                      AddNode(rcc::shared_ptr<Nodes::Node> node);
+        virtual void                                      AddNodeNoInit(rcc::shared_ptr<Nodes::Node> node);
+        virtual void                                      AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node);
+        virtual void                                      RemoveNode(rcc::shared_ptr<Nodes::Node> node);
+        virtual void                                      RemoveNode(Nodes::Node* node);
+        
+        void process();
+
+        void AddVariableSink(IVariableSink* sink);
+        void RemoveVariableSink(IVariableSink* sink);
+
+    protected:
+        virtual void AddChildNode(rcc::shared_ptr<Nodes::Node> node);
+        virtual void RemoveChildNode(rcc::shared_ptr<Nodes::Node> node);
+        virtual std::unique_ptr<ISingleton>& GetSingleton(mo::TypeInfo type);
+        virtual std::unique_ptr<ISingleton>& GetIObjectSingleton(mo::TypeInfo type);
+
+        std::map<mo::TypeInfo, std::unique_ptr<ISingleton>>       _singletons;
+        std::map<mo::TypeInfo, std::unique_ptr<ISingleton>>       _iobject_singletons;
+        int                                                       stream_id;
+        size_t                                                    _thread_id;
+        rcc::shared_ptr<IViewManager>                             view_manager;
+        rcc::shared_ptr<ICoordinateManager>                       coordinate_manager;
+        rcc::shared_ptr<IRenderEngine>                            rendering_engine;
+        rcc::shared_ptr<ITrackManager>                            track_manager;
+        std::shared_ptr<mo::IVariableManager>                     variable_manager;
+        std::shared_ptr<mo::RelayManager>                         relay_manager;
+        std::vector<rcc::shared_ptr<Nodes::Node>>                 top_level_nodes;
+        std::vector<rcc::weak_ptr<Nodes::Node>>                   child_nodes;
+        std::shared_ptr<IParameterBuffer>                         _parameter_buffer;
+        std::mutex                                                nodes_mtx;
+        bool                                                      paused;
+        cv::cuda::Stream                                          cuda_stream;
+        boost::thread                                             processing_thread;
+        volatile bool                                             dirty_flag;
+        cv::cuda::Stream                                          streams[2];
+        std::vector<IVariableSink*>                               variable_sinks;
+        // These are threads for attempted connections
+        std::vector<boost::thread*> connection_threads;
     };
 }
 
@@ -219,15 +208,13 @@ rcc::weak_ptr<ITrackManager> DataStream::GetTrackManager()
     return track_manager;
 }
 
-
-
-
 mo::RelayManager* DataStream::GetRelayManager()
 {
     if (relay_manager == nullptr)
         relay_manager.reset(new mo::RelayManager());
     return relay_manager.get();
 }
+
 IParameterBuffer* DataStream::GetParameterBuffer()
 {
     if (_parameter_buffer == nullptr)
@@ -235,6 +222,7 @@ IParameterBuffer* DataStream::GetParameterBuffer()
     return _parameter_buffer.get();
 
 }
+
 std::shared_ptr<mo::IVariableManager> DataStream::GetVariableManager()
 {
     if(variable_manager == nullptr)
@@ -402,7 +390,6 @@ std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::AddNode(const std::string&
 }
 void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
-    node->Init(true);
     node->SetDataStream(this);
     if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
     {
@@ -413,16 +400,34 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
     top_level_nodes.push_back(node);
     dirty_flag = true;
 }
+void DataStream::AddChildNode(rcc::shared_ptr<Nodes::Node> node)
+{
+    std::lock_guard<std::mutex> lock(nodes_mtx);
+    int type_count = 0;
+    for(auto& child : child_nodes)
+    {
+        if(child && child != node && child->GetTypeName() == node->GetTypeName())
+            ++type_count;
+    }
+    node->SetUniqueId(type_count);
+    child_nodes.emplace_back(node);
+}
+void DataStream::RemoveChildNode(rcc::shared_ptr<Nodes::Node> node)
+{
+    std::lock_guard<std::mutex> lock(nodes_mtx);
+    std::remove(child_nodes.begin(), child_nodes.end(), node);
+}
 void DataStream::AddNodeNoInit(rcc::shared_ptr<Nodes::Node> node)
 {
+    std::lock_guard<std::mutex> lock(nodes_mtx);
     top_level_nodes.push_back(node);
     dirty_flag = true;
 }
 void DataStream::AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> nodes)
 {
+    std::lock_guard<std::mutex> lock(nodes_mtx);
     for (auto& node : nodes)
     {
-        node->Init(true);
         node->SetDataStream(this);
     }
     if (boost::this_thread::get_id() != processing_thread.get_id() && _thread_id != 0 && !paused)
@@ -439,21 +444,20 @@ void DataStream::AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> nodes)
 }
 void DataStream::RemoveNode(Nodes::Node* node)
 {
-    std::lock_guard<std::mutex> lock(nodes_mtx);
-    auto itr = std::find(top_level_nodes.begin(), top_level_nodes.end(), node);
-    if(itr != top_level_nodes.end())
     {
-        top_level_nodes.erase(itr);
+        std::lock_guard<std::mutex> lock(nodes_mtx);
+        std::remove(top_level_nodes.begin(), top_level_nodes.end(), node);
     }
+    
+    RemoveChildNode(node);
 }
 void DataStream::RemoveNode(rcc::shared_ptr<Nodes::Node> node)
 {
-    std::lock_guard<std::mutex> lock(nodes_mtx);
-    auto itr = std::find(top_level_nodes.begin(), top_level_nodes.end(), node);
-    if(itr != top_level_nodes.end())
     {
-        top_level_nodes.erase(itr);
+        std::lock_guard<std::mutex> lock(nodes_mtx);
+        std::remove(top_level_nodes.begin(), top_level_nodes.end(), node);
     }
+    RemoveChildNode(node);
 }
 void DataStream::AddVariableSink(IVariableSink* sink)
 {
