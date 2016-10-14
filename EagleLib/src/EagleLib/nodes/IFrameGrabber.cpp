@@ -379,14 +379,14 @@ void FrameGrabberThreaded::StartThreads()
         _pause = false;
         return;
     }
-    LOG(info);
+    LOG(info) << "Starting buffer thread";
     StopThreads();
     buffer_thread = boost::thread(boost::bind(&FrameGrabberThreaded::Buffer, this));
 }
 
 void FrameGrabberThreaded::StopThreads()
 {
-    LOG(info);
+    LOG(info) << "Stopping buffer thread";
     buffer_thread.interrupt();
     DOIF_LOG_FAIL(buffer_thread.joinable(), buffer_thread.join(), trace);
 }

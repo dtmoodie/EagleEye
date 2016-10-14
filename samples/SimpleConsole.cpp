@@ -1,6 +1,6 @@
 
 #include <EagleLib/EagleLib.hpp>
-
+#include <EagleLib/Logging.h>
 #include <EagleLib/Nodes/NodeFactory.h>
 
 #include <MetaObject/MetaObject.hpp>
@@ -51,6 +51,7 @@ void sig_handler(int s)
 
 int main(int argc, char* argv[])
 {
+    EagleLib::SetupLogging();
     signal(SIGINT, sig_handler);
     signal(SIGILL, sig_handler);
     signal(SIGTERM, sig_handler);
@@ -58,11 +59,6 @@ int main(int argc, char* argv[])
     
     boost::program_options::options_description desc("Allowed options");
     
-    //boost::log::add_file_log(boost::log::keywords::file_name = "SimpleConsole%N.log", boost::log::keywords::rotation_size = 10 * 1024 * 1024);
-    
-    
-    //Signals::thread_registry::get_instance()->register_thread(Signals::GUI);
-    //mo::ThreadRegistry::Instance()->RegisterThread(mo::ThreadRegistry::GUI);
     desc.add_options()
         ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
         ("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")
@@ -662,6 +658,7 @@ int main(int argc, char* argv[])
                             {
                                 if(current_node->ConnectInput(output_node, output_param, input_param))
                                 {
+                                    std::cout << "Successfully set input of " << current_param->GetName() << " to " << output_param->GetName();
                                     return;
                                 }
                             }
@@ -830,8 +827,7 @@ int main(int argc, char* argv[])
                 {
                     std::cout << "No changes detected\n";
                 }
-            }
-            if(action == "swap")
+            }else if(action == "swap")
             {
                 for(auto& stream : _dataStreams)
                 {
@@ -848,11 +844,19 @@ int main(int argc, char* argv[])
                 current_param = nullptr;
                 current_stream.reset();
                 current_node.reset();
-            }
-            if(action == "abort")
+            }else if(action == "abort")
             {
-                std::cout << "Aborting current compilation\n";
-                mo::MetaObjectFactory::Instance()->AbortCompilation();
+                if(mo::MetaObjectFactory::Instance()->IsCurrentlyCompiling())
+                {
+                    std::cout << "Aborting current compilation\n";
+                    mo::MetaObjectFactory::Instance()->AbortCompilation();
+                }else
+                {
+                    std::cout << "No compilation currently active\n";
+                }
+            }else
+            {
+                std::cout << "Unknown option " << action << "\n";
             }
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "recompile"));
