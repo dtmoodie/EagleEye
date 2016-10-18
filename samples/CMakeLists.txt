@@ -44,6 +44,8 @@ target_link_libraries(SimpleConsole
     ${PYTHON_LIBRARY}
 )
 add_subdirectory(PythonInteractive)
-
+IF(WIN32)
+    CONFIGURE_FILE("../EagleLib/tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/samples/SimpleConsole.vcxproj.user @ONLY)
+endif(WIN32)
     
     

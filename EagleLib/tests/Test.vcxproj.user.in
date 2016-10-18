@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>	 	
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">	 	
  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">	 	
- <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\Debug;@PROJECT_BIN_DIRS_DEBUG@;%PATH%</LocalDebuggerEnvironment>	 	
+ <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\Debug;@PROJECT_BIN_DIRS_DEBUG@;@Boost_LIBRARY_DIR_DEBUG@;@OpenCV_BIN_DIR_DEBUG@;@Qt5_BIN_DIR@;@GSTREAMER_gst_BIN_DIR@;%PATH%</LocalDebuggerEnvironment>	 	
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
  <LocalDebuggerWorkingDirectory>@CMAKE_BINARY_DIR@\Debug</LocalDebuggerWorkingDirectory>
  </PropertyGroup>	 	
  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">	 	
- <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\Release;@PROJECT_BIN_DIRS_RELEASE@;%PATH%</LocalDebuggerEnvironment>	 	
+ <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\Release;@PROJECT_BIN_DIRS_RELEASE@;@Boost_LIBRARY_DIR_RELEASE@;@OpenCV_BIN_DIR_RELEASE@;@Qt5_BIN_DIR@;%PATH%</LocalDebuggerEnvironment>	 	
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
  <LocalDebuggerWorkingDirectory>@CMAKE_BINARY_DIR@\Release</LocalDebuggerWorkingDirectory>
  </PropertyGroup>	 	
  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">	 	
- <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\RelWithDebInfo;@PROJECT_BIN_DIRS_RELWITHDEBINFO@;%PATH%</LocalDebuggerEnvironment>	 	
+ <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\RelWithDebInfo;@PROJECT_BIN_DIRS_RELWITHDEBINFO@;@Boost_LIBRARY_DIR_RELEASE@;@OpenCV_BIN_DIR_RELEASE@;@Qt5_BIN_DIR@;%PATH%</LocalDebuggerEnvironment>	 	
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
  <LocalDebuggerWorkingDirectory>@CMAKE_BINARY_DIR@\RelWithDebInfo</LocalDebuggerWorkingDirectory>
  </PropertyGroup>	 	

@@ -22,53 +22,55 @@ FIND_PACKAGE(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cu
 FIND_PACKAGE(PCL COMPONENTS common visualization QUIET)
 
 IF(PCL_FOUND)
-	LINK_DIRECTORIES(${LINK_DIRS})
+	FIND_PACKAGE(VTK QUIET)
+	if(VTK_FOUND)
+		LINK_DIRECTORIES(${LINK_DIRS})
 
-	include_directories(${PCL_INCLUDE_DIRS})
-	link_directories(${PCL_LIBRARY_DIRS})
-	message(${PCL_DEFINITIONS})
-	INCLUDE_DIRECTORIES(
-			${EagleLib_INCLUDE_DIRECTORIES}
-			${OpenCV_INCLUDE_DIRS}
-			${Boost_INCLUDE_DIRS}
+		include_directories(${PCL_INCLUDE_DIRS})
+		link_directories(${PCL_LIBRARY_DIRS})
+		
+		INCLUDE_DIRECTORIES(
+				${EagleLib_INCLUDE_DIRECTORIES}
+				${OpenCV_INCLUDE_DIRS}
+				${Boost_INCLUDE_DIRS}
+			)
 
-	)
+		SET(PCL_BIN_DIR_DEBUG "${PCL_DIR}/../bin" CACHE PATH "Path to PCL debug binaries")
+		SET(PCL_BIN_DIR_RELEASE "${PCL_DIR}/../bin" CACHE PATH "Path to PCL release binaries")
 
-	SET(PCL_BIN_DIR_DEBUG "${PCL_DIR}/../bin" CACHE PATH "Path to PCL debug binaries")
-	SET(PCL_BIN_DIR_RELEASE "${PCL_DIR}/../bin" CACHE PATH "Path to PCL release binaries")
+		
+		SET(VTK_BIN_DIR "${VTK_LIBRARY_DIRS}/../bin" CACHE PATH "Path to VTK binaries")
+		
+		FILE(GLOB_RECURSE SRC "*.cpp")
+		FILE(GLOB_RECURSE HDR "*.h")
+		#FILE(GLOB_RECURSE knl "*.cu")
 
-	FIND_PACKAGE(VTK REQUIRED)
-	SET(VTK_BIN_DIR "${VTK_LIBRARY_DIRS}/../bin" CACHE PATH "Path to VTK binaries")
-	
-	FILE(GLOB_RECURSE SRC "*.cpp")
-	FILE(GLOB_RECURSE HDR "*.h")
-	#FILE(GLOB_RECURSE knl "*.cu")
+		cuda_add_library(PCL_bridge SHARED ${SRC} ${HDR} ${knl})
+		add_dependencies(PCL_bridge EagleLib)
 
-	cuda_add_library(PCL_bridge SHARED ${SRC} ${HDR} ${knl})
-	add_dependencies(PCL_bridge EagleLib)
+		RCC_LINK_LIB(PCL_bridge
+			EagleLib
+			${CUDA_LIBRARIES}
+		)
+		
+		TARGET_LINK_LIBRARIES(PCL_bridge ${EagleLib_LIBRARIES} ${PCL_COMMON_LIBRARIES}
+			${PCL_VISUALIZATION_LIBRARIES})
 
-	RCC_LINK_LIB(PCL_bridge
-		EagleLib
-		${CUDA_LIBRARIES}
-	)
-	
-	TARGET_LINK_LIBRARIES(PCL_bridge ${EagleLib_LIBRARIES} ${PCL_COMMON_LIBRARIES}
-		${PCL_VISUALIZATION_LIBRARIES})
+		SET(pcl_bridge_file "")
+		IF(WIN32)
+			SET(pcl_bridge_file "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.obj.cmake")
+		ELSE(WIN32)
+			SET(pcl_bridge_file "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.o.cmake")
+		ENDIF(WIN32)
+		MESSAGE("Correcting file ${pcl_bridge_file}")
+		
+		FILE(READ ${pcl_bridge_file} config_file)
+		STRING(REPLACE "(vtkRenderingContextOpenGL)" "" config_file "${config_file}")
+		STRING(REPLACE "(vtkRenderingVolumeOpenGL)" "" config_file "${config_file}")
+		STRING(REPLACE "(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL)" "" config_file "${config_file}")
+		FILE(WRITE ${pcl_bridge_file} "${config_file}")
 
-    SET(pcl_bridge_file "")
-	IF(WIN32)
-        SET(pcl_bridge_file "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.obj.cmake")
-    ELSE(WIN32)
-        SET(pcl_bridge_file "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/PCL_bridge.dir/PCL_bridge_generated_pcl_bridge.cu.o.cmake")
-    ENDIF(WIN32)
-    MESSAGE("Correcting file ${pcl_bridge_file}")
-	
-    FILE(READ ${pcl_bridge_file} config_file)
-	STRING(REPLACE "(vtkRenderingContextOpenGL)" "" config_file "${config_file}")
-	STRING(REPLACE "(vtkRenderingVolumeOpenGL)" "" config_file "${config_file}")
-    STRING(REPLACE "(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL)" "" config_file "${config_file}")
-    FILE(WRITE ${pcl_bridge_file} "${config_file}")
-
-	INCLUDE(../PluginTemplate.cmake)
+		INCLUDE(../PluginTemplate.cmake)
+	ENDIF(VTK_FOUND)
 ENDIF(PCL_FOUND)
 
