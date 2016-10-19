@@ -6,6 +6,7 @@
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Signals/RelayManager.hpp>
 #include <MetaObject/Parameters/IVariableManager.h>
+#include <MetaObject/Logging/Profiling.hpp>
 #include <RuntimeObjectSystem.h>
 
 #include <boost/program_options.hpp>
@@ -51,6 +52,7 @@ void sig_handler(int s)
 
 int main(int argc, char* argv[])
 {
+    mo::InitProfiling();
     signal(SIGINT, sig_handler);
     signal(SIGILL, sig_handler);
     signal(SIGTERM, sig_handler);
