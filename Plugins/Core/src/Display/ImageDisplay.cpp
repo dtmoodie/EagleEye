@@ -4,7 +4,7 @@
 #include "../remotery/lib/Remotery.h"
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #include <EagleLib/utilities/UiCallbackHandlers.h>
-#include "EagleLib/profiling.h"
+
 
 
 using namespace EagleLib;

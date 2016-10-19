@@ -6,19 +6,16 @@
 #include <EagleLib/rcc/SystemTable.hpp>
 #include <EagleLib/utilities/GpuMatAllocators.h>
 #include "EagleLib/Signals.h"
-#include "EagleLib/profiling.h"
 #include "EagleLib/Detail/AlgorithmImpl.hpp"
 
 
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
-#include <MetaObject/Parameters/IParameter.hpp>
+
+#include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Logging/Log.hpp>
-#include <MetaObject/Signals/Connection.hpp>
-#include <MetaObject/Logging/Log.hpp>
-#include <MetaObject/Signals/RelayManager.hpp>
-#include <MetaObject/Parameters/InputParameter.hpp>
+#include <MetaObject/Logging/Profiling.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -31,7 +28,6 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#include "remotery/lib/Remotery.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
 
 #include <regex>
@@ -209,7 +205,7 @@ bool Node::Process()
         }
 
         _modified = false;
-
+        
         if (!ProcessImpl())
             return false;
 
