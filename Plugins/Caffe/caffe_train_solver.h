@@ -12,8 +12,9 @@ namespace EagleLib
     {
         class PLUGIN_EXPORTS caffe_solver: public Node
         {
-        protected:
         public:
+            typedef std::vector<SyncedMemory> WrappedBlob_t;
+            typedef std::map<std::string, WrappedBlob_t> BlobMap_t;
             enum LearningPolicies
             {
                 fixed,
@@ -24,10 +25,6 @@ namespace EagleLib
                 poly,
                 sigmoid
             };
-            
-            bool ProcessImpl();
-            
-            
             MO_DERIVE(caffe_solver, Node);
                 PARAM(mo::ReadFile, solver_description, mo::ReadFile(""));
                 PARAM(mo::ReadFile, network_description, mo::ReadFile(""));
@@ -42,25 +39,27 @@ namespace EagleLib
                 PARAM(int, snapshot_interval, 10000);
                 PARAM(std::string, snapshot_prefix, "snapshots/");
                 PROPERTY(boost::shared_ptr<caffe::Net<float>>, neural_network, boost::shared_ptr<caffe::Net<float>>());
-                PROPERTY(std::vector<std::vector<std::vector<cv::Mat>>>, input_blobs, std::vector<std::vector<std::vector<cv::Mat>>>());
+                //PROPERTY(std::vector<std::vector<std::vector<cv::Mat>>>, input_blobs, std::vector<std::vector<std::vector<cv::Mat>>>());
+                OUTPUT(BlobMap_t, input_blobs, BlobMap_t());
                 MO_SIGNAL(void, fill_blobs);
                 MO_SIGNAL(void, update);
                 PROPERTY(boost::shared_ptr<caffe::Solver<float>>, solver, boost::shared_ptr<caffe::Solver<float>>());
                 ENUM_PARAM(solver_type, caffe::SolverParameter::SGD, caffe::SolverParameter::ADADELTA, caffe::SolverParameter::ADAGRAD, caffe::SolverParameter::ADAM, caffe::SolverParameter::NESTEROV, caffe::SolverParameter::RMSPROP)
                 ENUM_PARAM(learning_rate_policy, step, fixed, exponential, inverse, multistep, poly, sigmoid);
             MO_END;
-
+            bool ProcessImpl();
         };
-        class PLUGIN_EXPORTS caffe_network: public Node
+        /*class PLUGIN_EXPORTS caffe_network: public Node
         {
         public:
             caffe_network();
             MO_DERIVE(caffe_network, Node)
-                PARAM(boost::shared_ptr<caffe::Net<float>>, neural_network, NULL);
+                OUTPUT(boost::shared_ptr<caffe::Net<float>>, neural_network, NULL);
+                OUTPUT(caffe_solver::BlobMap_t, input_blobs, )
                 PARAM(mo::ReadFile, nn_description, mo::ReadFile(""));
             MO_END;
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
             virtual bool pre_check(const TS<SyncedMemory>& input);
-        };
+        };*/
     }
 }

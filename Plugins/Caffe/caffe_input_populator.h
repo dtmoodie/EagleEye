@@ -8,10 +8,6 @@ namespace EagleLib
         class PLUGIN_EXPORTS caffe_input_populator: public Node
         {
         public:
-            
-            virtual void NodeInit(bool firstInit);
-            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream);
-            virtual bool pre_check(const TS<SyncedMemory>& input);
             std::vector<std::pair<int,int>> sample_permutation;
 
             MO_DERIVE(caffe_input_populator, Node);
@@ -19,7 +15,7 @@ namespace EagleLib
                 STATUS(int, sample_index, 0);
                 PARAM(int, blob_index, 0);
                 PARAM(std::string, blob_name, "");
-                MO_SLOT(void, fill_blobs);
+                //MO_SLOT(void, fill_blobs);
             MO_END;
 
             

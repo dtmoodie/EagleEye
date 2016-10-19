@@ -5,7 +5,7 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-TS<SyncedMemory> result_cache::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
+/*TS<SyncedMemory> result_cache::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 {
     TS < SyncedMemory> output = input;
 
@@ -45,4 +45,4 @@ bool result_cache::pre_check(const TS<SyncedMemory>& input)
 }
 
 static EagleLib::Nodes::NodeInfo g_registerer_result_cache("result_cache", { "utilities"});
-REGISTERCLASS(result_cache, &g_registerer_result_cache);
+REGISTERCLASS(result_cache, &g_registerer_result_cache);*/

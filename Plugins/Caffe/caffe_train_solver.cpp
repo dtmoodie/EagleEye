@@ -3,7 +3,9 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <caffe/util/upgrade_proto.hpp>
+#include <EagleLib/Nodes/NodeInfo.hpp>
 #include <algorithm>
+#include "Caffe.h"
 #include "caffe_include.h"
 #include "caffe_init.h"
 using namespace EagleLib;
@@ -69,26 +71,10 @@ bool caffe_solver::ProcessImpl()
             
             for(int i = 0; i < input_blobs_.size(); ++i)
             {
-                float* data = input_blobs_[i]->mutable_cpu_data();
-                int rows = input_blobs_[i]->height();
-                int cols = input_blobs_[i]->width();
-                // for each blob
-                std::vector<std::vector<cv::Mat>> blob;
-                for(int j = 0; j < input_blobs_[i]->num(); ++j) // for each sample
-                {
-                    std::vector<cv::Mat> channels;
-                    for(int k = 0; k < input_blobs_[i]->channels(); ++k) // for each channel
-                    {
-                        cv::Mat mat(rows, cols, CV_32F, data);
-                        channels.push_back(mat);
-                        data += rows*cols;
-                    }
-                    blob.push_back(channels);
-                }
-                input_blobs.push_back(blob);
+                auto wrapped_blob = EagleLib::Nodes::CaffeBase::WrapBlob(*input_blobs_[i]);
+                input_blobs[input_names[i]] = wrapped_blob;
             }
-            input_blobs_param.type = Parameters::Parameter::Output;
-            updateParameter("input blob names", input_names)->type = Parameters::Parameter::Output;
+            input_blobs_param.Commit();
         }
         if(weight_files.size())
         {
@@ -109,27 +95,25 @@ bool caffe_solver::ProcessImpl()
             if(boost::filesystem::is_regular_file(previous_solver_state))
                 solver->Restore(previous_solver_state.string().c_str());
         }
-        solver_description_param.changed = false;
+        solver_description_param.modified = false;
     }
     if(!solver)
     {
         caffe::SolverParameter solver_params;
     }
-    if(solver && (input_blobs_param.subscribers || input_blobs.empty()))
+    if(solver && (input_blobs_param.HasSubscriptions() || input_blobs.empty()))
     {
         sig_fill_blobs();
         
         solver->Step(steps_per_iteration);
         if(input_blobs.empty())
             sig_update();
+        return true;
     }
-    return input;
+    return false;
 }
-bool caffe_solver::pre_check(const TS<SyncedMemory>& input)
-{
-    return true;
-}
-caffe_network::caffe_network():
+
+/*caffe_network::caffe_network():
     Nodes::Node()
 {
 
@@ -137,32 +121,28 @@ caffe_network::caffe_network():
 TS<SyncedMemory> Nodes::caffe_network::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
     // asdf
-    if(nn_description_param.changed && nn_description.size())
+    if(nn_description_param.modified && nn_description.size())
     {
         if(boost::filesystem::is_regular_file(nn_description))
         {
             neural_network.reset(new caffe::Net<float>(nn_description.string(), caffe::TRAIN));
-            neural_network_param.type = Parameters::Parameter::Output;
+            
             auto inputs = neural_network->input_blobs();
-            updateParameter("input blobs", inputs)->type = Parameters::Parameter::Output;
-            nn_description_param.changed = false;
+            //updateParameter("input blobs", inputs)->type = Parameters::Parameter::Output;
+            nn_description_param.modified = false;
         }        
     }
     return input;
 }
-bool caffe_network::pre_check(const TS<SyncedMemory>& input)
-{
-    return true;
-}
+*/
 
 
 
 
 
 
-static EagleLib::Nodes::NodeInfo g_registerer_caffe_solver("caffe_solver", { "caffe", "training" });
-static EagleLib::Nodes::NodeInfo g_registerer_caffe_network("caffe_network", { "caffe", "training" });
 
-REGISTERCLASS(caffe_solver, &g_registerer_caffe_solver);
-REGISTERCLASS(caffe_network, &g_registerer_caffe_network);
+
+MO_REGISTER_CLASS(caffe_solver);
+//REGISTERCLASS(caffe_network, &g_registerer_caffe_network);
 

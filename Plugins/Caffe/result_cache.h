@@ -5,7 +5,7 @@ namespace EagleLib
 {
     namespace Nodes
     {
-        class PLUGIN_EXPORTS result_cache: public Node
+        /*class PLUGIN_EXPORTS result_cache: public Node
         {
         public:
             virtual TS<SyncedMemory> process(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
@@ -14,6 +14,6 @@ namespace EagleLib
             BEGIN_PARAMS(result_cache);
                 PARAM(std::vector<TS<SyncedMemory>>, cache, std::vector<TS<SyncedMemory>>());
             END_PARAMS;
-        };
+        };*/
     }
 }
