@@ -51,6 +51,7 @@ void EagleLib::SetupLogging()
 #else
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
 #endif*/
+    BOOST_LOG_TRIVIAL(info) << "File logging to " << boost::filesystem::absolute(boost::filesystem::path("")).append("/logs");
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
     boost::log::add_common_attributes();
     if (!boost::filesystem::exists("./logs") || !boost::filesystem::is_directory("./logs"))
@@ -100,7 +101,7 @@ void EagleLib::SetupLogging()
         boost::log::keywords::rotation_size = 10 * 1024 * 1024,
         boost::log::keywords::min_free_space = 30 * 1024 * 1024,
         boost::log::keywords::open_mode = std::ios_base::app);
-    fsSink->set_formatter(logFmt);
+    //fsSink->set_formatter(logFmt);
     fsSink->locked_backend()->auto_flush(true);
     
     log_sink.reset(new boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>());
