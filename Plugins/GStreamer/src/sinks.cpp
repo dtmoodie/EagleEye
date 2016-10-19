@@ -1,5 +1,6 @@
 #include "sinks.hpp"
 #include <gst/gst.h>
+#include <EagleLib/Nodes/NodeInfo.hpp>
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -25,28 +26,31 @@ void tcpserver::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
-        Parameters::EnumParameter encoders;
         encoders.addEnum(-1, "Select encoder");
     
         if(check_feature("matroskamux"))
         {
-            ENUM_FEATURE(encoders, openh264enc)
-            ENUM_FEATURE(encoders, avenc_h264)
-            ENUM_FEATURE(encoders, omxh264enc)
+            if(check_feature("openh264enc"))
+                encoders.addEnum(0, "openh264enc");
+            if(check_feature("avenc_h264"))
+                encoders.addEnum(1, "avenc_h264");
+            if(check_feature("omxh264enc"))
+                encoders.addEnum(2, "omxh264enc");
         }
         if(check_feature("webmmux"))
         {
-            ENUM_FEATURE(encoders, omxvp8enc)
-            ENUM_FEATURE(encoders, vp8enc)
+            if(check_feature("omxvp8enc"))
+                encoders.addEnum(3, "omxvp8enc");
+            if(check_feature("vp8enc"))
+                encoders.addEnum(4, "vp8enc");
         }
-        updateParameter("Encoder", encoders);
+        encoders_param.Commit();
         auto interfaces = get_interfaces();
-        Parameters::EnumParameter interfaces_;
         for(int i = 0; i < interfaces.size(); ++i)
         {
-            interfaces_.addEnum(i, interfaces[i]);
+            this->interfaces.addEnum(i, interfaces[i]);
         }
-        updateParameter("Interfaces", interfaces_);
+        this->interfaces_param.Commit();
     }
 }
 
@@ -86,8 +90,8 @@ TS<SyncedMemory> tcpserver::doProcess(TS<SyncedMemory> img, cv::cuda::Stream &st
     return img;
 }
 
-static EagleLib::Nodes::NodeInfo g_registerer_tcpserver_sink("tcpserver", { "Image", "Sink" });
-REGISTERCLASS(tcpserver, &g_registerer_tcpserver_sink);
+
+MO_REGISTER_CLASS(tcpserver);
 
 
 

@@ -2,7 +2,7 @@
 #include "glib_thread.h"
 
 #include <EagleLib/rcc/SystemTable.hpp>
-
+#include <EagleLib/Nodes/NodeInfo.hpp>
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 
 #include <gst/video/video.h>
@@ -271,7 +271,7 @@ bool gstreamer_base::start_pipeline()
     GstStateChangeReturn ret = gst_element_set_state(_pipeline, GST_STATE_PLAYING);
     if(ret == GST_STATE_CHANGE_FAILURE)
     {
-        NODE_LOG(error) << "Unable to start pipeline";
+        LOG(error) << "Unable to start pipeline";
         return false;
     }
     LOG(debug) << "Starting pipeline";
@@ -284,7 +284,7 @@ bool gstreamer_base::stop_pipeline()
     GstStateChangeReturn ret = gst_element_set_state(_pipeline, GST_STATE_NULL);
     if(ret == GST_STATE_CHANGE_FAILURE)
     {
-        NODE_LOG(error) << "Unable to stop pipeline";
+        LOG(error) << "Unable to stop pipeline";
         return false;
     }
     LOG(debug) << "Stopping pipeline";
@@ -298,7 +298,7 @@ bool gstreamer_base::pause_pipeline()
     
     if(ret == GST_STATE_CHANGE_FAILURE)
     {
-        NODE_LOG(error) << "Unable to pause pipeline";
+        LOG(error) << "Unable to pause pipeline";
         return false;
     }
     LOG(debug) <<"Pausing pipeline";
@@ -447,7 +447,7 @@ bool gstreamer_base::is_pipeline(const std::string& string)
 // This only actually gets called when gstreamer.cpp gets recompiled or the node is deleted
 RTSP_server::~RTSP_server()
 {
-    NODE_LOG(info) << "RTSP server destructor";
+    LOG(info) << "RTSP server destructor";
     if (pipeline)
     {
         gst_element_set_state(pipeline, GST_STATE_NULL);
@@ -484,10 +484,9 @@ void RTSP_server::gst_loop()
 }
 void RTSP_server::onPipeChange()
 {
-    std::string* str = getParameter<std::string>("gst pipeline")->Data();
-    if (str->size())
+    if(gst_pipeline.size())
     {
-        setup(*str);
+        setup(gst_pipeline);
     }
 }
 
@@ -521,7 +520,7 @@ void RTSP_server::setup(std::string pipeOverride)
 #endif
         ss << "rtph264pay config-interval=1 pt=96 ! gdppay ! ";
 
-        switch (getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection)
+        switch (server_type.getValue())
         {
             case TCP:
             {
@@ -536,9 +535,9 @@ void RTSP_server::setup(std::string pipeOverride)
                         {
                             if (inter.hardwareAddress() != "00:00:00:00:00:00" && entry.ip().toString().contains("."))
                             {
-                                NODE_LOG(info) << "Setting interface to " << inter.name().toStdString() << " " <<
+                                LOG(info) << "Setting interface to " << inter.name().toStdString() << " " <<
                                     entry.ip().toString().toStdString() << " " << inter.hardwareAddress().toStdString();
-                                updateParameter<std::string>("Host", entry.ip().toString().toStdString());
+                                host_param.UpdateData(entry.ip().toString().toStdString());
                                 ss << entry.ip().toString().toStdString();
                                 break;
                             }
@@ -550,30 +549,31 @@ void RTSP_server::setup(std::string pipeOverride)
             case UDP:
             {
                 ss << "udpsink host=";
-                std::string* host = getParameter<std::string>("Host")->Data();
-                if (host->size())
+                
+                if (host.size())
                 {
-                    ss << *host;
+                    ss << host;
                 }
                 else
                 {
-                    NODE_LOG(warning) << "host not set, setting to localhost";
-                    updateParameter<std::string>("Host", "127.0.0.1");
+                    LOG(warning) << "host not set, setting to localhost";
+                    host_param.UpdateData("127.0.0.1");
                     ss << "127.0.0.1";
                 }
                 break;
             }
         }
-        ss << " port=";
-        ss << *getParameter<unsigned short>("Port")->Data();
+        ss << " port=" << port;
+        
         pipeOverride = ss.str();
     }
     else
     {
-        updateParameter<std::string>("gst pipeline", pipeOverride);
+        //updateParameter<std::string>("gst pipeline", pipeOverride);
+        gst_pipeline_param.UpdateData(pipeOverride);
     }
     
-    NODE_LOG(info) << pipeOverride;
+    LOG(info) << pipeOverride;
 
     
     if (pipeline)
@@ -591,14 +591,14 @@ void RTSP_server::setup(std::string pipeOverride)
     
     if (pipeline == nullptr)
     {
-        NODE_LOG(error) << "Error parsing pipeline";
+        LOG(error) << "Error parsing pipeline";
         feed_enabled = false;
         return;
     }
     
     if (error != nullptr)
     {
-        NODE_LOG(error) << "Error parsing pipeline " << error->message;
+        LOG(error) << "Error parsing pipeline " << error->message;
     }
     
     source_OpenCV = gst_bin_get_by_name(GST_BIN(pipeline), "mysource");
@@ -614,7 +614,7 @@ void RTSP_server::setup(std::string pipeOverride)
 
     if (caps == nullptr)
     {
-        NODE_LOG(error) << "Error creating caps for appsrc";
+       LOG(error) << "Error creating caps for appsrc";
     }
 
     gst_app_src_set_caps(GST_APP_SRC(source_OpenCV), caps);
@@ -637,27 +637,7 @@ void RTSP_server::setup(std::string pipeOverride)
     CV_Assert(ret != GST_STATE_CHANGE_FAILURE); 
 }
 
-void RTSP_server::NodeInit(bool firstInit)
-{
-    if (!firstInit)
-    {
 
-    }
-    if (firstInit)
-    {
-        timestamp = 0;
-        prevTime = clock();
-        
-        Parameters::EnumParameter server_type;
-        server_type.addEnum(ENUM(TCP));
-        server_type.addEnum(ENUM(UDP));
-        updateParameter("Server type", server_type);
-        updateParameter<unsigned short>("Port", 8004);
-        updateParameter<std::string>("Host", "")->SetTooltip("When TCP is selected, this is the address of the device to bind to, when UDP is selected this is the address of the device to receive the video stream")->type = Parameters::Parameter::Control;
-        updateParameter<std::string>("gst pipeline", "");
-    }
-    bufferPool.resize(5);
-}
 void RTSP_server::push_image()
 {
     rmt_ScopedCPUSample(RTSP_server_push_image);
@@ -684,19 +664,12 @@ void RTSP_server::push_image()
 
         if (rw != GST_FLOW_OK)
         {
-            NODE_LOG(error) << "Error pushing buffer into appsrc " << rw;
+            LOG(error) << "Error pushing buffer into appsrc " << rw;
         }
         gst_buffer_unref(buffer);
     }
 }
 
-void RTSP_server::Serialize(ISimpleSerializer* pSerializer)
-{
-    Node::Serialize(pSerializer);
-    SERIALIZE(delta);
-    SERIALIZE(timestamp);
-    SERIALIZE(prevTime);
-}
 
 void RTSP_serverCallback(int status, void* userData) 
 {
@@ -716,7 +689,7 @@ cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     if (!g_main_loop_is_running(glib_MainLoop))
     {
         glibThread = boost::thread(std::bind(&RTSP_server::gst_loop, this));
-        NODE_LOG(error) << "Main glib loop not running";
+        LOG(error) << "Main glib loop not running";
         return img;
     }
     if (feed_enabled)
@@ -738,8 +711,8 @@ RTSP_server::RTSP_server():
     need_data_id = 0; 
     enough_data_id = 0;
 }                    
-static EagleLib::Nodes::NodeInfo g_registerer_RTSP_server("RTSP_server", { "Image", "Sink" });
 
+MO_REGISTER_CLASS(RTSP_server);
 //REGISTERCLASS(RTSP_server, &g_registerer_RTSP_server)
 
 

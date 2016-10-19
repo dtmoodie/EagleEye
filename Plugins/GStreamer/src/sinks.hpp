@@ -1,5 +1,5 @@
 #pragma once
-
+#include "MetaObject/MetaObject.hpp"
 #include "gstreamer.hpp"
 #include "EagleLib/Nodes/IFrameGrabber.hpp"
 
@@ -11,6 +11,13 @@ namespace EagleLib
         {
             bool _initialized;
         public:
+            enum {
+                None
+            };
+            MO_DERIVE(tcp_server, gstreamer_sink_base)
+                ENUM_PARAM(encoders, None);
+                ENUM_PARAM(interfaces, None);
+            MO_END;
             tcpserver();
             ~tcpserver();
             virtual void NodeInit(bool firstInit);

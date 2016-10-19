@@ -5,13 +5,11 @@
 #ifdef HAVE_GST_RTSPSERVER
 #include <gst/rtsp-server/rtsp-server.h>
 #endif
-#include "EagleLib/nodes/Node.h"
-
-
+#include "EagleLib/Nodes/Node.h"
 #include "EagleLib/Detail/Export.hpp"
 #include <EagleLib/Project_defs.hpp>
 #include <EagleLib/utilities/CudaUtils.hpp>
-
+#include <MetaObject/MetaObject.hpp>
 
 #include <gst/gst.h>
 #include <gst/gstelement.h>
@@ -68,16 +66,17 @@ namespace EagleLib
         time_t          _delta;
         virtual void cleanup();
         bool _caps_set;
-
     public:
+
+
         gstreamer_base();
         virtual ~gstreamer_base();
+
         virtual bool create_pipeline(const std::string& pipeline_);
         virtual bool start_pipeline();
         virtual bool stop_pipeline();
         virtual bool pause_pipeline();
         virtual GstState get_pipeline_state();
-
 
         static std::vector<std::string> get_interfaces();
         static std::vector<std::string> get_gstreamer_features(const std::string& filter = "");
@@ -135,9 +134,6 @@ namespace EagleLib
 
         class PLUGIN_EXPORTS RTSP_server: public Node
         {
-            GstClockTime timestamp;
-            time_t prevTime;
-            time_t delta;
         public:
             enum ServerType
             {
@@ -156,14 +152,22 @@ namespace EagleLib
             guint enough_data_id;
 
             void gst_loop();
-            void Serialize(ISimpleSerializer* pSerializer);
             void push_image();
             void onPipeChange();
             void setup(std::string pipeOverride = std::string());
             RTSP_server();
             ~RTSP_server();
-            virtual void NodeInit(bool firstInit);
             virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+            MO_DERIVE(RTSP_server, Node)
+                ENUM_PARAM(server_type, TCP, UDP);
+                PARAM(unsigned short, port, 8004);
+                PARAM(std::string, host, "");
+                PARAM(std::string, gst_pipeline, "");
+                PROPERTY(time_t, delta, 0);
+                PROPERTY(time_t, prevTime, 0);
+                PROPERTY(GstClockTime, timestamp, 0);
+            MO_END;
+
         };
 #ifdef HAVE_GST_RTSPSERVER
         class PLUGIN_EXPORTS RTSP_server_new : public Node
