@@ -305,27 +305,26 @@ bool gstreamer_base::pause_pipeline()
     return true;
 }
 
-
-TS<SyncedMemory> gstreamer_sink_base::doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream)
+void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
 {
     auto curTime = clock();
     _delta = curTime - _prevTime;
     _prevTime = curTime;
     LOG(trace) << "Estimated frame time: " << _delta << " ms";
-    if(!_caps_set)
+    if (!_caps_set)
     {
-        if(set_caps(img.GetMat(stream).size(), img.GetMat(stream).channels()))
+        if (set_caps(img.GetMat(stream).size(), img.GetMat(stream).channels()))
         {
             _caps_set = true;
             start_pipeline();
         }
     }
-    
-    if(_feed_enabled)
+
+    if (_feed_enabled)
     {
         cv::Mat h_img = img.GetMat(stream);
         cuda::enqueue_callback_async(
-        [h_img, this]()->void
+            [h_img, this]()->void
         {
             int bufferlength = h_img.cols * h_img.rows * h_img.channels();
             GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
@@ -334,8 +333,8 @@ TS<SyncedMemory> gstreamer_sink_base::doProcess(TS<SyncedMemory> img, cv::cuda::
             memcpy(map.data, h_img.data, map.size);
             gst_buffer_unmap(buffer, &map);
 
-            GST_BUFFER_PTS(buffer) = _timestamp; 
-        
+            GST_BUFFER_PTS(buffer) = _timestamp;
+
             GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(_delta, GST_SECOND, 1000);
             _timestamp += GST_BUFFER_DURATION(buffer);
 
@@ -347,10 +346,10 @@ TS<SyncedMemory> gstreamer_sink_base::doProcess(TS<SyncedMemory> img, cv::cuda::
                 LOG(error) << "Error pushing buffer into appsrc " << rw;
             }
             gst_buffer_unref(buffer);
-        },  stream);
+        }, stream);
     }
-    return img;
 }
+
 GstState gstreamer_base::get_pipeline_state()
 {
     if (_pipeline)
@@ -711,7 +710,10 @@ RTSP_server::RTSP_server():
     need_data_id = 0; 
     enough_data_id = 0;
 }                    
-
+bool RTSP_server::ProcessImpl()
+{
+    return false;
+}
 MO_REGISTER_CLASS(RTSP_server);
 //REGISTERCLASS(RTSP_server, &g_registerer_RTSP_server)
 

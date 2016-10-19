@@ -7,7 +7,7 @@
 #endif
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/Detail/Export.hpp"
-#include <EagleLib/Project_defs.hpp>
+#include "EagleLib/Detail/PluginExport.hpp"
 #include <EagleLib/utilities/CudaUtils.hpp>
 #include <MetaObject/MetaObject.hpp>
 
@@ -85,7 +85,7 @@ namespace EagleLib
         static bool is_pipeline(const std::string& string);
     };
     // used to feed data into EagleEye from gstreamer, use when creating frame grabbers
-    class PLUGIN_EXPORTS gstreamer_src_base: public gstreamer_base
+    class PLUGIN_EXPORTS gstreamer_src_base: virtual public gstreamer_base
     {
     protected:
         GstElement* _appsink;
@@ -103,7 +103,7 @@ namespace EagleLib
     namespace Nodes
     {
         // Used to feed a gstreamer pipeline from EagleEye
-        class PLUGIN_EXPORTS gstreamer_sink_base: public gstreamer_base, public Node
+        class PLUGIN_EXPORTS gstreamer_sink_base: virtual public gstreamer_base, virtual public Node
         {
         protected:
             
@@ -125,7 +125,7 @@ namespace EagleLib
             virtual bool create_pipeline(const std::string& pipeline_);
             virtual bool set_caps(cv::Size image_size, int channels, int depth = CV_8U);
 
-            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
+            void PushImage(SyncedMemory img, cv::cuda::Stream& stream);
             // Used for gstreamer to indicate that the appsrc needs to either feed data or stop feeding data
             virtual void start_feed();
             virtual void stop_feed();
@@ -167,7 +167,8 @@ namespace EagleLib
                 PROPERTY(time_t, prevTime, 0);
                 PROPERTY(GstClockTime, timestamp, 0);
             MO_END;
-
+        protected:
+            bool ProcessImpl();
         };
 #ifdef HAVE_GST_RTSPSERVER
         class PLUGIN_EXPORTS RTSP_server_new : public Node

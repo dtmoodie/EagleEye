@@ -1,4 +1,5 @@
 #include "chunked_file_sink.h"
+#include <EagleLib/Nodes/FrameGrabberInfo.hpp>
 #include <EagleLib/ICoordinateManager.h>
 #include <gst/base/gstbasesink.h>
 using namespace EagleLib;
@@ -66,6 +67,10 @@ bool chunked_file_sink::LoadFile(const std::string& file_path)
     }
     return false;
 }
+TS<SyncedMemory> chunked_file_sink::GetCurrentFrame(cv::cuda::Stream& stream)
+{
+    return TS<SyncedMemory>();
+}
 long long chunked_file_sink::GetNumFrames()
 {
     return -1;
@@ -76,6 +81,9 @@ rcc::shared_ptr<EagleLib::ICoordinateManager> chunked_file_sink::GetCoordinateMa
     return rcc::shared_ptr<EagleLib::ICoordinateManager>();
 }
 
-
+bool chunked_file_sink::ProcessImpl()
+{
+    return false;
+}
 
 MO_REGISTER_CLASS(chunked_file_sink);

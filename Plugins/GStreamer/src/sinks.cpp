@@ -54,40 +54,40 @@ void tcpserver::NodeInit(bool firstInit)
     }
 }
 
-TS<SyncedMemory> tcpserver::doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream)
+bool tcpserver::ProcessImpl()
 {
-    if(!_initialized || getParameter("Encoder")->changed || getParameter("Interfaces")->changed)
+    if (!_initialized || encoders_param.modified || interfaces_param.modified)
     {
-        auto encoder = getParameter<Parameters::EnumParameter>("Encoder")->Data();
-        if(encoder->getValue() != -1)
+        if (encoders.getValue() != -1)
         {
-            std::string name = encoder->getEnum();
+            std::string name = encoders.getEnum();
             std::stringstream ss;
             ss << "appsrc name=mysource ! videoconvert ! ";
             ss << name;
-            if(name == "openh264enc" || name == "avenc_h264" || name == "omxh264enc")
+            if (name == "openh264enc" || name == "avenc_h264" || name == "omxh264enc")
             {
                 ss << " ! matroskamux streamable=true ! tcpserversink host=";
             }
-            else if(name == "omxvp8enc" || name == "vp8enc")
+            else if (name == "omxvp8enc" || name == "vp8enc")
             {
                 ss << " ! webmmux ! tcpserversink host=";
             }
-            ss << getParameter<Parameters::EnumParameter>("Interfaces")->Data()->getEnum();
+            ss << interfaces.getEnum();
             ss << " port=8080";
             _initialized = create_pipeline(ss.str());
-            if(_initialized)
+            if (_initialized)
             {
-                getParameter("Encoder")->changed = false;
-                getParameter("Interfaces")->changed = false;
+                encoders_param.modified = false;
+                interfaces_param.modified = false;
             }
         }
-    }else
-    {
-        return gstreamer_sink_base::doProcess(img, stream);
     }
-
-    return img;
+    if(_initialized)
+    {
+        PushImage(*image, Stream());
+        return true;
+    }
+    return false;
 }
 
 

@@ -26,7 +26,7 @@ IF(GSTREAMER_FOUND)
             INCLUDE_DIRECTORIES("/usr/lib/arm-linux-gnueabihf/glib-2.0/include")
             INCLUDE_DIRECTORIES("/usr/include/glib-2.0")
         else(GLIB2_FOUND)
-            message("glib2 not found")
+            message(STATUS "glib2 not found")
         endif(GLIB2_FOUND)
         LINK_DIRECTORIES(${CUDA_TOOLKIT_ROOT_DIR}/lib)
     endif()
@@ -40,6 +40,7 @@ IF(GSTREAMER_FOUND)
     LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glibconfig_INCLUDE_DIR})
     LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glib_INCLUDE_DIR})
     FIND_PACKAGE(Qt5 REQUIRED Network)
+    FIND_PACKAGE(OpenCV REQUIRED core)
     FILE(GLOB_RECURSE src "src/*.cpp")
     FILE(GLOB_RECURSE hdr "src/*.hpp")
     INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
@@ -53,6 +54,7 @@ IF(GSTREAMER_FOUND)
     ADD_DEFINITIONS(-DPROJECT_LIB_DIRS="${LIB_DIR}")
     ADD_LIBRARY(Gstreamer SHARED ${src} ${hdr})
     RCC_LINK_LIB(Gstreamer
+        ${OpenCV_LIBS}
         EagleLib
         Qt5::Network
         ${GSTREAMER_gstapp_LIBRARY}

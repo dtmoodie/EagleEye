@@ -5,7 +5,7 @@
 
 namespace EagleLib
 {
-    class PLUGIN_EXPORTS chunked_file_sink: public gstreamer_src_base, public Nodes::FrameGrabberBuffered
+    class PLUGIN_EXPORTS chunked_file_sink: virtual public gstreamer_src_base, virtual public Nodes::FrameGrabberBuffered
     {
     protected:
         GstElement* _filesink;
@@ -20,7 +20,9 @@ namespace EagleLib
         virtual bool LoadFile(const std::string& file_path);
         virtual long long GetNumFrames();
         virtual rcc::shared_ptr<EagleLib::ICoordinateManager> GetCoordinateManager();
-        virtual void Init(bool firstInit);
+        //virtual void Init(bool firstInit);
         virtual GstFlowReturn on_pull();
+        bool ProcessImpl();
+        virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
     };
 }

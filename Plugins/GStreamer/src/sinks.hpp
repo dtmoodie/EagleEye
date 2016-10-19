@@ -12,16 +12,18 @@ namespace EagleLib
             bool _initialized;
         public:
             enum {
-                None
+                None = -1
             };
-            MO_DERIVE(tcp_server, gstreamer_sink_base)
+            MO_DERIVE(tcpserver, gstreamer_sink_base)
                 ENUM_PARAM(encoders, None);
                 ENUM_PARAM(interfaces, None);
+                INPUT(SyncedMemory, image, nullptr);
             MO_END;
             tcpserver();
             ~tcpserver();
             virtual void NodeInit(bool firstInit);
-            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
+            bool ProcessImpl();
+            
         };
     }
 

@@ -15,7 +15,6 @@ namespace EagleLib
             MO_END;
         protected:
             bool ProcessImpl();
-            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
         };
     }
 }
