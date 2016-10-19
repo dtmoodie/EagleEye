@@ -24,24 +24,24 @@ namespace EagleLib
 {
     namespace Nodes
     {
-    class PLUGIN_EXPORTS frame_grabber_gstreamer: public frame_grabber_cv
-    {
-    public:
-        MO_DERIVE(frame_grabber_gstreamer, frame_grabber_cv)
-        MO_END;
+        class PLUGIN_EXPORTS frame_grabber_gstreamer: public frame_grabber_cv
+        {
+        public:
+            MO_DERIVE(frame_grabber_gstreamer, frame_grabber_cv)
+            MO_END;
 
-        frame_grabber_gstreamer();
-        virtual bool LoadFile(const std::string& file_path);
-        virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
+            frame_grabber_gstreamer();
+            virtual bool LoadFile(const std::string& file_path);
+            virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
 
-        static int CanLoadDocument(const std::string& document);
-    protected:
+            static int CanLoadDocument(const std::string& document);
+        protected:
 
-        cv::Ptr<cv::VideoCapture> h_cam;
-        rcc::shared_ptr<ICoordinateManager>     coordinate_manager;
-        std::string                             loaded_file;
-        TS<SyncedMemory>                        current_frame;
-    };
+            cv::Ptr<cv::VideoCapture> h_cam;
+            rcc::shared_ptr<ICoordinateManager>     coordinate_manager;
+            std::string                             loaded_file;
+            TS<SyncedMemory>                        current_frame;
+        };
     }
 }
 #endif // HAVE_GSTREAMER
