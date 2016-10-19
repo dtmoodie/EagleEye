@@ -44,11 +44,11 @@ SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mats):
     sync_flags.resize(h_mats.size(), HOST_UPDATED);
 }
 
-SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat):
+SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat, SYNC_STATE state):
     h_data(h_mat), d_data(d_mat)
 {
     assert(h_data.size() == d_data.size());
-    sync_flags.resize(h_data.size(), SYNCED);
+    sync_flags.resize(h_data.size(), state);
 }
 
 SyncedMemory::SyncedMemory(cv::MatAllocator* cpu_allocator, cv::cuda::GpuMat::Allocator* gpu_allocator):
@@ -71,6 +71,8 @@ SyncedMemory::GetMat(cv::cuda::Stream& stream, int index)
 cv::Mat&                    
 SyncedMemory::GetMatMutable(cv::cuda::Stream& stream, int index)
 {
+    if(sync_flags[index] == DO_NOT_SYNC)
+        return h_data[index];
     if (sync_flags[index] == DEVICE_UPDATED)
         d_data[index].download(h_data[index], stream);
     sync_flags[index] = HOST_UPDATED;
@@ -80,6 +82,8 @@ SyncedMemory::GetMatMutable(cv::cuda::Stream& stream, int index)
 const cv::cuda::GpuMat&        
 SyncedMemory::GetGpuMat(cv::cuda::Stream& stream, int index)
 {
+    if (sync_flags[index] == DO_NOT_SYNC)
+        return d_data[index];
     if (sync_flags[index] == HOST_UPDATED)
     {
         d_data[index].upload(h_data[index], stream);
@@ -92,6 +96,8 @@ SyncedMemory::GetGpuMat(cv::cuda::Stream& stream, int index)
 cv::cuda::GpuMat&            
 SyncedMemory::GetGpuMatMutable(cv::cuda::Stream& stream, int index)
 {
+    if (sync_flags[index] == DO_NOT_SYNC)
+        return d_data[index];
     if (sync_flags[index] == HOST_UPDATED)
         d_data[index].upload(h_data[index], stream);
     sync_flags[index] = DEVICE_UPDATED;
@@ -101,6 +107,8 @@ SyncedMemory::GetGpuMatMutable(cv::cuda::Stream& stream, int index)
 const std::vector<cv::Mat>&
 SyncedMemory::GetMatVec(cv::cuda::Stream& stream)
 {
+    if (sync_flags.size() && sync_flags[0] == DO_NOT_SYNC)
+        return h_data;
     for (int i = 0; i < sync_flags.size(); ++i)
     {
         if (sync_flags[i] == DEVICE_UPDATED)
@@ -112,6 +120,8 @@ SyncedMemory::GetMatVec(cv::cuda::Stream& stream)
 std::vector<cv::Mat>&
 SyncedMemory::GetMatVecMutable(cv::cuda::Stream& stream)
 {
+    if (sync_flags.size() && sync_flags[0] == DO_NOT_SYNC)
+        return h_data;
     for (int i = 0; i < sync_flags.size(); ++i)
     {
         if (sync_flags[i] == DEVICE_UPDATED)
@@ -125,6 +135,8 @@ SyncedMemory::GetMatVecMutable(cv::cuda::Stream& stream)
 const std::vector<cv::cuda::GpuMat>&
 SyncedMemory::GetGpuMatVec(cv::cuda::Stream& stream)
 {
+    if (sync_flags.size() && sync_flags[0] == DO_NOT_SYNC)
+        return d_data;
     for (int i = 0; i < sync_flags.size(); ++i)
     {
         if (sync_flags[i] == HOST_UPDATED)
@@ -136,6 +148,8 @@ SyncedMemory::GetGpuMatVec(cv::cuda::Stream& stream)
 std::vector<cv::cuda::GpuMat>&
 SyncedMemory::GetGpuMatVecMutable(cv::cuda::Stream& stream)
 {
+    if (sync_flags.size() && sync_flags[0] == DO_NOT_SYNC)
+        return d_data;
     for (int i = 0; i < sync_flags.size(); ++i)
     {
         if (sync_flags[i] == HOST_UPDATED)
@@ -176,8 +190,11 @@ bool SyncedMemory::empty() const
 }
 void SyncedMemory::Synchronize(cv::cuda::Stream& stream)
 {
+
     for(int i = 0; i < h_data.size(); ++i)
     {
+        if (sync_flags[i] == DO_NOT_SYNC)
+            continue;
         if(sync_flags[i] == HOST_UPDATED)
             d_data[i].upload(h_data[i], stream);
         else if(sync_flags[i] == DEVICE_UPDATED)
