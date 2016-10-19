@@ -86,6 +86,7 @@ namespace EagleLib
         DataStream();
         virtual ~DataStream();
         std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> GetTopLevelNodes();
+        virtual void                                      InitCustom(bool firstInit);
         virtual rcc::weak_ptr<IViewManager>               GetViewManager();
         virtual rcc::weak_ptr<ICoordinateManager>         GetCoordinateManager();
         virtual rcc::weak_ptr<IRenderEngine>              GetRenderingEngine();
@@ -162,6 +163,13 @@ DataStream::DataStream()
     stream_id = 0;
     _thread_id = 0;
     StartThread();
+}
+void DataStream::InitCustom(bool firstInit)
+{
+    if(firstInit)
+    {
+        this->SetupSignals(GetRelayManager());
+    }
 }
 
 DataStream::~DataStream()
@@ -471,8 +479,8 @@ void DataStream::RemoveVariableSink(IVariableSink* sink)
 void DataStream::StartThread()
 {
     StopThread();
-    sig_StartThreads();
     processing_thread = boost::thread(boost::bind(&DataStream::process, this));
+    sig_StartThreads();
 }
 
 void DataStream::StopThread()

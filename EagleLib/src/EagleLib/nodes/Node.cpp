@@ -200,29 +200,31 @@ bool Node::Process()
     if(_modified == false)
         return false;
 
-    boost::recursive_mutex::scoped_lock lock(*_mtx);
+    { // scope of the lock
+        boost::recursive_mutex::scoped_lock lock(*_mtx);
 
-    if(!CheckInputs())
-    {
-        return false;
-    }
-
-    _modified = false;
-    
-    if(!ProcessImpl())
-        return false;
-    
-    _pimpl->last_ts = _pimpl->ts;
-    if(_pimpl->sync_input == nullptr && _pimpl->ts != -1)
-        ++_pimpl->ts;
-    if(_pimpl->_sync_method == SyncEvery && _pimpl->sync_input)
-    {
-        boost::recursive_mutex::scoped_lock lock(_pimpl->_mtx);
-        if(_pimpl->ts == _pimpl->_ts_processing_queue.front())
+        if (!CheckInputs())
         {
-            _pimpl->_ts_processing_queue.pop();
+            return false;
         }
-    }
+
+        _modified = false;
+
+        if (!ProcessImpl())
+            return false;
+
+        _pimpl->last_ts = _pimpl->ts;
+        if (_pimpl->sync_input == nullptr && _pimpl->ts != -1)
+            ++_pimpl->ts;
+        if (_pimpl->_sync_method == SyncEvery && _pimpl->sync_input)
+        {
+            boost::recursive_mutex::scoped_lock lock(_pimpl->_mtx);
+            if (_pimpl->ts == _pimpl->_ts_processing_queue.front())
+            {
+                _pimpl->_ts_processing_queue.pop();
+            }
+        }
+    } // end lock
     
     for(rcc::shared_ptr<Node>& child : _children)
     {

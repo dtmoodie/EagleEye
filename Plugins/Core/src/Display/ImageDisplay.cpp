@@ -30,6 +30,7 @@ bool QtImageDisplay::ProcessImpl()
         {
             cv::imshow(name, mat);
         }, *_ctx->stream);*/
+
         size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
         EagleLib::cuda::enqueue_callback_async(
             [mat, name]()->void
