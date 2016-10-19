@@ -6,16 +6,18 @@
 #include "IRuntimeObjectSystem.h"
 #endif
 
-#define TOKEN_TO_STRING(token) #token
+#define TOKEN_TO_STRING_(token) #token
+#define TOKEN_TO_STRING(token) TOKEN_TO_STRING_(token)
+
 
 #ifdef PLUGIN_NAME
   #include "RuntimeLinkLibrary.h"
   #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
     #define PLUGIN_EXPORTS __declspec(dllexport)
     #ifdef _DEBUG
-      //RUNTIME_COMPILER_LINKLIBRARY(TOKEN_TO_STRING(PLUGIN_NAME) "d.lib")
+      RUNTIME_COMPILER_LINKLIBRARY(TOKEN_TO_STRING(PLUGIN_NAME) "d.lib")
     #else
-      //RUNTIME_COMPILER_LINKLIBRARY(TOKEN_TO_STRING(PLUGIN_NAME) ".lib")
+      RUNTIME_COMPILER_LINKLIBRARY(TOKEN_TO_STRING(PLUGIN_NAME) ".lib")
     #endif
   #else // Linux
     #define PLUGIN_EXPORTS
