@@ -119,7 +119,7 @@ bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& output_na
     auto input = this->GetInput(input_name);
     if(output && input)
     {
-        if(this->IMetaObject::ConnectInput(input, output, type))
+        if(this->IMetaObject::ConnectInput(input, node.Get(), output, type))
         {
             AddParent(node.Get());
             return true;
@@ -160,7 +160,7 @@ bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& output_na
 }
 bool Node::ConnectInput(rcc::shared_ptr<Node> output_node,    mo::IParameter* output_param,    mo::InputParameter* input_param,    mo::ParameterTypeFlags type)
 {
-    if (this->IMetaObject::ConnectInput(input_param, output_param, type))
+    if (this->IMetaObject::ConnectInput(input_param, output_node.Get(), output_param, type))
     {
         AddParent(output_node.Get());
         return true;
