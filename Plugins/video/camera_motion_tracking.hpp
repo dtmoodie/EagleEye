@@ -1,7 +1,7 @@
 #pragma once
 
 #include "EagleLib/nodes/Node.h"
-
+#include <MetaObject/MetaObject.hpp>
 namespace EagleLib
 {
     namespace Nodes
@@ -9,15 +9,11 @@ namespace EagleLib
         class track_camera_motion : public Node
         {
         public:
-            class track_camera_motion_info : public NodeInfo
-            {
-            public:
-                track_camera_motion_info();
-                virtual std::vector<std::vector<std::string>> GetParentalDependencies() const;
-            };
+            MO_DERIVE(track_camera_motion, Node)
 
-            TS<SyncedMemory> doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
-
+            MO_END;
+            static std::vector<std::vector<std::string>> GetParentalDependencies();
+            bool ProcessImpl();
         };
     }
 }
