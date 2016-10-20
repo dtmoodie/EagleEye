@@ -35,6 +35,7 @@ namespace EagleLib
             virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
 
             static int CanLoadDocument(const std::string& document);
+            static std::vector<std::string> ListLoadableDocuments();
         protected:
 
             cv::Ptr<cv::VideoCapture> h_cam;

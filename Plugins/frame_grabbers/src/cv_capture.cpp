@@ -1,6 +1,8 @@
 #include "cv_capture.h"
 #include "precompiled.hpp"
-
+#if _MSC_VER
+RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
+#endif
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
