@@ -206,8 +206,12 @@ bool Node::Process()
 
         _modified = false;
         
-        if (!ProcessImpl())
-            return false;
+        {
+            mo::scoped_profile(this->GetTreeName().c_str(), &this->_rmt_hash, &this->_rmt_cuda_hash, &Stream());
+            if (!ProcessImpl())
+                return false;
+        }
+        
 
         _pimpl->last_ts = _pimpl->ts;
         if (_pimpl->sync_input == nullptr && _pimpl->ts != -1)
@@ -360,7 +364,17 @@ Node* Node::GetNodeInScope(const std::string& name)
             return child.Get();
     }
     if(_parents.size())
-        return _parents[0]->GetNodeInScope(name);
+    {
+        for(auto& parent : _parents)
+        {
+            if(auto output = parent->GetNodeInScope(name))
+            {
+                return output;
+            }
+        }
+    }
+    if(_dataStream)
+        return _dataStream->GetNode(name);
     return nullptr;
 }
 
@@ -447,164 +461,7 @@ void Node::RemoveChild(rcc::weak_ptr<Node> node)
         _children.erase(itr);
     }
 }
-/*cv::cuda::GpuMat Node::process(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    if(boost::this_thread::interruption_requested())
-        return img;
-    //ui_collector::setNode(this);
-    ui_collector::set_node_name(getFullTreeName());
-    
-    if(img.empty() && SkipEmpty())
-    {
-        NODE_LOG(trace) << " Skipped due to empty input";
-    }else
-    {
-        try
-        {
-            // Used for debugging which nodes have started, thus if a segfault occurs you can know which node caused it
-            NODE_LOG(trace) << " process enabled: " << enabled;
-            if (enabled)
-            {
-                ClearProcessingTime();
-                std::lock_guard<std::recursive_mutex> lock(_mtx);
-                auto allocator = dynamic_cast<PitchedAllocator*>(cv::cuda::GpuMat::defaultAllocator());
-                if(allocator)
-                {
-                    allocator->SetScope(this->getTreeName());
-                }
 
-                // Do I lock each parameters mutex or do I just lock each node?
-                // I should only lock each node, but then I need to make sure the UI keeps track of the node
-                // to access the node's mutex while accessing a parameter, for now this works though.
-                std::vector<boost::recursive_mutex::scoped_lock> locks;
-                for (size_t i = 0; i < _parameters.size(); ++i)
-                {
-                    locks.push_back(boost::recursive_mutex::scoped_lock(_parameters[i]->mtx));
-                }
-                TIME
-                _rmt_BeginCPUSample(fullTreeName.c_str(), &rmt_hash);
-                _rmt_BeginCUDASample(fullTreeName.c_str(), &rmt_cuda_hash, cv::cuda::StreamAccessor::getStream(stream));
-                PROFILE_OBJ(fullTreeName.c_str());
-                img = doProcess(img, stream);
-                rmt_EndCPUSample();
-                rmt_EndCUDASample(cv::cuda::StreamAccessor::getStream(stream));
-                EndProcessingTime();
-            }
-            NODE_LOG(trace) << "End:   " << fullTreeName;
-        }CATCH_MACRO
-    }
-    try
-    {
-        if (children.size() == 0)
-            return img;
-
-        cv::cuda::GpuMat childResult;
-        if (!img.empty())
-            img.copyTo(childResult, stream);
-        NODE_LOG(trace) << " Executing " << children.size() << " child nodes";
-        std::vector<Node::Ptr>  children_;
-        children_.reserve(children.size());
-        {
-            // Prevents adding of children while running, debatable how much this is needed
-            std::lock_guard<std::recursive_mutex> lock(_mtx);
-            for (int i = 0; i < children.size(); ++i)
-            {
-                children_.push_back(children[i]);
-            }
-        }
-        for (size_t i = 0; i < children_.size(); ++i)
-        {
-            if (children_[i] != nullptr)
-            {
-                try
-                {
-                    childResult = children_[i]->process(childResult, stream);
-                }CATCH_MACRO
-            }
-            else
-            {
-                ui_collector::set_node_name(getFullTreeName());
-                NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
-            }
-        }
-        ui_collector::set_node_name(getFullTreeName());
-        // So here is the debate of is a node's output the output of it, or the output of its children....
-        // img = childResults;
-    }CATCH_MACRO;
-    ui_collector::set_node_name("");
-    
-    return img;
-}
-TS<SyncedMemory> Node::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
-{
-    TS < SyncedMemory> output = input;
-    if(pre_check(input))
-    {
-        _current_timestamp = input.frame_number;
-        if (boost::this_thread::interruption_requested())
-            return output;
-        ui_collector::set_node_name(getFullTreeName());
-        try
-        {
-                ClearProcessingTime();
-                std::lock_guard<std::recursive_mutex> lock(_mtx);
-                auto allocator = dynamic_cast<PitchedAllocator*>(cv::cuda::GpuMat::defaultAllocator());
-                if (allocator)
-                {
-                    allocator->SetScope(this->getTreeName());
-                }
-
-                // Do I lock each parameters mutex or do I just lock each node?
-                // I should only lock each node, but then I need to make sure the UI keeps track of the node
-                // to access the node's mutex while accessing a parameter, for now this works though.
-                
-                TIME
-                _rmt_BeginCPUSample(fullTreeName.c_str(), &rmt_hash);
-                _rmt_BeginCUDASample(fullTreeName.c_str(), &rmt_cuda_hash, cv::cuda::StreamAccessor::getStream(stream));
-                PROFILE_OBJ(fullTreeName.c_str());
-                output = doProcess(input, stream);
-                rmt_EndCPUSample();
-                rmt_EndCUDASample(cv::cuda::StreamAccessor::getStream(stream));
-                EndProcessingTime();
-        }CATCH_MACRO
-        try
-        {
-            if (children.size() == 0)
-                return output;
-            std::vector<Node::Ptr>  children_;
-            {
-                // Prevents adding of children while running, debatable how much this is needed
-                std::lock_guard<std::recursive_mutex> lock(_mtx);
-                children_ = children;
-            }
-            for (size_t i = 0; i < children_.size(); ++i)
-            {
-                if (children_[i] != nullptr)
-                {
-                    try
-                    {
-                        children_[i]->process(output, stream);
-                    }CATCH_MACRO
-                }
-                else
-                {
-                    ui_collector::set_node_name(getFullTreeName());
-                    NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
-                }
-            }
-            ui_collector::set_node_name(getFullTreeName());
-        }CATCH_MACRO;
-        ui_collector::set_node_name("");
-    }
-    return output;
-}
-
-
-bool Node::pre_check(const TS<SyncedMemory>& input)
-{
-    return !input.empty() && enabled;
-}
-*/
 
 void Node::SetDataStream(IDataStream* stream_)
 {

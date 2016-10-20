@@ -102,6 +102,7 @@ namespace EagleLib
         virtual void                                      AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node);
         virtual void                                      RemoveNode(rcc::shared_ptr<Nodes::Node> node);
         virtual void                                      RemoveNode(Nodes::Node* node);
+        virtual Nodes::Node*                              GetNode(const std::string& nodeName);
         
         void process();
 
@@ -459,6 +460,7 @@ void DataStream::RemoveNode(Nodes::Node* node)
     
     RemoveChildNode(node);
 }
+
 void DataStream::RemoveNode(rcc::shared_ptr<Nodes::Node> node)
 {
     {
@@ -467,6 +469,32 @@ void DataStream::RemoveNode(rcc::shared_ptr<Nodes::Node> node)
     }
     RemoveChildNode(node);
 }
+
+Nodes::Node* DataStream::GetNode(const std::string& nodeName)
+{
+    {
+        std::lock_guard<std::mutex> lock(nodes_mtx);
+        for(auto& node : top_level_nodes)
+        {
+            if(node->GetTreeName() == nodeName)
+            {
+                return node.Get();
+            }
+        }
+        for(auto& node : child_nodes)
+        {
+            if(node)
+            {
+                if(node->GetTreeName() == nodeName)
+                {
+                    return node.Get();
+                }
+            }
+        }
+    }
+    return nullptr;
+}
+
 void DataStream::AddVariableSink(IVariableSink* sink)
 {
     variable_sinks.push_back(sink);

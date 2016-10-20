@@ -66,6 +66,7 @@ namespace EagleLib
         virtual void AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node) = 0;
         virtual void RemoveNode(rcc::shared_ptr<Nodes::Node> node) = 0;
         virtual void RemoveNode(Nodes::Node* node) = 0;
+        virtual Nodes::Node* GetNode(const std::string& nodeName) = 0;
         
         virtual void StartThread() = 0;
         virtual void StopThread() = 0;

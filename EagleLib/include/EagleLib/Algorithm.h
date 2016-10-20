@@ -37,6 +37,8 @@ namespace EagleLib
         bool _enabled;
         struct impl;
         impl* _pimpl;
+        unsigned int _rmt_hash = 0;
+        unsigned int _rmt_cuda_hash = 0;
     private:
         
     };
