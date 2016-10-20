@@ -23,18 +23,26 @@ namespace EagleLib
             ~tcpserver();
             virtual void NodeInit(bool firstInit);
             bool ProcessImpl();
-            
+        };
+
+        class PLUGIN_EXPORTS BufferedHeartbeatRtsp : public FrameGrabberBuffered, public gstreamer_src_base
+        {
+        public:
+            virtual void NodeInit(bool firstInit);
+        protected:
+        };
+
+        class PLUGIN_EXPORTS JPEGSink: public Node, public gstreamer_src_base
+        {
+        public:
+            MO_DERIVE(JPEGSink, Node)
+                PARAM(std::string, gstreamer_pipeline, "");
+                OUTPUT(cv::Mat, jpeg_buffer, cv::Mat());
+            MO_END;
+            virtual void NodeInit(bool firstInit);
+        protected:
+            bool ProcessImpl();
+            virtual GstFlowReturn on_pull();
         };
     }
-
-    class PLUGIN_EXPORTS BufferedHeartbeatRtsp: public Nodes::FrameGrabberBuffered, public gstreamer_src_base
-    {
-    public:
-        virtual void NodeInit(bool firstInit);
-
-    protected:
-        
-    };
-
-
 }

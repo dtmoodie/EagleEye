@@ -17,11 +17,6 @@ tcpserver::~tcpserver()
 
 }
 
-#define ENUM_FEATURE(Enum, feature)     \
-    if(check_feature(#feature)) {       \
-        Enum.addEnum(__COUNTER__, #feature); \
-    }
-
 void tcpserver::NodeInit(bool firstInit)
 {
     if(firstInit)
@@ -89,12 +84,29 @@ bool tcpserver::ProcessImpl()
     }
     return false;
 }
-
-
 MO_REGISTER_CLASS(tcpserver);
 
+void JPEGSink::NodeInit(bool firstInit)
+{
+    
+}
 
+bool JPEGSink::ProcessImpl()
+{
+    if(gstreamer_pipeline_param.modified)
+    {
+        this->cleanup();
+        this->create_pipeline(gstreamer_pipeline);
+        
+    }
+    return true;
+}
 
+GstFlowReturn JPEGSink::on_pull()
+{
+    return GST_FLOW_OK;
+}
+MO_REGISTER_CLASS(JPEGSink)
 
 void BufferedHeartbeatRtsp::NodeInit(bool firstInit)
 {

@@ -7,6 +7,7 @@
 
 #include <gst/video/video.h>
 #include <gst/app/gstappsrc.h>
+#include <gst/app/gstappsink.h>
 
 #include "../remotery/lib/Remotery.h"
 
@@ -225,13 +226,24 @@ bool gstreamer_src_base::create_pipeline(const std::string& pipeline_)
     }
     return false;
 }
-
+bool gstreamer_src_base::set_caps(const std::string& caps_)
+{
+    if(_appsink == nullptr)
+        return false;
+    GstCaps* caps = gst_caps_new_simple(caps_.c_str(), nullptr);
+    if(caps == nullptr)
+    {
+        LOG(error) << "Error creating caps \"" << caps_ << "\"";
+        return false;
+    }
+    gst_app_sink_set_caps(GST_APP_SINK(_appsink), caps);
+    return true;
+}
 
 bool gstreamer_sink_base::set_caps(cv::Size img_size, int channels, int depth)
 {
     if(_source == nullptr)
         return false;
-    LOG(trace);
     std::string format;
     if(channels == 3)
         format = "BGR";
@@ -264,6 +276,32 @@ bool gstreamer_sink_base::set_caps(cv::Size img_size, int channels, int depth)
     _enough_data_id = g_signal_connect(_source, "enough-data", G_CALLBACK(_stop_feed),  this);
     return true;
 }
+bool gstreamer_sink_base::set_caps(const std::string& caps_)
+{
+    if (_source == nullptr)
+        return false;
+
+    GstCaps* caps = gst_caps_new_simple(caps_.c_str(), NULL);
+
+    if (caps == nullptr)
+    {
+        LOG(error) << "Error creating caps for appsrc";
+        return false;
+    }
+
+    gst_app_src_set_caps(GST_APP_SRC(_source), caps);
+
+    g_object_set(
+        G_OBJECT(_source),
+        "stream-type", GST_APP_STREAM_TYPE_STREAM,
+        "format", GST_FORMAT_TIME,
+        NULL);
+
+    LOG(debug) << "Connecting need/enough data callbacks";
+    _need_data_id = g_signal_connect(_source, "need-data", G_CALLBACK(_start_feed), this);
+    _enough_data_id = g_signal_connect(_source, "enough-data", G_CALLBACK(_stop_feed), this);
+}
+
 bool gstreamer_base::start_pipeline()
 {
     if(!_pipeline)

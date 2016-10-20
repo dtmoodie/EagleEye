@@ -87,16 +87,17 @@ namespace EagleLib
     // used to feed data into EagleEye from gstreamer, use when creating frame grabbers
     class PLUGIN_EXPORTS gstreamer_src_base: virtual public gstreamer_base
     {
-    protected:
-        GstElement* _appsink;
-        guint           _new_sample_id;
-        guint           _new_preroll_id;
     public:
         gstreamer_src_base();
         virtual ~gstreamer_src_base();
         virtual bool create_pipeline(const std::string& pipeline_);
         // Called when data is ready to be pulled from the appsink
         virtual GstFlowReturn on_pull() = 0;
+        virtual bool set_caps(const std::string& caps);
+    protected:
+        GstElement* _appsink;
+        guint       _new_sample_id;
+        guint       _new_preroll_id;
     };
 
 
@@ -105,8 +106,19 @@ namespace EagleLib
         // Used to feed a gstreamer pipeline from EagleEye
         class PLUGIN_EXPORTS gstreamer_sink_base: virtual public gstreamer_base, virtual public Node
         {
-        protected:
+        public:
+            gstreamer_sink_base();
+            virtual ~gstreamer_sink_base();
             
+            virtual bool create_pipeline(const std::string& pipeline_);
+            virtual bool set_caps(cv::Size image_size, int channels, int depth = CV_8U);
+            virtual bool set_caps(const std::string& caps);
+
+            void PushImage(SyncedMemory img, cv::cuda::Stream& stream);
+            // Used for gstreamer to indicate that the appsrc needs to either feed data or stop feeding data
+            virtual void start_feed();
+            virtual void stop_feed();
+        protected:
             // The output of EagleLib's processing pipeline and the input to the gstreamer pipeline
             GstElement*     _source;
             // id for the need data signal
@@ -116,19 +128,6 @@ namespace EagleLib
 
             bool _feed_enabled;
             virtual void cleanup();
-        public:
-
-            gstreamer_sink_base();
-            virtual ~gstreamer_sink_base();
-            
-            
-            virtual bool create_pipeline(const std::string& pipeline_);
-            virtual bool set_caps(cv::Size image_size, int channels, int depth = CV_8U);
-
-            void PushImage(SyncedMemory img, cv::cuda::Stream& stream);
-            // Used for gstreamer to indicate that the appsrc needs to either feed data or stop feeding data
-            virtual void start_feed();
-            virtual void stop_feed();
         };
 
 
