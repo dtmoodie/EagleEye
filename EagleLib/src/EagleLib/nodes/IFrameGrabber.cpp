@@ -200,8 +200,7 @@ FrameGrabberBuffered::~FrameGrabberBuffered()
 
 FrameGrabberThreaded::~FrameGrabberThreaded()
 {
-    buffer_thread.interrupt();
-    buffer_thread.join();
+    StopThreads();
 }
 
 /*TS<SyncedMemory> FrameGrabberBuffered::GetCurrentFrame(cv::cuda::Stream& stream)

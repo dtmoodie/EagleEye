@@ -18,6 +18,7 @@
 #include <boost/log/common.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/setup/file.hpp>
+#include <boost/lexical_cast/try_lexical_convert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 #include <boost/tokenizer.hpp>
@@ -262,15 +263,27 @@ int main(int argc, char* argv[])
         std::vector<std::shared_ptr<mo::Connection>> connections;
         //std::map<std::string, std::function<void(std::string)>> function_map;
         std::vector<std::shared_ptr<mo::ISlot>> slots;
-        
+        std::vector<std::string> documents_list;
         mo::TypedSlot<void(std::string)>* slot;
         slot = new mo::TypedSlot<void(std::string)>(
-            std::bind([](std::string null)->void
+            std::bind([&documents_list](std::string null)->void
             {
-                auto documents = EagleLib::Nodes::IFrameGrabber::ListAllLoadableDocuments();
-                for(auto document : documents)
+                documents_list.clear();
+                auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
+                int index = 0;
+                for(auto constructor : constructors)
                 {
-                    std::cout << "  " << document << "\n";
+                    auto fg_info = dynamic_cast<EagleLib::Nodes::IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
+                    if(fg_info)
+                    {
+                        auto documents = fg_info->ListLoadableDocuments();
+                        for(auto& document : documents)
+                        {
+                            std::cout << " - " << index << "  [" << fg_info->GetObjectName() << "] " << document << "\n";
+                            documents_list.push_back(document);
+                            ++index;
+                        }
+                    }
                 }
             }, std::placeholders::_1));
         slots.emplace_back(slot);
@@ -278,8 +291,20 @@ int main(int argc, char* argv[])
 
         
         slot = new mo::TypedSlot<void(std::string)>(
-            std::bind([&_dataStreams](std::string doc)->void
+            std::bind([&_dataStreams, &documents_list](std::string doc)->void
         {
+            int index = -1;
+            try
+            {
+                index = boost::lexical_cast<int>(doc);
+            }catch(boost::bad_lexical_cast& e)
+            {
+                index = -1;
+            }
+            if(index != -1 && index >= 0 && index < documents_list.size())
+            {
+                doc = documents_list[index];
+            }
             auto fg = EagleLib::Nodes::IFrameGrabber::Create(doc);
             if(fg)
             {
