@@ -26,7 +26,7 @@ long long IPyrOpticalFlow::PrepPyramid()
 {
     if (input->GetChannels() != 1)
     {
-        cv::cuda::cvtColor(input->GetGpuMat(Stream()), greyImg, cv::COLOR_BGR2GRAY, 1, Stream());
+        cv::cuda::cvtColor(input->GetGpuMat(Stream()), greyImg[0], cv::COLOR_BGR2GRAY, 1, Stream());
     }
     else
     {
