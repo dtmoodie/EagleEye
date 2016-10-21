@@ -97,6 +97,7 @@ namespace EagleLib
         
         MO_BEGIN(IFrameGrabber);
             MO_SIGNAL(void, update);
+            MO_SLOT(void, Restart);
             OUTPUT(SyncedMemory, current_frame, SyncedMemory());
         MO_END;
         

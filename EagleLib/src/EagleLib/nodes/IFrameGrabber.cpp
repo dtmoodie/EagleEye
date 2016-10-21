@@ -160,6 +160,10 @@ void IFrameGrabber::InitializeFrameGrabber(IDataStream* stream)
         SetupVariableManager(stream->GetVariableManager().get());
     }
 }
+void IFrameGrabber::Restart()
+{
+    this->LoadFile(this->GetSourceFilename());
+}
 void IFrameGrabber::Init(bool firstInit)
 {
     IMetaObject::Init(firstInit);
@@ -237,6 +241,7 @@ TS<SyncedMemory> FrameGrabberBuffered::GetNextFrame(cv::cuda::Stream& stream)
         frame_grabbed_cv.wait_for(bLock, boost::chrono::milliseconds(10));
         if(attempts > 500)
             return TS<SyncedMemory>();
+        ++attempts;
     }
     int index = 0;
     long long desired_frame;

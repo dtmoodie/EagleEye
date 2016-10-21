@@ -13,7 +13,7 @@ using namespace EagleLib::Nodes;
 bool QtImageDisplay::ProcessImpl()
 {
     cv::Mat mat;
-    if(image)
+    if(image && !image->empty())
     {
         mat = image->GetMat(*_ctx->stream);
     }

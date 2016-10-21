@@ -1,6 +1,7 @@
 #include "EagleLib/SyncedMemory.h"
 #include <EagleLib/utilities/GpuMatAllocators.h>
 #include <EagleLib/utilities/CudaCallbacks.hpp>
+#include <MetaObject/Logging/Log.hpp>
 #ifdef HAVE_MXNET
 
 
@@ -60,6 +61,8 @@ SyncedMemory::SyncedMemory(cv::MatAllocator* cpu_allocator, cv::cuda::GpuMat::Al
 const cv::Mat&                
 SyncedMemory::GetMat(cv::cuda::Stream& stream, int index)
 {
+    if(index < 0 || index >= std::max(h_data.size(), d_data.size()))
+        THROW(debug) << "Index (" << index << ") out of range [0," << std::max(h_data.size(), d_data.size()) << "]";
     if (sync_flags[index] == DEVICE_UPDATED)
     {
         d_data[index].download(h_data[index], stream);
@@ -71,6 +74,8 @@ SyncedMemory::GetMat(cv::cuda::Stream& stream, int index)
 cv::Mat&                    
 SyncedMemory::GetMatMutable(cv::cuda::Stream& stream, int index)
 {
+    if (index < 0 || index >= std::max(h_data.size(), d_data.size()))
+        THROW(debug) << "Index (" << index << ") out of range [0," << std::max(h_data.size(), d_data.size()) << "]";
     if(sync_flags[index] == DO_NOT_SYNC)
         return h_data[index];
     if (sync_flags[index] == DEVICE_UPDATED)
@@ -82,6 +87,8 @@ SyncedMemory::GetMatMutable(cv::cuda::Stream& stream, int index)
 const cv::cuda::GpuMat&        
 SyncedMemory::GetGpuMat(cv::cuda::Stream& stream, int index)
 {
+    if (index < 0 || index >= std::max(h_data.size(), d_data.size()))
+        THROW(debug) << "Index (" << index << ") out of range [0," << std::max(h_data.size(), d_data.size()) << "]";
     if (sync_flags[index] == DO_NOT_SYNC)
         return d_data[index];
     if (sync_flags[index] == HOST_UPDATED)
@@ -96,6 +103,8 @@ SyncedMemory::GetGpuMat(cv::cuda::Stream& stream, int index)
 cv::cuda::GpuMat&            
 SyncedMemory::GetGpuMatMutable(cv::cuda::Stream& stream, int index)
 {
+    if (index < 0 || index >= std::max(h_data.size(), d_data.size()))
+        THROW(debug) << "Index (" << index << ") out of range [0," << std::max(h_data.size(), d_data.size()) << "]";
     if (sync_flags[index] == DO_NOT_SYNC)
         return d_data[index];
     if (sync_flags[index] == HOST_UPDATED)

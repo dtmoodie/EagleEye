@@ -56,6 +56,16 @@ bool frame_grabber_gstreamer::LoadFile(const std::string& file_path)
 {
     if(frame_grabber_cv::h_LoadFile(file_path))
     {
+        cv::Mat test;
+        if(h_cam)
+        {
+            if (!h_cam->read(test))
+            {
+                return false;
+            }
+        }
+        
+        h_cam->set(cv::CAP_PROP_POS_FRAMES, 0);
         boost::property_tree::ptree file_history;
         if(boost::filesystem::exists("file_history.json"))
         {
@@ -68,6 +78,13 @@ bool frame_grabber_gstreamer::LoadFile(const std::string& file_path)
         child.put("path", file_path);
         if(!file_history.get_child_optional("files"))
             file_history.add_child("files", boost::property_tree::ptree());
+        for(auto& paths : file_history.get_child("files"))
+        {
+            if(child.get_child("path").get_value<std::string>() == file_path)
+            {
+                return true;
+            }
+        }
         file_history.get_child("files").push_back(std::make_pair("", child));
         boost::property_tree::json_parser::write_json("file_history.json", file_history);
         return true;
@@ -80,7 +97,38 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_gstreamer::GetCoordinateManage
     return coordinate_manager;
 }
 
+TS<SyncedMemory> frame_grabber_gstreamer::GetNextFrameImpl(cv::cuda::Stream& stream)
+{
+    if (d_cam)
+    {
 
+    }
+    if (h_cam)
+    {
+        cv::Mat h_mat;
+        if (h_cam->read(h_mat))
+        {
+            if (!h_mat.empty())
+            {
+                cv::cuda::GpuMat d_mat;
+                d_mat.upload(h_mat, stream);
+                return TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (long long)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
+            }
+        }else
+        {
+            double pos = h_cam->get(cv::CAP_PROP_POS_AVI_RATIO);
+            if(pos == 1.0)
+            {
+                sig_eof();
+                if(loop)
+                {
+                    h_cam->set(cv::CAP_PROP_POS_FRAMES, 0);
+                }
+            }
+        }
+    }
+    return TS<SyncedMemory>();
+}
 
 MO_REGISTER_CLASS(frame_grabber_gstreamer, &info);
 #endif // HAVE_GSTREAMER
