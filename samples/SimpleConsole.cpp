@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
         std::vector<std::shared_ptr<mo::Connection>> connections;
         //std::map<std::string, std::function<void(std::string)>> function_map;
         std::vector<std::shared_ptr<mo::ISlot>> slots;
-        std::vector<std::string> documents_list;
+        std::vector<std::pair<std::string, std::string>> documents_list;
         mo::TypedSlot<void(std::string)>* slot;
         slot = new mo::TypedSlot<void(std::string)>(
             std::bind([&documents_list](std::string null)->void
@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
                         for(auto& document : documents)
                         {
                             std::cout << " - " << index << "  [" << fg_info->GetObjectName() << "] " << document << "\n";
-                            documents_list.push_back(document);
+                            documents_list.emplace_back(document, fg_info->GetDisplayName());
                             ++index;
                         }
                     }
@@ -293,6 +293,7 @@ int main(int argc, char* argv[])
         slot = new mo::TypedSlot<void(std::string)>(
             std::bind([&_dataStreams, &documents_list](std::string doc)->void
         {
+            std::string fg_override;
             int index = -1;
             try
             {
@@ -303,9 +304,10 @@ int main(int argc, char* argv[])
             }
             if(index != -1 && index >= 0 && index < documents_list.size())
             {
-                doc = documents_list[index];
+                doc = documents_list[index].first;
+                fg_override = documents_list[index].second;
             }
-            auto fg = EagleLib::Nodes::IFrameGrabber::Create(doc);
+            auto fg = EagleLib::Nodes::IFrameGrabber::Create(doc, fg_override);
             if(fg)
             {
                 _dataStreams.push_back(rcc::shared_ptr<EagleLib::IDataStream>(fg->GetDataStream()));
