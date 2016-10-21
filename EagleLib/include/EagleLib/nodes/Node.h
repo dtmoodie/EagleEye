@@ -44,19 +44,14 @@
 #include <shared_ptr.hpp>
 
 // Dependent in house libraries
-#include <MetaObject/Signals/TypedSlot.hpp>
-#include <MetaObject/Signals/detail/SlotMacros.hpp>
-#include <MetaObject/Signals/detail/SignalMacros.hpp>
-#include <MetaObject/Detail/MetaObjectMacros.hpp>
-#include <MetaObject/IMetaObject.hpp>
-#include <MetaObject/IMetaObjectInfo.hpp>
+#include <MetaObject/MetaObject.hpp>
 
 // Dependent 3rd party libraries
 #include <opencv2/core/cuda.hpp>
 #include <EagleLib/rcc/external_includes/cv_core.hpp>
 #include <EagleLib/rcc/external_includes/cv_highgui.hpp>
 
-
+#define SCOPED_PROFILE_NODE mo::scoped_profile COMBINE(scoped_profile, __LINE__)(this->GetTreeName().c_str(), &_rmt_hash, &_rmt_cuda_hash, &Stream());
 namespace mo
 {
     class IVariableManager;

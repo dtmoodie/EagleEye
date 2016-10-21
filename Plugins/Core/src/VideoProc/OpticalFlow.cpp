@@ -4,18 +4,12 @@
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
 
-
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-
 
 #if __linux
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cudaoptflow")
 #endif
-
-
-MO_REGISTER_CLASS(SparsePyrLKOpticalFlow)
-MO_REGISTER_CLASS(DensePyrLKOpticalFlow)
 
 IPyrOpticalFlow::IPyrOpticalFlow()
 {
@@ -95,6 +89,7 @@ bool DensePyrLKOpticalFlow::ProcessImpl()
     }
     return false;
 }
+
 bool SparsePyrLKOpticalFlow::ProcessImpl()
 {
     if (window_size_param.modified ||
@@ -139,3 +134,6 @@ bool SparsePyrLKOpticalFlow::ProcessImpl()
     }
     return false;
 }
+
+MO_REGISTER_CLASS(SparsePyrLKOpticalFlow)
+MO_REGISTER_CLASS(DensePyrLKOpticalFlow)

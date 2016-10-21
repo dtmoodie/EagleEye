@@ -2,7 +2,7 @@
 #include "EagleLib/rcc/SystemTable.hpp"
 #include "EagleLib/utilities/sorting.hpp"
 #include "EagleLib/Logging.h"
-#include "Remotery.h"
+
 
 #include "EagleLib/ParameterBuffer.h"
 #include "EagleLib/IVariableSink.h"
@@ -19,6 +19,7 @@
 #include "MetaObject/Parameters/VariableManager.h"
 #include "MetaObject/Thread/InterThread.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
+#include <MetaObject/Logging/Profiling.hpp>
 
 #include <opencv2/core.hpp>
 #include <boost/chrono.hpp>
@@ -133,10 +134,11 @@ namespace EagleLib
         cv::cuda::Stream                                          cuda_stream;
         boost::thread                                             processing_thread;
         volatile bool                                             dirty_flag;
-        cv::cuda::Stream                                          streams[2];
         std::vector<IVariableSink*>                               variable_sinks;
         // These are threads for attempted connections
-        std::vector<boost::thread*> connection_threads;
+        std::vector<boost::thread*>                               connection_threads;
+        mo::Context                                               _context;
+        cv::cuda::Stream                                          _stream;
     };
 }
 
@@ -164,6 +166,8 @@ DataStream::DataStream()
     stream_id = 0;
     _thread_id = 0;
     StartThread();
+    _ctx = &_context;
+    _context.stream = &_stream;
 }
 void DataStream::InitCustom(bool firstInit)
 {
@@ -536,15 +540,17 @@ void DataStream::ResumeThread()
 
 void DataStream::process()
 {
+    mo::SetThreadName("DataStreamThread");
+    unsigned int rmt_hash = 0;
+    unsigned int rmt_cuda_hash = 0;
     dirty_flag = true;
     int iteration_count = 0;
-    //Signals::thread_registry::get_instance()->register_thread(Signals::ANY);
     mo::ThreadRegistry::Instance()->RegisterThread(mo::ThreadRegistry::ANY);
     
     if(_thread_id == 0)
         _thread_id = mo::GetThisThread();
 
-    rmt_SetCurrentThreadName("DataStreamThread");
+    //rmt_SetCurrentThreadName("DataStreamThread");
 
     mo::TypedSlot<void(EagleLib::Nodes::Node*)> node_update_slot(
         std::bind([this](EagleLib::Nodes::Node* node)->void
@@ -591,13 +597,15 @@ void DataStream::process()
     {
         if(!paused)
         {
-            //Signals::thread_specific_queue::run(_thread_id);
-            mo::ThreadSpecificQueue::Run(_thread_id);
-
+            {
+            
+                mo::scoped_profile profile("Event loop", &rmt_hash, &rmt_cuda_hash, _context.stream);
+                mo::ThreadSpecificQueue::Run(_thread_id);
+            }
             if(dirty_flag || run_continuously == true)
             {
                 dirty_flag = false;
-                
+                mo::scoped_profile profile("Processing nodes", &rmt_hash, &rmt_cuda_hash, _context.stream);
                 for(auto& node : top_level_nodes)
                 {
                     node->Process();

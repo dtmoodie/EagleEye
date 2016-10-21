@@ -1,9 +1,8 @@
 #include "EagleLib/nodes/IFrameGrabber.hpp"
-#include "EagleLib/Logging.h"
 #include "EagleLib/IDataStream.hpp"
 #include "EagleLib/utilities/sorting.hpp"
-#include "Remotery.h"
 #include <MetaObject/Logging/Log.hpp>
+#include <MetaObject/Logging/Profiling.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
 #include <MetaObject/MetaObjectFactory.hpp>
 
@@ -317,6 +316,7 @@ long long FrameGrabberBuffered::GetFrameNumber()
 }
 void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
 {
+    SCOPED_PROFILE_NODE
     boost::mutex::scoped_lock bLock(buffer_mtx);
 
     // Waiting for the reading thread to catch up
@@ -342,7 +342,8 @@ void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
 void FrameGrabberThreaded::Buffer()
 {
     cv::cuda::Stream read_stream;
-    rmt_SetCurrentThreadName("FrameGrabberThread");
+    //rmt_SetCurrentThreadName("FrameGrabberThread");
+    mo::SetThreadName("FrameGrabberThread");
     LOG(info) << "Starting buffer thread";
     while(!boost::this_thread::interruption_requested())
     {   
@@ -352,7 +353,7 @@ void FrameGrabberThreaded::Buffer()
         {
             TS<SyncedMemory> frame;
             {
-                rmt_ScopedCPUSample(BufferingFrame);
+                SCOPED_PROFILE_NODE
                 boost::mutex::scoped_lock gLock(grabber_mtx);
                 frame = GetNextFrameImpl(read_stream);
             }            
