@@ -33,6 +33,7 @@ namespace EagleLib
             MO_END;
 
             frame_grabber_gstreamer();
+            ~frame_grabber_gstreamer();
             virtual bool LoadFile(const std::string& file_path);
             virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
             TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);

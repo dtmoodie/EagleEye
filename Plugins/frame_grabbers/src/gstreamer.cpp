@@ -6,7 +6,10 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-
+frame_grabber_gstreamer::~frame_grabber_gstreamer()
+{
+    StopThreads();
+}
 int frame_grabber_gstreamer::CanLoadDocument(const std::string& document)
 {
     boost::filesystem::path path(document);
@@ -52,8 +55,17 @@ frame_grabber_gstreamer::frame_grabber_gstreamer():
     }
 }
 
-bool frame_grabber_gstreamer::LoadFile(const std::string& file_path)
+bool frame_grabber_gstreamer::LoadFile(const std::string& file_path_)
 {
+    std::string file_path = file_path_;
+    /*if(boost::filesystem::is_regular_file(file_path_))
+    {
+        file_path = "filesrc location=" + file_path_ + " ! decodebin ! appsink";
+    }else
+    {
+        file_path = file_path_;
+    }*/
+
     if(frame_grabber_cv::h_LoadFile(file_path))
     {
         cv::Mat test;

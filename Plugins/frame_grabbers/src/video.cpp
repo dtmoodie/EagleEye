@@ -4,7 +4,10 @@
 #include <ObjectInterfacePerModule.h>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-
+frame_grabber_video::~frame_grabber_video()
+{
+    StopThreads();
+}
 int frame_grabber_video::CanLoadDocument(const std::string& document)
 {
     boost::filesystem::path path(document);

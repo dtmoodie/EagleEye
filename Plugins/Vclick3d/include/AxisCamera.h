@@ -4,8 +4,7 @@
 #include "qnetworkreply.h"
 #include "qtcpsocket.h"
 #include "ObjectInterfacePerModule.h"
-#include <EagleLib/Project_defs.hpp>
-
+#include <MetaObject/MetaObject.hpp>
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
@@ -37,9 +36,6 @@ namespace EagleLib
         QNetworkAccessManager* network_manager;
         QNetworkReply* network_request;        
     public:
-        Parameters::ITypedParameter<int>* zoom;
-        Parameters::ITypedParameter<int>* focus;
-
         AxisSocket();
         void request(QUrl url);
         QString username;
@@ -53,12 +49,6 @@ namespace EagleLib
 
     class AxisCamera : public Node
     {
-        std::shared_ptr<Signals::connection> zoomConnection;
-        std::shared_ptr<Signals::connection> panConnection;
-        std::shared_ptr<Signals::connection> tiltConnection;
-        std::shared_ptr<Signals::connection> ipConnection;
-        std::shared_ptr<Signals::connection> usernameConnection;
-        std::shared_ptr<Signals::connection> passwordConnection;
         boost::shared_ptr<AxisSocket> socket;
         
         void on_zoomRequest();
@@ -67,10 +57,12 @@ namespace EagleLib
         void on_addressChange();
         void on_credentialChange();
         void get_position();
-        Parameters::ITypedParameter<int>* currentZoom;
-        Parameters::ITypedParameter<int>* currentFocus;
 
     public:
+        MO_DERIVE(AxisCamera, Node)
+            
+
+        MO_END;
         AxisCamera();
         ~AxisCamera();
         virtual void NodeInit(bool firstInit);

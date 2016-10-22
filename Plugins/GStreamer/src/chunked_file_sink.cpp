@@ -87,3 +87,76 @@ bool chunked_file_sink::ProcessImpl()
 }
 
 MO_REGISTER_CLASS(chunked_file_sink);
+
+int JpegKeyframer::CanLoadDocument(const std::string& doc)
+{
+    if(doc.find("http") != std::string::npos && doc.find("mjpg") != std::string::npos)
+    {
+        return 10;
+    }
+    return 0;
+}
+
+int JpegKeyframer::LoadTimeout()
+{
+    return 10000;
+}
+
+bool JpegKeyframer::LoadFile(const std::string& file_path)
+{
+    std::stringstream pipeline;
+    pipeline << "souphttpsrc location=" << file_path;
+    pipeline << " ! multipartdemux ! appsink name=mysink";
+    
+    if(this->create_pipeline(pipeline.str()))
+    {
+        if(this->set_caps("image/jpeg"))
+        {
+            this->start_pipeline();
+            return true;
+        }
+    }
+    return false;
+}
+
+GstFlowReturn JpegKeyframer::on_pull()
+{
+    GstSample *sample = gst_base_sink_get_last_sample(GST_BASE_SINK(_appsink));
+    if (sample)
+    {
+        GstBuffer *buffer;
+        GstCaps *caps;
+        GstStructure *s;
+        GstMapInfo map;
+        caps = gst_sample_get_caps(sample);
+        if (!caps)
+        {
+            LOG(debug) << "could not get sample caps";
+            return GST_FLOW_OK;
+        }
+        ++keyframe_count;
+    }
+    return GST_FLOW_OK;
+}
+    
+bool JpegKeyframer::ProcessImpl()
+{
+    return true;
+}
+TS<SyncedMemory> JpegKeyframer::GetCurrentFrame(cv::cuda::Stream& stream)
+{
+    return TS<SyncedMemory>();
+}
+long long JpegKeyframer::GetNumFrames()
+{
+    return -1;
+}
+long long JpegKeyframer::GetFrameNum()
+{
+    return keyframe_count;
+}
+rcc::shared_ptr<ICoordinateManager> JpegKeyframer::GetCoordinateManager()
+{
+    return rcc::shared_ptr<ICoordinateManager>();
+}
+MO_REGISTER_CLASS(JpegKeyframer);

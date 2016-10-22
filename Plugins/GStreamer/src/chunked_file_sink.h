@@ -25,4 +25,22 @@ namespace EagleLib
         bool ProcessImpl();
         virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
     };
+
+    class PLUGIN_EXPORTS JpegKeyframer: virtual public gstreamer_src_base, virtual public Nodes::FrameGrabberBuffered
+    {
+    public:
+        MO_DERIVE(JpegKeyframer, Nodes::FrameGrabberBuffered);
+            PROPERTY(long long, keyframe_count, 0);
+        MO_END;
+        static int CanLoadDocument(const std::string& doc);
+        static int LoadTimeout();
+        TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
+        long long GetNumFrames();
+        long long GetFrameNum();
+        bool LoadFile(const std::string& file_path);
+        GstFlowReturn on_pull();
+        rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
+    protected:
+        bool ProcessImpl();
+    };
 }

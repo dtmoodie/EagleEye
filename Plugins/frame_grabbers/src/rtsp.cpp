@@ -85,8 +85,8 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 #endif
     
     h_cam.release();
-    LOG(info) << "Attemping to load " << file_to_load;
-    LOG(debug) << "Gstreamer string: " << gstreamer_string;
+    LOG_NODE(info) << "Attemping to load " << file_to_load;
+    LOG_NODE(debug) << "Gstreamer string: " << gstreamer_string;
     _reconnect = false;
     playback_frame_number = 0;
     try
@@ -98,7 +98,7 @@ bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
             {
                 loaded_document = file_to_load;
                 playback_frame_number = h_cam->get(cv::CAP_PROP_POS_FRAMES) + 1;
-                LOG(info) << "Load success, first frame number: " << playback_frame_number;
+                LOG_NODE(info) << "Load success, first frame number: " << playback_frame_number;
                 frame_buffer.clear();
                 buffer_begin_frame_number = playback_frame_number.load();
                 buffer_end_frame_number = playback_frame_number.load();
@@ -119,7 +119,7 @@ void frame_grabber_rtsp::seek_relative_msec(double msec)
         double current = h_cam->get(cv::CAP_PROP_POS_MSEC);
         if(!h_cam->set(cv::CAP_PROP_POS_MSEC, current + msec))
         {
-            LOG(debug) << "Failed to seek by (" << msec << " ms) from " << current << " ms";
+            LOG_NODE(debug) << "Failed to seek by (" << msec << " ms) from " << current << " ms";
         }
     }
 }

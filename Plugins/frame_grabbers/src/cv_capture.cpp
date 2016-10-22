@@ -57,7 +57,8 @@ bool frame_grabber_cv::d_LoadFile(const std::string& file_path)
 bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
 {
     h_cam.release();
-    LOG(info) << "Attemping to load " << file_path;
+    //LOG(info) << "Attemping to load " << file_path;
+    BOOST_LOG_TRIVIAL(info ) << "[" << GetTreeName() << "::h_loadFile] Trying to load: \"" << file_path << "\"";
     boost::mutex::scoped_lock lock(buffer_mtx);
 
     frame_buffer.clear();
@@ -161,12 +162,7 @@ TS<SyncedMemory> frame_grabber_cv::GetNextFrameImpl(cv::cuda::Stream& stream)
     return TS<SyncedMemory>();
 }
 
-void frame_grabber_cv::Serialize(ISimpleSerializer* pSerializer)
-{
-    FrameGrabberBuffered::Serialize(pSerializer);
-    SERIALIZE(h_cam);
-    SERIALIZE(d_cam);
-}
+
 frame_grabber_camera::frame_grabber_camera()
 {
     this->_is_stream = true;
