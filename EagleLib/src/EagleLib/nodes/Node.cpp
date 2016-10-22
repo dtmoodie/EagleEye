@@ -500,7 +500,7 @@ IDataStream* Node::GetDataStream()
 
 std::string Node::GetTreeName() const
 {
-    return GetTypeName() + boost::lexical_cast<std::string>(_unique_id);
+    return std::string(GetTypeName()) + boost::lexical_cast<std::string>(_unique_id);
 }
 
 

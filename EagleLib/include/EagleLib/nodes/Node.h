@@ -52,6 +52,7 @@
 #include <EagleLib/rcc/external_includes/cv_highgui.hpp>
 
 #define SCOPED_PROFILE_NODE mo::scoped_profile COMBINE(scoped_profile, __LINE__)(this->GetTreeName().c_str(), &_rmt_hash, &_rmt_cuda_hash, &Stream());
+#define LOG_NODE(severity) BOOST_LOG_TRIVIAL(severity) << "[" << this->GetTreeName() << "::" __FUNCTION__ "] - "
 namespace mo
 {
     class IVariableManager;

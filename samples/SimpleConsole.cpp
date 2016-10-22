@@ -310,7 +310,9 @@ int main(int argc, char* argv[])
             auto fg = EagleLib::Nodes::IFrameGrabber::Create(doc, fg_override);
             if(fg)
             {
-                _dataStreams.push_back(rcc::shared_ptr<EagleLib::IDataStream>(fg->GetDataStream()));
+                rcc::shared_ptr<EagleLib::IDataStream> ds(fg->GetDataStream());
+                _dataStreams.push_back(ds);
+                ds->StartThread();
             }
         }, std::placeholders::_1));
         slots.emplace_back(slot);
@@ -920,6 +922,9 @@ int main(int argc, char* argv[])
                 }
                 if(command_list.size())
                     std::reverse(command_list.begin(), command_list.end());
+            }else
+            {
+                LOG(warning) << "Unable to load scripting file: " << vm["script"].as<std::string>();
             }
         }
         while(!quit)
