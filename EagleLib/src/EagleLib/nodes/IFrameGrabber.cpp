@@ -201,10 +201,7 @@ FrameGrabberBuffered::~FrameGrabberBuffered()
     
 }
 
-FrameGrabberThreaded::~FrameGrabberThreaded()
-{
-    StopThreads();
-}
+
 
 /*TS<SyncedMemory> FrameGrabberBuffered::GetCurrentFrame(cv::cuda::Stream& stream)
 {
@@ -393,7 +390,7 @@ void FrameGrabberThreaded::StopThreads()
 {
     LOG(info) << "Stopping buffer thread";
     buffer_thread.interrupt();
-    DOIF_LOG_FAIL(buffer_thread.joinable(), buffer_thread.join(), trace);
+    buffer_thread.join();
 }
 
 void FrameGrabberThreaded::PauseThreads()
@@ -439,11 +436,6 @@ void FrameGrabberBuffered::Init(bool firstInit)
     //RegisterParameterCallback("Frame buffer size", f, true, true);
 }
 
-void FrameGrabberThreaded::Init(bool firstInit)
-{
-    FrameGrabberBuffered::Init(firstInit);
-    StartThreads();
-}
 void FrameGrabberBuffered::Serialize(ISimpleSerializer* pSerializer)
 {
     IFrameGrabber::Serialize(pSerializer);

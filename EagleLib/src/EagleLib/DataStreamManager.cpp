@@ -165,7 +165,6 @@ DataStream::DataStream()
     paused = false;
     stream_id = 0;
     _thread_id = 0;
-    StartThread();
     _ctx = &_context;
     _context.stream = &_stream;
 }

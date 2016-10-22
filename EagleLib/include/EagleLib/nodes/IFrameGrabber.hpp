@@ -163,9 +163,6 @@ namespace EagleLib
     class EAGLE_EXPORTS FrameGrabberThreaded: public FrameGrabberBuffered
     {
     public:
-        virtual ~FrameGrabberThreaded();
-        virtual void Init(bool firstInit);
-        
         MO_DERIVE(FrameGrabberThreaded, FrameGrabberBuffered);
             MO_SLOT(void, StartThreads);
             MO_SLOT(void, StopThreads);
