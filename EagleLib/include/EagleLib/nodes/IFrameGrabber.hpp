@@ -108,8 +108,8 @@ namespace EagleLib
         IFrameGrabber& operator=(const IFrameGrabber&) = delete;
         ::std::string loaded_document;
         IDataStream* parent_stream;
-        cv::cuda::Stream stream;
-        mo::Context ctx;
+        //cv::cuda::Stream stream;
+        //mo::Context ctx;
     };
     //   [ 0 ,1, 2, 3, 4, 5 ....... N-5, N-4, N-3, N-2, N-1, N]
     //    buffer begin                                  buffer end

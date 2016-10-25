@@ -5,7 +5,7 @@
 #include <MetaObject/Logging/Profiling.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
 #include <MetaObject/MetaObjectFactory.hpp>
-
+#include <MetaObject/Logging/Profiling.hpp>
 #include "ISimpleSerializer.h"
 
 using namespace EagleLib;
@@ -140,8 +140,8 @@ rcc::shared_ptr<IFrameGrabber> IFrameGrabber::Create(const std::string& uri, con
 IFrameGrabber::IFrameGrabber()
 {
     parent_stream = nullptr;
-    this->_ctx = &ctx;
-    ctx.stream = &stream;
+    //this->_ctx = &ctx;
+    //ctx.stream = &stream;
 }
 
 std::string IFrameGrabber::GetSourceFilename()
@@ -235,7 +235,7 @@ TS<SyncedMemory> FrameGrabberBuffered::GetNextFrame(cv::cuda::Stream& stream)
     while(playback_frame_number > buffer_end_frame_number - 5 )
     {
         LOG(trace) << "Playback frame number (" << playback_frame_number << ") is too close to end of frame buffer (" << buffer_end_frame_number << ") - waiting for new frame to be read";
-        frame_grabbed_cv.wait_for(bLock, boost::chrono::milliseconds(10));
+        frame_grabbed_cv.wait_for(bLock, boost::chrono::nanoseconds(10));
         if(attempts > 500)
             return TS<SyncedMemory>();
         ++attempts;
@@ -324,11 +324,13 @@ void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
     // Waiting for the reading thread to catch up
     if(blocking)
     {
+
         while((buffer_begin_frame_number + 5 > playback_frame_number && 
             frame_buffer.size() == frame_buffer.capacity()) && 
             !_is_stream)
         {
             LOG(trace) << "Frame buffer is full and playback frame (" << playback_frame_number << ") is too close to the beginning of the frame buffer (" << buffer_begin_frame_number << ")";
+            sig_update(); // Due to threading, sometimes the threads can get out of sync and the reading thread thinks there isn't new data to read
             frame_read_cv.wait_for(bLock, boost::chrono::milliseconds(10));
         }
     }

@@ -1,6 +1,6 @@
 #pragma once
 #include <src/precompiled.hpp>
-
+#include <EagleLib/ObjectDetection.hpp>
 
 #include <EagleLib/utilities/ColorMapping.hpp>
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -20,7 +20,20 @@ namespace EagleLib
     protected:
         bool ProcessImpl();
     };
-
+    class DrawDetections: public Node
+    {
+    public:
+        MO_DERIVE(DrawDetections, Node)
+            PROPERTY(std::vector<std::string>, labels, std::vector<std::string>());
+            PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>());
+            INPUT(SyncedMemory, image, nullptr);
+            INPUT(std::vector<DetectedObject>, detections, nullptr);
+            PARAM(mo::ReadFile, detection_list, mo::ReadFile(""));
+            OUTPUT(SyncedMemory, image_with_detections, SyncedMemory());
+        MO_END;
+    protected:
+        bool ProcessImpl();
+    };
     /*class Colormap: public Node
     {
     protected:

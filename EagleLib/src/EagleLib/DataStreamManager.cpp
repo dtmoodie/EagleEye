@@ -65,10 +65,7 @@ catch (...)                                                                 \
 }
 
 
-IDataStream::~IDataStream()
-{
 
-}
 namespace EagleLib
 {
     class DataStream: public IDataStream
@@ -547,7 +544,11 @@ void DataStream::process()
     mo::ThreadRegistry::Instance()->RegisterThread(mo::ThreadRegistry::ANY);
     
     if(_thread_id == 0)
+    {
         _thread_id = mo::GetThisThread();
+        this->_ctx->thread_id = _thread_id;
+    }
+    
 
     //rmt_SetCurrentThreadName("DataStreamThread");
 
@@ -557,12 +558,14 @@ void DataStream::process()
             dirty_flag = true;
         }, std::placeholders::_1));
     _sig_manager->Connect(&node_update_slot, "node_updated");
+    node_update_slot.SetContext(this->_ctx);
 
     mo::TypedSlot<void()> update_slot(
         std::bind([this]()->void
         {
             dirty_flag = true;
         }));
+    update_slot.SetContext(this->_ctx);
     _sig_manager->Connect(&update_slot, "update");
 
 
@@ -571,6 +574,7 @@ void DataStream::process()
         {
             dirty_flag = true;
         }, std::placeholders::_1, std::placeholders::_2));
+    parameter_update_slot.SetContext(this->_ctx);
     _sig_manager->Connect(&parameter_update_slot, "parameter_updated");
 
     mo::TypedSlot<void(mo::IMetaObject*, mo::IParameter*)> parameter_added_slot(
@@ -578,6 +582,7 @@ void DataStream::process()
         {
             dirty_flag = true;
         }, std::placeholders::_1, std::placeholders::_2));
+    parameter_added_slot.SetContext(this->_ctx);
     _sig_manager->Connect(&parameter_added_slot, "parameter_added");
     
 
@@ -603,6 +608,7 @@ void DataStream::process()
             }
             if(dirty_flag || run_continuously == true)
             {
+
                 dirty_flag = false;
                 mo::scoped_profile profile("Processing nodes", &rmt_hash, &rmt_cuda_hash, _context.stream);
                 for(auto& node : top_level_nodes)
@@ -615,10 +621,11 @@ void DataStream::process()
                     //sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
                 }
                 ++iteration_count;
-#ifdef _DEBUG
-                if(!dirty_flag)
-                    LOG(trace) << "Dirty flag not set and end of iteration " << iteration_count;
-#endif
+                if (!dirty_flag)
+                    LOG(debug) << "Dirty flag not set and end of iteration " << iteration_count;
+            }else
+            {
+                LOG(trace) << "Dirty flag not set, not stepping";
             }
         }else
         {
@@ -630,11 +637,12 @@ void DataStream::process()
 
 IDataStream::Ptr IDataStream::Create(const std::string& document, const std::string& preferred_frame_grabber)
 {
-    auto stream = mo::MetaObjectFactory::Instance()->Create<IDataStream>("DataStream");
-    if(document.size() == 0)
-        return stream;
-    if(stream->LoadDocument(document, preferred_frame_grabber))
+    //auto stream = mo::MetaObjectFactory::Instance()->Create<IDataStream>("DataStream");
+    auto stream = DataStream::Create();
+    auto fg = IFrameGrabber::Create(document, preferred_frame_grabber);
+    if(fg)
     {
+        stream->AddNode(fg);
         return stream;
     }
     return IDataStream::Ptr();

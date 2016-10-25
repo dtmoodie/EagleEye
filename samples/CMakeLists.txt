@@ -42,6 +42,7 @@ target_link_libraries(SimpleConsole
     ${CUDA_nppc_LIBRARY}
     ${CUDA_CUDART_LIBRARY}
     ${PYTHON_LIBRARY}
+	instantiations
 )
 add_subdirectory(PythonInteractive)
 IF(WIN32)

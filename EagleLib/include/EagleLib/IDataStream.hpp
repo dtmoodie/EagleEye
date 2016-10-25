@@ -35,7 +35,6 @@ namespace EagleLib
         static Ptr Create(const std::string& document = "", const std::string& preferred_frame_grabber = "");
         static bool CanLoadDocument(const std::string& document);
 
-        virtual ~IDataStream();
 
         virtual std::vector<rcc::weak_ptr<Nodes::Node>> GetTopLevelNodes() = 0;
 

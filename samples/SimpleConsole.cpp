@@ -6,6 +6,7 @@
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Signals/RelayManager.hpp>
 #include <MetaObject/Parameters/IVariableManager.h>
+#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
 #include <RuntimeObjectSystem.h>
 
@@ -27,7 +28,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
-
+#include "instantiate.hpp"
 void PrintNodeTree(EagleLib::Nodes::Node* node, int depth)
 {
     for(int i = 0; i < depth; ++i)
@@ -54,6 +55,7 @@ void sig_handler(int s)
 int main(int argc, char* argv[])
 {
     mo::InitProfiling();
+    mo::instantiations::initialize();
     EagleLib::SetupLogging();
     signal(SIGINT, sig_handler);
     signal(SIGILL, sig_handler);
@@ -307,12 +309,11 @@ int main(int argc, char* argv[])
                 doc = documents_list[index].first;
                 fg_override = documents_list[index].second;
             }
-            auto fg = EagleLib::Nodes::IFrameGrabber::Create(doc, fg_override);
-            if(fg)
+            auto ds = EagleLib::IDataStream::Create(doc, fg_override);
+            if(ds)
             {
-                rcc::shared_ptr<EagleLib::IDataStream> ds(fg->GetDataStream());
-                _dataStreams.push_back(ds);
                 ds->StartThread();
+                _dataStreams.push_back(ds);
             }
         }, std::placeholders::_1));
         slots.emplace_back(slot);
@@ -382,7 +383,18 @@ int main(int argc, char* argv[])
                     std::stringstream ss;
                     try
                     {
-                        std::cout << " - " << itr->GetTreeName() << "\n";
+                        auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                        if(func)
+                        {
+                            std::stringstream ss;
+                            ss << " - " << itr->GetTreeName() << " [";
+                            func(itr,ss);
+                            std::cout << ss.str() << "]\n";
+                        }else
+                        {
+                            std::cout << " - " << itr->GetTreeName() << "\n";
+                        }
+                        
                         //THROW(debug) << "Needs to be reimplemented";
                         //mo::IO::Text::Serialize(&ss, itr);
                         //std::cout << " - " << ss.str() << "\n";
@@ -530,7 +542,7 @@ int main(int argc, char* argv[])
                         }
                     }
                 }
-                std::cout << "No stream found by given index\n";
+                std::cout << "No stream found by given index " << idx << "\n";
             }
             if(current_stream)
             {
@@ -546,7 +558,7 @@ int main(int argc, char* argv[])
                         return;
                     }
                 }
-                std::cout << "No node found with given name" << std::endl;
+                std::cout << "No node found with given name " << what << std::endl;
                 // parse name and try to find absolute path to node
             }
             if(current_node)
@@ -570,7 +582,7 @@ int main(int argc, char* argv[])
                             return;
                         }
                     }
-                    std::cout << "No parameter found with given name\n";
+                    std::cout << "No parameter found with given name " << what << "\n";
                 }
             }
         }, std::placeholders::_1));
@@ -687,7 +699,7 @@ int main(int argc, char* argv[])
                             auto input_param = dynamic_cast<mo::InputParameter*>(current_param);
                             if(input_param)
                             {
-                                if(current_node->ConnectInput(output_node, output_param, input_param))
+                                if(current_node->ConnectInput(output_node, output_param, input_param, mo::BlockingStreamBuffer_e))
                                 {
                                     std::cout << "Successfully set input of " << current_param->GetName() << " to " << output_param->GetName();
                                     return;
@@ -705,15 +717,25 @@ int main(int argc, char* argv[])
                     return;
                 }*/
             }
-            if(current_param)
+            if(!current_param)
             {
-                auto pos = value.find(current_param->GetName());
-                if(pos != std::string::npos)
-                {
-                    value = value.substr(current_param->GetName().size());
-                }
+                //auto pos = value.find(current_param->GetName());
+                //if(pos != std::string::npos)
+                //{
+                  //  value = value.substr(current_param->GetName().size());
+                //}
                 //if(Parameters::Persistence::Text::DeSerialize(&value, current_param))
                   //  return;
+            }else
+            {
+                auto func = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(current_param->GetTypeInfo());
+                if(func)
+                {
+                    std::stringstream ss; 
+                    ss << value;
+                    func(current_param, ss);
+                    return;
+                }
             }
             if (current_node)
             {
@@ -848,12 +870,13 @@ int main(int argc, char* argv[])
         {
             if(action == "check")
             {
-                //EagleLib::ObjectManager::Instance().CheckRecompile();
-                mo::MetaObjectFactory::Instance()->CheckCompile();
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-                if(mo::MetaObjectFactory::Instance()->IsCurrentlyCompiling())
+                if(mo::MetaObjectFactory::Instance()->CheckCompile())
                 {
                     std::cout << "Recompiling...\n";
+                    for(auto& ds : _dataStreams)
+                    {
+                        ds->StopThread();
+                    }
                 }else
                 {
                     std::cout << "No changes detected\n";
@@ -969,6 +992,11 @@ int main(int argc, char* argv[])
             for(int i = 0; i < 20; ++i)
                 mo::ThreadSpecificQueue::RunOnce();
         }
+        for(auto& ds : _dataStreams)
+        {
+            ds->StopThread();
+        }
+        _dataStreams.clear();
         std::cout << "Shutting down\n";
     }
     gui_thread.interrupt();

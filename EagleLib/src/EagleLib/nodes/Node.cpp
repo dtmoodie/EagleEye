@@ -254,7 +254,11 @@ Node::Ptr Node::AddChild(Node* child)
 
 Node::Ptr Node::AddChild(Node::Ptr child)
 {
-    boost::recursive_mutex::scoped_lock lock(*_mtx);
+    if(mo::GetThisThread() != _ctx->thread_id)
+    {
+        mo::ThreadSpecificQueue::Push(std::bind((Node::Ptr(Node::*)(Node::Ptr))&Node::AddChild, this, child), _ctx->thread_id, this);
+        return child;
+    }
     if (child == nullptr)
         return child;
     if(std::find(_children.begin(), _children.end(), child) != _children.end())

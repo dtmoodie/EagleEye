@@ -1,5 +1,7 @@
 #include "DisplayHelpers.h"
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
+#include <fstream>
+
 using namespace ::EagleLib;
 using namespace ::EagleLib::Nodes;
 
@@ -21,7 +23,63 @@ bool AutoScale::ProcessImpl()
     cv::cuda::merge(channels,output_image.GetGpuMat(*_ctx->stream), *_ctx->stream);
     return true;
 }
+bool DrawDetections::ProcessImpl()
+{
+    if(detection_list_param.modified)
+    {
+        std::ifstream ifs(detection_list.c_str());
+        if(ifs.is_open())
+        {
+            labels.clear();
+            std::string label;
+            while(ifs >> label)
+                labels.push_back(label);
+            colors.resize(labels.size());
+            for(int i = 0; i < colors.size(); ++i)
+            {
+                colors[i] = cv::Vec3b(i * 180 / colors.size(), 128, 128);
+            }
+            cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
+            cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
+        }
+        detection_list_param.modified = false;
+    }
+    
+    cv::Mat mat_ = image->GetMat(*_ctx->stream);
+    if (image->GetSyncState(0) < SyncedMemory::DEVICE_UPDATED)
+    {
 
+    }else
+    {
+        // TODO async push
+        _ctx->stream->waitForCompletion();
+    }
+    cv::Mat mat = mat_.clone();
+    for(auto& detection : *detections)
+    {
+        cv::Rect rect(detection.boundingBox.x, detection.boundingBox.y, detection.boundingBox.width, detection.boundingBox.height);
+        if(labels.size())
+        {
+            if(detection.detections.size())
+            {
+                if(detection.detections[0].classNumber > 0 && detection.detections[0].classNumber < labels.size())
+                {
+
+                    cv::rectangle(mat, rect, colors[detection.detections[0].classNumber], 3);
+                }
+                else
+                {
+                    
+                }
+            }    
+        }else
+        {
+            // random color for each different detection
+        }
+    }
+    image_with_detections_param.UpdateData(mat, image_param.GetTimestamp(), _ctx);
+    return true;
+}
 /*void
 Colormap::NodeInit(bool firstInit)
 {
@@ -142,6 +200,7 @@ bool Normalize::ProcessImpl()
 
 MO_REGISTER_CLASS(AutoScale)
 //NODE_DEFAULT_CONSTRUCTOR_IMPL(Colormap, Image, Processing)
-MO_REGISTER_CLASS(Normalize, Image, Processing)
+MO_REGISTER_CLASS(Normalize)
+MO_REGISTER_CLASS(DrawDetections)
 //static EagleLib::Nodes::NodeInfo g_registerer_QtColormapDisplay("QtColormapDisplay", { "Image", "Sink" });
 //REGISTERCLASS(QtColormapDisplay, &g_registerer_QtColormapDisplay)

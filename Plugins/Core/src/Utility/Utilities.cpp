@@ -1,11 +1,11 @@
 #include "Utilities.h"
 #include <boost/lexical_cast.hpp>
-
-
-
-/*
+#include <EagleLib/Nodes/NodeInfo.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
+
+/*
+
 
 bool functionQualifier(Parameters::Parameter* parameter)
 {
@@ -63,3 +63,26 @@ cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SyncFunctionCall, Utility)
 */
+
+bool RegionOfInterest::ProcessImpl()
+{
+    if(roi.area())
+    {
+        auto img_roi = cv::Rect(cv::Point(0,0), image->GetSize());
+        auto used_roi = img_roi & roi;
+
+        std::vector<cv::Mat> h_mats;
+        std::vector<cv::cuda::GpuMat> d_mats;
+        const auto& d_inputs = image->GetGpuMatVec(Stream());
+        const auto& h_inputs = image->GetMatVec(Stream());
+        for(int i = 0; i < d_inputs.size(); ++i)
+        {
+            d_mats.push_back(d_inputs[i](used_roi));
+            h_mats.push_back(h_inputs[i](used_roi));
+        }
+        ROI_param.UpdateData(SyncedMemory(h_mats, d_mats), image_param.GetTimestamp(), _ctx);
+        return true;
+    }
+    return false;
+}
+MO_REGISTER_CLASS(RegionOfInterest);

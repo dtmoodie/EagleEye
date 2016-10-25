@@ -107,10 +107,33 @@ bool Algorithm::CheckInputs()
     
     for(auto input : inputs)
     {
-        if(!input->GetInput(ts) && !input->CheckFlags(Optional_e))
+        if(!input->GetInput(ts))
         {
-            LOG(trace) << input->GetTreeName() << " failed to get input at timestamp: " << ts;
-            return false;
+            if(input->CheckFlags(Optional_e))
+            {
+                // If the input isn't set and it's optional then this is ok
+                if(input->GetInputParam())
+                {
+                    // Input is optional and set, but couldn't get the right timestamp, error
+                    LOG(trace) << "Failed to get input \"" << input->GetTreeName() << "\" at timestamp " << ts;
+                    return false;
+                }else
+                {
+                    LOG(trace) << "Optional input not set \"" << input->GetTreeName() << "\"";
+                }
+            }else
+            {
+                // Input is not optional
+                if (input->GetInputParam())
+                {
+                    LOG(debug) << "Failed to get input \"" << input->GetTreeName() << "\" at timestamp " << ts;
+                    return false;
+                }else
+                {
+                    LOG(debug) << "Input not set \"" << input->GetTreeName() << "\"";
+                    return false;
+                }
+            }
         }
     }
     return true;

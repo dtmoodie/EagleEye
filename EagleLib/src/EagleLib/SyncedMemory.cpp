@@ -2,17 +2,84 @@
 #include <EagleLib/utilities/GpuMatAllocators.h>
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #include <MetaObject/Logging/Log.hpp>
-#ifdef HAVE_MXNET
+
+#include "MetaObject/Parameters/MetaParameter.hpp"
+#include "MetaObject/Parameters/UI/Qt/OpenCV.hpp"
+#include "MetaObject/Parameters/UI/Qt/Containers.hpp"
+#include "MetaObject/Parameters/UI/Qt/TParameterProxy.hpp"
+#include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
+#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
+#include "MetaObject/Parameters/Buffers/map.hpp"
+#include "MetaObject/Parameters/IO/CerealPolicy.hpp"
+#include <cereal/types/vector.hpp>
+#include <cereal/types/array.hpp>
 
 
+INSTANTIATE_META_PARAMETER(EagleLib::SyncedMemory);
+namespace cereal
+{
+    void save(BinaryOutputArchive& ar, const cv::Mat& mat)
+    {
+        int rows, cols, type;
+        bool continuous;
 
-#endif
+        rows = mat.rows;
+        cols = mat.cols;
+        type = mat.type();
+        continuous = mat.isContinuous();
 
+        ar & rows & cols & type & continuous;
+
+        if (continuous) {
+            const int data_size = rows * cols * mat.elemSize();
+            auto mat_data = cereal::binary_data(mat.ptr(), data_size);
+            ar & mat_data;
+        }
+        else {
+            const int row_size = cols * mat.elemSize();
+            for (int i = 0; i < rows; i++) {
+                auto row_data = cereal::binary_data(mat.ptr(i), row_size);
+                ar & row_data;
+            }
+        }
+    }
+    
+    void load(BinaryInputArchive& ar, cv::Mat& mat)
+    {
+        int rows, cols, type;
+        bool continuous;
+
+        ar & rows & cols & type & continuous;
+
+        if (continuous) {
+            mat.create(rows, cols, type);
+            const int data_size = rows * cols * mat.elemSize();
+            auto mat_data = cereal::binary_data(mat.ptr(), data_size);
+            ar & mat_data;
+        }
+        else {
+            mat.create(rows, cols, type);
+            const int row_size = cols * mat.elemSize();
+            for (int i = 0; i < rows; i++) {
+                auto row_data = cereal::binary_data(mat.ptr(i), row_size);
+                ar & row_data;
+            }
+        }
+    };
+
+    template<class AR> void save(AR& ar, cv::Mat const& mat)
+    {
+    }
+    template<class AR> void load(AR& ar, cv::Mat& mat)
+    {
+    
+    }
+}
 
 using namespace EagleLib;
 SyncedMemory::SyncedMemory()
 {
-    sync_flags.resize(1, SYNCED);
+    
 }
 SyncedMemory::SyncedMemory(const cv::Mat& h_mat)
 {
@@ -63,11 +130,13 @@ SyncedMemory::GetMat(cv::cuda::Stream& stream, int index)
 {
     if(index < 0 || index >= std::max(h_data.size(), d_data.size()))
         THROW(debug) << "Index (" << index << ") out of range [0," << std::max(h_data.size(), d_data.size()) << "]";
+    if(sync_flags[index] == DO_NOT_SYNC)
+        return h_data[index];
     if (sync_flags[index] == DEVICE_UPDATED)
     {
         d_data[index].download(h_data[index], stream);
         sync_flags[index] = SYNCED;
-    }    
+    }
     return h_data[index];
 }
 
@@ -199,7 +268,6 @@ bool SyncedMemory::empty() const
 }
 void SyncedMemory::Synchronize(cv::cuda::Stream& stream)
 {
-
     for(int i = 0; i < h_data.size(); ++i)
     {
         if (sync_flags[i] == DO_NOT_SYNC)
