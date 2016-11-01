@@ -383,21 +383,39 @@ int main(int argc, char* argv[])
                     std::stringstream ss;
                     try
                     {
-                        auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
-                        if(func)
+                        if(itr->CheckFlags(mo::Input_e))
                         {
-                            std::stringstream ss;
-                            ss << " - " << itr->GetTreeName() << " [";
-                            func(itr,ss);
-                            std::cout << ss.str() << "]\n";
-                        }else
-                        {
-                            std::cout << " - " << itr->GetTreeName() << "\n";
+                            if(auto input = dynamic_cast<mo::InputParameter*>(itr))
+                            {
+                                std::stringstream ss;
+                                ss << " - " << itr->GetTreeName() << " [";
+                                auto input_param = input->GetInputParam();
+                                if(input_param)
+                                {
+                                    ss << input_param->GetTreeName();
+                                }else
+                                {
+                                    ss << "input not set";
+                                }
+                                ss << "]\n";
+                                std::cout << ss.str();
+                            }
                         }
-                        
-                        //THROW(debug) << "Needs to be reimplemented";
-                        //mo::IO::Text::Serialize(&ss, itr);
-                        //std::cout << " - " << ss.str() << "\n";
+                        else
+                        {
+                            auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                            if (func)
+                            {
+                                std::stringstream ss;
+                                ss << " - " << itr->GetTreeName() << " [";
+                                func(itr, ss);
+                                std::cout << ss.str() << "]\n";
+                            }
+                            else
+                            {
+                                std::cout << " - " << itr->GetTreeName() << "\n";
+                            }
+                        }
                     }catch(...)
                     {
                         //std::cout << " - " << itr->GetTreeName() << "\n";
@@ -503,6 +521,23 @@ int main(int argc, char* argv[])
                     ss << "No plugins loaded\n";
                 std::cout << ss.str() << std::endl;
             }
+            if(what == "tree")
+            {
+                if (current_stream)
+                {
+                    auto nodes = current_stream->GetNodes();
+                    for (auto& node : nodes)
+                    {
+                        PrintNodeTree(node.Get(), 0);
+                    }
+                }
+                else if (current_node)
+                {
+                    auto nodes = current_node->GetDataStream()->GetNodes();
+                    for(auto node : nodes)
+                        PrintNodeTree(node.Get(), 0);
+                }
+            }
         };
         slot = new mo::TypedSlot<void(std::string)>(std::bind(func, std::placeholders::_1));
         slots.emplace_back(slot);
@@ -569,6 +604,14 @@ int main(int argc, char* argv[])
                     current_node = child.Get();
                     current_stream.reset();
                     current_param = nullptr;
+                    std::cout << "Successfully set node to " << child->GetTreeName() << "\n";
+                    return;
+                } else if(auto node = current_node->GetNodeInScope(what))
+                {
+                    current_node = node;
+                    current_stream.reset();
+                    current_param = nullptr;
+                    std::cout << "Successfully set node to " << node->GetTreeName() << "\n";
                     return;
                 }else
                 {
@@ -701,7 +744,7 @@ int main(int argc, char* argv[])
                             {
                                 if(current_node->ConnectInput(output_node, output_param, input_param, mo::BlockingStreamBuffer_e))
                                 {
-                                    std::cout << "Successfully set input of " << current_param->GetName() << " to " << output_param->GetName();
+                                    std::cout << "Successfully set input of " << current_param->GetName() << " to " << output_param->GetName() << "\n";
                                     return;
                                 }
                             }
