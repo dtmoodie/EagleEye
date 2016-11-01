@@ -3,7 +3,7 @@
 #include "EagleLib/Signals.h"
 #include <MetaObject/IMetaObject.hpp>
 #include <MetaObject/Detail/MetaObjectMacros.hpp>
-#include <MetaObject/SIgnals/detail/SignalMacros.hpp>
+#include <MetaObject/Signals/detail/SignalMacros.hpp>
 #include <shared_ptr.hpp>
 
 #include <opencv2/core/types.hpp>

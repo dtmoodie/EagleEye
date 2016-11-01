@@ -14,9 +14,7 @@ namespace EagleLib
         virtual cv::Mat_<float> GetMat(float min, float max, int resolution);
         template<typename A> void serialize(A& ar)
         {
-            ar(_red);
-            ar(_green);
-            ar(_blue);
+
         }
         cv::Vec3f Interpolate(float x);
     private:

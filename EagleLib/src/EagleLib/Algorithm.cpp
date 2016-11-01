@@ -158,7 +158,8 @@ void Algorithm::SetSyncMethod(SyncMethod _method)
 {
     if(_pimpl->_sync_method == SyncEvery && _method != SyncEvery)
     {
-        std::swap(_pimpl->_ts_processing_queue, std::queue<long long>());
+        //std::swap(_pimpl->_ts_processing_queue, std::queue<long long>());
+        _pimpl->_ts_processing_queue = std::queue<long long>();
     }
     _pimpl->_sync_method = _method;
     

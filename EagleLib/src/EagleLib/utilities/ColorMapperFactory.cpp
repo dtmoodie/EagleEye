@@ -1,5 +1,6 @@
 #include "EagleLib/utilities/ColorMapperFactory.hpp"
 #include "EagleLib/utilities/ColorScale.hpp"
+#include <fstream>
 #include <boost/filesystem.hpp>
 #if defined(EAGLELIB_HAVE_CEREAL)
 #include "EagleLib/utilities/LinearColormapper.hpp"

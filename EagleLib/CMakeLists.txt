@@ -104,7 +104,7 @@ INCLUDE_DIRECTORIES(
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
     ${Qt5Core_INCLUDE_DIRS}
-	"${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
     ${Parameters_INCLUDE}
     ${Qt5Gui_INCLUDE_DIRS} 
     ${Qt5Widgets_INCLUDE_DIRS}
@@ -119,8 +119,6 @@ set_target_properties(MetaObject PROPERTIES FOLDER Dependencies)
 IF(NOT WIN32)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
-
-    SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 ENDIF()
 
 

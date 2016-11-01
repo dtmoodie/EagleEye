@@ -10,9 +10,9 @@
 #include "EagleLib/ICoordinateManager.h"
 #include "EagleLib/rendering/RenderingEngine.h"
 #include "EagleLib/tracking/ITrackManager.h"
-#include "EagleLib/nodes/IFrameGrabber.hpp"
-#include "EagleLib/nodes/Node.h"
-#include "EagleLib/nodes/NodeFactory.h"
+#include "EagleLib/Nodes/IFrameGrabber.hpp"
+#include "EagleLib/Nodes/Node.h"
+#include "EagleLib/Nodes/NodeFactory.h"
 
 #include "MetaObject/Signals/TypedSlot.hpp"
 #include "MetaObject/Signals/RelayManager.hpp"

@@ -20,8 +20,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include <boost/thread/recursive_mutex.hpp>
 #include <queue>
 #include <boost/thread.hpp>
-#ifndef __NVCC__
-#include <boost/log/trivial.hpp>
+#ifndef __CUDA_ARCH__
+#include <MetaObject/Logging/Log.hpp>
 #endif
 namespace EagleLib
 {
