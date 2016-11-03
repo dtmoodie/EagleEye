@@ -279,7 +279,18 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
 
     if(valid_frame_grabbers.empty())
     {
-        LOG(warning) << "No valid frame grabbers for " << file_to_load;
+        auto f = [&constructors]()->std::string
+        {
+            std::stringstream ss;
+            for(auto& constructor : constructors)
+            {
+                ss << constructor->GetName() << ", ";
+            }
+            return ss.str();
+        };
+        LOG(warning) << "No valid frame grabbers for " << file_to_load
+                     << " framegrabbers: " << f();
+
         return false;
     }
     // Pick the frame grabber with highest priority
@@ -616,10 +627,10 @@ void DataStream::process()
                     node->Process();
                 }
 
-                for(auto sink : variable_sinks)
+                /*for(auto sink : variable_sinks)
                 {
                     //sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
-                }
+                }*/
                 ++iteration_count;
                 if (!dirty_flag)
                     LOG(debug) << "Dirty flag not set and end of iteration " << iteration_count;

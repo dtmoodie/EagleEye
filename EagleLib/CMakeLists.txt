@@ -229,7 +229,6 @@ TARGET_LINK_LIBRARIES(EagleLib
         ${OpenCV_LIBS}
         pplx
         ${Parameters_LIBRARIES}
-        ${CUDA_CUDA_LIBRARY}
         ${CUDA_CUDART_LIBRARY}
         Qt5::OpenGL
         RuntimeObjectSystem

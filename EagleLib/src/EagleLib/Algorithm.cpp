@@ -173,6 +173,7 @@ void Algorithm::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
         {
             long long ts = param->GetTimestamp();
             boost::recursive_mutex::scoped_lock lock(_pimpl->_mtx);
+#ifdef _MSC_VER
 #ifdef _DEBUG
             _pimpl->timestamps.push_back(ts);
             if(_pimpl->_ts_processing_queue.size() && ts != (_pimpl->_ts_processing_queue.back() + 1))
@@ -182,6 +183,7 @@ void Algorithm::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
             {
                 LOG(debug) << "Timestamp (" << ts << ") exists in processing queue.";
             }
+#endif
 #endif
             _pimpl->_ts_processing_queue.push(ts);
         }

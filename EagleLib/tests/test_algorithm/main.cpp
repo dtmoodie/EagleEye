@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(test_threaded_input)
     {
         mo::Context _ctx;
         obj->SetContext(&_ctx);
-        BOOST_REQUIRE(obj->ConnectInput("input", &output));
+        BOOST_REQUIRE(obj->ConnectInput("input", nullptr, &output));
         int success_count = 0;
         while(success_count < 1000)
         {
@@ -180,8 +180,8 @@ BOOST_AUTO_TEST_CASE(test_desynced_nput)
     {
         mo::Context _ctx;
         obj->SetContext(&_ctx);
-        BOOST_REQUIRE(obj->ConnectInput("input1", &fast_output));
-        BOOST_REQUIRE(obj->ConnectInput("input2", &slow_output));
+        BOOST_REQUIRE(obj->ConnectInput("input1", nullptr, &fast_output));
+        BOOST_REQUIRE(obj->ConnectInput("input2", nullptr, &slow_output));
 
         int success_count = 0;
         while(success_count < 999)

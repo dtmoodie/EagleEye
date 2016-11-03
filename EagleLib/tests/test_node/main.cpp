@@ -1,11 +1,11 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 
 
 #include "EagleLib/Logging.h"
-#include "EagleLib/nodes/NodeInfo.hpp"
+#include "EagleLib/Nodes/NodeInfo.hpp"
 
 #include "MetaObject/Parameters/ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
