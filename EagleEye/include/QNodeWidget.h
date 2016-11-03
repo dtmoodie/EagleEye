@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include "qgraphicsitem.h"
 #include "qwidget.h"
 #include <boost/type_traits.hpp>

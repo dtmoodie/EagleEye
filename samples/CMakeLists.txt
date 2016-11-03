@@ -30,6 +30,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_executable(SimpleConsole SimpleConsole.cpp)
 add_dependencies(SimpleConsole EagleLib)
 target_link_libraries(SimpleConsole
+    MetaObject
     EagleLib
     ${Boost_LIBRARIES}
     RuntimeObjectSystem
@@ -42,7 +43,7 @@ target_link_libraries(SimpleConsole
     ${CUDA_nppc_LIBRARY}
     ${CUDA_CUDART_LIBRARY}
     ${PYTHON_LIBRARY}
-	instantiations
+    instantiations
 )
 add_subdirectory(PythonInteractive)
 IF(WIN32)

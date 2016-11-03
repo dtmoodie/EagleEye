@@ -1,5 +1,5 @@
-#include <EagleLib/nodes/NodeManager.h>
-#include "EagleLib/nodes/Node.h"
+#include <EagleLib/Nodes/NodeManager.h>
+#include "EagleLib/Nodes/Node.h"
 #include <boost/program_options.hpp>
 #include <parameters/ParameteredObjectImpl.hpp>
 
