@@ -1,7 +1,7 @@
 #pragma once
 
-#include <EagleLib/nodes/Node.h>
-#include <EagleLib/nodes/VideoProc/Tracking.hpp>
+#include <EagleLib/Nodes/Node.h>
+#include <EagleLib/Nodes/VideoProc/Tracking.hpp>
 #include <boost/circular_buffer.hpp>
 
 #include <MetaObject/Parameters/ParameterMacros.hpp>

@@ -75,8 +75,8 @@ public:
 protected:
     bool ProcessImpl();
     ContourBoundingBox();
-    virtual void NodeInit(bool firstInit);
-    virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
+    //virtual void NodeInit(bool firstInit);
+    //virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
 };
 
 class HistogramThreshold: public Node

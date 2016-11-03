@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include "qnetworkaccessmanager.h"
 #include "qnetworkreply.h"
 #include "qtcpsocket.h"

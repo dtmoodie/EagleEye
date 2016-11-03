@@ -27,7 +27,7 @@ bool caffe_solver::ProcessImpl()
 {
     if(::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
         ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
-    if(solver_description_param.modified && solver_description.size())
+    if(solver_description_param.modified && solver_description.string().size())
     {
         if(boost::filesystem::is_regular_file(solver_description))
         {
@@ -90,7 +90,7 @@ bool caffe_solver::ProcessImpl()
             }
             //CopyLayers(solver.get(), ss.str());
         }
-        if(previous_solver_state.size())
+        if(previous_solver_state.string().size())
         {
             if(boost::filesystem::is_regular_file(previous_solver_state))
                 solver->Restore(previous_solver_state.string().c_str());

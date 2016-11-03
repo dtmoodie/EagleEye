@@ -1,5 +1,5 @@
 #include "precompiled.hpp"
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/ParameterMacros.hpp>
 #include <MetaObject/Parameters/Types.hpp>

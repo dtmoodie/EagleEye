@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include <QtNetwork/qtcpserver.h>
 #include <QtNetwork/qtcpsocket.h>
 #include "RuntimeInclude.h"

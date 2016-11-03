@@ -1,7 +1,7 @@
 #pragma once
 #include "precompiled.hpp"
 #include <EagleLib/rcc/external_includes/cv_superres.hpp>
-#include <EagleLib/nodes/Node.h>
+#include <EagleLib/Nodes/Node.h>
 
 namespace EagleLib
 {

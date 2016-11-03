@@ -1,6 +1,6 @@
 #include "ImageWriter.h"
 
-#include "../remotery/lib/Remotery.h"
+
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

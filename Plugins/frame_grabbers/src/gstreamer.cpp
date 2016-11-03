@@ -1,4 +1,3 @@
-#ifdef HAVE_GSTREAMER
 #include "gstreamer.h"
 #include "precompiled.hpp"
 #include <boost/property_tree/ptree.hpp>
@@ -17,8 +16,9 @@ int frame_grabber_gstreamer::CanLoadDocument(const std::string& document)
     std::string appsink = "appsink";
     if(document.find(appsink) != std::string::npos)
         return 9;
-    if(boost::filesystem::is_regular_file(path))
+    if(boost::filesystem::exists(path))
         return 2;
+    LOG(trace) << "Document is not a regular file";
     return 0;
 }
 std::vector<std::string> frame_grabber_gstreamer::ListLoadableDocuments()
@@ -46,13 +46,13 @@ std::vector<std::string> frame_grabber_gstreamer::ListLoadableDocuments()
 frame_grabber_gstreamer::frame_grabber_gstreamer():
     frame_grabber_cv()
 {
-    if (!gst_is_initialized())
+    /*if (!gst_is_initialized())
     {
         char** argv;
         argv = new char*{ "-vvv" };
         int argc = 1;
         gst_init(&argc, &argv);
-    }
+    }*/
 }
 
 bool frame_grabber_gstreamer::LoadFile(const std::string& file_path_)
@@ -142,5 +142,4 @@ TS<SyncedMemory> frame_grabber_gstreamer::GetNextFrameImpl(cv::cuda::Stream& str
     return TS<SyncedMemory>();
 }
 
-MO_REGISTER_CLASS(frame_grabber_gstreamer, &info);
-#endif // HAVE_GSTREAMER
+MO_REGISTER_CLASS(frame_grabber_gstreamer);

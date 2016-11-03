@@ -1,7 +1,7 @@
 #include "Calibration.h"
 #include <EagleLib/rcc/external_includes/cv_calib3d.hpp>
 #include <EagleLib/rcc/external_includes/cv_highgui.hpp>
-#include <EagleLib/nodes/VideoProc/Tracking.hpp>
+#include <EagleLib/Nodes/VideoProc/Tracking.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 
@@ -122,6 +122,7 @@ bool CalibrateCamera::ProcessImpl()
         reprojection_error_param.UpdateData(quality);
         lastCalibration = object_point_collection.size();
     }
+    return true;
 }
 
 

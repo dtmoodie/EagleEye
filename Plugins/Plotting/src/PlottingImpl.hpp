@@ -1,5 +1,5 @@
 #pragma once
-#include "parameters/Parameters.hpp"
+
 #include "QVector"
 
 #include "opencv2/core.hpp"
@@ -11,7 +11,7 @@
 #include <memory>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
-#include "parameters/Converters/DoubleConverter.hpp"
+
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 

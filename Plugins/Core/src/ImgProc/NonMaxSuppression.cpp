@@ -117,5 +117,5 @@ bool Threshold::ProcessImpl()
 }*/
 
 //MO_REGISTER_CLASS(NonMaxSuppression, Image, Processing)
-MO_REGISTER_CLASS(MinMax, Image, Processing)
-MO_REGISTER_CLASS(Threshold, Image, Processing)
+MO_REGISTER_CLASS(MinMax)
+MO_REGISTER_CLASS(Threshold)

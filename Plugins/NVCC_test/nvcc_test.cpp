@@ -1,7 +1,7 @@
 #include "nvcc_test.h"
 #include "nvcc_test.cuh"
 #include "RuntimeSourceDependency.h"
-#include "EagleLib/rcc/ObjectManager.h"
+
 #include <opencv2/core/cuda_stream_accessor.hpp>
 
 

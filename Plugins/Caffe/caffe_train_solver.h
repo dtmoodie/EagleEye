@@ -1,6 +1,6 @@
 #pragma once
 #define PARAMTERS_GENERATE_PERSISTENCE
-#include <EagleLib/nodes/Node.h>
+#include <EagleLib/Nodes/Node.h>
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Types.hpp>
 

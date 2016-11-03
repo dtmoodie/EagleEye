@@ -85,7 +85,7 @@ JSONWriter::~JSONWriter()
 }
 bool JSONWriter::ProcessImpl()
 {
-    if(ar == nullptr && output_file.size())
+    if(ar == nullptr && output_file.string().size())
     {
         ofs.close();
         ofs.open(output_file.c_str(), std::ios::out);
@@ -175,5 +175,5 @@ bool JSONReader::ProcessImpl()
             ts = input_param->GetTimestamp();
         }
     }
-    
+    return false;
 }
