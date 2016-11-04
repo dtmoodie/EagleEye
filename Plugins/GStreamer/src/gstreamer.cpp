@@ -9,7 +9,7 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 
-#include "../remotery/lib/Remotery.h"
+
 
 #include <QtNetwork/qnetworkinterface.h>
 
@@ -529,7 +529,7 @@ void RTSP_server::onPipeChange()
 
 void RTSP_server::setup(std::string pipeOverride)
 {
-    rmt_ScopedCPUSample(RTSP_server_setup);
+    
     gst_debug_set_active(1);
 
     if (!gst_is_initialized())
@@ -677,7 +677,7 @@ void RTSP_server::setup(std::string pipeOverride)
 
 void RTSP_server::push_image()
 {
-    rmt_ScopedCPUSample(RTSP_server_push_image);
+    
     GstBuffer* buffer;
     auto h_buffer = bufferPool.getBack();
     if (h_buffer)

@@ -124,12 +124,7 @@ namespace EagleLib
         
         virtual long long GetFrameNumber();
         
-        //virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
-        //virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
-        //virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
-        //virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
-        
-
+        virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
 

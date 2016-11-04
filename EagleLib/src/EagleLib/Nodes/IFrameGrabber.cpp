@@ -328,6 +328,15 @@ long long FrameGrabberBuffered::GetFrameNumber()
 {
     return playback_frame_number;
 }
+TS<SyncedMemory> FrameGrabberBuffered::GetCurrentFrame(cv::cuda::Stream& stream)
+{
+    boost::mutex::scoped_lock bLock(buffer_mtx);
+    if(frame_buffer.size())
+    {
+        return frame_buffer.back();
+    }
+    return TS<SyncedMemory>();
+}
 void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
 {
     SCOPED_PROFILE_NODE

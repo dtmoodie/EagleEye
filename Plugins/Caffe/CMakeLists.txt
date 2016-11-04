@@ -14,22 +14,27 @@ if(Caffe_FOUND)
   find_path(CUDNN_BIN_DIR cudnn64_4.dll cudnn64_3.dll libcudnn.so cudnn cudnn.so HINTS "${CUDNN_DIR}/bin" "${CUDA_TOOLKIT_ROOT_DIR}/lib64")
   if(CUDNN_LIBRARY AND CUDNN_INCLUDE_DIR AND CUDNN_LIB_DIR AND CUDNN_BIN_DIR)
     include_directories(
-     ${Caffe_INCLUDE_DIRS}
-     ${EagleLib_INCLUDE_DIRECTORIES}
-     ${GLOG_INCLUDE_DIR}
-     ${CUDNN_INCLUDE_DIR}
-     ${CUDA_TOOLKIT_INCLUDE}
+      ${Caffe_INCLUDE_DIRS}
+      ${EagleLib_INCLUDE_DIRECTORIES}
+      ${GLOG_INCLUDE_DIR}
+      ${CUDNN_INCLUDE_DIR}
+      ${CUDA_TOOLKIT_INCLUDE}
     )
-    SET(CAFFE_BIN_DIR "" CACHE PATH "")
+
+	get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
+	get_filename_component(CAFFE_BIN_DIR_ "${CAFFE_BIN}" DIRECTORY)
+    #find_path(CAFFE_BIN_DIR NAMES libcaffe.dll libcaffe-nv.dll PATHS ${Caffe_INCLUDE_DIRS}/../bin)
+	set(CAFFE_BIN_DIR ${CAFFE_BIN_DIR_} CACHE PATH "" FORCE)
     SET(CAFFE_BIN_DIR_DBG ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
     SET(CAFFE_BIN_DIR_OPT ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
+
 
     LINK_DIRECTORIES(${LINK_DIRS})
     LINK_DIRECTORIES(${CUDNN_LIB_DIR})
     file(GLOB_RECURSE src "*.h" "*.cpp")
     add_library(Caffe SHARED ${src})
     add_dependencies(Caffe EagleLib)
-    SET(BIN_DIRS "${BIN_DIRS};CAFFE" CACHE STRING "" FORCE)
+    SET(BIN_DIRS "${BIN_DIRS};CAFFE;CUDNN" CACHE STRING "" FORCE)
 
     IF(WIN32)
       set_target_properties(libcaffe PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
