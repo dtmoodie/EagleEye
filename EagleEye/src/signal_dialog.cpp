@@ -1,48 +1,48 @@
 #include "signal_dialog.h"
 #include "ui_signal_dialog.h"
-#include <signals/signal_manager.h>
+#include <MetaObject/Signals/RelayManager.hpp>
+#include <MetaObject/Signals/ISignalRelay.hpp>
 #include <qinputdialog.h>
 
-signal_dialog::signal_dialog(Signals::signal_manager* manager, QWidget *parent) :
+signal_dialog::signal_dialog(mo::RelayManager* manager, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::signal_dialog)
 {
     ui->setupUi(this);
     ui->treeWidget->setColumnCount(3);
-    //connect(ui->treeWidget, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)), this, SLOT(on_item_select(QTreeWidgetItem*, int)));
     connect(ui->treeWidget, &QTreeWidget::itemDoubleClicked, this, &signal_dialog::on_item_select);
     update(manager);
 }
 
-void signal_dialog::update(Signals::signal_manager* manager)
+void signal_dialog::update(mo::RelayManager* manager)
 {
     _manager = manager;
     ui->treeWidget->clear();
-    auto all_receivers = manager->get_receivers();
+    auto all_relays = manager->GetAllRelays();
     std::map<std::string, QTreeWidgetItem*> top_level_items;
-    for(auto& receiver : all_receivers)
+    for(auto& relay : all_relays )
     {
         QTreeWidgetItem* parent = nullptr;
-        auto itr = top_level_items.find(receiver.signal_name);
+        auto itr = top_level_items.find(relay.second);
         if(itr != top_level_items.end())
         {
             parent = itr->second;
         }else
         {
             parent = new QTreeWidgetItem(ui->treeWidget);
-            top_level_items[receiver.signal_name] = parent;
-            parent->setText(0, QString::fromStdString(receiver.signal_name));
+            top_level_items[relay.second] = parent;
+            parent->setText(0, QString::fromStdString(relay.second));
         }
         if(parent)
         {
             QTreeWidgetItem* child = new QTreeWidgetItem(parent);
-            child->setText(0, QString::fromStdString(receiver.type.name()));
-            child->setText(2, QString::fromStdString(receiver.signature.name()));
-            child->setText(1, QString::fromStdString(receiver.description));
-            child->setToolTip(0, QString::fromStdString(receiver.tooltip));
+            child->setText(0, QString::fromStdString(relay.second));
+            child->setText(2, QString::fromStdString(relay.first->GetSignature().name()));
+            //child->setText(1, QString::fromStdString(receiver.description));
+            //child->setToolTip(0, QString::fromStdString(receiver.tooltip));
         }
     }
-    auto names = manager->get_signal_names();
+    /*auto names = manager->get_signal_names();
     for(auto& name : names)
     {
         if(top_level_items.find(name) == top_level_items.end())
@@ -51,7 +51,7 @@ void signal_dialog::update(Signals::signal_manager* manager)
             item->setText(0, QString::fromStdString(name));
             top_level_items[name] = item;
         }
-    }
+    }*/
 }
 
 signal_dialog::~signal_dialog()
@@ -61,7 +61,7 @@ signal_dialog::~signal_dialog()
 
 void signal_dialog::on_item_select(QTreeWidgetItem* item, int column)
 {
-    auto factory = Signals::serialization::text::factory::instance();
+    /*auto factory = Signals::serialization::text::factory::instance();
     if(item->parent() == nullptr)
     {
         auto all_signals = _manager->get_signals(item->text(0).toStdString());
@@ -92,5 +92,5 @@ void signal_dialog::on_item_select(QTreeWidgetItem* item, int column)
                 proxy->send(signal, text.toStdString());
             }
         }
-    }
+    }*/
 }

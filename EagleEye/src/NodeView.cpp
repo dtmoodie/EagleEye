@@ -2,7 +2,7 @@
 #include "qapplication.h"
 #include "qdrag.h"
 #include <qmimedata.h>
-#include <EagleLib/Nodes/NodeManager.h>
+
 #include <EagleLib/Signals.h>
 #include "signal_dialog.h"
 #include <EagleLib/plotters/PlotManager.h>

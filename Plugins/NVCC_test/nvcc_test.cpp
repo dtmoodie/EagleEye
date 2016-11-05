@@ -1,7 +1,8 @@
 #include "nvcc_test.h"
 #include "nvcc_test.cuh"
+#include <EagleLib/Nodes/NodeInfo.hpp>
 #include "RuntimeSourceDependency.h"
-
+#include <EagleLib/Detail/PluginExport.hpp>
 #include <opencv2/core/cuda_stream_accessor.hpp>
 
 
@@ -9,18 +10,12 @@ using namespace EagleLib;
 using namespace EagleLib::Nodes;
 SETUP_PROJECT_IMPL
 
-void nvcc_test::NodeInit(bool firstInit)  
+bool nvcc_test::ProcessImpl()
 {
-
+    //run_kernel()
+    return false;
 }
 
-cv::cuda::GpuMat nvcc_test::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-    run_kernel(img.data, img.size().area()*img.cols, cv::cuda::StreamAccessor::getStream(stream));
 
-    return img; 
-} 
-
-
-NODE_DEFAULT_CONSTRUCTOR_IMPL(nvcc_test, testing)  
+MO_REGISTER_CLASS(nvcc_test)
 

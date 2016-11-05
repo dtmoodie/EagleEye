@@ -5,13 +5,13 @@
 #include "EagleLib/Nodes/Node.h"
 #include <shared_ptr.hpp>
 
-#include <signals/signaler.h>
+
 
 namespace Ui {
 class NodeListDialog;
 }
 
-class NodeListDialog : public QDialog, public Signals::signaler
+class NodeListDialog : public QDialog, public mo::IMetaObject
 {
     Q_OBJECT
 
@@ -21,9 +21,9 @@ public:
     void show();
     ~NodeListDialog();
 
-    SIGNALS_BEGIN(NodeListDialog)
-        SIG_SEND(add_node, std::string);
-    SIGNALS_END
+    MO_BEGIN(NodeListDialog)
+        MO_SIGNAL(void, add_node, std::string);
+    MO_END
 
 signals:
     void nodeConstructed(EagleLib::Nodes::Node::Ptr node);

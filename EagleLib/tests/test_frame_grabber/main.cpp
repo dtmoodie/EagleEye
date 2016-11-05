@@ -1,6 +1,6 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
-
+#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/Nodes/ThreadedNode.h"
 #include "EagleLib/Nodes/IFrameGrabber.hpp"
@@ -8,7 +8,7 @@
 #include "EagleLib/Nodes/FrameGrabberInfo.hpp"
 #include "EagleLib/ICoordinateManager.h"
 
-#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
+
 #include "MetaObject/Parameters/ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"

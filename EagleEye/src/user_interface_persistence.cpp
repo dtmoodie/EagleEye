@@ -1,34 +1,36 @@
 #ifndef HAVE_OPENCV
 #define HAVE_OPENCV
 #endif
-#include "parameters/Persistence/OpenCV.hpp"
+
 #include "user_interface_persistence.h"
+#include <MetaObject/Parameters/IParameter.hpp>
 
-
-void user_interface_persistence::variable_storage::load_parameters(Parameters::ParameteredObject* This, mo::TypeInfo type)
+void user_interface_persistence::variable_storage::load_parameters(mo::IMetaObject* This, mo::TypeInfo type)
 {
     auto& params = loaded_parameters[type.name()];
     for (auto& param : params)
     {
-        if (This->exists(param.first))
+        auto param_ = This->GetParameter(param.first);
+        if (param_)
         {
             // Update the variable with data from file
-            This->getParameter(param.first)->Update(param.second.get());
+            param_->Update(param.second);
+            //This->getParameter(param.first)->Update(param.second.get());
         }
     }
 }
-void user_interface_persistence::variable_storage::save_parameters(Parameters::ParameteredObject* This, mo::TypeInfo type)
+void user_interface_persistence::variable_storage::save_parameters(mo::IMetaObject* This, mo::TypeInfo type)
 {
-    auto& params = loaded_parameters[type.name()];
+    /*auto& params = loaded_parameters[type.name()];
     auto all_params = This->getParameters();
     for(auto& param: all_params)
     {
         params[param->GetName()] = param->DeepCopy();
-    }
+    }*/
 }
 void user_interface_persistence::variable_storage::save_parameters(const std::string& file_name)
 {
-    cv::FileStorage fs;
+    /*cv::FileStorage fs;
     fs.open(file_name, cv::FileStorage::WRITE);
     int index = 0;
     fs << "Count" << (int)loaded_parameters.size();
@@ -44,12 +46,12 @@ void user_interface_persistence::variable_storage::save_parameters(const std::st
         fs << "}"; // End parameters
         fs << "}"; // End widgets
         ++index;
-    }
+    }*/
     
 }
 void user_interface_persistence::variable_storage::load_parameters(const std::string& file_name)
 {
-    try
+    /*try
     {
         cv::FileStorage fs;
         fs.open(file_name, cv::FileStorage::READ);
@@ -74,7 +76,7 @@ void user_interface_persistence::variable_storage::load_parameters(const std::st
     }catch(...)
     {
     
-    }
+    }*/
     
     
 }

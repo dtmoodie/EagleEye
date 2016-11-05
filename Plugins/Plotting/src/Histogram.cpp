@@ -1,7 +1,7 @@
 #include "PlottingImpl.hpp"
 #include "Plotting.h"
 #include "QVector"
-#include <parameters/ParameteredObjectImpl.hpp>
+
 
 using namespace EagleLib;
 

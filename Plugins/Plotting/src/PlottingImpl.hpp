@@ -15,19 +15,7 @@
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
-namespace Parameters
-{
-    namespace UI
-    {
-        namespace qt
-        {
-            class IParameterProxy;
-        }
-    }
-}
-
 class QWidget;
-
 
 namespace EagleLib
 {
@@ -37,18 +25,18 @@ namespace EagleLib
         int channels;
         cv::Size size;
         std::shared_ptr<QWidget> controlWidget;
-        std::vector<std::shared_ptr<Signals::connection>> connections;
+        std::vector<std::shared_ptr<mo::Connection>> connections;
         std::mutex mtx;
         
         std::vector<std::shared_ptr<Parameters::UI::qt::IParameterProxy>> parameterProxies;
-        std::vector<Parameters::Parameter*> parameters;
-        Parameters::Converters::Double::IConverter* converter;
+        std::vector<mo::IParameter*> parameters;
+        //Parameters::Converters::Double::IConverter* converter;
     public:
         QtPlotterImpl();
         ~QtPlotterImpl();
         virtual QWidget* GetControlWidget(QWidget* parent);
         virtual void Serialize(ISimpleSerializer *pSerializer);
-        template<typename T> typename Parameters::ITypedParameter<T>* GetParameter(const std::string& name)
+        template<typename T> typename mo::ITypedParameter<T>* GetParameter(const std::string& name)
         {
             for (auto& itr : parameters)
             {
@@ -59,7 +47,7 @@ namespace EagleLib
             }
             return nullptr;
         }
-        template<typename T> typename Parameters::ITypedParameter<T>::Ptr GetParameter(size_t index)
+        template<typename T> typename mo::ITypedParameter<T>::Ptr GetParameter(size_t index)
         {
             if(index < parameters.size())
                 return std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(parameters[index]);

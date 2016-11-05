@@ -1,11 +1,10 @@
 #include "AxisCamera.h"
 #include "QtNetwork/qauthenticator.h"
-#include "parameters/UI/InterThread.hpp"
+
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
-#include "EagleLib/rcc/ObjectManager.h"
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 

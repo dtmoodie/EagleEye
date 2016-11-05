@@ -16,12 +16,12 @@
 #include <qfiledialog.h>
 #include <QLineEdit>
 #include <QComboBox>
-#include <parameters/type.h>
+
 #include <boost/thread/recursive_mutex.hpp>
-#include <parameters/UI/Qt.hpp>
+
 #include <shared_ptr.hpp>
-#include <EagleLib/DataStreamManager.h>
-#include <parameters/UI/Qt/IParameterProxy.hpp>
+#include <MetaObject/Parameters/UI/Qt/IParameterProxy.hpp>
+
 namespace Ui {
     class QNodeWidget;
     class DataStreamWidget;
@@ -37,19 +37,19 @@ class QInputProxy : public QWidget
 {
     Q_OBJECT
     int prevIdx;
-    void onParamDelete(Parameters::Parameter* parameter);
+    void onParamDelete(mo::IParameter* parameter);
 public:
-    Parameters::InputParameter* inputParameter;
-    QInputProxy(Parameters::Parameter* parameter, rcc::weak_ptr<EagleLib::Nodes::Node> node_, QWidget* parent);
-    void updateParameter(Parameters::Parameter* parameter);
+    mo::InputParameter* inputParameter;
+    QInputProxy(mo::IParameter* parameter, rcc::weak_ptr<EagleLib::Nodes::Node> node_, QWidget* parent);
+    void updateParameter(mo::IParameter* parameter);
     virtual void updateUi(bool init = false);
     virtual QWidget* getWidget(int num = 0);
     bool eventFilter(QObject* obj, QEvent* event);
 private slots:
     void on_valueChanged(int);
 private:
-    std::shared_ptr<Signals::connection> bc;
-    std::shared_ptr<Signals::connection> dc;
+    std::shared_ptr<mo::Connection> bc;
+    std::shared_ptr<mo::Connection> dc;
     rcc::weak_ptr<EagleLib::Nodes::Node> node;
     QComboBox* box;
 };
@@ -67,7 +67,7 @@ public:
     void on_nodeUpdate();
     void on_logReceive(boost::log::trivial::severity_level verb, const std::string& msg);
     bool eventFilter(QObject *object, QEvent *event);
-    void addParameterWidgetMap(QWidget* widget, Parameters::Parameter::Ptr param);
+    void addParameterWidgetMap(QWidget* widget, mo::IParameter* param);
     QWidget* mainWindow;
 private slots:
     void on_enableClicked(bool state);
@@ -76,7 +76,7 @@ private slots:
     void log(boost::log::trivial::severity_level verb, const std::string& msg);
 signals:
     void eLog(boost::log::trivial::severity_level verb, const std::string& msg);
-    void parameterClicked(Parameters::Parameter* param, QPoint pos);
+    void parameterClicked(mo::IParameter* param, QPoint pos);
 private:
     QLineEdit* profileDisplay;
     QLineEdit* traceDisplay;
@@ -85,16 +85,16 @@ private:
     QLineEdit* warningDisplay;
     QLineEdit* errorDisplay;
 
-    void on_object_recompile(EagleLib::ParameteredIObject* obj);
-    std::map<QWidget*, Parameters::Parameter*> widgetParamMap;
+    void on_object_recompile(mo::IMetaObject* obj);
+    std::map<QWidget*, mo::IParameter*> widgetParamMap;
     Ui::QNodeWidget* ui;
     rcc::weak_ptr<EagleLib::Nodes::Node> node;
-    std::map<std::string, Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
+    std::map<std::string, mo::UI::qt::IParameterProxy::Ptr> parameterProxies;
     std::map<std::string, std::shared_ptr<QInputProxy>> inputProxies;
     QNodeWidget* parentWidget;
     std::vector<QNodeWidget*> childWidgets;
-    std::shared_ptr<Signals::connection> log_connection;
-    std::shared_ptr<Signals::connection> _recompile_connection;
+    std::shared_ptr<mo::Connection> log_connection;
+    std::shared_ptr<mo::Connection> _recompile_connection;
 };
 
 class CV_EXPORTS DataStreamWidget: public QWidget
@@ -115,15 +115,15 @@ private:
     EagleLib::IDataStream::Ptr _dataStream;
     Ui::DataStreamWidget* ui;
     std::vector<QInputProxy*> inputProxies;
-    std::map<std::string, Parameters::UI::qt::IParameterProxy::Ptr> parameterProxies;
-    std::map<QWidget*, Parameters::Parameter*> widgetParamMap;
+    std::map<std::string, mo::UI::qt::IParameterProxy::Ptr> parameterProxies;
+    std::map<QWidget*, mo::IParameter*> widgetParamMap;
 };
 
 class DraggableLabel: public QLabel
 {
-    Parameters::Parameter::Ptr param;
+    mo::IParameter* param;
 public:
-    DraggableLabel(QString name, Parameters::Parameter::Ptr param_);
+    DraggableLabel(QString name, mo::IParameter* param_);
     void dropEvent(QDropEvent* event);
     void dragLeaveEvent(QDragLeaveEvent* event);
     void dragMoveEvent(QDragMoveEvent* event);
@@ -140,9 +140,9 @@ public:
     virtual int getNumWidgets(){return 1;}
     virtual QWidget* getTypename()
     {        return new QLabel(QString::fromStdString(parameter->GetTypeInfo().name()));    }
-    boost::shared_ptr<Parameters::Parameter> parameter;
+    mo::IParameter* parameter;
 };
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, Parameters::Parameter::Ptr parameter, rcc::weak_ptr<EagleLib::Nodes::Node> node);
+IQNodeProxy* dispatchParameter(IQNodeInterop* parent, mo::IParameter* parameter, rcc::weak_ptr<EagleLib::Nodes::Node> node);
 
 
 // Interface class for the interop class
@@ -150,12 +150,12 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 {
     Q_OBJECT
 public:
-    IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent = nullptr, rcc::weak_ptr<EagleLib::Nodes::Node> node_= rcc::weak_ptr<EagleLib::Nodes::Node>());
+    IQNodeInterop(mo::IParameter* parameter_, QNodeWidget* parent = nullptr, rcc::weak_ptr<EagleLib::Nodes::Node> node_= rcc::weak_ptr<EagleLib::Nodes::Node>());
     virtual ~IQNodeInterop();
 
     IQNodeProxy* proxy;
-    Parameters::Parameter::Ptr parameter;
-    std::shared_ptr<Signals::connection> bc;
+    mo::IParameter* parameter;
+    std::shared_ptr<mo::Connection> bc;
     boost::posix_time::ptime previousUpdateTime;
 public slots:
     virtual void updateUi();
@@ -165,7 +165,7 @@ private slots:
     void on_valueChanged(bool value);
     void on_valueChanged(QString value);
     void on_valueChanged();
-    void onParameterUpdate(Parameters::Parameter::Ptr parameter);
+    void onParameterUpdate(mo::IParameter* parameter);
     void onParameterUpdate();
 signals:
     void updateNeeded();

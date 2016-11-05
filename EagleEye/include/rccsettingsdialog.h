@@ -2,7 +2,7 @@
 #define RCCSETTINGSDIALOG_H
 
 #include <QDialog>
-
+#include <MetaObject/Signals/TypedSlot.hpp>
 namespace Ui {
 class RCCSettingsDialog;
 }
@@ -27,6 +27,7 @@ private slots:
     void on_btn_abort_compilation_clicked();
 
 private:
+    mo::TypedSlot<void(void)> on_constructors_added;
     Ui::RCCSettingsDialog *ui;
 };
 

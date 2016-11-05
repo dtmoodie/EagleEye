@@ -7,10 +7,8 @@
 #include <QDateTime>
 #include "qevent.h"
 #include "EagleLib/logger.hpp"
-#include "parameters/IVariableManager.h"
-#include <parameters/UI/Qt/IParameterProxy.hpp>
 #include <MetaObject/Logging/Log.hpp>
-#include <EagleLib/frame_grabber_base.h>
+#include <EagleLib/Nodes/IFrameGrabber.hpp>
 
 
 IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, rcc::weak_ptr<EagleLib::Nodes::Node> node_) :
