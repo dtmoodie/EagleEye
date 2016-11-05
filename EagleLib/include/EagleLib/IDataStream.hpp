@@ -7,11 +7,6 @@
 #include <type_traits>
 #include <vector>
 #include <memory>
-namespace mo
-{
-    RelayManager;
-}
-
 
 namespace EagleLib
 {

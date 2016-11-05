@@ -174,7 +174,7 @@ cv::Mat EGBS::recolor( bool random_color) {
 
     return result;
 }
-#include <parameters/ParameteredObjectImpl.hpp>
+
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

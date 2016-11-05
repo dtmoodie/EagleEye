@@ -1,17 +1,14 @@
 #include "frame_grabber_openni2.h"
 #include "openni2_initializer.h"
 #include <EagleLib/ICoordinateManager.h>
-#include "EagleLib/rcc/ObjectManager.h"
+#include <EagleLib/Nodes/FrameGrabberInfo.hpp>
 using namespace EagleLib;
+using namespace EagleLib::Nodes;
 SETUP_PROJECT_IMPL
 
 
-std::string frame_grabber_openni2_info::GetObjectName()
-{
-    return "frame_grabber_openni2";
-}
 
-int frame_grabber_openni2_info::CanLoadDocument(const std::string& document) const
+int frame_grabber_openni2::CanLoadDocument(const std::string& document)
 {
     std::string doc = document;
     std::transform(doc.begin(), doc.end(), doc.begin(), ::tolower);
@@ -36,12 +33,12 @@ int frame_grabber_openni2_info::CanLoadDocument(const std::string& document) con
     return 0;
 }
 
-int frame_grabber_openni2_info::LoadTimeout() const
+int frame_grabber_openni2::LoadTimeout()
 {
     return 10000;
 }
 
-std::vector<std::string> frame_grabber_openni2_info::ListLoadableDocuments()
+std::vector<std::string> frame_grabber_openni2::ListLoadableDocuments()
 {
     initializer_NI2::instance();
     openni::Array<openni::DeviceInfo> devices;
@@ -74,7 +71,7 @@ frame_grabber_openni2::~frame_grabber_openni2()
         }
     }
 }
-int frame_grabber_openni2::GetNumFrames()
+long long frame_grabber_openni2::GetNumFrames()
 {
     return -1;
 }
@@ -88,32 +85,31 @@ bool frame_grabber_openni2::LoadFile(const std::string& file_path)
     {
         initializer_NI2::instance();
         std::string uri = file_path.substr(openni.length());
+        _device.reset(new openni::Device());
+        
+        
+        openni::Status rc;
         if(uri.size())
-        {
-            openni::Array<openni::DeviceInfo> devices;
-            openni::OpenNI::enumerateDevices(&devices);
-        }else
-        {
-            _device.reset(new openni::Device());
-            openni::Status rc;
+            rc = _device->open(uri.c_str());
+        else
             rc = _device->open(openni::ANY_DEVICE);
-            if(rc != openni::STATUS_OK)
-            {
-                LOG(info) << "Unable to connect to openni2 compatible device: " << openni::OpenNI::getExtendedError();
-                return false;
-            }
-            _depth.reset(new openni::VideoStream());
-            rc = _depth->create(*_device, openni::SENSOR_DEPTH);
-            if( rc != openni::STATUS_OK)
-            {
-                LOG(info) << "Unable to retrieve depth stream: " << openni::OpenNI::getExtendedError();
-                return false;
-            }
-            _depth->addNewFrameListener(this);
-            _depth->start();
-            LOG(info) << "Connected to device " << _device->getDeviceInfo().getUri();
-            return true;
+        if(rc != openni::STATUS_OK)
+        {
+            LOG(info) << "Unable to connect to openni2 compatible device: " << openni::OpenNI::getExtendedError();
+            return false;
         }
+        _depth.reset(new openni::VideoStream());
+        rc = _depth->create(*_device, openni::SENSOR_DEPTH);
+        if( rc != openni::STATUS_OK)
+        {
+            LOG(info) << "Unable to retrieve depth stream: " << openni::OpenNI::getExtendedError();
+            return false;
+        }
+        _depth->addNewFrameListener(this);
+        _depth->start();
+        LOG(info) << "Connected to device " << _device->getDeviceInfo().getUri();
+        return true;
+        
     }
     return false;
 }
@@ -148,7 +144,7 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
             }
         }
         
-        FrameGrabberBuffered::PushFrame(TS<SyncedMemory>(double(ts), fn, XYZ), false);
+        FrameGrabberBuffered::PushFrame(TS<SyncedMemory>(double(ts), (long long)fn, XYZ), false);
         break;
     }
 }
@@ -157,5 +153,5 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_openni2::GetCoordinateManager(
 {
     return rcc::shared_ptr<ICoordinateManager>();
 }
-static frame_grabber_openni2_info g_inst;
-REGISTERCLASS(frame_grabber_openni2, &g_inst);
+
+MO_REGISTER_CLASS(frame_grabber_openni2);

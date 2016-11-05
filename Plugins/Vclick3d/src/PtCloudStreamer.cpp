@@ -1,6 +1,6 @@
 #include "ptCloudStreamer.h"
 #include <QtNetwork/qhostaddress.h>
-#include <parameters/ParameteredObjectImpl.hpp>
+
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 ServerHandler::ServerHandler()

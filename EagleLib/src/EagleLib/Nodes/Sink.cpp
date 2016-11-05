@@ -1,4 +1,4 @@
-#include "EagleLib/nodes/Sink.h"
+#include "EagleLib/Nodes/Sink.h"
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

@@ -60,7 +60,7 @@ cv::Vec3f LUTColorMapper::Interpolate(float x_)
         int idx = itr - X.begin();
         if(idx == X.rows - 1)
         {
-            float deltaX = X(idx) - X(idx - 1);
+            //float deltaX = X(idx) - X(idx - 1);
             float x = x_ - X(idx - 1);
 
             float r = x*(_LUT(idx, 1) - _LUT(idx-1, 1)) + _LUT(idx-1, 1);
@@ -69,7 +69,7 @@ cv::Vec3f LUTColorMapper::Interpolate(float x_)
             return cv::Vec3f(r,g,b);
         }else
         {
-            float deltaX = X(idx + 1) - X(idx);
+            //float deltaX = X(idx + 1) - X(idx);
             float x = x_ - X(idx);
 
             float r = x*(_LUT(idx + 1, 1) - _LUT(idx, 1)) + _LUT(idx, 1);

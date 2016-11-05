@@ -14,7 +14,7 @@ namespace EagleLib
     class VideoWriter : public Node
     {
     public:
-        MO_BEGIN(VideoWriter, Node)
+        MO_DERIVE(VideoWriter, Node)
             INPUT(SyncedMemory, image, nullptr);
             PROPERTY(cv::Ptr<cv::cudacodec::VideoWriter>, d_writer, cv::Ptr<cv::cudacodec::VideoWriter>())
             PROPERTY(cv::Ptr<cv::VideoWriter>, h_writer, cv::Ptr<cv::VideoWriter>())

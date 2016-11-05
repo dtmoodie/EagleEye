@@ -26,7 +26,7 @@
 
 #ifndef __EfficientGraphBasedImageSegmentation__EGBS__
 #define __EfficientGraphBasedImageSegmentation__EGBS__
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include "DisjointSetForest.h"

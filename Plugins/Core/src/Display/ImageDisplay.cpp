@@ -1,7 +1,6 @@
 #include "ImageDisplay.h"
 
 #include <MetaObject/Thread/InterThread.hpp>
-#include "../remotery/lib/Remotery.h"
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #include <EagleLib/utilities/UiCallbackHandlers.h>
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include <boost/thread.hpp>
 
 namespace EagleLib

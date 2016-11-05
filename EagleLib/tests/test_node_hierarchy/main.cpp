@@ -1,8 +1,8 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #include "EagleLib/IDataStream.hpp"
-#include "EagleLib/nodes/Node.h"
-#include "EagleLib/nodes/ThreadedNode.h"
+#include "EagleLib/Nodes/Node.h"
+#include "EagleLib/Nodes/ThreadedNode.h"
 #include "EagleLib/Nodes/NodeInfo.hpp"
 #include "MetaObject/Parameters/ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"

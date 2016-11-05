@@ -25,13 +25,13 @@
 #include <EagleLib/Logging.h>
 #include <shared_ptr.hpp>
 #include "EagleLib/utilities/BufferPool.hpp"
-#include <EagleLib/nodes/NodeManager.h>
+#include <EagleLib/Nodes/NodeManager.h>
 #include <EagleLib/rcc/ObjectManager.h>
 #include "EagleLib/Signals.h"
 #include <EagleLib/DataStreamManager.h>
 #include "EagleLib/logger.hpp"
 #include "EagleLib/Plugins.h"
-#include <EagleLib/nodes/Node.h>
+#include <EagleLib/Nodes/Node.h>
 #include <EagleLib/utilities/ColorMapperFactory.hpp>
 
 #include <MetaObject/Logging/Log.hpp>

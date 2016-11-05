@@ -1,5 +1,5 @@
 #include "src/precompiled.hpp"
-#include "EagleLib/nodes/Sink.h"
+#include "EagleLib/Nodes/Sink.h"
 #include "src/precompiled.hpp"
 
 namespace EagleLib

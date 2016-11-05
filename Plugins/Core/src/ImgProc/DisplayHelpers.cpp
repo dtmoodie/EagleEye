@@ -64,8 +64,10 @@ bool DrawDetections::ProcessImpl()
             {
                 if(detection.detections[0].classNumber > 0 && detection.detections[0].classNumber < labels.size())
                 {
-
                     cv::rectangle(mat, rect, colors[detection.detections[0].classNumber], 3);
+                    std::stringstream ss;
+                    ss << detection.detections[0].label << " : " << detection.detections[0].confidence;
+                    cv::putText(mat, ss.str(), rect.tl() + cv::Point(10,20), cv::FONT_HERSHEY_COMPLEX, 0.5, colors[detection.detections[0].classNumber]);
                 }
                 else
                 {

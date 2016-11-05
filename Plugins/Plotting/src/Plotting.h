@@ -1,9 +1,8 @@
 
 #include "EagleLib/utilities/CudaCallbacks.hpp"
-#include "parameters/UI/InterThread.hpp"
+
 #include "EagleLib/plotters/Plotter.h"
 #include "qcustomplot.h"
-#include "Remotery.h"
 #include <EagleLib/Project_defs.hpp>
 #include "RuntimeLinkLibrary.h"
 #ifdef _DEBUG

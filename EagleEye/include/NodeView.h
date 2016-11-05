@@ -2,7 +2,7 @@
 #include <qgraphicsview.h>
 #include <qevent.h>
 #include <qgraphicsproxywidget.h>
-#include <EagleLib/nodes/Node.h>
+#include <EagleLib/Nodes/Node.h>
 #include <QNodeWidget.h>
 #include <QMenu>
 #include <shared_ptr.hpp>

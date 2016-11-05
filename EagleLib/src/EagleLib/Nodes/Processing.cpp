@@ -1,4 +1,4 @@
-#include "EagleLib/nodes/Processing.h"
+#include "EagleLib/Nodes/Processing.h"
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;

@@ -1,9 +1,10 @@
 #define PARAMTERS_GENERATE_PERSISTENCE
 
+
 #include "Caffe.h"
 #include "caffe_init.h"
 
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include "EagleLib/Nodes/NodeInfo.hpp"
 #include <EagleLib/ObjectDetection.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
@@ -12,6 +13,8 @@
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Types.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
+#include <MetaObject/Logging/Profiling.hpp>
+#include "MetaObject/Logging/Log.hpp"
 #include "caffe_include.h"
 
 #include <boost/tokenizer.hpp>
@@ -19,10 +22,11 @@
 #include <string>
 
 
+
 #include "caffe/caffe.hpp"
 
 
-#include "MetaObject/Logging/Log.hpp"
+
 
 SETUP_PROJECT_IMPL;
 
@@ -73,7 +77,8 @@ template <typename T>
 std::vector<size_t> sort_indexes(const T* begin, const T* end) {
     return sort_indexes<T>(begin, end - begin);
 }
-std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<float>& blob)
+
+std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<float>& blob, bool bgr_swap)
 {
     std::vector<SyncedMemory> wrapped_blob;
     int height = blob.height();
@@ -93,12 +98,17 @@ std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<float>& blob)
             d_ptr += height*width;
             h_ptr += height*width;
         }
-        SyncedMemory image(h_wrappedChannels, d_wrappedChannels);
+        if(bgr_swap && h_wrappedChannels.size() == 3 && d_wrappedChannels.size() == 3)
+        {
+            std::swap(h_wrappedChannels[0], h_wrappedChannels[2]);
+            std::swap(d_wrappedChannels[0], d_wrappedChannels[2]);
+        }
+        SyncedMemory image(h_wrappedChannels, d_wrappedChannels, SyncedMemory::DO_NOT_SYNC);
         wrapped_blob.push_back(image);
     }
     return wrapped_blob;
 }
-std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<double>& blob)
+std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<double>& blob, bool bgr_swap)
 {
     std::vector<SyncedMemory> wrapped_blob;
     int height = blob.height();
@@ -118,7 +128,12 @@ std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<double>& blob)
             d_ptr += height*width;
             h_ptr += height*width;
         }
-        SyncedMemory image(h_wrappedChannels, d_wrappedChannels);
+        if (bgr_swap && h_wrappedChannels.size() == 3 && d_wrappedChannels.size() == 3)
+        {
+            std::swap(h_wrappedChannels[0], h_wrappedChannels[2]);
+            std::swap(d_wrappedChannels[0], d_wrappedChannels[2]);
+        }
+        SyncedMemory image(h_wrappedChannels, d_wrappedChannels, SyncedMemory::DO_NOT_SYNC);
         wrapped_blob.push_back(image);
     }
     return wrapped_blob;
@@ -149,14 +164,22 @@ void CaffeBase::WrapInput()
         ss << "   input channels: " << input_blobs[i]->channels() << "\n";
         ss << "   input size: (" << input_blobs[i]->width() << ", " << input_blobs[i]->height() << ")\n";
     }
-    LOG(debug) << ss.str();
+    //LOG(debug) << ss.str();
 
     for(int k = 0; k < input_blobs.size(); ++k)
     {
-        wrapped_inputs[input_names[k]] = WrapBlob(*input_blobs[k]);
+        wrapped_inputs[input_names[k]] = WrapBlob(*input_blobs[k], bgr_swap);
     }
 }
-
+void CaffeBase::ReshapeInput(int num, int channels, int height, int width)
+{
+    input_blobs = NN->input_blobs();
+    for(auto input_blob : input_blobs)
+    {
+        input_blob->Reshape(num, channels, height, width);
+    }
+    WrapInput();
+}
 void CaffeBase::WrapOutput()
 {
     if (NN == nullptr)
@@ -175,11 +198,23 @@ void CaffeBase::WrapOutput()
     {
         wrapped_outputs[NN->blob_names()[output_idx[i]]] = WrapBlob(*outputs[i]);
     }
-
-    //caffe::Blob<float>* output_layer = NN->output_blobs()[0];
-    //float* begin = output_layer->mutable_cpu_data();
-    //float* end = begin + output_layer->channels()*output_layer->num();
-    //wrapped_output = cv::Mat(1, end - begin, CV_32F, begin);
+    if(NN->has_layer("detection_out"))
+    {
+        _network_type = Detector_e;
+    }
+    auto layers = NN->layers();
+    bool has_fully_connected = false;
+    for(auto layer : layers)
+    {
+        if(layer->type() == std::string("InnerProduct"))
+        {
+            has_fully_connected = true;
+        }
+    }
+    if(!has_fully_connected)
+    {
+        _network_type = (NetworkType)(_network_type | FCN_e);
+    }
 }
 bool CaffeBase::InitNetwork()
 {
@@ -189,8 +224,17 @@ bool CaffeBase::InitNetwork()
     {
         if (boost::filesystem::exists(nn_model_file))
         {
-            NN.reset(new caffe::Net<float>(nn_model_file.string(), caffe::TEST));
+            std::string param_file = nn_model_file.string();
+            /*try
+            {
+                NN.reset(new caffe::Net<float>(param_file, caffe::TEST));
+            }catch(caffe::ExceptionWithCallStack<std::string>& exp)
+            {
+                throw mo::ExceptionWithCallStack<std::string>(exp, exp.CallStack());
+            }*/
+            NN.reset(new caffe::Net<float>(param_file, caffe::TEST));
             WrapInput();
+            WrapOutput();
             nn_model_file_param.modified = false;
         }
         else
@@ -202,7 +246,17 @@ bool CaffeBase::InitNetwork()
     {
         if (boost::filesystem::exists(nn_weight_file))
         {
-            NN->CopyTrainedLayersFrom(nn_weight_file.string());
+            try
+            {
+                NN->CopyTrainedLayersFrom(nn_weight_file.string());
+            }
+            /*catch (caffe::ExceptionWithCallStack<std::string>& exp)
+            {
+                throw mo::ExceptionWithCallStack<std::string>(exp, exp.CallStack());
+            }*/catch (...)
+            {
+                return false;
+            }
             const std::vector<boost::shared_ptr<caffe::Layer<float>>>& layers = NN->layers();
             std::vector<std::string> layerNames;
             layerNames.reserve(layers.size());
@@ -250,9 +304,6 @@ bool CaffeBase::InitNetwork()
                 {
                     caffe::Blob<float> mean_blob;
                     mean_blob.FromProto(blob_proto);
-                    
-                    
-
                     /* The format of the mean file is planar 32-bit float BGR or grayscale. */
                     std::vector<cv::Mat> channels;
                     float* data = mean_blob.mutable_cpu_data();
@@ -291,7 +342,12 @@ bool CaffeImageClassifier::ProcessImpl()
 {
     if(!InitNetwork())
         return false;
+    if (input->empty())
+        return false;
+    auto input_shape = input->GetShape();
+    ReshapeInput(input_shape[0], input_shape[3], input_shape[1], input_shape[2]);
     cv::cuda::GpuMat float_image;
+    
     if (input->GetDepth() != CV_32F)
     {
         input->GetGpuMat(Stream()).convertTo(float_image, CV_32F, Stream());
@@ -300,6 +356,7 @@ bool CaffeImageClassifier::ProcessImpl()
     {
         float_image = input->GetGpuMat(Stream());
     }
+    cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, Stream());
     cv::cuda::multiply(float_image, cv::Scalar::all(scale), float_image, 1.0, -1, Stream());
     std::vector<cv::Rect> defaultROI;
     defaultROI.push_back(cv::Rect(cv::Point(), input->GetSize()));
@@ -326,7 +383,7 @@ bool CaffeImageClassifier::ProcessImpl()
         BOOST_LOG_TRIVIAL(debug) << "Too many input Regions of interest to handle in one pass, this network can only handle " << data_itr->second.size() << " inputs at a time";
     }
     auto shape = data_itr->second[0].GetShape();
-    cv::Size input_size(shape[1], shape[2]);
+    cv::Size input_size(shape[2], shape[1]);
 
     for (int i = 0; i < bounding_boxes->size() && i < data_itr->second.size(); ++i)
     {
@@ -339,7 +396,6 @@ bool CaffeImageClassifier::ProcessImpl()
         {
             resized = float_image((*bounding_boxes)[i]);
         }
-        ;
         cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());
     }
     // Signal update on all inputs
@@ -348,31 +404,72 @@ bool CaffeImageClassifier::ProcessImpl()
         blob->mutable_gpu_data(); 
     }
     float loss;
-    NN->ForwardPrefilled(&loss);
+    {
+        mo::scoped_profile("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &Stream());
+        NN->ForwardPrefilled(&loss);
+    }
+    
     caffe::Blob<float>* output_layer = NN->output_blobs()[0];
-    const float* begin = output_layer->cpu_data();
+    float* begin = output_layer->mutable_cpu_data();
     const float* end = begin + output_layer->channels() * output_layer->num();
     const size_t step = output_layer->channels();
     
-    
-    std::vector<DetectedObject> objects(std::min<size_t>(bounding_boxes->size(), data_itr->second.size()));
-    for (int i = 0; i < bounding_boxes->size() && i < data_itr->second.size(); ++i)
+    if(_network_type & Classifier_e)
     {
-        auto idx = sort_indexes_ascending(begin + i * output_layer->channels(), (size_t)output_layer->channels());
-        objects[i].detections.resize(num_classifications);
-        for (int j = 0; j < num_classifications; ++j)
+        std::vector<DetectedObject> objects(std::min<size_t>(bounding_boxes->size(), data_itr->second.size()));
+        for (int i = 0; i < bounding_boxes->size() && i < data_itr->second.size(); ++i)
         {
-            objects[i].detections[j].confidence = (begin + i * output_layer->channels())[idx[j]];
-            objects[i].detections[j].classNumber = idx[j];
-            if (labels && idx[j] < labels->size())
+            auto idx = sort_indexes_ascending(begin + i * output_layer->channels(), (size_t)output_layer->channels());
+            objects[i].detections.resize(num_classifications);
+            for (int j = 0; j < num_classifications && j < idx.size(); ++j)
             {
-                objects[i].detections[j].label = (*labels)[idx[j]];
+                objects[i].detections[j].confidence = (begin + i * output_layer->channels())[idx[j]];
+                objects[i].detections[j].classNumber = idx[j];
+                if (labels && idx[j] < labels->size())
+                {
+                    objects[i].detections[j].label = (*labels)[idx[j]];
+                }
+            }
+            objects[i].boundingBox = (*bounding_boxes)[i];
+        }
+        detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
+    }else if(_network_type & Detector_e)
+    {
+        const int num_detections = output_layer->height();
+        cv::Mat_<float> labels(num_detections, 1, begin + 1, sizeof(float)*7);
+        cv::Mat_<float> confidence(num_detections, 1, begin + 2, sizeof(float)*7);
+        cv::Mat_<float> xmin(num_detections, 1, begin + 3, sizeof(float) * 7);
+        cv::Mat_<float> ymin(num_detections, 1, begin + 4, sizeof(float) * 7);
+        cv::Mat_<float> xmax(num_detections, 1, begin + 5, sizeof(float) * 7);
+        cv::Mat_<float> ymax(num_detections, 1, begin + 6, sizeof(float) * 7);
+        std::vector<DetectedObject> objects;
+        cv::Size original_size = input->GetSize();
+        for(int i = 0; i < num_detections; ++i)
+        {
+            if(confidence[i][0] > detection_threshold)
+            {
+                DetectedObject obj;
+                obj.boundingBox.x = xmin[i][0] * original_size.width;
+                obj.boundingBox.y = ymin[i][0] * original_size.height;
+                obj.boundingBox.width = (xmax[i][0] - xmin[i][0])*original_size.width;
+                obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * original_size.height;
+                if (this->labels && labels[i][0] < this->labels->size())
+                    obj.detections.emplace_back((*this->labels)[int(labels[i][0])], confidence[i][0], int(labels[i][0]));
+                else
+                    obj.detections.emplace_back("", confidence[i][0], int(labels[i][0]));
+
+                objects.push_back(obj);
+            }
+            if(objects.size())
+            {
+                LOG(trace) << "Detected " << objects.size() << " objets in frame " << input_param.GetTimestamp();
             }
         }
-        objects[i].boundingBox = (*bounding_boxes)[i];
+        if(!(objects.empty() && detections.empty()))
+            detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
     }
-    detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
-
+    
+    bounding_boxes = nullptr;
     return true;
 }
 

@@ -1,5 +1,4 @@
 #include "EagleLib/utilities/UiCallbackHandlers.h"
-#include "Remotery.h"
 #include "ObjectInterfacePerModule.h"
 #include "EagleLib/rcc/external_includes/cv_core.hpp"
 #include "EagleLib/rcc/external_includes/cv_highgui.hpp"

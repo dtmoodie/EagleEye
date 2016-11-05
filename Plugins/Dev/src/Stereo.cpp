@@ -35,6 +35,7 @@ bool StereoBM::ProcessImpl()
     cv::cuda::GpuMat disparity;
     stereoBM->compute(left_image->GetGpuMat(*_ctx->stream), right_image->GetGpuMat(*_ctx->stream),disparity, *_ctx->stream);
     this->disparity_param.UpdateData(disparity, left_image_param.GetTimestamp(), _ctx);
+    return true;
 }
 
 bool StereoBeliefPropagation::ProcessImpl()
@@ -119,8 +120,8 @@ bool UndistortStereo::ProcessImpl()
 }
 
 
-MO_REGISTER_CLASS(StereoBM, Image, Processing)
-MO_REGISTER_CLASS(StereoBilateralFilter, Image, Processing)
-MO_REGISTER_CLASS(StereoBeliefPropagation, Image, Processing)
-MO_REGISTER_CLASS(StereoConstantSpaceBP, Image, Processing)
-MO_REGISTER_CLASS(UndistortStereo, Image, Processing)
+MO_REGISTER_CLASS(StereoBM)
+MO_REGISTER_CLASS(StereoBilateralFilter)
+MO_REGISTER_CLASS(StereoBeliefPropagation)
+MO_REGISTER_CLASS(StereoConstantSpaceBP)
+MO_REGISTER_CLASS(UndistortStereo)

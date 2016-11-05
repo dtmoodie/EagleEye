@@ -2,7 +2,7 @@
 #define NODELISTDIALOG_H
 
 #include <QDialog>
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include <shared_ptr.hpp>
 
 #include <signals/signaler.h>

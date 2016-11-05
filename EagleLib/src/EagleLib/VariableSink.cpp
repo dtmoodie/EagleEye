@@ -20,15 +20,15 @@ void CSV_VariableSink::SerializeVariables(unsigned long long frame_number, mo::I
     {
         _ofs << frame_number;
         std::stringstream ss;
-        for(auto& var_name : _serialization_layout)
+        /*for(auto& var_name : _serialization_layout)
         {
-            /*auto param = manager->GetOutputParameter(var_name);
+            auto param = manager->GetOutputParameter(var_name);
             if(param && Parameters::Persistence::Text::InterpreterRegistry::Exists(param->GetTypeInfo()))
             {
                 ss << ", ";
                 Parameters::Persistence::Text::SerializeValue(&ss, param);
-            }*/
-        }
+            }
+        }*/
         _ofs << ss.str();
     }
 }
@@ -60,12 +60,12 @@ std::vector<std::string> CSV_VariableSink::ListSerializableVariables(mo::IVariab
 {
     auto params = manager->GetAllParmaeters();
     std::vector<std::string> output;
-    for(auto param : params)
+    /*for(auto param : params)
     {
         // #TODO new implementation
-        /*if(Parameters::Persistence::Text::InterpreterRegistry::Exists(param->GetTypeInfo()))
-            output.push_back(param->GetTreeName());*/
-    }
+        if(Parameters::Persistence::Text::InterpreterRegistry::Exists(param->GetTypeInfo());
+            output.push_back(param->GetTreeName());
+    }*/
     return output;
 }
 

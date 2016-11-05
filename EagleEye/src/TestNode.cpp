@@ -1,6 +1,6 @@
 
 
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 //#include <opencv2/highgui.hpp>
 //RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_highgui")
 #define PARAMTESTMACRO(type) updateParameter< type >(##type,0)

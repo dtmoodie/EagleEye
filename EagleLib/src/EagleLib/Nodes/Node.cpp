@@ -560,9 +560,9 @@ void Node::Init(const cv::FileNode& configNode)
             LOG(error) << "No node found with the name " << name;
         }
     }
-    cv::FileNode paramNode = configNode["Parameters"];
+    /*cv::FileNode paramNode = configNode["Parameters"];
     // #TODO proper serialization with cereal
-    /*for (size_t i = 0; i < _parameters.size(); ++i)
+    for (size_t i = 0; i < _parameters.size(); ++i)
     {
         try
         {

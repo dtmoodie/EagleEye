@@ -15,7 +15,7 @@ LINK_DIRECTORIES(${LINK_DIRS})
 IF(WIN32)
 
 ELSE()
-set(CUDA_NVCC_FLAGS "-std=c++11")
+#set(CUDA_NVCC_FLAGS "-std=c++11")
 ENDIF(WIN32)
 
 message(STATUS

@@ -24,7 +24,7 @@
 #include <string>
 
 RUNTIME_MODIFIABLE_INCLUDE;
-RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("../../../src/EagleLib/nodes/IFrameGrabber", ".cpp");
+RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("../../../src/EagleLib/Nodes/IFrameGrabber", ".cpp");
 namespace EagleLib
 {
     namespace Nodes
@@ -124,12 +124,7 @@ namespace EagleLib
         
         virtual long long GetFrameNumber();
         
-        //virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
-        //virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
-        //virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
-        //virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
-        
-
+        virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
         virtual void Init(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
 

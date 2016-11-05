@@ -1,4 +1,4 @@
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include <MetaObject/MetaObject.hpp>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"

@@ -1,4 +1,4 @@
-#include "EagleLib/nodes/IFrameGrabber.hpp"
+#include "EagleLib/Nodes/IFrameGrabber.hpp"
 #include "EagleLib/IDataStream.hpp"
 #include "EagleLib/utilities/sorting.hpp"
 #include <MetaObject/Logging/Log.hpp>
@@ -47,6 +47,7 @@ rcc::shared_ptr<IFrameGrabber> IFrameGrabber::Create(const std::string& uri, con
         if(auto fg_info = dynamic_cast<FrameGrabberInfo*>(info))
         {
             int priority = fg_info->CanLoadDocument(uri);
+            LOG(debug) << fg_info->GetDisplayName() << " priority: " << priority;
             if(priority != 0)
             {
                 valid_constructors.push_back(constructor);
@@ -56,7 +57,18 @@ rcc::shared_ptr<IFrameGrabber> IFrameGrabber::Create(const std::string& uri, con
     }
     if (valid_constructors.empty())
     {
-        LOG(warning) << "No valid frame grabbers for " << uri;
+        auto f = [&constructors]()->std::string
+        {
+            std::stringstream ss;
+            for(auto& constructor : constructors)
+            {
+                ss << constructor->GetName() << ", ";
+            }
+            return ss.str();
+        };
+
+        LOG(warning) << "No valid frame grabbers for " << uri
+                     << " framegrabbers: " << f();
         return rcc::shared_ptr<IFrameGrabber>();
     }
 
@@ -315,6 +327,15 @@ TS<SyncedMemory> FrameGrabberBuffered::GetFrameRelative(int index, cv::cuda::Str
 long long FrameGrabberBuffered::GetFrameNumber()
 {
     return playback_frame_number;
+}
+TS<SyncedMemory> FrameGrabberBuffered::GetCurrentFrame(cv::cuda::Stream& stream)
+{
+    boost::mutex::scoped_lock bLock(buffer_mtx);
+    if(frame_buffer.size())
+    {
+        return frame_buffer.back();
+    }
+    return TS<SyncedMemory>();
 }
 void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
 {

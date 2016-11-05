@@ -1,4 +1,4 @@
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include "ObjectInterfacePerModule.h"
 #ifdef HAVE_GLOOX
 #define GLOOX_IMPORTS

@@ -111,38 +111,7 @@ bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 
 bool EagleLib::loadPlugin(const std::string& fullPluginPath)
 {
-    void* handle = dlopen(fullPluginPath.c_str(), RTLD_LAZY);
-    // Fallback on old module
-
-
-    typedef IPerModuleInterface* (*moduleFunctor)();
-
-    moduleFunctor module = (moduleFunctor)dlsym(handle, "GetPerModuleInterface");
-    const char *dlsym_error = dlerror();
-    if (dlsym_error) {
-           std::cerr << dlsym_error << '\n';
-           module = (moduleFunctor)dlsym(handle, "GetModule");
-           dlsym_error = dlerror();
-           if(dlsym_error)
-           {
-                std::cerr << dlsym_error << '\n';
-                return false;
-           }
-           std::cout << "Found symbol 'GetModule'" << std::endl;
-
-       }
-    if(module == nullptr)
-    {
-        std::cout << "module == nullptr" << std::endl;
-        return false;
-    }
-    ObjectManager::Instance().setupModule(module());
-    typedef void(*includeFunctor)();
-    includeFunctor functor = (includeFunctor)dlsym(handle, "SetupIncludes");
-    if(functor)
-        functor();
-
-    return true;
+    return mo::MetaObjectFactory::Instance()->LoadPlugin(fullPluginPath);
 }
 
 

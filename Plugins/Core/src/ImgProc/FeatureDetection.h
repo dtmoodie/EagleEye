@@ -1,6 +1,6 @@
 
 #include "src/precompiled.hpp"
-#include "EagleLib/nodes/VideoProc/Tracking.hpp"
+#include "EagleLib/Nodes/VideoProc/Tracking.hpp"
 #include "EagleLib/rcc/external_includes/cv_cudafeatures2d.hpp"
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY

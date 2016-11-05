@@ -6,7 +6,7 @@
  *
  *
 */
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY

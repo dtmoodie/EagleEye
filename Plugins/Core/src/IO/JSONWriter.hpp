@@ -22,5 +22,20 @@ namespace EagleLib
             std::ofstream ofs;
             std::shared_ptr<cereal::JSONOutputArchive> ar;
         };
+
+        class JSONReader: public Node
+        {
+        public:
+            JSONReader();
+            MO_DERIVE(JSONReader, Node);
+                PARAM(mo::ReadFile, input_file, mo::ReadFile("output_file.json"));
+            MO_END;
+        protected:
+            bool ProcessImpl();
+            std::shared_ptr<cereal::JSONInputArchive> ar;
+            std::ifstream ifs;
+            mo::InputParameter* input;
+        };
+
     }
 }

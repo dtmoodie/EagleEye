@@ -3,6 +3,7 @@
 #include <EagleLib/Nodes/NodeInfo.hpp>
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -84,7 +85,7 @@ JSONWriter::~JSONWriter()
 }
 bool JSONWriter::ProcessImpl()
 {
-    if(ar == nullptr && output_file.size())
+    if(ar == nullptr && output_file.string().size())
     {
         ofs.close();
         ofs.open(output_file.c_str(), std::ios::out);
@@ -149,3 +150,30 @@ void JSONWriter::on_input_set(mo::Context* ctx, mo::IParameter* param)
 }
 
 MO_REGISTER_CLASS(JSONWriter);
+JSONReader::JSONReader()
+{
+    input = new InputParameterAny("input-0");
+    input->SetFlags(mo::Optional_e);
+    AddParameter(std::shared_ptr<mo::IParameter>(input));
+}
+
+bool JSONReader::ProcessImpl()
+{
+    if(!ar && boost::filesystem::is_regular_file(input_file))
+    {
+        ifs.close();
+        ifs.open(input_file.c_str(), std::ios::in);
+        ar.reset(new cereal::JSONInputArchive(ifs));
+    }
+    if(!ar)
+        return false;
+    long long ts = -1;
+    if(input)
+    {
+        if(auto input_param = input->GetInputParam())
+        {
+            ts = input_param->GetTimestamp();
+        }
+    }
+    return false;
+}

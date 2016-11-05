@@ -1,7 +1,7 @@
 #include "NodeListDialog.h"
 #include "ui_nodelistdialog.h"
 #include <EagleLib/rcc/ObjectManager.h>
-#include <EagleLib/nodes/NodeManager.h>
+#include <EagleLib/Nodes/NodeManager.h>
 #include "QListWidgetItem"
 NodeListDialog::NodeListDialog(QWidget *parent) :
     QDialog(parent),

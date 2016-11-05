@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 #include <QMainWindow>
 #include "EagleLib/Signals.h"
-#include <EagleLib/nodes/Node.h>
+#include <EagleLib/Nodes/Node.h>
 
 
 #include <qtimer.h>

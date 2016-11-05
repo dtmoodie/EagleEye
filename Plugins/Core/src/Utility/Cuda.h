@@ -1,6 +1,6 @@
 #pragma once
 
-#include <EagleLib/nodes/Node.h>
+#include <EagleLib/Nodes/Node.h>
 #include "EagleLib/utilities/CudaUtils.hpp"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
