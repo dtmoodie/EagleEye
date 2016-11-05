@@ -81,6 +81,7 @@ namespace EagleLib
             MO_SLOT(void, StopThread);
             MO_SLOT(void, PauseThread);
             MO_SLOT(void, ResumeThread);
+            PROPERTY(std::vector<rcc::shared_ptr<Nodes::Node>>, top_level_nodes, std::vector<rcc::shared_ptr<Nodes::Node>>());
         MO_END
 
         DataStream();
@@ -126,7 +127,6 @@ namespace EagleLib
         rcc::shared_ptr<ITrackManager>                            track_manager;
         std::shared_ptr<mo::IVariableManager>                     variable_manager;
         std::shared_ptr<mo::RelayManager>                         relay_manager;
-        std::vector<rcc::shared_ptr<Nodes::Node>>                 top_level_nodes;
         std::vector<rcc::weak_ptr<Nodes::Node>>                   child_nodes;
         std::shared_ptr<IParameterBuffer>                         _parameter_buffer;
         std::mutex                                                nodes_mtx;
