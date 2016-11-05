@@ -75,6 +75,9 @@ namespace EagleLib
         
         virtual void AddVariableSink(IVariableSink* sink) = 0;
         virtual void RemoveVariableSink(IVariableSink* sink) = 0;
+
+		virtual bool SaveStream(const std::string& filename) = 0;
+		virtual bool LoadStream(const std::string& filename) = 0;
         
         // Get or create singleton for this datastream
         template<typename T> T* GetSingleton()

@@ -20,11 +20,13 @@
 #include "MetaObject/Thread/InterThread.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 #include <MetaObject/Logging/Profiling.hpp>
+#include "MetaObject/IO/Serializer.hpp"
+#include "MetaObject/IO/Policy.hpp"
 
 #include <opencv2/core.hpp>
 #include <boost/chrono.hpp>
 #include <boost/thread.hpp>
-
+#include <boost/filesystem.hpp>
 //#include <signals/boost_thread.h>
 #include <MetaObject/Parameters/VariableManager.h>
 
@@ -101,7 +103,8 @@ namespace EagleLib
         virtual void                                      RemoveNode(rcc::shared_ptr<Nodes::Node> node);
         virtual void                                      RemoveNode(Nodes::Node* node);
         virtual Nodes::Node*                              GetNode(const std::string& nodeName);
-        
+		virtual bool                                      SaveStream(const std::string& filename);
+		virtual bool                                      LoadStream(const std::string& filename);
         void process();
 
         void AddVariableSink(IVariableSink* sink);
@@ -136,6 +139,11 @@ namespace EagleLib
         std::vector<boost::thread*>                               connection_threads;
         mo::Context                                               _context;
         cv::cuda::Stream                                          _stream;
+		template<class AR> 
+		void serialize(AR& ar)
+		{
+			ar(CEREAL_NVP(top_level_nodes));
+		}
     };
 }
 
@@ -601,8 +609,8 @@ void DataStream::process()
     {
         if(!paused)
         {
+			if(mo::ThreadSpecificQueue::Size(_thread_id))
             {
-            
                 mo::scoped_profile profile("Event loop", &rmt_hash, &rmt_cuda_hash, _context.stream);
                 mo::ThreadSpecificQueue::Run(_thread_id);
             }
@@ -655,4 +663,38 @@ std::unique_ptr<ISingleton>& DataStream::GetIObjectSingleton(mo::TypeInfo type)
 {
     return _iobject_singletons[type];
 }
+
+bool DataStream::SaveStream(const std::string& filename)
+{
+	if (boost::filesystem::exists(filename))
+	{
+		LOG(warning) << "Overwriting existing stream config file: " << filename;
+	}
+	std::string ext = boost::filesystem::extension(filename);
+	mo::SerializerFactory::SerializationType type;
+	if (ext == ".bin")
+	{
+		type = mo::SerializerFactory::SerializationType::Binary_e;
+	}
+	else if (ext == ".json")
+	{
+		type = mo::SerializerFactory::SerializationType::json_e;
+	}
+	else if (ext == ".xml")
+	{
+		type = mo::SerializerFactory::SerializationType::xml_e;
+	}
+	
+	std::ofstream ofs(filename, type == mo::SerializerFactory::Binary_e ? std::ios::binary : std::ios::out);
+
+	mo::SerializerFactory::Serialize(this, ofs, type);
+	return false;
+}
+
+bool DataStream::LoadStream(const std::string& filename)
+{
+
+	return false;
+}
+
 MO_REGISTER_OBJECT(DataStream)

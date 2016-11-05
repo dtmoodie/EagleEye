@@ -207,7 +207,7 @@ bool Node::Process()
         _modified = false;
         
         {
-            mo::scoped_profile(this->GetTreeName().c_str(), &this->_rmt_hash, &this->_rmt_cuda_hash, &Stream());
+            mo::scoped_profile profiler(this->GetTreeName().c_str(), &this->_rmt_hash, &this->_rmt_cuda_hash, &Stream());
             if (!ProcessImpl())
                 return false;
         }
