@@ -508,7 +508,22 @@ int main(int argc, char* argv[])
         slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "print"));
         connections.push_back(manager.Connect(slot, "ls"));
-            
+        
+		slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_stream, &current_node](std::string file)
+		{
+			if (current_stream)
+			{
+				current_stream->SaveStream(file);
+			}
+			else if (current_node)
+			{
+
+			}
+		}, std::placeholders::_1));
+		slots.emplace_back(slot);
+		connections.push_back(manager.Connect(slot, "save"));
+
+
         slot = new mo::TypedSlot<void(std::string)>(
             std::bind([&_dataStreams,&current_stream, &current_node, &current_param](std::string what)
         {
