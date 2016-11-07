@@ -44,19 +44,19 @@ int main(int argc, char *argv[])
         }
     }
 
-    MainWindow w;
+    rcc::shared_ptr<MainWindow> w = rcc::shared_ptr<MainWindow>::Create();
     if(vm.count("file"))
     {
         if(vm.count("preferred_loader"))
         {
-            w.load_file(QString::fromStdString(vm["file"].as<std::string>()), QString::fromStdString(vm["preferred_loader"].as<std::string>()));
+            w->load_file(QString::fromStdString(vm["file"].as<std::string>()), QString::fromStdString(vm["preferred_loader"].as<std::string>()));
         }else
         {
-            w.load_file(QString::fromStdString(vm["file"].as<std::string>()));
+            w->load_file(QString::fromStdString(vm["file"].as<std::string>()));
         }
     }
     
-    w.show();
+    w->show();
 
     return a.exec();
 }

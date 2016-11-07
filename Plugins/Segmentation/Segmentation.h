@@ -1,10 +1,13 @@
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
+#include <EagleLib/SyncedMemory.h>
 #include <EagleLib/rcc/external_includes/cv_cudabgsegm.hpp>
 #include "EagleLib/utilities/CudaUtils.hpp"
 #include "Segmentation_impl.h"
 #include "libfastms/solver/solver.h"
-#include "EagleLib/Detail/Export.hpp"
-#include <EagleLib/Project_defs.hpp>
+#include <EagleLib/Detail/PluginExport.hpp>
+
+#include <MetaObject/Detail/MetaObjectMacros.hpp>
+
 SETUP_PROJECT_DEF
 
 namespace EagleLib
@@ -16,8 +19,14 @@ namespace EagleLib
     {
     public:
         OtsuThreshold();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        MO_DERIVE(OtsuThreshold, Node)
+            INPUT(SyncedMemory, image, nullptr);
+            OPTIONAL_INPUT(SyncedMemory, input_histogram, nullptr);
+            OPTIONAL_INPUT(SyncedMemory, input_range, nullptr);
+            OUTPUT(SyncedMemory, output, SyncedMemory());
+        MO_END
+    protected:
+        bool ProcessImpl();
     };
 
     class SegmentMOG2: public Node

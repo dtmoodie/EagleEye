@@ -145,6 +145,9 @@ namespace Nodes
         MO_BEGIN(Node);
             MO_SLOT(void, reset);
             MO_SIGNAL(void, node_updated, Node*);
+            // The children of a node are all nodes accepting inputs
+            // from this node
+            PERSISTENT(std::vector<rcc::shared_ptr<Node>>, _children);
         MO_END;
 
     protected:
@@ -162,9 +165,6 @@ namespace Nodes
         // It handles creating buffers, setting up contexts and all connecting nodes
         std::shared_ptr<mo::IVariableManager>   _variable_manager;
 
-        // The children of a node are all nodes accepting inputs
-        // from this node
-        std::vector<rcc::shared_ptr<Node>>      _children;
         // The parents of a node are all nodes with outputs
         // that this node accepts as inputs
         std::vector<rcc::weak_ptr<Node>>        _parents;

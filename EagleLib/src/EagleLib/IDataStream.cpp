@@ -1,4 +1,5 @@
 #include "EagleLib/IDataStream.hpp"
+#include "EagleLib/DataStream.hpp"
 #include "EagleLib/rcc/SystemTable.hpp"
 #include "EagleLib/utilities/sorting.hpp"
 #include "EagleLib/Logging.h"
@@ -20,16 +21,13 @@
 #include "MetaObject/Thread/InterThread.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 #include <MetaObject/Logging/Profiling.hpp>
-#include "MetaObject/IO/Serializer.hpp"
-#include "MetaObject/IO/Policy.hpp"
 
 #include <opencv2/core.hpp>
 #include <boost/chrono.hpp>
 #include <boost/thread.hpp>
 #include <boost/filesystem.hpp>
-//#include <signals/boost_thread.h>
-#include <MetaObject/Parameters/VariableManager.h>
 
+#include <fstream>
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -68,84 +66,8 @@ catch (...)                                                                 \
 
 
 
-namespace EagleLib
-{
-    class DataStream: public IDataStream
-    {
-    public:
-        MO_BEGIN(DataStream);
-            MO_SIGNAL(void, StartThreads);
-            MO_SIGNAL(void, StopThreads);
+ 
 
-            MO_SLOT(void, StartThread);
-            MO_SLOT(void, StopThread);
-            MO_SLOT(void, PauseThread);
-            MO_SLOT(void, ResumeThread);
-            PROPERTY(std::vector<rcc::shared_ptr<Nodes::Node>>, top_level_nodes, std::vector<rcc::shared_ptr<Nodes::Node>>());
-        MO_END
-
-        DataStream();
-        virtual ~DataStream();
-        std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> GetTopLevelNodes();
-        virtual void                                      InitCustom(bool firstInit);
-        virtual rcc::weak_ptr<IViewManager>               GetViewManager();
-        virtual rcc::weak_ptr<ICoordinateManager>         GetCoordinateManager();
-        virtual rcc::weak_ptr<IRenderEngine>              GetRenderingEngine();
-        virtual rcc::weak_ptr<ITrackManager>              GetTrackManager();
-        virtual std::shared_ptr<mo::IVariableManager>     GetVariableManager();
-        virtual mo::RelayManager*                         GetRelayManager();
-        virtual IParameterBuffer*                         GetParameterBuffer();
-        virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes();
-        virtual bool                                      LoadDocument(const std::string& document, const std::string& prefered_loader = "");
-        virtual std::vector<rcc::shared_ptr<Nodes::Node>> AddNode(const std::string& nodeName);
-        virtual void                                      AddNode(rcc::shared_ptr<Nodes::Node> node);
-        virtual void                                      AddNodeNoInit(rcc::shared_ptr<Nodes::Node> node);
-        virtual void                                      AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node);
-        virtual void                                      RemoveNode(rcc::shared_ptr<Nodes::Node> node);
-        virtual void                                      RemoveNode(Nodes::Node* node);
-        virtual Nodes::Node*                              GetNode(const std::string& nodeName);
-		virtual bool                                      SaveStream(const std::string& filename);
-		virtual bool                                      LoadStream(const std::string& filename);
-        void process();
-
-        void AddVariableSink(IVariableSink* sink);
-        void RemoveVariableSink(IVariableSink* sink);
-
-    protected:
-        virtual void AddChildNode(rcc::shared_ptr<Nodes::Node> node);
-        virtual void RemoveChildNode(rcc::shared_ptr<Nodes::Node> node);
-        virtual std::unique_ptr<ISingleton>& GetSingleton(mo::TypeInfo type);
-        virtual std::unique_ptr<ISingleton>& GetIObjectSingleton(mo::TypeInfo type);
-
-        std::map<mo::TypeInfo, std::unique_ptr<ISingleton>>       _singletons;
-        std::map<mo::TypeInfo, std::unique_ptr<ISingleton>>       _iobject_singletons;
-        int                                                       stream_id;
-        size_t                                                    _thread_id;
-        rcc::shared_ptr<IViewManager>                             view_manager;
-        rcc::shared_ptr<ICoordinateManager>                       coordinate_manager;
-        rcc::shared_ptr<IRenderEngine>                            rendering_engine;
-        rcc::shared_ptr<ITrackManager>                            track_manager;
-        std::shared_ptr<mo::IVariableManager>                     variable_manager;
-        std::shared_ptr<mo::RelayManager>                         relay_manager;
-        std::vector<rcc::weak_ptr<Nodes::Node>>                   child_nodes;
-        std::shared_ptr<IParameterBuffer>                         _parameter_buffer;
-        std::mutex                                                nodes_mtx;
-        bool                                                      paused;
-        cv::cuda::Stream                                          cuda_stream;
-        boost::thread                                             processing_thread;
-        volatile bool                                             dirty_flag;
-        std::vector<IVariableSink*>                               variable_sinks;
-        // These are threads for attempted connections
-        std::vector<boost::thread*>                               connection_threads;
-        mo::Context                                               _context;
-        cv::cuda::Stream                                          _stream;
-		template<class AR> 
-		void serialize(AR& ar)
-		{
-			ar(CEREAL_NVP(top_level_nodes));
-		}
-    };
-}
 
 // **********************************************************************
 //              DataStream
@@ -675,37 +597,7 @@ std::unique_ptr<ISingleton>& DataStream::GetIObjectSingleton(mo::TypeInfo type)
     return _iobject_singletons[type];
 }
 
-bool DataStream::SaveStream(const std::string& filename)
-{
-	if (boost::filesystem::exists(filename))
-	{
-		LOG(warning) << "Overwriting existing stream config file: " << filename;
-	}
-	std::string ext = boost::filesystem::extension(filename);
-	mo::SerializerFactory::SerializationType type;
-	if (ext == ".bin")
-	{
-		type = mo::SerializerFactory::SerializationType::Binary_e;
-	}
-	else if (ext == ".json")
-	{
-		type = mo::SerializerFactory::SerializationType::json_e;
-	}
-	else if (ext == ".xml")
-	{
-		type = mo::SerializerFactory::SerializationType::xml_e;
-	}
-	
-	std::ofstream ofs(filename, type == mo::SerializerFactory::Binary_e ? std::ios::binary : std::ios::out);
 
-	mo::SerializerFactory::Serialize(this, ofs, type);
-	return false;
-}
 
-bool DataStream::LoadStream(const std::string& filename)
-{
-
-	return false;
-}
 
 MO_REGISTER_OBJECT(DataStream)

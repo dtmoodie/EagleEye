@@ -20,11 +20,12 @@ if(Caffe_FOUND)
       ${CUDNN_INCLUDE_DIR}
       ${CUDA_TOOLKIT_INCLUDE}
     )
-
-	get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
-	get_filename_component(CAFFE_BIN_DIR_ "${CAFFE_BIN}" DIRECTORY)
+    if(TARGET libcaffe)
+      get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
+    endif(TARGET libcaffe)
+    get_filename_component(CAFFE_BIN_DIR_ "${CAFFE_BIN}" DIRECTORY)
     #find_path(CAFFE_BIN_DIR NAMES libcaffe.dll libcaffe-nv.dll PATHS ${Caffe_INCLUDE_DIRS}/../bin)
-	set(CAFFE_BIN_DIR ${CAFFE_BIN_DIR_} CACHE PATH "" FORCE)
+    set(CAFFE_BIN_DIR ${CAFFE_BIN_DIR_} CACHE PATH "" FORCE)
     SET(CAFFE_BIN_DIR_DBG ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
     SET(CAFFE_BIN_DIR_OPT ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
 

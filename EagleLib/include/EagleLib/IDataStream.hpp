@@ -28,6 +28,7 @@ namespace EagleLib
     public:
         typedef rcc::shared_ptr<IDataStream> Ptr;
         static Ptr Create(const std::string& document = "", const std::string& preferred_frame_grabber = "");
+        static Ptr Load(const std::string& config_file);
         static bool CanLoadDocument(const std::string& document);
 
 

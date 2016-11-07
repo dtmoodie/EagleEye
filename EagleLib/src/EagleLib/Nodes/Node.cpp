@@ -1,3 +1,4 @@
+#include "MetaObject/Parameters/MetaParameter.hpp"
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/Nodes/NodeFactory.h"
 #include "EagleLib/Nodes/NodeInfo.hpp"
@@ -7,11 +8,12 @@
 #include <EagleLib/utilities/GpuMatAllocators.h>
 #include "EagleLib/Signals.h"
 #include "EagleLib/Detail/AlgorithmImpl.hpp"
-
+#include <EagleLib/IO/memory.hpp>
 
 #include "../RuntimeObjectSystem/ISimpleSerializer.h"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
+
 
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Logging/Log.hpp>
@@ -35,6 +37,8 @@ using namespace EagleLib;
 using namespace EagleLib::Nodes;
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
+
+
 
 #define CATCH_MACRO                                                         \
     catch(mo::ExceptionWithCallStack<cv::Exception>& e)                \
@@ -98,7 +102,7 @@ namespace EagleLib
             
             
 #ifdef _DEBUG
-            std::vector<long long> timestamps;
+        std::vector<long long> timestamps;
 #endif
         };
     }    
@@ -693,5 +697,3 @@ void Node::SetUniqueId(int id)
     _unique_id = id;
     SetParameterRoot(GetTreeName());
 }
-
-

@@ -1,8 +1,9 @@
 PROJECT(vtkRendering)
 CMAKE_POLICY(SET CMP0020 NEW)
-find_package(VTK COMPONENTS 
+find_package(VTK QUIET
+                 COMPONENTS 
                  vtkInteractionStyle 
-				         vtkInteractionWidgets
+				 vtkInteractionWidgets
                  vtkRenderingLOD 
                  vtkIOPLY 
                  vtkFiltersTexture 
@@ -13,9 +14,8 @@ find_package(VTK COMPONENTS
                  vtkGUISupportQt
                  vtkGUISupportQtOpenGL
                  vtkRenderingAnnotation
-				         vtkRenderingVolume
-				         vtkRenderingVolumeOpenGL2
-                 QUIET
+				 vtkRenderingVolume
+				 vtkRenderingVolumeOpenGL2
                  )
 if(VTK_FOUND)
 

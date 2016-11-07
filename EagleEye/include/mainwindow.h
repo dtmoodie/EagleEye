@@ -17,9 +17,8 @@
 #include "user_interface_persistence.h"
 #include "plotwizarddialog.h"
 #include <QtGui/qopenglcontext.h>
-#include <signals/connection.h>
-#include <signals/signaler.h>
-#include <signals/signal_manager.h>
+#include <MetaObject/Signals/RelayManager.hpp>
+
 
 #include <qtimer.h>
 
@@ -36,13 +35,21 @@ class MainWindow;
 class SettingDialog;
 class bookmark_dialog;
 
-class MainWindow : public QMainWindow, public user_interface_persistence//, Signals::signaler
+class MainWindow : public QMainWindow, public user_interface_persistence
 {
     Q_OBJECT
 
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+    MO_DERIVE(MainWindow, user_interface_persistence)
+        MO_SIGNAL(void, StartThreads);
+        MO_SIGNAL(void, StopThreads);
+        MO_SIGNAL(void, PauseThreads);
+        MO_SIGNAL(void, ResumeThreads);
+    MO_END;
+
     void oglDisplay(cv::cuda::GpuMat img, EagleLib::Nodes::Node *node);
     void qtDisplay(cv::Mat img, EagleLib::Nodes::Node *node);
     void onCompileLog(const std::string& msg, int level);
@@ -134,24 +141,19 @@ private:
     SettingDialog*                                      settingsDialog;
     QOpenGLContext*                                     processing_thread_context;
     QWindow*                                            processing_thread_upload_window;
-    std::shared_ptr<Signals::connection>                new_parameter_connection;
-    std::shared_ptr<Signals::connection>                dirty_flag_connection;
+    std::shared_ptr<mo::Connection>                new_parameter_connection;
+    std::shared_ptr<mo::Connection>                dirty_flag_connection;
     std::vector<rcc::shared_ptr<EagleLib::IDataStream>>  data_streams;
-    std::shared_ptr<Signals::connection>                logging_connection;
+    std::shared_ptr<mo::Connection>                logging_connection;
     std::string file_load_path;
     std::string dir_load_path;
 
     QTimer* persistence_timer;
-    SIGNALS_BEGIN(MainWindow)
-        SIG_SEND(StartThreads);
-        SIG_SEND(StopThreads);
-        SIG_SEND(PauseThreads);
-        SIG_SEND(ResumeThreads);
-    SIGNALS_END
+
     // All signals from the user get directed through this manager so that 
     // they can all be attached to a serialization sink for recording user interaction
-    Signals::signal_manager                                _ui_manager;
-    std::vector<std::shared_ptr<Signals::connection>>   _signal_connections;
+    mo::RelayManager _ui_manager;
+    std::vector<std::shared_ptr<mo::Connection>>   _signal_connections;
 };
 
 #endif // MAINWINDOW_H

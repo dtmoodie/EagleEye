@@ -6,7 +6,7 @@ bookmark_dialog::bookmark_dialog(QWidget *parent) :
     ui(new Ui::bookmark_dialog)
 {
     ui->setupUi(this);
-    updateParameterPtr("bookmarks", &bookmarks);
+    //updateParameterPtr("bookmarks", &bookmarks);
     updateParameterPtr("history", &history);
 
     variable_storage::instance().load_parameters(this);

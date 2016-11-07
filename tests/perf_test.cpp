@@ -1,7 +1,7 @@
-#include <EagleLib/Nodes/NodeManager.h>
+
 #include "EagleLib/Nodes/Node.h"
 #include <boost/program_options.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
+
 
 namespace po = boost::program_options;
 

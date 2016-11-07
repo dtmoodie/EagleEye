@@ -2,9 +2,7 @@
 #define PARAMETERS_USE_UI
 #define Qt5_FOUND
 #define OPENCV_FOUND
-#include "parameters/UI/Qt.hpp"
-#include <parameters/ParameteredObjectImpl.hpp>
-#include <parameters/UI/Qt/IParameterProxy.hpp>
+
 using namespace EagleLib;
 
 QtPlotterImpl::QtPlotterImpl()

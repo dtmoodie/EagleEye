@@ -1,8 +1,8 @@
 #include "dialog_network_stream_selection.h"
 #include "ui_dialog_network_stream_selection.h"
 #include <qlistwidget.h>
-#include <EagleLib/rcc/ObjectManager.h>
-#include <EagleLib/frame_grabber_base.h>
+
+#include <EagleLib/Nodes/IFrameGrabber.hpp>
 
 dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent) :
     QDialog(parent),

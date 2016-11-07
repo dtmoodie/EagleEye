@@ -12,7 +12,6 @@ class QListWidgetItem;
 class bookmark_dialog : public QDialog, public user_interface_persistence
 {
     Q_OBJECT
-
 public:
     explicit bookmark_dialog(QWidget *parent = 0);
     ~bookmark_dialog();

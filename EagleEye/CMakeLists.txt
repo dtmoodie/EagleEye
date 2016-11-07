@@ -40,9 +40,9 @@ IF(Qt5_FOUND)
 
     QT5_WRAP_UI(UIS ${forms})
     QT5_WRAP_CPP(MOC ${headers})
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS} /FS")
-
+    if(MSVC)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS} /FS")
+    endif(MSVC)
         SET(executable_name "")
         if(WIN32)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
