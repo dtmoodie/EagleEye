@@ -223,7 +223,7 @@ void EagleLib::Plotting::convertPointCloudToVTKPolyData (
         cloud.getGpuMat().download(wrapper, stream);
     }else
     {
-        cloud.getMat().reshape(1, num_points).copyTo(wrapper);
+        cloud.getMat().copyTo(wrapper);
     }
 
     vtkSmartPointer<vtkIdTypeArray> cells = vertices->GetData ();
