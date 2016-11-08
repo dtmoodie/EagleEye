@@ -1,11 +1,11 @@
 #include "vtkPointCloudPlotter.h"
 #include <EagleLib/SyncedMemory.h>
+#include <EagleLib/plotters/PlotInfo.hpp>
 #include <vtkFloatArray.h>
 #include <vtkDataSetMapper.h>
 #include <vtkPointData.h>
 #include <vtkProperty.h>
 #include <QVTKWidget2.h>
-#include "Remotery.h"
 #include <vtkGenericOpenGLRenderWindow.h>
 
 using namespace EagleLib;
@@ -14,11 +14,7 @@ using namespace EagleLib::Plotting;
 
 
 
-Plotter::PlotterType vtkPointCloudPlotterInfo::GetPlotType()
-{
-    return Plotter::QT_Plotter;
-}
-bool vtkPointCloudPlotterInfo::AcceptsParameter(Parameters::Parameter* param)
+bool vtkPointCloudPlotter::AcceptsParameter(mo::IParameter* param)
 {
     auto type = param->GetTypeInfo();
     cv::Size size;
@@ -26,30 +22,30 @@ bool vtkPointCloudPlotterInfo::AcceptsParameter(Parameters::Parameter* param)
     int channels = 0;
     if(type == mo::TypeInfo(typeid(cv::cuda::GpuMat)))
     {
-        auto typed = dynamic_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>*>(param);
+        auto typed = dynamic_cast<mo::ITypedParameter<cv::cuda::GpuMat>*>(param);
         if(typed)
         {
-            channels = typed->Data()->channels();
-            size = typed->Data()->size();
-            depth = typed->Data()->depth();
+            channels = typed->GetDataPtr()->channels();
+            size = typed->GetDataPtr()->size();
+            depth = typed->GetDataPtr()->depth();
         }                    
     }else if(type == mo::TypeInfo(typeid(cv::Mat)))
     {
-        auto typed = dynamic_cast<Parameters::ITypedParameter<cv::Mat>*>(param);
+        auto typed = dynamic_cast<mo::ITypedParameter<cv::Mat>*>(param);
         if(typed)
         {
-            channels = typed->Data()->channels();
-            size = typed->Data()->size();
-            depth = typed->Data()->depth();
+            channels = typed->GetDataPtr()->channels();
+            size = typed->GetDataPtr()->size();
+            depth = typed->GetDataPtr()->depth();
         }
     }else if(type == mo::TypeInfo(typeid(EagleLib::SyncedMemory)))
     {
-        auto typed = dynamic_cast<Parameters::ITypedParameter<EagleLib::SyncedMemory>*>(param);
+        auto typed = dynamic_cast<mo::ITypedParameter<EagleLib::SyncedMemory>*>(param);
         if(typed)
         {
-            channels = typed->Data()->GetShape().back();
-            size = typed->Data()->GetSize();
-            depth = typed->Data()->GetDepth();
+            channels = typed->GetDataPtr()->GetShape().back();
+            size = typed->GetDataPtr()->GetSize();
+            depth = typed->GetDataPtr()->GetDepth();
         }
     }
 
@@ -68,41 +64,25 @@ bool vtkPointCloudPlotterInfo::AcceptsParameter(Parameters::Parameter* param)
     }
     return false;
 }
-std::string vtkPointCloudPlotterInfo::GetObjectName()
-{
-    return "vtkPointCloudPlotter";
-}
-std::string vtkPointCloudPlotterInfo::GetObjectTooltip()
-{
-    return "Used for displaying point clouds";
-}
-std::string vtkPointCloudPlotterInfo::GetObjectHelp()
-{
-    return "Input parameter must be a point cloud in floating point tensor format or a 3 channel float image";
-}
 
-vtkPointCloudPlotterInfo g_info;
 
 vtkPointCloudPlotter::~vtkPointCloudPlotter()
 {
-    Signals::thread_specific_queue::remove_from_queue(this);
+    mo::ThreadSpecificQueue::RemoveFromQueue(this);
     if(actor)
         renderer->RemoveActor(actor);
 }
-bool vtkPointCloudPlotter::AcceptsParameter(Parameters::Parameter* param)
-{
-    return g_info.AcceptsParameter(param);
-}
 
-void vtkPointCloudPlotter::SetInput(Parameters::Parameter* param_)
+
+void vtkPointCloudPlotter::SetInput(mo::IParameter* param_)
 {
     if(param_)
     {
         auto type = param_->GetTypeInfo();
         if(type == mo::TypeInfo(typeid(cv::cuda::GpuMat)))
         {
-            vtkPlotter::SetInput(param_);
-            _connections[&param_->update_signal] = param_->update_signal.connect(std::bind(&vtkPointCloudPlotter::OnGpuMatParameterUpdate, this, std::placeholders::_1));
+            vtkPlotterBase::SetInput(param_);
+            //_connections[&param_->update_signal] = param_->update_signal.connect(std::bind(&vtkPointCloudPlotter::OnGpuMatParameterUpdate, this, std::placeholders::_1));
 
         }else if(type == mo::TypeInfo(typeid(cv::Mat)))
         {
@@ -134,13 +114,10 @@ void vtkPointCloudPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
     
 }
 
-std::string vtkPointCloudPlotter::PlotName() const
-{
-    return "vtkPointCloudPlotter";
-}
+
 
 void
-updateCells (
+EagleLib::Plotting::updateCells (
     vtkSmartPointer<vtkIdTypeArray> &cells,
     vtkSmartPointer<vtkIdTypeArray> &initcells,
     vtkIdType nr_points)
@@ -186,7 +163,7 @@ updateCells (
     }
 }
 
-void convertPointCloudToVTKPolyData (
+void EagleLib::Plotting::convertPointCloudToVTKPolyData (
     cv::InputArray cloud,
     vtkSmartPointer<vtkPolyData> &polydata,
     vtkSmartPointer<vtkIdTypeArray> &initcells, cv::cuda::Stream& stream)
@@ -255,8 +232,9 @@ void convertPointCloudToVTKPolyData (
     // Set the cells and the vertices
     vertices->SetCells (nr_points, cells);
 }
+
 void
-createActorFromVTKDataSet (const vtkSmartPointer<vtkDataSet> &data,
+EagleLib::Plotting::createActorFromVTKDataSet (const vtkSmartPointer<vtkDataSet> &data,
     vtkSmartPointer<vtkLODActor> &actor,
     bool use_scalars)
 {
@@ -299,7 +277,7 @@ createActorFromVTKDataSet (const vtkSmartPointer<vtkDataSet> &data,
 
 void vtkPointCloudPlotter::OnGpuMatParameterUpdate(cv::cuda::Stream* stream)
 {
-    auto gui_thread = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
+    /*auto gui_thread = Signals::thread_registry::get_instance()->get_thread(Signals::GUI);
     if(Signals::get_this_thread() != gui_thread)
     {
         rmt_ScopedCPUSample(push_queue);
@@ -338,8 +316,8 @@ void vtkPointCloudPlotter::OnGpuMatParameterUpdate(cv::cuda::Stream* stream)
     {
         rmt_ScopedCPUSample(render);
         RenderAll();
-    }
+    }*/
     
 }
-REGISTERCLASS(vtkPointCloudPlotter, &g_info)
+MO_REGISTER_CLASS(vtkPointCloudPlotter)
 

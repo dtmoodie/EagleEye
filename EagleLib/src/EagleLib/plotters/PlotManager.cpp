@@ -1,7 +1,7 @@
 #include "EagleLib/plotters/PlotManager.h"
 #include "IObjectState.hpp"
 #include <MetaObject/Logging/Log.hpp>
-
+#include "EagleLib/plotters/PlotInfo.hpp"
 using namespace EagleLib;
 
 

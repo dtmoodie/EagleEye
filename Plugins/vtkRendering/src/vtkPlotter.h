@@ -1,5 +1,6 @@
 #pragma once
 #include "EagleLib/plotters/Plotter.h"
+#include "EagleLib/plotters/PlotInfo.hpp"
 #include "vtkSmartPointer.h"
 #include "vtkRenderer.h"
 #include "QVTKWidget2.h"
@@ -119,11 +120,8 @@ namespace EagleLib
 {
     namespace Plotting
     {
-        struct PLUGIN_EXPORTS vtkPlotterInfo: public PlotterInfo
-        {
-            virtual Plotter::PlotterType GetPlotType();
-        };
-        class PLUGIN_EXPORTS vtkPlotter : public QtPlotter
+        
+        class PLUGIN_EXPORTS vtkPlotterBase : public QtPlotter
         {
             std::list<vtkProp*> _auto_remove_props;
         protected:
@@ -136,12 +134,11 @@ namespace EagleLib
             void RemoveViewProp(vtkProp* prop);
             void RenderAll();
         public:
-            vtkPlotter();
-            virtual ~vtkPlotter();
-            virtual bool AcceptsParameter(Parameters::Parameter* param);
-            virtual void SetInput(Parameters::Parameter* param_ = nullptr);
+            vtkPlotterBase();
+            virtual ~vtkPlotterBase();
+            virtual bool AcceptsParameter(mo::IParameter* param);
+            virtual void SetInput(mo::IParameter* param_ = nullptr);
             virtual void OnParameterUpdate(cv::cuda::Stream* stream);
-            virtual std::string PlotName() const;
             virtual void PlotInit(bool firstInit);
             virtual void AddPlot(QWidget* plot_);
 

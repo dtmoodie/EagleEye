@@ -32,14 +32,14 @@ namespace EagleLib
 
     namespace Plotting
     {
-        struct PLUGIN_EXPORTS vtkImageViewerInfo: public vtkPlotterInfo
+        /*struct PLUGIN_EXPORTS vtkImageViewerInfo: public vtkPlotterInfo
         {
-            virtual bool AcceptsParameter(Parameters::Parameter* param);
+            virtual bool AcceptsParameter(mo::Parameter* param);
             virtual std::string GetObjectName();
             virtual std::string GetObjectTooltip();
             virtual std::string GetObjectHelp();
-        };
-        class PLUGIN_EXPORTS vtkImageViewer : public vtkPlotter
+        };*/
+        class PLUGIN_EXPORTS vtkImageViewer : public vtkPlotterBase
         {
         public:
             double current_aspect_ratio;
@@ -51,16 +51,18 @@ namespace EagleLib
             vtkSmartPointer<vtkFloatArray> textureCoordinates;
             vtkSmartPointer<vtkPolyDataMapper> mapper;
             vtkSmartPointer<vtkPolyData> quad;
+            MO_DERIVE(vtkImageViewer, vtkPlotterBase)
 
+            MO_END;
             vtkImageViewer();
             ~vtkImageViewer();
             QWidget* CreatePlot(QWidget* parent);
-            virtual bool AcceptsParameter(Parameters::Parameter* param);
-            virtual void SetInput(Parameters::Parameter* param_ = nullptr);
+            virtual void SetInput(mo::IParameter* param_ = nullptr);
             virtual void OnParameterUpdate(cv::cuda::Stream* stream);
-            virtual std::string PlotName() const;
+            //virtual std::string PlotName() const;
             virtual void Serialize(ISimpleSerializer *pSerializer);
             virtual void Init(bool firstInit);
+            static bool AcceptsParameter(mo::IParameter* param);
         };
     }
 }

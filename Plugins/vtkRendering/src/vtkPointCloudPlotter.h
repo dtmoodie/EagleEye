@@ -11,25 +11,40 @@ namespace EagleLib
 {
     namespace Plotting
     {
-        struct PLUGIN_EXPORTS vtkPointCloudPlotterInfo: public PlotterInfo
+        /*struct PLUGIN_EXPORTS vtkPointCloudPlotterInfo: public PlotterInfo
         {
-            virtual Plotter::PlotterType GetPlotType();
-            virtual bool AcceptsParameter(Parameters::Parameter* param);
+            
+            virtual bool AcceptsParameter(mo::IParameter* param);
             virtual std::string GetObjectName();
             virtual std::string GetObjectTooltip();
             virtual std::string GetObjectHelp();
-        };
-        class PLUGIN_EXPORTS vtkPointCloudPlotter: public vtkPlotter
+        };*/
+        PLUGIN_EXPORTS void convertPointCloudToVTKPolyData(
+            cv::InputArray cloud,
+            vtkSmartPointer<vtkPolyData> &polydata,
+            vtkSmartPointer<vtkIdTypeArray> &initcells, cv::cuda::Stream& stream);
+
+        PLUGIN_EXPORTS void createActorFromVTKDataSet(const vtkSmartPointer<vtkDataSet> &data,
+                vtkSmartPointer<vtkLODActor> &actor,
+                bool use_scalars);
+
+        PLUGIN_EXPORTS void updateCells(
+                vtkSmartPointer<vtkIdTypeArray> &cells,
+                vtkSmartPointer<vtkIdTypeArray> &initcells,
+                vtkIdType nr_points);
+
+        class PLUGIN_EXPORTS vtkPointCloudPlotter: public vtkPlotterBase
         {
         public:
+            MO_DERIVE(vtkPointCloudPlotter, vtkPlotterBase)
+            MO_END;
             ~vtkPointCloudPlotter();
-            virtual bool AcceptsParameter(Parameters::Parameter* param);
-            virtual void SetInput(Parameters::Parameter* param_ = nullptr);
+            static bool AcceptsParameter(mo::IParameter* param);
+            virtual void SetInput(mo::IParameter* param_ = nullptr);
             virtual void OnParameterUpdate(cv::cuda::Stream* stream);
             virtual void OnMatParameterUpdate(cv::cuda::Stream* stream);
             virtual void OnGpuMatParameterUpdate(cv::cuda::Stream* stream);
             virtual void OnSyncedMemUpdate(cv::cuda::Stream* stream);
-            virtual std::string PlotName() const;
 
         private:
             // Point clouds get uploaded / copied into this opengl vertex buffer for rendering

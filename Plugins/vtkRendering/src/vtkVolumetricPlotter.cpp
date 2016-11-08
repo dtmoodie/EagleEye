@@ -19,7 +19,7 @@
 #include <QVTKInteractor.h>
 #include <QVTKWidget2.h>
 #include <vtkGenericOpenGLRenderWindow.h>
-#include <signals/inter_thread.h>
+
 using namespace EagleLib;
 using namespace EagleLib::Plotting;
 
@@ -49,15 +49,15 @@ protected:
     vtkSmartVolumeMapper *Mapper;
 };
 
-bool vtkVolumetricPlotterInfo::AcceptsParameter(Parameters::Parameter* param)
+bool vtkVolumetricPlotter::AcceptsParameter(mo::IParameter* param)
 {
     auto type = param->GetTypeInfo();
     if(type == mo::TypeInfo(typeid(TS<SyncedMemory>)))
     {
-        auto typed = dynamic_cast<Parameters::ITypedParameter<TS<SyncedMemory>>*>(param);
+        auto typed = dynamic_cast<mo::ITypedParameter<TS<SyncedMemory>>*>(param);
         if(typed)
         {
-            auto ts_data = typed->Data();
+            auto ts_data = typed->GetDataPtr();
             if(ts_data)
             {
                 auto shape = ts_data->GetShape();
@@ -74,22 +74,7 @@ bool vtkVolumetricPlotterInfo::AcceptsParameter(Parameters::Parameter* param)
     return false;
 }
 
-std::string vtkVolumetricPlotterInfo::GetObjectName()
-{
-    return "vtkVolumetricPlotter";
-}
 
-std::string vtkVolumetricPlotterInfo::GetObjectTooltip()
-{
-    return "Plot data as if each channel is along the Z axis";
-}
-
-std::string vtkVolumetricPlotterInfo::GetObjectHelp()
-{
-    return "Volumetric plot .....";
-}
-
-static vtkVolumetricPlotterInfo g_volumeInfo;
 vtkVolumetricPlotter::vtkVolumetricPlotter()
 {
     _callback = nullptr;
@@ -104,24 +89,21 @@ vtkVolumetricPlotter::~vtkVolumetricPlotter()
         _mapper->RemoveAllClippingPlanes();
     }
 }
-bool vtkVolumetricPlotter::AcceptsParameter(Parameters::Parameter* param)
-{
-    return g_volumeInfo.AcceptsParameter(param);
-}
-void vtkVolumetricPlotter::SetInput(Parameters::Parameter* param_)
+
+void vtkVolumetricPlotter::SetInput(mo::IParameter* param_)
 {
     if(param_)
     {
         auto type = param_->GetTypeInfo();
         if(type == mo::TypeInfo(typeid(TS<SyncedMemory>)))
         {
-            vtkPlotter::SetInput(param_);
-            _connections[&param_->update_signal] = param_->update_signal.connect(std::bind(&vtkVolumetricPlotter::OnSyncedMemUpdate, this, std::placeholders::_1));
-            auto typed = dynamic_cast<Parameters::ITypedParameter<TS<SyncedMemory>>*>(param_);
-            if(typed && typed->Data())
+            vtkPlotterBase::SetInput(param_);
+            //_connections[&param_->update_signal] = param_->update_signal.connect(std::bind(&vtkVolumetricPlotter::OnSyncedMemUpdate, this, std::placeholders::_1));
+            auto typed = dynamic_cast<mo::ITypedParameter<TS<SyncedMemory>>*>(param_);
+            if(typed && typed->GetDataPtr())
             {
                 //vtkSmartPointer<vtkSmartVolumeMapper> volumeMapper = vtkSmartPointer<vtkSmartVolumeMapper>::New();
-                auto data = typed->Data();
+                auto data = typed->GetDataPtr();
                 auto shape = data->GetShape();
                 int extent[6];
                 int dim_count = 0;
@@ -237,7 +219,7 @@ std::string vtkVolumetricPlotter::PlotName() const
 }
 void vtkVolumetricPlotter::PlotInit(bool firstInit)
 {
-    vtkPlotter::PlotInit(firstInit);
+    vtkPlotterBase::PlotInit(firstInit);
     colormapping_scheme.enumerations = ColorMapperFactory::Instance()->ListSchemes();
     colormapping_scheme.values.clear();
     for(int i = 0; i < colormapping_scheme.enumerations.size(); ++i)
@@ -245,9 +227,9 @@ void vtkVolumetricPlotter::PlotInit(bool firstInit)
     if(firstInit)
         colormapping_scheme.currentSelection = 0;
 }
-void vtkVolumetricPlotter::onUpdate(Parameters::Parameter* param, cv::cuda::Stream* stream)
+void vtkVolumetricPlotter::onUpdate(mo::IParameter* param, cv::cuda::Stream* stream)
 {
-    vtkPlotter::onUpdate(param, stream);
+    //vtkPlotterBase::onUpdate(param, stream);
     if(param == &opacity_max_value_param || param == &opacity_sharpness_param || param == &opacity_min_value_param)
     {
         _compositeOpacity = vtkSmartPointer<vtkPiecewiseFunction>::New();
@@ -269,15 +251,15 @@ void vtkVolumetricPlotter::onUpdate(Parameters::Parameter* param, cv::cuda::Stre
             _volumeProperty->SetColor(_color);
         }
     }
-    Signals::thread_specific_queue::push(
+    mo::ThreadSpecificQueue::Push(
         [this]()->void
     {
         for (auto itr : this->render_widgets)
         {
             itr->GetRenderWindow()->Render();
         }
-    }, Signals::thread_registry::get_instance()->get_instance()->get_thread(Signals::GUI), this);
+    }, mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI), this);
 }
 
-REGISTERCLASS(vtkVolumetricPlotter, &g_volumeInfo)
+MO_REGISTER_CLASS(vtkVolumetricPlotter)
 
