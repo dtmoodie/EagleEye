@@ -123,6 +123,7 @@ namespace Nodes
         
         virtual void                     SetDataStream(IDataStream* stream);
         virtual IDataStream*             GetDataStream();
+        virtual std::shared_ptr<mo::IVariableManager>     GetVariableManager();
 
         void                             SetUniqueId(int id);
         std::string                      GetTreeName() const;

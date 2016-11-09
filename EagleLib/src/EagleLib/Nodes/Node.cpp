@@ -504,7 +504,10 @@ IDataStream* Node::GetDataStream()
     }    
     return _dataStream.Get();
 }
-
+std::shared_ptr<mo::IVariableManager>     Node::GetVariableManager()
+{
+    return GetDataStream()->GetVariableManager();
+}
 
 std::string Node::GetTreeName() const
 {
