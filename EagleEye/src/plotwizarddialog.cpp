@@ -31,28 +31,29 @@ void PlotWizardDialog::setup()
     
     ui->plotPreviewLayout->addWidget(plot_splitter, 0,0);
     
-    auto plotters = EagleLib::PlotManager::getInstance().getAvailablePlots();
+    auto plotters = EagleLib::PlotManager::Instance()->GetAvailablePlots();
     for(size_t i = 0; i < plotters.size(); ++i)
     {
-        rcc::shared_ptr<EagleLib::Plotter> plotter = EagleLib::PlotManager::getInstance().getPlot(plotters[i]);
+        rcc::shared_ptr<EagleLib::Plotter> plotter = EagleLib::PlotManager::Instance()->GetPlot(plotters[i]);
         if(plotter != nullptr)
         {
-            if(plotter->Type() == EagleLib::Plotter::QT_Plotter)
+            rcc::shared_ptr<EagleLib::QtPlotter> qtPlotter(plotter);
+            if(qtPlotter)
             {
-                rcc::shared_ptr<EagleLib::QtPlotter> qtPlotter(plotter);
                 QWidget* plot = qtPlotter->CreatePlot(this);
                 plot->installEventFilter(this);
                 qtPlotter->AddPlot(plot);
                 auto control_widget = qtPlotter->GetControlWidget(this);
                 if (control_widget)
                 {
-                    QSplitter* setting_splitter= new QSplitter(this);
+                    QSplitter* setting_splitter = new QSplitter(this);
                     setting_splitter->setOrientation(Qt::Horizontal);
                     setting_splitter->addWidget(plot);
                     setting_splitter->addWidget(control_widget);
                     previewPlotControllers[plot] = control_widget;
                     plot_splitter->addWidget(setting_splitter);
-                }else
+                }
+                else
                 {
                     plot_splitter->addWidget(plot);
                 }
@@ -118,7 +119,7 @@ void PlotWizardDialog::handleUpdate(int idx)
     //previewPlotters[idx]->doUpdate();
 }
 
-void PlotWizardDialog::plotParameter(Parameters::Parameter* param)
+void PlotWizardDialog::plotParameter(mo::IParameter* param)
 {
     this->show();
     //ui->tabWidget->setCurrentIndex(0);

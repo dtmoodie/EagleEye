@@ -9,18 +9,18 @@ dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent
     ui(new Ui::dialog_network_stream_selection)
 {
     ui->setupUi(this);
-    updateParameterPtr("url history", &url_history);
+    
     variable_storage::instance().load_parameters(this);
     ui->list_url_history->installEventFilter(this);
     QObject::connect(ui->list_url_history, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(on_item_clicked(QListWidgetItem*)));
 
-    auto constructors = EagleLib::ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
     for(auto constructor : constructors)
     {
         auto info = constructor->GetObjectInfo();
         if(info)
         {
-            auto fg_info = dynamic_cast<EagleLib::FrameGrabberInfo*>(info);
+            auto fg_info = dynamic_cast<EagleLib::Nodes::FrameGrabberInfo*>(info);
             if(fg_info)
             {
                 auto devices = fg_info->ListLoadableDocuments();
@@ -97,3 +97,5 @@ bool dialog_network_stream_selection::eventFilter(QObject *object, QEvent *event
     }
     return false;
 }
+
+MO_REGISTER_CLASS(dialog_network_stream_selection);

@@ -16,6 +16,10 @@ public:
     explicit bookmark_dialog(QWidget *parent = 0);
     ~bookmark_dialog();
     void update();
+    MO_DERIVE(bookmark_dialog, user_interface_persistence)
+        PERSISTENT(std::set<std::string>, history);
+        PERSISTENT(std::set<std::string>, bookmarks);
+    MO_END;
 public slots:
     void append_history(std::string dir);
 
@@ -27,8 +31,7 @@ private slots:
     
 private:
     Ui::bookmark_dialog *ui;
-    std::set<std::string> history;
-    std::set<std::string> bookmarks;
+    
 };
 
 #endif // BOOKMARK_DIALOG_H

@@ -14,19 +14,15 @@ class NodeListDialog;
 class NodeListDialog : public QDialog, public mo::IMetaObject
 {
     Q_OBJECT
-
 public:
     explicit NodeListDialog(QWidget *parent = 0);
-    void update();
-    void show();
     ~NodeListDialog();
 
     MO_BEGIN(NodeListDialog)
         MO_SIGNAL(void, add_node, std::string);
+        MO_SLOT(void, update);
     MO_END
 
-signals:
-    void nodeConstructed(EagleLib::Nodes::Node::Ptr node);
 private slots:
     void on_pushButton_clicked();
 

@@ -13,6 +13,10 @@ class dialog_network_stream_selection : public QDialog, public user_interface_pe
     Q_OBJECT
 
 public:
+    typedef std::set<std::pair<std::string, std::string>> UrlHistory_t;
+    MO_DERIVE(dialog_network_stream_selection, user_interface_persistence)
+        PERSISTENT(UrlHistory_t, url_history);
+    MO_END;
     explicit dialog_network_stream_selection(QWidget *parent = 0);
     ~dialog_network_stream_selection();
     QString url;
@@ -29,7 +33,7 @@ signals:
 private:
     void refresh_history();
     Ui::dialog_network_stream_selection *ui;
-    std::set<std::pair<std::string, std::string>> url_history;
+    
 };
 
 #endif // DIALOG_NETWORK_STREAM_SELECTION_H

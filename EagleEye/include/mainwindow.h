@@ -48,10 +48,11 @@ public:
         MO_SIGNAL(void, StopThreads);
         MO_SIGNAL(void, PauseThreads);
         MO_SIGNAL(void, ResumeThreads);
+        MO_SLOT(void, parameter_added, EagleLib::Nodes::Node*);
+        MO_SLOT(void, node_update, EagleLib::Nodes::Node*);
     MO_END;
 
-    void oglDisplay(cv::cuda::GpuMat img, EagleLib::Nodes::Node *node);
-    void qtDisplay(cv::Mat img, EagleLib::Nodes::Node *node);
+    
     void onCompileLog(const std::string& msg, int level);
     virtual void closeEvent(QCloseEvent *event);
     void processingThread_uiCallback(boost::function<void(void)> f, std::pair<void*, mo::TypeInfo> source);
@@ -64,9 +65,7 @@ private slots:
     
     void onSelectionChanged(QGraphicsProxyWidget* widget);
     void log(QString message);
-    void onOGLDisplay(std::string name, cv::cuda::GpuMat img);
-    void onQtDisplay(std::string name, cv::Mat img);
-    void onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::Nodes::Node* node);
+    
     void stopProcessingThread();
     void startProcessingThread();
     void onWidgetDeleted(QNodeWidget* widget);
@@ -80,8 +79,8 @@ private slots:
     void updateLines();
     void uiNotifier();
     void onUiUpdate();
-    void on_NewParameter(EagleLib::Nodes::Node* node);
-    void newParameter(EagleLib::Nodes::Node* node);
+    //void on_NewParameter(EagleLib::Nodes::Node* node);
+    //void newParameter(EagleLib::Nodes::Node* node);
     void displayRCCSettings();
     void onPlotAdd(PlotWindow* plot);
     void onPlotRemove(PlotWindow* plot);
@@ -101,7 +100,7 @@ private slots:
     void on_persistence_timeout();
 
 signals:
-    void onNewParameter(EagleLib::Nodes::Node* node);
+    //void onNewParameter(EagleLib::Nodes::Node* node);
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);
@@ -118,11 +117,11 @@ private:
     void processThread();
     bool processingThreadActive;
 
-    bookmark_dialog*                                    bookmarks;
+    rcc::shared_ptr<bookmark_dialog>                   bookmarks;
     bool                                                dirty;
     Ui::MainWindow *                                    ui;
     QTimer*                                             fileMonitorTimer;
-    NodeListDialog*                                     nodeListDialog;
+    rcc::shared_ptr<NodeListDialog>                    nodeListDialog;
     QGraphicsScene*                                     nodeGraph;
     NodeView*                                            nodeGraphView;
     QGraphicsProxyWidget*                               currentSelectedNodeWidget;

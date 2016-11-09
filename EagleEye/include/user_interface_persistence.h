@@ -5,18 +5,14 @@
 #include <MetaObject/Parameters/ParameterMacros.hpp>
 #include <map>
 
-class user_interface_persistence: public mo::IMetaObject
+class UIPersistence
 {
 public:
-    MO_BEGIN(user_interface_persistence)
-        PARAM(std::vector<rcc::shared_ptr<user_interface_persistence>>, child_ui_elements, std::vector<rcc::shared_ptr<user_interface_persistence>>());
-    MO_END
-    user_interface_persistence();
-    ~user_interface_persistence();
+    UIPersistence();
+    virtual ~UIPersistence();
 
     class variable_storage
     {
-
     public:
         static variable_storage& instance();
         void save_parameters(const std::string& file_name = "user_preferences.yml");

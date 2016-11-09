@@ -68,7 +68,7 @@ void user_interface_persistence::variable_storage::load_parameters(const std::st
                 auto param = Parameters::Persistence::cv::DeSerialize(&node);
                 if (param)
                 {
-                    param_vec[param->GetName()] = std::shared_ptr<Parameters::Parameter>(param);
+                    param_vec[param->GetName()] = std::shared_ptr<mo::IParameter>(param);
                 }
             }
         }

@@ -6,9 +6,7 @@ bookmark_dialog::bookmark_dialog(QWidget *parent) :
     ui(new Ui::bookmark_dialog)
 {
     ui->setupUi(this);
-    //updateParameterPtr("bookmarks", &bookmarks);
-    updateParameterPtr("history", &history);
-
+    
     variable_storage::instance().load_parameters(this);
     update();
     QObject::connect(ui->list_bookmarks, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(on_file_selected(QListWidgetItem*)));
@@ -50,3 +48,4 @@ void bookmark_dialog::on_file_selected(QListWidgetItem* item)
     }
     emit open_file(name);
 }
+MO_REGISTER_CLASS(bookmark_dialog);

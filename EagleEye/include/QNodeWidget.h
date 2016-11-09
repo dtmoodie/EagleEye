@@ -36,22 +36,25 @@ class QInputProxy;
 class QInputProxy : public QWidget
 {
     Q_OBJECT
-    int prevIdx;
-    void onParamDelete(mo::IParameter* parameter);
 public:
-    mo::InputParameter* inputParameter;
     QInputProxy(mo::IParameter* parameter, rcc::weak_ptr<EagleLib::Nodes::Node> node_, QWidget* parent);
     void updateParameter(mo::IParameter* parameter);
-    virtual void updateUi(bool init = false);
+    virtual void updateUi(mo::IParameter*, mo::Context*, bool init = false);
     virtual QWidget* getWidget(int num = 0);
     bool eventFilter(QObject* obj, QEvent* event);
+
+    mo::InputParameter* inputParameter;
 private slots:
     void on_valueChanged(int);
 private:
-    std::shared_ptr<mo::Connection> bc;
-    std::shared_ptr<mo::Connection> dc;
+    int prevIdx;
+    void onParamDelete(mo::IParameter const* parameter);
+    std::shared_ptr<mo::Connection> update_connection;
+    std::shared_ptr<mo::Connection> delete_connection;
     rcc::weak_ptr<EagleLib::Nodes::Node> node;
     QComboBox* box;
+    mo::TypedSlot<void(mo::IParameter*, mo::Context*)> onParameterUpdateSlot;
+    mo::TypedSlot<void(mo::IParameter const*)> onParameterDeleteSlot;
 };
 
 class CV_EXPORTS QNodeWidget : public QWidget
@@ -165,11 +168,12 @@ private slots:
     void on_valueChanged(bool value);
     void on_valueChanged(QString value);
     void on_valueChanged();
-    void onParameterUpdate(mo::IParameter* parameter);
-    void onParameterUpdate();
+    void onParameterUpdate(mo::IParameter* parameter, mo::Context* ctx);
+    //void onParameterUpdate();
 signals:
     void updateNeeded();
 protected:
+    mo::TypedSlot<void(mo::IParameter*, mo::Context*)> onParameterUpdateSlot;
     QLabel* nameElement;    
     QGridLayout* layout;
     rcc::weak_ptr<EagleLib::Nodes::Node> node;

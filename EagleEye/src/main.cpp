@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-
+    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
     rcc::shared_ptr<MainWindow> w = rcc::shared_ptr<MainWindow>::Create();
     if(vm.count("file"))
     {

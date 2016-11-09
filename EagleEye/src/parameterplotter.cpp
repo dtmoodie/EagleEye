@@ -3,7 +3,7 @@
 //#include "Manager.h"
 
 
-//QList<ParameterPlotterFactory*> ParameterPlotter::getPlotters(Parameters::Parameter::Ptr param)
+//QList<ParameterPlotterFactory*> ParameterPlotter::getPlotters(mo::IParameter::Ptr param)
 //{
 //    QList<ParameterPlotterFactory*> output;
 //    for(auto it = g_factories.begin(); it != g_factories.end(); ++it)
@@ -15,12 +15,12 @@
 //}
 
 
-//ParameterPlotter* ParameterPlotter::getPlot(Parameters::Parameter::Ptr param)
+//ParameterPlotter* ParameterPlotter::getPlot(mo::IParameter::Ptr param)
 //{
 
 //}
 
-//ParameterPlotter::ParameterPlotter(Parameters::Parameter::Ptr param_, QCustomPlot *plot_):
+//ParameterPlotter::ParameterPlotter(mo::IParameter::Ptr param_, QCustomPlot *plot_):
 //    param(param_), plot(plot_)
 //{
 //    param->onUpdate.connect(boost::bind(&ParameterPlotter::onUpdate, this));
@@ -44,14 +44,14 @@
 
 
 //static PlotterFactory<HistogramPlotter, SingleChannelPolicy, VectorSizePolicy, TypePolicy<cv::Mat>, TypePolicy<cv::cuda::GpuMat>, TypePolicy<cv::cuda::HostMem>> histPlotter("HistogramPlotter");
-//bool HistogramPlotter::acceptsType(Parameters::Parameter::Ptr param)
+//bool HistogramPlotter::acceptsType(mo::IParameter::Ptr param)
 //{
 //    return EagleLib::acceptsType<cv::Mat>(param->typeInfo) ||
 //            EagleLib::acceptsType<cv::cuda::GpuMat>(param->typeInfo) ||
 //            EagleLib::acceptsType<cv::cuda::HostMem>(param->typeInfo);
 //}
 
-//HistogramPlotter::HistogramPlotter(Parameters::Parameter::Ptr param, QCustomPlot* plot_):
+//HistogramPlotter::HistogramPlotter(mo::IParameter::Ptr param, QCustomPlot* plot_):
 //    ParameterPlotter(param, plot_)
 //{
 //    connect(this, SIGNAL(update()),this, SLOT(doUpdate()), Qt::QueuedConnection);
@@ -115,7 +115,7 @@
 //}
 //void HistogramPlotter::onScaleChange(QString name)
 //{
-//    Parameters::Parameter::Ptr param = EagleLib::NodeManager::getInstance().getParameter(name.toStdString());
+//    mo::IParameter::Ptr param = EagleLib::NodeManager::getInstance().getParameter(name.toStdString());
 //    if(param)
 //        scale = getParamArrayData(param,0);
 //}

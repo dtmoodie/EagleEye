@@ -27,6 +27,7 @@ public:
     void wheelEvent(QWheelEvent* event);
     QGraphicsLineItem* drawLine2Parent(QGraphicsProxyWidget* child);
     QGraphicsProxyWidget* getParent(EagleLib::Nodes::Node::Ptr child);
+    std::vector<QGraphicsProxyWidget*> getParents(EagleLib::Nodes::Node::Ptr child);
     QGraphicsProxyWidget* getStream(EagleLib::IDataStream* stream_id);
 
 signals:
