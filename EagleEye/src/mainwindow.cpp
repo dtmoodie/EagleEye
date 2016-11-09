@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
     processing_thread_context = nullptr;
     processing_thread_upload_window = nullptr;
     //updateParameterPtr("file load path", &file_load_path);
-    variable_storage::instance().load_parameters(this);
+    VariableStorage::Instance()->LoadParams(this, "MainWindow");
     
     cv::Mat::setDefaultAllocator(EagleLib::CpuPinnedAllocator::instance());
 
@@ -91,11 +91,11 @@ MainWindow::MainWindow(QWidget *parent) :
     fileMonitorTimer = new QTimer(this);
     fileMonitorTimer->start(1000);
     QObject::connect(fileMonitorTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
-    nodeListDialog = NodeListDialog::Create();
+    nodeListDialog = new NodeListDialog(this);
     nodeListDialog->setParent(this);
     nodeListDialog->hide();
     //nodeListDialog->setup_signals(&_ui_manager);
-    nodeListDialog->SetupSignals(&_ui_manager);
+    //nodeListDialog->SetupSignals(&_ui_manager);
     //_signal_connections.push_back(_ui_manager.connect<void(std::string)>("add_node", std::bind(&MainWindow::onNodeAdd, this, std::placeholders::_1), this, Signals::get_this_thread()));
 
     /*connect(nodeListDialog, SIGNAL(nodeConstructed(EagleLib::Nodes::Node::Ptr)),
@@ -115,14 +115,14 @@ MainWindow::MainWindow(QWidget *parent) :
     rccSettings->hide();
     plotWizardDialog->hide();
 
-    bookmarks = bookmark_dialog::Create();
+    bookmarks = new bookmark_dialog(this);
     bookmarks->setParent(this);
     bookmarks->hide();
 
     
     persistence_timer = new QTimer(this);
     persistence_timer->start(500); // save setting every half second
-    QObject::connect(bookmarks.Get(), SIGNAL(open_file(QString)), this, SLOT(load_file(QString)));
+    QObject::connect(bookmarks, SIGNAL(open_file(QString)), this, SLOT(load_file(QString)));
     QObject::connect(persistence_timer, SIGNAL(timeout()), this, SLOT(on_persistence_timeout()));
     QObject::connect(this, &MainWindow::uiCallback, this, &MainWindow::on_uiCallback, Qt::QueuedConnection);
     QObject::connect(nodeGraphView, SIGNAL(plotData(mo::IParameter*)), plotWizardDialog, SLOT(plotParameter(mo::IParameter*)));
@@ -207,8 +207,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    variable_storage::instance().save_parameters(this);
-    bookmarks.reset();
+    VariableStorage::Instance()->SaveParams(this, "MainWindow");
     stopProcessingThread();
     cv::destroyAllWindows();
     EagleLib::ShutdownLogging();
@@ -477,7 +476,7 @@ void MainWindow::onTimeout()
 }
 void MainWindow::on_persistence_timeout()
 {
-    variable_storage::instance().save_parameters();
+    VariableStorage::Instance()->SaveUI();
 }
 void MainWindow::log(QString message)
 {
@@ -749,11 +748,11 @@ void MainWindow::on_actionLog_settings_triggered()
 
 void MainWindow::on_actionOpen_Network_triggered()
 {
-    auto dlg = rcc::shared_ptr<dialog_network_stream_selection>::Create();
-    dlg->exec();
-    if(dlg->accepted)
+    dialog_network_stream_selection dlg;
+    dlg.exec();
+    if(dlg.accepted)
     {
-        load_file(dlg->url, dlg->preferred_loader);
+        load_file(dlg.url, dlg.preferred_loader);
     }
 }
 

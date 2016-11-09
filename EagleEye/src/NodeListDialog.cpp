@@ -10,9 +10,8 @@ NodeListDialog::NodeListDialog(QWidget *parent) :
     ui(new Ui::NodeListDialog)
 {
     ui->setupUi(this);
-    auto slot = GetSlot<void(void)>("update");
-    if(slot)
-        this->AddConnection(mo::MetaObjectFactory::Instance()->ConnectConstructorAdded(slot), "onConstructorAdded", "update", slot->GetSignature());
+    update_slot = mo::TypedSlot<void(void)>(std::bind(&NodeListDialog::update, this));
+    connection = mo::MetaObjectFactory::Instance()->ConnectConstructorAdded(&update_slot), "update", "update", update_slot.GetSignature();
     update();
 }
 
@@ -36,6 +35,8 @@ void NodeListDialog::update()
         if (auto node_info = dynamic_cast<EagleLib::Nodes::NodeInfo*>(info))
         {
             auto category = node_info->GetNodeCategory();
+            if(category.size() == 0)
+                category.push_back(node_info->GetDisplayName());
             for (int j = 0; j < ui->NodeList->topLevelItemCount(); ++j)
             {
                 if (ui->NodeList->topLevelItem(j)->text(0) == QString::fromStdString(category[0]))
@@ -85,8 +86,8 @@ void NodeListDialog::update()
 void NodeListDialog::on_pushButton_clicked()
 {
     if(ui->NodeList->currentItem())
-    {        
-        sig_add_node(ui->NodeList->currentItem()->text(0).toStdString());
+    {
+        add_node_signal(ui->NodeList->currentItem()->text(0).toStdString());
     }
 }
 
@@ -94,5 +95,3 @@ void NodeListDialog::on_pushButton_2_clicked()
 {
     hide();
 }
-
-MO_REGISTER_CLASS(NodeListDialog);

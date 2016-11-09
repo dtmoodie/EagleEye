@@ -6,8 +6,9 @@ bookmark_dialog::bookmark_dialog(QWidget *parent) :
     ui(new Ui::bookmark_dialog)
 {
     ui->setupUi(this);
-    
-    variable_storage::instance().load_parameters(this);
+    bookmarks_param.UpdatePtr(&bookmarks);
+    history_param.UpdatePtr(&history);
+    VariableStorage::Instance()->LoadParams(this, "bookmarks");
     update();
     QObject::connect(ui->list_bookmarks, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(on_file_selected(QListWidgetItem*)));
     QObject::connect(ui->list_history, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this,SLOT(on_file_selected(QListWidgetItem*)));
@@ -16,7 +17,7 @@ bookmark_dialog::bookmark_dialog(QWidget *parent) :
 
 bookmark_dialog::~bookmark_dialog()
 {
-    variable_storage::instance().save_parameters(this);
+    VariableStorage::Instance()->SaveParams(this, "bookmarks");
     delete ui;
 }
 
@@ -48,4 +49,10 @@ void bookmark_dialog::on_file_selected(QListWidgetItem* item)
     }
     emit open_file(name);
 }
-MO_REGISTER_CLASS(bookmark_dialog);
+std::vector<mo::IParameter*> bookmark_dialog::GetParameters()
+{
+    std::vector<mo::IParameter*> output;
+    output.push_back(&bookmarks_param);
+    output.push_back(&history_param);
+    return output;
+}
