@@ -283,6 +283,7 @@ Node::Ptr Node::AddChild(Node::Ptr child)
     child->SetContext(this->_ctx, false);
     std::string node_name = child->GetTypeName();
     child->SetUniqueId(count);
+    child->SetParameterRoot(child->GetTreeName());
     LOG(trace) << "[ " << GetTreeName() << " ]" << " Adding child " << child->GetTreeName();
     return child;
 }

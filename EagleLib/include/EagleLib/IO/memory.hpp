@@ -8,15 +8,7 @@
 #include <cereal/archives/json.hpp>
 #include <cereal/archives/xml.hpp>
 #include <cereal/types/string.hpp>
-namespace EagleLib
-{
-    EAGLE_EXPORTS bool Serialize(cereal::BinaryOutputArchive& ar, const EagleLib::Nodes::Node* obj);
-    EAGLE_EXPORTS bool DeSerialize(cereal::BinaryInputArchive& ar, EagleLib::Nodes::Node* obj);
-    EAGLE_EXPORTS bool Serialize(cereal::XMLOutputArchive& ar, const EagleLib::Nodes::Node* obj);
-    EAGLE_EXPORTS bool DeSerialize(cereal::XMLInputArchive& ar, EagleLib::Nodes::Node* obj);
-    EAGLE_EXPORTS bool Serialize(cereal::JSONOutputArchive& ar, const EagleLib::Nodes::Node* obj);
-    EAGLE_EXPORTS bool DeSerialize(cereal::JSONInputArchive& ar, EagleLib::Nodes::Node* obj);
-}
+
 namespace cereal
 {
     template<class AR, class T> void save(AR& ar, rcc::shared_ptr<T> const & m)

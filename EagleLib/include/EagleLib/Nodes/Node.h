@@ -35,6 +35,7 @@
 #include "EagleLib/Algorithm.h"
 #include "EagleLib/SyncedMemory.h"
 #include "EagleLib/utilities/CudaUtils.hpp"
+#include <EagleLib/IO/serialize.hpp>
 
 // RCC includes
 #include <IObject.h>
@@ -156,6 +157,7 @@ namespace Nodes
 
     protected:
         friend class ::EagleLib::NodeFactory;
+        friend bool EagleLib::DeSerialize(cereal::JSONInputArchive& ar, Node* obj);
         
         void onParameterUpdate(mo::Context* ctx, mo::IParameter* param);
         // The data stream is kinda the graph owner, it produces data and pushes
