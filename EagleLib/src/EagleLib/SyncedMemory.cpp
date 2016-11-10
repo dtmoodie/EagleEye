@@ -262,8 +262,12 @@ int SyncedMemory::GetNumMats() const
 }
 bool SyncedMemory::empty() const
 {
-    if(h_data.size())
+    if(h_data.size() && d_data.size())
+        return h_data[0].empty() && d_data[0].empty();
+    if(h_data.size() && d_data.size() == 0)
         return h_data[0].empty();
+    if(d_data.size() && h_data.size() == 0)
+        return d_data[0].empty();
     return true;
 }
 void SyncedMemory::Synchronize(cv::cuda::Stream& stream)
