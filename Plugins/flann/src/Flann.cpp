@@ -90,11 +90,12 @@ bool ForegroundEstimate::ProcessImpl()
         cv::cuda::threshold(index, point_mask, -1, 255, cv::THRESH_BINARY_INV, Stream());
         cv::cuda::GpuMat tmp;
         point_mask.convertTo(tmp, CV_8U, Stream());
-        point_mask_param.UpdateData(point_mask, input_point_cloud_param.GetTimestamp(), _ctx);
+        point_mask_param.UpdateData(tmp, input_point_cloud_param.GetTimestamp(), _ctx);
+        return true;
     }
     else
     {
-        //NODE_LOG(info) << "Background model not build yet";
+        return false;
     }
 }
 
