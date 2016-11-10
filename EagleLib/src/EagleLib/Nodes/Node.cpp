@@ -43,46 +43,46 @@ RUNTIME_MODIFIABLE_INCLUDE
 #define CATCH_MACRO                                                         \
     catch(mo::ExceptionWithCallStack<cv::Exception>& e)                \
 {                                                                           \
-    NODE_LOG(error) << e.what() << "\n" << e.CallStack();                   \
+    LOG_NODE(error) << e.what() << "\n" << e.CallStack();                   \
 }                                                                           \
     catch(mo::ExceptionWithCallStack<std::string>& e)                  \
 {                                                                           \
-    NODE_LOG(error) << std::string(e) << "\n" << e.CallStack();                   \
+    LOG_NODE(error) << std::string(e) << "\n" << e.CallStack();                   \
 }                                                                           \
-catch(mo::IExceptionWithCallStackBase& e)                              \
+catch(mo::IExceptionWithCallStackBase& e)                                   \
 {                                                                           \
-    NODE_LOG(error) << "Exception thrown with callstack: \n" << e.CallStack(); \
+    LOG_NODE(error) << "Exception thrown with callstack: \n" << e.CallStack(); \
 }                                                                           \
 catch (boost::thread_resource_error& err)                                   \
 {                                                                           \
-    NODE_LOG(error) << err.what();                                          \
+    LOG_NODE(error) << err.what();                                          \
 }                                                                           \
 catch (boost::thread_interrupted& err)                                      \
 {                                                                           \
-    NODE_LOG(error) << "Thread interrupted";                                \
+    LOG_NODE(error) << "Thread interrupted";                                \
     /* Needs to pass this back up to the chain to the processing thread.*/  \
     /* That way it knowns it needs to exit this thread */                   \
     throw err;                                                              \
 }                                                                           \
 catch (boost::thread_exception& err)                                        \
 {                                                                           \
-    NODE_LOG(error) << err.what();                                          \
+    LOG_NODE(error) << err.what();                                          \
 }                                                                           \
     catch (cv::Exception &err)                                              \
 {                                                                           \
-    NODE_LOG(error) << err.what();                                          \
+    LOG_NODE(error) << err.what();                                          \
 }                                                                           \
     catch (boost::exception &err)                                           \
 {                                                                           \
-    NODE_LOG(error) << "Boost error";                                       \
+    LOG_NODE(error) << "Boost error";                                       \
 }                                                                           \
 catch (std::exception &err)                                                 \
 {                                                                           \
-    NODE_LOG(error) << err.what();                                            \
+    LOG_NODE(error) << err.what();                                          \
 }                                                                           \
 catch (...)                                                                 \
 {                                                                           \
-    NODE_LOG(error) << "Unknown exception";                                 \
+    LOG_NODE(error) << "Unknown exception";                                 \
 }
 
 
@@ -212,8 +212,12 @@ bool Node::Process()
         
         {
             mo::scoped_profile profiler(this->GetTreeName().c_str(), &this->_rmt_hash, &this->_rmt_cuda_hash, &Stream());
-            if (!ProcessImpl())
-                return false;
+            try
+            {
+                if (!ProcessImpl())
+                    return false;
+            }CATCH_MACRO
+            
         }
         
 
@@ -258,7 +262,7 @@ Node::Ptr Node::AddChild(Node* child)
 
 Node::Ptr Node::AddChild(Node::Ptr child)
 {
-    if(mo::GetThisThread() != _ctx->thread_id)
+    if(_ctx && mo::GetThisThread() != _ctx->thread_id)
     {
         mo::ThreadSpecificQueue::Push(std::bind((Node::Ptr(Node::*)(Node::Ptr))&Node::AddChild, this, child), _ctx->thread_id, this);
         return child;
@@ -270,7 +274,7 @@ Node::Ptr Node::AddChild(Node::Ptr child)
     int count = 0;
     for(size_t i = 0; i < _children.size(); ++i)
     {
-        if(_children[i]->GetTypeName() == child->GetTypeName())
+        if(_children[i] && _children[i]->GetTypeName() == child->GetTypeName())
             ++count;
     }
     _children.push_back(child);
@@ -473,8 +477,10 @@ void Node::RemoveChild(rcc::weak_ptr<Node> node)
 
 void Node::SetDataStream(IDataStream* stream_)
 {
+    if(stream_ == nullptr)
+        return;
     boost::recursive_mutex::scoped_lock lock(*_mtx);
-    if (_dataStream)
+    if (_dataStream && _dataStream != stream_)
     {
         _dataStream->RemoveNode(this);
     }

@@ -294,7 +294,7 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
   foreach(test ${tests})
     file(GLOB_RECURSE test_srcs "tests/${test}/*.cpp")
       add_executable(${test} ${test_srcs})
-      TARGET_LINK_LIBRARIES(${test} MetaObject EagleLib ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+      TARGET_LINK_LIBRARIES(${test} MetaObject EagleLib instantiations ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
       ADD_DEPENDENCIES(${test} MetaObject EagleLib)
       set_target_properties(${test} PROPERTIES FOLDER Tests/EagleLib)
       

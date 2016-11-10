@@ -21,6 +21,7 @@
 #include "MetaObject/Thread/InterThread.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 #include <MetaObject/Logging/Profiling.hpp>
+#include "MetaObject/IO/memory.hpp"
 
 #include <opencv2/core.hpp>
 #include <boost/chrono.hpp>
@@ -31,6 +32,8 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
+INSTANTIATE_META_PARAMETER(rcc::shared_ptr<IDataStream>);
+INSTANTIATE_META_PARAMETER(rcc::weak_ptr<IDataStream>);
 #define CATCH_MACRO                                                         \
     catch (boost::thread_resource_error& err)                               \
 {                                                                           \
@@ -353,6 +356,8 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 void DataStream::AddChildNode(rcc::shared_ptr<Nodes::Node> node)
 {
     std::lock_guard<std::mutex> lock(nodes_mtx);
+    if(std::find(child_nodes.begin(), child_nodes.end(), node.Get()) == child_nodes.end())
+        return;
     int type_count = 0;
     for(auto& child : child_nodes)
     {
@@ -417,10 +422,14 @@ Nodes::Node* DataStream::GetNode(const std::string& nodeName)
         std::lock_guard<std::mutex> lock(nodes_mtx);
         for(auto& node : top_level_nodes)
         {
-            if(node->GetTreeName() == nodeName)
+            if(node) // during serialization top_level_nodes is resized thus allowing for nullptr nodes until they are serialized
             {
-                return node.Get();
+                if(node->GetTreeName() == nodeName)
+                {
+                    return node.Get();
+                }
             }
+            
         }
         for(auto& node : child_nodes)
         {

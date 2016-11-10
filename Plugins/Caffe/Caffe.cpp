@@ -345,7 +345,7 @@ bool CaffeImageClassifier::ProcessImpl()
     if (input->empty())
         return false;
     auto input_shape = input->GetShape();
-    ReshapeInput(input_shape[0], input_shape[3], input_shape[1], input_shape[2]);
+    ReshapeInput(input_shape[0], input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
     cv::cuda::GpuMat float_image;
     
     if (input->GetDepth() != CV_32F)
@@ -357,7 +357,7 @@ bool CaffeImageClassifier::ProcessImpl()
         float_image = input->GetGpuMat(Stream());
     }
     cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, Stream());
-    cv::cuda::multiply(float_image, cv::Scalar::all(scale), float_image, 1.0, -1, Stream());
+    cv::cuda::multiply(float_image, cv::Scalar::all(pixel_scale), float_image, 1.0, -1, Stream());
     std::vector<cv::Rect> defaultROI;
     defaultROI.push_back(cv::Rect(cv::Point(), input->GetSize()));
     if (bounding_boxes == nullptr)
