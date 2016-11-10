@@ -4,6 +4,7 @@
 #include <boost/filesystem.hpp>
 #include "MetaObject/IO/Serializer.hpp"
 #include "MetaObject/IO/Policy.hpp"
+
 #include <EagleLib/IO/memory.hpp>
 
 using namespace EagleLib;
@@ -21,6 +22,11 @@ void DataStream::load(AR& ar)
 template<typename AR>
 void DataStream::save(AR& ar) const
 {
+    ObjectId id = GetObjectId();
+    std::string type = GetTypeName();
+    ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
+    ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
+    ar(cereal::make_nvp("TypeName", type));
     this->_save_parameters<AR>(ar, mo::_counter_<_DS_N_ - 1>());
     this->_save_parent<AR>(ar);
 }
@@ -44,31 +50,29 @@ bool DataStream::LoadStream(const std::string& filename)
     std::string ext = boost::filesystem::extension(filename);
     if (ext == ".bin")
     {
+        mo::StartSerialization();
         std::ifstream ifs(filename, std::ios::binary);
         cereal::BinaryInputArchive ar(ifs);
         ar(*this);
+        mo::EndSerialization();
         return true;
     }
     else if (ext == ".json")
     {
+        mo::StartSerialization();
         std::ifstream ifs(filename, std::ios::binary);
         cereal::JSONInputArchive ar(ifs);
-        try
-        {
-            ar(*this);
-        }
-        catch (cereal::Exception&e)
-        {
-
-        }
-
+        ar(*this);
+        mo::EndSerialization();
         return true;
     }
     else if (ext == ".xml")
     {
+        mo::StartSerialization();
         std::ifstream ifs(filename, std::ios::binary);
         cereal::XMLInputArchive ar(ifs);
         ar(*this);
+        mo::EndSerialization();
         return true;
     }
 
@@ -81,28 +85,34 @@ bool DataStream::SaveStream(const std::string& filename)
     {
         LOG(warning) << "Overwriting existing stream config file: " << filename;
     }
+    
     std::string ext = boost::filesystem::extension(filename);
     if (ext == ".bin")
     {
+        mo::StartSerialization();
         std::ofstream ofs(filename, std::ios::binary);
         cereal::BinaryOutputArchive ar(ofs);
         ar(*this);
+        mo::EndSerialization();
         return true;
     }
     else if (ext == ".json")
     {
+        mo::StartSerialization();
         std::ofstream ofs(filename, std::ios::binary);
         cereal::JSONOutputArchive ar(ofs);
         ar(*this);
+        mo::EndSerialization();
         return true;
     }
     else if (ext == ".xml")
     {
+        mo::StartSerialization();
         std::ofstream ofs(filename, std::ios::binary);
         cereal::XMLOutputArchive ar(ofs);
         ar(*this);
+        mo::EndSerialization();
         return true;
     }
-
     return false;
 }

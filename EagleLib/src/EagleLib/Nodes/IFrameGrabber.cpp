@@ -356,6 +356,7 @@ void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
         {
             LOG(trace) << "Frame buffer is full and playback frame (" << playback_frame_number << ") is too close to the beginning of the frame buffer (" << buffer_begin_frame_number << ")";
             sig_update(); // Due to threading, sometimes the threads can get out of sync and the reading thread thinks there isn't new data to read
+            _modified = true;
             frame_read_cv.wait_for(bLock, boost::chrono::milliseconds(10));
         }
     }

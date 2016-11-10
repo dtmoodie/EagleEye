@@ -33,8 +33,10 @@ namespace EagleLib
                 PARAM(mo::ReadFile, nn_weight_file, mo::ReadFile());
                 PARAM(mo::ReadFile, label_file, mo::ReadFile());
                 PARAM(mo::ReadFile, mean_file, mo::ReadFile());
-                PARAM(float, scale, 0.00390625f);
-                TOOLTIP(scale, "Scale factor to multiply the image by, after mean subtraction");
+                PARAM(float, pixel_scale, 0.00390625f);
+                TOOLTIP(pixel_scale, "Scale factor to multiply the image by, after mean subtraction");
+                PARAM(float, image_scale, 1.0);
+                TOOLTIP(image_scale, "Scale factor for reducing image size to fit into network");
                 PARAM(int, num_classifications, 5);
                 PARAM(float, detection_threshold, 0.75);
                 OPTIONAL_INPUT(std::vector<cv::Rect>, bounding_boxes, nullptr);

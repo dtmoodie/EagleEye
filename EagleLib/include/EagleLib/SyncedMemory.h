@@ -94,13 +94,13 @@ namespace EagleLib
         int GetType() const;
         template<typename A> void load(A& ar)
         {
-            ar(h_data);
+            ar(cereal::make_nvp("matrices", h_data));
             sync_flags.resize(h_data.size(), HOST_UPDATED);
             d_data.resize(h_data.size());
         }
         template<typename A> void save(A & ar) const
         {
-            ar(h_data);
+            ar(cereal::make_nvp("matrices", h_data));
         }
     private:
         std::vector<cv::Mat> h_data;
