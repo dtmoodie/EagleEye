@@ -6,6 +6,7 @@
 #include "MetaObject/IO/Policy.hpp"
 
 #include <EagleLib/IO/memory.hpp>
+#include <fstream>
 
 using namespace EagleLib;
 template<typename AR> 

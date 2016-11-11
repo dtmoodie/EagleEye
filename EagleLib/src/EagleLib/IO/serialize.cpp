@@ -1,3 +1,4 @@
+#include "MetaObject/Parameters/IO/CerealPolicy.hpp"
 #include <EagleLib/IO/serialize.hpp>
 #include <EagleLib/IO/memory.hpp>
 #include <EagleLib/Nodes/Node.h>
@@ -5,7 +6,7 @@
 #include "MetaObject/IO/Serializer.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
 #include "MetaObject/IO/Policy.hpp"
-#include "MetaObject/Parameters/IO/CerealPolicy.hpp"
+//#include "MetaObject/Parameters/IO/CerealPolicy.hpp"
 
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
