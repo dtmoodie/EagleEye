@@ -19,7 +19,6 @@
 #include <boost/log/common.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/setup/file.hpp>
-#include <boost/lexical_cast/try_lexical_convert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 #include <boost/tokenizer.hpp>

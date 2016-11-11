@@ -9,7 +9,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
 
 set(link_libs "")
 
-set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono program_options log log_setup)
+set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono program_options log log_setup signals)
 find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
   list(APPEND link_libs ${Boost_LIBRARIES})
 

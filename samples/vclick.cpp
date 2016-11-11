@@ -1,5 +1,6 @@
-#include "vclick.hpp"
+//#include "vclick.hpp"
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
+#include "vclick.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
 
@@ -18,13 +19,17 @@
 #include <Wt/WHBoxLayout>
 #include <Wt/WVBoxLayout>
 
+#include <boost/functional.hpp>
+#include <boost/bind.hpp>
+#include <boost/bind/placeholders.hpp>
+
 #include <fstream>
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 using namespace vclick;
 using namespace Wt;
-using namespace boost::placeholders;
+//using namespace boost::placeholders;
 INSTANTIATE_META_PARAMETER(BoundingBox);
 INSTANTIATE_META_PARAMETER(std::vector<BoundingBox>);
 INSTANTIATE_META_PARAMETER(Moment);
