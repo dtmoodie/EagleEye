@@ -60,7 +60,7 @@ bool ForegroundEstimate::ProcessImpl()
     if (build_model)
     {
         BuildModel(tensor, Stream());
-        background_model_param.UpdateData(tensor, input_point_cloud_param.GetTimestamp(), _ctx);
+        background_model_param.UpdateData(input, input_point_cloud_param.GetTimestamp(), _ctx);
         build_model = false;
         return true;
     }
@@ -91,6 +91,26 @@ bool ForegroundEstimate::ProcessImpl()
         cv::cuda::GpuMat tmp;
         point_mask.convertTo(tmp, CV_8U, Stream());
         point_mask_param.UpdateData(tmp, input_point_cloud_param.GetTimestamp(), _ctx);
+        if(foreground_param.HasSubscriptions())
+        {
+            cv::Mat mask = this->point_mask.GetMat(Stream());
+            cv::Mat point_cloud = input_point_cloud->GetMat(Stream());
+            Stream().waitForCompletion();
+            int points = cv::countNonZero(mask);
+            cv::Mat foreground(1, points, CV_32FC3);
+            int count = 0;
+            for(int i = 0; i < mask.rows; ++i)
+            {
+                for(int j = 0; j < mask.cols; ++j)
+                {
+                    if(mask.at<uchar>(i,j))
+                    {
+                        foreground.at<cv::Vec3f>(count) = point_cloud.at<cv::Vec3f>(i,j);
+                    }
+                }
+            }
+            this->foreground_param.UpdateData(foreground, input_point_cloud_param.GetTimestamp(), _ctx);
+        }
         return true;
     }
     else

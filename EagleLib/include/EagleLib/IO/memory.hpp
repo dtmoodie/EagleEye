@@ -2,6 +2,7 @@
 #include "EagleLib/Nodes/Node.h"
 #include "shared_ptr.hpp"
 #include <MetaObject/Logging/Log.hpp>
+#include <MetaObject/IO/Serializer.hpp>
 
 #include <cereal/cereal.hpp>
 #include <cereal/archives/binary.hpp>

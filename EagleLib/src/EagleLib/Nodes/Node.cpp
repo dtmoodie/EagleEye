@@ -363,31 +363,16 @@ std::vector<Node*> Node::GetNodesInScope()
 Node* Node::GetNodeInScope(const std::string& name)
 {
     boost::recursive_mutex::scoped_lock lock(*_mtx);
-    // Check if this is a child node of mine, if not go up
-    auto fullTreeName = GetTreeName();
-    int ret = name.compare(0, fullTreeName.length(), fullTreeName);
-    if(ret == 0)
+    if(name == GetTreeName())
+        return this;
+    for(auto& child : _children)
     {
-        // name is a child of current node, or is the current node
-        if(fullTreeName.size() == name.size())
-            return this;
-        std::string childName = name.substr(fullTreeName.size() + 1);
-        auto child = GetChild(childName);
-        if(child != nullptr)
-            return child.Get();
-    }
-    if(_parents.size())
-    {
-        for(auto& parent : _parents)
+        auto result = child->GetNodeInScope(name);
+        if(result)
         {
-            if(auto output = parent->GetNodeInScope(name))
-            {
-                return output;
-            }
+            return result;
         }
     }
-    if(_dataStream)
-        return _dataStream->GetNode(name);
     return nullptr;
 }
 

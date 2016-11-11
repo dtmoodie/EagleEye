@@ -210,7 +210,8 @@ bool EagleLib::DeSerialize(cereal::JSONInputArchive& ar, Node* obj)
                         auto token_index = input_source.find(':');
                         if (token_index != std::string::npos)
                         {
-                            auto output_node = obj->GetNodeInScope(input_source.substr(0, token_index));
+                            auto stream = obj->GetDataStream();
+                            auto output_node = stream->GetNode(input_source.substr(0, token_index));
                             if (output_node)
                             {
                                 auto output_param = output_node->GetOutput(input_source.substr(token_index + 1));

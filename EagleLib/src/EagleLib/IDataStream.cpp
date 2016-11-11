@@ -418,30 +418,20 @@ void DataStream::RemoveNode(rcc::shared_ptr<Nodes::Node> node)
 
 Nodes::Node* DataStream::GetNode(const std::string& nodeName)
 {
+    
+    std::lock_guard<std::mutex> lock(nodes_mtx);
+    for(auto& node : top_level_nodes)
     {
-        std::lock_guard<std::mutex> lock(nodes_mtx);
-        for(auto& node : top_level_nodes)
+        if(node) // during serialization top_level_nodes is resized thus allowing for nullptr nodes until they are serialized
         {
-            if(node) // during serialization top_level_nodes is resized thus allowing for nullptr nodes until they are serialized
+            auto found_node = node->GetNodeInScope(nodeName);
+            if(found_node)
             {
-                if(node->GetTreeName() == nodeName)
-                {
-                    return node.Get();
-                }
+                return found_node;
             }
-            
-        }
-        for(auto& node : child_nodes)
-        {
-            if(node)
-            {
-                if(node->GetTreeName() == nodeName)
-                {
-                    return node.Get();
-                }
-            }
-        }
+        }       
     }
+    
     return nullptr;
 }
 

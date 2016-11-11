@@ -37,7 +37,8 @@ namespace EagleLib
                 OUTPUT(SyncedMemory, background_model, SyncedMemory());
                 OUTPUT(SyncedMemory, index, SyncedMemory());
                 OUTPUT(SyncedMemory, distance, SyncedMemory());
-                OUTPUT(SyncedMemory, point_mask, SyncedMemory())
+                OUTPUT(SyncedMemory, point_mask, SyncedMemory());
+                OUTPUT(SyncedMemory, foreground, SyncedMemory());
             MO_END;
         protected:
             bool ProcessImpl();
