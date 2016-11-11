@@ -271,6 +271,8 @@ Node::Ptr Node::AddChild(Node::Ptr child)
         return child;
     if(std::find(_children.begin(), _children.end(), child) != _children.end())
         return child;
+    if(child == this) // This can happen based on a bad user config
+        return child;
     int count = 0;
     for(size_t i = 0; i < _children.size(); ++i)
     {
@@ -683,6 +685,8 @@ Node::Serialize(cv::FileStorage& fs)
 void Node::AddParent(Node* parent_)
 {
     boost::recursive_mutex::scoped_lock lock(*_mtx);
+    if(std::find(_parents.begin(), _parents.end(), parent_) != _parents.end())
+        return;
     _parents.push_back(parent_);
     parent_->AddChild(this);
 }

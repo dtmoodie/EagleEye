@@ -300,6 +300,7 @@ bool gstreamer_sink_base::set_caps(const std::string& caps_)
     LOG(debug) << "Connecting need/enough data callbacks";
     _need_data_id = g_signal_connect(_source, "need-data", G_CALLBACK(_start_feed), this);
     _enough_data_id = g_signal_connect(_source, "enough-data", G_CALLBACK(_stop_feed), this);
+    return true;
 }
 
 bool gstreamer_base::start_pipeline()

@@ -398,11 +398,13 @@ bool CaffeImageClassifier::ProcessImpl()
         }
         cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());
     }
+    
     // Signal update on all inputs
     for(auto blob : input_blobs)
     {
-        blob->mutable_gpu_data(); 
+        float* data = blob->mutable_gpu_data(); 
     }
+
     float loss;
     {
         mo::scoped_profile("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &Stream());

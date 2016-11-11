@@ -60,11 +60,20 @@ bool DataStream::LoadStream(const std::string& filename)
     }
     else if (ext == ".json")
     {
-        mo::StartSerialization();
-        std::ifstream ifs(filename, std::ios::binary);
-        cereal::JSONInputArchive ar(ifs);
-        ar(*this);
-        mo::EndSerialization();
+        
+        try
+        {
+            mo::StartSerialization();
+            std::ifstream ifs(filename, std::ios::binary);
+            cereal::JSONInputArchive ar(ifs);
+            ar(*this);
+            mo::EndSerialization();
+        }catch(cereal::RapidJSONException&e)
+        {
+            LOG(warning) << "Unable to parse " << filename << " due to " << e.what();
+            mo::EndSerialization();
+            return false;
+        }
         return true;
     }
     else if (ext == ".xml")

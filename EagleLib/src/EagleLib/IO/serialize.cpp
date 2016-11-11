@@ -126,6 +126,12 @@ bool EagleLib::Serialize(cereal::JSONOutputArchive& ar, const Node* obj)
                         std::string param_name = param->GetName();
                         ar(cereal::make_nvp(param_name, input_source));
                         continue;
+                    }else
+                    {
+                        std::string blank;
+                        std::string param_name = param->GetName();
+                        ar(cereal::make_nvp(param_name, blank));
+                        continue;
                     }
                 }
             }

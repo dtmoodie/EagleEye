@@ -1,14 +1,15 @@
 //#include "vclick.hpp"
-#include "MetaObject/Parameters/IO/CerealPolicy.hpp"
+
+#include "WebSink.hpp"
 #include "vclick.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
 
 #include <cereal/types/vector.hpp>
-
+#include <EagleLib/IO/cvMat.hpp>
 #include "EagleLib/IO/memory.hpp"
 #include "EagleLib/Nodes/NodeFactory.h"
-#include "EagleLib/Nodes/NodeInfo.hpp"
+
 
 #include <Wt/WBreak>
 #include <Wt/WContainerWidget>
@@ -29,133 +30,10 @@ using namespace EagleLib;
 using namespace EagleLib::Nodes;
 using namespace vclick;
 using namespace Wt;
-//using namespace boost::placeholders;
-INSTANTIATE_META_PARAMETER(BoundingBox);
-INSTANTIATE_META_PARAMETER(std::vector<BoundingBox>);
-INSTANTIATE_META_PARAMETER(Moment);
-INSTANTIATE_META_PARAMETER(std::vector<Moment>);
-
-cv::Mat BoundingBox::Contains(std::vector<cv::Vec3f>& points)
-{
-    return Contains(cv::Mat(1, points.size(), CV_32FC3, &points[0]));
-}
-
-cv::Mat BoundingBox::Contains(cv::Mat points)
-{
-    cv::Mat output_mask;
-    output_mask.create(points.size(), CV_8UC1);
-    const int num_points = points.size().area();
-    uchar* mask_ptr = output_mask.ptr<uchar>();
-    cv::Vec3f* pt_ptr = points.ptr<cv::Vec3f>();
-    for(int i = 0; i < num_points; ++i)
-    {
-        const cv::Vec3f& pt = pt_ptr[i];
-        mask_ptr[i] = Contains(pt);
-    }
-    return output_mask;
-}
-
-template<typename AR> 
-void BoundingBox::serialize(AR& ar)
-{
-    ar(CEREAL_NVP(x));
-    ar(CEREAL_NVP(y));
-    ar(CEREAL_NVP(z));
-    ar(CEREAL_NVP(width));
-    ar(CEREAL_NVP(height));
-    ar(CEREAL_NVP(depth));
-}
-
-Moment::Moment(float Px_, float Py_, float Pz_):
-    Px(Px_), Py(Py_), Pz(Pz_)
-{
-
-}
-
-template<typename AR> 
-void Moment::serialize(AR& ar)
-{
-    ar(CEREAL_NVP(Px));
-    ar(CEREAL_NVP(Py));
-    ar(CEREAL_NVP(Pz));
-}
-
-float Moment::Evaluate(cv::Mat mask, cv::Mat points, cv::Vec3f centroid)
-{
-    float value = 0;
-    uchar* mask_ptr = mask.ptr<uchar>();
-    cv::Vec3f* pts = points.ptr<cv::Vec3f>();
-    const int num_points = mask.size().area();
-    float count = 0;
-    for(int i = 0; i < num_points; ++i)
-    {
-        if(mask_ptr[i])
-        {
-            value += pow(pts[i][0] - centroid[0], Px) * pow(pts[i][1] - centroid[1], Py) * pow(pts[i][2] - centroid[2], Pz); 
-            ++count;
-        }
-    }
-    value /= count;
-    return value;
-}
-
-WebSink::WebSink()
-{
-    h264_pass_through = mo::MetaObjectFactory::Instance()->Create("h264_pass_through");
-    active_switch = h264_pass_through->GetParameter<bool>("active");
-    moments.emplace_back(2, 0, 0);
-    moments.emplace_back(2, 2, 0);
-    moments.emplace_back(2, 0, 2);
-}
-
-bool WebSink::ProcessImpl()
-{
-    std::vector<cv::Vec3f> foreground_points;
-    cv::Mat mask = foreground_mask->GetMat(Stream());
-    cv::Mat ptCloud = point_cloud->GetMat(Stream());
-    int points = cv::countNonZero(mask);
-    foreground_points.reserve(points);
-    for(int i = 0; i < ptCloud.rows; ++i)
-    {
-        for(int j = 0; j < ptCloud.cols; ++j)
-        {
-            if(mask.at<uchar>(i,j))
-            {
-                foreground_points.push_back(ptCloud.at<cv::Vec3f>(i,j));
-            }
-        }
-    }
-    for(auto& bb : bounding_boxes)
-    {
-        cv::Mat bb_mask = bb.Contains(foreground_points);
-        cv::Vec3f centroid(0,0,0);
-        uchar* mask_ptr = bb_mask.ptr<uchar>();
-        float count = 0;
-        for(int i = 0; i < foreground_points.size(); ++i)
-        {
-            if(mask_ptr[i])
-            {
-                centroid += foreground_points[i];
-                ++count;
-            }
-        }
-        if(count == 0.0)
-            continue;
-        centroid /= count;
-        for(int i = 0; i < moments.size(); ++i)
-        {
-            float value = moments[i].Evaluate(bb_mask, 
-                cv::Mat(1, foreground_points.size(), CV_32FC3, &foreground_points[0]), centroid);
-            if(value > thresholds[i])
-            {
-                active_switch->UpdateData(true, point_cloud_param.GetTimestamp(), _ctx);
-            }
-        }
-    }
-    return false;
-}
 
 rcc::shared_ptr<WebSink> g_sink;
+
+
 
 WApplication* createApplication(const Wt::WEnvironment& env)
 {
@@ -177,22 +55,20 @@ WebUi::WebUi(const Wt::WEnvironment& env):
 {
     setTitle("vclick3d demo");
     
-    onBackgroundUpdate = new mo::TypedSlot<void(mo::Context*, mo::IParameter*)>(
-        std::bind(&WebUi::handleBackgroundUpdate, this, std::placeholders::_1, std::placeholders::_2));
-
-    onForegroundUpdate = new mo::TypedSlot<void(mo::Context*, mo::IParameter*)>(
-        std::bind(&WebUi::handleForegroundUpdate, this, std::placeholders::_1, std::placeholders::_2));
-
     auto stream = g_sink->GetDataStream();
     auto fg = stream->GetNode("ForegroundEstimate0");
-    foreground_param.SetUserDataPtr(&foreground);
-    foreground_param.SetName("foreground");
-    backgroundUpdateConnection = fg->GetParameter("background_model")->RegisterUpdateNotifier(onBackgroundUpdate);
-    auto fg_param = fg->GetParameter("foreground");
-    fg_param->Subscribe();
-    foreground_param.SetInput(fg_param);
-    foregroundUpdateConnection = foreground_param.RegisterUpdateNotifier(onForegroundUpdate);
+    backgroundStream = new TParameterResource<EagleLib::SyncedMemory>(
+        fg->GetParameter("background_model"), "background");
 
+    foregroundStream = new TParameterResource<cv::Mat>(
+        g_sink->GetParameter("foreground_points"), "foreground");
+
+    boundingBoxStream = new TParameterResource<std::vector<BoundingBox>>(
+        g_sink->GetParameter("bounding_boxes"), "bounding_boxes");
+
+    auto background_link = Wt::WLink(backgroundStream);
+    auto foreground_link = Wt::WLink(foregroundStream);
+    auto boundingBox_link = Wt::WLink(boundingBoxStream);
     
     {
         std::ofstream ofs("./web/bb.json");
@@ -262,7 +138,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         ss << "  event.preventDefault();\n";
         ss << "  controls.enabled = true;\n";
         ss << "  if (INTERSECTED) {\n";
-        ss << move_call;
+        ss <<        move_call;
         ss << "      SELECTED = null;\n";
         ss << "  }\n";
         ss << "  container.style.cursor = 'auto';\n";
@@ -276,15 +152,14 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         ss << "}\n";
         render_window = new Wt::WText(root());
         render_window->doJavaScript(ss.str());
-    }
-    
+    }   
 }
 
 WebUi::~WebUi()
 {
-    delete onForegroundUpdate;
-    delete onBackgroundUpdate;
+    
 }
+
 void WebUi::handleMove(int index, float x, float y, float z)
 {
     if(index >= 0 && index < g_sink->bounding_boxes.size())
@@ -320,6 +195,7 @@ void WebUi::handleAddbb()
     bb.height = 30;
     bb.depth = 20;
     g_sink->bounding_boxes.push_back(bb);
+    g_sink->bounding_boxes_param.Commit();
 }
 
 void WebUi::handleRebuildModel()
@@ -352,29 +228,4 @@ void WebUi::handleKeydown(int value)
     std::cout << value << std::endl;
 }
 
-void WebUi::handleBackgroundUpdate(mo::Context* ctx, mo::IParameter* param)
-{
-    auto func = mo::SerializationFunctionRegistry::Instance()->
-        GetJsonSerializationFunction(param->GetTypeInfo());
-    dynamic_cast<mo::ITypedParameter<SyncedMemory>*>(param)->GetDataPtr()->Synchronize();
-    if(func)
-    {
-        std::ofstream ofs("./web/background.json");
-        cereal::JSONOutputArchive ar(ofs);
-        func(param, ar);
-    }
-}
 
-void WebUi::handleForegroundUpdate(mo::Context* ctx, mo::IParameter* param)
-{
-    auto func = mo::SerializationFunctionRegistry::Instance()->
-        GetJsonSerializationFunction(param->GetTypeInfo());
-    dynamic_cast<mo::ITypedParameter<SyncedMemory>*>(param)->GetDataPtr()->Synchronize();
-    if (func)
-    {
-        std::ofstream ofs("./web/foreground.json");
-        cereal::JSONOutputArchive ar(ofs);
-        func(param, ar);
-    }
-}
-MO_REGISTER_CLASS(WebSink);

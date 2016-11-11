@@ -29,6 +29,12 @@ find_package(Wt REQUIRED)
 if(Wt_FOUND)
   include_directories(${Wt_INCLUDE_DIR})
   add_definitions(-DHAVE_WT)
+  if(WIN32)
+    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
+    find_library(Wt_bin NAMES wt PATHS ${Wt_DIR} PATH PATH_SUFFIXES bin)
+	get_filename_component(Wt_bin_dir "${Wt_bin}" DIRECTORY)
+	set(Wt_BIN_DIR_ ${Wt_bin_dir})
+  endif(WIN32)
   set(Wt_BIN_DIR ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
   set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
   set(Wt_BIN_DIR_OPT ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
@@ -43,7 +49,9 @@ INCLUDE_DIRECTORIES(
 )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-add_executable(SimpleConsole SimpleConsole.cpp vclick.hpp vclick.cpp)
+file(GLOB src "*.cpp")
+file(GLOB hdr "*.h" "*.hpp")
+add_executable(SimpleConsole ${src} ${hdr})
 add_dependencies(SimpleConsole EagleLib)
 target_link_libraries(SimpleConsole
     MetaObject

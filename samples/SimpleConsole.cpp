@@ -622,19 +622,12 @@ int main(int argc, char* argv[])
             if(current_stream)
             {
                 // look for a node with this name, relative then look absolute
-                auto nodes = current_stream->GetNodes();
-                for(auto& node : nodes)
+                auto node = current_stream->GetNode(what);
+                if(node)
                 {
-                    if(node->GetTreeName() == what)
-                    {
-                        current_stream.reset();
-                        current_node = node.Get();
-                        current_param = nullptr;
-                        return;
-                    }
+                    current_node = node;
                 }
                 std::cout << "No node found with given name " << what << std::endl;
-                // parse name and try to find absolute path to node
             }
             if(current_node)
             {
@@ -778,7 +771,8 @@ int main(int argc, char* argv[])
                 auto token_index = value.find(':');
                 if(token_index != std::string::npos)
                 {
-                    auto output_node = current_node->GetNodeInScope(value.substr(0, token_index));
+                    auto stream = current_node->GetDataStream();
+                    auto output_node = stream->GetNode(value.substr(0, token_index));
                     if(output_node)
                     {
                         auto output_param = output_node->GetOutput(value.substr(token_index + 1));
