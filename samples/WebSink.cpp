@@ -53,6 +53,7 @@ bool WebSink::ProcessImpl()
         }
     }
     foreground_points_param.UpdateData(foreground_points, point_cloud_param.GetTimestamp(), _ctx);
+    bool activated = false;
     for (auto& bb : bounding_boxes)
     {
         cv::Mat bb_mask = bb.Contains(foreground_points);
@@ -70,7 +71,14 @@ bool WebSink::ProcessImpl()
         if (count < min_points)
             continue;
         centroid /= count;
-        bool activated = false;
+        
+        if(thresholds.size() < moments.size())
+        {
+            while(thresholds.size() != moments.size())
+            {
+                thresholds.push_back(0.1);
+            }
+        }
         for (int i = 0; i < moments.size(); ++i)
         {
             float value = moments[i].Evaluate(bb_mask, foreground_points, centroid);
@@ -79,11 +87,11 @@ bool WebSink::ProcessImpl()
                 active_switch->UpdateData(true, point_cloud_param.GetTimestamp(), _ctx);
                 activated = true;
             }
-        }
-        if(activated == false)
-        {
-            active_switch->UpdateData(false, point_cloud_param.GetTimestamp(), _ctx);
-        }
+        }   
+    }
+    if (activated == false)
+    {
+        active_switch->UpdateData(false, point_cloud_param.GetTimestamp(), _ctx);
     }
     h264_pass_through->Process();
     return true;
