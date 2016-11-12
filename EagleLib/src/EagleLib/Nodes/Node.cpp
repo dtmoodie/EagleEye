@@ -688,6 +688,7 @@ void Node::AddParent(Node* parent_)
     if(std::find(_parents.begin(), _parents.end(), parent_) != _parents.end())
         return;
     _parents.push_back(parent_);
+    lock.unlock();
     parent_->AddChild(this);
 }
 

@@ -18,7 +18,9 @@
 #include <boost/lexical_cast.hpp>
 
 INSTANTIATE_META_PARAMETER(EagleLib::SyncedMemory);
-
+INSTANTIATE_META_PARAMETER(std::vector<EagleLib::SyncedMemory>);
+INSTANTIATE_META_PARAMETER(cv::Mat);
+INSTANTIATE_META_PARAMETER(std::vector<cv::Mat>);
 
 using namespace EagleLib;
 SyncedMemory::SyncedMemory()

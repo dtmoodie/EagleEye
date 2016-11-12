@@ -28,7 +28,7 @@ float Moment::Evaluate(cv::Mat mask, cv::Mat points, cv::Vec3f centroid)
     uchar* mask_ptr = mask.ptr<uchar>();
     cv::Vec3f* pts = points.ptr<cv::Vec3f>();
     const int num_points = mask.size().area();
-    float count = 0;
+    float count = 0.0f;
     for (int i = 0; i < num_points; ++i)
     {
         if (mask_ptr[i])

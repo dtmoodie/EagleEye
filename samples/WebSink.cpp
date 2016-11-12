@@ -10,9 +10,32 @@ WebSink::WebSink()
     moments.emplace_back(0, 2, 0);
     moments.emplace_back(0, 0, 2);
 }
+void WebSink::SetContext(mo::Context* ctx, bool overwrite)
+{
+    Node::SetContext(ctx, overwrite);
+    h264_pass_through->SetContext(ctx, overwrite);
+}
+std::vector<mo::IParameter*> WebSink::GetParameters(const std::string& filter) const
+{
+    auto h264_params = h264_pass_through->GetParameters();
+    auto my_params = Node::GetParameters();
+    my_params.insert(my_params.end(), h264_params.begin(), h264_params.end());
+    return my_params;
+}
 
 bool WebSink::ProcessImpl()
 {
+    if(moments.empty())
+    {
+        moments.emplace_back(2, 0, 0);
+        moments.emplace_back(0, 2, 0);
+        moments.emplace_back(0, 0, 2);
+        thresholds.push_back(0.1);
+        thresholds.push_back(0.1);
+        thresholds.push_back(0.1);
+    }
+    if(foreground_mask->empty() || point_cloud->empty())
+        return false;
     cv::Mat mask = foreground_mask->GetMat(Stream());
     cv::Mat ptCloud = point_cloud->GetMat(Stream());
     int num_points = cv::countNonZero(mask);
@@ -44,7 +67,7 @@ bool WebSink::ProcessImpl()
                 ++count;
             }
         }
-        if (count == 0.0)
+        if (count < min_points)
             continue;
         centroid /= count;
         for (int i = 0; i < moments.size(); ++i)
@@ -56,6 +79,7 @@ bool WebSink::ProcessImpl()
             }
         }
     }
-    return false;
+    h264_pass_through->Process();
+    return true;
 }
 MO_REGISTER_CLASS(WebSink);

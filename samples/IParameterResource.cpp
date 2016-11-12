@@ -5,9 +5,16 @@
 
 using namespace vclick;
 
-IParameterResource::IParameterResource(mo::IParameter* param_) :
-    param(param_)
+IParameterResource::IParameterResource():
+    Wt::WStreamResource()
 {
+    param = nullptr;
+    onParamUpdate = nullptr;
+    ss = nullptr;
+}
+void IParameterResource::setParam(mo::IParameter* param_)
+{
+    param = param_;
     onParamUpdate = new mo::TypedSlot<void(mo::Context*, mo::IParameter*)>(std::bind(
         &IParameterResource::handleParamUpdate, this, std::placeholders::_1, std::placeholders::_2));
     this->connection = param->RegisterUpdateNotifier(onParamUpdate);
@@ -36,11 +43,13 @@ void IParameterResource::handleParamUpdate(mo::Context* ctx, mo::IParameter* par
 {
     std::stringstream* new_ss = new std::stringstream();
     auto func = mo::SerializationFunctionRegistry::Instance()->
-        GetJsonSerializationFunction(param->GetTypeInfo());
+        GetJsonSerializationFunction(this->param->GetTypeInfo());
     if (func)
     {
-        cereal::JSONOutputArchive ar(*new_ss);
-        func(param, ar);
+        {
+            cereal::JSONOutputArchive ar(*new_ss);
+            func(this->param, ar);
+        }
         std::stringstream* old_ss;
         {
             std::lock_guard<std::mutex> lock(mtx);

@@ -915,7 +915,11 @@ int main(int argc, char* argv[])
         {
             if(current_stream)
             {
-                rcc::shared_ptr<vclick::WebSink> sink = rcc::shared_ptr<vclick::WebSink>::Create();
+                rcc::shared_ptr<vclick::WebSink> sink = current_stream->GetNode("WebSink0");
+                if(!sink)
+                {
+                    sink = rcc::shared_ptr<vclick::WebSink>::Create();
+                }
                 current_stream->AddNode(sink);
                 auto fg = current_stream->GetNode("frame_grabber_openni20");
                 sink->ConnectInput(fg, fg->GetParameter("current_frame"), sink->GetInput("point_cloud"));

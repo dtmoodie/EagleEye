@@ -58,13 +58,16 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     auto stream = g_sink->GetDataStream();
     auto fg = stream->GetNode("ForegroundEstimate0");
     backgroundStream = new TParameterResource<EagleLib::SyncedMemory>(
-        fg->GetParameter("background_model"), "background");
+        fg->GetParameter("background_model"), "background_model");
+    backgroundStream->handleParamUpdate(nullptr, nullptr);
 
     foregroundStream = new TParameterResource<cv::Mat>(
         g_sink->GetParameter("foreground_points"), "foreground");
+    foregroundStream->handleParamUpdate(nullptr, nullptr);
 
     boundingBoxStream = new TParameterResource<std::vector<BoundingBox>>(
         g_sink->GetParameter("bounding_boxes"), "bounding_boxes");
+    boundingBoxStream->handleParamUpdate(nullptr, nullptr);
 
     auto background_link = Wt::WLink(backgroundStream);
     auto foreground_link = Wt::WLink(foregroundStream);
@@ -148,10 +151,107 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         ss <<    onKeydown.createCall("key");
         ss << "  if(key == 65){\n";
         ss << "    addBoundingBox();\n";
+        ss << "  } else if(key == 82){\n";
+        ss << "    loadBb();\n"
+              "    loadForeground();\n"
+              "    loadBackground();\n";
         ss << "  }\n";
         ss << "}\n";
+        ss << "function loadBb(){\n";
+        ss << "    var xhr = new XMLHttpRequest();\n";
+        ss << "    xhr.open('GET', '" << boundingBox_link.url() << "?_=' + new Date().getTime(), true);\n"
+              "    xhr.onreadystatechange = function() {\n"
+              "        if (xhr.readyState == XMLHttpRequest.DONE) {\n"
+              "            for(var i = 0; i < objects.length; ++i){"
+              "                scene.remove(objects[i]);"
+              "            }\n"
+              "            objects = [];\n"
+              "            var obj = JSON.parse(xhr.responseText);\n"
+              "            for (var i = 0; i < obj.bounding_boxes.length; ++i) {\n"
+              "                var object = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));\n"
+              "                object.position.x = obj.bounding_boxes[i].x;\n"
+              "                object.position.y = obj.bounding_boxes[i].y;\n"
+              "                object.position.z = obj.bounding_boxes[i].z;\n"
+              "                object.rotation.x = 0;\n"
+              "                object.rotation.y = 0;\n"
+              "                object.rotation.z = 0;\n"
+              "                object.scale.x = obj.bounding_boxes[i].width;\n"
+              "                object.scale.y = obj.bounding_boxes[i].height;\n"
+              "                object.scale.z = obj.bounding_boxes[i].depth;\n"
+              "                object.castShadow = true;\n"
+              "                object.receiveShadow = true;\n"
+              "                object.index = i;\n"
+              "                scene.add(object);\n"
+              "                objects.push(object);\n"
+              "            }\n"
+              "        }\n"
+              "    }\n"
+              "    xhr.send(null);\n"
+              "}\n";
+    ss << 
+        "function loadForeground() {\n"
+        "    var xhr = new XMLHttpRequest();\n"
+        "    xhr.open('GET', '" << foreground_link.url() << "?_=' + new Date().getTime(), true);\n"
+        "    xhr.onreadystatechange = function() {\n"
+        "        if (xhr.readyState == XMLHttpRequest.DONE) {\n"
+        "            var geometry = new THREE.Geometry();\n"
+        "            scene.remove(foreground);\n"
+        "            var obj = JSON.parse(xhr.responseText);\n"
+        "            var byteArray = Base64Binary.decodeArrayBuffer(obj.foreground.data);\n"
+        "            var floatView = new Float32Array(byteArray);\n"
+        "            var num_points = obj.foreground.rows * obj.foreground.cols;\n"
+        "            for (var i = 0; i < num_points; i += 3) {\n"
+        "                var vertex = new THREE.Vector3();\n"
+        "                vertex.x = floatView[i * 3];\n"
+        "                vertex.y = floatView[i * 3 + 1];\n"
+        "                vertex.z = floatView[i * 3 + 2];\n"
+        "                geometry.vertices.push(vertex);\n"
+        "            }\n"
+        "            var material = new THREE.PointsMaterial({\n"
+        "                size: 50\n"
+        "            });\n"
+        "            material.color.setRGB(0, 255, 0);\n"
+        "            foreground = new THREE.Points(geometry, material);\n"
+        "            scene.add(foreground);\n"
+        "        }\n"
+        "    }\n"
+        "xhr.send(null);\n"
+        "}\n";
+    ss << 
+        "function loadBackground() {\n"
+        "    var xhr = new XMLHttpRequest();\n"
+        "    xhr.open('GET', '" << background_link.url() << "?_=' + new Date().getTime(), true);\n"
+        "    xhr.onreadystatechange = function() {\n"
+        "        if (xhr.readyState == XMLHttpRequest.DONE) {\n"
+        "            var geometry = new THREE.Geometry();\n"
+        "            scene.remove(background);\n"
+        "            var obj = JSON.parse(xhr.responseText);\n"
+        "            console.log(obj);\n"
+        "            var byteArray = Base64Binary.decodeArrayBuffer(obj.background_model.matrices[0].data);\n"
+        "            var floatView = new Float32Array(byteArray);\n"
+        "            var num_points = obj.background_model.matrices[0].rows * obj.background_model.matrices[0].cols;\n"
+        "            for (var i = 0; i < num_points; i += 3) {\n"
+        "                var vertex = new THREE.Vector3();\n"
+        "                vertex.x = floatView[i * 3];\n"
+        "                vertex.y = floatView[i * 3 + 1];\n"
+        "                vertex.z = floatView[i * 3 + 2];\n"
+        "                geometry.vertices.push(vertex);\n"
+        "            }\n"
+        "                var material = new THREE.PointsMaterial({\n"
+        "                    size: 50\n"
+        "                });\n"
+        "            material.color.setRGB(0, 0, 255);\n"
+        "            background = new THREE.Points(geometry, material);\n"
+        "            scene.add(background);\n"
+        "            }\n"
+        "        }\n"
+        "    xhr.send(null);\n"
+        "}\n";
+        std::string js = ss.str();
+        LOG(debug) << "\n" << js;
+
         render_window = new Wt::WText(root());
-        render_window->doJavaScript(ss.str());
+        render_window->doJavaScript(js);
     }   
 }
 
@@ -167,6 +267,7 @@ void WebUi::handleMove(int index, float x, float y, float z)
         g_sink->bounding_boxes[index].x = x;
         g_sink->bounding_boxes[index].y = y;
         g_sink->bounding_boxes[index].z = z;
+        g_sink->bounding_boxes_param.Commit();
     }
 }
 
@@ -191,9 +292,9 @@ void WebUi::handleAddbb()
     bb.x = 0;
     bb.y = 0;
     bb.z = 0;
-    bb.width = 20;
-    bb.height = 30;
-    bb.depth = 20;
+    bb.width = 800;
+    bb.height = 1200;
+    bb.depth = 800;
     g_sink->bounding_boxes.push_back(bb);
     g_sink->bounding_boxes_param.Commit();
 }

@@ -9,6 +9,7 @@ namespace EagleLib
         class PLUGIN_EXPORTS h264_pass_through: public gstreamer_sink_base
         {
         public:
+            h264_pass_through();
             MO_DERIVE(h264_pass_through, gstreamer_sink_base)
                 PARAM(std::string, gstreamer_string, "");
                 PARAM(bool, active, false);
