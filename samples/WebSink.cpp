@@ -70,13 +70,19 @@ bool WebSink::ProcessImpl()
         if (count < min_points)
             continue;
         centroid /= count;
+        bool activated = false;
         for (int i = 0; i < moments.size(); ++i)
         {
             float value = moments[i].Evaluate(bb_mask, foreground_points, centroid);
             if (value > thresholds[i])
             {
                 active_switch->UpdateData(true, point_cloud_param.GetTimestamp(), _ctx);
+                activated = true;
             }
+        }
+        if(activated == false)
+        {
+            active_switch->UpdateData(false, point_cloud_param.GetTimestamp(), _ctx);
         }
     }
     h264_pass_through->Process();
