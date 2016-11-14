@@ -17,6 +17,7 @@ namespace EagleLib
         protected:
             bool ProcessImpl();
             GstElement* valve = nullptr;
+            bool previously_active;
         };
     }
 }

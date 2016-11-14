@@ -2,6 +2,7 @@
 #include "openni2_initializer.h"
 #include <EagleLib/ICoordinateManager.h>
 #include <EagleLib/Nodes/FrameGrabberInfo.hpp>
+#include <MetaObject/Logging/Profiling.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 SETUP_PROJECT_IMPL
@@ -103,12 +104,21 @@ bool frame_grabber_openni2::LoadFile(const std::string& file_path)
             return false;
         }
         _depth.reset(new openni::VideoStream());
+        
         rc = _depth->create(*_device, openni::SENSOR_DEPTH);
         if( rc != openni::STATUS_OK)
         {
             LOG(info) << "Unable to retrieve depth stream: " << openni::OpenNI::getExtendedError();
             return false;
         }
+        openni::VideoMode mode = _depth->getVideoMode();
+        mode.setResolution(640, 480);
+        rc = _depth->setVideoMode(mode);
+        if(rc != openni::STATUS_OK)
+        {
+            LOG(info) << "Unable to set video resolution";
+        }
+
         _depth->addNewFrameListener(this);
         _depth->start();
         LOG(info) << "Connected to device " << _device->getDeviceInfo().getUri();
@@ -147,8 +157,10 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
                 openni::CoordinateConverter::convertDepthToWorld(*_depth, j, i, ptr[j], &pt_ptr[j].val[0], &pt_ptr[j].val[1], &pt_ptr[j].val[2]);
             }
         }
-        
+        if(fn != 1)
+            mo::PopCpu();
         FrameGrabberBuffered::PushFrame(TS<SyncedMemory>(double(ts), (long long)fn, XYZ), false);
+        mo::PushCpu("openni2 frame grabber waiting on frame");
         break;
     }
 }

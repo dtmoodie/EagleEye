@@ -20,15 +20,18 @@ bool h264_pass_through::ProcessImpl()
         {
             LOG_NODE(warning) << "No valve found in pipeline with name 'myvalve'";
         }
+        previously_active = false;
     }
-    if(active_param.modified)
+    if(active_param.modified && active != previously_active)
     {
         if(active)
         {
             g_object_set(valve, "drop", false, NULL);
+            previously_active = true;
         }else
         {
             g_object_set(valve, "drop", true, NULL);
+            previously_active = false;
         }
         active_param.modified = false;
     }

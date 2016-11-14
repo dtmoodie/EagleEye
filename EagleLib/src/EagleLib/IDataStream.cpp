@@ -544,7 +544,7 @@ void DataStream::process()
         {
 			if(mo::ThreadSpecificQueue::Size(_thread_id))
             {
-                mo::scoped_profile profile("Event loop", &rmt_hash, &rmt_cuda_hash, _context.stream);
+                //mo::scoped_profile profile("Event loop", &rmt_hash, &rmt_cuda_hash, _context.stream);
                 mo::ThreadSpecificQueue::Run(_thread_id);
             }
             if(dirty_flag || run_continuously == true)
@@ -556,11 +556,6 @@ void DataStream::process()
                 {
                     node->Process();
                 }
-
-                /*for(auto sink : variable_sinks)
-                {
-                    //sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
-                }*/
                 ++iteration_count;
                 if (!dirty_flag)
                     LOG(debug) << "Dirty flag not set and end of iteration " << iteration_count;
