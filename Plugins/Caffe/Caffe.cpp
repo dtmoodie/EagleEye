@@ -142,7 +142,7 @@ void CaffeBase::WrapInput()
 {
     if(NN == nullptr)
     {
-        BOOST_LOG_TRIVIAL(error) << "Neural network not defined";
+        LOG_EVERY_N(error, 100) << "Neural network not defined";
         return;
     }
     if(NN->num_inputs() == 0)
@@ -239,7 +239,7 @@ bool CaffeBase::InitNetwork()
         }
         else
         {
-            BOOST_LOG_TRIVIAL(debug) << "Architecture file does not exist";
+            LOG_EVERY_N(warning, 100) << "Architecture file does not exist";
         }
     }
     if (nn_weight_file_param.modified && NN)
@@ -271,7 +271,7 @@ bool CaffeBase::InitNetwork()
         }
         else
         {
-            BOOST_LOG_TRIVIAL(debug) << "Weight file does not exist";
+            LOG_EVERY_N(warning, 100) << "Weight file does not exist";
         }
     }
     if (label_file_param.modified)
@@ -281,7 +281,7 @@ bool CaffeBase::InitNetwork()
             std::ifstream ifs(label_file.string().c_str());
             if (!ifs)
             {
-                BOOST_LOG_TRIVIAL(error) << "Unable to load label file";
+                LOG_EVERY_N(error, 100) << "Unable to load label file";
             }
             labels.reset(new std::vector<std::string>());
             std::string line;
@@ -325,7 +325,7 @@ bool CaffeBase::InitNetwork()
     }
     if (NN == nullptr || weightsLoaded == false)
     {
-        BOOST_LOG_TRIVIAL(trace) << "Model not loaded";
+        LOG_EVERY_N(debug, 1000) << "Model not loaded";
         return false;
     }
     return true;

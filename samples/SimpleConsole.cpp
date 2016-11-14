@@ -629,6 +629,7 @@ int main(int argc, char* argv[])
                         {
                             current_param = param;
                             current_stream.reset();
+                            std::cout << "Successfully set parameter to " << current_param->GetTreeName() << std::endl;
                             return;
                         }
                     }
@@ -756,26 +757,12 @@ int main(int argc, char* argv[])
                                 }
                             }
                         }
-                        
                     }
                 }
-                /*auto variable_manager = current_node->GetDataStream()->GetVariableManager();
-                auto output = variable_manager->GetOutputParameter(value);
-                if(output)
-                {
-                    variable_manager->LinkParameters(output, current_param);
-                    return;
-                }*/
             }
             if(!current_param)
             {
-                //auto pos = value.find(current_param->GetName());
-                //if(pos != std::string::npos)
-                //{
-                  //  value = value.substr(current_param->GetName().size());
-                //}
-                //if(Parameters::Persistence::Text::DeSerialize(&value, current_param))
-                  //  return;
+
             }else
             {
                 auto func = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(current_param->GetTypeInfo());
@@ -784,6 +771,7 @@ int main(int argc, char* argv[])
                     std::stringstream ss; 
                     ss << value;
                     func(current_param, ss);
+                    std::cout << "Successfully set " << current_param->GetTreeName() << " to " << value << std::endl;
                     return;
                 }
             }
@@ -821,6 +809,7 @@ int main(int argc, char* argv[])
                 }
                 std::cout << "Unable to find parameter by name for set string: " << value << std::endl;*/
             }
+            std::cout << "Unable to set value to " << value << std::endl;
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "set"));
         
@@ -973,6 +962,8 @@ int main(int argc, char* argv[])
                 std::string line;
                 while(std::getline(ifs, line))
                 {
+                    if(line[line.size() - 1] == '\n' || line[line.size() - 1] == '\r')
+                        line = line.substr(0, line.size() - 1);
                     command_list.push_back(line);
                 }
                 if(command_list.size())
