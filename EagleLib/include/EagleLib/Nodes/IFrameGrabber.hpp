@@ -95,10 +95,12 @@ namespace EagleLib
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
         
-        MO_BEGIN(IFrameGrabber);
+        MO_DERIVE(IFrameGrabber, Node);
             MO_SIGNAL(void, update);
             MO_SLOT(void, Restart);
             OUTPUT(SyncedMemory, current_frame, SyncedMemory());
+            PARAM(std::string, loaded_document, "");
+            MO_SLOT(void, on_loaded_document_modified, mo::Context*, mo::IParameter*);
         MO_END;
         
     protected:
@@ -106,7 +108,6 @@ namespace EagleLib
 
         IFrameGrabber(const IFrameGrabber&) = delete;
         IFrameGrabber& operator=(const IFrameGrabber&) = delete;
-        ::std::string loaded_document;
         IDataStream* parent_stream;
         //cv::cuda::Stream stream;
         //mo::Context ctx;
@@ -136,12 +137,10 @@ namespace EagleLib
             MO_SLOT(TS<SyncedMemory>, GetFrame, int, cv::cuda::Stream&);
             MO_SLOT(TS<SyncedMemory>, GetNextFrame, cv::cuda::Stream&);
             MO_SLOT(TS<SyncedMemory>, GetFrameRelative, int, cv::cuda::Stream&);
+            
         MO_END;
-
-
     protected:
         virtual void PushFrame(TS<SyncedMemory> frame, bool blocking = true);
-
         boost::mutex                             buffer_mtx;
         boost::mutex                             grabber_mtx;
         std::atomic_llong                        buffer_begin_frame_number;

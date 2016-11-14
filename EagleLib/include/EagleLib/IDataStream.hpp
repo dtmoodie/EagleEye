@@ -28,6 +28,7 @@ namespace EagleLib
     public:
         typedef rcc::shared_ptr<IDataStream> Ptr;
         static Ptr Create(const std::string& document = "", const std::string& preferred_frame_grabber = "");
+        static Ptr Load(const std::string& config_file);
         static bool CanLoadDocument(const std::string& document);
 
 
@@ -70,6 +71,9 @@ namespace EagleLib
         
         virtual void AddVariableSink(IVariableSink* sink) = 0;
         virtual void RemoveVariableSink(IVariableSink* sink) = 0;
+
+		virtual bool SaveStream(const std::string& filename) = 0;
+		virtual bool LoadStream(const std::string& filename) = 0;
         
         // Get or create singleton for this datastream
         template<typename T> T* GetSingleton()

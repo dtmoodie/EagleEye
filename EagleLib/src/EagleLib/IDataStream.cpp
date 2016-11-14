@@ -1,4 +1,5 @@
 #include "EagleLib/IDataStream.hpp"
+#include "EagleLib/DataStream.hpp"
 #include "EagleLib/rcc/SystemTable.hpp"
 #include "EagleLib/utilities/sorting.hpp"
 #include "EagleLib/Logging.h"
@@ -20,17 +21,19 @@
 #include "MetaObject/Thread/InterThread.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 #include <MetaObject/Logging/Profiling.hpp>
+#include "MetaObject/IO/memory.hpp"
 
 #include <opencv2/core.hpp>
 #include <boost/chrono.hpp>
 #include <boost/thread.hpp>
+#include <boost/filesystem.hpp>
 
-//#include <signals/boost_thread.h>
-#include <MetaObject/Parameters/VariableManager.h>
-
+#include <fstream>
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
+INSTANTIATE_META_PARAMETER(rcc::shared_ptr<IDataStream>);
+INSTANTIATE_META_PARAMETER(rcc::weak_ptr<IDataStream>);
 #define CATCH_MACRO                                                         \
     catch (boost::thread_resource_error& err)                               \
 {                                                                           \
@@ -66,78 +69,8 @@ catch (...)                                                                 \
 
 
 
-namespace EagleLib
-{
-    class DataStream: public IDataStream
-    {
-    public:
-        MO_BEGIN(DataStream);
-            MO_SIGNAL(void, StartThreads);
-            MO_SIGNAL(void, StopThreads);
+ 
 
-            MO_SLOT(void, StartThread);
-            MO_SLOT(void, StopThread);
-            MO_SLOT(void, PauseThread);
-            MO_SLOT(void, ResumeThread);
-        MO_END
-
-        DataStream();
-        virtual ~DataStream();
-        std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> GetTopLevelNodes();
-        virtual void                                      InitCustom(bool firstInit);
-        virtual rcc::weak_ptr<IViewManager>               GetViewManager();
-        virtual rcc::weak_ptr<ICoordinateManager>         GetCoordinateManager();
-        virtual rcc::weak_ptr<IRenderEngine>              GetRenderingEngine();
-        virtual rcc::weak_ptr<ITrackManager>              GetTrackManager();
-        virtual std::shared_ptr<mo::IVariableManager>     GetVariableManager();
-        virtual mo::RelayManager*                         GetRelayManager();
-        virtual IParameterBuffer*                         GetParameterBuffer();
-        virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes();
-        virtual bool                                      LoadDocument(const std::string& document, const std::string& prefered_loader = "");
-        virtual std::vector<rcc::shared_ptr<Nodes::Node>> AddNode(const std::string& nodeName);
-        virtual void                                      AddNode(rcc::shared_ptr<Nodes::Node> node);
-        virtual void                                      AddNodeNoInit(rcc::shared_ptr<Nodes::Node> node);
-        virtual void                                      AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> node);
-        virtual void                                      RemoveNode(rcc::shared_ptr<Nodes::Node> node);
-        virtual void                                      RemoveNode(Nodes::Node* node);
-        virtual Nodes::Node*                              GetNode(const std::string& nodeName);
-        
-        void process();
-
-        void AddVariableSink(IVariableSink* sink);
-        void RemoveVariableSink(IVariableSink* sink);
-
-    protected:
-        virtual void AddChildNode(rcc::shared_ptr<Nodes::Node> node);
-        virtual void RemoveChildNode(rcc::shared_ptr<Nodes::Node> node);
-        virtual std::unique_ptr<ISingleton>& GetSingleton(mo::TypeInfo type);
-        virtual std::unique_ptr<ISingleton>& GetIObjectSingleton(mo::TypeInfo type);
-
-        std::map<mo::TypeInfo, std::unique_ptr<ISingleton>>       _singletons;
-        std::map<mo::TypeInfo, std::unique_ptr<ISingleton>>       _iobject_singletons;
-        int                                                       stream_id;
-        size_t                                                    _thread_id;
-        rcc::shared_ptr<IViewManager>                             view_manager;
-        rcc::shared_ptr<ICoordinateManager>                       coordinate_manager;
-        rcc::shared_ptr<IRenderEngine>                            rendering_engine;
-        rcc::shared_ptr<ITrackManager>                            track_manager;
-        std::shared_ptr<mo::IVariableManager>                     variable_manager;
-        std::shared_ptr<mo::RelayManager>                         relay_manager;
-        std::vector<rcc::shared_ptr<Nodes::Node>>                 top_level_nodes;
-        std::vector<rcc::weak_ptr<Nodes::Node>>                   child_nodes;
-        std::shared_ptr<IParameterBuffer>                         _parameter_buffer;
-        std::mutex                                                nodes_mtx;
-        bool                                                      paused;
-        cv::cuda::Stream                                          cuda_stream;
-        boost::thread                                             processing_thread;
-        volatile bool                                             dirty_flag;
-        std::vector<IVariableSink*>                               variable_sinks;
-        // These are threads for attempted connections
-        std::vector<boost::thread*>                               connection_threads;
-        mo::Context                                               _context;
-        cv::cuda::Stream                                          _stream;
-    };
-}
 
 // **********************************************************************
 //              DataStream
@@ -413,16 +346,19 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
     node->SetDataStream(this);
     if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
     {
-        //Signals::thread_specific_queue::push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node), _thread_id);
         mo::ThreadSpecificQueue::Push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node), _thread_id);
         return;
     }
+    if(std::find(top_level_nodes.begin(), top_level_nodes.end(), node) != top_level_nodes.end())
+        return;
     top_level_nodes.push_back(node);
     dirty_flag = true;
 }
 void DataStream::AddChildNode(rcc::shared_ptr<Nodes::Node> node)
 {
     std::lock_guard<std::mutex> lock(nodes_mtx);
+    if(std::find(child_nodes.begin(), child_nodes.end(), node.Get()) == child_nodes.end())
+        return;
     int type_count = 0;
     for(auto& child : child_nodes)
     {
@@ -483,26 +419,20 @@ void DataStream::RemoveNode(rcc::shared_ptr<Nodes::Node> node)
 
 Nodes::Node* DataStream::GetNode(const std::string& nodeName)
 {
+    
+    std::lock_guard<std::mutex> lock(nodes_mtx);
+    for(auto& node : top_level_nodes)
     {
-        std::lock_guard<std::mutex> lock(nodes_mtx);
-        for(auto& node : top_level_nodes)
+        if(node) // during serialization top_level_nodes is resized thus allowing for nullptr nodes until they are serialized
         {
-            if(node->GetTreeName() == nodeName)
+            auto found_node = node->GetNodeInScope(nodeName);
+            if(found_node)
             {
-                return node.Get();
+                return found_node;
             }
-        }
-        for(auto& node : child_nodes)
-        {
-            if(node)
-            {
-                if(node->GetTreeName() == nodeName)
-                {
-                    return node.Get();
-                }
-            }
-        }
+        }       
     }
+    
     return nullptr;
 }
 
@@ -612,8 +542,8 @@ void DataStream::process()
     {
         if(!paused)
         {
+			if(mo::ThreadSpecificQueue::Size(_thread_id))
             {
-            
                 mo::scoped_profile profile("Event loop", &rmt_hash, &rmt_cuda_hash, _context.stream);
                 mo::ThreadSpecificQueue::Run(_thread_id);
             }
@@ -666,4 +596,8 @@ std::unique_ptr<ISingleton>& DataStream::GetIObjectSingleton(mo::TypeInfo type)
 {
     return _iobject_singletons[type];
 }
+
+
+
+
 MO_REGISTER_OBJECT(DataStream)

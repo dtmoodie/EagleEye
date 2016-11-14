@@ -21,20 +21,20 @@ void vtkLogRedirect::init()
 void vtkLogRedirect::DisplayText(const char* msg)
 {
     LOG(debug) << msg;
-    LOG(debug) << Signals::print_callstack(0, true);
+    LOG(debug) << mo::print_callstack(0, true);
 }
 void vtkLogRedirect::DisplayErrorText(const char* msg)
 {
     LOG(error) << msg;
-    LOG(debug) << Signals::print_callstack(0, true);
+    LOG(debug) << mo::print_callstack(0, true);
 }
 void vtkLogRedirect::DisplayWarningText(const char* msg)
 {
     LOG(warning) << msg;
-    LOG(debug) << Signals::print_callstack(0, true);
+    LOG(debug) << mo::print_callstack(0, true);
 }
 void vtkLogRedirect::DisplayGenericWarningText(const char* msg)
 {
     LOG(warning) << msg;
-    LOG(debug) << Signals::print_callstack(0, true);
+    LOG(debug) << mo::print_callstack(0, true);
 }

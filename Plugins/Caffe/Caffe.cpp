@@ -345,7 +345,7 @@ bool CaffeImageClassifier::ProcessImpl()
     if (input->empty())
         return false;
     auto input_shape = input->GetShape();
-    ReshapeInput(input_shape[0], input_shape[3], input_shape[1], input_shape[2]);
+    ReshapeInput(input_shape[0], input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
     cv::cuda::GpuMat float_image;
     
     if (input->GetDepth() != CV_32F)
@@ -357,7 +357,7 @@ bool CaffeImageClassifier::ProcessImpl()
         float_image = input->GetGpuMat(Stream());
     }
     cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, Stream());
-    cv::cuda::multiply(float_image, cv::Scalar::all(scale), float_image, 1.0, -1, Stream());
+    cv::cuda::multiply(float_image, cv::Scalar::all(pixel_scale), float_image, 1.0, -1, Stream());
     std::vector<cv::Rect> defaultROI;
     defaultROI.push_back(cv::Rect(cv::Point(), input->GetSize()));
     if (bounding_boxes == nullptr)
@@ -398,11 +398,13 @@ bool CaffeImageClassifier::ProcessImpl()
         }
         cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());
     }
+    
     // Signal update on all inputs
     for(auto blob : input_blobs)
     {
-        blob->mutable_gpu_data(); 
+        float* data = blob->mutable_gpu_data(); 
     }
+
     float loss;
     {
         mo::scoped_profile("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &Stream());

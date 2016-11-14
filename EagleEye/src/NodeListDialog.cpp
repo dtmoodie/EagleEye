@@ -1,14 +1,17 @@
 #include "NodeListDialog.h"
 #include "ui_nodelistdialog.h"
-#include <EagleLib/rcc/ObjectManager.h>
-#include <EagleLib/Nodes/NodeManager.h>
+#include "MetaObject/MetaObjectFactory.hpp"
+#include "EagleLib/Nodes/NodeInfo.hpp"
+#include "MetaObject/Detail/IMetaObjectImpl.hpp"
 #include "QListWidgetItem"
+
 NodeListDialog::NodeListDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NodeListDialog)
 {
     ui->setupUi(this);
-    EagleLib::ObjectManager::Instance().RegisterConstructorAddedCallback(boost::bind(&NodeListDialog::update, this));
+    update_slot = mo::TypedSlot<void(void)>(std::bind(&NodeListDialog::update, this));
+    connection = mo::MetaObjectFactory::Instance()->ConnectConstructorAdded(&update_slot), "update", "update", update_slot.GetSignature();
     update();
 }
 
@@ -17,21 +20,26 @@ NodeListDialog::~NodeListDialog()
 {
     delete ui;
 }
-void
-NodeListDialog::update()
+
+void NodeListDialog::update()
 {
     ui->NodeList->clear();
-    auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
+    //auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
+    auto nodes = mo::MetaObjectFactory::Instance()->GetConstructors(IID_NodeObject);
     for(size_t i = 0; i < nodes.size(); ++i)
     {
         //ui->NodeList->addItem(QString::fromStdString(nodes[i]));
-        auto info  = EagleLib::NodeManager::getInstance().GetNodeInfo(nodes[i]);
+        //auto info  = EagleLib::NodeManager::getInstance().GetNodeInfo(nodes[i]);
+        auto info = nodes[i]->GetObjectInfo();
         QTreeWidgetItem* parent = nullptr;
-        if (info.size())
+        if (auto node_info = dynamic_cast<EagleLib::Nodes::NodeInfo*>(info))
         {
+            auto category = node_info->GetNodeCategory();
+            if(category.size() == 0)
+                category.push_back(node_info->GetDisplayName());
             for (int j = 0; j < ui->NodeList->topLevelItemCount(); ++j)
             {
-                if (ui->NodeList->topLevelItem(j)->text(0) == QString(info[0]))
+                if (ui->NodeList->topLevelItem(j)->text(0) == QString::fromStdString(category[0]))
                 {
                     parent = ui->NodeList->topLevelItem(j);
                 }
@@ -40,14 +48,14 @@ NodeListDialog::update()
             {
                 parent = new QTreeWidgetItem(ui->NodeList);
                 ui->NodeList->addTopLevelItem(parent);
-                parent->setText(0, QString(info[0]));
+                parent->setText(0, QString::fromStdString(node_info->GetDisplayName()));
             }
-            for (int k = 1; k < info.size(); ++k)
+            for (int k = 1; k < category.size(); ++k)
             {
                 bool found = false;
                 for (int j = 0; j < parent->childCount(); ++j)
                 {
-                    if (parent->child(j)->text(0) == QString(info[k]))
+                    if (parent->child(j)->text(0) == QString::fromStdString(category[k]))
                     {
                         found = true;
                         parent = parent->child(j);
@@ -57,47 +65,29 @@ NodeListDialog::update()
                 if (!found)
                 {
                     auto newParent = new QTreeWidgetItem(parent);
-                    newParent->setText(0, QString(info[k]));
+                    newParent->setText(0, QString::fromStdString(category[k]));
                     parent->addChild(newParent);
                     parent = newParent;
                 }
             }
             auto node = new QTreeWidgetItem(parent);
-            node->setText(0, QString::fromStdString((nodes[i])));
+            node->setText(0, QString::fromStdString(node_info->GetDisplayName()));
             parent->addChild(node);
         }
         else
         {
             QTreeWidgetItem* item = new QTreeWidgetItem(ui->NodeList);
-            item->setText(0, QString::fromStdString(nodes[i]));
+            item->setText(0, QString::fromStdString(node_info->GetDisplayName()));
             ui->NodeList->addTopLevelItem(item);
         }
     }
-    //ui->NodeList->sortItems();
-
-}
-
-void
-NodeListDialog::show()
-{
-    // Update node list with any newly populated nodes
-
-    // Show list
-    QDialog::show();
 }
 
 void NodeListDialog::on_pushButton_clicked()
 {
     if(ui->NodeList->currentItem())
     {
-        
-        sig_add_node(ui->NodeList->currentItem()->text(0).toStdString());
-        //EagleLib::Nodes::Node::Ptr node = EagleLib::NodeManager::getInstance().addNode(ui->NodeList->currentItem()->text(0).toStdString());
-        //if (node != nullptr)
-        //{
-            //emit nodeConstructed(node);
-        //}
-        
+        add_node_signal(ui->NodeList->currentItem()->text(0).toStdString());
     }
 }
 

@@ -51,4 +51,4 @@ cv::cuda::GpuMat Server::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stre
     return img; 
 }
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(Server, PtCloud, Sink);
+MO_REGISTER_CLASS(Server);

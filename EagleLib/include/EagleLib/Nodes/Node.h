@@ -35,6 +35,7 @@
 #include "EagleLib/Algorithm.h"
 #include "EagleLib/SyncedMemory.h"
 #include "EagleLib/utilities/CudaUtils.hpp"
+#include <EagleLib/IO/serialize.hpp>
 
 // RCC includes
 #include <IObject.h>
@@ -54,7 +55,7 @@
 #include <string>
 
 #define SCOPED_PROFILE_NODE mo::scoped_profile COMBINE(scoped_profile, __LINE__)((this->GetTreeName() + "::" + __FUNCTION__), &_rmt_hash, &_rmt_cuda_hash, &Stream());
-#define LOG_NODE(severity) BOOST_LOG_TRIVIAL(severity) << "[" << this->GetTreeName() << "::" __FUNCTION__ "] - "
+#define LOG_NODE(severity) BOOST_LOG_TRIVIAL(severity) << "[" << this->GetTreeName() << "::" << __FUNCTION__ <<  "] - "
 namespace mo
 {
     class IVariableManager;
@@ -123,6 +124,7 @@ namespace Nodes
         
         virtual void                     SetDataStream(IDataStream* stream);
         virtual IDataStream*             GetDataStream();
+        virtual std::shared_ptr<mo::IVariableManager>     GetVariableManager();
 
         void                             SetUniqueId(int id);
         std::string                      GetTreeName() const;
@@ -145,31 +147,29 @@ namespace Nodes
         MO_BEGIN(Node);
             MO_SLOT(void, reset);
             MO_SIGNAL(void, node_updated, Node*);
+            // The children of a node are all nodes accepting inputs
+            // from this node
+            PERSISTENT(std::vector<rcc::shared_ptr<Node>>, _children);
+            PERSISTENT(rcc::weak_ptr<IDataStream>, _dataStream);
+            PERSISTENT(int, _unique_id);
+            PERSISTENT(std::vector<rcc::weak_ptr<Node>>, _parents);
         MO_END;
 
     protected:
         friend class ::EagleLib::NodeFactory;
+        friend bool EagleLib::DeSerialize(cereal::JSONInputArchive& ar, Node* obj);
         
         void onParameterUpdate(mo::Context* ctx, mo::IParameter* param);
         // The data stream is kinda the graph owner, it produces data and pushes
         // It also calls Process for all of the children of the data stream
         // it onto the graph.
-        rcc::weak_ptr<IDataStream>                          _dataStream;
+        
         // Current timestamp of the frame that this node is processing / processed last
         long long                               _current_timestamp;
         // The variable manager is one object shared within a processing graph
         // that has knowledge of all inputs and outputs within the graph
         // It handles creating buffers, setting up contexts and all connecting nodes
         std::shared_ptr<mo::IVariableManager>   _variable_manager;
-
-        // The children of a node are all nodes accepting inputs
-        // from this node
-        std::vector<rcc::shared_ptr<Node>>      _children;
-        // The parents of a node are all nodes with outputs
-        // that this node accepts as inputs
-        std::vector<rcc::weak_ptr<Node>>        _parents;
-        // Unique name in each processing graph. GetTypeName() + unique index
-        int                                     _unique_id;
         bool                                    _modified;
     private:
         std::shared_ptr<NodeImpl>             pImpl_;

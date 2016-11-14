@@ -1,34 +1,34 @@
-#include "parameters/UI/InterThread.hpp"
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <boost/log/trivial.hpp>
+#include <MetaObject/Thread/InterThread.hpp>
 #include <MetaObject/Logging/Log.hpp>
-#include "EagleLib/Logging.h"
+
 
 int main()
 {
-    EagleLib::SetupLogging();
+    //EagleLib::SetupLogging();
     LOG(info) << "Main thread started";
-    boost::thread thread(boost::bind<void>([]()->void
+    size_t main_thread_id = mo::GetThisThread();
+    boost::thread thread(boost::bind<void>([main_thread_id]()->void
     {
         while (!boost::this_thread::interruption_requested())
         {
             LOG(info) << "Launching callback from work thread";
-            Parameters::UI::UiCallbackService::Instance()->post(
+            mo::ThreadSpecificQueue::Push(
                 boost::bind<void>([]()->void
             {
                 LOG(info) << "Running callback from main thread";
-            }));
+            }), main_thread_id);
         }
     }));
 
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     while (boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - start).total_seconds() < 60)
     {
-        Parameters::UI::UiCallbackService::Instance()->run();
+        mo::ThreadSpecificQueue::Run();
     }
     thread.interrupt();
     thread.join();
-    EagleLib::ShutdownLogging();
+    //EagleLib::ShutdownLogging();
     return 0;
 }

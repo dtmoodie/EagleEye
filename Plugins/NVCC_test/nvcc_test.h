@@ -10,10 +10,11 @@ namespace EagleLib
     class nvcc_test: public Node
     {
     public:
-         
-        nvcc_test();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        MO_DERIVE(nvcc_test, Node)
+            INPUT(SyncedMemory, input, nullptr);
+        MO_END;
+    protected:
+        bool ProcessImpl();
     };
     }
 }

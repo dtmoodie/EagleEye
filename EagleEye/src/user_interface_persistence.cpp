@@ -1,34 +1,38 @@
 #ifndef HAVE_OPENCV
 #define HAVE_OPENCV
 #endif
-#include "parameters/Persistence/OpenCV.hpp"
+
 #include "user_interface_persistence.h"
+#include <MetaObject/Parameters/IParameter.hpp>
 
-
-void user_interface_persistence::variable_storage::load_parameters(Parameters::ParameteredObject* This, mo::TypeInfo type)
+void VariableStorage::LoadParams(UIPersistence* obj, const std::string& name)
 {
-    auto& params = loaded_parameters[type.name()];
-    for (auto& param : params)
+    auto itr= loaded_parameters.find(name);
+    if(itr != loaded_parameters.end())
     {
-        if (This->exists(param.first))
+        auto params = obj->GetParameters();
+        for(auto param : params)
         {
-            // Update the variable with data from file
-            This->getParameter(param.first)->Update(param.second.get());
+            auto itr2 = itr->second.find(param->GetName());
+            if(itr2 != itr->second.end())
+            {
+                
+            }
         }
     }
 }
-void user_interface_persistence::variable_storage::save_parameters(Parameters::ParameteredObject* This, mo::TypeInfo type)
+void VariableStorage::SaveParams(UIPersistence* obj, const std::string& name)
 {
-    auto& params = loaded_parameters[type.name()];
+    /*auto& params = loaded_parameters[type.name()];
     auto all_params = This->getParameters();
     for(auto& param: all_params)
     {
         params[param->GetName()] = param->DeepCopy();
-    }
+    }*/
 }
-void user_interface_persistence::variable_storage::save_parameters(const std::string& file_name)
+void VariableStorage::SaveUI(const std::string& file_name)
 {
-    cv::FileStorage fs;
+    /*cv::FileStorage fs;
     fs.open(file_name, cv::FileStorage::WRITE);
     int index = 0;
     fs << "Count" << (int)loaded_parameters.size();
@@ -44,12 +48,12 @@ void user_interface_persistence::variable_storage::save_parameters(const std::st
         fs << "}"; // End parameters
         fs << "}"; // End widgets
         ++index;
-    }
+    }*/
     
 }
-void user_interface_persistence::variable_storage::load_parameters(const std::string& file_name)
+void VariableStorage::LoadUI(const std::string& file_name)
 {
-    try
+    /*try
     {
         cv::FileStorage fs;
         fs.open(file_name, cv::FileStorage::READ);
@@ -66,7 +70,7 @@ void user_interface_persistence::variable_storage::load_parameters(const std::st
                 auto param = Parameters::Persistence::cv::DeSerialize(&node);
                 if (param)
                 {
-                    param_vec[param->GetName()] = std::shared_ptr<Parameters::Parameter>(param);
+                    param_vec[param->GetName()] = std::shared_ptr<mo::IParameter>(param);
                 }
             }
         }
@@ -74,32 +78,31 @@ void user_interface_persistence::variable_storage::load_parameters(const std::st
     }catch(...)
     {
     
-    }
-    
-    
-}
-user_interface_persistence::variable_storage::variable_storage()
-{
-    load_parameters();
+    }*/
 }
 
-user_interface_persistence::variable_storage::~variable_storage()
+VariableStorage::VariableStorage()
 {
-    save_parameters();
+    LoadUI();
 }
 
-user_interface_persistence::variable_storage& user_interface_persistence::variable_storage::instance()
+VariableStorage::~VariableStorage()
 {
-    static variable_storage inst;
+    SaveUI();
+}
+
+VariableStorage* VariableStorage::Instance()
+{
+    static VariableStorage* inst = nullptr;
+    if(inst == nullptr)
+        inst = new VariableStorage();
     return inst;
 }
 
-user_interface_persistence::user_interface_persistence()
+UIPersistence::UIPersistence()
 {
     //variable_storage::instance().load_parameters(this);
+    VariableStorage::Instance()->LoadParams(this, "UIPersistence");
 }
 
-user_interface_persistence::~user_interface_persistence()
-{
-    //variable_storage::instance().save_parameters(this);
-}
+

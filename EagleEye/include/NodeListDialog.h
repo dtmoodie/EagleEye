@@ -5,28 +5,20 @@
 #include "EagleLib/Nodes/Node.h"
 #include <shared_ptr.hpp>
 
-#include <signals/signaler.h>
+
 
 namespace Ui {
 class NodeListDialog;
 }
 
-class NodeListDialog : public QDialog, public Signals::signaler
+class NodeListDialog : public QDialog
 {
     Q_OBJECT
-
 public:
     explicit NodeListDialog(QWidget *parent = 0);
-    void update();
-    void show();
     ~NodeListDialog();
-
-    SIGNALS_BEGIN(NodeListDialog)
-        SIG_SEND(add_node, std::string);
-    SIGNALS_END
-
-signals:
-    void nodeConstructed(EagleLib::Nodes::Node::Ptr node);
+    void update();
+    mo::TypedSlot<void()> update_slot;
 private slots:
     void on_pushButton_clicked();
 
@@ -34,7 +26,8 @@ private slots:
 
 private:
     Ui::NodeListDialog *ui;
-    
+    mo::TypedSignal<void(std::string)> add_node_signal;
+    std::shared_ptr<mo::Connection> connection;
 };
 
 #endif // NODELISTDIALOG_H

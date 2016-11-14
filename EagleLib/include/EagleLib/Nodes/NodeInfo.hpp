@@ -45,7 +45,7 @@ template<class T> struct GetNodeCategoryHelper
     template<class U> 
     static std::vector<std::string> helper(typename std::enable_if<!HasNodeCategory<U>::value, void>::type* = 0)
     { 
-        return std::vector<std::string>(); 
+        return std::vector<std::string>(1, std::string(U::GetTypeNameStatic()));
     }
 
     static std::vector<std::string> Get()

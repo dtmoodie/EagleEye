@@ -2,8 +2,9 @@
 #include "qapplication.h"
 #include "qdrag.h"
 #include <qmimedata.h>
-#include <EagleLib/Nodes/NodeManager.h>
+
 #include <EagleLib/Signals.h>
+#include <EagleLib/Nodes/NodeFactory.h>
 #include "signal_dialog.h"
 #include <EagleLib/plotters/PlotManager.h>
 
@@ -62,12 +63,12 @@ QGraphicsProxyWidget* NodeView::getWidget(EagleLib::IDataStream* id)
         return itr->second;
     else return nullptr;
 }
-void NodeView::on_parameter_clicked(Parameters::Parameter* param, QPoint pos)
+void NodeView::on_parameter_clicked(mo::IParameter* param, QPoint pos)
 {
     // Spawn the right click dialog
     if (param != nullptr)
     {
-        if (EagleLib::PlotManager::getInstance().canPlotParameter(param))
+        if (EagleLib::PlotManager::Instance()->CanPlotParameter(param))
         {
             actions[2]->setEnabled(true);
             actions[3]->setEnabled(true);
@@ -98,14 +99,15 @@ void NodeView::on_deleteNode()
         if (nodeWidget)
         {
             auto node = nodeWidget->getNode();
-            node->enabled = false;
             boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
             emit stopThread();
             boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
-            Parameters::UI::ProcessingThreadCallbackService::run();
-            auto parent = node->getParent();
-            if (parent != nullptr)
-                parent->removeChild(node);
+
+            //Parameters::UI::ProcessingThreadCallbackService::run();
+            auto parents = node->GetParents();
+            for(auto parent : parents)
+                parent->RemoveChild(node);
+
             emit selectionChanged(nullptr);
             emit widgetDeleted(nodeWidget);
             emit startThread();
@@ -116,7 +118,7 @@ void NodeView::on_deleteNode()
         auto stream = streamWidget->GetStream();
         stream->StartThread();
         emit widgetDeleted(streamWidget);
-        dataStreamWidget.erase(stream.get());
+        dataStreamWidget.erase(stream.Get());
     }
     scene()->removeItem(currentWidget);
     delete currentWidget;
@@ -146,10 +148,10 @@ void NodeView::on_display_signals()
             auto node = node_widget->getNode();
             if(_signal_dialog)
             {
-                _signal_dialog->update(dynamic_cast<Signals::signal_manager*>(node->GetDataStream()->GetSignalManager()));
+                _signal_dialog->update(node->GetDataStream()->GetRelayManager());
             }else
             {
-                _signal_dialog = new signal_dialog(dynamic_cast<Signals::signal_manager*>(node->GetDataStream()->GetSignalManager()), this);
+                _signal_dialog = new signal_dialog(node->GetDataStream()->GetRelayManager(), this);
             }
             _signal_dialog->show();
         }
@@ -158,10 +160,10 @@ void NodeView::on_display_signals()
             auto stream = stream_widget->GetStream();
             if(_signal_dialog)
             {
-                _signal_dialog->update(dynamic_cast<Signals::signal_manager*>(stream->GetSignalManager()));
+                _signal_dialog->update(stream->GetRelayManager());
             }else
             {
-                _signal_dialog = new signal_dialog(dynamic_cast<Signals::signal_manager*>(stream->GetSignalManager()), this);
+                _signal_dialog = new signal_dialog(stream->GetRelayManager(), this);
             }
             _signal_dialog->show();
         }
@@ -183,7 +185,7 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                 {
                     auto id = node->GetObjectId();
                     if(id.IsValid())
-                        fileName = EagleLib::NodeManager::getInstance().getNodeFile(id);
+                        fileName = EagleLib::NodeFactory::Instance()->GetNodeFile(id);
                 }
                 QDrag* drag = new QDrag(this);
                 QMimeData* mimeData = new QMimeData();
@@ -356,38 +358,51 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
     }
     if(nodeWidget)
     {
-        auto parentPtr = node->getParent();
-        if(parentPtr != nullptr)
+        auto parents = node->GetParents();
+        for(auto parent : parents)
         {
-            QGraphicsProxyWidget* parentWidget = getWidget(parentPtr->GetObjectId());
-            if(parentWidget)
+            QGraphicsProxyWidget* parentWidget = getWidget(parent->GetObjectId());
+            if (parentWidget)
             {
-                auto center = parentWidget->pos() += QPointF(parentWidget->size().width()/2, parentWidget->size().height()/2);
+                auto center = parentWidget->pos() += QPointF(parentWidget->size().width() / 2, parentWidget->size().height() / 2);
                 // Draw line from this widget to parent
-                connectingLine->setLine(center.x(), center.y(), child->pos().x() + child->size().width()/2, child->pos().y() + child->size().height()/2);
+                connectingLine->setLine(center.x(), center.y(), child->pos().x() + child->size().width() / 2, child->pos().y() + child->size().height() / 2);
             }
-        }else
-        {
+        }
+        
+        /*{
             auto streamWidget = getWidget(node->GetDataStream());
             if(streamWidget)
             {
                 auto center = streamWidget->pos() += QPointF(streamWidget->size().width() / 2, streamWidget->size().height() / 2);
                 connectingLine->setLine(center.x(), center.y(), child->pos().x() + child->size().width() / 2, child->pos().y() + child->size().height() / 2);
-            }
-            
-        }
+            } 
+        }*/
     }
     return connectingLine;
 }
 QGraphicsProxyWidget* NodeView::getParent(EagleLib::Nodes::Node::Ptr child)
 {
-    auto parentPtr = child->getParent();
-    if(parentPtr != nullptr)
+    auto parents = child->GetParents();
+    for(auto parent : parents)
     {
-        QGraphicsProxyWidget* parentWidget = getWidget(parentPtr->GetObjectId());
+        // TODO figure out how this should correctly be used
+        QGraphicsProxyWidget* parentWidget = getWidget(parent->GetObjectId());
         return parentWidget;
     }
     return nullptr;
+}
+std::vector<QGraphicsProxyWidget*> NodeView::getParents(EagleLib::Nodes::Node::Ptr child)
+{
+    std::vector<QGraphicsProxyWidget*> output;
+    auto parents = child->GetParents();
+    for (auto parent : parents)
+    {
+        // TODO figure out how this should correctly be used
+        QGraphicsProxyWidget* parentWidget = getWidget(parent->GetObjectId());
+        output.push_back(parentWidget);
+    }
+    return output;
 }
 QGraphicsProxyWidget* NodeView::getStream(EagleLib::IDataStream* stream_id)
 {

@@ -25,16 +25,25 @@ namespace EagleLib
 {
     namespace Nodes
     {
-    
-    class ForegroundEstimate : public Node
-    {
-        bool _build_model;
-        void BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& stream);
-        std::shared_ptr<flann::GpuIndex<flann::L2<float>>> nnIndex;
-    public:
-        ForegroundEstimate();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-    };
+        class ForegroundEstimate : public Node
+        {
+        public:
+            MO_DERIVE(ForegroundEstimate, Node)
+                INPUT(SyncedMemory, input_point_cloud, nullptr);
+                PARAM(float, radius, 5.0);
+                PARAM(float, epsilon, 1.0);
+                PARAM(int, checks, -1);
+                PARAM(bool, build_model, false);
+                OUTPUT(SyncedMemory, background_model, SyncedMemory());
+                OUTPUT(SyncedMemory, index, SyncedMemory());
+                OUTPUT(SyncedMemory, distance, SyncedMemory());
+                OUTPUT(SyncedMemory, point_mask, SyncedMemory());
+                OUTPUT(SyncedMemory, foreground, SyncedMemory());
+            MO_END;
+        protected:
+            bool ProcessImpl();
+            void BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& stream);
+            std::shared_ptr<flann::GpuIndex<flann::L2<float>>> nnIndex;
+        };
     }
 }

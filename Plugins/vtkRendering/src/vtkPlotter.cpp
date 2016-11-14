@@ -11,50 +11,42 @@
 #include "QtOpenGL/QGLContext"
 #include <qgridlayout.h>
 
-#include <parameters/UI/Qt.hpp>
-
 using namespace EagleLib;
 using namespace EagleLib::Plotting;
 
-Plotter::PlotterType vtkPlotterInfo::GetPlotType()
-{
-    return Plotter::PlotterType(Plotter::QT_Plotter + Plotter::VTK_Plotter);
-}
-vtkPlotter::vtkPlotter():
+
+vtkPlotterBase::vtkPlotterBase():
     QtPlotter()
 {
     renderer = vtkSmartPointer<vtkRenderer>::New();
     vtkLogRedirect::init();
 }
 
-vtkPlotter::~vtkPlotter()
+vtkPlotterBase::~vtkPlotterBase()
 {
-    Signals::thread_specific_queue::remove_from_queue(this);
+    mo::ThreadSpecificQueue::RemoveFromQueue(this);
     for(auto prop : _auto_remove_props)
     {
         renderer->RemoveViewProp(prop);
     }
 }
-bool vtkPlotter::AcceptsParameter(Parameters::Parameter* param)
+bool vtkPlotterBase::AcceptsParameter(mo::IParameter* param)
 {
     return false;
 }
-std::string vtkPlotter::PlotName() const
-{
-    return "vtkPlotter";
-}
 
-void vtkPlotter::SetInput(Parameters::Parameter* param_)
+
+void vtkPlotterBase::SetInput(mo::IParameter* param_)
 {
     QtPlotter::SetInput(param_);
 }
 
-void vtkPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
+void vtkPlotterBase::OnParameterUpdate(cv::cuda::Stream* stream)
 {
 
 }
 
-void vtkPlotter::AddPlot(QWidget* plot_)
+void vtkPlotterBase::AddPlot(QWidget* plot_)
 {
     auto widget = dynamic_cast<QVTKWidget2*>(plot_);
     if (widget)
@@ -63,7 +55,7 @@ void vtkPlotter::AddPlot(QWidget* plot_)
     }
 }
 
-QWidget* vtkPlotter::CreatePlot(QWidget* parent)
+QWidget* vtkPlotterBase::CreatePlot(QWidget* parent)
 {
     QOpenGLContext* draw_context = new QOpenGLContext();
 
@@ -82,7 +74,7 @@ QWidget* vtkPlotter::CreatePlot(QWidget* parent)
 
     return widget;
 }
-void vtkPlotter::PlotInit(bool firstInit)
+void vtkPlotterBase::PlotInit(bool firstInit)
 {
     QtPlotter::PlotInit(firstInit);
     if(firstInit)
@@ -93,35 +85,35 @@ void vtkPlotter::PlotInit(bool firstInit)
     }    
 }
 
-void vtkPlotter::Serialize(ISimpleSerializer *pSerializer)
+void vtkPlotterBase::Serialize(ISimpleSerializer *pSerializer)
 {
     QtPlotter::Serialize(pSerializer);
     SERIALIZE(render_widgets);
     SERIALIZE(renderer);
 }
 
-vtkRenderer* vtkPlotter::GetRenderer()
+vtkRenderer* vtkPlotterBase::GetRenderer()
 {
     return renderer;
 }
-void vtkPlotter::AddViewProp(vtkProp* prop)
+void vtkPlotterBase::AddViewProp(vtkProp* prop)
 {
     renderer->AddViewProp(prop);
 }
-void vtkPlotter::AddAutoRemoveProp(vtkProp* prop)
+void vtkPlotterBase::AddAutoRemoveProp(vtkProp* prop)
 {
     renderer->AddViewProp(prop);
     _auto_remove_props.push_back(prop);
 }
-void vtkPlotter::RemoveViewProp(vtkProp* prop)
+void vtkPlotterBase::RemoveViewProp(vtkProp* prop)
 {
     renderer->RemoveViewProp(prop);
 }
-void vtkPlotter::RenderAll()
+void vtkPlotterBase::RenderAll()
 {
     for (auto itr : this->render_widgets)
     {
         itr->GetRenderWindow()->Render();
     }
 }
-REGISTERCLASS(vtkPlotter);
+//MO_REGISTER_CLASS(vtkPlotterBase);

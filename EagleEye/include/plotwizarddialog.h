@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QVector>
 
-#include "parameters/Parameters.hpp"
+
 #include "plotwindow.h"
 #include "parameterplotter.h"
 #include "IObject.h"
@@ -35,7 +35,7 @@ signals:
     void update(int idx);
 public slots:
     void setup();
-    void plotParameter(Parameters::Parameter* param);
+    void plotParameter(mo::IParameter* param);
     void onUpdate(int idx);
     void handleUpdate(int idx);
 private slots:

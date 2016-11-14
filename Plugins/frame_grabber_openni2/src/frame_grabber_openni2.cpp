@@ -81,10 +81,14 @@ bool frame_grabber_openni2::LoadFile(const std::string& file_path)
     std::string doc = file_path;
     std::transform(doc.begin(), doc.end(), doc.begin(), ::tolower);
     std::string openni("openni::");
-    if(doc.compare(0, openni.length(), openni) == 0)
+    if(doc.compare(0, openni.length(), openni) == 0 || file_path.empty())
     {
         initializer_NI2::instance();
-        std::string uri = file_path.substr(openni.length());
+        std::string uri;
+        if(!file_path.empty())
+        {
+            uri = file_path.substr(openni.length());
+        }
         _device.reset(new openni::Device());
         
         

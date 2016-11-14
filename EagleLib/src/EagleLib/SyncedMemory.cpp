@@ -1,6 +1,8 @@
 #include "EagleLib/SyncedMemory.h"
 #include <EagleLib/utilities/GpuMatAllocators.h>
 #include <EagleLib/utilities/CudaCallbacks.hpp>
+#include <EagleLib/IO/cvMat.hpp>
+
 #include <MetaObject/Logging/Log.hpp>
 
 #include "MetaObject/Parameters/MetaParameter.hpp"
@@ -13,68 +15,12 @@
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
 #include <cereal/types/vector.hpp>
 #include <cereal/types/array.hpp>
-
+#include <boost/lexical_cast.hpp>
 
 INSTANTIATE_META_PARAMETER(EagleLib::SyncedMemory);
-namespace cereal
-{
-    void save(BinaryOutputArchive& ar, const cv::Mat& mat)
-    {
-        int rows, cols, type;
-        bool continuous;
-
-        rows = mat.rows;
-        cols = mat.cols;
-        type = mat.type();
-        continuous = mat.isContinuous();
-
-        ar & rows & cols & type & continuous;
-
-        if (continuous) {
-            const int data_size = rows * cols * mat.elemSize();
-            auto mat_data = cereal::binary_data(mat.ptr(), data_size);
-            ar & mat_data;
-        }
-        else {
-            const int row_size = cols * mat.elemSize();
-            for (int i = 0; i < rows; i++) {
-                auto row_data = cereal::binary_data(mat.ptr(i), row_size);
-                ar & row_data;
-            }
-        }
-    }
-    
-    void load(BinaryInputArchive& ar, cv::Mat& mat)
-    {
-        int rows, cols, type;
-        bool continuous;
-
-        ar & rows & cols & type & continuous;
-
-        if (continuous) {
-            mat.create(rows, cols, type);
-            const int data_size = rows * cols * mat.elemSize();
-            auto mat_data = cereal::binary_data(mat.ptr(), data_size);
-            ar & mat_data;
-        }
-        else {
-            mat.create(rows, cols, type);
-            const int row_size = cols * mat.elemSize();
-            for (int i = 0; i < rows; i++) {
-                auto row_data = cereal::binary_data(mat.ptr(i), row_size);
-                ar & row_data;
-            }
-        }
-    };
-
-    template<class AR> void save(AR& ar, cv::Mat const& mat)
-    {
-    }
-    template<class AR> void load(AR& ar, cv::Mat& mat)
-    {
-    
-    }
-}
+INSTANTIATE_META_PARAMETER(std::vector<EagleLib::SyncedMemory>);
+INSTANTIATE_META_PARAMETER(cv::Mat);
+INSTANTIATE_META_PARAMETER(std::vector<cv::Mat>);
 
 using namespace EagleLib;
 SyncedMemory::SyncedMemory()
@@ -262,8 +208,12 @@ int SyncedMemory::GetNumMats() const
 }
 bool SyncedMemory::empty() const
 {
-    if(h_data.size())
+    if(h_data.size() && d_data.size())
+        return h_data[0].empty() && d_data[0].empty();
+    if(h_data.size() && d_data.size() == 0)
         return h_data[0].empty();
+    if(d_data.size() && h_data.size() == 0)
+        return d_data[0].empty();
     return true;
 }
 void SyncedMemory::Synchronize(cv::cuda::Stream& stream)
@@ -380,4 +330,14 @@ int SyncedMemory::GetDim(int dim) const
 SyncedMemory::SYNC_STATE SyncedMemory::GetSyncState(int index) const
 {
     return sync_flags[index];
+}
+template<typename A> void SyncedMemory::load(A& ar)
+{
+    ar(cereal::make_nvp("matrices", h_data));
+    sync_flags.resize(h_data.size(), HOST_UPDATED);
+    d_data.resize(h_data.size());
+}
+template<typename A> void SyncedMemory::save(A & ar) const
+{
+    ar(cereal::make_nvp("matrices", h_data));
 }

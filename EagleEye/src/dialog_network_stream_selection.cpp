@@ -1,26 +1,26 @@
 #include "dialog_network_stream_selection.h"
 #include "ui_dialog_network_stream_selection.h"
 #include <qlistwidget.h>
-#include <EagleLib/rcc/ObjectManager.h>
-#include <EagleLib/frame_grabber_base.h>
+
+#include <EagleLib/Nodes/IFrameGrabber.hpp>
 
 dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::dialog_network_stream_selection)
 {
     ui->setupUi(this);
-    updateParameterPtr("url history", &url_history);
-    variable_storage::instance().load_parameters(this);
+    url_history_param.UpdatePtr(&url_history);
+    VariableStorage::Instance()->LoadParams(this, "Network Streams");
     ui->list_url_history->installEventFilter(this);
     QObject::connect(ui->list_url_history, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(on_item_clicked(QListWidgetItem*)));
 
-    auto constructors = EagleLib::ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
     for(auto constructor : constructors)
     {
         auto info = constructor->GetObjectInfo();
         if(info)
         {
-            auto fg_info = dynamic_cast<EagleLib::FrameGrabberInfo*>(info);
+            auto fg_info = dynamic_cast<EagleLib::Nodes::FrameGrabberInfo*>(info);
             if(fg_info)
             {
                 auto devices = fg_info->ListLoadableDocuments();
@@ -44,7 +44,7 @@ dialog_network_stream_selection::~dialog_network_stream_selection()
     {
         url_history.insert(std::make_pair(ui->list_url_history->item(i)->text().toStdString(),std::string("")));
     }
-    variable_storage::instance().save_parameters(this);
+    VariableStorage::Instance()->SaveParams(this, "Network Stream");
     delete ui;
 }
 
@@ -96,4 +96,10 @@ bool dialog_network_stream_selection::eventFilter(QObject *object, QEvent *event
         }
     }
     return false;
+}
+std::vector<mo::IParameter*> dialog_network_stream_selection::GetParameters()
+{
+    std::vector<mo::IParameter*> output;
+    output.push_back(&url_history_param);
+    return output;
 }

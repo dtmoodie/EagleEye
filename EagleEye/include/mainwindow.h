@@ -17,9 +17,8 @@
 #include "user_interface_persistence.h"
 #include "plotwizarddialog.h"
 #include <QtGui/qopenglcontext.h>
-#include <signals/connection.h>
-#include <signals/signaler.h>
-#include <signals/signal_manager.h>
+#include <MetaObject/Signals/RelayManager.hpp>
+
 
 #include <qtimer.h>
 
@@ -36,19 +35,32 @@ class MainWindow;
 class SettingDialog;
 class bookmark_dialog;
 
-class MainWindow : public QMainWindow, public user_interface_persistence//, Signals::signaler
+class MainWindow : public QMainWindow, public mo::IMetaObject, public UIPersistence
 {
     Q_OBJECT
 
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void oglDisplay(cv::cuda::GpuMat img, EagleLib::Nodes::Node *node);
-    void qtDisplay(cv::Mat img, EagleLib::Nodes::Node *node);
+
+    MO_BEGIN(MainWindow)
+        MO_SIGNAL(void, StartThreads);
+        MO_SIGNAL(void, StopThreads);
+        MO_SIGNAL(void, PauseThreads);
+        MO_SIGNAL(void, ResumeThreads);
+        MO_SLOT(void, parameter_added, EagleLib::Nodes::Node*);
+        MO_SLOT(void, node_update, EagleLib::Nodes::Node*);
+    MO_END;
+
+    
     void onCompileLog(const std::string& msg, int level);
     virtual void closeEvent(QCloseEvent *event);
     void processingThread_uiCallback(boost::function<void(void)> f, std::pair<void*, mo::TypeInfo> source);
     void process_log_message(boost::log::trivial::severity_level severity, std::string message);
+    std::vector<mo::IParameter*> GetParameters()
+    {
+        return this->mo::IMetaObject::GetParameters();
+    }
 public slots:
     void load_file(QString file, QString preferred_loader = "");
 private slots:
@@ -57,9 +69,7 @@ private slots:
     
     void onSelectionChanged(QGraphicsProxyWidget* widget);
     void log(QString message);
-    void onOGLDisplay(std::string name, cv::cuda::GpuMat img);
-    void onQtDisplay(std::string name, cv::Mat img);
-    void onQtDisplay(boost::function<cv::Mat(void)> function, EagleLib::Nodes::Node* node);
+    
     void stopProcessingThread();
     void startProcessingThread();
     void onWidgetDeleted(QNodeWidget* widget);
@@ -73,8 +83,8 @@ private slots:
     void updateLines();
     void uiNotifier();
     void onUiUpdate();
-    void on_NewParameter(EagleLib::Nodes::Node* node);
-    void newParameter(EagleLib::Nodes::Node* node);
+    //void on_NewParameter(EagleLib::Nodes::Node* node);
+    //void newParameter(EagleLib::Nodes::Node* node);
     void displayRCCSettings();
     void onPlotAdd(PlotWindow* plot);
     void onPlotRemove(PlotWindow* plot);
@@ -94,7 +104,7 @@ private slots:
     void on_persistence_timeout();
 
 signals:
-    void onNewParameter(EagleLib::Nodes::Node* node);
+    //void onNewParameter(EagleLib::Nodes::Node* node);
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);
@@ -117,41 +127,34 @@ private:
     QTimer*                                             fileMonitorTimer;
     NodeListDialog*                                     nodeListDialog;
     QGraphicsScene*                                     nodeGraph;
-    NodeView*                                            nodeGraphView;
+    NodeView*                                           nodeGraphView;
     QGraphicsProxyWidget*                               currentSelectedNodeWidget;
     QGraphicsProxyWidget*                               currentSelectedStreamWidget;
-    rcc::weak_ptr<EagleLib::Nodes::Node>                          currentNode;
-    rcc::weak_ptr<EagleLib::IDataStream>                          current_stream;
+    rcc::weak_ptr<EagleLib::Nodes::Node>                currentNode;
+    rcc::weak_ptr<EagleLib::IDataStream>                current_stream;
     
     std::vector<EagleLib::Nodes::Node::Ptr>             parentList;
     boost::timed_mutex                                  parentMtx;
     std::vector<QNodeWidget*>                           widgets;
-    std::vector<DataStreamWidget*>                       data_stream_widgets;
-    //boost::thread                                       processingThread;
+    std::vector<DataStreamWidget*>                      data_stream_widgets;
     RCCSettingsDialog*                                  rccSettings;
     std::map<std::string, cv::Vec2f>                    positionMap;
     PlotWizardDialog*                                   plotWizardDialog;
     SettingDialog*                                      settingsDialog;
     QOpenGLContext*                                     processing_thread_context;
     QWindow*                                            processing_thread_upload_window;
-    std::shared_ptr<Signals::connection>                new_parameter_connection;
-    std::shared_ptr<Signals::connection>                dirty_flag_connection;
-    std::vector<rcc::shared_ptr<EagleLib::IDataStream>>  data_streams;
-    std::shared_ptr<Signals::connection>                logging_connection;
-    std::string file_load_path;
-    std::string dir_load_path;
+    std::shared_ptr<mo::Connection>                     new_parameter_connection;
+    std::shared_ptr<mo::Connection>                     dirty_flag_connection;
+    std::vector<rcc::shared_ptr<EagleLib::IDataStream>> data_streams;
+    std::shared_ptr<mo::Connection>                     logging_connection;
+    std::string                                         file_load_path;
+    std::string                                         dir_load_path;
+    QTimer*                                             persistence_timer;
 
-    QTimer* persistence_timer;
-    SIGNALS_BEGIN(MainWindow)
-        SIG_SEND(StartThreads);
-        SIG_SEND(StopThreads);
-        SIG_SEND(PauseThreads);
-        SIG_SEND(ResumeThreads);
-    SIGNALS_END
     // All signals from the user get directed through this manager so that 
     // they can all be attached to a serialization sink for recording user interaction
-    Signals::signal_manager                                _ui_manager;
-    std::vector<std::shared_ptr<Signals::connection>>   _signal_connections;
+    mo::RelayManager                                    _ui_manager;
+    std::vector<std::shared_ptr<mo::Connection>>        _signal_connections;
 };
 
 #endif // MAINWINDOW_H

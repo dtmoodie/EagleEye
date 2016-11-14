@@ -19,7 +19,6 @@
 #include <boost/log/common.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/setup/file.hpp>
-#include <boost/lexical_cast/try_lexical_convert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 #include <boost/tokenizer.hpp>
@@ -29,6 +28,10 @@
 #include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
 #include "instantiate.hpp"
+
+#ifdef HAVE_WT
+#include "vclick.hpp"
+#endif
 
 #include <fstream>
 
@@ -59,6 +62,7 @@ int main(int argc, char* argv[])
 {
     mo::instantiations::initialize();
     EagleLib::SetupLogging();
+    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
     signal(SIGINT, sig_handler);
     signal(SIGILL, sig_handler);
     signal(SIGTERM, sig_handler);
@@ -74,6 +78,9 @@ int main(int argc, char* argv[])
         ("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")
         ("script", boost::program_options::value<std::string>(), "Text file with scripting commands")
         ("profile", boost::program_options::value<bool>()->default_value(false), "Profile application")
+        ("docroot", boost::program_options::value<std::string>(), "")
+        ("http-address", boost::program_options::value<std::string>(), "")
+        ("http-port", boost::program_options::value<std::string>(), "")
         ;
 
     boost::program_options::variables_map vm;
@@ -271,7 +278,7 @@ int main(int argc, char* argv[])
         };
         std::vector<std::shared_ptr<mo::Connection>> connections;
         //std::map<std::string, std::function<void(std::string)>> function_map;
-        std::vector<std::shared_ptr<mo::ISlot>> slots;
+        std::vector<std::shared_ptr<mo::ISlot>> _slots;
         std::vector<std::pair<std::string, std::string>> documents_list;
         mo::TypedSlot<void(std::string)>* slot;
         slot = new mo::TypedSlot<void(std::string)>(
@@ -295,7 +302,7 @@ int main(int argc, char* argv[])
                     }
                 }
             }, std::placeholders::_1));
-        slots.emplace_back(slot);
+        _slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "list_devices"));
 
         
@@ -323,7 +330,7 @@ int main(int argc, char* argv[])
                 _dataStreams.push_back(ds);
             }
         }, std::placeholders::_1));
-        slots.emplace_back(slot);
+        _slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "load_file"));
 
 
@@ -332,7 +339,7 @@ int main(int argc, char* argv[])
         {
             quit = true;
         }, std::placeholders::_1));
-        slots.emplace_back(slot);
+        _slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "quit"));
 
 
@@ -547,10 +554,36 @@ int main(int argc, char* argv[])
             }
         };
         slot = new mo::TypedSlot<void(std::string)>(std::bind(func, std::placeholders::_1));
-        slots.emplace_back(slot);
+        _slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "print"));
         connections.push_back(manager.Connect(slot, "ls"));
-            
+        
+		slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_stream, &current_node](std::string file)
+		{
+			if (current_stream)
+			{
+				current_stream->SaveStream(file);
+			}
+			else if (current_node)
+			{
+
+			}
+		}, std::placeholders::_1));
+        _slots.emplace_back(slot);
+		connections.push_back(manager.Connect(slot, "save"));
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([&_dataStreams, &current_stream, &current_node](std::string file)
+        {
+            auto stream = EagleLib::IDataStream::Load(file);
+            if(stream)
+            {
+                stream->StartThread();
+                _dataStreams.push_back(stream);
+            }
+        }, std::placeholders::_1));
+        _slots.emplace_back(slot);
+        connections.push_back(manager.Connect(slot, "load"));
+
         slot = new mo::TypedSlot<void(std::string)>(
             std::bind([&_dataStreams,&current_stream, &current_node, &current_param](std::string what)
         {
@@ -589,19 +622,12 @@ int main(int argc, char* argv[])
             if(current_stream)
             {
                 // look for a node with this name, relative then look absolute
-                auto nodes = current_stream->GetNodes();
-                for(auto& node : nodes)
+                auto node = current_stream->GetNode(what);
+                if(node)
                 {
-                    if(node->GetTreeName() == what)
-                    {
-                        current_stream.reset();
-                        current_node = node.Get();
-                        current_param = nullptr;
-                        return;
-                    }
+                    current_node = node;
                 }
                 std::cout << "No node found with given name " << what << std::endl;
-                // parse name and try to find absolute path to node
             }
             if(current_node)
             {
@@ -613,27 +639,32 @@ int main(int argc, char* argv[])
                     current_param = nullptr;
                     std::cout << "Successfully set node to " << child->GetTreeName() << "\n";
                     return;
-                } else if(auto node = current_node->GetNodeInScope(what))
+                } else 
                 {
-                    current_node = node;
-                    current_stream.reset();
-                    current_param = nullptr;
-                    std::cout << "Successfully set node to " << node->GetTreeName() << "\n";
-                    return;
-                }else
-                {
-                    auto params = current_node->GetParameters();
-                    for(auto& param : params)
+                    auto stream = current_node->GetDataStream();
+                    if(auto node = stream->GetNode(what))
                     {
-                        if(param->GetName().find(what) != std::string::npos)
-                        {
-                            current_param = param;
-                            current_stream.reset();
-                            std::cout << "Successfully set parameter to " << current_param->GetTreeName() << std::endl;
-                            return;
-                        }
+                        current_node = node;
+                        current_stream.reset();
+                        current_param = nullptr;
+                        std::cout << "Successfully set node to " << node->GetTreeName() << "\n";
+                        return;
                     }
-                    std::cout << "No parameter found with given name " << what << "\n";
+                    else
+                    {
+                        auto params = current_node->GetParameters();
+                        for(auto& param : params)
+                        {
+
+                            if(param->GetName().find(what) != std::string::npos)
+                            {
+                                current_param = param;
+                                current_stream.reset();
+                                return;
+                            }
+                        }
+                        std::cout << "No parameter found with given name " << what << "\n";
+                    }
                 }
             }
         }, std::placeholders::_1));
@@ -741,7 +772,8 @@ int main(int argc, char* argv[])
                 auto token_index = value.find(':');
                 if(token_index != std::string::npos)
                 {
-                    auto output_node = current_node->GetNodeInScope(value.substr(0, token_index));
+                    auto stream = current_node->GetDataStream();
+                    auto output_node = stream->GetNode(value.substr(0, token_index));
                     if(output_node)
                     {
                         auto output_param = output_node->GetOutput(value.substr(token_index + 1));
@@ -865,8 +897,41 @@ int main(int argc, char* argv[])
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "emit"));
 
+        boost::thread web_thread;
+        
+        slot = new mo::TypedSlot<void(std::string)>(std::bind(
+            [&current_stream, &web_thread, argc, argv](std::string null)->void
+        {
+            if(current_stream)
+            {
+                rcc::shared_ptr<vclick::WebSink> sink = current_stream->GetNode("WebSink0");
+                if(!sink)
+                {
+                    sink = rcc::shared_ptr<vclick::WebSink>::Create();
+                }
+                current_stream->AddNode(sink);
+                auto fg = current_stream->GetNode("frame_grabber_openni20");
+                sink->ConnectInput(fg, fg->GetParameter("current_frame"), sink->GetInput("point_cloud"));
+                
+                auto foreground_estimator = current_stream->GetNode("ForegroundEstimate0");
+                sink->ConnectInput(foreground_estimator, foreground_estimator->GetParameter("point_mask"),
+                    sink->GetInput("foreground_mask"));
 
-        slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string level)
+                sink->ConnectInput(foreground_estimator, foreground_estimator->GetParameter("background_model"),
+                    sink->GetInput("background_model"));
+
+                web_thread = boost::thread(std::bind(
+                    [argc, argv, sink]()->void
+                {
+                    vclick::WebUi::StartServer(argc, argv, sink);
+                }));
+            }
+        }, std::placeholders::_1));
+
+        connections.push_back(manager.Connect(slot, "web-ui"));
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind(
+            [](std::string level)
         {
         if (level == "trace")
             boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);

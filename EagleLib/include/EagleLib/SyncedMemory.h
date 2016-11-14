@@ -92,16 +92,8 @@ namespace EagleLib
         int GetDim(int dim) const;
         int GetDepth() const;
         int GetType() const;
-        template<typename A> void load(A& ar)
-        {
-            ar(h_data);
-            sync_flags.resize(h_data.size(), HOST_UPDATED);
-            d_data.resize(h_data.size());
-        }
-        template<typename A> void save(A & ar) const
-        {
-            ar(h_data);
-        }
+        template<typename A> void load(A& ar);
+        template<typename A> void save(A & ar) const;
     private:
         std::vector<cv::Mat> h_data;
         std::vector<cv::cuda::GpuMat> d_data;

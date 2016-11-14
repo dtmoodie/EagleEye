@@ -5,7 +5,7 @@
 
 #include "vtkPlotter.h"
 #include "vtkMatDataBuffer.h"
-#include <EagleLib/ParameteredIObjectImpl.hpp>
+#include "MetaObject/Parameters/Types.hpp"
 
 #include <vtkPolyData.h>
 #include <vtkIdTypeArray.h>
@@ -40,16 +40,28 @@ namespace EagleLib
 {
     namespace Plotting
     {
-        struct PLUGIN_EXPORTS vtkVolumetricPlotterInfo: public vtkPlotterInfo
+        class PLUGIN_EXPORTS vtkVolumetricPlotter : public vtkPlotterBase
         {
-            virtual bool AcceptsParameter(Parameters::Parameter* param);
-            virtual std::string GetObjectName();
-            virtual std::string GetObjectTooltip();
-            virtual std::string GetObjectHelp();
-        };
-
-        class PLUGIN_EXPORTS vtkVolumetricPlotter : public vtkPlotter
-        {
+        public:
+            vtkVolumetricPlotter();
+            virtual ~vtkVolumetricPlotter();
+            static bool AcceptsParameter(mo::IParameter* param);
+            virtual void SetInput(mo::IParameter* param_ = nullptr);
+            virtual void OnParameterUpdate(cv::cuda::Stream* stream);
+            virtual void OnMatParameterUpdate(cv::cuda::Stream* stream);
+            virtual void OnGpuMatParameterUpdate(cv::cuda::Stream* stream);
+            virtual void OnSyncedMemUpdate(cv::cuda::Stream* stream);
+            virtual std::string PlotName() const;
+            virtual void onUpdate(mo::IParameter* param = nullptr, cv::cuda::Stream* stream = nullptr);
+            virtual void PlotInit(bool firstInit);
+            
+            MO_DERIVE(vtkVolumetricPlotter, vtkPlotterBase);
+                PARAM(cv::Rect, region_of_interest, cv::Rect(0,0, 10, 10));
+                PARAM(float, opacity_max_value, 2048 );
+                PARAM(float, opacity_min_value, 50 );
+                PARAM(float, opacity_sharpness, 0.5);
+                PARAM(mo::EnumParameter, colormapping_scheme, mo::EnumParameter());
+            MO_END;
         protected:
             vtkSmartPointer<vtkVolume> _volume;
             vtkSmartPointer<vtkSmartVolumeMapper> _mapper;
@@ -59,26 +71,6 @@ namespace EagleLib
             vtkSmartPointer<vtkClipVolume> _clipping_volume;
             vtkSmartPointer<vtkBoxWidget> _clipping_function;
             vtkBoxWidgetCallback* _callback;
-        public:
-            vtkVolumetricPlotter();
-            virtual ~vtkVolumetricPlotter();
-            virtual bool AcceptsParameter(Parameters::Parameter* param);
-            virtual void SetInput(Parameters::Parameter* param_ = nullptr);
-            virtual void OnParameterUpdate(cv::cuda::Stream* stream);
-            virtual void OnMatParameterUpdate(cv::cuda::Stream* stream);
-            virtual void OnGpuMatParameterUpdate(cv::cuda::Stream* stream);
-            virtual void OnSyncedMemUpdate(cv::cuda::Stream* stream);
-            virtual std::string PlotName() const;
-            virtual void onUpdate(Parameters::Parameter* param = nullptr, cv::cuda::Stream* stream = nullptr);
-            virtual void PlotInit(bool firstInit);
-            
-            BEGIN_PARAMS(vtkVolumetricPlotter, vtkPlotter);
-                PARAM(cv::Rect, region_of_interest, cv::Rect(0,0, 10, 10));
-                PARAM(float, opacity_max_value, 2048 );
-                PARAM(float, opacity_min_value, 50 );
-                PARAM(float, opacity_sharpness, 0.5);
-                PARAM(Parameters::EnumParameter, colormapping_scheme, Parameters::EnumParameter());
-            END_PARAMS;
         };
     }
 }

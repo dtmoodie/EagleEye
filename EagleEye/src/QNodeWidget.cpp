@@ -2,18 +2,22 @@
 
 #include "ui_QNodeWidget.h"
 #include "ui_datastreamwidget.h"
+
 #include <boost/bind.hpp>
 #include <QPalette>
 #include <QDateTime>
 #include "qevent.h"
+
 #include "EagleLib/logger.hpp"
-#include "parameters/IVariableManager.h"
-#include <parameters/UI/Qt/IParameterProxy.hpp>
+#include <EagleLib/Nodes/IFrameGrabber.hpp>
 #include <MetaObject/Logging/Log.hpp>
-#include <EagleLib/frame_grabber_base.h>
+#include <MetaObject/Parameters/UI/WidgetFactory.hpp>
+#include <MetaObject/Parameters/IVariableManager.h>
 
 
-IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget* parent, rcc::weak_ptr<EagleLib::Nodes::Node> node_) :
+IQNodeInterop::IQNodeInterop(mo::IParameter* parameter_, 
+                             QNodeWidget* parent, 
+                             rcc::weak_ptr<EagleLib::Nodes::Node> node_) :
     QWidget(parent),
     parameter(parameter_),
     node(node_)
@@ -34,10 +38,10 @@ IQNodeInterop::IQNodeInterop(Parameters::Parameter::Ptr parameter_, QNodeWidget*
     }
     layout->addWidget(nameElement, 0, 0);
     nameElement->installEventFilter(parent);
-    nameElement->setToolTip(QString::fromStdString(parameter_->GetTooltip()));
     connect(this, SIGNAL(updateNeeded()), this, SLOT(updateUi()), Qt::QueuedConnection);
-    bc = parameter->RegisterNotifier(boost::bind(&IQNodeInterop::onParameterUpdate, this));
-
+    onParameterUpdateSlot = mo::TypedSlot<void(mo::IParameter*, mo::Context*)>(std::bind(&IQNodeInterop::onParameterUpdate, this, std::placeholders::_1, std::placeholders::_2));
+    bc = parameter->RegisterUpdateNotifier(&onParameterUpdateSlot);
+    
     QLabel* typeElement = new QLabel(QString::fromStdString(parameter_->GetTypeInfo().name()));
 
     typeElement->installEventFilter(parent);
@@ -50,7 +54,7 @@ IQNodeInterop::~IQNodeInterop()
     delete proxy;
 }
 
-void IQNodeInterop::onParameterUpdate()
+/*void IQNodeInterop::onParameterUpdate()
 {
     boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta = currentTime - previousUpdateTime;
@@ -59,7 +63,7 @@ void IQNodeInterop::onParameterUpdate()
         previousUpdateTime = currentTime;
         emit updateNeeded();
     }
-}
+}*/
 
 void IQNodeInterop::updateUi()
 {
@@ -95,11 +99,11 @@ void IQNodeInterop::on_valueChanged()
     if (proxy)
         proxy->onUiUpdated(static_cast<QWidget*>(sender()));
 }
-void IQNodeInterop::onParameterUpdate(Parameters::Parameter::Ptr parameter)
+void IQNodeInterop::onParameterUpdate(mo::IParameter* parameter, mo::Context* ctx)
 {
     updateUi();
 }
-DraggableLabel::DraggableLabel(QString name, Parameters::Parameter::Ptr param_):
+DraggableLabel::DraggableLabel(QString name, mo::IParameter* param_):
     QLabel(name), param(param_)
 {
     setAcceptDrops(true);
@@ -153,19 +157,19 @@ QNodeWidget::QNodeWidget(QWidget* parent, rcc::weak_ptr<EagleLib::Nodes::Node> n
 
     if (node != nullptr)
     {
-        ui->chkEnabled->setChecked(node->enabled);
-        ui->profile->setChecked(node->profile);
+//        ui->chkEnabled->setChecked(node->enabled);
+        //ui->profile->setChecked(node->profile);
         connect(ui->chkEnabled, SIGNAL(clicked(bool)), this, SLOT(on_enableClicked(bool)));
         connect(ui->profile, SIGNAL(clicked(bool)), this, SLOT(on_profileClicked(bool)));
-        ui->nodeName->setText(QString::fromStdString(node->getName()));
-        ui->nodeName->setToolTip(QString::fromStdString(node->getFullTreeName()));
+        ui->nodeName->setText(QString::fromStdString(node->GetTypeName()));
+        ui->nodeName->setToolTip(QString::fromStdString(node->GetTreeName()));
         ui->nodeName->setMaximumWidth(200);
         ui->gridLayout->setSpacing(0);
-        auto parameters = node->getDisplayParameters();
+        auto parameters = node->GetDisplayParameters();
         for (size_t i = 0; i < parameters.size(); ++i)
         {
             int col = 0;
-            if (parameters[i]->type & Parameters::Parameter::Input)
+            if (parameters[i]->CheckFlags(mo::Input_e))
             {
                 QInputProxy* proxy = new QInputProxy(parameters[i], node, this);
                 ui->gridLayout->addWidget(proxy->getWidget(0), i+7, col, 1,1);
@@ -173,20 +177,21 @@ QNodeWidget::QNodeWidget(QWidget* parent, rcc::weak_ptr<EagleLib::Nodes::Node> n
                 ++col;
             }
             
-            if(parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::State || parameters[i]->type & Parameters::Parameter::Output)
+            if(parameters[i]->CheckFlags(mo::Control_e)|| parameters[i]->CheckFlags(mo::State_e) || parameters[i]->CheckFlags(mo::Output_e))
             {
-                auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
-                if (interop)
+                //auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
+                auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(parameters[i]);
+                if (proxy)
                 {
-                    parameterProxies[parameters[i]->GetTreeName()] = interop;
-                    auto widget = interop->GetParameterWidget(this);
+                    parameterProxies[parameters[i]->GetTreeName()] = proxy;
+                    auto widget = proxy->GetParameterWidget(this);
                     widget->installEventFilter(this);
                     widgetParamMap[widget] = parameters[i];
                     ui->gridLayout->addWidget(widget, i + 7, col, 1,1);
                 }
             }
         }
-        log_connection = EagleLib::ui_collector::get_object_log_handler(node->getFullTreeName()).connect(std::bind(&QNodeWidget::on_logReceive, this, std::placeholders::_1, std::placeholders::_2));
+        /*log_connection = EagleLib::ui_collector::get_object_log_handler(node->getFullTreeName()).connect(std::bind(&QNodeWidget::on_logReceive, this, std::placeholders::_1, std::placeholders::_2));
         if (auto stream = node->GetDataStream())
         {
             if (auto sig_mgr = stream->GetSignalManager())
@@ -201,54 +206,58 @@ QNodeWidget::QNodeWidget(QWidget* parent, rcc::weak_ptr<EagleLib::Nodes::Node> n
         else
         {
             LOG(debug) << "No stream attached to node";
-        }
+        }*/
     }
 }
-void QNodeWidget::on_object_recompile(EagleLib::ParameteredIObject* obj)
+void QNodeWidget::on_object_recompile(mo::IMetaObject* obj)
 {
-    if(obj->GetObjectId()  == node.get_id())
+    if(node)
     {
-        auto params = node->getDisplayParameters();
-        int idx = -1;
-        for(auto& param : params)
+        if (obj->GetObjectId() == node->GetObjectId())
         {
-            ++idx;
+            auto params = node->GetDisplayParameters();
+            int idx = -1;
+            for (auto& param : params)
             {
-                auto itr = parameterProxies.find(param->GetTreeName());
-                if(itr != parameterProxies.end())
+                ++idx;
                 {
-                    itr->second->SetParameter(param);
-                    break;
+                    auto itr = parameterProxies.find(param->GetTreeName());
+                    if (itr != parameterProxies.end())
+                    {
+                        itr->second->SetParameter(param);
+                        break;
+                    }
                 }
-            }
-            {
-                auto itr = inputProxies.find(param->GetTreeName());
-                if(itr != inputProxies.end())
                 {
-                    itr->second->updateParameter(param);
-                    break;
+                    auto itr = inputProxies.find(param->GetTreeName());
+                    if (itr != inputProxies.end())
+                    {
+                        itr->second->updateParameter(param);
+                        break;
+                    }
                 }
-            }
-            LOG(debug) << "Adding new parameter after recompile: " << param->GetTreeName();
-            int col = 0;
-            if (param->type & Parameters::Parameter::Input)
-            {
-                QInputProxy* proxy = new QInputProxy(param, node, this);
-                ui->gridLayout->addWidget(proxy->getWidget(0), idx + 7, col, 1, 1);
-                inputProxies[param->GetTreeName()] = std::shared_ptr<QInputProxy>(proxy);
-                ++col;
-            }
+                LOG(debug) << "Adding new parameter after recompile: " << param->GetTreeName();
+                int col = 0;
+                if (param->CheckFlags(mo::Input_e))
+                {
+                    QInputProxy* proxy = new QInputProxy(param, node, this);
+                    ui->gridLayout->addWidget(proxy->getWidget(0), idx + 7, col, 1, 1);
+                    inputProxies[param->GetTreeName()] = std::shared_ptr<QInputProxy>(proxy);
+                    ++col;
+                }
 
-            if (param->type & Parameters::Parameter::Control || param->type & Parameters::Parameter::State  || param->type & Parameters::Parameter::Output)
-            {
-                auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(param);
-                if (interop)
+                if (param->CheckFlags(mo::Control_e) || param->CheckFlags(mo::State_e) || param->CheckFlags(mo::Output_e))
                 {
-                    parameterProxies[param->GetTreeName()] = interop;
-                    auto widget = interop->GetParameterWidget(this);
-                    widget->installEventFilter(this);
-                    widgetParamMap[widget] = param;
-                    ui->gridLayout->addWidget(widget, idx + 7, col, 1, 1);
+                    //auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(param);
+                    auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(param);
+                    if (proxy)
+                    {
+                        parameterProxies[param->GetTreeName()] = proxy;
+                        auto widget = proxy->GetParameterWidget(this);
+                        widget->installEventFilter(this);
+                        widgetParamMap[widget] = param;
+                        ui->gridLayout->addWidget(widget, idx + 7, col, 1, 1);
+                    }
                 }
             }
         }
@@ -273,7 +282,7 @@ bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
-void QNodeWidget::addParameterWidgetMap(QWidget* widget, Parameters::Parameter::Ptr param)
+void QNodeWidget::addParameterWidgetMap(QWidget* widget, mo::IParameter* param)
 {
     
 }
@@ -282,8 +291,8 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
 {
     if(node == nullptr)
         return;
-    ui->processingTime->setText(QString::number(node->GetProcessingTime()));
-    if (node->profile)
+    //ui->processingTime->setText(QString::number(node->GetProcessingTime()));
+    /*if (node->profile)
     {
         auto timings = node->GetProfileTimings();
         if (timings.size() > 1)
@@ -300,10 +309,10 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
     else
     {
         profileDisplay->hide();
-    }
-    if(parameterUpdate && node_ == node.get())
+    }*/
+    if(parameterUpdate && node_ == node.Get())
     {
-        auto parameters = node->getDisplayParameters();
+        auto parameters = node->GetDisplayParameters();
         if (parameters.size() != (parameterProxies.size() + inputProxies.size()))
         {
             for(size_t i = 0; i < parameters.size(); ++i)
@@ -324,14 +333,14 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
                     auto itr = inputProxies.find(parameters[i]->GetTreeName());
                     if(itr != inputProxies.end())
                     {
-                        found = itr->second->inputParameter == dynamic_cast<Parameters::InputParameter*>(parameters[i]);
+                        found = itr->second->inputParameter == dynamic_cast<mo::InputParameter*>(parameters[i]);
                     }
                 }
                 
                 if(found == false)
                 {
                     int col = 0;
-                    if (parameters[i]->type & Parameters::Parameter::Input)
+                    if (parameters[i]->CheckFlags(mo::Input_e))
                     {
                         QInputProxy* proxy = new QInputProxy(parameters[i], node, this);
                         ui->gridLayout->addWidget(proxy->getWidget(0), i + 7, col, 1, 1);
@@ -339,13 +348,14 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
                         ++col;
                     }
 
-                    if (parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::State  || parameters[i]->type & Parameters::Parameter::Output)
+                    if (parameters[i]->CheckFlags(mo::Control_e) || parameters[i]->CheckFlags(mo::State_e) || parameters[i]->CheckFlags(mo::Output_e))
                     {
-                        auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
-                        if (interop)
+                        //auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
+                        auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(parameters[i]);
+                        if (proxy)
                         {
-                            parameterProxies[parameters[i]->GetTreeName()] = interop;
-                            auto widget = interop->GetParameterWidget(this);
+                            parameterProxies[parameters[i]->GetTreeName()] = proxy;
+                            auto widget = proxy->GetParameterWidget(this);
                             widget->installEventFilter(this);
                             widgetParamMap[widget] = parameters[i];
                             ui->gridLayout->addWidget(widget, i + 7, col, 1, 1);
@@ -355,11 +365,11 @@ void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
             }
         }
     }
-    if(parameterUpdate && node_ != node.get())
+    if(parameterUpdate && node_ != node.Get())
     {
         for(auto& proxy : inputProxies)
         {
-            proxy.second->updateUi(true);
+            proxy.second->updateUi(nullptr, nullptr, true);
         }
     }
 }
@@ -425,11 +435,13 @@ QNodeWidget::~QNodeWidget()
 }
 
 void QNodeWidget::on_enableClicked(bool state)
-{    node->enabled = state;     }
+{    
+    //node->enabled = state;     
+}
 void QNodeWidget::on_profileClicked(bool state)
 {
-    if(node != nullptr)
-        node->profile = state;
+    /*if(node != nullptr)
+        node->profile = state;*/
     
 }
 
@@ -457,26 +469,26 @@ DataStreamWidget::DataStreamWidget(QWidget* parent, EagleLib::IDataStream::Ptr s
 {
     ui->setupUi(this);
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    if(auto fg = stream->GetFrameGrabber())
-        ui->lbl_loaded_document->setText(QString::fromStdString(fg->GetSourceFilename()));
+    /*if(auto fg = stream->GetFrameGrabber())
+        ui->lbl_loaded_document->setText(QString::fromStdString(fg->GetSourceFilename()));*/
     //ui->lbl_stream_id->setText(QString::number(stream->get_stream_id()));
     update_ui();
 }
 void DataStreamWidget::update_ui()
 {
-    auto fg = _dataStream->GetFrameGrabber();
-    if (fg != nullptr)
+    //auto fg = _dataStream->GetFrameGrabber();
+    /*if (fg != nullptr)
     {
         auto parameters = fg->getParameters();
         for (int i = 0; i < parameters.size(); ++i)
         {
             int col = 0;
-            if (parameters[i]->type & Parameters::Parameter::Input)
+            if (parameters[i]->type & mo::IParameter::Input)
             {
                 
             }
 
-            if (parameters[i]->type & Parameters::Parameter::Control || parameters[i]->type & Parameters::Parameter::State || parameters[i]->type & Parameters::Parameter::Output)
+            if (parameters[i]->type & mo::IParameter::Control || parameters[i]->type & mo::IParameter::State || parameters[i]->type & mo::IParameter::Output)
             {
                 auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
                 if (interop)
@@ -489,7 +501,7 @@ void DataStreamWidget::update_ui()
                 }
             }
         }
-    }
+    }*/
 }
 
 DataStreamWidget::~DataStreamWidget()
@@ -514,7 +526,7 @@ void DataStreamWidget::SetSelected(bool state)
 
 
 
-QInputProxy::QInputProxy(Parameters::Parameter* parameter_, rcc::weak_ptr<EagleLib::Nodes::Node> node_, QWidget* parent):
+QInputProxy::QInputProxy(mo::IParameter* parameter_, rcc::weak_ptr<EagleLib::Nodes::Node> node_, QWidget* parent):
     node(node_), QWidget(parent)
 {
     box = new QComboBox(this);
@@ -522,21 +534,27 @@ QInputProxy::QInputProxy(Parameters::Parameter* parameter_, rcc::weak_ptr<EagleL
     box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     //bc = parameter_->RegisterNotifier(boost::bind(&QInputProxy::updateUi, this, false));
-    dc = parameter_->RegisterDeleteNotifier(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
-    inputParameter = dynamic_cast<Parameters::InputParameter*>(parameter_);
-    updateUi(true);
+    //dc = parameter_->RegisterDeleteNotifier(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
+    onParameterUpdateSlot = mo::TypedSlot<void(mo::IParameter*, mo::Context*)>(std::bind(&QInputProxy::updateUi, this, std::placeholders::_1, std::placeholders::_2, false));
+    onParameterDeleteSlot = mo::TypedSlot<void(mo::IParameter const*)>(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
+    update_connection = parameter_->RegisterUpdateNotifier(&onParameterUpdateSlot);
+    delete_connection = parameter_->RegisterDeleteNotifier(&onParameterDeleteSlot);
+    //dc = parameter_->RegisterDeleteNotifier(&onParameterUpdateSlot);
+    inputParameter = dynamic_cast<mo::InputParameter*>(parameter_);
+    updateUi(nullptr, nullptr, true);
     connect(box, SIGNAL(currentIndexChanged(int)), this, SLOT(on_valueChanged(int)));
     prevIdx = 0;
     box->installEventFilter(this);
 }
 
-void QInputProxy::updateParameter(Parameters::Parameter* parameter)
+void QInputProxy::updateParameter(mo::IParameter* parameter)
 {
-    dc = parameter->RegisterDeleteNotifier(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
-    inputParameter = dynamic_cast<Parameters::InputParameter*>(parameter);
+    delete_connection = parameter->RegisterDeleteNotifier(&onParameterDeleteSlot);
+    update_connection = parameter->RegisterUpdateNotifier(&onParameterUpdateSlot);
+    inputParameter = dynamic_cast<mo::InputParameter*>(parameter);
 }
 
-void QInputProxy::onParamDelete(Parameters::Parameter* parameter)
+void QInputProxy::onParamDelete(mo::IParameter const* parameter)
 {
     inputParameter = nullptr;
 }
@@ -551,19 +569,19 @@ void QInputProxy::on_valueChanged(int idx)
         return;
     }
     QString inputName = box->currentText();
-    LOG(debug) << "Input changed to " << inputName.toStdString() << " for variable " << dynamic_cast<Parameters::Parameter*>(inputParameter)->GetName();
+    LOG(debug) << "Input changed to " << inputName.toStdString() << " for variable " << dynamic_cast<mo::IParameter*>(inputParameter)->GetName();
     auto tokens = inputName.split(":");
-    auto var_manager = node->GetVariableManager();
-    auto tmp_param = var_manager->GetOutputParameter(inputName.toStdString());
+    //auto var_manager = node->GetVariableManager();
+    //auto tmp_param = var_manager->GetOutputParameter(inputName.toStdString());
     
     //auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
     //DOIF(sourceNode == nullptr, "Unable to find source node"; return;, debug);
     //auto param = sourceNode->getParameter(tokens[1].toStdString());
-    if(tmp_param)
+    /*if(tmp_param)
     {
         inputParameter->SetInput(tmp_param);
-        dynamic_cast<Parameters::Parameter*>(inputParameter)->changed = true;
-    }
+        dynamic_cast<mo::IParameter*>(inputParameter)->changed = true;
+    }*/
 }
 QWidget* QInputProxy::getWidget(int num)
 {
@@ -575,7 +593,7 @@ bool QInputProxy::eventFilter(QObject* obj, QEvent* event)
     {
         if(auto focus_event = dynamic_cast<QFocusEvent*>(event))
         {
-            updateUi(false);
+            updateUi(nullptr, nullptr, false);
             return true;
         }
     }
@@ -584,13 +602,13 @@ bool QInputProxy::eventFilter(QObject* obj, QEvent* event)
 // This only needs to be called when a new output parameter is added to the environment......
 // The best way of doing this would be to add a signal that each node emits when a new parameter is added
 // to the environment, this signal is then caught and used to update all input proxies.
-void QInputProxy::updateUi(bool init)
+void QInputProxy::updateUi(mo::IParameter*, mo::Context*, bool init)
 {
     auto var_man = node->GetVariableManager();
     auto inputs = var_man->GetOutputParameters(inputParameter->GetTypeInfo());
     if(box->count() == 0)
     {
-        box->addItem(QString::fromStdString(dynamic_cast<Parameters::Parameter*>(inputParameter)->GetTreeName()));    
+        box->addItem(QString::fromStdString(dynamic_cast<mo::IParameter*>(inputParameter)->GetTreeName()));    
     }
     for(size_t i = 0; i < inputs.size(); ++i)
     {
@@ -604,7 +622,7 @@ void QInputProxy::updateUi(bool init)
         if(!found)
             box->addItem(text);
     }
-    auto input = inputParameter->GetInput();
+    auto input = inputParameter->GetInputParam();
     if (input)
     {
         auto currentInputName = input->GetTreeName();

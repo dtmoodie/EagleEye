@@ -1,14 +1,11 @@
 #include "Renderers.h"
 #include "vtkLogRedirect.h"
-#include "Remotery.h"
+
 #include "EagleLib/nodes/Node.h"
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #include "EagleLib/utilities/ObjectPool.hpp"
 #include <EagleLib/rcc/SystemTable.hpp>
-#include "EagleLib/rcc/ObjectManager.h"
-#include <parameters/ParameteredObjectImpl.hpp>
-
-#include "parameters/UI/InterThread.hpp"
+#include <EagleLib/plotters/PlotInfo.hpp>
 
 #include "vtkTexture.h"
 #include "vtkPointData.h"
@@ -32,13 +29,13 @@ using namespace EagleLib;
 using namespace EagleLib::Plotting;
 
 
-bool vtkImageViewerInfo::AcceptsParameter(Parameters::Parameter* param)
+bool vtkImageViewer::AcceptsParameter(mo::IParameter* param)
 {
     auto type = param->GetTypeInfo();
     if(type == mo::TypeInfo(typeid(cv::cuda::GpuMat)))
     {
-        auto typed = static_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>*>(param);
-        auto mat = typed->Data();
+        auto typed = dynamic_cast<mo::ITypedParameter<cv::cuda::GpuMat>*>(param);
+        auto mat = typed->GetDataPtr();
         if(mat->depth() == CV_8U && (mat->channels() == 1 || mat->channels() == 3 || mat->channels() == 4))
         {
             return true;
@@ -47,34 +44,20 @@ bool vtkImageViewerInfo::AcceptsParameter(Parameters::Parameter* param)
     return false;
 }
 
-std::string vtkImageViewerInfo::GetObjectName()
-{
-    return "vtkImageViewer";
-}
-std::string vtkImageViewerInfo::GetObjectTooltip()
-{
-    return "Render image to quad in vtk opengl render window";
-}
-std::string vtkImageViewerInfo::GetObjectHelp()
-{
-    return GetObjectTooltip();
-}
-
-vtkImageViewerInfo g_info;
 
 vtkImageViewer::vtkImageViewer():
-    vtkPlotter()
+    vtkPlotterBase()
 {
     current_aspect_ratio = 1.0;
     vtkLogRedirect::init();
 }
 vtkImageViewer::~vtkImageViewer()
 {
-    Signals::thread_specific_queue::remove_from_queue(this);
+    mo::ThreadSpecificQueue::RemoveFromQueue(this);
 }
 void vtkImageViewer::Serialize(ISimpleSerializer *pSerializer)
 {
-    vtkPlotter::Serialize(pSerializer);
+    vtkPlotterBase::Serialize(pSerializer);
     SERIALIZE(texture);
     SERIALIZE(textureObject);
     SERIALIZE(texturedQuad);
@@ -85,7 +68,7 @@ void vtkImageViewer::Serialize(ISimpleSerializer *pSerializer)
 }
 QWidget* vtkImageViewer::CreatePlot(QWidget* parent)
 {
-    auto plot = vtkPlotter::CreatePlot(parent);
+    auto plot = vtkPlotterBase::CreatePlot(parent);
     if(textureObject == nullptr)
     {
         cv::Mat default_texture(cv::Size(100, 100), CV_8UC3, cv::Scalar(255));
@@ -104,7 +87,7 @@ QWidget* vtkImageViewer::CreatePlot(QWidget* parent)
 }
 void vtkImageViewer::Init(bool firstInit)
 {
-    vtkPlotter::Init(firstInit);
+    vtkPlotterBase::Init(firstInit);
     if (firstInit)
     {
         texture = vtkSmartPointer<vtkOpenGLTexture>::New();
@@ -152,19 +135,16 @@ void vtkImageViewer::Init(bool firstInit)
     }
     texture_stream_index = 0;
 }
-bool vtkImageViewer::AcceptsParameter(Parameters::Parameter* param)
-{
-    return g_info.AcceptsParameter(param);
-}
 
-void vtkImageViewer::SetInput(Parameters::Parameter* param_)
+
+void vtkImageViewer::SetInput(mo::IParameter* param_)
 {
-    vtkPlotter::SetInput(param_);
+    vtkPlotterBase::SetInput(param_);
 }
 
 void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
 {
-    rmt_ScopedCPUSample(vtkImageViewer_OnParameterUpdate);
+    //rmt_ScopedCPUSample(vtkImageViewer_OnParameterUpdate);
     if (stream)
     {
         bool shown = false;
@@ -177,12 +157,12 @@ void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
         if (shown == false)
             return;
 
-        cv::cuda::GpuMat d_mat = *(dynamic_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>*>(param)->Data());
+        cv::cuda::GpuMat d_mat = *(dynamic_cast<mo::ITypedParameter<cv::cuda::GpuMat>*>(parameter)->GetDataPtr());
         
-        Signals::thread_specific_queue::push(std::bind<void>([d_mat, stream, this]()->void
+        mo::ThreadSpecificQueue::Push(std::bind<void>([d_mat, stream, this]()->void
         {
             {
-                rmt_ScopedCPUSample(opengl_buffer_fill);
+                //rmt_ScopedCPUSample(opengl_buffer_fill);
                 // Need to adjust points to the aspect ratio of the input image
                 double aspect_ratio = (double)d_mat.cols / (double)d_mat.rows;
                 if(aspect_ratio != current_aspect_ratio)
@@ -203,26 +183,22 @@ void vtkImageViewer::OnParameterUpdate(cv::cuda::Stream* stream)
                 stream->waitForCompletion();
             }
 
-            std::lock_guard<std::recursive_mutex> lock(this->mtx);
+            //std::lock_guard<std::recursive_mutex> lock(this->mtx());
             {
-                rmt_ScopedCPUSample(texture_creation);
+                //rmt_ScopedCPUSample(texture_creation);
 
                 textureObject->compile_texture();
             }
             {
-                rmt_ScopedCPUSample(Rendering);
+                //rmt_ScopedCPUSample(Rendering);
                 for (auto itr : this->render_widgets)
                 {
                     itr->GetRenderWindow()->Render();
                 }
             }
-        }), Signals::thread_registry::get_instance()->get_thread(Signals::GUI), this);
+        }), mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI), this);
     }
 }
 
-std::string vtkImageViewer::PlotName() const
-{
-    return "vtkImageViewer";
-}
 
-REGISTERCLASS(vtkImageViewer, &g_info);
+MO_REGISTER_CLASS(vtkImageViewer);

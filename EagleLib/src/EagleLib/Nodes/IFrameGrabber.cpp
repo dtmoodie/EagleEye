@@ -128,9 +128,9 @@ rcc::shared_ptr<IFrameGrabber> IFrameGrabber::Create(const std::string& uri, con
         {
             if (future.get())
             {
-                //top_level_nodes.emplace_back(fg);
                 LOG(info) << "Loading " << uri << " with frame_grabber: " << fg->GetTypeName() << " with priority: " << valid_constructor_priority[idx[i]];
                 delete connection_thread;
+                fg->loaded_document = uri;
                 return fg; // successful load
             }
             else // unsuccessful load
@@ -154,6 +154,10 @@ IFrameGrabber::IFrameGrabber()
     parent_stream = nullptr;
     //this->_ctx = &ctx;
     //ctx.stream = &stream;
+}
+void IFrameGrabber::on_loaded_document_modified(mo::Context*, mo::IParameter*)
+{
+    this->LoadFile(loaded_document);
 }
 
 std::string IFrameGrabber::GetSourceFilename()
@@ -352,6 +356,7 @@ void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
         {
             LOG(trace) << "Frame buffer is full and playback frame (" << playback_frame_number << ") is too close to the beginning of the frame buffer (" << buffer_begin_frame_number << ")";
             sig_update(); // Due to threading, sometimes the threads can get out of sync and the reading thread thinks there isn't new data to read
+            _modified = true;
             frame_read_cv.wait_for(bLock, boost::chrono::milliseconds(10));
         }
     }

@@ -6,35 +6,33 @@
 #include <map>
 using namespace EagleLib;
 
-int PlotterInfo::GetInterfaceId()
-{
-    return IID_Plotter;
-}
-
-Plotter::Plotter()
-{
-    param = nullptr;
-}
-Plotter::~Plotter()
-{
-}
-
 void Plotter::Init(bool firstInit)
 {
     PlotInit(firstInit);
     IMetaObject::Init(firstInit);
     if (!firstInit)
     {
-        SetInput(param);
-        if (param)
+        SetInput(parameter);
+        if (parameter)
         {
-            param->RegisterUpdateNotifier(GetSlot<void(mo::Context*, mo::IParameter*)>("on_parameter_update"));
+            //param->RegisterUpdateNotifier(GetSlot<void(mo::Context*, mo::IParameter*)>("on_parameter_update"));
         }
     }
 }
+
 void Plotter::PlotInit(bool firstInit)
 {
 
+}
+
+void Plotter::SetInput(mo::IParameter* param_)
+{
+    parameter = param_;
+    if (parameter)
+    {
+        //_connections[&param->update_signal] = param->RegisterNotifier(std::bind(&Plotter::OnParameterUpdate, this, std::placeholders::_1));
+        //_connections[&param->delete_signal] = param->RegisterDeleteNotifier(std::bind(&Plotter::on_param_delete, this, std::placeholders::_1));
+    }
 }
 
 void Plotter::on_parameter_update(mo::Context* ctx, mo::IParameter* param)
@@ -42,31 +40,9 @@ void Plotter::on_parameter_update(mo::Context* ctx, mo::IParameter* param)
 
 }
 
-
-void Plotter::Serialize(ISimpleSerializer *pSerializer)
-{
-    IObject::Serialize(pSerializer);
-    SERIALIZE(param);
-}
-
-void Plotter::SetInput(mo::IParameter* param_)
-{
-    param = param_;
-    if (param)
-    {
-        //_connections[&param->update_signal] = param->RegisterNotifier(std::bind(&Plotter::OnParameterUpdate, this, std::placeholders::_1));
-        //_connections[&param->delete_signal] = param->RegisterDeleteNotifier(std::bind(&Plotter::on_param_delete, this, std::placeholders::_1));
-    }
-}
 void Plotter::on_parameter_delete(mo::IParameter const* param)
 {
     param = nullptr;
-}
-void QtPlotter::Serialize(ISimpleSerializer *pSerializer)
-{
-    Plotter::Serialize(pSerializer);
-    SERIALIZE(plot_widgets);
-    SERIALIZE(_pimpl);
 }
 
 void QtPlotter::AddPlot(QWidget* plot_)
@@ -74,13 +50,10 @@ void QtPlotter::AddPlot(QWidget* plot_)
     plot_widgets.push_back(plot_);
 }
 
-Plotter::PlotterType QtPlotter::Type() const
-{
-    return QT_Plotter;
-}
 #ifdef QT_GUI_LIB
 #define Qt5_FOUND
 #define HAVE_OPENCV
+
 #include <MetaObject/Parameters/UI/WidgetFactory.hpp>
 #include <MetaObject/Parameters/UI/Qt/IParameterProxy.hpp>
 #include "qgridlayout.h"

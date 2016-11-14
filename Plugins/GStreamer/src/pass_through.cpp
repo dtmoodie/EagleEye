@@ -3,7 +3,10 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
+h264_pass_through::h264_pass_through()
+{
 
+}
 bool h264_pass_through::ProcessImpl()
 {
     if(gstreamer_string_param.modified)
@@ -12,16 +15,20 @@ bool h264_pass_through::ProcessImpl()
         if (get_pipeline_state() != GST_STATE_PLAYING && _pipeline)
             start_pipeline();
         gstreamer_string_param.modified = false;
+        valve = gst_bin_get_by_name(GST_BIN(_pipeline), "myvalve");
+        if(!valve)
+        {
+            LOG_NODE(warning) << "No valve found in pipeline with name 'myvalve'";
+        }
     }
     if(active_param.modified)
     {
         if(active)
         {
-            if (get_pipeline_state() != GST_STATE_PLAYING && _pipeline)
-                start_pipeline();
+            g_object_set(valve, "drop", false, NULL);
         }else
         {
-            pause_pipeline();
+            g_object_set(valve, "drop", true, NULL);
         }
         active_param.modified = false;
     }

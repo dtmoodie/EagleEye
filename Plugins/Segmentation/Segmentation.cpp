@@ -3,9 +3,9 @@
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudalegacy.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
+
 #include "RuntimeLinkLibrary.h"
-#include <EagleLib/rcc/ObjectManager.h>
+
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
 #else
@@ -19,23 +19,19 @@ void OtsuThreshold::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
-        addInputParameter<cv::cuda::GpuMat>("Input Histogram")->SetTooltip("Optional");
-        addInputParameter<cv::Mat>("Input range")->SetTooltip("Required if input histogram is provided");
+        //addInputParameter<cv::cuda::GpuMat>("Input Histogram")->SetTooltip("Optional");
+        //addInputParameter<cv::Mat>("Input range")->SetTooltip("Required if input histogram is provided");
     }
 
 }
-
-cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+bool OtsuThreshold::ProcessImpl()
 {
-    if(img.channels() != 1)
+    if(image->GetChannels() != 1)
     {
-        //log(Error, "Currently only support single channel images!");
-        NODE_LOG(warning) << "Currently only support single channel images!";
-        return img;
+        LOG_EVERY_N(warning, 100) << "Currently only supports single channel images!";
+        return false;
     }
     cv::cuda::GpuMat hist;
-    cv::cuda::GpuMat* histogram = getParameter<cv::cuda::GpuMat>(0)->Data();
-    cv::Mat* bins = getParameter<cv::Mat>(1)->Data();
     if(!histogram)
     {
         cv::Mat h_levels(1,200,CV_32F);
@@ -51,6 +47,35 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
             h_levels.at<float>(i) = val;
         }
         cv::cuda::histRange(img, hist, cv::cuda::GpuMat(h_levels), stream);
+    }else
+    {
+        if(input_range == nullptr)
+        {
+            LOG_EVERY_N(error, 100) << "Histogram provided but range not provided";
+            return false;
+        }
+        if(input_range->GetChannels() != 1)
+        {
+            LOG_EVERY_N(error, 100) << "Currently only support equal bins accross all histograms";
+            return img;
+        }
+        hist = input_histogram->GetGpuMat(Stream());
+    }
+
+}
+
+cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
+{
+    if(img.channels() != 1)
+    {
+        LOG(warning) << "Currently only support single channel images!";
+        return img;
+    }
+    cv::cuda::GpuMat hist;
+    cv::cuda::GpuMat* histogram = getParameter<cv::cuda::GpuMat>(0)->Data();
+    cv::Mat* bins = getParameter<cv::Mat>(1)->Data();
+    if(!histogram)
+    {
     }else
     {
         if(bins == nullptr)

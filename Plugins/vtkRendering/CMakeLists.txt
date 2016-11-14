@@ -1,8 +1,9 @@
 PROJECT(vtkRendering)
 CMAKE_POLICY(SET CMP0020 NEW)
-find_package(VTK COMPONENTS 
+find_package(VTK QUIET
+                 COMPONENTS 
                  vtkInteractionStyle 
-				         vtkInteractionWidgets
+				 vtkInteractionWidgets
                  vtkRenderingLOD 
                  vtkIOPLY 
                  vtkFiltersTexture 
@@ -13,9 +14,8 @@ find_package(VTK COMPONENTS
                  vtkGUISupportQt
                  vtkGUISupportQtOpenGL
                  vtkRenderingAnnotation
-				         vtkRenderingVolume
-				         vtkRenderingVolumeOpenGL2
-                 QUIET
+				 vtkRenderingVolume
+				 vtkRenderingVolumeOpenGL2
                  )
 if(VTK_FOUND)
 
@@ -62,9 +62,11 @@ if(Plugin_point_clouds_INCLUDES)
     list(APPEND link_libs_ point_clouds)
 endif()
 
-SET(VTK_BIN_DIR "" CACHE PATH "")
-SET(VTK_BIN_DIR_DBG ${VTK_BIN_DIR} CACHE PATH "" FORCE)
-SET(VTK_BIN_DIR_OPT ${VTK_BIN_DIR} CACHE PATH "" FORCE)
+get_target_property(VTK_BIN vtkInteractionStyle IMPORTED_LOCATION_DEBUG)
+get_filename_component(VTK_BIN_DIR_ "${VTK_BIN}" DIRECTORY)
+set(VTK_BIN_DIR ${VTK_BIN_DIR_} CACHE PATH "" FORCE)
+set(VTK_BIN_DIR_DBG ${VTK_BIN_DIR_} CACHE PATH "" FORCE)
+set(VTK_BIN_DIR_OPT ${VTK_BIN_DIR_} CACHE PATH "" FORCE)
 SET(BIN_DIRS "${BIN_DIRS};VTK" CACHE STRING "" FORCE)
 
 FILE(GLOB_RECURSE src "src/*.cpp")
