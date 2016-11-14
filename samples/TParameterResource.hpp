@@ -14,6 +14,7 @@ namespace vclick
             data_param.SetUserDataPtr(&data);
             data_param.SetName(name);
             data_param.SetInput(param);
+            data_param.SetMtx(&param->mtx());
             this->setParam(&data_param);
         }
     private:
@@ -31,6 +32,7 @@ namespace vclick
             data_param.SetUserDataPtr(&data);
             data_param.SetName(name);
             data_param.SetInput(param);
+            data_param.SetMtx(&param->mtx());
             this->setParam(&data_param);
         }
         void handleParamUpdate(mo::Context* ctx, mo::IParameter* param);

@@ -2,7 +2,7 @@
 #include "IParameterResource.hpp"
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <cereal/archives/json.hpp>
-
+#include <boost/thread/recursive_mutex.hpp>
 using namespace vclick;
 
 IParameterResource::IParameterResource():
@@ -48,6 +48,7 @@ void IParameterResource::handleParamUpdate(mo::Context* ctx, mo::IParameter* par
     {
         {
             cereal::JSONOutputArchive ar(*new_ss);
+            boost::recursive_mutex::scoped_lock lock(this->param->mtx());
             func(this->param, ar);
         }
         std::stringstream* old_ss;

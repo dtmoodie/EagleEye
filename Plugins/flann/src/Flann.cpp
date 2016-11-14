@@ -3,6 +3,7 @@
 #include "thrust/transform_reduce.h"
 #include "thrust/count.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
+#include <MetaObject/Logging/Profiling.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_imgproc.hpp>
 #include <EagleLib/Nodes/NodeInfo.hpp>
@@ -18,6 +19,7 @@ using namespace EagleLib::Nodes;
 
 void ForegroundEstimate::BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& stream)
 {
+    SCOPED_PROFILE_NODE
     if (tensor.cols && tensor.rows)
     {
         flann::KDTreeCuda3dIndexParams params;
@@ -30,6 +32,7 @@ void ForegroundEstimate::BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& 
 
 bool ForegroundEstimate::ProcessImpl()
 {
+    SCOPED_PROFILE_NODE
     const cv::cuda::GpuMat& input = input_point_cloud->GetGpuMat(Stream());
     cv::cuda::GpuMat cv32f;
     if (input.depth() != CV_32F)

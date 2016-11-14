@@ -9,6 +9,7 @@ void TParameterResource<EagleLib::SyncedMemory>::handleParamUpdate(mo::Context* 
     std::stringstream* new_ss = new std::stringstream();
     auto func = mo::SerializationFunctionRegistry::Instance()->
         GetJsonSerializationFunction(this->param->GetTypeInfo());
+    boost::recursive_mutex::scoped_lock lock(this->param->mtx());
     dynamic_cast<mo::ITypedParameter<EagleLib::SyncedMemory>*>(this->param)->GetDataPtr()->Synchronize();
     if (func)
     {

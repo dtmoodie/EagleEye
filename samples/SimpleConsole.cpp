@@ -51,7 +51,7 @@ void PrintNodeTree(EagleLib::Nodes::Node* node, int depth)
 static volatile bool quit;
 void sig_handler(int s)
 {
-    //std::cout << "Caught signal " << s << std::endl;
+    
     LOG(error) << "Caught signal " << s;
     quit = true;
     if(s == 2)
@@ -78,6 +78,7 @@ int main(int argc, char* argv[])
         ("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")
         ("script", boost::program_options::value<std::string>(), "Text file with scripting commands")
         ("profile", boost::program_options::value<bool>()->default_value(false), "Profile application")
+        ("gpu", boost::program_options::value<int>()->default_value(0), "")
         ("docroot", boost::program_options::value<std::string>(), "")
         ("http-address", boost::program_options::value<std::string>(), "")
         ("http-port", boost::program_options::value<std::string>(), "")
@@ -89,7 +90,7 @@ int main(int argc, char* argv[])
     {
         mo::InitProfiling();
     }
-
+    cv::cuda::setDevice(vm["gpu"].as<int>());
     {
         boost::posix_time::ptime initialization_start = boost::posix_time::microsec_clock::universal_time();
         LOG(info) << "Initializing GPU...";
@@ -289,6 +290,7 @@ int main(int argc, char* argv[])
                 int index = 0;
                 for(auto constructor : constructors)
                 {
+                    constructor->GetName();
                     auto fg_info = dynamic_cast<EagleLib::Nodes::IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
                     if(fg_info)
                     {
@@ -572,6 +574,13 @@ int main(int argc, char* argv[])
         _slots.emplace_back(slot);
 		connections.push_back(manager.Connect(slot, "save"));
 
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string null)
+        {
+            //mo::InitProfiling();
+        }, std::placeholders::_1));
+        _slots.emplace_back(slot);
+        connections.push_back(manager.Connect(slot, "profile"));
+
         slot = new mo::TypedSlot<void(std::string)>(std::bind([&_dataStreams, &current_stream, &current_node](std::string file)
         {
             auto stream = EagleLib::IDataStream::Load(file);
@@ -729,8 +738,7 @@ int main(int argc, char* argv[])
                 }else
                 {
                     std::cout << " - " << node << "\n";
-                }
-                
+                }   
             }
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "list"));
