@@ -897,8 +897,8 @@ int main(int argc, char* argv[])
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "emit"));
 
+#ifdef HAVE_WT
         boost::thread web_thread;
-        
         slot = new mo::TypedSlot<void(std::string)>(std::bind(
             [&current_stream, &web_thread, argc, argv](std::string null)->void
         {
@@ -929,7 +929,7 @@ int main(int argc, char* argv[])
         }, std::placeholders::_1));
 
         connections.push_back(manager.Connect(slot, "web-ui"));
-
+#endif
         slot = new mo::TypedSlot<void(std::string)>(std::bind(
             [](std::string level)
         {

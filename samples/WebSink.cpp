@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #include "WebSink.hpp"
 #include <EagleLib/Nodes/NodeInfo.hpp>
 using namespace vclick;
@@ -97,3 +98,4 @@ bool WebSink::ProcessImpl()
     return true;
 }
 MO_REGISTER_CLASS(WebSink);
+#endif

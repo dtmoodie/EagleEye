@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #include "TParameterResource.hpp"
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <cereal/archives/json.hpp>
@@ -24,3 +25,4 @@ void TParameterResource<EagleLib::SyncedMemory>::handleParamUpdate(mo::Context* 
         delete old_ss;
     }
 }
+#endif

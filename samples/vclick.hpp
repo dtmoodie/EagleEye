@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #pragma once
 #include "WebSink.hpp"
 #include "TParameterResource.hpp"
@@ -39,3 +40,4 @@ namespace vclick
         TParameterResource<std::vector<BoundingBox>>* boundingBoxStream;
     };
 }
+#endif

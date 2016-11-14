@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #pragma once
 #include <Wt/WStreamResource>
 #include <MetaObject/Parameters/IParameter.hpp>
@@ -23,3 +24,4 @@ namespace vclick
         std::mutex mtx;
     };
 }
+#endif

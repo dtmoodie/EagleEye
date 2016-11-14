@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #pragma once
 #include "IParameterResource.hpp"
 #include <EagleLib/SyncedMemory.h>
@@ -39,3 +40,4 @@ namespace vclick
         mo::TypedInputParameterPtr<EagleLib::SyncedMemory> data_param;
     };
 }
+#endif

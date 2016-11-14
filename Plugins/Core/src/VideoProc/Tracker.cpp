@@ -1,5 +1,5 @@
 #include "Tracker.h"
-#include "EagleLib/Nodes/VideoProc/Tracking.hpp"
+//#include "EagleLib/Nodes/VideoProc/Tracking.hpp"
 #include "EagleLib/rcc/external_includes/cv_imgproc.hpp"
 #include <EagleLib/rcc/external_includes/cv_highgui.hpp>
 #include <EagleLib/rcc/external_includes/cv_calib3d.hpp>

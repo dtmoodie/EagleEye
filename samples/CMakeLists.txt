@@ -25,7 +25,7 @@ LINK_DIRECTORIES(${LINK_DIRS})
 
 find_package(CUDA REQUIRED)
 
-find_package(Wt REQUIRED)
+find_package(Wt QUIET)
 if(Wt_FOUND)
   include_directories(${Wt_INCLUDE_DIR})
   add_definitions(-DHAVE_WT)
@@ -39,7 +39,6 @@ if(Wt_FOUND)
   set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
   set(Wt_BIN_DIR_OPT ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
   set(BIN_DIRS "${BIN_DIRS};Wt" CACHE STRING "" FORCE)
-  #list(APPEND link_libs "debug;${Wt_HTTP_DEBUG_LIBRARY};optimized;${Wt_HTTP_LIBRARY};optimized;${Wt_LIBRARY};debug;${Wt_DEBUG_LIBRARY}")
 endif()
   
 INCLUDE_DIRECTORIES(
@@ -67,13 +66,18 @@ target_link_libraries(SimpleConsole
     ${CUDA_nppc_LIBRARY}
     ${CUDA_CUDART_LIBRARY}
     ${PYTHON_LIBRARY}
-	${link_libs}
-	debug;${Wt_HTTP_DEBUG_LIBRARY}
-	debug;${Wt_DEBUG_LIBRARY}
-	optimized;${Wt_LIBRARY}
-	optimized;${Wt_HTTP_LIBRARY}
+    ${link_libs}
     instantiations
 )
+if(Wt_FOUND)
+    target_link_libraries(SimpleConsole
+        debug;${Wt_HTTP_DEBUG_LIBRARY}
+        debug;${Wt_DEBUG_LIBRARY}
+        optimized;${Wt_LIBRARY}
+        optimized;${Wt_HTTP_LIBRARY}
+    )
+endif(Wt_FOUND)
+
 add_subdirectory(PythonInteractive)
 IF(WIN32)
   set(PROJECT_BIN_DIRS_DEBUG "")

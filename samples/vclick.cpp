@@ -1,4 +1,4 @@
-//#include "vclick.hpp"
+#ifdef HAVE_WT
 
 #include "WebSink.hpp"
 #include "vclick.hpp"
@@ -330,3 +330,4 @@ void WebUi::handleKeydown(int value)
 }
 
 
+#endif

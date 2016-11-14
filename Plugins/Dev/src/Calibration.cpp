@@ -1,7 +1,7 @@
 #include "Calibration.h"
 #include <EagleLib/rcc/external_includes/cv_calib3d.hpp>
 #include <EagleLib/rcc/external_includes/cv_highgui.hpp>
-#include <EagleLib/Nodes/VideoProc/Tracking.hpp>
+
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 

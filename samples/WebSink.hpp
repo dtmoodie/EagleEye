@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #pragma once
 #include <EagleLib/Nodes/Node.h>
 #include "BoundingBox.hpp"
@@ -27,3 +28,4 @@ namespace vclick
         bool ProcessImpl();
     };
 }
+#endif // HAVE_WT

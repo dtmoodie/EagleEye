@@ -1,4 +1,4 @@
-#pragma once
+#ifdef HAVE_WT
 #include "IParameterResource.hpp"
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <cereal/archives/json.hpp>
@@ -59,5 +59,4 @@ void IParameterResource::handleParamUpdate(mo::Context* ctx, mo::IParameter* par
         delete old_ss;
     }
 }
-
-
+#endif

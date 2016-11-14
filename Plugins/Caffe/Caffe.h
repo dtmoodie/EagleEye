@@ -1,16 +1,16 @@
 #pragma once
 #define COMPACT_GOOGLE_LOG_debug COMPACT_GOOGLE_LOG_DEBUG
+
 #include "EagleLib/Detail/PluginExport.hpp"
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/ObjectDetection.hpp"
 #include "MetaObject/MetaObject.hpp"
 #include "MetaObject/Parameters/Types.hpp"
 #include "RuntimeLinkLibrary.h"
-SETUP_PROJECT_DEF
-
-
 #include "caffe/blob.hpp"
 #include "caffe/net.hpp"
+
+SETUP_PROJECT_DEF
 
 namespace EagleLib
 {
