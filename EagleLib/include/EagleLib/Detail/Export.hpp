@@ -22,10 +22,10 @@
 
 #ifndef _MSC_VER
   #include "RuntimeLinkLibrary.h"
-  #ifdef _DEBUG
-    RUNTIME_COMPILER_LINKLIBRARY("EagleLibd.lib");
+  #ifdef NDEBUG
+    RUNTIME_COMPILER_LINKLIBRARY("-lEagleLib")
   #else
-    RUNTIME_COMPILER_LINKLIBRARY("EagleLib.lib");
+    RUNTIME_COMPILER_LINKLIBRARY("-lEagleLibd")
   #endif
 #endif
 

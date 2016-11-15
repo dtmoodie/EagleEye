@@ -225,14 +225,14 @@ bool CaffeBase::InitNetwork()
         if (boost::filesystem::exists(nn_model_file))
         {
             std::string param_file = nn_model_file.string();
-            /*try
+            try
             {
                 NN.reset(new caffe::Net<float>(param_file, caffe::TEST));
             }catch(caffe::ExceptionWithCallStack<std::string>& exp)
             {
                 throw mo::ExceptionWithCallStack<std::string>(exp, exp.CallStack());
-            }*/
-            NN.reset(new caffe::Net<float>(param_file, caffe::TEST));
+            }
+            //NN.reset(new caffe::Net<float>(param_file, caffe::TEST));
             WrapInput();
             WrapOutput();
             nn_model_file_param.modified = false;
@@ -250,10 +250,10 @@ bool CaffeBase::InitNetwork()
             {
                 NN->CopyTrainedLayersFrom(nn_weight_file.string());
             }
-            /*catch (caffe::ExceptionWithCallStack<std::string>& exp)
+            catch (caffe::ExceptionWithCallStack<std::string>& exp)
             {
                 throw mo::ExceptionWithCallStack<std::string>(exp, exp.CallStack());
-            }*/catch (...)
+            }catch (...)
             {
                 return false;
             }
@@ -356,10 +356,13 @@ bool CaffeImageClassifier::ProcessImpl()
     {
         float_image = input->GetGpuMat(Stream());
     }
+
     cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, Stream());
     cv::cuda::multiply(float_image, cv::Scalar::all(pixel_scale), float_image, 1.0, -1, Stream());
+
     std::vector<cv::Rect> defaultROI;
     defaultROI.push_back(cv::Rect(cv::Point(), input->GetSize()));
+
     if (bounding_boxes == nullptr)
     {
         bounding_boxes = &defaultROI;

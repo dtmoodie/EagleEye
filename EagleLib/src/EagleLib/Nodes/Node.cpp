@@ -40,42 +40,42 @@ using namespace EagleLib::Nodes;
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
-
+#define EXCEPTION_TRY_COUNT 10
 
 #define CATCH_MACRO                                                         \
     catch(mo::ExceptionWithCallStack<cv::Exception>& e)                     \
 {                                                                           \
     LOG_NODE(error) << e.what() << "\n" << e.CallStack();                   \
     ++_pimpl_node->throw_count;                                             \
-    if(_pimpl_node->throw_count > 100)                                      \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
         _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
     catch(thrust::system_error& e)                                          \
 {                                                                           \
     LOG_NODE(error) << e.what();                                            \
     ++_pimpl_node->throw_count;                                             \
-    if(_pimpl_node->throw_count > 100)                                      \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
         _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
     catch(mo::ExceptionWithCallStack<std::string>& e)                       \
 {                                                                           \
     LOG_NODE(error) << std::string(e) << "\n" << e.CallStack();             \
     ++_pimpl_node->throw_count;                                             \
-    if(_pimpl_node->throw_count > 100)                                      \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
         _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
 catch(mo::IExceptionWithCallStackBase& e)                                   \
 {                                                                           \
     LOG_NODE(error) << "Exception thrown with callstack: \n" << e.CallStack(); \
     ++_pimpl_node->throw_count;                                             \
-    if(_pimpl_node->throw_count > 100)                                      \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
         _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
 catch (boost::thread_resource_error& err)                                   \
 {                                                                           \
     LOG_NODE(error) << err.what();                                          \
     ++_pimpl_node->throw_count;                                             \
-    if(_pimpl_node->throw_count > 100)                                      \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
         _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
 catch (boost::thread_interrupted& err)                                      \
@@ -89,35 +89,35 @@ catch (boost::thread_exception& err)                                        \
 {                                                                           \
     LOG_NODE(error) << err.what();                                          \
     ++_pimpl_node->throw_count;                                             \
-    if(_pimpl_node->throw_count > 100)                                      \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
         _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
     catch (cv::Exception &err)                                              \
 {                                                                           \
     LOG_NODE(error) << err.what();                                          \
     ++_pimpl_node->throw_count;                                             \
-    if(_pimpl_node->throw_count > 100)                                      \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
         _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
     catch (boost::exception &err)                                           \
 {                                                                           \
     LOG_NODE(error) << "Boost error";                                       \
     ++_pimpl_node->throw_count;                                             \
-    if(_pimpl_node->throw_count > 100)                                      \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
         _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
 catch (std::exception &err)                                                 \
 {                                                                           \
     LOG_NODE(error) << err.what();                                          \
     ++_pimpl_node->throw_count;                                             \
-    if(_pimpl_node->throw_count > 100)                                      \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
         _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
 catch (...)                                                                 \
 {                                                                           \
     LOG_NODE(error) << "Unknown exception";                                 \
     ++_pimpl_node->throw_count;                                             \
-    if(_pimpl_node->throw_count > 100)                                      \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
         _pimpl_node->disable_due_to_errors = true;                          \
 }
 
@@ -228,11 +228,12 @@ void Node::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
     {
         _modified = true;
         // Reanble if disabled 
-        if(_pimpl_node->disable_due_to_errors)
+        // TODO: Figure out how to re-enable only when the user changes an input
+        /*if(_pimpl_node->disable_due_to_errors)
         {
             _pimpl_node->throw_count--;
             _pimpl_node->disable_due_to_errors = false;
-        }
+        }*/
     }
 }
 

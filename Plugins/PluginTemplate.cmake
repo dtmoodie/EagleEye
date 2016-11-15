@@ -41,14 +41,14 @@ LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
 LINK_DIRECTORIES(${LINK_DIRS})
 INSTALL(TARGETS ${PROJECT_NAME}
 	LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin)
+    RUNTIME DESTINATION bin)
        
 IF(RCC_VERBOSE_CONFIG) 
-string(REGEX REPLACE ";" "\n    " include_dirs_ "${INCLUDE_DIRS}")
-string(REGEX REPLACE ";" "\n    " link_dirs_release_ "${LINK_DIRS_RELEASE}")
-string(REGEX REPLACE ";" "\n    " link_dirs_debug_ "${LINK_DIRS_DEBUG}")
-MESSAGE(STATUS
-"  Include Dirs: 
+  string(REGEX REPLACE ";" "\n    " include_dirs_ "${INCLUDE_DIRS}")
+  string(REGEX REPLACE ";" "\n    " link_dirs_release_ "${LINK_DIRS_RELEASE}")
+  string(REGEX REPLACE ";" "\n    " link_dirs_debug_ "${LINK_DIRS_DEBUG}")
+  MESSAGE(STATUS
+  "  Include Dirs:
     ${include_dirs_}  
   Link Dirs Debug: 
     ${link_dirs_debug_}

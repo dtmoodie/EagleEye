@@ -978,7 +978,7 @@ int main(int argc, char* argv[])
         connections.push_back(manager.Connect(slot, "wait"));
         
         bool swap_required = false;
-        slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_param, &current_node, &current_stream, &swap_required, &_dataStreams](std::string action)
+        /*slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_param, &current_node, &current_stream, &swap_required, &_dataStreams](std::string action)
         {
             if(action == "check")
             {
@@ -1025,7 +1025,7 @@ int main(int argc, char* argv[])
                 std::cout << "Unknown option " << action << "\n";
             }
         }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "recompile"));
+        connections.push_back(manager.Connect(slot, "recompile"));*/
         std::vector<std::string> command_list;
         slot = new mo::TypedSlot<void(std::string)>(std::bind([&command_list](std::string filename)
         {
@@ -1061,7 +1061,46 @@ int main(int argc, char* argv[])
         
         print_options();
         mo::MetaObjectFactory::Instance()->CheckCompile();
-
+        boost::thread compile_check_thread(std::bind(
+            [&_dataStreams]()
+        {
+            bool compiling = false;
+            while(!boost::this_thread::interruption_requested())
+            {
+                boost::this_thread::sleep_for(boost::chrono::seconds(1));
+                if(mo::MetaObjectFactory::Instance()->CheckCompile())
+                {
+                    std::cout << "Recompiling...\n";
+                    for(auto& ds : _dataStreams)
+                    {
+                        ds->StopThread();
+                    }
+                    compiling = true;
+                }
+                if(compiling)
+                {
+                    if(!mo::MetaObjectFactory::Instance()->IsCompileComplete())
+                    {
+                        std::cout << "Still compiling\n";
+                    }else
+                    {
+                        if(mo::MetaObjectFactory::Instance()->SwapObjects())
+                        {
+                            std::cout << "Object swap success\n";
+                            for(auto& ds : _dataStreams)
+                            {
+                                ds->StartThread();
+                            }
+                        }else
+                        {
+                            std::cout << "Failed to recompile\n";
+                        }
+                        compiling = false;
+                    }
+                }
+            }
+            mo::MetaObjectFactory::Instance()->AbortCompilation();
+        }));
         if(vm.count("script"))
         {
             auto relay = manager.GetRelay<void(std::string)>("run");
@@ -1114,9 +1153,12 @@ int main(int argc, char* argv[])
         }
         _dataStreams.clear();
         std::cout << "Shutting down\n";
+        compile_check_thread.interrupt();
+        compile_check_thread.join();
     }
     gui_thread.interrupt();
+
     gui_thread.join();
-    
+
     return 0;
 }
