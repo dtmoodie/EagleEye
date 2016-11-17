@@ -10,6 +10,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
+
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Types.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
@@ -21,15 +22,7 @@
 
 #include <string>
 
-
-
 #include "caffe/caffe.hpp"
-
-
-
-
-SETUP_PROJECT_IMPL;
-
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -47,7 +40,6 @@ std::vector<size_t> sort_indexes(const std::vector<T> &v) {
 
   return idx;
 }
-
 
 template <typename T>
 std::vector<size_t> sort_indexes(const T* begin, size_t size) {
@@ -138,6 +130,7 @@ std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<double>& blob, bool bg
     }
     return wrapped_blob;
 }
+
 void CaffeBase::WrapInput()
 {
     if(NN == nullptr)
@@ -171,6 +164,7 @@ void CaffeBase::WrapInput()
         wrapped_inputs[input_names[k]] = WrapBlob(*input_blobs[k], bgr_swap);
     }
 }
+
 void CaffeBase::ReshapeInput(int num, int channels, int height, int width)
 {
     input_blobs = NN->input_blobs();
@@ -180,6 +174,7 @@ void CaffeBase::ReshapeInput(int num, int channels, int height, int width)
     }
     WrapInput();
 }
+
 void CaffeBase::WrapOutput()
 {
     if (NN == nullptr)

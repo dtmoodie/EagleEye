@@ -79,6 +79,7 @@ FILE(GLOB_RECURSE hdr "remotery/lib/*.h" "include/*.hpp" "include/*.h")
 FILE(GLOB_RECURSE ext_inc "include/EagleLib/rcc/external_includes")
 FILE(GLOB_RECURSE knl "src/*.cu")
 ADD_SUBDIRECTORY("MetaObject")
+set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOPE)
 include_directories(${RCC_INCLUDE_DIRS})
 ADD_SUBDIRECTORY("pplx")
 
