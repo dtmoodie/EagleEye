@@ -1,5 +1,4 @@
 macro(RCC_HANDLE_LIB TARGET)
-
     if(RCC_VERBOSE_CONFIG)
       message(STATUS "===================================================================
                RCC config information for ${TARGET}")
@@ -26,6 +25,9 @@ IF(temp)
   STRING(FIND "${temp}" "\n" len)
   STRING(SUBSTRING "${temp}" 0 ${len} temp)
   SET(PROJECT_ID ${temp})
+  if(RCC_VERBOSE_CONFIG)
+      message("Project ID for ${PROJECT_NAME}: ${PROJECT_ID}")
+  endif()
 ELSE(temp)
   SET(PROJECT_ID "1")
 ENDIF(temp)
@@ -34,32 +36,42 @@ LIST(REMOVE_DUPLICATES target_include_dirs_)
 LIST(REMOVE_DUPLICATES LINK_DIRS_RELEASE)
 LIST(REMOVE_DUPLICATES LINK_DIRS_DEBUG)
 set(outfile_ "")
-if(WIN32)
-	string(REGEX REPLACE "-D" "/D" WIN_DEFS "${DEFS}")
-	string(REGEX REPLACE ";" "\n" WIN_DEFS "${WIN_DEFS}")
-	string(REGEX REPLACE ";" "\n" target_include_dirs_ "${target_include_dirs_}")
-	string(REGEX REPLACE ";" "\n" link_dirs_release "${LINK_DIRS_RELEASE}")
-	string(REGEX REPLACE ";" "\n" link_dirs_debug "${LINK_DIRS_DEBUG}")
+
+string(REGEX REPLACE ";" "\n" target_include_dirs_ "${target_include_dirs_}")
+string(REGEX REPLACE ";" "\n" link_dirs_release "${LINK_DIRS_RELEASE}")
+string(REGEX REPLACE ";" "\n" link_dirs_debug "${LINK_DIRS_DEBUG}")
+
+if(WIN32)	
+    string(REGEX REPLACE "-D" "/D" WIN_DEFS "${DEFS}")
+    string(REGEX REPLACE ";" "\n" WIN_DEFS "${WIN_DEFS}")
     FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug/${PROJECT_NAME}_config.txt" 
-"project_id:\n${PROJECT_ID}\n\
-include_dirs:\n${target_include_dirs_}\n\
-lib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n\
-lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo;\n\
-compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"EagleLib/Detail/PluginExport.hpp\""
-)
+        "project_id:\n${PROJECT_ID}\n"
+        "include_dirs:\n${target_include_dirs_}\n"
+        "lib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
+        "lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo;\n"
+        "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"EagleLib/Detail/PluginExport.hpp\""
+    )
 
     FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo/${PROJECT_NAME}_config.txt" 
-"project_id:\n${PROJECT_ID}\n\
-include_dirs:\n${target_include_dirs_};\n\
-lib_dirs_debug:\n${link_dirs_debug};${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n\
-lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo;\n\
-compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"EagleLib/Detail/PluginExport.hpp\""
-)
+        "project_id:\n${PROJECT_ID}\n"
+        "include_dirs:\n${target_include_dirs_};\n"
+        "lib_dirs_debug:\n${link_dirs_debug};${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
+        "lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo;\n"
+        "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"EagleLib/Detail/PluginExport.hpp\""
+    )
 	set(outfile_ "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug/${PROJECT_NAME}_config.txt")
 else(WIN32)
-    string(REGEX REPLACE ";" " " defs_ "${DEFS}")
-    FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}_config.txt" "${PROJECT_ID}\n${target_include_dirs_};\n${LINK_DIRS_DEBUG};${LINK_DIRS}\n${LINK_DIRS_RELEASE};${LINK_DIRS}\n-DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${defs_} -DPLUGIN_NAME=${PROJECT_NAME} -include \"EagleLib/Detail/PluginExport.hpp\"")
+    string(REGEX REPLACE ";" "\n" WIN_DEFS "${DEFS}")
+
+    FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}_config.txt"
+        "project_id:\n${PROJECT_ID}\n"
+        "\ninclude_dirs:\n${target_include_dirs_};\n"
+        "\nlib_dirs_debug:\n${link_dirs_debug};${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
+        "\nlib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo;\n"
+        "\ncompile_options:\n-DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\"\n${WIN_DEFS}\n-DPLUGIN_NAME=${PROJECT_NAME}\n-include \"EagleLib/Detail/PluginExport.hpp\""
+    )
 	set(outfile_ "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}_config.txt")
+
 endif(WIN32)
 
 #ADD_DEFINITIONS(-DPROJECT_CONFIG_FILE=\"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_config.txt\")
