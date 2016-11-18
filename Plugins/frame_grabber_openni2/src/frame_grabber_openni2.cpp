@@ -111,9 +111,9 @@ bool frame_grabber_openni2::LoadFile(const std::string& file_path)
             LOG(info) << "Unable to retrieve depth stream: " << openni::OpenNI::getExtendedError();
             return false;
         }
-        openni::VideoMode mode = _depth->getVideoMode();
-        mode.setResolution(640, 480);
-        rc = _depth->setVideoMode(mode);
+        //openni::VideoMode mode = _depth->getVideoMode();
+        //mode.setResolution(640, 480);
+        //rc = _depth->setVideoMode(mode);
         if(rc != openni::STATUS_OK)
         {
             LOG(info) << "Unable to set video resolution";
