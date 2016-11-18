@@ -218,16 +218,19 @@ bool EagleLib::DeSerialize(cereal::JSONInputArchive& ar, Node* obj)
                         if (token_index != std::string::npos)
                         {
                             auto stream = obj->GetDataStream();
-                            auto output_node = stream->GetNode(input_source.substr(0, token_index));
-                            if (output_node)
+                            if(stream)
                             {
-                                auto output_param = output_node->GetOutput(input_source.substr(token_index + 1));
-                                if (output_param)
+                                auto output_node = stream->GetNode(input_source.substr(0, token_index));
+                                if (output_node)
                                 {
-                                    //obj->ConnectInput(output_node, output_param, input, mo::BlockingStreamBuffer_e);
-                                    obj->IMetaObject::ConnectInput(input, output_node, output_param, mo::BlockingStreamBuffer_e);
-                                    obj->SetDataStream(output_node->GetDataStream());
-                                    obj->SetContext(output_node->GetContext());
+                                    auto output_param = output_node->GetOutput(input_source.substr(token_index + 1));
+                                    if (output_param)
+                                    {
+                                        //obj->ConnectInput(output_node, output_param, input, mo::BlockingStreamBuffer_e);
+                                        obj->IMetaObject::ConnectInput(input, output_node, output_param, mo::BlockingStreamBuffer_e);
+                                        obj->SetDataStream(output_node->GetDataStream());
+                                        obj->SetContext(output_node->GetContext());
+                                    }
                                 }
                             }
                         }

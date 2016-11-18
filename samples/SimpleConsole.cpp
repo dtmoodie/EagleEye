@@ -48,6 +48,7 @@ void PrintNodeTree(EagleLib::Nodes::Node* node, int depth)
         PrintNodeTree(children[i].Get(), depth + 1);
     }
 }
+
 static volatile bool quit;
 void sig_handler(int s)
 {
@@ -886,14 +887,27 @@ int main(int argc, char* argv[])
                 return;
             }
             int idx = 0;
+            mo::ISignalRelay* relay = nullptr;
             if (relays.size() > 1)
             {
-                for (auto relay : relays)
+                for (auto relay_ : relays)
                 {
-                    std::cout << idx << " - " << relay->GetSignature().name();
+                    std::cout << idx << " - " << relay_->GetSignature().name();
                     ++idx;
                 }
                 std::cin >> idx;
+                if(idx >= 0 && idx < relays.size())
+                    relay = relays[idx].get();
+            }else if(relays.size() == 1)
+            {
+                relay = relays[0].get();
+            }
+
+            mo::TypedSignalRelay<void(void)>* typed = dynamic_cast<mo::TypedSignalRelay<void(void)>*>(relay);
+            if(typed)
+            {
+                (*typed)();
+                return;
             }
             THROW(debug) << "Signal serialization needs to be reimplemented";
             /*auto proxy = Signals::serialization::text::factory::instance()->get_proxy(signals[idx]);
@@ -977,55 +991,7 @@ int main(int argc, char* argv[])
 
         connections.push_back(manager.Connect(slot, "wait"));
         
-        bool swap_required = false;
-        /*slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_param, &current_node, &current_stream, &swap_required, &_dataStreams](std::string action)
-        {
-            if(action == "check")
-            {
-                if(mo::MetaObjectFactory::Instance()->CheckCompile())
-                {
-                    std::cout << "Recompiling...\n";
-                    for(auto& ds : _dataStreams)
-                    {
-                        ds->StopThread();
-                    }
-                }else
-                {
-                    std::cout << "No changes detected\n";
-                }
-            }else if(action == "swap")
-            {
-                for(auto& stream : _dataStreams)
-                {
-                    stream->StopThread();
-                }
-                if(mo::MetaObjectFactory::Instance()->SwapObjects())
-                {
-                    std::cout << "Recompile complete\n";
-                }
-                for(auto& stream : _dataStreams)
-                {
-                    stream->StartThread();
-                }
-                current_param = nullptr;
-                current_stream.reset();
-                current_node.reset();
-            }else if(action == "abort")
-            {
-                if(mo::MetaObjectFactory::Instance()->IsCurrentlyCompiling())
-                {
-                    std::cout << "Aborting current compilation\n";
-                    mo::MetaObjectFactory::Instance()->AbortCompilation();
-                }else
-                {
-                    std::cout << "No compilation currently active\n";
-                }
-            }else
-            {
-                std::cout << "Unknown option " << action << "\n";
-            }
-        }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "recompile"));*/
+
         std::vector<std::string> command_list;
         slot = new mo::TypedSlot<void(std::string)>(std::bind([&command_list](std::string filename)
         {

@@ -398,9 +398,10 @@ bool CaffeImageClassifier::ProcessImpl()
     }
     
     // Signal update on all inputs
+    float* data = nullptr;
     for(auto blob : input_blobs)
     {
-        float* data = blob->mutable_gpu_data(); 
+        data = blob->mutable_gpu_data();
     }
 
     float loss;
@@ -436,6 +437,7 @@ bool CaffeImageClassifier::ProcessImpl()
     }else if(_network_type & Detector_e)
     {
         const int num_detections = output_layer->height();
+        cv::Mat all(num_detections, 7, CV_32F, begin);
         cv::Mat_<float> labels(num_detections, 1, begin + 1, sizeof(float)*7);
         cv::Mat_<float> confidence(num_detections, 1, begin + 2, sizeof(float)*7);
         cv::Mat_<float> xmin(num_detections, 1, begin + 3, sizeof(float) * 7);
