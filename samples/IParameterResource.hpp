@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #pragma once
 #include <Wt/WStreamResource>
 #include <MetaObject/Parameters/IParameter.hpp>
@@ -10,7 +11,8 @@ namespace vclick
     class IParameterResource : public Wt::WStreamResource
     {
     public:
-        IParameterResource(mo::IParameter* param);
+        IParameterResource();
+        void setParam(mo::IParameter* param);
         virtual ~IParameterResource();
         void handleRequest(const Wt::Http::Request& request, Wt::Http::Response& response);
         virtual void handleParamUpdate(mo::Context* ctx, mo::IParameter* param);
@@ -22,3 +24,4 @@ namespace vclick
         std::mutex mtx;
     };
 }
+#endif

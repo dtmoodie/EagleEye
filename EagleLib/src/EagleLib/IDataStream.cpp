@@ -346,10 +346,11 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
     node->SetDataStream(this);
     if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
     {
-        //Signals::thread_specific_queue::push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node), _thread_id);
         mo::ThreadSpecificQueue::Push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node), _thread_id);
         return;
     }
+    if(std::find(top_level_nodes.begin(), top_level_nodes.end(), node) != top_level_nodes.end())
+        return;
     top_level_nodes.push_back(node);
     dirty_flag = true;
 }
@@ -543,7 +544,7 @@ void DataStream::process()
         {
 			if(mo::ThreadSpecificQueue::Size(_thread_id))
             {
-                mo::scoped_profile profile("Event loop", &rmt_hash, &rmt_cuda_hash, _context.stream);
+                //mo::scoped_profile profile("Event loop", &rmt_hash, &rmt_cuda_hash, _context.stream);
                 mo::ThreadSpecificQueue::Run(_thread_id);
             }
             if(dirty_flag || run_continuously == true)
@@ -555,11 +556,6 @@ void DataStream::process()
                 {
                     node->Process();
                 }
-
-                /*for(auto sink : variable_sinks)
-                {
-                    //sink->SerializeVariables(current_frame.frame_number, variable_manager.get());
-                }*/
                 ++iteration_count;
                 if (!dirty_flag)
                     LOG(debug) << "Dirty flag not set and end of iteration " << iteration_count;

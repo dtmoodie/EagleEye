@@ -10,6 +10,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
+
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Types.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
@@ -21,15 +22,7 @@
 
 #include <string>
 
-
-
 #include "caffe/caffe.hpp"
-
-
-
-
-SETUP_PROJECT_IMPL;
-
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -47,7 +40,6 @@ std::vector<size_t> sort_indexes(const std::vector<T> &v) {
 
   return idx;
 }
-
 
 template <typename T>
 std::vector<size_t> sort_indexes(const T* begin, size_t size) {
@@ -138,11 +130,12 @@ std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<double>& blob, bool bg
     }
     return wrapped_blob;
 }
+
 void CaffeBase::WrapInput()
 {
     if(NN == nullptr)
     {
-        BOOST_LOG_TRIVIAL(error) << "Neural network not defined";
+        LOG_EVERY_N(error, 100) << "Neural network not defined";
         return;
     }
     if(NN->num_inputs() == 0)
@@ -171,6 +164,7 @@ void CaffeBase::WrapInput()
         wrapped_inputs[input_names[k]] = WrapBlob(*input_blobs[k], bgr_swap);
     }
 }
+
 void CaffeBase::ReshapeInput(int num, int channels, int height, int width)
 {
     input_blobs = NN->input_blobs();
@@ -180,6 +174,7 @@ void CaffeBase::ReshapeInput(int num, int channels, int height, int width)
     }
     WrapInput();
 }
+
 void CaffeBase::WrapOutput()
 {
     if (NN == nullptr)
@@ -238,7 +233,7 @@ bool CaffeBase::InitNetwork()
         }
         else
         {
-            BOOST_LOG_TRIVIAL(debug) << "Architecture file does not exist";
+            LOG_EVERY_N(warning, 100) << "Architecture file does not exist";
         }
     }
     if (nn_weight_file_param.modified && NN)
@@ -324,7 +319,7 @@ bool CaffeBase::InitNetwork()
     }
     if (NN == nullptr || weightsLoaded == false)
     {
-        BOOST_LOG_TRIVIAL(trace) << "Model not loaded";
+        LOG_EVERY_N(debug, 1000) << "Model not loaded";
         return false;
     }
     return true;
@@ -357,11 +352,13 @@ bool CaffeImageClassifier::ProcessImpl()
     {
         input->GetGpuMat(Stream()).copyTo(float_image, Stream());
     }
+
     cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, Stream());
     cv::cuda::multiply(float_image, cv::Scalar::all(pixel_scale), float_image, 1.0, -1, Stream());
-    
+
     std::vector<cv::Rect> defaultROI;
     defaultROI.push_back(cv::Rect(cv::Point(), input->GetSize()));
+
     if (bounding_boxes == nullptr)
     {
         bounding_boxes = &defaultROI;

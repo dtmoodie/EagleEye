@@ -51,7 +51,7 @@ void PrintNodeTree(EagleLib::Nodes::Node* node, int depth)
 static volatile bool quit;
 void sig_handler(int s)
 {
-    //std::cout << "Caught signal " << s << std::endl;
+    
     LOG(error) << "Caught signal " << s;
     quit = true;
     if(s == 2)
@@ -78,6 +78,7 @@ int main(int argc, char* argv[])
         ("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")
         ("script", boost::program_options::value<std::string>(), "Text file with scripting commands")
         ("profile", boost::program_options::value<bool>()->default_value(false), "Profile application")
+        ("gpu", boost::program_options::value<int>()->default_value(0), "")
         ("docroot", boost::program_options::value<std::string>(), "")
         ("http-address", boost::program_options::value<std::string>(), "")
         ("http-port", boost::program_options::value<std::string>(), "")
@@ -89,7 +90,7 @@ int main(int argc, char* argv[])
     {
         mo::InitProfiling();
     }
-
+    cv::cuda::setDevice(vm["gpu"].as<int>());
     {
         boost::posix_time::ptime initialization_start = boost::posix_time::microsec_clock::universal_time();
         LOG(info) << "Initializing GPU...";
@@ -132,15 +133,11 @@ int main(int argc, char* argv[])
     }
     boost::filesystem::path currentDir = boost::filesystem::current_path();
 #ifdef _MSC_VER
-#ifdef _DEBUG
-    currentDir = boost::filesystem::path(currentDir.string() + "/../Debug");
-#else
-    currentDir = boost::filesystem::path(currentDir.string() + "/../RelWithDebInfo");
-#endif
+    currentDir = boost::filesystem::path(currentDir.string());
 #else
     currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
-    LOG(info) << "Looking for plugins in: " << currentDir.string();
 #endif
+    LOG(info) << "Looking for plugins in: " << currentDir.string();
     boost::filesystem::directory_iterator end_itr;
     if(boost::filesystem::is_directory(currentDir))
     {
@@ -289,6 +286,7 @@ int main(int argc, char* argv[])
                 int index = 0;
                 for(auto constructor : constructors)
                 {
+                    constructor->GetName();
                     auto fg_info = dynamic_cast<EagleLib::Nodes::IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
                     if(fg_info)
                     {
@@ -572,6 +570,13 @@ int main(int argc, char* argv[])
         _slots.emplace_back(slot);
 		connections.push_back(manager.Connect(slot, "save"));
 
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string null)
+        {
+            //mo::InitProfiling();
+        }, std::placeholders::_1));
+        _slots.emplace_back(slot);
+        connections.push_back(manager.Connect(slot, "profile"));
+
         slot = new mo::TypedSlot<void(std::string)>(std::bind([&_dataStreams, &current_stream, &current_node](std::string file)
         {
             auto stream = EagleLib::IDataStream::Load(file);
@@ -655,6 +660,7 @@ int main(int argc, char* argv[])
                         auto params = current_node->GetParameters();
                         for(auto& param : params)
                         {
+
                             if(param->GetName().find(what) != std::string::npos)
                             {
                                 current_param = param;
@@ -728,8 +734,7 @@ int main(int argc, char* argv[])
                 }else
                 {
                     std::cout << " - " << node << "\n";
-                }
-                
+                }   
             }
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "list"));
@@ -788,26 +793,12 @@ int main(int argc, char* argv[])
                                 }
                             }
                         }
-                        
                     }
                 }
-                /*auto variable_manager = current_node->GetDataStream()->GetVariableManager();
-                auto output = variable_manager->GetOutputParameter(value);
-                if(output)
-                {
-                    variable_manager->LinkParameters(output, current_param);
-                    return;
-                }*/
             }
             if(!current_param)
             {
-                //auto pos = value.find(current_param->GetName());
-                //if(pos != std::string::npos)
-                //{
-                  //  value = value.substr(current_param->GetName().size());
-                //}
-                //if(Parameters::Persistence::Text::DeSerialize(&value, current_param))
-                  //  return;
+
             }else
             {
                 auto func = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(current_param->GetTypeInfo());
@@ -816,6 +807,7 @@ int main(int argc, char* argv[])
                     std::stringstream ss; 
                     ss << value;
                     func(current_param, ss);
+                    std::cout << "Successfully set " << current_param->GetTreeName() << " to " << value << std::endl;
                     return;
                 }
             }
@@ -853,6 +845,7 @@ int main(int argc, char* argv[])
                 }
                 std::cout << "Unable to find parameter by name for set string: " << value << std::endl;*/
             }
+            std::cout << "Unable to set value to " << value << std::endl;
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "set"));
         
@@ -908,14 +901,18 @@ int main(int argc, char* argv[])
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "emit"));
 
+#ifdef HAVE_WT
         boost::thread web_thread;
-        
         slot = new mo::TypedSlot<void(std::string)>(std::bind(
             [&current_stream, &web_thread, argc, argv](std::string null)->void
         {
             if(current_stream)
             {
-                rcc::shared_ptr<vclick::WebSink> sink = rcc::shared_ptr<vclick::WebSink>::Create();
+                rcc::shared_ptr<vclick::WebSink> sink = current_stream->GetNode("WebSink0");
+                if(!sink)
+                {
+                    sink = rcc::shared_ptr<vclick::WebSink>::Create();
+                }
                 current_stream->AddNode(sink);
                 auto fg = current_stream->GetNode("frame_grabber_openni20");
                 sink->ConnectInput(fg, fg->GetParameter("current_frame"), sink->GetInput("point_cloud"));
@@ -936,7 +933,7 @@ int main(int argc, char* argv[])
         }, std::placeholders::_1));
 
         connections.push_back(manager.Connect(slot, "web-ui"));
-
+#endif
         slot = new mo::TypedSlot<void(std::string)>(std::bind(
             [](std::string level)
         {
@@ -977,7 +974,7 @@ int main(int argc, char* argv[])
         connections.push_back(manager.Connect(slot, "wait"));
         
         bool swap_required = false;
-        slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_param, &current_node, &current_stream, &swap_required, &_dataStreams](std::string action)
+        /*slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_param, &current_node, &current_stream, &swap_required, &_dataStreams](std::string action)
         {
             if(action == "check")
             {
@@ -1024,7 +1021,7 @@ int main(int argc, char* argv[])
                 std::cout << "Unknown option " << action << "\n";
             }
         }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "recompile"));
+        connections.push_back(manager.Connect(slot, "recompile"));*/
         std::vector<std::string> command_list;
         slot = new mo::TypedSlot<void(std::string)>(std::bind([&command_list](std::string filename)
         {
@@ -1034,6 +1031,8 @@ int main(int argc, char* argv[])
                 std::string line;
                 while(std::getline(ifs, line))
                 {
+                    if(line[line.size() - 1] == '\n' || line[line.size() - 1] == '\r')
+                        line = line.substr(0, line.size() - 1);
                     command_list.push_back(line);
                 }
                 if(command_list.size())
@@ -1058,7 +1057,46 @@ int main(int argc, char* argv[])
         
         print_options();
         mo::MetaObjectFactory::Instance()->CheckCompile();
-
+        boost::thread compile_check_thread(std::bind(
+            [&_dataStreams]()
+        {
+            bool compiling = false;
+            while(!boost::this_thread::interruption_requested())
+            {
+                boost::this_thread::sleep_for(boost::chrono::seconds(1));
+                if(mo::MetaObjectFactory::Instance()->CheckCompile())
+                {
+                    std::cout << "Recompiling...\n";
+                    for(auto& ds : _dataStreams)
+                    {
+                        ds->StopThread();
+                    }
+                    compiling = true;
+                }
+                if(compiling)
+                {
+                    if(!mo::MetaObjectFactory::Instance()->IsCompileComplete())
+                    {
+                        std::cout << "Still compiling\n";
+                    }else
+                    {
+                        if(mo::MetaObjectFactory::Instance()->SwapObjects())
+                        {
+                            std::cout << "Object swap success\n";
+                            for(auto& ds : _dataStreams)
+                            {
+                                ds->StartThread();
+                            }
+                        }else
+                        {
+                            std::cout << "Failed to recompile\n";
+                        }
+                        compiling = false;
+                    }
+                }
+            }
+            mo::MetaObjectFactory::Instance()->AbortCompilation();
+        }));
         if(vm.count("script"))
         {
             auto relay = manager.GetRelay<void(std::string)>("run");
@@ -1111,9 +1149,12 @@ int main(int argc, char* argv[])
         }
         _dataStreams.clear();
         std::cout << "Shutting down\n";
+        compile_check_thread.interrupt();
+        compile_check_thread.join();
     }
     gui_thread.interrupt();
+
     gui_thread.join();
-    
+
     return 0;
 }

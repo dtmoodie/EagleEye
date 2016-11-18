@@ -172,7 +172,7 @@ namespace Nodes
         std::shared_ptr<mo::IVariableManager>   _variable_manager;
         bool                                    _modified;
     private:
-        std::shared_ptr<NodeImpl>             pImpl_;
+        std::shared_ptr<NodeImpl>             _pimpl_node;
         // These are used for profiling
         unsigned int                          rmt_hash;
         unsigned int                          rmt_cuda_hash;

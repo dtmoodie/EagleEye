@@ -1,16 +1,26 @@
 #pragma once
 #define COMPACT_GOOGLE_LOG_debug COMPACT_GOOGLE_LOG_DEBUG
+
 #include "EagleLib/Detail/PluginExport.hpp"
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/ObjectDetection.hpp"
+#include "EagleLib/rcc/external_includes/cv_calib3d.hpp"
 #include "MetaObject/MetaObject.hpp"
 #include "MetaObject/Parameters/Types.hpp"
 #include "RuntimeLinkLibrary.h"
-SETUP_PROJECT_DEF
-
-
 #include "caffe/blob.hpp"
 #include "caffe/net.hpp"
+
+#ifdef _MSC_VER // Windows
+  #ifdef _DEBUG
+    RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib")
+  #else
+    RUNTIME_COMPILER_LINKLIBRARY("opencv_calib3d" CV_VERSION_ ".lib")
+  #endif
+#else // Linux
+  RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
+#endif
+
 
 namespace EagleLib
 {

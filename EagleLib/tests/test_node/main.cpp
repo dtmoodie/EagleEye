@@ -1,6 +1,6 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
-
+#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
 #include "EagleLib/Nodes/Node.h"
 
 
@@ -12,7 +12,7 @@
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
-#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
+
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "EagleLibFrameGrabbers"

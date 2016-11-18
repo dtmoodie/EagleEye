@@ -1,7 +1,7 @@
 #include "Renderers.h"
 #include "vtkLogRedirect.h"
 
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #include "EagleLib/utilities/ObjectPool.hpp"
 #include <EagleLib/rcc/SystemTable.hpp>
@@ -24,7 +24,7 @@
 #include <vtkPolygon.h>
 #include <vtkGenericOpenGLRenderWindow.h>
 
-SETUP_PROJECT_IMPL
+
 using namespace EagleLib;
 using namespace EagleLib::Plotting;
 

@@ -343,7 +343,7 @@ TS<SyncedMemory> FrameGrabberBuffered::GetCurrentFrame(cv::cuda::Stream& stream)
 }
 void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
 {
-    SCOPED_PROFILE_NODE
+    //SCOPED_PROFILE_NODE
     boost::mutex::scoped_lock bLock(buffer_mtx);
 
     // Waiting for the reading thread to catch up
@@ -383,7 +383,7 @@ void FrameGrabberThreaded::Buffer()
         {
             TS<SyncedMemory> frame;
             {
-                SCOPED_PROFILE_NODE
+                //SCOPED_PROFILE_NODE
                 boost::mutex::scoped_lock gLock(grabber_mtx);
                 frame = GetNextFrameImpl(read_stream);
             }            

@@ -1,4 +1,4 @@
-//#include "vclick.hpp"
+#ifdef HAVE_WT
 
 #include "WebSink.hpp"
 #include "vclick.hpp"
@@ -57,14 +57,19 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     
     auto stream = g_sink->GetDataStream();
     auto fg = stream->GetNode("ForegroundEstimate0");
+
+    auto bg_param = fg->GetParameter("background_model");
     backgroundStream = new TParameterResource<EagleLib::SyncedMemory>(
-        fg->GetParameter("background_model"), "background");
+        fg->GetParameter("background_model"), "background_model");
+    backgroundStream->handleParamUpdate(nullptr, nullptr);
 
     foregroundStream = new TParameterResource<cv::Mat>(
         g_sink->GetParameter("foreground_points"), "foreground");
+    foregroundStream->handleParamUpdate(nullptr, nullptr);
 
     boundingBoxStream = new TParameterResource<std::vector<BoundingBox>>(
         g_sink->GetParameter("bounding_boxes"), "bounding_boxes");
+    boundingBoxStream->handleParamUpdate(nullptr, nullptr);
 
     auto background_link = Wt::WLink(backgroundStream);
     auto foreground_link = Wt::WLink(foregroundStream);
@@ -132,26 +137,38 @@ WebUi::WebUi(const Wt::WEnvironment& env):
             "SELECTED.position.y", "SELECTED.position.z");
         std::string source((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
         std::stringstream ss;
+        ss << "var bounding_box_url = \"" << boundingBox_link.url() << "\";\n";
+        ss << "var background_url = \"" << background_link.url() << "\";\n";
+        ss << "var foregorund_url = \"" << foreground_link.url() << "\";\n";
         ss << source;
-        ss << "\n";
-        ss << "function onDocumentMouseUp( event ) {\n";
-        ss << "  event.preventDefault();\n";
-        ss << "  controls.enabled = true;\n";
-        ss << "  if (INTERSECTED) {\n";
-        ss <<        move_call;
-        ss << "      SELECTED = null;\n";
-        ss << "  }\n";
-        ss << "  container.style.cursor = 'auto';\n";
-        ss << "}\n";
-        ss << "function onDocumentKeydown(event){\n";
-        ss << "  var key = event.which; \n";
-        ss <<    onKeydown.createCall("key");
-        ss << "  if(key == 65){\n";
-        ss << "    addBoundingBox();\n";
-        ss << "  }\n";
-        ss << "}\n";
+        ss << "\n" << 
+            "function onDocumentKeydown(event) {"
+            "    var key = event.which;"
+            <<   onKeydown.createCall("key") <<
+            "    if (key == 65) {"
+            "        addBoundingBox();"
+            "    }"
+            "    else if (key == 82) {"
+            "        loadBb();"
+            "        loadForeground();"
+            "        loadBackground();"
+            "    }"
+            "}"
+            "function onDocumentMouseUp( event ) {\n"
+            "    event.preventDefault();\n"
+            "    controls.enabled = true;\n"
+            "    if (INTERSECTED) {\n        "
+            <<       move_call <<
+            "        SELECTED = null;\n"
+            "    }\n"
+            "    container.style.cursor = 'auto';\n"
+            "}\n";
+
+        std::string js = ss.str();
+        LOG(debug) << "\n" << js;
+
         render_window = new Wt::WText(root());
-        render_window->doJavaScript(ss.str());
+        render_window->doJavaScript(js);
     }   
 }
 
@@ -167,6 +184,7 @@ void WebUi::handleMove(int index, float x, float y, float z)
         g_sink->bounding_boxes[index].x = x;
         g_sink->bounding_boxes[index].y = y;
         g_sink->bounding_boxes[index].z = z;
+        g_sink->bounding_boxes_param.Commit();
     }
 }
 
@@ -191,9 +209,9 @@ void WebUi::handleAddbb()
     bb.x = 0;
     bb.y = 0;
     bb.z = 0;
-    bb.width = 20;
-    bb.height = 30;
-    bb.depth = 20;
+    bb.width = 800;
+    bb.height = 1200;
+    bb.depth = 800;
     g_sink->bounding_boxes.push_back(bb);
     g_sink->bounding_boxes_param.Commit();
 }
@@ -229,3 +247,4 @@ void WebUi::handleKeydown(int value)
 }
 
 
+#endif

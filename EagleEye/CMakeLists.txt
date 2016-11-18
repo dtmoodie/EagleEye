@@ -11,7 +11,7 @@ IF(Qt5_FOUND)
     
     find_package(CUDA REQUIRED)
 
-    set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono log log_setup)
+    set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono log log_setup program_options)
 
     find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 

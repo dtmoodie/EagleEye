@@ -14,23 +14,27 @@ namespace cereal
 {
     template<class AR, class T> void save(AR& ar, rcc::shared_ptr<T> const & m)
     {
-        if (mo::CheckHasBeenSerialized(m->GetObjectId()))
+        if(m)
         {
-            std::string type = m->GetTypeName();
-            ObjectId id = m->GetObjectId();
-            ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
-            ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
-            ar(make_nvp("TypeName", type));
-            return;
+            if (mo::CheckHasBeenSerialized(m->GetObjectId()))
+            {
+                std::string type = m->GetTypeName();
+                ObjectId id = m->GetObjectId();
+                ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
+                ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
+                ar(make_nvp("TypeName", type));
+                return;
+            }
+            if (std::is_base_of<EagleLib::Nodes::Node, T>::value)
+            {
+                EagleLib::Serialize(ar, m.Get());
+            }
+            else
+            {
+                mo::Serialize(ar, m.Get());
+            }
+            mo::SetHasBeenSerialized(m->GetObjectId());
         }
-        if(std::is_base_of<EagleLib::Nodes::Node, T>::value)
-        {
-            EagleLib::Serialize(ar, m.Get());
-        }else
-        {
-            mo::Serialize(ar, m.Get());
-        }
-        mo::SetHasBeenSerialized(m->GetObjectId());
     }
 
     template<class AR, class T> void load(AR& ar, rcc::shared_ptr<T> & m)
@@ -64,11 +68,14 @@ namespace cereal
     }
     template<class AR, class T> void save(AR& ar, rcc::weak_ptr<T> const & m)
     {
-        std::string type = m->GetTypeName();
-        ObjectId id = m->GetObjectId();
-        ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
-        ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
-        ar(make_nvp("TypeName", type));
+        if(m)
+        {
+            std::string type = m->GetTypeName();
+            ObjectId id = m->GetObjectId();
+            ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
+            ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
+            ar(make_nvp("TypeName", type));
+        }
     }
 
     template<class AR, class T> void load(AR& ar, rcc::weak_ptr<T> & m)

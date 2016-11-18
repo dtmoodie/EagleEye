@@ -3,7 +3,10 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
+h264_pass_through::h264_pass_through()
+{
 
+}
 bool h264_pass_through::ProcessImpl()
 {
     if(gstreamer_string_param.modified)
@@ -17,15 +20,18 @@ bool h264_pass_through::ProcessImpl()
         {
             LOG_NODE(warning) << "No valve found in pipeline with name 'myvalve'";
         }
+        previously_active = false;
     }
-    if(active_param.modified)
+    if(active_param.modified && active != previously_active)
     {
         if(active)
         {
             g_object_set(valve, "drop", false, NULL);
+            previously_active = true;
         }else
         {
             g_object_set(valve, "drop", true, NULL);
+            previously_active = false;
         }
         active_param.modified = false;
     }

@@ -37,14 +37,15 @@
 
 
 // *************** SETUP_PROJECT_DEF ********************
-#ifdef __cplusplus
+/*#ifdef __cplusplus
   #define SETUP_PROJECT_DEF extern "C"{    \
     PLUGIN_EXPORTS void SetupIncludes();   \
     PLUGIN_EXPORTS int GetBuildType();     \
   }
 #else
   #define SETUP_PROJECT_DEF PLUGIN_EXPORTS void SetupIncludes(); PLUGIN_EXPORTS int GetBuildType();
-#endif
+#endif*/
+#define SETUP_PROJECT_DEF
 
 
 // *************** SETUP_PROJECT_IMPL ********************
@@ -64,9 +65,10 @@
   #define PROJECT_CONFIG_FILE ""
 #endif
 
-#define SETUP_PROJECT_IMPL    int GetBuildType() {return BUILD_TYPE; }                                  \
+#define SETUP_PROJECT_IMPL
+/*#define SETUP_PROJECT_IMPL    int GetBuildType() {return BUILD_TYPE; }                                  \
 void SetupIncludes(){                                                                                   \
         auto id = mo::MetaObjectFactory::Instance()->GetObjectSystem()->ParseConfigFile(PROJECT_CONFIG_FILE);     \
         PerModuleInterface::GetInstance()->SetProjectIdForAllConstructors(id);                          \
-}
+}*/
 

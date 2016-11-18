@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #include "WebSink.hpp"
 #include <EagleLib/Nodes/NodeInfo.hpp>
 using namespace vclick;
@@ -10,9 +11,32 @@ WebSink::WebSink()
     moments.emplace_back(0, 2, 0);
     moments.emplace_back(0, 0, 2);
 }
+void WebSink::SetContext(mo::Context* ctx, bool overwrite)
+{
+    Node::SetContext(ctx, overwrite);
+    h264_pass_through->SetContext(ctx, overwrite);
+}
+std::vector<mo::IParameter*> WebSink::GetParameters(const std::string& filter) const
+{
+    auto h264_params = h264_pass_through->GetParameters();
+    auto my_params = Node::GetParameters();
+    my_params.insert(my_params.end(), h264_params.begin(), h264_params.end());
+    return my_params;
+}
 
 bool WebSink::ProcessImpl()
 {
+    if(moments.empty())
+    {
+        moments.emplace_back(2, 0, 0);
+        moments.emplace_back(0, 2, 0);
+        moments.emplace_back(0, 0, 2);
+        thresholds.push_back(0.1);
+        thresholds.push_back(0.1);
+        thresholds.push_back(0.1);
+    }
+    if(foreground_mask->empty() || point_cloud->empty())
+        return false;
     cv::Mat mask = foreground_mask->GetMat(Stream());
     cv::Mat ptCloud = point_cloud->GetMat(Stream());
     int num_points = cv::countNonZero(mask);
@@ -30,6 +54,7 @@ bool WebSink::ProcessImpl()
         }
     }
     foreground_points_param.UpdateData(foreground_points, point_cloud_param.GetTimestamp(), _ctx);
+    bool activated = false;
     for (auto& bb : bounding_boxes)
     {
         cv::Mat bb_mask = bb.Contains(foreground_points);
@@ -44,18 +69,33 @@ bool WebSink::ProcessImpl()
                 ++count;
             }
         }
-        if (count == 0.0)
+        if (count < min_points)
             continue;
         centroid /= count;
+        
+        if(thresholds.size() < moments.size())
+        {
+            while(thresholds.size() != moments.size())
+            {
+                thresholds.push_back(0.1);
+            }
+        }
         for (int i = 0; i < moments.size(); ++i)
         {
             float value = moments[i].Evaluate(bb_mask, foreground_points, centroid);
             if (value > thresholds[i])
             {
                 active_switch->UpdateData(true, point_cloud_param.GetTimestamp(), _ctx);
+                activated = true;
             }
-        }
+        }   
     }
-    return false;
+    if (activated == false)
+    {
+        active_switch->UpdateData(false, point_cloud_param.GetTimestamp(), _ctx);
+    }
+    h264_pass_through->Process();
+    return true;
 }
 MO_REGISTER_CLASS(WebSink);
+#endif

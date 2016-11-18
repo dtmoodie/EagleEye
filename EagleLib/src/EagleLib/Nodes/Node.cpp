@@ -31,6 +31,8 @@
 #include <boost/bind.hpp>
 
 #include <opencv2/core/cuda_stream_accessor.hpp>
+#include <thrust/system/system_error.h>
+
 
 #include <regex>
 using namespace EagleLib;
@@ -38,24 +40,43 @@ using namespace EagleLib::Nodes;
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
-
+#define EXCEPTION_TRY_COUNT 10
 
 #define CATCH_MACRO                                                         \
-    catch(mo::ExceptionWithCallStack<cv::Exception>& e)                \
+    catch(mo::ExceptionWithCallStack<cv::Exception>& e)                     \
 {                                                                           \
     LOG_NODE(error) << e.what() << "\n" << e.CallStack();                   \
+    ++_pimpl_node->throw_count;                                             \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
+        _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
-    catch(mo::ExceptionWithCallStack<std::string>& e)                  \
+    catch(thrust::system_error& e)                                          \
 {                                                                           \
-    LOG_NODE(error) << std::string(e) << "\n" << e.CallStack();                   \
+    LOG_NODE(error) << e.what();                                            \
+    ++_pimpl_node->throw_count;                                             \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
+        _pimpl_node->disable_due_to_errors = true;                          \
+}                                                                           \
+    catch(mo::ExceptionWithCallStack<std::string>& e)                       \
+{                                                                           \
+    LOG_NODE(error) << std::string(e) << "\n" << e.CallStack();             \
+    ++_pimpl_node->throw_count;                                             \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
+        _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
 catch(mo::IExceptionWithCallStackBase& e)                                   \
 {                                                                           \
     LOG_NODE(error) << "Exception thrown with callstack: \n" << e.CallStack(); \
+    ++_pimpl_node->throw_count;                                             \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
+        _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
 catch (boost::thread_resource_error& err)                                   \
 {                                                                           \
     LOG_NODE(error) << err.what();                                          \
+    ++_pimpl_node->throw_count;                                             \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
+        _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
 catch (boost::thread_interrupted& err)                                      \
 {                                                                           \
@@ -67,22 +88,37 @@ catch (boost::thread_interrupted& err)                                      \
 catch (boost::thread_exception& err)                                        \
 {                                                                           \
     LOG_NODE(error) << err.what();                                          \
+    ++_pimpl_node->throw_count;                                             \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
+        _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
     catch (cv::Exception &err)                                              \
 {                                                                           \
     LOG_NODE(error) << err.what();                                          \
+    ++_pimpl_node->throw_count;                                             \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
+        _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
     catch (boost::exception &err)                                           \
 {                                                                           \
     LOG_NODE(error) << "Boost error";                                       \
+    ++_pimpl_node->throw_count;                                             \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
+        _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
 catch (std::exception &err)                                                 \
 {                                                                           \
     LOG_NODE(error) << err.what();                                          \
+    ++_pimpl_node->throw_count;                                             \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
+        _pimpl_node->disable_due_to_errors = true;                          \
 }                                                                           \
 catch (...)                                                                 \
 {                                                                           \
     LOG_NODE(error) << "Unknown exception";                                 \
+    ++_pimpl_node->throw_count;                                             \
+    if(_pimpl_node->throw_count > EXCEPTION_TRY_COUNT)                                      \
+        _pimpl_node->disable_due_to_errors = true;                          \
 }
 
 
@@ -99,8 +135,8 @@ namespace EagleLib
         class NodeImpl
         {
         public:
-            
-            
+            long long throw_count = 0;
+            bool disable_due_to_errors = false;
 #ifdef _DEBUG
         std::vector<long long> timestamps;
 #endif
@@ -111,6 +147,7 @@ namespace EagleLib
 Node::Node()
 {
     _modified = true;
+    _pimpl_node.reset(new NodeImpl());
 }
 
 bool Node::ConnectInput(rcc::shared_ptr<Node> node, const std::string& output_name, const std::string& input_name, mo::ParameterTypeFlags type)
@@ -190,6 +227,13 @@ void Node::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
     if(param->CheckFlags(mo::Control_e) || param->CheckFlags(mo::Input_e))
     {
         _modified = true;
+        // Reanble if disabled 
+        // TODO: Figure out how to re-enable only when the user changes an input
+        /*if(_pimpl_node->disable_due_to_errors)
+        {
+            _pimpl_node->throw_count--;
+            _pimpl_node->disable_due_to_errors = false;
+        }*/
     }
 }
 
@@ -199,7 +243,8 @@ bool Node::Process()
         return false;
     if(_modified == false)
         return false;
-
+    if(_pimpl_node->disable_due_to_errors)
+        return false;
     { // scope of the lock
         boost::recursive_mutex::scoped_lock lock(*_mtx);
 
@@ -211,7 +256,7 @@ bool Node::Process()
         _modified = false;
         
         {
-            mo::scoped_profile profiler(this->GetTreeName().c_str(), &this->_rmt_hash, &this->_rmt_cuda_hash, &Stream());
+            //mo::scoped_profile profiler(this->GetTreeName().c_str(), &this->_rmt_hash, &this->_rmt_cuda_hash, &Stream());
             try
             {
                 if (!ProcessImpl())
@@ -611,7 +656,7 @@ void Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(_children);
     SERIALIZE(_parents);
     
-    SERIALIZE(pImpl_);
+    SERIALIZE(_pimpl_node);
     SERIALIZE(_dataStream);
 }
 
@@ -688,6 +733,7 @@ void Node::AddParent(Node* parent_)
     if(std::find(_parents.begin(), _parents.end(), parent_) != _parents.end())
         return;
     _parents.push_back(parent_);
+    lock.unlock();
     parent_->AddChild(this);
 }
 
