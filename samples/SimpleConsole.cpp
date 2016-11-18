@@ -133,15 +133,11 @@ int main(int argc, char* argv[])
     }
     boost::filesystem::path currentDir = boost::filesystem::current_path();
 #ifdef _MSC_VER
-#ifdef _DEBUG
-    currentDir = boost::filesystem::path(currentDir.string() + "/../Debug");
-#else
-    currentDir = boost::filesystem::path(currentDir.string() + "/../RelWithDebInfo");
-#endif
+    currentDir = boost::filesystem::path(currentDir.string());
 #else
     currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
-    LOG(info) << "Looking for plugins in: " << currentDir.string();
 #endif
+    LOG(info) << "Looking for plugins in: " << currentDir.string();
     boost::filesystem::directory_iterator end_itr;
     if(boost::filesystem::is_directory(currentDir))
     {
