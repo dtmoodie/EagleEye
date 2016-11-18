@@ -1,15 +1,17 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
+#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
 #include "EagleLib/IDataStream.hpp"
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/Nodes/ThreadedNode.h"
 #include "EagleLib/Nodes/NodeInfo.hpp"
+
 #include "MetaObject/Parameters/ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
-#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
+
 #include "EagleLib/Detail/AlgorithmImpl.hpp"
 #include "EagleLib/Logging.h"
 #define BOOST_TEST_DYN_LINK
