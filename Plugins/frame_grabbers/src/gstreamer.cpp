@@ -124,6 +124,11 @@ TS<SyncedMemory> frame_grabber_gstreamer::GetNextFrameImpl(cv::cuda::Stream& str
             {
                 cv::cuda::GpuMat d_mat;
                 d_mat.upload(h_mat, stream);
+                double pos = h_cam->get(cv::CAP_PROP_POS_AVI_RATIO);
+                if(pos == 1.0)
+                {
+                    sig_eof();
+                }
                 return TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (long long)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
             }
         }else

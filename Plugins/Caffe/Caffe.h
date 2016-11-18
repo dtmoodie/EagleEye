@@ -28,6 +28,7 @@ namespace EagleLib
                 PROPERTY(BlobMap_t, wrapped_inputs, BlobMap_t());
                 PARAM(cv::Scalar, channel_mean, cv::Scalar(104, 117, 123));
                 PARAM(bool, bgr_swap, false);
+                PARAM(bool, debug_dump, false);
                 PROPERTY(bool, weightsLoaded, false);
                 PARAM(mo::ReadFile, nn_model_file, mo::ReadFile());
                 PARAM(mo::ReadFile, nn_weight_file, mo::ReadFile());

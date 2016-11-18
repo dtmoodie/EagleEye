@@ -225,14 +225,13 @@ bool CaffeBase::InitNetwork()
         if (boost::filesystem::exists(nn_model_file))
         {
             std::string param_file = nn_model_file.string();
-            /*try
+            try
             {
                 NN.reset(new caffe::Net<float>(param_file, caffe::TEST));
             }catch(caffe::ExceptionWithCallStack<std::string>& exp)
             {
                 throw mo::ExceptionWithCallStack<std::string>(exp, exp.CallStack());
-            }*/
-            NN.reset(new caffe::Net<float>(param_file, caffe::TEST));
+            }
             WrapInput();
             WrapOutput();
             nn_model_file_param.modified = false;
@@ -250,10 +249,10 @@ bool CaffeBase::InitNetwork()
             {
                 NN->CopyTrainedLayersFrom(nn_weight_file.string());
             }
-            /*catch (caffe::ExceptionWithCallStack<std::string>& exp)
+            catch (caffe::ExceptionWithCallStack<std::string>& exp)
             {
                 throw mo::ExceptionWithCallStack<std::string>(exp, exp.CallStack());
-            }*/catch (...)
+            }catch (...)
             {
                 return false;
             }
@@ -271,7 +270,7 @@ bool CaffeBase::InitNetwork()
         }
         else
         {
-            BOOST_LOG_TRIVIAL(debug) << "Weight file does not exist";
+            LOG_EVERY_N(warning, 100) << "Weight file does not exist";
         }
     }
     if (label_file_param.modified)
@@ -281,7 +280,7 @@ bool CaffeBase::InitNetwork()
             std::ifstream ifs(label_file.string().c_str());
             if (!ifs)
             {
-                BOOST_LOG_TRIVIAL(error) << "Unable to load label file";
+                LOG_EVERY_N(warning, 100) << "Unable to load label file";
             }
             labels.reset(new std::vector<std::string>());
             std::string line;
@@ -344,8 +343,10 @@ bool CaffeImageClassifier::ProcessImpl()
         return false;
     if (input->empty())
         return false;
-    auto input_shape = input->GetShape();
-    ReshapeInput(input_shape[0], input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
+    WrapInput();
+    //auto input_shape = input->GetShape();
+    //ReshapeInput(input_shape[0], input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
+    int device = cv::cuda::getDevice();
     cv::cuda::GpuMat float_image;
     
     if (input->GetDepth() != CV_32F)
@@ -354,10 +355,11 @@ bool CaffeImageClassifier::ProcessImpl()
     }
     else
     {
-        float_image = input->GetGpuMat(Stream());
+        input->GetGpuMat(Stream()).copyTo(float_image, Stream());
     }
     cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, Stream());
     cv::cuda::multiply(float_image, cv::Scalar::all(pixel_scale), float_image, 1.0, -1, Stream());
+    
     std::vector<cv::Rect> defaultROI;
     defaultROI.push_back(cv::Rect(cv::Point(), input->GetSize()));
     if (bounding_boxes == nullptr)
@@ -382,6 +384,7 @@ bool CaffeImageClassifier::ProcessImpl()
     {
         BOOST_LOG_TRIVIAL(debug) << "Too many input Regions of interest to handle in one pass, this network can only handle " << data_itr->second.size() << " inputs at a time";
     }
+
     auto shape = data_itr->second[0].GetShape();
     cv::Size input_size(shape[2], shape[1]);
 
@@ -396,7 +399,18 @@ bool CaffeImageClassifier::ProcessImpl()
         {
             resized = float_image((*bounding_boxes)[i]);
         }
-        cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());
+        cv::Mat h_resized(resized);
+        std::vector<cv::cuda::GpuMat> split(resized.channels());
+        for(int j = 0; j < resized.channels(); ++j)
+        {
+            cv::cuda::createContinuous(resized.size(), resized.depth(), split[j]);
+        }
+        //cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());
+        cv::cuda::split(resized, split, Stream());
+        for(int j = 0; j < split.size(); ++j)
+        {
+            split[i].copyTo(data_itr->second[i].GetGpuMat(Stream(), j), Stream());
+        }
     }
     
     // Signal update on all inputs
@@ -405,10 +419,19 @@ bool CaffeImageClassifier::ProcessImpl()
         float* data = blob->mutable_gpu_data(); 
     }
 
+    std::vector<cv::Mat> debug_mat_vec;
+    if(debug_dump)
+    {
+        for (int i = 0; i < data_itr->second[0].GetNumMats(); ++i)
+        {
+            debug_mat_vec.push_back(cv::Mat(data_itr->second[0].GetGpuMat(Stream(), i)));
+        }
+    }
+
     float loss;
     {
-        mo::scoped_profile("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &Stream());
-        NN->ForwardPrefilled(&loss);
+        mo::scoped_profile profile("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &Stream());
+        NN->Forward(&loss);
     }
     
     caffe::Blob<float>* output_layer = NN->output_blobs()[0];
