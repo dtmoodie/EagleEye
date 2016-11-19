@@ -1,7 +1,8 @@
 #include "sinks.hpp"
 #include <gst/gst.h>
 #include <EagleLib/Nodes/NodeInfo.hpp>
-
+#include <gst/base/gstbasesink.h>
+#include <opencv2/imgcodecs.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -97,13 +98,40 @@ bool JPEGSink::ProcessImpl()
     {
         this->cleanup();
         this->create_pipeline(gstreamer_pipeline);
-        
+        this->set_caps("image/jpeg");
+        this->start_pipeline();
+        gstreamer_pipeline_param.modified = false;
     }
+    _modified = true;
     return true;
 }
 
 GstFlowReturn JPEGSink::on_pull()
 {
+    GstSample *sample = gst_base_sink_get_last_sample(GST_BASE_SINK(_appsink));
+    if (sample)
+    {
+        GstBuffer *buffer;
+        GstCaps *caps;
+        GstStructure *s;
+        GstMapInfo map;
+        caps = gst_sample_get_caps(sample);
+        if (!caps)
+        {
+            LOG(debug) << "could not get sample caps";
+            return GST_FLOW_OK;
+        }
+        buffer = gst_sample_get_buffer(sample);
+        if (gst_buffer_map(buffer, &map, GST_MAP_READ))
+        {
+            cv::Mat mapped(1, map.size, CV_8U);
+            memcpy(mapped.data, map.data, map.size);
+            //cv::Mat decoded = cv::imdecode(mapped, cv::IMREAD_UNCHANGED, &decode_buffer);
+            this->jpeg_buffer_param.UpdateData(mapped, buffer->pts);
+        }
+        gst_sample_unref(sample);
+        
+    }
     return GST_FLOW_OK;
 }
 MO_REGISTER_CLASS(JPEGSink)

@@ -43,6 +43,7 @@ namespace EagleLib
         protected:
             bool ProcessImpl();
             virtual GstFlowReturn on_pull();
+            cv::Mat decode_buffer;
         };
     }
 }
