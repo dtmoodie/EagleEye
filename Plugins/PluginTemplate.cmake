@@ -7,7 +7,6 @@ macro(RCC_HANDLE_LIB TARGET)
     endforeach(lib ${ARGN})
 endmacro(RCC_HANDLE_LIB target lib)
 
-
 get_target_property(target_include_dirs_ ${PROJECT_NAME} INCLUDE_DIRECTORIES)
 get_target_property(target_link_libs_    ${PROJECT_NAME} LINK_LIBRARIES)
 
@@ -74,10 +73,9 @@ else(WIN32)
 
 endif(WIN32)
 
-#ADD_DEFINITIONS(-DPROJECT_CONFIG_FILE=\"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_config.txt\")
 ADD_DEFINITIONS(-DPLUGIN_NAME=${PROJECT_NAME})
-
-
+set(PLUGIN_NAME "${PROJECT_NAME}")
+CONFIGURE_FILE("../PluginExport.hpp.in" "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/${PROJECT_NAME}Export.hpp" @ONLY)
 if(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FI\"EagleLib/Detail/PluginExport.hpp\"")
 else(WIN32)

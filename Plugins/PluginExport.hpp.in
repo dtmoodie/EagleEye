@@ -1,0 +1,30 @@
+#pragma once
+
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined @PLUGIN_NAME@_EXPORTS
+#  define @PLUGIN_NAME@_EXPORT __declspec(dllexport)
+#elif defined __GNUC__ && __GNUC__ >= 4
+#  define @PLUGIN_NAME@_EXPORT __attribute__ ((visibility ("default")))
+#else
+#  define @PLUGIN_NAME@_EXPORT
+#endif
+
+#if _WIN32
+#pragma warning(disable: 4251)
+#pragma warning(disable: 4275)
+#endif
+
+
+#include "RuntimeLinkLibrary.h"
+#ifdef WIN32
+#ifdef _DEBUG
+  RUNTIME_COMPILER_LINKLIBRARY("@PLUGIN_NAME@d.lib")
+#else
+  RUNTIME_COMPILER_LINKLIBRARY("@PLUGIN_NAME@.lib")
+#endif
+#else // Unix
+#ifdef NDEBUG
+  RUNTIME_COMPILER_LINKLIBRARY("-l@PLUGIN_NAME@")
+#else
+  RUNTIME_COMPILER_LINKLIBRARY("-l@PLUGIN_NAME@d")
+#endif
+#endif
