@@ -25,7 +25,7 @@
 SETUP_PROJECT_DEF
 
 
-
+/*
 namespace EagleLib
 {
     namespace Nodes
@@ -73,3 +73,4 @@ namespace EagleLib
     };
     }
 }
+*/

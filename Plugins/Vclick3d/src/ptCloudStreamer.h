@@ -5,7 +5,7 @@
 #include <QtNetwork/qtcpsocket.h>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
-
+/*
 RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE(PROJECT_BUILD_DIR "/include/moc_ptCloudStreamer", ".cpp");
 
 namespace EagleLib
@@ -38,3 +38,4 @@ namespace EagleLib
     };
     }
 }
+*/

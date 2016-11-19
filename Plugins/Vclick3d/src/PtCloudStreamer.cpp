@@ -3,6 +3,7 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
+/*
 ServerHandler::ServerHandler()
 {
     server = new QTcpServer();
@@ -52,3 +53,4 @@ cv::cuda::GpuMat Server::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stre
 }
 
 MO_REGISTER_CLASS(Server);
+*/
