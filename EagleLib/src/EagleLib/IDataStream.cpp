@@ -92,11 +92,13 @@ DataStream::DataStream()
     }
     GetRelayManager()->ConnectSlots(this);
     GetRelayManager()->ConnectSignals(this);
-    paused = false;
+    paused = true;
     stream_id = 0;
     _thread_id = 0;
     _ctx = &_context;
     _context.stream = &_stream;
+    processing_thread = boost::thread(boost::bind(&DataStream::process, this));
+    
 }
 void DataStream::InitCustom(bool firstInit)
 {
@@ -109,6 +111,8 @@ void DataStream::InitCustom(bool firstInit)
 DataStream::~DataStream()
 {
     StopThread();
+    processing_thread.interrupt();
+    processing_thread.join();
     top_level_nodes.clear();
     relay_manager.reset();
     _sig_manager = nullptr;
@@ -351,6 +355,16 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
     }
     if(std::find(top_level_nodes.begin(), top_level_nodes.end(), node) != top_level_nodes.end())
         return;
+    
+    std::string node_name = node->GetTypeName();
+    int count = 0;
+    for (size_t i = 0; i < top_level_nodes.size(); ++i)
+    {
+        if (top_level_nodes[i] && top_level_nodes[i]->GetTypeName() == node_name)
+            ++count;
+    }
+    node->SetUniqueId(count);
+    node->SetParameterRoot(node->GetTreeName());
     top_level_nodes.push_back(node);
     dirty_flag = true;
 }
@@ -448,14 +462,13 @@ void DataStream::RemoveVariableSink(IVariableSink* sink)
 void DataStream::StartThread()
 {
     StopThread();
-    processing_thread = boost::thread(boost::bind(&DataStream::process, this));
+    paused = false;
     sig_StartThreads();
 }
 
 void DataStream::StopThread()
 {
-    processing_thread.interrupt();
-    processing_thread.join();
+    paused = true;
     sig_StopThreads();
     LOG(trace);
 }
@@ -490,9 +503,6 @@ void DataStream::process()
         this->_ctx->thread_id = _thread_id;
     }
     
-
-    //rmt_SetCurrentThreadName("DataStreamThread");
-
     mo::TypedSlot<void(EagleLib::Nodes::Node*)> node_update_slot(
         std::bind([this](EagleLib::Nodes::Node* node)->void
         {
@@ -540,13 +550,12 @@ void DataStream::process()
     LOG(info) << "Starting stream thread";
     while(!boost::this_thread::interruption_requested())
     {
-        if(!paused)
+        if (mo::ThreadSpecificQueue::Size(_thread_id))
         {
-			if(mo::ThreadSpecificQueue::Size(_thread_id))
-            {
-                //mo::scoped_profile profile("Event loop", &rmt_hash, &rmt_cuda_hash, _context.stream);
-                mo::ThreadSpecificQueue::Run(_thread_id);
-            }
+            mo::ThreadSpecificQueue::Run(_thread_id);
+        }
+        if(!paused)
+        {	
             if(dirty_flag || run_continuously == true)
             {
 
@@ -558,7 +567,7 @@ void DataStream::process()
                 }
                 ++iteration_count;
                 if (!dirty_flag)
-                    LOG(debug) << "Dirty flag not set and end of iteration " << iteration_count;
+                    LOG(trace) << "Dirty flag not set and end of iteration " << iteration_count;
             }else
             {
                 LOG(trace) << "Dirty flag not set, not stepping";

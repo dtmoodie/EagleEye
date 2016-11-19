@@ -36,11 +36,9 @@ namespace EagleLib
         std::vector<rcc::shared_ptr<Nodes::Node>> AddNode(const std::string& nodeName, Nodes::Node* parentNode);
 
 
-        std::vector<rcc::shared_ptr<Nodes::Node>> LoadNodes(const std::string& saveFile);
+        
 
-        void SaveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, const std::string& fileName);
-
-        void SaveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, cv::FileStorage fs);
+        
 
         void PrintNodeTree(std::string* ret = nullptr);
         void SaveTree(const std::string& fileName);

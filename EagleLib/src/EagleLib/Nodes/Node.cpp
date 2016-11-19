@@ -33,7 +33,7 @@
 #include <opencv2/core/cuda_stream_accessor.hpp>
 #include <thrust/system/system_error.h>
 
-
+#include <future>
 #include <regex>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -137,6 +137,7 @@ namespace EagleLib
         public:
             long long throw_count = 0;
             bool disable_due_to_errors = false;
+            std::string tree_name;
 #ifdef _DEBUG
         std::vector<long long> timestamps;
 #endif
@@ -227,13 +228,11 @@ void Node::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
     if(param->CheckFlags(mo::Control_e) || param->CheckFlags(mo::Input_e))
     {
         _modified = true;
-        // Reanble if disabled 
-        // TODO: Figure out how to re-enable only when the user changes an input
-        /*if(_pimpl_node->disable_due_to_errors)
-        {
-            _pimpl_node->throw_count--;
-            _pimpl_node->disable_due_to_errors = false;
-        }*/
+    }
+    if(_pimpl_node->disable_due_to_errors && param->CheckFlags(mo::Control_e))
+    {
+        _pimpl_node->throw_count--;
+        _pimpl_node->disable_due_to_errors = false;
     }
 }
 
@@ -309,8 +308,17 @@ Node::Ptr Node::AddChild(Node::Ptr child)
 {
     if(_ctx && mo::GetThisThread() != _ctx->thread_id)
     {
-        mo::ThreadSpecificQueue::Push(std::bind((Node::Ptr(Node::*)(Node::Ptr))&Node::AddChild, this, child), _ctx->thread_id, this);
-        return child;
+        std::future<Ptr> result;
+        std::promise<Ptr> promise;
+        mo::ThreadSpecificQueue::Push(
+            std::bind(
+        [this, &promise, child]()
+        {
+            promise.set_value(this->AddChild(child));
+        }), _ctx->thread_id, this);
+        result = promise.get_future();
+        result.wait();
+        return result.get();
     }
     if (child == nullptr)
         return child;
@@ -449,17 +457,6 @@ void Node::GetNodesInScope(std::vector<Node*> &nodes)
 }
 
 
-/*Node* Node::GetChildRecursive(std::string treeName_)
-{
-    
-
-    // TODO tree structure parsing and correct directing of the search
-    // Find the common base between this node and treeName
-
-
-    return nullptr;
-}*/
-
 void Node::RemoveChild(Node::Ptr node)
 {
     boost::recursive_mutex::scoped_lock lock(*_mtx);
@@ -513,46 +510,56 @@ void Node::SetDataStream(IDataStream* stream_)
     if(stream_ == nullptr)
         return;
     boost::recursive_mutex::scoped_lock lock(*_mtx);
-    if (_dataStream && _dataStream != stream_)
+    if (_data_stream && _data_stream != stream_)
     {
-        _dataStream->RemoveNode(this);
+        _data_stream->RemoveNode(this);
     }
-    _dataStream = stream_;
+    _data_stream = stream_;
     this->SetContext(stream_->GetContext());
-    SetupSignals(_dataStream->GetRelayManager());
-    SetupVariableManager(_dataStream->GetVariableManager().get());
-    _dataStream->AddChildNode(this);
+    SetupSignals(_data_stream->GetRelayManager());
+    SetupVariableManager(_data_stream->GetVariableManager().get());
+    _data_stream->AddChildNode(this);
     for (auto& child : _children)
     {
-        child->SetDataStream(_dataStream.Get());
+        child->SetDataStream(_data_stream.Get());
     }
     
 }
 
 IDataStream* Node::GetDataStream()
 {
-    if (_parents.size() && _dataStream == nullptr)
+    if (_parents.size() && _data_stream == nullptr)
     {
         LOG(debug) << "Setting data stream from parent";
         SetDataStream(_parents[0]->GetDataStream());
     }
-    if (_parents.size() == 0 && _dataStream == nullptr)
+    if (_parents.size() == 0 && _data_stream == nullptr)
     {
-        _dataStream = IDataStream::Create();
-        _dataStream->AddNode(this);
+        _data_stream = IDataStream::Create();
+        _data_stream->AddNode(this);
     }    
-    return _dataStream.Get();
+    return _data_stream.Get();
 }
 std::shared_ptr<mo::IVariableManager>     Node::GetVariableManager()
 {
     return GetDataStream()->GetVariableManager();
 }
 
-std::string Node::GetTreeName() const
+std::string Node::GetTreeName()
 {
-    return std::string(GetTypeName()) + boost::lexical_cast<std::string>(_unique_id);
+    if(name.size() == 0)
+    {
+        name = std::string(GetTypeName()) + boost::lexical_cast<std::string>(_unique_id);
+        name_param.Commit();
+    }
+    return name;
 }
 
+void Node::SetTreeName(const std::string& name)
+{
+    this->name = name;
+    name_param.Commit();
+}
 
 std::vector<rcc::weak_ptr<Node>> Node::GetParents()
 {
@@ -575,79 +582,7 @@ void Node::NodeInit(bool firstInit)
 
 }
 
-void Node::Init(const std::string &configFile)
-{
-    //ui_collector::set_node_name(getFullTreeName());
-    
-}
 
-
-void Node::Init(const cv::FileNode& configNode)
-{
-    //ui_collector::set_node_name(getFullTreeName());
-    LOG(trace) << " Initializing from file";
-    
-    
-    cv::FileNode childrenFS = configNode["Children"];
-    int childCount = (int)childrenFS["Count"];
-    for(int i = 0; i < childCount; ++i)
-    {
-        cv::FileNode childNode = childrenFS["Node-" + boost::lexical_cast<std::string>(i)];
-        std::string name = (std::string)childNode["NodeName"];
-        auto node = NodeFactory::Instance()->AddNode(name);
-        if (node != nullptr)
-        {
-            AddChild(node);
-            node->Init(childNode);
-            //ui_collector::set_node_name(getFullTreeName());
-        }
-        else
-        {
-            LOG(error) << "No node found with the name " << name;
-        }
-    }
-    /*cv::FileNode paramNode = configNode["Parameters"];
-    // #TODO proper serialization with cereal
-    for (size_t i = 0; i < _parameters.size(); ++i)
-    {
-        try
-        {
-            if (_parameters[i]->type & Parameters::Parameter::Input)
-            {
-                auto node = paramNode[_parameters[i]->GetName()];
-                auto inputName = (std::string)node["InputParameter"];
-                if (inputName.size())
-                {
-                    auto idx = inputName.find(':');
-                    auto nodeName = inputName.substr(0, idx);
-                    auto paramName = inputName.substr(idx + 1);
-                    auto nodes = getNodesInScope();
-                    auto node = getNodeInScope(nodeName);
-                    if (node)
-                    {
-                        auto param = node->getParameter(paramName);
-                        if (param)
-                        {
-                            auto inputParam = dynamic_cast<mo::InputParameter*>(_parameters[i]);
-                            inputParam->SetInput(param);
-                        }
-                    }
-                }
-
-            }
-            else
-            {
-                // #TODO update to new api
-                if (_parameters[i]->CheckFlags(mo::Control_e))
-                    Parameters::Persistence::cv::DeSerialize(&paramNode, _parameters[i]);
-            }
-        }
-        catch (cv::Exception &e)
-        {
-            LOG(error) << "Deserialization failed for " << _parameters[i]->GetName() << " with type " << _parameters[i]->GetTypeInfo().name() << std::endl;
-        }
-    }*/
-}
 
 void Node::Serialize(ISimpleSerializer *pSerializer)
 {
@@ -655,76 +590,11 @@ void Node::Serialize(ISimpleSerializer *pSerializer)
     IMetaObject::Serialize(pSerializer);
     SERIALIZE(_children);
     SERIALIZE(_parents);
-    
     SERIALIZE(_pimpl_node);
-    SERIALIZE(_dataStream);
+    SERIALIZE(_data_stream);
 }
 
-void
-Node::Serialize(cv::FileStorage& fs)
-{
-    /*NODE_LOG(trace) << " Serializing to file";
-    if(fs.isOpened())
-    {
-        fs << "NodeName" << GetTypeName();
-        fs << "NodeTreeName" << treeName;
-        fs << "FullTreeName" << fullTreeName;
-        fs << "Enabled" << enabled;
-        fs << "ExternalDisplay" << externalDisplay;
-        fs << "Children" << "{";
-        fs << "Count" << (int)children.size();
-        for(size_t i = 0; i < children.size(); ++i)
-        {
-            fs << "Node-" + boost::lexical_cast<std::string>(i) << "{";
-            children[i]->Serialize(fs);
-            fs << "}";
-        }
-        fs << "}"; // end children
 
-        fs << "Parameters" << "{";
-        for(size_t i = 0; i < _parameters.size(); ++i)
-        {
-            if (_parameters[i]->type & Parameters::Parameter::Input)
-            {
-                auto inputParam = dynamic_cast<Parameters::InputParameter*>(_parameters[i]);
-                if (inputParam)
-                {
-                    auto input = inputParam->GetInput();
-                    if (input)
-                    {
-                        fs << _parameters[i]->GetName().c_str() << "{";
-                        fs << "TreeName" << _parameters[i]->GetTreeName();
-                        fs << "InputParameter" << input->GetTreeName();
-                        fs << "Type" << _parameters[i]->GetTypeInfo().name();
-                        auto toolTip = _parameters[i]->GetTooltip();
-                        if (toolTip.size())
-                            fs << "ToolTip" << toolTip;
-                        fs << "}";
-                    }
-                }
-            }
-            else
-            {
-                if (_parameters[i]->type & Parameters::Parameter::Control)
-                {
-                    // TODO
-                    try
-                    {
-                        Parameters::Persistence::cv::Serialize(&fs, _parameters[i]);
-                    }
-                    catch (cv::Exception &e)
-                    {
-                        NODE_LOG(warning) << e.what();
-                        continue;
-                    }
-                }
-            }            
-        }
-        fs << "}"; // end parameters
-
-    }
-    */
-}
 
 
 void Node::AddParent(Node* parent_)
