@@ -8,10 +8,12 @@ using namespace EagleLib::Nodes;
 SETUP_PROJECT_IMPL
 
 bool MorphologyFilter::ProcessImpl()
-{    
+{
     if (input_image)
     {
-        if (structuring_element_type_param.modified || morphology_type_param.modified)
+        if (structuring_element_type_param.modified || morphology_type_param.modified || 
+            anchor_point_param.modified || iterations_param.modified ||
+            filter == nullptr)
         {
             structuring_element_param.UpdateData(
                 cv::getStructuringElement(
@@ -21,9 +23,14 @@ bool MorphologyFilter::ProcessImpl()
             filter = ::cv::cuda::createMorphologyFilter(
                 morphology_type.currentSelection, input_image->GetMat(*_ctx->stream).type(), 
                 structuring_element, anchor_point, iterations);
+
+            structuring_element_size_param.modified = false;
+            morphology_type_param.modified = false;
+            anchor_point_param.modified = false;
+            iterations_param.modified = false;
         }
-        SyncedMemory out;
-        filter->apply(input_image->GetGpuMat(*_ctx->stream), out.GetGpuMat(*_ctx->stream), *_ctx->stream);
+        cv::cuda::GpuMat out;
+        filter->apply(input_image->GetGpuMat(Stream()), out, Stream());
         this->output_param.UpdateData(out, input_image_param.GetTimestamp(), _ctx);
         return true;
     }
