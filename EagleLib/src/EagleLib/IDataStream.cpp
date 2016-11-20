@@ -355,15 +355,18 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
     }
     if(std::find(top_level_nodes.begin(), top_level_nodes.end(), node) != top_level_nodes.end())
         return;
-    
-    std::string node_name = node->GetTypeName();
-    int count = 0;
-    for (size_t i = 0; i < top_level_nodes.size(); ++i)
+    if(node->name.size()  == 0)
     {
-        if (top_level_nodes[i] && top_level_nodes[i]->GetTypeName() == node_name)
-            ++count;
+        std::string node_name = node->GetTypeName();
+        int count = 0;
+        for (size_t i = 0; i < top_level_nodes.size(); ++i)
+        {
+            if (top_level_nodes[i] && top_level_nodes[i]->GetTypeName() == node_name)
+                ++count;
+        }
+        node->SetUniqueId(count);
     }
-    node->SetUniqueId(count);
+    
     node->SetParameterRoot(node->GetTreeName());
     top_level_nodes.push_back(node);
     dirty_flag = true;

@@ -56,6 +56,7 @@ void HandleNode(cereal::JSONInputArchive& ar, rcc::shared_ptr<Nodes::Node>& node
     ar(CEREAL_NVP(type));
     ar.startNode();
     node = mo::MetaObjectFactory::Instance()->Create(type.c_str());
+    node->SetTreeName(name);
     if(node)
     {
         auto parameters = node->GetParameters();
@@ -74,7 +75,6 @@ void HandleNode(cereal::JSONInputArchive& ar, rcc::shared_ptr<Nodes::Node>& node
         }
     }
     ar.finishNode();
-    const char* name0 = ar.getNodeName();
     ar(CEREAL_NVP(inputs));
     ar.finishNode();
 }
