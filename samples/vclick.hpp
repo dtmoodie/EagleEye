@@ -35,9 +35,13 @@ namespace vclick
         Wt::JSignal<int> onKeydown;
         Wt::JSlot* update;
         
-        TParameterResource<cv::Mat>* foregroundStream;
-        TParameterResource<EagleLib::SyncedMemory>* backgroundStream;
-        TParameterResource<std::vector<BoundingBox>>* boundingBoxStream;
+        std::shared_ptr<TParameterResource<cv::Mat>> foregroundStream;
+        std::shared_ptr<TParameterResource<EagleLib::SyncedMemory>> backgroundStream;
+        std::shared_ptr<TParameterResource<std::vector<BoundingBox>>> boundingBoxStream;
+        std::shared_ptr<TParameterResourceRaw<cv::Mat>> heartbeatStream;
+        std::shared_ptr<TParameterResourceRaw<cv::Mat>> rawStream;
+        std::shared_ptr<mo::TypedSlot<void(mo::Context*, mo::IParameter*)>> onActivate;
+        std::shared_ptr<mo::Connection> onActivateConntection;
     };
 }
 #endif

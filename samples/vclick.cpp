@@ -19,6 +19,9 @@
 #include <Wt/WJavaScriptSlot>
 #include <Wt/WHBoxLayout>
 #include <Wt/WVBoxLayout>
+#include <Wt/WPanel>
+#include <Wt/WImage>
+#include <Wt/WVideo>
 
 #include <boost/functional.hpp>
 #include <boost/bind.hpp>
@@ -53,28 +56,90 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     onRotate(this, "onRotate"),
     onKeydown(this, "onKeydown")
 {
+    Wt::WContainerWidget *container = new Wt::WContainerWidget(root());
     setTitle("vclick3d demo");
     
     auto stream = g_sink->GetDataStream();
     auto fg = stream->GetNode("ForegroundEstimate0");
 
     auto bg_param = fg->GetParameter("background_model");
-    backgroundStream = new TParameterResource<EagleLib::SyncedMemory>(
-        fg->GetParameter("background_model"), "background_model");
+    backgroundStream.reset(new TParameterResource<EagleLib::SyncedMemory>(this,
+        fg->GetParameter("background_model"), "background_model"));
     backgroundStream->handleParamUpdate(nullptr, nullptr);
 
-    foregroundStream = new TParameterResource<cv::Mat>(
-        g_sink->GetParameter("foreground_points"), "foreground");
+    foregroundStream.reset(new TParameterResource<cv::Mat>(this,
+        g_sink->GetParameter("foreground_points"), "foreground"));
     foregroundStream->handleParamUpdate(nullptr, nullptr);
 
-    boundingBoxStream = new TParameterResource<std::vector<BoundingBox>>(
-        g_sink->GetParameter("bounding_boxes"), "bounding_boxes");
+    boundingBoxStream.reset(new TParameterResource<std::vector<BoundingBox>>(this,
+        g_sink->GetParameter("bounding_boxes"), "bounding_boxes"));
     boundingBoxStream->handleParamUpdate(nullptr, nullptr);
-
-    auto background_link = Wt::WLink(backgroundStream);
-    auto foreground_link = Wt::WLink(foregroundStream);
-    auto boundingBox_link = Wt::WLink(boundingBoxStream);
     
+    /*heartbeatStream = new TParameterResourceRaw<cv::Mat>(this,
+        g_sink->GetParameter("output_jpeg"), "heartbeat");
+    heartbeatStream->handleParamUpdate(nullptr, nullptr);*/
+
+    /*auto jpeg_node = stream->GetNode("JPEGSink0");
+    rawStream = nullptr;
+    if(jpeg_node)
+    {
+        rawStream = new TParameterResourceRaw<cv::Mat>(this,
+            jpeg_node->GetParameter("jpeg_buffer"), "rawvideo");
+        rawStream->handleParamUpdate(nullptr, nullptr);
+    }*/
+    
+
+    
+
+    /*Wt::WAnimation animation(Wt::WAnimation::SlideInFromTop,
+        Wt::WAnimation::EaseOut,
+        100);
+    {
+        Wt::WPanel *raw_video_panel = new Wt::WPanel(container);
+            raw_video_panel->setTitle("Raw video");
+            raw_video_panel->addStyleClass("centered-example");
+            raw_video_panel->setCollapsible(true);
+            raw_video_panel->setAnimation(animation);
+
+        Wt::WVideo* raw_feed = new Wt::WVideo(container);
+            raw_video_panel->setCentralWidget(raw_feed);
+            raw_feed->addSource(Wt::WLink("http://192.168.1.252:8090"));
+            raw_video_panel->collapsed().connect(std::bind([=]()
+            {
+                raw_feed->pause();
+            }));
+            
+    }
+    {
+        Wt::WPanel *video_panel = new Wt::WPanel(container);
+            video_panel->setTitle("Heartbeat video");
+            video_panel->addStyleClass("centered-example");
+            video_panel->setCollapsible(true);
+            video_panel->setAnimation(animation);
+
+        Wt::WVideo* video_feed = new Wt::WVideo(container);
+            video_panel->setCentralWidget(video_feed);
+            video_feed->addSource(Wt::WLink("http://192.168.1.252:8080"));
+            video_panel->collapsed().connect(std::bind([=]()
+            {
+                video_feed->pause();
+            }));
+            onActivate.reset(new mo::TypedSlot<void(mo::Context*, mo::IParameter*)>(std::bind(
+                [=](mo::Context* ctx, mo::IParameter* param)
+            {
+                if(param->GetData<bool>())
+                {
+                    auto lock = this->getUpdateLock();
+                    video_feed->play();
+                }
+            }, std::placeholders::_1, std::placeholders::_2)));
+            onActivateConntection = g_sink->active_switch->RegisterUpdateNotifier(onActivate.get());
+    }*/
+
+    auto background_link = Wt::WLink(backgroundStream.get());
+    auto foreground_link = Wt::WLink(foregroundStream.get());
+    auto boundingBox_link = Wt::WLink(boundingBoxStream.get());
+
     {
         std::ofstream ofs("./web/bb.json");
         cereal::JSONOutputArchive ar(ofs);
@@ -87,18 +152,6 @@ WebUi::WebUi(const Wt::WEnvironment& env):
             func(bb, ar);
         }
     }
-
-    Wt::WPushButton *activate = new WPushButton("Activate", root());
-    activate->clicked().connect(this, &WebUi::handleActivate);
-    
-
-    Wt::WPushButton *trigger = new WPushButton("AddTriggerRegion", root());
-    trigger->clicked().connect(this, &WebUi::handleAddbb);
-    
-
-    Wt::WPushButton *rebuild = new WPushButton("Rebuild Model", root());
-    rebuild->clicked().connect(this, &WebUi::handleRebuildModel);
-    
 
     if (!require("three.js"))
     {
@@ -167,9 +220,11 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         std::string js = ss.str();
         LOG(debug) << "\n" << js;
 
-        render_window = new Wt::WText(root());
+        render_window = new Wt::WText(container);
+        
         render_window->doJavaScript(js);
-    }   
+    }
+    
 }
 
 WebUi::~WebUi()
