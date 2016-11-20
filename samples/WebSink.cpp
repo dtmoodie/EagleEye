@@ -10,6 +10,7 @@ WebSink::WebSink()
     moments.emplace_back(2, 0, 0);
     moments.emplace_back(0, 2, 0);
     moments.emplace_back(0, 0, 2);
+    last_keyframe_time = boost::posix_time::microsec_clock::universal_time();
 }
 void WebSink::SetContext(mo::Context* ctx, bool overwrite)
 {
@@ -54,7 +55,7 @@ bool WebSink::ProcessImpl()
         }
     }
     foreground_points_param.UpdateData(foreground_points, point_cloud_param.GetTimestamp(), _ctx);
-    bool activated = false;
+    bool activated = force_active;
     for (auto& bb : bounding_boxes)
     {
         cv::Mat bb_mask = bb.Contains(foreground_points);
@@ -85,16 +86,29 @@ bool WebSink::ProcessImpl()
             float value = moments[i].Evaluate(bb_mask, foreground_points, centroid);
             if (value > thresholds[i])
             {
-                active_switch->UpdateData(true, point_cloud_param.GetTimestamp(), _ctx);
                 activated = true;
             }
-        }   
+        }
     }
-    if (activated == false)
-    {
-        active_switch->UpdateData(false, point_cloud_param.GetTimestamp(), _ctx);
-    }
+    active_switch->UpdateData(activated, point_cloud_param.GetTimestamp(), _ctx);
+    
     h264_pass_through->Process();
+    
+    auto current_time = boost::posix_time::microsec_clock::universal_time();
+    if(boost::posix_time::time_duration(current_time - last_keyframe_time).total_milliseconds() > heartbeat_ms || activated == true)
+    {
+        if(jpeg_buffer && !jpeg_buffer->empty())
+        {
+            last_keyframe_time = current_time;
+            output_jpeg_param.UpdateData(*jpeg_buffer, jpeg_buffer_param.GetTimestamp(), _ctx);
+        }
+        if(raw_image && !raw_image->empty())
+        {
+            last_keyframe_time = current_time;
+            output_image_param.UpdateData(*raw_image, raw_image_param.GetTimestamp(), _ctx);
+        }
+    }
+    
     return true;
 }
 MO_REGISTER_CLASS(WebSink);
