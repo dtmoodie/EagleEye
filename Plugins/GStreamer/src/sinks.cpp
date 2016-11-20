@@ -3,6 +3,7 @@
 #include <EagleLib/Nodes/NodeInfo.hpp>
 #include <gst/base/gstbasesink.h>
 #include <opencv2/imgcodecs.hpp>
+#include "glib_thread.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -87,10 +88,13 @@ bool tcpserver::ProcessImpl()
 }
 MO_REGISTER_CLASS(tcpserver);
 
-void JPEGSink::NodeInit(bool firstInit)
+
+JPEGSink::JPEGSink()
 {
-    
+    gstreamer_context.thread_id = glib_thread::instance()->get_thread_id();
+    this->_ctx = &gstreamer_context;
 }
+
 
 bool JPEGSink::ProcessImpl()
 {
@@ -126,13 +130,22 @@ GstFlowReturn JPEGSink::on_pull()
         {
             cv::Mat mapped(1, map.size, CV_8U);
             memcpy(mapped.data, map.data, map.size);
-            //cv::Mat decoded = cv::imdecode(mapped, cv::IMREAD_UNCHANGED, &decode_buffer);
-            this->jpeg_buffer_param.UpdateData(mapped, buffer->pts);
+            this->jpeg_buffer_param.UpdateData(mapped, buffer->pts, &gstreamer_context);
+            if(decoded_param.HasSubscriptions())
+            {
+                decoded_param.UpdateData(cv::imdecode(jpeg_buffer, cv::IMREAD_UNCHANGED, &decode_buffer),
+                    buffer->pts, &gstreamer_context);
+            }
         }
         gst_sample_unref(sample);
         
     }
     return GST_FLOW_OK;
+}
+
+void  JPEGSink::SetContext(mo::Context* ctx, bool overwrite)
+{
+
 }
 MO_REGISTER_CLASS(JPEGSink)
 
