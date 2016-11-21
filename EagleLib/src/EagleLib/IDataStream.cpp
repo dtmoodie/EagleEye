@@ -550,7 +550,7 @@ void DataStream::process()
     _sig_manager->Connect(&run_continuously_slot, "run_continuously");
 
 
-    LOG(info) << "Starting stream thread";
+    LOG(debug) << "Starting stream thread";
     while(!boost::this_thread::interruption_requested())
     {
         if (mo::ThreadSpecificQueue::Size(_thread_id))
@@ -580,7 +580,7 @@ void DataStream::process()
             boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
         }
     }
-    LOG(info) << "Stream thread shutting down";
+    LOG(debug) << "Stream thread shutting down";
 }
 
 IDataStream::Ptr IDataStream::Create(const std::string& document, const std::string& preferred_frame_grabber)

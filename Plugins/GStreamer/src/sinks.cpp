@@ -91,8 +91,9 @@ MO_REGISTER_CLASS(tcpserver);
 
 JPEGSink::JPEGSink()
 {
+    glib_thread::instance()->start_thread();
     gstreamer_context.thread_id = glib_thread::instance()->get_thread_id();
-    this->_ctx = &gstreamer_context;
+    //this->_ctx = &gstreamer_context;
 }
 
 
@@ -143,10 +144,6 @@ GstFlowReturn JPEGSink::on_pull()
     return GST_FLOW_OK;
 }
 
-void  JPEGSink::SetContext(mo::Context* ctx, bool overwrite)
-{
-
-}
 MO_REGISTER_CLASS(JPEGSink)
 
 void BufferedHeartbeatRtsp::NodeInit(bool firstInit)

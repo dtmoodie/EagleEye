@@ -3,7 +3,9 @@
 #include <EagleLib/Nodes/NodeInfo.hpp>
 using namespace vclick;
 
-WebSink::WebSink()
+WebSink::WebSink():
+    raw_bandwidth_mean(boost::accumulators::tag::rolling_window::window_size = 100),
+    throttled_bandwidth_mean(boost::accumulators::tag::rolling_window::window_size = 100)
 {
     h264_pass_through = mo::MetaObjectFactory::Instance()->Create("h264_pass_through");
     active_switch = h264_pass_through->GetParameter<bool>("active");
@@ -107,8 +109,20 @@ bool WebSink::ProcessImpl()
             last_keyframe_time = current_time;
             output_image_param.UpdateData(*raw_image, raw_image_param.GetTimestamp(), _ctx);
         }
+        if(jpeg_buffer)
+        {
+            throttled_bandwidth_mean(double(jpeg_buffer->size().area()));
+        }
+    }else
+    {
+        throttled_bandwidth_mean(0.0);
     }
-    
+    if(jpeg_buffer)
+    {
+        raw_bandwidth_mean(jpeg_buffer->size().area());
+    }
+    raw_bandwidth_param.UpdateData(boost::accumulators::rolling_mean(raw_bandwidth_mean), background_model_param.GetTimestamp(), _ctx);
+    throttled_bandwidth_param.UpdateData(boost::accumulators::rolling_mean(throttled_bandwidth_mean), background_model_param.GetTimestamp(), _ctx);
     return true;
 }
 MO_REGISTER_CLASS(WebSink);

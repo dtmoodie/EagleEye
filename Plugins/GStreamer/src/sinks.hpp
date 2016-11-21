@@ -41,7 +41,6 @@ namespace EagleLib
                 OUTPUT(cv::Mat, jpeg_buffer, cv::Mat());
                 OUTPUT(cv::Mat, decoded, cv::Mat());
             MO_END;
-            void  SetContext(mo::Context* ctx, bool overwrite = false);
         protected:
             bool ProcessImpl();
             virtual GstFlowReturn on_pull();

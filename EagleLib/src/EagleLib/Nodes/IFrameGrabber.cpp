@@ -374,7 +374,7 @@ void FrameGrabberThreaded::Buffer()
     cv::cuda::Stream read_stream;
     //rmt_SetCurrentThreadName("FrameGrabberThread");
     mo::SetThreadName("FrameGrabberThread");
-    LOG(info) << "Starting buffer thread";
+    LOG(debug) << "Starting buffer thread";
     while(!boost::this_thread::interruption_requested())
     {   
         while(_pause)
@@ -399,7 +399,7 @@ void FrameGrabberThreaded::Buffer()
             LOG(warning) << "Error reading next frame: " << e.what();
         }
     }
-    LOG(info) << "Shutting down buffer thread";
+    LOG(debug) << "Shutting down buffer thread";
 }
 
 void FrameGrabberThreaded::StartThreads()
