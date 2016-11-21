@@ -75,7 +75,14 @@ void HandleNode(cereal::JSONInputArchive& ar, rcc::shared_ptr<Nodes::Node>& node
         }
     }
     ar.finishNode();
-    ar(CEREAL_NVP(inputs));
+    try
+    {
+        ar(CEREAL_NVP(inputs));
+    }catch(...)
+    {
+    
+    }
+    
     ar.finishNode();
 }
 

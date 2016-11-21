@@ -61,14 +61,24 @@ bool SetMatrixValues::ProcessImpl()
 
 bool Resize::ProcessImpl()
 {
-    if(input->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
+    if(input && !input->empty())
     {
-        cv::resize(input->GetMat(Stream()), output.GetMatMutable(Stream()), cv::Size(height, width), 0.0, 0.0, interpolation_method.getValue());
-    }else
-    {
-        cv::cuda::resize(input->GetGpuMat(Stream()), output.GetGpuMatMutable(Stream()), cv::Size(height, width), 0.0, 0.0, interpolation_method.getValue(), Stream());
+        if (input->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
+        {
+            cv::Mat resized;
+            cv::resize(input->GetMat(Stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue());
+            output_param.UpdateData(resized, input_param.GetTimestamp(), _ctx);
+            return true;
+        }
+        else
+        {
+            cv::cuda::GpuMat resized;
+            cv::cuda::resize(input->GetGpuMat(Stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue(), Stream());
+            output_param.UpdateData(resized, input_param.GetTimestamp(), _ctx);
+            return true;
+        }
     }
-    return true;
+    return false;
 }
 
 bool Subtract::ProcessImpl()
