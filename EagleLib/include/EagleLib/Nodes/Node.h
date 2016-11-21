@@ -145,7 +145,7 @@ namespace Nodes
     protected:
         friend class NodeFactory;
         friend class IDataStream;
-        friend class DataStream;
+        friend class EagleLib::DataStream;
 
         virtual std::vector<Node*>                        GetNodesInScope();
         virtual Node *                                    GetNodeInScope(const std::string& name);

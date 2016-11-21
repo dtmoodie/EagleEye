@@ -386,9 +386,10 @@ void NodeFactory::printTreeHelper(std::stringstream& tree, int level, Nodes::Nod
         tree << "+";
     }
     tree << node->GetTreeName() << std::endl;
-    for (size_t i = 0; i < node->_children.size(); ++i)
+    auto children = node->GetChildren();
+    for (size_t i = 0; i < children.size(); ++i)
     {
-        printTreeHelper(tree, level + 1, node->_children[i].Get());
+        printTreeHelper(tree, level + 1, children[i].Get());
     }
 }
 

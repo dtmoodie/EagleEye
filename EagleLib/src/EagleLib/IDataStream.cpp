@@ -366,7 +366,7 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
         }
         node->SetUniqueId(count);
     }
-    
+    //node->SetTreeName(node->GetTreeName());
     node->SetParameterRoot(node->GetTreeName());
     top_level_nodes.push_back(node);
     dirty_flag = true;

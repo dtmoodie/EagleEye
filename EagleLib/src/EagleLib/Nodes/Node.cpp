@@ -559,6 +559,7 @@ void Node::SetTreeName(const std::string& name)
 {
     this->name = name;
     name_param.Commit();
+    SetParameterRoot(name);
 }
 
 std::vector<rcc::weak_ptr<Node>> Node::GetParents()
