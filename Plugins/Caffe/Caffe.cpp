@@ -384,7 +384,7 @@ bool CaffeImageClassifier::ProcessImpl()
 
     auto shape = data_itr->second[0].GetShape();
     cv::Size input_size(shape[2], shape[1]);
-
+    std::vector<cv::Mat> debug_mat_vec;
     for (int i = 0; i < bounding_boxes->size() && i < data_itr->second.size(); ++i)
     {
         cv::cuda::GpuMat resized;
@@ -403,10 +403,15 @@ bool CaffeImageClassifier::ProcessImpl()
             cv::cuda::createContinuous(resized.size(), resized.depth(), split[j]);
         }
         //cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());
+        
         cv::cuda::split(resized, split, Stream());
         for(int j = 0; j < split.size(); ++j)
         {
             split[i].copyTo(data_itr->second[i].GetGpuMat(Stream(), j), Stream());
+            if(debug_dump)
+            {
+                debug_mat_vec.push_back(cv::Mat(data_itr->second[i].GetGpuMat(Stream(), j)));
+            }
         }
     }
     
@@ -417,7 +422,7 @@ bool CaffeImageClassifier::ProcessImpl()
         data = blob->mutable_gpu_data();
     }
 
-    std::vector<cv::Mat> debug_mat_vec;
+    
     if(debug_dump)
     {
         for (int i = 0; i < data_itr->second[0].GetNumMats(); ++i)
