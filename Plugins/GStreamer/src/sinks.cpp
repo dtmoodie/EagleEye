@@ -118,7 +118,7 @@ GstFlowReturn JPEGSink::on_pull()
     {
         GstBuffer *buffer;
         GstCaps *caps;
-        GstStructure *s;
+        //GstStructure *s;
         GstMapInfo map;
         caps = gst_sample_get_caps(sample);
         if (!caps)

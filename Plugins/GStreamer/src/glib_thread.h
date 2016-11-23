@@ -1,10 +1,10 @@
 #pragma once
 
-#include "GstreamerExport.hpp"
+#include "GStreamerExport.hpp"
 #include <gst/gst.h>
 #include <boost/thread.hpp>
 
-class Gstreamer_EXPORT glib_thread
+class GStreamer_EXPORT glib_thread
 {
 protected:
     boost::thread _thread;

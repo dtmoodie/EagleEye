@@ -1,4 +1,4 @@
-PROJECT(Gstreamer)
+PROJECT(GStreamer)
 CMAKE_POLICY(SET CMP0020 NEW)
 SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 include(CMake)
@@ -52,8 +52,8 @@ IF(GSTREAMER_FOUND)
         add_definitions(-DHAVE_GST_RTSPSERVER)
     endif()
     ADD_DEFINITIONS(-DPROJECT_LIB_DIRS="${LIB_DIR}")
-    ADD_LIBRARY(Gstreamer SHARED ${src} ${hdr})
-    RCC_LINK_LIB(Gstreamer
+    ADD_LIBRARY(GStreamer SHARED ${src} ${hdr})
+    RCC_LINK_LIB(GStreamer
         ${OpenCV_LIBS}
         EagleLib
         Qt5::Network
@@ -79,6 +79,7 @@ IF(GSTREAMER_FOUND)
     ENDIF()
 
     INCLUDE(../PluginTemplate.cmake)
-    ADD_DEPENDENCIES(Gstreamer EagleLib)
-
+    ADD_DEPENDENCIES(GStreamer EagleLib)
+else()
+    message("Gstreamer not found")
 ENDIF()
