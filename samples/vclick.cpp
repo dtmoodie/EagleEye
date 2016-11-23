@@ -2,7 +2,7 @@
 
 #include "WebSink.hpp"
 #include "vclick.hpp"
-#include "ChartConfig.h"
+
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
 
@@ -193,7 +193,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         chart->setMargin(10, Top | Bottom);            // add margin vertically
         chart->setMargin(WLength::Auto, Left | Right); // center horizontally
 
-        new ChartConfig(chart, container);
+        
     }
     
 

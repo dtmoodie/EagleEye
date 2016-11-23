@@ -1,4 +1,5 @@
 #pragma once
+#include "GStreamerExport.hpp"
 #include "MetaObject/MetaObject.hpp"
 #include "gstreamer.hpp"
 #include "EagleLib/Nodes/IFrameGrabber.hpp"
@@ -7,7 +8,7 @@ namespace EagleLib
 {
     namespace Nodes
     {
-        class PLUGIN_EXPORTS tcpserver: public gstreamer_sink_base
+        class GStreamer_EXPORT tcpserver: public gstreamer_sink_base
         {
             bool _initialized;
         public:
@@ -25,14 +26,26 @@ namespace EagleLib
             bool ProcessImpl();
         };
 
-        class PLUGIN_EXPORTS BufferedHeartbeatRtsp : public FrameGrabberBuffered, public gstreamer_src_base
+        class GStreamer_EXPORT GStreamerSink: public gstreamer_sink_base
+        {
+        public:
+            MO_DERIVE(GStreamerSink, gstreamer_sink_base)
+                INPUT(SyncedMemory, image, nullptr);
+                PARAM(std::string, gstreamer_pipeline, "");
+            MO_END;
+        protected:
+            bool ProcessImpl();
+            bool _initialized = false;
+        };
+
+        class GStreamer_EXPORT BufferedHeartbeatRtsp : public FrameGrabberBuffered, public gstreamer_src_base
         {
         public:
             virtual void NodeInit(bool firstInit);
         protected:
         };
 
-        class PLUGIN_EXPORTS JPEGSink: public Node, public gstreamer_src_base
+        class GStreamer_EXPORT JPEGSink: public Node, public gstreamer_src_base
         {
         public:
             JPEGSink();

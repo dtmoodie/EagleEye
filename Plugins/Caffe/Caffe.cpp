@@ -75,8 +75,8 @@ std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<float>& blob, bool bgr
     std::vector<SyncedMemory> wrapped_blob;
     int height = blob.height();
     int width = blob.width();
-    float* d_ptr = blob.mutable_gpu_data();
     float* h_ptr = blob.mutable_cpu_data();
+    float* d_ptr = blob.mutable_gpu_data();
     for (int j = 0; j < blob.num(); ++j)
     {
         std::vector<cv::cuda::GpuMat> d_wrappedChannels;
@@ -165,7 +165,39 @@ void CaffeBase::WrapInput()
         wrapped_inputs[input_names[k]] = WrapBlob(*input_blobs[k], bgr_swap);
     }
 }
-
+bool CaffeBase::CheckInput()
+{
+    if(NN == nullptr)
+        return false;
+    const auto& input_blob_indecies = NN->input_blob_indices();
+    std::vector<std::string> input_names;
+    for (auto idx : input_blob_indecies)
+    {
+        input_names.push_back(NN->blob_names()[idx]);
+    }
+    auto input_blobs_ = NN->input_blobs();
+    for(int i = 0; i < input_blob_indecies.size(); ++i)
+    {
+        auto itr = wrapped_inputs.find(input_names[i]);
+        if(itr != wrapped_inputs.end())
+        {
+            const float* data = input_blobs[i]->gpu_data();
+            for(int j = 0; j < itr->second.size(); ++j)
+            {
+                for(int k = 0; k < itr->second[j].GetNumMats(); ++k)
+                {
+                    const cv::cuda::GpuMat& mat = itr->second[j].GetGpuMat(Stream(), k);
+                    if(data != (float*)mat.data)
+                    {
+                        return false;
+                    }
+                    data += mat.rows * mat.cols;
+                }
+            }
+        }
+    }
+    return true;
+}
 void CaffeBase::ReshapeInput(int num, int channels, int height, int width)
 {
     input_blobs = NN->input_blobs();
@@ -173,7 +205,8 @@ void CaffeBase::ReshapeInput(int num, int channels, int height, int width)
     {
         input_blob->Reshape(num, channels, height, width);
     }
-    WrapInput();
+    if(!CheckInput())
+        WrapInput();
 }
 
 void CaffeBase::WrapOutput()
@@ -340,9 +373,10 @@ bool CaffeImageClassifier::ProcessImpl()
         return false;
     if (input->empty())
         return false;
-    WrapInput();
-    //auto input_shape = input->GetShape();
-    //ReshapeInput(input_shape[0], input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
+    if(!CheckInput())
+        WrapInput();
+    auto input_shape = input->GetShape();
+    ReshapeInput(input_shape[0], input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
     int device = cv::cuda::getDevice();
     cv::cuda::GpuMat float_image;
     
@@ -404,17 +438,8 @@ bool CaffeImageClassifier::ProcessImpl()
         {
             cv::cuda::createContinuous(resized.size(), resized.depth(), split[j]);
         }
-        //cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());
+        cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());
         
-        cv::cuda::split(resized, split, Stream());
-        for(int j = 0; j < split.size(); ++j)
-        {
-            split[i].copyTo(data_itr->second[i].GetGpuMat(Stream(), j), Stream());
-            if(debug_dump)
-            {
-                debug_mat_vec.push_back(cv::Mat(data_itr->second[i].GetGpuMat(Stream(), j)));
-            }
-        }
     }
     
     // Signal update on all inputs

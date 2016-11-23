@@ -59,6 +59,7 @@ namespace EagleLib
         protected:
             bool InitNetwork();
             void WrapInput();
+            bool CheckInput();
             void WrapOutput();
             void ReshapeInput(int num, int channels, int height, int width);
             std::vector<caffe::Blob<float>*> input_blobs;

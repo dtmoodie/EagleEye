@@ -2,48 +2,48 @@ PROJECT(Vclick3d)
 CMAKE_POLICY(SET CMP0020 NEW)
 FIND_PACKAGE(Qt5Network)
 IF(Qt5Network_FOUND)
-FIND_PACKAGE(OpenCV QUIET COMPONENTS core videoio highgui)
-set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
-FIND_PACKAGE(CUDA REQUIRED)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+  FIND_PACKAGE(OpenCV QUIET COMPONENTS core videoio highgui)
+  set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+  FIND_PACKAGE(CUDA REQUIRED)
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-find_package(PCAP REQUIRED)
-  include_directories(${PCAP_INCLUDE_DIR})
-
-INCLUDE_DIRECTORIES(
-    ${INCLUDE_DIRS}
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    ${Qt5Network_INCLUDE_DIRS}
-    ${Qt5Core_INCLUDE_DIRS}
-)
-
-FILE(GLOB_RECURSE hdrs "src/*.h" "src/*.hpp")
-FILE(GLOB_RECURSE src "src/*.cpp")
-
-QT5_WRAP_CPP(MOC ${hdrs})
-LINK_DIRECTORIES(${LINK_DIRS})
-CUDA_ADD_LIBRARY(Vclick3d SHARED ${hdrs} ${src} ${MOC})
-ADD_DEPENDENCIES(Vclick3d EagleLib)
-SET(GLOOX_LIBRARY "" CACHE FILEPATH "")
-SET(GLOOX_INCLUDE_DIR "" CACHE PATH "")
-IF(GLOOX_INCLUDE_DIR AND GLOOX_LIBRARY)
-  INCLUDE_DIRECTORIES(${GLOOX_INCLUDE_DIR})
-  add_definitions(-DHAVE_GLOOX)
-endif()
-RCC_LINK_LIB(Vclick3d 
-    ${OpenCV_LIBS}
-    Qt5::Network
-    Qt5::Core
-    EagleLib
-    ${LINK_LIBS} 
-    ${GLOOX_LIBRARY} 
-    ${EagleLib_LIBRARIES}
-	${PCAP_LIBRARY}
+  find_package(PCAP QUIET)
+  
+  if(PCAP_FOUND)
+    INCLUDE_DIRECTORIES(
+      ${INCLUDE_DIRS}
+      "${CMAKE_CURRENT_SOURCE_DIR}/include"
+      ${Qt5Network_INCLUDE_DIRS}
+      ${Qt5Core_INCLUDE_DIRS}
+      ${PCAP_INCLUDE_DIR}
     )
 
+    FILE(GLOB_RECURSE hdrs "src/*.h" "src/*.hpp")
+    FILE(GLOB_RECURSE src "src/*.cpp")
 
-INCLUDE(../PluginTemplate.cmake)
+    QT5_WRAP_CPP(MOC ${hdrs})
+    LINK_DIRECTORIES(${LINK_DIRS})
+    CUDA_ADD_LIBRARY(Vclick3d SHARED ${hdrs} ${src} ${MOC})
+    ADD_DEPENDENCIES(Vclick3d EagleLib)
+    SET(GLOOX_LIBRARY "" CACHE FILEPATH "")
+    SET(GLOOX_INCLUDE_DIR "" CACHE PATH "")
+    IF(GLOOX_INCLUDE_DIR AND GLOOX_LIBRARY)
+      INCLUDE_DIRECTORIES(${GLOOX_INCLUDE_DIR})
+      add_definitions(-DHAVE_GLOOX)
+    endif()
+    RCC_LINK_LIB(Vclick3d 
+      ${OpenCV_LIBS}
+      Qt5::Network
+      Qt5::Core
+      EagleLib
+      ${LINK_LIBS} 
+      ${GLOOX_LIBRARY} 
+      ${EagleLib_LIBRARIES}
+	  ${PCAP_LIBRARY}
+      )
 
-ELSE(Qt5Network_FOUND)
-MESSAGE("Qt5Network not found, not building Vclick3d plugin")
-ENDIF(Qt5Network_FOUND)
+    INCLUDE(../PluginTemplate.cmake)
+    endif(PCAP_FOUND)
+  ELSE(Qt5Network_FOUND)
+    MESSAGE("Qt5Network not found, not building Vclick3d plugin")
+  ENDIF(Qt5Network_FOUND)

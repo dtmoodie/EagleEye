@@ -258,19 +258,29 @@ void SyncedMemory::ReleaseGpu(cv::cuda::Stream& stream)
 
 cv::Size SyncedMemory::GetSize() const
 {
-    if(d_data.empty())
+    if(d_data.empty() || h_data.empty())
         return cv::Size();
-    return d_data[0].size();
+    cv::Size output;
+    if(d_data[0].empty())
+        output = h_data[0].size();
+    else
+        output = d_data[0].size();
+    return output;
 }
 
 int SyncedMemory::GetChannels() const
 {
-    if(d_data.empty())
+    if(d_data.empty() && h_data.empty())
         return 0;
-    if(d_data.size() == 1)
+    if(d_data.size() == 1 && !d_data[0].empty())
         return d_data[0].channels();
-    CV_Assert(d_data[0].channels() == 1);
-    return d_data.size();
+    if(h_data.size() == 1 && !h_data[0].empty())
+        return h_data[0].channels();
+    if(d_data.size() > 1 && d_data[0].channels() == 1)
+        return d_data.size();
+    if(h_data.size() > 1 && h_data[0].channels() == 1)
+        return h_data.size();
+    return 0;
 }
 
 std::vector<int> SyncedMemory::GetShape() const

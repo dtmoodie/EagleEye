@@ -88,6 +88,25 @@ bool tcpserver::ProcessImpl()
 }
 MO_REGISTER_CLASS(tcpserver);
 
+bool GStreamerSink::ProcessImpl()
+{
+    if(!_initialized || gstreamer_pipeline_param.modified)
+    {
+        cleanup();
+        _initialized = create_pipeline(gstreamer_pipeline);
+        if(_initialized)
+        {
+            gstreamer_pipeline_param.modified = false;
+        }
+    }
+    if(_initialized)
+    {
+        PushImage(*image, Stream());
+        return true;
+    }
+    return false;
+}
+MO_REGISTER_CLASS(GStreamerSink);
 
 JPEGSink::JPEGSink()
 {

@@ -169,7 +169,12 @@ int main(int argc, char* argv[])
             try
             {
                 mo::ThreadSpecificQueue::Run();
-            }catch(...)
+            }
+            catch (boost::thread_interrupted& err)
+            {
+                break;
+            }
+            catch(...)
             {
                 LOG(debug) << "Unknown / unhandled exception thrown in gui thread event handler";
             }
@@ -182,6 +187,10 @@ int main(int argc, char* argv[])
             }catch(cv::Exception&e)
             {
             
+            }
+            catch(boost::thread_interrupted& err)
+            {
+                break;   
             }catch(...)
             {
 
@@ -333,9 +342,9 @@ int main(int argc, char* argv[])
         _slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "load_file"));
 
-
+        bool quit = false;
         slot = new mo::TypedSlot<void(std::string)>(
-            std::bind([](std::string)->void
+            std::bind([&quit](std::string)->void
         {
             quit = true;
         }, std::placeholders::_1));
@@ -1020,7 +1029,6 @@ int main(int argc, char* argv[])
         mo::MetaObjectFactory::Instance()->CheckCompile();
         auto compile_check_function = [&_dataStreams, &compiling]()
         {
-            boost::this_thread::sleep_for(boost::chrono::seconds(1));
             if (mo::MetaObjectFactory::Instance()->CheckCompile())
             {
                 std::cout << "Recompiling...\n";
@@ -1105,7 +1113,7 @@ int main(int argc, char* argv[])
                 (*relay)(file);
             }
         }
-        bool quit = false;
+        
         boost::thread io_thread = boost::thread(std::bind(
         [&io_func, &quit, &_dataStreams]()
         {
@@ -1128,14 +1136,17 @@ int main(int argc, char* argv[])
             {
                 last_compile_check_time = current_time;
                 compile_check_function();
+            }else
+            {
+                boost::this_thread::sleep_for(boost::chrono::seconds(1));
             }
         }
-        
-        
+        io_thread.interrupt();
+        io_thread.join();
     }
     gui_thread.interrupt();
-
+    
     gui_thread.join();
-
+    
     return 0;
 }

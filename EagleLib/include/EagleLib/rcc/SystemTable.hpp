@@ -30,6 +30,7 @@ template<typename T> struct IObjectSingleton: public ISingleton
 struct SystemTable
 {
     SystemTable();
+    void CleanUp();
     // These are per stream singletons
     template<typename T> T* GetSingleton()
     {

@@ -71,7 +71,6 @@ if(Caffe_FOUND)
           ${CUDA_npps_LIBRARY}
         )
     ENDIF(WIN32)
-    get_target_property(caffe_lib_file_ ${Caffe_LIBRARIES} IMPORTED_LOCATION_RELEASE)
     INCLUDE(../PluginTemplate.cmake)
   else()
     message("CUDNN not found")

@@ -19,11 +19,11 @@ namespace EagleLib
             PROPERTY(cv::Ptr<cv::cudacodec::VideoWriter>, d_writer, cv::Ptr<cv::cudacodec::VideoWriter>())
             PROPERTY(cv::Ptr<cv::VideoWriter>, h_writer, cv::Ptr<cv::VideoWriter>())
             PARAM(mo::EnumParameter, codec, mo::EnumParameter());
-            PARAM(mo::WriteFile, filename, mo::WriteFile("video.mp4"));
-            STATUS(bool, using_gpu_writer, true);
+            PARAM(mo::WriteFile, filename, mo::WriteFile("video.avi"));
+            PARAM(bool, using_gpu_writer, true);
             MO_SLOT(void, write_out);
         MO_END;
-
+        void NodeInit(bool firstInit);
     protected:
         bool ProcessImpl();
         
