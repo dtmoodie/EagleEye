@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EagleLib/nodes/Node.h"
+#include "EagleLib/Nodes/Node.h"
 #include "EagleLib/Detail/Export.hpp"
 #include <EagleLib/utilities/CudaUtils.hpp>
 #include <EagleLib/Project_defs.hpp>

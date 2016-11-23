@@ -56,11 +56,14 @@ void HandleNode(cereal::JSONInputArchive& ar, rcc::shared_ptr<Nodes::Node>& node
     ar(CEREAL_NVP(type));
     ar.startNode();
     node = mo::MetaObjectFactory::Instance()->Create(type.c_str());
+    node->SetTreeName(name);
     if(node)
     {
         auto parameters = node->GetParameters();
         for(auto param : parameters)
         {
+            if(param->CheckFlags(mo::Output_e) || param->CheckFlags(mo::Input_e))
+                continue;
             auto func1 = mo::SerializationFunctionRegistry::Instance()->GetJsonDeSerializationFunction(param->GetTypeInfo());
             if (func1)
             {
@@ -72,8 +75,14 @@ void HandleNode(cereal::JSONInputArchive& ar, rcc::shared_ptr<Nodes::Node>& node
         }
     }
     ar.finishNode();
-    const char* name0 = ar.getNodeName();
-    ar(CEREAL_NVP(inputs));
+    try
+    {
+        ar(CEREAL_NVP(inputs));
+    }catch(...)
+    {
+    
+    }
+    
     ar.finishNode();
 }
 
@@ -125,7 +134,8 @@ bool DataStream::LoadStream(const std::string& filename)
                 if(inputs[i].size() == 0)
                 {
                     handled_node_indecies.push_back(i);
-                    top_level_nodes.push_back(all_nodes[i]);
+                    //top_level_nodes.push_back(all_nodes[i]);
+                    AddNode(all_nodes[i]);
                 }else
                 {
                     bool connected = false;
@@ -177,6 +187,13 @@ bool DataStream::LoadStream(const std::string& filename)
                     {
                        handled_node_indecies.push_back(i);
                     }
+                }
+            }
+            for(int i = 0; i < all_nodes.size(); ++i)
+            {
+                if(std::find(handled_node_indecies.begin(), handled_node_indecies.end(), i) == handled_node_indecies.end())
+                {
+                    AddNode(all_nodes[i]);
                 }
             }
 

@@ -22,6 +22,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/date_time.hpp>
 #include <signal.h> // SIGINT, etc
 
 #include <cuda.h>
@@ -220,15 +221,15 @@ int main(int argc, char* argv[])
         
         auto stream = EagleLib::IDataStream::Create(document);
         
-        auto nodes = EagleLib::NodeFactory::Instance()->LoadNodes(configFile);
-        stream->AddNodes(nodes);
+        //auto nodes = EagleLib::NodeFactory::Instance()->LoadNodes(configFile);
+        //stream->AddNodes(nodes);
 
-        std::cout  << "Loaded " << nodes.size() << " top level nodes\n";
-        for(int i = 0; i < nodes.size(); ++i)
+        //std::cout  << "Loaded " << nodes.size() << " top level nodes\n";
+        /*for(int i = 0; i < nodes.size(); ++i)
         {
             PrintNodeTree(nodes[i].Get(), 1);
         }
-        stream->process();
+        stream->process();*/
     }else
     {
         std::vector<rcc::shared_ptr<EagleLib::IDataStream>> _dataStreams;
@@ -830,26 +831,18 @@ int main(int argc, char* argv[])
                 std::cout << "Unable to find parameter by name for set string: " << value << std::endl;
             }else if(current_stream)
             {
-                /*auto params = current_stream->GetFrameGrabber()->getParameters();
-                for(auto& param : params)
-                {
-                    auto pos = value.find(param->GetName());
-                    if(pos != std::string::npos)
-                    {
-                        auto len = param->GetName().size() + 1;
-                        std::cout << "Setting value for parameter " << param->GetName() << " to " << value.substr(len) << std::endl;
-                        std::stringstream ss;
-                        ss << value.substr(len);
-                        Parameters::Persistence::Text::DeSerialize(&ss, param);
-                        return;
-                    }
-                }
-                std::cout << "Unable to find parameter by name for set string: " << value << std::endl;*/
             }
             std::cout << "Unable to set value to " << value << std::endl;
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "set"));
-        
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_node](std::string name)
+        {
+            if(current_node)
+            {
+                current_node->SetTreeName(name);
+            }
+        }, std::placeholders::_1));
+        connections.push_back(manager.Connect(slot, "rename"));
         
         slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_node, &current_stream](std::string name)
         {
@@ -926,17 +919,18 @@ int main(int argc, char* argv[])
                 if(!sink)
                 {
                     sink = rcc::shared_ptr<vclick::WebSink>::Create();
-                }
-                current_stream->AddNode(sink);
-                auto fg = current_stream->GetNode("frame_grabber_openni20");
-                sink->ConnectInput(fg, fg->GetParameter("current_frame"), sink->GetInput("point_cloud"));
-                
-                auto foreground_estimator = current_stream->GetNode("ForegroundEstimate0");
-                sink->ConnectInput(foreground_estimator, foreground_estimator->GetParameter("point_mask"),
-                    sink->GetInput("foreground_mask"));
+                    current_stream->AddNode(sink);
+                    auto fg = current_stream->GetNode("frame_grabber_openni20");
+                    sink->ConnectInput(fg, fg->GetParameter("current_frame"), sink->GetInput("point_cloud"));
 
-                sink->ConnectInput(foreground_estimator, foreground_estimator->GetParameter("background_model"),
-                    sink->GetInput("background_model"));
+                    auto foreground_estimator = current_stream->GetNode("ForegroundEstimate0");
+                    sink->ConnectInput(foreground_estimator, foreground_estimator->GetParameter("point_mask"),
+                        sink->GetInput("foreground_mask"));
+
+                    sink->ConnectInput(foreground_estimator, foreground_estimator->GetParameter("background_model"),
+                        sink->GetInput("background_model"));
+                }
+                
 
                 web_thread = boost::thread(std::bind(
                     [argc, argv, sink]()->void
@@ -1022,64 +1016,54 @@ int main(int argc, char* argv[])
         }
         
         print_options();
+        bool compiling = false;
         mo::MetaObjectFactory::Instance()->CheckCompile();
-        boost::thread compile_check_thread(std::bind(
-            [&_dataStreams]()
+        auto compile_check_function = [&_dataStreams, &compiling]()
         {
-            bool compiling = false;
-            while(!boost::this_thread::interruption_requested())
+            boost::this_thread::sleep_for(boost::chrono::seconds(1));
+            if (mo::MetaObjectFactory::Instance()->CheckCompile())
             {
-                boost::this_thread::sleep_for(boost::chrono::seconds(1));
-                if(mo::MetaObjectFactory::Instance()->CheckCompile())
+                std::cout << "Recompiling...\n";
+                for (auto& ds : _dataStreams)
                 {
-                    std::cout << "Recompiling...\n";
-                    for(auto& ds : _dataStreams)
-                    {
-                        ds->StopThread();
-                    }
-                    compiling = true;
+                    ds->StopThread();
                 }
-                if(compiling)
+                compiling = true;
+            }
+            if (compiling)
+            {
+                if (!mo::MetaObjectFactory::Instance()->IsCompileComplete())
                 {
-                    if(!mo::MetaObjectFactory::Instance()->IsCompileComplete())
+                    std::cout << "Still compiling\n";
+                }
+                else
+                {
+                    if (mo::MetaObjectFactory::Instance()->SwapObjects())
                     {
-                        std::cout << "Still compiling\n";
-                    }else
-                    {
-                        if(mo::MetaObjectFactory::Instance()->SwapObjects())
+                        std::cout << "Object swap success\n";
+                        for (auto& ds : _dataStreams)
                         {
-                            std::cout << "Object swap success\n";
-                            for(auto& ds : _dataStreams)
-                            {
-                                ds->StartThread();
-                            }
-                        }else
-                        {
-                            std::cout << "Failed to recompile\n";
+                            ds->StartThread();
                         }
-                        compiling = false;
                     }
+                    else
+                    {
+                        std::cout << "Failed to recompile\n";
+                    }
+                    compiling = false;
                 }
-            }
-            mo::MetaObjectFactory::Instance()->AbortCompilation();
-        }));
-        if(vm.count("script"))
-        {
-            auto relay = manager.GetRelay<void(std::string)>("run");
-            if(relay)
-            {
-                std::string file = vm["script"].as<std::string>();
-                (*relay)(file);
-            }
-        }
-        while(!quit)
+            }  
+        };
+
+        auto io_func = [&command_list, &manager, &print_options]()
         {
             std::string command_line;
-            if(command_list.size())
+            if (command_list.size())
             {
                 command_line = command_list.back();
                 command_list.pop_back();
-            }else
+            }
+            else
             {
                 std::getline(std::cin, command_line);
             }
@@ -1089,7 +1073,7 @@ int main(int argc, char* argv[])
             std::string command;
             std::getline(ss, command, ' ');
             auto relay = manager.GetRelay<void(std::string)>(command);
-            if(relay)
+            if (relay)
             {
                 std::string rest;
                 std::getline(ss, rest);
@@ -1097,26 +1081,57 @@ int main(int argc, char* argv[])
                 {
                     LOG(debug) << "Running command (" << command << ") with arguments: " << rest;
                     (*relay)(rest);
-                }catch(...)
+                }
+                catch (...)
                 {
                     LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed miserably";
                 }
-            }else
+            }
+            else
             {
                 LOG(warning) << "Invalid command: " << command_line;
                 print_options();
             }
-            for(int i = 0; i < 20; ++i)
+            for (int i = 0; i < 20; ++i)
                 mo::ThreadSpecificQueue::RunOnce();
-        }
-        for(auto& ds : _dataStreams)
+        };
+        
+        if(vm.count("script"))
         {
-            ds->StopThread();
+            auto relay = manager.GetRelay<void(std::string)>("run");
+            if(relay)
+            {
+                std::string file = vm["script"].as<std::string>();
+                (*relay)(file);
+            }
         }
-        _dataStreams.clear();
-        std::cout << "Shutting down\n";
-        compile_check_thread.interrupt();
-        compile_check_thread.join();
+        bool quit = false;
+        boost::thread io_thread = boost::thread(std::bind(
+        [&io_func, &quit, &_dataStreams]()
+        {
+            while(!quit)
+            {
+                io_func();
+            }
+            for (auto& ds : _dataStreams)
+            {
+                ds->StopThread();
+            }
+            _dataStreams.clear();
+            std::cout << "Shutting down\n";
+        }));
+        boost::posix_time::ptime last_compile_check_time = boost::posix_time::microsec_clock::universal_time();
+        while(!quit)
+        {
+            auto current_time = boost::posix_time::microsec_clock::universal_time();
+            if (boost::posix_time::time_duration(current_time - last_compile_check_time).total_milliseconds() > 1000)
+            {
+                last_compile_check_time = current_time;
+                compile_check_function();
+            }
+        }
+        
+        
     }
     gui_thread.interrupt();
 

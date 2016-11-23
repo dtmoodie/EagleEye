@@ -1,7 +1,9 @@
 #include "sinks.hpp"
 #include <gst/gst.h>
 #include <EagleLib/Nodes/NodeInfo.hpp>
-
+#include <gst/base/gstbasesink.h>
+#include <opencv2/imgcodecs.hpp>
+#include "glib_thread.h"
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
@@ -86,10 +88,14 @@ bool tcpserver::ProcessImpl()
 }
 MO_REGISTER_CLASS(tcpserver);
 
-void JPEGSink::NodeInit(bool firstInit)
+
+JPEGSink::JPEGSink()
 {
-    
+    glib_thread::instance()->start_thread();
+    gstreamer_context.thread_id = glib_thread::instance()->get_thread_id();
+    //this->_ctx = &gstreamer_context;
 }
+
 
 bool JPEGSink::ProcessImpl()
 {
@@ -97,15 +103,47 @@ bool JPEGSink::ProcessImpl()
     {
         this->cleanup();
         this->create_pipeline(gstreamer_pipeline);
-        
+        this->set_caps("image/jpeg");
+        this->start_pipeline();
+        gstreamer_pipeline_param.modified = false;
     }
+    _modified = true;
     return true;
 }
 
 GstFlowReturn JPEGSink::on_pull()
 {
+    GstSample *sample = gst_base_sink_get_last_sample(GST_BASE_SINK(_appsink));
+    if (sample)
+    {
+        GstBuffer *buffer;
+        GstCaps *caps;
+        //GstStructure *s;
+        GstMapInfo map;
+        caps = gst_sample_get_caps(sample);
+        if (!caps)
+        {
+            LOG(debug) << "could not get sample caps";
+            return GST_FLOW_OK;
+        }
+        buffer = gst_sample_get_buffer(sample);
+        if (gst_buffer_map(buffer, &map, GST_MAP_READ))
+        {
+            cv::Mat mapped(1, map.size, CV_8U);
+            memcpy(mapped.data, map.data, map.size);
+            this->jpeg_buffer_param.UpdateData(mapped, buffer->pts, &gstreamer_context);
+            if(decoded_param.HasSubscriptions())
+            {
+                decoded_param.UpdateData(cv::imdecode(jpeg_buffer, cv::IMREAD_UNCHANGED, &decode_buffer),
+                    buffer->pts, &gstreamer_context);
+            }
+        }
+        gst_sample_unref(sample);
+        
+    }
     return GST_FLOW_OK;
 }
+
 MO_REGISTER_CLASS(JPEGSink)
 
 void BufferedHeartbeatRtsp::NodeInit(bool firstInit)

@@ -9,7 +9,16 @@
 #include <MetaObject/Parameters/TypedParameterPtr.hpp>
 #include <sstream>
 #include <mutex>
-
+namespace Wt
+{
+    class WBatchEditProxyModel;
+    class WStandardItemModel;
+    namespace Chart
+    {
+        class WCartesianChart;
+    }
+}
+class DelayedBatchEditProxyModel;
 namespace vclick
 {
     class WebUi: public Wt::WApplication
@@ -28,6 +37,9 @@ namespace vclick
         void handleRebuildModel();
         void handleKeydown(int value);
         
+        void updatePlots();
+        
+
         Wt::WText* render_window;
         Wt::JSignal<int, float, float, float> onMove;
         Wt::JSignal<int, float, float, float> onResize;
@@ -35,9 +47,30 @@ namespace vclick
         Wt::JSignal<int> onKeydown;
         Wt::JSlot* update;
         
-        TParameterResource<cv::Mat>* foregroundStream;
-        TParameterResource<EagleLib::SyncedMemory>* backgroundStream;
-        TParameterResource<std::vector<BoundingBox>>* boundingBoxStream;
+        std::shared_ptr<TParameterResource<cv::Mat>> foregroundStream;
+        std::shared_ptr<TParameterResource<EagleLib::SyncedMemory>> backgroundStream;
+        std::shared_ptr<TParameterResource<std::vector<BoundingBox>>> boundingBoxStream;
+        std::shared_ptr<TParameterResourceRaw<cv::Mat>> heartbeatStream;
+        std::shared_ptr<TParameterResourceRaw<cv::Mat>> rawStream;
+        std::shared_ptr<mo::TypedSlot<void(mo::Context*, mo::IParameter*)>> onActivate;
+        std::shared_ptr<mo::Connection> onActivateConntection;
+        std::shared_ptr<mo::Connection> onRawBandwidthUpdateConnection;
+        std::shared_ptr<mo::Connection> onThrottledBandwidthUpdateConnection;
+        mo::ParameterUpdateSlotPtr onBandwidthRawUpdateSlot;
+        mo::ParameterUpdateSlotPtr onBandwidthThrottledUpdateSlot;
+
+
+        boost::circular_buffer<double> bandwidth_raw;
+        boost::circular_buffer<double> bandwidth_throttled;
+        boost::circular_buffer<double> timestamp;
+
+        bool bandwidthRawUpdated = false;
+        bool bandwidthThrottledUpdated = false;
+        double current_timestamp = 0.0;
+        Wt::WBatchEditProxyModel* model_proxy;
+        Wt::WStandardItemModel* model;
+        Wt::Chart::WCartesianChart *chart;
+        int update_frequency = 60;
     };
 }
 #endif

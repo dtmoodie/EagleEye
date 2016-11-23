@@ -1,6 +1,4 @@
 #define PARAMTERS_GENERATE_PERSISTENCE
-
-
 #include "Caffe.h"
 #include "caffe_init.h"
 
@@ -16,8 +14,8 @@
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
 #include "MetaObject/Logging/Log.hpp"
-#include "caffe_include.h"
 
+#include "caffe_include.h"
 #include <boost/tokenizer.hpp>
 
 #include <string>
@@ -53,6 +51,7 @@ std::vector<size_t> sort_indexes(const T* begin, size_t size) {
 
   return idx;
 }
+
 template <typename T>
 std::vector<size_t> sort_indexes_ascending(const T* begin, size_t size) {
 
@@ -65,6 +64,7 @@ std::vector<size_t> sort_indexes_ascending(const T* begin, size_t size) {
 
     return idx;
 }
+
 template <typename T>
 std::vector<size_t> sort_indexes(const T* begin, const T* end) {
     return sort_indexes<T>(begin, end - begin);
@@ -100,6 +100,7 @@ std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<float>& blob, bool bgr
     }
     return wrapped_blob;
 }
+
 std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<double>& blob, bool bgr_swap)
 {
     std::vector<SyncedMemory> wrapped_blob;
@@ -211,6 +212,7 @@ void CaffeBase::WrapOutput()
         _network_type = (NetworkType)(_network_type | FCN_e);
     }
 }
+
 bool CaffeBase::InitNetwork()
 {
     if (::caffe::Caffe::mode() != ::caffe::Caffe::GPU)

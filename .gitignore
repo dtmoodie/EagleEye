@@ -2,3 +2,17 @@ snc
 build
 build_qt
 build_vc120
+/Plugins/Caffe/src/CaffeExport.hpp
+/Plugins/Core/src/CoreExport.hpp
+/Plugins/Dev/src/DevExport.hpp
+/Plugins/GStreamer/src/GstreamerExport.hpp
+/Plugins/ML/src/MLExport.hpp
+/Plugins/NVCC_test/src/nvcc_testExport.hpp
+/Plugins/Plotting/src/PlottingExport.hpp
+/Plugins/Segmentation/src/SegmentationExport.hpp
+/Plugins/flann/src/FlannExport.hpp
+/Plugins/frame_grabber_openni2/src/frame_grabber_openni2Export.hpp
+/Plugins/frame_grabbers/src/frame_grabbersExport.hpp
+/Plugins/point_clouds/src/point_cloudsExport.hpp
+/Plugins/video/src/videoExport.hpp
+/Plugins/vtkRendering/src/vtkRenderingExport.hpp

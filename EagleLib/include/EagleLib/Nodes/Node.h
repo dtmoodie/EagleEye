@@ -59,6 +59,7 @@
 namespace mo
 {
     class IVariableManager;
+    typedef std::shared_ptr<IVariableManager> IVariableManagerPtr;
 }
 namespace EagleLib
 {
@@ -68,6 +69,7 @@ namespace EagleLib
         class NodeImpl;
     }
     class IDataStream;
+    class DataStream;
     class NodeFactory;
 }
 
@@ -83,80 +85,71 @@ namespace Nodes
         typedef NodeInfo InterfaceInfo;
         typedef rcc::shared_ptr<Node> Ptr;
         typedef rcc::weak_ptr<Node>   WeakPtr;
+        typedef std::vector<Ptr> VecPtr;
 
         Node();
-        virtual bool                     Process();
+        virtual bool                    Process();
 
-        virtual void                     AddParent(Node *parent);
+        virtual void                    AddParent(Node *parent);
 
-        std::vector<rcc::weak_ptr<Node>> GetParents();
+        std::vector<WeakPtr>            GetParents();
 
-        virtual bool                     ConnectInput(rcc::shared_ptr<Node> output_node, 
-                                                      const std::string& output_name, 
-                                                      const std::string& input_name, 
-                                                      mo::ParameterTypeFlags type = mo::StreamBuffer_e);
-        virtual bool                     ConnectInput(rcc::shared_ptr<Node> output_node,
-                                                      mo::IParameter* output_param,
-                                                      mo::InputParameter* input_param,
-                                                      mo::ParameterTypeFlags type = mo::StreamBuffer_e);
+        virtual bool                    ConnectInput(Ptr output_node,
+                                                     const std::string& output_name, 
+                                                     const std::string& input_name, 
+                                                     mo::ParameterTypeFlags type = mo::StreamBuffer_e);
+        virtual bool                    ConnectInput(Ptr output_node,
+                                                     mo::IParameter* output_param,
+                                                     mo::InputParameter* input_param,
+                                                     mo::ParameterTypeFlags type = mo::StreamBuffer_e);
 
+        virtual Ptr                     AddChild(Node* child);
+        virtual Ptr                     AddChild(Node::Ptr child);
 
-        virtual Node::Ptr                AddChild(Node* child);
-        virtual Node::Ptr                AddChild(Node::Ptr child);
+        virtual Ptr                     GetChild(const std::string& treeName);
+        virtual Ptr                     GetChild(const int& index);
+        virtual VecPtr                  GetChildren();
 
-        virtual Node::Ptr                GetChild(const std::string& treeName);
-        virtual Node::Ptr                GetChild(const int& index);
-        virtual std::vector<Node::Ptr>   GetChildren();
+        virtual void                    RemoveChild(const std::string& name);
+        virtual void                    RemoveChild(Ptr node);
+        virtual void                    RemoveChild(Node* node);
+        virtual void                    RemoveChild(WeakPtr node);
+        virtual void                    RemoveChild(int idx);
 
-        virtual void                     RemoveChild(const std::string& name);
-        virtual void                     RemoveChild(Node::Ptr node);
-        virtual void                     RemoveChild(Node* node);
-        virtual void                     RemoveChild(rcc::weak_ptr<Node> node);
-        virtual void                     RemoveChild(int idx);
+        virtual void                    SwapChildren(int idx1, int idx2);
+        virtual void                    SwapChildren(const std::string& name1, const std::string& name2);
+        virtual void                    SwapChildren(Node::Ptr child1, Node::Ptr child2);
 
-        virtual void                     SwapChildren(int idx1, int idx2);
-        virtual void                     SwapChildren(const std::string& name1, const std::string& name2);
-        virtual void                     SwapChildren(Node::Ptr child1, Node::Ptr child2);
+        virtual void                    SetDataStream(IDataStream* stream);
+        virtual IDataStream*            GetDataStream();
+        virtual mo::IVariableManagerPtr GetVariableManager();
 
-        virtual std::vector<Node*>       GetNodesInScope();
-        virtual Node *                   GetNodeInScope(const std::string& name);
-        virtual void                     GetNodesInScope(std::vector<Node*>& nodes);
+        void                            SetUniqueId(int id);
+        std::string                     GetTreeName();
+        void                            SetTreeName(const std::string& name);
         
-        virtual void                     SetDataStream(IDataStream* stream);
-        virtual IDataStream*             GetDataStream();
-        virtual std::shared_ptr<mo::IVariableManager>     GetVariableManager();
+        virtual void                    Init(bool firstInit);
+        virtual void                    NodeInit(bool firstInit);
 
-        void                             SetUniqueId(int id);
-        std::string                      GetTreeName() const;
-        
-        virtual void                     Init(bool firstInit);
-        virtual void                     NodeInit(bool firstInit);
-
-        virtual void                     Init(const std::string& configFile);
-        virtual void                     Init(const cv::FileNode& configNode);
-
-        virtual void                     Serialize(ISimpleSerializer *pSerializer);
-        virtual void                     Serialize(cv::FileStorage& fs);
-        inline cv::cuda::Stream&                Stream()
-        {
-            return *_ctx->stream;
-        }
+        virtual void                    Serialize(ISimpleSerializer *pSerializer);
+        inline cv::cuda::Stream&        Stream(){ return *_ctx->stream;}
         
         bool CheckInputs();
 
         MO_BEGIN(Node);
             MO_SLOT(void, reset);
             MO_SIGNAL(void, node_updated, Node*);
-            // The children of a node are all nodes accepting inputs
-            // from this node
-            PERSISTENT(std::vector<rcc::shared_ptr<Node>>, _children);
-            PERSISTENT(rcc::weak_ptr<IDataStream>, _dataStream);
-            PERSISTENT(int, _unique_id);
-            PERSISTENT(std::vector<rcc::weak_ptr<Node>>, _parents);
+            STATUS(std::string, name, "");
         MO_END;
 
     protected:
-        friend class ::EagleLib::NodeFactory;
+        friend class NodeFactory;
+        friend class IDataStream;
+        friend class EagleLib::DataStream;
+
+        virtual std::vector<Node*>                        GetNodesInScope();
+        virtual Node *                                    GetNodeInScope(const std::string& name);
+        virtual void                                      GetNodesInScope(std::vector<Node*>& nodes);
         friend bool EagleLib::DeSerialize(cereal::JSONInputArchive& ar, Node* obj);
         
         void onParameterUpdate(mo::Context* ctx, mo::IParameter* param);
@@ -165,17 +158,22 @@ namespace Nodes
         // it onto the graph.
         
         // Current timestamp of the frame that this node is processing / processed last
-        long long                               _current_timestamp;
+        long long                                       _current_timestamp;
         // The variable manager is one object shared within a processing graph
         // that has knowledge of all inputs and outputs within the graph
         // It handles creating buffers, setting up contexts and all connecting nodes
-        std::shared_ptr<mo::IVariableManager>   _variable_manager;
-        bool                                    _modified;
+        mo::IVariableManagerPtr                         _variable_manager;
+        bool                                            _modified;
+        // The children of a node are all nodes accepting inputs
+        // from this node
+        VecPtr                                          _children;
+        rcc::weak_ptr<IDataStream>                      _data_stream;
+        int _unique_id;
+        std::vector<WeakPtr>                            _parents;
+        unsigned int                                    _rmt_hash;
+        unsigned int                                    _rmt_cuda_hash;
     private:
-        std::shared_ptr<NodeImpl>             _pimpl_node;
-        // These are used for profiling
-        unsigned int                          rmt_hash;
-        unsigned int                          rmt_cuda_hash;
+        std::shared_ptr<NodeImpl>                       _pimpl_node;
     };
 } // namespace Nodes
 } // namespace EagleLib

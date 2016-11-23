@@ -274,61 +274,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string
     return constructed_nodes;    
 }
 
-std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::LoadNodes(const std::string& saveFile)
-{
-    
-    boost::filesystem::path path(saveFile);
-    if (!boost::filesystem::is_regular_file(path))
-    {
-        //std::cout << "Unable to load " << saveFile << " doesn't exist, or is not a regular file" << std::endl;
-        LOG(warning) << "[ NodeManager ] " << saveFile << " doesn't exist or not a regular file";
-    }
-    cv::FileStorage fs;
-    try
-    {
-        fs.open(saveFile, cv::FileStorage::READ);
-    }
-    catch (cv::Exception &e)
-    {
-        //std::cout << e.what() << std::endl;
-        LOG(error) << "[ NodeManager ] " << e.what();
-    }
 
-    int nodeCount = (int)fs["TopLevelNodeCount"];
-    LOG(info) << "[ NodeManager ] " << "Loading " << nodeCount << " nodes";
-    std::vector<rcc::shared_ptr<Nodes::Node>> nodes;
-    nodes.reserve(nodeCount);
-    for (int i = 0; i < nodeCount; ++i)
-    {
-        auto nodeFS = fs["Node-" + boost::lexical_cast<std::string>(i)];
-        std::string name = (std::string)nodeFS["NodeName"];
-        Nodes::Node::Ptr node = AddNode(name);
-        node->Init(true);
-        node->Init(nodeFS);
-        nodes.push_back(node);
-    }
-    return nodes;
-}
-
-void NodeFactory::SaveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, const std::string& fileName)
-{
-    cv::FileStorage fs;
-    fs.open(fileName, cv::FileStorage::WRITE);
-    SaveNodes(topLevelNodes, fs);
-    fs.release();
-}
-void NodeFactory::SaveNodes(std::vector<rcc::shared_ptr<Nodes::Node>>& topLevelNodes, cv::FileStorage fs)
-{
-    
-    fs << "TopLevelNodeCount" << (int)topLevelNodes.size();
-
-    for (size_t i = 0; i < topLevelNodes.size(); ++i)
-    {
-        fs << "Node-" + boost::lexical_cast<std::string>(i) << "{";
-        topLevelNodes[i]->Serialize(fs);
-        fs << "}";
-    }
-}
 
 bool NodeFactory::RemoveNode(const std::string& nodeName)
 {    
@@ -440,9 +386,10 @@ void NodeFactory::printTreeHelper(std::stringstream& tree, int level, Nodes::Nod
         tree << "+";
     }
     tree << node->GetTreeName() << std::endl;
-    for (size_t i = 0; i < node->_children.size(); ++i)
+    auto children = node->GetChildren();
+    for (size_t i = 0; i < children.size(); ++i)
     {
-        printTreeHelper(tree, level + 1, node->_children[i].Get());
+        printTreeHelper(tree, level + 1, children[i].Get());
     }
 }
 

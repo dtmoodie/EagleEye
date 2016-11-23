@@ -1,16 +1,17 @@
 #pragma once
 
-// trivial does not need RCC support
+#include "GStreamerExport.hpp"
 #include <gst/gst.h>
 #include <boost/thread.hpp>
 
-class PLUGIN_EXPORTS glib_thread
+class GStreamer_EXPORT glib_thread
 {
 protected:
     boost::thread _thread;
     GMainLoop* _main_loop;
     
     void loop();
+    
 public:
     glib_thread();
     ~glib_thread();
@@ -21,4 +22,6 @@ public:
     void stop_thread();
 
     void start_thread();
+
+    size_t get_thread_id();
 };

@@ -35,14 +35,17 @@ namespace EagleLib
         class PLUGIN_EXPORTS JPEGSink: public Node, public gstreamer_src_base
         {
         public:
+            JPEGSink();
             MO_DERIVE(JPEGSink, Node)
                 PARAM(std::string, gstreamer_pipeline, "");
                 OUTPUT(cv::Mat, jpeg_buffer, cv::Mat());
+                OUTPUT(cv::Mat, decoded, cv::Mat());
             MO_END;
-            virtual void NodeInit(bool firstInit);
         protected:
             bool ProcessImpl();
             virtual GstFlowReturn on_pull();
+            cv::Mat decode_buffer;
+            mo::Context gstreamer_context;
         };
     }
 }

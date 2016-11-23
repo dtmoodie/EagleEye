@@ -5,7 +5,10 @@ IF(Qt5Network_FOUND)
 FIND_PACKAGE(OpenCV QUIET COMPONENTS core videoio highgui)
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 FIND_PACKAGE(CUDA REQUIRED)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+find_package(PCAP REQUIRED)
+  include_directories(${PCAP_INCLUDE_DIR})
 
 INCLUDE_DIRECTORIES(
     ${INCLUDE_DIRS}
@@ -14,7 +17,7 @@ INCLUDE_DIRECTORIES(
     ${Qt5Core_INCLUDE_DIRS}
 )
 
-FILE(GLOB_RECURSE hdrs "include/*.h")
+FILE(GLOB_RECURSE hdrs "src/*.h" "src/*.hpp")
 FILE(GLOB_RECURSE src "src/*.cpp")
 
 QT5_WRAP_CPP(MOC ${hdrs})
@@ -35,6 +38,7 @@ RCC_LINK_LIB(Vclick3d
     ${LINK_LIBS} 
     ${GLOOX_LIBRARY} 
     ${EagleLib_LIBRARIES}
+	${PCAP_LIBRARY}
     )
 
 

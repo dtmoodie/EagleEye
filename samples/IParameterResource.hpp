@@ -11,7 +11,7 @@ namespace vclick
     class IParameterResource : public Wt::WStreamResource
     {
     public:
-        IParameterResource();
+        IParameterResource(Wt::WApplication* app);
         void setParam(mo::IParameter* param);
         virtual ~IParameterResource();
         void handleRequest(const Wt::Http::Request& request, Wt::Http::Response& response);
@@ -20,8 +20,9 @@ namespace vclick
         mo::IParameter* param;
         std::shared_ptr<mo::Connection> connection;
         mo::TypedSlot<void(mo::Context*, mo::IParameter*)>* onParamUpdate;
-        std::stringstream* ss;
+        std::iostream* ss;
         std::mutex mtx;
+        Wt::WApplication* app;
     };
 }
 #endif

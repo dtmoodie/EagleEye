@@ -4,7 +4,7 @@
 #include "ObjectInterfacePerModule.h"
 
 #include <MetaObject/Logging/Log.hpp>
-
+#include <MetaObject/Thread/BoostThread.h>
 glib_thread::glib_thread()
 {
     _main_loop = nullptr;
@@ -67,4 +67,8 @@ void glib_thread::start_thread()
         return;
     }
     _thread = boost::thread(boost::bind(&glib_thread::loop, this));
+}
+size_t glib_thread::get_thread_id()
+{
+    return mo::GetThreadId(_thread);
 }
