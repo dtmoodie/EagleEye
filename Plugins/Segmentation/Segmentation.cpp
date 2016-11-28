@@ -15,15 +15,7 @@ using namespace EagleLib;
 using namespace EagleLib::Nodes;
 SETUP_PROJECT_IMPL
 
-void OtsuThreshold::NodeInit(bool firstInit)
-{
-    if(firstInit)
-    {
-        //addInputParameter<cv::cuda::GpuMat>("Input Histogram")->SetTooltip("Optional");
-        //addInputParameter<cv::Mat>("Input range")->SetTooltip("Required if input histogram is provided");
-    }
 
-}
 bool OtsuThreshold::ProcessImpl()
 {
     if(image->GetChannels() != 1)
@@ -36,8 +28,7 @@ bool OtsuThreshold::ProcessImpl()
     {
         cv::Mat h_levels(1,200,CV_32F);
         double minVal, maxVal;
-        stream.waitForCompletion();
-        cv::cuda::minMax(img, &minVal, &maxVal);
+        cv::cuda::minMax(image->GetGpuMat(Stream()), &minVal, &maxVal);
         // Generate 300 equally spaced bins over the space
         double step = (maxVal - minVal) / double(200);
 
@@ -46,66 +37,32 @@ bool OtsuThreshold::ProcessImpl()
         {
             h_levels.at<float>(i) = val;
         }
-        cv::cuda::histRange(img, hist, cv::cuda::GpuMat(h_levels), stream);
+        cv::cuda::histRange(image->GetGpuMat(Stream()), hist, cv::cuda::GpuMat(h_levels), Stream());
     }else
     {
-        if(input_range == nullptr)
+        if(range == nullptr)
         {
             LOG_EVERY_N(error, 100) << "Histogram provided but range not provided";
             return false;
         }
-        if(input_range->GetChannels() != 1)
+        if(range->GetChannels() != 1)
         {
             LOG_EVERY_N(error, 100) << "Currently only support equal bins accross all histograms";
-            return img;
+            return false;
         }
-        hist = input_histogram->GetGpuMat(Stream());
+        hist = histogram->GetGpuMat(Stream());
     }
-
-}
-
-cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-    if(img.channels() != 1)
-    {
-        LOG(warning) << "Currently only support single channel images!";
-        return img;
-    }
-    cv::cuda::GpuMat hist;
-    cv::cuda::GpuMat* histogram = getParameter<cv::cuda::GpuMat>(0)->Data();
-    cv::Mat* bins = getParameter<cv::Mat>(1)->Data();
-    if(!histogram)
-    {
-    }else
-    {
-        if(bins == nullptr)
-        {
-            //log(Error, "Histogram provided but range not provided");
-            NODE_LOG(error) << "Histogram provided but range not provided";
-            return img;
-        }
-        if(bins->channels() != 1)
-        {
-            //log(Error, "Currently only support equal bins accross all histograms");
-            NODE_LOG(error) << "Currently only support equal bins accross all histograms";
-            return img;
-        }
-        hist = *histogram;
-    }
-
     // Normalize histogram
-    hist.convertTo(hist, CV_32F, 1 / float(img.size().area()), 0, stream);
-
-    // Download histogram
+    hist.convertTo(hist, CV_32F, 1 / float(image->GetSize().area()), 0, Stream());
     cv::cuda::HostMem h_hist;
-    hist.download(h_hist, stream);
-    stream.waitForCompletion();
+    hist.download(h_hist, Stream());
+    Stream().waitForCompletion();
     cv::Mat h_hist_ = h_hist.createMatHeader();
     int channels = h_hist_.channels();
     std::vector<double> optValue(channels);
 
 
-    if(channels == 1)
+    if (channels == 1)
     {
         float prbn = 0;  // First order cumulative
         float meanItr = 0; // Second order cumulative
@@ -115,38 +72,39 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
         double param3 = 0;
         double optThresh = 0;
 
-        for(int i = 0; i < h_hist_.size().area(); ++i)
+        for (int i = 0; i < h_hist_.size().area(); ++i)
         {
             meanGlb += h_hist_.at<float>(i)*i;
         }
 
-
-
         // Currently we only support equal bins accross all channels
         float val = 0;
-        for(int i = 0; i < bins->cols-1; ++i)
+        cv::Mat bins = range->GetMat(Stream());
+        for (int i = 0; i < bins.cols - 1; ++i)
         {
             val = h_hist_.at<float>(i);
             prbn += val;
             meanItr += val * i;
 
             param1 = meanGlb * prbn - meanItr;
-            param2 = param1 * param1 / (prbn*(1-prbn));
-            if(param2 > param3)
+            param2 = param1 * param1 / (prbn*(1 - prbn));
+            if (param2 > param3)
             {
                 param3 = param2;
-                if(bins->type() == CV_32F)
-                    optThresh = bins->at<float>(i);
+                if (bins.type() == CV_32F)
+                    optThresh = bins.at<float>(i);
                 else
-                    optThresh = bins->at<int>(i);
+                    optThresh = bins.at<int>(i);
             }
         }
         optValue[0] = optThresh;
-    }else
+    }
+    else
     {
-        if(channels == 4)
+        cv::Mat bins = range->GetMat(Stream());
+        if (channels == 4)
         {
-            for(int c = 0; c < channels; ++c)
+            for (int c = 0; c < channels; ++c)
             {
                 float prbn = 0;  // First order cumulative
                 float meanItr = 0; // Second order cumulative
@@ -156,114 +114,79 @@ cv::cuda::GpuMat OtsuThreshold::doProcess(cv::cuda::GpuMat &img, cv::cuda::Strea
                 double param3 = 0;
                 double optThresh = 0;
 
-                for(int i = 0; i < h_hist_.size().area(); ++i)
+                for (int i = 0; i < h_hist_.size().area(); ++i)
                 {
-                    meanGlb += h_hist_.at<cv::Vec4f>(i).val[c]*i;
+                    meanGlb += h_hist_.at<cv::Vec4f>(i).val[c] * i;
                 }
 
 
 
                 // Currently we only support equal bins accross all channels
                 float val = 0;
-                for(int i = 0; i < bins->size().area(); ++i)
+                for (int i = 0; i < bins.size().area(); ++i)
                 {
                     val = h_hist_.at<cv::Vec4f>(i).val[c];
                     prbn += val;
                     meanItr += val * i;
 
                     param1 = meanGlb * prbn - meanItr;
-                    param2 = param1 * param1 / (prbn*(1-prbn));
-                    if(param2 > param3)
+                    param2 = param1 * param1 / (prbn*(1 - prbn));
+                    if (param2 > param3)
                     {
                         param3 = param2;
-                        optThresh = bins->at<float>(i);
+                        optThresh = bins.at<float>(i);
                     }
                 }
                 optValue[c] = optThresh;
             }
-        }else
+        }
+        else
         {
-            //log(Error, "Incompatible channel count");
-            NODE_LOG(error) << "Incompatible channel count";
+            LOG_NODE(error) << "Incompatible channel count";
         }
     }
-    for(int i = 0; i < optValue.size(); ++i)
+    for (int i = 0; i < optValue.size(); ++i)
     {
-        updateParameter("Optimal threshold " + boost::lexical_cast<std::string>(i), optValue[i])->type =  Parameters::Parameter::Output;
+        //updateParameter("Optimal threshold " + boost::lexical_cast<std::string>(i), optValue[i]);
     }
-    return img;
+    return true;
 }
 
-void SegmentMOG2::NodeInit(bool firstInit)
+
+bool MOG2::ProcessImpl()
 {
-    if(firstInit)
+    if(mog2 == nullptr)
     {
-        updateParameter("History", int(500));
-        updateParameter("Threshold", double(16));
-        updateParameter("Detect Shadows", true);
-
+        mog2 = cv::cuda::createBackgroundSubtractorMOG2(history, threshold, detect_shadows);
+        history_param.modified = false;
     }
-    updateParameter("Learning Rate", double(1.0));
-
-}
-void SegmentMOG2::Serialize(ISimpleSerializer *pSerializer)
-{
-    Node::Serialize(pSerializer);
-    SERIALIZE(mog2)
-}
-
-cv::cuda::GpuMat SegmentMOG2::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-    //std::cout << "Test" << std::endl;
-    if(_parameters[0]->changed ||
-        _parameters[1]->changed ||
-        _parameters[2]->changed)
+    if(history_param.modified)
     {
-        mog2 = cv::cuda::createBackgroundSubtractorMOG2(*getParameter<int>(0)->Data(),*getParameter<double>(1)->Data(), *getParameter<bool>(2)->Data());
+        mog2->setHistory(history);
+        history_param.modified = false;
     }
-    if(mog2 != nullptr)
+    if(threshold_param.modified)
     {
-        cv::cuda::GpuMat mask;
-        mog2->apply(img, mask, *getParameter<double>(3)->Data(), stream);
-        updateParameter("Foreground mask", mask)->type =  Parameters::Parameter::Output;
+        mog2->setVarThreshold(threshold);
+        threshold_param.modified = false;
     }
-    return img;
+    cv::cuda::GpuMat mask;
+    mog2->apply(image->GetGpuMat(Stream()), mask, learning_rate, Stream());
+    background_param.UpdateData(mask, image_param.GetTimestamp(), _ctx);
+    return true;
 }
 
-void SegmentWatershed::NodeInit(bool firstInit)
+bool Watershed::ProcessImpl()
 {
-    if(firstInit)
-    {
-        addInputParameter<cv::Mat>("Input Marker Mask");
-    }
-}
-
-cv::cuda::GpuMat SegmentWatershed::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-    cv::Mat h_img;
-    img.download(h_img,stream);
-    cv::Mat* h_markerMask = getParameter<cv::Mat>(0)->Data();
-    if(h_markerMask)
-    {
-        cv::watershed(h_img, *h_markerMask);
-    }
-
-    return img;
-}
-
-void SegmentCPMC::NodeInit(bool firstInit)
-{
-
-}
-
-cv::cuda::GpuMat SegmentCPMC::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-
-    return img;
+    const cv::Mat& img = image->GetMat(Stream());
+    cv::Mat mask = marker_mask->GetMat(Stream()).clone();
+    cv::watershed(img,mask);
+    mask_param.UpdateData(mask, image_param.GetTimestamp(), _ctx);
+    return true;
 }
 
 
-void SegmentGrabCut::NodeInit(bool firstInit)
+/*void SegmentGrabCut::NodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -296,7 +219,7 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
         if(mode == cv::GC_INIT_WITH_MASK)
         {
             //log(Error, "Mode set to initialize with mask, but no mask provided");
-            NODE_LOG(error) << "Mode set to initialize with mask, but no mask provided";
+            LOG_NODE(error) << "Mode set to initialize with mask, but no mask provided";
             return img;
         }
         maskExists = false;
@@ -313,8 +236,7 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
 
     if(mode == cv::GC_INIT_WITH_MASK && mask.size() != h_img.size())
     {
-        //log(Error, "Mask size does not match image size");
-        NODE_LOG(error) << "Mask size does not match image size";
+        LOG_NODE(error) << "Mask size does not match image size";
         return img;
     }
 
@@ -322,7 +244,7 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     if(!roi && mode == cv::GC_INIT_WITH_RECT)
     {
         //log(Error, "Mode set to initialize with rect, but no rect provided");
-        NODE_LOG(error) << "Mode set to initialize with rect, but no rect provided";
+        LOG_NODE(error) << "Mode set to initialize with rect, but no rect provided";
         return img;
     }
     cv::Rect rect;
@@ -335,55 +257,22 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
         updateParameter("Grab Cut results", mask);
     }
     return img;
-}
+}*/
 
-void KMeans::NodeInit(bool firstInit)
+
+
+bool KMeans::ProcessImpl()
 {
-
+    const cv::Mat& img = image->GetMat(Stream());
+    cv::TermCriteria termCrit(cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS, iterations, epsilon);
+    cv::Mat labels, clusters;
+    double ret = cv::kmeans(img, k, labels, termCrit, attempts, flags.getValue(), clusters);
+    clusters_param.UpdateData(clusters, image_param.GetTimestamp(), _ctx);
+    labels_param.UpdateData(labels, image_param.GetTimestamp(), _ctx);
+    compactness_param.UpdateData(ret, image_param.GetTimestamp(), _ctx);
+    return true;
 }
 
-cv::cuda::GpuMat KMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-
-    return img;
-}
-
-
-void SegmentKMeans::NodeInit(bool firstInit)
-{
-    Parameters::EnumParameter flags;
-    flags.addEnum(ENUM(cv::KMEANS_PP_CENTERS));
-    flags.addEnum(ENUM(cv::KMEANS_RANDOM_CENTERS));
-    flags.addEnum(ENUM(cv::KMEANS_USE_INITIAL_LABELS));
-    updateParameter("K", int(10));
-    updateParameter("Iterations", 100);
-    updateParameter("Epsilon", double(0.1));
-    updateParameter("Attempts", int(1));
-    updateParameter("Flags", flags);
-    updateParameter("Color weight", double(1.0));
-    updateParameter("Distance weight", double(1.0));
-}
-
-cv::cuda::GpuMat SegmentKMeans::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-    int k = *getParameter<int>(0)->Data();
-
-    img.download(hostBuf, stream);
-    stream.waitForCompletion();
-    cv::Mat samples = hostBuf.createMatHeader();
-
-    cv::Mat labels;
-    cv::Mat clusters;
-    cv::TermCriteria termCrit( cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS, *getParameter<int>(1)->Data(), *getParameter<double>(2)->Data());
-    double ret = cv::kmeans(samples, k, labels, termCrit, *getParameter<int>(3)->Data(), getParameter<Parameters::EnumParameter>(4)->Data()->getValue(), clusters);
-    cv::cuda::GpuMat d_clusters, d_labels;
-    d_clusters.upload(clusters, stream);
-    d_labels.upload(labels, stream);
-    updateParameter("Clusters", d_clusters)->type = Parameters::Parameter::Output;
-    updateParameter("Labels", d_labels)->type = Parameters::Parameter::Output;
-    updateParameter("Compactedness", ret)->type =  Parameters::Parameter::Output;
-    return img;
-}
 void
 SegmentMeanShift::NodeInit(bool firstInit)
 {

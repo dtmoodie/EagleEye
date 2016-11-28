@@ -18,52 +18,47 @@ namespace EagleLib
     class OtsuThreshold: public Node
     {
     public:
-        OtsuThreshold();
         MO_DERIVE(OtsuThreshold, Node)
             INPUT(SyncedMemory, image, nullptr);
-            OPTIONAL_INPUT(SyncedMemory, input_histogram, nullptr);
-            OPTIONAL_INPUT(SyncedMemory, input_range, nullptr);
+            OPTIONAL_INPUT(SyncedMemory, histogram, nullptr);
+            OPTIONAL_INPUT(SyncedMemory, range, nullptr);
             OUTPUT(SyncedMemory, output, SyncedMemory());
         MO_END
     protected:
         bool ProcessImpl();
     };
 
-    class SegmentMOG2: public Node
+    class MOG2: public Node
     {
-
+    public:
+        MO_DERIVE(MOG2, Node);
+            INPUT(SyncedMemory, image, nullptr);
+            PARAM(int, history, 500);
+            PARAM(double, threshold, 15);
+            PARAM(bool, detect_shadows, true);
+            PARAM(double, learning_rate, 1.0);
+            OUTPUT(SyncedMemory, background, SyncedMemory());
+        MO_END;
+        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+    protected:
+        bool ProcessImpl();
         cv::Ptr<cv::cuda::BackgroundSubtractorMOG2> mog2;
-    public:
-        SegmentMOG2();
-        virtual void NodeInit(bool firstInit);
-        virtual void Serialize(ISimpleSerializer *pSerializer);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 
-    class SegmentWatershed: public Node
+    class Watershed: public Node
     {
     public:
-        SegmentWatershed();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        MO_DERIVE(Watershed, Node);
+            INPUT(SyncedMemory, image, nullptr);
+            INPUT(SyncedMemory, marker_mask, nullptr);
+            OUTPUT(SyncedMemory, mask, SyncedMemory());
+        MO_END;
+    protected:
+        bool ProcessImpl();
     };
-    class SegmentCPMC: public Node
-    {
-        enum BackgroundInitialization
-        {
-            AllBoarders = 0,
-            TopAndSides = 1,
-            Top = 2,
-            Sides = 3
-        };
+    
 
-    public:
-        SegmentCPMC();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };
-
-    class SegmentGrabCut: public Node
+    /*class SegmentGrabCut: public Node
     {
         cv::Mat bgdModel;
         cv::Mat fgdModel;
@@ -72,25 +67,30 @@ namespace EagleLib
         SegmentGrabCut();
         virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };
+    };*/
+
     void kmeans_impl(cv::cuda::GpuMat input, cv::cuda::GpuMat& labels, cv::cuda::GpuMat& clusters, int k, cv::cuda::Stream stream, cv::cuda::GpuMat weights = cv::cuda::GpuMat());
+    
+
     class KMeans: public Node
     {
-    public:
-        KMeans();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };
-
-    class SegmentKMeans: public Node
-    {
-//        cv::cuda::HostMem labels;
-//        cv::cuda::HostMem clusters;
         cv::cuda::HostMem hostBuf;
     public:
-        SegmentKMeans();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        MO_DERIVE(KMeans, Node)
+            INPUT(SyncedMemory, image, nullptr);
+            ENUM_PARAM(flags, cv::KMEANS_PP_CENTERS, cv::KMEANS_RANDOM_CENTERS, cv::KMEANS_USE_INITIAL_LABELS)
+            PARAM(int, k, 10);
+            PARAM(int, iterations, 100);
+            PARAM(double, epsilon, 0.1);
+            PARAM(int, attempts, 1);
+            PARAM(double, color_weight, 1.0);
+            PARAM(double, distance_weight, 1.0);
+            OUTPUT(SyncedMemory, clusters, SyncedMemory());
+            OUTPUT(SyncedMemory, labels, SyncedMemory());
+            OUTPUT(double, compactness, 0.0);
+        MO_END;
+    protected:
+        bool ProcessImpl();
     };
 
     class SegmentMeanShift: public Node
