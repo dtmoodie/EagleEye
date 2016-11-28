@@ -45,6 +45,7 @@ namespace EagleLib
 
             static std::vector<std::string> ListLoadableDocuments();
             static int CanLoadDocument(const std::string& doc);
+            virtual bool LoadFile(const std::string& file_path);
             virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
             rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
         protected:

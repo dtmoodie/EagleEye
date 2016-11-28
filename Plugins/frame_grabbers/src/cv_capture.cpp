@@ -279,9 +279,34 @@ TS<SyncedMemory> frame_grabber_camera::GetNextFrameImpl(cv::cuda::Stream& stream
                 cv::cuda::GpuMat d_mat;
                 d_mat.upload(h_mat, stream);
                 return TS<SyncedMemory>(0.0, current_timestamp++, h_mat, d_mat);
+            }else
+            {
+                LOG_EVERY_N(warning, 90) << "h_cam->read returned empty frame";
             }
+        }else
+        {
+            LOG_EVERY_N(warning, 90) << "h_cam->read(h_mat) failed";
         }
     }
+    if(!d_cam && !h_cam)
+    {
+        LOG_EVERY_N(warning, 10000) << "no video capture device specified";
+    }
     return TS<SyncedMemory>();
+}
+bool frame_grabber_camera::LoadFile(const std::string& file_path)
+{
+    auto cameras = ListLoadableDocuments();
+    int index = 0;
+    for(auto camera : cameras)
+    {
+        if(camera == file_path)
+        {
+            h_cam.reset(new cv::VideoCapture());
+            return h_cam->open(index);
+        }
+        ++index;
+    }
+    return false;
 }
 MO_REGISTER_CLASS(frame_grabber_camera);

@@ -12,9 +12,14 @@ using namespace EagleLib::Nodes;
 bool QtImageDisplay::ProcessImpl()
 {
     cv::Mat mat;
+    bool stream_desynced = false;
     if(image && !image->empty())
     {
         mat = image->GetMat(*_ctx->stream);
+        if(image->GetSyncState() == EagleLib::SyncedMemory::DEVICE_UPDATED)
+        {
+            stream_desynced = true;
+        }
     }
     if(cpu_mat)
     {
@@ -24,21 +29,21 @@ bool QtImageDisplay::ProcessImpl()
     std::string name = GetTreeName();
     if(!mat.empty())
     {
-        /*EagleLib::cuda::enqueue_callback(
-            [mat, name]()->void
-        {
-            cv::imshow(name, mat);
-        }, *_ctx->stream);*/
-
         size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
-        EagleLib::cuda::enqueue_callback_async(
-            [mat, name]()->void
+        if(stream_desynced)
         {
-            cv::imshow(name, mat);
-        },gui_thread_id, *_ctx->stream);
+            EagleLib::cuda::enqueue_callback_async(
+                [mat, name]()->void
+            {
+                cv::imshow(name, mat);
+            }, gui_thread_id, *_ctx->stream);
+        }else
+        {
+            mo::ThreadSpecificQueue::Push([name, mat](){cv::imshow(name, mat);}, gui_thread_id, this);
+        }
+        return true;
     }
-    
-    return true;
+    return false;
 }
 
 bool KeyPointDisplay::ProcessImpl()

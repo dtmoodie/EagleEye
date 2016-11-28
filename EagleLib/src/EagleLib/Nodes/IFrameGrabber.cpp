@@ -392,7 +392,7 @@ void FrameGrabberThreaded::Buffer()
                 PushFrame(frame, true);
             }else
             {
-                LOG(trace) << "Read empty frame from frame grabber";
+                LOG_EVERY_N(warning, 500) << "Read empty frame from frame grabber";
             }
         }catch(cv::Exception& e)
         {

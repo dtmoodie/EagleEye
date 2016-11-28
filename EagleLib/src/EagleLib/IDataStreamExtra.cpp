@@ -107,7 +107,6 @@ bool DataStream::LoadStream(const std::string& filename)
     }
     else if (ext == ".json")
     {
-        
         try
         {
             mo::StartSerialization();
@@ -134,7 +133,6 @@ bool DataStream::LoadStream(const std::string& filename)
                 if(inputs[i].size() == 0)
                 {
                     handled_node_indecies.push_back(i);
-                    //top_level_nodes.push_back(all_nodes[i]);
                     AddNode(all_nodes[i]);
                 }else
                 {
