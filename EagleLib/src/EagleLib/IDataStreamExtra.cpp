@@ -56,24 +56,27 @@ void HandleNode(cereal::JSONInputArchive& ar, rcc::shared_ptr<Nodes::Node>& node
     ar(CEREAL_NVP(type));
     ar.startNode();
     node = mo::MetaObjectFactory::Instance()->Create(type.c_str());
-    node->SetTreeName(name);
-    if(node)
+    if(!node)
     {
-        auto parameters = node->GetParameters();
-        for(auto param : parameters)
+        LOG(warning) << "Unable to create node with type: " << type;
+        return;
+    }
+    node->SetTreeName(name);
+    auto parameters = node->GetParameters();
+    for(auto param : parameters)
+    {
+        if(param->CheckFlags(mo::Output_e) || param->CheckFlags(mo::Input_e))
+            continue;
+        auto func1 = mo::SerializationFunctionRegistry::Instance()->GetJsonDeSerializationFunction(param->GetTypeInfo());
+        if (func1)
         {
-            if(param->CheckFlags(mo::Output_e) || param->CheckFlags(mo::Input_e))
-                continue;
-            auto func1 = mo::SerializationFunctionRegistry::Instance()->GetJsonDeSerializationFunction(param->GetTypeInfo());
-            if (func1)
+            if(!func1(param, ar))
             {
-                if(!func1(param, ar))
-                {
-                    LOG(info) << "Unable to deserialize " << param->GetName();
-                }
+                LOG(info) << "Unable to deserialize " << param->GetName();
             }
         }
     }
+
     ar.finishNode();
     try
     {

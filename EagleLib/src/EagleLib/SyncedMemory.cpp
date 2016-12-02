@@ -339,6 +339,7 @@ int SyncedMemory::GetDim(int dim) const
 }
 SyncedMemory::SYNC_STATE SyncedMemory::GetSyncState(int index) const
 {
+    CV_Assert(index < sync_flags.size() && index >= 0);
     return sync_flags[index];
 }
 template<typename A> void SyncedMemory::load(A& ar)
