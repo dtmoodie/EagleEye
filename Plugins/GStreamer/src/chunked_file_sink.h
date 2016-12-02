@@ -43,4 +43,17 @@ namespace EagleLib
     protected:
         bool ProcessImpl();
     };
+    namespace Nodes
+    {
+    class GstreamerSink: virtual public gstreamer_sink_base
+    {
+    public:
+        MO_DERIVE(GstreamerSink, gstreamer_sink_base)
+            INPUT(SyncedMemory, image, nullptr);
+            PARAM(std::string, pipeline, "");
+        MO_END;
+    protected:
+        bool ProcessImpl();
+    };
+    }
 }

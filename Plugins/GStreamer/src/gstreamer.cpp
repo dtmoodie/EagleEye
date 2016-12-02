@@ -113,6 +113,10 @@ gstreamer_base::~gstreamer_base()
 gstreamer_sink_base::~gstreamer_sink_base()
 {
     LOG(trace);
+    if(_source)
+    {
+        gst_app_src_end_of_stream(_source);
+    }
     cleanup();
 }
 
@@ -177,7 +181,7 @@ bool gstreamer_sink_base::create_pipeline(const std::string& pipeline_)
 {
     if(gstreamer_base::create_pipeline(pipeline_))
     {
-        _source = gst_bin_get_by_name(GST_BIN(_pipeline), "mysource");
+        _source = (GstAppSrc*)gst_bin_get_by_name(GST_BIN(_pipeline), "mysource");
         if(!_source)
         {
             LOG(warning) << "No appsrc with name \"mysource\" found";
@@ -274,6 +278,7 @@ bool gstreamer_sink_base::set_caps(cv::Size img_size, int channels, int depth)
     LOG(debug) << "Connecting need/enough data callbacks";
     _need_data_id   = g_signal_connect(_source, "need-data",   G_CALLBACK(_start_feed), this);
     _enough_data_id = g_signal_connect(_source, "enough-data", G_CALLBACK(_stop_feed),  this);
+    _caps_set = true;
     return true;
 }
 bool gstreamer_sink_base::set_caps(const std::string& caps_)
@@ -346,6 +351,7 @@ bool gstreamer_base::pause_pipeline()
 
 void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
 {
+    LOG_EVERY_N(debug, 100) << "Pushing image onto pipeline";
     auto curTime = clock();
     _delta = curTime - _prevTime;
     _prevTime = curTime;
@@ -362,8 +368,7 @@ void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
     if (_feed_enabled)
     {
         cv::Mat h_img = img.GetMat(stream);
-        cuda::enqueue_callback_async(
-            [h_img, this]()->void
+        if(img.GetSyncState() < img.DEVICE_UPDATED)
         {
             int bufferlength = h_img.cols * h_img.rows * h_img.channels();
             GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
@@ -385,7 +390,33 @@ void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
                 LOG(error) << "Error pushing buffer into appsrc " << rw;
             }
             gst_buffer_unref(buffer);
-        }, stream);
+        }else
+        {
+            cuda::enqueue_callback_async(
+                [h_img, this]()->void
+            {
+                int bufferlength = h_img.cols * h_img.rows * h_img.channels();
+                GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
+                GstMapInfo map;
+                gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
+                memcpy(map.data, h_img.data, map.size);
+                gst_buffer_unmap(buffer, &map);
+
+                GST_BUFFER_PTS(buffer) = _timestamp;
+
+                GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(_delta, GST_SECOND, 1000);
+                _timestamp += GST_BUFFER_DURATION(buffer);
+
+                GstFlowReturn rw;
+                g_signal_emit_by_name(_source, "push-buffer", buffer, &rw);
+
+                if (rw != GST_FLOW_OK)
+                {
+                    LOG(error) << "Error pushing buffer into appsrc " << rw;
+                }
+                gst_buffer_unref(buffer);
+            }, stream);
+        }
     }
 }
 

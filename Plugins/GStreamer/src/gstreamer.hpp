@@ -120,7 +120,7 @@ namespace EagleLib
             virtual void stop_feed();
         protected:
             // The output of EagleLib's processing pipeline and the input to the gstreamer pipeline
-            GstElement*     _source;
+            GstAppSrc*     _source;
             // id for the need data signal
             guint           _need_data_id;
             // id for the enough data signal

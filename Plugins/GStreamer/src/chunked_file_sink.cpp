@@ -160,3 +160,35 @@ rcc::shared_ptr<ICoordinateManager> JpegKeyframer::GetCoordinateManager()
     return rcc::shared_ptr<ICoordinateManager>();
 }
 MO_REGISTER_CLASS(JpegKeyframer);
+
+using namespace EagleLib::Nodes;
+bool GstreamerSink::ProcessImpl()
+{
+    if(pipeline_param.modified && !image->empty())
+    {
+        this->cleanup();
+        if(!this->create_pipeline(pipeline))
+        {
+            LOG(warning) << "Unable to create pipeline " << pipeline;
+            return false;
+        }
+        if(!this->set_caps(image->GetSize(), image->GetChannels(), image->GetDepth()))
+        {
+            LOG(warning) << "Unable to set caps on pipeline";
+            return false;
+        }
+        if(!this->start_pipeline())
+        {
+            LOG(warning) << "Unable to start pipeline " << pipeline;
+            return false;
+        }
+        pipeline_param.modified = false;
+    }
+    if(_source && _feed_enabled)
+    {
+        PushImage(*image, Stream());
+        return true;
+    }
+    return false;
+}
+MO_REGISTER_CLASS(GstreamerSink)
