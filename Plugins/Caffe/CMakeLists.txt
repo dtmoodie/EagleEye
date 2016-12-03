@@ -13,6 +13,7 @@ if(Caffe_FOUND)
   find_path(CUDNN_INCLUDE_DIR cudnn.h HINTS "${CUDNN_DIR}/include" "${CUDA_TOOLKIT_ROOT_DIR}/include")
   find_path(CUDNN_BIN_DIR cudnn64_4.dll cudnn64_3.dll libcudnn.so cudnn cudnn.so HINTS "${CUDNN_DIR}/bin" "${CUDA_TOOLKIT_ROOT_DIR}/lib64")
   if(CUDNN_LIBRARY AND CUDNN_INCLUDE_DIR AND CUDNN_LIB_DIR AND CUDNN_BIN_DIR)
+      message("Caffe includes: ${Caffe_INCLUDE_DIRS}")
     include_directories(
       ${Caffe_INCLUDE_DIRS}
       ${EagleLib_INCLUDE_DIRECTORIES}
@@ -58,7 +59,8 @@ if(Caffe_FOUND)
     ELSE(WIN32)
         RCC_LINK_LIB(Caffe
           EagleLib
-          ${Caffe_LIBRARIES}
+          #${Caffe_LIBRARIES}
+          caffe
           ${CUDA_LIBRARIES}
           ${CUDA_CUFFT_LIBRARIES}
           ${CUDA_CUBLAS_LIBRARIES}

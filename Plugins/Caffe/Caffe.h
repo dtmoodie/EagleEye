@@ -1,6 +1,6 @@
 #pragma once
 #define COMPACT_GOOGLE_LOG_debug COMPACT_GOOGLE_LOG_DEBUG
-
+#define USE_CUDNN
 #include "EagleLib/Detail/PluginExport.hpp"
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/ObjectDetection.hpp"

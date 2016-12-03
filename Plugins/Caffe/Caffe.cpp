@@ -268,7 +268,7 @@ bool CaffeBase::InitNetwork()
         }
         else
         {
-            LOG_EVERY_N(warning, 100) << "Architecture file does not exist";
+            LOG_EVERY_N(warning, 100) << "Architecture file does not exist " << nn_model_file.string();
         }
     }
     if (nn_weight_file_param.modified && NN)
@@ -300,7 +300,7 @@ bool CaffeBase::InitNetwork()
         }
         else
         {
-            LOG_EVERY_N(warning, 100) << "Weight file does not exist";
+            LOG_EVERY_N(warning, 100) << "Weight file does not exist " << nn_weight_file.string();
         }
     }
     if (label_file_param.modified)
@@ -376,7 +376,8 @@ bool CaffeImageClassifier::ProcessImpl()
     if(!CheckInput())
         WrapInput();
     auto input_shape = input->GetShape();
-    ReshapeInput(input_shape[0], input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
+    if(image_scale != -1)
+        ReshapeInput(input_shape[0], input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
     int device = cv::cuda::getDevice();
     cv::cuda::GpuMat float_image;
     
@@ -432,14 +433,7 @@ bool CaffeImageClassifier::ProcessImpl()
         {
             resized = float_image((*bounding_boxes)[i]);
         }
-        cv::Mat h_resized(resized);
-        std::vector<cv::cuda::GpuMat> split(resized.channels());
-        for(int j = 0; j < resized.channels(); ++j)
-        {
-            cv::cuda::createContinuous(resized.size(), resized.depth(), split[j]);
-        }
-        cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());
-        
+        cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());   
     }
     
     // Signal update on all inputs

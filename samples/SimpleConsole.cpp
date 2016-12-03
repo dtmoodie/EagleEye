@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
                 " - select           -- Select object\n"
                 "    name            -- select node by name\n"
                 "    index           -- select stream by index\n"
-                "    parameter       -- if currently a node is selected, select a parameter"
+                "    parameter       -- if currently a node is selected, select a parameter\n"
                 " - delete           -- delete selected item\n"
                 " - emit             -- Send a signal\n"
                 "    name parameters -- signal name and parameters\n"
