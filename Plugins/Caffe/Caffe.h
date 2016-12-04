@@ -10,7 +10,7 @@
 #include "RuntimeLinkLibrary.h"
 #include "caffe/blob.hpp"
 #include "caffe/net.hpp"
-
+#include "caffe/common.hpp"
 #ifdef _MSC_VER // Windows
   #ifdef _DEBUG
     RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib")
@@ -18,7 +18,7 @@
     RUNTIME_COMPILER_LINKLIBRARY("opencv_calib3d" CV_VERSION_ ".lib")
   #endif
 #else // Linux
-  RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
+  RUNTIME_COMPILER_LINKLIBRARY("-lcaffe-nv")
 #endif
 
 

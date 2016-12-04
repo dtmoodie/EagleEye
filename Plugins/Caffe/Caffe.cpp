@@ -165,6 +165,7 @@ void CaffeBase::WrapInput()
         wrapped_inputs[input_names[k]] = WrapBlob(*input_blobs[k], bgr_swap);
     }
 }
+
 bool CaffeBase::CheckInput()
 {
     if(NN == nullptr)
@@ -198,6 +199,7 @@ bool CaffeBase::CheckInput()
     }
     return true;
 }
+
 void CaffeBase::ReshapeInput(int num, int channels, int height, int width)
 {
     input_blobs = NN->input_blobs();
@@ -271,6 +273,7 @@ bool CaffeBase::InitNetwork()
             LOG_EVERY_N(warning, 100) << "Architecture file does not exist " << nn_model_file.string();
         }
     }
+
     if (nn_weight_file_param.modified && NN)
     {
         if (boost::filesystem::exists(nn_weight_file))
@@ -303,6 +306,7 @@ bool CaffeBase::InitNetwork()
             LOG_EVERY_N(warning, 100) << "Weight file does not exist " << nn_weight_file.string();
         }
     }
+
     if (label_file_param.modified)
     {
         if (boost::filesystem::exists(label_file))
@@ -322,6 +326,7 @@ bool CaffeBase::InitNetwork()
             label_file_param.modified = false;
         }
     }
+
     if (mean_file_param.modified)
     {
         if (boost::filesystem::exists(mean_file))
@@ -371,14 +376,17 @@ bool CaffeImageClassifier::ProcessImpl()
 {
     if(!InitNetwork())
         return false;
+
     if (input->empty())
         return false;
+
     if(!CheckInput())
         WrapInput();
     auto input_shape = input->GetShape();
+
     if(image_scale != -1)
         ReshapeInput(input_shape[0], input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
-    int device = cv::cuda::getDevice();
+
     cv::cuda::GpuMat float_image;
     
     if (input->GetDepth() != CV_32F)
@@ -400,6 +408,7 @@ bool CaffeImageClassifier::ProcessImpl()
     {
         bounding_boxes = &defaultROI;
     }
+
     auto data_itr = wrapped_inputs.find("data");
     if(data_itr == wrapped_inputs.end())
     {
