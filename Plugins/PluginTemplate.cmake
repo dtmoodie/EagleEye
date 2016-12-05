@@ -67,7 +67,7 @@ else(WIN32)
         "\ninclude_dirs:\n${target_include_dirs_}\n"
         "\nlib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
         "\nlib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
-        "\ncompile_options:\n-DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\"\n${WIN_DEFS}\n-DPLUGIN_NAME=${PROJECT_NAME}\n-include \"EagleLib/Detail/PluginExport.hpp\""
+        "\ncompile_options:\n-DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\"\n${WIN_DEFS}\n-DPLUGIN_NAME=${PROJECT_NAME}\n"
     )
 	set(outfile_ "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}_config.txt")
 
