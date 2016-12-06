@@ -384,8 +384,17 @@ bool CaffeImageClassifier::ProcessImpl()
         WrapInput();
     auto input_shape = input->GetShape();
 
+    std::vector<cv::Rect> defaultROI;
+    defaultROI.push_back(cv::Rect(cv::Point(), input->GetSize()));
+
+    if (bounding_boxes == nullptr)
+    {
+        bounding_boxes = &defaultROI;
+    }
+
+
     if(image_scale != -1)
-        ReshapeInput(input_shape[0], input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
+        ReshapeInput(bounding_boxes->size(), input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
 
     cv::cuda::GpuMat float_image;
     
@@ -401,13 +410,7 @@ bool CaffeImageClassifier::ProcessImpl()
     cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, Stream());
     cv::cuda::multiply(float_image, cv::Scalar::all(pixel_scale), float_image, 1.0, -1, Stream());
 
-    std::vector<cv::Rect> defaultROI;
-    defaultROI.push_back(cv::Rect(cv::Point(), input->GetSize()));
 
-    if (bounding_boxes == nullptr)
-    {
-        bounding_boxes = &defaultROI;
-    }
 
     auto data_itr = wrapped_inputs.find("data");
     if(data_itr == wrapped_inputs.end())
@@ -469,9 +472,7 @@ bool CaffeImageClassifier::ProcessImpl()
     
     caffe::Blob<float>* output_layer = NN->output_blobs()[0];
     float* begin = output_layer->mutable_cpu_data();
-    const float* end = begin + output_layer->channels() * output_layer->num();
-    const size_t step = output_layer->channels();
-    
+
     if(_network_type & Classifier_e)
     {
         std::vector<DetectedObject> objects(std::min<size_t>(bounding_boxes->size(), data_itr->second.size()));
@@ -493,25 +494,29 @@ bool CaffeImageClassifier::ProcessImpl()
         detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
     }else if(_network_type & Detector_e)
     {
+        std::vector<DetectedObject> objects;
+
         const int num_detections = output_layer->height();
         cv::Mat all(num_detections, 7, CV_32F, begin);
+        cv::Mat_<float> roi_num(num_detections, 1, begin, sizeof(float)*7);
         cv::Mat_<float> labels(num_detections, 1, begin + 1, sizeof(float)*7);
         cv::Mat_<float> confidence(num_detections, 1, begin + 2, sizeof(float)*7);
         cv::Mat_<float> xmin(num_detections, 1, begin + 3, sizeof(float) * 7);
         cv::Mat_<float> ymin(num_detections, 1, begin + 4, sizeof(float) * 7);
         cv::Mat_<float> xmax(num_detections, 1, begin + 5, sizeof(float) * 7);
         cv::Mat_<float> ymax(num_detections, 1, begin + 6, sizeof(float) * 7);
-        std::vector<DetectedObject> objects;
+
         cv::Size original_size = input->GetSize();
         for(int i = 0; i < num_detections; ++i)
         {
             if(confidence[i][0] > detection_threshold)
             {
+                int num = roi_num[i][0];
                 DetectedObject obj;
-                obj.boundingBox.x = xmin[i][0] * original_size.width;
-                obj.boundingBox.y = ymin[i][0] * original_size.height;
-                obj.boundingBox.width = (xmax[i][0] - xmin[i][0])*original_size.width;
-                obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * original_size.height;
+                obj.boundingBox.x = xmin[i][0] * (*bounding_boxes)[num].width;
+                obj.boundingBox.y = ymin[i][0] * (*bounding_boxes)[num].height;
+                obj.boundingBox.width = (xmax[i][0] - xmin[i][0])*(*bounding_boxes)[num].width;
+                obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * (*bounding_boxes)[num].height;
                 if (this->labels && labels[i][0] < this->labels->size())
                     obj.detections.emplace_back((*this->labels)[int(labels[i][0])], confidence[i][0], int(labels[i][0]));
                 else
@@ -519,10 +524,13 @@ bool CaffeImageClassifier::ProcessImpl()
 
                 objects.push_back(obj);
             }
-            if(objects.size())
-            {
-                LOG(trace) << "Detected " << objects.size() << " objets in frame " << input_param.GetTimestamp();
-            }
+
+        }
+        begin += output_layer->width() * output_layer->height() * num_detections;
+
+        if(objects.size())
+        {
+            LOG(trace) << "Detected " << objects.size() << " objets in frame " << input_param.GetTimestamp();
         }
         if(!(objects.empty() && detections.empty()))
             detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
