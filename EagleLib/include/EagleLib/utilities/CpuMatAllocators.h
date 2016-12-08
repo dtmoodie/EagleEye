@@ -1,4 +1,5 @@
 #pragma once
+#include "MemoryBlock.h"
 #include <opencv2/core/mat.hpp>
 #include "EagleLib/Detail/Export.hpp"
 #include <map>
@@ -9,7 +10,7 @@
 #include <memory>
 namespace EagleLib
 {
-    class CpuMemoryBlock;
+
     class EAGLE_EXPORTS CpuDelayedDeallocationPool
     {
     public:

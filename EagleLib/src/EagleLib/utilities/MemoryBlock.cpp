@@ -30,16 +30,42 @@ int alignmentOffset(unsigned char* ptr, int elemSize)
     }
     return i;
 }
-MemoryBlock::MemoryBlock(size_t size_) :size(size_)
+
+void GPUMemory::_allocate(unsigned char** ptr, size_t size)
 {
-    //_allocate(&begin, size);
-    //end = begin + size;
+    CV_CUDEV_SAFE_CALL(cudaMalloc(ptr, size));
 }
-MemoryBlock::~MemoryBlock()
+void GPUMemory::_deallocate(unsigned char* ptr)
 {
-    //_deallocate(begin);
+    CV_CUDEV_SAFE_CALL(cudaFree(ptr));
 }
-unsigned char* MemoryBlock::allocate(size_t size_, size_t elemSize_)
+
+void CPUMemory::_allocate(unsigned char** ptr, size_t size)
+{
+    CV_CUDEV_SAFE_CALL(cudaMallocHost(ptr, size));
+}
+
+void CPUMemory::_deallocate(unsigned char* ptr)
+{
+    CV_CUDEV_SAFE_CALL(cudaFreeHost(ptr));
+}
+
+template<class XPU>
+MemoryBlock<XPU>::MemoryBlock(size_t size_):
+    size(size_)
+{
+    XPU::_allocate(&begin, size);
+    end = begin + size;
+}
+
+template<class XPU>
+MemoryBlock<XPU>::~MemoryBlock()
+{
+    XPU::_deallocate(begin);
+}
+
+template<class XPU>
+unsigned char* MemoryBlock<XPU>::allocate(size_t size_, size_t elemSize_)
 {
     if (size_ > size)
         return nullptr;
@@ -69,7 +95,12 @@ unsigned char* MemoryBlock::allocate(size_t size_, size_t elemSize_)
         }
     }
     // Find the smallest chunk of memory that fits our requirement, helps reduce fragmentation.
-    auto min = std::min_element(candidates.begin(), candidates.end(), [](const std::pair<size_t, unsigned char*>& first, const std::pair<size_t, unsigned char*>& second) {return first.first < second.first; });
+    auto min = std::min_element(candidates.begin(), candidates.end(),
+                    [](const std::pair<size_t, unsigned char*>& first, const std::pair<size_t, unsigned char*>& second)
+                    {
+                        return first.first < second.first;
+                    });
+
     if (min != candidates.end() && min->first > size_)
     {
         allocatedBlocks[min->second] = (unsigned char*)(min->second + size_);
@@ -77,7 +108,9 @@ unsigned char* MemoryBlock::allocate(size_t size_, size_t elemSize_)
     }
     return nullptr;
 }
-bool MemoryBlock::deAllocate(unsigned char* ptr)
+
+template<class XPU>
+bool MemoryBlock<XPU>::deAllocate(unsigned char* ptr)
 {
     if (ptr < begin || ptr > end)
         return false;
@@ -89,42 +122,24 @@ bool MemoryBlock::deAllocate(unsigned char* ptr)
     }
     return true;
 }
-GpuMemoryBlock::GpuMemoryBlock(size_t size) :
-    MemoryBlock(size)
+
+template<class XPU>
+unsigned char* MemoryBlock<XPU>::Begin() const
 {
-    _allocate(&begin, size);
-    end = begin + size;
-}
-GpuMemoryBlock::~GpuMemoryBlock()
-{
-    _deallocate(MemoryBlock::begin);
-}
-void GpuMemoryBlock::_allocate(unsigned char** ptr, size_t size)
-{
-    CV_CUDEV_SAFE_CALL(cudaMalloc(ptr, size));
-}
-void GpuMemoryBlock::_deallocate(unsigned char* ptr)
-{
-    CV_CUDEV_SAFE_CALL(cudaFree(ptr));
-}
-CpuMemoryBlock::CpuMemoryBlock(size_t size) :
-    MemoryBlock(size) 
-{
-    _allocate(&begin, size);
-    end = begin + size;
-}
-CpuMemoryBlock::~CpuMemoryBlock()
-{
-    _deallocate(MemoryBlock::begin);
+    return begin;
 }
 
-void CpuMemoryBlock::_allocate(unsigned char** ptr, size_t size)
+template<class XPU>
+unsigned char* MemoryBlock<XPU>::End() const
 {
-    CV_CUDEV_SAFE_CALL(cudaMallocHost(ptr, size));
+    return end;
 }
 
-void CpuMemoryBlock::_deallocate(unsigned char* ptr)
+template<class XPU>
+size_t MemoryBlock<XPU>::Size() const
 {
-    //free(ptr);
-    CV_CUDEV_SAFE_CALL(cudaFreeHost(ptr));
+    return size;
 }
+
+template class MemoryBlock<CPUMemory>;
+template class MemoryBlock<GPUMemory>;

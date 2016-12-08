@@ -4,6 +4,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/thread.hpp>
+#include <boost/thread/tss.hpp>
 #include <opencv2/cudev/common.hpp>
 #include <cuda_runtime.h>
 
@@ -33,6 +34,394 @@ namespace EagleLib
         }
         return i;
     }
+
+    /// ==========================================================
+    /// PitchedPolicy
+    /*PitchedPolicy::PitchedPolicy()
+    {
+
+    }
+
+    void PitchedPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride)
+    {
+        if (rows == 1 || cols == 1)
+        {
+            stride = cols*elemSize;
+        }
+        else
+        {
+            if((cols*elemSize % textureAlignment) == 0)
+                stride = cols*elemSize;
+            else
+                stride = cols*elemSize + textureAlignment - (cols*elemSize % textureAlignment);
+        }
+        sizeNeeded = stride*rows;
+    }
+
+    /// ==========================================================
+    /// ContinuousPolicy
+    void ContinuousPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride)
+    {
+        stride = cols*elemSize;
+        sizeNeeded = stride * rows;
+    }
+
+    /// ==========================================================
+    /// PoolPolicy
+    template<typename PaddingPolicy>
+    bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
+    {
+        size_t sizeNeeded, stride;
+        PaddingPolicy::SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
+        unsigned char* ptr;
+        for (auto itr : blocks)
+        {
+            ptr = itr->allocate(sizeNeeded, elemSize);
+            if (ptr)
+            {
+                mat->data = ptr;
+                mat->step = stride;
+                mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+                memoryUsage += mat->step*rows;
+                LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
+                           << mat->step * rows / (1024 * 1024) << " MB from memory block. Total usage: "
+                           << memoryUsage / (1024 * 1024) << " MB";
+                return true;
+            }
+        }
+        // If we get to this point, then no memory was found, need to allocate new memory
+        blocks.push_back(std::shared_ptr<GpuMemoryBlock>(
+                             new GpuMemoryBlock(
+                                 std::max(_initial_block_size / 2, sizeNeeded))));
+        LOG(trace) << "[GPU] Expanding memory pool by " <<
+                      std::max(_initial_block_size / 2, sizeNeeded) / (1024 * 1024)
+                   << " MB";
+        if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, elemSize))
+        {
+            mat->data = ptr;
+            mat->step = stride;
+            mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+            memoryUsage += mat->step*rows;
+            LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
+                       << mat->step * rows / (1024 * 1024)
+                       << " MB from memory block. Total usage: "
+                       << memoryUsage / (1024 * 1024) << " MB";
+            return true;
+        }
+        return false;
+    }
+
+    template<typename PaddingPolicy>
+    void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat)
+    {
+        for (auto itr : blocks)
+        {
+            if (itr->deAllocate(mat->data))
+            {
+                cv::fastFree(mat->refcount);
+                memoryUsage -= mat->step*mat->rows;
+                return;
+            }
+        }
+        throw cv::Exception(0, "[GPU] Unable to find memory to deallocate", __FUNCTION__, __FILE__, __LINE__);
+    }
+
+    template<typename PaddingPolicy>
+    unsigned char* PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t sizeNeeded)
+    {
+        unsigned char* ptr;
+        for (auto itr : blocks)
+        {
+            ptr = itr->allocate(sizeNeeded, 1);
+            if (ptr)
+            {
+                memoryUsage += sizeNeeded;
+
+                return ptr;
+            }
+        }
+        // If we get to this point, then no memory was found, need to allocate new memory
+        blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(std::max(_initial_block_size / 2, sizeNeeded))));
+        LOG(trace) << "[GPU] Expanding memory pool by "
+                   << std::max(_initial_block_size / 2, sizeNeeded) / (1024 * 1024)
+                   << " MB";
+        if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, 1))
+        {
+            memoryUsage += sizeNeeded;
+
+            return ptr;
+        }
+        return nullptr;
+    }
+
+    template<typename PaddingPolicy>
+    void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(unsigned char* ptr)
+    {
+        for (auto itr : blocks)
+        {
+            if (itr->deAllocate(ptr))
+            {
+                return;
+            }
+        }
+        throw cv::Exception(0, "[GPU] Unable to find memory to deallocate", __FUNCTION__, __FILE__, __LINE__);
+    }
+
+    /// ==========================================================
+    /// StackPolicy
+    template<typename PaddingPolicy>
+    bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
+    {
+        size_t sizeNeeded, stride;
+        PaddingPolicy::SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
+        for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
+        {
+            if(std::get<2>(*itr) == sizeNeeded)
+            {
+                mat->data = std::get<0>(*itr);
+                mat->step = stride;
+                mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+                deallocateList.erase(itr);
+                LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
+                           << mat->step * rows / (1024 * 1024) << " MB. total usage: " << memoryUsage / (1024 * 1024) << " MB";
+                return true;
+            }
+        }
+        if (rows > 1 && cols > 1)
+        {
+            CV_CUDEV_SAFE_CALL(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows));
+            LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
+                       << mat->step * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
+        }
+        else
+        {
+            CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
+            LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
+                       << cols * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
+            mat->step = elemSize * cols;
+        }
+        mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+        return true;
+    }
+
+    template<typename PaddingPolicy>
+    void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat)
+    {
+
+        this->memoryUsage -= mat->rows*mat->step;
+        LOG(trace) << "[GPU] Releasing mat of size (" << mat->rows << ","
+                   << mat->cols << ") " << (mat->dataend - mat->datastart)/(1024*1024) << " MB to the memory pool";
+        deallocateList.emplace_back(mat->data, clock(), mat->dataend - mat->datastart);
+        cv::fastFree(mat->refcount);
+        clear();
+    }
+
+    template<typename PaddingPolicy>
+    unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t sizeNeeded)
+    {
+        unsigned char* ptr = nullptr;
+        for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
+        {
+            if (std::get<2>(*itr) == sizeNeeded)
+            {
+                ptr = std::get<0>(*itr);
+                deallocateList.erase(itr);
+                memoryUsage += sizeNeeded;
+                current_allocations[ptr] = sizeNeeded;
+                return ptr;
+            }
+        }
+        CV_CUDEV_SAFE_CALL(cudaMalloc(&ptr, sizeNeeded));
+        this->memoryUsage += sizeNeeded;
+        current_allocations[ptr] = sizeNeeded;
+        return ptr;
+    }
+
+    template<typename PaddingPolicy>
+    void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(unsigned char* ptr)
+    {
+        auto itr = current_allocations.find(ptr);
+        if(itr != current_allocations.end())
+        {
+            current_allocations.erase(itr);
+            deallocateList.emplace_back(ptr, clock(), current_allocations[ptr]);
+        }
+
+        clear();
+    }
+
+    template<typename PaddingPolicy>
+    void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear()
+    {
+        auto time = clock();
+        for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
+        {
+            if((time - std::get<1>(*itr)) > deallocateDelay)
+            {
+                memoryUsage -= std::get<2>(*itr);
+                LOG(trace) << "[GPU] Deallocating block of size " << std::get<2>(*itr) /(1024*1024)
+                           << "MB. Which was stale for " << time - std::get<1>(*itr) << " ms";
+                CV_CUDEV_SAFE_CALL(cudaFree(std::get<0>(*itr)));
+                itr = deallocateList.erase(itr);
+            }
+        }
+    }
+
+    /// ==========================================================
+    /// NonCachingPolicy
+    template<typename PaddingPolicy>
+    bool NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
+    {
+        size_t size_needed, stride;
+        PaddingPolicy::SizeNeeded(rows, cols, elemSize, size_needed, stride);
+        if (rows > 1 && cols > 1)
+        {
+            CV_CUDEV_SAFE_CALL(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows));
+            memoryUsage += mat->step*rows;
+            LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
+                       << mat->step * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
+        }
+        else
+        {
+            CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
+            memoryUsage += elemSize*cols*rows;
+            LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
+                       << cols * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
+            mat->step = elemSize * cols;
+        }
+        mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+        return true;
+    }
+
+    template<typename PaddingPolicy>
+    void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat)
+    {
+        CV_CUDEV_SAFE_CALL(cudaFree(mat->data));
+        cv::fastFree(mat->refcount);
+    }
+
+    template<typename PaddingPolicy>
+    unsigned char* NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t num_bytes)
+    {
+        unsigned char* ptr = nullptr;
+        CV_CUDEV_SAFE_CALL(cudaMalloc(&ptr, num_bytes));
+        memoryUsage += num_bytes;
+        return ptr;
+    }
+
+    template<typename PaddingPolicy>
+    void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(unsigned char* ptr)
+    {
+        CV_CUDEV_SAFE_CALL(cudaFree(ptr));
+    }
+
+    /// ==========================================================
+    /// LockPolicy
+    template<class Allocator>
+    bool LockPolicy<Allocator>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
+    {
+        boost::mutex::scoped_lock lock(mtx);
+        return Allocator::allocate(mat, rows, cols, elemSize);
+    }
+
+    template<class Allocator>
+    void LockPolicy<Allocator>::free(cv::cuda::GpuMat* mat)
+    {
+        boost::mutex::scoped_lock lock(mtx);
+        return Allocator::free(mat);
+    }
+
+    template<class Allocator>
+    unsigned char* LockPolicy<Allocator>::allocate(size_t num_bytes)
+    {
+        boost::mutex::scoped_lock lock(mtx);
+        return Allocator::allocate(num_bytes);
+    }
+
+    template<class Allocator>
+    void LockPolicy<Allocator>::free(unsigned char* ptr)
+    {
+        boost::mutex::scoped_lock lock(mtx);
+        return Allocator::free(ptr);
+    }
+*/
+    /// ==========================================================
+    /// ScopedDebugPolicy
+    boost::thread_specific_ptr<std::string> current_scope;
+    void SetScopeName(const std::string& name)
+    {
+        if(current_scope.get() == nullptr)
+        {
+            current_scope.reset(new std::string());
+        }
+        *current_scope = name;
+    }
+
+    const std::string& GetScopeName()
+    {
+        if(current_scope.get() == nullptr)
+        {
+            current_scope.reset(new std::string());
+        }
+        return *current_scope;
+    }
+
+    template<class Allocator>
+    bool ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(
+            cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
+    {
+        if(Allocator::allocate(mat, rows, cols, elemSize))
+        {
+            scopeOwnership[mat->data] = GetScopeName();
+            scopedAllocationSize[GetScopeName()] += mat->step * mat->rows;
+            return true;
+        }
+        return false;
+    }
+
+    template<class Allocator>
+    void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat)
+    {
+        Allocator::free(mat);
+        auto itr = scopeOwnership.find(mat->data);
+        if (itr != scopeOwnership.end())
+        {
+            scopedAllocationSize[itr->second] -= mat->rows * mat->step;
+        }
+    }
+
+    template<class Allocator>
+    unsigned char* ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(size_t num_bytes)
+    {
+        if(auto ptr = Allocator::allocate(num_bytes))
+        {
+            scopeOwnership[ptr] = GetScopeName();
+            scopedAllocationSize[GetScopeName()] += num_bytes;
+            return true;
+        }
+        return false;
+    }
+
+    template<class Allocator>
+    void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::free(unsigned char* ptr)
+    {
+        Allocator::free(ptr);
+        auto itr = scopeOwnership.find(ptr);
+        if (itr != scopeOwnership.end())
+        {
+            scopedAllocationSize[itr->second] -= this->current_allocations[ptr];
+        }
+    }
+
+
+
+
+    PitchedAllocator::PitchedAllocator()
+    {
+        textureAlignment = cv::cuda::DeviceInfo(cv::cuda::getDevice()).textureAlignment();
+        memoryUsage = 0;
+        SetScope("Default");
+    }
     void PitchedAllocator::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride)
     {
         if (rows == 1 || cols == 1)
@@ -50,7 +439,6 @@ namespace EagleLib
     }
     void PitchedAllocator::SetScope(const std::string& name)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
         auto id = boost::this_thread::get_id();
         auto itr = scopedAllocationSize.find(name);
         if (itr == scopedAllocationSize.end())
@@ -60,12 +448,7 @@ namespace EagleLib
         }
         currentScopeName[id] = name;
     }
-    PitchedAllocator::PitchedAllocator()
-    {
-        textureAlignment = cv::cuda::DeviceInfo(cv::cuda::getDevice()).textureAlignment();
-        memoryUsage = 0;
-        SetScope("Default");
-    }
+
     void PitchedAllocator::Increment(unsigned char* ptr, size_t size)
     {
         auto id = boost::this_thread::get_id();
@@ -80,7 +463,9 @@ namespace EagleLib
             scopedAllocationSize[itr->second] -= size;
         }        
     }
-    
+
+    // =====================================================================
+    // BlockMemoryAllocator
     BlockMemoryAllocator::BlockMemoryAllocator(size_t initialSize)
     {
         blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(initialSize)));
@@ -97,7 +482,7 @@ namespace EagleLib
     }
     bool BlockMemoryAllocator::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
+
         size_t sizeNeeded, stride;
         SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
         unsigned char* ptr;
@@ -132,7 +517,7 @@ namespace EagleLib
     }
     unsigned char* BlockMemoryAllocator::allocate(size_t sizeNeeded)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
+
         unsigned char* ptr;
         for (auto itr : blocks)
         {
@@ -157,7 +542,7 @@ namespace EagleLib
     }
     void BlockMemoryAllocator::free(unsigned char* ptr)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
+
         for (auto itr : blocks)
         {
             if (itr->deAllocate(ptr))
@@ -169,7 +554,6 @@ namespace EagleLib
     }
     void BlockMemoryAllocator::free(cv::cuda::GpuMat* mat)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
         for (auto itr : blocks)
         {
             if (itr->deAllocate(mat->data))
@@ -182,19 +566,24 @@ namespace EagleLib
         }
         throw cv::Exception(0, "[GPU] Unable to find memory to deallocate", __FUNCTION__, __FILE__, __LINE__);
     }
+
     bool BlockMemoryAllocator::free_impl(cv::cuda::GpuMat* mat)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
         for (auto itr : blocks)
         {
             if (itr->deAllocate(mat->data))
             {
                 cv::fastFree(mat->refcount);
+                Decrement(mat->data, mat->step*mat->rows);
+                memoryUsage -= mat->step*mat->rows;
                 return true;
             }
         }
         return false;
     }
+
+    // =====================================================================
+    // DelayedDeallocator
     DelayedDeallocator::DelayedDeallocator() :
         PitchedAllocator()
     {
@@ -204,7 +593,7 @@ namespace EagleLib
     bool DelayedDeallocator::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
     {
         // First check for anything of the correct size
-        std::lock_guard<std::recursive_mutex> lock(mtx);
+
         size_t sizeNeeded, stride;
         SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
         for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
@@ -241,7 +630,6 @@ namespace EagleLib
     }
     unsigned char* DelayedDeallocator::allocate(size_t sizeNeeded)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
         unsigned char* ptr = nullptr;
         for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
         {
@@ -263,7 +651,7 @@ namespace EagleLib
     }
     void DelayedDeallocator::free(unsigned char* ptr)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
+
         //Decrement(ptr, mat->step*mat->rows);
         //scopedAllocationSize[scopeOwnership[ptr]] -= mat->rows*mat->step;
         //memoryUsage -= mat->rows*mat->step;
@@ -279,7 +667,7 @@ namespace EagleLib
     }
     void DelayedDeallocator::free(cv::cuda::GpuMat* mat)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
+
         Decrement(mat->data, mat->step*mat->rows);
         scopedAllocationSize[scopeOwnership[mat->data]] -= mat->rows*mat->step;
         memoryUsage -= mat->rows*mat->step;
@@ -322,7 +710,7 @@ namespace EagleLib
     {
         if (rows*cols*elemSize < _threshold_level)
         {
-            std::lock_guard<std::recursive_mutex> lock(mtx);
+
             size_t sizeNeeded, stride;
             SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
             return BlockMemoryAllocator::allocate(mat, rows, cols, elemSize);
@@ -340,7 +728,7 @@ namespace EagleLib
     }
     void CombinedAllocator::free(cv::cuda::GpuMat* mat)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
+
         if(!BlockMemoryAllocator::free_impl(mat))
             DelayedDeallocator::free(mat);
         

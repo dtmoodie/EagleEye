@@ -54,7 +54,7 @@ ogl_allocator::ogl_allocator():
 }
 bool ogl_allocator::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
 {
-    std::lock_guard<std::recursive_mutex> lock(EagleLib::PitchedAllocator::mtx);
+
     auto id = boost::this_thread::get_id();
     auto scope_name = currentScopeName[id];
     auto scope = std::make_tuple(scope_name, rows, cols, mat->type(), id, false);
@@ -124,7 +124,7 @@ void ogl_allocator::free(cv::cuda::GpuMat* mat)
 // Creates a GpuMat from an opengl buffer
 cv::cuda::GpuMat ogl_allocator::createMat(int rows, int cols, int type, cv::cuda::Stream& stream)
 {
-    std::lock_guard<std::recursive_mutex> lock(EagleLib::PitchedAllocator::mtx);
+
     {
         std::lock_guard<std::mutex> pool_lock(EagleLib::pool::ObjectPool<cv::ogl::Buffer>::mtx);
         for (auto itr = _pool.begin(); itr != _pool.end(); ++itr)
@@ -147,7 +147,7 @@ cv::cuda::GpuMat ogl_allocator::createMat(int rows, int cols, int type, cv::cuda
 
 EagleLib::pool::Ptr<cv::ogl::Buffer> ogl_allocator::get_ogl_buffer(const cv::cuda::GpuMat& mat, cv::cuda::Stream& stream)
 {
-    std::lock_guard<std::recursive_mutex> lock(EagleLib::PitchedAllocator::mtx);
+
     auto itr = mapped_buffers.find(mat.data);
     if(itr != mapped_buffers.end())
     {
@@ -187,7 +187,7 @@ EagleLib::pool::Ptr<cv::ogl::Buffer> ogl_allocator::get_ogl_buffer(const cv::cud
 }
 EagleLib::pool::Ptr<cv::ogl::Buffer> ogl_allocator::get_ogl_buffer(const cv::Mat& mat)
 {
-    std::lock_guard<std::recursive_mutex> lock(EagleLib::PitchedAllocator::mtx);
+
     {
         std::lock_guard<std::mutex> pool_lock(EagleLib::pool::ObjectPool<cv::ogl::Buffer>::mtx);
         // Find any unused opengl buffers of the correct size
