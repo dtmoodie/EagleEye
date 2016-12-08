@@ -128,11 +128,14 @@ bool DataStream::LoadStream(const std::string& filename)
             }
             for(auto& node : all_nodes)
             {
-                node->SetDataStream(this);
+                if(node)
+                    node->SetDataStream(this);
             }
             std::vector<int> handled_node_indecies;
             for(int i = 0; i < inputs.size(); ++i)
             {
+                if(all_nodes[i] == nullptr)
+                    continue;
                 if(inputs[i].size() == 0)
                 {
                     handled_node_indecies.push_back(i);
@@ -194,7 +197,8 @@ bool DataStream::LoadStream(const std::string& filename)
             {
                 if(std::find(handled_node_indecies.begin(), handled_node_indecies.end(), i) == handled_node_indecies.end())
                 {
-                    AddNode(all_nodes[i]);
+                    if(all_nodes[i])
+                        AddNode(all_nodes[i]);
                 }
             }
 
