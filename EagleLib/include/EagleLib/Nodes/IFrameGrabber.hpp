@@ -157,19 +157,19 @@ namespace EagleLib
     class EAGLE_EXPORTS FrameGrabberThreaded: public FrameGrabberBuffered
     {
     public:
-        MO_DERIVE(FrameGrabberThreaded, FrameGrabberBuffered);
-            MO_SLOT(void, StartThreads);
-            MO_SLOT(void, StopThreads);
-            MO_SLOT(void, PauseThreads);
-            MO_SLOT(void, ResumeThreads);
-        MO_END;
+        MO_DERIVE(FrameGrabberThreaded, FrameGrabberBuffered)
+            MO_SLOT(void, StartThreads)
+            MO_SLOT(void, StopThreads)
+            MO_SLOT(void, PauseThreads)
+            MO_SLOT(void, ResumeThreads)
+        MO_END
     protected:
         bool _pause = false;
         // Should only ever be called from the buffer thread
         virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
         virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
+        virtual void                             Buffer();
     private:
-        void                                     Buffer();
         boost::thread                            buffer_thread;
     };
     }
