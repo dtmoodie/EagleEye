@@ -45,7 +45,7 @@ if(WIN32)
     string(REGEX REPLACE ";" "\n" WIN_DEFS "${WIN_DEFS}")
     FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug/${PROJECT_NAME}_config.txt" 
         "project_id:\n${PROJECT_ID}\n"
-        "include_dirs:\n${target_include_dirs_}\n"
+        "include_dirs:\n${target_include_dirs_}\n${CMAKE_CURRENT_LIST_DIR}/src\n"
         "lib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
         "lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
         "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"EagleLib/Detail/PluginExport.hpp\""
@@ -53,7 +53,7 @@ if(WIN32)
 
     FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo/${PROJECT_NAME}_config.txt" 
         "project_id:\n${PROJECT_ID}\n"
-        "include_dirs:\n${target_include_dirs_}\n"
+        "include_dirs:\n${target_include_dirs_}\n${CMAKE_CURRENT_LIST_DIR}/src\n"
         "lib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
         "lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
         "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"EagleLib/Detail/PluginExport.hpp\""
@@ -64,7 +64,7 @@ else(WIN32)
 
     FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}_config.txt"
         "project_id:\n${PROJECT_ID}\n"
-        "\ninclude_dirs:\n${target_include_dirs_}\n"
+        "\ninclude_dirs:\n${target_include_dirs_}\n${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src\n"
         "\nlib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
         "\nlib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
         "\ncompile_options:\n-DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\"\n${WIN_DEFS}\n-DPLUGIN_NAME=${PROJECT_NAME}\n"
