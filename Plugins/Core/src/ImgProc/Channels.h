@@ -34,21 +34,36 @@ namespace EagleLib
         class ConvertToLab : public ::EagleLib::Nodes::Node
         {
         public:
-            MO_DERIVE(ConvertToLab, ::EagleLib::Nodes::Node);
-            INPUT(SyncedMemory, input_image, nullptr);
-            OUTPUT(SyncedMemory, lab_image, SyncedMemory());
-            MO_END;
+            MO_DERIVE(ConvertToLab, ::EagleLib::Nodes::Node)
+            INPUT(SyncedMemory, input_image, nullptr)
+            OUTPUT(SyncedMemory, lab_image, SyncedMemory())
+            MO_END
         protected:
             bool ProcessImpl();
         };
-        class ConvertColorspace : public ::EagleLib::Nodes::Node
+
+        class ConvertTo: public EagleLib::Nodes::Node
+        {
+        public:
+            MO_DERIVE(ConvertTo, Node)
+                INPUT(SyncedMemory, input, nullptr)
+                OUTPUT(SyncedMemory, output, SyncedMemory())
+                ENUM_PARAM(datatype, CV_8U, CV_8S, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F)
+                PARAM(float, alpha, 1.0)
+                PARAM(float, beta, 0.0)
+            MO_END
+        protected:
+            bool ProcessImpl();
+        };
+
+        class ConvertColorspace : public Node
         {
         
         public:
-            MO_DERIVE(ConvertColorspace, ::EagleLib::Nodes::Node);
-            INPUT(SyncedMemory, input_image, nullptr);
-            OUTPUT(SyncedMemory, output_image, SyncedMemory());
-            MO_END;
+            MO_DERIVE(ConvertColorspace, ::EagleLib::Nodes::Node)
+                INPUT(SyncedMemory, input_image, nullptr)
+                OUTPUT(SyncedMemory, output_image, SyncedMemory())
+            MO_END
         protected:
             bool ProcessImpl();
         };

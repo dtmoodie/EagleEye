@@ -75,7 +75,8 @@ catch (...)                                                                 \
 // **********************************************************************
 //              DataStream
 // **********************************************************************
-DataStream::DataStream()
+DataStream::DataStream():
+    _context("DataStream")
 {
     _sig_manager = GetRelayManager();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
@@ -96,7 +97,7 @@ DataStream::DataStream()
     stream_id = 0;
     _thread_id = 0;
     _ctx = &_context;
-    _context.stream = &_stream;
+    _context.SetStream(_stream);
     processing_thread = boost::thread(boost::bind(&DataStream::process, this));
     
 }
@@ -563,17 +564,20 @@ void DataStream::process()
             {
 
                 dirty_flag = false;
-                mo::scoped_profile profile("Processing nodes", &rmt_hash, &rmt_cuda_hash, _context.stream);
+                mo::scoped_profile profile("Processing nodes", &rmt_hash, &rmt_cuda_hash, &_context.GetStream());
                 for(auto& node : top_level_nodes)
                 {
                     node->Process();
                 }
                 ++iteration_count;
                 if (!dirty_flag)
-                    LOG(trace) << "Dirty flag not set and end of iteration " << iteration_count;
+                {
+                    LOG_EVERY_N(trace, 100) << "Dirty flag not set and end of iteration " << iteration_count;
+                }
             }else
             {
-                LOG(trace) << "Dirty flag not set, not stepping";
+                LOG_EVERY_N(trace, 100) << "Dirty flag not set, not stepping";
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
             }
         }else
         {

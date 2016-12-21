@@ -15,11 +15,11 @@ bool QtImageDisplay::ProcessImpl()
     bool stream_desynced = false;
     if(image && !image->empty())
     {
-        mat = image->GetMat(*_ctx->stream);
         if(image->GetSyncState() == EagleLib::SyncedMemory::DEVICE_UPDATED)
         {
             stream_desynced = true;
         }
+        mat = image->GetMat(Stream());
     }
     if(cpu_mat)
     {
@@ -36,10 +36,13 @@ bool QtImageDisplay::ProcessImpl()
                 [mat, name]()->void
             {
                 cv::imshow(name, mat);
-            }, gui_thread_id, *_ctx->stream);
+            }, gui_thread_id, Stream());
         }else
         {
-            mo::ThreadSpecificQueue::Push([name, mat](){cv::imshow(name, mat);}, gui_thread_id, this);
+            mo::ThreadSpecificQueue::Push([name, mat]()
+            {
+                cv::imshow(name, mat);
+            }, gui_thread_id, this);
         }
         return true;
     }

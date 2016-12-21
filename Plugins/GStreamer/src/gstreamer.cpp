@@ -348,6 +348,76 @@ bool gstreamer_base::pause_pipeline()
     LOG(debug) <<"Pausing pipeline";
     return true;
 }
+void gstreamer_sink_base::PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stream)
+{
+    LOG_EVERY_N(debug, 100) << "Pushing image onto pipeline";
+    auto curTime = clock();
+    _delta = curTime - _prevTime;
+    _prevTime = curTime;
+    LOG(trace) << "Estimated frame time: " << _delta << " ms";
+    if (!_caps_set)
+    {
+        if (set_caps(img.GetMat(stream).size(), img.GetMat(stream).channels()))
+        {
+            _caps_set = true;
+            start_pipeline();
+        }
+    }
+
+    if (_feed_enabled)
+    {
+        cv::Mat h_img = img.GetMat(stream);
+        if(img.GetSyncState() < img.DEVICE_UPDATED)
+        {
+            int bufferlength = h_img.cols * h_img.rows * h_img.channels();
+            GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
+            GstMapInfo map;
+            gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
+            memcpy(map.data, h_img.data, map.size);
+            gst_buffer_unmap(buffer, &map);
+
+            GST_BUFFER_PTS(buffer) = img.frame_number;
+
+            GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(_delta, GST_SECOND, 1000);
+            _timestamp += GST_BUFFER_DURATION(buffer);
+
+            GstFlowReturn rw;
+            g_signal_emit_by_name(_source, "push-buffer", buffer, &rw);
+
+            if (rw != GST_FLOW_OK)
+            {
+                LOG(error) << "Error pushing buffer into appsrc " << rw;
+            }
+            gst_buffer_unref(buffer);
+        }else
+        {
+            cuda::enqueue_callback_async(
+                [h_img, this]()->void
+            {
+                int bufferlength = h_img.cols * h_img.rows * h_img.channels();
+                GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
+                GstMapInfo map;
+                gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
+                memcpy(map.data, h_img.data, map.size);
+                gst_buffer_unmap(buffer, &map);
+
+                GST_BUFFER_PTS(buffer) = _timestamp;
+
+                GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(_delta, GST_SECOND, 1000);
+                _timestamp += GST_BUFFER_DURATION(buffer);
+
+                GstFlowReturn rw;
+                g_signal_emit_by_name(_source, "push-buffer", buffer, &rw);
+
+                if (rw != GST_FLOW_OK)
+                {
+                    LOG(error) << "Error pushing buffer into appsrc " << rw;
+                }
+                gst_buffer_unref(buffer);
+            }, stream);
+        }
+    }
+}
 
 void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
 {

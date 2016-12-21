@@ -104,7 +104,14 @@ bool Algorithm::CheckInputs()
         if(ts == _pimpl->last_ts)
             return false;
     }
-    
+    if(ts == -1)
+    {
+        ts = inputs[0]->GetTimestamp();
+        for(int i = 1; i < inputs.size(); ++i)
+        {
+            ts = std::min(ts, inputs[0]->GetTimestamp());
+        }
+    }
     for(auto input : inputs)
     {
         if(!input->GetInput(ts))

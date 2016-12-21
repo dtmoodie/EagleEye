@@ -3,6 +3,7 @@
 #include <list>
 #include <mutex>
 #include <atomic>
+#include <cassert>
 
 namespace EagleLib
 {
@@ -36,7 +37,6 @@ namespace EagleLib
                 _pool.erase(itr);
                 return ret;
             }
-            
         protected:
             std::list<T*> _pool;
             std::mutex mtx;

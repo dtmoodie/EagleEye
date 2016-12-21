@@ -115,6 +115,7 @@ namespace EagleLib
             virtual bool set_caps(const std::string& caps);
 
             void PushImage(SyncedMemory img, cv::cuda::Stream& stream);
+            void PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stream);
             // Used for gstreamer to indicate that the appsrc needs to either feed data or stop feeding data
             virtual void start_feed();
             virtual void stop_feed();

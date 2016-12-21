@@ -24,6 +24,9 @@ find_package(OpenCV 3.0 QUIET COMPONENTS  core imgproc highgui cudaimgproc cudaw
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 find_package(CUDA REQUIRED)
+set(CUDA_ARCH_NAME "Manual")
+set(CUDA_ARCH_BIN "30 35 50 60")
+set(CUDA_ARCH_PTX "30 35 50 60")
 get_filename_component(_cuda_lib_dir "${CUDA_CUDART_LIBRARY}" DIRECTORY)
 link_directories(${_cuda_lib_dir})
 find_package(Qt5 COMPONENTS Core Gui Widgets Network OpenGL)
@@ -70,7 +73,8 @@ set(BOOST_REQUIRED_MODULES
 	log 
 	log_setup 
 	atomic 
-	unit_test_framework)
+        unit_test_framework
+)
 
 find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES}) 
 
@@ -96,7 +100,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(cereal QUIET)
 if(cereal_FOUND)
     include_directories(${cereal_INCLUDE_DIRS})
-	add_definitions(-DEAGLELIB_HAVE_CEREAL)
+    add_definitions(-DEAGLELIB_HAVE_CEREAL)
 endif()
 
 
@@ -123,9 +127,9 @@ IF(NOT WIN32)
 ENDIF()
 
 
-#
-#                Export variables for other projects to use
-#
+#===================================================================
+#Export variables for other projects to use
+
 SET(LIB_BUILD_DIR_RELEASE "")
 SET(LIB_BUILD_DIR_DEBUG "")
 
@@ -153,9 +157,7 @@ LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIR})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIR_RELEASE})
 # Reporting section
-IF(Parameters_UI_qt)
-    message(STATUS "Parameters built with QT support, so linking into EagleLib")
-ENDIF()
+
 message(STATUS
 "================ EagleLib ===============
     Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}
@@ -220,7 +222,7 @@ cuda_add_library(EagleLib SHARED
     ${hdr}
     ${knl}
     ${RuntimeObjectSystem_SRCS}
-	src/precompiled.hpp
+    src/precompiled.hpp
 )
 ocv_add_precompiled_header_to_target(EagleLib src/precompiled.hpp)
 SOURCE_GROUP("Header Files\\External" FILES ${ext_inc})

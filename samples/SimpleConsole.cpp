@@ -8,6 +8,7 @@
 #include <MetaObject/Parameters/IVariableManager.h>
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
+#include <MetaObject/Detail/Allocator.hpp>
 #include <RuntimeObjectSystem.h>
 
 #include <boost/program_options.hpp>
@@ -53,11 +54,37 @@ void PrintNodeTree(EagleLib::Nodes::Node* node, int depth)
 static volatile bool quit;
 void sig_handler(int s)
 {
-    
-    LOG(error) << "Caught signal " << s;
+	switch(s)
+	{
+	case SIGSEGV:
+	{
+		LOG(error) << "Caught SIGINT " << mo::print_callstack(2, true);
+		break;
+	}
+	case SIGINT:
+	{
+		LOG(error) << "Caught SIGINT " << mo::print_callstack(2, true);
+		break;
+	}
+	case SIGILL:
+	{
+		LOG(error) << "Caught SIGILL " << mo::print_callstack(2, true);
+		break;
+	}
+	case SIGTERM:
+	{
+		LOG(error) << "Caught SIGTERM " << mo::print_callstack(2, true);
+		break;
+	}
+    case SIGKILL:
+    {
+        LOG(error) << "Caught SIGKILL " << mo::print_callstack(2, true);
+        break;
+    }
+	}
     quit = true;
-    if(s == 2)
-        exit(EXIT_FAILURE);
+
+    exit(EXIT_FAILURE);
 }
 
 int main(int argc, char* argv[])
@@ -69,7 +96,12 @@ int main(int argc, char* argv[])
     signal(SIGILL, sig_handler);
     signal(SIGTERM, sig_handler);
     signal(SIGSEGV, sig_handler);
-    
+    auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
+    g_allocator->SetName("Global Allocator");
+    cv::Mat::setDefaultAllocator(g_allocator, false);
+    cv::cuda::GpuMat::setDefaultAllocator(g_allocator, false);
+
+
     boost::program_options::options_description desc("Allowed options");
     
     desc.add_options()
@@ -78,12 +110,16 @@ int main(int argc, char* argv[])
         ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")
         ("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")
         ("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")
-        ("script", boost::program_options::value<std::string>(), "Text file with scripting commands")
-        ("profile", boost::program_options::value<bool>()->default_value(false), "Profile application")
+        ("script,s", boost::program_options::value<std::string>(), "Text file with scripting commands")
+        ("profile,p", boost::program_options::bool_switch(), "Profile application")
         ("gpu", boost::program_options::value<int>()->default_value(0), "")
         ("docroot", boost::program_options::value<std::string>(), "")
         ("http-address", boost::program_options::value<std::string>(), "")
         ("http-port", boost::program_options::value<std::string>(), "")
+        ("disable-rcc", boost::program_options::bool_switch(), "Disable rcc")
+        ("quit-on-eos", boost::program_options::bool_switch(), "Quit program on end of stream signal")
+        ("disable-input", boost::program_options::bool_switch(), "Disable input for batch scripting, and nvprof")
+        ("profile-for", boost::program_options::value<int>(), "Amount of time to run before quitting, use with profiler")
         ;
 
     boost::program_options::variables_map vm;
@@ -133,7 +169,7 @@ int main(int argc, char* argv[])
     {
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
     }
-    boost::filesystem::path currentDir = boost::filesystem::current_path();
+    boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
 #ifdef _MSC_VER
     currentDir = boost::filesystem::path(currentDir.string());
 #else
@@ -588,13 +624,25 @@ int main(int argc, char* argv[])
         _slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "profile"));
 
-        slot = new mo::TypedSlot<void(std::string)>(std::bind([&_dataStreams, &current_stream, &current_node](std::string file)
+        bool quit_on_eos = vm["quit-on-eos"].as<bool>();
+        mo::TypedSlot<void()> eos_slot(std::bind([&quit]()
+        {
+            LOG(info) << "End Of Stream received, shutting down";
+            quit = true;
+        }));
+        std::vector<std::shared_ptr<mo::Connection>> eos_connections;
+        slot = new mo::TypedSlot<void(std::string)>(
+        std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot](std::string file)
         {
             auto stream = EagleLib::IDataStream::Load(file);
             if(stream)
             {
                 stream->StartThread();
                 _dataStreams.push_back(stream);
+                if(quit_on_eos)
+                {
+                    stream->GetRelayManager()->Connect(&eos_slot, "eos");
+                }
             }
         }, std::placeholders::_1));
         _slots.emplace_back(slot);
@@ -1014,6 +1062,7 @@ int main(int argc, char* argv[])
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "run"));
 
+
         if (vm.count("file"))
         {
             auto relay = manager.GetRelay<void(std::string)>("load_file");
@@ -1026,46 +1075,52 @@ int main(int argc, char* argv[])
         
         print_options();
         bool compiling = false;
-        mo::MetaObjectFactory::Instance()->CheckCompile();
-        auto compile_check_function = [&_dataStreams, &compiling]()
+        bool rcc_enabled = !vm["disable-rcc"].as<bool>();
+        if(rcc_enabled)
+            mo::MetaObjectFactory::Instance()->CheckCompile();
+        auto compile_check_function = [&_dataStreams, &compiling, rcc_enabled]()
         {
-            if (mo::MetaObjectFactory::Instance()->CheckCompile())
+            if(rcc_enabled)
             {
-                std::cout << "Recompiling...\n";
-                for (auto& ds : _dataStreams)
+                if (mo::MetaObjectFactory::Instance()->CheckCompile())
                 {
-                    ds->StopThread();
-                }
-                compiling = true;
-            }
-            if (compiling)
-            {
-                if (!mo::MetaObjectFactory::Instance()->IsCompileComplete())
-                {
-                    std::cout << "Still compiling\n";
-                }
-                else
-                {
-                    if (mo::MetaObjectFactory::Instance()->SwapObjects())
+                    std::cout << "Recompiling...\n";
+                    for (auto& ds : _dataStreams)
                     {
-                        std::cout << "Object swap success\n";
-                        for (auto& ds : _dataStreams)
-                        {
-                            ds->StartThread();
-                        }
+                        ds->StopThread();
+                    }
+                    compiling = true;
+                }
+                if (compiling)
+                {
+                    if (!mo::MetaObjectFactory::Instance()->IsCompileComplete())
+                    {
+                        std::cout << "Still compiling\n";
                     }
                     else
                     {
-                        std::cout << "Failed to recompile\n";
+                        if (mo::MetaObjectFactory::Instance()->SwapObjects())
+                        {
+                            std::cout << "Object swap success\n";
+                            for (auto& ds : _dataStreams)
+                            {
+                                ds->StartThread();
+                            }
+                        }
+                        else
+                        {
+                            std::cout << "Failed to recompile\n";
+                        }
+                        compiling = false;
                     }
-                    compiling = false;
                 }
-            }  
+            }
         };
-
-        auto io_func = [&command_list, &manager, &print_options]()
+        bool disable_input = vm["disable-input"].as<bool>();
+        auto io_func = [&command_list, &manager, &print_options, disable_input]()
         {
             std::string command_line;
+            bool skip = (command_list.size() == 0) && disable_input;
             if (command_list.size())
             {
                 command_line = command_list.back();
@@ -1073,33 +1128,38 @@ int main(int argc, char* argv[])
             }
             else
             {
-                std::getline(std::cin, command_line);
+                if(!disable_input)
+                    std::getline(std::cin, command_line);
             }
-            
-            std::stringstream ss;
-            ss << command_line;
-            std::string command;
-            std::getline(ss, command, ' ');
-            auto relay = manager.GetRelay<void(std::string)>(command);
-            if (relay)
+            if(!skip)
             {
-                std::string rest;
-                std::getline(ss, rest);
-                try
+                std::stringstream ss;
+                ss << command_line;
+                std::string command;
+                std::getline(ss, command, ' ');
+                auto relay = manager.GetRelay<void(std::string)>(command);
+                if (relay)
                 {
-                    LOG(debug) << "Running command (" << command << ") with arguments: " << rest;
-                    (*relay)(rest);
+                    std::string rest;
+                    std::getline(ss, rest);
+                    try
+                    {
+                        LOG(debug) << "Running command (" << command << ") with arguments: " << rest;
+                        (*relay)(rest);
+                    }
+                    catch (...)
+                    {
+                        LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed miserably";
+                    }
                 }
-                catch (...)
+                else
                 {
-                    LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed miserably";
+                    LOG(warning) << "Invalid command: " << command_line;
+                    print_options();
                 }
+
             }
-            else
-            {
-                LOG(warning) << "Invalid command: " << command_line;
-                print_options();
-            }
+
             for (int i = 0; i < 20; ++i)
                 mo::ThreadSpecificQueue::RunOnce();
         };
@@ -1113,13 +1173,26 @@ int main(int argc, char* argv[])
                 (*relay)(file);
             }
         }
-        
+		int run_time = -1;
+		if(vm.count("profile-for") != 0)
+		{
+			run_time = vm["profile-for"].as<int>();
+		}
         boost::thread io_thread = boost::thread(std::bind(
-        [&io_func, &quit, &_dataStreams]()
+        [&io_func, &quit, &_dataStreams, run_time]()
         {
+        	auto start = boost::posix_time::microsec_clock::universal_time();
             while(!quit)
             {
                 io_func();
+                if(run_time != -1)
+				{
+                	auto now = boost::posix_time::microsec_clock::universal_time();
+					if(boost::posix_time::time_duration(now - start).total_seconds() > run_time)
+					{
+						quit = true;
+					}
+				}
             }
             for (auto& ds : _dataStreams)
             {

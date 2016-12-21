@@ -11,7 +11,7 @@ frame_grabber_directory::frame_grabber_directory()
 }
 bool frame_grabber_directory::ProcessImpl()
 {
-    auto frame = GetNextFrame(*_ctx->stream);
+    auto frame = GetNextFrame(Stream());
     if(!frame.empty())
     {
         this->current_frame_param.UpdateData(frame, frame.frame_number, _ctx);

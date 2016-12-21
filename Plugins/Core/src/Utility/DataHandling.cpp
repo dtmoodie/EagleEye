@@ -4,8 +4,21 @@
 #include <boost/lexical_cast.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-MO_REGISTER_CLASS(ImageInfo);
 
+bool PlaybackInfo::ProcessImpl()
+{
+    double ts_delta = (input_param.GetTimestamp() - last_timestamp) / 1000.0;
+    auto now = boost::posix_time::microsec_clock::local_time();
+    double processrate = 1000.0 / (double)boost::posix_time::time_duration(now - last_iteration_time).total_milliseconds();
+    double framerate = 1000.0 / double(ts_delta);
+    framerate_param.UpdateData(processrate);
+    source_framerate_param.UpdateData(framerate);
+    playrate_param.UpdateData(processrate / framerate);
+    last_timestamp = input_param.GetTimestamp();
+    last_iteration_time = now;
+    return true;
+}
+MO_REGISTER_CLASS(PlaybackInfo);
 bool ImageInfo::ProcessImpl()
 {
     long long ts = input_param.GetTimestamp();
@@ -17,6 +30,7 @@ bool ImageInfo::ProcessImpl()
     return true;
 }
 
+MO_REGISTER_CLASS(ImageInfo);
 bool Mat2Tensor::ProcessImpl()
 {
     int new_channels = input->GetChannels();

@@ -37,5 +37,17 @@ namespace EagleLib
         protected:
             bool ProcessImpl();
         };
+        class ExportRegionsOfInterest: public Node
+        {
+        public:
+            MO_DERIVE(ExportRegionsOfInterest, Node)
+                PARAM(std::vector<cv::Rect>, rois, std::vector<cv::Rect>());
+            MO_END;
+            mo::TypedParameterPtr<std::vector<cv::Rect>> output;
+            void NodeInit(bool firstInit);
+        protected:
+            bool ProcessImpl();
+
+        };
     }
 }

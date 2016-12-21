@@ -33,7 +33,7 @@ bool StereoBM::ProcessImpl()
         return false;
     }
     cv::cuda::GpuMat disparity;
-    stereoBM->compute(left_image->GetGpuMat(*_ctx->stream), right_image->GetGpuMat(*_ctx->stream),disparity, *_ctx->stream);
+    stereoBM->compute(left_image->GetGpuMat(Stream()), right_image->GetGpuMat(Stream()),disparity, Stream());
     this->disparity_param.UpdateData(disparity, left_image_param.GetTimestamp(), _ctx);
     return true;
 }
@@ -97,7 +97,7 @@ bool StereoConstantSpaceBP::ProcessImpl()
         num_iterations_param.modified = false;
     }
     cv::cuda::GpuMat disparity;
-    csbp->compute(left_image->GetGpuMat(*_ctx->stream), right_image->GetGpuMat(*_ctx->stream),disparity, *_ctx->stream);
+    csbp->compute(left_image->GetGpuMat(Stream()), right_image->GetGpuMat(Stream()),disparity, Stream());
     this->disparity_param.UpdateData(disparity, left_image_param.GetTimestamp(), _ctx);
     return true;
 }
@@ -113,9 +113,9 @@ bool UndistortStereo::ProcessImpl()
         mapX_param.UpdateData(X, -1, _ctx);
         mapY_param.UpdateData(Y, -1, _ctx);
     }
-    cv::cuda::remap(input->GetGpuMat(*_ctx->stream), input->GetGpuMatMutable(*_ctx->stream), 
-        mapX.GetGpuMat(*_ctx->stream), mapY.GetGpuMat(*_ctx->stream), 
-        interpolation_method.getValue(), boarder_mode.getValue(), cv::Scalar(), *_ctx->stream);
+    cv::cuda::remap(input->GetGpuMat(Stream()), input->GetGpuMatMutable(Stream()), 
+        mapX.GetGpuMat(Stream()), mapY.GetGpuMat(Stream()), 
+        interpolation_method.getValue(), boarder_mode.getValue(), cv::Scalar(), Stream());
     return true;
 }
 

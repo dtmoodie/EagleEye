@@ -30,9 +30,9 @@ namespace EagleLib
         {
         public:
             MO_DERIVE(GStreamerSink, gstreamer_sink_base)
-                INPUT(SyncedMemory, image, nullptr);
-                PARAM(std::string, gstreamer_pipeline, "");
-            MO_END;
+                INPUT(SyncedMemory, image, nullptr)
+                PARAM(std::string, gstreamer_pipeline, "")
+            MO_END
         protected:
             bool ProcessImpl();
             bool _initialized = false;

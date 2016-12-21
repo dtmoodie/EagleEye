@@ -10,13 +10,25 @@ namespace EagleLib
 {
     namespace Nodes
     {
+    class Scale:public Node
+    {
+    public:
+        MO_DERIVE(Scale, Node)
+            PARAM(double, scale_factor, 1.0)
+            INPUT(SyncedMemory, input, nullptr)
+            OUTPUT(SyncedMemory, output, SyncedMemory())
+        MO_END
+    protected:
+        bool ProcessImpl();
+    };
+
     class AutoScale: public Node
     {
     public:
-    MO_DERIVE(AutoScale, Node);
-        INPUT(SyncedMemory, input_image, nullptr);
-        OUTPUT(SyncedMemory, output_image, SyncedMemory());
-    MO_END;
+    MO_DERIVE(AutoScale, Node)
+        INPUT(SyncedMemory, input_image, nullptr)
+        OUTPUT(SyncedMemory, output_image, SyncedMemory())
+    MO_END
     protected:
         bool ProcessImpl();
     };
@@ -24,13 +36,13 @@ namespace EagleLib
     {
     public:
         MO_DERIVE(DrawDetections, Node)
-            PROPERTY(std::vector<std::string>, labels, std::vector<std::string>());
-            PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>());
-            INPUT(SyncedMemory, image, nullptr);
-            INPUT(std::vector<DetectedObject>, detections, nullptr);
-            PARAM(mo::ReadFile, detection_list, mo::ReadFile(""));
-            OUTPUT(SyncedMemory, image_with_detections, SyncedMemory());
-        MO_END;
+            PROPERTY(std::vector<std::string>, labels, std::vector<std::string>())
+            PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>())
+            INPUT(SyncedMemory, image, nullptr)
+            OPTIONAL_INPUT(std::vector<DetectedObject>, detections, nullptr)
+            PARAM(mo::ReadFile, detection_list, mo::ReadFile(""))
+            OUTPUT(SyncedMemory, image_with_detections, SyncedMemory())
+        MO_END
     protected:
         bool ProcessImpl();
     };

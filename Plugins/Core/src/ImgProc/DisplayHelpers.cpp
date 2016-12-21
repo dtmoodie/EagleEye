@@ -5,12 +5,19 @@
 using namespace ::EagleLib;
 using namespace ::EagleLib::Nodes;
 
+bool Scale::ProcessImpl()
+{
+    cv::cuda::GpuMat scaled;
+    cv::cuda::multiply(input->GetGpuMat(Stream()), cv::Scalar(scale_factor), scaled, 1, -1, Stream());
+    output_param.UpdateData(scaled, input_param.GetTimestamp(), _ctx);
+    return true;
+}
+MO_REGISTER_CLASS(Scale)
 
 bool AutoScale::ProcessImpl()
 {
-
     std::vector<cv::cuda::GpuMat> channels;
-    cv::cuda::split(input_image->GetGpuMat(*_ctx->stream), channels, *_ctx->stream);
+    cv::cuda::split(input_image->GetGpuMat(Stream()), channels, Stream());
     for(size_t i = 0; i < channels.size(); ++i)
     {
         double minVal, maxVal;
@@ -20,7 +27,7 @@ bool AutoScale::ProcessImpl()
         UpdateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal)->SetFlags(mo::State_e);
         UpdateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->SetFlags(mo::State_e);
     }
-    cv::cuda::merge(channels,output_image.GetGpuMat(*_ctx->stream), *_ctx->stream);
+    cv::cuda::merge(channels,output_image.GetGpuMat(Stream()), Stream());
     return true;
 }
 bool DrawDetections::ProcessImpl()
@@ -37,7 +44,7 @@ bool DrawDetections::ProcessImpl()
             colors.resize(labels.size());
             for(int i = 0; i < colors.size(); ++i)
             {
-                colors[i] = cv::Vec3b(i * 180 / colors.size(), 128, 128);
+                colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
             }
             cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
             cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
@@ -45,38 +52,40 @@ bool DrawDetections::ProcessImpl()
         detection_list_param.modified = false;
     }
     
-    cv::Mat mat_ = image->GetMat(*_ctx->stream);
+    cv::Mat mat_;
     if (image->GetSyncState(0) < SyncedMemory::DEVICE_UPDATED)
     {
-
+        mat_  = image->GetMat(Stream());
     }else
     {
-        // TODO async push
-        _ctx->stream->waitForCompletion();
+        mat_  = image->GetMat(Stream());
+        Stream().waitForCompletion();
     }
     cv::Mat mat = mat_.clone();
-    for(auto& detection : *detections)
+    if(detections)
     {
-        cv::Rect rect(detection.boundingBox.x, detection.boundingBox.y, detection.boundingBox.width, detection.boundingBox.height);
-        if(labels.size())
+        for(auto& detection : *detections)
         {
-            if(detection.detections.size())
+            cv::Rect rect(detection.boundingBox.x, detection.boundingBox.y, detection.boundingBox.width, detection.boundingBox.height);
+            if(labels.size())
             {
-                if(detection.detections[0].classNumber > 0 && detection.detections[0].classNumber < labels.size())
+                if(detection.detections.size())
                 {
                     cv::rectangle(mat, rect, colors[detection.detections[0].classNumber], 3);
                     std::stringstream ss;
-                    ss << detection.detections[0].label << " : " << detection.detections[0].confidence;
-                    cv::putText(mat, ss.str(), rect.tl() + cv::Point(10,20), cv::FONT_HERSHEY_COMPLEX, 0.5, colors[detection.detections[0].classNumber]);
+                    if(detection.detections[0].classNumber > 0 && detection.detections[0].classNumber < labels.size())
+                    {
+                        ss << detection.detections[0].label << " : " << detection.detections[0].confidence;
+                    }else
+                    {
+                        ss << detection.detections[0].confidence;
+                    }
+                    cv::putText(mat, ss.str(), rect.tl() + cv::Point(10,20), cv::FONT_HERSHEY_COMPLEX, 0.4, colors[detection.detections[0].classNumber]);
                 }
-                else
-                {
-                    
-                }
-            }    
-        }else
-        {
-            // random color for each different detection
+            }else
+            {
+                // random color for each different detection
+            }
         }
     }
     image_with_detections_param.UpdateData(mat, image_param.GetTimestamp(), _ctx);
@@ -156,13 +165,13 @@ bool Normalize::ProcessImpl()
     
     if(input_image->GetChannels() == 1)
     {
-        cv::cuda::normalize(input_image->GetGpuMat(*_ctx->stream), 
+        cv::cuda::normalize(input_image->GetGpuMat(Stream()), 
             normalized,
             alpha,
             beta,
             norm_type.currentSelection, input_image->GetDepth(),
-            mask == NULL ? cv::noArray(): mask->GetGpuMat(*_ctx->stream),
-            *_ctx->stream);
+            mask == NULL ? cv::noArray(): mask->GetGpuMat(Stream()),
+            Stream());
         normalized_output_param.UpdateData(normalized, input_image_param.GetTimestamp(), _ctx);
         return true;
     }else
@@ -171,10 +180,10 @@ bool Normalize::ProcessImpl()
         
         if (input_image->GetNumMats() == 1)
         {
-            cv::cuda::split(input_image->GetGpuMat(*_ctx->stream), channels, *_ctx->stream);
+            cv::cuda::split(input_image->GetGpuMat(Stream()), channels, Stream());
         }else
         {
-            channels = input_image->GetGpuMatVec(*_ctx->stream);
+            channels = input_image->GetGpuMatVec(Stream());
         }
         std::vector<cv::cuda::GpuMat> normalized_channels;
         normalized_channels.resize(channels.size());
@@ -184,12 +193,12 @@ bool Normalize::ProcessImpl()
                 alpha,
                 beta,
                 norm_type.getValue(), input_image->GetDepth(),
-                mask == NULL ? cv::noArray() : mask->GetGpuMat(*_ctx->stream),
-                *_ctx->stream);
+                mask == NULL ? cv::noArray() : mask->GetGpuMat(Stream()),
+                Stream());
         }
         if(input_image->GetNumMats() == 1)
         {
-            cv::cuda::merge(channels, normalized, *_ctx->stream);
+            cv::cuda::merge(channels, normalized, Stream());
             normalized_output_param.UpdateData(normalized, input_image_param.GetTimestamp(), _ctx);
         }else
         {

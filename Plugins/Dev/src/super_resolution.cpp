@@ -78,7 +78,7 @@ bool super_resolution::ProcessImpl()
     }
     cv::cuda::GpuMat result;
     
-    frame_source->input_frame(*input, *_ctx->stream);
+    frame_source->input_frame(*input, Stream());
     
     return true;
 }

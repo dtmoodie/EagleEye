@@ -132,7 +132,7 @@ namespace Nodes
         virtual void                    NodeInit(bool firstInit);
 
         virtual void                    Serialize(ISimpleSerializer *pSerializer);
-        inline cv::cuda::Stream&        Stream(){ return *_ctx->stream;}
+        inline cv::cuda::Stream&        Stream(){ return _ctx->GetStream();}
         
         bool CheckInputs();
 

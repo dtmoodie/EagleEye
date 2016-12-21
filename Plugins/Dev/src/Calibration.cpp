@@ -33,8 +33,8 @@ bool FindCheckerboard::ProcessImpl()
         num_corners_y_param.modified = false;
         corner_distance_param.modified = false;
     }
-    auto& mat = input->GetMat(*_ctx->stream);
-    _ctx->stream->waitForCompletion();
+    auto& mat = input->GetMat(Stream());
+    Stream().waitForCompletion();
     bool found = cv::findChessboardCorners(mat, cv::Size(num_corners_x, num_corners_y), image_points);
     if (drawn_corners_param.HasSubscriptions())
     {

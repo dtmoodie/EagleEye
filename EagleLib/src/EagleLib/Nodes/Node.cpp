@@ -215,7 +215,7 @@ bool Node::CheckInputs()
         _modified = true;
     if(_modified == false)
     {
-        LOG(trace) << "_modified == false for " << GetTreeName();
+        LOG_EVERY_N(trace, 10) << "_modified == false for " << GetTreeName();
         return false;
     }
     
@@ -238,12 +238,7 @@ void Node::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
 
 bool Node::Process()
 {
-    if(_enabled == false)
-        return false;
-    if(_modified == false)
-        return false;
-    if(_pimpl_node->disable_due_to_errors)
-        return false;
+    if(_enabled == true && _modified == true && _pimpl_node->disable_due_to_errors == false)
     { // scope of the lock
         boost::recursive_mutex::scoped_lock lock(*_mtx);
 
@@ -255,7 +250,7 @@ bool Node::Process()
         _modified = false;
         
         {
-            //mo::scoped_profile profiler(this->GetTreeName().c_str(), &this->_rmt_hash, &this->_rmt_cuda_hash, &Stream());
+            mo::scoped_profile profiler(this->GetTreeName().c_str(), &this->_rmt_hash, &this->_rmt_cuda_hash, &Stream());
             try
             {
                 if (!ProcessImpl())
@@ -587,7 +582,7 @@ void Node::NodeInit(bool firstInit)
 
 void Node::Serialize(ISimpleSerializer *pSerializer)
 {
-    LOG(trace) << " Serializing";
+    LOG(trace) << " Serializing " << GetTreeName();
     IMetaObject::Serialize(pSerializer);
     SERIALIZE(_children);
     SERIALIZE(_parents);

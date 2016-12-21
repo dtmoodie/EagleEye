@@ -1,12 +1,12 @@
 #pragma once
 #include "EagleLib/Detail/Export.hpp"
-#include <opencv2/core/cuda.hpp>
-#include <functional>
-#include <future>
 #include "ObjectPool.hpp"
+#include <opencv2/core/cuda.hpp>
 #include <pplx/pplxtasks.h>
 #include <boost/log/trivial.hpp>
 #include <iostream>
+#include <functional>
+#include <future>
 namespace boost
 {
     namespace posix_time

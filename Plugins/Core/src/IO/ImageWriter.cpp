@@ -37,15 +37,15 @@ bool ImageWriter::ProcessImpl()
         std::string save_name = ss.str();
         if(input_image->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
         {
-            cv::imwrite(save_name, input_image->GetMat(*_ctx->stream));
+            cv::imwrite(save_name, input_image->GetMat(Stream()));
         }else
         {
-            input_image->Synchronize(*_ctx->stream);
-            cv::Mat mat = input_image->GetMat(*_ctx->stream);
+            input_image->Synchronize(Stream());
+            cv::Mat mat = input_image->GetMat(Stream());
             cuda::enqueue_callback_async([mat, save_name]()->void
             {
                 cv::imwrite(save_name, mat);
-            }, *_ctx->stream);
+            }, Stream());
         }
     }
     ++frameSkip;

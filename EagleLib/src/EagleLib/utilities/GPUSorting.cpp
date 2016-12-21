@@ -37,7 +37,7 @@ void cv::cuda::sort(InputArray src, OutputArray dst, int flags, cv::cuda::Stream
     {
         if(flags & cv::SORT_EVERY_ROW)
         {
-            
+            descendEachRowSorts[dst.depth()](dst_, cv::cuda::StreamAccessor::getStream(stream));
         }else if(flags & cv::SORT_EVERY_COLUMN)
         {
             cv::error(1, "Column sorting not yet implemented on the GPU", __FUNCTION__, __FILE__, __LINE__);
@@ -50,7 +50,7 @@ void cv::cuda::sort(InputArray src, OutputArray dst, int flags, cv::cuda::Stream
     {
         if (flags & cv::SORT_EVERY_ROW)
         {
-
+            ascendEachRowSorts[dst.depth()](dst_, cv::cuda::StreamAccessor::getStream(stream));
         }
         else if (flags & cv::SORT_EVERY_COLUMN)
         {

@@ -21,7 +21,7 @@ bool MorphologyFilter::ProcessImpl()
                     ::cv::Size(structuring_element_size, structuring_element_size), anchor_point));
 
             filter = ::cv::cuda::createMorphologyFilter(
-                morphology_type.currentSelection, input_image->GetMat(*_ctx->stream).type(), 
+                morphology_type.currentSelection, input_image->GetMat(Stream()).type(), 
                 structuring_element, anchor_point, iterations);
 
             structuring_element_size_param.modified = false;
@@ -78,7 +78,7 @@ bool FindContours::ProcessImpl()
 {
     if(input_image)
     {
-        ::cv::Mat h_mat = input_image->GetMat(*_ctx->stream);
+        ::cv::Mat h_mat = input_image->GetMat(Stream());
         if(::cv::countNonZero(h_mat) <= 1)
         {
             this->contours.clear();
@@ -86,7 +86,7 @@ bool FindContours::ProcessImpl()
             return false;
         }
         long long ts = input_image_param.GetTimestamp();
-        _ctx->stream->waitForCompletion();
+        Stream().waitForCompletion();
         ::cv::findContours(h_mat,contours, hierarchy, mode.currentSelection, method.currentSelection);
         contours_param.Commit(ts, _ctx);
         hierarchy_param.Commit(ts, _ctx);

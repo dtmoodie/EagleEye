@@ -86,3 +86,18 @@ bool RegionOfInterest::ProcessImpl()
     return false;
 }
 MO_REGISTER_CLASS(RegionOfInterest);
+void ExportRegionsOfInterest::NodeInit(bool firstInit)
+{
+    output.SetMtx(_mtx);
+    output.UpdatePtr(&rois);
+    output.SetContext(_ctx);
+    output.SetName("output");
+    output.SetFlags(mo::ParameterType::Output_e);
+    AddParameter(&output);
+}
+
+bool ExportRegionsOfInterest::ProcessImpl()
+{
+    return true;
+}
+MO_REGISTER_CLASS(ExportRegionsOfInterest)

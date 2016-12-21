@@ -53,20 +53,20 @@ bool VideoWriter::ProcessImpl()
     }
     if(d_writer)
     {
-        d_writer->write(image->GetGpuMat(*_ctx->stream));
+        d_writer->write(image->GetGpuMat(Stream()));
     }
     if(h_writer)
     {
         if(image->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
         {
-            h_writer->write(image->GetMat(*_ctx->stream));
+            h_writer->write(image->GetMat(Stream()));
         }else
         {
-            cv::Mat mat = image->GetMat(*_ctx->stream);
+            cv::Mat mat = image->GetMat(Stream());
             cuda::enqueue_callback_async([mat, this]()->void
             {
                 this->h_writer->write(mat);
-            }, *_ctx->stream);
+            }, Stream());
         }
     }
     return true;

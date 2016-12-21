@@ -41,6 +41,11 @@ void DataStream::save(AR& ar) const
 IDataStream::Ptr IDataStream::Load(const std::string& config_file)
 {
     rcc::shared_ptr<DataStream> stream = rcc::shared_ptr<DataStream>::Create();
+    if(!stream)
+    {
+    	LOG(error) << "Unable to create data stream";
+    	return Ptr();
+    }
     if (stream->LoadStream(config_file))
         return stream;
     return Ptr();

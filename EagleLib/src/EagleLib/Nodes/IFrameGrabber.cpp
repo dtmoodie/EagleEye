@@ -190,7 +190,7 @@ void IFrameGrabber::Init(bool firstInit)
 }
 bool IFrameGrabber::ProcessImpl()
 {
-    auto frame = GetNextFrame(*_ctx->stream);
+    auto frame = GetNextFrame(Stream());
     if (!frame.empty())
     {
         this->current_frame_param.UpdateData(frame, frame.frame_number, _ctx);
@@ -209,7 +209,7 @@ FrameGrabberBuffered::FrameGrabberBuffered():
 {
     buffer_begin_frame_number = 0;
     buffer_end_frame_number = 0;
-    playback_frame_number = 0;
+    playback_frame_number = -1;
     _is_stream = false;
 }
 FrameGrabberBuffered::~FrameGrabberBuffered()
@@ -250,7 +250,9 @@ TS<SyncedMemory> FrameGrabberBuffered::GetNextFrame(cv::cuda::Stream& stream)
     int attempts = 0;
     while(playback_frame_number > buffer_end_frame_number - 5 )
     {
-        LOG(trace) << "Playback frame number (" << playback_frame_number << ") is too close to end of frame buffer (" << buffer_end_frame_number << ") - waiting for new frame to be read";
+        LOG_EVERY_N(debug, 100) << "Playback frame number (" << playback_frame_number
+                                << ") is too close to end of frame buffer ("
+                                << buffer_end_frame_number << ") - waiting for new frame to be read";
         frame_grabbed_cv.wait_for(bLock, boost::chrono::nanoseconds(10));
         if(attempts > 500)
             return TS<SyncedMemory>();
@@ -266,34 +268,38 @@ TS<SyncedMemory> FrameGrabberBuffered::GetNextFrame(cv::cuda::Stream& stream)
     }
     else
     {
-        desired_frame = playback_frame_number + 1;
+        if(_frame_number_playback_queue.size())
+        {
+            playback_frame_number = _frame_number_playback_queue.front();
+            _frame_number_playback_queue.pop();
+            LOG(trace) << "Got next frame index from playback queue " << playback_frame_number;
+        }
+        desired_frame = playback_frame_number;
     }
- 
-   for(auto& itr : frame_buffer)
+
+    for(auto& itr : frame_buffer)
     {
         if(itr.frame_number == desired_frame)
         {
-            LOG(trace) << "Found next frame in frame buffer with frame index (" << desired_frame << ") at buffer index (" << index << ")";
+            LOG(trace) << "Found next frame in frame buffer with frame index ("
+                       << desired_frame << ") at buffer index (" << index << ")";
             playback_frame_number = desired_frame;
-            // Found the next frame
-            //if (update_signal)
-                //(*update_signal)();
             sig_update();
             return itr;
         }
         ++index;
     }
     // If we get to this point, perhaps a frame was dropped. look for the next valid frame number in the frame buffer
-   if(_is_stream)
-   {
+    if(_is_stream)
+    {
         if(desired_frame < buffer_begin_frame_number)
         {
             // If this is a live stream and we've fallen behind, rail desired frame and return back of frame buffer
             playback_frame_number = frame_buffer.begin()->frame_number;
             sig_update();
-            return *frame_buffer.begin();        
-        }   
-   }
+            return *frame_buffer.begin();
+        }
+    }
     LOG(trace) << "Unable to find desired frame (" << desired_frame << ") in frame buffer [" << buffer_begin_frame_number << "," << buffer_end_frame_number << "]";
     for(int i = 0; i < frame_buffer.size(); ++i)
     {
@@ -349,7 +355,6 @@ void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
     // Waiting for the reading thread to catch up
     if(blocking)
     {
-
         while((buffer_begin_frame_number + 5 > playback_frame_number && 
             frame_buffer.size() == frame_buffer.capacity()) && 
             !_is_stream)
@@ -363,6 +368,7 @@ void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
     
     buffer_end_frame_number = frame.frame_number;
     frame_buffer.push_back(frame);
+    _frame_number_playback_queue.push(frame.frame_number);
     if(frame_buffer.size())
         buffer_begin_frame_number = frame_buffer[0].frame_number;
     frame_grabbed_cv.notify_all();
@@ -404,6 +410,7 @@ void FrameGrabberThreaded::Buffer()
 
 void FrameGrabberThreaded::StartThreads()
 {
+    LOG(debug) << "Received start threads signal";
     if(_pause)
     {
         _pause = false;

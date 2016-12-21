@@ -19,15 +19,15 @@ bool FFT::ProcessImpl()
         int in_cols = input->GetSize().width;
         int rows = cv::getOptimalDFTSize(in_rows);
         int cols = cv::getOptimalDFTSize(in_cols);
-        cv::cuda::copyMakeBorder(input->GetGpuMat(*_ctx->stream), padded, 0, rows - in_rows, 0, cols - in_cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), *_ctx->stream);
+        cv::cuda::copyMakeBorder(input->GetGpuMat(Stream()), padded, 0, rows - in_rows, 0, cols - in_cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), Stream());
     }else
     {
-        padded = input->GetGpuMat(*_ctx->stream);
+        padded = input->GetGpuMat(Stream());
     }
     if(padded.depth() != CV_32F)
     {
         cv::cuda::GpuMat float_img;
-        padded.convertTo(float_img, CV_MAKETYPE(CV_32F, padded.channels()), *_ctx->stream);
+        padded.convertTo(float_img, CV_MAKETYPE(CV_32F, padded.channels()), Stream());
         padded = float_img;
     }
     int flags = 0;
@@ -40,17 +40,17 @@ bool FFT::ProcessImpl()
     if (dft_real_output)
         flags = flags | cv::DFT_REAL_OUTPUT;
     cv::cuda::GpuMat result;
-    cv::cuda::dft(padded, result, input->GetSize(),flags, *_ctx->stream);
+    cv::cuda::dft(padded, result, input->GetSize(),flags, Stream());
     coefficients_param.UpdateData(result, input_param.GetTimestamp(), _ctx);
     if(magnitude_param.HasSubscriptions())
     {
         cv::cuda::GpuMat magnitude;
-        cv::cuda::magnitude(result,magnitude, *_ctx->stream);
+        cv::cuda::magnitude(result,magnitude, Stream());
         
         if(log_scale)
         {
-            cv::cuda::add(magnitude, cv::Scalar::all(1), magnitude, cv::noArray(), -1, *_ctx->stream);
-            cv::cuda::log(magnitude, magnitude, *_ctx->stream);
+            cv::cuda::add(magnitude, cv::Scalar::all(1), magnitude, cv::noArray(), -1, Stream());
+            cv::cuda::log(magnitude, magnitude, Stream());
         }
         this->magnitude_param.UpdateData(magnitude, input_param.GetTimestamp(), _ctx);
     }

@@ -1,9 +1,12 @@
 #include "EagleLib/utilities/CudaCallbacks.hpp"
+
+#include <MetaObject/Logging/Log.hpp>
+#include <MetaObject/Thread/InterThread.hpp>
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/microsec_time_clock.hpp>
 #include <boost/date_time/time_duration.hpp>
-#include <MetaObject/Logging/Log.hpp>
-#include <MetaObject/Thread/InterThread.hpp>
+
 using namespace EagleLib::cuda;
 
 void EagleLib::cuda::ICallback::cb_func_async_event_loop(int status, void* user_data)

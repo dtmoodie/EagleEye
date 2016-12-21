@@ -20,6 +20,7 @@
 #include <boost/circular_buffer.hpp>
 #include <boost/thread.hpp>
 
+
 #include <atomic>
 #include <string>
 
@@ -153,6 +154,7 @@ namespace EagleLib
         // condition variable for a notification of grabbing of a new image
         boost::condition_variable                frame_grabbed_cv;
         bool                                     _is_stream;
+        std::queue<long long>        _frame_number_playback_queue;
     };
     class EAGLE_EXPORTS FrameGrabberThreaded: public FrameGrabberBuffered
     {
