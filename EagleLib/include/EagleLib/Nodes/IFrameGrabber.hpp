@@ -171,7 +171,6 @@ namespace EagleLib
         virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
         virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
         virtual void                             Buffer();
-    private:
         boost::thread                            buffer_thread;
     };
     }
