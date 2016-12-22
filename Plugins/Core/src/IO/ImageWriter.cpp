@@ -1,5 +1,5 @@
 #include "ImageWriter.h"
-
+#include <boost/filesystem.hpp>
 
 
 using namespace EagleLib;
@@ -28,11 +28,17 @@ bool ImageWriter::ProcessImpl()
     }
 
     ++frame_count;
+    if(frequency == 0 && request_write == false)
+        return true;
     if (request_write || (frameSkip >= frequency) || frequency == -1)
     {
         request_write_param.UpdateData(false);
         std::stringstream ss;
-        ss << save_directory << base_name << std::setfill('0') << std::setw(4) << frame_count << ext;
+        if(!boost::filesystem::exists(save_directory))
+        {
+            boost::filesystem::create_directories(save_directory);
+        }
+        ss << save_directory.string() << "/" << base_name << std::setfill('0') << std::setw(4) << frame_count << ext;
         ++frame_count;
         std::string save_name = ss.str();
         if(input_image->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
@@ -51,4 +57,9 @@ bool ImageWriter::ProcessImpl()
     ++frameSkip;
     return true;
 }
+void ImageWriter::snap()
+{
+    request_write_param.UpdateData(true);
+}
+
 MO_REGISTER_CLASS(ImageWriter)

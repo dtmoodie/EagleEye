@@ -27,10 +27,15 @@ namespace EagleLib
             INPUT(SyncedMemory, input_image, nullptr)
             PARAM(std::string, base_name, "Image-")
             ENUM_PARAM(extension, jpg, png, tiff, bmp)
-            PARAM(int, frequency, -1)
+            PARAM(int, frequency, 30)
+        #ifdef _MSC_VER
             PARAM(mo::WriteDirectory, save_directory, mo::WriteDirectory("C:/tmp"))
-            STATUS(int, frame_count, 0);
-            PARAM(bool, request_write, false);
+        #else
+            PARAM(mo::WriteDirectory, save_directory, mo::WriteDirectory("/tmp"))
+        #endif
+            STATUS(int, frame_count, 0)
+            PARAM(bool, request_write, false)
+            MO_SLOT(void, snap)
         MO_END;
     protected:
         bool ProcessImpl();
