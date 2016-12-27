@@ -1,11 +1,10 @@
 #pragma once
-
-
 #include <cereal/archives/json.hpp>
 #include <cereal/types/vector.hpp>
 #include <EagleLib/Nodes/Node.h>
 #include <EagleLib/IDataStream.hpp>
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
+#include <boost/lexical_cast.hpp>
 namespace EagleLib
 {
 
@@ -376,6 +375,17 @@ namespace EagleLib
             sizeof(T) < sizeof(int64_t)> = cereal::traits::sfinae> inline
             void loadValue(T & val)
         {
+            if (itsNextName)
+            {
+                auto itr = variable_replace_mapping.find(itsNextName);
+                if (itr != variable_replace_mapping.end())
+                {
+                    val = boost::lexical_cast<T>(itr->second);
+                    itsNextName = nullptr;
+                    ++itsIteratorStack.back();
+                    return;
+                }
+            }
             search();
 
             val = static_cast<T>(itsIteratorStack.back().value().GetInt());
@@ -388,6 +398,17 @@ namespace EagleLib
             !std::is_same<bool, T>::value> = cereal::traits::sfinae> inline
             void loadValue(T & val)
         {
+            if (itsNextName)
+            {
+                auto itr = variable_replace_mapping.find(itsNextName);
+                if (itr != variable_replace_mapping.end())
+                {
+                    val = boost::lexical_cast<T>(itr->second);
+                    itsNextName = nullptr;
+                    ++itsIteratorStack.back();
+                    return;
+                }
+            }
             search();
 
             val = static_cast<T>(itsIteratorStack.back().value().GetUint());
@@ -395,15 +416,95 @@ namespace EagleLib
         }
 
         //! Loads a value from the current node - bool overload
-        void loadValue(bool & val) { search(); val = itsIteratorStack.back().value().GetBool(); ++itsIteratorStack.back(); }
+        void loadValue(bool & val) 
+        { 
+            if (itsNextName)
+            {
+                auto itr = variable_replace_mapping.find(itsNextName);
+                if (itr != variable_replace_mapping.end())
+                {
+                    val = boost::lexical_cast<bool>(itr->second);
+                    itsNextName = nullptr;
+                    ++itsIteratorStack.back();
+                    return;
+                }
+            }
+            search(); 
+            val = itsIteratorStack.back().value().GetBool(); 
+            ++itsIteratorStack.back();
+        }
         //! Loads a value from the current node - int64 overload
-        void loadValue(int64_t & val) { search(); val = itsIteratorStack.back().value().GetInt64(); ++itsIteratorStack.back(); }
+        void loadValue(int64_t & val) 
+        { 
+            if (itsNextName)
+            {
+                auto itr = variable_replace_mapping.find(itsNextName);
+                if (itr != variable_replace_mapping.end())
+                {
+                    val = boost::lexical_cast<int64_t>(itr->second);
+                    itsNextName = nullptr;
+                    ++itsIteratorStack.back();
+                    return;
+                }
+            }
+            search(); 
+            val = itsIteratorStack.back().value().GetInt64(); 
+            ++itsIteratorStack.back(); 
+        }
         //! Loads a value from the current node - uint64 overload
-        void loadValue(uint64_t & val) { search(); val = itsIteratorStack.back().value().GetUint64(); ++itsIteratorStack.back(); }
+        void loadValue(uint64_t & val) 
+        { 
+            if (itsNextName)
+            {
+                auto itr = variable_replace_mapping.find(itsNextName);
+                if (itr != variable_replace_mapping.end())
+                {
+                    val = boost::lexical_cast<uint64_t>(itr->second);
+                    itsNextName = nullptr;
+                    ++itsIteratorStack.back();
+                    return;
+                }
+            }
+            search(); 
+            val = itsIteratorStack.back().value().GetUint64(); 
+            ++itsIteratorStack.back(); 
+        }
         //! Loads a value from the current node - float overload
-        void loadValue(float & val) { search(); val = static_cast<float>(itsIteratorStack.back().value().GetDouble()); ++itsIteratorStack.back(); }
+        void loadValue(float & val) 
+        { 
+            if (itsNextName)
+            {
+                auto itr = variable_replace_mapping.find(itsNextName);
+                if (itr != variable_replace_mapping.end())
+                {
+                    val = boost::lexical_cast<float>(itr->second);
+                    itsNextName = nullptr;
+                    ++itsIteratorStack.back();
+                    return;
+                }
+            }
+            search(); 
+            val = static_cast<float>(itsIteratorStack.back().value().GetDouble()); 
+            ++itsIteratorStack.back(); 
+        }
         //! Loads a value from the current node - double overload
-        void loadValue(double & val) { search(); val = itsIteratorStack.back().value().GetDouble(); ++itsIteratorStack.back(); }
+        void loadValue(double & val) 
+        { 
+            if (itsNextName)
+            {
+                auto itr = variable_replace_mapping.find(itsNextName);
+                if (itr != variable_replace_mapping.end())
+                {
+                    val = boost::lexical_cast<double>(itr->second);
+                    itsNextName = nullptr;
+                    ++itsIteratorStack.back();
+                    return;
+                }
+            }
+            search(); 
+            val = itsIteratorStack.back().value().GetDouble(); 
+            ++itsIteratorStack.back(); 
+        }
         //! Loads a value from the current node - string overload
         void loadValue(std::string & val) 
         { 
@@ -433,79 +534,10 @@ namespace EagleLib
 
         // Special cases to handle various flavors of long, which tend to conflict with
         // the int32_t or int64_t on various compiler/OS combinations.  MSVC doesn't need any of this.
-#ifndef _MSC_VER
-    private:
-        //! 32 bit signed long loading from current node
-        template <class T> inline
-            typename std::enable_if<sizeof(T) == sizeof(std::int32_t) && std::is_signed<T>::value, void>::type
-            loadLong(T & l) { loadValue(reinterpret_cast<std::int32_t&>(l)); }
 
-        //! non 32 bit signed long loading from current node
-        template <class T> inline
-            typename std::enable_if<sizeof(T) == sizeof(std::int64_t) && std::is_signed<T>::value, void>::type
-            loadLong(T & l) { loadValue(reinterpret_cast<std::int64_t&>(l)); }
 
-        //! 32 bit unsigned long loading from current node
-        template <class T> inline
-            typename std::enable_if<sizeof(T) == sizeof(std::uint32_t) && !std::is_signed<T>::value, void>::type
-            loadLong(T & lu) { loadValue(reinterpret_cast<std::uint32_t&>(lu)); }
-
-        //! non 32 bit unsigned long loading from current node
-        template <class T> inline
-            typename std::enable_if<sizeof(T) == sizeof(std::uint64_t) && !std::is_signed<T>::value, void>::type
-            loadLong(T & lu) { loadValue(reinterpret_cast<std::uint64_t&>(lu)); }
-
-    public:
-        //! Serialize a long if it would not be caught otherwise
-        template <class T> inline
-            typename std::enable_if<std::is_same<T, long>::value &&
-            sizeof(T) >= sizeof(std::int64_t) &&
-            !std::is_same<T, std::int64_t>::value, void>::type
-            loadValue(T & t) { loadLong(t); }
-
-        //! Serialize an unsigned long if it would not be caught otherwise
-        template <class T> inline
-            typename std::enable_if<std::is_same<T, unsigned long>::value &&
-            sizeof(T) >= sizeof(std::uint64_t) &&
-            !std::is_same<T, std::uint64_t>::value, void>::type
-            loadValue(T & t) { loadLong(t); }
-#endif // _MSC_VER
-
-    private:
-        //! Convert a string to a long long
-        void stringToNumber(std::string const & str, long long & val) { val = std::stoll(str); }
-        //! Convert a string to an unsigned long long
-        void stringToNumber(std::string const & str, unsigned long long & val) { val = std::stoull(str); }
-        //! Convert a string to a long double
-        void stringToNumber(std::string const & str, long double & val) { val = std::stold(str); }
-
-    public:
-        //! Loads a value from the current node - long double and long long overloads
-        template <class T, cereal::traits::EnableIf<std::is_arithmetic<T>::value,
-            !std::is_same<T, long>::value,
-            !std::is_same<T, unsigned long>::value,
-            !std::is_same<T, std::int64_t>::value,
-            !std::is_same<T, std::uint64_t>::value,
-            (sizeof(T) >= sizeof(long double) || sizeof(T) >= sizeof(long long))> = cereal::traits::sfinae>
-            inline void loadValue(T & val)
-        {
-            std::string encoded;
-            loadValue(encoded);
-            stringToNumber(encoded, val);
-        }
-
-        //! Loads the size for a SizeTag
-        void loadSize(cereal::size_type & size)
-        {
-            if (itsIteratorStack.size() == 1)
-                size = itsDocument.Size();
-            else
-                size = (itsIteratorStack.rbegin() + 1)->value().Size();
-        }
-
-        //! @}
-
-    private:
+    
+        
     };
 
     // ######################################################################
@@ -922,7 +954,8 @@ namespace cereal
                            }
                        }else
                        {
-                           LOG(warning) << "Invalid input format " << itr->second;
+                           if(itr->second.size())
+                            LOG(warning) << "Invalid input format " << itr->second;
                        }
                 }else
                 {
@@ -996,7 +1029,7 @@ namespace cereal
         ar(CEREAL_NVP(inputs));
         EagleLib::JSONInputArchive& ar_ = dynamic_cast<EagleLib::JSONInputArchive&>(ar);
         std::vector<std::string> parents;
-        ar(cereal::make_nvp("parents", ar_.parent_mappings[name]));
+        ar(cereal::make_optional_nvp("parents", ar_.parent_mappings[name]));
     }
 }
 
