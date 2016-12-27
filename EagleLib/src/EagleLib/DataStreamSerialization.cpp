@@ -38,7 +38,7 @@ void DataStream::save(AR& ar) const
     this->_save_parent<AR>(ar);
 }
 
-IDataStream::Ptr IDataStream::Load(const std::string& config_file)
+IDataStream::Ptr IDataStream::Load(const std::string& config_file, const VariableMap& vm, const VariableMap& sm)
 {
     rcc::shared_ptr<DataStream> stream_ = rcc::shared_ptr<DataStream>::Create();
     if(!stream_)
@@ -67,7 +67,7 @@ IDataStream::Ptr IDataStream::Load(const std::string& config_file)
         try
         {
             std::ifstream ifs(config_file, std::ios::binary);
-            EagleLib::JSONInputArchive ar(ifs);
+            EagleLib::JSONInputArchive ar(ifs, vm, sm);
             ar(stream);
         }
         catch (cereal::RapidJSONException&e)

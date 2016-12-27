@@ -27,8 +27,9 @@ namespace EagleLib
     {
     public:
         typedef rcc::shared_ptr<IDataStream> Ptr;
+        typedef std::map<std::string, std::string> VariableMap;
         static Ptr Create(const std::string& document = "", const std::string& preferred_frame_grabber = "");
-        static Ptr Load(const std::string& config_file);
+        static Ptr Load(const std::string& config_file, const VariableMap& vm = VariableMap(), const VariableMap& sm = VariableMap());
         static void Save(const std::string& config_file, rcc::shared_ptr<IDataStream>& stream);
         static bool CanLoadDocument(const std::string& document);
 

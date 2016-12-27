@@ -251,14 +251,18 @@ namespace EagleLib
     public:
         std::map<std::string, std::map<std::string, std::string>> input_mappings;
         std::map<std::string, std::vector<std::string>> parent_mappings;
+        const std::map<std::string, std::string>& variable_replace_mapping;
+        const std::map<std::string, std::string>& string_replace_mapping;
         /*! @name Common Functionality
         Common use cases for directly interacting with an JSONInputArchive */
         //! @{
 
         //! Construct, reading from the provided stream
         /*! @param stream The stream to read from */
-        JSONInputArchive(std::istream & stream) :
-            cereal::JSONInputArchive(stream)
+        JSONInputArchive(std::istream & stream, const std::map<std::string, std::string>& vm, const std::map<std::string, std::string>& sm) :
+            cereal::JSONInputArchive(stream),
+            variable_replace_mapping(vm),
+            string_replace_mapping(sm)
         {
             
         }
@@ -401,7 +405,29 @@ namespace EagleLib
         //! Loads a value from the current node - double overload
         void loadValue(double & val) { search(); val = itsIteratorStack.back().value().GetDouble(); ++itsIteratorStack.back(); }
         //! Loads a value from the current node - string overload
-        void loadValue(std::string & val) { search(); val = itsIteratorStack.back().value().GetString(); ++itsIteratorStack.back(); }
+        void loadValue(std::string & val) 
+        { 
+            if (itsNextName)
+            {
+                auto itr = variable_replace_mapping.find(itsNextName);
+                if (itr != variable_replace_mapping.end())
+                {
+                    val = itr->second;
+                    itsNextName = nullptr;
+                    ++itsIteratorStack.back();
+                    return;
+                }
+            }
+            search();
+            val = itsIteratorStack.back().value().GetString();
+            
+            auto itr1 = string_replace_mapping.find(val);
+            if(itr1 != string_replace_mapping.end())
+            {
+                val = itr1->second;
+            }
+            ++itsIteratorStack.back();
+        }
         //! Loads a nullptr from the current node
         void loadValue(std::nullptr_t&) { search(); CEREAL_RAPIDJSON_ASSERT(itsIteratorStack.back().value().IsNull()); ++itsIteratorStack.back(); }
 
