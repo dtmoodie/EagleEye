@@ -22,6 +22,7 @@
 #include "MetaObject/MetaObjectFactory.hpp"
 #include <MetaObject/Logging/Profiling.hpp>
 #include "MetaObject/IO/memory.hpp"
+#include "MetaObject/Thread/ThreadPool.hpp"
 
 #include <opencv2/core.hpp>
 #include <boost/chrono.hpp>
@@ -29,6 +30,7 @@
 #include <boost/filesystem.hpp>
 
 #include <fstream>
+#include <future>
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -75,8 +77,7 @@ catch (...)                                                                 \
 // **********************************************************************
 //              DataStream
 // **********************************************************************
-DataStream::DataStream():
-    _context("DataStream")
+DataStream::DataStream()
 {
     _sig_manager = GetRelayManager();
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
@@ -93,27 +94,51 @@ DataStream::DataStream():
     }
     GetRelayManager()->ConnectSlots(this);
     GetRelayManager()->ConnectSignals(this);
-    paused = true;
     stream_id = 0;
     _thread_id = 0;
-    _ctx = &_context;
-    _context.SetStream(_stream);
-    processing_thread = boost::thread(boost::bind(&DataStream::process, this));
+    _processing_thread = mo::ThreadPool::Instance()->RequestThread();
+    _processing_thread.SetInnerLoop(GetSlot_process<int(void)>());
+    _processing_thread.SetThreadName("DataStreamThread");
+    _processing_thread.SetStartCallback([this](){this->_ctx = this->_processing_thread.GetContext();});
+}
+
+void DataStream::node_updated(Nodes::Node* node)
+{
+    dirty_flag = true;
+}
+
+void DataStream::update()
+{
+    dirty_flag = true;
+}
+
+void DataStream::parameter_updated(mo::IMetaObject* obj, mo::IParameter* param)
+{
+    dirty_flag = true;
+}
+
+void DataStream::parameter_added(mo::IMetaObject* obj, mo::IParameter* param)
+{
+    dirty_flag = true;
+}
+
+void DataStream::run_continuously(bool value)
+{
     
 }
+
 void DataStream::InitCustom(bool firstInit)
 {
     if(firstInit)
     {
         this->SetupSignals(GetRelayManager());
     }
+    _processing_thread.Start();
 }
 
 DataStream::~DataStream()
 {
     StopThread();
-    processing_thread.interrupt();
-    processing_thread.join();
     top_level_nodes.clear();
     relay_manager.reset();
     _sig_manager = nullptr;
@@ -338,9 +363,18 @@ bool IDataStream::CanLoadDocument(const std::string& document)
     return !valid_frame_grabbers.empty();
 }
 
-std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::GetNodes()
+std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::GetNodes() const
 {
     return top_level_nodes;
+}
+std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::GetAllNodes() const
+{
+    std::vector<rcc::shared_ptr<Nodes::Node>> output;
+    for(auto& child : child_nodes)
+    {
+        output.emplace_back(child);
+    }
+    return output;
 }
 std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::AddNode(const std::string& nodeName)
 {
@@ -349,9 +383,34 @@ std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::AddNode(const std::string&
 void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
     node->SetDataStream(this);
-    if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
+    if(!_processing_thread.IsOnThread()) //    if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
     {
-        mo::ThreadSpecificQueue::Push(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node), _thread_id);
+        //_processing_thread.PushEventQueue(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node));
+        
+        std::promise<void> promise;
+        std::future<void> future = promise.get_future();
+        _processing_thread.PushEventQueue(std::bind([&promise, node, this]()
+        {
+            rcc::shared_ptr<Node> node_ = node;
+            if (std::find(top_level_nodes.begin(), top_level_nodes.end(), node) != top_level_nodes.end())
+                return;
+            if (node->name.size() == 0)
+            {
+                std::string node_name = node->GetTypeName();
+                int count = 0;
+                for (size_t i = 0; i < top_level_nodes.size(); ++i)
+                {
+                    if (top_level_nodes[i] && top_level_nodes[i]->GetTypeName() == node_name)
+                        ++count;
+                }
+                node_->SetUniqueId(count);
+            }
+            node_->SetParameterRoot(node_->GetTreeName());
+            top_level_nodes.push_back(node);
+            dirty_flag = true;
+            promise.set_value();
+        }));
+        future.wait();
         return;
     }
     if(std::find(top_level_nodes.begin(), top_level_nodes.end(), node) != top_level_nodes.end())
@@ -367,7 +426,6 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
         }
         node->SetUniqueId(count);
     }
-    //node->SetTreeName(node->GetTreeName());
     node->SetParameterRoot(node->GetTreeName());
     top_level_nodes.push_back(node);
     dirty_flag = true;
@@ -375,7 +433,7 @@ void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 void DataStream::AddChildNode(rcc::shared_ptr<Nodes::Node> node)
 {
     std::lock_guard<std::mutex> lock(nodes_mtx);
-    if(std::find(child_nodes.begin(), child_nodes.end(), node.Get()) == child_nodes.end())
+    if(std::find(child_nodes.begin(), child_nodes.end(), node.Get()) != child_nodes.end())
         return;
     int type_count = 0;
     for(auto& child : child_nodes)
@@ -404,13 +462,22 @@ void DataStream::AddNodes(std::vector<rcc::shared_ptr<Nodes::Node>> nodes)
     {
         node->SetDataStream(this);
     }
-    if (boost::this_thread::get_id() != processing_thread.get_id() && _thread_id != 0 && !paused)
+    if(!_processing_thread.IsOnThread())
     {
-        //Signals::thread_specific_queue::push(std::bind(&DataStream::AddNodes, this, nodes), _thread_id);
-        mo::ThreadSpecificQueue::Push(std::bind(&DataStream::AddNodes, this, nodes), _thread_id);
-        return;
+        std::promise<void> promise;
+        std::future<void> future = promise.get_future();
+        _processing_thread.PushEventQueue(std::bind([&nodes, this, &promise]()
+        {
+            for (auto& node : nodes)
+            {
+                AddNode(node);
+            }
+            dirty_flag = true;
+            promise.set_value();
+        }));
+        future.wait();
     }
-    for(auto& node: nodes)
+    for (auto& node : nodes)
     {
         top_level_nodes.push_back(node);
     }
@@ -466,35 +533,32 @@ void DataStream::RemoveVariableSink(IVariableSink* sink)
 void DataStream::StartThread()
 {
     StopThread();
-    paused = false;
     sig_StartThreads();
+    _processing_thread.Start();
 }
 
 void DataStream::StopThread()
 {
-    paused = true;
+    _processing_thread.Stop();
     sig_StopThreads();
-    LOG(trace);
 }
 
 
 void DataStream::PauseThread()
 {
-    paused = true;
     sig_StopThreads();
-    LOG(trace);
+    _processing_thread.Stop();
 }
 
 void DataStream::ResumeThread()
 {
-    paused = false;
+    _processing_thread.Start();
     sig_StartThreads();
-    LOG(trace);
 }
 
-void DataStream::process()
+int DataStream::process()
 {
-    mo::SetThreadName("DataStreamThread");
+    /*mo::SetThreadName("DataStreamThread");
     unsigned int rmt_hash = 0;
     unsigned int rmt_cuda_hash = 0;
     dirty_flag = true;
@@ -562,7 +626,6 @@ void DataStream::process()
         {	
             if(dirty_flag || run_continuously == true)
             {
-
                 dirty_flag = false;
                 mo::scoped_profile profile("Processing nodes", &rmt_hash, &rmt_cuda_hash, &_context.GetStream());
                 for(auto& node : top_level_nodes)
@@ -584,7 +647,21 @@ void DataStream::process()
             boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
         }
     }
-    LOG(debug) << "Stream thread shutting down";
+    LOG(debug) << "Stream thread shutting down";*/
+    if (dirty_flag/* || run_continuously == true*/)
+    {
+        dirty_flag = false;
+        //mo::scoped_profile profile("Processing nodes", &rmt_hash, &rmt_cuda_hash, &_context.GetStream());
+        for (auto& node : top_level_nodes)
+        {
+            node->Process();
+        }
+        if (dirty_flag)
+        {
+            return 0;
+        }
+    }
+    return 10;
 }
 
 IDataStream::Ptr IDataStream::Create(const std::string& document, const std::string& preferred_frame_grabber)
@@ -607,8 +684,5 @@ std::unique_ptr<ISingleton>& DataStream::GetIObjectSingleton(mo::TypeInfo type)
 {
     return _iobject_singletons[type];
 }
-
-
-
 
 MO_REGISTER_OBJECT(DataStream)

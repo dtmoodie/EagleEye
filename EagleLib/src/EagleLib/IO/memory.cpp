@@ -10,7 +10,8 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-INSTANTIATE_META_PARAMETER(rcc::shared_ptr<Node>);
+/*INSTANTIATE_META_PARAMETER(rcc::shared_ptr<Node>);
 INSTANTIATE_META_PARAMETER(rcc::weak_ptr<Node>);
 INSTANTIATE_META_PARAMETER(std::vector<rcc::shared_ptr<Node>>);
 INSTANTIATE_META_PARAMETER(std::vector<rcc::weak_ptr<Node>>);
+*/

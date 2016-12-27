@@ -29,6 +29,7 @@ namespace EagleLib
         typedef rcc::shared_ptr<IDataStream> Ptr;
         static Ptr Create(const std::string& document = "", const std::string& preferred_frame_grabber = "");
         static Ptr Load(const std::string& config_file);
+        static void Save(const std::string& config_file, rcc::shared_ptr<IDataStream>& stream);
         static bool CanLoadDocument(const std::string& document);
 
 
@@ -52,7 +53,8 @@ namespace EagleLib
 
         virtual IParameterBuffer*                       GetParameterBuffer() = 0;
 
-        virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes() = 0;
+        virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes() const = 0;
+        virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetAllNodes() const = 0;
 
         virtual bool LoadDocument(const std::string& document, const std::string& prefered_loader = "") = 0;
 
@@ -67,7 +69,7 @@ namespace EagleLib
         virtual void StopThread() = 0;
         virtual void PauseThread() = 0;
         virtual void ResumeThread() = 0;
-        virtual void process() = 0;
+        virtual int process() = 0;
         
         virtual void AddVariableSink(IVariableSink* sink) = 0;
         virtual void RemoveVariableSink(IVariableSink* sink) = 0;

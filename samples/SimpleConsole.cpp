@@ -9,6 +9,8 @@
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
 #include <MetaObject/Detail/Allocator.hpp>
+#include <MetaObject/Thread/ThreadPool.hpp>
+
 #include <RuntimeObjectSystem.h>
 
 #include <boost/program_options.hpp>
@@ -76,11 +78,13 @@ void sig_handler(int s)
 		LOG(error) << "Caught SIGTERM " << mo::print_callstack(2, true);
 		break;
 	}
+#ifndef _MSC_VER
     case SIGKILL:
     {
         LOG(error) << "Caught SIGKILL " << mo::print_callstack(2, true);
         break;
     }
+#endif
 	}
     quit = true;
 
@@ -98,8 +102,8 @@ int main(int argc, char* argv[])
     signal(SIGSEGV, sig_handler);
     auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
     g_allocator->SetName("Global Allocator");
-    cv::Mat::setDefaultAllocator(g_allocator, false);
-    cv::cuda::GpuMat::setDefaultAllocator(g_allocator, false);
+    mo::SetGpuAllocatorHelper<cv::cuda::GpuMat>(g_allocator);
+    mo::SetCpuAllocatorHelper<cv::Mat>(g_allocator);
 
 
     boost::program_options::options_description desc("Allowed options");
@@ -607,7 +611,9 @@ int main(int argc, char* argv[])
 		{
 			if (current_stream)
 			{
-				current_stream->SaveStream(file);
+				//current_stream->SaveStream(file);
+                rcc::shared_ptr<EagleLib::IDataStream> stream(current_stream);
+                EagleLib::IDataStream::Save(file, stream);
 			}
 			else if (current_node)
 			{
@@ -1220,6 +1226,6 @@ int main(int argc, char* argv[])
     gui_thread.interrupt();
     
     gui_thread.join();
-    
+    mo::ThreadPool::Instance()->Cleanup();
     return 0;
 }

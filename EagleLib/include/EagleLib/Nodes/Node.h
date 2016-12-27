@@ -92,7 +92,7 @@ namespace Nodes
 
         virtual void                    AddParent(Node *parent);
 
-        std::vector<WeakPtr>            GetParents();
+        std::vector<WeakPtr>            GetParents() const;
 
         virtual bool                    ConnectInput(Ptr output_node,
                                                      const std::string& output_name, 
@@ -126,6 +126,7 @@ namespace Nodes
 
         void                            SetUniqueId(int id);
         std::string                     GetTreeName();
+        std::string                     GetTreeName() const;
         void                            SetTreeName(const std::string& name);
         
         virtual void                    Init(bool firstInit);
@@ -139,7 +140,6 @@ namespace Nodes
         MO_BEGIN(Node);
             MO_SLOT(void, reset);
             MO_SIGNAL(void, node_updated, Node*);
-            STATUS(std::string, name, "");
         MO_END;
 
     protected:
@@ -172,6 +172,7 @@ namespace Nodes
         std::vector<WeakPtr>                            _parents;
         unsigned int                                    _rmt_hash;
         unsigned int                                    _rmt_cuda_hash;
+        std::string                                     name;
     private:
         std::shared_ptr<NodeImpl>                       _pimpl_node;
     };

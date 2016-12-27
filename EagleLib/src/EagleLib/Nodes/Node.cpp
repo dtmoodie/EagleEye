@@ -518,7 +518,6 @@ void Node::SetDataStream(IDataStream* stream_)
     {
         child->SetDataStream(_data_stream.Get());
     }
-    
 }
 
 IDataStream* Node::GetDataStream()
@@ -545,19 +544,23 @@ std::string Node::GetTreeName()
     if(name.size() == 0)
     {
         name = std::string(GetTypeName()) + boost::lexical_cast<std::string>(_unique_id);
-        name_param.Commit();
+        //name_param.Commit();
     }
+    return name;
+}
+std::string Node::GetTreeName() const
+{
     return name;
 }
 
 void Node::SetTreeName(const std::string& name)
 {
     this->name = name;
-    name_param.Commit();
+    //name_param.Commit();
     SetParameterRoot(name);
 }
 
-std::vector<rcc::weak_ptr<Node>> Node::GetParents()
+std::vector<rcc::weak_ptr<Node>> Node::GetParents() const
 {
     return _parents;
 }
