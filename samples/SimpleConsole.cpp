@@ -179,12 +179,7 @@ int main(int argc, char* argv[])
     }
 
 
-    if((!vm.count("config") || !vm.count("file")) && vm["mode"].as<std::string>() == "batch")
-    {
-        LOG(info) << "Batch mode selected but \"file\" and \"config\" options not set";
-        std::cout << desc;
-        return 1;
-    }
+    
     if (vm.count("log"))
     {
         std::string verbosity = vm["log"].as<std::string>();
@@ -293,23 +288,7 @@ int main(int argc, char* argv[])
 
     if(vm["mode"].as<std::string>() == "batch")
     {
-        quit = false;
-        std::string document = vm["file"].as<std::string>();
-        std::cout  << "Loading file: " << document << std::endl;
-        std::string configFile = vm["config"].as<std::string>();
-        std::cout << "Loading config file " << configFile << std::endl;
         
-        auto stream = EagleLib::IDataStream::Create(document);
-        
-        //auto nodes = EagleLib::NodeFactory::Instance()->LoadNodes(configFile);
-        //stream->AddNodes(nodes);
-
-        //std::cout  << "Loaded " << nodes.size() << " top level nodes\n";
-        /*for(int i = 0; i < nodes.size(); ++i)
-        {
-            PrintNodeTree(nodes[i].Get(), 1);
-        }
-        stream->process();*/
     }else
     {
         std::vector<rcc::shared_ptr<EagleLib::IDataStream>> _dataStreams;
@@ -1075,7 +1054,7 @@ int main(int argc, char* argv[])
 
         connections.push_back(manager.Connect(slot, "wait"));
         
-
+        
         std::vector<std::string> command_list;
         slot = new mo::TypedSlot<void(std::string)>(std::bind([&command_list](std::string filename)
         {
@@ -1098,7 +1077,12 @@ int main(int argc, char* argv[])
 
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "run"));
-
+        if (vm.count("config"))
+        {
+            std::stringstream ss;
+            ss << "load " << vm["config"].as<std::string>();
+            command_list.emplace_back(ss.str());
+        }
 
         if (vm.count("file"))
         {
