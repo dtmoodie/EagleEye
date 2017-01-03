@@ -868,6 +868,9 @@ int main(int argc, char* argv[])
                     func(current_param, ss);
                     std::cout << "Successfully set " << current_param->GetTreeName() << " to " << value << std::endl;
                     return;
+                }else
+                {
+                    std::cout << "No text deserialization function found for " << current_param->GetTypeInfo().name();
                 }
             }
             if (current_node)
@@ -878,9 +881,9 @@ int main(int argc, char* argv[])
                     auto pos = value.find(param->GetName());
                     if(pos != std::string::npos && value.size() > param->GetName().size() + 1 && value[param->GetName().size()] == ' ')
                     {
-                        std::cout << "Setting value for parameter " << param->GetName() << " to " << value.substr(pos + param->GetName().size() + 1) << std::endl;
-                        std::stringstream ss;
-                        ss << value.substr(pos + param->GetName().size() + 1);
+                        //std::cout << "Setting value for parameter " << param->GetName() << " to " << value.substr(pos + param->GetName().size() + 1) << std::endl;
+                        //std::stringstream ss;
+                        //ss << value.substr(pos + param->GetName().size() + 1);
                         //Parameters::Persistence::Text::DeSerialize(&ss, param);
                         return;
                     }
