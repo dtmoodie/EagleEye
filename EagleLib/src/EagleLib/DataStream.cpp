@@ -99,7 +99,11 @@ DataStream::DataStream()
     _processing_thread = mo::ThreadPool::Instance()->RequestThread();
     _processing_thread.SetInnerLoop(GetSlot_process<int(void)>());
     _processing_thread.SetThreadName("DataStreamThread");
-    _processing_thread.SetStartCallback([this](){this->_ctx = this->_processing_thread.GetContext();});
+    _processing_thread.SetStartCallback(
+                [this]()
+    {
+        this->_ctx = this->_processing_thread.GetContext();
+    });
 }
 
 void DataStream::node_updated(Nodes::Node* node)
@@ -383,12 +387,11 @@ std::vector<rcc::shared_ptr<Nodes::Node>> DataStream::AddNode(const std::string&
 void DataStream::AddNode(rcc::shared_ptr<Nodes::Node> node)
 {
     node->SetDataStream(this);
-    if(!_processing_thread.IsOnThread()) //    if (boost::this_thread::get_id() != processing_thread.get_id() && !paused  && _thread_id != 0)
+    if(!_processing_thread.IsOnThread() && _processing_thread.GetIsRunning())
     {
-        //_processing_thread.PushEventQueue(std::bind(static_cast<void(DataStream::*)(rcc::shared_ptr<Nodes::Node>)>(&DataStream::AddNodeNoInit), this, node));
-        
         std::promise<void> promise;
         std::future<void> future = promise.get_future();
+
         _processing_thread.PushEventQueue(std::bind([&promise, node, this]()
         {
             rcc::shared_ptr<Node> node_ = node;
