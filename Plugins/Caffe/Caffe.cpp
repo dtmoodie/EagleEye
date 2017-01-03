@@ -1,7 +1,7 @@
 #define PARAMTERS_GENERATE_PERSISTENCE
 #include "Caffe.h"
 #include "caffe_init.h"
-
+#include "helpers.hpp"
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/Nodes/NodeInfo.hpp"
 #include <EagleLib/ObjectDetection.hpp>
@@ -24,6 +24,13 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
+
+float iou(const cv::Rect& r1, const cv::Rect& r2)
+{
+    float intersection = (r1 & r2).area();
+    float rect_union = (r1.area() + r2.area()) - intersection;
+    return intersection / rect_union;
+}
 
 template <typename T>
 std::vector<size_t> sort_indexes(const std::vector<T> &v) {
@@ -396,6 +403,8 @@ bool CaffeImageClassifier::ProcessImpl()
     if(image_scale != -1)
         ReshapeInput(bounding_boxes->size(), input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
 
+
+
     cv::cuda::GpuMat float_image;
     
     if (input->GetDepth() != CV_32F)
@@ -410,8 +419,6 @@ bool CaffeImageClassifier::ProcessImpl()
     cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, Stream());
     cv::cuda::multiply(float_image, cv::Scalar::all(pixel_scale), float_image, 1.0, -1, Stream());
 
-
-
     auto data_itr = wrapped_inputs.find("data");
     if(data_itr == wrapped_inputs.end())
     {
@@ -425,21 +432,19 @@ bool CaffeImageClassifier::ProcessImpl()
             
         return false;
     }
-    
-    if (bounding_boxes->size() > data_itr->second.size())
-    {
-        BOOST_LOG_TRIVIAL(debug) << "Too many input Regions of interest to handle in one pass, this network can only handle " << data_itr->second.size() << " inputs at a time";
-    }
-
     auto shape = data_itr->second[0].GetShape();
     cv::Size input_size(shape[2], shape[1]);
+
+    if(bounding_boxes->size() != input_shape[0])
+        ReshapeInput(bounding_boxes->size(), input_shape[3], shape[1], shape[2]);
+
     std::vector<cv::Mat> debug_mat_vec;
+    cv::cuda::GpuMat resized;
     for (int i = 0; i < bounding_boxes->size() && i < data_itr->second.size(); ++i)
     {
-        cv::cuda::GpuMat resized;
         if ((*bounding_boxes)[i].size() != input_size)
         {
-            cv::cuda::resize(float_image, resized, input_size, 0, 0, cv::INTER_LINEAR, Stream());
+            cv::cuda::resize(float_image((*bounding_boxes)[i]), resized, input_size, 0, 0, cv::INTER_LINEAR, Stream());
         }
         else
         {
@@ -449,12 +454,10 @@ bool CaffeImageClassifier::ProcessImpl()
     }
     
     // Signal update on all inputs
-    float* data = nullptr;
     for(auto blob : input_blobs)
     {
-        data = blob->mutable_gpu_data();
+        blob->mutable_gpu_data();
     }
-
     
     if(debug_dump)
     {
@@ -470,11 +473,12 @@ bool CaffeImageClassifier::ProcessImpl()
         NN->Forward(&loss);
     }
     
-    caffe::Blob<float>* output_layer = NN->output_blobs()[0];
-    float* begin = output_layer->mutable_cpu_data();
+
 
     if(_network_type & Classifier_e)
     {
+        caffe::Blob<float>* output_layer = NN->output_blobs()[0];
+        float* begin = output_layer->mutable_cpu_data();
         std::vector<DetectedObject> objects(std::min<size_t>(bounding_boxes->size(), data_itr->second.size()));
         for (int i = 0; i < bounding_boxes->size() && i < data_itr->second.size(); ++i)
         {
@@ -494,6 +498,8 @@ bool CaffeImageClassifier::ProcessImpl()
         detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
     }else if(_network_type & Detector_e)
     {
+        caffe::Blob<float>* output_layer = NN->output_blobs()[0];
+        float* begin = output_layer->mutable_cpu_data();
         std::vector<DetectedObject> objects;
 
         const int num_detections = output_layer->height();
@@ -513,27 +519,54 @@ bool CaffeImageClassifier::ProcessImpl()
             {
                 int num = roi_num[i][0];
                 DetectedObject obj;
-                obj.boundingBox.x = xmin[i][0] * (*bounding_boxes)[num].width;
-                obj.boundingBox.y = ymin[i][0] * (*bounding_boxes)[num].height;
+                obj.boundingBox.x = xmin[i][0] * (*bounding_boxes)[num].width + (*bounding_boxes)[num].x;
+                obj.boundingBox.y = ymin[i][0] * (*bounding_boxes)[num].height + (*bounding_boxes)[num].y;
                 obj.boundingBox.width = (xmax[i][0] - xmin[i][0])*(*bounding_boxes)[num].width;
                 obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * (*bounding_boxes)[num].height;
+                // Check all current objects iou value
+                bool append = true;
+
+
                 if (this->labels && labels[i][0] < this->labels->size())
                     obj.detections.emplace_back((*this->labels)[int(labels[i][0])], confidence[i][0], int(labels[i][0]));
                 else
                     obj.detections.emplace_back("", confidence[i][0], int(labels[i][0]));
 
-                objects.push_back(obj);
+                for(auto itr = objects.begin(); itr != objects.end(); ++itr)
+                {
+                    float iou_val = iou(obj.boundingBox, itr->boundingBox);
+                    if(iou_val > 0.2)
+                    {
+                        if(obj.detections[0].confidence > itr->detections[0].confidence)
+                        {
+                            // Current object has higher prediction, replace
+                            *itr = obj;
+                        }
+                        append = false;
+                    }
+                }
+                if(append)
+                    objects.push_back(obj);
             }
-
         }
         begin += output_layer->width() * output_layer->height() * num_detections;
-
         if(objects.size())
         {
             LOG(trace) << "Detected " << objects.size() << " objets in frame " << input_param.GetTimestamp();
         }
-        if(!(objects.empty() && detections.empty()))
-            detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
+
+        detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
+    }else if(_network_type & FCN_e)
+    {
+        cv::cuda::GpuMat label, confidence;
+        caffe::Blob<float>* output_layer = NN->output_blobs()[0];
+        EagleLib::Caffe::MaxSegmentation(output_layer, label, confidence, Stream());
+#ifndef NDEBUG
+        cv::Mat h_label(label);
+        cv::Mat h_confidence(confidence);
+        cv::Mat dummy();
+#endif
+
     }
     
     bounding_boxes = nullptr;
