@@ -33,8 +33,8 @@ if(Caffe_FOUND)
 
     LINK_DIRECTORIES(${LINK_DIRS})
     LINK_DIRECTORIES(${CUDNN_LIB_DIR})
-    file(GLOB_RECURSE src "*.h" "*.cpp")
-    add_library(Caffe SHARED ${src})
+    file(GLOB_RECURSE src "*.h" "*.cpp" "*.cu")
+    cuda_add_library(Caffe SHARED ${src})
     add_dependencies(Caffe EagleLib)
     SET(BIN_DIRS "${BIN_DIRS};CAFFE;CUDNN" CACHE STRING "" FORCE)
 
