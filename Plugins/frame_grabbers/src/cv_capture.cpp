@@ -307,6 +307,25 @@ bool frame_grabber_camera::LoadFile(const std::string& file_path)
         }
         ++index;
     }
+    auto func = [&cameras]() 
+    {
+        std::stringstream ss; 
+        for (auto& cam : cameras) 
+            ss << cam << ", "; 
+        return ss.str(); 
+    };
+    LOG(debug) << "Unable to load " << file_path << " queried cameras: " << func() << " trying to requery";
+    cameras = ListLoadableDocuments();
+    for (auto camera : cameras)
+    {
+        if (camera == file_path)
+        {
+            h_cam.reset(new cv::VideoCapture());
+            return h_cam->open(index);
+        }
+        ++index;
+    }
+    LOG(warning) << "Unable to load " << file_path << " queried cameras: " << func();
     return false;
 }
 MO_REGISTER_CLASS(frame_grabber_camera);

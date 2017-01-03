@@ -1,6 +1,8 @@
 #include "EagleLib/Nodes/IFrameGrabber.hpp"
 #include "EagleLib/IDataStream.hpp"
 #include "EagleLib/utilities/sorting.hpp"
+#include "EagleLib/Nodes/FrameGrabberInfo.hpp"
+#include <EagleLib/ICoordinateManager.h>
 #include <MetaObject/Logging/Log.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
@@ -375,10 +377,9 @@ void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
     sig_update();
     _modified = true;
 }
-void FrameGrabberThreaded::Buffer()
+int FrameGrabberThreaded::Buffer()
 {
-    cv::cuda::Stream read_stream;
-    //rmt_SetCurrentThreadName("FrameGrabberThread");
+    /*cv::cuda::Stream read_stream;
     mo::SetThreadName("FrameGrabberThread");
     LOG(debug) << "Starting buffer thread";
     while(!boost::this_thread::interruption_requested())
@@ -405,37 +406,65 @@ void FrameGrabberThreaded::Buffer()
             LOG(warning) << "Error reading next frame: " << e.what();
         }
     }
-    LOG(debug) << "Shutting down buffer thread";
+    LOG(debug) << "Shutting down buffer thread";*/
+    try
+    {
+        TS<SyncedMemory> frame;
+        {
+            boost::mutex::scoped_lock gLock(grabber_mtx);
+            frame = GetNextFrameImpl(_buffer_thread_handle.GetContext()->GetStream());
+        }
+        if (!frame.empty())
+        {
+            PushFrame(frame, true);
+            return 0;
+        }
+        else
+        {
+            LOG_EVERY_N(warning, 500) << "Read empty frame from frame grabber";
+            
+        }
+    }
+    catch (cv::Exception& e)
+    {
+        LOG(warning) << "Error reading next frame: " << e.what();
+    }
+    return 30;
 }
 
 void FrameGrabberThreaded::StartThreads()
 {
-    LOG(debug) << "Received start threads signal";
-    if(_pause)
-    {
-        _pause = false;
-        return;
-    }
     LOG(info) << "Starting buffer thread";
     StopThreads();
-    buffer_thread = boost::thread(boost::bind(&FrameGrabberThreaded::Buffer, this));
+    _buffer_thread_handle.Start();
 }
 
 void FrameGrabberThreaded::StopThreads()
 {
     LOG(info) << "Stopping buffer thread";
-    buffer_thread.interrupt();
-    buffer_thread.join();
+    _buffer_thread_handle.Stop();
+}
+
+FrameGrabberThreaded::FrameGrabberThreaded()
+{
+
+}
+
+void FrameGrabberThreaded::Init(bool firstinit)
+{
+    FrameGrabberBuffered::Init(firstinit);
+    _buffer_thread_handle.SetInnerLoop(this->GetSlot_Buffer<int(void)>());
+    _buffer_thread_handle.SetThreadName("FrameGrabberBufferThread");
 }
 
 void FrameGrabberThreaded::PauseThreads()
 {
-    _pause = true;
+    _buffer_thread_handle.Stop();
 }
 
 void FrameGrabberThreaded::ResumeThreads()
 {
-    _pause = false;
+    _buffer_thread_handle.Start();
 }
 
 
@@ -476,3 +505,57 @@ void FrameGrabberBuffered::Serialize(ISimpleSerializer* pSerializer)
     IFrameGrabber::Serialize(pSerializer);
     SERIALIZE(frame_buffer);
 }
+
+class TestFrameGrabber: public IFrameGrabber
+{
+public:
+    MO_DERIVE(TestFrameGrabber, IFrameGrabber)
+    MO_END;
+    TestFrameGrabber()
+    {
+        cv::Mat output_(640,480, CV_8UC3);
+        cv::randn(output_, 128, 10);
+        this->output = TS<SyncedMemory>(0.0, (long long)0, output_);
+    }
+    bool LoadFile(const ::std::string& file_path)
+    {
+        return true;
+    }
+    long long GetFrameNumber()
+    {
+        return 0;
+    }
+    long long GetNumFrames()
+    {
+        return 0;
+    }
+    TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream)
+    {
+        return output;
+    }
+    TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream)
+    {
+        return output;
+    }
+    TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream)
+    {
+        return output;
+    }
+    
+    TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream)
+    {
+        return output;
+    }
+
+    rcc::shared_ptr<ICoordinateManager> GetCoordinateManager()
+    {
+        return rcc::shared_ptr<ICoordinateManager>();
+    }
+    TS<SyncedMemory> output;
+    static int CanLoadDocument(const std::string& doc)
+    {
+        return -1;
+    }
+};
+
+MO_REGISTER_CLASS(TestFrameGrabber)

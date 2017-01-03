@@ -23,23 +23,27 @@ INSTANTIATE_META_PARAMETER(cv::Mat);
 INSTANTIATE_META_PARAMETER(std::vector<cv::Mat>);
 
 using namespace EagleLib;
-SyncedMemory::SyncedMemory()
+SyncedMemory::SyncedMemory():
+    _ctx(nullptr)
 {
     
 }
-SyncedMemory::SyncedMemory(const cv::Mat& h_mat)
+SyncedMemory::SyncedMemory(const cv::Mat& h_mat):
+    _ctx(nullptr)
 {
     h_data.resize(1, h_mat);
     d_data.resize(1);
     sync_flags.resize(1, HOST_UPDATED);
 }
-SyncedMemory::SyncedMemory(const cv::cuda::GpuMat& d_mat)
+SyncedMemory::SyncedMemory(const cv::cuda::GpuMat& d_mat):
+    _ctx(nullptr)
 {
     h_data.resize(1);
     d_data.resize(1, d_mat);
     sync_flags.resize(1, DEVICE_UPDATED);
 }
-SyncedMemory::SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat)
+SyncedMemory::SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat):
+    _ctx(nullptr)
 {
     h_data.resize(1, h_mat);
     d_data.resize(1, d_mat);
@@ -47,26 +51,30 @@ SyncedMemory::SyncedMemory(const cv::Mat& h_mat, const cv::cuda::GpuMat& d_mat)
 }
 
 SyncedMemory::SyncedMemory(const std::vector<cv::cuda::GpuMat> & d_mats):
-    d_data(d_mats)
+    d_data(d_mats),
+    _ctx(nullptr)
 {
     sync_flags.resize(d_mats.size(), DEVICE_UPDATED);
 }
 
 SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mats):
-    h_data(h_mats)
+    h_data(h_mats),
+    _ctx(nullptr)
 {
     sync_flags.resize(h_mats.size(), HOST_UPDATED);
 }
 
 SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat, SYNC_STATE state):
-    h_data(h_mat), d_data(d_mat)
+    h_data(h_mat), d_data(d_mat),
+    _ctx(nullptr)
 {
     assert(h_data.size() == d_data.size());
     sync_flags.resize(h_data.size(), state);
 }
 
 SyncedMemory::SyncedMemory(cv::MatAllocator* cpu_allocator, cv::cuda::GpuMat::Allocator* gpu_allocator):
-    h_data(1, cv::Mat()), d_data(1, cv::cuda::GpuMat(gpu_allocator)), sync_flags(1, SYNCED)
+    h_data(1, cv::Mat()), d_data(1, cv::cuda::GpuMat(gpu_allocator)), sync_flags(1, SYNCED),
+    _ctx(nullptr)
 {
     h_data[0].allocator = cpu_allocator;
 }
@@ -351,4 +359,13 @@ template<typename A> void SyncedMemory::load(A& ar)
 template<typename A> void SyncedMemory::save(A & ar) const
 {
     ar(cereal::make_nvp("matrices", h_data));
+}
+mo::Context*                           GetContext()
+{
+
+}
+
+void                                   SetContext(mo::Context* ctx)
+{
+
 }

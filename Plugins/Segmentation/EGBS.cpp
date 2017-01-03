@@ -178,7 +178,7 @@ cv::Mat EGBS::recolor( bool random_color) {
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
-void SegmentEGBS::NodeInit(bool firstInit)
+/*void SegmentEGBS::NodeInit(bool firstInit)
 {
     updateParameter("Sigma", float(0.5));;
     updateParameter("Threshold", float(1500));
@@ -200,4 +200,4 @@ cv::cuda::GpuMat SegmentEGBS::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
 }
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentEGBS, Image, Processing, Segmentation)
-
+*/

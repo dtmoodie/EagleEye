@@ -158,6 +158,7 @@ LINK_DIRECTORIES(${Boost_LIBRARY_DIR})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIR_RELEASE})
 # Reporting section
 
+if(RCC_VERBOSE_CONFIG)
 message(STATUS
 "================ EagleLib ===============
     Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}
@@ -198,7 +199,7 @@ message(STATUS
     Includes: ${Parameters_INCLUDE}
     UI: ${Parameters_UI_qt}
 ")
-
+endif()
 ADD_DEFINITIONS(${defs_})
 
 

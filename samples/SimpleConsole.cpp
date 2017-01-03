@@ -9,6 +9,8 @@
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
 #include <MetaObject/Detail/Allocator.hpp>
+#include <MetaObject/Thread/ThreadPool.hpp>
+
 #include <RuntimeObjectSystem.h>
 
 #include <boost/program_options.hpp>
@@ -76,11 +78,13 @@ void sig_handler(int s)
 		LOG(error) << "Caught SIGTERM " << mo::print_callstack(2, true);
 		break;
 	}
+#ifndef _MSC_VER
     case SIGKILL:
     {
         LOG(error) << "Caught SIGKILL " << mo::print_callstack(2, true);
         break;
     }
+#endif
 	}
     quit = true;
 
@@ -98,8 +102,8 @@ int main(int argc, char* argv[])
     signal(SIGSEGV, sig_handler);
     auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
     g_allocator->SetName("Global Allocator");
-    cv::Mat::setDefaultAllocator(g_allocator, false);
-    cv::cuda::GpuMat::setDefaultAllocator(g_allocator, false);
+    mo::SetGpuAllocatorHelper<cv::cuda::GpuMat>(g_allocator);
+    mo::SetCpuAllocatorHelper<cv::Mat>(g_allocator);
 
 
     boost::program_options::options_description desc("Allowed options");
@@ -123,7 +127,38 @@ int main(int argc, char* argv[])
         ;
 
     boost::program_options::variables_map vm;
-    boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
+    auto parsed_options = boost::program_options::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
+    boost::program_options::store(parsed_options, vm);
+    auto unrecognized = boost::program_options::collect_unrecognized(parsed_options.options, boost::program_options::include_positional);
+    std::map<std::string, std::string> replace_map;
+    std::map<std::string, std::string> variable_replace_map;
+    for(auto& option : unrecognized)
+    {
+        auto pos = option.find(":=");
+        if(pos != std::string::npos)
+        {
+            std::string start = option.substr(0, pos);
+            std::string end = option.substr(pos+2);
+            if(end[0] == '\"' && end[end.size() - 1] == '\"')
+            {
+                end = end.substr(1, end.size() - 2);
+            }
+            replace_map["${" + start + "}"] = end;
+            continue;
+        }
+        pos = option.find("=");
+        if(option.find("--") == 0 && pos != std::string::npos)
+        {
+            std::string var_name = option.substr(2, pos - 2);
+            std::string var_value = option.substr(pos + 1);
+            if (var_value[0] == '\"' && var_value[var_value.size() - 1] == '\"')
+            {
+                var_value = var_value.substr(1, var_value.size() - 2);
+            }
+            variable_replace_map[var_name] = var_value;
+        }
+    }
+    
     if(vm["profile"].as<bool>())
     {
         mo::InitProfiling();
@@ -144,12 +179,7 @@ int main(int argc, char* argv[])
     }
 
 
-    if((!vm.count("config") || !vm.count("file")) && vm["mode"].as<std::string>() == "batch")
-    {
-        LOG(info) << "Batch mode selected but \"file\" and \"config\" options not set";
-        std::cout << desc;
-        return 1;
-    }
+    
     if (vm.count("log"))
     {
         std::string verbosity = vm["log"].as<std::string>();
@@ -258,23 +288,7 @@ int main(int argc, char* argv[])
 
     if(vm["mode"].as<std::string>() == "batch")
     {
-        quit = false;
-        std::string document = vm["file"].as<std::string>();
-        std::cout  << "Loading file: " << document << std::endl;
-        std::string configFile = vm["config"].as<std::string>();
-        std::cout << "Loading config file " << configFile << std::endl;
         
-        auto stream = EagleLib::IDataStream::Create(document);
-        
-        //auto nodes = EagleLib::NodeFactory::Instance()->LoadNodes(configFile);
-        //stream->AddNodes(nodes);
-
-        //std::cout  << "Loaded " << nodes.size() << " top level nodes\n";
-        /*for(int i = 0; i < nodes.size(); ++i)
-        {
-            PrintNodeTree(nodes[i].Get(), 1);
-        }
-        stream->process();*/
     }else
     {
         std::vector<rcc::shared_ptr<EagleLib::IDataStream>> _dataStreams;
@@ -607,7 +621,9 @@ int main(int argc, char* argv[])
 		{
 			if (current_stream)
 			{
-				current_stream->SaveStream(file);
+				//current_stream->SaveStream(file);
+                rcc::shared_ptr<EagleLib::IDataStream> stream(current_stream);
+                EagleLib::IDataStream::Save(file, stream);
 			}
 			else if (current_node)
 			{
@@ -632,9 +648,9 @@ int main(int argc, char* argv[])
         }));
         std::vector<std::shared_ptr<mo::Connection>> eos_connections;
         slot = new mo::TypedSlot<void(std::string)>(
-        std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot](std::string file)
+        std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file)
         {
-            auto stream = EagleLib::IDataStream::Load(file);
+            auto stream = EagleLib::IDataStream::Load(file, variable_replace_map, replace_map);
             if(stream)
             {
                 stream->StartThread();
@@ -1041,7 +1057,7 @@ int main(int argc, char* argv[])
 
         connections.push_back(manager.Connect(slot, "wait"));
         
-
+        
         std::vector<std::string> command_list;
         slot = new mo::TypedSlot<void(std::string)>(std::bind([&command_list](std::string filename)
         {
@@ -1064,7 +1080,12 @@ int main(int argc, char* argv[])
 
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "run"));
-
+        if (vm.count("config"))
+        {
+            std::stringstream ss;
+            ss << "load " << vm["config"].as<std::string>();
+            command_list.emplace_back(ss.str());
+        }
 
         if (vm.count("file"))
         {
@@ -1223,6 +1244,6 @@ int main(int argc, char* argv[])
     gui_thread.interrupt();
     
     gui_thread.join();
-    
+    mo::ThreadPool::Instance()->Cleanup();
     return 0;
 }

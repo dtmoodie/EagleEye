@@ -101,7 +101,7 @@ struct img_node: public Node
     bool ProcessImpl()
     {
         BOOST_REQUIRE(input);
-        auto mat = input->GetMat(*(this->_ctx->stream));
+        auto mat = input->GetMat(Stream());
         BOOST_REQUIRE_EQUAL(mat.at<uchar>(0), input_param.GetTimestamp());
         return true;
     }

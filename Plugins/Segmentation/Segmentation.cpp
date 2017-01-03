@@ -3,7 +3,7 @@
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudalegacy.hpp>
-
+#include <EagleLib/Nodes/NodeInfo.hpp>
 #include "RuntimeLinkLibrary.h"
 
 #ifdef _DEBUG
@@ -273,53 +273,41 @@ bool KMeans::ProcessImpl()
     return true;
 }
 
-void
-SegmentMeanShift::NodeInit(bool firstInit)
+bool MeanShift::ProcessImpl()
 {
-    if(firstInit)
+    if(image->GetDepth() != CV_8U)
     {
-        updateParameter("Spatial window radius", int(5));
-        updateParameter("Color radius", int(5));
-        updateParameter("Min size", int(5));
-        updateParameter("Max iterations", 5);
-        updateParameter("Epsilon", double(1.0));
+        LOG_EVERY_N(debug, 100) << "Image not CV_8U type";
+        return false;
     }
-}
-
-cv::cuda::GpuMat SegmentMeanShift::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
-{
-    if(img.depth() != CV_8U)
+    cv::cuda::GpuMat img;
+    if(image->GetChannels() != 4)
     {
-        //log(Error, "Image not CV_8U type");
-        NODE_LOG(error) << "Image not CV_8U type";
-        return img;
-    }
-    if(img.channels() != 4)
-    {
-        //log(Warning, "Image doesn't have 4 channels, appending blank image");
-        NODE_LOG(warning) << "Image doesn't have 4 channels, appending blank image";
         if(blank.size() != img.size())
         {
             blank.create(img.size(), CV_8U);
-            blank.setTo(cv::Scalar(0), stream);
+            blank.setTo(cv::Scalar(0), Stream());
         }
         std::vector<cv::cuda::GpuMat> channels;
-        cv::cuda::split(img,channels, stream);
+        cv::cuda::split(image->GetGpuMat(Stream()),channels, Stream());
         channels.push_back(blank);
-        cv::cuda::merge(channels, img, stream);
+        cv::cuda::merge(channels, img, Stream());
+    }else
+    {
+        img = image->GetGpuMat(Stream());
     }
+    cv::cuda::GpuMat dest;
     cv::cuda::meanShiftSegmentation(img, dest,
-        *getParameter<int>(0)->Data(),
-        *getParameter<int>(1)->Data(),
-        *getParameter<int>(2)->Data(),
-        cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, *getParameter<int>(3)->Data(),
-        *getParameter<double>(4)->Data()), stream);
-    img.upload(dest,stream);
-    return img;
+        spatial_radius,
+        color_radius,
+        min_size,
+        cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, max_iters,
+        epsilon), Stream());
+    output_param.UpdateData(dest, image_param.GetTimestamp(), _ctx);
+    return true;
 }
 
-
-
+/*
 void ManualMask::NodeInit(bool firstInit)
 {
 
@@ -429,15 +417,15 @@ cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream
     updateParameter("Centers", centers); 
     return img;
 }
+*/
 
-
-NODE_DEFAULT_CONSTRUCTOR_IMPL(OtsuThreshold, Image, Processing, Segmentation)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentMOG2, Image, Processing, Segmentation)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentGrabCut, Image, Processing, Segmentation)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentWatershed, Image, Processing, Segmentation)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentKMeans, Image, Processing, Segmentation)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(ManualMask, Image, Processing, Segmentation)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentMeanShift, Image, Processing, Segmentation)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SegmentCPMC, Image, Processing, Segmentation)
-NODE_DEFAULT_CONSTRUCTOR_IMPL(SLaT, Image, Processing, Segmentation)
+MO_REGISTER_CLASS(OtsuThreshold)
+MO_REGISTER_CLASS(MOG2)
+//MO_REGISTER_CLASS(GrabCut)
+MO_REGISTER_CLASS(Watershed)
+MO_REGISTER_CLASS(KMeans)
+//NODE_DEFAULT_CONSTRUCTOR_IMPL(ManualMask, Image, Processing, Segmentation)
+MO_REGISTER_CLASS(MeanShift)
+//MO_REGISTER_CLASS(CPMC)
+//NODE_DEFAULT_CONSTRUCTOR_IMPL(SLaT, Image, Processing, Segmentation)
 

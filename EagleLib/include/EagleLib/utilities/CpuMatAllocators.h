@@ -1,5 +1,5 @@
 #pragma once
-#include "MemoryBlock.h"
+#include "MetaObject/Detail/MemoryBlock.h"
 #include <opencv2/core/mat.hpp>
 #include "EagleLib/Detail/Export.hpp"
 #include <map>
@@ -17,6 +17,7 @@ namespace EagleLib
         CpuDelayedDeallocationPool(size_t initial_pool_size, size_t threshold_level);
         ~CpuDelayedDeallocationPool();
         static CpuDelayedDeallocationPool* instance(size_t initial_pool_size = 10000000, size_t threshold_level = 1000000);
+
         void allocate(void** ptr, size_t total, size_t elemSize);
         void deallocate(void* ptr, size_t total);
         size_t deallocation_delay;
@@ -28,7 +29,7 @@ namespace EagleLib
         std::recursive_timed_mutex deallocate_pool_mutex;
         
         size_t _initial_block_size;
-        std::list<std::shared_ptr<CpuMemoryBlock>> blocks;
+        std::list<std::shared_ptr<mo::CpuMemoryBlock>> blocks;
     };
 
     class EAGLE_EXPORTS CpuPinnedAllocator : public cv::MatAllocator

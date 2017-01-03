@@ -1,31 +1,11 @@
 #define BOOST_TEST_MAIN
-#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
-#include <MetaObject/Parameters/IO/TextPolicy.hpp>
-#include <MetaObject/Parameters/Types.hpp>
-#include "MetaObject/Parameters/MetaParameter.hpp"
-#include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
-#include "MetaObject/Detail/Counter.hpp"
-#include "MetaObject/Detail/MetaObjectMacros.hpp"
-#include "MetaObject/Signals/detail/SignalMacros.hpp"
-#include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "MetaObject/Parameters//ParameterMacros.hpp"
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
-#include "MetaObject/Logging/CompileLogger.hpp"
-#include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
-#include "MetaObject/IO/Policy.hpp"
-#include "MetaObject/IO/memory.hpp"
-#include "shared_ptr.hpp"
-#include "RuntimeObjectSystem.h"
-#include "shared_ptr.hpp"
-#include "IObjectFactorySystem.h"
-#include "cereal/archives/xml.hpp"
-#include "cereal/archives/portable_binary.hpp"
-#include <fstream>
-#include "../MetaObject/instantiations/instantiate.hpp"
+#include <EagleLib/IDataStream.hpp>
+#include <EagleLib/IO/JsonArchive.hpp>
+#include <EagleLib/DataStream.hpp>
 
-#include <opencv2/core.hpp>
+#include <MetaObject/Thread/ThreadPool.hpp>
+#include <MetaObject/MetaObject.hpp>
+#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
@@ -35,22 +15,46 @@
 #endif
 #include <EagleLib/SyncedMemory.h>
 #include <boost/thread.hpp>
+#include <boost/filesystem.hpp>
 #include <iostream>
+#include <fstream>
 
 using namespace mo;
 
-struct serializable_object : public IMetaObject
+//MO_REGISTER_OBJECT(serializable_object);
+BOOST_AUTO_TEST_CASE(initialize)
 {
-    MO_BEGIN(serializable_object);
-    PARAM(int, test, 5);
-    PARAM(int, test2, 6);
-    MO_END;
-};
-
-
-
-BuildCallback* cb = nullptr;
-MO_REGISTER_OBJECT(serializable_object);
+    boost::filesystem::path currentDir = boost::filesystem::current_path();
+#ifdef _MSC_VER
+#ifdef _DEBUG
+    currentDir = boost::filesystem::path(currentDir.string() + "/../Debug/");
+#else
+    currentDir = boost::filesystem::path(currentDir.string() + "/../RelWithDebInfo/");
+#endif
+#else
+    currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
+#endif
+    LOG(info) << "Looking for plugins in: " << currentDir.string();
+    boost::filesystem::directory_iterator end_itr;
+    if (boost::filesystem::is_directory(currentDir))
+    {
+        for (boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr)
+        {
+            if (boost::filesystem::is_regular_file(itr->path()))
+            {
+#ifdef _MSC_VER
+                if (itr->path().extension() == ".dll")
+#else
+                if (itr->path().extension() == ".so")
+#endif
+                {
+                    std::string file = itr->path().string();
+                    mo::MetaObjectFactory::Instance()->LoadPlugin(file);
+                }
+            }
+        }
+    }
+}
 
 BOOST_AUTO_TEST_CASE(synced_mem_to_json)
 {
@@ -63,6 +67,34 @@ BOOST_AUTO_TEST_CASE(synced_mem_to_json)
     BOOST_REQUIRE(func);
     std::ofstream ofs("synced_memory_json.json");
     BOOST_REQUIRE(ofs.is_open());
-    cereal::JSONOutputArchive ar(ofs);
+    EagleLib::JSONOutputArchive ar(ofs);
     func(&param,ar);
+}
+
+BOOST_AUTO_TEST_CASE(datastream)
+{
+    auto ds = EagleLib::IDataStream::Create("", "TestFrameGrabber");
+    std::ofstream ofs("datastream.json");
+    BOOST_REQUIRE(ofs.is_open());
+    EagleLib::JSONOutputArchive ar(ofs);
+    ds->AddNode("QtImageDisplay");
+    auto disp = ds->GetNode("QtImageDisplay0");
+    auto fg = ds->GetNode("TestFrameGrabber0");
+    disp->ConnectInput(fg, "current_frame", "image");
+    ar(ds);
+}
+
+BOOST_AUTO_TEST_CASE(read_datastream)
+{
+    rcc::shared_ptr<EagleLib::IDataStream> stream = rcc::shared_ptr<EagleLib::DataStream>::Create();
+    std::ifstream ifs("datastream.json");
+    BOOST_REQUIRE(ifs.is_open());
+    std::map<std::string, std::string> dummy;
+    EagleLib::JSONInputArchive ar(ifs, dummy, dummy);
+    ar(stream);
+}
+
+BOOST_AUTO_TEST_CASE(cleanup)
+{
+    mo::ThreadPool::Instance()->Cleanup();
 }

@@ -12,6 +12,7 @@
 
 namespace cereal
 {
+    /*
     template<class AR, class T> void save(AR& ar, rcc::shared_ptr<T> const & m)
     {
         if(m)
@@ -86,5 +87,5 @@ namespace cereal
         ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
         ar(make_nvp("TypeName", type));
         m.reset(mo::MetaObjectFactory::Instance()->Get(id, type.c_str()));
-    }
+    }*/
 }

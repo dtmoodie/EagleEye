@@ -24,7 +24,7 @@ bool FastMumfordShah::ProcessImpl()
     param.adapt_params = adapt_params;
     param.weight = weight;
     param.edges = overlay_edges;
-    stream.waitForCompletion();
+    Stream().waitForCompletion();
     cv::Mat result = solver->run(h_img, param);
     segmented_param.UpdateData(result, input_param.GetTimestamp(), _ctx);
     return true;

@@ -7,7 +7,7 @@
 #include <map>
 #include <memory>
 #include <boost/thread.hpp>
-#include "MemoryBlock.h"
+#include "MetaObject/Detail/MemoryBlock.h"
 namespace EagleLib
 {
     cv::cuda::GpuMat::Allocator* GetDefaultBlockMemoryAllocator();
@@ -69,7 +69,7 @@ namespace EagleLib
 
         size_t initialBlockSize_;
     protected:
-        std::list<std::shared_ptr<GpuMemoryBlock>> blocks;
+        std::list<std::shared_ptr<mo::GpuMemoryBlock>> blocks;
     };
 
     class EAGLE_EXPORTS DelayedDeallocator : public virtual PitchedAllocator
@@ -103,6 +103,6 @@ namespace EagleLib
         size_t _threshold_level;
         size_t initialBlockSize_;
     protected:
-        std::list<std::shared_ptr<GpuMemoryBlock>> blocks;
+        std::list<std::shared_ptr<mo::GpuMemoryBlock>> blocks;
     };
 }

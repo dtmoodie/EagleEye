@@ -43,10 +43,6 @@ extern "C"{
 #endif
 
 
-
-
-
-
 class EGBS {
 public:
     EGBS();
@@ -75,8 +71,8 @@ namespace EagleLib
         cv::cuda::HostMem h_buf;
     public:
         SegmentEGBS();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+        //virtual void NodeInit(bool firstInit);
+        //virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     }
 }

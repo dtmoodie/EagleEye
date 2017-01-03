@@ -1,11 +1,11 @@
 #include "EagleLib/DataStream.hpp"
 #include "EagleLib/Nodes/Node.h"
-
+#include "EagleLib/ICoordinateManager.h"
 #include <cereal/types/vector.hpp>
 #include <cereal/types/tuple.hpp>
 #include <cereal/types/utility.hpp>
 #include <cereal/archives/json.hpp>
-
+#include "EagleLib/IO/JsonArchive.hpp"
 #include "MetaObject/IO/Serializer.hpp"
 #include "MetaObject/IO/Policy.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
@@ -38,17 +38,76 @@ void DataStream::save(AR& ar) const
     this->_save_parent<AR>(ar);
 }
 
-IDataStream::Ptr IDataStream::Load(const std::string& config_file)
+IDataStream::Ptr IDataStream::Load(const std::string& config_file, const VariableMap& vm, const VariableMap& sm)
 {
-    rcc::shared_ptr<DataStream> stream = rcc::shared_ptr<DataStream>::Create();
-    if(!stream)
+    rcc::shared_ptr<DataStream> stream_ = rcc::shared_ptr<DataStream>::Create();
+    if(!stream_)
     {
     	LOG(error) << "Unable to create data stream";
     	return Ptr();
     }
-    if (stream->LoadStream(config_file))
+    stream_->StopThread();
+    stream_->top_level_nodes.clear();
+    rcc::shared_ptr<IDataStream> stream(stream_);
+    if (!boost::filesystem::exists(config_file))
+    {
+        LOG(warning) << "Stream config file doesn't exist: " << config_file;
+        return Ptr();
+    }
+    std::string ext = boost::filesystem::extension(config_file);
+    if (ext == ".bin")
+    {
+        std::ifstream ifs(config_file, std::ios::binary);
+        cereal::BinaryInputArchive ar(ifs);
+        //ar(stream);   
         return stream;
+    }
+    else if (ext == ".json")
+    {
+        try
+        {
+            std::ifstream ifs(config_file, std::ios::binary);
+            EagleLib::JSONInputArchive ar(ifs, vm, sm);
+            ar(stream);
+        }
+        catch (cereal::RapidJSONException&e)
+        {
+            LOG(warning) << "Unable to parse " << config_file << " due to " << e.what();
+            return Ptr();
+        }
+        return stream;
+    }
+    else if (ext == ".xml")
+    {
+        std::ifstream ifs(config_file, std::ios::binary);
+        cereal::XMLInputArchive ar(ifs);
+        //ar(stream);
+        return stream;
+    }
     return Ptr();
+}
+
+void IDataStream::Save(const std::string& config_file, rcc::shared_ptr<IDataStream>& stream)
+{
+    stream->StopThread();
+    if (boost::filesystem::exists(config_file))
+    {
+        LOG(info) << "Stream config file exists, overwiting: " << config_file;
+    }
+    std::string ext = boost::filesystem::extension(config_file);
+    if (ext == ".json")
+    {
+        try
+        {
+            std::ofstream ofs(config_file, std::ios::binary);
+            EagleLib::JSONOutputArchive ar(ofs);
+            ar(stream);
+        }
+        catch (cereal::RapidJSONException&e)
+        {
+            LOG(warning) << "Unable to save " << config_file << " due to " << e.what();   
+        }
+    }
 }
 
 void HandleNode(cereal::JSONInputArchive& ar, rcc::shared_ptr<Nodes::Node>& node,
@@ -96,135 +155,7 @@ void HandleNode(cereal::JSONInputArchive& ar, rcc::shared_ptr<Nodes::Node>& node
 
 bool DataStream::LoadStream(const std::string& filename)
 {
-    StopThread();
-    this->top_level_nodes.clear();
-    if (!boost::filesystem::exists(filename))
-    {
-        LOG(warning) << "Stream config file doesn't exist: " << filename;
-        return false;
-    }
-    std::string ext = boost::filesystem::extension(filename);
-    if (ext == ".bin")
-    {
-        mo::StartSerialization();
-        std::ifstream ifs(filename, std::ios::binary);
-        cereal::BinaryInputArchive ar(ifs);
-        ar(*this);
-        mo::EndSerialization();
-        return true;
-    }
-    else if (ext == ".json")
-    {
-        try
-        {
-            mo::StartSerialization();
-            std::ifstream ifs(filename, std::ios::binary);
-            cereal::JSONInputArchive ar(ifs);
-            std::vector<rcc::shared_ptr<Nodes::Node>> all_nodes;
-            ar.setNextName("nodes");
-            ar.startNode();
-            size_t size;
-            ar(cereal::make_size_tag(size));
-            all_nodes.resize(size);
-            std::vector<std::vector<std::pair<std::string,std::string>>> inputs(size);
-            for(int i = 0; i < size; ++i)
-            {
-                HandleNode(ar, all_nodes[i], inputs[i]);
-            }
-            for(auto& node : all_nodes)
-            {
-                if(node)
-                    node->SetDataStream(this);
-            }
-            std::vector<int> handled_node_indecies;
-            for(int i = 0; i < inputs.size(); ++i)
-            {
-                if(all_nodes[i] == nullptr)
-                    continue;
-                if(inputs[i].size() == 0)
-                {
-                    handled_node_indecies.push_back(i);
-                    AddNode(all_nodes[i]);
-                }else
-                {
-                    bool connected = false;
-                    for(int j = 0; j < inputs[i].size(); ++j)
-                    {
-                        std::string param_name = inputs[i][j].first;
-                        std::string input_name = inputs[i][j].second;
-                        if(input_name.size() == 0)
-                        {
-                            LOG(warning) << param_name << " input not set";
-                            continue;
-                        }
-                        auto pos = input_name.find(':');
-                        if(pos != std::string::npos)
-                        {
-                            std::string output_node_name = input_name.substr(0, pos);
-                            auto node = GetNode(output_node_name);
-                            if(!node)
-                            {
-                                LOG(warning) << "Unable to find node by name " << output_node_name;
-                                continue;
-                            }
-                            auto output_param = node->GetOutput(input_name.substr(pos+1));
-                            if(!output_param)
-                            {
-                                LOG(warning) << "Unable to find parameter " << input_name.substr(pos+1) << " in node " << node->GetTreeName();
-                                continue;
-                            }
-                            auto input_param = all_nodes[i]->GetInput(param_name);
-                            if(!input_param)
-                            {
-                                LOG(warning) << "Unable to find input parameter " << param_name << " in node " << all_nodes[i]->GetTreeName();
-                                continue;
-                            }
-                            if(!all_nodes[i]->ConnectInput(node, output_param, input_param))
-                            {
-                                LOG(warning) << "Unable to connect " << output_param->GetTreeName() << " (" << output_param->GetTypeInfo().name() << ") to "
-                                             << input_param->GetTreeName() << " (" << input_param->GetTypeInfo().name() << ")";
-                            }else
-                            {
-                                connected = true;
-                            }
-                        }else
-                        {
-                            LOG(warning) << "Invalid input format " << input_name;
-                        }
-                    }
-                    if(connected)
-                    {
-                       handled_node_indecies.push_back(i);
-                    }
-                }
-            }
-            for(int i = 0; i < all_nodes.size(); ++i)
-            {
-                if(std::find(handled_node_indecies.begin(), handled_node_indecies.end(), i) == handled_node_indecies.end())
-                {
-                    if(all_nodes[i])
-                        AddNode(all_nodes[i]);
-                }
-            }
-
-            mo::EndSerialization();
-        }catch(cereal::RapidJSONException&e)
-        {
-            LOG(warning) << "Unable to parse " << filename << " due to " << e.what();
-            mo::EndSerialization();
-            return false;
-        }
-        return true;
-    }
-    else if (ext == ".xml")
-    {
-        mo::StartSerialization();
-        std::ifstream ifs(filename, std::ios::binary);
-        cereal::XMLInputArchive ar(ifs);
-        ar(*this);
-        mo::EndSerialization();
-        return true;
-    }
+    
 
     return false;
 }

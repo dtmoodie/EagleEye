@@ -12,6 +12,8 @@
 #include <MetaObject/Signals/detail/SignalMacros.hpp>
 #include <MetaObject/Context.hpp>
 #include <MetaObject/IMetaObject.hpp>
+#include <MetaObject/Thread/ThreadHandle.hpp>
+#include <MetaObject/Thread/ThreadPool.hpp>
 
 #include <RuntimeInclude.h>
 #include <RuntimeSourceDependency.h>
@@ -159,19 +161,20 @@ namespace EagleLib
     class EAGLE_EXPORTS FrameGrabberThreaded: public FrameGrabberBuffered
     {
     public:
+        FrameGrabberThreaded();
         MO_DERIVE(FrameGrabberThreaded, FrameGrabberBuffered)
             MO_SLOT(void, StartThreads)
             MO_SLOT(void, StopThreads)
             MO_SLOT(void, PauseThreads)
             MO_SLOT(void, ResumeThreads)
+            MO_SLOT(int, Buffer);
+            PROPERTY(mo::ThreadHandle, _buffer_thread_handle, mo::ThreadPool::Instance()->RequestThread())
         MO_END
+            void Init(bool firstInit);
     protected:
-        bool _pause = false;
         // Should only ever be called from the buffer thread
         virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
         virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
-        virtual void                             Buffer();
-        boost::thread                            buffer_thread;
     };
     }
 }

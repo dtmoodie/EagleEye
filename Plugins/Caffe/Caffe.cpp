@@ -526,7 +526,6 @@ bool CaffeImageClassifier::ProcessImpl()
                 // Check all current objects iou value
                 bool append = true;
 
-
                 if (this->labels && labels[i][0] < this->labels->size())
                     obj.detections.emplace_back((*this->labels)[int(labels[i][0])], confidence[i][0], int(labels[i][0]));
                 else

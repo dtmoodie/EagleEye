@@ -36,7 +36,7 @@ namespace EagleLib
 
 template<class T> struct GetNodeCategoryHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasNodeCategory, V::GetNodeCategory, std::vector<std::string>(*)(void));
+    DEFINE_HAS_STATIC_FUNCTION(HasNodeCategory, GetNodeCategory, std::vector<std::string>(*)(void));
     template<class U> 
     static std::vector<std::string> helper(typename std::enable_if<HasNodeCategory<U>::value, void>::type* = 0)
     { 
@@ -56,7 +56,7 @@ template<class T> struct GetNodeCategoryHelper
 
 template<class T> struct GetParentDepsHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasParentDeps, V::GetParentalDependencies, std::vector<std::vector<std::string>>(*)(void));
+    DEFINE_HAS_STATIC_FUNCTION(HasParentDeps, GetParentalDependencies, std::vector<std::vector<std::string>>(*)(void));
     template<class U> 
     static std::vector<std::vector<std::string>> helper(typename std::enable_if<HasParentDeps<U>::value, void>::type* = 0)
     { 
@@ -76,7 +76,7 @@ template<class T> struct GetParentDepsHelper
 
 template<class T> struct GetNonParentDepsHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasNonParentDeps, V::GetNonParentalDependencies, std::vector<std::vector<std::string>>(*)(void));
+    DEFINE_HAS_STATIC_FUNCTION(HasNonParentDeps, GetNonParentalDependencies, std::vector<std::vector<std::string>>(*)(void));
     template<class U> 
     static std::vector<std::vector<std::string>> helper(typename std::enable_if<HasNonParentDeps<U>::value, void>::type* = 0)
     { 
@@ -97,7 +97,7 @@ template<class T> struct GetNonParentDepsHelper
 
 template<class T> struct GetDepVarHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasDepVar, V::CheckDependentVariables, std::vector<std::string>(*)(mo::IVariableManager*));
+    DEFINE_HAS_STATIC_FUNCTION(HasDepVar, CheckDependentVariables, std::vector<std::string>(*)(mo::IVariableManager*));
     template<class U> 
     static std::vector<std::vector<std::string>> helper(mo::IVariableManager* mgr, typename std::enable_if<HasDepVar<U>::value, void>::type* = 0)
     { 
