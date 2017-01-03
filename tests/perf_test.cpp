@@ -4,7 +4,7 @@
 
 
 namespace po = boost::program_options;
-
+/*
 EagleLib::Nodes::Node::Ptr setVideoFile(EagleLib::Nodes::Node::Ptr node, const std::string& videoFile)
 {
     if(node->getName() == "VideoLoader")
@@ -80,5 +80,10 @@ int main(int argc, char* argv[])
             }
         }
     }
+    return 0;
+}*/
+int main()
+{
+
     return 0;
 }

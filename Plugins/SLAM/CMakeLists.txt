@@ -3,7 +3,7 @@ CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
     CMAKE_POLICY(SET CMP0053 OLD)
 ENDIF()
-
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 
 find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
@@ -16,38 +16,36 @@ set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBIN
 ADD_DEFINITIONS(${DEFS})
 
 INCLUDE_DIRECTORIES(
-    ${INCLUDE_DIRS}
-    ${OpenCV_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
-    ${CUDA_INCLUDE_DIRS}	
-	${CMAKE_CURRENT_SOURCE_DIR}/src
-	${CMAKE_CURRENT_SOURCE_DIR}/dtam/Cpp
+  ${INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${CUDA_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/dtam/Cpp
 )
 find_package(Eigen QUIET)
-if(Eigen_FOUND)
-	#ADD_SUBDIRECTORY("dtam/cpp")
-	ADD_SUBDIRECTORY("lsd_slam/lsd_slam_core")
+if(EIGEN3_INCLUDE_DIR)
+  include_directories(${EIGEN3_INCLUDE_DIR})
+  ADD_SUBDIRECTORY("lsd_slam/lsd_slam_core")
 
-	file(GLOB_RECURSE src "src/*.cpp")
-	file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
+  file(GLOB_RECURSE src "src/*.cpp")
+  file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
 
-	IF(WIN32)
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-	ELSE()
-	    #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
-	ENDIF()
+  IF(WIN32)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+  ENDIF()
 
-	cuda_add_library(SLAM SHARED ${src} ${hdr} ${knl})
+  cuda_add_library(SLAM SHARED ${src} ${hdr} ${knl})
 
-	add_dependencies(SLAM EagleLib)
-	add_dependencies(SLAM OpenDTAM)
-	RCC_LINK_LIB(SLAM 
-		${OpenCV_LIBS}
-		${CUDA_CUBLAS_LIBRARIES} 
-		EagleLib
-		OpenDTAM
-	)
+  add_dependencies(SLAM EagleLib)
+  add_dependencies(SLAM OpenDTAM)
+  RCC_LINK_LIB(SLAM
+    ${OpenCV_LIBS}
+    ${CUDA_CUBLAS_LIBRARIES}
+    EagleLib
+    OpenDTAM
+  )
 
-	INCLUDE(../PluginTemplate.cmake)
+  INCLUDE(../PluginTemplate.cmake)
 
 endif()

@@ -1,5 +1,5 @@
 #include "EagleLib/utilities/CpuMatAllocators.h"
-#include "EagleLib/utilities/MemoryBlock.h"
+#include "MetaObject/Detail/MemoryBlock.h"
 #include <cuda_runtime_api.h>
 
 #include <opencv2/core/cuda/common.hpp>
@@ -14,7 +14,7 @@ using namespace EagleLib;
 CpuDelayedDeallocationPool::CpuDelayedDeallocationPool(size_t initial_pool_size, size_t threshold_level):
     _threshold_level(threshold_level), _initial_block_size(initial_pool_size)
 {
-    blocks.push_back(std::shared_ptr<CpuMemoryBlock>(new CpuMemoryBlock(initial_pool_size)));
+    blocks.push_back(std::shared_ptr<mo::CpuMemoryBlock>(new mo::CpuMemoryBlock(initial_pool_size)));
     deallocation_delay = 100;
     total_usage = 0;
 }
@@ -56,8 +56,8 @@ void CpuDelayedDeallocationPool::allocate(void** ptr, size_t total, size_t elemS
         }
         LOG(trace) << "Creating new block of page locked memory for allocation.";
         blocks.push_back(
-            std::shared_ptr<CpuMemoryBlock>(
-                new CpuMemoryBlock(std::max(_initial_block_size / 2, total))));
+            std::shared_ptr<mo::CpuMemoryBlock>(
+                new mo::CpuMemoryBlock(std::max(_initial_block_size / 2, total))));
         _ptr = (*blocks.rbegin())->allocate(total, elemSize);
         if (_ptr)
         {

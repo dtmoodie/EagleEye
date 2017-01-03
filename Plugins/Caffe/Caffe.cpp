@@ -513,10 +513,10 @@ bool CaffeImageClassifier::ProcessImpl()
             {
                 int num = roi_num[i][0];
                 DetectedObject obj;
-                obj.boundingBox.x = xmin[i][0] * (*bounding_boxes)[num].width;
-                obj.boundingBox.y = ymin[i][0] * (*bounding_boxes)[num].height;
-                obj.boundingBox.width = (xmax[i][0] - xmin[i][0])*(*bounding_boxes)[num].width;
-                obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * (*bounding_boxes)[num].height;
+                obj.boundingBox.x = xmin[i][0] * (*bounding_boxes)[num].width + (*bounding_boxes)[num].x;
+                obj.boundingBox.y = ymin[i][0] * (*bounding_boxes)[num].height + (*bounding_boxes)[num].y;
+                obj.boundingBox.width = (xmax[i][0] - xmin[i][0])*(*bounding_boxes)[num].width + (*bounding_boxes)[num].x;
+                obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * (*bounding_boxes)[num].height + (*bounding_boxes)[num].y;
                 if (this->labels && labels[i][0] < this->labels->size())
                     obj.detections.emplace_back((*this->labels)[int(labels[i][0])], confidence[i][0], int(labels[i][0]));
                 else

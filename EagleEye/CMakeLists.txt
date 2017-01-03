@@ -64,7 +64,9 @@ IF(Qt5_FOUND)
             IF(EXISTS "${${ARG1}}" AND IS_DIRECTORY "${${ARG1}}")
                 LIST(APPEND ${ARG2} ${${ARG1}})
             ELSE()
+              if(RCC_VERBOSE_CONFIG)
                 MESSAGE("${ARG1} : ${${ARG1}} is not a valid directory")
+              endif()
             ENDIF()
         ENDMACRO(APPEND_BIN_DIR)
 
@@ -144,29 +146,27 @@ IF(Qt5_FOUND)
     SOURCE_GROUP("MOC"  FILES ${MOC} ${UIS})
     SOURCE_GROUP("UIs" FILES ${forms})
 
-    message(STATUS
-    "======== EagleEye Reporting =======
-      Qt bin dir: ${Qt5_DIR} 
-      Boost bin dir: ${Boost_BIN_DIR}
-          Bost libs: ${Boost_LIBRARIES}
-
-      CXX Flags: ${CMAKE_CXX_FLAGS}
-
-      Debug flags: ${CMAKE_CXX_FLAGS_DEBUG}
-
-      Release flags: ${CMAKE_CXX_FLAGS_RELEASE}
-  
-    ")
+    if(RCC_VERBOSE_CONFIG)
+        message(STATUS
+            "======== EagleEye Reporting =======\n"
+            "  Qt bin dir: ${Qt5_DIR}\n"
+            "  Boost bin dir: ${Boost_BIN_DIR}\n"
+            "  Boost libs: ${Boost_LIBRARIES}\n"
+            "  CXX Flags: ${CMAKE_CXX_FLAGS} \n"
+            "  Debug flags: ${CMAKE_CXX_FLAGS_DEBUG}\n"
+            "  Release flags: ${CMAKE_CXX_FLAGS_RELEASE}"
+        )
+    endif()
  
-        TARGET_LINK_LIBRARIES(${executable_name}
-            Qt5::Gui
-            Qt5::Widgets
-            Qt5::Core
-            Qt5::OpenGL
-            Qt5::PrintSupport
-            EagleLib
-            ${Boost_LIBRARIES}
-            ${OpenCV_LIBS} 
+    TARGET_LINK_LIBRARIES(${executable_name}
+        Qt5::Gui
+        Qt5::Widgets
+        Qt5::Core
+        Qt5::OpenGL
+        Qt5::PrintSupport
+        EagleLib
+        ${Boost_LIBRARIES}
+        ${OpenCV_LIBS}
     )
     if(UNIX)
         TARGET_LINK_LIBRARIES(${executable_name} dl)

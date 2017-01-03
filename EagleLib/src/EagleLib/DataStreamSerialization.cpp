@@ -1,6 +1,6 @@
 #include "EagleLib/DataStream.hpp"
 #include "EagleLib/Nodes/Node.h"
-
+#include "EagleLib/ICoordinateManager.h"
 #include <cereal/types/vector.hpp>
 #include <cereal/types/tuple.hpp>
 #include <cereal/types/utility.hpp>

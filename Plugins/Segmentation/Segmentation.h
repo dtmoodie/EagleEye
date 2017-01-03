@@ -19,10 +19,10 @@ namespace EagleLib
     {
     public:
         MO_DERIVE(OtsuThreshold, Node)
-            INPUT(SyncedMemory, image, nullptr);
-            OPTIONAL_INPUT(SyncedMemory, histogram, nullptr);
-            OPTIONAL_INPUT(SyncedMemory, range, nullptr);
-            OUTPUT(SyncedMemory, output, SyncedMemory());
+            INPUT(SyncedMemory, image, nullptr)
+            OPTIONAL_INPUT(SyncedMemory, histogram, nullptr)
+            OPTIONAL_INPUT(SyncedMemory, range, nullptr)
+            OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
         bool ProcessImpl();
@@ -31,15 +31,15 @@ namespace EagleLib
     class MOG2: public Node
     {
     public:
-        MO_DERIVE(MOG2, Node);
-            INPUT(SyncedMemory, image, nullptr);
-            PARAM(int, history, 500);
-            PARAM(double, threshold, 15);
-            PARAM(bool, detect_shadows, true);
-            PARAM(double, learning_rate, 1.0);
-            OUTPUT(SyncedMemory, background, SyncedMemory());
+        MO_DERIVE(MOG2, Node)
+            INPUT(SyncedMemory, image, nullptr)
+            PARAM(int, history, 500)
+            PARAM(double, threshold, 15)
+            PARAM(bool, detect_shadows, true)
+            PARAM(double, learning_rate, 1.0)
+            OUTPUT(SyncedMemory, background, SyncedMemory())
         MO_END;
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+
     protected:
         bool ProcessImpl();
         cv::Ptr<cv::cuda::BackgroundSubtractorMOG2> mog2;
@@ -48,10 +48,10 @@ namespace EagleLib
     class Watershed: public Node
     {
     public:
-        MO_DERIVE(Watershed, Node);
-            INPUT(SyncedMemory, image, nullptr);
-            INPUT(SyncedMemory, marker_mask, nullptr);
-            OUTPUT(SyncedMemory, mask, SyncedMemory());
+        MO_DERIVE(Watershed, Node)
+            INPUT(SyncedMemory, image, nullptr)
+            INPUT(SyncedMemory, marker_mask, nullptr)
+            OUTPUT(SyncedMemory, mask, SyncedMemory())
         MO_END;
     protected:
         bool ProcessImpl();
@@ -77,30 +77,40 @@ namespace EagleLib
         cv::cuda::HostMem hostBuf;
     public:
         MO_DERIVE(KMeans, Node)
-            INPUT(SyncedMemory, image, nullptr);
+            INPUT(SyncedMemory, image, nullptr)
             ENUM_PARAM(flags, cv::KMEANS_PP_CENTERS, cv::KMEANS_RANDOM_CENTERS, cv::KMEANS_USE_INITIAL_LABELS)
-            PARAM(int, k, 10);
-            PARAM(int, iterations, 100);
-            PARAM(double, epsilon, 0.1);
-            PARAM(int, attempts, 1);
-            PARAM(double, color_weight, 1.0);
-            PARAM(double, distance_weight, 1.0);
-            OUTPUT(SyncedMemory, clusters, SyncedMemory());
-            OUTPUT(SyncedMemory, labels, SyncedMemory());
-            OUTPUT(double, compactness, 0.0);
+            PARAM(int, k, 10)
+            PARAM(int, iterations, 100)
+            PARAM(double, epsilon, 0.1)
+            PARAM(int, attempts, 1)
+            PARAM(double, color_weight, 1.0)
+            PARAM(double, distance_weight, 1.0)
+            OUTPUT(SyncedMemory, clusters, SyncedMemory())
+            OUTPUT(SyncedMemory, labels, SyncedMemory())
+            OUTPUT(double, compactness, 0.0)
         MO_END;
     protected:
         bool ProcessImpl();
     };
 
-    class SegmentMeanShift: public Node
+    class MeanShift: public Node
     {
         cv::cuda::GpuMat blank;
-        cv::cuda::HostMem dest;
+
     public:
-        SegmentMeanShift();
-        virtual void NodeInit(bool firstInit);
+        MO_DERIVE(MeanShift, Node)
+            INPUT(SyncedMemory, image, nullptr)
+            PARAM(int, spatial_radius, 5)
+            PARAM(int, color_radius, 5)
+            PARAM(int, min_size, 5)
+            PARAM(int, max_iters, 5)
+            PARAM(double, epsilon, 1.0)
+            OUTPUT(SyncedMemory, output, SyncedMemory())
+        MO_END
+        bool ProcessImpl();
+
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+
     };
 
     class ManualMask: public Node

@@ -2,7 +2,7 @@
 #include "ObjectInterfacePerModule.h"
 SETUP_PROJECT_IMPL
 
-#include <nodes/Node.h>
+#include <EagleLib/Nodes/Node.h>
 
 #include "CostVolume/utils/reproject.hpp"
 #include "CostVolume/utils/reprojectCloud.hpp"

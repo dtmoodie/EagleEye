@@ -18,13 +18,6 @@ ELSE()
 #set(CUDA_NVCC_FLAGS "-std=c++11")
 ENDIF(WIN32)
 
-message(STATUS
-"=============== nvcc_test ============
-  Cuda includes: ${CUDA_INCLUDE_DIRS}
-
-  Cuda libs: ${CUDA_LIBRARIES}
-
-")
 include_directories(
  ${EagleLib_INCLUDE_DIRECTORIES}
  ${CUDA_INCLUDE_DIRS}

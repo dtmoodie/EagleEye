@@ -89,7 +89,8 @@ BOOST_AUTO_TEST_CASE(read_datastream)
     rcc::shared_ptr<EagleLib::IDataStream> stream = rcc::shared_ptr<EagleLib::DataStream>::Create();
     std::ifstream ifs("datastream.json");
     BOOST_REQUIRE(ifs.is_open());
-    EagleLib::JSONInputArchive ar(ifs);
+    std::map<std::string, std::string> dummy;
+    EagleLib::JSONInputArchive ar(ifs, dummy, dummy);
     ar(stream);
 }
 

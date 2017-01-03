@@ -14,7 +14,7 @@ namespace EagleLib
 // I tried placing these as functions inside of the MetaObjectInfoImpl specialization, but msvc doesn't like that. :(
 template<class T> struct GetLoadableDocumentsHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasLoadableDocuments, V::ListLoadableDocuments, std::vector<std::string>(*)(void));
+    DEFINE_HAS_STATIC_FUNCTION(HasLoadableDocuments, ListLoadableDocuments, std::vector<std::string>(*)(void));
     template<class U> 
     static std::vector<std::string> helper(typename std::enable_if<HasLoadableDocuments<U>::value, void>::type* = 0)
     { 
@@ -34,7 +34,7 @@ template<class T> struct GetLoadableDocumentsHelper
 
 template<class T> struct GetTimeoutHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasTimeout, V::LoadTimeout, int(*)(void));
+    DEFINE_HAS_STATIC_FUNCTION(HasTimeout, LoadTimeout, int(*)(void));
     template<class U> 
     static int helper(typename std::enable_if<HasTimeout<U>::value, void>::type* = 0)
     { 
@@ -54,7 +54,7 @@ template<class T> struct GetTimeoutHelper
 
 template<class T> struct GetCanLoadHelper
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasCanLoad, T::CanLoadDocument, int(*)(const std::string&));
+    DEFINE_HAS_STATIC_FUNCTION(HasCanLoad, CanLoadDocument, int(*)(const std::string&));
     template<class U> 
     static int helper(const std::string& doc, typename std::enable_if<HasCanLoad<U>::value, void>::type* = 0)
     { 

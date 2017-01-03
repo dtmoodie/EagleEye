@@ -2,6 +2,7 @@
 #include "EagleLib/IDataStream.hpp"
 #include "EagleLib/utilities/sorting.hpp"
 #include "EagleLib/Nodes/FrameGrabberInfo.hpp"
+#include <EagleLib/ICoordinateManager.h>
 #include <MetaObject/Logging/Log.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>

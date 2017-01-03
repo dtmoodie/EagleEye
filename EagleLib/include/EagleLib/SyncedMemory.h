@@ -2,7 +2,10 @@
 #include "EagleLib/Detail/Export.hpp"
 #include "EagleLib/rcc/external_includes/cv_core.hpp"
 #include <opencv2/core/cuda.hpp>
-
+namespace mo
+{
+    class Context;
+}
 
 namespace EagleLib
 {
@@ -79,6 +82,8 @@ namespace EagleLib
         const std::vector<cv::cuda::GpuMat>&   GetGpuMatVec(cv::cuda::Stream& stream);
         std::vector<cv::cuda::GpuMat>&         GetGpuMatVecMutable(cv::cuda::Stream& stream);
         SYNC_STATE                             GetSyncState(int index = 0) const;
+        mo::Context*                           GetContext();
+        void                                   SetContext(mo::Context* ctx);
 
         void Synchronize(cv::cuda::Stream& stream = cv::cuda::Stream::Null());
         void ResizeNumMats(int new_size = 1);
@@ -98,5 +103,6 @@ namespace EagleLib
         std::vector<cv::Mat> h_data;
         std::vector<cv::cuda::GpuMat> d_data;
         std::vector<SYNC_STATE> sync_flags;
+        mo::Context* _ctx;
     };
 }
