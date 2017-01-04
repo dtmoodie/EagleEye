@@ -79,7 +79,8 @@ namespace Nodes
 {
     struct NodeInfo;
     
-    class EAGLE_EXPORTS Node: public TInterface<IID_NodeObject, Algorithm>
+    class EAGLE_EXPORTS Node:
+            public TInterface<COMPILE_TIME_CRC32_STR("EagleLib::Nodes::Node"), Algorithm>
     {
     public:
         typedef NodeInfo InterfaceInfo;

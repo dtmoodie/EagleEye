@@ -25,7 +25,8 @@ std::vector<std::string> FrameGrabberInfo::ListLoadableDocuments() const
 ::std::vector<::std::string> IFrameGrabber::ListAllLoadableDocuments()
 {
     std::vector<std::string> output;
-    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
+    auto constructors = mo::MetaObjectFactory::Instance()->
+            GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
     for(auto constructor : constructors)
     {
         auto info = constructor->GetObjectInfo();
@@ -38,9 +39,11 @@ std::vector<std::string> FrameGrabberInfo::ListLoadableDocuments() const
     return output;
 }
 
-rcc::shared_ptr<IFrameGrabber> IFrameGrabber::Create(const std::string& uri, const std::string& preferred_loader)
+rcc::shared_ptr<IFrameGrabber> IFrameGrabber::Create(const std::string& uri,
+                                                     const std::string& preferred_loader)
 {
-    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
+    auto constructors = mo::MetaObjectFactory::Instance()->
+            GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
     std::vector<IObjectConstructor*> valid_constructors;
     std::vector<int> valid_constructor_priority;
     for(auto constructor : constructors)

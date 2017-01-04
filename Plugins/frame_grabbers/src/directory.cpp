@@ -56,7 +56,8 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
                 files.push_back(itr->path().string());
             }
         }
-        auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
+        auto constructors = mo::MetaObjectFactory::Instance()->
+                GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
         std::vector<int> load_count(constructors.size(), 0);
         std::vector<int> priorities(constructors.size(), 0);
         for(int i = 0; i < constructors.size(); ++i)
@@ -176,7 +177,8 @@ int frame_grabber_directory::CanLoadDocument(const std::string& document)
                 files.push_back(itr->path().string());
             }
         }
-        auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
+        auto constructors = mo::MetaObjectFactory::Instance()->
+                GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
         std::vector<int> load_count(constructors.size(), 0);
         std::vector<int> priorities(constructors.size(), 0);
         for (int i = 0; i < constructors.size(); ++i)

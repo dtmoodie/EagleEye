@@ -71,7 +71,7 @@ namespace EagleLib
 
     
     // Interface class for the base level of features frame grabber
-    class EAGLE_EXPORTS IFrameGrabber: public TInterface<IID_FrameGrabber, Node>
+    class EAGLE_EXPORTS IFrameGrabber: public TInterface<COMPILE_TIME_CRC32_STR("EagleLib::Nodes::IFrameGrabber"), Node>
     {
     public:
         typedef FrameGrabberInfo InterfaceInfo;

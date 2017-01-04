@@ -67,10 +67,10 @@ rcc::shared_ptr<Nodes::Node> NodeFactory::AddNode(const std::string &nodeName)
 {
     auto pConstructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
 
-    if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
+    if (pConstructor && pConstructor->GetInterfaceId() == Nodes::Node::s_interfaceID)
     {
         IObject* pObj = pConstructor->Construct();
-        IObject* interface = pObj->GetInterface(IID_NodeObject);
+        IObject* interface = pObj->GetInterface(Nodes::Node::s_interfaceID);
 
         if (interface)
         {
@@ -113,7 +113,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string
 {
     IObjectConstructor* pConstructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
     std::vector<rcc::shared_ptr<Nodes::Node>> constructed_nodes;
-    if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
+    if (pConstructor && pConstructor->GetInterfaceId() == Nodes::Node::s_interfaceID)
     {
         auto obj_info = pConstructor->GetObjectInfo();
         auto node_info = dynamic_cast<Nodes::NodeInfo*>(obj_info);
@@ -200,7 +200,7 @@ std::vector<rcc::shared_ptr<Nodes::Node>> NodeFactory::AddNode(const std::string
 {
     IObjectConstructor* pConstructor = mo::MetaObjectFactory::Instance()->GetConstructor(nodeName.c_str());
     std::vector<rcc::shared_ptr<Nodes::Node>> constructed_nodes;
-    if (pConstructor && pConstructor->GetInterfaceId() == IID_NodeObject)
+    if (pConstructor && pConstructor->GetInterfaceId() == Nodes::Node::s_interfaceID)
     {
         auto obj_info = pConstructor->GetObjectInfo();
         auto node_info = dynamic_cast<Nodes::NodeInfo*>(obj_info);
@@ -309,7 +309,7 @@ Nodes::NodeInfo* NodeFactory::GetNodeInfo(std::string& nodeName)
         auto obj_info = constructor->GetObjectInfo();
         if (obj_info)
         {
-            if (obj_info->GetInterfaceId() == IID_NodeObject)
+            if (obj_info->GetInterfaceId() == Nodes::Node::s_interfaceID)
             {
                 auto node_info = dynamic_cast<EagleLib::Nodes::NodeInfo*>(obj_info);
                 if (node_info)
@@ -345,7 +345,7 @@ Nodes::Node* NodeFactory::GetNode(const ObjectId& id)
     IObject* pObj = constructors[id.m_ConstructorId]->GetConstructedObject(id.m_PerTypeId);
     if (!pObj)
         return nullptr;
-    pObj = pObj->GetInterface(IID_NodeObject);
+    pObj = pObj->GetInterface(Nodes::Node::s_interfaceID);
     if (!pObj)
         return nullptr;
     return static_cast<Nodes::Node*>(pObj);
@@ -445,7 +445,7 @@ std::vector<std::string> NodeFactory::GetConstructableNodes()
     {
         if (constructors[i])
         {
-            if (constructors[i]->GetInterfaceId() == IID_NodeObject)
+            if (constructors[i]->GetInterfaceId() == Nodes::Node::s_interfaceID)
                 output.push_back(constructors[i]->GetName());
         }
         else

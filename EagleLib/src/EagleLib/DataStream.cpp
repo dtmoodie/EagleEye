@@ -216,9 +216,8 @@ bool DataStream::LoadDocument(const std::string& document, const std::string& pr
         file_to_load = file_to_load.substr(1, file_to_load.size() - 2);
     }
     std::lock_guard<std::mutex> lock(nodes_mtx);
-    
-    //auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
-    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
+
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
     std::vector<IObjectConstructor*> valid_frame_grabbers;
     std::vector<int> frame_grabber_priorities;
     if(constructors.empty())
@@ -337,8 +336,8 @@ bool IDataStream::CanLoadDocument(const std::string& document)
     {
         doc_to_load = doc_to_load.substr(1, doc_to_load.size() - 2);
     }
-    //auto constructors = ObjectManager::Instance().GetConstructorsForInterface(IID_FrameGrabber);
-    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
+
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
     std::vector<IObjectConstructor*> valid_frame_grabbers;
     std::vector<int> frame_grabber_priorities;
     if (constructors.empty())

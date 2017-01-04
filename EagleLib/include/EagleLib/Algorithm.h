@@ -5,7 +5,8 @@
 
 namespace EagleLib
 {
-    class EAGLE_EXPORTS Algorithm : public TInterface<IID_Algorithm, mo::IMetaObject>
+    class EAGLE_EXPORTS Algorithm :
+            public TInterface<COMPILE_TIME_CRC32_STR("EagleLib::Algorithm"), mo::IMetaObject>
     {
     public:
         enum SyncMethod

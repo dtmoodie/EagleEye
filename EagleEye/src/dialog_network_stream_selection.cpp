@@ -14,7 +14,7 @@ dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent
     ui->list_url_history->installEventFilter(this);
     QObject::connect(ui->list_url_history, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(on_item_clicked(QListWidgetItem*)));
 
-    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IID_FrameGrabber);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
     for(auto constructor : constructors)
     {
         auto info = constructor->GetObjectInfo();
