@@ -4,9 +4,7 @@ IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
     CMAKE_POLICY(SET CMP0053 OLD)
 ENDIF()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 
-find_package(Boost 1.47.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
 find_package(CUDA REQUIRED)
 
 find_package(OpenCV 3.0 REQUIRED core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
