@@ -21,7 +21,7 @@ endif(NOT LIBVLC_MIN_VERSION)
 
 if (NOT WIN32)
     find_package(PkgConfig)
-    pkg_check_modules(PC_LIBVLC libvlc)
+    pkg_check_modules(PC_LIBVLC libvlc QUIET)
     set(LIBVLC_DEFINITIONS ${PC_LIBVLC_CFLAGS_OTHER})
 endif (NOT WIN32)
 
@@ -32,7 +32,7 @@ HINTS "$ENV{LIBVLC_INCLUDE_PATH}"
 PATHS
     "$ENV{LIB_DIR}/include"
     "$ENV{LIB_DIR}/include/vlc"
-	"C:/Program Files/VideoLAN/VLC/SDK/include"
+    "C:/Program Files/VideoLAN/VLC/SDK/include"
     "/usr/include"
     "/usr/include/vlc"
     "/usr/local/include"
@@ -48,11 +48,11 @@ find_path(LIBVLC_INCLUDE_DIR PATHS "${CMAKE_INCLUDE_PATH}/vlc" NAMES vlc.h
 SET(libvlc)
 SET(libvlccore)
 IF(WIN32)
-SET(libvlc libvlc)
-SET(libvlccore libvlccore)
+    SET(libvlc libvlc)
+    SET(libvlccore libvlccore)
 ELSE()
-SET(libvcl vlc)
-SET(libvlccore vlccore)
+    SET(libvcl vlc)
+    SET(libvlccore vlccore)
 ENDIF()
 
 find_library(LIBVLC_LIBRARY NAMES  ${libvlc}
@@ -80,7 +80,7 @@ if (NOT LIBVLC_VERSION)
 endif (NOT LIBVLC_VERSION)
 
 if (LIBVLC_INCLUDE_DIR AND LIBVLC_LIBRARY AND LIBVLCCORE_LIBRARY)
-set(LIBVLC_FOUND TRUE)
+    set(LIBVLC_FOUND TRUE)
 endif (LIBVLC_INCLUDE_DIR AND LIBVLC_LIBRARY AND LIBVLCCORE_LIBRARY)
 
 if (LIBVLC_VERSION STRLESS "${LIBVLC_MIN_VERSION}")

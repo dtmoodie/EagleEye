@@ -3,7 +3,7 @@ project(MXnet)
 find_package(mxnet QUIET)
 
 if(MXNET_FOUND)
-  find_package(OpenBLAS REQUIRED)
+  find_package(OpenBLAS QUIET)
     include_directories(${OpenBLAS_INCLUDE_DIR})
   find_package(CUDA REQUIRED)
     include_directories(${CUDA_TOOLKIT_INCLUDE})
@@ -18,9 +18,10 @@ if(MXNET_FOUND)
   file(GLOB_RECURSE hdr "src/*.hpp" "src/*.h")
   add_library(MXnet SHARED ${src} ${hdr})
   RCC_LINK_LIB(MXnet ${MXNET_LIBRARY}
-					 ${OpenBLAS_LIB}
-					 ${CUDNN_LIBRARY}
-					 EagleLib
-					 MetaObject)
+                     ${OpenBLAS_LIB}
+                     ${CUDNN_LIBRARY}
+                     EagleLib
+                     MetaObject
+                     )
   INCLUDE(../PluginTemplate.cmake)
 endif()

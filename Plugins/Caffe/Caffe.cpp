@@ -1,7 +1,7 @@
 #define PARAMTERS_GENERATE_PERSISTENCE
 #include "Caffe.h"
 #include "caffe_init.h"
-#include "helpers.hpp"
+
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/Nodes/NodeInfo.hpp"
 #include <EagleLib/ObjectDetection.hpp>
@@ -557,7 +557,7 @@ bool CaffeImageClassifier::ProcessImpl()
         detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
     }else if(_network_type & FCN_e)
     {
-        cv::cuda::GpuMat label, confidence;
+        /*cv::cuda::GpuMat label, confidence;
         caffe::Blob<float>* output_layer = NN->output_blobs()[0];
         EagleLib::Caffe::MaxSegmentation(output_layer, label, confidence, Stream());
 #ifndef NDEBUG
@@ -565,6 +565,7 @@ bool CaffeImageClassifier::ProcessImpl()
         cv::Mat h_confidence(confidence);
         cv::Mat dummy();
 #endif
+*/
 
     }
     

@@ -49,7 +49,7 @@ IF(TARGET fastms)
     add_definitions(-DFASTMS_INCLUDE=${fastms_INCLUDE_DIRECTORIES})
     LIST(APPEND DEFS -DFASTMS_FOUND)
     INCLUDE_DIRECTORIES(${fastms_INCLUDE_DIRECTORIES})
-    message(STATUS "FastMS include: ${fastms_INCLUDE_DIRECTORIES}") 
+    #message(STATUS "FastMS include: ${fastms_INCLUDE_DIRECTORIES}")
 
 ENDIF()
 INCLUDE(../PluginTemplate.cmake)

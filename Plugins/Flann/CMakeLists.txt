@@ -34,9 +34,6 @@ IF(EAGLELIB_FLANN_LIBRARY_DEBUG AND EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG)
         ${EAGLELIB_FLANN_INCLUDE_DIR}
         )
     GET_FILENAME_COMPONENT(FLANN_LIB_DIR "${EAGLELIB_FLANN_LIBRARY_DEBUG}" PATH)
-    #ADD_DEFINITIONS(-DPROJECT_INCLUDES="${EAGLELIB_FLANN_INCLUDE_DIR}")
-    #ADD_DEFINITIONS(-DPROJECT_LIB_DIRS="${FLANN_LIB_DIR}")
-    #ADD_DEFINITIONS(-DPARAMETERS_USE_UI)
 
     ADD_LIBRARY(Flann SHARED ${src} ${hdr})
     add_dependencies(Flann EagleLib)
@@ -44,12 +41,12 @@ IF(EAGLELIB_FLANN_LIBRARY_DEBUG AND EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG)
     RCC_LINK_LIB(Flann EagleLib
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}
-		)
+        )
     
     target_link_libraries(Flann debug;${EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG};
-	                            debug;${EAGLELIB_FLANN_LIBRARY_DEBUG};
-                            	optimized;${EAGLELIB_FLANN_CUDA_LIBRARY_RELEASE};
-								optimized;${EAGLELIB_FLANN_LIBRARY_RELEASE})
+                                debug;${EAGLELIB_FLANN_LIBRARY_DEBUG};
+                                optimized;${EAGLELIB_FLANN_CUDA_LIBRARY_RELEASE};
+                                optimized;${EAGLELIB_FLANN_LIBRARY_RELEASE})
     
     
 
@@ -58,6 +55,6 @@ IF(EAGLELIB_FLANN_LIBRARY_DEBUG AND EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG)
     INCLUDE(../PluginTemplate.cmake)
 
 ELSE()
-
-MESSAGE("Flann not found, not building flann module")
+MESSAGE("-- Flann:\t\tNotFound")
 ENDIF()
+
