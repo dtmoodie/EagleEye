@@ -256,7 +256,7 @@ int main(int argc, char* argv[])
             }
             catch(boost::thread_interrupted& err)
             {
-                break;   
+                break;
             }catch(...)
             {
 
@@ -315,6 +315,7 @@ int main(int argc, char* argv[])
                 "    current         -- prints what is currently selected (default)\n"  
                 "    signals         -- prints current signal map\n"
                 "    inputs          -- prints possible inputs\n"
+                " - info             -- get info on given node\n"
                 " - set              -- Set a parameters value\n"
                 "    name value      -- name value pair to be applied to parameter\n"
                 " - select           -- Select object\n"
@@ -335,7 +336,6 @@ int main(int argc, char* argv[])
                 "   swap             -- swaps any objects that were recompiled\n";
         };
         std::vector<std::shared_ptr<mo::Connection>> connections;
-        //std::map<std::string, std::function<void(std::string)>> function_map;
         std::vector<std::shared_ptr<mo::ISlot>> _slots;
         std::vector<std::pair<std::string, std::string>> documents_list;
         mo::TypedSlot<void(std::string)>* slot;
@@ -525,7 +525,12 @@ int main(int argc, char* argv[])
             {
                 if (current_node)
                 {
-                    //current_node->GetDataStream()->GetRelayManager()->print_signal_map();
+                    std::vector<mo::SignalInfo*> infos;
+                    current_node->GetSignalInfo(infos);
+                    for(auto& info : infos)
+                    {
+                        std::cout << info->Print();
+                    }
                 }
                 if (current_stream)
                 {
@@ -616,7 +621,25 @@ int main(int argc, char* argv[])
         _slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "print"));
         connections.push_back(manager.Connect(slot, "ls"));
-        
+        slot = new mo::TypedSlot<void(std::string)>(
+                    std::bind([](std::string obj)
+        {
+            IObjectConstructor* constructor = mo::MetaObjectFactory::Instance()->GetConstructor(obj.c_str());
+            if(constructor)
+            {
+                mo::IMetaObjectInfo* info = dynamic_cast<mo::IMetaObjectInfo*>(constructor->GetObjectInfo());
+                if(info)
+                {
+                    std::cout << info->Print();
+                }
+            }else
+            {
+                std::cout << "No constructor found for " << obj;
+            }
+        }, std::placeholders::_1));
+        _slots.emplace_back(slot);
+        connections.push_back(manager.Connect(slot, "info"));
+
 		slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_stream, &current_node](std::string file)
 		{
 			if (current_stream)
