@@ -28,7 +28,8 @@ namespace EagleLib
 
         void               SetSyncInput(const std::string& name);
         void               SetSyncMethod(SyncMethod method);
-        
+        virtual void       PostSerializeInit(){}
+        std::vector<mo::IParameter*> GetParameters(const std::string& filter = "") const;
     protected:
         virtual bool CheckInputs();
         virtual bool ProcessImpl() = 0;
@@ -40,6 +41,7 @@ namespace EagleLib
         impl* _pimpl;
         unsigned int _rmt_hash = 0;
         unsigned int _rmt_cuda_hash = 0;
+        std::vector<rcc::shared_ptr<Algorithm>> _algorithm_components;
     private:
         
     };

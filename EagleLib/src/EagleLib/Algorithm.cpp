@@ -37,7 +37,16 @@ bool Algorithm::IsEnabled() const
 {
     return _enabled;
 }
-
+std::vector<mo::IParameter*> Algorithm::GetParameters(const std::string& filter) const
+{
+    std::vector<mo::IParameter*> output = mo::IMetaObject::GetParameters(filter);
+    for(auto& component: _algorithm_components)
+    {
+        std::vector<mo::IParameter*> output2 = component->GetParameters(filter);
+        output.insert(output.end(), output2.begin(), output2.end());
+    }
+    return output;
+}
 bool Algorithm::Process()
 {
     boost::recursive_mutex::scoped_lock lock(*_mtx);
