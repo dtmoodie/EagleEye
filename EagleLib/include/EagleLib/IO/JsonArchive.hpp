@@ -905,6 +905,8 @@ namespace cereal
         EagleLib::JSONInputArchive& ar_ = dynamic_cast<EagleLib::JSONInputArchive&>(ar);
         for(int i = 0; i < nodes.size(); ++i)
         {
+            if(nodes[0] == nullptr)
+                continue;
             nodes[i]->SetDataStream(stream.Get());
             auto& parents = ar_.parent_mappings[nodes[i]->GetTreeName()];
             for (auto& parent : parents)
@@ -924,7 +926,7 @@ namespace cereal
             auto input_params = nodes[i]->GetInputs();
             for(auto& input : input_params)
             {
-                bool connected = false;
+
                 auto itr = input_mappings.find(input->GetName());
                 if(itr != input_mappings.end())
                 {
@@ -948,7 +950,7 @@ namespace cereal
                                             << input->GetTreeName() << " (" << input->GetTypeInfo().name() << ")";
                                     }else
                                     {
-                                        connected = true;
+
                                     }
                                 }
                            }
@@ -971,7 +973,7 @@ namespace cereal
         }
         for(int i = 0; i < nodes.size(); ++i)
         {
-            if(nodes[i]->GetParents().size() == 0)
+            if(nodes[i] != nullptr && nodes[i]->GetParents().size() == 0)
             {
                 stream->AddNode(nodes[i]);
             }
