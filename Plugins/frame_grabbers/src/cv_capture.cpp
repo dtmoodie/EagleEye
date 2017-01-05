@@ -236,6 +236,7 @@ int frame_grabber_camera::CanLoadDocument(const std::string& doc)
         try
         {
             int index = boost::lexical_cast<int>(doc.substr(pos));
+            (void)index;
             return 10;
         }catch(...)
         {
@@ -245,6 +246,7 @@ int frame_grabber_camera::CanLoadDocument(const std::string& doc)
         try
         {
             int index = boost::lexical_cast<int>(doc);
+            (void)index;
             return 10;
         }
         catch (...)

@@ -92,6 +92,7 @@ bool frame_grabber_gstreamer::LoadFile(const std::string& file_path_)
             file_history.add_child("files", boost::property_tree::ptree());
         for(auto& paths : file_history.get_child("files"))
         {
+            (void)paths;
             if(child.get_child("path").get_value<std::string>() == file_path)
             {
                 return true;

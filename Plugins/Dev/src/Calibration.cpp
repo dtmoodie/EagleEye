@@ -79,7 +79,7 @@ bool CalibrateCamera::ProcessImpl()
         LOG(trace) << "image_points->size() != object_points->size()";
         return false;
     }
-    cv::Size size = image->GetSize();
+    //cv::Size size = image->GetSize();
     cv::Vec2f centroid(0,0);
     for (int i = 0; i < image_points->size(); ++i)
     {
@@ -101,8 +101,8 @@ bool CalibrateCamera::ProcessImpl()
     }
     if(object_point_collection.size() > lastCalibration + 10)
     {
-        std::vector<cv::Mat> rvecs;
-        std::vector<cv::Mat> tvecs;
+//        std::vector<cv::Mat> rvecs;
+        //std::vector<cv::Mat> tvecs;
         double quality = cv::calibrateCamera(
             object_point_collection, 
             image_point_collection,
