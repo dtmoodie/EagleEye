@@ -167,7 +167,7 @@ namespace EagleLib
             MO_SLOT(void, StopThreads)
             MO_SLOT(void, PauseThreads)
             MO_SLOT(void, ResumeThreads)
-            MO_SLOT(int, Buffer);
+            MO_SLOT(int, Buffer)
             PROPERTY(mo::ThreadHandle, _buffer_thread_handle, mo::ThreadPool::Instance()->RequestThread())
         MO_END
             void Init(bool firstInit);
