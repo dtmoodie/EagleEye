@@ -360,12 +360,12 @@ template<typename A> void SyncedMemory::save(A & ar) const
 {
     ar(cereal::make_nvp("matrices", h_data));
 }
-mo::Context*                           GetContext()
+mo::Context* SyncedMemory::GetContext()
 {
-
+    return _ctx;
 }
 
-void                                   SetContext(mo::Context* ctx)
+void SyncedMemory::SetContext(mo::Context* ctx)
 {
-
+    _ctx = ctx;
 }
