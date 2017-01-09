@@ -571,9 +571,18 @@ void Node::Init(bool firstInit)
     //ui_collector::set_node_name(getFullTreeName());
     // Node init should be called first because it is where implicit parameters should be setup
     // Then in ParmaeteredIObject, the implicit parameters will be added back to the _parameter vector
-    
-    NodeInit(firstInit); 
+    NodeInit(firstInit);
     IMetaObject::Init(firstInit);
+    if(!firstInit)
+    {
+        if(_data_stream)
+        {
+            this->SetContext(_data_stream->GetContext());
+            SetupSignals(_data_stream->GetRelayManager());
+            SetupVariableManager(_data_stream->GetVariableManager().get());
+            _data_stream->AddChildNode(this);
+        }
+    }
 }
 
 void Node::NodeInit(bool firstInit)
@@ -610,4 +619,24 @@ void Node::SetUniqueId(int id)
 {
     _unique_id = id;
     SetParameterRoot(GetTreeName());
+}
+
+mo::IParameter* Node::AddParameter(std::shared_ptr<mo::IParameter> param)
+{
+    auto result = mo::IMetaObject::AddParameter(param);
+    if(result)
+    {
+        result->SetTreeRoot(this->GetTreeName());
+    }
+    return result;
+}
+
+mo::IParameter* Node::AddParameter(mo::IParameter* param)
+{
+    auto result = mo::IMetaObject::AddParameter(param);
+    if(result)
+    {
+        result->SetTreeRoot(this->GetTreeName());
+    }
+    return result;
 }

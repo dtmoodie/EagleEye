@@ -6,7 +6,7 @@
 namespace EagleLib
 {
     class EAGLE_EXPORTS Algorithm :
-            public TInterface<COMPILE_TIME_CRC32_STR("EagleLib::Algorithm"), mo::IMetaObject>
+            public TInterface<ctcrc32("EagleLib::Algorithm"), mo::IMetaObject>
     {
     public:
         enum SyncMethod
@@ -28,7 +28,7 @@ namespace EagleLib
 
         void               SetSyncInput(const std::string& name);
         void               SetSyncMethod(SyncMethod method);
-        virtual void       PostSerializeInit(){}
+        virtual void       PostSerializeInit();
         std::vector<mo::IParameter*> GetParameters(const std::string& filter = "") const;
     protected:
         virtual bool CheckInputs();

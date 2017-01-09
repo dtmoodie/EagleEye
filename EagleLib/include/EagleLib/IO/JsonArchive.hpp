@@ -4,6 +4,8 @@
 #include <EagleLib/Nodes/Node.h>
 #include <EagleLib/IDataStream.hpp>
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
+#include <MetaObject/Parameters/Buffers/IBuffer.hpp>
+#include <MetaObject/Parameters/Buffers/BufferFactory.hpp>
 #include <boost/lexical_cast.hpp>
 namespace EagleLib
 {
@@ -248,7 +250,7 @@ namespace EagleLib
         typedef rapidjson::Document::GenericValue GenericValue;
 
     public:
-        std::map<std::string, std::map<std::string, std::string>> input_mappings;
+        std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>> input_mappings;
         std::map<std::string, std::vector<std::string>> parent_mappings;
         const std::map<std::string, std::string>& variable_replace_mapping;
         const std::map<std::string, std::string>& string_replace_mapping;
@@ -853,21 +855,50 @@ namespace cereal
             }
         }
     }
+    struct InputInfo
+    {
+        std::string name;
+        std::string type;
+        template<class AR> void serialize(AR& ar)
+        {
+            ar(CEREAL_NVP(name));
+            ar(CEREAL_NVP(type));
+        }
+    };
+
     void save(JSONOutputArchive& ar, std::vector<mo::InputParameter*> const& parameters)
     {
         for (auto& param : parameters)
         {
-            std::string input_name;
+
             mo::InputParameter* input_param = dynamic_cast<mo::InputParameter*>(param);
+            InputInfo info;
+            info.type = "Direct";
             if (input_param)
             {
                 mo::IParameter* _input_param = input_param->GetInputParam();
+                std::string input_name;
                 if (_input_param)
                 {
                     input_name = _input_param->GetTreeName();
+                    auto pos = input_name.find(" buffer for ");
+                    if(pos != std::string::npos)
+                    {
+                        input_name = input_name.substr(0, pos);
+                    }
+
+                    if(_input_param->CheckFlags(mo::Buffer_e))
+                    {
+                        mo::Buffer::IBuffer* buffer = dynamic_cast<mo::Buffer::IBuffer*>(_input_param);
+                        if(buffer)
+                        {
+                            info.type = mo::ParameterTypeFlagsToString(buffer->GetBufferType());
+                        }
+                    }
+                    info.name = input_name;
                 }
             }
-            ar(cereal::make_nvp(param->GetName(), input_name));
+            ar(cereal::make_nvp(param->GetName(), info));
         }
     }
     void save(JSONOutputArchive& ar, rcc::weak_ptr<EagleLib::Nodes::Node> const& node)
@@ -930,34 +961,49 @@ namespace cereal
                 auto itr = input_mappings.find(input->GetName());
                 if(itr != input_mappings.end())
                 {
-                       auto pos = itr->second.find(":");
+                       auto pos = itr->second.first.find(":");
                        if(pos != std::string::npos)
                        {
-                           std::string output_node_name = itr->second.substr(0, pos);
+                           std::string output_node_name = itr->second.first.substr(0, pos);
                            for(int j = 0; j < nodes.size(); ++j)
                            {
                                 if(nodes[j]->GetTreeName() == output_node_name)
                                 {
-                                    auto output_param = nodes[j]->GetOutput(itr->second.substr(pos + 1));
+                                    auto output_param = nodes[j]->GetOutput(itr->second.first.substr(pos + 1));
                                     if (!output_param)
                                     {
-                                        LOG(warning) << "Unable to find parameter " << itr->second.substr(pos + 1) << " in node " << nodes[j]->GetTreeName();
+                                        LOG(warning) << "Unable to find parameter " << itr->second.first.substr(pos + 1) << " in node " << nodes[j]->GetTreeName();
                                         break;
                                     }
-                                    if (!nodes[i]->ConnectInput(nodes[j], output_param, input))
+                                    std::string type = itr->second.second;
+                                    if(type != "Direct")
                                     {
-                                        LOG(warning) << "Unable to connect " << output_param->GetTreeName() << " (" << output_param->GetTypeInfo().name() << ") to "
-                                            << input->GetTreeName() << " (" << input->GetTypeInfo().name() << ")";
+                                          mo::ParameterTypeFlags buffer_type = mo::StringToParameterTypeFlags(type);
+                                          if (!nodes[i]->ConnectInput(nodes[j], output_param, input, mo::ParameterTypeFlags(buffer_type | mo::ForceBufferedConnection_e)))
+                                          {
+                                              LOG(warning) << "Unable to connect " << output_param->GetTreeName() << " (" << output_param->GetTypeInfo().name() << ") to "
+                                                  << input->GetTreeName() << " (" << input->GetTypeInfo().name() << ")";
+                                          }else
+                                          {
+
+                                          }
                                     }else
                                     {
+                                        if (!nodes[i]->ConnectInput(nodes[j], output_param, input))
+                                        {
+                                            LOG(warning) << "Unable to connect " << output_param->GetTreeName() << " (" << output_param->GetTypeInfo().name() << ") to "
+                                                << input->GetTreeName() << " (" << input->GetTypeInfo().name() << ")";
+                                        }else
+                                        {
 
+                                        }
                                     }
                                 }
                            }
                        }else
                        {
-                           if(itr->second.size())
-                            LOG(warning) << "Invalid input format " << itr->second;
+                           if(itr->second.first.size())
+                               LOG(warning) << "Invalid input format " << itr->second.first;
                        }
                 }else
                 {
@@ -1006,10 +1052,13 @@ namespace cereal
         for (auto& param : parameters)
         {
             std::string name = param->GetName();
-            std::string input_name;
-            ar(cereal::make_nvp(name, input_name));
+            InputInfo info;
+            auto nvp = cereal::make_optional_nvp(name, info, info);
+            ar(nvp);
+            if(nvp.success == false)
+                return;
             EagleLib::JSONInputArchive& ar_ = dynamic_cast<EagleLib::JSONInputArchive&>(ar);
-            ar_.input_mappings[param->GetTreeRoot()][name] = input_name;
+            ar_.input_mappings[param->GetTreeRoot()][name] = std::make_pair(info.name, info.type);
         }
     }
     void load(JSONInputArchive& ar, rcc::shared_ptr<EagleLib::Nodes::Node>& node)
@@ -1026,12 +1075,24 @@ namespace cereal
         }
         node->SetTreeName(name);
         auto parameters = node->GetParameters();
-        ar(CEREAL_NVP(parameters));
+        for(auto itr = parameters.begin(); itr != parameters.end(); )
+        {
+            if((*itr)->CheckFlags(mo::Input_e))
+            {
+                itr = parameters.erase(itr);
+            }else
+            {
+                ++itr;
+            }
+        }
+        if(parameters.size())
+            ar(CEREAL_OPTIONAL_NVP(parameters, parameters));
         auto inputs = node->GetInputs();
-        ar(CEREAL_NVP(inputs));
+        if(inputs.size())
+            ar(CEREAL_NVP(inputs));
         EagleLib::JSONInputArchive& ar_ = dynamic_cast<EagleLib::JSONInputArchive&>(ar);
-        std::vector<std::string> parents;
         ar(cereal::make_optional_nvp("parents", ar_.parent_mappings[name]));
+        node->PostSerializeInit();
     }
 }
 

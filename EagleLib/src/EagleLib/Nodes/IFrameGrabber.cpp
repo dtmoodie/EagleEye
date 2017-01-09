@@ -187,7 +187,7 @@ void IFrameGrabber::Restart()
 }
 void IFrameGrabber::Init(bool firstInit)
 {
-    IMetaObject::Init(firstInit);
+    Node::Init(firstInit);
     if(!firstInit)
     {
         //LoadFile(loaded_document); // each implementation should know if it needs to reload the file on recompile
@@ -205,7 +205,7 @@ bool IFrameGrabber::ProcessImpl()
 }
 void IFrameGrabber::Serialize(ISimpleSerializer* pSerializer)
 {
-    IMetaObject::Serialize(pSerializer);
+    Node::Serialize(pSerializer);
     SERIALIZE(loaded_document);
     SERIALIZE(parent_stream);
 }

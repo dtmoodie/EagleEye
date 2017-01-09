@@ -80,7 +80,7 @@ namespace Nodes
     struct NodeInfo;
     
     class EAGLE_EXPORTS Node:
-            public TInterface<COMPILE_TIME_CRC32_STR("EagleLib::Nodes::Node"), Algorithm>
+            public TInterface<ctcrc32("EagleLib::Nodes::Node"), Algorithm>
     {
     public:
         typedef NodeInfo InterfaceInfo;
@@ -151,6 +151,9 @@ namespace Nodes
         virtual std::vector<Node*>                        GetNodesInScope();
         virtual Node *                                    GetNodeInScope(const std::string& name);
         virtual void                                      GetNodesInScope(std::vector<Node*>& nodes);
+        virtual mo::IParameter* AddParameter(std::shared_ptr<mo::IParameter> param);
+        virtual mo::IParameter* AddParameter(mo::IParameter* param);
+
         friend bool EagleLib::DeSerialize(cereal::JSONInputArchive& ar, Node* obj);
         
         void onParameterUpdate(mo::Context* ctx, mo::IParameter* param);

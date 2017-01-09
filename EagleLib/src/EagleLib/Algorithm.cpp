@@ -42,8 +42,11 @@ std::vector<mo::IParameter*> Algorithm::GetParameters(const std::string& filter)
     std::vector<mo::IParameter*> output = mo::IMetaObject::GetParameters(filter);
     for(auto& component: _algorithm_components)
     {
-        std::vector<mo::IParameter*> output2 = component->GetParameters(filter);
-        output.insert(output.end(), output2.begin(), output2.end());
+        if(component)
+        {
+            std::vector<mo::IParameter*> output2 = component->GetParameters(filter);
+            output.insert(output.end(), output2.begin(), output2.end());
+        }
     }
     return output;
 }
@@ -209,5 +212,13 @@ void Algorithm::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
         {
             _pimpl->ts = param->GetTimestamp();
         }
+    }
+}
+
+void Algorithm::PostSerializeInit()
+{
+    for(auto& child : _algorithm_components)
+    {
+        child->PostSerializeInit();
     }
 }

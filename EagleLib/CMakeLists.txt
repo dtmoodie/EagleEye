@@ -24,9 +24,9 @@ find_package(OpenCV 3.0 QUIET COMPONENTS  core imgproc highgui cudaimgproc cudaw
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 find_package(CUDA REQUIRED)
-set(CUDA_ARCH_NAME "Manual")
-set(CUDA_ARCH_BIN "30 35 50 60")
-set(CUDA_ARCH_PTX "30 35 50 60")
+  set(CUDA_ARCH_NAME "Manual")
+  set(CUDA_ARCH_BIN "30 35 50 60")
+  set(CUDA_ARCH_PTX "30 35 50 60")
 get_filename_component(_cuda_lib_dir "${CUDA_CUDART_LIBRARY}" DIRECTORY)
 link_directories(${_cuda_lib_dir})
 find_package(Qt5 COMPONENTS Core Gui Widgets Network OpenGL)
