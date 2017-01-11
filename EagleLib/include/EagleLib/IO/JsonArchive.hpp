@@ -830,12 +830,12 @@ namespace EagleLib
 
 namespace cereal
 {
-    void save(JSONOutputArchive& ar, rcc::shared_ptr<EagleLib::IDataStream> const & stream)
+    inline void save(JSONOutputArchive& ar, rcc::shared_ptr<EagleLib::IDataStream> const & stream)
     {
         auto nodes = stream->GetAllNodes();
         ar(CEREAL_NVP(nodes));
     }
-    void save(JSONOutputArchive& ar, std::vector<mo::IParameter*> const& parameters)
+    inline void save(JSONOutputArchive& ar, std::vector<mo::IParameter*> const& parameters)
     {
         for (auto& param : parameters)
         {
@@ -866,7 +866,7 @@ namespace cereal
         }
     };
 
-    void save(JSONOutputArchive& ar, std::vector<mo::InputParameter*> const& parameters)
+    inline void save(JSONOutputArchive& ar, std::vector<mo::InputParameter*> const& parameters)
     {
         for (auto& param : parameters)
         {
@@ -901,19 +901,31 @@ namespace cereal
             ar(cereal::make_nvp(param->GetName(), info));
         }
     }
-    void save(JSONOutputArchive& ar, rcc::weak_ptr<EagleLib::Nodes::Node> const& node)
+    inline void save(JSONOutputArchive& ar, rcc::weak_ptr<EagleLib::Nodes::Node> const& node)
     {
         std::string name = node->GetTreeName();
         ar(CEREAL_NVP(name));
     }
-    void save(JSONOutputArchive& ar, rcc::shared_ptr<EagleLib::Nodes::Node> const& node)
+    inline void save(JSONOutputArchive& ar, rcc::weak_ptr<EagleLib::Algorithm> const& obj)
+    {
+        auto parameters = obj->GetParameters();
+        std::string type = obj->GetTypeName();
+        const auto& components = obj->GetComponents();
+        ar(CEREAL_NVP(type));
+        ar(CEREAL_NVP(parameters));
+        ar(CEREAL_NVP(components));
+    }
+
+    inline void save(JSONOutputArchive& ar, rcc::shared_ptr<EagleLib::Nodes::Node> const& node)
     {
         auto parameters = node->GetParameters();
         std::string type = node->GetTypeName();
         std::string name = node->GetTreeName();
+        const auto& components = node->GetComponents();
         ar(CEREAL_NVP(type));
         ar(CEREAL_NVP(name));
         ar(CEREAL_NVP(parameters));
+        ar(CEREAL_NVP(components));
         auto inputs = node->GetInputs();
         ar(CEREAL_NVP(inputs));
         auto parent_nodes = node->GetParents();
@@ -926,7 +938,7 @@ namespace cereal
     }
 
 
-    void load(JSONInputArchive& ar, rcc::shared_ptr<EagleLib::IDataStream>& stream)
+    inline void load(JSONInputArchive& ar, rcc::shared_ptr<EagleLib::IDataStream>& stream)
     {
         if(stream == nullptr)
         {
@@ -1026,7 +1038,7 @@ namespace cereal
         }
     }
 
-    void load(JSONInputArchive& ar, std::vector<mo::IParameter*>& parameters)
+    inline void load(JSONInputArchive& ar, std::vector<mo::IParameter*>& parameters)
     {
         for (auto& param : parameters)
         {
@@ -1047,7 +1059,7 @@ namespace cereal
         }
     }
 
-    void load(JSONInputArchive& ar, std::vector<mo::InputParameter*> & parameters)
+    inline void load(JSONInputArchive& ar, std::vector<mo::InputParameter*> & parameters)
     {
         for (auto& param : parameters)
         {
@@ -1061,13 +1073,49 @@ namespace cereal
             ar_.input_mappings[param->GetTreeRoot()][name] = std::make_pair(info.name, info.type);
         }
     }
-    void load(JSONInputArchive& ar, rcc::shared_ptr<EagleLib::Nodes::Node>& node)
+   inline void load(JSONInputArchive& ar, rcc::weak_ptr<EagleLib::Algorithm>& obj)
+   {
+       std::string type;
+       ar(CEREAL_NVP(type));
+       if(!obj)
+            obj = dynamic_cast<EagleLib::Algorithm*>(mo::MetaObjectFactory::Instance()->Create(type.c_str()));
+       if(!obj)
+            LOG(warning) << "Unable to create algorithm of type: " << type;
+       auto parameters = obj->GetParameters();
+       if(parameters.size())
+          ar(CEREAL_NVP(parameters));
+       std::vector<rcc::weak_ptr<EagleLib::Algorithm>> components;
+       try
+       {
+           ar(CEREAL_OPTIONAL_NVP(components, components));
+       }catch(...)
+       {
+
+       }
+
+       if(components.size())
+            for(auto component : components)
+                obj->AddComponent(component);
+   }
+    inline void load(JSONInputArchive& ar, rcc::shared_ptr<EagleLib::Nodes::Node>& node)
     {
         std::string type;
         std::string name;
         ar(CEREAL_NVP(type));
+        if(!node)
+            node = mo::MetaObjectFactory::Instance()->Create(type.c_str());
         ar(CEREAL_NVP(name));
-        node = mo::MetaObjectFactory::Instance()->Create(type.c_str());
+        std::vector<rcc::weak_ptr<EagleLib::Algorithm>> components;
+        auto components_nvp = CEREAL_OPTIONAL_NVP(components, components);
+        ar(components_nvp);
+        if(components_nvp.success)
+        {
+            for(auto component : components)
+            {
+                node->AddComponent(component);
+            }
+        }
+
         if (!node)
         {
             LOG(warning) << "Unable to create node with type: " << type;
@@ -1089,7 +1137,7 @@ namespace cereal
             ar(CEREAL_OPTIONAL_NVP(parameters, parameters));
         auto inputs = node->GetInputs();
         if(inputs.size())
-            ar(CEREAL_NVP(inputs));
+            ar(CEREAL_OPTIONAL_NVP(inputs, inputs));
         EagleLib::JSONInputArchive& ar_ = dynamic_cast<EagleLib::JSONInputArchive&>(ar);
         ar(cereal::make_optional_nvp("parents", ar_.parent_mappings[name]));
         node->PostSerializeInit();

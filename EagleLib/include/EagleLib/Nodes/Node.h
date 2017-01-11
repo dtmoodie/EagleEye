@@ -132,16 +132,17 @@ namespace Nodes
         
         virtual void                    Init(bool firstInit);
         virtual void                    NodeInit(bool firstInit);
+        virtual void                    PostSerializeInit();
 
         virtual void                    Serialize(ISimpleSerializer *pSerializer);
         inline cv::cuda::Stream&        Stream(){ return _ctx->GetStream();}
         
         bool CheckInputs();
 
-        MO_BEGIN(Node);
-            MO_SLOT(void, reset);
-            MO_SIGNAL(void, node_updated, Node*);
-        MO_END;
+        MO_BEGIN(Node)
+            MO_SLOT(void, reset)
+            MO_SIGNAL(void, node_updated, Node*)
+        MO_END
 
     protected:
         friend class NodeFactory;

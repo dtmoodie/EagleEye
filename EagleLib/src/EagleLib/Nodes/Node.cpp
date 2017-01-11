@@ -590,20 +590,30 @@ void Node::NodeInit(bool firstInit)
 
 }
 
+void Node::PostSerializeInit()
+{
+    Algorithm::PostSerializeInit();
+    std::string name = GetTreeName();
+    for(auto& child : _algorithm_components)
+    {
+        auto params = child->GetAllParameters();
 
+        for(auto param : params)
+        {
+            param->SetTreeRoot(name);
+        }
+    }
+}
 
 void Node::Serialize(ISimpleSerializer *pSerializer)
 {
     LOG(trace) << " Serializing " << GetTreeName();
-    IMetaObject::Serialize(pSerializer);
+    Algorithm::Serialize(pSerializer);
     SERIALIZE(_children);
     SERIALIZE(_parents);
     SERIALIZE(_pimpl_node);
     SERIALIZE(_data_stream);
 }
-
-
-
 
 void Node::AddParent(Node* parent_)
 {

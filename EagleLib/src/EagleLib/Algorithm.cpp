@@ -1,3 +1,6 @@
+#include <MetaObject/Parameters/IO/CerealPolicy.hpp>
+#include <MetaObject/Parameters/IO/CerealMemory.hpp>
+
 #include "EagleLib/Algorithm.h"
 #include "EagleLib/Detail/AlgorithmImpl.hpp"
 #include <MetaObject/Parameters/InputParameter.hpp>
@@ -6,6 +9,11 @@
 #include <boost/accumulators/statistics/rolling_mean.hpp>
 #include <boost/accumulators/statistics/rolling_window.hpp>
 
+#include <EagleLib/IO/JsonArchive.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/string.hpp>
+
+INSTANTIATE_META_PARAMETER(std::vector<rcc::shared_ptr<EagleLib::Algorithm>>)
 using namespace mo;
 using namespace EagleLib;
 
@@ -37,7 +45,20 @@ bool Algorithm::IsEnabled() const
 {
     return _enabled;
 }
-std::vector<mo::IParameter*> Algorithm::GetParameters(const std::string& filter) const
+std::vector<mo::IParameter*> Algorithm::GetComponentParameters(const std::string& filter) const
+{
+    std::vector<mo::IParameter*> output; // = mo::IMetaObject::GetParameters(filter);
+    for(auto& component: _algorithm_components)
+    {
+        if(component)
+        {
+            std::vector<mo::IParameter*> output2 = component->GetParameters(filter);
+            output.insert(output.end(), output2.begin(), output2.end());
+        }
+    }
+    return output;
+}
+std::vector<mo::IParameter*> Algorithm::GetAllParameters(const std::string& filter) const
 {
     std::vector<mo::IParameter*> output = mo::IMetaObject::GetParameters(filter);
     for(auto& component: _algorithm_components)
@@ -75,6 +96,27 @@ bool Algorithm::Process()
     }
     return false;
 }
+mo::IParameter* Algorithm::GetOutput(const std::string& name) const
+{
+    auto output = mo::IMetaObject::GetOutput(name);
+    if(output)
+        return output;
+    if(!output)
+    {
+        for(auto& component: _algorithm_components)
+        {
+            if(component)
+            {
+                output = component->GetOutput(name);
+                if(output)
+                    return output;
+            }
+        }
+    }
+    return nullptr;
+}
+
+
 
 bool Algorithm::CheckInputs()
 {
@@ -214,11 +256,29 @@ void Algorithm::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
         }
     }
 }
+void  Algorithm::SetContext(mo::Context* ctx, bool overwrite)
+{
+    mo::IMetaObject::SetContext(ctx, overwrite);
+    for(auto& child : _algorithm_components)
+    {
+        child->SetContext(ctx, overwrite);
+    }
+}
 
 void Algorithm::PostSerializeInit()
 {
     for(auto& child : _algorithm_components)
     {
+        child->SetContext(this->_ctx);
         child->PostSerializeInit();
     }
+}
+void Algorithm::AddComponent(rcc::weak_ptr<Algorithm> component)
+{
+    _algorithm_components.push_back(component);
+}
+void  Algorithm::Serialize(ISimpleSerializer *pSerializer)
+{
+    mo::IMetaObject::Serialize(pSerializer);
+    SERIALIZE(_algorithm_components);
 }

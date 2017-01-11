@@ -30,12 +30,16 @@ template<typename T> struct step_functor : public thrust::unary_function<int, in
 };
 template<typename T, int CN, typename PtrType> class ThrustView;
 template<typename T, int CN> ThrustView<T, CN, T*> CreateView(cv::Mat& mat, int channel = 0);
-template<typename T, int CN> ThrustView<T, CN, thrust::device_ptr<T>> CreateView(cv::cuda::GpuMat& mat, int channel = 0);
 template<typename T, int CN> ThrustView<const T, CN, T*> CreateView(const cv::Mat& mat, int channel = 0);
-template<typename T, int CN> ThrustView<const T, CN, thrust::device_ptr<T>> CreateView(const cv::cuda::GpuMat& mat, int channel = 0);
+
+template<typename T, int CN> ThrustView<T, CN, thrust::device_ptr<T>> CreateView(cv::cuda::GpuMat& mat, int channel = 0);
+template<typename T, int CN> ThrustView<const T, CN, thrust::device_ptr<const T>> CreateView(const cv::cuda::GpuMat& mat, int channel = 0);
 
 
-template<typename T, int CN, typename PtrType = thrust::device_ptr<T>> class ThrustView
+
+
+template<typename T, int CN, typename PtrType = thrust::device_ptr<T>>
+class ThrustView
 {
     // Iterates over every element inside of a matrix
     typedef cv::Vec<T, CN> DataType;
@@ -46,7 +50,8 @@ template<typename T, int CN, typename PtrType = thrust::device_ptr<T>> class Thr
     typedef MatrixItr_t ColItr_t;
 };
 
-template<typename T, typename PtrType> class ThrustView<T, 1, PtrType>
+template<typename T, typename PtrType>
+class ThrustView<T, 1, PtrType>
 {
 public:
     // Iterates over every element inside of a matrix
@@ -150,7 +155,8 @@ public:
     int _element_step;
 };
 
-template<typename T, int CN> ThrustView<T, CN, T*> CreateView(cv::Mat& mat, int channel)
+template<typename T, int CN>
+ThrustView<T, CN, T*> CreateView(cv::Mat& mat, int channel)
 {
     ThrustView<T, CN, T*> view;
     CV_Assert(mat.depth() == cv::DataType<T>::depth);
@@ -173,7 +179,8 @@ template<typename T, int CN> ThrustView<T, CN, T*> CreateView(cv::Mat& mat, int 
     return view;
 }
 
-template<typename T, int CN> ThrustView<const T, CN, T*> CreateView(const cv::Mat& mat, int channel)
+template<typename T, int CN>
+ThrustView<const T, CN, T*> CreateView(const cv::Mat& mat, int channel)
 {
     ThrustView<T, CN, T*> view;
     CV_Assert(mat.depth() == cv::DataType<T>::depth);
@@ -197,7 +204,8 @@ template<typename T, int CN> ThrustView<const T, CN, T*> CreateView(const cv::Ma
 }
 
 
-template<typename T, int CN> ThrustView<T, CN, thrust::device_ptr<T>> CreateView(cv::cuda::GpuMat& mat, int channel)
+template<typename T, int CN>
+ThrustView<T, CN, thrust::device_ptr<T>> CreateView(cv::cuda::GpuMat& mat, int channel)
 {
     ThrustView<T, CN, thrust::device_ptr<T>> view;
     CV_Assert(mat.depth() == cv::DataType<T>::depth);
@@ -220,9 +228,10 @@ template<typename T, int CN> ThrustView<T, CN, thrust::device_ptr<T>> CreateView
     return view;
 }
 
-template<typename T, int CN> ThrustView<const T, CN, thrust::device_ptr<T>> CreateView(const cv::cuda::GpuMat& mat, int channel)
+template<typename T, int CN>
+ThrustView<const T, CN, thrust::device_ptr<const T>> CreateView(const cv::cuda::GpuMat& mat, int channel)
 {
-    ThrustView<const T, CN, thrust::device_ptr<T>> view;
+    ThrustView<const T, CN, thrust::device_ptr<const T>> view;
     CV_Assert(mat.depth() == cv::DataType<T>::depth);
     view._rows = mat.rows;
     view._cols = mat.cols;

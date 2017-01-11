@@ -1,6 +1,6 @@
 #pragma once
 #include "EagleLib/Detail/Export.hpp"
-#include <MetaObject/IMetaObject.hpp>
+#include <MetaObject/MetaObject.hpp>
 #include <shared_ptr.hpp>
 
 namespace EagleLib
@@ -29,7 +29,17 @@ namespace EagleLib
         void               SetSyncInput(const std::string& name);
         void               SetSyncMethod(SyncMethod method);
         virtual void       PostSerializeInit();
-        std::vector<mo::IParameter*> GetParameters(const std::string& filter = "") const;
+        //std::vector<mo::IParameter*> GetParameters(const std::string& filter = "") const;
+        std::vector<mo::IParameter*> GetComponentParameters(const std::string& filter = "") const;
+        std::vector<mo::IParameter*> GetAllParameters(const std::string& filter = "") const;
+        mo::IParameter* GetOutput(const std::string& name) const;
+        void  SetContext(mo::Context* ctx, bool overwrite = false);
+        const std::vector<rcc::weak_ptr<Algorithm>>& GetComponents() const
+        {
+            return _algorithm_components;
+        }
+        void  Serialize(ISimpleSerializer *pSerializer);
+        void AddComponent(rcc::weak_ptr<Algorithm> component);
     protected:
         virtual bool CheckInputs();
         virtual bool ProcessImpl() = 0;
@@ -41,7 +51,8 @@ namespace EagleLib
         impl* _pimpl;
         unsigned int _rmt_hash = 0;
         unsigned int _rmt_cuda_hash = 0;
-        std::vector<rcc::shared_ptr<Algorithm>> _algorithm_components;
+        std::vector<rcc::weak_ptr<Algorithm>> _algorithm_components;
+
     private:
         
     };
