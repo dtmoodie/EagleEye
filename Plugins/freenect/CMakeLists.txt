@@ -2,7 +2,7 @@ CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 CMAKE_POLICY(SET CMP0053 OLD)
 ENDIF()
-project(freenect_framegrabber)
+project(freenect)
 
 #set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -22,14 +22,14 @@ IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
         SET(PTHREADS_INCLUDE_DIR "" CACHE PATH "${THREADS_PTHREADS_INCLUDE_DIR}")
         SET(PTHREADS_LIBRARY "" CACHE FILE "${PTHREADS_INCLUDE_DIR}/../lib/x64/pthreadVC2.lib")
         INCLUDE_DIRECTORIES(${PTHREADS_INCLUDE_DIR})
-        
+
     ELSE(WIN32)
         LINK_DIRECTORIES("/usr/local/lib")
     ENDIF(WIN32)
 
     ADD_DEFINITIONS(${DEFS})
     LINK_DIRECTORIES(${LINK_DIRS})
-    
+
     INCLUDE_DIRECTORIES(
         ${EagleLib_INCLUDE_DIRECTORIES}
         ${OpenCV_INCLUDE_DIRS}
@@ -51,9 +51,9 @@ IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
         SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
     ENDIF()
 
-    cuda_add_library(freenect_framegrabber SHARED ${src} ${hdr} ${knl})
-    add_dependencies(freenect_framegrabber EagleLib)
-    RCC_LINK_LIB(freenect_framegrabber
+    cuda_add_library(freenect SHARED ${src} ${hdr} ${knl})
+    add_dependencies(freenect EagleLib)
+    RCC_LINK_LIB(freenect
         EagleLib
         ${LIBFREENECT_LIBRARY}
         ${OpenCV_LIBS}
@@ -62,7 +62,7 @@ IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
         ${LIBUSB_1_LIBRARY}
     )
     IF(WIN32)
-        TARGET_LINK_LIBRARIES(freenect_framegrabber ${PTHREADS_LIBRARY})
+        TARGET_LINK_LIBRARIES(freenect ${PTHREADS_LIBRARY})
     ENDIF(WIN32)
     INCLUDE(../PluginTemplate.cmake)
 
