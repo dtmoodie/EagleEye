@@ -7,6 +7,7 @@
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/ObjectDetection.hpp"
 #include "EagleLib/rcc/external_includes/cv_calib3d.hpp"
+#include "CaffeNetHandler.hpp"
 #include "MetaObject/MetaObject.hpp"
 #include "MetaObject/Parameters/Types.hpp"
 #include "RuntimeLinkLibrary.h"
@@ -20,14 +21,18 @@
     RUNTIME_COMPILER_LINKLIBRARY("opencv_calib3d" CV_VERSION_ ".lib")
   #endif
 #else // Linux
-  RUNTIME_COMPILER_LINKLIBRARY("-lcaffe-nv")
+  RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 #endif
 
 
 namespace EagleLib
 {
+
+
     namespace Nodes
     {
+
+
         class CaffeBase : public Node
         {
         public:
@@ -87,9 +92,10 @@ namespace EagleLib
                 PARAM(int, num_classifications, 5)
                 OUTPUT(std::vector<DetectedObject>, detections, std::vector<DetectedObject>())
             MO_END
-            
+            void       PostSerializeInit();
         protected:
             bool ProcessImpl();
+            std::vector<rcc::shared_ptr<Caffe::NetHandler>> net_handlers;
         };
         
         class CaffeDetector: public CaffeBase

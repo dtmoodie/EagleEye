@@ -1,14 +1,14 @@
 #define PARAMTERS_GENERATE_PERSISTENCE
 #include "Caffe.h"
 #include "caffe_init.h"
-
+#include "helpers.hpp"
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/Nodes/NodeInfo.hpp"
 #include <EagleLib/ObjectDetection.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
 #include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
-
+#include "helpers.hpp"
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Types.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
@@ -25,12 +25,7 @@
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-float iou(const cv::Rect& r1, const cv::Rect& r2)
-{
-    float intersection = (r1 & r2).area();
-    float rect_union = (r1.area() + r2.area()) - intersection;
-    return intersection / rect_union;
-}
+
 
 template <typename T>
 std::vector<size_t> sort_indexes(const std::vector<T> &v) {
@@ -184,6 +179,8 @@ bool CaffeBase::CheckInput()
         input_names.push_back(NN->blob_names()[idx]);
     }
     auto input_blobs_ = NN->input_blobs();
+    if(input_blobs_.size() != input_blobs.size())
+        return false;
     for(int i = 0; i < input_blob_indecies.size(); ++i)
     {
         auto itr = wrapped_inputs.find(input_names[i]);
@@ -473,7 +470,45 @@ bool CaffeImageClassifier::ProcessImpl()
         NN->Forward(&loss);
     }
     
+    if(net_handlers.empty())
+    {
+        auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(Caffe::NetHandler::s_interfaceID);
+        auto output_blobs = NN->output_blob_indices();
+        for(auto& constructor : constructors)
+        {
+            auto info = dynamic_cast<Caffe::NetHandlerInfo*>(constructor->GetObjectInfo());
+            if(info)
+            {
+                std::vector<int> handled_blobs = info->CanHandleNetwork(*NN);
+                for(auto handled_blob : handled_blobs)
+                {
+                    auto itr = std::find(output_blobs.begin(), output_blobs.end(), handled_blob);
+                    if(itr != output_blobs.end())
+                    {
+                        LOG(info) << info->GetDisplayName() << " handles blob " << NN->blob_names()[*itr];
+                        output_blobs.erase(itr);
+                    }
+                }
+                if(handled_blobs.size())
+                {
+                    auto handler = dynamic_cast<Caffe::NetHandler*>(constructor->Construct());
+                    if(handler)
+                    {
+                        handler->Init(true);
+                        net_handlers.emplace_back(handler);
+                        this->_algorithm_components.emplace_back(handler);
+                    }
 
+                }
+            }
+        }
+    }
+
+    for(auto& handler : net_handlers)
+    {
+        handler->HandleOutput(*NN, input_param.GetTimestamp(), *bounding_boxes);
+    }
+    return true;
 
     if(_network_type & Classifier_e)
     {
@@ -512,7 +547,6 @@ bool CaffeImageClassifier::ProcessImpl()
         cv::Mat_<float> xmax(num_detections, 1, begin + 5, sizeof(float) * 7);
         cv::Mat_<float> ymax(num_detections, 1, begin + 6, sizeof(float) * 7);
 
-        cv::Size original_size = input->GetSize();
         for(int i = 0; i < num_detections; ++i)
         {
             if(confidence[i][0] > detection_threshold)
@@ -533,7 +567,7 @@ bool CaffeImageClassifier::ProcessImpl()
 
                 for(auto itr = objects.begin(); itr != objects.end(); ++itr)
                 {
-                    float iou_val = iou(obj.boundingBox, itr->boundingBox);
+                    float iou_val = EagleLib::Caffe::iou(obj.boundingBox, itr->boundingBox);
                     if(iou_val > 0.2)
                     {
                         if(obj.detections[0].confidence > itr->detections[0].confidence)
@@ -557,20 +591,28 @@ bool CaffeImageClassifier::ProcessImpl()
         detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
     }else if(_network_type & FCN_e)
     {
-        /*cv::cuda::GpuMat label, confidence;
+        cv::Mat label, confidence;
         caffe::Blob<float>* output_layer = NN->output_blobs()[0];
-        EagleLib::Caffe::MaxSegmentation(output_layer, label, confidence, Stream());
-#ifndef NDEBUG
-        cv::Mat h_label(label);
-        cv::Mat h_confidence(confidence);
-        cv::Mat dummy();
-#endif
-*/
-
+        EagleLib::Caffe::MaxSegmentation(output_layer, label, confidence);
+        UpdateParameter<SyncedMemory>("label", label, input_param.GetTimestamp(), _ctx);
+        UpdateParameter<SyncedMemory>("confidence", label, input_param.GetTimestamp(), _ctx);
     }
     
     bounding_boxes = nullptr;
     return true;
+}
+void CaffeImageClassifier::PostSerializeInit()
+{
+    Node::PostSerializeInit();
+    for(auto& component : _algorithm_components)
+    {
+        rcc::shared_ptr<Caffe::NetHandler> handler(component);
+        if(handler)
+        {
+            net_handlers.push_back(handler);
+            handler->SetContext(this->GetContext());
+        }
+    }
 }
 
 MO_REGISTER_CLASS(CaffeImageClassifier)
