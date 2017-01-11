@@ -445,7 +445,7 @@ int main(int argc, char* argv[])
                 std::vector<mo::IParameter*> parameters;
                 if(current_node)
                 {
-                    parameters = current_node->GetParameters();
+                    parameters = current_node->GetAllParameters();
                 }
                 if(current_stream)
                 {
@@ -557,7 +557,7 @@ int main(int argc, char* argv[])
                 }
                 if(current_node)
                 {
-                    auto params = current_node->GetParameters();
+                    auto params = current_node->GetAllParameters();
                     std::stringstream ss;
                     for(auto param : params)
                     {
@@ -755,10 +755,31 @@ int main(int argc, char* argv[])
                     }
                     else
                     {
-                        auto params = current_node->GetParameters();
+                        auto params = current_node->GetAllParameters();
                         for(auto& param : params)
                         {
-
+                            std::string name = param->GetName();
+                            auto pos = name.find(':');
+                            if(pos == std::string::npos)
+                            {
+                                if(name == what)
+                                {
+                                    current_param = param;
+                                    current_stream.reset();
+                                    return;
+                                }
+                            }else
+                            {
+                                if(name.substr(pos+1) == what)
+                                {
+                                    current_param = param;
+                                    current_stream.reset();
+                                    return;
+                                }
+                            }
+                        }
+                        for(auto& param : params)
+                        {
                             if(param->GetName().find(what) != std::string::npos)
                             {
                                 current_param = param;
@@ -914,7 +935,7 @@ int main(int argc, char* argv[])
             }
             if (current_node)
             {
-                auto params = current_node->GetParameters();
+                auto params = current_node->GetAllParameters();
                 for(auto& param : params)
                 {
                     auto pos = value.find(param->GetName());
