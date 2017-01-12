@@ -1,5 +1,5 @@
 #include <EagleLib/Thrust_interop.hpp>
-#include "GPUSortingPriv.hpp"
+#include "EagleLib/utilities/GPUSortingPriv.hpp"
 namespace cv
 {
     namespace cuda

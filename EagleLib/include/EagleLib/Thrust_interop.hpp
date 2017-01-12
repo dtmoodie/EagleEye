@@ -223,7 +223,7 @@ ThrustView<T, CN, thrust::device_ptr<T>> CreateView(cv::cuda::GpuMat& mat, int c
     else
     {
         view._element_step = mat.channels();
-        view._data = (T*)(mat.ptr() + channel);
+        view._data = mat.ptr<T>() + channel;
     }
     return view;
 }
@@ -242,12 +242,12 @@ ThrustView<const T, CN, thrust::device_ptr<const T>> CreateView(const cv::cuda::
         // Virtually reshape the matrix such that each channel of the image is seen as a separate adjacent pixel
         // IE [(RGB),(RGB)] -> [R,G,B,R,G,B]
         view._element_step = 1;
-        view._data = mat.ptr();
+        view._data = mat.ptr<T>();
     }
     else
     {
         view._element_step = mat.channels();
-        view._data = mat.ptr() + channel;
+        view._data = mat.ptr<T>() + channel;
     }
     return view;
 }

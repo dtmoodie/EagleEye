@@ -1078,9 +1078,22 @@ namespace cereal
        std::string type;
        ar(CEREAL_NVP(type));
        if(!obj)
-            obj = dynamic_cast<EagleLib::Algorithm*>(mo::MetaObjectFactory::Instance()->Create(type.c_str()));
+       {
+            IObject* ptr =  mo::MetaObjectFactory::Instance()->Create(type.c_str());
+            if(ptr)
+            {
+                EagleLib::Algorithm* alg_ptr = dynamic_cast<EagleLib::Algorithm*>(ptr);
+                if(!alg_ptr)
+                    delete ptr;
+                else
+                    obj = alg_ptr;
+            }
+       }
        if(!obj)
+       {
             LOG(warning) << "Unable to create algorithm of type: " << type;
+            return;
+       }
        auto parameters = obj->GetParameters();
        if(parameters.size())
           ar(CEREAL_NVP(parameters));

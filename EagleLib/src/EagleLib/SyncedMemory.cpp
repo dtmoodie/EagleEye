@@ -2,7 +2,7 @@
 #include <EagleLib/utilities/GpuMatAllocators.h>
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #include <EagleLib/IO/cvMat.hpp>
-
+#include <EagleLib/SyncedMemoryInl.hpp>
 #include <MetaObject/Logging/Log.hpp>
 
 #include "MetaObject/Parameters/MetaParameter.hpp"
@@ -349,16 +349,6 @@ SyncedMemory::SYNC_STATE SyncedMemory::GetSyncState(int index) const
 {
     CV_Assert(index < sync_flags.size() && index >= 0);
     return sync_flags[index];
-}
-template<typename A> void SyncedMemory::load(A& ar)
-{
-    ar(cereal::make_nvp("matrices", h_data));
-    sync_flags.resize(h_data.size(), HOST_UPDATED);
-    d_data.resize(h_data.size());
-}
-template<typename A> void SyncedMemory::save(A & ar) const
-{
-    ar(cereal::make_nvp("matrices", h_data));
 }
 mo::Context* SyncedMemory::GetContext()
 {
