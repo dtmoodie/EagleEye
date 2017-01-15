@@ -70,14 +70,9 @@ public:
           _btn_load_config->clicked().connect(std::bind(&MainApplication::onActionClicked, this, _btn_load_config));
 
 
+        //_graph = new WTree();
+        //_graph->setSelectionMode(SingleSelection);
 
-          _btn_load_config = new WPushButton(_action_list_container);
-
-
-        _graph = new WTree();
-        _graph->setSelectionMode(SingleSelection);
-        
-        
     }
     
     void onAddNodeClicked()
@@ -100,15 +95,18 @@ protected:
     {
         if(sender == _btn_load_data)
         {
-            WDialog* dialog = new WDialog("Select data to load");
-            
-            new WText("asdf", dialog->contents());
-            new WLineEdit(dialog->contents());
-            /*auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IFrameGrabber::s_interfaceID);
+            WDialog* dialog = new WDialog("Select data to load", this);
+
+            auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IFrameGrabber::s_interfaceID);
             std::vector<std::pair<std::string, std::string>> data;
-            WTable *table = new Wt::WTable();
+            WTable *table = new Wt::WTable(dialog->contents());
+
             table->setHeaderCount(1);
-            int count = 0;
+            table->elementAt(0, 0)->addWidget(new WText("File"));
+            table->elementAt(0, 0)->addWidget(new WText("FrameGrabber"));
+            table->setMargin(5);
+
+            int count = 1;
             for (auto constructor : constructors)
             {
                 auto fg_info = dynamic_cast< IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
@@ -123,7 +121,10 @@ protected:
                     }
                 }
             }
-            */
+
+            WLineEdit* manual_entry = new WLineEdit("Enter file path", dialog->contents());
+
+
             WPushButton* btn_ok = new WPushButton("OK", dialog->footer());
             btn_ok->setDefault(true);
             btn_ok->clicked().connect(std::bind([=]() {
