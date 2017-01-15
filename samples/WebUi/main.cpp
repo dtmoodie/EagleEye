@@ -69,10 +69,10 @@ public:
           _btn_load_config->setText("Load config file");
           _btn_load_config->clicked().connect(std::bind(&MainApplication::onActionClicked, this, _btn_load_config));
 
-
-        //_graph = new WTree();
-        //_graph->setSelectionMode(SingleSelection);
-
+        _data_stream_list_container = new WContainerWidget(root());
+          
+        _node_tree = new WTree(root());
+        _node_tree->setSelectionMode(SingleSelection);
     }
     
     void onAddNodeClicked()
@@ -99,37 +99,58 @@ protected:
 
             auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IFrameGrabber::s_interfaceID);
             std::vector<std::pair<std::string, std::string>> data;
+
             WTable *table = new Wt::WTable(dialog->contents());
+              table->setHeaderCount(1);
+              table->elementAt(0, 0)->addWidget(new WText("File"));
+              table->elementAt(0, 0)->addWidget(new WText("FrameGrabber"));
+              table->setMargin(5);
 
-            table->setHeaderCount(1);
-            table->elementAt(0, 0)->addWidget(new WText("File"));
-            table->elementAt(0, 0)->addWidget(new WText("FrameGrabber"));
-            table->setMargin(5);
-
-            int count = 1;
-            for (auto constructor : constructors)
-            {
-                auto fg_info = dynamic_cast< IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
-                if (fg_info)
-                {
-                    auto documents = fg_info->ListLoadableDocuments();
-                    for(auto& document : documents)
-                    {
-                        table->elementAt(count, 0)->addWidget(new WText(document));
-                        table->elementAt(count, 1)->addWidget(new WText(fg_info->GetDisplayName()));
-                        ++count;
-                    }
-                }
-            }
+              int count = 1;
+              for (auto constructor : constructors)
+              {
+                  auto fg_info = dynamic_cast< IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
+                  if (fg_info)
+                  {
+                      auto documents = fg_info->ListLoadableDocuments();
+                      std::string fg_name = fg_info->GetDisplayName();
+                      for(auto document : documents)
+                      {
+                          table->elementAt(count, 0)->addWidget(new WText(document));
+                          table->elementAt(count, 1)->addWidget(new WText(fg_name));
+                        
+                          WPushButton* btn = new WPushButton();
+                          btn->setText("Load");
+                          table->elementAt(count, 2)->addWidget(btn);
+                          btn->clicked().connect(std::bind([document, fg_name, dialog, this]()
+                          {
+                              this->loadData(document, fg_name);
+                              dialog->reject();
+                          }));
+                          ++count;
+                      }
+                  }
+              }
 
             WLineEdit* manual_entry = new WLineEdit("Enter file path", dialog->contents());
-
+            manual_entry->enterPressed().connect(
+                std::bind([manual_entry, dialog]()
+                {
+                    std::string data = manual_entry->text().toUTF8();
+                    auto ds = IDataStream::Create(data);
+                    if (ds)
+                    {
+                        ds->StartThread();
+                        g_ctx._data_streams.push_back(ds);
+                    }
+                    dialog->reject();
+                }));
 
             WPushButton* btn_ok = new WPushButton("OK", dialog->footer());
-            btn_ok->setDefault(true);
-            btn_ok->clicked().connect(std::bind([=]() {
-                dialog->accept();
-            }));
+              btn_ok->setDefault(true);
+              btn_ok->clicked().connect(std::bind([=]() {
+                  dialog->accept();
+              }));
 
             WPushButton* btn_cancel = new WPushButton("Cancel", dialog->footer());
             btn_cancel->clicked().connect(dialog, &Wt::WDialog::reject);
@@ -146,8 +167,63 @@ protected:
         }
     }
     
+    void loadData(const std::string& data, const std::string& fg = "")
+    {
+        auto ds = IDataStream::Create(data, fg);
+        if (ds)
+        {
+            ds->StartThread();
+            g_ctx._data_streams.push_back(ds);
+        }
+        std::string display_name;
+        if(boost::filesystem::is_regular_file(data))
+        {
+            boost::filesystem::path path(data);
+            display_name = path.stem().string();
+        }else
+        {
+            display_name = data;
+        }
+        rcc::weak_ptr<IDataStream> weak_ptr(ds);
+        WPushButton* btn = new WPushButton(display_name, _data_stream_list_container);
+        btn->clicked().connect(std::bind([weak_ptr, this, display_name]()
+        {
+            this->onStreamSelected(weak_ptr, display_name);
+        }));
+    }
+    
+    void populateTree(rcc::weak_ptr<Nodes::Node> current_node, WTreeNode* display_node)
+    {
+        WTreeNode* new_node = new WTreeNode(current_node->GetTreeName(), 0, display_node);
+        auto children = current_node->GetChildren();
+        for(auto& child : children)
+        {
+            populateTree(child, new_node);
+        }
+    }
+
+    void onStreamSelected(rcc::weak_ptr<IDataStream> stream, const std::string& display = "")
+    {
+        _current_stream = stream;
+        _current_node.reset();
+        _current_parameter = nullptr;
+        delete _node_tree->treeRoot();
+        
+        WTreeNode* root_node = new WTreeNode(display);
+        _node_tree->setTreeRoot(root_node);
+        root_node->label()->setTextFormat(Wt::PlainText);
+
+        std::vector<rcc::weak_ptr<Nodes::Node>> nodes = stream->GetTopLevelNodes();
+        
+        for(auto& node : nodes)
+        {
+            populateTree(node, root_node);
+        }
+
+    }
+
     // for now displaying the graph as a tree
-    Wt::WTree* _graph;
+    Wt::WTree* _node_tree;
 
     rcc::weak_ptr<IDataStream> _current_stream;
     rcc::weak_ptr<Nodes::Node> _current_node;
