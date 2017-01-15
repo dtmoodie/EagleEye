@@ -2,6 +2,7 @@
 #include <EagleLib/Nodes/Node.h>
 #include <EagleLib/Logging.h>
 #include <EagleLib/Nodes/IFrameGrabber.hpp>
+#include <EagleLib/Nodes/NodeFactory.h>
 
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Demangle.hpp>
@@ -30,6 +31,8 @@
 #include <Wt/WTable>
 #include <Wt/WTreeNode>
 #include <Wt/WDialog>
+#include <Wt/WSuggestionPopup>
+#include <Wt/WSortFilterProxyModel>
 
 #include <boost/thread.hpp>
 #include <boost/filesystem.hpp>
@@ -45,6 +48,7 @@ struct GlobalContext
 
     TypedSignal<void(void)> onStreamAdded;
     TypedSignal<void(IDataStream*, Nodes::Node*)> onNodeAdded;
+    boost::filesystem::path _current_dir;
 };
 GlobalContext g_ctx;
 
@@ -59,106 +63,110 @@ public:
         _action_list_container = new WContainerWidget(root());
           _btn_add_node = new WPushButton(_action_list_container);
           _btn_add_node->setText("Add node");
-          _btn_add_node->clicked().connect(std::bind(&MainApplication::onActionClicked, this, _btn_add_node));
+          _btn_add_node->clicked().connect(std::bind(&MainApplication::onAddNodeClicked, this));
           
           _btn_load_data = new WPushButton(_action_list_container);
           _btn_load_data->setText("Load data");
-          _btn_load_data->clicked().connect(std::bind(&MainApplication::onActionClicked, this, _btn_load_data));
+          _btn_load_data->clicked().connect(std::bind(&MainApplication::onLoadDataClicked, this));
 
           _btn_load_config = new WPushButton(_action_list_container);
           _btn_load_config->setText("Load config file");
-          _btn_load_config->clicked().connect(std::bind(&MainApplication::onActionClicked, this, _btn_load_config));
+          _btn_load_config->clicked().connect(std::bind(&MainApplication::onLoadConfigClicked, this));
+
+          _btn_plugins = new WPushButton(_action_list_container);
+          _btn_plugins->setText("List loaded plugins");
+
 
         _data_stream_list_container = new WContainerWidget(root());
+
           
         _node_tree = new WTree(root());
         _node_tree->setSelectionMode(SingleSelection);
     }
-    
-    void onAddNodeClicked()
-    {
-        
-    }
+
     
 protected:
 
     void onStreamAdded()
     {
-    
+
     }
 
     void onNodeAdded(IDataStream* stream, Nodes::Node*)
     {
-        
+
     }
-    void onActionClicked(WPushButton* sender)
+    void onLoadConfigClicked()
     {
-        if(sender == _btn_load_data)
+
+    }
+
+    void onAddNodeClicked()
+    {
+        if(_current_stream || _current_node)
         {
-            WDialog* dialog = new WDialog("Select data to load", this);
+            WDialog* dialog = new WDialog("Select node", this);
 
-            auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IFrameGrabber::s_interfaceID);
-            std::vector<std::pair<std::string, std::string>> data;
+            auto constructors = MetaObjectFactory::Instance()->GetConstructors(Nodes::Node::s_interfaceID);
 
-            WTable *table = new Wt::WTable(dialog->contents());
-              table->setHeaderCount(1);
-              table->elementAt(0, 0)->addWidget(new WText("File"));
-              table->elementAt(0, 0)->addWidget(new WText("FrameGrabber"));
-              table->setMargin(5);
-
-              int count = 1;
-              for (auto constructor : constructors)
-              {
-                  auto fg_info = dynamic_cast< IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
-                  if (fg_info)
-                  {
-                      auto documents = fg_info->ListLoadableDocuments();
-                      std::string fg_name = fg_info->GetDisplayName();
-                      for(auto document : documents)
-                      {
-                          table->elementAt(count, 0)->addWidget(new WText(document));
-                          table->elementAt(count, 1)->addWidget(new WText(fg_name));
-                        
-                          WPushButton* btn = new WPushButton();
-                          btn->setText("Load");
-                          table->elementAt(count, 2)->addWidget(btn);
-                          btn->clicked().connect(std::bind([document, fg_name, dialog, this]()
-                          {
-                              this->loadData(document, fg_name);
-                              dialog->reject();
-                          }));
-                          ++count;
-                      }
-                  }
-              }
-
-            WLineEdit* manual_entry = new WLineEdit("Enter file path", dialog->contents());
-            manual_entry->enterPressed().connect(
-                std::bind([manual_entry, dialog]()
+            WTable* table = new WTable(dialog->contents());
+            table->setHeaderCount(1);
+            table->elementAt(0, 0)->addWidget(new WText("Name"));
+            table->elementAt(0, 1)->addWidget(new WText("Description"));
+            table->setWidth(WLength("100%"));
+            int column = 0;
+            int row = 1;
+            for(int i = 0; i < constructors.size(); ++i)
+            {
+                IObjectConstructor* constructor = constructors[i];
+                std::string node_name = constructor->GetName();
+                Nodes::NodeInfo* info = dynamic_cast<Nodes::NodeInfo*>(constructors[i]->GetObjectInfo());
+                if(info)
                 {
-                    std::string data = manual_entry->text().toUTF8();
-                    auto ds = IDataStream::Create(data);
-                    if (ds)
+                    WPushButton* name = new WPushButton(info->GetDisplayName());
+                    table->elementAt(row, column * 2)->addWidget(name);
+                    WPushButton* btn = new WPushButton();
+                    btn->setText("Detailed info");
+                    table->elementAt(row, column * 2 + 1)->addWidget(btn);
+                    name->clicked().connect(
+                        std::bind([node_name, this]()
+                        {
+                            if(_current_stream && !_current_node)
+                            {
+                                _current_stream->AddNode(node_name);
+                            }
+                            if(_current_node && _current_stream)
+                            {
+                                NodeFactory::Instance()->AddNode(node_name, _current_node.Get());
+                                WTreeNode* root = _node_tree->treeRoot();
+                                for(auto& node : _display_nodes)
+                                {
+                                    root->removeChildNode(node.second);
+                                }
+                                _display_nodes.clear();
+                                std::vector<rcc::weak_ptr<Nodes::Node>> nodes = _current_stream->GetTopLevelNodes();
+
+                                for(auto& node : nodes)
+                                {
+                                    populateTree(node, root);
+                                }
+                            }
+                        }));
+                    ++row;
+                    if(row > 15)
                     {
-                        ds->StartThread();
-                        g_ctx._data_streams.push_back(ds);
+                        row = 1;
+                        ++column;
                     }
-                    dialog->reject();
-                }));
-
-            WPushButton* btn_ok = new WPushButton("OK", dialog->footer());
-              btn_ok->setDefault(true);
-              btn_ok->clicked().connect(std::bind([=]() {
-                  dialog->accept();
-              }));
-
+                }
+            }
             WPushButton* btn_cancel = new WPushButton("Cancel", dialog->footer());
             btn_cancel->clicked().connect(dialog, &Wt::WDialog::reject);
 
             dialog->rejectWhenEscapePressed();
             dialog->setModal(true);
 
-            dialog->finished().connect(std::bind([=]() 
+            dialog->finished().connect(std::bind([=]()
             {
                 delete dialog;
             }));
@@ -166,7 +174,153 @@ protected:
             dialog->show();
         }
     }
+
+    void onLoadDataClicked()
+    {
+        WDialog* dialog = new WDialog("Select data to load", this);
+
+        auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IFrameGrabber::s_interfaceID);
+        std::vector<std::pair<std::string, std::string>> data;
+
+        WTable *table = new Wt::WTable(dialog->contents());
+          table->setHeaderCount(1);
+          table->elementAt(0, 0)->addWidget(new WText("File"));
+          table->elementAt(0, 0)->addWidget(new WText("FrameGrabber"));
+          table->setMargin(5);
+
+          int count = 1;
+          for (auto constructor : constructors)
+          {
+              auto fg_info = dynamic_cast< IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
+              if (fg_info)
+              {
+                  auto documents = fg_info->ListLoadableDocuments();
+                  std::string fg_name = fg_info->GetDisplayName();
+                  for(auto document : documents)
+                  {
+                      table->elementAt(count, 0)->addWidget(new WText(document));
+                      table->elementAt(count, 1)->addWidget(new WText(fg_name));
+
+                      WPushButton* btn = new WPushButton();
+                      btn->setText("Load");
+                      table->elementAt(count, 2)->addWidget(btn);
+                      btn->clicked().connect(std::bind([document, fg_name, dialog, this]()
+                      {
+                          this->loadData(document, fg_name);
+                          dialog->accept();
+                      }));
+                      ++count;
+                  }
+              }
+          }
+
+        WLineEdit* manual_entry = new WLineEdit(dialog->contents());
+        manual_entry->setEmptyText("Enter file path");
+
+        manual_entry->enterPressed().connect(
+            std::bind([manual_entry, dialog, this]()
+            {
+                std::string data = manual_entry->text().toUTF8();
+                this->loadData(data);
+                dialog->accept();
+            }));
+        WSuggestionPopup::Options options;
+        options.highlightBeginTag = "<span class=\"highlight\">";
+        options.highlightEndTag = "</span>";
+        options.listSeparator = ',';
+        options.whitespace = " \\n";
+        options.wordSeparators = "-., \"@\\n;";
+        options.appendReplacedText = ", ";
+        _sp = new WSuggestionPopup(options, dialog->contents());
+
+        _sp->filterModel().connect(this, &MainApplication::onFilterModel);
+
+        boost::filesystem::directory_iterator end_itr;
+        _current_path = g_ctx._current_dir;
+        if (boost::filesystem::is_directory(g_ctx._current_dir))
+        {
+            for (boost::filesystem::directory_iterator itr(g_ctx._current_dir); itr != end_itr; ++itr)
+            {
+                if (boost::filesystem::is_regular_file(itr->path()))
+                {
+                    std::string file = itr->path().stem().string();
+
+                    _sp->addSuggestion(file);
+                }
+            }
+        }
+#ifdef _MSC_VER
+
+#else
+        for(boost::filesystem::directory_iterator itr("/"); itr != end_itr; ++itr)
+        {
+            _sp->addSuggestion(itr->path().string());
+        }
+#endif
+        _sp->forEdit(manual_entry);
+        _sp->setFilterLength(-1);
+
+        WPushButton* btn_ok = new WPushButton("OK", dialog->footer());
+          btn_ok->setDefault(true);
+          btn_ok->clicked().connect(std::bind([=]()
+          {
+              std::string data = manual_entry->text().toUTF8();
+              this->loadData(data);
+              dialog->accept();
+          }));
+
+        WPushButton* btn_cancel = new WPushButton("Cancel", dialog->footer());
+        btn_cancel->clicked().connect(dialog, &Wt::WDialog::reject);
+
+        dialog->rejectWhenEscapePressed();
+        dialog->setModal(true);
+
+        dialog->finished().connect(std::bind([=]()
+        {
+            delete dialog;
+            this->_sp  = nullptr;
+        }));
+
+        dialog->show();
+    }
     
+    void onFilterModel(const WString& data_)
+    {
+        std::cout << "on filter model " << data_ << std::endl;
+        boost::filesystem::directory_iterator end_itr;
+        std::string data = data_.toUTF8();
+        for (boost::filesystem::directory_iterator itr(_current_path); itr != end_itr; ++itr)
+        {
+            if(data == itr->path().string())
+            {
+                if(boost::filesystem::is_directory(itr->path()))
+                {
+                    _sp->clearSuggestions();
+                    for (boost::filesystem::directory_iterator itr2(itr->path()); itr2 != end_itr; ++itr2)
+                    {
+                        _sp->addSuggestion(itr2->path().string());
+                    }
+                    return;
+                }
+            }
+        }
+#ifndef _MSC_VER
+        for(boost::filesystem::directory_iterator itr("/"); itr != end_itr; ++itr)
+        {
+            if(data == itr->path().string())
+            {
+                for (boost::filesystem::directory_iterator itr2(itr->path()); itr2 != end_itr; ++itr2)
+                {
+                    _sp->addSuggestion(itr2->path().string());
+                }
+                _current_path = data + "/";
+                return;
+            }
+        }
+#endif
+
+    }
+
     void loadData(const std::string& data, const std::string& fg = "")
     {
         auto ds = IDataStream::Create(data, fg);
@@ -195,6 +349,12 @@ protected:
     void populateTree(rcc::weak_ptr<Nodes::Node> current_node, WTreeNode* display_node)
     {
         WTreeNode* new_node = new WTreeNode(current_node->GetTreeName(), 0, display_node);
+        _display_nodes[current_node->GetTreeName()] = new_node;
+        new_node->selected().connect(
+            std::bind([this, current_node]()
+            {
+                this->_current_node = current_node;
+            }));
         auto children = current_node->GetChildren();
         for(auto& child : children)
         {
@@ -208,6 +368,7 @@ protected:
         _current_node.reset();
         _current_parameter = nullptr;
         delete _node_tree->treeRoot();
+        _display_nodes.clear();
         
         WTreeNode* root_node = new WTreeNode(display);
         _node_tree->setTreeRoot(root_node);
@@ -219,7 +380,6 @@ protected:
         {
             populateTree(node, root_node);
         }
-
     }
 
     // for now displaying the graph as a tree
@@ -231,10 +391,14 @@ protected:
 
     WContainerWidget* _data_stream_list_container;
     WContainerWidget* _action_list_container;
-      Wt::WPushButton* _btn_add_node;
-      Wt::WPushButton* _btn_load_data;
-      Wt::WPushButton* _btn_load_config;
-      Wt::WPushButton* _btn_run_script;
+      WPushButton* _btn_add_node;
+      WPushButton* _btn_load_data;
+      WPushButton* _btn_load_config;
+      WPushButton* _btn_run_script;
+      WPushButton* _btn_plugins;
+    boost::filesystem::path _current_path;
+    WSuggestionPopup *_sp = nullptr;
+    std::map<std::string, WTreeNode*> _display_nodes;
 };
 
 WApplication* createApplication(const WEnvironment& env)
@@ -251,19 +415,20 @@ int main(int argc, char** argv)
     g_allocator->SetName("Global Allocator");
     mo::SetGpuAllocatorHelper<cv::cuda::GpuMat>(g_allocator);
     mo::SetCpuAllocatorHelper<cv::Mat>(g_allocator);
-    
-    boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
+
+    boost::filesystem::path current_dir = boost::filesystem::path(argv[0]).parent_path();
+    g_ctx._current_dir  = current_dir;
 #ifdef _MSC_VER
-    currentDir = boost::filesystem::path(currentDir.string());
+    current_dir = boost::filesystem::path(currentDir.string());
 #else
-    currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
+    current_dir = boost::filesystem::path(current_dir.string() + "/Plugins");
 #endif
-    LOG(info) << "Looking for plugins in: " << currentDir.string();
+    LOG(info) << "Looking for plugins in: " << current_dir.string();
 
     boost::filesystem::directory_iterator end_itr;
-    if (boost::filesystem::is_directory(currentDir))
+    if (boost::filesystem::is_directory(current_dir))
     {
-        for (boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr)
+        for (boost::filesystem::directory_iterator itr(current_dir); itr != end_itr; ++itr)
         {
             if (boost::filesystem::is_regular_file(itr->path()))
             {
