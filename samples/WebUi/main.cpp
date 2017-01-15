@@ -137,7 +137,9 @@ protected:
                             }
                             if(_current_node && _current_stream)
                             {
-                                NodeFactory::Instance()->AddNode(node_name, _current_node.Get());
+                                auto added_nodes = NodeFactory::Instance()->AddNode(node_name, _current_node.Get());
+                                if (added_nodes.size() == 0)
+                                    return;
                                 WTreeNode* root = _node_tree->treeRoot();
                                 for(auto& node : _display_nodes)
                                 {
@@ -145,10 +147,14 @@ protected:
                                 }
                                 _display_nodes.clear();
                                 std::vector<rcc::weak_ptr<Nodes::Node>> nodes = _current_stream->GetTopLevelNodes();
-
+                                std::string new_node_name = added_nodes[0]->GetTreeName();
                                 for(auto& node : nodes)
                                 {
-                                    populateTree(node, root);
+                                    if(auto ret = populateTree(node, root, new_node_name))
+                                    {
+                                        // When you add a node, select it in the tree
+                                        _node_tree->select(ret);
+                                    }
                                 }
                             }
                         }));
@@ -346,9 +352,12 @@ protected:
         }));
     }
     
-    void populateTree(rcc::weak_ptr<Nodes::Node> current_node, WTreeNode* display_node)
+    WTreeNode* populateTree(rcc::weak_ptr<Nodes::Node> current_node, WTreeNode* display_node, const std::string& desired_return = "")
     {
         WTreeNode* new_node = new WTreeNode(current_node->GetTreeName(), 0, display_node);
+        WTreeNode* output = nullptr;
+        if(current_node->GetTreeName() == desired_return)
+            output = new_node;
         _display_nodes[current_node->GetTreeName()] = new_node;
         new_node->selected().connect(
             std::bind([this, current_node]()
@@ -358,8 +367,11 @@ protected:
         auto children = current_node->GetChildren();
         for(auto& child : children)
         {
-            populateTree(child, new_node);
+            auto ret = populateTree(child, new_node);
+            if(ret && ! output)
+                output = ret;
         }
+        return output;
     }
 
     void onStreamSelected(rcc::weak_ptr<IDataStream> stream, const std::string& display = "")
@@ -419,7 +431,7 @@ int main(int argc, char** argv)
     boost::filesystem::path current_dir = boost::filesystem::path(argv[0]).parent_path();
     g_ctx._current_dir  = current_dir;
 #ifdef _MSC_VER
-    current_dir = boost::filesystem::path(currentDir.string());
+    current_dir = boost::filesystem::path(current_dir.string());
 #else
     current_dir = boost::filesystem::path(current_dir.string() + "/Plugins");
 #endif
