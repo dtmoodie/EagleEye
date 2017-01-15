@@ -209,8 +209,6 @@ int main(int argc, char* argv[])
     boost::filesystem::directory_iterator end_itr;
     if(boost::filesystem::is_directory(currentDir))
     {
-    
-    
         for(boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr)
         {
             if(boost::filesystem::is_regular_file(itr->path()))
@@ -347,7 +345,6 @@ int main(int argc, char* argv[])
                 int index = 0;
                 for(auto constructor : constructors)
                 {
-                    constructor->GetName();
                     auto fg_info = dynamic_cast<EagleLib::Nodes::IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
                     if(fg_info)
                     {

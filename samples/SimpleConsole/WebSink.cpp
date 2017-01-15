@@ -34,9 +34,9 @@ bool WebSink::ProcessImpl()
         moments.emplace_back(2, 0, 0);
         moments.emplace_back(0, 2, 0);
         moments.emplace_back(0, 0, 2);
-        thresholds.push_back(0.1);
-        thresholds.push_back(0.1);
-        thresholds.push_back(0.1);
+        thresholds.push_back(0.1f);
+        thresholds.push_back(0.1f);
+        thresholds.push_back(0.1f);
     }
     if(foreground_mask->empty() || point_cloud->empty())
         return false;
