@@ -156,6 +156,7 @@ protected:
                                         _node_tree->select(ret);
                                     }
                                 }
+                                this->_current_node = added_nodes[0];
                             }
                         }));
                     ++row;
