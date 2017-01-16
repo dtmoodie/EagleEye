@@ -1,3 +1,5 @@
+#include "MetaObject/Parameters/UI/Wt/POD.hpp"
+#include "MetaObject/Parameters/UI/Wt/IParameterProxy.hpp"
 #include <EagleLib/IDataStream.hpp>
 #include <EagleLib/Nodes/Node.h>
 #include <EagleLib/Logging.h>
@@ -16,6 +18,9 @@
 #include <MetaObject/Logging/Log.hpp>
 #include <MetaObject/Detail/Allocator.hpp>
 #include <MetaObject/Thread/ThreadPool.hpp>
+#include <MetaObject/Parameters/UI/Wt/IParameterInputProxy.hpp>
+#include <MetaObject/Parameters/UI/Wt/IParameterOutputProxy.hpp>
+
 
 #include "instantiate.hpp"
 
@@ -42,6 +47,17 @@ using namespace EagleLib;
 using namespace EagleLib::Nodes;
 using namespace mo;
 using namespace Wt;
+
+INSTANTIATE_META_PARAMETER(bool);
+INSTANTIATE_META_PARAMETER(int);
+INSTANTIATE_META_PARAMETER(unsigned short);
+INSTANTIATE_META_PARAMETER(unsigned int);
+INSTANTIATE_META_PARAMETER(char);
+INSTANTIATE_META_PARAMETER(unsigned char);
+INSTANTIATE_META_PARAMETER(float);
+INSTANTIATE_META_PARAMETER(double);
+INSTANTIATE_META_PARAMETER(std::string);
+
 struct GlobalContext
 {
     std::vector<rcc::shared_ptr<IDataStream>> _data_streams;
@@ -79,9 +95,12 @@ public:
 
         _data_stream_list_container = new WContainerWidget(root());
 
-          
-        _node_tree = new WTree(root());
-        _node_tree->setSelectionMode(SingleSelection);
+        _node_container = new WContainerWidget(root());
+          _node_container->setWidth(WLength("20%"));
+          _node_tree = new WTree(_node_container);
+          _node_tree->setSelectionMode(SingleSelection);
+          _parameter_display = new WContainerWidget(_node_container);
+          _parameter_display->hide();
     }
 
     
@@ -96,6 +115,7 @@ protected:
     {
 
     }
+
     void onLoadConfigClicked()
     {
 
@@ -153,7 +173,7 @@ protected:
                                     if(auto ret = populateTree(node, root, new_node_name))
                                     {
                                         // When you add a node, select it in the tree
-                                        _node_tree->select(ret);
+                                        //_node_tree->select(ret);
                                     }
                                 }
                                 this->_current_node = added_nodes[0];
@@ -234,10 +254,10 @@ protected:
         WSuggestionPopup::Options options;
         options.highlightBeginTag = "<span class=\"highlight\">";
         options.highlightEndTag = "</span>";
-        options.listSeparator = ',';
+        //options.listSeparator = ',';
         options.whitespace = " \\n";
         options.wordSeparators = "-., \"@\\n;";
-        options.appendReplacedText = ", ";
+        //options.appendReplacedText = ", ";
         _sp = new WSuggestionPopup(options, dialog->contents());
 
         _sp->filterModel().connect(this, &MainApplication::onFilterModel);
@@ -272,6 +292,11 @@ protected:
           btn_ok->clicked().connect(std::bind([=]()
           {
               std::string data = manual_entry->text().toUTF8();
+              auto pos = data.find(',');
+              if(pos != std::string::npos)
+              {
+                    data = data.substr(0, pos);
+              }
               this->loadData(data);
               dialog->accept();
           }));
@@ -363,12 +388,13 @@ protected:
         new_node->selected().connect(
             std::bind([this, current_node]()
             {
-                this->_current_node = current_node;
+                this->onNodeSelected(current_node);
+
             }));
         auto children = current_node->GetChildren();
         for(auto& child : children)
         {
-            auto ret = populateTree(child, new_node);
+            auto ret = populateTree(child, new_node, desired_return);
             if(ret && ! output)
                 output = ret;
         }
@@ -395,6 +421,80 @@ protected:
         }
     }
 
+    void onNodeSelected(rcc::weak_ptr<Nodes::Node> node)
+    {
+        this->_current_node = node;
+        _parameter_display->show();
+        _parameter_display->clear();
+        auto params = node->GetAllParameters();
+        for(auto param : params)
+        {
+            auto widget = UI::wt::WidgetFactory::Instance()->CreateWidget(param, this);
+            if(widget)
+            {
+                _parameter_display->addWidget(widget);
+            }else
+            {
+                if(param->CheckFlags(Input_e))
+                {
+                    // Get a list of all possible input parameters
+                    auto box = new WComboBox();
+                    box->addItem(param->GetTreeName());
+                    auto all_nodes = node->GetDataStream()->GetAllNodes();
+                    auto input = dynamic_cast<InputParameter*>(param);
+                    if(input)
+                    {
+                        for(auto output_node : all_nodes)
+                        {
+                            auto output_params = output_node->GetAllParameters();
+                            for(auto output : output_params)
+                            {
+                                if(input->AcceptsInput(output))
+                                {
+                                    box->addItem(output->GetTreeName());
+                                }
+                            }
+                        }
+                    }
+                    box->changed().connect(
+                        std::bind([node, box, input]
+                    {
+                        rcc::shared_ptr<Nodes::Node> node_ = node;
+                        auto output_name = box->currentText().toUTF8();
+                        if(output_name == input->GetTreeName())
+                        {
+                            input->SetInput(nullptr);
+                            return;
+                        }
+                        auto pos = output_name.find(':');
+                        if(pos == std::string::npos)
+                            return;
+                        auto output_node = node_->GetDataStream()->GetNode(output_name.substr(0, pos));
+                        if(output_node)
+                        {
+                            auto output_param = output_node->GetOutput(output_name.substr(pos + 1));
+                            if(output_param)
+                            {
+                                input->SetInput(output_param);
+                            }
+                        }
+                    }));
+                    _parameter_display->addWidget(box);
+                }else if(param->CheckFlags(Output_e))
+                {
+
+                }else
+                {
+                    auto text = new WText(param->GetTreeName());
+                    text->setToolTip(param->GetTypeInfo().name());
+                    _parameter_display->addWidget(text);
+                }
+
+            }
+        }
+        _parameter_display->show();
+    }
+
     // for now displaying the graph as a tree
     Wt::WTree* _node_tree;
 
@@ -409,6 +509,8 @@ protected:
       WPushButton* _btn_load_config;
       WPushButton* _btn_run_script;
       WPushButton* _btn_plugins;
+    WContainerWidget* _node_container;
+      WContainerWidget* _parameter_display;
     boost::filesystem::path _current_path;
     WSuggestionPopup *_sp = nullptr;
     std::map<std::string, WTreeNode*> _display_nodes;
