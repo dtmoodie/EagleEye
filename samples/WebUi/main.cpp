@@ -433,6 +433,38 @@ protected:
             if(widget)
             {
                 _parameter_display->addWidget(widget);
+                if(UI::wt::WidgetFactory::Instance()->CanPlot(param))
+                {
+                    Wt::WPushButton* btn = new Wt::WPushButton(widget);
+                    btn->setText("Plot");
+                    btn->setCheckable(true);
+                    btn->setChecked(false);
+                    btn->clicked().connect(std::bind([widget, param, this, btn]()
+                    {
+                        if(btn->isChecked())
+                        {
+                            auto plot = UI::wt::WidgetFactory::Instance()->CreatePlot(param,this, widget);
+                            if(plot)
+                            {
+
+                            }
+                            btn->setText("Remove plot");
+                        }else
+                        {
+                            auto children = widget->children();
+                            for(auto child : children)
+                            {
+                                if(dynamic_cast<UI::wt::IPlotProxy*>(child))
+                                {
+                                    delete child;
+                                    btn->setText("Plot");
+                                    return;
+                                }
+                            }
+                        }
+
+                    }));
+                }
             }else
             {
                 if(param->CheckFlags(Input_e))
