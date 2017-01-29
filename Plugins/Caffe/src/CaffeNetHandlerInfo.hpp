@@ -7,7 +7,7 @@ namespace mo
     struct MetaObjectInfoImpl<Type, EagleLib::Caffe::NetHandlerInfo>
             : public EagleLib::Caffe::NetHandlerInfo
     {
-        std::vector<int> CanHandleNetwork(const caffe::Net<float>& net) const
+        std::map<int, int> CanHandleNetwork(const caffe::Net<float>& net) const
         {
             return Type::CanHandleNetwork(net);
         }

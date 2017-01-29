@@ -8,7 +8,7 @@ namespace EagleLib
         class SSDHandler: public NetHandler
         {
         public:
-            static std::vector<int> CanHandleNetwork(const caffe::Net<float>& net);
+            static std::map<int, int> CanHandleNetwork(const caffe::Net<float>& net);
             MO_DERIVE(SSDHandler, NetHandler)
                 PARAM(float, detection_threshold, 0.75)
                 OUTPUT(std::vector<DetectedObject>, detections, std::vector<DetectedObject>())

@@ -56,8 +56,7 @@ namespace EagleLib
                 PARAM(float, image_scale, 1.0)
                 TOOLTIP(image_scale, "Scale factor for reducing image size to fit into network")
                 PARAM(int, num_classifications, 5)
-                PARAM(float, detection_threshold, 0.75)
-                OPTIONAL_INPUT(std::vector<cv::Rect>, bounding_boxes, nullptr)
+                OPTIONAL_INPUT(std::vector<cv::Rect2f>, bounding_boxes, nullptr)
                 INPUT(SyncedMemory, input, nullptr)
             MO_END
             virtual void NodeInit(bool firstInit);
@@ -90,7 +89,6 @@ namespace EagleLib
         public:
             MO_DERIVE(CaffeImageClassifier, CaffeBase)
                 PARAM(int, num_classifications, 5)
-                OUTPUT(std::vector<DetectedObject>, detections, std::vector<DetectedObject>())
             MO_END
             void       PostSerializeInit();
         protected:

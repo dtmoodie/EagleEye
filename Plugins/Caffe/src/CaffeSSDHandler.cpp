@@ -4,24 +4,38 @@
 using namespace EagleLib::Caffe;
 
 
-std::vector<int> SSDHandler::CanHandleNetwork(const caffe::Net<float>& net)
+std::map<int, int> SSDHandler::CanHandleNetwork(const caffe::Net<float>& net)
 {
-
+    const std::vector<caffe::Blob<float>*>& blobs = net.output_blobs();
+    const std::vector<int>& out_idx = net.output_blob_indices();
+    const std::vector<std::string>& names = net.blob_names();
+    auto layer_names = net.layer_names();
     auto layers = net.layers();
-    for(int i = 0; i < layers.size(); ++i)
+    std::map<int, int> output;
+    for(int i = 0; i < layer_names.size(); ++i)
     {
-        if(std::string(layers[i]->type()) == "DetectionOutput")
+        std::vector<int> top_ids = net.top_ids(i);
+        for(auto id : top_ids)
         {
-            return net.bottom_ids(i);
+            if(std::find(out_idx.begin(), out_idx.end(), id) != out_idx.end())
+            {
+                // Layer(i) outputs from network
+                std::string type = layers[i]->type();
+                if(type == "DetectionOutput")
+                {
+                    output[id] = 10;
+                }
+            }
         }
     }
-    return std::vector<int>();
+    return output;
 }
 
 void SSDHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp, const std::vector<cv::Rect>& bounding_boxes)
 {
     auto output_blob= net.blob_by_name(output_blob_name);
-
+    if(!output_blob)
+        return;
     float* begin = output_blob->mutable_cpu_data();
     std::vector<DetectedObject> objects;
 
@@ -78,3 +92,5 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,
 
     detections_param.UpdateData(objects, timestamp, _ctx);
 }
+
+MO_REGISTER_CLASS(SSDHandler)
