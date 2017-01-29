@@ -68,17 +68,24 @@ bool RegionOfInterest::ProcessImpl()
 {
     if(roi.area())
     {
-        auto img_roi = cv::Rect(cv::Point(0,0), image->GetSize());
+        //auto img_roi = cv::Rect2f(cv::Point2f(0.0,0.0), image->GetSize());
+        auto img_roi = cv::Rect2f(0.0f, 0.0f, 1.0f, 1.0f);
         auto used_roi = img_roi & roi;
-
+        //cv::Rect2f img_size(cv::Point2f(0.0f, 0.0f), image->GetSize());
+        auto img_size = image->GetSize();
+        cv::Rect pixel_roi;
+        pixel_roi.x = used_roi.x * img_size.width;
+        pixel_roi.y = used_roi.y * img_size.height;
+        pixel_roi.width = used_roi.width * img_size.width;
+        pixel_roi.height = used_roi.height * img_size.height;
         std::vector<cv::Mat> h_mats;
         std::vector<cv::cuda::GpuMat> d_mats;
         const auto& d_inputs = image->GetGpuMatVec(Stream());
         const auto& h_inputs = image->GetMatVec(Stream());
         for(int i = 0; i < d_inputs.size(); ++i)
         {
-            d_mats.push_back(d_inputs[i](used_roi));
-            h_mats.push_back(h_inputs[i](used_roi));
+            d_mats.push_back(d_inputs[i](pixel_roi));
+            h_mats.push_back(h_inputs[i](pixel_roi));
         }
         ROI_param.UpdateData(SyncedMemory(h_mats, d_mats), image_param.GetTimestamp(), _ctx);
         return true;
@@ -86,6 +93,7 @@ bool RegionOfInterest::ProcessImpl()
     return false;
 }
 MO_REGISTER_CLASS(RegionOfInterest);
+
 void ExportRegionsOfInterest::NodeInit(bool firstInit)
 {
     output.SetMtx(_mtx);

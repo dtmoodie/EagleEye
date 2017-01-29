@@ -53,6 +53,7 @@ bool ImageWriter::ProcessImpl()
                 cv::imwrite(save_name, mat);
             }, Stream());
         }
+        frameSkip = 0;
     }
     ++frameSkip;
     return true;

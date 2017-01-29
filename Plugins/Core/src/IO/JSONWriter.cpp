@@ -167,12 +167,12 @@ bool JSONReader::ProcessImpl()
     }
     if(!ar)
         return false;
-    long long ts = -1;
+
     if(input)
     {
         if(auto input_param = input->GetInputParam())
         {
-            ts = input_param->GetTimestamp();
+            input_param->GetTimestamp();
         }
     }
     return false;

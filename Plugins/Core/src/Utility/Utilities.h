@@ -30,9 +30,9 @@ namespace EagleLib
         {
         public:
             MO_DERIVE(RegionOfInterest, Node)
-                PARAM(cv::Rect, roi, cv::Rect(0,0,0,0));
-                INPUT(SyncedMemory, image, nullptr);
-                OUTPUT(SyncedMemory, ROI, SyncedMemory());
+                PARAM(cv::Rect2f, roi, cv::Rect2f(0.0f,0.0f,1.0f,1.0f))
+                INPUT(SyncedMemory, image, nullptr)
+                OUTPUT(SyncedMemory, ROI, SyncedMemory())
             MO_END
         protected:
             bool ProcessImpl();
@@ -41,9 +41,9 @@ namespace EagleLib
         {
         public:
             MO_DERIVE(ExportRegionsOfInterest, Node)
-                PARAM(std::vector<cv::Rect>, rois, std::vector<cv::Rect>());
-            MO_END;
-            mo::TypedParameterPtr<std::vector<cv::Rect>> output;
+                PARAM(std::vector<cv::Rect2f>, rois, {})
+            MO_END
+            mo::TypedParameterPtr<std::vector<cv::Rect2f>> output;
             void NodeInit(bool firstInit);
         protected:
             bool ProcessImpl();

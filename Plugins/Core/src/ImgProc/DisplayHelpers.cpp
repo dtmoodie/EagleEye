@@ -75,7 +75,7 @@ bool DrawDetections::ProcessImpl()
                     std::stringstream ss;
                     if(detection.detections[0].classNumber > 0 && detection.detections[0].classNumber < labels.size())
                     {
-                        ss << detection.detections[0].label << " : " << detection.detections[0].confidence;
+                        ss << labels[detection.detections[0].classNumber] << " : " << detection.detections[0].confidence;
                     }else
                     {
                         ss << detection.detections[0].confidence;
@@ -85,6 +85,21 @@ bool DrawDetections::ProcessImpl()
             }else
             {
                 // random color for each different detection
+                if(detection.detections[0].classNumber >= colors.size())
+                {
+                    colors.resize(detection.detections[0].classNumber + 1);
+                    for(int i = 0; i < colors.size(); ++i)
+                    {
+                        colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
+                    }
+                    cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
+                    cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
+                }
+
+                cv::rectangle(mat, rect, colors[detection.detections[0].classNumber], 3);
+                std::stringstream ss;
+                ss << detection.detections[0].classNumber << " : " << detection.detections[0].confidence;
+                cv::putText(mat, ss.str(), rect.tl() + cv::Point(10,20), cv::FONT_HERSHEY_COMPLEX, 0.4, colors[detection.detections[0].classNumber]);
             }
         }
     }
