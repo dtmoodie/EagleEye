@@ -51,6 +51,7 @@ namespace EagleLib
         DS_END_(__COUNTER__);
 
         std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> GetTopLevelNodes();
+        virtual mo::Context*                              GetContext() const;
         virtual void                                      InitCustom(bool firstInit);
         virtual rcc::weak_ptr<IViewManager>               GetViewManager();
         virtual rcc::weak_ptr<ICoordinateManager>         GetCoordinateManager();

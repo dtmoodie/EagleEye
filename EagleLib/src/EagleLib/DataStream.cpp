@@ -99,6 +99,7 @@ DataStream::DataStream()
     _processing_thread = mo::ThreadPool::Instance()->RequestThread();
     _processing_thread.SetInnerLoop(GetSlot_process<int(void)>());
     _processing_thread.SetThreadName("DataStreamThread");
+    this->_ctx = this->_processing_thread.GetContext();
     _processing_thread.SetStartCallback(
                 [this]()
     {
@@ -152,6 +153,12 @@ DataStream::~DataStream()
         delete thread;
     }
 }
+
+mo::Context* DataStream::GetContext() const
+{
+    return IDataStream::GetContext();
+}
+
 std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> DataStream::GetTopLevelNodes()
 {
     std::vector<rcc::weak_ptr<EagleLib::Nodes::Node>> output;
@@ -560,96 +567,6 @@ void DataStream::ResumeThread()
 
 int DataStream::process()
 {
-    /*mo::SetThreadName("DataStreamThread");
-    unsigned int rmt_hash = 0;
-    unsigned int rmt_cuda_hash = 0;
-    dirty_flag = true;
-    int iteration_count = 0;
-    mo::ThreadRegistry::Instance()->RegisterThread(mo::ThreadRegistry::ANY);
-    
-    if(_thread_id == 0)
-    {
-        _thread_id = mo::GetThisThread();
-        this->_ctx->thread_id = _thread_id;
-    }
-    
-    mo::TypedSlot<void(EagleLib::Nodes::Node*)> node_update_slot(
-        std::bind([this](EagleLib::Nodes::Node* node)->void
-        {
-            dirty_flag = true;
-        }, std::placeholders::_1));
-    _sig_manager->Connect(&node_update_slot, "node_updated");
-    node_update_slot.SetContext(this->_ctx);
-
-    mo::TypedSlot<void()> update_slot(
-        std::bind([this]()->void
-        {
-            dirty_flag = true;
-        }));
-    update_slot.SetContext(this->_ctx);
-    _sig_manager->Connect(&update_slot, "update");
-
-
-    mo::TypedSlot<void(mo::IMetaObject*, mo::IParameter*)> parameter_update_slot(
-        std::bind([this](mo::IMetaObject*, mo::IParameter*)
-        {
-            dirty_flag = true;
-        }, std::placeholders::_1, std::placeholders::_2));
-    parameter_update_slot.SetContext(this->_ctx);
-    _sig_manager->Connect(&parameter_update_slot, "parameter_updated");
-
-    mo::TypedSlot<void(mo::IMetaObject*, mo::IParameter*)> parameter_added_slot(
-        std::bind([this](mo::IMetaObject*, mo::IParameter*)
-        {
-            dirty_flag = true;
-        }, std::placeholders::_1, std::placeholders::_2));
-    parameter_added_slot.SetContext(this->_ctx);
-    _sig_manager->Connect(&parameter_added_slot, "parameter_added");
-    
-
-    bool run_continuously = false;
-    mo::TypedSlot<void(bool)> run_continuously_slot(
-        std::bind([&run_continuously](bool value)
-    {
-        run_continuously = value;
-    }, std::placeholders::_1));
-    
-    _sig_manager->Connect(&run_continuously_slot, "run_continuously");
-
-
-    LOG(debug) << "Starting stream thread";
-    while(!boost::this_thread::interruption_requested())
-    {
-        if (mo::ThreadSpecificQueue::Size(_thread_id))
-        {
-            mo::ThreadSpecificQueue::Run(_thread_id);
-        }
-        if(!paused)
-        {	
-            if(dirty_flag || run_continuously == true)
-            {
-                dirty_flag = false;
-                mo::scoped_profile profile("Processing nodes", &rmt_hash, &rmt_cuda_hash, &_context.GetStream());
-                for(auto& node : top_level_nodes)
-                {
-                    node->Process();
-                }
-                ++iteration_count;
-                if (!dirty_flag)
-                {
-                    LOG_EVERY_N(trace, 100) << "Dirty flag not set and end of iteration " << iteration_count;
-                }
-            }else
-            {
-                LOG_EVERY_N(trace, 100) << "Dirty flag not set, not stepping";
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-            }
-        }else
-        {
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-        }
-    }
-    LOG(debug) << "Stream thread shutting down";*/
     if (dirty_flag/* || run_continuously == true*/)
     {
         dirty_flag = false;

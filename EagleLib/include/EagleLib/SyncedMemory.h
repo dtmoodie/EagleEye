@@ -2,6 +2,7 @@
 #include "EagleLib/Detail/Export.hpp"
 #include "EagleLib/rcc/external_includes/cv_core.hpp"
 #include <opencv2/core/cuda.hpp>
+#include <MetaObject/Parameters/TypedInputParameter.hpp>
 namespace mo
 {
     class Context;
@@ -105,4 +106,23 @@ namespace EagleLib
         std::vector<SYNC_STATE> sync_flags;
         mo::Context* _ctx;
     };
+}
+
+namespace mo
+{
+template<>
+class EAGLE_EXPORTS TypedInputParameterPtr<EagleLib::SyncedMemory> : public ITypedInputParameter<EagleLib::SyncedMemory>
+{
+public:
+    TypedInputParameterPtr(const std::string& name = "", EagleLib::SyncedMemory** userVar_ = nullptr, Context* ctx = nullptr);
+    bool SetInput(std::shared_ptr<IParameter> input);
+    bool SetInput(IParameter* input);
+    void SetUserDataPtr(EagleLib::SyncedMemory** user_var_);
+    bool GetInput(long long ts = -1);
+protected:
+    EagleLib::SyncedMemory** userVar; // Pointer to the user space pointer variable of type T
+    void updateUserVar();
+    virtual void onInputUpdate(Context* ctx, IParameter* param);
+    virtual void onInputDelete(IParameter const* param);
+};
 }

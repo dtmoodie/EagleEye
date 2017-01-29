@@ -359,3 +359,109 @@ void SyncedMemory::SetContext(mo::Context* ctx)
 {
     _ctx = ctx;
 }
+
+using namespace mo;
+
+
+
+TypedInputParameterPtr<SyncedMemory>::TypedInputParameterPtr(const std::string& name,
+                                                             SyncedMemory** userVar_, Context* ctx) :
+        userVar(userVar_),
+        ITypedInputParameter<SyncedMemory>(name, ctx),
+        IParameter(name, Input_e, -1, ctx),
+        ITypedParameter<SyncedMemory>(name, Input_e, -1, ctx)
+{
+}
+
+bool TypedInputParameterPtr<SyncedMemory>::SetInput(std::shared_ptr<IParameter> param)
+{
+    boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+    if(ITypedInputParameter<SyncedMemory>::SetInput(param))
+    {
+        if(userVar)
+        {
+            if(this->input)
+                *userVar = this->input->GetDataPtr();
+            if(this->shared_input)
+                *userVar = this->shared_input->GetDataPtr();
+        }
+        return true;
+    }
+    return false;
+}
+
+bool TypedInputParameterPtr<SyncedMemory>::SetInput(IParameter* param)
+{
+    boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+    if(ITypedInputParameter<SyncedMemory>::SetInput(param))
+    {
+        if(userVar)
+        {
+            if(this->input)
+                *userVar = this->input->GetDataPtr();
+            if(this->shared_input)
+                *userVar = this->shared_input->GetDataPtr();
+        }
+        return true;
+    }
+    return false;
+}
+
+void TypedInputParameterPtr<SyncedMemory>::SetUserDataPtr(SyncedMemory** user_var_)
+{
+    boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+    userVar = user_var_;
+}
+
+void TypedInputParameterPtr<SyncedMemory>::onInputUpdate(Context* ctx, IParameter* param)
+{
+    if(this->input)
+    {
+        this->Commit(this->input->GetTimestamp(), ctx);
+        if((ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id) || (ctx == nullptr &&  this->_ctx == nullptr))
+        {
+            if(userVar)
+                *userVar = this->input->GetDataPtr();
+        }
+    }else if(this->shared_input)
+    {
+        this->Commit(this->shared_input->GetTimestamp(), ctx);
+        if((ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id) || (ctx == nullptr &&  this->_ctx == nullptr))
+        {
+            if(userVar)
+                *userVar = this->shared_input->GetDataPtr();
+        }
+    }
+}
+
+bool TypedInputParameterPtr<SyncedMemory>::GetInput(long long ts)
+{
+    boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+    if(userVar)
+    {
+        if(this->shared_input)
+        {
+            *userVar = this->shared_input->GetDataPtr(ts, this->_ctx);
+            if(*userVar != nullptr)
+            {
+                return !(*userVar)->empty();
+            }
+        }
+        if(this->input)
+        {
+            *userVar = this->input->GetDataPtr(ts, this->_ctx);
+            if(*userVar != nullptr)
+            {
+                return !(*userVar)->empty();
+            }
+        }
+    }
+    return false;
+}
+
+void TypedInputParameterPtr<SyncedMemory>::onInputDelete(IParameter const* param)
+{
+    boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+    this->shared_input.reset();
+    this->input = nullptr;
+}

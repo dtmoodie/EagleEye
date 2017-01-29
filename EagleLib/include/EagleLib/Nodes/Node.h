@@ -135,7 +135,7 @@ namespace Nodes
         virtual void                    PostSerializeInit();
 
         virtual void                    Serialize(ISimpleSerializer *pSerializer);
-        inline cv::cuda::Stream&        Stream(){ return _ctx->GetStream();}
+        inline cv::cuda::Stream&        Stream(){ CV_Assert(_ctx); return _ctx->GetStream();}
         
         bool CheckInputs();
 
