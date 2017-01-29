@@ -21,7 +21,7 @@
 #include <MetaObject/Parameters/UI/Wt/IParameterInputProxy.hpp>
 #include <MetaObject/Parameters/UI/Wt/IParameterOutputProxy.hpp>
 
-
+#include "FileBrowseWidget.hpp"
 #include "instantiate.hpp"
 
 #include <Wt/WBreak>
@@ -91,7 +91,25 @@ public:
 
           _btn_plugins = new WPushButton(_action_list_container);
           _btn_plugins->setText("List loaded plugins");
-
+          _btn_plugins->clicked().connect(std::bind([this]()
+          {
+              WDialog* dlg = new WDialog(this);
+              WTable* table = new WTable(dlg->contents());
+              table->elementAt(0, 0)->addWidget(new WText("Plugin name"));
+              //table->elementAt(0, 1)->addWidget(new WText("Plugin path"));
+              std::vector<std::string> plugins = mo::MetaObjectFactory::Instance()->ListLoadedPlugins();
+              for(int i = 0; i < plugins.size(); ++i)
+              {
+                  table->elementAt(i + 1, 0)->addWidget(new WText(plugins[i]));
+              }
+              dlg->rejectWhenEscapePressed();
+              dlg->setModal(true);
+              dlg->finished().connect(std::bind([dlg]()
+              {
+                  delete dlg;
+              }));
+              dlg->show();
+          }));
 
         _data_stream_list_container = new WContainerWidget(root());
 
@@ -102,10 +120,7 @@ public:
           _parameter_display = new WContainerWidget(_node_container);
           _parameter_display->hide();
     }
-
-    
 protected:
-
     void onStreamAdded()
     {
 

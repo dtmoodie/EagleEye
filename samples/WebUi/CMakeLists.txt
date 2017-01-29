@@ -4,7 +4,8 @@ if(Wt_FOUND)
   find_package(CUDA REQUIRED)
   include_directories(${Wt_INCLUDE_DIR})
   INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
-  add_executable(WebUi main.cpp)
+  file(GLOB_RECURSE src "*.cpp" "*.hpp")
+  add_executable(WebUi ${src})
   target_link_libraries(WebUi 
     EagleLib 
     MetaObject 

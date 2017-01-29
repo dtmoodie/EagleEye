@@ -16,3 +16,4 @@ build_vc120
 /Plugins/point_clouds/src/point_cloudsExport.hpp
 /Plugins/video/src/videoExport.hpp
 /Plugins/vtkRendering/src/vtkRenderingExport.hpp
+CMakeLists.txt.user
