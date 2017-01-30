@@ -58,16 +58,19 @@ frame_grabber_gstreamer::frame_grabber_gstreamer():
 bool frame_grabber_gstreamer::LoadFile(const std::string& file_path_)
 {
     std::string file_path = file_path_;
-    /*if(boost::filesystem::is_regular_file(file_path_))
-    {
-        file_path = "filesrc location=" + file_path_ + " ! decodebin ! appsink";
-    }else
-    {
-        file_path = file_path_;
-    }*/
 
-    if(frame_grabber_cv::h_LoadFile(file_path))
+    boost::mutex::scoped_lock lock(buffer_mtx);
+    //if(frame_grabber_cv::h_LoadFile(file_path))
+    frame_buffer.clear();
+    buffer_begin_frame_number = 0;
+    buffer_end_frame_number = 0;
+    playback_frame_number = -1;
+
+    h_cam.reset(new cv::VideoCapture(file_path_, cv::CAP_GSTREAMER));
+    if(h_cam->isOpened())
     {
+        loaded_document = file_path;
+        playback_frame_number = 0;
         cv::Mat test;
         if(h_cam)
         {

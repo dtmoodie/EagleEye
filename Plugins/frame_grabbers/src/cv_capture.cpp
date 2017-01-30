@@ -71,14 +71,11 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
         if (h_cam)
         {
             int index = -1;
-            try
-            {
-                index = boost::lexical_cast<int>(file_path);
-            }
-            catch (boost::bad_lexical_cast e)
+            if(!boost::conversion::detail::try_lexical_convert(file_path, index))
             {
                 index = -1;
             }
+
             if (index == -1)
             {
                 if (h_cam->open(file_path))
@@ -233,24 +230,17 @@ int frame_grabber_camera::CanLoadDocument(const std::string& doc)
     auto pos = doc.find(" - ");
     if(pos != std::string::npos)
     {
-        try
+        int index = 0;
+        if(boost::conversion::detail::try_lexical_convert(doc.substr(pos), index))
         {
-            int index = boost::lexical_cast<int>(doc.substr(pos));
-            (void)index;
             return 10;
-        }catch(...)
-        {
         }
     }else
     {
-        try
+        int index = 0;
+        if(boost::conversion::detail::try_lexical_convert(doc, index))
         {
-            int index = boost::lexical_cast<int>(doc);
-            (void)index;
             return 10;
-        }
-        catch (...)
-        {
         }
     }
     auto cameras = ListLoadableDocuments();
@@ -298,8 +288,13 @@ TS<SyncedMemory> frame_grabber_camera::GetNextFrameImpl(cv::cuda::Stream& stream
 }
 bool frame_grabber_camera::LoadFile(const std::string& file_path)
 {
-    auto cameras = ListLoadableDocuments();
     int index = 0;
+    if(boost::conversion::detail::try_lexical_convert(file_path, index))
+    {
+        h_cam.reset(new cv::VideoCapture(index));
+        return true;
+    }
+    auto cameras = ListLoadableDocuments();
     for(auto camera : cameras)
     {
         if(camera == file_path)
