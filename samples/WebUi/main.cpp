@@ -38,6 +38,7 @@
 #include <Wt/WDialog>
 #include <Wt/WSuggestionPopup>
 #include <Wt/WSortFilterProxyModel>
+#include <Wt/WHBoxLayout>
 
 #include <boost/thread.hpp>
 #include <boost/filesystem.hpp>
@@ -112,6 +113,7 @@ public:
           }));
 
         _data_stream_list_container = new WContainerWidget(root());
+        _data_stream_list_container->setWidth(WLength("20%"));
 
         _node_container = new WContainerWidget(root());
           _node_container->setWidth(WLength("20%"));
@@ -121,9 +123,36 @@ public:
           _parameter_display->hide();
     }
 protected:
-    void onStreamAdded()
+    WDialog* _current_dialog = nullptr;
+    void onStreamAdded(rcc::shared_ptr<IDataStream> ds, const std::string& name)
     {
+        //WContainerWidget* stream_widget = new WContainerWidget(_data_stream_list_container);
+        WHBoxLayout* layout = new WHBoxLayout(_data_stream_list_container);
 
+        WPushButton* btn = new WPushButton(name);
+        layout->addWidget(btn);
+        btn->clicked().connect(std::bind([ds, this, name]()
+        {
+            this->onStreamSelected(ds, name);
+        }));
+        WPushButton* save_btn = new WPushButton("Save");
+        layout->addWidget(save_btn);
+        save_btn->clicked().connect(std::bind([ds,this,name]()
+        {
+            _current_dialog = new WDialog(this);
+            AutoCompleteFileWidget* widget = new AutoCompleteFileWidget(_current_dialog->contents());
+            widget->fileSelected().connect(std::bind([this, widget, ds]()
+            {
+                rcc::shared_ptr<IDataStream> ds_(ds);
+                std::string save_file = widget->hostFile();
+                EagleLib::IDataStream::Save(save_file, ds_);
+                ds_->StartThread();
+                delete _current_dialog;
+                _current_dialog = nullptr;
+            }));
+            _current_dialog->rejectWhenEscapePressed();
+            _current_dialog->show();
+        }));
     }
 
     void onNodeAdded(IDataStream* stream, Nodes::Node*)
@@ -133,7 +162,35 @@ protected:
 
     void onLoadConfigClicked()
     {
+        _current_dialog = new WDialog(this);
+        FileBrowseWidget* widget = new FileBrowseWidget(_current_dialog->contents());
+        widget->fileSelected().connect(std::bind([this, widget]()
+        {
+            this->onConfigFileSelected(widget->hostFile(), widget->clientFile());
+        }));
+        _current_dialog->rejectWhenEscapePressed();
+        _current_dialog->show();
 
+    }
+    void onConfigFileSelected(std::string file, std::string remote_file)
+    {
+        if(remote_file.size())
+        {
+            // rename file to have correct extension
+            auto ext = boost::filesystem::path(remote_file).extension();
+            auto new_name = boost::filesystem::path(file).replace_extension(ext);
+            boost::filesystem::rename(file, new_name);
+            file = new_name.string();
+        }
+        auto stream = EagleLib::IDataStream::Load(file);
+        if(stream)
+        {
+            stream->StartThread();
+            g_ctx._data_streams.push_back(stream);
+            this->onStreamAdded(stream, file);
+        }
+        delete _current_dialog;
+        _current_dialog = nullptr;
     }
 
     void onAddNodeClicked()
@@ -386,11 +443,12 @@ protected:
             display_name = data;
         }
         rcc::weak_ptr<IDataStream> weak_ptr(ds);
-        WPushButton* btn = new WPushButton(display_name, _data_stream_list_container);
-        btn->clicked().connect(std::bind([weak_ptr, this, display_name]()
+        this->onStreamAdded(weak_ptr, display_name);
+        /*WPushButton* btn = new WPushButton(display_name, _data_stream_list_container);
+        /btn->clicked().connect(std::bind([weak_ptr, this, display_name]()
         {
             this->onStreamSelected(weak_ptr, display_name);
-        }));
+        }));*/
     }
     
     WTreeNode* populateTree(rcc::weak_ptr<Nodes::Node> current_node, WTreeNode* display_node, const std::string& desired_return = "")

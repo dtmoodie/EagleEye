@@ -5,13 +5,14 @@
 #include <Wt/WSortFilterProxyModel>
 #include <Wt/WFileUpload>
 #include <Wt/WProgressBar>
-
+#include <Wt/WSignal>
 using namespace Wt;
 
-FileBrowseWidget::FileBrowseWidget(WContainerWidget* parent, const std::string& upload_dir,
+AutoCompleteFileWidget::AutoCompleteFileWidget(WContainerWidget* parent, const std::string& upload_dir,
                                    const boost::filesystem::path & current_path):
     WContainerWidget(parent),
-    _current_path(current_path)
+    _current_path(current_path),
+    _sig_file_selected("fileSelected", this)
 {
     _txt_manual_entry = new WLineEdit(this);
 
@@ -50,38 +51,24 @@ FileBrowseWidget::FileBrowseWidget(WContainerWidget* parent, const std::string& 
     _sp->forEdit(_txt_manual_entry);
     _sp->setFilterLength(-1);
 
-    _btn_browse = new WFileUpload(this);
-    _btn_browse->setProgressBar(new WProgressBar());
-    _btn_browse->setFileTextSize(50*1024*1024);
-    _btn_browse->uploaded().connect(std::bind([this]()
-    {
-        const std::vector<Http::UploadedFile>& files =
-                _btn_browse->uploadedFiles();
-        std::string file = _btn_browse->spoolFileName();
-        _btn_browse->stealSpooledFile();
-        _txt_manual_entry->setText(file);
-        _sig_file_selected(file);
-    }));
-    _btn_browse->changed().connect(std::bind([this]()
-    {
-        _btn_browse->upload();
-    }));
+
     _txt_manual_entry->enterPressed().connect(std::bind([this]()
     {
         auto txt = _txt_manual_entry->text();
         if(!txt.empty())
         {
-            _sig_file_selected(txt.toUTF8());
+            //_sig_file_selected(txt.toUTF8(), "");
+            _sig_file_selected.emit();
         }
     }));
 }
 
-Signal<std::string>& FileBrowseWidget::fileSelected()
+EventSignal<>& AutoCompleteFileWidget::fileSelected()
 {
     return _sig_file_selected;
 }
 
-void FileBrowseWidget::onFilterModel(const WString& data_)
+void AutoCompleteFileWidget::onFilterModel(const WString& data_)
 {
     boost::filesystem::directory_iterator end_itr;
     std::string data = data_.toUTF8();
@@ -116,3 +103,37 @@ void FileBrowseWidget::onFilterModel(const WString& data_)
 #endif
 }
 
+FileBrowseWidget::FileBrowseWidget(WContainerWidget* parent,
+                 const std::string& upload_dir,
+                 const boost::filesystem::path & current_dir):
+    AutoCompleteFileWidget(parent, upload_dir, current_dir)
+{
+    _btn_browse = new WFileUpload(this);
+    _btn_browse->setProgressBar(new WProgressBar());
+    _btn_browse->setFileTextSize(50*1024*1024);
+    _btn_browse->uploaded().connect(std::bind([this]()
+    {
+        const std::vector<Http::UploadedFile>& files =
+                _btn_browse->uploadedFiles();
+        if(files.size() == 1)
+        {
+            std::string spooled_name = files[0].spoolFileName();
+            //std::string host_name = files[0].clientFileName();
+            _txt_manual_entry->setText(spooled_name);
+            _sig_file_selected.emit();
+        }
+    }));
+    _btn_browse->changed().connect(std::bind([this]()
+    {
+        _btn_browse->upload();
+    }));
+}
+std::string AutoCompleteFileWidget::hostFile()
+{
+    return _txt_manual_entry->text().toUTF8();
+}
+
+std::string FileBrowseWidget::clientFile()
+{
+    return _btn_browse->clientFileName().toUTF8();
+}
