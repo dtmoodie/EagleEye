@@ -20,11 +20,16 @@ namespace EagleLib
                 PARAM(int, num_classes, 13)
                 PARAM(float, label_weight, 0.7)
                 PARAM(int, ignore_class, -1)
+                PARAM(bool, display_legend, true)
+                PARAM(mo::ReadFile, label_file, {})
             MO_END
         protected:
             bool ProcessImpl();
             cv::cuda::GpuMat d_lut;
+            cv::cuda::GpuMat d_legend;
             cv::Mat h_lut;
+            std::vector<std::string> labels;
+            int legend_width;
         };
     }
 }
