@@ -614,6 +614,8 @@ void Node::Serialize(ISimpleSerializer *pSerializer)
     SERIALIZE(_parents);
     SERIALIZE(_pimpl_node);
     SERIALIZE(_data_stream);
+    SERIALIZE(name);
+    SERIALIZE(_unique_id)
 }
 
 void Node::AddParent(Node* parent_)
