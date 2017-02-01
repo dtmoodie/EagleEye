@@ -87,7 +87,7 @@ bool FindContours::ProcessImpl()
         }
         long long ts = input_image_param.GetTimestamp();
         Stream().waitForCompletion();
-        ::cv::findContours(h_mat,contours, hierarchy, mode.currentSelection, method.currentSelection);
+        cv::findContours(h_mat,contours, hierarchy, mode.currentSelection, method.currentSelection);
         contours_param.Commit(ts, _ctx);
         hierarchy_param.Commit(ts, _ctx);
         num_contours_param.UpdateData(contours.size(), ts, _ctx);
@@ -96,6 +96,7 @@ bool FindContours::ProcessImpl()
     return false;
 }
 
+MO_REGISTER_CLASS(FindContours)
 /*TS<SyncedMemory> FindContours::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
 {
     cv::Mat h_mat = img.GetMat(stream).clone();
@@ -379,6 +380,30 @@ void HistogramThreshold::runFilter()
     }
     return img;
 }*/
+
+bool DrawContours::ProcessImpl()
+{
+    const cv::Mat& image = input_image->GetMat(Stream());
+    cv::Mat output_image;
+    image.copyTo(output_image);
+    int largest_idx =  -1;
+    if(Largest == draw_mode.getValue())
+    {
+        int largest_count = 0;
+        for(int i = 0; i < input_contours->size(); ++i)
+        {
+            if((*input_contours)[i].size() > largest_count)
+            {
+                largest_idx = i;
+                largest_count = (*input_contours)[i].size();
+            }
+        }
+    }
+    cv::drawContours(output_image, *input_contours, largest_idx, cv::Scalar(0,255,0));
+    output_param.UpdateData(output_image, input_image_param.GetTimestamp(), _ctx);
+    return true;
+}
+MO_REGISTER_CLASS(DrawContours)
 
 /*void DrawContours::NodeInit(bool firstInit)
 {

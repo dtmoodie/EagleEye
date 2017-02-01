@@ -25,18 +25,15 @@ class FindContours: public Node
 {
 public:
     MO_DERIVE(FindContours, Node)
-        INPUT(SyncedMemory, input_image, nullptr);
-        OUTPUT(SyncedMemory, output, SyncedMemory());
-        ENUM_PARAM(mode, cv::RETR_EXTERNAL, cv::RETR_LIST, cv::RETR_CCOMP, cv::RETR_TREE, cv::RETR_FLOODFILL);
-        ENUM_PARAM(method, cv::CHAIN_APPROX_NONE, cv::CHAIN_APPROX_SIMPLE, cv::CHAIN_APPROX_TC89_L1, cv::CHAIN_APPROX_TC89_KCOS);
-        OUTPUT(std::vector<std::vector<cv::Point>>, contours, std::vector<std::vector<cv::Point>>());
-        OUTPUT(std::vector<cv::Vec4i>, hierarchy, std::vector<cv::Vec4i>());
-
-        PARAM(bool, calculate_contour_area, false);
-        PARAM(bool, calculate_moments, false);
-        STATUS(int, num_contours, 0);
-
-    MO_END;
+        INPUT(SyncedMemory, input_image, nullptr)
+        ENUM_PARAM(mode, cv::RETR_EXTERNAL, cv::RETR_LIST, cv::RETR_CCOMP, cv::RETR_TREE, cv::RETR_FLOODFILL)
+        ENUM_PARAM(method, cv::CHAIN_APPROX_NONE, cv::CHAIN_APPROX_SIMPLE, cv::CHAIN_APPROX_TC89_L1, cv::CHAIN_APPROX_TC89_KCOS)
+        OUTPUT(std::vector<std::vector<cv::Point>>, contours, {})
+        OUTPUT(std::vector<cv::Vec4i>, hierarchy, {})
+        PARAM(bool, calculate_contour_area, false)
+        PARAM(bool, calculate_moments, false)
+        STATUS(int, num_contours, 0)
+    MO_END
 
 protected:
     bool ProcessImpl();
@@ -50,7 +47,7 @@ public:
     MO_DERIVE(PruneContours, Node)
         PARAM(int, min_area, 20)
         PARAM(int, max_area, 500)
-    MO_END;
+    MO_END
     PruneContours();
 
     virtual void NodeInit(bool firstInit);
@@ -61,17 +58,17 @@ class ContourBoundingBox: public Node
 {
 public:
     typedef std::vector<std::pair<int, double>> contour_area_t;
-    MO_DERIVE(ContourBoundingBox, Node);
-    INPUT(SyncedMemory, input_image, nullptr);
-    INPUT(std::vector<std::vector<cv::Point>>, contours, nullptr);
-    INPUT(std::vector<cv::Vec4i>, hierarchy, nullptr);
-    PARAM(cv::Scalar, box_color, (cv::Scalar(0, 0, 255)));
-    PARAM(int, line_thickness, 2);
-    PARAM(bool, use_filtered_area, false);
-    PARAM(bool, merge_contours, false);
-    PARAM(int, separation_distance, false);
-    OUTPUT(contour_area_t, contour_area, contour_area_t());
-    MO_END;
+    MO_DERIVE(ContourBoundingBox, Node)
+        INPUT(SyncedMemory, input_image, nullptr)
+        INPUT(std::vector<std::vector<cv::Point>>, contours, nullptr)
+        INPUT(std::vector<cv::Vec4i>, hierarchy, nullptr)
+        PARAM(cv::Scalar, box_color, (cv::Scalar(0, 0, 255)))
+        PARAM(int, line_thickness, 2)
+        PARAM(bool, use_filtered_area, false)
+        PARAM(bool, merge_contours, false)
+        PARAM(int, separation_distance, false)
+    OUTPUT(contour_area_t, contour_area, contour_area_t())
+    MO_END
 protected:
     bool ProcessImpl();
     ContourBoundingBox();
@@ -104,14 +101,23 @@ public:
 class DrawContours: public Node
 {
 public:
-    MO_DERIVE(DrawContours, Node)
-        PARAM(cv::Scalar, draw_color, cv::Scalar(0,0,255))
-        PARAM(int, draw_thickness, 8);
-    MO_END;
+    enum DrawMode
+    {
+        Largest,
+        All
+    };
 
-    DrawContours();
-    virtual void NodeInit(bool firstInit);
-    virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
+    MO_DERIVE(DrawContours, Node)
+        INPUT(SyncedMemory, input_image, nullptr)
+        INPUT(std::vector<std::vector<cv::Point>>, input_contours, nullptr)
+        PARAM(cv::Scalar, draw_color, cv::Scalar(0,0,255))
+        PARAM(int, draw_thickness, 8)
+        ENUM_PARAM(draw_mode, Largest, All)
+        OUTPUT(SyncedMemory, output, {})
+    MO_END
+protected:
+    bool ProcessImpl();
+
 };
 
 class DrawRects: public Node

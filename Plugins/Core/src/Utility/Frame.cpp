@@ -101,3 +101,20 @@ MO_REGISTER_CLASS(FrameLimiter)
 MO_REGISTER_CLASS(CreateMat)
 MO_REGISTER_CLASS(Resize)
 MO_REGISTER_CLASS(Subtract)
+bool RescaleContours::ProcessImpl()
+{
+    output.resize(input->size());
+    for(int i = 0; i < input->size(); ++i)
+    {
+        output[i].resize((*input)[i].size());
+        for(int j = 0; j < (*input)[i].size(); ++j)
+        {
+            output[i][j].x = (*input)[i][j].x * scale_x;
+            output[i][j].y = (*input)[i][j].y * scale_y;
+        }
+    }
+    output_param.Commit(input_param.GetTimestamp(), _ctx);
+    return true;
+}
+
+MO_REGISTER_CLASS(RescaleContours)

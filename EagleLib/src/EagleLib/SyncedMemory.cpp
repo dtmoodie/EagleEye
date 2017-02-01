@@ -462,6 +462,9 @@ bool TypedInputParameterPtr<SyncedMemory>::GetInput(long long ts)
 void TypedInputParameterPtr<SyncedMemory>::onInputDelete(IParameter const* param)
 {
     boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-    this->shared_input.reset();
-    this->input = nullptr;
+    if(param == this->input || param == this->shared_input.get())
+    {
+        this->shared_input.reset();
+        this->input = nullptr;
+    }
 }
