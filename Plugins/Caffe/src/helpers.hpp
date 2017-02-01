@@ -1,4 +1,5 @@
 #pragma once
+#include "CaffeExport.hpp"
 #include <opencv2/core/cuda.hpp>
 #include <EagleLib/SyncedMemory.h>
 namespace caffe
@@ -9,8 +10,8 @@ namespace EagleLib
 {
     namespace Caffe
     {
-        float iou(const cv::Rect& r1, const cv::Rect& r2);
-        void MaxSegmentation(const caffe::Blob<float>* blob, cv::cuda::GpuMat& label, cv::cuda::GpuMat& confidence, cv::cuda::Stream& stream);
-        void MaxSegmentation(const caffe::Blob<float>* blob, cv::Mat& label, cv::Mat& confidence);
+        Caffe_EXPORT float iou(const cv::Rect& r1, const cv::Rect& r2);
+        Caffe_EXPORT void argMax(const caffe::Blob<float>* blob, cv::cuda::GpuMat& label, cv::cuda::GpuMat& confidence, cv::cuda::Stream& stream);
+        Caffe_EXPORT void argMax(const caffe::Blob<float>* blob, cv::Mat& label, cv::Mat& confidence);
     }
 }
