@@ -46,12 +46,19 @@ boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>>
 void EagleLib::SetupLogging()
 {
     cv::redirectError(&static_errorHandler);
-    BOOST_LOG_TRIVIAL(info) << "File logging to " << boost::filesystem::absolute(boost::filesystem::path("")).string() << "/logs";
+    std::string logging_Path;
+#if _MSC_VER
+
+#else
+    logging_path = "/tmp/logs";
+#endif
+    BOOST_LOG_TRIVIAL(info) << "File logging to " << logging_path;
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
     boost::log::add_common_attributes();
-    if (!boost::filesystem::exists("./logs") || !boost::filesystem::is_directory("./logs"))
+
+    if (!boost::filesystem::exists(logging_path) || !boost::filesystem::is_directory(logging_path))
     {
-        boost::filesystem::create_directory("./logs");
+        boost::filesystem::create_directory(logging_path);
     }
     boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
     // https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
@@ -92,7 +99,7 @@ void EagleLib::SetupLogging()
 
 
     auto fsSink = boost::log::add_file_log(
-        boost::log::keywords::file_name = "./logs/%Y-%m-%d_%H-%M-%S.%N.log",
+        boost::log::keywords::file_name = logging_path + "/%Y-%m-%d_%H-%M-%S.%N.log",
         boost::log::keywords::rotation_size = 10 * 1024 * 1024,
         boost::log::keywords::min_free_space = 30 * 1024 * 1024,
         boost::log::keywords::open_mode = std::ios_base::app);
