@@ -19,7 +19,7 @@ namespace vclick
             this->setParam(&data_param);
         }
     private:
-        T* data;
+        const T* data;
         mo::TypedInputParameterPtr<T> data_param;
     };
     template<class T> class TParameterResourceRaw: public IParameterResource
@@ -42,7 +42,7 @@ namespace vclick
         }
         void handleParamUpdate(mo::Context* ctx, mo::IParameter* param);
     private:
-        cv::Mat* data;
+        const cv::Mat* data;
         mo::TypedInputParameterPtr<cv::Mat> data_param;
     };
 
@@ -63,7 +63,7 @@ namespace vclick
         void handleParamUpdate(mo::Context* ctx, mo::IParameter* param);
 
     private:
-        EagleLib::SyncedMemory* data;
+        const EagleLib::SyncedMemory* data;
         mo::TypedInputParameterPtr<EagleLib::SyncedMemory> data_param;
     };
 }
