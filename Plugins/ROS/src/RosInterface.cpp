@@ -1,0 +1,41 @@
+#include "RosInterface.hpp"
+#include "ros/init.h"
+#include "ros/node_handle.h"
+
+#include "EagleLib/rcc/SystemTable.hpp"
+#include "ObjectInterfacePerModule.h"
+
+using namespace EagleLib;
+
+RosInterface::RosInterface()
+{
+    int argc = 1;
+    char** argv = new char*{ "EagleEye"};
+    ros::init(argc, argv, "EagleEye");
+    _nh = new ros::NodeHandle("EagleEye");
+}
+
+RosInterface::~RosInterface()
+{
+    delete _nh;
+}
+
+ros::NodeHandle* RosInterface::nh() const
+{
+    return _nh;
+}
+
+RosInterface* RosInterface::Instance()
+{
+    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    RosInterface* singleton = table->GetSingleton<RosInterface>();
+    if(singleton)
+    {
+        return singleton;
+    }else
+    {
+        singleton = new RosInterface();
+        table->SetSingleton(singleton);
+        return singleton;
+    }
+}
