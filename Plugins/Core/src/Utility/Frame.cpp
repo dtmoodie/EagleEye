@@ -49,13 +49,14 @@ bool CreateMat::ProcessImpl()
 
 bool SetMatrixValues::ProcessImpl()
 {
-    if(mask)
+
+    /*if(mask)
     {
         input->GetGpuMatMutable(Stream()).setTo(replace_value, mask->GetGpuMat(Stream()), Stream());
     }else
     {
         input->GetGpuMatMutable(Stream()).setTo(replace_value, Stream());
-    }
+    }*/
     return true;
 }
 
@@ -95,7 +96,7 @@ bool Subtract::ProcessImpl()
 
 
 
-MO_REGISTER_CLASS(SetMatrixValues)
+//MO_REGISTER_CLASS(SetMatrixValues)
 MO_REGISTER_CLASS(FrameRate)
 MO_REGISTER_CLASS(FrameLimiter)
 MO_REGISTER_CLASS(CreateMat)
