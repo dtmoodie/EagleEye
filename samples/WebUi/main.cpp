@@ -633,8 +633,10 @@ int main(int argc, char** argv)
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
     auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
     g_allocator->SetName("Global Allocator");
-    mo::SetGpuAllocatorHelper<cv::cuda::GpuMat>(g_allocator);
-    mo::SetCpuAllocatorHelper<cv::Mat>(g_allocator);
+    //mo::SetGpuAllocatorHelper<cv::cuda::GpuMat>(g_allocator);
+    //mo::SetCpuAllocatorHelper<cv::Mat>(g_allocator);
+    GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(g_allocator);
+    CpuThreadAllocatorSetter<cv::Mat>::Set(g_allocator);
 
     boost::filesystem::path current_dir = boost::filesystem::path(argv[0]).parent_path();
     g_ctx._current_dir  = current_dir;

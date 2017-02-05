@@ -71,22 +71,22 @@ namespace EagleLib
         SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat, SYNC_STATE state = SYNCED);
         SyncedMemory clone(cv::cuda::Stream& stream);
 
-        const cv::Mat&                         GetMat(cv::cuda::Stream& stream, int = 0);
+        const cv::Mat&                         GetMat(cv::cuda::Stream& stream, int = 0) const;
         cv::Mat&                               GetMatMutable(cv::cuda::Stream& stream, int = 0);
 
-        const cv::cuda::GpuMat&                 GetGpuMat(cv::cuda::Stream& stream, int = 0);
+        const cv::cuda::GpuMat&                 GetGpuMat(cv::cuda::Stream& stream, int = 0) const;
         cv::cuda::GpuMat&                       GetGpuMatMutable(cv::cuda::Stream& stream, int = 0);
 
-        const std::vector<cv::Mat>&             GetMatVec(cv::cuda::Stream& stream);
+        const std::vector<cv::Mat>&             GetMatVec(cv::cuda::Stream& stream) const;
         std::vector<cv::Mat>&                   GetMatVecMutable(cv::cuda::Stream& stream);
 
-        const std::vector<cv::cuda::GpuMat>&   GetGpuMatVec(cv::cuda::Stream& stream);
+        const std::vector<cv::cuda::GpuMat>&   GetGpuMatVec(cv::cuda::Stream& stream) const;
         std::vector<cv::cuda::GpuMat>&         GetGpuMatVecMutable(cv::cuda::Stream& stream);
         SYNC_STATE                             GetSyncState(int index = 0) const;
-        mo::Context*                           GetContext();
+        mo::Context*                           GetContext() const;
         void                                   SetContext(mo::Context* ctx);
 
-        void Synchronize(cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+        void Synchronize(cv::cuda::Stream& stream = cv::cuda::Stream::Null()) const;
         void ResizeNumMats(int new_size = 1);
         void ReleaseGpu(cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 
@@ -101,10 +101,19 @@ namespace EagleLib
         template<typename A> void load(A& ar);
         template<typename A> void save(A & ar) const;
     private:
-        std::vector<cv::Mat> h_data;
-        std::vector<cv::cuda::GpuMat> d_data;
-        std::vector<SYNC_STATE> sync_flags;
-        mo::Context* _ctx;
+        struct impl
+        {
+            impl():
+                _ctx(nullptr)
+            {
+            }
+            std::vector<cv::Mat> h_data;
+            std::vector<cv::cuda::GpuMat> d_data;
+            std::vector<SyncedMemory::SYNC_STATE> sync_flags;
+            mo::Context* _ctx;
+        };
+
+        std::shared_ptr<impl> _pimpl;
     };
 }
 
@@ -114,13 +123,13 @@ template<>
 class EAGLE_EXPORTS TypedInputParameterPtr<EagleLib::SyncedMemory> : public ITypedInputParameter<EagleLib::SyncedMemory>
 {
 public:
-    TypedInputParameterPtr(const std::string& name = "", EagleLib::SyncedMemory** userVar_ = nullptr, Context* ctx = nullptr);
+    TypedInputParameterPtr(const std::string& name = "", const EagleLib::SyncedMemory** userVar_ = nullptr, Context* ctx = nullptr);
     bool SetInput(std::shared_ptr<IParameter> input);
     bool SetInput(IParameter* input);
-    void SetUserDataPtr(EagleLib::SyncedMemory** user_var_);
+    void SetUserDataPtr(const EagleLib::SyncedMemory** user_var_);
     bool GetInput(long long ts = -1);
 protected:
-    EagleLib::SyncedMemory** userVar; // Pointer to the user space pointer variable of type T
+    const EagleLib::SyncedMemory** userVar; // Pointer to the user space pointer variable of type T
     void updateUserVar();
     virtual void onInputUpdate(Context* ctx, IParameter* param);
     virtual void onInputDelete(IParameter const* param);

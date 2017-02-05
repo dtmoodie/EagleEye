@@ -21,23 +21,23 @@ if(Caffe_FOUND)
       ${CUDA_TOOLKIT_INCLUDE}
     )
     add_definitions(-DUSE_CUDNN)
-    if(TARGET libcaffe)
-      get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
-    endif(TARGET libcaffe)
-    get_filename_component(CAFFE_BIN_DIR_ "${CAFFE_BIN}" DIRECTORY)
-    set(CAFFE_BIN_DIR ${CAFFE_BIN_DIR_} CACHE PATH "" FORCE)
-    SET(CAFFE_BIN_DIR_DBG ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
-    SET(CAFFE_BIN_DIR_OPT ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
-
 
     LINK_DIRECTORIES(${LINK_DIRS})
     LINK_DIRECTORIES(${CUDNN_LIB_DIR})
     file(GLOB_RECURSE src "*.h" "*.hpp" "*.cpp" "*.cu")
     cuda_add_library(Caffe SHARED ${src})
     add_dependencies(Caffe EagleLib)
-    SET(BIN_DIRS "${BIN_DIRS};CAFFE;CUDNN" CACHE STRING "" FORCE)
+
 
     IF(WIN32)
+      if(TARGET libcaffe)
+        get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
+      endif(TARGET libcaffe)
+      get_filename_component(CAFFE_BIN_DIR_ "${CAFFE_BIN}" DIRECTORY)
+      set(CAFFE_BIN_DIR ${CAFFE_BIN_DIR_} CACHE PATH "" FORCE)
+      SET(CAFFE_BIN_DIR_DBG ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
+      SET(CAFFE_BIN_DIR_OPT ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
+      SET(BIN_DIRS "${BIN_DIRS};CAFFE;CUDNN" CACHE STRING "" FORCE)
       set_target_properties(libcaffe PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
       RCC_LINK_LIB(Caffe
           EagleLib

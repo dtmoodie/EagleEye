@@ -113,9 +113,11 @@ bool UndistortStereo::ProcessImpl()
         mapX_param.UpdateData(X, -1, _ctx);
         mapY_param.UpdateData(Y, -1, _ctx);
     }
-    cv::cuda::remap(input->GetGpuMat(Stream()), input->GetGpuMatMutable(Stream()), 
-        mapX.GetGpuMat(Stream()), mapY.GetGpuMat(Stream()), 
+    cv::cuda::GpuMat remapped;
+    cv::cuda::remap(input->GetGpuMat(Stream()), remapped,
+        mapX.GetGpuMat(Stream()), mapY.GetGpuMat(Stream()),
         interpolation_method.getValue(), boarder_mode.getValue(), cv::Scalar(), Stream());
+    undistorted_param.UpdateData(remapped, input_param.GetTimestamp(), _ctx);
     return true;
 }
 
