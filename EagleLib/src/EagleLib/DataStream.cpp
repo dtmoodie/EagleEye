@@ -101,7 +101,7 @@ DataStream::DataStream()
     _processing_thread.SetThreadName("DataStreamThread");
     this->_ctx = this->_processing_thread.GetContext();
     _processing_thread.SetStartCallback(
-                [this]()
+    [this]()
     {
         this->_ctx = this->_processing_thread.GetContext();
     });

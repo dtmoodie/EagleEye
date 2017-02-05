@@ -98,13 +98,13 @@ namespace EagleLib
         virtual void Serialize(ISimpleSerializer* pSerializer);
 
         
-        MO_DERIVE(IFrameGrabber, Node);
-            MO_SIGNAL(void, update);
-            MO_SLOT(void, Restart);
-            OUTPUT(SyncedMemory, current_frame, SyncedMemory());
-            PARAM(std::string, loaded_document, "");
-            MO_SLOT(void, on_loaded_document_modified, mo::Context*, mo::IParameter*);
-        MO_END;
+        MO_DERIVE(IFrameGrabber, Node)
+            MO_SIGNAL(void, update)
+            MO_SLOT(void, Restart)
+            OUTPUT(SyncedMemory, current_frame, SyncedMemory())
+            PARAM(std::string, loaded_document, "")
+            MO_SLOT(void, on_loaded_document_modified, mo::Context*, mo::IParameter*)
+        MO_END
         
     protected:
         bool ProcessImpl();
@@ -135,13 +135,12 @@ namespace EagleLib
         SyncedMemory get_frame(int ts, cv::cuda::Stream& stream);
 
         MO_DERIVE(FrameGrabberBuffered, IFrameGrabber)
-            PARAM(int, frame_buffer_size, 10);
-            OUTPUT(boost::circular_buffer<TS<SyncedMemory>>, frame_buffer, boost::circular_buffer<TS<SyncedMemory>>());
-            MO_SLOT(TS<SyncedMemory>, GetFrame, int, cv::cuda::Stream&);
-            MO_SLOT(TS<SyncedMemory>, GetNextFrame, cv::cuda::Stream&);
-            MO_SLOT(TS<SyncedMemory>, GetFrameRelative, int, cv::cuda::Stream&);
-            
-        MO_END;
+            PARAM(int, frame_buffer_size, 10)
+            OUTPUT(boost::circular_buffer<TS<SyncedMemory>>, frame_buffer, boost::circular_buffer<TS<SyncedMemory>>())
+            MO_SLOT(TS<SyncedMemory>, GetFrame, int, cv::cuda::Stream&)
+            MO_SLOT(TS<SyncedMemory>, GetNextFrame, cv::cuda::Stream&)
+            MO_SLOT(TS<SyncedMemory>, GetFrameRelative, int, cv::cuda::Stream&)
+        MO_END
     protected:
         virtual void PushFrame(TS<SyncedMemory> frame, bool blocking = true);
         boost::mutex                             buffer_mtx;
