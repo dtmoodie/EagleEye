@@ -42,7 +42,7 @@ void __global__ argmaxKernel(Matrix3D<const float> data, cv::cuda::PtrStepSz<flo
     label(y,x) = maxLabel;
 }
 
-void EagleLib::Caffe::MaxSegmentation(const caffe::Blob<float>* blob_, cv::Mat& h_label, cv::Mat& h_confidence)
+void EagleLib::Caffe::argMax(const caffe::Blob<float>* blob_, cv::Mat& h_label, cv::Mat& h_confidence)
 {
     auto shape = blob_->shape();
     CV_Assert(shape.size() == 4);
@@ -73,7 +73,7 @@ void EagleLib::Caffe::MaxSegmentation(const caffe::Blob<float>* blob_, cv::Mat& 
     }
 }
 
-void EagleLib::Caffe::MaxSegmentation(const caffe::Blob<float>* blob_, cv::cuda::GpuMat& label, cv::cuda::GpuMat& confidence, cv::cuda::Stream& stream_)
+void EagleLib::Caffe::argMax(const caffe::Blob<float>* blob_, cv::cuda::GpuMat& label, cv::cuda::GpuMat& confidence, cv::cuda::Stream& stream_)
 {
     const float* data = blob_->gpu_data();
     auto shape = blob_->shape();

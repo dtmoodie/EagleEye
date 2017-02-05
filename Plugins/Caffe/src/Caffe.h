@@ -24,15 +24,10 @@
   RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 #endif
 
-
 namespace EagleLib
 {
-
-
     namespace Nodes
     {
-
-
         class CaffeBase : public Node
         {
         public:
@@ -104,6 +99,4 @@ namespace EagleLib
 
         };
     }
-
-
 }
