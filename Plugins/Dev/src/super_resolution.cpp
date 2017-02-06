@@ -78,10 +78,10 @@ bool super_resolution::ProcessImpl()
     }
     cv::cuda::GpuMat result;
     
-    frame_source->input_frame(*input, Stream());
+    //frame_source->input_frame(*input, Stream());
     
     return true;
 }
 
 
-MO_REGISTER_CLASS(super_resolution)
+//MO_REGISTER_CLASS(super_resolution)

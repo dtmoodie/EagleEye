@@ -437,7 +437,7 @@ int FrameGrabberThreaded::Buffer()
 
 void FrameGrabberThreaded::StartThreads()
 {
-    StopThreads();
+    //StopThreads();
     LOG(info) << "Starting buffer thread";
     _buffer_thread_handle.Start();
 }

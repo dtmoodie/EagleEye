@@ -30,7 +30,8 @@ long long IPyrOpticalFlow::PrepPyramid()
     if (image_pyramid == nullptr)
     {
         image_pyramid = &greyImg;
-        build_pyramid(*image_pyramid);
+        THROW(debug) << "Need to reimplement and redesign";
+        //build_pyramid(*image_pyramid);
         timestamp = input_param.GetTimestamp();
     }
     else

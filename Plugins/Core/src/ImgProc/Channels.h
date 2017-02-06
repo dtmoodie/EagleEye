@@ -62,6 +62,7 @@ namespace EagleLib
         public:
             MO_DERIVE(ConvertColorspace, ::EagleLib::Nodes::Node)
                 INPUT(SyncedMemory, input_image, nullptr)
+                ENUM_PARAM(conversion_code, cv::COLOR_BGR2HSV)
                 OUTPUT(SyncedMemory, output_image, SyncedMemory())
             MO_END
         protected:

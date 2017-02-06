@@ -15,11 +15,11 @@ namespace EagleLib
         public:
             IPyrOpticalFlow();
             MO_DERIVE(IPyrOpticalFlow, Node)
-                INPUT(SyncedMemory, input, nullptr);
-                OPTIONAL_INPUT(std::vector<cv::cuda::GpuMat>, image_pyramid, nullptr);
-                PARAM(int, window_size, 13);
-                PARAM(int, iterations, 30);
-                PARAM(int, pyramid_levels, 3);
+                INPUT(SyncedMemory, input, nullptr)
+                OPTIONAL_INPUT(std::vector<cv::cuda::GpuMat>, image_pyramid, nullptr)
+                PARAM(int, window_size, 13)
+                PARAM(int, iterations, 30)
+                PARAM(int, pyramid_levels, 3)
                 PARAM(bool, use_initial_flow, false)
             MO_END;
         protected:

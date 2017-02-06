@@ -102,8 +102,10 @@ int main(int argc, char* argv[])
     signal(SIGSEGV, sig_handler);
     auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
     g_allocator->SetName("Global Allocator");
-    mo::SetGpuAllocatorHelper<cv::cuda::GpuMat>(g_allocator);
-    mo::SetCpuAllocatorHelper<cv::Mat>(g_allocator);
+    mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(g_allocator);
+    mo::CpuThreadAllocatorSetter<cv::Mat>::Set(g_allocator);
+    //mo::SetGpuAllocatorHelper<cv::cuda::GpuMat>(g_allocator);
+    //mo::SetCpuAllocatorHelper<cv::Mat>(g_allocator);
 
 
     boost::program_options::options_description desc("Allowed options");

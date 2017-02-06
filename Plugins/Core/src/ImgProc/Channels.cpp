@@ -228,7 +228,10 @@ bool ConvertDataType::ProcessImpl()
 }*/
 bool ConvertColorspace::ProcessImpl()
 {
-    return false;
+    cv::cuda::GpuMat output;
+    cv::cuda::cvtColor(input_image->GetGpuMat(Stream()),output, conversion_code.getValue(), 0, Stream());
+    output_image_param.UpdateData(output, input_image_param.GetTimestamp(), _ctx);
+    return true;
 }
 
 bool MergeChannels::ProcessImpl()
