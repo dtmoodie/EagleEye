@@ -33,6 +33,11 @@ namespace EagleLib
         std::vector<mo::IParameter*> GetComponentParameters(const std::string& filter = "") const;
         std::vector<mo::IParameter*> GetAllParameters(const std::string& filter = "") const;
         mo::IParameter* GetOutput(const std::string& name) const;
+        template<class T> 
+        mo::ITypedParameter<T>* GetOutput(const std::string& name) const
+        {
+            return mo::IMetaObject::GetOutput<T>(name);
+        }
         void  SetContext(mo::Context* ctx, bool overwrite = false);
         const std::vector<rcc::weak_ptr<Algorithm>>& GetComponents() const
         {
