@@ -13,7 +13,10 @@ bool FrameRate::ProcessImpl()
     boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta = currentTime - prevTime;
     prevTime = currentTime;
-    framerate_param.UpdateData(1000.0 / delta.total_milliseconds());
+    framerate_param.UpdateData(1000.0 / (double)delta.total_milliseconds());
+    long long ts_delta = input_param.GetTimestamp() - _previous_frame_timestamp;
+    frametime_param.UpdateData(ts_delta);
+    _previous_frame_timestamp = input_param.GetTimestamp();
     return true;
 }
 

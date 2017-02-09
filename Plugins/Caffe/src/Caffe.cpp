@@ -27,50 +27,7 @@ using namespace EagleLib::Nodes;
 
 
 
-template <typename T>
-std::vector<size_t> sort_indexes(const std::vector<T> &v) {
 
-  // initialize original index locations
-  std::vector<size_t> idx(v.size());
-  for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
-
-  // sort indexes based on comparing values in v
-  std::sort(idx.begin(), idx.end(),
-       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
-
-  return idx;
-}
-
-template <typename T>
-std::vector<size_t> sort_indexes(const T* begin, size_t size) {
-
-  // initialize original index locations
-  std::vector<size_t> idx(size);
-  for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
-
-  // sort indexes based on comparing values in v
-  std::sort(idx.begin(), idx.end(), [&begin](size_t i1, size_t i2) {return begin[i1] < begin[i2];});
-
-  return idx;
-}
-
-template <typename T>
-std::vector<size_t> sort_indexes_ascending(const T* begin, size_t size) {
-
-    // initialize original index locations
-    std::vector<size_t> idx(size);
-    for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
-
-    // sort indexes based on comparing values in v
-    std::sort(idx.begin(), idx.end(), [&begin](size_t i1, size_t i2) {return begin[i1] > begin[i2]; });
-
-    return idx;
-}
-
-template <typename T>
-std::vector<size_t> sort_indexes(const T* begin, const T* end) {
-    return sort_indexes<T>(begin, end - begin);
-}
 
 std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<float>& blob, bool bgr_swap)
 {
@@ -490,7 +447,7 @@ bool CaffeImageClassifier::ProcessImpl()
 
     float loss;
     {
-        mo::scoped_profile profile("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &Stream());
+        mo::scoped_profile profile_forward("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &Stream());
         NN->Forward(&loss);
     }
     
@@ -510,24 +467,6 @@ bool CaffeImageClassifier::ProcessImpl()
                 {
                     blob_priority_map[itr.first].emplace_back(itr.second, constructor);
                 }
-                /*for(auto handled_blob : handled_blobs)
-                {
-                    auto itr = std::find(output_blobs.begin(), output_blobs.end(), handled_blob.first);
-                    if(itr != output_blobs.end())
-                    {
-                        LOG(info) << info->GetDisplayName() << " handles blob " << NN->blob_names()[*itr];
-                        output_blobs.erase(itr);
-                        auto handler = dynamic_cast<Caffe::NetHandler*>(constructor->Construct());
-                        if(handler)
-                        {
-                            handler->Init(true);
-                            handler->SetContext(this->GetContext());
-                            net_handlers.emplace_back(handler);
-                            this->_algorithm_components.emplace_back(handler);
-                            handler->SetOutputBlob(*net, handled_blob.first);
-                        }
-                    }
-                }*/
             }
         }
         for(auto& itr : blob_priority_map)
@@ -556,104 +495,12 @@ bool CaffeImageClassifier::ProcessImpl()
             // construct the handlers with largest priority
         }
     }
-
+    mo::scoped_profile profile_handlers("Handle neural net output", &_rmt_hash, &_rmt_cuda_hash, &Stream());
     for(auto& handler : net_handlers)
     {
         handler->HandleOutput(*NN, input_param.GetTimestamp(), pixel_bounding_boxes);
     }
     return true;
-    /*
-    if(_network_type & Classifier_e)
-    {
-        caffe::Blob<float>* output_layer = NN->output_blobs()[0];
-        float* begin = output_layer->mutable_cpu_data();
-        std::vector<DetectedObject> objects(std::min<size_t>(bounding_boxes->size(), data_itr->second.size()));
-        for (int i = 0; i < bounding_boxes->size() && i < data_itr->second.size(); ++i)
-        {
-            auto idx = sort_indexes_ascending(begin + i * output_layer->channels(), (size_t)output_layer->channels());
-            objects[i].detections.resize(num_classifications);
-            for (int j = 0; j < num_classifications && j < idx.size(); ++j)
-            {
-                objects[i].detections[j].confidence = (begin + i * output_layer->channels())[idx[j]];
-                objects[i].detections[j].classNumber = idx[j];
-                if (labels && idx[j] < labels->size())
-                {
-                    objects[i].detections[j].label = (*labels)[idx[j]];
-                }
-            }
-            objects[i].boundingBox = (*bounding_boxes)[i];
-        }
-        detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
-    }else if(_network_type & Detector_e)
-    {
-        caffe::Blob<float>* output_layer = NN->output_blobs()[0];
-        float* begin = output_layer->mutable_cpu_data();
-        std::vector<DetectedObject> objects;
-
-        const int num_detections = output_layer->height();
-        cv::Mat all(num_detections, 7, CV_32F, begin);
-        cv::Mat_<float> roi_num(num_detections, 1, begin, sizeof(float)*7);
-        cv::Mat_<float> labels(num_detections, 1, begin + 1, sizeof(float)*7);
-        cv::Mat_<float> confidence(num_detections, 1, begin + 2, sizeof(float)*7);
-        cv::Mat_<float> xmin(num_detections, 1, begin + 3, sizeof(float) * 7);
-        cv::Mat_<float> ymin(num_detections, 1, begin + 4, sizeof(float) * 7);
-        cv::Mat_<float> xmax(num_detections, 1, begin + 5, sizeof(float) * 7);
-        cv::Mat_<float> ymax(num_detections, 1, begin + 6, sizeof(float) * 7);
-
-        for(int i = 0; i < num_detections; ++i)
-        {
-            if(confidence[i][0] > detection_threshold)
-            {
-                int num = roi_num[i][0];
-                DetectedObject obj;
-                obj.boundingBox.x = xmin[i][0] * (*bounding_boxes)[num].width + (*bounding_boxes)[num].x;
-                obj.boundingBox.y = ymin[i][0] * (*bounding_boxes)[num].height + (*bounding_boxes)[num].y;
-                obj.boundingBox.width = (xmax[i][0] - xmin[i][0])*(*bounding_boxes)[num].width;
-                obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * (*bounding_boxes)[num].height;
-                // Check all current objects iou value
-                bool append = true;
-
-                if (this->labels && labels[i][0] < this->labels->size())
-                    obj.detections.emplace_back((*this->labels)[int(labels[i][0])], confidence[i][0], int(labels[i][0]));
-                else
-                    obj.detections.emplace_back("", confidence[i][0], int(labels[i][0]));
-
-                for(auto itr = objects.begin(); itr != objects.end(); ++itr)
-                {
-                    float iou_val = EagleLib::Caffe::iou(obj.boundingBox, itr->boundingBox);
-                    if(iou_val > 0.2)
-                    {
-                        if(obj.detections[0].confidence > itr->detections[0].confidence)
-                        {
-                            // Current object has higher prediction, replace
-                            *itr = obj;
-                        }
-                        append = false;
-                    }
-                }
-                if(append)
-                    objects.push_back(obj);
-            }
-        }
-        begin += output_layer->width() * output_layer->height() * num_detections;
-        if(objects.size())
-        {
-            LOG(trace) << "Detected " << objects.size() << " objets in frame " << input_param.GetTimestamp();
-        }
-
-        detections_param.UpdateData(objects, input_param.GetTimestamp(), _ctx);
-    }else if(_network_type & FCN_e)
-    {
-        cv::Mat label, confidence;
-        caffe::Blob<float>* output_layer = NN->output_blobs()[0];
-        EagleLib::Caffe::MaxSegmentation(output_layer, label, confidence);
-        UpdateParameter<SyncedMemory>("label", label, input_param.GetTimestamp(), _ctx);
-        UpdateParameter<SyncedMemory>("confidence", label, input_param.GetTimestamp(), _ctx);
-    }
-    
-    bounding_boxes = nullptr;
-    return true;
-    */
 }
 void CaffeImageClassifier::PostSerializeInit()
 {

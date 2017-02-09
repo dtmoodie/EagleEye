@@ -9,9 +9,7 @@ using namespace EagleLib::Caffe;
 
 std::map<int, int> FCNHandler::CanHandleNetwork(const caffe::Net<float>& net)
 {
-    const std::vector<caffe::Blob<float>*>& blobs = net.output_blobs();
     const std::vector<int>& out_idx = net.output_blob_indices();
-    const std::vector<std::string>& names = net.blob_names();
     auto layer_names = net.layer_names();
     auto layers = net.layers();
     std::map<int, int> output;
@@ -26,7 +24,13 @@ std::map<int, int> FCNHandler::CanHandleNetwork(const caffe::Net<float>& net)
                 std::string type = layers[i]->type();
                 if(type == "Softmax" || type == "Convolution" || type == "Crop")
                 {
-                    output[id] = 10;
+                    const std::vector<boost::shared_ptr<caffe::Blob<float> > >& blobs = net.blobs();
+                    const std::vector<int>& shape = blobs[id]->shape();
+                    if(shape.size() == 4)
+                    {
+                        if(shape[2] > 1 && shape[3] > 1)
+                            output[id] = 10;
+                    }
                 }
             }
         }
@@ -50,9 +54,7 @@ MO_REGISTER_CLASS(FCNHandler)
 
 std::map<int, int> FCNSingleClassHandler::CanHandleNetwork(const caffe::Net<float>& net)
 {
-    const std::vector<caffe::Blob<float>*>& blobs = net.output_blobs();
     const std::vector<int>& out_idx = net.output_blob_indices();
-    const std::vector<std::string>& names = net.blob_names();
     auto layer_names = net.layer_names();
     auto layers = net.layers();
     std::map<int, int> output;
@@ -67,7 +69,13 @@ std::map<int, int> FCNSingleClassHandler::CanHandleNetwork(const caffe::Net<floa
                 std::string type = layers[i]->type();
                 if(type == "Softmax" || type == "Convolution" || type == "Crop")
                 {
-                    output[id] = 10;
+                    const std::vector<boost::shared_ptr<caffe::Blob<float> > >& blobs = net.blobs();
+                    const std::vector<int>& shape = blobs[id]->shape();
+                    if(shape.size() == 4)
+                    {
+                        if(shape[2] > 1 && shape[3] > 1)
+                            output[id] = 10;
+                    }
                 }
             }
         }

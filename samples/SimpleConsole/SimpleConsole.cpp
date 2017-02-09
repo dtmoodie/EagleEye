@@ -646,6 +646,7 @@ int main(int argc, char* argv[])
 				//current_stream->SaveStream(file);
                 rcc::shared_ptr<EagleLib::IDataStream> stream(current_stream);
                 EagleLib::IDataStream::Save(file, stream);
+                stream->StartThread();
 			}
 			else if (current_node)
 			{
@@ -924,6 +925,7 @@ int main(int argc, char* argv[])
                 {
                     std::stringstream ss; 
                     ss << value;
+                    boost::recursive_mutex::scoped_lock lock(current_param->mtx());
                     func(current_param, ss);
                     std::cout << "Successfully set " << current_param->GetTreeName() << " to " << value << std::endl;
                     return;
@@ -1166,6 +1168,10 @@ int main(int argc, char* argv[])
                     }
                     else
                     {
+                        for (auto& ds : _dataStreams)
+                        {
+                            ds->StopThread();
+                        }
                         if (mo::MetaObjectFactory::Instance()->SwapObjects())
                         {
                             std::cout << "Object swap success\n";

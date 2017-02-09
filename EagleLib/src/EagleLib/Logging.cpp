@@ -46,7 +46,7 @@ boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>>
 void EagleLib::SetupLogging()
 {
     cv::redirectError(&static_errorHandler);
-    std::string logging_Path;
+    std::string logging_path;
 #if _MSC_VER
 
 #else

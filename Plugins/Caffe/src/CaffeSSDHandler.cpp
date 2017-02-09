@@ -6,9 +6,7 @@ using namespace EagleLib::Caffe;
 
 std::map<int, int> SSDHandler::CanHandleNetwork(const caffe::Net<float>& net)
 {
-    const std::vector<caffe::Blob<float>*>& blobs = net.output_blobs();
     const std::vector<int>& out_idx = net.output_blob_indices();
-    const std::vector<std::string>& names = net.blob_names();
     auto layer_names = net.layer_names();
     auto layers = net.layers();
     std::map<int, int> output;

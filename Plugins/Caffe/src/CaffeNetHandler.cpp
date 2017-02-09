@@ -10,9 +10,7 @@ INSTANTIATE_META_PARAMETER(std::vector<rcc::shared_ptr<EagleLib::Caffe::NetHandl
 std::vector<boost::shared_ptr<caffe::Layer<float>>>
 EagleLib::Caffe::NetHandler::GetOutputLayers(const caffe::Net<float>& net)
 {
-    const std::vector<caffe::Blob<float>*>& blobs = net.output_blobs();
     const std::vector<int>& out_idx = net.output_blob_indices();
-    const std::vector<std::string>& names = net.blob_names();
     auto layer_names = net.layer_names();
     auto layers = net.layers();
     std::vector<boost::shared_ptr<caffe::Layer<float>>> output;
