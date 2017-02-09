@@ -39,7 +39,7 @@ namespace EagleLib
             return _algorithm_components;
         }
         void  Serialize(ISimpleSerializer *pSerializer);
-        void AddComponent(rcc::weak_ptr<Algorithm> component);
+        virtual void AddComponent(rcc::weak_ptr<Algorithm> component);
     protected:
         virtual bool CheckInputs();
         virtual bool ProcessImpl() = 0;
