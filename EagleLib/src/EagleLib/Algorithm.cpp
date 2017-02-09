@@ -124,6 +124,11 @@ bool Algorithm::CheckInputs()
     if(inputs.size() == 0)
         return true;
     long long ts = -1;
+    if(_pimpl->sync_input)
+    {
+        ts = _pimpl->sync_input->GetTimestamp();
+    }
+    else
     if(_pimpl->ts == -1 && _pimpl->sync_input == nullptr)
     {
         for(auto input : inputs)

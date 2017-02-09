@@ -100,11 +100,6 @@ DataStream::DataStream()
     _processing_thread.SetInnerLoop(GetSlot_process<int(void)>());
     _processing_thread.SetThreadName("DataStreamThread");
     this->_ctx = this->_processing_thread.GetContext();
-    _processing_thread.SetStartCallback(
-    [this]()
-    {
-        this->_ctx = this->_processing_thread.GetContext();
-    });
 }
 
 void DataStream::node_updated(Nodes::Node* node)
