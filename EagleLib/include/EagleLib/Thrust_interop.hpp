@@ -32,21 +32,21 @@ template<typename T, int CN, typename PtrType> class ThrustView;
 template<typename T, int CN> ThrustView<T, CN, T*> CreateView(cv::Mat& mat, int channel = 0);
 template<typename T, int CN> ThrustView<const T, CN, T*> CreateView(const cv::Mat& mat, int channel = 0);
 
-template<typename T, int CN> ThrustView<T, CN, thrust::device_ptr<T>> CreateView(cv::cuda::GpuMat& mat, int channel = 0);
-template<typename T, int CN> ThrustView<const T, CN, thrust::device_ptr<const T>> CreateView(const cv::cuda::GpuMat& mat, int channel = 0);
+template<typename T, int CN> ThrustView<T, CN, thrust::device_ptr<T> > CreateView(cv::cuda::GpuMat& mat, int channel = 0);
+template<typename T, int CN> ThrustView<const T, CN, thrust::device_ptr<const T> > CreateView(const cv::cuda::GpuMat& mat, int channel = 0);
 
 
 
 
-template<typename T, int CN, typename PtrType = thrust::device_ptr<T>>
+template<typename T, int CN, typename PtrType = thrust::device_ptr<T> >
 class ThrustView
 {
     // Iterates over every element inside of a matrix
     typedef cv::Vec<T, CN> DataType;
-    typedef thrust::permutation_iterator<PtrType, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int>>> MatrixItr_t;
-    typedef thrust::permutation_iterator<PtrType, thrust::counting_iterator<int>> RowItr_t;
+    typedef thrust::permutation_iterator<PtrType, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int> > > MatrixItr_t;
+    typedef thrust::permutation_iterator<PtrType, thrust::counting_iterator<int> > RowItr_t;
     // Outer iterator iterates over each row of the matrix, inner iterator iterats over elemetns of the row
-    typedef thrust::permutation_iterator<RowItr_t, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int>>> RowsItr_t;
+    typedef thrust::permutation_iterator<RowItr_t, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int> > > RowsItr_t;
     typedef MatrixItr_t ColItr_t;
 };
 
@@ -55,12 +55,12 @@ class ThrustView<T, 1, PtrType>
 {
 public:
     // Iterates over every element inside of a matrix
-    typedef thrust::permutation_iterator<PtrType, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int>>> MatrixItr_t;
-    typedef thrust::permutation_iterator<PtrType, thrust::counting_iterator<int>> RowItr_t;
+    typedef thrust::permutation_iterator<PtrType, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int> > > MatrixItr_t;
+    typedef thrust::permutation_iterator<PtrType, thrust::counting_iterator<int> > RowItr_t;
     typedef MatrixItr_t ColItr_t;
     // Outer iterator iterates over each row of the matrix, inner iterator iterats over elemetns of the row
-    typedef thrust::permutation_iterator<thrust::zip_iterator<thrust::tuple<RowItr_t, RowItr_t>>, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int>>> RowsItr_t;
-    typedef thrust::permutation_iterator<thrust::zip_iterator<thrust::tuple<ColItr_t, ColItr_t>>, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int>>> ColsItr_t;
+    typedef thrust::permutation_iterator<thrust::zip_iterator<thrust::tuple<RowItr_t, RowItr_t> >, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int> > > RowsItr_t;
+    typedef thrust::permutation_iterator<thrust::zip_iterator<thrust::tuple<ColItr_t, ColItr_t> >, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int> > > ColsItr_t;
 
     MatrixItr_t begin()
     {
@@ -205,9 +205,9 @@ ThrustView<const T, CN, T*> CreateView(const cv::Mat& mat, int channel)
 
 
 template<typename T, int CN>
-ThrustView<T, CN, thrust::device_ptr<T>> CreateView(cv::cuda::GpuMat& mat, int channel)
+ThrustView<T, CN, thrust::device_ptr<T> > CreateView(cv::cuda::GpuMat& mat, int channel)
 {
-    ThrustView<T, CN, thrust::device_ptr<T>> view;
+    ThrustView<T, CN, thrust::device_ptr<T> > view;
     CV_Assert(mat.depth() == cv::DataType<T>::depth);
     view._rows = mat.rows;
     view._cols = mat.cols;
@@ -229,9 +229,9 @@ ThrustView<T, CN, thrust::device_ptr<T>> CreateView(cv::cuda::GpuMat& mat, int c
 }
 
 template<typename T, int CN>
-ThrustView<const T, CN, thrust::device_ptr<const T>> CreateView(const cv::cuda::GpuMat& mat, int channel)
+ThrustView<const T, CN, thrust::device_ptr<const T> > CreateView(const cv::cuda::GpuMat& mat, int channel)
 {
-    ThrustView<const T, CN, thrust::device_ptr<const T>> view;
+    ThrustView<const T, CN, thrust::device_ptr<const T> > view;
     CV_Assert(mat.depth() == cv::DataType<T>::depth);
     view._rows = mat.rows;
     view._cols = mat.cols;
@@ -258,7 +258,7 @@ ThrustView<const T, CN, thrust::device_ptr<const T>> CreateView(const cv::cuda::
 @Param channel is the channel of the matrix that the iterator is accessing.  If set to -1, the iterator will access every element in sequential order
 */
 template<typename T>
-thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int>>>  GpuMatBeginItr(cv::cuda::GpuMat& mat, int channel = 0)
+thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int> > >  GpuMatBeginItr(cv::cuda::GpuMat& mat, int channel = 0)
 {
     if (channel == -1)
     {
@@ -276,7 +276,7 @@ thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<s
 @Param channel is the channel of the matrix that the iterator is accessing.  If set to -1, the iterator will access every element in sequential order
 */
 template<typename T>
-thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int>>>  GpuMatEndItr(cv::cuda::GpuMat& mat, int channel = 0)
+thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int> > >  GpuMatEndItr(cv::cuda::GpuMat& mat, int channel = 0)
 {
     if (channel == -1)
     {
@@ -291,7 +291,7 @@ thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<s
 }
 
 template<typename T>
-thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int>>>  GpuMatDiagBeginItr(cv::cuda::GpuMat& mat, int channel = 0)
+thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int> > >  GpuMatDiagBeginItr(cv::cuda::GpuMat& mat, int channel = 0)
 {
     if(channel == -1)
     {
@@ -305,7 +305,7 @@ thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<s
 }
 
 template<typename T>
-thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int>>>  GpuMatDiagEndItr(cv::cuda::GpuMat& mat, int channel = 0)
+thrust::permutation_iterator<thrust::device_ptr<T>, thrust::transform_iterator<step_functor<T>, thrust::counting_iterator<int> > >  GpuMatDiagEndItr(cv::cuda::GpuMat& mat, int channel = 0)
 {
     if (channel == -1)
     {
