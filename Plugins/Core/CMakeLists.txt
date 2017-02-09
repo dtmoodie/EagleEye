@@ -40,7 +40,7 @@ IF(WIN32)
 
 ELSE()
     #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+    #set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 ENDIF()
 
 cuda_add_library(Core SHARED ${src} ${hdr} ${knl})

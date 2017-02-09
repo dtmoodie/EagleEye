@@ -48,7 +48,7 @@ IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
     IF(WIN32)
 
     ELSE()
-        SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
+        #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
     ENDIF()
 
     cuda_add_library(freenect SHARED ${src} ${hdr} ${knl})
