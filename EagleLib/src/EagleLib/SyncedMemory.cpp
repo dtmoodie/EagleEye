@@ -12,7 +12,9 @@
 #include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
 #include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
 #include "MetaObject/Parameters/Buffers/map.hpp"
+#include "MetaObject/Parameters/Buffers/NNStreamBuffer.hpp"
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
+
 #include <cereal/types/vector.hpp>
 #include <cereal/types/array.hpp>
 #include <boost/lexical_cast.hpp>
@@ -73,7 +75,7 @@ SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<
     _pimpl(new impl)
 {
     assert(h_mat.size() == d_mat.size());
-    _pimpl->sync_flags.resize(_pimpl->h_data.size(), state);
+    _pimpl->sync_flags.resize(h_mat.size(), state);
     _pimpl->h_data = h_mat;
     _pimpl->d_data = d_mat;
 }
@@ -232,6 +234,41 @@ bool SyncedMemory::empty() const
         return _pimpl->d_data[0].empty();
     return true;
 }
+
+bool SyncedMemory::Clone(cv::Mat& dest, cv::cuda::Stream& stream, int idx) const
+{
+    CV_Assert(_pimpl->sync_flags.size() > idx);
+    if(_pimpl->sync_flags[idx] < DEVICE_UPDATED || _pimpl->sync_flags[idx] == DO_NOT_SYNC)
+    {
+        _pimpl->h_data[idx].copyTo(dest);
+        return false;
+    }else
+    {
+        _pimpl->d_data[idx].download(dest, stream);
+        return true;
+    }
+}
+
+bool SyncedMemory::Clone(cv::cuda::GpuMat& dest, cv::cuda::Stream& stream, int idx) const
+{
+    CV_Assert(_pimpl->sync_flags.size() > idx);
+    if(_pimpl->sync_flags[idx] < DEVICE_UPDATED || _pimpl->sync_flags[idx] == DO_NOT_SYNC)
+    {
+        //_pimpl->h_data[idx].copyTo(dest);
+        dest.upload(_pimpl->h_data[idx], stream);
+        if(_pimpl->sync_flags[idx] != DO_NOT_SYNC)
+        {
+            dest.copyTo(_pimpl->d_data[idx], stream);
+            _pimpl->sync_flags[idx] = SYNCED;
+        }
+        return true;
+    }else
+    {
+        _pimpl->d_data[idx].copyTo(dest, stream);
+        return true;
+    }
+}
+
 void SyncedMemory::Synchronize(cv::cuda::Stream& stream) const
 {
     for(int i = 0; i < _pimpl->h_data.size(); ++i)

@@ -86,6 +86,9 @@ namespace EagleLib
         mo::Context*                           GetContext() const;
         void                                   SetContext(mo::Context* ctx);
 
+        bool Clone(cv::Mat& dest, cv::cuda::Stream& stream, int idx = 0) const;
+        bool Clone(cv::cuda::GpuMat& dest, cv::cuda::Stream& stream, int idx = 0) const;
+
         void Synchronize(cv::cuda::Stream& stream = cv::cuda::Stream::Null()) const;
         void ResizeNumMats(int new_size = 1);
         void ReleaseGpu(cv::cuda::Stream& stream = cv::cuda::Stream::Null());
