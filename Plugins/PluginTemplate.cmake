@@ -1,10 +1,10 @@
 macro(RCC_HANDLE_LIB TARGET)
-    if(RCC_VERBOSE_CONFIG)
-      message(STATUS "===================================================================
-               RCC config information for ${TARGET}")
-    endif(RCC_VERBOSE_CONFIG)
-    foreach(lib ${ARGN})
-    endforeach(lib ${ARGN})
+  if(RCC_VERBOSE_CONFIG)
+    message(STATUS "===================================================================\n"
+                   "  RCC config information for ${TARGET}")
+  endif(RCC_VERBOSE_CONFIG)
+  foreach(lib ${ARGN})
+  endforeach(lib ${ARGN})
 endmacro(RCC_HANDLE_LIB target lib)
 
 get_target_property(target_include_dirs_ ${PROJECT_NAME} INCLUDE_DIRECTORIES)
@@ -25,7 +25,7 @@ IF(temp)
   STRING(SUBSTRING "${temp}" 0 ${len} temp)
   SET(PROJECT_ID ${temp})
   if(RCC_VERBOSE_CONFIG)
-      message("Project ID for ${PROJECT_NAME}: ${PROJECT_ID}")
+    message("Project ID for ${PROJECT_NAME}: ${PROJECT_ID}")
   endif()
 ELSE(temp)
   SET(PROJECT_ID "1")
@@ -41,36 +41,47 @@ string(REGEX REPLACE ";" "\n" link_dirs_release "${LINK_DIRS_RELEASE}")
 string(REGEX REPLACE ";" "\n" link_dirs_debug "${LINK_DIRS_DEBUG}")
 
 if(WIN32)	
-    string(REGEX REPLACE "-D" "/D" WIN_DEFS "${DEFS}")
-    string(REGEX REPLACE ";" "\n" WIN_DEFS "${WIN_DEFS}")
-    FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug/${PROJECT_NAME}_config.txt" 
+  string(REGEX REPLACE "-D" "/D" WIN_DEFS "${DEFS}")
+  string(REGEX REPLACE ";" "\n" WIN_DEFS "${WIN_DEFS}")
+  FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug/${PROJECT_NAME}_config.txt"
         "project_id:\n${PROJECT_ID}\n"
         "include_dirs:\n${target_include_dirs_}\n${CMAKE_CURRENT_LIST_DIR}/src\n"
         "lib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
         "lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
         "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"EagleLib/Detail/PluginExport.hpp\""
-    )
+  )
 
-    FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo/${PROJECT_NAME}_config.txt" 
+  FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo/${PROJECT_NAME}_config.txt"
         "project_id:\n${PROJECT_ID}\n"
         "include_dirs:\n${target_include_dirs_}\n${CMAKE_CURRENT_LIST_DIR}/src\n"
         "lib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
         "lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
         "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"EagleLib/Detail/PluginExport.hpp\""
-    )
-	set(outfile_ "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug/${PROJECT_NAME}_config.txt")
+  )
+  set(outfile_ "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug/${PROJECT_NAME}_config.txt")
 else(WIN32)
-    string(REGEX REPLACE ";" "\n" WIN_DEFS "${DEFS}")
+  string(REGEX REPLACE ";" "\n" WIN_DEFS "${DEFS}")
 
-    FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}_config.txt"
-        "project_id:\n${PROJECT_ID}\n"
-        "\ninclude_dirs:\n${target_include_dirs_}\n${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src\n"
-        "\nlib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
-        "\nlib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
-        "\ncompile_options:\n-DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\"\n${WIN_DEFS}\n-DPLUGIN_NAME=${PROJECT_NAME}\n"
+  FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}_config.txt"
+       "project_id:\n"
+       "${PROJECT_ID}\n"
+       "\ninclude_dirs:\n"
+       "${target_include_dirs_}\n"
+       "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src\n"
+       "\nlib_dirs_debug:\n"
+       "${link_dirs_debug}\n"
+       "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
+       "\n"
+       "lib_dirs_release:\n"
+       "${link_dirs_release}\n"
+       "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
+       "\n"
+       "compile_options:\n"
+       "-DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "${WIN_DEFS}\n"
+       "-DPLUGIN_NAME=${PROJECT_NAME}\n"
     )
-	set(outfile_ "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}_config.txt")
-
+  set(outfile_ "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}_config.txt")
 endif(WIN32)
 
 set(${PROJECT_NAME}_PLUGIN_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/" CACHE PATH "" FORCE)
@@ -88,12 +99,36 @@ LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
 LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
 LINK_DIRECTORIES(${LINK_DIRS})
 
+# ============= Write out a file containing external include info
+
+set(external_include_file "#pragma once\n\n#include \"RuntimeLinkLibrary.h\"\n\n#ifdef _MSC_VER\n")
+# wndows link libs
+
+
+set(external_include_file "${external_include_file}\n#else\n\n  #ifdef NDEBUG\n")
+
+foreach(lib ${LINK_LIBS_RELEASE})
+    set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+endforeach()
+
+set(external_include_file "${external_include_file}\n  #else\n")
+
+foreach(lib ${LINK_LIBS_DEBUG})
+    set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+endforeach()
+set(external_include_file "${external_include_file}\n  #endif // NDEBUG\n")
+
+set(external_include_file "${external_include_file}\n#endif // _MSC_VER")
+
+
+FILE(WRITE "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/EagleLib/rcc/external_includes/${PROJECT_NAME}_link_libs.hpp" "${external_include_file}")
+
+
 INSTALL(TARGETS ${PROJECT_NAME}
 	LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin)
+        RUNTIME DESTINATION bin)
        
 IF(RCC_VERBOSE_CONFIG)
-  
   string(REGEX REPLACE ";" "\n    " include_dirs_ "${INCLUDE_DIRS}")
   string(REGEX REPLACE ";" "\n    " link_dirs_release_ "${LINK_DIRS_RELEASE}")
   string(REGEX REPLACE ";" "\n    " link_dirs_debug_ "${LINK_DIRS_DEBUG}")
@@ -105,5 +140,9 @@ IF(RCC_VERBOSE_CONFIG)
     ${link_dirs_debug_}
   Link Dirs Release: 
     ${link_dirs_release_}
+  Link libs Release:
+    ${LINK_LIBS_RELEASE}
+  Link libs Debug:
+    ${LINK_LIBS_DEBUG}
  ")
 ENDIF(RCC_VERBOSE_CONFIG)
