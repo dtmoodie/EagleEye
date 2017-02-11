@@ -155,7 +155,7 @@ bool Algorithm::CheckInputs()
         }else
         {
             LOG(trace) << "No new data to be processed";
-            return false; // no new data to be processed
+            //return false; // no new data to be processed
         }
     }else if(_pimpl->_sync_method == SyncNewest && _pimpl->sync_input)
     {
@@ -168,7 +168,10 @@ bool Algorithm::CheckInputs()
         ts = inputs[0]->GetTimestamp();
         for(int i = 1; i < inputs.size(); ++i)
         {
-            ts = std::min(ts, inputs[0]->GetTimestamp());
+            if(ts == -1)
+                ts = inputs[i]->GetTimestamp();
+            else
+                ts = std::min(ts, inputs[i]->GetTimestamp());
         }
     }
     for(auto input : inputs)
@@ -181,7 +184,7 @@ bool Algorithm::CheckInputs()
                 if(input->GetInputParam())
                 {
                     // Input is optional and set, but couldn't get the right timestamp, error
-                    LOG(trace) << "Failed to get input \"" << input->GetTreeName() << "\" at timestamp " << ts;
+                    LOG(debug) << "Failed to get input \"" << input->GetTreeName() << "\" at timestamp " << ts;
                     return false;
                 }else
                 {
@@ -281,6 +284,17 @@ void Algorithm::PostSerializeInit()
 void Algorithm::AddComponent(rcc::weak_ptr<Algorithm> component)
 {
     _algorithm_components.push_back(component);
+    mo::ISlot* slot = this->GetSlot("parameter_updated", mo::TypeInfo(typeid(void(mo::Context*, mo::IParameter*))));
+    if(slot)
+    {
+        auto params = component->GetParameters();
+        for(auto param : params)
+        {
+            param->RegisterUpdateNotifier(slot);
+        }
+    }
+
+
 }
 void  Algorithm::Serialize(ISimpleSerializer *pSerializer)
 {
