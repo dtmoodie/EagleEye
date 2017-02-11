@@ -9,10 +9,11 @@ namespace Nodes
     class QtImageDisplay: public Node
     {
     public:
-        MO_DERIVE(QtImageDisplay, Node);
-            OPTIONAL_INPUT(SyncedMemory, image, nullptr);
-            OPTIONAL_INPUT(cv::Mat, cpu_mat, nullptr);
-        MO_END;
+        MO_DERIVE(QtImageDisplay, Node)
+            OPTIONAL_INPUT(SyncedMemory, image, nullptr)
+            OPTIONAL_INPUT(cv::Mat, cpu_mat, nullptr)
+            PARAM(bool, overlay_timestamp, true)
+        MO_END
     protected:
         bool ProcessImpl();
     };

@@ -3,6 +3,7 @@
 #include <MetaObject/Thread/InterThread.hpp>
 #include <EagleLib/utilities/CudaCallbacks.hpp>
 #include <EagleLib/utilities/UiCallbackHandlers.h>
+#include <MetaObject/Logging/Profiling.hpp>
 
 
 
@@ -13,6 +14,8 @@ bool QtImageDisplay::ProcessImpl()
 {
     cv::Mat mat;
     bool stream_desynced = false;
+    long long ts = -1;
+    bool overlay = overlay_timestamp;
     if(image && !image->empty())
     {
         if(image->GetSyncState() == EagleLib::SyncedMemory::DEVICE_UPDATED)
@@ -20,6 +23,7 @@ bool QtImageDisplay::ProcessImpl()
             stream_desynced = true;
         }
         mat = image->GetMat(Stream());
+        ts = image_param.GetTimestamp();
     }
     if(cpu_mat)
     {
@@ -33,14 +37,30 @@ bool QtImageDisplay::ProcessImpl()
         if(stream_desynced)
         {
             EagleLib::cuda::enqueue_callback_async(
-                [mat, name]()->void
+                [mat, name, overlay, ts]()->void
             {
+                PROFILE_RANGE(imshow);
+                if(overlay)
+                {
+                    std::stringstream ss;
+                    ss << "Timestamp: " << ts;
+                    cv::putText(mat, ss.str(), cv::Point(20,40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0,255,0));
+                }
+
                 cv::imshow(name, mat);
             }, gui_thread_id, Stream());
         }else
         {
-            mo::ThreadSpecificQueue::Push([name, mat]()
+            mo::ThreadSpecificQueue::Push(
+                        [name, mat, overlay, ts]()
             {
+                PROFILE_RANGE(imshow);
+                if(overlay)
+                {
+                    std::stringstream ss;
+                    ss << "Timestamp: " << ts;
+                    cv::putText(mat, ss.str(), cv::Point(20,40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0,255,0));
+                }
                 cv::imshow(name, mat);
             }, gui_thread_id, this);
         }
