@@ -10,7 +10,7 @@ namespace EagleLib
         public:
             static std::map<int, int> CanHandleNetwork(const caffe::Net<float>& net);
             MO_DERIVE(SSDHandler, NetHandler)
-                PARAM(float, detection_threshold, 0.75)
+                PARAM(std::vector<float>, detection_threshold, {0.75})
                 OUTPUT(std::vector<DetectedObject>, detections, std::vector<DetectedObject>())
                 PARAM(std::string, output_blob_name, "detection_out")
                 PARAM(mo::ReadFile, label_file, mo::ReadFile())

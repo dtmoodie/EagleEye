@@ -49,7 +49,9 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,
 
     for(int i = 0; i < num_detections; ++i)
     {
-        if(confidence[i][0] > detection_threshold)
+
+        if((detection_threshold.size() == 1 && confidence[i][0] > detection_threshold[0]) ||
+            (labels[i][0] < detection_threshold.size() && confidence[i][0] > detection_threshold[int(labels[i][0])]))
         {
             int num = roi_num[i][0];
             DetectedObject obj;
