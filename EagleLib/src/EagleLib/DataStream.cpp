@@ -200,6 +200,15 @@ IParameterBuffer* DataStream::GetParameterBuffer()
     return _parameter_buffer.get();
 
 }
+rcc::weak_ptr<WindowCallbackHandler> DataStream::GetWindowCallbackManager()
+{
+    if(!_window_callback_handler)
+    {
+        _window_callback_handler = WindowCallbackHandler::Create();
+        _window_callback_handler->SetupSignals(this->GetRelayManager());
+    }
+    return _window_callback_handler;
+}
 
 std::shared_ptr<mo::IVariableManager> DataStream::GetVariableManager()
 {
@@ -566,13 +575,14 @@ int DataStream::process()
     {
         dirty_flag = false;
         //mo::scoped_profile profile("Processing nodes", &rmt_hash, &rmt_cuda_hash, &_context.GetStream());
+        mo::scoped_profile profile_nodes("Processing nodes", &_rmt_hash, &_rmt_cuda_hash, &GetContext()->GetStream());
         for (auto& node : top_level_nodes)
         {
             node->Process();
         }
         if (dirty_flag)
         {
-            return 0;
+            return 10;
         }
     }
     return 10;

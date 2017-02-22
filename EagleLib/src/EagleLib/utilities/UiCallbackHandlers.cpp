@@ -10,12 +10,49 @@
 #include <boost/thread/mutex.hpp>
 
 using namespace EagleLib;
-
-
-static void on_mouse_click(int event, int x, int y, int flags, void* callback_handler)
+WindowCallbackHandler::EventLoop::EventLoop()
 {
-    auto ptr =  static_cast<std::pair<std::string, WindowCallbackHandler*>*>(callback_handler);
-    ptr->second->handle_click(event, x, y, flags, ptr->first);
+    //size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
+
+    //mo::ThreadSpecificQueue::Push(, gui_thread_id, this)
+}
+
+WindowCallbackHandler::EventLoop::~EventLoop()
+{
+
+}
+
+WindowCallbackHandler::EventLoop* WindowCallbackHandler::EventLoop::Instance()
+{
+    static EventLoop* g_inst = nullptr;
+    if(g_inst == nullptr)
+        g_inst = new EventLoop();
+    return g_inst;
+}
+
+void WindowCallbackHandler::EventLoop::run()
+{
+    int key = cv::waitKey(1);
+    if(key != -1)
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        for(auto& itr : handlers)
+        {
+            itr->sig_on_key(key);
+        }
+    }
+}
+
+void WindowCallbackHandler::EventLoop::Register(WindowCallbackHandler* handler)
+{
+    std::unique_lock<std::mutex> lock(mtx);
+    handlers.push_back(handler);
+}
+
+void WindowCallbackHandler::on_mouse_click(int event, int x, int y, int flags, void* callback_handler)
+{
+    auto ptr =  static_cast<WindowCallbackHandler::WindowHandler*>(callback_handler);
+    ptr->on_mouse(event, x, y, flags);
 }
 
 void WindowCallbackHandler::imshow(const std::string& window_name, cv::Mat img, int flags)
@@ -26,17 +63,26 @@ void WindowCallbackHandler::imshow(const std::string& window_name, cv::Mat img, 
         mo::ThreadSpecificQueue::Push(std::bind(&WindowCallbackHandler::imshow, this, window_name, img, flags), gui_thread_id);
         return;
     }
-    // The below code should only execute if this is on the GUI thread, thus it doesn't need locking
-    auto itr = windows.find(window_name);
-    if (itr == windows.end())
+    std::shared_ptr<WindowHandler>& handler = windows[window_name];
+
+    if(!handler)
     {
+        handler.reset(new WindowHandler());
         cv::namedWindow(window_name, flags);
-        windows[window_name] = this;
-        auto itr = windows.find(window_name);
-        cv::setMouseCallback(window_name, on_mouse_click, &(*itr));
+        cv::setMouseCallback(window_name, on_mouse_click, handler.get());
+        handler->parent = this;
+        handler->win_name = window_name;
     }
-    if (!dragging[window_name])
+    if (!handler->dragging)
+    {
         cv::imshow(window_name, img);
+        handler->displayed_image = img;
+    }
+    int key = cv::waitKey(1);
+    if(key != -1)
+    {
+        sig_on_key(key);
+    }
 }
 void WindowCallbackHandler::imshowd(const std::string& window_name, cv::cuda::GpuMat img, int flags)
 {
@@ -46,122 +92,150 @@ void WindowCallbackHandler::imshowd(const std::string& window_name, cv::cuda::Gp
         mo::ThreadSpecificQueue::Push(std::bind(&WindowCallbackHandler::imshowd, this, window_name, img, flags), gui_thread_id);
         return;
     }
-    auto itr = windows.find(window_name);
-    if (itr == windows.end())
+    std::shared_ptr<WindowHandler>& handler = windows[window_name];
+    if(!handler)
     {
+        handler.reset(new WindowHandler());
         cv::namedWindow(window_name, flags);
-        windows[window_name] = this;
-        auto itr = windows.find(window_name);
-        cv::setMouseCallback(window_name, on_mouse_click, &(*itr));
+        cv::setMouseCallback(window_name, on_mouse_click, handler.get());
+        handler->parent = this;
+        handler->win_name = window_name;
     }
-    if (!dragging[window_name])
+    if (!handler->dragging)
+    {
         cv::imshow(window_name, img);
+    }
+    int key = cv::waitKey(1);
+    if(key != -1)
+    {
+        sig_on_key(key);
+    }
 }
-
-void WindowCallbackHandler::Init(bool firstInit)
+void WindowCallbackHandler::imshowb(const std::string& window_name, cv::ogl::Buffer buffer, int flags)
 {
-    if(firstInit)
+    auto gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
+    if (mo::GetThisThread() != gui_thread_id)
     {
-    
-    }else
+        mo::ThreadSpecificQueue::Push(std::bind(&WindowCallbackHandler::imshowb, this, window_name, buffer, flags), gui_thread_id);
+        return;
+    }
+    std::shared_ptr<WindowHandler>& handler = windows[window_name];
+    if(!handler)
     {
-        for(auto& itr : windows)
-        {
-            itr.second = this;
-            cv::setMouseCallback(itr.first, on_mouse_click, &itr);
-        }
+        handler.reset(new WindowHandler());
+        cv::namedWindow(window_name, flags);
+        cv::setMouseCallback(window_name, on_mouse_click, handler.get());
+        handler->parent = this;
+        handler->win_name = window_name;
+    }
+    if (!handler->dragging)
+    {
+        cv::imshow(window_name, buffer);
+    }
+    int key = cv::waitKey(1);
+    if(key != -1)
+    {
+        sig_on_key(key);
     }
 }
 
 WindowCallbackHandler::WindowCallbackHandler()
 {
+
+}
+void WindowCallbackHandler::Init(bool firstInit)
+{
+    mo::IMetaObject::Init(firstInit);
+    EventLoop::Instance()->Register(this);
 }
 
 MO_REGISTER_OBJECT(WindowCallbackHandler);
 
 
-void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, const std::string& win_name_)
+void WindowCallbackHandler::WindowHandler::on_mouse(int event, int x, int y, int flags)
 {
     cv::Point pt(x, y);
-    std::string win_name = win_name_;
+    double aspect_ratio = cv::getWindowProperty(this->win_name, cv::WND_PROP_ASPECT_RATIO);
+
+    //pt.y *= aspect_ratio;
     switch (event)
     {
     case cv::EVENT_MOUSEMOVE:
     {
         if(flags & cv::EVENT_FLAG_LBUTTON)
-            dragged_points[win_name].push_back(pt);
-        sig_move_mouse(win_name, pt, flags);
-        sig_click(win_name, pt, flags);
+            dragged_points.push_back(pt);
+        parent->sig_move_mouse(win_name, pt, flags, displayed_image);
+        parent->sig_click(win_name, pt, flags, displayed_image);
         break;
     }
     case cv::EVENT_LBUTTONDOWN:
     {
-        dragging[win_name] = true;
-        drag_start[win_name] = pt;
-        dragged_points[win_name].clear();
-        dragged_points[win_name].push_back(pt);
-        sig_click_left(win_name, pt, flags);
-        sig_click(win_name, pt, flags);
+        dragging = true;
+        drag_start = pt;
+        dragged_points.clear();
+        dragged_points.push_back(pt);
+        parent->sig_click_left(win_name, pt, flags, displayed_image);
+        parent->sig_click(win_name, pt, flags, displayed_image);
         break;
     }
     case cv::EVENT_RBUTTONDOWN:
     {
-        dragging[win_name] = true;
-        drag_start[win_name] = cv::Point(x, y);
-        sig_click_right(win_name, pt, flags);
-        sig_click(win_name, pt, flags);
+        dragging = true;
+        drag_start = cv::Point(x, y);
+        parent->sig_click_right(win_name, pt, flags, displayed_image);
+        parent->sig_click(win_name, pt, flags, displayed_image);
         break;
     }
     case cv::EVENT_MBUTTONDOWN:
     {
-        dragging[win_name] = true;
-        drag_start[win_name] = cv::Point(x, y);
-        sig_click_middle(win_name, pt, flags);
-        sig_click(win_name, pt, flags);
+        dragging = true;
+        drag_start = cv::Point(x, y);
+        parent->sig_click_middle(win_name, pt, flags, displayed_image);
+        parent->sig_click(win_name, pt, flags, displayed_image);
         break;
     }
     case cv::EVENT_LBUTTONUP:
     {
-        dragging[win_name] = false;
-        cv::Rect rect(drag_start[win_name], cv::Point(x, y));
+        dragging = false;
+        cv::Rect rect(drag_start, cv::Point(x, y));
         if(rect.width != 0 && rect.height != 0)
-            sig_select_rect(win_name, rect, flags);
-        sig_select_points(win_name, dragged_points[win_name], flags);
-        dragged_points[win_name].clear();
+            parent->sig_select_rect(win_name, rect, flags, displayed_image);
+        parent->sig_select_points(win_name, dragged_points, flags, displayed_image);
+        dragged_points.clear();
         break;
     }
     case cv::EVENT_RBUTTONUP:
     {
-        dragging[win_name] = false;
-        cv::Rect rect(drag_start[win_name], cv::Point(x, y));
+        dragging = false;
+        cv::Rect rect(drag_start, cv::Point(x, y));
         if (rect.width != 0 && rect.height != 0)
-            sig_select_rect(win_name, rect, flags);
+            parent->sig_select_rect(win_name, rect, flags, displayed_image);
         break;
     }
     case cv::EVENT_MBUTTONUP:
     {
-        dragging[win_name] = false;
-        cv::Rect rect(drag_start[win_name], cv::Point(x, y));
+        dragging = false;
+        cv::Rect rect(drag_start, cv::Point(x, y));
         if (rect.width != 0 && rect.height != 0)
-            sig_select_rect(win_name, rect, flags);
+            parent->sig_select_rect(win_name, rect, flags, displayed_image);
         break;
     }
     case cv::EVENT_LBUTTONDBLCLK:
     {
         flags += 64;
-        sig_click_left(win_name, pt, flags);
+        parent->sig_click_left(win_name, pt, flags, displayed_image);
         break;
     }
     case cv::EVENT_RBUTTONDBLCLK:
     {
         flags += 64;
-        sig_click_right(win_name, pt, flags);
+        parent->sig_click_right(win_name, pt, flags, displayed_image);
         break;
     }
     case cv::EVENT_MBUTTONDBLCLK:
     {
         flags += 64;
-        sig_click_middle(win_name, pt, flags);
+        parent->sig_click_middle(win_name, pt, flags, displayed_image);
         break;
     }
     case cv::EVENT_MOUSEWHEEL:
@@ -176,6 +250,4 @@ void WindowCallbackHandler::handle_click(int event, int x, int y, int flags, con
     }
     }
 }
-
-
 

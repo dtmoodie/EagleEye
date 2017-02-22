@@ -22,6 +22,7 @@ namespace EagleLib
     
     class IParameterBuffer;
     class IVariableSink;
+    class WindowCallbackHandler;
 
     class EAGLE_EXPORTS IDataStream: public TInterface<IID_DataStream, mo::IMetaObject>
     {
@@ -51,6 +52,7 @@ namespace EagleLib
 
         virtual mo::RelayManager*                       GetRelayManager() = 0;
         virtual std::shared_ptr<mo::IVariableManager>   GetVariableManager() = 0;
+        virtual rcc::weak_ptr<WindowCallbackHandler>    GetWindowCallbackManager() = 0;
 
         virtual IParameterBuffer*                       GetParameterBuffer() = 0;
 

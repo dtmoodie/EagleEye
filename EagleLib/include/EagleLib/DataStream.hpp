@@ -4,7 +4,7 @@
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Thread/Thread.hpp>
 #include <MetaObject/Thread/ThreadHandle.hpp>
-
+#include <EagleLib/utilities/UiCallbackHandlers.h>
 #include <boost/thread.hpp>
 #include <opencv2/core/cuda.hpp>
 
@@ -60,6 +60,7 @@ namespace EagleLib
         virtual std::shared_ptr<mo::IVariableManager>     GetVariableManager();
         virtual mo::RelayManager*                         GetRelayManager();
         virtual IParameterBuffer*                         GetParameterBuffer();
+        virtual rcc::weak_ptr<WindowCallbackHandler>    GetWindowCallbackManager();
         virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetNodes() const;
         virtual std::vector<rcc::shared_ptr<Nodes::Node>> GetAllNodes() const;
         virtual bool                                      LoadDocument(const std::string& document, const std::string& prefered_loader = "");
@@ -103,5 +104,8 @@ namespace EagleLib
         std::vector<boost::thread*>                               connection_threads;
         std::vector<rcc::shared_ptr<Nodes::Node>>                 top_level_nodes;
         std::vector<rcc::weak_ptr<Nodes::Node>>                   child_nodes;
+        rcc::shared_ptr<WindowCallbackHandler>                    _window_callback_handler;
+        unsigned int                                              _rmt_hash;
+        unsigned int                                              _rmt_cuda_hash;
     };
 }
