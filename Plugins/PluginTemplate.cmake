@@ -31,6 +31,20 @@ ELSE(temp)
   SET(PROJECT_ID "1")
 ENDIF(temp)
 
+foreach( lib ${target_link_libs_})
+    if(EXISTS ${lib})
+        GET_FILENAME_COMPONENT(dir ${lib} DIRECTORY)
+        if(dir)
+            if(RCC_VERBOSE_CONFIG)
+                message(STATUS "Library ${lib} link directory: ${dir}")
+            endif()
+            list(APPEND LINK_DIRS_RELEASE ${dir})
+            list(APPEND LINK_DIRS_DEBUG ${dir})
+        endif()
+    endif()
+endforeach()
+
+
 LIST(REMOVE_DUPLICATES target_include_dirs_)
 LIST(REMOVE_DUPLICATES LINK_DIRS_RELEASE)
 LIST(REMOVE_DUPLICATES LINK_DIRS_DEBUG)
@@ -103,7 +117,8 @@ LINK_DIRECTORIES(${LINK_DIRS})
 
 set(external_include_file "#pragma once\n\n#include \"RuntimeLinkLibrary.h\"\n\n#ifdef _MSC_VER\n")
 # wndows link libs
-
+LIST(REMOVE_DUPLICATES LINK_LIBS_RELEASE)
+LIST(REMOVE_DUPLICATES LINK_LIBS_DEBUG)
 
 set(external_include_file "${external_include_file}\n#else\n\n  #ifdef NDEBUG\n")
 
@@ -119,10 +134,19 @@ endforeach()
 set(external_include_file "${external_include_file}\n  #endif // NDEBUG\n")
 
 set(external_include_file "${external_include_file}\n#endif // _MSC_VER")
+set(link_file_path "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/EagleLib/rcc/external_includes/${PROJECT_NAME}_link_libs.hpp")
 
-
-FILE(WRITE "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/EagleLib/rcc/external_includes/${PROJECT_NAME}_link_libs.hpp" "${external_include_file}")
-
+if(EXISTS ${link_file_path})
+    FILE(READ ${link_file_path} read_file)
+    if(NOT ${read_file} STREQUAL ${external_include_file})
+        FILE(WRITE ${link_file_path} "${external_include_file}")
+        if(RCC_VERBOSE_CONFIG)
+            message(STATUS "Updating ${link_file_path}")
+        endif()
+    endif()
+else()
+  FILE(WRITE ${link_file_path} "${external_include_file}")
+endif()
 
 INSTALL(TARGETS ${PROJECT_NAME}
 	LIBRARY DESTINATION lib
