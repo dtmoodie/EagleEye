@@ -78,16 +78,30 @@ bool RegionOfInterest::ProcessImpl()
         pixel_roi.y = used_roi.y * img_size.height;
         pixel_roi.width = used_roi.width * img_size.width;
         pixel_roi.height = used_roi.height * img_size.height;
+        pixel_roi = pixel_roi & cv::Rect(cv::Point(), img_size);
+
+
         std::vector<cv::Mat> h_mats;
         std::vector<cv::cuda::GpuMat> d_mats;
-        const auto& d_inputs = image->GetGpuMatVec(Stream());
-        const auto& h_inputs = image->GetMatVec(Stream());
-        for(int i = 0; i < d_inputs.size(); ++i)
+        std::vector<SyncedMemory::SYNC_STATE> state;
+        const int num = image->GetNumMats();
+        h_mats.resize(num);
+        d_mats.resize(num);
+        state.resize(num);
+        for(int i = 0; i < num; ++i)
         {
-            d_mats.push_back(d_inputs[i](pixel_roi));
-            h_mats.push_back(h_inputs[i](pixel_roi));
+            state[i] = image->GetSyncState(i);
+            if(state[i] < SyncedMemory::DEVICE_UPDATED)
+            {
+                // host is ahead
+                h_mats[i] = image->GetMat(Stream(), i)(pixel_roi);
+            }else
+            {
+                // device is ahead
+                d_mats[i] = image->GetGpuMat(Stream(), i)(pixel_roi);
+            }
         }
-        ROI_param.UpdateData(SyncedMemory(h_mats, d_mats), image_param.GetTimestamp(), _ctx);
+        ROI_param.UpdateData(SyncedMemory(h_mats, d_mats, state), image_param.GetTimestamp(), _ctx);
         return true;
     }
     return false;
