@@ -198,6 +198,7 @@ bool IFrameGrabber::ProcessImpl()
     auto frame = GetNextFrame(Stream());
     if (!frame.empty())
     {
+        this->_modified = true;
         this->current_frame_param.UpdateData(frame, frame.frame_number, _ctx);
         return true;
     }
