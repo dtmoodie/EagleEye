@@ -3,6 +3,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudawarping.hpp>
+
+
 #include <fstream>
 #include <boost/filesystem.hpp>
 using namespace EagleLib::Nodes;
@@ -78,8 +80,23 @@ bool LabelDisplay::ProcessImpl()
             }
         }
     }
+
+    cv::cuda::GpuMat input;
+    if(dilate != 0)
+    {
+        if(!_dilate_filter || dilate_param.modified)
+        {
+            _dilate_filter = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE,label->GetType(),
+                                                              cv::getStructuringElement(cv::MORPH_CROSS, {dilate, dilate}));
+            dilate_param.modified = false;
+        }
+        _dilate_filter->apply(label->GetGpuMat(Stream()), input, Stream());
+    }else
+    {
+        input = label->GetGpuMat(Stream());
+    }
     cv::cuda::GpuMat output;
-    EagleLib::applyColormap(label->GetGpuMat(Stream()), output, d_lut, Stream());
+    EagleLib::applyColormap(input, output, d_lut, Stream());
 
     if(original_image == nullptr)
     {
@@ -96,6 +113,7 @@ bool LabelDisplay::ProcessImpl()
         {
             resized = output;
         }
+
 
         cv::cuda::GpuMat combined;
         cv::cuda::addWeighted(input, 1.0 - label_weight, resized, label_weight, 0.0, combined, -1, Stream());

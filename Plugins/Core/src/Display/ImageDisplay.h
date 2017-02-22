@@ -21,10 +21,13 @@ namespace Nodes
     {
     public:
         MO_DERIVE(OGLImageDisplay, Node);
-            INPUT(TS<SyncedMemory>, image, nullptr);
+            INPUT(SyncedMemory, image, nullptr)
         MO_END;
         bool ProcessImpl();
+        cv::ogl::Buffer _pixel_buffer;
     };
+
+
     class KeyPointDisplay: public Node
     {
     public:
