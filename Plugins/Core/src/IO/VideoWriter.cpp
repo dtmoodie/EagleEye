@@ -7,7 +7,7 @@ using namespace EagleLib::Nodes;
 
 void VideoWriter::NodeInit(bool firstInit)
 {
-    
+
 }
 bool VideoWriter::ProcessImpl()
 {
@@ -40,15 +40,6 @@ bool VideoWriter::ProcessImpl()
             {
                 LOG(warning) << "Unable to open video writer for file " << filename;
             }
-
-            /*if(!h_writer->open(filename.string(), 0, 30, image->GetSize(), image->GetChannels() == 3))
-            {
-                LOG(debug) << "Failed to open video writer with codec " << codec.getEnum() << " falling back on defaults";
-                if(!h_writer->open(filename.string(), 0, 30, image->GetSize(), image->GetChannels() == 3))
-                {
-                    LOG(warning) << "Unable to fallback on default video writer parameters";
-                }
-            }*/
         }
     }
     if(d_writer)
@@ -57,17 +48,12 @@ bool VideoWriter::ProcessImpl()
     }
     if(h_writer)
     {
-        if(image->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
+        cv::Mat h_img = image->GetMat(Stream());
+        cuda::enqueue_callback_async([h_img, this]()
         {
-            h_writer->write(image->GetMat(Stream()));
-        }else
-        {
-            cv::Mat mat = image->GetMat(Stream());
-            cuda::enqueue_callback_async([mat, this]()->void
-            {
-                this->h_writer->write(mat);
-            }, Stream());
-        }
+            h_writer->write(h_img);
+        }, _write_thread.GetId(), Stream());
+
     }
     return true;
 }

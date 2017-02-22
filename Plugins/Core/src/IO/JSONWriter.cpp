@@ -2,12 +2,13 @@
 #include <MetaObject/Parameters/TypedParameter.hpp>
 #include <EagleLib/Nodes/NodeInfo.hpp>
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
+#include <MetaObject/Parameters/InputParameterAny.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
 
-class InputParameterAny: public mo::InputParameter
+/*class InputParameterAny: public mo::InputParameter
 {
 public:
     InputParameterAny(const std::string& name):
@@ -72,11 +73,11 @@ public:
     mo::TypedSlot<void(mo::Context*, mo::IParameter*)> _update_slot;
     mo::TypedSlot<void(mo::IParameter const*)> _delete_slot;
 };
-mo::TypeInfo InputParameterAny::_void_type_info;
+mo::TypeInfo InputParameterAny::_void_type_info;*/
 
 JSONWriter::JSONWriter()
 {
-    AddParameter(std::shared_ptr<mo::IParameter>(new InputParameterAny("input-0")));
+    AddParameter(std::shared_ptr<mo::IParameter>(new mo::InputParameterAny("input-0")));
 }
 JSONWriter::~JSONWriter()
 {
@@ -146,13 +147,14 @@ void JSONWriter::on_input_set(mo::Context* ctx, mo::IParameter* param)
         }
         ++count;
     }
-    AddParameter(std::shared_ptr<mo::IParameter>(new InputParameterAny("input-" + boost::lexical_cast<std::string>(count))));
+    AddParameter(std::shared_ptr<mo::IParameter>(new mo::InputParameterAny("input-" + boost::lexical_cast<std::string>(count))));
 }
 
-MO_REGISTER_CLASS(JSONWriter);
+MO_REGISTER_CLASS(JSONWriter)
+
 JSONReader::JSONReader()
 {
-    input = new InputParameterAny("input-0");
+    input = new mo::InputParameterAny("input-0");
     input->SetFlags(mo::Optional_e);
     AddParameter(std::shared_ptr<mo::IParameter>(input));
 }
