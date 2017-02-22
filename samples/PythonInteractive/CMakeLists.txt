@@ -1,5 +1,5 @@
 
-if(${USE_PYTHON})
+if(WITH_PYTHON)
 find_package(Qt5 QUIET COMPONENTS Core Gui Widgets)
 if(Qt5_FOUND)
   find_package(PythonInterp REQUIRED)
@@ -57,4 +57,4 @@ if(Qt5_FOUND)
   endif()
 endif()
 
-endif(${USE_PYTHON})
+endif(WITH_PYTHON)
