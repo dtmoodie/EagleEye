@@ -74,8 +74,16 @@ SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mats):
 SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat, SYNC_STATE state):
     _pimpl(new impl)
 {
-    assert(h_mat.size() == d_mat.size());
+    CV_Assert(h_mat.size() == d_mat.size());
     _pimpl->sync_flags.resize(h_mat.size(), state);
+    _pimpl->h_data = h_mat;
+    _pimpl->d_data = d_mat;
+}
+SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<cv::cuda::GpuMat>& d_mat, const std::vector<SYNC_STATE> state):
+    _pimpl(new impl)
+{
+    CV_Assert(h_mat.size() == d_mat.size());
+    _pimpl->sync_flags = state;
     _pimpl->h_data = h_mat;
     _pimpl->d_data = d_mat;
 }
@@ -222,6 +230,8 @@ SyncedMemory SyncedMemory::clone(cv::cuda::Stream& stream)
 }
 int SyncedMemory::GetNumMats() const
 {
+    if(_pimpl->h_data.size() == 0)
+        return _pimpl->d_data.size();
     return _pimpl->h_data.size();
 }
 bool SyncedMemory::empty() const
