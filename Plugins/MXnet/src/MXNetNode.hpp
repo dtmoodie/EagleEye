@@ -21,8 +21,8 @@ namespace EagleLib
         {
         public:
             MO_DERIVE(MXNet, Node)
-                PARAM(mo::ReadFile, model_file, mo::ReadFile());
-                PARAM(mo::ReadFile, weight_file, mo::ReadFile());
+                PARAM(mo::ReadFile, model_file, mo::ReadFile())
+                PARAM(mo::ReadFile, weight_file, mo::ReadFile())
             MO_END;
         protected:
             bool ProcessImpl();
@@ -37,9 +37,9 @@ namespace EagleLib
         {
         public:
             MO_DERIVE(MXNetC, Node)
-                INPUT(SyncedMemory, input, nullptr);
-                PARAM(mo::ReadFile, model_file, mo::ReadFile());
-                PARAM(mo::ReadFile, weight_file, mo::ReadFile());
+                INPUT(SyncedMemory, input, nullptr)
+                PARAM(mo::ReadFile, model_file, mo::ReadFile())
+                PARAM(mo::ReadFile, weight_file, mo::ReadFile())
                 PARAM(int, width, 224);
                 PARAM(int, height, 224);
             MO_END;
