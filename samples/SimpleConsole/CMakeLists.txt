@@ -24,23 +24,24 @@ find_package(CUDA REQUIRED)
 LINK_DIRECTORIES(${LINK_DIRS})
 
 find_package(CUDA REQUIRED)
-
+if(WITH_WT)
 find_package(Wt QUIET)
-if(Wt_FOUND)
-  include_directories(${Wt_INCLUDE_DIR})
-  add_definitions(-DHAVE_WT)
-  if(WIN32)
-    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
-    find_library(Wt_bin NAMES wt PATHS ${Wt_DIR} PATH PATH_SUFFIXES bin)
-	get_filename_component(Wt_bin_dir "${Wt_bin}" DIRECTORY)
-	set(Wt_BIN_DIR_ ${Wt_bin_dir})
-  endif(WIN32)
-  set(Wt_BIN_DIR ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
-  set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
-  set(Wt_BIN_DIR_OPT ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
-  set(BIN_DIRS "${BIN_DIRS};Wt" CACHE STRING "" FORCE)
-endif()
-  
+  if(Wt_FOUND)
+    include_directories(${Wt_INCLUDE_DIR})
+    add_definitions(-DHAVE_WT)
+    if(WIN32)
+      SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
+      find_library(Wt_bin NAMES wt PATHS ${Wt_DIR} PATH PATH_SUFFIXES bin)
+      get_filename_component(Wt_bin_dir "${Wt_bin}" DIRECTORY)
+      set(Wt_BIN_DIR_ ${Wt_bin_dir})
+    endif(WIN32)
+    set(Wt_BIN_DIR ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
+    set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
+    set(Wt_BIN_DIR_OPT ${Wt_BIN_DIR_} CACHE PATH "" FORCE)
+    set(BIN_DIRS "${BIN_DIRS};Wt" CACHE STRING "" FORCE)
+  endif()
+endif(WITH_WT)
+
 INCLUDE_DIRECTORIES(
     ${EagleLib_INCLUDE_DIRECTORIES}
     ${OpenCV_INCLUDE_DIRS}
@@ -69,14 +70,14 @@ target_link_libraries(SimpleConsole
     ${link_libs}
     instantiations
 )
-if(Wt_FOUND)
+if(Wt_FOUND AND WITH_WT)
     target_link_libraries(SimpleConsole
         debug;${Wt_HTTP_DEBUG_LIBRARY}
         debug;${Wt_DEBUG_LIBRARY}
         optimized;${Wt_LIBRARY}
         optimized;${Wt_HTTP_LIBRARY}
     )
-endif(Wt_FOUND)
+endif(Wt_FOUND AND WITH_WT)
 
 
 IF(WIN32)
