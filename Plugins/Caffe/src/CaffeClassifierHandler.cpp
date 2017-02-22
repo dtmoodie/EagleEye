@@ -80,7 +80,10 @@ std::map<int, int> ClassifierHandler::CanHandleNetwork(const caffe::Net<float>& 
     }
     return output;
 }
-
+void ClassifierHandler::StartBatch()
+{
+    objects.clear();
+}
 
 void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp, const std::vector<cv::Rect>& bounding_boxes)
 {
@@ -89,22 +92,28 @@ void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, long long tim
     {
         float* data = output_blob->mutable_cpu_data();
         int num = output_blob->channels();
-        objects.resize(output_blob->num());
+        //objects.resize(output_blob->num());
 
-        for(int i = 0; i  < output_blob->num(); ++i)
+        for(int i = 0; i  < output_blob->num() && i < bounding_boxes.size(); ++i)
         {
             auto idx = sort_indexes_ascending(data + i * num, num);
-            if(idx[0] < labels.size())
+            DetectedObject obj;
+            obj.timestamp = timestamp;
+            if(labels && idx[0] < labels->size())
             {
-                objects[i].detections.emplace_back(labels[idx[0]], (data + i * num)[idx[0]], idx[0]);
+                obj.detections.emplace_back((*labels)[idx[0]], (data + i * num)[idx[0]], idx[0]);
             }else
             {
-                objects[i].detections.emplace_back("", (data + i * num)[idx[0]], idx[0]);
+                obj.detections.emplace_back("", (data + i * num)[idx[0]], idx[0]);
             }
-            objects[i].boundingBox = cv::Rect2f(bounding_boxes[i].x, bounding_boxes[i].y, bounding_boxes[i].width, bounding_boxes[i].height);
+            obj.boundingBox = cv::Rect2f(bounding_boxes[i].x, bounding_boxes[i].y, bounding_boxes[i].width, bounding_boxes[i].height);
+            objects.push_back(obj);
         }
-        objects_param.Commit(timestamp, _ctx);
     }
+}
+void ClassifierHandler::EndBatch(long long timestamp)
+{
+    objects_param.Commit(timestamp, _ctx);
 }
 
 MO_REGISTER_CLASS(ClassifierHandler)

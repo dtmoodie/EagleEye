@@ -12,11 +12,11 @@ namespace EagleLib
 
             MO_DERIVE(ClassifierHandler, NetHandler)
                 OUTPUT(std::vector<DetectedObject>, objects, {})
-                PARAM(mo::ReadFile, label_file, {})
-                PARAM(std::vector<std::string>, labels, {})
+                PARAM(float, classification_threshold, 0.5)
             MO_END
-
+            void StartBatch();
             void HandleOutput(const caffe::Net<float>& net, long long timestamp, const std::vector<cv::Rect>& bounding_boxes);
+            void EndBatch(long long timestamp);
         };
     }
 }

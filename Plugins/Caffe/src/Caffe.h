@@ -7,6 +7,7 @@
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/ObjectDetection.hpp"
 #include "EagleLib/rcc/external_includes/cv_calib3d.hpp"
+#include "EagleLib/ObjectDetection.hpp"
 #include "CaffeNetHandler.hpp"
 #include "MetaObject/MetaObject.hpp"
 #include "MetaObject/Parameters/Types.hpp"
@@ -35,7 +36,6 @@ namespace EagleLib
             typedef std::map<std::string, WrappedBlob_t> BlobMap_t;
             MO_DERIVE(CaffeBase, Node)
                 PROPERTY(boost::shared_ptr<caffe::Net<float>>, NN, boost::shared_ptr<caffe::Net<float>>())
-                PROPERTY(boost::shared_ptr< std::vector< std::string > >, labels, boost::shared_ptr< std::vector< std::string > >())
                 PROPERTY(BlobMap_t, wrapped_outputs, BlobMap_t())
                 PROPERTY(BlobMap_t, wrapped_inputs, BlobMap_t())
                 PARAM(cv::Scalar, channel_mean, cv::Scalar(104, 117, 123))
@@ -52,7 +52,11 @@ namespace EagleLib
                 TOOLTIP(image_scale, "Scale factor for reducing image size to fit into network")
                 PARAM(int, num_classifications, 5)
                 OPTIONAL_INPUT(std::vector<cv::Rect2f>, bounding_boxes, nullptr)
+                OPTIONAL_INPUT(std::vector<DetectedObject>, input_detections, nullptr)
+                PARAM(int, detection_class, -1)
+                TOOLTIP(detection_class, "When given an input_detections, decide which class of input detections should be used to select regions of interest for this classifier")
                 INPUT(SyncedMemory, input, nullptr)
+                OUTPUT(std::vector<std::string>, labels, {})
             MO_END
             virtual void NodeInit(bool firstInit);
             static std::vector<SyncedMemory> WrapBlob(caffe::Blob<float>& blob, bool bgr_swap = false);

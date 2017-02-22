@@ -57,13 +57,14 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,
             DetectedObject obj;
             obj.boundingBox.x = xmin[i][0] * bounding_boxes[num].width + bounding_boxes[num].x;
             obj.boundingBox.y = ymin[i][0] * bounding_boxes[num].height + bounding_boxes[num].y;
-            obj.boundingBox.width = (xmax[i][0] - xmin[i][0])*bounding_boxes[num].width;
+            obj.boundingBox.width = (xmax[i][0] - xmin[i][0]) * bounding_boxes[num].width;
             obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * bounding_boxes[num].height;
+            obj.timestamp = timestamp;
             // Check all current objects iou value
             bool append = true;
 
-            if (labels[i][0] < class_names.size())
-                obj.detections.emplace_back(class_names[int(labels[i][0])], confidence[i][0], int(labels[i][0]));
+            if (this->labels && labels[i][0] < this->labels->size())
+                obj.detections.emplace_back((*this->labels)[int(labels[i][0])], confidence[i][0], int(labels[i][0]));
             else
                 obj.detections.emplace_back("", confidence[i][0], int(labels[i][0]));
 

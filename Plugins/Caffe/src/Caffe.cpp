@@ -268,24 +268,23 @@ bool CaffeBase::InitNetwork()
         }
     }
 
-    if (label_file_param.modified)
+    if ((label_file_param.modified || labels.empty()) && boost::filesystem::exists(label_file))
     {
-        if (boost::filesystem::exists(label_file))
+        labels.clear();
+        std::ifstream ifs(label_file.string().c_str());
+        if (!ifs)
         {
-            std::ifstream ifs(label_file.string().c_str());
-            if (!ifs)
-            {
-                LOG_EVERY_N(warning, 100) << "Unable to load label file";
-            }
-            labels.reset(new std::vector<std::string>());
-            std::string line;
-            while (std::getline(ifs, line))
-            {
-                labels->push_back(line);
-            }
-            BOOST_LOG_TRIVIAL(info) << "Loaded " << labels->size() << " classes";
-            label_file_param.modified = false;
+            LOG_EVERY_N(warning, 100) << "Unable to load label file";
         }
+
+        std::string line;
+        while (std::getline(ifs, line, '\n'))
+        {
+            labels.push_back(line);
+        }
+        BOOST_LOG_TRIVIAL(info) << "Loaded " << labels.size() << " classes";
+        labels_param.Commit();
+        label_file_param.modified = false;
     }
 
     if (mean_file_param.modified)
@@ -365,12 +364,27 @@ bool CaffeImageClassifier::ProcessImpl()
         bounding_boxes = &defaultROI;
     }
 
-
-    if(image_scale != -1)
+    if(input_detections != nullptr && bounding_boxes == &defaultROI)
     {
+        defaultROI.clear();
+        for(const auto& itr : *input_detections)
+        {
+            if(itr.detections.size() && detection_class != -1)
+            {
+                if(itr.detections[0].classNumber != detection_class)
+                    continue;
+            }
 
-        ReshapeInput(bounding_boxes->size(), input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
+            defaultROI.emplace_back(
+                    itr.boundingBox.x / input_shape[2],
+                    itr.boundingBox.y / input_shape[1],
+                    itr.boundingBox.width / input_shape[2],
+                    itr.boundingBox.height / input_shape[1]);
+        }
+        if(defaultROI.size() == 0)
+            return false;
     }
+
     std::vector<cv::Rect> pixel_bounding_boxes;
     for(int i = 0; i < bounding_boxes->size(); ++i)
     {
@@ -378,8 +392,24 @@ bool CaffeImageClassifier::ProcessImpl()
         bb.x = (*bounding_boxes)[i].x * input_shape[2];
         bb.y = (*bounding_boxes)[i].y * input_shape[1];
         bb.width = (*bounding_boxes)[i].width * input_shape[2];
-        bb.height= (*bounding_boxes)[i].height * input_shape[1];
+        bb.height = (*bounding_boxes)[i].height * input_shape[1];
+        if(bb.x + bb.width >= input_shape[2])
+        {
+            bb.x -= input_shape[2] - bb.width;
+        }
+        if(bb.y + bb.height >= input_shape[1])
+        {
+            bb.y -= input_shape[1] - bb.height;
+        }
+        bb.x = std::max(0, bb.x);
+        bb.y = std::max(0, bb.y);
         pixel_bounding_boxes.push_back(bb);
+    }
+
+
+    if(image_scale != -1)
+    {
+        ReshapeInput(bounding_boxes->size(), input_shape[3], input_shape[1] * image_scale, input_shape[2]*image_scale);
     }
 
     cv::cuda::GpuMat float_image;
@@ -412,93 +442,109 @@ bool CaffeImageClassifier::ProcessImpl()
     auto shape = data_itr->second[0].GetShape();
     cv::Size input_size(shape[2], shape[1]);
 
-    if(pixel_bounding_boxes.size() != input_shape[0])
+    if(pixel_bounding_boxes.size() != input_shape[0] &&
+            input_detections == nullptr /* Since number of detections can change at each iteration, it is beneficial to avoid reshaping the minibatch size constantly */)
+    {
         ReshapeInput(pixel_bounding_boxes.size(), input_shape[3], shape[1], shape[2]);
+    }
 
-    std::vector<cv::Mat> debug_mat_vec;
     cv::cuda::GpuMat resized;
-
-    for (int i = 0; i < pixel_bounding_boxes.size() && i < data_itr->second.size(); ++i)
-    {
-        if (pixel_bounding_boxes[i].size() != input_size)
-        {
-            cv::cuda::resize(float_image(pixel_bounding_boxes[i]), resized, input_size, 0, 0, cv::INTER_LINEAR, Stream());
-        }
-        else
-        {
-            resized = float_image(pixel_bounding_boxes[i]);
-        }
-        cv::cuda::split(resized, data_itr->second[i].GetGpuMatVecMutable(Stream()), Stream());   
-    }
-
-    // Signal update on all inputs
-    for(auto blob : input_blobs)
-    {
-        blob->mutable_gpu_data();
-    }
-    
-    if(debug_dump)
-    {
-        for (int i = 0; i < data_itr->second[0].GetNumMats(); ++i)
-        {
-            debug_mat_vec.push_back(cv::Mat(data_itr->second[0].GetGpuMat(Stream(), i)));
-        }
-    }
-
-    float loss;
-    {
-        mo::scoped_profile profile_forward("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &Stream());
-        NN->Forward(&loss);
-    }
-    
-    if(net_handlers.empty())
-    {
-        auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(Caffe::NetHandler::s_interfaceID);
-        auto output_blobs = NN->output_blob_indices();
-        // For each blob, we check each handler and pick the handler with the highest priority
-        std::map<int, std::vector<std::pair<int, IObjectConstructor*>>> blob_priority_map;
-        for(auto& constructor : constructors)
-        {
-            auto info = dynamic_cast<Caffe::NetHandlerInfo*>(constructor->GetObjectInfo());
-            if(info)
-            {
-                std::map<int,int> handled_blobs = info->CanHandleNetwork(*NN);
-                for(auto& itr : handled_blobs)
-                {
-                    blob_priority_map[itr.first].emplace_back(itr.second, constructor);
-                }
-            }
-        }
-        for(auto& itr : blob_priority_map)
-        {
-            std::sort(itr.second.begin(), itr.second.end(), [](const std::pair<int, IObjectConstructor*>& I1,const std::pair<int, IObjectConstructor*>& I2)
-            {
-               return I1.first > I2.first;
-            });
-            if(itr.second.size() == 0)
-            {
-                continue;
-            }
-            auto obj = itr.second[0].second->Construct();
-            auto handler = dynamic_cast<Caffe::NetHandler*>(obj);
-            if(handler)
-            {
-                handler->Init(true);
-                handler->SetContext(this->GetContext());
-                net_handlers.emplace_back(handler);
-                this->_algorithm_components.emplace_back(handler);
-                handler->SetOutputBlob(*NN, itr.first);
-            }else
-            {
-                delete obj;
-            }
-            // construct the handlers with largest priority
-        }
-    }
-    mo::scoped_profile profile_handlers("Handle neural net output", &_rmt_hash, &_rmt_cuda_hash, &Stream());
     for(auto& handler : net_handlers)
     {
-        handler->HandleOutput(*NN, input_param.GetTimestamp(), pixel_bounding_boxes);
+        handler->StartBatch();
+    }
+    for(int i = 0; i < pixel_bounding_boxes.size();) // for each roi
+    {
+        int start = i, end = 0;
+        for(int j = 0; j < data_itr->second.size() && i < pixel_bounding_boxes.size(); ++j, ++i) // for each mini batch
+        {
+            if (pixel_bounding_boxes[i].size() != input_size)
+            {
+                cv::cuda::resize(float_image(pixel_bounding_boxes[i]), resized, input_size, 0, 0, cv::INTER_LINEAR, Stream());
+            }
+            else
+            {
+                resized = float_image(pixel_bounding_boxes[i]);
+            }
+            cv::cuda::split(resized, data_itr->second[j].GetGpuMatVecMutable(Stream()), Stream());
+            end = start + j + 1;
+        }
+        // Signal update on all inputs
+        for(auto blob : input_blobs)
+        {
+            blob->mutable_gpu_data();
+        }
+
+        float loss;
+        {
+            mo::scoped_profile profile_forward("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &Stream());
+            NN->Forward(&loss);
+        }
+
+        if(net_handlers.empty())
+        {
+            auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(Caffe::NetHandler::s_interfaceID);
+            // For each blob, we check each handler and pick the handler with the highest priority
+            std::map<int, std::vector<std::pair<int, IObjectConstructor*>>> blob_priority_map;
+            for(auto& constructor : constructors)
+            {
+                auto info = dynamic_cast<Caffe::NetHandlerInfo*>(constructor->GetObjectInfo());
+                if(info)
+                {
+                    std::map<int,int> handled_blobs = info->CanHandleNetwork(*NN);
+                    for(auto& itr : handled_blobs)
+                    {
+                        blob_priority_map[itr.first].emplace_back(itr.second, constructor);
+                    }
+                }
+            }
+            for(auto& itr : blob_priority_map)
+            {
+                std::sort(itr.second.begin(), itr.second.end(), [](const std::pair<int, IObjectConstructor*>& I1,const std::pair<int, IObjectConstructor*>& I2)
+                {
+                   return I1.first > I2.first;
+                });
+                if(itr.second.size() == 0)
+                {
+                    continue;
+                }
+                auto obj = itr.second[0].second->Construct();
+                auto handler = dynamic_cast<Caffe::NetHandler*>(obj);
+                if(handler)
+                {
+                    handler->Init(true);
+                    handler->SetContext(this->GetContext());
+                    handler->SetLabels(&this->labels);
+                    net_handlers.emplace_back(handler);
+                    this->_algorithm_components.emplace_back(handler);
+                    handler->SetOutputBlob(*NN, itr.first);
+                    handler->StartBatch();
+
+                }else
+                {
+                    delete obj;
+                }
+                // construct the handlers with largest priority
+            }
+        }
+        mo::scoped_profile profile_handlers("Handle neural net output", &_rmt_hash, &_rmt_cuda_hash, &Stream());
+        std::vector<cv::Rect> batch_bounding_boxes;
+        for(int j = start; j < end; ++j)
+        {
+            batch_bounding_boxes.push_back(pixel_bounding_boxes[j]);
+        }
+        for(auto& handler : net_handlers)
+        {
+            handler->HandleOutput(*NN, input_param.GetTimestamp(), batch_bounding_boxes);
+        }
+    }
+    for(auto& handler : net_handlers)
+    {
+        handler->EndBatch(input_param.GetTimestamp());
+    }
+    if(bounding_boxes == &defaultROI)
+    {
+        bounding_boxes = nullptr;
     }
     return true;
 }
@@ -511,6 +557,7 @@ void CaffeImageClassifier::PostSerializeInit()
         if(handler)
         {
             net_handlers.push_back(handler);
+            handler->SetLabels(&this->labels);
             handler->SetContext(this->GetContext());
         }
     }

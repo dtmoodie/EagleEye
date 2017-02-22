@@ -27,10 +27,13 @@ namespace EagleLib
                 PARAM(std::string, output_blob_name, "score")
             MO_END
             virtual void SetOutputBlob(const caffe::Net<float>& net, int output_blob_index);
+            virtual void StartBatch(){}
             virtual void HandleOutput(const caffe::Net<float>& net, long long timestamp, const std::vector<cv::Rect>& bounding_boxes) = 0;
+            virtual void EndBatch(long long timestamp){}
+            void SetLabels(std::vector<std::string>* labels){this->labels = labels;}
         protected:
             bool ProcessImpl() { return true;}
-
+            std::vector<std::string>* labels = nullptr;
         };
     }
 }
