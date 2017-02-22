@@ -3,8 +3,12 @@ cmake_minimum_required(VERSION 2.8)
 project(EagleEye)
 SET(BIN_DIRS "" CACHE STRING "" FORCE)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 find_package(CUDA REQUIRED)
-include_directories(${CUDA_INCLUDE_DIRS})
+  include_directories(${CUDA_INCLUDE_DIRS})
+find_package(Eigen3 REQUIRED)
+  include_directories(${EIGEN_INCLUDE_DIRS})
+
 set(PROJECT_BIN_DIRS_DEBUG "" CACHE PATH "" FORCE)
 set(PROJECT_BIN_DIRS_RELWITHDEBINFO "" CACHE PATH "" FORCE)
 set(PROJECT_BIN_DIRS_RELEASE "" CACHE PATH "" FORCE)
