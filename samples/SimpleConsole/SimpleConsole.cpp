@@ -2,6 +2,7 @@
 #include <EagleLib/EagleLib.hpp>
 #include <EagleLib/Logging.h>
 #include <EagleLib/Nodes/NodeFactory.h>
+#include <EagleLib/utilities/UiCallbackHandlers.h>
 
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Signals/RelayManager.hpp>
@@ -101,11 +102,11 @@ int main(int argc, char* argv[])
     signal(SIGTERM, sig_handler);
     signal(SIGSEGV, sig_handler);
     auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
+    cv::cuda::GpuMat::setDefaultAllocator(g_allocator);
+    cv::Mat::setDefaultAllocator(g_allocator);
     g_allocator->SetName("Global Allocator");
     mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(g_allocator);
     mo::CpuThreadAllocatorSetter<cv::Mat>::Set(g_allocator);
-    //mo::SetGpuAllocatorHelper<cv::cuda::GpuMat>(g_allocator);
-    //mo::SetCpuAllocatorHelper<cv::Mat>(g_allocator);
 
 
     boost::program_options::options_description desc("Allowed options");
@@ -246,7 +247,8 @@ int main(int argc, char* argv[])
             }
             try
             {
-                cv::waitKey(1);
+                //cv::waitKey(1);
+                EagleLib::WindowCallbackHandler::EventLoop::Instance()->run();
             }catch(mo::ExceptionWithCallStack<cv::Exception>& e)
             {
 
@@ -692,14 +694,11 @@ int main(int argc, char* argv[])
         {
             int idx = -1;
             std::string name;
-            
-            try
-            {
-                idx =  boost::lexical_cast<int>(what);
-            }catch(...)
+            if(!boost::conversion::detail::try_lexical_convert(what, idx))
             {
                 idx = -1;
             }
+
             if(idx == -1)
             {
                 name = what;
@@ -882,7 +881,11 @@ int main(int argc, char* argv[])
             }
             if(current_node)
             {
-                EagleLib::NodeFactory::Instance()->AddNode(name, current_node.Get());
+                auto added_nodes = EagleLib::NodeFactory::Instance()->AddNode(name, current_node.Get());
+                if(added_nodes.size() == 1)
+                {
+                    current_node = added_nodes[0];
+                }
             }
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "add"));
@@ -896,16 +899,29 @@ int main(int argc, char* argv[])
                 if(token_index != std::string::npos)
                 {
                     auto stream = current_node->GetDataStream();
+                    auto space_index = value.substr(token_index+1).find(' ');
+                    std::string output_name;
+                    mo::ParameterTypeFlags flags = mo::BlockingStreamBuffer_e;
+                    if(space_index != std::string::npos)
+                    {
+                        output_name = value.substr(token_index + 1, space_index);
+                        std::string buffer_type = value.substr(token_index + space_index + 2);
+                        flags = mo::ParameterTypeFlags(mo::StringToParameterTypeFlags(buffer_type) | mo::ForceBufferedConnection_e);
+                    }else
+                    {
+                        output_name = value.substr(token_index + 1);
+                    }
+
                     auto output_node = stream->GetNode(value.substr(0, token_index));
                     if(output_node)
                     {
-                        auto output_param = output_node->GetOutput(value.substr(token_index + 1));
+                        auto output_param = output_node->GetOutput(output_name);
                         if(output_param)
                         {
                             auto input_param = dynamic_cast<mo::InputParameter*>(current_param);
                             if(input_param)
                             {
-                                if(current_node->ConnectInput(output_node, output_param, input_param, mo::BlockingStreamBuffer_e))
+                                if(current_node->ConnectInput(output_node, output_param, input_param, flags))
                                 {
                                     std::cout << "Successfully set input of " << current_param->GetName() << " to " << output_param->GetName() << "\n";
                                     return;
@@ -931,7 +947,7 @@ int main(int argc, char* argv[])
                     return;
                 }else
                 {
-                    std::cout << "No text deserialization function found for " << current_param->GetTypeInfo().name();
+                    std::cout << "No text deserialization function found for " << current_param->GetTypeInfo().name() << std::endl;
                 }
             }
             if (current_node)
@@ -950,6 +966,13 @@ int main(int argc, char* argv[])
                     }
                 }
                 std::cout << "Unable to find parameter by name for set string: " << value << std::endl;
+                auto pos = value.find("sync");
+                if(pos == 0)
+                {
+                    pos = value.find(' ');
+                    current_node->SetSyncInput(value.substr(pos + 1));
+                }
+
             }else if(current_stream)
             {
             }
@@ -1267,12 +1290,8 @@ int main(int argc, char* argv[])
 					}
 				}
             }
-            for (auto& ds : _dataStreams)
-            {
-                ds->StopThread();
-            }
-            _dataStreams.clear();
-            std::cout << "Shutting down\n";
+
+            std::cout << "IO thread shutting down\n";
         }));
         boost::posix_time::ptime last_compile_check_time = boost::posix_time::microsec_clock::universal_time();
         while(!quit)
@@ -1287,12 +1306,27 @@ int main(int argc, char* argv[])
                 boost::this_thread::sleep_for(boost::chrono::seconds(1));
             }
         }
-        io_thread.interrupt();
+
         io_thread.join();
+        gui_thread.interrupt();
+        gui_thread.join();
+        for (auto& ds : _dataStreams)
+        {
+            ds->StopThread();
+        }
+        _dataStreams.clear();
+        LOG(info) << "Gui thread shut down complete";
+        mo::ThreadPool::Instance()->Cleanup();
+        LOG(info) << "Thread pool cleanup complete";
+        delete g_allocator;
+        return 0;
     }
     gui_thread.interrupt();
     
     gui_thread.join();
+    LOG(info) << "Gui thread shut down complete";
     mo::ThreadPool::Instance()->Cleanup();
+    LOG(info) << "Thread pool cleanup complete";
+    delete g_allocator;
     return 0;
 }
