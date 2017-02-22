@@ -18,9 +18,9 @@ namespace EagleLib
         int buffer_size = -1;
         template<class AR> void serialize(AR& ar)
         {
+            ar(CEREAL_NVP(name));
             ar(CEREAL_OPTIONAL_NVP(sync, false));
             ar(CEREAL_OPTIONAL_NVP(buffer_size, -1));
-            ar(CEREAL_NVP(name));
             ar(CEREAL_NVP(type));
         }
     };
@@ -896,7 +896,8 @@ namespace cereal
                     auto pos = input_name.find(" buffer for ");
                     if(pos != std::string::npos)
                     {
-                        input_name = input_name.substr(0, pos);
+                        input_name = input_name.substr(0, input_name.find_first_of(' '));
+                        //input_name = input_name.substr(0, pos);
                     }
 
                     if(_input_param->CheckFlags(mo::Buffer_e))
@@ -993,7 +994,8 @@ namespace cereal
                            {
                                 if(nodes[j]->GetTreeName() == output_node_name)
                                 {
-                                    auto output_param = nodes[j]->GetOutput(itr->second.name.substr(pos + 1));
+                                    auto space_pos = itr->second.name.find(' ');
+                                    auto output_param = nodes[j]->GetOutput(itr->second.name.substr(pos + 1, space_pos - (pos + 1)));
                                     if (!output_param)
                                     {
                                         LOG(warning) << "Unable to find parameter " << itr->second.name.substr(pos + 1) << " in node " << nodes[j]->GetTreeName();
@@ -1031,7 +1033,11 @@ namespace cereal
                                                 << input->GetTreeName() << " (" << input->GetTypeInfo().name() << ")";
                                         }else
                                         {
-
+                                           if(itr->second.sync)
+                                           {
+                                               nodes[i]->SetSyncInput(input->GetName());
+                                               LOG(info) << "Node (" << nodes[i]->GetTreeName() << ") syncs to " << input->GetName();
+                                           }
                                         }
                                     }
                                 }
