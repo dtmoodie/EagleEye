@@ -440,7 +440,7 @@ bool CaffeImageClassifier::ProcessImpl()
         return false;
     }
     auto shape = data_itr->second[0].GetShape();
-    cv::Size input_size(shape[2], shape[1]);
+    cv::Size input_size(shape[2], shape[1]); // NN input size
 
     if(pixel_bounding_boxes.size() != input_shape[0] &&
             input_detections == nullptr /* Since number of detections can change at each iteration, it is beneficial to avoid reshaping the minibatch size constantly */)
@@ -453,6 +453,7 @@ bool CaffeImageClassifier::ProcessImpl()
     {
         handler->StartBatch();
     }
+    cv::Size input_image_size = input->GetSize();
     for(int i = 0; i < pixel_bounding_boxes.size();) // for each roi
     {
         int start = i, end = 0;
@@ -535,7 +536,7 @@ bool CaffeImageClassifier::ProcessImpl()
         }
         for(auto& handler : net_handlers)
         {
-            handler->HandleOutput(*NN, input_param.GetTimestamp(), batch_bounding_boxes);
+            handler->HandleOutput(*NN, input_param.GetTimestamp(), batch_bounding_boxes, input_image_size);
         }
     }
     for(auto& handler : net_handlers)

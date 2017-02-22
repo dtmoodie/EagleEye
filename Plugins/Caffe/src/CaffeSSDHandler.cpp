@@ -29,7 +29,7 @@ std::map<int, int> SSDHandler::CanHandleNetwork(const caffe::Net<float>& net)
     return output;
 }
 
-void SSDHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp, const std::vector<cv::Rect>& bounding_boxes)
+void SSDHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size)
 {
     auto output_blob= net.blob_by_name(output_blob_name);
     if(!output_blob)
@@ -90,6 +90,7 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,
     {
         LOG(trace) << "Detected " << objects.size() << " objets in frame " << timestamp;
     }
+    num_detections_param.UpdateData(objects.size(), timestamp, _ctx);
 
     detections_param.UpdateData(objects, timestamp, _ctx);
 }

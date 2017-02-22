@@ -38,7 +38,7 @@ std::map<int, int> FCNHandler::CanHandleNetwork(const caffe::Net<float>& net)
     return output;
 }
 
-void FCNHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,  const std::vector<cv::Rect>& bounding_boxes)
+void FCNHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,  const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size)
 {
     auto blob = net.blob_by_name(output_blob_name);
     if(!blob)
@@ -83,7 +83,7 @@ std::map<int, int> FCNSingleClassHandler::CanHandleNetwork(const caffe::Net<floa
     return output;
 }
 
-void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,  const std::vector<cv::Rect>& bounding_boxes)
+void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,  const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size)
 {
     auto blob = net.blob_by_name(output_blob_name);
     if(blob)
