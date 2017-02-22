@@ -36,11 +36,10 @@ namespace EagleLib
     {
     public:
         MO_DERIVE(DrawDetections, Node)
-            PROPERTY(std::vector<std::string>, labels, std::vector<std::string>())
-            PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>())
             INPUT(SyncedMemory, image, nullptr)
+            INPUT(std::vector<std::string>, labels, nullptr)
             OPTIONAL_INPUT(std::vector<DetectedObject>, detections, nullptr)
-            PARAM(mo::ReadFile, detection_list, mo::ReadFile(""))
+            PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>())
             OUTPUT(SyncedMemory, image_with_detections, SyncedMemory())
         MO_END
     protected:

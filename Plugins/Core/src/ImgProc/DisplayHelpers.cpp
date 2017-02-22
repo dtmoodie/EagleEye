@@ -32,12 +32,12 @@ bool AutoScale::ProcessImpl()
 }
 bool DrawDetections::ProcessImpl()
 {
-    if(detection_list_param.modified)
+    /*if(detection_list_param.modified)
     {
         std::ifstream ifs(detection_list.c_str());
         if(ifs.is_open())
         {
-            labels.clear();
+
             std::string label;
             while(ifs >> label)
                 labels.push_back(label);
@@ -50,8 +50,17 @@ bool DrawDetections::ProcessImpl()
             cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
         }
         detection_list_param.modified = false;
+    }*/
+    if(colors.size() != labels->size())
+    {
+        colors.resize(labels->size());
+        for(int i = 0; i < colors.size(); ++i)
+        {
+            colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
+        }
+        cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
+        cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
     }
-    
     cv::Mat mat_;
     if (image->GetSyncState(0) < SyncedMemory::DEVICE_UPDATED)
     {
@@ -67,15 +76,15 @@ bool DrawDetections::ProcessImpl()
         for(auto& detection : *detections)
         {
             cv::Rect rect(detection.boundingBox.x, detection.boundingBox.y, detection.boundingBox.width, detection.boundingBox.height);
-            if(labels.size())
+            if(labels->size())
             {
                 if(detection.detections.size())
                 {
                     cv::rectangle(mat, rect, colors[detection.detections[0].classNumber], 3);
                     std::stringstream ss;
-                    if(detection.detections[0].classNumber > 0 && detection.detections[0].classNumber < labels.size())
+                    if(detection.detections[0].classNumber > 0 && detection.detections[0].classNumber < labels->size())
                     {
-                        ss << labels[detection.detections[0].classNumber] << " : " << detection.detections[0].confidence;
+                        ss << (*labels)[detection.detections[0].classNumber] << " : " << detection.detections[0].confidence;
                     }else
                     {
                         ss << detection.detections[0].confidence;
