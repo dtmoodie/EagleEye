@@ -124,11 +124,7 @@ bool Algorithm::CheckInputs()
     if(inputs.size() == 0)
         return true;
     long long ts = -1;
-    if(_pimpl->sync_input)
-    {
-        ts = _pimpl->sync_input->GetTimestamp();
-    }
-    else
+
     if(_pimpl->ts == -1 && _pimpl->sync_input == nullptr)
     {
         for(auto input : inputs)
@@ -174,6 +170,10 @@ bool Algorithm::CheckInputs()
                 ts = std::min(ts, inputs[i]->GetTimestamp());
         }
     }
+    if(_pimpl->sync_input)
+    {
+        ts = _pimpl->sync_input->GetTimestamp();
+    }
     for(auto input : inputs)
     {
         if(!input->GetInput(ts))
@@ -185,7 +185,7 @@ bool Algorithm::CheckInputs()
                 {
                     // Input is optional and set, but couldn't get the right timestamp, error
                     LOG(debug) << "Failed to get input \"" << input->GetTreeName() << "\" at timestamp " << ts;
-                    return false;
+                    //return false;
                 }else
                 {
                     LOG(trace) << "Optional input not set \"" << input->GetTreeName() << "\"";
@@ -221,6 +221,13 @@ long long Algorithm::GetTimestamp()
 void Algorithm::SetSyncInput(const std::string& name)
 {
     _pimpl->sync_input = GetInput(name);
+    if(_pimpl->sync_input)
+    {
+        LOG(info) << "Updating sync parameter for " << this->GetTypeName() << " to " << name;
+    }else
+    {
+        LOG(warning) << "Unable to set sync input for " << this->GetTypeName() << " to " << name;
+    }
 }
 
 void Algorithm::SetSyncMethod(SyncMethod _method)
