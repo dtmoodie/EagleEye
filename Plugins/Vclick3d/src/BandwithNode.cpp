@@ -1,11 +1,15 @@
 #include "BandwidthNode.hpp"
 #include "EagleLib/Nodes/NodeInfo.hpp"
 
-#include <MetaObject/Parameters/IO/TextPolicy.hpp>
-#include <MetaObject/Parameters/IO/CerealPolicy.hpp>
-
+//#include <MetaObject/Parameters/IO/TextPolicy.hpp>
+//#include <MetaObject/Parameters/IO/CerealPolicy.hpp>
+#include <pcap/ipnet.h>
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
+
+#ifndef _MSC_VER
+#include <sys/socket.h>
+#endif
 
 #include "RuntimeLinkLibrary.h"
 using namespace EagleLib;
@@ -18,7 +22,7 @@ RUNTIME_COMPILER_LINKLIBRARY("wpcap.lib")
 
 #endif
 
-INSTANTIATE_META_PARAMETER(std::vector<std::string>);
+//INSTANTIATE_META_PARAMETER(std::vector<std::string>);
 BandwidthUsage::~BandwidthUsage()
 {
     for(auto& thread : monitor_threads)
