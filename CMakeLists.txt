@@ -7,7 +7,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 find_package(CUDA REQUIRED)
   include_directories(${CUDA_INCLUDE_DIRS})
 find_package(Eigen3 REQUIRED)
-  include_directories(${EIGEN_INCLUDE_DIRS})
+  include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
 
 set(PROJECT_BIN_DIRS_DEBUG "" CACHE PATH "" FORCE)
 set(PROJECT_BIN_DIRS_RELWITHDEBINFO "" CACHE PATH "" FORCE)
