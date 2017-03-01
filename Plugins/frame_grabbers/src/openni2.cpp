@@ -11,16 +11,13 @@ int frame_grabber_openni2::CanLoadDocument(const std::string& document)
     {
         return 10;
     }
-    try
+    int index = -1;
+    if(boost::conversion::detail::try_lexical_convert(doc, index))
     {
-        int index = boost::lexical_cast<int>(doc);
         if (index == cv::CAP_OPENNI2 || index == cv::CAP_OPENNI2_ASUS)
         {
             return 10;
         }
-    }
-    catch (boost::bad_lexical_cast &e)
-    {
     }
     return 0;
 }
@@ -38,16 +35,13 @@ bool frame_grabber_openni2::LoadFile(const std::string& file_path)
     {
         return this->h_LoadFile("1600");
     }
-    try
+    int index = -1;
+    if(boost::conversion::detail::try_lexical_convert(doc, index))
     {
-        int index = boost::lexical_cast<int>(doc);
         if (index == cv::CAP_OPENNI2 || index == cv::CAP_OPENNI2_ASUS)
         {
             return h_LoadFile(doc);
         }
-    }
-    catch (boost::bad_lexical_cast &e)
-    {
     }
     return false;
 }
