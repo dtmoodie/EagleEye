@@ -32,25 +32,6 @@ bool AutoScale::ProcessImpl()
 }
 bool DrawDetections::ProcessImpl()
 {
-    /*if(detection_list_param.modified)
-    {
-        std::ifstream ifs(detection_list.c_str());
-        if(ifs.is_open())
-        {
-
-            std::string label;
-            while(ifs >> label)
-                labels.push_back(label);
-            colors.resize(labels.size());
-            for(int i = 0; i < colors.size(); ++i)
-            {
-                colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
-            }
-            cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
-            cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
-        }
-        detection_list_param.modified = false;
-    }*/
     if(colors.size() != labels->size())
     {
         colors.resize(labels->size());
@@ -84,10 +65,10 @@ bool DrawDetections::ProcessImpl()
                     std::stringstream ss;
                     if(detection.detections[0].classNumber > 0 && detection.detections[0].classNumber < labels->size())
                     {
-                        ss << (*labels)[detection.detections[0].classNumber] << " : " << detection.detections[0].confidence;
+                        ss << (*labels)[detection.detections[0].classNumber] << " : " << std::setprecision(3) << detection.detections[0].confidence;
                     }else
                     {
-                        ss << detection.detections[0].confidence;
+                        ss << std::setprecision(3) << detection.detections[0].confidence;
                     }
                     cv::putText(mat, ss.str(), rect.tl() + cv::Point(10,20), cv::FONT_HERSHEY_COMPLEX, 0.4, colors[detection.detections[0].classNumber]);
                 }
@@ -107,7 +88,7 @@ bool DrawDetections::ProcessImpl()
 
                 cv::rectangle(mat, rect, colors[detection.detections[0].classNumber], 3);
                 std::stringstream ss;
-                ss << detection.detections[0].classNumber << " : " << detection.detections[0].confidence;
+                ss << detection.detections[0].classNumber << " : " << std::setprecision(3) << detection.detections[0].confidence;
                 cv::putText(mat, ss.str(), rect.tl() + cv::Point(10,20), cv::FONT_HERSHEY_COMPLEX, 0.4, colors[detection.detections[0].classNumber]);
             }
         }
@@ -115,73 +96,6 @@ bool DrawDetections::ProcessImpl()
     image_with_detections_param.UpdateData(mat, image_param.GetTimestamp(), _ctx);
     return true;
 }
-/*void
-Colormap::NodeInit(bool firstInit)
-{
-    rescale = true;
-    updateParameter("Colormapping scheme", int(0));
-    updateParameter<boost::function<void(void)>>("Rescale colormap", boost::bind(&Colormap::Rescale, this));
-}
-void Colormap::Rescale()
-{
-    rescale = true;
-}
-
-cv::cuda::GpuMat
-Colormap::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    if(img.channels() != 1)
-    {
-        NODE_LOG(warning) << "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels";
-        return img;
-    }
-    if (rescale)
-    {
-        double min, max;
-        cv::cuda::minMax(img, &min, &max);
-        mapper.setMapping(ColorScale(50, 255 / 25, true), ColorScale(50 / 3, 255 / 25, true), ColorScale(0, 255 / 25, true), min, max);
-        rescale = false;
-    }
-    mapper.colormap_image(img, color_mapped_image, stream); 
-    return color_mapped_image;
-}
-
-
-QtColormapDisplay::QtColormapDisplay():
-    Colormap()
-{
-}
-
-void QtColormapDisplayCallback(int status, void* data)
-{
-    QtColormapDisplay* node = static_cast<QtColormapDisplay*>(data);
-    Parameters::UI::UiCallbackService::Instance()->post(boost::bind(&QtColormapDisplay::display, node),
-        std::make_pair(data, mo::TypeInfo(typeid(EagleLib::Nodes::Node))));
-}
-
-void QtColormapDisplay::display()
-{
-
-}
-
-void QtColormapDisplay::NodeInit(bool firstInit)
-{
-    Colormap::Init(firstInit);
-}
-cv::cuda::GpuMat QtColormapDisplay::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
-{
-    if(img.channels() != 1)
-    {
-        NODE_LOG(warning) << "Non-monochrome image! Has " + boost::lexical_cast<std::string>(img.channels()) + " channels";
-        return img;
-    }
-    Colormap::doProcess(img, stream);
-    //color_mapped_image.download()
-
-    return img;
-}
-*/
-
 
 bool Normalize::ProcessImpl()
 {
@@ -234,8 +148,6 @@ bool Normalize::ProcessImpl()
 }
 
 MO_REGISTER_CLASS(AutoScale)
-//NODE_DEFAULT_CONSTRUCTOR_IMPL(Colormap, Image, Processing)
 MO_REGISTER_CLASS(Normalize)
 MO_REGISTER_CLASS(DrawDetections)
-//static EagleLib::Nodes::NodeInfo g_registerer_QtColormapDisplay("QtColormapDisplay", { "Image", "Sink" });
-//REGISTERCLASS(QtColormapDisplay, &g_registerer_QtColormapDisplay)
+

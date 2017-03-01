@@ -17,12 +17,11 @@ namespace EagleLib
             MO_DERIVE(LabelDisplay, Node)
                 INPUT(SyncedMemory, label, nullptr)
                 OPTIONAL_INPUT(SyncedMemory, original_image, nullptr)
+                INPUT(std::vector<std::string>, labels, nullptr)
                 OUTPUT(SyncedMemory, colorized, SyncedMemory())
-                PARAM(int, num_classes, 13)
                 PARAM(float, label_weight, 0.7)
                 PARAM(int, ignore_class, -1)
                 PARAM(bool, display_legend, true)
-                PARAM(mo::ReadFile, label_file, {})
                 PARAM(int, dilate, 0)
             MO_END
         protected:
@@ -30,7 +29,7 @@ namespace EagleLib
             cv::cuda::GpuMat d_lut;
             cv::cuda::GpuMat d_legend;
             cv::Mat h_lut;
-            std::vector<std::string> labels;
+            //std::vector<std::string> labels;
             int legend_width;
             cv::Ptr<cv::cuda::Filter> _dilate_filter;
         };

@@ -2,6 +2,15 @@
 #include "EagleLib/Nodes/Sink.h"
 #include "src/precompiled.hpp"
 
+namespace cv
+{
+namespace cuda
+{
+    void drawHistogram(cv::InputArray histogram,
+                       cv::OutputArray draw,
+                       cv::InputArray bins = cv::noArray(), cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+}
+}
 namespace EagleLib
 {
 namespace Nodes
@@ -20,7 +29,7 @@ namespace Nodes
     class OGLImageDisplay: public Node
     {
     public:
-        MO_DERIVE(OGLImageDisplay, Node);
+        MO_DERIVE(OGLImageDisplay, Node)
             INPUT(SyncedMemory, image, nullptr)
         MO_END;
         bool ProcessImpl();
@@ -31,11 +40,11 @@ namespace Nodes
     class KeyPointDisplay: public Node
     {
     public:
-        MO_DERIVE(KeyPointDisplay, Node);
-            INPUT(TS<SyncedMemory>, image, nullptr);
-            INPUT(TS<SyncedMemory>, synced_points,  nullptr);
-            INPUT(cv::cuda::GpuMat, gpu_points, nullptr);
-            INPUT(cv::Mat, cpu_points, nullptr);
+        MO_DERIVE(KeyPointDisplay, Node)
+            INPUT(TS<SyncedMemory>, image, nullptr)
+            INPUT(TS<SyncedMemory>, synced_points,  nullptr)
+            INPUT(cv::cuda::GpuMat, gpu_points, nullptr)
+            INPUT(cv::Mat, cpu_points, nullptr)
         MO_END;
     protected:
         bool ProcessImpl();
@@ -43,8 +52,8 @@ namespace Nodes
     class FlowVectorDisplay: public Node
     {
     public:
-        MO_DERIVE(FlowVectorDisplay, Node);
-            INPUT(TS<SyncedMemory>, image, nullptr);
+        MO_DERIVE(FlowVectorDisplay, Node)
+            INPUT(TS<SyncedMemory>, image, nullptr)
         MO_END;
     protected:
         bool ProcessImpl();
@@ -53,10 +62,13 @@ namespace Nodes
     class HistogramDisplay: public Node
     {
     public:
-        MO_DERIVE(HistogramDisplay, Node);
+        MO_DERIVE(HistogramDisplay, Node)
+            INPUT(SyncedMemory, histogram, nullptr)
+            OPTIONAL_INPUT(SyncedMemory, bins, nullptr)
         MO_END;
     protected:
         bool ProcessImpl();
+        cv::cuda::GpuMat draw;
     };
     class DetectionDisplay: public Node
     {

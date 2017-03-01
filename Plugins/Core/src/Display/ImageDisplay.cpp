@@ -68,6 +68,16 @@ bool FlowVectorDisplay::ProcessImpl()
 
 bool HistogramDisplay::ProcessImpl()
 {
+    cv::cuda::drawHistogram(histogram->GetGpuMat(Stream()), draw, cv::noArray(), Stream());
+    std::string name = GetTreeName();
+    size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
+
+    EagleLib::cuda::enqueue_callback_async(
+                [name, this]()->void
+    {
+        PROFILE_RANGE(imshow);
+        GetDataStream()->GetWindowCallbackManager()->imshowd(name, draw, cv::WINDOW_OPENGL);
+    }, gui_thread_id, Stream());
     return true;
 }
 
