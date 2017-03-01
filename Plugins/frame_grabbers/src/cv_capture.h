@@ -23,6 +23,7 @@ namespace EagleLib
             MO_ABSTRACT(frame_grabber_cv, FrameGrabberThreaded)
                 PROPERTY(cv::Ptr<cv::VideoCapture>, h_cam, cv::Ptr<cv::VideoCapture>());
                 PROPERTY(cv::Ptr<cv::cudacodec::VideoReader>, d_cam, cv::Ptr<cv::cudacodec::VideoReader>());
+                MO_SIGNAL(void, eos)
             MO_END;
             virtual bool LoadFile(const std::string& file_path);
             virtual bool d_LoadFile(const std::string& file_path);
@@ -34,6 +35,7 @@ namespace EagleLib
             virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream);
             virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
             TS<SyncedMemory>                        current_frame;
+            bool got_frame = false;
         };
         class PLUGIN_EXPORTS frame_grabber_camera: public frame_grabber_cv
         {

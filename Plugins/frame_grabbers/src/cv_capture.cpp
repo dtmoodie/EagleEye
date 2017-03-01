@@ -150,11 +150,18 @@ TS<SyncedMemory> frame_grabber_cv::GetNextFrameImpl(cv::cuda::Stream& stream)
         {
             if (!h_mat.empty())
             {
+                got_frame = true;
                 cv::cuda::GpuMat d_mat;
                 d_mat.upload(h_mat, stream);
                 return TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (long long)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
+            }else
+            {
+                if(got_frame)
+                    sig_eos();
             }
         }
+        if(got_frame)
+            sig_eos();
     }
     return TS<SyncedMemory>();
 }
