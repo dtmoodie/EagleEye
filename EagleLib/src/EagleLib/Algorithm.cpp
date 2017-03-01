@@ -164,10 +164,13 @@ bool Algorithm::CheckInputs()
         ts = inputs[0]->GetTimestamp();
         for(int i = 1; i < inputs.size(); ++i)
         {
+            auto in_ts = inputs[i]->GetTimestamp();
+
             if(ts == -1)
                 ts = inputs[i]->GetTimestamp();
             else
-                ts = std::min(ts, inputs[i]->GetTimestamp());
+                if(in_ts != -1)
+                    ts = std::min(ts, in_ts);
         }
     }
     if(_pimpl->sync_input)
