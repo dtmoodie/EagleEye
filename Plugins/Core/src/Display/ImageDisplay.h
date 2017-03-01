@@ -1,12 +1,12 @@
 #include "src/precompiled.hpp"
 #include "EagleLib/Nodes/Sink.h"
-#include "src/precompiled.hpp"
+#include "src/CoreExport.hpp"
 
 namespace cv
 {
 namespace cuda
 {
-    void drawHistogram(cv::InputArray histogram,
+    void Core_EXPORT drawHistogram(cv::InputArray histogram,
                        cv::OutputArray draw,
                        cv::InputArray bins = cv::noArray(), cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 }
@@ -70,6 +70,20 @@ namespace Nodes
         bool ProcessImpl();
         cv::cuda::GpuMat draw;
     };
+    class HistogramOverlay: public Node
+    {
+    public:
+        MO_DERIVE(HistogramOverlay, Node)
+            INPUT(SyncedMemory, histogram, nullptr)
+            INPUT(SyncedMemory, image, nullptr)
+            OPTIONAL_INPUT(SyncedMemory, bins, nullptr)
+            OUTPUT(SyncedMemory, output, {})
+        MO_END;
+    protected:
+        bool ProcessImpl();
+        cv::cuda::GpuMat draw;
+    };
+
     class DetectionDisplay: public Node
     {
     public:
