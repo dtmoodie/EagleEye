@@ -1,5 +1,7 @@
 #include "DisplayHelpers.h"
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
+#include <EagleLib/utilities/GpuDrawing.hpp>
+
 #include <fstream>
 
 using namespace ::EagleLib;
@@ -30,6 +32,7 @@ bool AutoScale::ProcessImpl()
     cv::cuda::merge(channels,output_image.GetGpuMat(Stream()), Stream());
     return true;
 }
+
 bool DrawDetections::ProcessImpl()
 {
     if(colors.size() != labels->size())
@@ -42,27 +45,22 @@ bool DrawDetections::ProcessImpl()
         cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
         cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
     }
-    cv::Mat mat_;
-    if (image->GetSyncState(0) < SyncedMemory::DEVICE_UPDATED)
-    {
-        mat_  = image->GetMat(Stream());
-    }else
-    {
-        mat_  = image->GetMat(Stream());
-        Stream().waitForCompletion();
-    }
-    cv::Mat mat = mat_.clone();
+    cv::cuda::GpuMat draw_image;
+    image->Clone(draw_image, Stream());
+    std::vector<cv::Mat> drawn_text;
+
     if(detections)
     {
         for(auto& detection : *detections)
         {
             cv::Rect rect(detection.boundingBox.x, detection.boundingBox.y, detection.boundingBox.width, detection.boundingBox.height);
+            cv::Scalar color;
+            std::stringstream ss;
             if(labels->size())
             {
                 if(detection.detections.size())
                 {
-                    cv::rectangle(mat, rect, colors[detection.detections[0].classNumber], 3);
-                    std::stringstream ss;
+                    color = colors[detection.detections[0].classNumber];
                     if(detection.detections[0].classNumber > 0 && detection.detections[0].classNumber < labels->size())
                     {
                         ss << (*labels)[detection.detections[0].classNumber] << " : " << std::setprecision(3) << detection.detections[0].confidence;
@@ -70,7 +68,6 @@ bool DrawDetections::ProcessImpl()
                     {
                         ss << std::setprecision(3) << detection.detections[0].confidence;
                     }
-                    cv::putText(mat, ss.str(), rect.tl() + cv::Point(10,20), cv::FONT_HERSHEY_COMPLEX, 0.4, colors[detection.detections[0].classNumber]);
                 }
             }else
             {
@@ -85,15 +82,26 @@ bool DrawDetections::ProcessImpl()
                     cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
                     cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
                 }
-
-                cv::rectangle(mat, rect, colors[detection.detections[0].classNumber], 3);
-                std::stringstream ss;
-                ss << detection.detections[0].classNumber << " : " << std::setprecision(3) << detection.detections[0].confidence;
-                cv::putText(mat, ss.str(), rect.tl() + cv::Point(10,20), cv::FONT_HERSHEY_COMPLEX, 0.4, colors[detection.detections[0].classNumber]);
+                color = colors[detection.detections[0].classNumber];
             }
+            cv::cuda::rectangle(draw_image, rect, color, 3, Stream());
+
+            cv::Rect text_rect = cv::Rect(rect.tl() + cv::Point(10,20), cv::Size(200,20));
+            if((cv::Rect({0,0}, draw_image.size()) & text_rect) == text_rect)
+            {
+                cv::Mat text_image(20, 200, CV_8UC3);
+                text_image.setTo(cv::Scalar::all(0));
+                cv::putText(text_image, ss.str(), {0, 15}, cv::FONT_HERSHEY_COMPLEX, 0.4, color);
+                cv::cuda::GpuMat d_text;
+                d_text.upload(text_image, Stream());
+                cv::cuda::GpuMat text_roi = draw_image(text_rect);
+                cv::cuda::add(text_roi, d_text, text_roi, cv::noArray(), -1, Stream());
+                drawn_text.push_back(text_image); // need to prevent recycling of the images too early
+            }
+
         }
     }
-    image_with_detections_param.UpdateData(mat, image_param.GetTimestamp(), _ctx);
+    image_with_detections_param.UpdateData(draw_image, image_param.GetTimestamp(), _ctx);
     return true;
 }
 
