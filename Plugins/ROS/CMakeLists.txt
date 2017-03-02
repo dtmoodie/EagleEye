@@ -1,5 +1,5 @@
 project(ROS)
-find_package(catkin COMPONENTS
+find_package(catkin QUIET COMPONENTS
   std_msgs
   roscpp
   cv_bridge
