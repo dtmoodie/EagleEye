@@ -43,7 +43,7 @@ namespace EagleLib
             MO_SIGNAL(void, select_points, std::string, std::vector<cv::Point>, int, cv::Mat)
             MO_SIGNAL(void, on_key, int)
         MO_END
-        struct EventLoop
+        struct EAGLE_EXPORTS EventLoop
         {
         public:
             static EventLoop* Instance();
@@ -58,7 +58,7 @@ namespace EagleLib
         };
     private:
         static void on_mouse_click(int event, int x, int y, int flags, void* callback_handler);
-        struct WindowHandler
+        struct EAGLE_EXPORTS WindowHandler
         {
             WindowCallbackHandler* parent;
             bool dragging;

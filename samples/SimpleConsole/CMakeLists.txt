@@ -66,10 +66,13 @@ target_link_libraries(SimpleConsole
     ${CUDA_npps_LIBRARY}
     ${CUDA_nppc_LIBRARY}
     ${CUDA_CUDART_LIBRARY}
-    ${PYTHON_LIBRARY}
+    
     ${link_libs}
     instantiations
 )
+if(WITH_PYTHON)
+  target_link_libraries(SimpleConsole ${PYTHON_LIBRARY})
+endif(WITH_PYTHON)
 if(Wt_FOUND AND WITH_WT)
     target_link_libraries(SimpleConsole
         debug;${Wt_HTTP_DEBUG_LIBRARY}
