@@ -76,7 +76,7 @@ bool Algorithm::Process()
     boost::recursive_mutex::scoped_lock lock(*_mtx);
     if(_enabled == false)
         return false;
-    if(!CheckInputs())
+    if(CheckInputs() == NoneValid)
     {
         return false;
     }
@@ -118,30 +118,30 @@ mo::IParameter* Algorithm::GetOutput(const std::string& name) const
 
 
 
-bool Algorithm::CheckInputs()
+Algorithm::InputState Algorithm::CheckInputs()
 {
     auto inputs = this->GetInputs();
     if(inputs.size() == 0)
-        return true;
-    long long ts = -1;
+        return AllValid;
 
-    if(_pimpl->ts == -1 && _pimpl->sync_input == nullptr)
+    long long ts = -1;
+    if(_pimpl->sync_input == nullptr)
     {
         for(auto input : inputs)
         {
-            long long ts = input->GetTimestamp();
-            if(ts != -1)
+            long long ts_in = input->GetTimestamp();
+            if(ts_in != -1)
             {
-                if(_pimpl->ts == -1)
-                    _pimpl->ts = ts;
+                if(ts == -1)
+                    ts = ts_in;
                 else
-                    _pimpl->ts = std::min(_pimpl->ts, ts);
+                    ts = std::min(ts, ts_in);
             }
         }
-        if(_pimpl->ts != -1)
+        if(ts != -1)
             LOG(trace) << "Timestamp updated to " << _pimpl->ts;
-        ts = _pimpl->ts;
     }
+    //ts = _pimpl->ts;
     if(_pimpl->_sync_method == SyncEvery && _pimpl->sync_input)
     {
         if(_pimpl->_ts_processing_queue.size() != 0)
@@ -151,32 +151,16 @@ bool Algorithm::CheckInputs()
         }else
         {
             LOG(trace) << "No new data to be processed";
-            //return false; // no new data to be processed
+            // TODO TEST
+            return NotUpdated;
         }
     }else if(_pimpl->_sync_method == SyncNewest && _pimpl->sync_input)
     {
         ts = _pimpl->ts;
         if(ts == _pimpl->last_ts)
-            return false;
+            return NoneValid;
     }
-    if(ts == -1)
-    {
-        ts = inputs[0]->GetTimestamp();
-        for(int i = 1; i < inputs.size(); ++i)
-        {
-            auto in_ts = inputs[i]->GetTimestamp();
 
-            if(ts == -1)
-                ts = inputs[i]->GetTimestamp();
-            else
-                if(in_ts != -1)
-                    ts = std::min(ts, in_ts);
-        }
-    }
-    if(_pimpl->sync_input)
-    {
-        ts = _pimpl->sync_input->GetTimestamp();
-    }
     for(auto input : inputs)
     {
         if(!input->GetInput(ts))
@@ -199,16 +183,19 @@ bool Algorithm::CheckInputs()
                 if (input->GetInputParam())
                 {
                     LOG(debug) << "Failed to get input \"" << input->GetTreeName() << "\" at timestamp " << ts;
-                    return false;
+                    return NoneValid;
                 }else
                 {
                     LOG(debug) << "Input not set \"" << input->GetTreeName() << "\"";
-                    return false;
+                    return NoneValid;
                 }
             }
         }
     }
-    return true;
+    _pimpl->ts = ts;
+    if(ts == _pimpl->last_ts)
+        return NotUpdated;
+    return AllValid;
 }
 
 void Algorithm::Clock(int line_number)

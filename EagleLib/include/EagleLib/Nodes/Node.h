@@ -137,7 +137,7 @@ namespace Nodes
         virtual void                    Serialize(ISimpleSerializer *pSerializer);
         inline cv::cuda::Stream&        Stream(){ CV_Assert(_ctx); return _ctx->GetStream();}
         
-        bool CheckInputs();
+        InputState CheckInputs();
 
         MO_BEGIN(Node)
             MO_SLOT(void, reset)
