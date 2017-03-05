@@ -94,6 +94,7 @@ namespace EagleLib
         // Called when data is ready to be pulled from the appsink
         virtual GstFlowReturn on_pull() = 0;
         virtual bool set_caps(const std::string& caps);
+        virtual bool set_caps();
     protected:
         GstElement* _appsink;
         guint       _new_sample_id;
