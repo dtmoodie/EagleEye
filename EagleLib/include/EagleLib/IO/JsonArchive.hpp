@@ -964,6 +964,7 @@ namespace cereal
             if(nodes[0] == nullptr)
                 continue;
             nodes[i]->SetDataStream(stream.Get());
+            nodes[i]->PostSerializeInit();
             auto& parents = ar_.parent_mappings[nodes[i]->GetTreeName()];
             for (auto& parent : parents)
             {
@@ -1184,7 +1185,6 @@ namespace cereal
             ar(CEREAL_OPTIONAL_NVP(inputs, inputs));
         EagleLib::JSONInputArchive& ar_ = dynamic_cast<EagleLib::JSONInputArchive&>(ar);
         ar(cereal::make_optional_nvp("parents", ar_.parent_mappings[name]));
-        node->PostSerializeInit();
     }
 }
 
