@@ -259,7 +259,7 @@ bool CaffeBase::InitNetwork()
             }
             BOOST_LOG_TRIVIAL(info) << "Weights loaded";
             weightsLoaded = true;
-            UpdateParameter("Loaded layers", layerNames);
+            //UpdateParameter("Loaded layers", layerNames);
             nn_weight_file_param.modified = false;
         }
         else

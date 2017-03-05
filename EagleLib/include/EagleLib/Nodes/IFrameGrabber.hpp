@@ -168,12 +168,14 @@ namespace EagleLib
             MO_SLOT(void, ResumeThreads)
             MO_SLOT(int, Buffer)
             PROPERTY(mo::ThreadHandle, _buffer_thread_handle, mo::ThreadPool::Instance()->RequestThread())
+            MO_SIGNAL(void, eos)
         MO_END
             void Init(bool firstInit);
     protected:
         // Should only ever be called from the buffer thread
         virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream) = 0;
         virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream) = 0;
+        long long _empty_frame_count;
     };
     }
 }

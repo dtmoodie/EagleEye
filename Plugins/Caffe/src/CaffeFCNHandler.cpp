@@ -46,6 +46,8 @@ void FCNHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,
     cv::Mat label, confidence;
     EagleLib::Caffe::argMax(blob.get(), label, confidence);
     label.setTo(0, confidence < min_confidence);
+    cv::resize(label, label, input_image_size, 0, 0, cv::INTER_NEAREST);
+    cv::resize(confidence, confidence, input_image_size, 0, 0, cv::INTER_NEAREST);
     label_param.UpdateData(label, timestamp, _ctx);
     confidence_param.UpdateData(confidence, timestamp, _ctx);
 }
@@ -89,12 +91,12 @@ void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, long long
     if(blob)
     {
         blob->gpu_data();
-        blob->cpu_data();
+        //blob->cpu_data();
         auto wrapped = EagleLib::Nodes::CaffeBase::WrapBlob(*blob);
         if(class_index < blob->channels() && blob->num())
         {
             const cv::cuda::GpuMat& confidence = wrapped[0].GetGpuMat(_ctx->GetStream(), class_index);
-            cv::Mat dbg = wrapped[0].GetMat(_ctx->GetStream(), class_index);
+            //cv::Mat dbg = wrapped[0].GetMat(_ctx->GetStream(), class_index);
             cv::cuda::GpuMat confidence_out;
             cv::cuda::threshold(confidence, confidence_out, min_confidence, 255, cv::THRESH_BINARY, _ctx->GetStream());
             cv::cuda::GpuMat mask_out;

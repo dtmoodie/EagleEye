@@ -83,6 +83,12 @@ SyncedMemory::SyncedMemory(const std::vector<cv::Mat>& h_mat, const std::vector<
     _pimpl(new impl)
 {
     CV_Assert(h_mat.size() == d_mat.size());
+    for(int i = 0; i < h_mat.size(); ++i)
+    {
+        /*CV_Assert(h_mat[i].empty() == d_mat[i].empty());
+        CV_Assert(h_mat[i].size() == d_mat[i].size());
+        CV_Assert(h_mat[i].type() == d_mat[i].type());*/
+    }
     _pimpl->sync_flags = state;
     _pimpl->h_data = h_mat;
     _pimpl->d_data = d_mat;
@@ -137,7 +143,10 @@ SyncedMemory::GetGpuMat(cv::cuda::Stream& stream, int index) const
         _pimpl->d_data[index].upload(_pimpl->h_data[index], stream);
         _pimpl->sync_flags[index] = SYNCED;
     }
-    
+    if(_pimpl->d_data.empty() && !_pimpl->h_data.empty())
+    {
+        // Something went wrong, probably set incorrectly by external program
+    }
     return _pimpl->d_data[index];
 }
 

@@ -209,14 +209,14 @@ bool Node::ConnectInput(rcc::shared_ptr<Node> output_node,    mo::IParameter* ou
     }
 }
 
-bool Node::CheckInputs()
+Algorithm::InputState Node::CheckInputs()
 {
     if(_pimpl->_sync_method == Algorithm::SyncEvery && _pimpl->_ts_processing_queue.size() != 0)
         _modified = true;
     if(_modified == false)
     {
         LOG_EVERY_N(trace, 10) << "_modified == false for " << GetTreeName();
-        return false;
+        return Algorithm::NoneValid;
     }
     
     return Algorithm::CheckInputs();
@@ -241,11 +241,11 @@ bool Node::Process()
     if(_enabled == true && _modified == true && _pimpl_node->disable_due_to_errors == false)
     { // scope of the lock
         boost::recursive_mutex::scoped_lock lock(*_mtx);
-
-        if (!CheckInputs())
-        {
+        auto state = CheckInputs();
+        if(state == Algorithm::NoneValid)
             return false;
-        }
+        if(state == Algorithm::NotUpdated && _modified == false)
+            return false;
 
         _modified = false;
         // check if more data exists

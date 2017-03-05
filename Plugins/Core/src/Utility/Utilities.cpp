@@ -91,10 +91,14 @@ bool RegionOfInterest::ProcessImpl()
         for(int i = 0; i < num; ++i)
         {
             state[i] = image->GetSyncState(i);
-            if(state[i] < SyncedMemory::DEVICE_UPDATED)
+            if(state[i] == SyncedMemory::HOST_UPDATED)
             {
                 // host is ahead
                 h_mats[i] = image->GetMat(Stream(), i)(pixel_roi);
+            }else if(state[i] == SyncedMemory::SYNCED)
+            {
+                h_mats[i] = image->GetMat(Stream(), i)(pixel_roi);
+                d_mats[i] = image->GetGpuMat(Stream(), i)(pixel_roi);
             }else
             {
                 // device is ahead

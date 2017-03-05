@@ -6,7 +6,7 @@ namespace EagleLib
 {
     namespace Nodes
     {
-    class PLUGIN_EXPORTS frame_grabber_directory: public IFrameGrabber
+    class frame_grabber_directory: public IFrameGrabber
     {
     public:
         frame_grabber_directory();
@@ -26,7 +26,9 @@ namespace EagleLib
         virtual void Serialize(ISimpleSerializer* pSerializer);
         
         MO_DERIVE(frame_grabber_directory, IFrameGrabber)
-            MO_SLOT(void, Restart);
+            MO_SLOT(void, Restart)
+            STATUS(int, frame_index, 0)
+            MO_SIGNAL(void, eos)
         MO_END;
         
         static int CanLoadDocument(const std::string& doc);
@@ -41,7 +43,7 @@ namespace EagleLib
         rcc::shared_ptr<ICoordinateManager>  coordinate_manager;
         std::string                     loaded_file;
         std::vector<std::string>        files_on_disk;
-        int frame_index;
+        //int frame_index;
         boost::circular_buffer<std::tuple<std::string, TS<SyncedMemory>>> loaded_images;
         rcc::shared_ptr<IFrameGrabber> fg; // internal frame grabber used for loading the actual files
     };

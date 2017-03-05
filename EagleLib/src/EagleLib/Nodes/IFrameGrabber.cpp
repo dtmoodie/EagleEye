@@ -383,34 +383,6 @@ void FrameGrabberBuffered::PushFrame(TS<SyncedMemory> frame, bool blocking)
 }
 int FrameGrabberThreaded::Buffer()
 {
-    /*cv::cuda::Stream read_stream;
-    mo::SetThreadName("FrameGrabberThread");
-    LOG(debug) << "Starting buffer thread";
-    while(!boost::this_thread::interruption_requested())
-    {   
-        while(_pause)
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
-        try
-        {
-            TS<SyncedMemory> frame;
-            {
-                //SCOPED_PROFILE_NODE
-                boost::mutex::scoped_lock gLock(grabber_mtx);
-                frame = GetNextFrameImpl(read_stream);
-            }            
-            if (!frame.empty())
-            {
-                PushFrame(frame, true);
-            }else
-            {
-                LOG_EVERY_N(warning, 500) << "Read empty frame from frame grabber";
-            }
-        }catch(cv::Exception& e)
-        {
-            LOG(warning) << "Error reading next frame: " << e.what();
-        }
-    }
-    LOG(debug) << "Shutting down buffer thread";*/
     try
     {
         TS<SyncedMemory> frame;
@@ -421,12 +393,19 @@ int FrameGrabberThreaded::Buffer()
         if (!frame.empty())
         {
             PushFrame(frame, true);
+            _empty_frame_count = 0;
             return 0;
         }
         else
         {
+            ++_empty_frame_count;
             LOG_EVERY_N(warning, 500) << "Read empty frame from frame grabber";
-            
+            if(_empty_frame_count > 100)
+            {
+                // Haven't received a new frame in over 3 seconds.
+                // Signal end of stream
+                sig_eos();
+            }
         }
     }
     catch (cv::Exception& e)
@@ -451,7 +430,7 @@ void FrameGrabberThreaded::StopThreads()
 
 FrameGrabberThreaded::FrameGrabberThreaded()
 {
-
+    _empty_frame_count = 0;
 }
 
 void FrameGrabberThreaded::Init(bool firstinit)

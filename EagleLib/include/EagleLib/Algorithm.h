@@ -14,6 +14,17 @@ namespace EagleLib
             SyncEvery = 0, // Require every timestamp to be processed
             SyncNewest     // Process data according to the newest timestamp
         };
+        enum InputState
+        {
+            // Inputs either aren't set or aren't
+            NoneValid = 0,
+            // Inputs are valid
+            AllValid = 1,
+            // Inputs are valid but not updated,
+            // ie we've already processed this frame
+            NotUpdated = 2
+
+        };
         Algorithm();
         virtual ~Algorithm();
         
@@ -46,7 +57,9 @@ namespace EagleLib
         void  Serialize(ISimpleSerializer *pSerializer);
         virtual void AddComponent(rcc::weak_ptr<Algorithm> component);
     protected:
-        virtual bool CheckInputs();
+
+
+        virtual InputState CheckInputs();
         virtual bool ProcessImpl() = 0;
         void Clock(int line_number);
 

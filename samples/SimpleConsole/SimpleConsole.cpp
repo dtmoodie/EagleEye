@@ -11,6 +11,7 @@
 #include <MetaObject/Logging/Profiling.hpp>
 #include <MetaObject/Detail/Allocator.hpp>
 #include <MetaObject/Thread/ThreadPool.hpp>
+#include <MetaObject/Parameters/Buffers/IBuffer.hpp>
 
 #include <RuntimeObjectSystem.h>
 
@@ -54,6 +55,33 @@ void PrintNodeTree(EagleLib::Nodes::Node* node, int depth)
     }
 }
 
+void PrintBuffers(EagleLib::Nodes::Node* node, std::vector<std::string>& printed_nodes)
+{
+    std::string name = node->GetTreeName();
+    if(std::find(printed_nodes.begin(), printed_nodes.end(), name) != printed_nodes.end())
+    {
+        return;
+    }
+    printed_nodes.push_back(name);
+    std::vector<mo::InputParameter*> inputs = node->GetInputs();
+    std::cout << "--------\n" << name << std::endl;
+    for(mo::InputParameter* input : inputs)
+    {
+        mo::IParameter* param = input->GetInputParam();
+        mo::Buffer::IBuffer* buf = dynamic_cast<mo::Buffer::IBuffer*>(param);
+        if(buf)
+        {
+            std::cout << param->GetTreeName() << " - " << buf->GetSize() << std::endl;
+        }
+    }
+
+    auto children = node->GetChildren();
+    for(auto child : children)
+    {
+        PrintBuffers(child.Get(), printed_nodes);
+    }
+}
+
 static volatile bool quit;
 void sig_handler(int s)
 {
@@ -61,52 +89,41 @@ void sig_handler(int s)
 	{
 	case SIGSEGV:
 	{
-		LOG(error) << "Caught SIGINT " << mo::print_callstack(2, true);
+        //std::cout << "Caught SIGSEGV " << mo::print_callstack(2, true);
 		break;
 	}
 	case SIGINT:
 	{
-		LOG(error) << "Caught SIGINT " << mo::print_callstack(2, true);
+        //std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
 		break;
 	}
 	case SIGILL:
 	{
-		LOG(error) << "Caught SIGILL " << mo::print_callstack(2, true);
+        //std::cout  << "Caught SIGILL " << mo::print_callstack(2, true);
 		break;
 	}
 	case SIGTERM:
 	{
-		LOG(error) << "Caught SIGTERM " << mo::print_callstack(2, true);
+        //std::cout  << "Caught SIGTERM " << mo::print_callstack(2, true);
 		break;
 	}
 #ifndef _MSC_VER
     case SIGKILL:
     {
-        LOG(error) << "Caught SIGKILL " << mo::print_callstack(2, true);
+        //std::cout  << "Caught SIGKILL " << mo::print_callstack(2, true);
         break;
     }
 #endif
 	}
     quit = true;
 
-    exit(EXIT_FAILURE);
+    //exit(EXIT_FAILURE);
+    std::abort();
 }
 
 int main(int argc, char* argv[])
 {
-    mo::instantiations::initialize();
-    EagleLib::SetupLogging();
-    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
-    signal(SIGINT, sig_handler);
-    signal(SIGILL, sig_handler);
-    signal(SIGTERM, sig_handler);
-    signal(SIGSEGV, sig_handler);
-    auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
-    cv::cuda::GpuMat::setDefaultAllocator(g_allocator);
-    cv::Mat::setDefaultAllocator(g_allocator);
-    g_allocator->SetName("Global Allocator");
-    mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(g_allocator);
-    mo::CpuThreadAllocatorSetter<cv::Mat>::Set(g_allocator);
+
 
 
     boost::program_options::options_description desc("Allowed options");
@@ -116,6 +133,7 @@ int main(int argc, char* argv[])
         ("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")
         ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")
         ("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")
+        ("log-dir", boost::program_options::value<std::string>(), "directory for log output")
         ("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")
         ("script,s", boost::program_options::value<std::string>(), "Text file with scripting commands")
         ("profile,p", boost::program_options::bool_switch(), "Profile application")
@@ -132,6 +150,26 @@ int main(int argc, char* argv[])
     boost::program_options::variables_map vm;
     auto parsed_options = boost::program_options::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
     boost::program_options::store(parsed_options, vm);
+
+    mo::instantiations::initialize();
+    if(vm.count("log-dir"))
+        EagleLib::SetupLogging(vm["log-dir"].as<std::string>());
+    else
+        EagleLib::SetupLogging();
+
+    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+    signal(SIGINT, sig_handler);
+    signal(SIGILL, sig_handler);
+    signal(SIGTERM, sig_handler);
+    signal(SIGSEGV, sig_handler);
+    auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
+    cv::cuda::GpuMat::setDefaultAllocator(g_allocator);
+    cv::Mat::setDefaultAllocator(g_allocator);
+    g_allocator->SetName("Global Allocator");
+    mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(g_allocator);
+    mo::CpuThreadAllocatorSetter<cv::Mat>::Set(g_allocator);
+
+
     auto unrecognized = boost::program_options::collect_unrecognized(parsed_options.options, boost::program_options::include_positional);
     std::map<std::string, std::string> replace_map;
     std::map<std::string, std::string> variable_replace_map;
@@ -371,10 +409,7 @@ int main(int argc, char* argv[])
         {
             std::string fg_override;
             int index = -1;
-            try
-            {
-                index = boost::lexical_cast<int>(doc);
-            }catch(boost::bad_lexical_cast& e)
+            if(!boost::conversion::detail::try_lexical_convert(doc, index))
             {
                 index = -1;
             }
@@ -617,6 +652,18 @@ int main(int argc, char* argv[])
                         PrintNodeTree(node.Get(), 0);
                 }
             }
+            if(what == "buffers")
+            {
+                if(current_stream)
+                {
+                    auto nodes = current_stream->GetNodes();
+                    std::vector<std::string> printed;
+                    for(auto node : nodes)
+                    {
+                        PrintBuffers(node.Get(), printed);
+                    }
+                }
+            }
         };
         slot = new mo::TypedSlot<void(std::string)>(std::bind(func, std::placeholders::_1));
         _slots.emplace_back(slot);
@@ -715,6 +762,11 @@ int main(int argc, char* argv[])
                             current_stream = itr.Get();
                             current_node.reset();
                             current_param = nullptr;
+                            auto nodes = current_stream->GetNodes();
+                            for (auto& node : nodes)
+                            {
+                                PrintNodeTree(node.Get(), 0);
+                            }
                             return;
                         }
                     }
@@ -740,6 +792,60 @@ int main(int argc, char* argv[])
                     current_stream.reset();
                     current_param = nullptr;
                     std::cout << "Successfully set node to " << child->GetTreeName() << "\n";
+                    std::vector<mo::IParameter*> parameters;
+                    if(current_node)
+                    {
+                        parameters = current_node->GetAllParameters();
+                    }
+                    if(current_stream)
+                    {
+
+                    }
+                    for(auto& itr : parameters)
+                    {
+                        std::stringstream ss;
+                        try
+                        {
+                            if(itr->CheckFlags(mo::Input_e))
+                            {
+                                if(auto input = dynamic_cast<mo::InputParameter*>(itr))
+                                {
+                                    std::stringstream ss;
+                                    ss << " - " << itr->GetTreeName() << " [";
+                                    auto input_param = input->GetInputParam();
+                                    if(input_param)
+                                    {
+                                        ss << input_param->GetTreeName();
+                                    }else
+                                    {
+                                        ss << "input not set";
+                                    }
+                                    ss << "]\n";
+                                    std::cout << ss.str();
+                                }
+                            }
+                            else
+                            {
+                                auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                                if (func)
+                                {
+                                    std::stringstream ss;
+                                    ss << " - " << itr->GetTreeName() << " [";
+                                    func(itr, ss);
+                                    std::cout << ss.str() << "]\n";
+                                }
+                                else
+                                {
+                                    std::cout << " - " << itr->GetTreeName() << "\n";
+                                }
+                            }
+                        }catch(...)
+                        {
+                            //std::cout << " - " << itr->GetTreeName() << "\n";
+                        }
+                    }
+                    if(parameters.empty())
+                        std::cout << "No parameters exist\n";
                     return;
                 } else 
                 {
@@ -750,6 +856,60 @@ int main(int argc, char* argv[])
                         current_stream.reset();
                         current_param = nullptr;
                         std::cout << "Successfully set node to " << node->GetTreeName() << "\n";
+                        std::vector<mo::IParameter*> parameters;
+                        if(current_node)
+                        {
+                            parameters = current_node->GetAllParameters();
+                        }
+                        if(current_stream)
+                        {
+
+                        }
+                        for(auto& itr : parameters)
+                        {
+                            std::stringstream ss;
+                            try
+                            {
+                                if(itr->CheckFlags(mo::Input_e))
+                                {
+                                    if(auto input = dynamic_cast<mo::InputParameter*>(itr))
+                                    {
+                                        std::stringstream ss;
+                                        ss << " - " << itr->GetTreeName() << " [";
+                                        auto input_param = input->GetInputParam();
+                                        if(input_param)
+                                        {
+                                            ss << input_param->GetTreeName();
+                                        }else
+                                        {
+                                            ss << "input not set";
+                                        }
+                                        ss << "]\n";
+                                        std::cout << ss.str();
+                                    }
+                                }
+                                else
+                                {
+                                    auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                                    if (func)
+                                    {
+                                        std::stringstream ss;
+                                        ss << " - " << itr->GetTreeName() << " [";
+                                        func(itr, ss);
+                                        std::cout << ss.str() << "]\n";
+                                    }
+                                    else
+                                    {
+                                        std::cout << " - " << itr->GetTreeName() << "\n";
+                                    }
+                                }
+                            }catch(...)
+                            {
+                                //std::cout << " - " << itr->GetTreeName() << "\n";
+                            }
+                        }
+                        if(parameters.empty())
+                            std::cout << "No parameters exist\n";
                         return;
                     }
                     else
@@ -876,7 +1036,59 @@ int main(int argc, char* argv[])
         {
             if(current_stream)
             {
-                current_stream->AddNode(name);
+                auto added_nodes = current_stream->AddNode(name);
+                if(added_nodes.size())
+                    current_node = added_nodes[0];
+                std::vector<mo::IParameter*> parameters;
+                if(current_node)
+                {
+                    parameters = current_node->GetAllParameters();
+                }
+                for(auto& itr : parameters)
+                {
+                    std::stringstream ss;
+                    try
+                    {
+                        if(itr->CheckFlags(mo::Input_e))
+                        {
+                            if(auto input = dynamic_cast<mo::InputParameter*>(itr))
+                            {
+                                std::stringstream ss;
+                                ss << " - " << itr->GetTreeName() << " [";
+                                auto input_param = input->GetInputParam();
+                                if(input_param)
+                                {
+                                    ss << input_param->GetTreeName();
+                                }else
+                                {
+                                    ss << "input not set";
+                                }
+                                ss << "]\n";
+                                std::cout << ss.str();
+                            }
+                        }
+                        else
+                        {
+                            auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                            if (func)
+                            {
+                                std::stringstream ss;
+                                ss << " - " << itr->GetTreeName() << " [";
+                                func(itr, ss);
+                                std::cout << ss.str() << "]\n";
+                            }
+                            else
+                            {
+                                std::cout << " - " << itr->GetTreeName() << "\n";
+                            }
+                        }
+                    }catch(...)
+                    {
+                        //std::cout << " - " << itr->GetTreeName() << "\n";
+                    }
+                }
+                if(parameters.empty())
+                    std::cout << "No parameters exist\n";
                 return;
             }
             if(current_node)
@@ -886,6 +1098,56 @@ int main(int argc, char* argv[])
                 {
                     current_node = added_nodes[0];
                 }
+                std::vector<mo::IParameter*> parameters;
+                if(current_node)
+                {
+                    parameters = current_node->GetAllParameters();
+                }
+                for(auto& itr : parameters)
+                {
+                    std::stringstream ss;
+                    try
+                    {
+                        if(itr->CheckFlags(mo::Input_e))
+                        {
+                            if(auto input = dynamic_cast<mo::InputParameter*>(itr))
+                            {
+                                std::stringstream ss;
+                                ss << " - " << itr->GetTreeName() << " [";
+                                auto input_param = input->GetInputParam();
+                                if(input_param)
+                                {
+                                    ss << input_param->GetTreeName();
+                                }else
+                                {
+                                    ss << "input not set";
+                                }
+                                ss << "]\n";
+                                std::cout << ss.str();
+                            }
+                        }
+                        else
+                        {
+                            auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                            if (func)
+                            {
+                                std::stringstream ss;
+                                ss << " - " << itr->GetTreeName() << " [";
+                                func(itr, ss);
+                                std::cout << ss.str() << "]\n";
+                            }
+                            else
+                            {
+                                std::cout << " - " << itr->GetTreeName() << "\n";
+                            }
+                        }
+                    }catch(...)
+                    {
+                        //std::cout << " - " << itr->GetTreeName() << "\n";
+                    }
+                }
+                if(parameters.empty())
+                    std::cout << "No parameters exist\n";
             }
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "add"));
@@ -1324,7 +1586,7 @@ int main(int argc, char* argv[])
     gui_thread.interrupt();
     
     gui_thread.join();
-    LOG(info) << "Gui thread shut down complete";
+    LOG(info) << "Gui thread shut down complete, cleaning up thread pool";
     mo::ThreadPool::Instance()->Cleanup();
     LOG(info) << "Thread pool cleanup complete";
     delete g_allocator;

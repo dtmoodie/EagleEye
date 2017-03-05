@@ -43,7 +43,7 @@ int static_errorHandler(int status, const char* func_name, const char* err_msg, 
 
 boost::shared_ptr< boost::log::sinks::asynchronous_sink<EagleLib::ui_collector>> log_sink;
 
-void EagleLib::SetupLogging()
+void EagleLib::SetupLogging(const std::string& log_dir)
 {
     cv::redirectError(&static_errorHandler);
     std::string logging_path;
@@ -52,6 +52,8 @@ void EagleLib::SetupLogging()
 #else
     logging_path = "/tmp/logs";
 #endif
+    if(log_dir.size())
+        logging_path = log_dir;
     BOOST_LOG_TRIVIAL(info) << "File logging to " << logging_path;
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
     boost::log::add_common_attributes();

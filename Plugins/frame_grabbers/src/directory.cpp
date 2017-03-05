@@ -49,12 +49,18 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
         boost::filesystem::directory_iterator end_itr;
         std::vector<std::string> files;
         // cycle through the directory
+        std::map<std::string, std::vector<std::string>> extension_map;
         for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr)
         {
             if (is_regular_file(itr->path())) 
             {
-                files.push_back(itr->path().string());
+                //files.push_back(itr->path().string());
+                extension_map[itr->path().extension().string()].push_back(itr->path().string());
             }
+        }
+        for(auto& itr: extension_map)
+        {
+            std::sort(itr.second.begin(), itr.second.end());
         }
         auto constructors = mo::MetaObjectFactory::Instance()->
                 GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
@@ -64,9 +70,9 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
         {
             if(auto info = dynamic_cast<FrameGrabberInfo*>(constructors[i]->GetObjectInfo()))
             {
-                for(auto& file : files)
+                for(auto& file : extension_map)
                 {
-                    int priority = info->CanLoadDocument(file);
+                    int priority = info->CanLoadDocument(file.second[0]);
                     if(priority > 0)
                     {
                         ++load_count[i];
@@ -80,12 +86,13 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
         {
             long long idx = itr - load_count.begin();
             this->fg = constructors[idx]->Construct();
+            this->fg->Init(true);
             auto info = dynamic_cast<FrameGrabberInfo*>(constructors[idx]->GetObjectInfo());
-            for(auto& file : files)
+            for(auto& file : extension_map)
             {
-                if(info->CanLoadDocument(file))
+                if(info->CanLoadDocument(file.second[0]))
                 {
-                    files_on_disk.push_back(file);
+                    files_on_disk.insert(files_on_disk.end(), file.second.begin(), file.second.end());
                 }
             }
             return files_on_disk.size() != 0;
@@ -116,29 +123,21 @@ TS<SyncedMemory> frame_grabber_directory::GetCurrentFrame(cv::cuda::Stream& stre
 TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& stream)
 {
     // First check if this has already been loaded in the frame buffer
+    if(index == files_on_disk.size() - 1)
+        sig_eos();
     if(files_on_disk.empty())
         return TS<SyncedMemory>(0.0, (long long)0);
     if(index >= files_on_disk.size())
         index = static_cast<int>(files_on_disk.size() - 1);
     std::string file_name = files_on_disk[index];
-    
-    if (index != this->GetParameterValue<int>("Frame Index"))
-    {
-        UpdateParameter("Frame Index", index);
-        UpdateParameter("Loaded file", file_name);
-    }
-    
-    for(auto& itr : loaded_images)
-    {
-        if(std::get<0>(itr) == file_name)
-        {
-            return std::get<1>(itr);
-        }
-    }
+
     cv::Mat h_out = cv::imread(file_name);
+
     if(h_out.empty())
         return TS<SyncedMemory>(0.0, (long long)0);
-    loaded_images.push_back(std::make_tuple(file_name, TS<SyncedMemory>(h_out)));
+
+    this->_modified = true;
+
     return TS<SyncedMemory>(h_out);
 }
 
@@ -167,6 +166,7 @@ int frame_grabber_directory::CanLoadDocument(const std::string& document)
     auto path = boost::filesystem::path(document);
     if (boost::filesystem::exists(path) && boost::filesystem::is_directory(path))
     {
+        std::map<std::string, std::vector<std::string>> extension_map;
         boost::filesystem::directory_iterator end_itr;
         std::vector<std::string> files;
         // cycle through the directory
@@ -174,9 +174,10 @@ int frame_grabber_directory::CanLoadDocument(const std::string& document)
         {
             if (is_regular_file(itr->path()))
             {
-                files.push_back(itr->path().string());
+                extension_map[itr->path().extension().string()].push_back(itr->path().string());
             }
         }
+
         auto constructors = mo::MetaObjectFactory::Instance()->
                 GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
         std::vector<int> load_count(constructors.size(), 0);
@@ -185,9 +186,9 @@ int frame_grabber_directory::CanLoadDocument(const std::string& document)
         {
             if (auto info = dynamic_cast<FrameGrabberInfo*>(constructors[i]->GetObjectInfo()))
             {
-                for (auto& file : files)
+                for(auto& file : extension_map)
                 {
-                    int priority = info->CanLoadDocument(file);
+                    int priority = info->CanLoadDocument(file.second[0]);
                     if (priority > 0)
                     {
                         ++load_count[i];
