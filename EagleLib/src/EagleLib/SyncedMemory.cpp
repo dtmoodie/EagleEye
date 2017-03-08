@@ -273,7 +273,6 @@ bool SyncedMemory::Clone(cv::cuda::GpuMat& dest, cv::cuda::Stream& stream, int i
     CV_Assert(_pimpl->sync_flags.size() > idx);
     if(_pimpl->sync_flags[idx] < DEVICE_UPDATED || _pimpl->sync_flags[idx] == DO_NOT_SYNC)
     {
-        //_pimpl->h_data[idx].copyTo(dest);
         dest.upload(_pimpl->h_data[idx], stream);
         if(_pimpl->sync_flags[idx] != DO_NOT_SYNC)
         {
