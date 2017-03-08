@@ -1046,7 +1046,7 @@ namespace cereal
                        }else
                        {
                            if(itr->second.name.size())
-                               LOG(warning) << "Invalid input format " << itr->second.name;
+                               LOG(warning) << "Invalid input format for input [" << itr->second.name << "] of node: " << nodes[i]->GetTreeName();
                        }
                 }else
                 {
