@@ -102,7 +102,7 @@ IF(WIN32)
     APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELEASE)
     APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELWITHDEBINFO)
   ENDFOREACH(dir ${BIN_DIRS})
-  CONFIGURE_FILE("../../EagleLib/tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/samples/SimpleConsole.vcxproj.user @ONLY)
+  CONFIGURE_FILE("../../EagleLib/tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/samples/SimpleConsole/SimpleConsole.vcxproj.user @ONLY)
 endif(WIN32)
     
     

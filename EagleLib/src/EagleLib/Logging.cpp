@@ -33,6 +33,10 @@
 #include <EagleLib/logger.hpp>
 #include <opencv2/core.hpp>
 
+#ifdef _MSC_VER
+#include "Windows.h"
+#endif
+
 int static_errorHandler(int status, const char* func_name, const char* err_msg, const char* file_name, int line, void* userdata)
 {
     std::stringstream ss;
@@ -48,7 +52,9 @@ void EagleLib::SetupLogging(const std::string& log_dir)
     cv::redirectError(&static_errorHandler);
     std::string logging_path;
 #if _MSC_VER
-
+    char* buffer = new char[1024];
+    auto len = GetTempPathA(1024, buffer);
+    logging_path = buffer;
 #else
     logging_path = "/tmp/logs";
 #endif
