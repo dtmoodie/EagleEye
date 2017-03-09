@@ -138,7 +138,7 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
 
     this->_modified = true;
 
-    return TS<SyncedMemory>(h_out);
+    return TS<SyncedMemory>(0.0, (long long)index, h_out);
 }
 
 TS<SyncedMemory> frame_grabber_directory::GetNextFrame(cv::cuda::Stream& stream)

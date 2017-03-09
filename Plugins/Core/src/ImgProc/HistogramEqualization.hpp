@@ -12,6 +12,7 @@ namespace aq
         public:
             MO_DERIVE(HistogramEqualization, Node)
                 INPUT(SyncedMemory, input, nullptr)
+                PARAM(bool, per_channel, false)
                 OUTPUT(SyncedMemory, output, {})
             MO_END
         protected:

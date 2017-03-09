@@ -16,13 +16,13 @@ namespace aq
 {
     namespace Nodes
     {
-        class PLUGIN_EXPORTS frame_grabber_cv: public FrameGrabberThreaded
+        class frame_grabber_cv: public FrameGrabberThreaded
         {
         public:
             frame_grabber_cv();
             MO_ABSTRACT(frame_grabber_cv, FrameGrabberThreaded)
-                PROPERTY(cv::Ptr<cv::VideoCapture>, h_cam, cv::Ptr<cv::VideoCapture>());
-                PROPERTY(cv::Ptr<cv::cudacodec::VideoReader>, d_cam, cv::Ptr<cv::cudacodec::VideoReader>());
+                PROPERTY(cv::Ptr<cv::VideoCapture>, h_cam, cv::Ptr<cv::VideoCapture>())
+                PROPERTY(cv::Ptr<cv::cudacodec::VideoReader>, d_cam, cv::Ptr<cv::cudacodec::VideoReader>())
                 MO_SIGNAL(void, eos)
             MO_END;
             virtual bool LoadFile(const std::string& file_path);
@@ -37,12 +37,12 @@ namespace aq
             TS<SyncedMemory>                        current_frame;
             bool got_frame = false;
         };
-        class PLUGIN_EXPORTS frame_grabber_camera: public frame_grabber_cv
+        class frame_grabber_camera: public frame_grabber_cv
         {
         public:
             frame_grabber_camera();
-            MO_DERIVE(frame_grabber_camera, frame_grabber_cv);
-                PROPERTY(long long, current_timestamp, 0);
+            MO_DERIVE(frame_grabber_camera, frame_grabber_cv)
+                PROPERTY(long long, current_timestamp, 0)
             MO_END;
 
             static std::vector<std::string> ListLoadableDocuments();

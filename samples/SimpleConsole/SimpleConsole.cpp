@@ -1577,6 +1577,7 @@ int main(int argc, char* argv[])
         {
             ds->StopThread();
         }
+        mo::ThreadSpecificQueue::Cleanup();
         _dataStreams.clear();
         LOG(info) << "Gui thread shut down complete";
         mo::ThreadPool::Instance()->Cleanup();
@@ -1585,8 +1586,8 @@ int main(int argc, char* argv[])
         return 0;
     }
     gui_thread.interrupt();
-    
     gui_thread.join();
+
     LOG(info) << "Gui thread shut down complete, cleaning up thread pool";
     mo::ThreadPool::Instance()->Cleanup();
     LOG(info) << "Thread pool cleanup complete";

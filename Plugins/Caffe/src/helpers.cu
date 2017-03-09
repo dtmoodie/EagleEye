@@ -51,6 +51,7 @@ void aq::Caffe::argMax(const caffe::Blob<float>* blob_, cv::Mat& h_label, cv::Ma
     cpu_blob.channels = shape[1];
     cpu_blob.height = shape[2];
     cpu_blob.width = shape[3];
+    CV_Assert(cpu_blob.channels < 255);
     h_label.create(shape[2], shape[3], CV_8U);
     h_confidence.create(shape[2], shape[3], CV_32F);
     for(int i = 0; i < cpu_blob.height; ++i)
@@ -83,12 +84,12 @@ void aq::Caffe::argMax(const caffe::Blob<float>* blob_, cv::cuda::GpuMat& label,
     blob.channels = shape[1];
     blob.height = shape[2];
     blob.width = shape[3];
-    confidence.create(shape[2], shape[3], CV_32F);
     label.create(shape[2], shape[3], CV_8U);
-    dim3 threads(64, 64, 1);
+    confidence.create(shape[2], shape[3], CV_32F);
+    dim3 threads(16, 16, 1);
 
-    dim3 blocks(cv::cudev::divUp(shape[3], 64),
-                cv::cudev::divUp(shape[2], 64),
+    dim3 blocks(cv::cudev::divUp(shape[3], 16),
+                cv::cudev::divUp(shape[2], 16),
                 1);
     auto stream = cv::cuda::StreamAccessor::getStream(stream_);
 

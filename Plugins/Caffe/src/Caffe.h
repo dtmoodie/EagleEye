@@ -24,7 +24,7 @@
 #else // Linux
   RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 #endif
-
+extern "C" Caffe_EXPORT void InitModule();
 namespace aq
 {
     namespace Nodes

@@ -8,7 +8,12 @@ namespace cuda
 {
     void Core_EXPORT drawHistogram(cv::InputArray histogram,
                        cv::OutputArray draw,
-                       cv::InputArray bins = cv::noArray(), cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+                       cv::InputArray bins = cv::noArray(),
+                       cv::cuda::Stream& stream = cv::cuda::Stream::Null());
+
+    void Core_EXPORT drawPlot(cv::InputArray plot, // 1D array
+                       cv::OutputArray draw,
+                       cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 }
 }
 namespace aq

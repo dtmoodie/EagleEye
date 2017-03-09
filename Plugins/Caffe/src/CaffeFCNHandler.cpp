@@ -4,6 +4,7 @@
 #include "Caffe.h"
 #include "opencv2/cudaarithm.hpp"
 #include "opencv2/cudaimgproc.hpp"
+#include "opencv2/cudawarping.hpp"
 
 using namespace aq::Caffe;
 
@@ -49,7 +50,15 @@ void FCNHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,
     cv::resize(label, label, input_image_size, 0, 0, cv::INTER_NEAREST);
     cv::resize(confidence, confidence, input_image_size, 0, 0, cv::INTER_NEAREST);
     label_param.UpdateData(label, timestamp, _ctx);
-    confidence_param.UpdateData(confidence, timestamp, _ctx);
+    confidence_param.UpdateData(confidence, timestamp, _ctx);*/
+
+    cv::cuda::GpuMat label, confidence;
+    EagleLib::Caffe::argMax(blob.get(), label, confidence, _ctx->GetStream());
+    cv::cuda::GpuMat resized_label, resized_confidence;
+    cv::cuda::resize(label, resized_label, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->GetStream());
+    cv::cuda::resize(confidence, resized_confidence, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->GetStream());
+    label_param.UpdateData(resized_label, timestamp, _ctx);
+    confidence_param.UpdateData(resized_confidence, timestamp, _ctx);
 }
 
 MO_REGISTER_CLASS(FCNHandler)

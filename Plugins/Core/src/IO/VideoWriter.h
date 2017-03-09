@@ -10,9 +10,9 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace aq
 {
-    namespace Nodes
-    {
-    
+namespace Nodes
+{
+
     class VideoWriter : public Node
     {
     public:
@@ -29,8 +29,15 @@ namespace aq
         void NodeInit(bool firstInit);
     protected:
         bool ProcessImpl();
-        //mo::ThreadHandle _write_thread;
-        
     };
-    }
+#ifdef HAVE_FFMPEG
+    class VideoWriterFFMPEG: public Node
+    {
+    public:
+        MO_DERIVE(VideoWriterFFMPEG, Node)
+
+        MO_END;
+    };
+#endif
+}
 }
