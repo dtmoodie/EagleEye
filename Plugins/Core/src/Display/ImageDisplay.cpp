@@ -13,15 +13,10 @@ using namespace EagleLib::Nodes;
 bool QtImageDisplay::ProcessImpl()
 {
     cv::Mat mat;
-    bool stream_desynced = false;
     long long ts = -1;
     bool overlay = overlay_timestamp;
     if(image && !image->empty())
     {
-        if(image->GetSyncState() == EagleLib::SyncedMemory::DEVICE_UPDATED)
-        {
-            stream_desynced = true;
-        }
         mat = image->GetMat(Stream());
         ts = image_param.GetTimestamp();
     }

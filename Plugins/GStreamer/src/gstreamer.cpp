@@ -157,6 +157,9 @@ bool gstreamer_base::create_pipeline(const std::string& pipeline_)
     {
         LOG(error) << "Error parsing pipeline";
         return false;
+    }else
+    {
+        LOG(info) << "Successfully created pipeline: " << pipeline_;
     }
     
     if (error != nullptr)
@@ -230,6 +233,7 @@ bool gstreamer_src_base::create_pipeline(const std::string& pipeline_)
     }
     return false;
 }
+
 bool gstreamer_src_base::set_caps(const std::string& caps_)
 {
     if(_appsink == nullptr)
@@ -238,6 +242,22 @@ bool gstreamer_src_base::set_caps(const std::string& caps_)
     if(caps == nullptr)
     {
         LOG(error) << "Error creating caps \"" << caps_ << "\"";
+        return false;
+    }
+    gst_app_sink_set_caps(GST_APP_SINK(_appsink), caps);
+    return true;
+}
+
+bool gstreamer_src_base::set_caps()
+{
+    if(_appsink == nullptr)
+        return false;
+    GstCaps* caps = gst_caps_new_simple("video/x-raw",
+                                        "format", G_TYPE_STRING, "BGR",
+                                        nullptr);
+    if(caps == nullptr)
+    {
+        LOG(error) << "Error creating caps \"" << caps << "\"";
         return false;
     }
     gst_app_sink_set_caps(GST_APP_SINK(_appsink), caps);

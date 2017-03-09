@@ -531,3 +531,5 @@ void TypedInputParameterPtr<SyncedMemory>::onInputDelete(IParameter const* param
         this->input = nullptr;
     }
 }
+
+TEMPLATE_EXTERN template class EAGLE_EXPORTS TypedInputParameterPtr<SyncedMemory>;

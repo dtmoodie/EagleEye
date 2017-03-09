@@ -300,6 +300,9 @@ bool frame_grabber_camera::LoadFile(const std::string& file_path)
     {
         h_cam.reset(new cv::VideoCapture(index));
         return true;
+    }else
+    {
+        index = 0;
     }
     auto cameras = ListLoadableDocuments();
     for(auto camera : cameras)
