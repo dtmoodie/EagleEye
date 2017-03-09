@@ -1,5 +1,7 @@
 #include "EagleLib/Nodes/Node.h"
 #include "ObjectInterfacePerModule.h"
+#include "EagleLib/ObjectDetection.hpp"
+
 #ifdef HAVE_GLOOX
 #define GLOOX_IMPORTS
 #include "gloox/loghandler.h"
@@ -38,6 +40,14 @@ namespace EagleLib
         MessageEventFilter* m_messageEventFilter;
         ChatStateFilter* m_chatStateFilter;
     public:
+        MO_DERIVE(XmppClient, Node)
+            INPUT(std::vector<DetectedObject2d>, detections, nullptr)
+            PARAM(std::string, jid, "dtmoodie")
+            PARAM(std::string, pass, "12369pp")
+            PARAM(std::string, server, "jabber.iitsp.com")
+            PARAM(uint16_t, port, 5222)
+        MO_END;
+
         virtual void onConnect();
         virtual void onDisconnect(ConnectionError e);
         virtual bool onTLSConnect(const CertInfo& info);
@@ -49,9 +59,10 @@ namespace EagleLib
         virtual void sendPointCloud();
         virtual void _sendPointCloud();
         void on_msgReceived(std::string& msg);
-        XmppClient();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream /* = cv::cuda::Stream::Null() */);
+    protected:
+        bool ProcessImpl();
+
+        //virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream /* = cv::cuda::Stream::Null() */);
     };
     }
 }

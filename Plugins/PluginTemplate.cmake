@@ -117,9 +117,12 @@ LINK_DIRECTORIES(${LINK_DIRS})
 
 set(external_include_file "#pragma once\n\n#include \"RuntimeLinkLibrary.h\"\n\n#ifdef _MSC_VER\n")
 # wndows link libs
-LIST(REMOVE_DUPLICATES LINK_LIBS_RELEASE)
-LIST(REMOVE_DUPLICATES LINK_LIBS_DEBUG)
-
+if(LINK_LIBS_RELEASE)
+  LIST(REMOVE_DUPLICATES LINK_LIBS_RELEASE)
+endif()
+if(LINK_LIBS_DEBUG)
+  LIST(REMOVE_DUPLICATES LINK_LIBS_DEBUG)
+endif()
 set(external_include_file "${external_include_file}\n#else\n\n  #ifdef NDEBUG\n")
 
 foreach(lib ${LINK_LIBS_RELEASE})

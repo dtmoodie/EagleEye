@@ -37,7 +37,7 @@ GstFlowReturn chunked_file_sink::on_pull()
         gboolean res; 
         res = gst_structure_get_int (s, "width", &width);
         res |= gst_structure_get_int (s, "height", &height);
-        const gchar* format = gst_structure_get_string(s, "format");
+        //const gchar* format = gst_structure_get_string(s, "format");
         if (!res) 
         {
             LOG(debug) << "could not get snapshot dimension\n";
@@ -124,10 +124,7 @@ GstFlowReturn JpegKeyframer::on_pull()
     GstSample *sample = gst_base_sink_get_last_sample(GST_BASE_SINK(_appsink));
     if (sample)
     {
-        GstBuffer *buffer;
         GstCaps *caps;
-        GstStructure *s;
-        GstMapInfo map;
         caps = gst_sample_get_caps(sample);
         if (!caps)
         {

@@ -17,7 +17,6 @@ namespace EagleLib
     class FastMumfordShah : public Node
     {
     public:
-        FastMumfordShah();
         MO_DERIVE(FastMumfordShah, Node)
             INPUT(SyncedMemory, input, nullptr);
             PARAM(double, lambda, 0.1);

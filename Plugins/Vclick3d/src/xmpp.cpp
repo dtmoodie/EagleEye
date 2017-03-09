@@ -1,5 +1,5 @@
 #ifdef HAVE_GLOOX
-#include "parameters/Persistence/TextSerializer.hpp"
+#include <EagleLib/Nodes/NodeInfo.hpp>
 #include "xmpp.h"
 #include "gloox/disco.h"
 #include "gloox/message.h"
@@ -11,7 +11,7 @@
 #include "gloox/socks5bytestreamserver.h"
 #include "gloox/messageeventfilter.h"
 #include <boost/algorithm/string/predicate.hpp>
-#include <parameters/ParameteredObjectImpl.hpp>
+
 using namespace gloox;
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -31,13 +31,12 @@ bool XmppClient::onTLSConnect(const CertInfo& info)
 }
 void XmppClient::handleMessage(const Message& msg, MessageSession * session)
 {
-    
-    auto body = msg.body();
-    NODE_LOG(debug) << "Received message " << body;
-    updateParameter<std::string>("Message", body);
-    auto nodes = getNodesInScope();
+    //auto body = msg.body();
+    //LOG(trace) << "Received message " << body;
+    //updateParameter<std::string>("Message", body);
+    //auto nodes = getNodesInScope();
 
-    if (boost::starts_with(body, "SetParameter\n"))
+    /*if (boost::starts_with(body, "SetParameter\n"))
     {
         std::stringstream ss(body);
         std::string line;
@@ -69,7 +68,7 @@ void XmppClient::handleMessage(const Message& msg, MessageSession * session)
 
             }
         }
-    }
+    }*/
 }
 void XmppClient::handleMessageEvent(const JID& from, MessageEventType messageEvent)
 {
@@ -90,7 +89,7 @@ void XmppClient::handleMessageSession(MessageSession *session)
     m_chatStateFilter->registerChatStateHandler(this);
     session->send("IP:68.100.56.64");
     std::stringstream ss;
-    auto nodes = getNodesInScope();
+    /*auto nodes = getNodesInScope();
     for (auto node : nodes)
     {
         auto parameters = node->getParameters();
@@ -99,7 +98,7 @@ void XmppClient::handleMessageSession(MessageSession *session)
             Parameters::Persistence::Text::Serialize(&ss, param);
             //ss << param->GetTreeName() << ":" << param->GetTypeInfo().name() << "\n";
         }
-    }
+    }*/
     session->send(ss.str());
 }
 void XmppClient::handleLog(LogLevel level, LogArea area, const std::string& message)
@@ -109,15 +108,15 @@ void XmppClient::handleLog(LogLevel level, LogArea area, const std::string& mess
     {
     case LogLevelDebug:
     {
-         NODE_LOG(debug) << message;
+         LOG(debug) << message;
     }
     case LogLevelError:
     {
-        NODE_LOG(error) << message;
+        LOG(error) << message;
     }
     case LogLevelWarning:
     {
-         NODE_LOG(warning) << message;
+        LOG(warning) << message;
     }
 
     }
@@ -128,29 +127,18 @@ void XmppClient::on_msgReceived(std::string& msg)
 
 }
 
-void XmppClient::NodeInit(bool firstInit)
-{
-    if (firstInit)
-    {
-        updateParameter<std::string>("Jabber id", "dtmoodie");
-        updateParameter<std::string>("Password", "12369pp");
-        updateParameter<std::string>("Jabber server", "jabber.iitsp.com");
-        updateParameter<unsigned short>("Server port", 5222);
-        addInputParameter<cv::cuda::GpuMat>("Input point cloud");
-        RegisterParameterCallback("Input point cloud", boost::bind(&XmppClient::_sendPointCloud, this));
-    }
 
-}
 void XmppClient::_sendPointCloud()
 {
     //Parameters::UI::ProcessingThreadCallbackService::Instance()->post(boost::bind(&XmppClient::sendPointCloud, this));
 }
 void XmppClient::sendPointCloud()
 {
-    auto gpuMat = getParameter<cv::cuda::GpuMat>("Input point cloud")->Data();
+
 
 }
-cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+
+/*cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
     if (_parameters[0]->changed || _parameters[1]->changed || _parameters[2]->changed || _parameters[3]->changed)
     {
@@ -176,8 +164,26 @@ cv::cuda::GpuMat XmppClient::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
         xmpp_client->recv(0);
     }
     return img;
+}*/
+bool XmppClient::ProcessImpl()
+{
+    if(jid_param.modified || pass_param.modified || server_param.modified || port_param.modified)
+    {
+        gloox::JID jid(jid + "@" + server);
+        xmpp_client.reset(new gloox::Client(jid, pass, port));
+        xmpp_client->registerConnectionListener(this);
+        xmpp_client->registerMessageSessionHandler(this, 0);
+        xmpp_client->disco()->setVersion("messageTest", GLOOX_VERSION, "Linux");
+        xmpp_client->disco()->setIdentity("client", "bot");
+        xmpp_client->disco()->addFeature(XMLNS_CHAT_STATES);
+        xmpp_client->logInstance().registerLogHandler(LogLevelDebug, LogAreaAll, this);
+        if (!xmpp_client->connect(false))
+        {
+            LOG(error) << "Unable to connect";
+        }
+    }
+    return true;
 }
 
-
-NODE_DEFAULT_CONSTRUCTOR_IMPL(XmppClient, Utility)
+MO_REGISTER_CLASS(XmppClient)
 #endif

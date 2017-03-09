@@ -108,9 +108,6 @@ namespace EagleLib
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
         bool ProcessImpl();
-
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-
     };
 
     class ManualMask: public Node
