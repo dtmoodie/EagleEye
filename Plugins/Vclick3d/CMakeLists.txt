@@ -4,7 +4,7 @@ FIND_PACKAGE(Qt5Network)
 find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND)
   	pkg_check_modules(GLOOX QUIET gloox)
-  	
+
 	FIND_PACKAGE(CUDA REQUIRED)
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 	INCLUDE_DIRECTORIES(
@@ -16,10 +16,10 @@ if(PkgConfig_FOUND)
 
 	find_package(PCAP QUIET)
 
-	if(PCAP_FOUND)
+	if(PCAP_FOUND AND PCAP_INCLUDE_DIRS)
 		include_directories(${PCAP_INCLUDE_DIR})
 		add_definitions(-DHAVE_PCAP)
-	endif(PCAP_FOUND)
+	endif(PCAP_FOUND AND PCAP_INCLUDE_DIRS)
 	IF(GLOOX_INCLUDEDIR AND GLOOX_LIBRARIES)
 		INCLUDE_DIRECTORIES(${GLOOX_INCLUDEDIR})
 		add_definitions(-DHAVE_GLOOX)
@@ -39,11 +39,13 @@ if(PkgConfig_FOUND)
 		Qt5::Network
 		Qt5::Core
 		Aquila
-		${LINK_LIBS} 
+		${LINK_LIBS}
 		${GLOOX_LIBRARIES}
 		${Aquila_LIBRARIES}
-		${PCAP_LIBRARY}
 	)
+        if(PCAP_LIBRARY)
+            rcc_link_lib(Vclick3d ${PCAP_LIBRARY})
+        endif()
 
 		INCLUDE(../PluginTemplate.cmake)
 
