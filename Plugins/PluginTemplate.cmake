@@ -103,11 +103,7 @@ set(${PROJECT_NAME}_PLUGIN_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAM
 ADD_DEFINITIONS(-DPLUGIN_NAME=${PROJECT_NAME})
 set(PLUGIN_NAME "${PROJECT_NAME}")
 CONFIGURE_FILE("../PluginExport.hpp.in" "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/${PROJECT_NAME}Export.hpp" @ONLY)
-if(WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FI\"Aquila/Detail/PluginExport.hpp\"")
-else(WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include \"Aquila/Detail/PluginExport.hpp\"")
-endif(WIN32)
+
 
 LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
 LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
@@ -151,7 +147,7 @@ else()
   FILE(WRITE ${link_file_path} "${external_include_file}")
 endif()
 
-FILE(WRITE "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/.gitignore" "Aquila")
+FILE(WRITE "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/.gitignore" "Aquila\n${PROJECT_NAME}Export.hpp")
 
 INSTALL(TARGETS ${PROJECT_NAME}
 	LIBRARY DESTINATION lib
