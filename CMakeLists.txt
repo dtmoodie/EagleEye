@@ -19,6 +19,7 @@ SET(CMAKE_VERBOSE_MAKEFILE "true")
 SET(CMAKE_DEBUG_POSTFIX "d")
 STRING(TOUPPER "${CMAKE_BUILD_TYPE}" _BUILD_TYPE)
 include("cmake/FindNVToolsExt.cmake")
+include("cmake/Utils.cmake")
 
 IF(WIN32)
   set(Boost_USE_STATIC_LIBS        OFF)
