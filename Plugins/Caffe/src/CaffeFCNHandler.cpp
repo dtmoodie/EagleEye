@@ -4,6 +4,7 @@
 #include "Caffe.h"
 #include "opencv2/cudaarithm.hpp"
 #include "opencv2/cudaimgproc.hpp"
+#include "opencv2/cudawarping.hpp"
 
 using namespace EagleLib::Caffe;
 
@@ -43,13 +44,21 @@ void FCNHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,
     auto blob = net.blob_by_name(output_blob_name);
     if(!blob)
         return;
-    cv::Mat label, confidence;
+    /*cv::Mat label, confidence;
     EagleLib::Caffe::argMax(blob.get(), label, confidence);
     label.setTo(0, confidence < min_confidence);
     cv::resize(label, label, input_image_size, 0, 0, cv::INTER_NEAREST);
     cv::resize(confidence, confidence, input_image_size, 0, 0, cv::INTER_NEAREST);
     label_param.UpdateData(label, timestamp, _ctx);
-    confidence_param.UpdateData(confidence, timestamp, _ctx);
+    confidence_param.UpdateData(confidence, timestamp, _ctx);*/
+
+    cv::cuda::GpuMat label, confidence;
+    EagleLib::Caffe::argMax(blob.get(), label, confidence, _ctx->GetStream());
+    cv::cuda::GpuMat resized_label, resized_confidence;
+    cv::cuda::resize(label, resized_label, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->GetStream());
+    cv::cuda::resize(confidence, resized_confidence, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->GetStream());
+    label_param.UpdateData(resized_label, timestamp, _ctx);
+    confidence_param.UpdateData(resized_confidence, timestamp, _ctx);
 }
 
 MO_REGISTER_CLASS(FCNHandler)
@@ -96,7 +105,6 @@ void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, long long
         if(class_index < blob->channels() && blob->num())
         {
             const cv::cuda::GpuMat& confidence = wrapped[0].GetGpuMat(_ctx->GetStream(), class_index);
-            //cv::Mat dbg = wrapped[0].GetMat(_ctx->GetStream(), class_index);
             cv::cuda::GpuMat confidence_out;
             cv::cuda::threshold(confidence, confidence_out, min_confidence, 255, cv::THRESH_BINARY, _ctx->GetStream());
             cv::cuda::GpuMat mask_out;

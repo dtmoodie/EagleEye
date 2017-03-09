@@ -24,9 +24,17 @@
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
+#ifndef _MSC_VER
+#include "dlfcn.h"
+#else
 
-
-
+#endif
+void InitModule()
+{
+#ifndef _MSC_VER
+    dlopen("libpython2.7.so", RTLD_LAZY | RTLD_GLOBAL);
+#endif
+}
 
 
 std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<float>& blob, bool bgr_swap)
@@ -348,7 +356,11 @@ bool CaffeImageClassifier::ProcessImpl()
     if(!CheckInput())
         WrapInput();
     auto input_shape = input->GetShape();
-
+    if(input_blobs.empty())
+    {
+        LOG_EVERY_N(warning, 100) << "No input blobs to network, is this a deploy network?";
+        return false;
+    }
     if(input_shape[3] != input_blobs[0]->channels())
     {
         LOG(warning) << "Cannot handle image with " << input_shape[3] << " channels with network "

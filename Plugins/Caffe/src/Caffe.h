@@ -3,7 +3,7 @@
 #ifndef USE_CUDNN
 #define USE_CUDNN
 #endif
-#include "EagleLib/Detail/PluginExport.hpp"
+#include "CaffeExport.hpp"
 #include "EagleLib/Nodes/Node.h"
 #include "EagleLib/ObjectDetection.hpp"
 #include "EagleLib/rcc/external_includes/cv_calib3d.hpp"
@@ -24,7 +24,7 @@
 #else // Linux
   RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 #endif
-
+extern "C" Caffe_EXPORT void InitModule();
 namespace EagleLib
 {
     namespace Nodes
