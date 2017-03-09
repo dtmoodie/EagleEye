@@ -1,9 +1,9 @@
 #include "mil_boost.hpp"
 
-using namespace EagleLib;
-using namespace EagleLib::ML;
-using namespace EagleLib::ML::classifiers;
-using namespace EagleLib::ML::classifiers::MIL;
+using namespace aq;
+using namespace aq::ML;
+using namespace aq::ML::classifiers;
+using namespace aq::ML::classifiers::MIL;
 
 
 void mil_tree::NodeInit(bool firstInit)

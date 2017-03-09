@@ -1,5 +1,5 @@
 #include "ImageDisplay.h"
-
+#include "../precompiled.hpp"
 #include <MetaObject/Thread/InterThread.hpp>
 #include <Aquila/utilities/CudaCallbacks.hpp>
 #include <Aquila/utilities/UiCallbackHandlers.h>

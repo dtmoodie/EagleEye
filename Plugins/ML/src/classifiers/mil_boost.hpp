@@ -6,13 +6,13 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 
-//#include "EagleLib/rcc/external_includes/parameters.hpp"
-#include "EagleLib/rcc/external_includes/cv_core.hpp"
-#include "EagleLib/rcc/external_includes/cv_cudev.hpp"
+//#include "Aquila/rcc/external_includes/parameters.hpp"
+#include "Aquila/rcc/external_includes/cv_core.hpp"
+#include "Aquila/rcc/external_includes/cv_cudev.hpp"
 #include <opencv2/core/cuda_types.hpp>
 #include <opencv2/core/cuda.hpp>
 
-//#include "EagleLib/Algorithm.h"
+//#include "Aquila/Algorithm.h"
 
 #include "thrust/device_vector.h"
 #include "thrust/host_vector.h"
@@ -20,7 +20,7 @@
 RUNTIME_MODIFIABLE_INCLUDE;// If this file changes, update files that include this
 RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("mil_boost", ".cu");// If the cuda implementation file changes, recompile dependents
 
-namespace EagleLib {
+namespace aq {
 namespace ML {
 namespace classifiers {
 namespace MIL {
@@ -58,7 +58,7 @@ namespace MIL {
         };
     } // namespace device
 
-class mil_tree// : public EagleLib::Algorithm
+class mil_tree// : public Aquila::Algorithm
 {
     thrust::device_vector<device::stump> d_stumps;
     thrust::host_vector<device::stump>   h_stumps;
@@ -86,4 +86,4 @@ public:
 } // namespace MIL
 } // namespace classifiers
 } // namespace ML
-} // namespace EagleLib
+} // namespace aq

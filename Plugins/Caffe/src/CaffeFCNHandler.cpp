@@ -44,7 +44,7 @@ void FCNHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,
     auto blob = net.blob_by_name(output_blob_name);
     if(!blob)
         return;
-    cv::Mat label, confidence;
+    /*cv::Mat label, confidence;
     aq::Caffe::argMax(blob.get(), label, confidence);
     label.setTo(0, confidence < min_confidence);
     cv::resize(label, label, input_image_size, 0, 0, cv::INTER_NEAREST);
@@ -53,7 +53,7 @@ void FCNHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,
     confidence_param.UpdateData(confidence, timestamp, _ctx);*/
 
     cv::cuda::GpuMat label, confidence;
-    EagleLib::Caffe::argMax(blob.get(), label, confidence, _ctx->GetStream());
+    aq::Caffe::argMax(blob.get(), label, confidence, _ctx->GetStream());
     cv::cuda::GpuMat resized_label, resized_confidence;
     cv::cuda::resize(label, resized_label, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->GetStream());
     cv::cuda::resize(confidence, resized_confidence, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->GetStream());

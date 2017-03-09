@@ -335,7 +335,7 @@ bool CaffeBase::InitNetwork()
 
 void CaffeBase::NodeInit(bool firstInit)
 {
-    EagleLib::caffe_init_singleton::inst();
+    aq::caffe_init_singleton::inst();
     if (::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
         ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
 }

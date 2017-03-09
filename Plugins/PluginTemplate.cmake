@@ -151,6 +151,8 @@ else()
   FILE(WRITE ${link_file_path} "${external_include_file}")
 endif()
 
+FILE(WRITE "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/.gitignore" "Aquila")
+
 INSTALL(TARGETS ${PROJECT_NAME}
 	LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin)

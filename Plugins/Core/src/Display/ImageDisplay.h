@@ -1,6 +1,5 @@
-#include "src/precompiled.hpp"
 #include "Aquila/Nodes/Sink.h"
-#include "src/CoreExport.hpp"
+#include "../CoreExport.hpp"
 
 namespace cv
 {
@@ -38,7 +37,6 @@ namespace Nodes
             INPUT(SyncedMemory, image, nullptr)
         MO_END;
         bool ProcessImpl();
-        cv::ogl::Buffer _pixel_buffer;
     };
 
 

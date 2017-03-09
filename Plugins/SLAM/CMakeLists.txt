@@ -21,29 +21,32 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${CMAKE_CURRENT_SOURCE_DIR}/dtam/Cpp
 )
-find_package(Eigen QUIET)
-if(EIGEN3_INCLUDE_DIR)
-  include_directories(${EIGEN3_INCLUDE_DIR})
-  ADD_SUBDIRECTORY("lsd_slam/lsd_slam_core")
+find_package(Eigen3 REQUIRED)
+  include_directories(${EIGEN_INCLUDE_DIRS})
+if(EIGEN_INCLUDE_DIRS)
+  find_package(G2O QUIET)
+  if(G2O_FOUND)
+    include_directories(${EIGEN3_INCLUDE_DIR})
+    ADD_SUBDIRECTORY("lsd_slam/lsd_slam_core")
 
-  file(GLOB_RECURSE src "src/*.cpp")
-  file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
+    file(GLOB_RECURSE src "src/*.cpp")
+    file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
 
-  IF(WIN32)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-  ENDIF()
+    IF(WIN32)
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+    ENDIF()
 
-  cuda_add_library(SLAM SHARED ${src} ${hdr} ${knl})
+    cuda_add_library(SLAM SHARED ${src} ${hdr} ${knl})
 
-  add_dependencies(SLAM EagleLib)
-  add_dependencies(SLAM OpenDTAM)
-  RCC_LINK_LIB(SLAM
-    ${OpenCV_LIBS}
-    ${CUDA_CUBLAS_LIBRARIES}
-    EagleLib
-    OpenDTAM
-  )
+    add_dependencies(SLAM Aquila)
+    add_dependencies(SLAM OpenDTAM)
+    RCC_LINK_LIB(SLAM
+      ${OpenCV_LIBS}
+      ${CUDA_CUBLAS_LIBRARIES}
+      Aquila
+      OpenDTAM
+    )
 
-  INCLUDE(../PluginTemplate.cmake)
-
+    INCLUDE(../PluginTemplate.cmake)
+  endif(G2O_FOUND)
 endif()

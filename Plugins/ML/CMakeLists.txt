@@ -34,9 +34,9 @@ ENDIF(NOT WIN32)
 
 cuda_add_library(ML SHARED ${src} ${hdr} ${knl} ${knl_hdr})
 
-add_dependencies(ML EagleLib)
-RCC_LINK_LIB(ML EagleLib ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES})
-#RCC_LINK_LIB(Core EagleLib)
+add_dependencies(ML Aquila)
+RCC_LINK_LIB(ML Aquila ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES})
+#RCC_LINK_LIB(Core Aquila)
 #RCC_LINK_LIB(Core ${OpenCV_LIBS})
 #RCC_LINK_LIB(Core ${CUDA_CUBLAS_LIBRARIES})
 

@@ -15,6 +15,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/net.hpp"
 #include "caffe/common.hpp"
+#include "CaffeExport.hpp"
 #ifdef _MSC_VER // Windows
   #ifdef _DEBUG
     RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib")

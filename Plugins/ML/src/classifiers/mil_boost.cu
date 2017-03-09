@@ -2,15 +2,15 @@
 #include "opencv2/core/cuda_stream_accessor.hpp"
 #include <opencv2/cudaarithm.hpp>
 
-#include "EagleLib/Thrust_interop.hpp"
+#include "Aquila/Thrust_interop.hpp"
 #include <thrust/transform.h>
 #include <thrust/sort.h>
 #include <thrust/system/cuda/execution_policy.h>
-using namespace EagleLib;
-using namespace EagleLib::ML;
-using namespace EagleLib::ML::classifiers;
-using namespace EagleLib::ML::classifiers::MIL;
-using namespace EagleLib::ML::classifiers::MIL::device;
+using namespace aq;
+using namespace aq::ML;
+using namespace aq::ML::classifiers;
+using namespace aq::ML::classifiers::MIL;
+using namespace aq::ML::classifiers::MIL::device;
 #define  sign(s)  ((s > 0 ) ? 1 : ((s<0) ? -1 : 0))
 
 template <typename T>

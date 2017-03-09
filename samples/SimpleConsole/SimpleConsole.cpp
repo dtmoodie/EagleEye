@@ -689,13 +689,16 @@ int main(int argc, char* argv[])
         _slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "info"));
 
-		slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_stream, &current_node](std::string file)
+        slot = new mo::TypedSlot<void(std::string)>(std::bind(
+        [&current_stream, &current_node, &variable_replace_map, &replace_map](std::string file)
 		{
 			if (current_stream)
 			{
 				//current_stream->SaveStream(file);
                 rcc::shared_ptr<aq::IDataStream> stream(current_stream);
-                aq::IDataStream::Save(file, stream);
+                std::vector<rcc::shared_ptr<aq::IDataStream>> streams;
+                streams.push_back(stream);
+                aq::IDataStream::Save(file, streams, variable_replace_map, replace_map);
                 stream->StartThread();
 			}
 			else if (current_node)
@@ -723,14 +726,18 @@ int main(int argc, char* argv[])
         slot = new mo::TypedSlot<void(std::string)>(
         std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file)
         {
-            auto stream = aq::IDataStream::Load(file, variable_replace_map, replace_map);
-            if(stream)
+            auto streams = aq::IDataStream::Load(file, variable_replace_map, replace_map);
+
+            if(streams.size())
             {
-                stream->StartThread();
-                _dataStreams.push_back(stream);
-                if(quit_on_eos)
+                for(auto& stream : streams)
                 {
-                    stream->GetRelayManager()->Connect(&eos_slot, "eos");
+                    stream->StartThread();
+                    _dataStreams.push_back(stream);
+                    if(quit_on_eos)
+                    {
+                        stream->GetRelayManager()->Connect(&eos_slot, "eos");
+                    }
                 }
             }
         }, std::placeholders::_1));
@@ -740,6 +747,12 @@ int main(int argc, char* argv[])
         slot = new mo::TypedSlot<void(std::string)>(
             std::bind([&_dataStreams,&current_stream, &current_node, &current_param](std::string what)
         {
+            if(what == "null")
+            {
+                current_stream.reset();
+                current_node.reset();
+                current_param = nullptr;
+            }
             int idx = -1;
             std::string name;
             if(!boost::conversion::detail::try_lexical_convert(what, idx))
@@ -1505,6 +1518,11 @@ int main(int argc, char* argv[])
                     {
                         LOG(debug) << "Running command (" << command << ") with arguments: " << rest;
                         (*relay)(rest);
+                    }
+                    catch(std::exception& e)
+                    {
+                        LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed due to: "
+                                     << "[" << typeid(e).name() << "] - " << e.what();
                     }
                     catch (...)
                     {

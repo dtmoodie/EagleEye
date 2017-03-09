@@ -11,7 +11,7 @@ RUNTIME_MODIFIABLE_INCLUDE;// If this file changes, update files that include th
 RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("mil_boost", ".cu");// If the cuda implementation file changes, recompile dependents
 
 
-namespace EagleLib {
+namespace aq {
     namespace ML {
         namespace classifiers {
             namespace MIL {
@@ -51,4 +51,4 @@ namespace EagleLib {
             } // namespace MIL
         } // namespace classifiers
     } // namespace ML
-} // namespace EagleLib
+} // namespace aq
