@@ -1,5 +1,6 @@
 #include "VideoWriter.h"
 #include <boost/filesystem.hpp>
+#include "MetaObject/Logging/Profiling.hpp"
 
 using namespace EagleLib;
 using namespace EagleLib::Nodes;
@@ -51,6 +52,7 @@ bool VideoWriter::ProcessImpl()
         cv::Mat h_img = image->GetMat(Stream());
         cuda::enqueue_callback_async([h_img, this]()
         {
+            mo::scoped_profile profile("Writing video");
             h_writer->write(h_img);
         }, _write_thread.GetId(), Stream());
 
@@ -65,3 +67,11 @@ void VideoWriter::write_out()
 }
 
 MO_REGISTER_CLASS(VideoWriter);
+
+
+#ifdef HAVE_FFMPEG
+
+
+
+
+#endif

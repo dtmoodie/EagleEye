@@ -13,7 +13,20 @@ find_package(CUDA REQUIRED)
 
 
 find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo videoio)
-set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+  set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+
+find_package(PkgConfig QUIET)
+if(PKG_CONFIG_FOUND)
+    ocv_check_modules(FFMPEG libavcodec libavformat libavutil libswscale)
+    ocv_check_modules(FFMPEG_libavresample libavresample)
+    if(FFMPEG_libavresample_FOUND)
+        add_definitions(-DHAVE_FFMPEG)
+    endif()
+endif()
+
+
+
+
 
 ADD_DEFINITIONS(${DEFS})
 LINK_DIRECTORIES(${LINK_DIRS})
