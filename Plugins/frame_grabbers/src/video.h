@@ -6,7 +6,7 @@ namespace EagleLib
 {
     namespace Nodes
     {
-    class PLUGIN_EXPORTS frame_grabber_video : public frame_grabber_cv
+    class frame_grabber_video : public frame_grabber_cv
     {
     public:
         ~frame_grabber_video();
