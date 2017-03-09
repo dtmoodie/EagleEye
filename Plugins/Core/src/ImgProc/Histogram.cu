@@ -3,7 +3,7 @@
 #include <cuda_runtime_api.h>
 #include <opencv2/cudev.hpp>
 #include <opencv2/core/matx.hpp>
-#include <EagleLib/Thrust_interop.hpp>
+#include <Aquila/Thrust_interop.hpp>
 #include <thrust/sequence.h>
 #include <thrust/system/cuda/execution_policy.h>
 namespace cv

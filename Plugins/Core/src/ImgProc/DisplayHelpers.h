@@ -1,12 +1,12 @@
 #pragma once
 #include <src/precompiled.hpp>
-#include <EagleLib/ObjectDetection.hpp>
+#include <Aquila/ObjectDetection.hpp>
 
-#include <EagleLib/utilities/ColorMapping.hpp>
+#include <Aquila/utilities/ColorMapping.hpp>
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

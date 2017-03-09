@@ -1,10 +1,10 @@
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include <MetaObject/MetaObject.hpp>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

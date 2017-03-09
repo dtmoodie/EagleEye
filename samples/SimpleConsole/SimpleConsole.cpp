@@ -1,8 +1,8 @@
 
-#include <EagleLib/EagleLib.hpp>
-#include <EagleLib/Logging.h>
-#include <EagleLib/Nodes/NodeFactory.h>
-#include <EagleLib/utilities/UiCallbackHandlers.h>
+#include <Aquila/Aquila.hpp>
+#include <Aquila/Logging.h>
+#include <Aquila/Nodes/NodeFactory.h>
+#include <Aquila/utilities/UiCallbackHandlers.h>
 
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Signals/RelayManager.hpp>
@@ -33,7 +33,8 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
-#include "instantiate.hpp"
+#include "MetaParameters.hpp"
+
 
 #ifdef HAVE_WT
 #include "vclick.hpp"
@@ -41,7 +42,7 @@
 
 #include <fstream>
 
-void PrintNodeTree(EagleLib::Nodes::Node* node, int depth)
+void PrintNodeTree(aq::Nodes::Node* node, int depth)
 {
     for(int i = 0; i < depth; ++i)
     {
@@ -55,7 +56,7 @@ void PrintNodeTree(EagleLib::Nodes::Node* node, int depth)
     }
 }
 
-void PrintBuffers(EagleLib::Nodes::Node* node, std::vector<std::string>& printed_nodes)
+void PrintBuffers(aq::Nodes::Node* node, std::vector<std::string>& printed_nodes)
 {
     std::string name = node->GetTreeName();
     if(std::find(printed_nodes.begin(), printed_nodes.end(), name) != printed_nodes.end())
@@ -150,12 +151,12 @@ int main(int argc, char* argv[])
     boost::program_options::variables_map vm;
     auto parsed_options = boost::program_options::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
     boost::program_options::store(parsed_options, vm);
+    mo::MetaParameters::initialize();
 
-    mo::instantiations::initialize();
     if(vm.count("log-dir"))
-        EagleLib::SetupLogging(vm["log-dir"].as<std::string>());
+        aq::SetupLogging(vm["log-dir"].as<std::string>());
     else
-        EagleLib::SetupLogging();
+        aq::SetupLogging();
 
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
     signal(SIGINT, sig_handler);
@@ -286,7 +287,7 @@ int main(int argc, char* argv[])
             try
             {
                 //cv::waitKey(1);
-                EagleLib::WindowCallbackHandler::EventLoop::Instance()->run();
+                aq::WindowCallbackHandler::EventLoop::Instance()->run();
             }catch(mo::ExceptionWithCallStack<cv::Exception>& e)
             {
 
@@ -331,9 +332,9 @@ int main(int argc, char* argv[])
         
     }else
     {
-        std::vector<rcc::shared_ptr<EagleLib::IDataStream>> _dataStreams;
-        rcc::weak_ptr<EagleLib::IDataStream> current_stream;
-        rcc::weak_ptr<EagleLib::Nodes::Node> current_node;
+        std::vector<rcc::shared_ptr<aq::IDataStream>> _dataStreams;
+        rcc::weak_ptr<aq::IDataStream> current_stream;
+        rcc::weak_ptr<aq::Nodes::Node> current_node;
         mo::IParameter* current_param = nullptr;
 
         auto print_options = []()->void
@@ -383,11 +384,11 @@ int main(int argc, char* argv[])
             std::bind([&documents_list](std::string null)->void
             {
                 documents_list.clear();
-                auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
+                auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
                 int index = 0;
                 for(auto constructor : constructors)
                 {
-                    auto fg_info = dynamic_cast<EagleLib::Nodes::IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
+                    auto fg_info = dynamic_cast<aq::Nodes::IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
                     if(fg_info)
                     {
                         auto documents = fg_info->ListLoadableDocuments();
@@ -418,7 +419,7 @@ int main(int argc, char* argv[])
                 doc = documents_list[index].first;
                 fg_override = documents_list[index].second;
             }
-            auto ds = EagleLib::IDataStream::Create(doc, fg_override);
+            auto ds = aq::IDataStream::Create(doc, fg_override);
             if(ds)
             {
                 ds->StartThread();
@@ -447,7 +448,7 @@ int main(int argc, char* argv[])
                     auto fgs = itr->GetTopLevelNodes();
                     for(auto& fg : fgs)
                     {
-                        if(auto frame_grabber = fg.DynamicCast<EagleLib::Nodes::IFrameGrabber>())
+                        if(auto frame_grabber = fg.DynamicCast<aq::Nodes::IFrameGrabber>())
                         {
                             std::cout << " - " << frame_grabber->GetPerTypeId() << " - " << frame_grabber->GetSourceFilename() << "\n";
                         }
@@ -540,7 +541,7 @@ int main(int argc, char* argv[])
                     auto fgs = current_stream->GetTopLevelNodes();
                     for(auto& fg : fgs)
                     {
-                        if(auto f_g = fg.DynamicCast<EagleLib::Nodes::IFrameGrabber>())
+                        if(auto f_g = fg.DynamicCast<aq::Nodes::IFrameGrabber>())
                         {
                             std::cout << " - Datasource: " << f_g->GetSourceFilename() << "\n";
                         }
@@ -613,12 +614,12 @@ int main(int argc, char* argv[])
             if(what == "projects")
             {
                 THROW(debug) << "Needs to be reimplemented";
-                //auto project_count = EagleLib::ObjectManager::Instance().getProjectCount();
+                //auto project_count = aq::ObjectManager::Instance().getProjectCount();
                 /*std::stringstream ss;
                 ss << "\n";
                 for(int i = 0; i < project_count; ++i)
                 {
-                    ss << i << " - " << EagleLib::ObjectManager::Instance().getProjectName(i) << "\n";
+                    ss << i << " - " << aq::ObjectManager::Instance().getProjectName(i) << "\n";
                 }
                 std::cout << ss.str() << std::endl;*/
             }
@@ -693,8 +694,8 @@ int main(int argc, char* argv[])
 			if (current_stream)
 			{
 				//current_stream->SaveStream(file);
-                rcc::shared_ptr<EagleLib::IDataStream> stream(current_stream);
-                EagleLib::IDataStream::Save(file, stream);
+                rcc::shared_ptr<aq::IDataStream> stream(current_stream);
+                aq::IDataStream::Save(file, stream);
                 stream->StartThread();
 			}
 			else if (current_node)
@@ -722,7 +723,7 @@ int main(int argc, char* argv[])
         slot = new mo::TypedSlot<void(std::string)>(
         std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file)
         {
-            auto stream = EagleLib::IDataStream::Load(file, variable_replace_map, replace_map);
+            auto stream = aq::IDataStream::Load(file, variable_replace_map, replace_map);
             if(stream)
             {
                 stream->StartThread();
@@ -1000,7 +1001,7 @@ int main(int argc, char* argv[])
 
         slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string filter)->void
         {
-            auto nodes = EagleLib::NodeFactory::Instance()->GetConstructableNodes();
+            auto nodes = aq::NodeFactory::Instance()->GetConstructableNodes();
             for(auto& node : nodes)
             {
                 if(filter.size())
@@ -1093,7 +1094,7 @@ int main(int argc, char* argv[])
             }
             if(current_node)
             {
-                auto added_nodes = EagleLib::NodeFactory::Instance()->AddNode(name, current_node.Get());
+                auto added_nodes = aq::NodeFactory::Instance()->AddNode(name, current_node.Get());
                 if(added_nodes.size() == 1)
                 {
                     current_node = added_nodes[0];

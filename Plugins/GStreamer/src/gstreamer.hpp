@@ -5,10 +5,10 @@
 #ifdef HAVE_GST_RTSPSERVER
 #include <gst/rtsp-server/rtsp-server.h>
 #endif
-#include "EagleLib/Nodes/Node.h"
-#include "EagleLib/Detail/Export.hpp"
-#include "EagleLib/Detail/PluginExport.hpp"
-#include <EagleLib/utilities/CudaUtils.hpp>
+#include "Aquila/Nodes/Node.h"
+#include "Aquila/Detail/Export.hpp"
+#include "Aquila/Detail/PluginExport.hpp"
+#include <Aquila/utilities/CudaUtils.hpp>
 #include <MetaObject/MetaObject.hpp>
 
 #include <gst/gst.h>
@@ -54,7 +54,7 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
 #endif
 #endif
 
-namespace EagleLib
+namespace aq
 {
     class PLUGIN_EXPORTS gstreamer_base
     {
@@ -121,7 +121,7 @@ namespace EagleLib
             virtual void start_feed();
             virtual void stop_feed();
         protected:
-            // The output of EagleLib's processing pipeline and the input to the gstreamer pipeline
+            // The output of Aquila's processing pipeline and the input to the gstreamer pipeline
             GstAppSrc*     _source;
             // id for the need data signal
             guint           _need_data_id;

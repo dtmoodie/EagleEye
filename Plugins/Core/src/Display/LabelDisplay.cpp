@@ -1,6 +1,6 @@
 #include "LabelDisplay.hpp"
-#include <EagleLib/Nodes/NodeInfo.hpp>
-#include <EagleLib/ObjectDetection.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/ObjectDetection.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudawarping.hpp>
@@ -8,7 +8,7 @@
 
 #include <fstream>
 #include <boost/filesystem.hpp>
-using namespace EagleLib::Nodes;
+using namespace aq::Nodes;
 
 bool LabelDisplay::ProcessImpl()
 {
@@ -62,7 +62,7 @@ bool LabelDisplay::ProcessImpl()
         input = label->GetGpuMat(Stream());
     }
     cv::cuda::GpuMat output;
-    EagleLib::applyColormap(input, output, d_lut, Stream());
+    aq::applyColormap(input, output, d_lut, Stream());
 
     if(original_image == nullptr)
     {

@@ -4,7 +4,7 @@
 
 int main()
 {
-    //EagleLib::ObjectManager::Instance().TestRuntimeCompilation();
+    //aq::ObjectManager::Instance().TestRuntimeCompilation();
     return 0;
 }
 

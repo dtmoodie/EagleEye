@@ -1,7 +1,7 @@
 #pragma once
-#include "EagleLib/Nodes/Node.h"
-#include "EagleLib/SyncedMemory.h"
-namespace EagleLib
+#include "Aquila/Nodes/Node.h"
+#include "Aquila/SyncedMemory.h"
+namespace aq
 {
     namespace Nodes
     {

@@ -2,7 +2,7 @@
 #include <MetaObject/MetaObject.hpp>
 #include "gstreamer.hpp"
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

@@ -1,10 +1,10 @@
 /*#include "ProcessFuture.h"
-#include "EagleLib/DataStreamManager.h"
+#include "Aquila/DataStreamManager.h"
 #include "Remotery.h"
-#include <EagleLib/frame_grabber_base.h>
-#include "EagleLib/Signals.h"
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+#include <Aquila/frame_grabber_base.h>
+#include "Aquila/Signals.h"
+using namespace aq;
+using namespace aq::Nodes;
 
 ProcessFuture::ProcessFuture()
 {

@@ -1,12 +1,12 @@
 #pragma once
 #include "CaffeExport.hpp"
 #include <opencv2/core/cuda.hpp>
-#include <EagleLib/SyncedMemory.h>
+#include <Aquila/SyncedMemory.h>
 namespace caffe
 {
     template<class T> class Blob;
 }
-namespace EagleLib
+namespace aq
 {
     namespace Caffe
     {

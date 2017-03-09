@@ -1,9 +1,9 @@
 #pragma once
-#include "EagleLib/Algorithm.h"
+#include "Aquila/Algorithm.h"
 
 namespace Ros
 {
-    class IRosMessageWriter: public EagleLib::Algorithm
+    class IRosMessageWriter: public aq::Algorithm
     {
     public:
 

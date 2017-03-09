@@ -1,10 +1,10 @@
 #pragma once
 
-#include <EagleLib/Nodes/Node.h>
+#include <Aquila/Nodes/Node.h>
 #include <opencv2/cudaarithm.hpp>
 #include "../CoreExport.hpp"
-#include <EagleLib/rcc/external_includes/cv_cudafilters.hpp>
-namespace EagleLib
+#include <Aquila/rcc/external_includes/cv_cudafilters.hpp>
+namespace aq
 {
     Core_EXPORT void applyColormap(const cv::cuda::GpuMat& input, cv::cuda::GpuMat& output, const cv::cuda::GpuMat& colormap, cv::cuda::Stream& stream);
 

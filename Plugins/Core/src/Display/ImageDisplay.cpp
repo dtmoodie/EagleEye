@@ -1,14 +1,14 @@
 #include "ImageDisplay.h"
 
 #include <MetaObject/Thread/InterThread.hpp>
-#include <EagleLib/utilities/CudaCallbacks.hpp>
-#include <EagleLib/utilities/UiCallbackHandlers.h>
+#include <Aquila/utilities/CudaCallbacks.hpp>
+#include <Aquila/utilities/UiCallbackHandlers.h>
 #include <MetaObject/Logging/Profiling.hpp>
 
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 bool QtImageDisplay::ProcessImpl()
 {
@@ -30,7 +30,7 @@ bool QtImageDisplay::ProcessImpl()
     {
         size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
 
-        EagleLib::cuda::enqueue_callback_async(
+        aq::cuda::enqueue_callback_async(
             [mat, name, overlay, ts, this]()->void
         {
             PROFILE_RANGE(imshow);
@@ -80,7 +80,7 @@ bool HistogramDisplay::ProcessImpl()
     size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
     //draw.copyTo(output_image, Stream());
     cv::cuda::add(output_image, draw, output_image, cv::noArray(), -1, Stream());
-    EagleLib::cuda::enqueue_callback_async(
+    aq::cuda::enqueue_callback_async(
                 [name, output_image, this]()->void
     {
         PROFILE_RANGE(imshow);
@@ -125,7 +125,7 @@ bool OGLImageDisplay::ProcessImpl()
     //_pixel_buffer.copyFrom(image->GetGpuMat(Stream()), Stream());
     size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
     cv::cuda::GpuMat gpumat = image->GetGpuMat(Stream());
-    EagleLib::cuda::enqueue_callback_async(
+    aq::cuda::enqueue_callback_async(
                 [name, this, gpumat]()->void
     {
         PROFILE_RANGE(imshow);

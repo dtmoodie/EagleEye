@@ -1,5 +1,5 @@
-#include <EagleLib/plotters/PlotManager.h>
-#include "EagleLib/plotters/Plotter.h"
+#include <Aquila/plotters/PlotManager.h>
+#include "Aquila/plotters/Plotter.h"
 
 #include "plotwizarddialog.h"
 #include "ui_plotwizarddialog.h"
@@ -31,13 +31,13 @@ void PlotWizardDialog::setup()
     
     ui->plotPreviewLayout->addWidget(plot_splitter, 0,0);
     
-    auto plotters = EagleLib::PlotManager::Instance()->GetAvailablePlots();
+    auto plotters = aq::PlotManager::Instance()->GetAvailablePlots();
     for(size_t i = 0; i < plotters.size(); ++i)
     {
-        rcc::shared_ptr<EagleLib::Plotter> plotter = EagleLib::PlotManager::Instance()->GetPlot(plotters[i]);
+        rcc::shared_ptr<aq::Plotter> plotter = aq::PlotManager::Instance()->GetPlot(plotters[i]);
         if(plotter != nullptr)
         {
-            rcc::shared_ptr<EagleLib::QtPlotter> qtPlotter(plotter);
+            rcc::shared_ptr<aq::QtPlotter> qtPlotter(plotter);
             if(qtPlotter)
             {
                 QWidget* plot = qtPlotter->CreatePlot(this);

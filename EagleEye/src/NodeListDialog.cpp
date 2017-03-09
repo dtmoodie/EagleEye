@@ -1,7 +1,7 @@
 #include "NodeListDialog.h"
 #include "ui_nodelistdialog.h"
 #include "MetaObject/MetaObjectFactory.hpp"
-#include "EagleLib/Nodes/NodeInfo.hpp"
+#include "Aquila/Nodes/NodeInfo.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
 #include "QListWidgetItem"
 
@@ -24,15 +24,15 @@ NodeListDialog::~NodeListDialog()
 void NodeListDialog::update()
 {
     ui->NodeList->clear();
-    //auto nodes = EagleLib::NodeManager::getInstance().getConstructableNodes();
+    //auto nodes = aq::NodeManager::getInstance().getConstructableNodes();
     auto nodes = mo::MetaObjectFactory::Instance()->GetConstructors(IID_NodeObject);
     for(size_t i = 0; i < nodes.size(); ++i)
     {
         //ui->NodeList->addItem(QString::fromStdString(nodes[i]));
-        //auto info  = EagleLib::NodeManager::getInstance().GetNodeInfo(nodes[i]);
+        //auto info  = aq::NodeManager::getInstance().GetNodeInfo(nodes[i]);
         auto info = nodes[i]->GetObjectInfo();
         QTreeWidgetItem* parent = nullptr;
-        if (auto node_info = dynamic_cast<EagleLib::Nodes::NodeInfo*>(info))
+        if (auto node_info = dynamic_cast<aq::Nodes::NodeInfo*>(info))
         {
             auto category = node_info->GetNodeCategory();
             if(category.size() == 0)

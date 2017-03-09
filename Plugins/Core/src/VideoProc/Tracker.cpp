@@ -1,17 +1,17 @@
 #include "Tracker.h"
-//#include "EagleLib/Nodes/VideoProc/Tracking.hpp"
-#include "EagleLib/rcc/external_includes/cv_imgproc.hpp"
-#include <EagleLib/rcc/external_includes/cv_highgui.hpp>
-#include <EagleLib/rcc/external_includes/cv_calib3d.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <EagleLib/Nodes/NodeInfo.hpp>
+//#include "Aquila/Nodes/VideoProc/Tracking.hpp"
+#include "Aquila/rcc/external_includes/cv_imgproc.hpp"
+#include <Aquila/rcc/external_includes/cv_highgui.hpp>
+#include <Aquila/rcc/external_includes/cv_calib3d.hpp>
+#include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 
 #include <MetaObject/Thread/InterThread.hpp>
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 MO_REGISTER_CLASS(KeyFrameTracker);
@@ -93,7 +93,7 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
 {
     std::pair<cv::cuda::GpuMat*, std::string>* data = (std::pair<cv::cuda::GpuMat*, std::string>*)userData;
     boost::function<void(void)> f = boost::bind(displayCallback, *data->first, data->second);
-    Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, mo::TypeInfo(typeid(EagleLib::Nodes::Node))));
+    Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, mo::TypeInfo(typeid(aq::Nodes::Node))));
     delete data;
 }
 */

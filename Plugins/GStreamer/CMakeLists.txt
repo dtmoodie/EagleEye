@@ -59,7 +59,7 @@ IF(GSTREAMER_FOUND)
     ADD_LIBRARY(GStreamer SHARED ${src} ${hdr})
     RCC_LINK_LIB(GStreamer
         ${OpenCV_LIBS}
-        EagleLib
+        Aquila
         Qt5::Network
         ${GSTREAMER_gstapp_LIBRARY}
         ${GSTREAMER_gstaudio_LIBRARY}
@@ -83,7 +83,7 @@ IF(GSTREAMER_FOUND)
     ENDIF()
 
     INCLUDE(../PluginTemplate.cmake)
-    ADD_DEPENDENCIES(GStreamer EagleLib)
+    ADD_DEPENDENCIES(GStreamer Aquila)
 else()
     message("Gstreamer not found")
 ENDIF()

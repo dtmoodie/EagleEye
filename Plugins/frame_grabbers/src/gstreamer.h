@@ -1,11 +1,11 @@
 #pragma once
 
 #include "cv_capture.h"
-#include "EagleLib/ICoordinateManager.h"
+#include "Aquila/ICoordinateManager.h"
 #include "RuntimeLinkLibrary.h"
 
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

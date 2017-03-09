@@ -6,7 +6,7 @@
 #include <opencv2/core/cuda/transform.hpp>
 #include <opencv2/core/cuda_stream_accessor.hpp>
 
-float EagleLib::Caffe::iou(const cv::Rect& r1, const cv::Rect& r2)
+float aq::Caffe::iou(const cv::Rect& r1, const cv::Rect& r2)
 {
     float intersection = (r1 & r2).area();
     float rect_union = (r1.area() + r2.area()) - intersection;
@@ -42,7 +42,7 @@ void __global__ argmaxKernel(Matrix3D<const float> data, cv::cuda::PtrStepSz<flo
     label(y,x) = maxLabel;
 }
 
-void EagleLib::Caffe::argMax(const caffe::Blob<float>* blob_, cv::Mat& h_label, cv::Mat& h_confidence)
+void aq::Caffe::argMax(const caffe::Blob<float>* blob_, cv::Mat& h_label, cv::Mat& h_confidence)
 {
     auto shape = blob_->shape();
     CV_Assert(shape.size() == 4);
@@ -73,7 +73,7 @@ void EagleLib::Caffe::argMax(const caffe::Blob<float>* blob_, cv::Mat& h_label, 
     }
 }
 
-void EagleLib::Caffe::argMax(const caffe::Blob<float>* blob_, cv::cuda::GpuMat& label, cv::cuda::GpuMat& confidence, cv::cuda::Stream& stream_)
+void aq::Caffe::argMax(const caffe::Blob<float>* blob_, cv::cuda::GpuMat& label, cv::cuda::GpuMat& confidence, cv::cuda::Stream& stream_)
 {
     const float* data = blob_->gpu_data();
     auto shape = blob_->shape();

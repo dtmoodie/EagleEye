@@ -1,14 +1,14 @@
 #include "RosPublisher.hpp"
 #include "RosInterface.hpp"
-#include "EagleLib/utilities/CudaCallbacks.hpp"
-#include "EagleLib/Nodes/NodeInfo.hpp"
+#include "Aquila/utilities/CudaCallbacks.hpp"
+#include "Aquila/Nodes/NodeInfo.hpp"
 
 #include <ros/node_handle.h>
 #include <cv_bridge/cv_bridge.h>
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 void ImagePublisher::NodeInit(bool firstInit)
@@ -33,7 +33,7 @@ bool ImagePublisher::ProcessImpl()
     {
         // data on gpu, do async publish
         size_t id = mo::GetThisThread();
-        EagleLib::cuda::enqueue_callback_async(
+        aq::cuda::enqueue_callback_async(
             [h_input, this]()->void
         {
             // This code is executed on cpu thead id after the download is complete

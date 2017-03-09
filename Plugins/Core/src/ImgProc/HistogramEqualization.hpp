@@ -1,9 +1,9 @@
 #pragma once
 
-#include <EagleLib/Nodes/Node.h>
+#include <Aquila/Nodes/Node.h>
 #include <opencv2/cudaimgproc.hpp>
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

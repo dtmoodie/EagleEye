@@ -5,7 +5,7 @@
 #include "BoundingBox.hpp"
 
 #include <Wt/WApplication>
-#include <EagleLib/Nodes/Node.h>
+#include <Aquila/Nodes/Node.h>
 #include <MetaObject/Parameters/TypedParameterPtr.hpp>
 #include <sstream>
 #include <mutex>
@@ -48,7 +48,7 @@ namespace vclick
         Wt::JSlot* update;
         
         std::shared_ptr<TParameterResource<cv::Mat>> foregroundStream;
-        std::shared_ptr<TParameterResource<EagleLib::SyncedMemory>> backgroundStream;
+        std::shared_ptr<TParameterResource<aq::SyncedMemory>> backgroundStream;
         std::shared_ptr<TParameterResource<std::vector<BoundingBox>>> boundingBoxStream;
         std::shared_ptr<TParameterResourceRaw<cv::Mat>> heartbeatStream;
         std::shared_ptr<TParameterResourceRaw<cv::Mat>> rawStream;

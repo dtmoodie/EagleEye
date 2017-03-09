@@ -1,7 +1,7 @@
 #pragma once
 
-#include <EagleLib/Nodes/Node.h>
-//#include <EagleLib/Nodes/VideoProc/Tracking.hpp>
+#include <Aquila/Nodes/Node.h>
+//#include <Aquila/Nodes/VideoProc/Tracking.hpp>
 #include <boost/circular_buffer.hpp>
 
 #include <MetaObject/Parameters/ParameterMacros.hpp>
@@ -11,7 +11,7 @@
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

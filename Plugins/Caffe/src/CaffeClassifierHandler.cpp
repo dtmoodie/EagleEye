@@ -1,6 +1,6 @@
 #include "CaffeClassifierHandler.hpp"
 #include "CaffeNetHandlerInfo.hpp"
-using namespace EagleLib::Caffe;
+using namespace aq::Caffe;
 
 template <typename T>
 std::vector<size_t> sort_indexes(const std::vector<T> &v) {

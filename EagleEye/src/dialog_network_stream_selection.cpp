@@ -2,7 +2,7 @@
 #include "ui_dialog_network_stream_selection.h"
 #include <qlistwidget.h>
 
-#include <EagleLib/Nodes/IFrameGrabber.hpp>
+#include <Aquila/Nodes/IFrameGrabber.hpp>
 
 dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent) :
     QDialog(parent),
@@ -14,13 +14,13 @@ dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent
     ui->list_url_history->installEventFilter(this);
     QObject::connect(ui->list_url_history, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(on_item_clicked(QListWidgetItem*)));
 
-    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
+    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
     for(auto constructor : constructors)
     {
         auto info = constructor->GetObjectInfo();
         if(info)
         {
-            auto fg_info = dynamic_cast<EagleLib::Nodes::FrameGrabberInfo*>(info);
+            auto fg_info = dynamic_cast<aq::Nodes::FrameGrabberInfo*>(info);
             if(fg_info)
             {
                 auto devices = fg_info->ListLoadableDocuments();

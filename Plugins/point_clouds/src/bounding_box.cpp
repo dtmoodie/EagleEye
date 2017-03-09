@@ -1,8 +1,8 @@
 #include "bounding_box.h"
 #include <opencv2/calib3d.hpp>
 
-using namespace EagleLib;
-using namespace EagleLib::point_clouds;
+using namespace aq;
+using namespace aq::point_clouds;
 
 namespace detail
 {

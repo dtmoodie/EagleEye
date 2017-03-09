@@ -1,5 +1,5 @@
 #include "glib_thread.h"
-#include "EagleLib/rcc/SystemTable.hpp"
+#include "Aquila/rcc/SystemTable.hpp"
 
 #include "ObjectInterfacePerModule.h"
 

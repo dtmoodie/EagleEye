@@ -1,8 +1,8 @@
 #pragma once
-#include "EagleLib/Nodes/Node.h"
-#include "EagleLib/ObjectDetection.hpp"
+#include "Aquila/Nodes/Node.h"
+#include "Aquila/ObjectDetection.hpp"
 
-namespace EagleLib
+namespace aq
 {
 namespace Nodes
 {

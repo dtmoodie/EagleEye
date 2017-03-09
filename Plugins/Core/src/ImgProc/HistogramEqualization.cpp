@@ -1,8 +1,8 @@
 #include "HistogramEqualization.hpp"
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudaarithm.hpp>
-using namespace EagleLib::Nodes;
+using namespace aq::Nodes;
 
 bool HistogramEqualization::ProcessImpl()
 {

@@ -6,7 +6,7 @@
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
-namespace EagleLib
+namespace aq
 { 
     namespace Nodes
     {
@@ -28,4 +28,4 @@ namespace EagleLib
             bool ProcessImpl();
         };
     } // namespace nodes
-} // namespace EagleLib 
+} // namespace aq 

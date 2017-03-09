@@ -4,7 +4,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/core/cuda.hpp>
 
-namespace EagleLib
+namespace aq
 {
     namespace point_clouds
     {

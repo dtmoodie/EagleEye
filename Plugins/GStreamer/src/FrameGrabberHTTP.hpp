@@ -1,7 +1,7 @@
 #include "gstreamer.hpp"
-#include "EagleLib/Nodes/IFrameGrabber.hpp"
+#include "Aquila/Nodes/IFrameGrabber.hpp"
 #include "GStreamerExport.hpp"
-namespace EagleLib
+namespace aq
 {
 namespace Nodes
 {
@@ -15,7 +15,7 @@ public:
     static int LoadTimeout(){return 10000;}
 
     long long GetNumFrames() {return -1;}
-    rcc::shared_ptr<EagleLib::ICoordinateManager> GetCoordinateManager()
+    rcc::shared_ptr<aq::ICoordinateManager> GetCoordinateManager()
     {
         return {};
     }

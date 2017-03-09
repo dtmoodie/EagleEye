@@ -17,7 +17,7 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
     ui->comboBox->addItem(RCppOptimizationLevelStrings[1]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[2]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[3]);
-    //ui->comboBox->setCurrentIndex(EagleLib::ObjectManager::Instance().getOptimizationLevel());
+    //ui->comboBox->setCurrentIndex(aq::ObjectManager::Instance().getOptimizationLevel());
     updateDisplay();
 }
 void RCCSettingsDialog::updateDisplay()
@@ -67,7 +67,7 @@ void RCCSettingsDialog::updateDisplay()
         objItem->setText(0,QString::fromStdString(constructor->GetName()));
         //objItem->setText(1, QString::number(obj.second));
         ui->linkTree->addTopLevelItem(objItem);
-        /*auto linkDependencies = EagleLib::ObjectManager::Instance().getLinkDependencies(obj.first);
+        /*auto linkDependencies = aq::ObjectManager::Instance().getLinkDependencies(obj.first);
         for(auto& link : linkDependencies)
         {
             QTreeWidgetItem* dependency = new QTreeWidgetItem(objItem);
@@ -84,13 +84,13 @@ RCCSettingsDialog::~RCCSettingsDialog()
 
 void RCCSettingsDialog::on_buttonBox_accepted()
 {
-    //EagleLib::ObjectManager::Instance().setOptimizationLevel((RCppOptimizationLevel)ui->comboBox->currentIndex());
-    //ui->comboBox->setCurrentIndex(EagleLib::ObjectManager::Instance().getOptimizationLevel());
+    //aq::ObjectManager::Instance().setOptimizationLevel((RCppOptimizationLevel)ui->comboBox->currentIndex());
+    //ui->comboBox->setCurrentIndex(aq::ObjectManager::Instance().getOptimizationLevel());
 }
 
 void RCCSettingsDialog::on_buttonBox_rejected()
 {
-    //ui->comboBox->setCurrentIndex(EagleLib::ObjectManager::Instance().getOptimizationLevel());
+    //ui->comboBox->setCurrentIndex(aq::ObjectManager::Instance().getOptimizationLevel());
 }
 
 void RCCSettingsDialog::on_comboBox_currentIndexChanged(int index)
@@ -118,7 +118,7 @@ void RCCSettingsDialog::on_btnAddIncludeDir_clicked()
         projectId = ui->incDirs->indexOfTopLevelItem(item);
     }
         
-    //EagleLib::ObjectManager::Instance().addIncludeDir(dir.toStdString(), projectId);
+    //aq::ObjectManager::Instance().addIncludeDir(dir.toStdString(), projectId);
     ui->includeDir->clear();
     updateDisplay();
 }
@@ -147,15 +147,15 @@ void RCCSettingsDialog::on_btnAddLinkDir_clicked()
         LOG(warning) << "Unable to determine correct project";
         return;
     }
-    //EagleLib::ObjectManager::Instance().addLinkDir(dir.toStdString(), projectId);
+    //aq::ObjectManager::Instance().addLinkDir(dir.toStdString(), projectId);
     ui->linkDir->clear();
     updateDisplay();
 }
 void RCCSettingsDialog::on_btnTestRcc_clicked()
 {
-    //EagleLib::ObjectManager::Instance().TestRuntimeCompilation();
+    //aq::ObjectManager::Instance().TestRuntimeCompilation();
 }
 void RCCSettingsDialog::on_btn_abort_compilation_clicked()
 {
-    //EagleLib::ObjectManager::Instance().abort_compilation();
+    //aq::ObjectManager::Instance().abort_compilation();
 }

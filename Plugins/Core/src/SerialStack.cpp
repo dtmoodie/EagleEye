@@ -1,8 +1,8 @@
 /*#include "nodes/SerialStack.h"
 
 #include <parameters/ParameteredObjectImpl.hpp>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SerialStack, Utility);
 

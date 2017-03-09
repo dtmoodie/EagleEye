@@ -4,8 +4,8 @@
 namespace mo
 {
     template<class Type>
-    struct MetaObjectInfoImpl<Type, EagleLib::Caffe::NetHandlerInfo>
-            : public EagleLib::Caffe::NetHandlerInfo
+    struct MetaObjectInfoImpl<Type, aq::Caffe::NetHandlerInfo>
+            : public aq::Caffe::NetHandlerInfo
     {
         std::map<int, int> CanHandleNetwork(const caffe::Net<float>& net) const
         {

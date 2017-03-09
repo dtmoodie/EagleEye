@@ -5,8 +5,8 @@
 
 
 /*RUNTIME_COMPILER_LINKLIBRARY("-lcudart")
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 void SetDevice::NodeInit(bool firstInit)
 {

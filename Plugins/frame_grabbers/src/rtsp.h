@@ -1,9 +1,9 @@
 #pragma once
 #ifdef HAVE_GSTREAMER
 #include "gstreamer.h"
-#include "EagleLib/ICoordinateManager.h"
+#include "Aquila/ICoordinateManager.h"
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

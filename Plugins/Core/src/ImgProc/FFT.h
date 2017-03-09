@@ -1,12 +1,12 @@
 #pragma once
 #include <src/precompiled.hpp>
-#include <EagleLib/Nodes/Node.h>
-#include "EagleLib/utilities/CudaUtils.hpp"
+#include <Aquila/Nodes/Node.h>
+#include "Aquila/utilities/CudaUtils.hpp"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

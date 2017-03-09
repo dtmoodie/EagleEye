@@ -11,7 +11,7 @@ if(Qt5_FOUND)
 	if(${_python_qt_name}_QtAll_FOUND)
     
 	  include_directories("${Qt5Python35_DIR}/../../../include"
-	  ${EaglePython_INCLUDE})
+          ${AquilaPython_INCLUDE})
 	
 	
 	set(Qt5Python35_BIN_DIR "" CACHE PATH "${Qt5Python35_DIR}/../../../bin")
@@ -51,8 +51,8 @@ if(Qt5_FOUND)
 	QT5_WRAP_CPP(MOC ${hdr})
 	LINK_DIRECTORIES(${LINK_DIRS})
 	add_executable(PythonInteractive ${MOC} ${hdr} ${src})
-	RCC_LINK_LIB(PythonInteractive EagleLib ${_python_qt_name} ${_python_qt_name}_QtAll EaglePython)
-	add_dependencies(PythonInteractive EagleLib EaglePython)
+        RCC_LINK_LIB(PythonInteractive Aquila ${_python_qt_name} ${_python_qt_name}_QtAll AquilaPython)
+        add_dependencies(PythonInteractive Aquila AquilaPython)
 	endif()
   endif()
 endif()

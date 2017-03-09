@@ -1,14 +1,14 @@
 #pragma once
 #include "precompiled.hpp"
 #include <boost/circular_buffer.hpp>
-#include "EagleLib/Detail/Export.hpp"
-#include <EagleLib/Detail/PluginExport.hpp>
+#include "Aquila/Detail/Export.hpp"
+#include <Aquila/Detail/PluginExport.hpp>
 #include <MetaObject/Parameters/Types.hpp>
 
 SETUP_PROJECT_DEF
 
 
-namespace EagleLib
+namespace aq
 {
     typedef std::vector<cv::Point2f> ImagePoints;
     typedef std::vector<cv::Point3f> ObjectPoints;

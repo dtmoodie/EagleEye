@@ -6,14 +6,14 @@
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {
-        class ConvertToGrey: public ::EagleLib::Nodes::Node
+        class ConvertToGrey: public ::aq::Nodes::Node
         {
         public:
-            MO_DERIVE(ConvertToGrey, ::EagleLib::Nodes::Node);
+            MO_DERIVE(ConvertToGrey, ::aq::Nodes::Node);
                 INPUT(SyncedMemory, input_image, nullptr);
                 OUTPUT(SyncedMemory, grey_image, SyncedMemory());
             MO_END;
@@ -21,20 +21,20 @@ namespace EagleLib
             bool ProcessImpl();
         };
 
-        class ConvertToHSV: public ::EagleLib::Nodes::Node
+        class ConvertToHSV: public ::aq::Nodes::Node
         {
         public:
-            MO_DERIVE(ConvertToHSV, ::EagleLib::Nodes::Node);
+            MO_DERIVE(ConvertToHSV, ::aq::Nodes::Node);
             INPUT(SyncedMemory, input_image, nullptr);
             OUTPUT(SyncedMemory, hsv_image, SyncedMemory());
             MO_END;
         protected:
             bool ProcessImpl();
         };
-        class ConvertToLab : public ::EagleLib::Nodes::Node
+        class ConvertToLab : public ::aq::Nodes::Node
         {
         public:
-            MO_DERIVE(ConvertToLab, ::EagleLib::Nodes::Node)
+            MO_DERIVE(ConvertToLab, ::aq::Nodes::Node)
             INPUT(SyncedMemory, input_image, nullptr)
             OUTPUT(SyncedMemory, lab_image, SyncedMemory())
             MO_END
@@ -42,7 +42,7 @@ namespace EagleLib
             bool ProcessImpl();
         };
 
-        class ConvertTo: public EagleLib::Nodes::Node
+        class ConvertTo: public aq::Nodes::Node
         {
         public:
             MO_DERIVE(ConvertTo, Node)
@@ -60,7 +60,7 @@ namespace EagleLib
         {
         
         public:
-            MO_DERIVE(ConvertColorspace, ::EagleLib::Nodes::Node)
+            MO_DERIVE(ConvertColorspace, ::aq::Nodes::Node)
                 INPUT(SyncedMemory, input_image, nullptr)
                 ENUM_PARAM(conversion_code, cv::COLOR_BGR2HSV)
                 OUTPUT(SyncedMemory, output_image, SyncedMemory())
@@ -68,30 +68,30 @@ namespace EagleLib
         protected:
             bool ProcessImpl();
         };
-        class Magnitude : public ::EagleLib::Nodes::Node
+        class Magnitude : public ::aq::Nodes::Node
         {
         public:
-            MO_DERIVE(Magnitude, ::EagleLib::Nodes::Node);
+            MO_DERIVE(Magnitude, ::aq::Nodes::Node);
             INPUT(SyncedMemory, input_image, nullptr);
             OUTPUT(SyncedMemory, output_magnitude, SyncedMemory());
             MO_END;
         protected:
             bool ProcessImpl();
         };
-        class SplitChannels: public ::EagleLib::Nodes::Node
+        class SplitChannels: public ::aq::Nodes::Node
         {
         public:
-            MO_DERIVE(SplitChannels, ::EagleLib::Nodes::Node);
+            MO_DERIVE(SplitChannels, ::aq::Nodes::Node);
                 INPUT(SyncedMemory, input_image, nullptr);
                 OUTPUT(SyncedMemory, channels, SyncedMemory());
             MO_END;
         protected:
             bool ProcessImpl();
         };
-        class ConvertDataType: public ::EagleLib::Nodes::Node
+        class ConvertDataType: public ::aq::Nodes::Node
         {
         public:
-            MO_DERIVE(ConvertDataType, ::EagleLib::Nodes::Node);
+            MO_DERIVE(ConvertDataType, ::aq::Nodes::Node);
             INPUT(SyncedMemory, input_image, nullptr);
             OUTPUT(SyncedMemory, output_image, SyncedMemory());
             ENUM_PARAM(data_type, CV_8U, CV_8S, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F);
@@ -102,20 +102,20 @@ namespace EagleLib
         protected:
             bool ProcessImpl();
         };
-        class MergeChannels: public ::EagleLib::Nodes::Node
+        class MergeChannels: public ::aq::Nodes::Node
         {
         public:
-            MO_DERIVE(MergeChannels, ::EagleLib::Nodes::Node);
+            MO_DERIVE(MergeChannels, ::aq::Nodes::Node);
                 INPUT(SyncedMemory, input_image, nullptr);
                 OUTPUT(SyncedMemory, merged_image, SyncedMemory());
             MO_END;
         protected:
             bool ProcessImpl();
         };
-        class Reshape: public ::EagleLib::Nodes::Node
+        class Reshape: public ::aq::Nodes::Node
         {
         public:
-            MO_DERIVE(Reshape, ::EagleLib::Nodes::Node);
+            MO_DERIVE(Reshape, ::aq::Nodes::Node);
                 INPUT(SyncedMemory, input_image, nullptr);
                 OUTPUT(SyncedMemory, reshaped_image, SyncedMemory());
                 PARAM(int, channels, 0);

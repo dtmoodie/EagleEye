@@ -2,8 +2,8 @@
 #include "html5.h"
 #include "precompiled.hpp"
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 frame_grabber_html5::frame_grabber_html5()
 {

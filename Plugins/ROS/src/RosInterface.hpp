@@ -7,7 +7,7 @@ namespace ros
 {
     class NodeHandle;
 }
-namespace EagleLib
+namespace aq
 {
     /*!
      * \brief The RosInterface class is the boundary between eagle eye and ros

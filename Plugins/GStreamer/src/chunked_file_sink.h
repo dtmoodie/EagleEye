@@ -1,9 +1,9 @@
 #pragma once
 
-#include "EagleLib/Nodes/IFrameGrabber.hpp"
+#include "Aquila/Nodes/IFrameGrabber.hpp"
 #include "gstreamer.hpp"
 
-namespace EagleLib
+namespace aq
 {
     class PLUGIN_EXPORTS chunked_file_sink: virtual public gstreamer_src_base, virtual public Nodes::FrameGrabberBuffered
     {
@@ -19,7 +19,7 @@ namespace EagleLib
 
         virtual bool LoadFile(const std::string& file_path);
         virtual long long GetNumFrames();
-        virtual rcc::shared_ptr<EagleLib::ICoordinateManager> GetCoordinateManager();
+        virtual rcc::shared_ptr<aq::ICoordinateManager> GetCoordinateManager();
         //virtual void Init(bool firstInit);
         virtual GstFlowReturn on_pull();
         bool ProcessImpl();

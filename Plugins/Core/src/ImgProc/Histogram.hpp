@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 namespace cv
 {
 namespace cuda
@@ -10,7 +10,7 @@ namespace cuda
                    cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 }
 }
-namespace EagleLib
+namespace aq
 {
 namespace Nodes
 {

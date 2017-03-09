@@ -1,11 +1,11 @@
 
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include <boost/program_options.hpp>
 
 
 namespace po = boost::program_options;
 /*
-EagleLib::Nodes::Node::Ptr setVideoFile(EagleLib::Nodes::Node::Ptr node, const std::string& videoFile)
+aq::Nodes::Node::Ptr setVideoFile(aq::Nodes::Node::Ptr node, const std::string& videoFile)
 {
     if(node->getName() == "VideoLoader")
     {
@@ -21,7 +21,7 @@ EagleLib::Nodes::Node::Ptr setVideoFile(EagleLib::Nodes::Node::Ptr node, const s
             return retNode;
         }
     }
-    return EagleLib::Nodes::Node::Ptr();
+    return aq::Nodes::Node::Ptr();
 }
 
 int main(int argc, char* argv[])
@@ -41,9 +41,9 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    auto nodes = EagleLib::NodeManager::getInstance().loadNodes(vm["nodeFile"].as<std::string>());
-    EagleLib::NodeManager::getInstance().printNodeTree();
-    EagleLib::Nodes::Node::Ptr playbackNode;
+    auto nodes = aq::NodeManager::getInstance().loadNodes(vm["nodeFile"].as<std::string>());
+    aq::NodeManager::getInstance().printNodeTree();
+    aq::Nodes::Node::Ptr playbackNode;
     bool loop = false;
     if(vm.count("loop"))
     {
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
         std::string fileName = vm["videoFile"].as<std::string>();
         for(size_t i = 0; i < nodes.size(); ++i)
         {
-           EagleLib::Nodes::Node::Ptr tmpNode = setVideoFile(nodes[i], fileName);
+           aq::Nodes::Node::Ptr tmpNode = setVideoFile(nodes[i], fileName);
            if(tmpNode != nullptr)
            {
                playbackNode = tmpNode;

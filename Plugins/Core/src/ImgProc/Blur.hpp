@@ -1,7 +1,7 @@
 #pragma once
-#include <EagleLib/Nodes/Node.h>
-#include "EagleLib/rcc/external_includes/cv_cudafilters.hpp"
-namespace EagleLib
+#include <Aquila/Nodes/Node.h>
+#include "Aquila/rcc/external_includes/cv_cudafilters.hpp"
+namespace aq
 {
 namespace Nodes
 {

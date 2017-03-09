@@ -1,15 +1,15 @@
 #include "SaveAnnotations.hpp"
 #include <fstream>
-#include <EagleLib/Nodes/NodeInfo.hpp>
-#include "EagleLib/utilities/UiCallbackHandlers.h"
-#include "EagleLib/utilities/CudaCallbacks.hpp"
+#include <Aquila/Nodes/NodeInfo.hpp>
+#include "Aquila/utilities/UiCallbackHandlers.h"
+#include "Aquila/utilities/CudaCallbacks.hpp"
 #include <opencv2/imgproc.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cereal/archives/json.hpp>
 #include <cereal/types/vector.hpp>
 #include <fstream>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 SaveAnnotations::SaveAnnotations()
 {
 
@@ -192,12 +192,12 @@ bool SaveAnnotations::ProcessImpl()
     }
     _annotations.clear();
     size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
-    if(input->GetSyncState() == EagleLib::SyncedMemory::DEVICE_UPDATED)
+    if(input->GetSyncState() == aq::SyncedMemory::DEVICE_UPDATED)
     {
         cv::Mat img = input->GetMat(Stream());
         //cv::Mat img = input->GetMat(Stream());
 
-        EagleLib::cuda::enqueue_callback_async([img, this]()
+        aq::cuda::enqueue_callback_async([img, this]()
         {
             GetDataStream()->GetWindowCallbackManager()->imshow("original", img);
         }, gui_thread_id ,Stream());

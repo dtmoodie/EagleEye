@@ -1,5 +1,5 @@
 
-#include <EagleLib/Thrust_interop.hpp>
+#include <Aquila/Thrust_interop.hpp>
 #include <vector_types.h>
 #include <thrust/for_each.h>
 #include <thrust/iterator/zip_iterator.h>
@@ -24,7 +24,7 @@ void __global__ apply_lut_kernel(const cv::Vec3b* lut, const cv::cuda::PtrStepSz
     }
 }
 
-namespace EagleLib
+namespace aq
 {
     void applyColormap(const cv::cuda::GpuMat& input_8U,
                                  cv::cuda::GpuMat& output_8UC3,

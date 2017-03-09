@@ -1,9 +1,9 @@
 #include "result_cache.h"
-#include "EagleLib/utilities/helper_macros.hpp"
-#include "EagleLib/logger.hpp"
+#include "Aquila/utilities/helper_macros.hpp"
+#include "Aquila/logger.hpp"
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 /*TS<SyncedMemory> result_cache::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 {
@@ -44,5 +44,5 @@ bool result_cache::pre_check(const TS<SyncedMemory>& input)
     return true;
 }
 
-static EagleLib::Nodes::NodeInfo g_registerer_result_cache("result_cache", { "utilities"});
+static aq::Nodes::NodeInfo g_registerer_result_cache("result_cache", { "utilities"});
 REGISTERCLASS(result_cache, &g_registerer_result_cache);*/

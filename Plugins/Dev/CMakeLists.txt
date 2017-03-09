@@ -32,11 +32,11 @@ ENDIF()
 
 cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})
 
-add_dependencies(Dev EagleLib)
+add_dependencies(Dev Aquila)
 RCC_LINK_LIB(Dev 
     ${OpenCV_LIBS}
     ${CUDA_CUBLAS_LIBRARIES} 
-    EagleLib
+    Aquila
 )
 
 INCLUDE(../PluginTemplate.cmake)

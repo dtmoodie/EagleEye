@@ -3,8 +3,8 @@
 #include "precompiled.hpp"
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 int frame_grabber_rtsp::CanLoadDocument(const std::string& document)

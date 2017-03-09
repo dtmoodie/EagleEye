@@ -1,10 +1,10 @@
 #include "Blur.hpp"
-#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-#include "EagleLib/Nodes/NodeInfo.hpp"
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
+#include "Aquila/Nodes/NodeInfo.hpp"
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 bool MedianBlur::ProcessImpl()
 {

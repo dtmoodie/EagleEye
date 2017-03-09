@@ -18,13 +18,13 @@
 
 //cv::Size inline getSize(mo::IParameter::Ptr param)
 //{
-//    auto gpuParam = EagleLib::getParameterPtr<cv::cuda::GpuMat>(param);
+//    auto gpuParam = aq::getParameterPtr<cv::cuda::GpuMat>(param);
 //    if(gpuParam)
 //        return gpuParam->size();
-//    auto cpuParam = EagleLib::getParameterPtr<cv::Mat>(param);
+//    auto cpuParam = aq::getParameterPtr<cv::Mat>(param);
 //    if(cpuParam)
 //        return cpuParam->size();
-//    auto hostParam = EagleLib::getParameterPtr<cv::cuda::HostMem>(param);
+//    auto hostParam = aq::getParameterPtr<cv::cuda::HostMem>(param);
 //    if(hostParam)
 //        return hostParam->size();
 
@@ -32,13 +32,13 @@
 //}
 //int inline getChannels(mo::IParameter::Ptr param)
 //{
-//    auto gpuParam = EagleLib::getParameterPtr<cv::cuda::GpuMat>(param);
+//    auto gpuParam = aq::getParameterPtr<cv::cuda::GpuMat>(param);
 //    if(gpuParam)
 //        return gpuParam->channels();
-//    auto cpuParam = EagleLib::getParameterPtr<cv::Mat>(param);
+//    auto cpuParam = aq::getParameterPtr<cv::Mat>(param);
 //    if(cpuParam)
 //        return cpuParam->channels();
-//    auto hostParam = EagleLib::getParameterPtr<cv::cuda::HostMem>(param);
+//    auto hostParam = aq::getParameterPtr<cv::cuda::HostMem>(param);
 //    if(hostParam)
 //        return hostParam->channels();
 //    return 0;
@@ -82,23 +82,23 @@
 
 //QVector<double> inline getParamArrayData(mo::IParameter::Ptr param, int channel)
 //{
-//    auto gpuParam = EagleLib::getParameterPtr<cv::cuda::GpuMat>(param);
+//    auto gpuParam = aq::getParameterPtr<cv::cuda::GpuMat>(param);
 //    if(gpuParam)
 //        return getParamArrayDataHelper(cv::Mat(*gpuParam), channel);
-//    auto cpuParam = EagleLib::getParameterPtr<cv::Mat>(param);
+//    auto cpuParam = aq::getParameterPtr<cv::Mat>(param);
 //    if(cpuParam)
 //        return getParamArrayDataHelper(*cpuParam, channel);
-//    auto hostParam = EagleLib::getParameterPtr<cv::cuda::HostMem>(param);
+//    auto hostParam = aq::getParameterPtr<cv::cuda::HostMem>(param);
 //    if(hostParam)
 //        return getParamArrayDataHelper(hostParam->createMatHeader(), channel);
-//    auto vecParam = EagleLib::getParameterPtr<std::vector<double>>(param);
+//    auto vecParam = aq::getParameterPtr<std::vector<double>>(param);
 //    if(vecParam)
 //        return getParamArrayDataHelper(cv::Mat(*vecParam), 0);
 //    return QVector<double>();
 //}
 //template<typename T> bool inline getData(mo::IParameter::Ptr param, double& data)
 //{
-//    auto ptr = EagleLib::getParameterPtr<T>(param);
+//    auto ptr = aq::getParameterPtr<T>(param);
 //    if(ptr)
 //    {
 //        data = *ptr;
@@ -108,7 +108,7 @@
 //}
 //template<typename T> bool inline getDataVec(mo::IParameter::Ptr param, int channel, double& data)
 //{
-//    auto ptr = EagleLib::getParameterPtr<T>(param);
+//    auto ptr = aq::getParameterPtr<T>(param);
 //    if(ptr)
 //    {
 //        data = ptr->val[channel];
@@ -214,7 +214,7 @@
 //{
 //    static bool acceptsType(mo::IParameter::Ptr param)
 //    {
-//        return EagleLib::acceptsType<T>(param->typeInfo);
+//        return aq::acceptsType<T>(param->typeInfo);
 //    }
 //};
 //struct StaticPlotPolicy

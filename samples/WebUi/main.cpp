@@ -1,10 +1,10 @@
 #include "MetaObject/Parameters/UI/Wt/POD.hpp"
 #include "MetaObject/Parameters/UI/Wt/IParameterProxy.hpp"
-#include <EagleLib/IDataStream.hpp>
-#include <EagleLib/Nodes/Node.h>
-#include <EagleLib/Logging.h>
-#include <EagleLib/Nodes/IFrameGrabber.hpp>
-#include <EagleLib/Nodes/NodeFactory.h>
+#include <Aquila/IDataStream.hpp>
+#include <Aquila/Nodes/Node.h>
+#include <Aquila/Logging.h>
+#include <Aquila/Nodes/IFrameGrabber.hpp>
+#include <Aquila/Nodes/NodeFactory.h>
 
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Demangle.hpp>
@@ -44,8 +44,8 @@
 #include <boost/filesystem.hpp>
 
 #include <functional>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 using namespace mo;
 using namespace Wt;
 
@@ -145,7 +145,7 @@ protected:
             {
                 rcc::shared_ptr<IDataStream> ds_(ds);
                 std::string save_file = widget->hostFile();
-                EagleLib::IDataStream::Save(save_file, ds_);
+                aq::IDataStream::Save(save_file, ds_);
                 ds_->StartThread();
                 delete _current_dialog;
                 _current_dialog = nullptr;
@@ -182,7 +182,7 @@ protected:
             boost::filesystem::rename(file, new_name);
             file = new_name.string();
         }
-        auto stream = EagleLib::IDataStream::Load(file);
+        auto stream = aq::IDataStream::Load(file);
         if(stream)
         {
             stream->StartThread();
@@ -629,7 +629,7 @@ WApplication* createApplication(const WEnvironment& env)
 int main(int argc, char** argv)
 {
     mo::instantiations::initialize();
-    EagleLib::SetupLogging();
+    aq::SetupLogging();
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
     auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
     g_allocator->SetName("Global Allocator");

@@ -4,7 +4,7 @@
 #include <opencv2/core/cuda_stream_accessor.hpp>
 #include <opencv2/core/cuda/utility.hpp>
 
-#include "EagleLib/utilities/GPUSortingPriv.hpp"
+#include "Aquila/utilities/GPUSortingPriv.hpp"
 
 template<class T>
 void __global__ accum_kernel(const T* in, float* out)
@@ -119,7 +119,7 @@ void transform(const cv::cuda::GpuMat& in, cv::cuda::GpuMat& out, const cv::cuda
     transform_kernel<T1,T2><<<grid, block, 0, stream>>>(in, out, saturate, dyn_range);
 }
 
-namespace EagleLib
+namespace aq
 {
     void applyWhiteBalance(const cv::cuda::GpuMat& input, cv::cuda::GpuMat& output,
                            const cv::Scalar& lower, const cv::Scalar& upper,

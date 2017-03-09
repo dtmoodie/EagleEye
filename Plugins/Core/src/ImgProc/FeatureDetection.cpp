@@ -3,8 +3,8 @@
 
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 bool GoodFeaturesToTrack::ProcessImpl()

@@ -1,6 +1,6 @@
 #ifdef HAVE_WT
 #include "WebSink.hpp"
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 using namespace vclick;
 
 WebSink::WebSink():

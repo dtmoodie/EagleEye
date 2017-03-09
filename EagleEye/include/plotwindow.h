@@ -1,6 +1,6 @@
 #ifndef PLOTWINDOW_H
 #define PLOTWINDOW_H
-#include "EagleLib/plotters/Plotter.h"
+#include "Aquila/plotters/Plotter.h"
 #include "qcustomplot.h"
 
 #include <boost/shared_ptr.hpp>
@@ -37,7 +37,7 @@ public:
     virtual QString getPlotName() = 0;
 
 public slots:
-    virtual void addPlotter(rcc::shared_ptr<EagleLib::QtPlotter> plotter) = 0;
+    virtual void addPlotter(rcc::shared_ptr<aq::QtPlotter> plotter) = 0;
 
 signals:
     virtual void onDrop();
@@ -55,7 +55,7 @@ public:
     bool eventFilter(QObject *, QEvent *);
 
 public slots:
-    void addPlotter(rcc::shared_ptr<EagleLib::QtPlotter> plotter);
+    void addPlotter(rcc::shared_ptr<aq::QtPlotter> plotter);
     void on_resizePlot_activated();
 signals:
     void onDrop();
@@ -65,7 +65,7 @@ private:
 
     Ui::PlotWindow *ui;
     QCustomPlot* plot;
-    std::vector<rcc::shared_ptr<EagleLib::QtPlotter>> plots;
+    std::vector<rcc::shared_ptr<aq::QtPlotter>> plots;
     QMenu* rightClickMenu;
 };
 
@@ -76,7 +76,7 @@ class MatrixViewWindow: public IPlotWindow
 public:
     explicit MatrixViewWindow(QWidget* parent = 0);
     virtual ~MatrixViewWindow();
-    void addPlotter(rcc::shared_ptr<EagleLib::QtPlotter> plotter);
+    void addPlotter(rcc::shared_ptr<aq::QtPlotter> plotter);
     QString getPlotName() {return _name;}
 signals:
     void onDrop();

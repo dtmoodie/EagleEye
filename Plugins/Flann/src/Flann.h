@@ -1,9 +1,9 @@
 #pragma once
 
-#include "EagleLib/Nodes/Node.h"
-#include "EagleLib/Detail/Export.hpp"
-#include <EagleLib/utilities/CudaUtils.hpp>
-#include <EagleLib/Project_defs.hpp>
+#include "Aquila/Nodes/Node.h"
+#include "Aquila/Detail/Export.hpp"
+#include <Aquila/utilities/CudaUtils.hpp>
+#include <Aquila/Project_defs.hpp>
 #include "RuntimeLinkLibrary.h"
 
 
@@ -21,7 +21,7 @@ RUNTIME_COMPILER_LINKLIBRARY("flann_cpp_s.lib")
 RUNTIME_COMPILER_LINKLIBRARY("flann_cuda_s.lib")
 #endif
 
-namespace EagleLib
+namespace Aquila
 {
     namespace Nodes
     {

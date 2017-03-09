@@ -1,8 +1,8 @@
 #include "FrameGrabberHTTP.hpp"
-#include "EagleLib/Nodes/FrameGrabberInfo.hpp"
+#include "Aquila/Nodes/FrameGrabberInfo.hpp"
 #include <gst/base/gstbasesink.h>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 int FrameGrabberHTTP::CanLoadDocument(const std::string& doc)
 {

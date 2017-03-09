@@ -2,8 +2,8 @@
 #include <boost/filesystem.hpp>
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 bool ImageWriter::ProcessImpl()
 {

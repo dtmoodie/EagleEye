@@ -1,7 +1,7 @@
 #include "super_resolution.h"
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 my_frame_source::my_frame_source()
 {

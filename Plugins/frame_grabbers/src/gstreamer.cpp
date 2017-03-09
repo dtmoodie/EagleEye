@@ -2,8 +2,8 @@
 #include "precompiled.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 frame_grabber_gstreamer::~frame_grabber_gstreamer()
 {

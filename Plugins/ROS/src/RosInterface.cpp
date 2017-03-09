@@ -2,10 +2,10 @@
 #include "ros/init.h"
 #include "ros/node_handle.h"
 
-#include "EagleLib/rcc/SystemTable.hpp"
+#include "Aquila/rcc/SystemTable.hpp"
 #include "ObjectInterfacePerModule.h"
 
-using namespace EagleLib;
+using namespace aq;
 
 RosInterface::RosInterface()
 {

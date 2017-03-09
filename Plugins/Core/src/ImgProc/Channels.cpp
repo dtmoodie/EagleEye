@@ -1,8 +1,8 @@
 #include "Channels.h"
-#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <EagleLib/Qualifiers.hpp>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/Qualifiers.hpp>
+using namespace aq;
+using namespace aq::Nodes;
 
 
 bool ConvertToGrey::ProcessImpl()

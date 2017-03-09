@@ -46,9 +46,9 @@
 //static PlotterFactory<HistogramPlotter, SingleChannelPolicy, VectorSizePolicy, TypePolicy<cv::Mat>, TypePolicy<cv::cuda::GpuMat>, TypePolicy<cv::cuda::HostMem>> histPlotter("HistogramPlotter");
 //bool HistogramPlotter::acceptsType(mo::IParameter::Ptr param)
 //{
-//    return EagleLib::acceptsType<cv::Mat>(param->typeInfo) ||
-//            EagleLib::acceptsType<cv::cuda::GpuMat>(param->typeInfo) ||
-//            EagleLib::acceptsType<cv::cuda::HostMem>(param->typeInfo);
+//    return aq::acceptsType<cv::Mat>(param->typeInfo) ||
+//            aq::acceptsType<cv::cuda::GpuMat>(param->typeInfo) ||
+//            aq::acceptsType<cv::cuda::HostMem>(param->typeInfo);
 //}
 
 //HistogramPlotter::HistogramPlotter(mo::IParameter::Ptr param, QCustomPlot* plot_):
@@ -100,10 +100,10 @@
 //    QComboBox* comboBox = new QComboBox(widget);
 //    boost::function<bool(mo::TypeInfo&)> f(
 //                [](mo::TypeInfo& type)->bool{
-//                    return EagleLib::acceptsType<cv::Mat>(type) ||
-//                            EagleLib::acceptsType<cv::cuda::GpuMat>(type) ||
-//                            EagleLib::acceptsType<cv::cuda::HostMem>(type);});
-//    std::vector<std::string> candidates = EagleLib::NodeManager::getInstance().getParametersOfType(f);
+//                    return aq::acceptsType<cv::Mat>(type) ||
+//                            aq::acceptsType<cv::cuda::GpuMat>(type) ||
+//                            aq::acceptsType<cv::cuda::HostMem>(type);});
+//    std::vector<std::string> candidates = aq::NodeManager::getInstance().getParametersOfType(f);
 //    comboBox->addItem("");
 //    for(int i = 0; i < candidates.size(); ++i)
 //    {
@@ -115,7 +115,7 @@
 //}
 //void HistogramPlotter::onScaleChange(QString name)
 //{
-//    mo::IParameter::Ptr param = EagleLib::NodeManager::getInstance().getParameter(name.toStdString());
+//    mo::IParameter::Ptr param = aq::NodeManager::getInstance().getParameter(name.toStdString());
 //    if(param)
 //        scale = getParamArrayData(param,0);
 //}

@@ -2,7 +2,7 @@
 #ifdef HAVE_GSTREAMER
 #include "gstreamer.h"
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

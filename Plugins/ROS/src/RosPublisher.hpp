@@ -1,9 +1,9 @@
 #pragma once
 #include "ROSExport.hpp"
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include "IRosMessageWriter.hpp"
 #include "ros/publisher.h"
-namespace EagleLib
+namespace aq
 {
 namespace Nodes
 {

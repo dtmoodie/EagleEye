@@ -2,8 +2,8 @@
 
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 bool MinMax::ProcessImpl()
 {
     cv::cuda::minMax(input->GetGpuMat(Stream()), &min_value, &max_value);

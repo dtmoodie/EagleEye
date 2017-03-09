@@ -1,5 +1,5 @@
 #pragma once
 
 #include <MetaObject/MetaObject.hpp>
-#include <EagleLib/Nodes/NodeInfo.hpp>
-#include <EagleLib/Nodes/Node.h>
+#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/Node.h>

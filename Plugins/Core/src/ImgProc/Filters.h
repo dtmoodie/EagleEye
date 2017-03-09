@@ -1,11 +1,11 @@
 #include "src/precompiled.hpp"
-#include <EagleLib/rcc/external_includes/cv_cudafeatures3d.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudafeatures3d.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

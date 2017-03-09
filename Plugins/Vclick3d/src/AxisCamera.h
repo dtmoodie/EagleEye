@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include "qnetworkaccessmanager.h"
 #include "qnetworkreply.h"
 #include "qtcpsocket.h"
@@ -26,7 +26,7 @@ SETUP_PROJECT_DEF
 
 
 /*
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

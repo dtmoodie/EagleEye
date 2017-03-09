@@ -1,12 +1,12 @@
 #include "precompiled.hpp"
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/ParameterMacros.hpp>
 #include <MetaObject/Parameters/Types.hpp>
 #include "opencv2/cudastereo.hpp"
 #include <opencv2/imgproc.hpp>
-#include "EagleLib/utilities/CudaUtils.hpp"
-namespace EagleLib
+#include "Aquila/utilities/CudaUtils.hpp"
+namespace aq
 {
     namespace Nodes
     {

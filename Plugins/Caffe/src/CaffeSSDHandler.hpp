@@ -1,7 +1,7 @@
 #pragma once
 #include "CaffeNetHandler.hpp"
-#include "EagleLib/ObjectDetection.hpp"
-namespace EagleLib
+#include "Aquila/ObjectDetection.hpp"
+namespace aq
 {
     namespace Caffe
     {

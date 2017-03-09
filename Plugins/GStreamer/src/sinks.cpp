@@ -1,11 +1,11 @@
 #include "sinks.hpp"
 #include <gst/gst.h>
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 #include <gst/base/gstbasesink.h>
 #include <opencv2/imgcodecs.hpp>
 #include "glib_thread.h"
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 tcpserver::tcpserver():
     gstreamer_sink_base()

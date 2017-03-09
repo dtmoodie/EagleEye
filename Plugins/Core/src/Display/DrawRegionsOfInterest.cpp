@@ -1,8 +1,8 @@
 #include "DrawRegionsOfInterest.hpp"
-#include "EagleLib/Nodes/NodeInfo.hpp"
-#include "EagleLib/utilities/GpuDrawing.hpp"
+#include "Aquila/Nodes/NodeInfo.hpp"
+#include "Aquila/utilities/GpuDrawing.hpp"
 
-using namespace EagleLib::Nodes;
+using namespace aq::Nodes;
 
 bool DrawRegionsOfInterest::ProcessImpl()
 {

@@ -31,7 +31,7 @@ IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
     LINK_DIRECTORIES(${LINK_DIRS})
 
     INCLUDE_DIRECTORIES(
-        ${EagleLib_INCLUDE_DIRECTORIES}
+        ${Aquila_INCLUDE_DIRECTORIES}
         ${OpenCV_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
@@ -52,9 +52,9 @@ IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
     ENDIF()
 
     cuda_add_library(freenect SHARED ${src} ${hdr} ${knl})
-    add_dependencies(freenect EagleLib)
+    add_dependencies(freenect Aquila)
     RCC_LINK_LIB(freenect
-        EagleLib
+        Aquila
         ${LIBFREENECT_LIBRARY}
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}

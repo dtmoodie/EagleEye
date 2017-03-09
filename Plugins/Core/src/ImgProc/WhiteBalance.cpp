@@ -1,10 +1,10 @@
 #include "WhiteBalance.hpp"
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudaarithm.hpp>
 
 #include <iostream>
-using namespace EagleLib::Nodes;
+using namespace aq::Nodes;
 using namespace cv;
 
 

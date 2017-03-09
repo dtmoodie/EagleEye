@@ -1,10 +1,10 @@
 #pragma once
 
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 
-#include "EagleLib/utilities/GpuDrawing.hpp"
+#include "Aquila/utilities/GpuDrawing.hpp"
 
-namespace EagleLib
+namespace aq
 {
 namespace Nodes
 {

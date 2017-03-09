@@ -1,8 +1,8 @@
 #include "HeartBeatBuffer.h"
 #include <shared_ptr.hpp>
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 #define CATCH_MACRO                                                         \
     catch (boost::thread_resource_error& err)                               \
 {                                                                           \

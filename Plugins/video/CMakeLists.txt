@@ -14,7 +14,7 @@ cuda_add_library(video SHARED ${src})
 RCC_LINK_LIB(video
     ${OpenCV_LIBS}
     ${CUDA_CUBLAS_LIBRARIES} 
-    EagleLib
+    Aquila
 )
 
 INCLUDE(../PluginTemplate.cmake)

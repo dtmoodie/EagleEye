@@ -29,7 +29,7 @@ IF(Qt5_FOUND)
         ${Qt5OpenGL_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_BINARY_DIR}
-        ${EagleLib_INCLUDE_DIRECTORIES}
+        ${Aquila_INCLUDE_DIRECTORIES}
     )
 
     LINK_DIRECTORIES(${LINK_DIRS})
@@ -139,8 +139,8 @@ IF(Qt5_FOUND)
         CONFIGURE_FILE(EagleEye.vcxproj.user.in ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
     ENDIF(WIN32)
     ADD_DEFINITIONS(-DBUILD_DIR=${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-        add_dependencies(${executable_name} EagleLib frame_grabbers Core)
-    GET_TARGET_PROPERTY(LIB_DIR_RELEASE EagleLib IMPORTED_LINK_DEPENDENT_LIBRARIES)
+        add_dependencies(${executable_name} Aquila frame_grabbers Core)
+    GET_TARGET_PROPERTY(LIB_DIR_RELEASE Aquila IMPORTED_LINK_DEPENDENT_LIBRARIES)
 
     LINK_DIRECTORIES(${LINK_DIRS})
     SOURCE_GROUP("MOC"  FILES ${MOC} ${UIS})
@@ -164,7 +164,7 @@ IF(Qt5_FOUND)
         Qt5::Core
         Qt5::OpenGL
         Qt5::PrintSupport
-        EagleLib
+        Aquila
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS}
     )

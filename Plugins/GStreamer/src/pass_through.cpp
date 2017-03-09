@@ -1,8 +1,8 @@
 #include "pass_through.h"
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 bool h264_pass_through::ProcessImpl()
 {

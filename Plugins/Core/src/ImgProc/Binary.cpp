@@ -1,8 +1,8 @@
 #include "Binary.h"
 #include "opencv2/imgproc.hpp"
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 SETUP_PROJECT_IMPL

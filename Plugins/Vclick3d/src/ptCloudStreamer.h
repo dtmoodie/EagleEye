@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include <QtNetwork/qtcpserver.h>
 #include <QtNetwork/qtcpsocket.h>
 #include "RuntimeInclude.h"
@@ -8,7 +8,7 @@
 /*
 RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE(PROJECT_BUILD_DIR "/include/moc_ptCloudStreamer", ".cpp");
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

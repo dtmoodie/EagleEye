@@ -1,9 +1,9 @@
 #pragma once
 #include "precompiled.hpp"
-#include <EagleLib/rcc/external_includes/cv_superres.hpp>
-#include <EagleLib/Nodes/Node.h>
+#include <Aquila/rcc/external_includes/cv_superres.hpp>
+#include <Aquila/Nodes/Node.h>
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

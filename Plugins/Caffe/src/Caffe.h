@@ -3,11 +3,11 @@
 #ifndef USE_CUDNN
 #define USE_CUDNN
 #endif
-#include "EagleLib/Detail/PluginExport.hpp"
-#include "EagleLib/Nodes/Node.h"
-#include "EagleLib/ObjectDetection.hpp"
-#include "EagleLib/rcc/external_includes/cv_calib3d.hpp"
-#include "EagleLib/ObjectDetection.hpp"
+#include "Aquila/Detail/PluginExport.hpp"
+#include "Aquila/Nodes/Node.h"
+#include "Aquila/ObjectDetection.hpp"
+#include "Aquila/rcc/external_includes/cv_calib3d.hpp"
+#include "Aquila/ObjectDetection.hpp"
 #include "CaffeNetHandler.hpp"
 #include "MetaObject/MetaObject.hpp"
 #include "MetaObject/Parameters/Types.hpp"
@@ -25,7 +25,7 @@
   RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 #endif
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

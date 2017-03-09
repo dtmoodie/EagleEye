@@ -15,7 +15,7 @@ if(Caffe_FOUND)
   if(CUDNN_LIBRARY AND CUDNN_INCLUDE_DIR AND CUDNN_LIB_DIR AND CUDNN_BIN_DIR)
     include_directories(
       ${Caffe_INCLUDE_DIRS}
-      ${EagleLib_INCLUDE_DIRECTORIES}
+      ${Aquila_INCLUDE_DIRECTORIES}
       ${GLOG_INCLUDE_DIR}
       ${CUDNN_INCLUDE_DIR}
       ${CUDA_TOOLKIT_INCLUDE}
@@ -26,7 +26,7 @@ if(Caffe_FOUND)
     LINK_DIRECTORIES(${CUDNN_LIB_DIR})
     file(GLOB_RECURSE src "*.h" "*.hpp" "*.cpp" "*.cu")
     cuda_add_library(Caffe SHARED ${src})
-    add_dependencies(Caffe EagleLib)
+    add_dependencies(Caffe Aquila)
 
 
     IF(WIN32)
@@ -40,7 +40,7 @@ if(Caffe_FOUND)
       SET(BIN_DIRS "${BIN_DIRS};CAFFE;CUDNN" CACHE STRING "" FORCE)
       set_target_properties(libcaffe PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
       RCC_LINK_LIB(Caffe
-          EagleLib
+          Aquila
           ${CUDA_LIBRARIES}
           ${CUDA_CUFFT_LIBRARIES}
           ${CUDA_CUBLAS_LIBRARIES}
@@ -57,7 +57,7 @@ if(Caffe_FOUND)
         )
     ELSE(WIN32)
         RCC_LINK_LIB(Caffe
-          EagleLib
+          Aquila
           caffe
           ${CUDA_LIBRARIES}
           ${CUDA_CUFFT_LIBRARIES}

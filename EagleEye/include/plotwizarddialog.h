@@ -8,7 +8,7 @@
 #include "plotwindow.h"
 #include "parameterplotter.h"
 #include "IObject.h"
-#include "EagleLib/plotters/Plotter.h"
+#include "Aquila/plotters/Plotter.h"
 
 #include <boost/date_time.hpp>
 
@@ -50,12 +50,12 @@ private:
     QVector<QWidget*> previewPlots;
     std::map<QWidget*, QWidget*> previewPlotControllers;
     // These are all the ploters which generate data from parameters that go into the plot window
-    QVector<rcc::shared_ptr<EagleLib::QtPlotter>> previewPlotters;
-    QVector<rcc::shared_ptr<EagleLib::QtPlotter>> plotters;
+    QVector<rcc::shared_ptr<aq::QtPlotter>> previewPlotters;
+    QVector<rcc::shared_ptr<aq::QtPlotter>> plotters;
     Ui::PlotWizardDialog *ui;
     QList<QCheckBox*> plotOptions;
 
-    rcc::shared_ptr<EagleLib::QtPlotter> currentPlotter;
+    rcc::shared_ptr<aq::QtPlotter> currentPlotter;
     std::vector<boost::posix_time::ptime> lastUpdateTime;
 };
 

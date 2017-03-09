@@ -1,15 +1,15 @@
 #include "Calibration.h"
-#include <EagleLib/rcc/external_includes/cv_calib3d.hpp>
-#include <EagleLib/rcc/external_includes/cv_highgui.hpp>
+#include <Aquila/rcc/external_includes/cv_calib3d.hpp>
+#include <Aquila/rcc/external_includes/cv_highgui.hpp>
 
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 
 #include <IRuntimeObjectSystem.h>
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 IPerModuleInterface* GetModule()
 {
     return PerModuleInterface::GetInstance();

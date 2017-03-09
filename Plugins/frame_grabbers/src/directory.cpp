@@ -1,9 +1,9 @@
 #include "directory.h"
-#include <EagleLib/rcc/external_includes/cv_imgcodec.hpp>
+#include <Aquila/rcc/external_includes/cv_imgcodec.hpp>
 #include "precompiled.hpp"
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 frame_grabber_directory::frame_grabber_directory()
 {
@@ -63,7 +63,7 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
             std::sort(itr.second.begin(), itr.second.end());
         }
         auto constructors = mo::MetaObjectFactory::Instance()->
-                GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
+                GetConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
         std::vector<int> load_count(constructors.size(), 0);
         std::vector<int> priorities(constructors.size(), 0);
         for(int i = 0; i < constructors.size(); ++i)
@@ -179,7 +179,7 @@ int frame_grabber_directory::CanLoadDocument(const std::string& document)
         }
 
         auto constructors = mo::MetaObjectFactory::Instance()->
-                GetConstructors(EagleLib::Nodes::IFrameGrabber::s_interfaceID);
+                GetConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
         std::vector<int> load_count(constructors.size(), 0);
         std::vector<int> priorities(constructors.size(), 0);
         for (int i = 0; i < constructors.size(); ++i)

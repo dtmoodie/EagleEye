@@ -1,9 +1,9 @@
 #include "gstreamer.hpp"
 #include "glib_thread.h"
 
-#include <EagleLib/rcc/SystemTable.hpp>
-#include <EagleLib/Nodes/NodeInfo.hpp>
-#include <EagleLib/utilities/CudaCallbacks.hpp>
+#include <Aquila/rcc/SystemTable.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/utilities/CudaCallbacks.hpp>
 
 #include <gst/video/video.h>
 #include <gst/app/gstappsrc.h>
@@ -16,8 +16,8 @@
 
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 SETUP_PROJECT_IMPL
@@ -943,7 +943,7 @@ void RTSP_server_new::setup(std::string pipeOverride)
 void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpointer user_data)
 {
     LOG(debug) << __FUNCTION__;
-    auto node = static_cast<EagleLib::Nodes::RTSP_server_new*>(user_data);
+    auto node = static_cast<aq::Nodes::RTSP_server_new*>(user_data);
     cv::Mat h_buffer;
     node->notifier.wait_and_pop(h_buffer);
     if (!h_buffer.empty() && node->connected)
@@ -1003,7 +1003,7 @@ bus_message_new(GstBus * bus, GstMessage * message, RTSP_server_new * app)
     }
     return TRUE;
 }
-void client_close_handler(GstRTSPClient *client, EagleLib::Nodes::RTSP_server_new* node)
+void client_close_handler(GstRTSPClient *client, aq::Nodes::RTSP_server_new* node)
 {
     node->clientCount--;
     LOG(info) << "[RTSP Server] Client Disconnected " << node->clientCount << " " << client;
@@ -1018,7 +1018,7 @@ void client_close_handler(GstRTSPClient *client, EagleLib::Nodes::RTSP_server_ne
         node->connected = false;
     }
 }
-void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, EagleLib::Nodes::RTSP_server_new* node)
+void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, aq::Nodes::RTSP_server_new* node)
 {
     BOOST_LOG(debug) << __FUNCTION__;
     if (node->imgSize.area() == 0)
@@ -1051,7 +1051,7 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, EagleL
     //gst_object_unref(appsrc);
     //gst_object_unref(element);
 }
-void new_client_handler(GstRTSPServer *server, GstRTSPClient *client, EagleLib::Nodes::RTSP_server_new* node)
+void new_client_handler(GstRTSPServer *server, GstRTSPClient *client, aq::Nodes::RTSP_server_new* node)
 {
     LOG(debug) << __FUNCTION__;
     node->clientCount++;
@@ -1174,6 +1174,6 @@ TS<SyncedMemory> RTSP_server_new::doProcess(TS<SyncedMemory> img, cv::cuda::Stre
     return img;
 }*/
 
-static EagleLib::Nodes::NodeInfo g_registerer_RTSP_server_new("RTSP_server_new", { "Image", "Sink" });
+static aq::Nodes::NodeInfo g_registerer_RTSP_server_new("RTSP_server_new", { "Image", "Sink" });
 REGISTERCLASS(RTSP_server_new, &g_registerer_RTSP_server_new);
 #endif

@@ -4,7 +4,7 @@
 #include <src/precompiled.hpp>
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

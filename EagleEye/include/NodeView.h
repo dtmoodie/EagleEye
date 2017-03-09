@@ -2,7 +2,7 @@
 #include <qgraphicsview.h>
 #include <qevent.h>
 #include <qgraphicsproxywidget.h>
-#include <EagleLib/Nodes/Node.h>
+#include <Aquila/Nodes/Node.h>
 #include <QNodeWidget.h>
 #include <QMenu>
 #include <shared_ptr.hpp>
@@ -16,9 +16,9 @@ public:
 
     NodeView(QGraphicsScene *scene, QWidget *parent = 0);
     void addWidget(QGraphicsProxyWidget * widget, ObjectId id);
-    void addWidget(QGraphicsProxyWidget* widget, EagleLib::IDataStream* stream_);
+    void addWidget(QGraphicsProxyWidget* widget, aq::IDataStream* stream_);
     QGraphicsProxyWidget* getWidget(ObjectId id);
-    QGraphicsProxyWidget* getWidget(EagleLib::IDataStream* stream_);
+    QGraphicsProxyWidget* getWidget(aq::IDataStream* stream_);
     
     void removeWidget(ObjectId id);
     void mousePressEvent(QMouseEvent* event);
@@ -26,9 +26,9 @@ public:
     void mouseReleaseEvent(QMouseEvent* event);
     void wheelEvent(QWheelEvent* event);
     QGraphicsLineItem* drawLine2Parent(QGraphicsProxyWidget* child);
-    QGraphicsProxyWidget* getParent(EagleLib::Nodes::Node::Ptr child);
-    std::vector<QGraphicsProxyWidget*> getParents(EagleLib::Nodes::Node::Ptr child);
-    QGraphicsProxyWidget* getStream(EagleLib::IDataStream* stream_id);
+    QGraphicsProxyWidget* getParent(aq::Nodes::Node::Ptr child);
+    std::vector<QGraphicsProxyWidget*> getParents(aq::Nodes::Node::Ptr child);
+    QGraphicsProxyWidget* getStream(aq::IDataStream* stream_id);
 
 signals:
     void selectionChanged(QGraphicsProxyWidget* widget);
@@ -50,7 +50,7 @@ private:
     QGraphicsProxyWidget* currentWidget;
     QPoint mousePressPosition;
     std::map<ObjectId, QGraphicsProxyWidget*> widgetMap;
-    std::map<EagleLib::IDataStream*, QGraphicsProxyWidget*> dataStreamWidget;
+    std::map<aq::IDataStream*, QGraphicsProxyWidget*> dataStreamWidget;
     bool resize = false;
     int resizeGrabSize;
     QPointF grabPoint;

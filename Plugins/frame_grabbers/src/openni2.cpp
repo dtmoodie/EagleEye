@@ -1,7 +1,7 @@
 #include "openni2.h"
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 int frame_grabber_openni2::CanLoadDocument(const std::string& document)
 {

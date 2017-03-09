@@ -1,8 +1,8 @@
 #pragma once
 
-#include <EagleLib/Nodes/Node.h>
+#include <Aquila/Nodes/Node.h>
 #include <opencv2/imgproc.hpp>
-namespace EagleLib
+namespace aq
 {
     //void ApplyWhiteBalance(const cv::cuda::GpuMat& in_8uc3, cv::cuda::GpuMat& out_8uc3, )
     void applyWhiteBalance(const cv::cuda::GpuMat& input, cv::cuda::GpuMat& output,

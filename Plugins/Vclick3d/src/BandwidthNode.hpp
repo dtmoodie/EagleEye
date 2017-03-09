@@ -1,11 +1,11 @@
 #pragma once
 
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include "BandwidthMonitor.hpp"
 #include "PcapDevices.hpp"
 
 #include <boost/thread.hpp>
-namespace EagleLib
+namespace aq
 {
 namespace Nodes
 {
@@ -28,4 +28,4 @@ namespace Nodes
         PcapDevices d;
     };
 } // namespace Nodes
-} // namespace EagleLib
+} // namespace aq

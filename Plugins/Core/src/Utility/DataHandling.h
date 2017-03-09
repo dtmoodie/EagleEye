@@ -1,7 +1,7 @@
 #pragma once
 
 #include "src/precompiled.hpp"
-#include "EagleLib/utilities/CudaUtils.hpp"
+#include "Aquila/utilities/CudaUtils.hpp"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -12,7 +12,7 @@ RUNTIME_MODIFIABLE_INCLUDE
 #endif
 #define ENUM_(TOKEN) {TOKEN_TO_STRING(TOKEN), TOKEN}
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

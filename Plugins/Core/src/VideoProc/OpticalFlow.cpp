@@ -1,11 +1,11 @@
 #include "OpticalFlow.h"
-//#include "EagleLib/Nodes/VideoProc/Tracking.hpp"
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
+//#include "Aquila/Nodes/VideoProc/Tracking.hpp"
+#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 #if __linux
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cudaoptflow")

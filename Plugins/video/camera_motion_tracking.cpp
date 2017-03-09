@@ -1,7 +1,7 @@
 #include "camera_motion_tracking.hpp"
-#include <EagleLib/Nodes/NodeInfo.hpp>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+#include <Aquila/Nodes/NodeInfo.hpp>
+using namespace aq;
+using namespace aq::Nodes;
 
 
 std::vector<std::vector<std::string>> track_camera_motion::GetParentalDependencies()

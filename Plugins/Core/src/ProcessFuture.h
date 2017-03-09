@@ -4,7 +4,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

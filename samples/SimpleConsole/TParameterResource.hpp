@@ -1,7 +1,7 @@
 #ifdef HAVE_WT
 #pragma once
 #include "IParameterResource.hpp"
-#include <EagleLib/SyncedMemory.h>
+#include <Aquila/SyncedMemory.h>
 #include <MetaObject/Parameters/TypedInputParameter.hpp>
 namespace vclick
 {
@@ -46,7 +46,7 @@ namespace vclick
         mo::TypedInputParameterPtr<cv::Mat> data_param;
     };
 
-    template<> class TParameterResource<EagleLib::SyncedMemory> : public IParameterResource
+    template<> class TParameterResource<aq::SyncedMemory> : public IParameterResource
     {
     public:
         TParameterResource(Wt::WApplication* app, mo::IParameter* param,
@@ -63,8 +63,8 @@ namespace vclick
         void handleParamUpdate(mo::Context* ctx, mo::IParameter* param);
 
     private:
-        const EagleLib::SyncedMemory* data;
-        mo::TypedInputParameterPtr<EagleLib::SyncedMemory> data_param;
+        const aq::SyncedMemory* data;
+        mo::TypedInputParameterPtr<aq::SyncedMemory> data_param;
     };
 }
 #endif

@@ -8,8 +8,8 @@
 #include <QDateTime>
 #include "qevent.h"
 
-#include "EagleLib/logger.hpp"
-#include <EagleLib/Nodes/IFrameGrabber.hpp>
+#include "Aquila/logger.hpp"
+#include <Aquila/Nodes/IFrameGrabber.hpp>
 #include <MetaObject/Logging/Log.hpp>
 #include <MetaObject/Parameters/UI/WidgetFactory.hpp>
 #include <MetaObject/Parameters/IVariableManager.h>
@@ -17,7 +17,7 @@
 
 IQNodeInterop::IQNodeInterop(mo::IParameter* parameter_, 
                              QNodeWidget* parent, 
-                             rcc::weak_ptr<EagleLib::Nodes::Node> node_) :
+                             rcc::weak_ptr<aq::Nodes::Node> node_) :
     QWidget(parent),
     parameter(parameter_),
     node(node_)
@@ -127,7 +127,7 @@ void DraggableLabel::dragMoveEvent(QDragMoveEvent* event)
     return;
 }
 
-QNodeWidget::QNodeWidget(QWidget* parent, rcc::weak_ptr<EagleLib::Nodes::Node> node_) :
+QNodeWidget::QNodeWidget(QWidget* parent, rcc::weak_ptr<aq::Nodes::Node> node_) :
     mainWindow(parent),
     ui(new Ui::QNodeWidget()),
     node(node_)
@@ -191,12 +191,12 @@ QNodeWidget::QNodeWidget(QWidget* parent, rcc::weak_ptr<EagleLib::Nodes::Node> n
                 }
             }
         }
-        /*log_connection = EagleLib::ui_collector::get_object_log_handler(node->getFullTreeName()).connect(std::bind(&QNodeWidget::on_logReceive, this, std::placeholders::_1, std::placeholders::_2));
+        /*log_connection = aq::ui_collector::get_object_log_handler(node->getFullTreeName()).connect(std::bind(&QNodeWidget::on_logReceive, this, std::placeholders::_1, std::placeholders::_2));
         if (auto stream = node->GetDataStream())
         {
             if (auto sig_mgr = stream->GetSignalManager())
             {
-                _recompile_connection = sig_mgr->connect<void(EagleLib::ParameteredIObject*)>("object_recompiled", std::bind(&QNodeWidget::on_object_recompile, this, std::placeholders::_1));
+                _recompile_connection = sig_mgr->connect<void(aq::ParameteredIObject*)>("object_recompiled", std::bind(&QNodeWidget::on_object_recompile, this, std::placeholders::_1));
             }
             else
             {
@@ -287,7 +287,7 @@ void QNodeWidget::addParameterWidgetMap(QWidget* widget, mo::IParameter* param)
     
 }
 
-void QNodeWidget::updateUi(bool parameterUpdate, EagleLib::Nodes::Node *node_)
+void QNodeWidget::updateUi(bool parameterUpdate, aq::Nodes::Node *node_)
 {
     if(node == nullptr)
         return;
@@ -431,7 +431,7 @@ void QNodeWidget::on_logReceive(boost::log::trivial::severity_level verb, const 
 
 QNodeWidget::~QNodeWidget()
 {
-    //EagleLib::ui_collector::removeNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
+    //aq::ui_collector::removeNodeCallbackHandler(node.get(), boost::bind(&QNodeWidget::on_logReceive, this, _1, _2));
 }
 
 void QNodeWidget::on_enableClicked(bool state)
@@ -445,7 +445,7 @@ void QNodeWidget::on_profileClicked(bool state)
     
 }
 
-rcc::weak_ptr<EagleLib::Nodes::Node> QNodeWidget::getNode()
+rcc::weak_ptr<aq::Nodes::Node> QNodeWidget::getNode()
 {
     return node;
 }
@@ -462,7 +462,7 @@ void QNodeWidget::setSelected(bool state)
     setPalette(pal);
 }
 
-DataStreamWidget::DataStreamWidget(QWidget* parent, EagleLib::IDataStream::Ptr stream):
+DataStreamWidget::DataStreamWidget(QWidget* parent, aq::IDataStream::Ptr stream):
     QWidget(parent), 
     _dataStream(stream),
     ui(new Ui::DataStreamWidget())
@@ -509,7 +509,7 @@ DataStreamWidget::~DataStreamWidget()
 
 }
 
-rcc::weak_ptr<EagleLib::IDataStream> DataStreamWidget::GetStream()
+rcc::weak_ptr<aq::IDataStream> DataStreamWidget::GetStream()
 {
     return _dataStream;
 }
@@ -526,7 +526,7 @@ void DataStreamWidget::SetSelected(bool state)
 
 
 
-QInputProxy::QInputProxy(mo::IParameter* parameter_, rcc::weak_ptr<EagleLib::Nodes::Node> node_, QWidget* parent):
+QInputProxy::QInputProxy(mo::IParameter* parameter_, rcc::weak_ptr<aq::Nodes::Node> node_, QWidget* parent):
     node(node_), QWidget(parent)
 {
     box = new QComboBox(this);

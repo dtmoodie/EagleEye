@@ -1,8 +1,8 @@
 #include "chunked_file_sink.h"
-#include <EagleLib/Nodes/FrameGrabberInfo.hpp>
-#include <EagleLib/ICoordinateManager.h>
+#include <Aquila/Nodes/FrameGrabberInfo.hpp>
+#include <Aquila/ICoordinateManager.h>
 #include <gst/base/gstbasesink.h>
-using namespace EagleLib;
+using namespace aq;
 
 
 int chunked_file_sink::CanLoadDocument(const std::string& document)
@@ -76,9 +76,9 @@ long long chunked_file_sink::GetNumFrames()
     return -1;
 }
 
-rcc::shared_ptr<EagleLib::ICoordinateManager> chunked_file_sink::GetCoordinateManager()
+rcc::shared_ptr<aq::ICoordinateManager> chunked_file_sink::GetCoordinateManager()
 {
-    return rcc::shared_ptr<EagleLib::ICoordinateManager>();
+    return rcc::shared_ptr<aq::ICoordinateManager>();
 }
 
 bool chunked_file_sink::ProcessImpl()
@@ -158,7 +158,7 @@ rcc::shared_ptr<ICoordinateManager> JpegKeyframer::GetCoordinateManager()
 }
 MO_REGISTER_CLASS(JpegKeyframer);
 
-using namespace EagleLib::Nodes;
+using namespace aq::Nodes;
 bool GstreamerSink::ProcessImpl()
 {
     if(pipeline_param.modified && !image->empty())

@@ -1,6 +1,6 @@
 #include "Stereo.h"
-#include "EagleLib/rcc/external_includes/cv_imgproc.hpp"
-#include "EagleLib/rcc/external_includes/cv_cudawarping.hpp"
+#include "Aquila/rcc/external_includes/cv_imgproc.hpp"
+#include "Aquila/rcc/external_includes/cv_cudawarping.hpp"
 
 #if _WIN32
     #if _DEBUG
@@ -14,8 +14,8 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudastereo")
  
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 bool StereoBM::ProcessImpl()

@@ -1,9 +1,9 @@
 #pragma once
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <cereal/archives/json.hpp>
 #include <fstream>
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

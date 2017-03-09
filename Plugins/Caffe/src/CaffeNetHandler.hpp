@@ -1,10 +1,10 @@
 #pragma once
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/IMetaObjectInfo.hpp>
-#include <EagleLib/SyncedMemory.h>
-#include <EagleLib/Algorithm.h>
+#include <Aquila/SyncedMemory.h>
+#include <Aquila/Algorithm.h>
 #include <caffe/net.hpp>
-namespace EagleLib
+namespace aq
 {
     namespace Caffe
     {
@@ -15,7 +15,7 @@ namespace EagleLib
             virtual std::map<int, int> CanHandleNetwork(const caffe::Net<float>& net) const = 0;
         };
         class NetHandler:
-              public TInterface<ctcrc32("EagleLib::Caffe::NetHandler"), Algorithm>
+              public TInterface<ctcrc32("aq::Caffe::NetHandler"), Algorithm>
         {
         public:
             static std::vector<boost::shared_ptr<caffe::Layer<float>>> GetOutputLayers(const caffe::Net<float>& net);

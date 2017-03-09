@@ -43,7 +43,7 @@ find_package(Wt QUIET)
 endif(WITH_WT)
 
 INCLUDE_DIRECTORIES(
-    ${EagleLib_INCLUDE_DIRECTORIES}
+    ${Aquila_INCLUDE_DIRECTORIES}
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
 )
@@ -52,10 +52,10 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 file(GLOB src "*.cpp")
 file(GLOB hdr "*.h" "*.hpp")
 add_executable(SimpleConsole ${src} ${hdr})
-add_dependencies(SimpleConsole EagleLib)
+add_dependencies(SimpleConsole Aquila)
 target_link_libraries(SimpleConsole
     MetaObject
-    EagleLib
+    Aquila
     ${Boost_LIBRARIES}
     RuntimeObjectSystem
     RuntimeCompiler
@@ -66,9 +66,8 @@ target_link_libraries(SimpleConsole
     ${CUDA_npps_LIBRARY}
     ${CUDA_nppc_LIBRARY}
     ${CUDA_CUDART_LIBRARY}
-    
     ${link_libs}
-    instantiations
+    MetaParameters
 )
 if(WITH_PYTHON)
   target_link_libraries(SimpleConsole ${PYTHON_LIBRARY})
@@ -102,7 +101,7 @@ IF(WIN32)
     APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELEASE)
     APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELWITHDEBINFO)
   ENDFOREACH(dir ${BIN_DIRS})
-  CONFIGURE_FILE("../../EagleLib/tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/samples/SimpleConsole/SimpleConsole.vcxproj.user @ONLY)
+  CONFIGURE_FILE("../../Aquila/tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/samples/SimpleConsole/SimpleConsole.vcxproj.user @ONLY)
 endif(WIN32)
     
     

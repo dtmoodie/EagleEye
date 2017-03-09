@@ -1,8 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include <QMainWindow>
-#include "EagleLib/Signals.h"
-#include <EagleLib/Nodes/Node.h>
+#include "Aquila/Signals.h"
+#include <Aquila/Nodes/Node.h>
 
 
 #include <qtimer.h>
@@ -24,7 +24,7 @@
 
 #include <functional>
 
-namespace EagleLib
+namespace aq
 {
     class IDataStream;
 }
@@ -48,8 +48,8 @@ public:
         MO_SIGNAL(void, StopThreads);
         MO_SIGNAL(void, PauseThreads);
         MO_SIGNAL(void, ResumeThreads);
-        MO_SLOT(void, parameter_added, EagleLib::Nodes::Node*);
-        MO_SLOT(void, node_update, EagleLib::Nodes::Node*);
+        MO_SLOT(void, parameter_added, aq::Nodes::Node*);
+        MO_SLOT(void, node_update, aq::Nodes::Node*);
     MO_END;
 
     
@@ -79,12 +79,12 @@ private slots:
     void onLoadFileClicked();
     void onLoadDirectoryClicked();
     void onLoadPluginClicked();
-    void addNode(EagleLib::Nodes::Node::Ptr node);
+    void addNode(aq::Nodes::Node::Ptr node);
     void updateLines();
     void uiNotifier();
     void onUiUpdate();
-    //void on_NewParameter(EagleLib::Nodes::Node* node);
-    //void newParameter(EagleLib::Nodes::Node* node);
+    //void on_NewParameter(aq::Nodes::Node* node);
+    //void newParameter(aq::Nodes::Node* node);
     void displayRCCSettings();
     void onPlotAdd(PlotWindow* plot);
     void onPlotRemove(PlotWindow* plot);
@@ -99,16 +99,16 @@ private slots:
     void on_btnStart_clicked();
 
     void on_btnStop_clicked();
-    void on_nodeUpdate(EagleLib::Nodes::Node* node);
+    void on_nodeUpdate(aq::Nodes::Node* node);
     
     void on_persistence_timeout();
 
 signals:
-    //void onNewParameter(EagleLib::Nodes::Node* node);
+    //void onNewParameter(aq::Nodes::Node* node);
     void eLog(QString message);
     void oglDisplayImage(std::string name, cv::cuda::GpuMat img);
     void qtDisplayImage(std::string name, cv::Mat img);
-    void qtDisplayImage(boost::function<cv::Mat(void)> function, EagleLib::Nodes::Node* node);
+    void qtDisplayImage(boost::function<cv::Mat(void)> function, aq::Nodes::Node* node);
     void uiCallback(boost::function<void()> f, std::pair<void*, mo::TypeInfo> source);
     void uiNeedsUpdate();
     void pluginLoaded();
@@ -130,10 +130,10 @@ private:
     NodeView*                                           nodeGraphView;
     QGraphicsProxyWidget*                               currentSelectedNodeWidget;
     QGraphicsProxyWidget*                               currentSelectedStreamWidget;
-    rcc::weak_ptr<EagleLib::Nodes::Node>                currentNode;
-    rcc::weak_ptr<EagleLib::IDataStream>                current_stream;
+    rcc::weak_ptr<aq::Nodes::Node>                currentNode;
+    rcc::weak_ptr<aq::IDataStream>                current_stream;
     
-    std::vector<EagleLib::Nodes::Node::Ptr>             parentList;
+    std::vector<aq::Nodes::Node::Ptr>             parentList;
     boost::timed_mutex                                  parentMtx;
     std::vector<QNodeWidget*>                           widgets;
     std::vector<DataStreamWidget*>                      data_stream_widgets;
@@ -145,7 +145,7 @@ private:
     QWindow*                                            processing_thread_upload_window;
     std::shared_ptr<mo::Connection>                     new_parameter_connection;
     std::shared_ptr<mo::Connection>                     dirty_flag_connection;
-    std::vector<rcc::shared_ptr<EagleLib::IDataStream>> data_streams;
+    std::vector<rcc::shared_ptr<aq::IDataStream>> data_streams;
     std::shared_ptr<mo::Connection>                     logging_connection;
     std::string                                         file_load_path;
     std::string                                         dir_load_path;

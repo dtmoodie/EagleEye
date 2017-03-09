@@ -1,8 +1,8 @@
 #include "VideoWriter.h"
 #include <boost/filesystem.hpp>
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 void VideoWriter::NodeInit(bool firstInit)

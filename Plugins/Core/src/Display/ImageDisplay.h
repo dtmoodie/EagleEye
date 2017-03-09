@@ -1,5 +1,5 @@
 #include "src/precompiled.hpp"
-#include "EagleLib/Nodes/Sink.h"
+#include "Aquila/Nodes/Sink.h"
 #include "src/CoreExport.hpp"
 
 namespace cv
@@ -11,7 +11,7 @@ namespace cuda
                        cv::InputArray bins = cv::noArray(), cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 }
 }
-namespace EagleLib
+namespace aq
 {
 namespace Nodes
 {
@@ -94,4 +94,4 @@ namespace Nodes
         bool ProcessImpl();
     };
 } // namespace Nodes
-} // namespace EagleLib
+} // namespace aq

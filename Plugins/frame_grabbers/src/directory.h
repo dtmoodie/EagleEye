@@ -1,8 +1,8 @@
 #pragma once
-#include "EagleLib/Nodes/IFrameGrabber.hpp"
-#include "EagleLib/ICoordinateManager.h"
+#include "Aquila/Nodes/IFrameGrabber.hpp"
+#include "Aquila/ICoordinateManager.h"
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

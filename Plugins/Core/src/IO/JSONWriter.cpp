@@ -1,12 +1,12 @@
 #include "JSONWriter.hpp"
 #include <MetaObject/Parameters/TypedParameter.hpp>
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <MetaObject/Parameters/InputParameterAny.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 /*class InputParameterAny: public mo::InputParameter
 {

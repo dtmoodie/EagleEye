@@ -2,9 +2,9 @@
 #include "GStreamerExport.hpp"
 #include "MetaObject/MetaObject.hpp"
 #include "gstreamer.hpp"
-#include "EagleLib/Nodes/IFrameGrabber.hpp"
+#include "Aquila/Nodes/IFrameGrabber.hpp"
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

@@ -1,14 +1,14 @@
 #pragma once
 #include <src/precompiled.hpp>
-#include <EagleLib/rcc/external_includes/cv_videoio.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudacodec.hpp>
+#include <Aquila/rcc/external_includes/cv_videoio.hpp>
+#include <Aquila/rcc/external_includes/cv_cudacodec.hpp>
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 #include "MetaObject/Thread/ThreadHandle.hpp"
 #include "MetaObject/Thread/ThreadPool.hpp"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

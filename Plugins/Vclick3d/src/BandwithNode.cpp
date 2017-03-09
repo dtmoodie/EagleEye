@@ -1,5 +1,5 @@
 #include "BandwidthNode.hpp"
-#include "EagleLib/Nodes/NodeInfo.hpp"
+#include "Aquila/Nodes/NodeInfo.hpp"
 
 //#include <MetaObject/Parameters/IO/TextPolicy.hpp>
 //#include <MetaObject/Parameters/IO/CerealPolicy.hpp>
@@ -12,8 +12,8 @@
 #endif
 
 #include "RuntimeLinkLibrary.h"
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 #ifdef _MSC_VER
 RUNTIME_COMPILER_LINKLIBRARY("wpcap.lib")

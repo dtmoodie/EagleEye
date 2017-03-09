@@ -1,6 +1,6 @@
 #include "DetectionWriter.hpp"
-#include "EagleLib/utilities/CudaCallbacks.hpp"
-#include "EagleLib/Nodes/NodeInfo.hpp"
+#include "Aquila/utilities/CudaCallbacks.hpp"
+#include "Aquila/Nodes/NodeInfo.hpp"
 
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
 
@@ -12,8 +12,8 @@
 
 #include <fstream>
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 bool DetectionWriter::ProcessImpl()
 {

@@ -16,7 +16,7 @@ if(mxnet_FOUND)
       RCC_LINK_LIB(MXnet mxnet
                          ${OpenBLAS_LIB}
                          ${CUDNN_LIBRARY}
-                         EagleLib
+                         Aquila
                          MetaObject
        )
       INCLUDE(../PluginTemplate.cmake)

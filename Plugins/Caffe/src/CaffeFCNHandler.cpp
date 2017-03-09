@@ -5,7 +5,7 @@
 #include "opencv2/cudaarithm.hpp"
 #include "opencv2/cudaimgproc.hpp"
 
-using namespace EagleLib::Caffe;
+using namespace aq::Caffe;
 
 std::map<int, int> FCNHandler::CanHandleNetwork(const caffe::Net<float>& net)
 {
@@ -44,7 +44,7 @@ void FCNHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,
     if(!blob)
         return;
     cv::Mat label, confidence;
-    EagleLib::Caffe::argMax(blob.get(), label, confidence);
+    aq::Caffe::argMax(blob.get(), label, confidence);
     label.setTo(0, confidence < min_confidence);
     cv::resize(label, label, input_image_size, 0, 0, cv::INTER_NEAREST);
     cv::resize(confidence, confidence, input_image_size, 0, 0, cv::INTER_NEAREST);
@@ -92,7 +92,7 @@ void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, long long
     {
         blob->gpu_data();
         //blob->cpu_data();
-        auto wrapped = EagleLib::Nodes::CaffeBase::WrapBlob(*blob);
+        auto wrapped = aq::Nodes::CaffeBase::WrapBlob(*blob);
         if(class_index < blob->channels() && blob->num())
         {
             const cv::cuda::GpuMat& confidence = wrapped[0].GetGpuMat(_ctx->GetStream(), class_index);

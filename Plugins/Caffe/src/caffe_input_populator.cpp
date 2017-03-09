@@ -1,8 +1,8 @@
 #include "caffe_input_populator.h"
 #include <caffe/blob.hpp>
-#include <EagleLib/rcc/external_includes/cv_imgproc.hpp>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+#include <Aquila/rcc/external_includes/cv_imgproc.hpp>
+using namespace aq;
+using namespace aq::Nodes;
 
 
 
@@ -109,5 +109,5 @@ bool caffe_input_populator::pre_check(const TS<SyncedMemory>& input)
     return true;
 }
 
-static EagleLib::Nodes::NodeInfo g_registerer_caffe_input_populator("caffe_input_populator", { "caffe"});
+static aq::Nodes::NodeInfo g_registerer_caffe_input_populator("caffe_input_populator", { "caffe"});
 REGISTERCLASS(caffe_input_populator, &g_registerer_caffe_input_populator);*/

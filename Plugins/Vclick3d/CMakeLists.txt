@@ -31,17 +31,17 @@ if(PkgConfig_FOUND)
 	QT5_WRAP_CPP(MOC ${hdrs})
 	LINK_DIRECTORIES(${LINK_DIRS})
 	CUDA_ADD_LIBRARY(Vclick3d SHARED ${hdrs} ${src} ${MOC})
-	ADD_DEPENDENCIES(Vclick3d EagleLib)
+	ADD_DEPENDENCIES(Vclick3d Aquila)
 
 
 	RCC_LINK_LIB(Vclick3d
 		${OpenCV_LIBS}
 		Qt5::Network
 		Qt5::Core
-		EagleLib
+		Aquila
 		${LINK_LIBS} 
 		${GLOOX_LIBRARIES}
-		${EagleLib_LIBRARIES}
+		${Aquila_LIBRARIES}
 		${PCAP_LIBRARY}
 	)
 

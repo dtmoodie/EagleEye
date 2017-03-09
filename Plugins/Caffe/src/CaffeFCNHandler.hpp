@@ -1,7 +1,7 @@
 #pragma once
 #include "CaffeNetHandler.hpp"
 
-namespace EagleLib
+namespace aq
 {
     namespace Caffe
     {

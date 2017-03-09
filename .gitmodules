@@ -13,3 +13,6 @@
 [submodule "EagleLib/MetaObject"]
 	path = EagleLib/MetaObject
 	url = http://github.com/dtmoodie/MetaObject
+[submodule "Aquila"]
+	path = Aquila
+	url = http://github.com/dtmoodie/Aquila

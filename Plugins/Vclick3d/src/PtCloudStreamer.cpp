@@ -1,8 +1,8 @@
 #include "ptCloudStreamer.h"
 #include <QtNetwork/qhostaddress.h>
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 /*
 ServerHandler::ServerHandler()
 {

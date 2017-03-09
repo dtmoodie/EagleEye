@@ -14,7 +14,7 @@
     RUNTIME_COMPILER_LINKLIBRARY("-lCaffed")
   #endif
 #endif
-namespace EagleLib
+namespace aq
 {
     class PLUGIN_EXPORTS caffe_init_singleton
     {

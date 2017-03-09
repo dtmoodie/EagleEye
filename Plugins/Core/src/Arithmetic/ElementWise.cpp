@@ -1,8 +1,8 @@
 #include "ElementWise.hpp"
-#include <EagleLib/Nodes/NodeInfo.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
+using namespace aq;
+using namespace aq::Nodes;
 
 bool Equal::ProcessImpl()
 {

@@ -10,7 +10,7 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 IF(${Ceres_FOUND})
     include_directories(
         ${CERES_INCLUDE_DIRS}
-        ${EagleLib_INCLUDE_DIRECTORIES}
+        ${Aquila_INCLUDE_DIRECTORIES}
     )
     if(RCC_VERBOSE_CONFIG)
         message( STATUS
@@ -23,7 +23,7 @@ IF(${Ceres_FOUND})
 
           ${CUDA_LIBRARIES}
 
-          ${EagleLib_LIBRARIES}
+          ${AquilaES}
         ")
     endif(RCC_VERBOSE_CONFIG)
 
@@ -32,9 +32,8 @@ IF(${Ceres_FOUND})
     add_definitions(-DCERES_LIB_DIR="${Ceres_DIR}/../lib")
     add_definitions(-DCERES_INC_DIR="${CERES_INCLUDE_DIRS_}")
     add_library(BundleAdjustment SHARED BundleAdjustment.h BundleAdjustment.cpp)
-    target_link_libraries(BundleAdjustment ${Boost_LIBRARIES} ${EagleLib_LIBRARIES} ${CUDA_LIBRARIES})
+    target_link_libraries(BundleAdjustment ${Boost_LIBRARIES} ${AquilaES} ${CUDA_LIBRARIES})
     set_target_properties(BundleAdjustment PROPERTIES FOLDER "Plugins")
-    add_dependencies(BundleAdjustment EagleLib)
-ELSE(${Ceres_FOUND})
+    add_dependencies(BundleAdjustment Aquila{Ceres_FOUND})
 message(STATUS "Ceres:\t\tNotFound")
 ENDIF(${Ceres_FOUND})

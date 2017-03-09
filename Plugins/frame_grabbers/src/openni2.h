@@ -3,7 +3,7 @@
 #include "cv_capture.h"
 #include <boost/lexical_cast.hpp>
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

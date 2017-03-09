@@ -1,10 +1,10 @@
 #include "flip.hpp"
-#include "EagleLib/Nodes/NodeInfo.hpp"
+#include "Aquila/Nodes/NodeInfo.hpp"
 #include <opencv2/cudaarithm.hpp>
 #include <opencv2/cudawarping.hpp>
 #include "opencv2/imgproc.hpp"
 
-using namespace EagleLib::Nodes;
+using namespace aq::Nodes;
 bool Flip::ProcessImpl()
 {
     auto state = input->GetSyncState();

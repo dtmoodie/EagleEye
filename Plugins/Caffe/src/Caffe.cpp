@@ -2,12 +2,12 @@
 #include "Caffe.h"
 #include "caffe_init.h"
 #include "helpers.hpp"
-#include "EagleLib/Nodes/Node.h"
-#include "EagleLib/Nodes/NodeInfo.hpp"
-#include <EagleLib/ObjectDetection.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudawarping.hpp>
+#include "Aquila/Nodes/Node.h"
+#include "Aquila/Nodes/NodeInfo.hpp"
+#include <Aquila/ObjectDetection.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
+#include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
 #include "helpers.hpp"
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Types.hpp>
@@ -22,8 +22,8 @@
 
 #include "caffe/caffe.hpp"
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 
@@ -327,7 +327,7 @@ bool CaffeBase::InitNetwork()
 
 void CaffeBase::NodeInit(bool firstInit)
 {
-    EagleLib::caffe_init_singleton::inst();
+    aq::caffe_init_singleton::inst();
     if (::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
         ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
 }

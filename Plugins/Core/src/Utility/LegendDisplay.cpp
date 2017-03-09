@@ -1,12 +1,12 @@
 #include "LegendDisplay.hpp"
-#include "EagleLib/utilities/UiCallbackHandlers.h"
-#include "EagleLib/utilities/CudaCallbacks.hpp"
+#include "Aquila/utilities/UiCallbackHandlers.h"
+#include "Aquila/utilities/CudaCallbacks.hpp"
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <boost/lexical_cast.hpp>
-#include <EagleLib/Nodes/NodeInfo.hpp>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+#include <Aquila/Nodes/NodeInfo.hpp>
+using namespace aq;
+using namespace aq::Nodes;
 
 void LegendDisplay::click_left(std::string window_name, cv::Point pt, int, cv::Mat)
 {

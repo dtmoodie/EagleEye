@@ -1,6 +1,6 @@
 #include "src/precompiled.hpp"
-using namespace ::EagleLib;
-using namespace ::EagleLib::Nodes;
+using namespace aq;
+using namespace ::aq::Nodes;
 
 class MorphologyFilter: public Node
 {

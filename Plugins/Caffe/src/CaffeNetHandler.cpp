@@ -1,14 +1,14 @@
 #include <MetaObject/Parameters/IO/CerealPolicy.hpp>
 #include <MetaObject/Parameters/IO/CerealMemory.hpp>
 #include "CaffeNetHandler.hpp"
-#include "EagleLib/IO/JsonArchive.hpp"
+#include "Aquila/IO/JsonArchive.hpp"
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
 
-INSTANTIATE_META_PARAMETER(std::vector<rcc::shared_ptr<EagleLib::Caffe::NetHandler>>)
+INSTANTIATE_META_PARAMETER(std::vector<rcc::shared_ptr<aq::Caffe::NetHandler>>)
 
 std::vector<boost::shared_ptr<caffe::Layer<float>>>
-EagleLib::Caffe::NetHandler::GetOutputLayers(const caffe::Net<float>& net)
+aq::Caffe::NetHandler::GetOutputLayers(const caffe::Net<float>& net)
 {
     const std::vector<int>& out_idx = net.output_blob_indices();
     auto layer_names = net.layer_names();
@@ -28,7 +28,7 @@ EagleLib::Caffe::NetHandler::GetOutputLayers(const caffe::Net<float>& net)
     return output;
 }
 
-void EagleLib::Caffe::NetHandler::SetOutputBlob(const caffe::Net<float> &net, int output_blob_index)
+void aq::Caffe::NetHandler::SetOutputBlob(const caffe::Net<float> &net, int output_blob_index)
 {
     output_blob_name = net.blob_names()[output_blob_index];
 }

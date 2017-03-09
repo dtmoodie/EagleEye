@@ -22,11 +22,11 @@ IF(LIBVLC_FOUND)
 
     IF(NOT ${LIBVLC_LIBRARY} MATCHES "NOTFOUND")
         CUDA_ADD_LIBRARY(VLC SHARED ${src} ${hdr})
-        ADD_DEPENDENCIES(VLC EagleLib)
+        ADD_DEPENDENCIES(VLC Aquila)
         RCC_LINK_LIB(VLC
                 opencv_core
                 opencv_videoio
-                EagleLib
+                Aquila
 
 
                 )

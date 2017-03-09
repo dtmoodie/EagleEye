@@ -1,8 +1,8 @@
 
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 
 int main()
 {
-    //auto node = EagleLib::NodeManager::getInstance().addNode("SerialStack");
+    //auto node = aq::NodeManager::getInstance().addNode("SerialStack");
     return 0;
 }

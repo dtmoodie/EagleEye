@@ -3,10 +3,10 @@
 #include "qdrag.h"
 #include <qmimedata.h>
 
-#include <EagleLib/Signals.h>
-#include <EagleLib/Nodes/NodeFactory.h>
+#include <Aquila/Signals.h>
+#include <Aquila/Nodes/NodeFactory.h>
 #include "signal_dialog.h"
-#include <EagleLib/plotters/PlotManager.h>
+#include <Aquila/plotters/PlotManager.h>
 
 NodeView::NodeView(QWidget* parent) :
     QGraphicsView(parent), currentWidget(nullptr), resizeGrabSize(20), rightClickMenu(new QMenu(this))
@@ -41,7 +41,7 @@ void NodeView::addWidget(QGraphicsProxyWidget * widget, ObjectId id)
     // If this widget has a parent, draw a line to it
     drawLine2Parent(widget);
 }
-void NodeView::addWidget(QGraphicsProxyWidget* widget, EagleLib::IDataStream* stream_)
+void NodeView::addWidget(QGraphicsProxyWidget* widget, aq::IDataStream* stream_)
 {
     dataStreamWidget[stream_] = widget;
 }
@@ -56,7 +56,7 @@ void NodeView::removeWidget(ObjectId id)
 {
     widgetMap.erase(id);
 }
-QGraphicsProxyWidget* NodeView::getWidget(EagleLib::IDataStream* id)
+QGraphicsProxyWidget* NodeView::getWidget(aq::IDataStream* id)
 {
     auto itr = dataStreamWidget.find(id);
     if (itr != dataStreamWidget.end())
@@ -68,7 +68,7 @@ void NodeView::on_parameter_clicked(mo::IParameter* param, QPoint pos)
     // Spawn the right click dialog
     if (param != nullptr)
     {
-        if (EagleLib::PlotManager::Instance()->CanPlotParameter(param))
+        if (aq::PlotManager::Instance()->CanPlotParameter(param))
         {
             actions[2]->setEnabled(true);
             actions[3]->setEnabled(true);
@@ -185,7 +185,7 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                 {
                     auto id = node->GetObjectId();
                     if(id.IsValid())
-                        fileName = EagleLib::NodeFactory::Instance()->GetNodeFile(id);
+                        fileName = aq::NodeFactory::Instance()->GetNodeFile(id);
                 }
                 QDrag* drag = new QDrag(this);
                 QMimeData* mimeData = new QMimeData();
@@ -381,7 +381,7 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
     }
     return connectingLine;
 }
-QGraphicsProxyWidget* NodeView::getParent(EagleLib::Nodes::Node::Ptr child)
+QGraphicsProxyWidget* NodeView::getParent(aq::Nodes::Node::Ptr child)
 {
     auto parents = child->GetParents();
     for(auto parent : parents)
@@ -392,7 +392,7 @@ QGraphicsProxyWidget* NodeView::getParent(EagleLib::Nodes::Node::Ptr child)
     }
     return nullptr;
 }
-std::vector<QGraphicsProxyWidget*> NodeView::getParents(EagleLib::Nodes::Node::Ptr child)
+std::vector<QGraphicsProxyWidget*> NodeView::getParents(aq::Nodes::Node::Ptr child)
 {
     std::vector<QGraphicsProxyWidget*> output;
     auto parents = child->GetParents();
@@ -404,7 +404,7 @@ std::vector<QGraphicsProxyWidget*> NodeView::getParents(EagleLib::Nodes::Node::P
     }
     return output;
 }
-QGraphicsProxyWidget* NodeView::getStream(EagleLib::IDataStream* stream_id)
+QGraphicsProxyWidget* NodeView::getStream(aq::IDataStream* stream_id)
 {
     auto itr = dataStreamWidget.find(stream_id);
     if(itr != dataStreamWidget.end())

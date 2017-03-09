@@ -9,7 +9,7 @@
 #include <pcl/point_traits.h>
 
 
-namespace EagleLib
+namespace aq
 {
     class InputArray: public cv::InputArray
     {

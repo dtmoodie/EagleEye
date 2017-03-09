@@ -1,11 +1,11 @@
 
 
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 //#include <opencv2/highgui.hpp>
 //RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_highgui")
 #define PARAMTESTMACRO(type) updateParameter< type >(##type,0)
 #if 0
-namespace EagleLib
+namespace aq
 {
     class TestNode: public Node
     {
@@ -175,7 +175,7 @@ namespace EagleLib
 
 
 }
-using namespace EagleLib;
+using namespace aq;
 REGISTERCLASS(TestNode)
 #endif
 

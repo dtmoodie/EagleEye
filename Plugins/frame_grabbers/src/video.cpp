@@ -1,9 +1,9 @@
 #include "video.h"
-#include "EagleLib/Nodes/FrameGrabberInfo.hpp"
+#include "Aquila/Nodes/FrameGrabberInfo.hpp"
 #include "boost/filesystem.hpp"
 #include <ObjectInterfacePerModule.h>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 frame_grabber_video::~frame_grabber_video()
 {
     StopThreads();

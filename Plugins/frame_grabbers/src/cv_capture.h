@@ -1,10 +1,10 @@
 #pragma once
 
-#include "EagleLib/Nodes/IFrameGrabber.hpp"
-#include "EagleLib/ICoordinateManager.h"
-#include "EagleLib/rcc/external_includes/cv_cudacodec.hpp"
-#include "EagleLib/rcc/external_includes/cv_imgcodec.hpp"
-#include "EagleLib/rcc/external_includes/cv_videoio.hpp"
+#include "Aquila/Nodes/IFrameGrabber.hpp"
+#include "Aquila/ICoordinateManager.h"
+#include "Aquila/rcc/external_includes/cv_cudacodec.hpp"
+#include "Aquila/rcc/external_includes/cv_imgcodec.hpp"
+#include "Aquila/rcc/external_includes/cv_videoio.hpp"
 
 #include "RuntimeSourceDependency.h"
 
@@ -12,7 +12,7 @@
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("cv_capture", ".cpp");
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

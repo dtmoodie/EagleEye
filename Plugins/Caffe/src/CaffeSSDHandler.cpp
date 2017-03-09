@@ -1,7 +1,7 @@
 #include "CaffeSSDHandler.hpp"
 #include "CaffeNetHandlerInfo.hpp"
 #include "helpers.hpp"
-using namespace EagleLib::Caffe;
+using namespace aq::Caffe;
 
 
 std::map<int, int> SSDHandler::CanHandleNetwork(const caffe::Net<float>& net)

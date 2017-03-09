@@ -25,7 +25,7 @@ PlotWindow::~PlotWindow()
 {
     delete ui;
 }
-void PlotWindow::addPlotter(rcc::shared_ptr<EagleLib::QtPlotter> plotter)
+void PlotWindow::addPlotter(rcc::shared_ptr<aq::QtPlotter> plotter)
 {
     plotter->AddPlot(plot);
     plots.push_back(plotter);
@@ -73,7 +73,7 @@ MatrixViewWindow::~MatrixViewWindow()
 {
 
 }
-void MatrixViewWindow::addPlotter(rcc::shared_ptr<EagleLib::QtPlotter> plotter)
+void MatrixViewWindow::addPlotter(rcc::shared_ptr<aq::QtPlotter> plotter)
 {
 
 }

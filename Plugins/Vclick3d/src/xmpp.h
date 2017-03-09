@@ -1,6 +1,6 @@
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include "ObjectInterfacePerModule.h"
-#include "EagleLib/ObjectDetection.hpp"
+#include "Aquila/ObjectDetection.hpp"
 
 #ifdef HAVE_GLOOX
 #define GLOOX_IMPORTS
@@ -26,7 +26,7 @@ RUNTIME_COMPILER_LINKLIBRARY("G:/libs/gloox/libs/gloox-1.0.lib");
 #endif
 
 using namespace gloox;
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include <QApplication>
 
-#include <EagleLib/Plugins.h>
+#include <Aquila/Plugins.h>
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 #endif
                 {
                     std::string file = itr->path().string();
-                    EagleLib::loadPlugin(file);
+                    aq::loadPlugin(file);
                 }
             }
         }

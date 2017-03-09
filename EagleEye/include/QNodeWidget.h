@@ -1,5 +1,5 @@
 #pragma once
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include "qgraphicsitem.h"
 #include "qwidget.h"
 #include <boost/type_traits.hpp>
@@ -37,7 +37,7 @@ class QInputProxy : public QWidget
 {
     Q_OBJECT
 public:
-    QInputProxy(mo::IParameter* parameter, rcc::weak_ptr<EagleLib::Nodes::Node> node_, QWidget* parent);
+    QInputProxy(mo::IParameter* parameter, rcc::weak_ptr<aq::Nodes::Node> node_, QWidget* parent);
     void updateParameter(mo::IParameter* parameter);
     virtual void updateUi(mo::IParameter*, mo::Context*, bool init = false);
     virtual QWidget* getWidget(int num = 0);
@@ -51,7 +51,7 @@ private:
     void onParamDelete(mo::IParameter const* parameter);
     std::shared_ptr<mo::Connection> update_connection;
     std::shared_ptr<mo::Connection> delete_connection;
-    rcc::weak_ptr<EagleLib::Nodes::Node> node;
+    rcc::weak_ptr<aq::Nodes::Node> node;
     QComboBox* box;
     mo::TypedSlot<void(mo::IParameter*, mo::Context*)> onParameterUpdateSlot;
     mo::TypedSlot<void(mo::IParameter const*)> onParameterDeleteSlot;
@@ -61,11 +61,11 @@ class CV_EXPORTS QNodeWidget : public QWidget
 {
     Q_OBJECT
 public:
-    QNodeWidget(QWidget* parent = nullptr, rcc::weak_ptr<EagleLib::Nodes::Node> node = rcc::weak_ptr<EagleLib::Nodes::Node>());
+    QNodeWidget(QWidget* parent = nullptr, rcc::weak_ptr<aq::Nodes::Node> node = rcc::weak_ptr<aq::Nodes::Node>());
     ~QNodeWidget();
-    rcc::weak_ptr<EagleLib::Nodes::Node> getNode();
+    rcc::weak_ptr<aq::Nodes::Node> getNode();
     void setSelected(bool state);
-    void updateUi(bool parameterUpdate = false, EagleLib::Nodes::Node* node = nullptr);
+    void updateUi(bool parameterUpdate = false, aq::Nodes::Node* node = nullptr);
     // Used for thread safety
     void on_nodeUpdate();
     void on_logReceive(boost::log::trivial::severity_level verb, const std::string& msg);
@@ -91,7 +91,7 @@ private:
     void on_object_recompile(mo::IMetaObject* obj);
     std::map<QWidget*, mo::IParameter*> widgetParamMap;
     Ui::QNodeWidget* ui;
-    rcc::weak_ptr<EagleLib::Nodes::Node> node;
+    rcc::weak_ptr<aq::Nodes::Node> node;
     std::map<std::string, mo::UI::qt::IParameterProxy::Ptr> parameterProxies;
     std::map<std::string, std::shared_ptr<QInputProxy>> inputProxies;
     QNodeWidget* parentWidget;
@@ -104,10 +104,10 @@ class CV_EXPORTS DataStreamWidget: public QWidget
 {
     Q_OBJECT
 public:
-    DataStreamWidget(QWidget* parent = nullptr, EagleLib::IDataStream::Ptr stream = EagleLib::IDataStream::Ptr());
+    DataStreamWidget(QWidget* parent = nullptr, aq::IDataStream::Ptr stream = aq::IDataStream::Ptr());
     ~DataStreamWidget();
 
-    rcc::weak_ptr<EagleLib::IDataStream> GetStream();
+    rcc::weak_ptr<aq::IDataStream> GetStream();
     void SetSelected(bool state);
     void update_ui();
 
@@ -115,7 +115,7 @@ signals:
 
 
 private:
-    EagleLib::IDataStream::Ptr _dataStream;
+    aq::IDataStream::Ptr _dataStream;
     Ui::DataStreamWidget* ui;
     std::vector<QInputProxy*> inputProxies;
     std::map<std::string, mo::UI::qt::IParameterProxy::Ptr> parameterProxies;
@@ -145,7 +145,7 @@ public:
     {        return new QLabel(QString::fromStdString(parameter->GetTypeInfo().name()));    }
     mo::IParameter* parameter;
 };
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, mo::IParameter* parameter, rcc::weak_ptr<EagleLib::Nodes::Node> node);
+IQNodeProxy* dispatchParameter(IQNodeInterop* parent, mo::IParameter* parameter, rcc::weak_ptr<aq::Nodes::Node> node);
 
 
 // Interface class for the interop class
@@ -153,7 +153,7 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 {
     Q_OBJECT
 public:
-    IQNodeInterop(mo::IParameter* parameter_, QNodeWidget* parent = nullptr, rcc::weak_ptr<EagleLib::Nodes::Node> node_= rcc::weak_ptr<EagleLib::Nodes::Node>());
+    IQNodeInterop(mo::IParameter* parameter_, QNodeWidget* parent = nullptr, rcc::weak_ptr<aq::Nodes::Node> node_= rcc::weak_ptr<aq::Nodes::Node>());
     virtual ~IQNodeInterop();
 
     IQNodeProxy* proxy;
@@ -176,6 +176,6 @@ protected:
     mo::TypedSlot<void(mo::IParameter*, mo::Context*)> onParameterUpdateSlot;
     QLabel* nameElement;    
     QGridLayout* layout;
-    rcc::weak_ptr<EagleLib::Nodes::Node> node;
+    rcc::weak_ptr<aq::Nodes::Node> node;
 };
 

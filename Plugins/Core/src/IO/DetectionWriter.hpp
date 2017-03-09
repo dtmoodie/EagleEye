@@ -1,10 +1,10 @@
 #pragma once
 
-#include "EagleLib/Nodes/Node.h"
-#include "EagleLib/ObjectDetection.hpp"
+#include "Aquila/Nodes/Node.h"
+#include "Aquila/ObjectDetection.hpp"
 #include "MetaObject/Thread/ThreadHandle.hpp"
 #include "MetaObject/Thread/ThreadPool.hpp"
-namespace EagleLib
+namespace aq
 {
 namespace Nodes
 {

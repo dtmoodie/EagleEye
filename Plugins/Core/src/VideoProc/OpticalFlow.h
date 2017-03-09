@@ -1,12 +1,12 @@
 #pragma once
 #include <src/precompiled.hpp>
 
-#include <EagleLib/rcc/external_includes/cv_cudaoptflow.hpp>
-#include "EagleLib/utilities/CudaUtils.hpp"
+#include <Aquila/rcc/external_includes/cv_cudaoptflow.hpp>
+#include "Aquila/utilities/CudaUtils.hpp"
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

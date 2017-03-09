@@ -16,7 +16,7 @@ find_package(OpenCV 3.0 QUIET COMPONENTS core)
 
 FIND_PACKAGE(Flann QUIET)
 
-IF(EAGLELIB_FLANN_LIBRARY_DEBUG AND EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG)
+IF(Aquila_FLANN_LIBRARY_DEBUG AND Aquila_FLANN_CUDA_LIBRARY_DEBUG)
     FILE(GLOB_RECURSE src "src/*.cpp")
     FILE(GLOB_RECURSE hdr "src/*.hpp" "src/*.h")
     FILE(GLOB_RECURSE knl "src/*.cu")
@@ -31,27 +31,27 @@ IF(EAGLELIB_FLANN_LIBRARY_DEBUG AND EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG)
         ${OpenCV_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
-        ${EAGLELIB_FLANN_INCLUDE_DIR}
+        ${Aquila_FLANN_INCLUDE_DIR}
         )
-    GET_FILENAME_COMPONENT(FLANN_LIB_DIR "${EAGLELIB_FLANN_LIBRARY_DEBUG}" PATH)
+    GET_FILENAME_COMPONENT(FLANN_LIB_DIR "${Aquila_FLANN_LIBRARY_DEBUG}" PATH)
 
     ADD_LIBRARY(Flann SHARED ${src} ${hdr})
-    add_dependencies(Flann EagleLib)
+    add_dependencies(Flann Aquila)
 
-    RCC_LINK_LIB(Flann EagleLib
+    RCC_LINK_LIB(Flann Aquila
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}
         )
     
-    target_link_libraries(Flann debug;${EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG};
-                                debug;${EAGLELIB_FLANN_LIBRARY_DEBUG};
-                                optimized;${EAGLELIB_FLANN_CUDA_LIBRARY_RELEASE};
-                                optimized;${EAGLELIB_FLANN_LIBRARY_RELEASE})
+    target_link_libraries(Flann debug;${Aquila_FLANN_CUDA_LIBRARY_DEBUG};
+                                debug;${Aquila_FLANN_LIBRARY_DEBUG};
+                                optimized;${Aquila_FLANN_CUDA_LIBRARY_RELEASE};
+                                optimized;${Aquila_FLANN_LIBRARY_RELEASE})
     
     
 
-    #TARGET_LINK_LIBRARIES(Flann debug ${EAGLELIB_FLANN_CUDA_LIBRARY_DEBUG} ${EAGLELIB_FLANN_LIBRARY_DEBUG})
-    #TARGET_LINK_LIBRARIES(Flann optimized ${EAGLELIB_FLANN_CUDA_LIBRARY_RELEASE} ${EAGLELIB_FLANN_LIBRARY_RELEASE})
+    #TARGET_LINK_LIBRARIES(Flann debug ${Aquila_FLANN_CUDA_LIBRARY_DEBUG} ${Aquila_FLANN_LIBRARY_DEBUG})
+    #TARGET_LINK_LIBRARIES(Flann optimized ${Aquila_FLANN_CUDA_LIBRARY_RELEASE} ${Aquila_FLANN_LIBRARY_RELEASE})
     INCLUDE(../PluginTemplate.cmake)
 
 ELSE()

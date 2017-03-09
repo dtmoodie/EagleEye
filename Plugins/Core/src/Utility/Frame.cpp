@@ -1,11 +1,11 @@
 #include "Frame.h"
-#include "EagleLib/rcc/external_includes/cv_cudawarping.hpp"
-#include "EagleLib/rcc/external_includes/cv_cudaarithm.hpp"
-#include <EagleLib/Qualifiers.hpp>
+#include "Aquila/rcc/external_includes/cv_cudawarping.hpp"
+#include "Aquila/rcc/external_includes/cv_cudaarithm.hpp"
+#include <Aquila/Qualifiers.hpp>
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 bool FrameRate::ProcessImpl()

@@ -1,11 +1,11 @@
 #include "DisplayHelpers.h"
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
-#include <EagleLib/utilities/GpuDrawing.hpp>
+#include <Aquila/utilities/GpuDrawing.hpp>
 
 #include <fstream>
 
-using namespace ::EagleLib;
-using namespace ::EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 bool Scale::ProcessImpl()
 {

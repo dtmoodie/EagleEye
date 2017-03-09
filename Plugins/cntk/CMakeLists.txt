@@ -64,6 +64,6 @@ if(CNTK_CNTK_LIBRARY AND
   link_directories(${CNTK_LIB_DIR})
   link_directories(${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
   add_library(cntk SHARED cntk.cpp)
-  RCC_LINK_LIB(cntk ${CNTK_LIBS} EagleLib)
+  RCC_LINK_LIB(cntk ${CNTK_LIBS} Aquila)
   INCLUDE(../PluginTemplate.cmake)
 endif()

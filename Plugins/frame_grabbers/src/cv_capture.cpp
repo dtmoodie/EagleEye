@@ -3,8 +3,8 @@
 #if _MSC_VER
 RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
 #endif
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 template <class T> void SafeRelease(T **ppT)
 {

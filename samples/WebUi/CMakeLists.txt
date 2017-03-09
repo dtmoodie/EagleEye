@@ -7,7 +7,7 @@ if(Wt_FOUND)
   file(GLOB_RECURSE src "*.cpp" "*.hpp")
   add_executable(WebUi ${src})
   target_link_libraries(WebUi 
-    EagleLib 
+    Aquila 
     MetaObject 
     instantiations
     debug;${Wt_HTTP_DEBUG_LIBRARY}

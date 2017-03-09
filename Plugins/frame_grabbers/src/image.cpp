@@ -3,8 +3,8 @@
 #include <opencv2/imgcodecs.hpp>
 
 
-using namespace ::EagleLib;
-using namespace ::EagleLib::Nodes;
+using namespace aq;
+using namespace ::aq::Nodes;
 
 bool frame_grabber_image::LoadFile(const ::std::string& file_path)
 {

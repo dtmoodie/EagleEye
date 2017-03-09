@@ -7,9 +7,9 @@
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
 
 #include <cereal/types/vector.hpp>
-#include <EagleLib/IO/cvMat.hpp>
-#include "EagleLib/IO/memory.hpp"
-#include "EagleLib/Nodes/NodeFactory.h"
+#include <Aquila/IO/cvMat.hpp>
+#include "Aquila/IO/memory.hpp"
+#include "Aquila/Nodes/NodeFactory.h"
 
 
 #include <Wt/WBreak>
@@ -37,8 +37,8 @@
 
 #include <fstream>
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 using namespace vclick;
 using namespace Wt;
 
@@ -114,7 +114,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     auto fg = stream->GetNode("ForegroundEstimate0");
 
     auto bg_param = fg->GetParameter("background_model");
-    backgroundStream.reset(new TParameterResource<EagleLib::SyncedMemory>(this,
+    backgroundStream.reset(new TParameterResource<aq::SyncedMemory>(this,
         fg->GetParameter("background_model"), "background_model"));
     backgroundStream->handleParamUpdate(nullptr, nullptr);
 

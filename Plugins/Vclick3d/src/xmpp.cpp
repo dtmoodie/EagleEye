@@ -1,5 +1,5 @@
 #ifdef HAVE_GLOOX
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 #include "xmpp.h"
 #include "gloox/disco.h"
 #include "gloox/message.h"
@@ -13,8 +13,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 using namespace gloox;
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 void XmppClient::onConnect()
 {

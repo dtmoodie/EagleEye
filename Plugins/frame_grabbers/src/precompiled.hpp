@@ -1,7 +1,7 @@
 #pragma once
 
-#include <EagleLib/Nodes/IFrameGrabber.hpp>
-#include <EagleLib/Nodes/FrameGrabberInfo.hpp>
+#include <Aquila/Nodes/IFrameGrabber.hpp>
+#include <Aquila/Nodes/FrameGrabberInfo.hpp>
 #include <MetaObject/MetaObjectFactory.hpp>
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>

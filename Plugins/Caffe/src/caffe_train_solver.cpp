@@ -3,13 +3,13 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <caffe/util/upgrade_proto.hpp>
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 #include <algorithm>
 #include "Caffe.h"
 #include "caffe_include.h"
 #include "caffe_init.h"
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
@@ -71,7 +71,7 @@ bool caffe_solver::ProcessImpl()
             
             for(int i = 0; i < input_blobs_.size(); ++i)
             {
-                auto wrapped_blob = EagleLib::Nodes::CaffeBase::WrapBlob(*input_blobs_[i]);
+                auto wrapped_blob = aq::Nodes::CaffeBase::WrapBlob(*input_blobs_[i]);
                 input_blobs[input_names[i]] = wrapped_blob;
             }
             input_blobs_param.Commit();

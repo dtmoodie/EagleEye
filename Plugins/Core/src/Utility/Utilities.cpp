@@ -1,8 +1,8 @@
 #include "Utilities.h"
 #include <boost/lexical_cast.hpp>
-#include <EagleLib/Nodes/NodeInfo.hpp>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+#include <Aquila/Nodes/NodeInfo.hpp>
+using namespace aq;
+using namespace aq::Nodes;
 
 /*
 

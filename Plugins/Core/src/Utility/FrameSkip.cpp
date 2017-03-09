@@ -1,7 +1,7 @@
 #include "FrameSkip.hpp"
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 
-using namespace EagleLib::Nodes;
+using namespace aq::Nodes;
 
 bool FrameSkip::ProcessImpl()
 {

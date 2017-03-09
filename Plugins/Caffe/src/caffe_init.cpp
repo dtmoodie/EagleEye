@@ -1,9 +1,9 @@
 #include "caffe_init.h"
 #include "ObjectInterfacePerModule.h"
-#include "EagleLib/rcc/SystemTable.hpp"
+#include "Aquila/rcc/SystemTable.hpp"
 
 #include <caffe/caffe.hpp>
-using namespace EagleLib;
+using namespace aq;
 
 caffe_init_singleton::caffe_init_singleton()
 {

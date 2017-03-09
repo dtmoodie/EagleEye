@@ -5,8 +5,8 @@
 
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 /*
 void register_to_reference::NodeInit(bool firstInit)
 {

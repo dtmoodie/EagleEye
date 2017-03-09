@@ -1,8 +1,8 @@
 #pragma once
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include <boost/circular_buffer.hpp>
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

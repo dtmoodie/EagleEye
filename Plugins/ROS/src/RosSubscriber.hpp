@@ -1,8 +1,8 @@
 #pragma once
 #include "ROSExport.hpp"
-#include <EagleLib/Nodes/IFrameGrabber.hpp>
+#include <Aquila/Nodes/IFrameGrabber.hpp>
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

@@ -17,9 +17,9 @@ file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
 
 add_library(point_clouds SHARED ${src} ${knl} ${hdr})
 
-add_dependencies(point_clouds EagleLib)
+add_dependencies(point_clouds Aquila)
 RCC_LINK_LIB(point_clouds
-  EagleLib
+  Aquila
   ${OpenCV_LIBS}
 )
 

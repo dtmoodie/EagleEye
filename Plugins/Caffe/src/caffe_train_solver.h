@@ -1,12 +1,12 @@
 #pragma once
 #define PARAMTERS_GENERATE_PERSISTENCE
-#include <EagleLib/Nodes/Node.h>
+#include <Aquila/Nodes/Node.h>
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Types.hpp>
 
 #include <caffe/solver.hpp>
 #include <caffe/parallel.hpp>
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

@@ -4,16 +4,16 @@
 #include "thrust/count.h"
 #include <opencv2/core/cuda_stream_accessor.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-#include <EagleLib/rcc/external_includes/cv_imgproc.hpp>
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
+#include <Aquila/rcc/external_includes/cv_imgproc.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 
 #include "RuntimeSourceDependency.h"
 SETUP_PROJECT_IMPL
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace Aquila;
+using namespace Aquila::Nodes;
 
 
 

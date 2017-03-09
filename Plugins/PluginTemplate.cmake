@@ -62,7 +62,7 @@ if(WIN32)
         "include_dirs:\n${target_include_dirs_}\n${CMAKE_CURRENT_LIST_DIR}/src\n"
         "lib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
         "lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
-        "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"EagleLib/Detail/PluginExport.hpp\""
+        "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"Aquila/Detail/PluginExport.hpp\""
   )
 
   FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo/${PROJECT_NAME}_config.txt"
@@ -70,7 +70,7 @@ if(WIN32)
         "include_dirs:\n${target_include_dirs_}\n${CMAKE_CURRENT_LIST_DIR}/src\n"
         "lib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
         "lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
-        "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"EagleLib/Detail/PluginExport.hpp\""
+        "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"Aquila/Detail/PluginExport.hpp\""
   )
   set(outfile_ "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug/${PROJECT_NAME}_config.txt")
 else(WIN32)
@@ -104,9 +104,9 @@ ADD_DEFINITIONS(-DPLUGIN_NAME=${PROJECT_NAME})
 set(PLUGIN_NAME "${PROJECT_NAME}")
 CONFIGURE_FILE("../PluginExport.hpp.in" "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/${PROJECT_NAME}Export.hpp" @ONLY)
 if(WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FI\"EagleLib/Detail/PluginExport.hpp\"")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FI\"Aquila/Detail/PluginExport.hpp\"")
 else(WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include \"EagleLib/Detail/PluginExport.hpp\"")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include \"Aquila/Detail/PluginExport.hpp\"")
 endif(WIN32)
 
 LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
@@ -137,7 +137,7 @@ endforeach()
 set(external_include_file "${external_include_file}\n  #endif // NDEBUG\n")
 
 set(external_include_file "${external_include_file}\n#endif // _MSC_VER")
-set(link_file_path "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/EagleLib/rcc/external_includes/${PROJECT_NAME}_link_libs.hpp")
+set(link_file_path "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/Aquila/rcc/external_includes/${PROJECT_NAME}_link_libs.hpp")
 
 if(EXISTS ${link_file_path})
     FILE(READ ${link_file_path} read_file)

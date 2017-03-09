@@ -6,7 +6,7 @@
 
 int main()
 {
-    //EagleLib::SetupLogging();
+    //aq::SetupLogging();
     LOG(info) << "Main thread started";
     size_t main_thread_id = mo::GetThisThread();
     boost::thread thread(boost::bind<void>([main_thread_id]()->void
@@ -29,6 +29,6 @@ int main()
     }
     thread.interrupt();
     thread.join();
-    //EagleLib::ShutdownLogging();
+    //aq::ShutdownLogging();
     return 0;
 }
