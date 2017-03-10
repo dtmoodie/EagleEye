@@ -13,11 +13,10 @@ rcc_find_library(dmlc_CORE_LIBRARY_RELEASE dmlccore PATHS ${mxnet_ROOT}/lib ${mx
 rcc_find_library(dmlc_CORE_LIBRARY_DEBUG dmlccored PATHS ${mxnet_ROOT}/lib ${mxnet_ROOT}/build/dmlc-core)
 
 find_package(OpenBLAS QUIET)
-  include_directories(${OpenBLAS_INCLUDE_DIR})
-
-  set(mxnet_INCLUDE_DIRS "${dmlc_INCLUDE};${mxnet_INCLUDE};${mshadow_INCLUDE}")
 
 if(OpenBLAS_FOUND)
+  include_directories(${OpenBLAS_INCLUDE_DIR})
+  set(mxnet_INCLUDE_DIRS "${dmlc_INCLUDE};${mxnet_INCLUDE};${mshadow_INCLUDE}")
   find_package(CUDA REQUIRED)
     include_directories(${CUDA_TOOLKIT_INCLUDE})
   find_package(CUDNN QUIET)

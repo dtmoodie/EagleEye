@@ -21,8 +21,10 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${CMAKE_CURRENT_SOURCE_DIR}/dtam/Cpp
 )
-find_package(Eigen3 REQUIRED)
-  include_directories(${EIGEN_INCLUDE_DIRS})
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
+find_package(Eigen3 QUIET)
 if(EIGEN_INCLUDE_DIRS)
   find_package(G2O QUIET)
   if(G2O_FOUND)

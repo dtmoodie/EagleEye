@@ -47,17 +47,22 @@ macro(ocv_parse_header FILENAME FILE_VAR)
     endif()
   endforeach()
 endmacro()
-find_path(EIGEN_INCLUDE_PATH "Eigen/Core"
-		PATHS /usr/local /opt /usr $ENV{EIGEN_ROOT}/include ENV ProgramFiles ENV ProgramW6432
-		PATH_SUFFIXES include/eigen3 include/eigen2 Eigen/include/eigen3 Eigen/include/eigen2
-		DOC "The path to Eigen3/Eigen2 headers"
-		CMAKE_FIND_ROOT_PATH_BOTH)
+#find_path(EIGEN_INCLUDE_PATH "Eigen/Core"
+#		PATHS /usr/local /opt /usr $ENV{EIGEN_ROOT}/include ENV ProgramFiles ENV ProgramW6432
+#		PATH_SUFFIXES include/eigen3 include/eigen2 Eigen/include/eigen3 Eigen/include/eigen2
+#		DOC "The path to Eigen3/Eigen2 headers"
+#		CMAKE_FIND_ROOT_PATH_BOTH
+#)
 
-if(EIGEN_INCLUDE_PATH)
-include_directories(${EIGEN_INCLUDE_PATH})
-ocv_parse_header("${EIGEN_INCLUDE_PATH}/Eigen/src/Core/util/Macros.h" EIGEN_VERSION_LINES EIGEN_WORLD_VERSION EIGEN_MAJOR_VERSION EIGEN_MINOR_VERSION)
-
-endif()
+#if(EIGEN_INCLUDE_PATH)
+#  include_directories(${EIGEN_INCLUDE_PATH})
+#  ocv_parse_header("${EIGEN_INCLUDE_PATH}/Eigen/src/Core/util/Macros.h" 
+#    EIGEN_VERSION_LINES 
+#    EIGEN_WORLD_VERSION 
+#    EIGEN_MAJOR_VERSION 
+#    EIGEN_MINOR_VERSION
+#  )
+#endif()
 
 
 set(PROJECT_BIN_DIRS_DEBUG "" CACHE PATH "" FORCE)
@@ -114,6 +119,7 @@ ENDIF(WIN32)
 
 SET(Aquila_JETSON FALSE CACHE BOOL "True if building for jetson platform")
 add_subdirectory(Aquila)
+
 include_directories(${MetaObject_INCLUDE_DIRS})
 SET(LINK_DIRS ${Aquila_LIB_DIRS_RELEASE})
 SET(LINK_DIRS_RELEASE ${Aquila_LIB_DIRS_RELEASE})
