@@ -8,7 +8,7 @@ namespace aq
     namespace Nodes
     {
     
-    class PLUGIN_EXPORTS frame_grabber_rtsp: public frame_grabber_gstreamer
+    class frame_grabbers_EXPORT frame_grabber_rtsp: public frame_grabber_gstreamer
     {
     public:
         

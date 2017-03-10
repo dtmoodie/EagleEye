@@ -1,7 +1,9 @@
 # Locates the tensorFlow library and include directories.
 
 include(FindPackageHandleStandardArgs)
-unset(TENSORFLOW_FOUND)
+set(TensorFlow_FOUND OFF)
+unset(TensorFlow_INCLUDE_DIR)
+unset(TensorFlow_LIBRARY)
 
 find_path(TensorFlow_INCLUDE_DIR
         NAMES
@@ -21,7 +23,7 @@ find_library(TensorFlow_LIBRARY NAMES tensorflow_cc
 find_package_handle_standard_args(TensorFlow DEFAULT_MSG TensorFlow_INCLUDE_DIR TensorFlow_LIBRARY)
 
 # set external variables for usage in CMakeLists.txt
-if(TENSORFLOW_FOUND)
+if(TensorFlow_FOUND)
     set(TensorFlow_LIBRARIES ${TensorFlow_LIBRARY})
     set(TensorFlow_INCLUDE_DIRS ${TensorFlow_INCLUDE_DIR})
 endif()

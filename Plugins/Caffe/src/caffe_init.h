@@ -1,22 +1,9 @@
 #pragma once
 #include <RuntimeLinkLibrary.h>
-
-#ifdef _MSC_VER
-  #ifdef _DEBUG
-
-  #else
-
-  #endif
-#else
-  #ifdef NDEBUG
-    RUNTIME_COMPILER_LINKLIBRARY("-lCaffe")
-  #else
-    RUNTIME_COMPILER_LINKLIBRARY("-lCaffed")
-  #endif
-#endif
+#include "CaffeExport.hpp"
 namespace aq
 {
-    class PLUGIN_EXPORTS caffe_init_singleton
+    class Caffe_EXPORT caffe_init_singleton
     {
         caffe_init_singleton();
     public:

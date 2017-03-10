@@ -56,7 +56,7 @@ TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
     }
     catch(...)
     {
-    
+
     }
     _reconnect = true;
     return TS<SyncedMemory>();
