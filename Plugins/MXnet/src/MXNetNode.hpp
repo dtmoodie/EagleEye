@@ -1,5 +1,5 @@
 #include "MXnetExport.hpp"
-#include <EagleLib/Nodes/Node.h>
+#include <Aquila/Nodes/Node.h>
 #include <MetaObject/Parameters/Types.hpp>
 #define DMLC_USE_CXX11 1
 #define MXNET_USE_CUDA 1
@@ -40,8 +40,8 @@ namespace EagleLib
                 INPUT(SyncedMemory, input, nullptr)
                 PARAM(mo::ReadFile, model_file, mo::ReadFile())
                 PARAM(mo::ReadFile, weight_file, mo::ReadFile())
-                PARAM(int, width, 224);
-                PARAM(int, height, 224);
+                PARAM(int, width, 224)
+                PARAM(int, height, 224)
             MO_END;
         protected:
             bool ProcessImpl();
