@@ -6,7 +6,7 @@
 #include <opencv2/core/cuda.hpp>
 #include "boost/circular_buffer.hpp"
 #include <mutex>
-#include "EagleLib/Detail/Export.hpp"
+#include "PlottingExport.hpp"
 #include "Plotting.h"
 #include <memory>
 #include "RuntimeInclude.h"
@@ -17,9 +17,9 @@ RUNTIME_MODIFIABLE_INCLUDE
 
 class QWidget;
 
-namespace EagleLib
+namespace aq
 {
-    class EAGLE_EXPORTS QtPlotterImpl : public QtPlotter
+    class Plotting_EXPORT QtPlotterImpl : public QtPlotter
     {
     protected:
         int channels;
@@ -28,7 +28,7 @@ namespace EagleLib
         std::vector<std::shared_ptr<mo::Connection>> connections;
         std::mutex mtx;
         
-        std::vector<std::shared_ptr<Parameters::UI::qt::IParameterProxy>> parameterProxies;
+        std::vector<std::shared_ptr<mo::UI::qt::IParameterProxy>> parameterProxies;
         std::vector<mo::IParameter*> parameters;
         //Parameters::Converters::Double::IConverter* converter;
     public:
@@ -42,7 +42,7 @@ namespace EagleLib
             {
                 if (itr->GetName() == name)
                 {
-                    return dynamic_cast<typename Parameters::ITypedParameter<T>*>(itr);
+                    return dynamic_cast<typename mo::ITypedParameter<T>*>(itr);
                 }
             }
             return nullptr;
@@ -50,16 +50,14 @@ namespace EagleLib
         template<typename T> typename mo::ITypedParameter<T>::Ptr GetParameter(size_t index)
         {
             if(index < parameters.size())
-                return std::dynamic_pointer_cast<typename Parameters::ITypedParameter<T>>(parameters[index]);
-            return typename Parameters::ITypedParameter<T>::Ptr();
+                return std::dynamic_pointer_cast<typename mo::ITypedParameter<T>>(parameters[index]);
+            return typename mo::ITypedParameter<T>::Ptr();
         }
-
-        //virtual void HandleData(double data, int row, int col, int channel) = 0;
 
         virtual void OnParameterUpdate(cv::cuda::Stream* stream);
     };
 
-    class EAGLE_EXPORTS HistoryPlotter : public QtPlotterImpl
+    class Plotting_EXPORT HistoryPlotter : public QtPlotterImpl
     {
     protected:
         std::vector<boost::circular_buffer<double>> channelData;
@@ -69,7 +67,7 @@ namespace EagleLib
     public:
         virtual void PlotInit(bool firstInit);
     };
-    class EAGLE_EXPORTS StaticPlotter : public QtPlotterImpl
+    class Plotting_EXPORT StaticPlotter : public QtPlotterImpl
     {
     protected:
         QVector<QVector<double>> channelData;
@@ -78,41 +76,43 @@ namespace EagleLib
     public:
     };
 
-    template<typename T> class EAGLE_EXPORTS VectorPlotter : public T
+    template<typename T>
+    class Plotting_EXPORT VectorPlotter : public T
     {
         virtual void OnParameterUpdate(cv::cuda::Stream* stream)
         {
 
         }
     };
-    template<typename T> class EAGLE_EXPORTS MatrixPlotter : public T
+
+    template<typename T>
+    class Plotting_EXPORT MatrixPlotter : public T
     {
 
     };
 
-    template<typename T> class EAGLE_EXPORTS ScalarPlotter : public T
+    template<typename T>
+    class Plotting_EXPORT ScalarPlotter : public T
     {
 
     };
-
-
 }
 
 
 
 
-template<typename T> T* getParameterPtr(Parameters::Parameter* param)
+template<typename T>
+T* getParameterPtr(mo::IParameter* param)
 {
-    auto typedParam = dynamic_cast<Parameters::ITypedParameter<T>*>(param);
+    auto typedParam = dynamic_cast<mo::ITypedParameter<T>*>(param);
     if (typedParam)
         return typedParam->Data();
     return nullptr;
 }
 
 
-cv::Size inline getSize(Parameters::Parameter* param)
+cv::Size inline getSize(mo::IParameter* param)
 {
-    //auto gpuParam = EagleLib::getParameterPtr<cv::cuda::GpuMat>(param);
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
     if(gpuParam)
         return gpuParam->size();
@@ -125,7 +125,7 @@ cv::Size inline getSize(Parameters::Parameter* param)
 
     return cv::Size(0,0);
 }
-int inline getChannels(Parameters::Parameter* param)
+int inline getChannels(mo::IParameter* param)
 {
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
     if(gpuParam)
@@ -175,7 +175,7 @@ QVector<double> inline getParamArrayDataHelper(cv::Mat h_data, int channel)
     return output;
 }
 
-QVector<double> inline getParamArrayData(Parameters::Parameter* param, int channel)
+QVector<double> inline getParamArrayData(mo::IParameter* param, int channel)
 {
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
     if(gpuParam)
@@ -191,7 +191,9 @@ QVector<double> inline getParamArrayData(Parameters::Parameter* param, int chann
         return getParamArrayDataHelper(cv::Mat(*vecParam), 0);
     return QVector<double>();
 }
-template<typename T> bool inline getData(Parameters::Parameter* param, double& data)
+
+template<typename T>
+bool inline getData(mo::IParameter* param, double& data)
 {
     auto ptr = getParameterPtr<T>(param);
     if(ptr)
@@ -200,8 +202,10 @@ template<typename T> bool inline getData(Parameters::Parameter* param, double& d
         return true;
     }
     return false;
+
 }
-template<typename T> bool inline getDataVec(Parameters::Parameter* param, int channel, double& data)
+template<typename T>
+bool inline getDataVec(mo::IParameter* param, int channel, double& data)
 {
     auto ptr = getParameterPtr<T>(param);
     if(ptr)
@@ -212,7 +216,7 @@ template<typename T> bool inline getDataVec(Parameters::Parameter* param, int ch
     return false;
 }
 
-double inline getParamData(Parameters::Parameter* data, int channel)
+double inline getParamData(mo::Parameter* data, int channel)
 {
     double output;
     if(getData<double>(data, output))
@@ -299,7 +303,7 @@ struct MatrixSizePolicy
 
 struct DefaultTypePolicy
 {
-    static bool acceptsType(Parameters::Parameter::Ptr param)
+    static bool acceptsType(mo::Parameter::Ptr param)
     {
         return true;
     }
@@ -307,7 +311,7 @@ struct DefaultTypePolicy
 
 template<typename T> struct TypePolicy
 {
-    static bool acceptsType(Parameters::Parameter* param)
+    static bool acceptsType(mo::Parameter* param)
     {
     return mo::TypeInfo(typeid(T)) == param->GetTypeInfo();
     }
@@ -317,7 +321,7 @@ struct StaticPlotPolicy
     int size;
     int channel;
     QVector<double> data;
-    void addPlotData(Parameters::Parameter* param, cv::cuda::Stream* stream)
+    void addPlotData(mo::IParameter* param, cv::cuda::Stream* stream)
     {
         data = getParamArrayData(param, channel);
     }
@@ -342,7 +346,7 @@ struct SlidingWindowPlotPolicy
     int channel;
 
     boost::circular_buffer<double> plotData;
-    void addPlotData(Parameters::Parameter* param)
+    void addPlotData(mo::IParameter* param)
     {
         plotData.push_back(getParamData(param, channel));
     }
