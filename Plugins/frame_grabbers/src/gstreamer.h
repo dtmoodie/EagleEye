@@ -3,13 +3,13 @@
 #include "cv_capture.h"
 #include "Aquila/ICoordinateManager.h"
 #include "RuntimeLinkLibrary.h"
-
+#include "frame_grabbersExport.hpp"
 
 namespace aq
 {
     namespace Nodes
     {
-        class PLUGIN_EXPORTS frame_grabber_gstreamer: public frame_grabber_cv
+        class frame_grabbers_EXPORT frame_grabber_gstreamer: public frame_grabber_cv
         {
         public:
             MO_DERIVE(frame_grabber_gstreamer, frame_grabber_cv)

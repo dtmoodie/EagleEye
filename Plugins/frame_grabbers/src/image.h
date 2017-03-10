@@ -2,13 +2,13 @@
 
 #include "Aquila/Nodes/IFrameGrabber.hpp"
 #include "Aquila/ICoordinateManager.h"
-
+#include "frame_grabbersExport.hpp"
 namespace aq
 {
     namespace Nodes
     {
     
-    class PLUGIN_EXPORTS frame_grabber_image: public IFrameGrabber
+    class frame_grabbers_EXPORT frame_grabber_image: public IFrameGrabber
     {
     public:
         MO_DERIVE(frame_grabber_image, IFrameGrabber);

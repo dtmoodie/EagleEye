@@ -1,13 +1,14 @@
 #pragma once
 
 #include "cv_capture.h"
+#include "frame_grabbersExport.hpp"
 #include <boost/lexical_cast.hpp>
 
 namespace aq
 {
     namespace Nodes
     {
-    class PLUGIN_EXPORTS frame_grabber_openni2 : public frame_grabber_cv
+    class frame_grabbers_EXPORT frame_grabber_openni2 : public frame_grabber_cv
     {
     public:
         virtual bool LoadFile(const std::string& file_path);
