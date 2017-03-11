@@ -33,7 +33,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
-#include "instantiate.hpp"
+#include "MetaParameters.hpp"
 
 #ifdef HAVE_WT
 #include "vclick.hpp"
