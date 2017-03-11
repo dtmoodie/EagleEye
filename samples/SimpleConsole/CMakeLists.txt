@@ -68,7 +68,7 @@ target_link_libraries(SimpleConsole
     ${CUDA_CUDART_LIBRARY}
     
     ${link_libs}
-    instantiations
+    MetaParameters
 )
 if(WITH_PYTHON)
   target_link_libraries(SimpleConsole ${PYTHON_LIBRARY})
