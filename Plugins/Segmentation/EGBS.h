@@ -26,11 +26,11 @@
 
 #ifndef __EfficientGraphBasedImageSegmentation__EGBS__
 #define __EfficientGraphBasedImageSegmentation__EGBS__
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include "DisjointSetForest.h"
-#include "EagleLib/rcc/external_includes/cv_imgproc.hpp"
+#include "Aquila/rcc/external_includes/cv_imgproc.hpp"
 
 #ifdef __cplusplus
 extern "C"{

@@ -16,3 +16,6 @@
 [submodule "Aquila"]
 	path = Aquila
 	url = http://github.com/dtmoodie/Aquila
+[submodule "EagleEye/dependencies/NodeEditor"]
+	path = EagleEye/dependencies/NodeEditor
+	url = http://github.com/dtmoodie/NodeEditor

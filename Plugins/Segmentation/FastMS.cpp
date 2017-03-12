@@ -1,11 +1,11 @@
 
 #include "FastMS.h"
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 
 #ifdef FASTMS_FOUND
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 
 
 bool FastMumfordShah::ProcessImpl()
@@ -32,6 +32,6 @@ bool FastMumfordShah::ProcessImpl()
 
 
 
-MO_REGISTER_CLASS(FastMumfordShah);
+MO_REGISTER_CLASS(FastMumfordShah)
 
 #endif

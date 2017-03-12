@@ -2,8 +2,8 @@
 #include "pcl/point_cloud.h"
 #include "pcl/point_types.h"
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core")
 using namespace EagleLib;
 IPerModuleInterface* GetModule()

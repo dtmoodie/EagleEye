@@ -1,16 +1,16 @@
-#include "EagleLib/Nodes/Node.h"
-#include <EagleLib/SyncedMemory.h>
-#include <EagleLib/rcc/external_includes/cv_cudabgsegm.hpp>
-#include "EagleLib/utilities/CudaUtils.hpp"
+#include "Aquila/Nodes/Node.h"
+#include <Aquila/SyncedMemory.h>
+#include <Aquila/rcc/external_includes/cv_cudabgsegm.hpp>
+#include "Aquila/utilities/CudaUtils.hpp"
 #include "Segmentation_impl.h"
 #include "libfastms/solver/solver.h"
-#include <EagleLib/Detail/PluginExport.hpp>
+
 
 #include <MetaObject/Detail/MetaObjectMacros.hpp>
 
-SETUP_PROJECT_DEF
 
-namespace EagleLib
+
+namespace aq
 {
     namespace Nodes
     {
@@ -58,16 +58,7 @@ namespace EagleLib
     };
     
 
-    /*class SegmentGrabCut: public Node
-    {
-        cv::Mat bgdModel;
-        cv::Mat fgdModel;
-        ConstBuffer<cv::Mat> maskBuf;
-    public:
-        SegmentGrabCut();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };*/
+
 
     void kmeans_impl(cv::cuda::GpuMat input, cv::cuda::GpuMat& labels, cv::cuda::GpuMat& clusters, int k, cv::cuda::Stream stream, cv::cuda::GpuMat weights = cv::cuda::GpuMat());
     

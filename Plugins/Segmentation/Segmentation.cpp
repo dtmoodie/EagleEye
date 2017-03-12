@@ -1,9 +1,9 @@
 #include "Segmentation.h"
-#include <EagleLib/rcc/external_includes/cv_imgproc.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudaarithm.hpp>
-#include <EagleLib/rcc/external_includes/cv_cudalegacy.hpp>
-#include <EagleLib/Nodes/NodeInfo.hpp>
+#include <Aquila/rcc/external_includes/cv_imgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
+#include <Aquila/rcc/external_includes/cv_cudalegacy.hpp>
+#include <Aquila/Nodes/NodeInfo.hpp>
 #include "RuntimeLinkLibrary.h"
 
 #ifdef _DEBUG
@@ -11,9 +11,9 @@ RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
 #else
 RUNTIME_COMPILER_LINKLIBRARY("fastms.lib")
 #endif
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
-SETUP_PROJECT_IMPL
+using namespace aq;
+using namespace aq::Nodes;
+
 
 
 bool OtsuThreshold::ProcessImpl()

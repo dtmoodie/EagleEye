@@ -113,7 +113,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     auto stream = g_sink->GetDataStream();
     auto fg = stream->GetNode("ForegroundEstimate0");
 
-    auto bg_param = fg->GetParameter("background_model");
+    //auto bg_param = fg->GetParameter("background_model");
     backgroundStream.reset(new TParameterResource<aq::SyncedMemory>(this,
         fg->GetParameter("background_model"), "background_model"));
     backgroundStream->handleParamUpdate(nullptr, nullptr);

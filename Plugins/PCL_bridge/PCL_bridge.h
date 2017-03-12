@@ -1,5 +1,5 @@
 #pragma once
-#include <EagleLib/nodes/Node.h>
+#include <Aquila/Nodes/Node.h>
 
 #ifdef __cplusplus
 extern "C"{
@@ -9,7 +9,7 @@ extern "C"{
 #ifdef __cplusplus
 }
 #endif
-namespace EagleLib
+namespace aq
 {
 namespace Nodes
 {

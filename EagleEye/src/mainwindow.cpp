@@ -88,7 +88,19 @@ struct ParentProxy: public NodeData
     }
     rcc::shared_ptr<aq::Nodes::Node> _node;
 };
+struct DataStreamData: public NodeData
+{
+    DataStreamData(rcc::shared_ptr<aq::IDataStream> ds):
+        _ds(ds)
+    {
+    }
 
+    NodeDataType type() const
+    {
+        return {"DataStream", QString::number(_ds->GetPerTypeId())};
+    }
+    rcc::shared_ptr<aq::IDataStream> _ds;
+};
 struct NodeProxy: public QtNodes::NodeDataModel
 {
     NodeProxy(rcc::shared_ptr<aq::Nodes::Node> node, FlowScene* scene):
@@ -159,10 +171,20 @@ struct NodeProxy: public QtNodes::NodeDataModel
     {
         if(port == 0)
         {
-            auto typed = std::dynamic_pointer_cast<ParentProxy>(nodeData);
-            if(typed)
+            if(nodeData->type().id == "DataStream")
             {
-                _node->AddParent(typed->_node.Get());
+                auto typed = std::dynamic_pointer_cast<DataStreamData>(nodeData);
+                if(typed)
+                {
+                    _node->SetDataStream(typed->_ds.Get());
+                }
+            }else
+            {
+                auto typed = std::dynamic_pointer_cast<ParentProxy>(nodeData);
+                if(typed)
+                {
+                    _node->AddParent(typed->_node.Get());
+                }
             }
         }else
         {
@@ -172,7 +194,8 @@ struct NodeProxy: public QtNodes::NodeDataModel
             {
                 if(_node->ConnectInput(typed->_node, typed->_param, inputs[port - 1]))
                 {
-                    _connections.push_back(_scene->createConnection(*this->_display_node, 0, *(typed->_display_node), 0));
+                    //_connections.push_back(_scene->createConnection(*this->_display_node, 0, *(typed->_display_node), 0));
+                    _scene->createConnection(*this->_display_node, 0, *(typed->_display_node), 0);
                 }
             }
         }
@@ -193,25 +216,40 @@ struct NodeProxy: public QtNodes::NodeDataModel
     QWidget * embeddedWidget()
     {
         std::vector<mo::IParameter*> params = _node->GetAllParameters();
-        if(params.size())
+        int control_count = 0;
+        for(auto param : params)
         {
-            QWidget* container = new QWidget();
-            QVBoxLayout* layout = new QVBoxLayout();
-            container->setLayout(layout);
-            for(auto param : params)
+            if(param->CheckFlags(mo::Control_e))
             {
-                auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(param);
-                if(proxy)
+                ++control_count;
+            }
+        }
+
+        if(control_count)
+        {
+            if(!_container)
+            {
+                _container = new QWidget();
+                QVBoxLayout* layout = new QVBoxLayout();
+                _container->setLayout(layout);
+                for(auto param : params)
                 {
-                    _proxies.push_back(proxy);
-                    auto widget = proxy->GetParameterWidget(container);
-                    if(widget)
+                    if(param->CheckFlags(mo::Control_e))
                     {
-                        layout->addWidget(widget);
+                        auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(param);
+                        if(proxy)
+                        {
+                            _proxies.push_back(proxy);
+                            auto widget = proxy->GetParameterWidget(_container);
+                            if(widget)
+                            {
+                                layout->addWidget(widget);
+                            }
+                        }
                     }
                 }
             }
-            return container;
+            return _container;
         }
         return nullptr;
     }
@@ -232,8 +270,9 @@ struct NodeProxy: public QtNodes::NodeDataModel
     rcc::shared_ptr<aq::Nodes::Node> _node;
     std::vector<std::shared_ptr<mo::UI::qt::IParameterProxy>> _proxies;
     FlowScene* _scene;
-    std::vector<std::shared_ptr<QtNodes::Connection>> _connections;
+    //std::vector<std::shared_ptr<QtNodes::Connection>> _connections;
     Node* _display_node;
+    QWidget* _container = nullptr;
 };
 
 struct NodeConstructorProxy: public QtNodes::DataModelConstructor
@@ -260,6 +299,8 @@ struct NodeConstructorProxy: public QtNodes::DataModelConstructor
     FlowScene* _scene;
 };
 
+
+
 struct DataStreamProxy: public QtNodes::NodeDataModel
 {
     DataStreamProxy(rcc::shared_ptr<aq::IDataStream> ds):
@@ -267,12 +308,45 @@ struct DataStreamProxy: public QtNodes::NodeDataModel
     {
 
     }
+    QString caption() const
+    {
+        return "DataStream";
+    }
     QString name() const
     {
         return "DataStream";
     }
+    QWidget * embeddedWidget()
+    {
+        return nullptr;
+    }
+    NodeDataType dataType(QtNodes::PortType portType, PortIndex portIndex) const
+    {
+        return {"DataStream", QString::number(_ds->GetPerTypeId())};
+    }
+    std::shared_ptr<NodeData> outData(PortIndex port)
+    {
+        return std::shared_ptr<NodeData>(new DataStreamData(_ds));
+    }
+    void setInData(std::shared_ptr<NodeData> nodeData,
+              PortIndex port)
+    {
 
-
+    }
+    unsigned int nPorts(QtNodes::PortType portType) const
+    {
+        if(portType == PortType::In)
+        {
+            return 0;
+        }else
+        {
+            return 1;
+        }
+    }
+    std::unique_ptr<NodeDataModel> clone() const
+    {
+        return {};
+    }
     rcc::shared_ptr<aq::IDataStream> _ds;
 };
 
@@ -287,8 +361,9 @@ struct DatastreamConstructor: public QtNodes::DataModelConstructor
         auto ds = aq::IDataStream::Create();
         if(ds)
         {
-
+            return std::unique_ptr<NodeDataModel>(new DataStreamProxy(ds));
         }
+        return {};
     }
 };
 
