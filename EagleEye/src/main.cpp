@@ -2,7 +2,7 @@
 #include <QApplication>
 
 #include <Aquila/Plugins.h>
-
+#include "MetaParameters.hpp"
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
@@ -43,20 +43,37 @@ int main(int argc, char *argv[])
             }
         }
     }
-    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
-    rcc::shared_ptr<MainWindow> w = rcc::shared_ptr<MainWindow>::Create();
-    if(vm.count("file"))
+    mo::MetaParameters::initialize();
+    boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
+#ifdef _MSC_VER
+    currentDir = boost::filesystem::path(currentDir.string());
+#else
+    currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
+#endif
+    LOG(info) << "Looking for plugins in: " << currentDir.string();
+    boost::filesystem::directory_iterator end_itr;
+    if(boost::filesystem::is_directory(currentDir))
     {
-        if(vm.count("preferred_loader"))
+        for(boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr)
         {
-            w->load_file(QString::fromStdString(vm["file"].as<std::string>()), QString::fromStdString(vm["preferred_loader"].as<std::string>()));
-        }else
-        {
-            w->load_file(QString::fromStdString(vm["file"].as<std::string>()));
+            if(boost::filesystem::is_regular_file(itr->path()))
+            {
+#ifdef _MSC_VER
+                if(itr->path().extension() == ".dll")
+#else
+                if(itr->path().extension() == ".so")
+#endif
+                {
+                    std::string file = itr->path().string();
+                    mo::MetaObjectFactory::Instance()->LoadPlugin(file);
+                }
+            }
         }
     }
+    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+    MainWindow w;
     
-    w->show();
+    w.show();
 
     return a.exec();
 }

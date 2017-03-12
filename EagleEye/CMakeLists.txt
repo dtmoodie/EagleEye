@@ -4,11 +4,21 @@ CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 CMAKE_POLICY(SET CMP0053 OLD)
 ENDIF()
+
+option(BUILD_NodeEditor "Build node editor" OFF)
 find_package(Qt5 COMPONENTS Gui Widgets Core OpenGL PrintSupport)
-IF(Qt5_FOUND)
+if(NOT BUILD_NodeEditor)
+    find_package(NodeEditor QUIET)
+endif()
+if(NOT NodeEditor_FOUND OR NOT TARGET NodeEditor OR BUILD_NodeEditor)
+    message(STATUS "Building node editor")
+    add_subdirectory(dependencies/nodeeditor)
+    include_directories(dependencies/nodeeditor/src)
+endif()
+IF(Qt5_FOUND AND TARGET NodeEditor)
+    include_directories(${NodeEditor_INCLUDE_DIRS})
     find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
 
-    
     find_package(CUDA REQUIRED)
 
     set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono log log_setup program_options)
@@ -139,7 +149,7 @@ IF(Qt5_FOUND)
         CONFIGURE_FILE(EagleEye.vcxproj.user.in ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
     ENDIF(WIN32)
     ADD_DEFINITIONS(-DBUILD_DIR=${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-        add_dependencies(${executable_name} Aquila frame_grabbers Core)
+        add_dependencies(${executable_name} Aquila frame_grabbers Core NodeEditor)
     GET_TARGET_PROPERTY(LIB_DIR_RELEASE Aquila IMPORTED_LINK_DEPENDENT_LIBRARIES)
 
     LINK_DIRECTORIES(${LINK_DIRS})
@@ -167,9 +177,11 @@ IF(Qt5_FOUND)
         Aquila
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS}
+        NodeEditor
+        MetaParameters
     )
     if(UNIX)
         TARGET_LINK_LIBRARIES(${executable_name} dl)
     endif()
 
-ENDIF(Qt5_FOUND)
+ENDIF(Qt5_FOUND TARGET NodeEditor)
