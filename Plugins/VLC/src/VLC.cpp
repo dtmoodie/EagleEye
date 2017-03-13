@@ -1,12 +1,13 @@
 #include "VLC.h"
-#include "EagleLib/nodes/Node.h"
-#include <EagleLib/ParameteredIObjectImpl.hpp>
-#include <EagleLib/rcc/ObjectManager.h>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+#include "Aquila/nodes/Node.h"
+#include <Aquila/ParameteredIObjectImpl.hpp>
+#include <Aquila/rcc/ObjectManager.h>
+
+using namespace aq;
+using namespace aq::Nodes;
 // callbacks for vlc
 
-SETUP_PROJECT_IMPL
+
 
 IPerModuleInterface* GetModule()
 {

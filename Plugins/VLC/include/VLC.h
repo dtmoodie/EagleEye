@@ -2,8 +2,8 @@
 
 
 #include "vlc/vlc.h"
-#include <EagleLib/nodes/Node.h>
-#include <EagleLib/Project_defs.hpp>
+#include <Aquila/nodes/Node.h>
+#include <Aquila/Project_defs.hpp>
 #if defined( PROJECT_INCLUDES_) && !defined(PROJECT_INCLUDES)
 #define PROJECT_INCLUDES PROJECT_INCLUDES_
 #endif
@@ -29,18 +29,9 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
 #endif
 RUNTIME_COMPILER_LINKLIBRARY("libvlccore.lib");
 RUNTIME_COMPILER_LINKLIBRARY("libvlc.lib");
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-	CV_EXPORTS IPerModuleInterface* GetModule();
-	
-#ifdef __cplusplus
-}
-#endif
-SETUP_PROJECT_DEF
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {

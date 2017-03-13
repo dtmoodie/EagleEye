@@ -42,7 +42,7 @@ bool Rotate::ProcessImpl()
 {
     cv::cuda::GpuMat rotated;
     auto size = input->GetSize();
-    cv::Mat rotation = cv::getRotationMatrix2D({size.width / 2.0, size.height / 2.0}, angle_degrees, 1.0);
+    cv::Mat rotation = cv::getRotationMatrix2D({size.width / 2.0f, size.height / 2.0f}, angle_degrees, 1.0);
     cv::cuda::warpAffine(input->GetGpuMat(Stream()), rotated , rotation, size, cv::INTER_CUBIC, cv::BORDER_REFLECT, cv::Scalar(), Stream());
     output_param.UpdateData(rotated, input_param.GetTimestamp(), _ctx);
     return true;
