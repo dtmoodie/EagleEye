@@ -54,7 +54,7 @@ string(REGEX REPLACE ";" "\n" target_include_dirs_ "${target_include_dirs_}")
 string(REGEX REPLACE ";" "\n" link_dirs_release "${LINK_DIRS_RELEASE}")
 string(REGEX REPLACE ";" "\n" link_dirs_debug "${LINK_DIRS_DEBUG}")
 
-if(WIN32)	
+if(WIN32)
   string(REGEX REPLACE "-D" "/D" WIN_DEFS "${DEFS}")
   string(REGEX REPLACE ";" "\n" WIN_DEFS "${WIN_DEFS}")
   FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug/${PROJECT_NAME}_config.txt"
@@ -102,7 +102,7 @@ set(${PROJECT_NAME}_PLUGIN_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAM
 
 ADD_DEFINITIONS(-DPLUGIN_NAME=${PROJECT_NAME})
 set(PLUGIN_NAME "${PROJECT_NAME}")
-CONFIGURE_FILE("../PluginExport.hpp.in" "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/${PROJECT_NAME}Export.hpp" @ONLY)
+CONFIGURE_FILE("${CMAKE_CURRENT_LIST_DIR}/PluginExport.hpp.in" "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/${PROJECT_NAME}Export.hpp" @ONLY)
 
 
 LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
@@ -150,9 +150,9 @@ endif()
 FILE(WRITE "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/.gitignore" "Aquila\n${PROJECT_NAME}Export.hpp\nprecompiled.hpp")
 
 INSTALL(TARGETS ${PROJECT_NAME}
-	LIBRARY DESTINATION lib
+    LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin)
-       
+
 IF(RCC_VERBOSE_CONFIG)
   string(REGEX REPLACE ";" "\n    " include_dirs_ "${INCLUDE_DIRS}")
   string(REGEX REPLACE ";" "\n    " link_dirs_release_ "${LINK_DIRS_RELEASE}")
@@ -160,10 +160,10 @@ IF(RCC_VERBOSE_CONFIG)
   MESSAGE(STATUS
   "  ${outfile_}
   Include Dirs:
-    ${include_dirs_}  
-  Link Dirs Debug: 
+    ${include_dirs_}
+  Link Dirs Debug:
     ${link_dirs_debug_}
-  Link Dirs Release: 
+  Link Dirs Release:
     ${link_dirs_release_}
   Link libs Release:
     ${LINK_LIBS_RELEASE}
