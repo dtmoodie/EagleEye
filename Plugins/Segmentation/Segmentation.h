@@ -1,16 +1,14 @@
-#include "EagleLib/Nodes/Node.h"
-#include <EagleLib/SyncedMemory.h>
-#include <EagleLib/rcc/external_includes/cv_cudabgsegm.hpp>
-#include "EagleLib/utilities/CudaUtils.hpp"
+#include "Aquila/Nodes/Node.h"
+#include <Aquila/SyncedMemory.h>
+#include <Aquila/rcc/external_includes/cv_cudabgsegm.hpp>
+#include "Aquila/utilities/CudaUtils.hpp"
 #include "Segmentation_impl.h"
 #include "libfastms/solver/solver.h"
-#include <EagleLib/Detail/PluginExport.hpp>
-
 #include <MetaObject/Detail/MetaObjectMacros.hpp>
 
-SETUP_PROJECT_DEF
 
-namespace EagleLib
+
+namespace aq
 {
     namespace Nodes
     {

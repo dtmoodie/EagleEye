@@ -31,10 +31,10 @@ file(GLOB knl "*.cu")
 
 cuda_add_library(Segmentation SHARED ${src} ${hdr})
 
-add_dependencies(Segmentation EagleLib)
+add_dependencies(Segmentation Aquila)
 
 RCC_LINK_LIB(Segmentation
-    EagleLib
+    Aquila
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
 )

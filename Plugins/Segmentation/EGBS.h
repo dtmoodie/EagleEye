@@ -26,22 +26,11 @@
 
 #ifndef __EfficientGraphBasedImageSegmentation__EGBS__
 #define __EfficientGraphBasedImageSegmentation__EGBS__
-#include "EagleLib/Nodes/Node.h"
+#include "Aquila/Nodes/Node.h"
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include "DisjointSetForest.h"
-#include "EagleLib/rcc/external_includes/cv_imgproc.hpp"
-
-#ifdef __cplusplus
-extern "C"{
-#endif
-
-    CV_EXPORTS IPerModuleInterface* GetModule();
-
-#ifdef __cplusplus
-}
-#endif
-
+#include "Aquila/rcc/external_includes/cv_imgproc.hpp"
 
 class EGBS {
 public:
@@ -60,7 +49,7 @@ protected:
 };
 
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {
