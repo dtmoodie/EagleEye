@@ -69,9 +69,10 @@ target_link_libraries(SimpleConsole
     ${link_libs}
     MetaParameters
 )
-if(WITH_PYTHON)
+if(WITH_PYTHON AND HAVE_PYTHON)
   target_link_libraries(SimpleConsole ${PYTHON_LIBRARY})
-endif(WITH_PYTHON)
+endif(WITH_PYTHON AND HAVE_PYTHON)
+
 if(Wt_FOUND AND WITH_WT)
     target_link_libraries(SimpleConsole
         debug;${Wt_HTTP_DEBUG_LIBRARY}

@@ -86,28 +86,28 @@ void PrintBuffers(aq::Nodes::Node* node, std::vector<std::string>& printed_nodes
 static volatile bool quit;
 void sig_handler(int s)
 {
-	switch(s)
-	{
-	case SIGSEGV:
-	{
+    switch(s)
+    {
+    case SIGSEGV:
+    {
         //std::cout << "Caught SIGSEGV " << mo::print_callstack(2, true);
-		break;
-	}
-	case SIGINT:
-	{
+        break;
+    }
+    case SIGINT:
+    {
         //std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
-		break;
-	}
-	case SIGILL:
-	{
+        break;
+    }
+    case SIGILL:
+    {
         //std::cout  << "Caught SIGILL " << mo::print_callstack(2, true);
-		break;
-	}
-	case SIGTERM:
-	{
+        break;
+    }
+    case SIGTERM:
+    {
         //std::cout  << "Caught SIGTERM " << mo::print_callstack(2, true);
-		break;
-	}
+        break;
+    }
 #ifndef _MSC_VER
     case SIGKILL:
     {
@@ -115,7 +115,7 @@ void sig_handler(int s)
         break;
     }
 #endif
-	}
+    }
     quit = true;
 
     //exit(EXIT_FAILURE);
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 
 
     boost::program_options::options_description desc("Allowed options");
-    
+
     desc.add_options()
         ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
         ("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")
@@ -200,7 +200,22 @@ int main(int argc, char* argv[])
             variable_replace_map[var_name] = var_value;
         }
     }
-    
+    if(replace_map.size())
+    {
+        std::stringstream ss;
+        for(const auto& pair : replace_map)
+            ss << "\n" << pair.first << " = " << pair.second;
+        LOG(debug) << "String replacements: " << ss.str();
+    }
+
+    if(variable_replace_map.size())
+    {
+        std::stringstream ss;
+        for(const auto& pair : variable_replace_map)
+            ss << "\n" <<  pair.first << " = " << pair.second;
+        LOG(debug) << "Variable replacements: " << ss.str();
+    }
+
     if(vm["profile"].as<bool>())
     {
         mo::InitProfiling();
@@ -221,7 +236,7 @@ int main(int argc, char* argv[])
     }
 
 
-    
+
     if (vm.count("log"))
     {
         std::string verbosity = vm["log"].as<std::string>();
@@ -293,7 +308,7 @@ int main(int argc, char* argv[])
 
             }catch(cv::Exception&e)
             {
-            
+
             }
             catch(boost::thread_interrupted& err)
             {
@@ -306,7 +321,7 @@ int main(int argc, char* argv[])
         LOG(info) << "Gui thread shutting down naturally";
     });
     mo::RelayManager manager;
-    
+
     if(vm.count("plugins"))
     {
         currentDir = boost::filesystem::path(vm["plugins"].as<boost::filesystem::path>());
@@ -329,7 +344,7 @@ int main(int argc, char* argv[])
 
     if(vm["mode"].as<std::string>() == "batch")
     {
-        
+
     }else
     {
         std::vector<rcc::shared_ptr<aq::IDataStream>> _dataStreams;
@@ -339,7 +354,7 @@ int main(int argc, char* argv[])
 
         auto print_options = []()->void
         {
-            std::cout << 
+            std::cout <<
                 "- Options: \n"
                 " - list_devices     -- List available connected devices for streaming access\n"
                 " - load_file        -- Create a frame grabber for a document\n"
@@ -353,7 +368,7 @@ int main(int argc, char* argv[])
                 "    streams         -- prints all streams\n"
                 "    nodes           -- prints all nodes of current stream\n"
                 "    parameters      -- prints all parameters of current node or stream\n"
-                "    current         -- prints what is currently selected (default)\n"  
+                "    current         -- prints what is currently selected (default)\n"
                 "    signals         -- prints current signal map\n"
                 "    inputs          -- prints possible inputs\n"
                 " - info             -- get info on given node\n"
@@ -404,7 +419,7 @@ int main(int argc, char* argv[])
         _slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "list_devices"));
 
-        
+
         slot = new mo::TypedSlot<void(std::string)>(
             std::bind([&_dataStreams, &documents_list](std::string doc)->void
         {
@@ -454,7 +469,7 @@ int main(int argc, char* argv[])
                         }
                         else
                         {
-                            
+
                         }
                     }
 
@@ -486,7 +501,7 @@ int main(int argc, char* argv[])
                 }
                 if(current_stream)
                 {
-                    
+
                 }
                 for(auto& itr : parameters)
                 {
@@ -691,23 +706,23 @@ int main(int argc, char* argv[])
 
         slot = new mo::TypedSlot<void(std::string)>(std::bind(
         [&current_stream, &current_node, &variable_replace_map, &replace_map](std::string file)
-		{
-			if (current_stream)
-			{
-				//current_stream->SaveStream(file);
+        {
+            if (current_stream)
+            {
+                //current_stream->SaveStream(file);
                 rcc::shared_ptr<aq::IDataStream> stream(current_stream);
                 std::vector<rcc::shared_ptr<aq::IDataStream>> streams;
                 streams.push_back(stream);
                 aq::IDataStream::Save(file, streams, variable_replace_map, replace_map);
                 stream->StartThread();
-			}
-			else if (current_node)
-			{
+            }
+            else if (current_node)
+            {
 
-			}
-		}, std::placeholders::_1));
+            }
+        }, std::placeholders::_1));
         _slots.emplace_back(slot);
-		connections.push_back(manager.Connect(slot, "save"));
+        connections.push_back(manager.Connect(slot, "save"));
 
         slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string null)
         {
@@ -861,7 +876,7 @@ int main(int argc, char* argv[])
                     if(parameters.empty())
                         std::cout << "No parameters exist\n";
                     return;
-                } else 
+                } else
                 {
                     auto stream = current_node->GetDataStream();
                     if(auto node = stream->GetNode(what))
@@ -969,7 +984,7 @@ int main(int argc, char* argv[])
 
         connections.push_back(manager.Connect(slot,"select"));
 
-        
+
         slot = new mo::TypedSlot<void(std::string)>(
             std::bind([&_dataStreams,&current_stream, &current_node](std::string what)
         {
@@ -1026,7 +1041,7 @@ int main(int argc, char* argv[])
                 }else
                 {
                     std::cout << " - " << node << "\n";
-                }   
+                }
             }
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "list"));
@@ -1215,7 +1230,7 @@ int main(int argc, char* argv[])
                 auto func = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(current_param->GetTypeInfo());
                 if(func)
                 {
-                    std::stringstream ss; 
+                    std::stringstream ss;
                     ss << value;
                     boost::recursive_mutex::scoped_lock lock(current_param->mtx());
                     func(current_param, ss);
@@ -1263,7 +1278,7 @@ int main(int argc, char* argv[])
             }
         }, std::placeholders::_1));
         connections.push_back(manager.Connect(slot, "rename"));
-        
+
         slot = new mo::TypedSlot<void(std::string)>(std::bind([&current_node, &current_stream](std::string name)
         {
             mo::RelayManager* mgr = nullptr;
@@ -1350,7 +1365,7 @@ int main(int argc, char* argv[])
                     sink->ConnectInput(foreground_estimator, foreground_estimator->GetParameter("background_model"),
                         sink->GetInput("background_model"));
                 }
-                
+
 
                 web_thread = boost::thread(std::bind(
                     [argc, argv, sink]()->void
@@ -1389,7 +1404,7 @@ int main(int argc, char* argv[])
                 idx = boost::lexical_cast<int>(directory.substr(0, pos));
                 directory = directory.substr(pos + 1);
             }
-            mo::MetaObjectFactory::Instance()->GetObjectSystem()->AddLibraryDir(directory.c_str(), idx);            
+            mo::MetaObjectFactory::Instance()->GetObjectSystem()->AddLibraryDir(directory.c_str(), idx);
         }, std::placeholders::_1));
 
         connections.push_back(manager.Connect(slot, "link"));
@@ -1400,8 +1415,8 @@ int main(int argc, char* argv[])
         }, std::placeholders::_1));
 
         connections.push_back(manager.Connect(slot, "wait"));
-        
-        
+
+
         std::vector<std::string> command_list;
         slot = new mo::TypedSlot<void(std::string)>(std::bind([&command_list](std::string filename)
         {
@@ -1440,7 +1455,7 @@ int main(int argc, char* argv[])
                 (*relay)(file);
             }
         }
-        
+
         print_options();
         bool compiling = false;
         bool rcc_enabled = !vm["disable-rcc"].as<bool>();
@@ -1540,7 +1555,7 @@ int main(int argc, char* argv[])
             for (int i = 0; i < 20; ++i)
                 mo::ThreadSpecificQueue::RunOnce();
         };
-        
+
         if(vm.count("script"))
         {
             auto relay = manager.GetRelay<void(std::string)>("run");
@@ -1550,26 +1565,26 @@ int main(int argc, char* argv[])
                 (*relay)(file);
             }
         }
-		int run_time = -1;
-		if(vm.count("profile-for") != 0)
-		{
-			run_time = vm["profile-for"].as<int>();
-		}
+        int run_time = -1;
+        if(vm.count("profile-for") != 0)
+        {
+            run_time = vm["profile-for"].as<int>();
+        }
         boost::thread io_thread = boost::thread(std::bind(
         [&io_func, &quit, &_dataStreams, run_time]()
         {
-        	auto start = boost::posix_time::microsec_clock::universal_time();
+            auto start = boost::posix_time::microsec_clock::universal_time();
             while(!quit)
             {
                 io_func();
                 if(run_time != -1)
-				{
-                	auto now = boost::posix_time::microsec_clock::universal_time();
-					if(boost::posix_time::time_duration(now - start).total_seconds() > run_time)
-					{
-						quit = true;
-					}
-				}
+                {
+                    auto now = boost::posix_time::microsec_clock::universal_time();
+                    if(boost::posix_time::time_duration(now - start).total_seconds() > run_time)
+                    {
+                        quit = true;
+                    }
+                }
             }
 
             std::cout << "IO thread shutting down\n";
