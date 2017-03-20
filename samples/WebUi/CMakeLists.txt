@@ -9,7 +9,7 @@ if(Wt_FOUND)
   target_link_libraries(WebUi 
     Aquila 
     MetaObject 
-    instantiations
+    MetaParameters
     debug;${Wt_HTTP_DEBUG_LIBRARY}
     debug;${Wt_DEBUG_LIBRARY}
     optimized;${Wt_LIBRARY}

@@ -17,7 +17,7 @@ using namespace aq::Nodes;
 
 bool DetectionWriter::ProcessImpl()
 {
-    if(output_directory_param.modified)
+    if(output_directory_param._modified)
     {
         if(!boost::filesystem::exists(output_directory))
         {
@@ -60,7 +60,7 @@ bool DetectionWriter::ProcessImpl()
                 }
             }
         }
-        output_directory_param.modified = false;
+        output_directory_param._modified = false;
     }
 
     bool found;

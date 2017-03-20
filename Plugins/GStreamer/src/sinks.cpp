@@ -53,7 +53,7 @@ void tcpserver::NodeInit(bool firstInit)
 
 bool tcpserver::ProcessImpl()
 {
-    if (!_initialized || encoders_param.modified || interfaces_param.modified)
+    if (!_initialized || encoders_param._modified || interfaces_param._modified)
     {
         if (encoders.getValue() != -1)
         {
@@ -74,8 +74,8 @@ bool tcpserver::ProcessImpl()
             _initialized = create_pipeline(ss.str());
             if (_initialized)
             {
-                encoders_param.modified = false;
-                interfaces_param.modified = false;
+                encoders_param._modified = false;
+                interfaces_param._modified = false;
             }
         }
     }
@@ -90,13 +90,13 @@ MO_REGISTER_CLASS(tcpserver);
 
 bool GStreamerSink::ProcessImpl()
 {
-    if(!_initialized || gstreamer_pipeline_param.modified)
+    if(!_initialized || gstreamer_pipeline_param._modified)
     {
         cleanup();
         _initialized = create_pipeline(gstreamer_pipeline);
         if(_initialized)
         {
-            gstreamer_pipeline_param.modified = false;
+            gstreamer_pipeline_param._modified = false;
         }
     }
     if(_initialized)
@@ -118,13 +118,13 @@ JPEGSink::JPEGSink()
 
 bool JPEGSink::ProcessImpl()
 {
-    if(gstreamer_pipeline_param.modified)
+    if(gstreamer_pipeline_param._modified)
     {
         this->cleanup();
         this->create_pipeline(gstreamer_pipeline);
         this->set_caps("image/jpeg");
         this->start_pipeline();
-        gstreamer_pipeline_param.modified = false;
+        gstreamer_pipeline_param._modified = false;
     }
     _modified = true;
     return true;

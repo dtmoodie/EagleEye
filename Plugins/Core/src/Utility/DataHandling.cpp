@@ -7,10 +7,17 @@ using namespace aq::Nodes;
 
 bool PlaybackInfo::ProcessImpl()
 {
-    double ts_delta = (input_param.GetTimestamp() - last_timestamp) / 1000.0;
+    auto current_ts = input_param.GetTimestamp();
+    double framerate = 30.0;
+    if(current_ts && last_timestamp)
+    {
+        mo::time_t ts_delta = (*current_ts - *last_timestamp);
+        framerate = 1000.0 / ts_delta.value();
+    }
+
     auto now = boost::posix_time::microsec_clock::local_time();
     double processrate = 1000.0 / (double)boost::posix_time::time_duration(now - last_iteration_time).total_milliseconds();
-    double framerate = 1000.0 / double(ts_delta);
+
     framerate_param.UpdateData(processrate);
     source_framerate_param.UpdateData(framerate);
     playrate_param.UpdateData(processrate / framerate);
@@ -21,7 +28,7 @@ bool PlaybackInfo::ProcessImpl()
 MO_REGISTER_CLASS(PlaybackInfo);
 bool ImageInfo::ProcessImpl()
 {
-    long long ts = input_param.GetTimestamp();
+    auto ts = input_param.GetTimestamp();
     auto shape = input->GetShape();
     count_param.UpdateData(shape[0], ts, _ctx);
     height_param.UpdateData(shape[1], ts, _ctx);

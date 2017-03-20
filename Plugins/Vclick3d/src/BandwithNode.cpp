@@ -62,7 +62,7 @@ std::vector<std::string> BandwidthUsage::listDevices()
 
 bool BandwidthUsage::ProcessImpl()
 {
-    if(ports_param.modified && selected_device != -1)
+    if(ports_param._modified && selected_device != -1)
     {
         monitors.reserve(ports.size());
         monitor_threads.reserve(ports.size());
@@ -78,7 +78,7 @@ bool BandwidthUsage::ProcessImpl()
             monitor_threads.emplace_back(&BandwidthMonitor::run, m);
         }
 
-        ports_param.modified = false;
+        ports_param._modified = false;
     }
     _modified = true;
     return true;

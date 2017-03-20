@@ -8,7 +8,7 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-SETUP_PROJECT_IMPL
+
 
  
 /*AxisSocket::AxisSocket() 

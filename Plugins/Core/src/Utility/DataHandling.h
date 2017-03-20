@@ -28,7 +28,7 @@ namespace aq
         protected:
             bool ProcessImpl();
             boost::posix_time::ptime last_iteration_time;
-            long long last_timestamp = 0;
+            boost::optional<mo::time_t> last_timestamp;
         };
 
         class ImageInfo: public Node

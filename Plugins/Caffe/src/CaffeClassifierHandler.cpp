@@ -85,7 +85,7 @@ void ClassifierHandler::StartBatch()
     objects.clear();
 }
 
-void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size)
+void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size)
 {
     auto output_blob = net.blob_by_name(output_blob_name);
     if(output_blob)
@@ -111,7 +111,7 @@ void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, long long tim
         }
     }
 }
-void ClassifierHandler::EndBatch(long long timestamp)
+void ClassifierHandler::EndBatch(boost::optional<mo::time_t>timestamp)
 {
     objects_param.Commit(timestamp, _ctx);
 }

@@ -17,8 +17,8 @@ IPerModuleInterface* GetModule()
 SETUP_PROJECT_IMPL
 bool FindCheckerboard::ProcessImpl()
 {
-    if(num_corners_x_param.modified || num_corners_y_param.modified ||
-        corner_distance_param.modified || object_points.empty())
+    if(num_corners_x_param._modified || num_corners_y_param._modified ||
+        corner_distance_param._modified || object_points.empty())
     {
         object_points.resize(num_corners_x * num_corners_y);
         int count = 0;
@@ -29,9 +29,9 @@ bool FindCheckerboard::ProcessImpl()
                 object_points[count] = cv::Point3f(corner_distance*j, corner_distance*i, 0);
             }
         }
-        num_corners_x_param.modified = false;
-        num_corners_y_param.modified = false;
-        corner_distance_param.modified = false;
+        num_corners_x_param._modified = false;
+        num_corners_y_param._modified = false;
+        corner_distance_param._modified = false;
     }
     auto& mat = input->GetMat(Stream());
     Stream().waitForCompletion();

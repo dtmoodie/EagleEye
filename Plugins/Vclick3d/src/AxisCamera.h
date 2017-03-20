@@ -22,7 +22,7 @@
 
 #endif
 
-SETUP_PROJECT_DEF
+
 
 
 /*

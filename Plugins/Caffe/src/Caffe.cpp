@@ -221,7 +221,7 @@ bool CaffeBase::InitNetwork()
 {
     if (::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
         ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
-    if (nn_model_file_param.modified)
+    if (nn_model_file_param._modified)
     {
         if (boost::filesystem::exists(nn_model_file))
         {
@@ -235,7 +235,7 @@ bool CaffeBase::InitNetwork()
             }
             WrapInput();
             WrapOutput();
-            nn_model_file_param.modified = false;
+            nn_model_file_param._modified = false;
         }
         else
         {
@@ -243,7 +243,7 @@ bool CaffeBase::InitNetwork()
         }
     }
 
-    if (nn_weight_file_param.modified && NN)
+    if (nn_weight_file_param._modified && NN)
     {
         if (boost::filesystem::exists(nn_weight_file))
         {
@@ -268,7 +268,7 @@ bool CaffeBase::InitNetwork()
             BOOST_LOG_TRIVIAL(info) << "Weights loaded";
             weightsLoaded = true;
             //UpdateParameter("Loaded layers", layerNames);
-            nn_weight_file_param.modified = false;
+            nn_weight_file_param._modified = false;
         }
         else
         {
@@ -276,7 +276,7 @@ bool CaffeBase::InitNetwork()
         }
     }
 
-    if ((label_file_param.modified || labels.empty()) && boost::filesystem::exists(label_file))
+    if ((label_file_param._modified || labels.empty()) && boost::filesystem::exists(label_file))
     {
         labels.clear();
         std::ifstream ifs(label_file.string().c_str());
@@ -292,10 +292,10 @@ bool CaffeBase::InitNetwork()
         }
         BOOST_LOG_TRIVIAL(info) << "Loaded " << labels.size() << " classes";
         labels_param.Commit();
-        label_file_param.modified = false;
+        label_file_param._modified = false;
     }
 
-    if (mean_file_param.modified)
+    if (mean_file_param._modified)
     {
         if (boost::filesystem::exists(mean_file))
         {

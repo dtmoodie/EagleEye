@@ -7,10 +7,10 @@ using namespace aq::Nodes;
 
 bool Canny::ProcessImpl()
 {
-    if(low_thresh_param.modified || 
-        high_thresh_param.modified || 
-        aperature_size_param.modified || 
-        L2_gradient_param.modified || 
+    if(low_thresh_param._modified || 
+        high_thresh_param._modified || 
+        aperature_size_param._modified || 
+        L2_gradient_param._modified || 
         detector == nullptr)
     {
         detector = cv::cuda::createCannyEdgeDetector(low_thresh, high_thresh, aperature_size, L2_gradient);

@@ -23,7 +23,7 @@ namespace aq
                 PARAM(bool, use_initial_flow, false)
             MO_END;
         protected:
-            long long PrepPyramid();
+            size_t PrepPyramid();
             void build_pyramid(std::vector<cv::cuda::GpuMat>& pyramid);
             TS<std::vector<cv::cuda::GpuMat>> prevGreyImg;
             std::vector<cv::cuda::GpuMat> greyImg;

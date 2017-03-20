@@ -6,12 +6,12 @@ using namespace aq::Nodes;
 
 bool h264_pass_through::ProcessImpl()
 {
-    if(gstreamer_string_param.modified)
+    if(gstreamer_string_param._modified)
     {
         create_pipeline(gstreamer_string);
         if (get_pipeline_state() != GST_STATE_PLAYING && _pipeline)
             start_pipeline();
-        gstreamer_string_param.modified = false;
+        gstreamer_string_param._modified = false;
         valve = gst_bin_get_by_name(GST_BIN(_pipeline), "myvalve");
         if(!valve)
         {
@@ -19,7 +19,7 @@ bool h264_pass_through::ProcessImpl()
         }
         previously_active = false;
     }
-    if(active_param.modified && active != previously_active)
+    if(active_param._modified && active != previously_active)
     {
         if(active)
         {
@@ -30,7 +30,7 @@ bool h264_pass_through::ProcessImpl()
             g_object_set(valve, "drop", true, NULL);
             previously_active = false;
         }
-        active_param.modified = false;
+        active_param._modified = false;
     }
     return true;
 }

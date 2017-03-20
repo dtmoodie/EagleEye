@@ -15,7 +15,7 @@ namespace aq
                 //PARAM(std::string, output_blob_name, "score")
                 PARAM(float, min_confidence, 10)
             MO_END
-            virtual void HandleOutput(const caffe::Net<float>& net, long long timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size);
+            void HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size);
         };
         class FCNSingleClassHandler: public NetHandler
         {
@@ -28,7 +28,7 @@ namespace aq
                 PARAM(float, min_confidence, 10)
                 PARAM(int, class_index, 0)
             MO_END
-            virtual void HandleOutput(const caffe::Net<float>& net, long long timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size);
+            virtual void HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size);
         };
     }
 }

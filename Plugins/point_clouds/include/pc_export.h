@@ -9,7 +9,7 @@ RUNTIME_COMPILER_LINKLIBRARY("point_cloudsd.lib")
 #endif
 #else // linux
 #define PC_EXPORTS 
-
+#include <RuntimeLinkLibrary.h>
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("-lpoint_clouds" )
 #else

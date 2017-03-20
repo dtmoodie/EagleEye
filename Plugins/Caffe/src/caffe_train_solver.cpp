@@ -27,7 +27,7 @@ bool caffe_solver::ProcessImpl()
 {
     if(::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
         ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
-    if(solver_description_param.modified && solver_description.string().size())
+    if(solver_description_param._modified && solver_description.string().size())
     {
         if(boost::filesystem::is_regular_file(solver_description))
         {
@@ -95,7 +95,7 @@ bool caffe_solver::ProcessImpl()
             if(boost::filesystem::is_regular_file(previous_solver_state))
                 solver->Restore(previous_solver_state.string().c_str());
         }
-        solver_description_param.modified = false;
+        solver_description_param._modified = false;
     }
     if(!solver)
     {
@@ -121,7 +121,7 @@ bool caffe_solver::ProcessImpl()
 TS<SyncedMemory> Nodes::caffe_network::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
     // asdf
-    if(nn_description_param.modified && nn_description.size())
+    if(nn_description_param._modified && nn_description.size())
     {
         if(boost::filesystem::is_regular_file(nn_description))
         {
@@ -129,7 +129,7 @@ TS<SyncedMemory> Nodes::caffe_network::doProcess(TS<SyncedMemory> input, cv::cud
             
             auto inputs = neural_network->input_blobs();
             //updateParameter("input blobs", inputs)->type = Parameters::Parameter::Output;
-            nn_description_param.modified = false;
+            nn_description_param._modified = false;
         }        
     }
     return input;

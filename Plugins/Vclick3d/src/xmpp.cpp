@@ -167,7 +167,7 @@ void XmppClient::sendPointCloud()
 }*/
 bool XmppClient::ProcessImpl()
 {
-    if(jid_param.modified || pass_param.modified || server_param.modified || port_param.modified)
+    if(jid_param._modified || pass_param._modified || server_param._modified || port_param._modified)
     {
         gloox::JID jid(jid + "@" + server);
         xmpp_client.reset(new gloox::Client(jid, pass, port));

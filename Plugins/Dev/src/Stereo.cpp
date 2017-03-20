@@ -20,11 +20,11 @@ using namespace aq::Nodes;
 
 bool StereoBM::ProcessImpl()
 {
-    if(!stereoBM || num_disparities_param.modified || block_size_param.modified)
+    if(!stereoBM || num_disparities_param._modified || block_size_param._modified)
     {
         stereoBM = cv::cuda::createStereoBM(num_disparities, block_size);
-        block_size_param.modified = false;
-        num_disparities_param.modified = false;
+        block_size_param._modified = false;
+        num_disparities_param._modified = false;
     }
     if (left_image->GetSize() != right_image->GetSize())
     {
@@ -41,17 +41,17 @@ bool StereoBM::ProcessImpl()
 bool StereoBeliefPropagation::ProcessImpl()
 {
     if(bp == nullptr ||
-        num_iters_param.modified ||
-        num_disparities_param.modified ||
-        num_levels_param.modified,
-        message_type_param.modified)
+        num_iters_param._modified ||
+        num_disparities_param._modified ||
+        num_levels_param._modified,
+        message_type_param._modified)
     {
         bp = cv::cuda::createStereoBeliefPropagation(num_disparities, num_iters, num_levels, message_type.getValue());
 
-        num_iters_param.modified = true;
-        num_disparities_param.modified = true;
-        num_levels_param.modified = true;
-        message_type_param.modified = true;
+        num_iters_param._modified = true;
+        num_disparities_param._modified = true;
+        num_levels_param._modified = true;
+        message_type_param._modified = true;
     }
     cv::cuda::GpuMat disparity;
     bp->compute(left_image->GetGpuMat(Stream()), right_image->GetGpuMat(Stream()), disparity, Stream());
@@ -84,17 +84,17 @@ bool StereoBeliefPropagation::ProcessImpl()
 }*/
 bool StereoConstantSpaceBP::ProcessImpl()
 {
-    if(num_levels_param.modified || nr_plane_param.modified || 
-        num_disparities_param.modified || num_iterations_param.modified || !csbp)
+    if(num_levels_param._modified || nr_plane_param._modified || 
+        num_disparities_param._modified || num_iterations_param._modified || !csbp)
     {
         csbp = cv::cuda::createStereoConstantSpaceBP(
             num_disparities, 
             num_iterations, 
             num_levels, nr_plane, message_type.getValue());
-        num_levels_param.modified = false;
-        nr_plane_param.modified =  false;
-        num_disparities_param.modified = false;
-        num_iterations_param.modified = false;
+        num_levels_param._modified = false;
+        nr_plane_param._modified =  false;
+        num_disparities_param._modified = false;
+        num_iterations_param._modified = false;
     }
     cv::cuda::GpuMat disparity;
     csbp->compute(left_image->GetGpuMat(Stream()), right_image->GetGpuMat(Stream()),disparity, Stream());
@@ -104,8 +104,8 @@ bool StereoConstantSpaceBP::ProcessImpl()
 
 bool UndistortStereo::ProcessImpl()
 {
-    if(camera_matrix_param.modified || distortion_matrix_param.modified ||
-        rotation_matrix_param.modified || projection_matrix_param.modified)
+    if(camera_matrix_param._modified || distortion_matrix_param._modified ||
+        rotation_matrix_param._modified || projection_matrix_param._modified)
     {
         cv::Mat X, Y;
         cv::initUndistortRectifyMap(*camera_matrix, *distortion_matrix,

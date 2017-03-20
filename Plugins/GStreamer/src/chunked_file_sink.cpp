@@ -161,7 +161,7 @@ MO_REGISTER_CLASS(JpegKeyframer);
 using namespace aq::Nodes;
 bool GstreamerSink::ProcessImpl()
 {
-    if(pipeline_param.modified && !image->empty())
+    if(pipeline_param._modified && !image->empty())
     {
         this->cleanup();
         if(!this->create_pipeline(pipeline))
@@ -179,7 +179,7 @@ bool GstreamerSink::ProcessImpl()
             LOG(warning) << "Unable to start pipeline " << pipeline;
             return false;
         }
-        pipeline_param.modified = false;
+        pipeline_param._modified = false;
     }
     if(_source && _feed_enabled)
     {

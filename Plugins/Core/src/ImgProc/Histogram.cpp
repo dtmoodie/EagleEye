@@ -5,12 +5,12 @@ using namespace aq::Nodes;
 
 bool HistogramRange::ProcessImpl()
 {
-    if(lower_bound_param.modified || upper_bound_param.modified || bins_param.modified)
+    if(lower_bound_param._modified || upper_bound_param._modified || bins_param._modified)
     {
         updateLevels(input->GetDepth());
-        lower_bound_param.modified = false;
-        upper_bound_param.modified = false;
-        bins_param.modified = false;
+        lower_bound_param._modified = false;
+        upper_bound_param._modified = false;
+        bins_param._modified = false;
     }
     if(input->GetChannels() == 1 || input->GetChannels() == 4)
     {

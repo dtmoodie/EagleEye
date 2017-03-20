@@ -14,8 +14,12 @@ bool FrameRate::ProcessImpl()
     boost::posix_time::time_duration delta = currentTime - prevTime;
     prevTime = currentTime;
     framerate_param.UpdateData(1000.0 / (double)delta.total_milliseconds());
-    long long ts_delta = input_param.GetTimestamp() - _previous_frame_timestamp;
-    frametime_param.UpdateData(ts_delta);
+    auto ts = input_param.GetTimestamp();
+    if(ts && _previous_frame_timestamp)
+    {
+        mo::time_t ts_delta =  *ts - *_previous_frame_timestamp;
+        frametime_param.UpdateData(ts_delta);
+    }
     _previous_frame_timestamp = input_param.GetTimestamp();
     return true;
 }
@@ -35,16 +39,16 @@ bool FrameLimiter::ProcessImpl()
 
 bool CreateMat::ProcessImpl()
 {
-    if(data_type_param.modified || channels_param.modified || width_param.modified || height_param.modified || fill_param.modified)
+    if(data_type_param._modified || channels_param._modified || width_param._modified || height_param._modified || fill_param._modified)
     {
         cv::cuda::GpuMat mat;
         mat.create(height, width, CV_MAKETYPE(data_type.getValue(), channels));
         output_param.UpdateData(mat);
-        data_type_param.modified = false;
-        channels_param.modified = false;
-        width_param.modified = false;
-        height_param.modified = false; 
-        fill_param.modified = false;
+        data_type_param._modified = false;
+        channels_param._modified = false;
+        width_param._modified = false;
+        height_param._modified = false; 
+        fill_param._modified = false;
     }
     output.GetGpuMatMutable(Stream()).setTo(fill, Stream());
     return true;

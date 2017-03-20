@@ -15,13 +15,13 @@ namespace Nodes
     public:
         MO_DERIVE(FrameRate, Node)
             STATUS(double, framerate, 0.0)
-            STATUS(double, frametime, 0.0)
+            STATUS(mo::time_t, frametime, {})
             INPUT(SyncedMemory, input, nullptr)
         MO_END
     protected:
         bool ProcessImpl();
         boost::posix_time::ptime prevTime;
-        long long _previous_frame_timestamp = 0;
+        boost::optional<mo::time_t> _previous_frame_timestamp;
     };
     
     class FrameLimiter : public Node

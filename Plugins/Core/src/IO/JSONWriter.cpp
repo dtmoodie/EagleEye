@@ -96,18 +96,19 @@ bool JSONWriter::ProcessImpl()
     {
         auto input_params = GetInputs();
         bool found = false;
-        long long ts = -1;
+        size_t fn = 0;
         for(auto param : input_params)
         {
             if(auto input = param->GetInputParam())
             {
                 found = true;
-                ts = input->GetTimestamp();
+                fn = input->GetFrameNumber();
             }
         }
         if(found == false)
             return false;
-        std::string name = "frame_" + boost::lexical_cast<std::string>(ts);
+
+        std::string name = "frame_" + boost::lexical_cast<std::string>(fn);
         ar->setNextName(name.c_str());
         ar->startNode();
         for (auto param : input_params)

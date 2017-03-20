@@ -38,11 +38,11 @@ MO_REGISTER_CLASS(HistogramEqualization)
 
 bool CLAHE::ProcessImpl()
 {
-    if(!_clahe || clip_limit_param.modified || grid_size_param.modified)
+    if(!_clahe || clip_limit_param._modified || grid_size_param._modified)
     {
         _clahe = cv::cuda::createCLAHE(clip_limit, cv::Size(grid_size, grid_size));
-        clip_limit_param.modified = false;
-        grid_size_param.modified = false;
+        clip_limit_param._modified = false;
+        grid_size_param._modified = false;
     }
     cv::cuda::GpuMat hsv;
     cv::cuda::cvtColor(input->GetGpuMat(Stream()), hsv, cv::COLOR_BGR2HSV, 0, Stream());

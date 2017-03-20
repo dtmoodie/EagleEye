@@ -13,7 +13,7 @@ using namespace aq::Nodes;
 bool QtImageDisplay::ProcessImpl()
 {
     cv::Mat mat;
-    long long ts = -1;
+    boost::optional<mo::time_t> ts;
     bool overlay = overlay_timestamp;
     if(image && !image->empty())
     {
@@ -35,7 +35,7 @@ bool QtImageDisplay::ProcessImpl()
         {
             PROFILE_RANGE(imshow);
             cv::Mat draw_img = mat;
-            if(overlay)
+            if(overlay && ts)
             {
                 draw_img = mat.clone();
                 std::stringstream ss;

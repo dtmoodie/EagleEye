@@ -140,7 +140,7 @@ void SaveAnnotations::draw()
 
 bool SaveAnnotations::ProcessImpl()
 {
-    /*if(label_file_param.modified)
+    /*if(label_file_param._modified)
     {
         labels.clear();
         std::ifstream ifs;
@@ -180,7 +180,7 @@ bool SaveAnnotations::ProcessImpl()
                         cv::Scalar(color[0], color[1], color[2]));
         }
 
-        label_file_param.modified = false;
+        label_file_param._modified = false;
         GetDataStream()->GetWindowCallbackManager()->imshow("legend", h_legend);
     }*/
     if(h_lut.cols != labels->size())

@@ -11,8 +11,8 @@ bool MorphologyFilter::ProcessImpl()
 {
     if (input_image)
     {
-        if (structuring_element_type_param.modified || morphology_type_param.modified || 
-            anchor_point_param.modified || iterations_param.modified ||
+        if (structuring_element_type_param._modified || morphology_type_param._modified || 
+            anchor_point_param._modified || iterations_param._modified ||
             filter == nullptr)
         {
             structuring_element_param.UpdateData(
@@ -24,10 +24,10 @@ bool MorphologyFilter::ProcessImpl()
                 morphology_type.currentSelection, input_image->GetMat(Stream()).type(), 
                 structuring_element, anchor_point, iterations);
 
-            structuring_element_size_param.modified = false;
-            morphology_type_param.modified = false;
-            anchor_point_param.modified = false;
-            iterations_param.modified = false;
+            structuring_element_size_param._modified = false;
+            morphology_type_param._modified = false;
+            anchor_point_param._modified = false;
+            iterations_param._modified = false;
         }
         cv::cuda::GpuMat out;
         filter->apply(input_image->GetGpuMat(Stream()), out, Stream());
@@ -85,7 +85,7 @@ bool FindContours::ProcessImpl()
             num_contours = 0;
             return false;
         }
-        long long ts = input_image_param.GetTimestamp();
+        auto ts = input_image_param.GetTimestamp();
         Stream().waitForCompletion();
         cv::findContours(h_mat,contours, hierarchy, mode.currentSelection, method.currentSelection);
         contours_param.Commit(ts, _ctx);

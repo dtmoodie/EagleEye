@@ -31,50 +31,50 @@ void my_frame_source::input_frame(SyncedMemory& image, cv::cuda::Stream& stream)
 
 bool super_resolution::ProcessImpl()
 {
-    if(scale_param.modified)
+    if(scale_param._modified)
     {
         super_res->setScale(scale);
-        scale_param.modified = false;
+        scale_param._modified = false;
     }
-    if(iterations_param.modified)
+    if(iterations_param._modified)
     {
         super_res->setIterations(iterations);
-        iterations_param.modified = false;
+        iterations_param._modified = false;
     }
-    if(tau_param.modified)
+    if(tau_param._modified)
     {
         super_res->setTau(tau);
-        tau_param.modified = false;
+        tau_param._modified = false;
     }
-    if(lambda_param.modified)
+    if(lambda_param._modified)
     {
         super_res->setLabmda(lambda);
-        lambda_param.modified = false;
+        lambda_param._modified = false;
     }
-    if(alpha_param.modified)
+    if(alpha_param._modified)
     {
         super_res->setAlpha(alpha);
-        alpha_param.modified = false;
+        alpha_param._modified = false;
     }
-    if(kernel_size_param.modified)
+    if(kernel_size_param._modified)
     {
         super_res->setKernelSize(kernel_size);
-        kernel_size_param.modified = false;
+        kernel_size_param._modified = false;
     }
-    if(blur_size_param.modified)
+    if(blur_size_param._modified)
     {
         super_res->setBlurKernelSize(blur_size);
-        blur_size_param.modified = false;
+        blur_size_param._modified = false;
     }
-    if(blur_sigma_param.modified)
+    if(blur_sigma_param._modified)
     {
         super_res->setBlurSigma(blur_sigma);
-        blur_sigma_param.modified = false;
+        blur_sigma_param._modified = false;
     }
-    if(temporal_radius_param.modified)
+    if(temporal_radius_param._modified)
     {
         super_res->setTemporalAreaRadius(temporal_radius);
-        temporal_radius_param.modified = false;
+        temporal_radius_param._modified = false;
     }
     cv::cuda::GpuMat result;
     

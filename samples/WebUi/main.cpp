@@ -22,7 +22,7 @@
 #include <MetaObject/Parameters/UI/Wt/IParameterOutputProxy.hpp>
 
 #include "FileBrowseWidget.hpp"
-#include "instantiate.hpp"
+#include "MetaParameters.hpp"
 
 #include <Wt/WBreak>
 #include <Wt/WContainerWidget>
@@ -182,8 +182,8 @@ protected:
             boost::filesystem::rename(file, new_name);
             file = new_name.string();
         }
-        auto stream = aq::IDataStream::Load(file);
-        if(stream)
+        auto streams = aq::IDataStream::Load(file);
+        for(auto stream : streams)
         {
             stream->StartThread();
             g_ctx._data_streams.push_back(stream);
@@ -628,7 +628,7 @@ WApplication* createApplication(const WEnvironment& env)
 
 int main(int argc, char** argv)
 {
-    mo::instantiations::initialize();
+    mo::MetaParameters::initialize();
     aq::SetupLogging();
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
     auto g_allocator = mo::Allocator::GetThreadSafeAllocator();

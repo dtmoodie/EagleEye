@@ -16,7 +16,7 @@ IPyrOpticalFlow::IPyrOpticalFlow()
     greyImg.resize(1);
 }
 
-long long IPyrOpticalFlow::PrepPyramid()
+size_t IPyrOpticalFlow::PrepPyramid()
 {
     if (input->GetChannels() != 1)
     {
@@ -26,25 +26,19 @@ long long IPyrOpticalFlow::PrepPyramid()
     {
         greyImg[0] = input->GetGpuMat(Stream());
     }
-    long long timestamp;
+    size_t fn;
     if (image_pyramid == nullptr)
     {
         image_pyramid = &greyImg;
         THROW(debug) << "Need to reimplement and redesign";
-        //build_pyramid(*image_pyramid);
-        timestamp = input_param.GetTimestamp();
+
+        fn= input_param.GetFrameNumber();
     }
     else
     {
-        timestamp = image_pyramid_param.GetTimestamp();
+        fn = image_pyramid_param.GetFrameNumber();
     }
-
-    if (prevGreyImg.empty())
-    {
-        prevGreyImg = greyImg;
-        return -1;
-    }
-    return timestamp;
+    return fn;
 }
 
 void IPyrOpticalFlow::build_pyramid(std::vector<cv::cuda::GpuMat>& pyramid)
@@ -60,10 +54,10 @@ void IPyrOpticalFlow::build_pyramid(std::vector<cv::cuda::GpuMat>& pyramid)
 
 bool DensePyrLKOpticalFlow::ProcessImpl()
 {
-    if(window_size_param.modified ||
-        pyramid_levels_param.modified ||
-        iterations_param.modified ||
-        use_initial_flow_param.modified ||
+    if(window_size_param._modified ||
+        pyramid_levels_param._modified ||
+        iterations_param._modified ||
+        use_initial_flow_param._modified ||
         opt_flow == nullptr)
     {
         
@@ -73,30 +67,33 @@ bool DensePyrLKOpticalFlow::ProcessImpl()
             iterations,
             use_initial_flow);
 
-        window_size_param.modified = false;
-        pyramid_levels_param.modified = false;
-        iterations_param.modified = false;
-        use_initial_flow_param.modified = false;
+        window_size_param._modified = false;
+        pyramid_levels_param._modified = false;
+        iterations_param._modified = false;
+        use_initial_flow_param._modified = false;
     }
     cv::cuda::GpuMat flow;
-    long long ts = PrepPyramid();
-    if(ts != -1)
+    if(prevGreyImg.empty())
     {
-        opt_flow->calc(prevGreyImg, *image_pyramid, flow, Stream());
-
         prevGreyImg = greyImg;
-        flow_field_param.UpdateData(flow, ts, _ctx);
         return true;
     }
-    return false;
+
+    auto fn = PrepPyramid();
+
+    opt_flow->calc(prevGreyImg, *image_pyramid, flow, Stream());
+
+    prevGreyImg = greyImg;
+    flow_field_param.UpdateData(flow, fn, _ctx);
+    return true;
 }
 
 bool SparsePyrLKOpticalFlow::ProcessImpl()
 {
-    if (window_size_param.modified ||
-        pyramid_levels_param.modified ||
-        iterations_param.modified ||
-        use_initial_flow_param.modified ||
+    if (window_size_param._modified ||
+        pyramid_levels_param._modified ||
+        iterations_param._modified ||
+        use_initial_flow_param._modified ||
         optFlow == nullptr)
     {
         optFlow = cv::cuda::SparsePyrLKOpticalFlow::create(
@@ -105,13 +102,13 @@ bool SparsePyrLKOpticalFlow::ProcessImpl()
             iterations,
             use_initial_flow);
 
-        window_size_param.modified = false;
-        pyramid_levels_param.modified = false;
-        iterations_param.modified = false;
-        use_initial_flow_param.modified = false;
+        window_size_param._modified = false;
+        pyramid_levels_param._modified = false;
+        iterations_param._modified = false;
+        use_initial_flow_param._modified = false;
     }
-    long long ts = PrepPyramid();
-    if(ts != -1)
+    auto ts = PrepPyramid();
+    if(ts)
     {
         cv::cuda::GpuMat tracked_points, status, error;
         if(input_points_param.GetInput(ts - 1))

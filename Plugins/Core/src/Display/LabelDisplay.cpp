@@ -50,11 +50,11 @@ bool LabelDisplay::ProcessImpl()
     cv::cuda::GpuMat input;
     if(dilate != 0)
     {
-        if(!_dilate_filter || dilate_param.modified)
+        if(!_dilate_filter || dilate_param._modified)
         {
             _dilate_filter = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE,label->GetType(),
                                                               cv::getStructuringElement(cv::MORPH_CROSS, {dilate, dilate}));
-            dilate_param.modified = false;
+            dilate_param._modified = false;
         }
         _dilate_filter->apply(label->GetGpuMat(Stream()), input, Stream());
     }else
