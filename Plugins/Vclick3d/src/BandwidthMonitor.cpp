@@ -1,3 +1,4 @@
+#ifdef HAVE_PCAP
 #include "BandwidthMonitor.hpp"
 
 #include <fstream>
@@ -112,3 +113,4 @@ std::pair<unsigned long long, std::string> convert_bytes(unsigned long long byte
     }
     return { value, unit };
 }
+#endif

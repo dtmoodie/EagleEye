@@ -1,3 +1,4 @@
+#ifdef HAVE_PCAP
 #include "PcapAdapter.hpp"
 
 #include <cassert>
@@ -57,3 +58,4 @@ void PcapAdapter::open_offline(pcap_if_t* device)
     assert(false);
     // not yet implemented
 }
+#endif

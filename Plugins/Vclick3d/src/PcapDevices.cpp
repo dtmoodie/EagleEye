@@ -1,3 +1,4 @@
+#ifdef HAVE_PCAP
 #include "PcapDevices.hpp"
 
 #include <iostream>
@@ -26,3 +27,4 @@ std::vector<pcap_if_t*> PcapDevices::get_devices() const
     }
     return result;
 }
+#endif
