@@ -31,7 +31,7 @@ file(GLOB knl "*.cu")
 
 cuda_add_library(Segmentation SHARED ${src} ${hdr})
 
-add_dependencies(Segmentation EagleLib)
+add_dependencies(Segmentation Aquila)
 
 RCC_LINK_LIB(Segmentation
     EagleLib
@@ -41,7 +41,7 @@ RCC_LINK_LIB(Segmentation
 
 
 IF(TARGET fastms)
-    
+
     add_dependencies(Segmentation fastms)
     RCC_LINK_LIB(Segmentation fastms ${fastms_LIBS})
     TARGET_LINK_LIBRARIES(Segmentation fastms)
