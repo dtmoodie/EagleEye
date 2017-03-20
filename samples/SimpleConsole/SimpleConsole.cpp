@@ -12,7 +12,7 @@
 #include <MetaObject/Detail/Allocator.hpp>
 #include <MetaObject/Thread/ThreadPool.hpp>
 #include <MetaObject/Parameters/Buffers/IBuffer.hpp>
-
+#include <MetaObject/Logging/Profiling.hpp>
 #include <RuntimeObjectSystem.h>
 
 #include <boost/program_options.hpp>
@@ -124,9 +124,6 @@ void sig_handler(int s)
 
 int main(int argc, char* argv[])
 {
-
-
-
     boost::program_options::options_description desc("Allowed options");
 
     desc.add_options()
@@ -166,9 +163,16 @@ int main(int argc, char* argv[])
     auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
     cv::cuda::GpuMat::setDefaultAllocator(g_allocator);
     cv::Mat::setDefaultAllocator(g_allocator);
+
     g_allocator->SetName("Global Allocator");
-    mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(g_allocator);
-    mo::CpuThreadAllocatorSetter<cv::Mat>::Set(g_allocator);
+    if(!mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(g_allocator))
+    {
+        LOG(info) << "Unable to set thread specific gpu allocator in opencv";
+    }
+    if(!mo::CpuThreadAllocatorSetter<cv::Mat>::Set(g_allocator))
+    {
+        LOG(info) << "Unable to set thread specific cpu allocator in opencv";
+    }
 
 
     auto unrecognized = boost::program_options::collect_unrecognized(parsed_options.options, boost::program_options::include_positional);
@@ -205,7 +209,7 @@ int main(int argc, char* argv[])
         std::stringstream ss;
         for(const auto& pair : replace_map)
             ss << "\n" << pair.first << " = " << pair.second;
-        LOG(debug) << "String replacements: " << ss.str();
+        LOG(debug) << "Input string replacements: " << ss.str();
     }
 
     if(variable_replace_map.size())
@@ -213,7 +217,7 @@ int main(int argc, char* argv[])
         std::stringstream ss;
         for(const auto& pair : variable_replace_map)
             ss << "\n" <<  pair.first << " = " << pair.second;
-        LOG(debug) << "Variable replacements: " << ss.str();
+        LOG(debug) << "Input variable replacements: " << ss.str();
     }
 
     if(vm["profile"].as<bool>())
@@ -287,6 +291,7 @@ int main(int argc, char* argv[])
         mo::ThreadRegistry::Instance()->RegisterThread(mo::ThreadRegistry::GUI);
         while(!boost::this_thread::interruption_requested())
         {
+            mo::SetThreadName("SimpleConsole GUI thread");
             try
             {
                 mo::ThreadSpecificQueue::Run();
@@ -1616,6 +1621,7 @@ int main(int argc, char* argv[])
         mo::ThreadPool::Instance()->Cleanup();
         LOG(info) << "Thread pool cleanup complete";
         delete g_allocator;
+        mo::Allocator::CleanupThreadSpecificAllocator();
         return 0;
     }
     gui_thread.interrupt();
