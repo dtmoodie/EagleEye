@@ -158,17 +158,17 @@ bool MOG2::ProcessImpl()
     if(mog2 == nullptr)
     {
         mog2 = cv::cuda::createBackgroundSubtractorMOG2(history, threshold, detect_shadows);
-        history_param.modified = false;
+        history_param._modified = false;
     }
-    if(history_param.modified)
+    if(history_param._modified)
     {
         mog2->setHistory(history);
-        history_param.modified = false;
+        history_param._modified = false;
     }
-    if(threshold_param.modified)
+    if(threshold_param._modified)
     {
         mog2->setVarThreshold(threshold);
-        threshold_param.modified = false;
+        threshold_param._modified = false;
     }
     cv::cuda::GpuMat mask;
     mog2->apply(image->GetGpuMat(Stream()), mask, learning_rate, Stream());
