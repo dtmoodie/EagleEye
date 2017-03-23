@@ -1,7 +1,8 @@
 #include "HistogramEqualization.hpp"
 #include <Aquila/Nodes/NodeInfo.hpp>
-#include <opencv2/cudaimgproc.hpp>
-#include <opencv2/cudaarithm.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
+
 using namespace aq::Nodes;
 
 bool HistogramEqualization::ProcessImpl()
