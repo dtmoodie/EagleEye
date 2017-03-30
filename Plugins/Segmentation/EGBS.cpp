@@ -29,11 +29,7 @@
 #include "EGBS.h"
 #include <map>
 
-using namespace EagleLib;
-IPerModuleInterface* GetModule()
-{
-    return PerModuleInterface::GetInstance();
-}
+using namespace aq;
 
 EGBS::EGBS() {
     
@@ -176,8 +172,8 @@ cv::Mat EGBS::recolor( bool random_color) {
 }
 
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
+using namespace aq;
+using namespace aq::Nodes;
 /*void SegmentEGBS::NodeInit(bool firstInit)
 {
     updateParameter("Sigma", float(0.5));;

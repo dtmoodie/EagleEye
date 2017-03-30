@@ -2,7 +2,7 @@
 if(WITH_PYTHON)
 find_package(Qt5 QUIET COMPONENTS Core Gui Widgets)
 if(Qt5_FOUND)
-  find_package(PythonInterp REQUIRED)
+  find_package(PythonInterp QUIET)
   if(PYTHONINTERP_FOUND)
 	project(PythonInteractive)
 	set(_python_qt_name Qt5Python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR})
