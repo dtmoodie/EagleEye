@@ -394,7 +394,18 @@ bool CaffeImageClassifier::ProcessImpl()
                     itr.boundingBox.height / input_shape[1]);
         }
         if(defaultROI.size() == 0)
+        {
+            for(auto& handler : net_handlers)
+            {
+                handler->StartBatch();
+                handler->EndBatch(input_param.GetTimestamp());
+            }
+            if(bounding_boxes == &defaultROI)
+            {
+                bounding_boxes = nullptr;
+            }
             return false;
+        }
     }
 
     std::vector<cv::Rect> pixel_bounding_boxes;
@@ -425,7 +436,7 @@ bool CaffeImageClassifier::ProcessImpl()
     }
 
     cv::cuda::GpuMat float_image;
-    
+
     if (input->GetDepth() != CV_32F)
     {
         input->GetGpuMat(Stream()).convertTo(float_image, CV_32F, Stream());
@@ -448,7 +459,7 @@ bool CaffeImageClassifier::ProcessImpl()
             return ss.str();
         };
         LOG(warning) << "Input blob \"data\" not found in network input blobs, existing blobs: " << f();
-            
+
         return false;
     }
     auto shape = data_itr->second[0].GetShape();
