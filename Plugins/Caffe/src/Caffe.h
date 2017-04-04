@@ -58,6 +58,7 @@ namespace aq
                 TOOLTIP(detection_class, "When given an input_detections, decide which class of input detections should be used to select regions of interest for this classifier")
                 INPUT(SyncedMemory, input, nullptr)
                 OUTPUT(std::vector<std::string>, labels, {})
+                APPEND_FLAGS(labels, mo::Unstamped_e)
             MO_END
             virtual void NodeInit(bool firstInit);
             static std::vector<SyncedMemory> WrapBlob(caffe::Blob<float>& blob, bool bgr_swap = false);
@@ -95,7 +96,7 @@ namespace aq
             bool ProcessImpl();
             std::vector<rcc::shared_ptr<Caffe::NetHandler>> net_handlers;
         };
-        
+
         class CaffeDetector: public CaffeBase
         {
         public:
