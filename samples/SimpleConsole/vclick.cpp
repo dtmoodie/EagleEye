@@ -260,19 +260,6 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     auto foreground_link = Wt::WLink(foregroundStream.get());
     auto boundingBox_link = Wt::WLink(boundingBoxStream.get());
 
-    {
-        std::ofstream ofs("./web/bb.json");
-        cereal::JSONOutputArchive ar(ofs);
-        auto bb = g_sink->GetParameter<std::vector<BoundingBox>>("bounding_boxes");
-
-        auto func = mo::SerializationFunctionRegistry::Instance()->
-            GetJsonSerializationFunction(bb->GetTypeInfo());
-        if (func)
-        {
-            func(bb, ar);
-        }
-    }
-
     if (!require("three.js"))
     {
         BOOST_LOG_TRIVIAL(info) << "Unable to open three.js";
@@ -343,6 +330,9 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         render_window = new Wt::WText(container);
         
         render_window->doJavaScript(js);
+    }else
+    {
+        LOG(error) <<"Unable to open ../render_script.txt";
     }
     
 }

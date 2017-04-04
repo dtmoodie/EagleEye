@@ -1,8 +1,8 @@
 #pragma once
 
-namespace EagleLib
+namespace aq
 {
-    class PLUGIN_EXPORTS initializer_NI2
+    class initializer_NI2
     {
         initializer_NI2();
     public:

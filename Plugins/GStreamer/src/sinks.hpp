@@ -52,7 +52,7 @@ namespace aq
             MO_DERIVE(JPEGSink, Node)
                 PARAM(std::string, gstreamer_pipeline, "");
                 OUTPUT(cv::Mat, jpeg_buffer, cv::Mat());
-                OUTPUT(cv::Mat, decoded, cv::Mat());
+                OUTPUT(aq::SyncedMemory, decoded, {});
             MO_END;
         protected:
             bool ProcessImpl();

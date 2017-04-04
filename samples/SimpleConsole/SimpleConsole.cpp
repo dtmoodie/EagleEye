@@ -754,6 +754,9 @@ int main(int argc, char* argv[])
                         stream->GetRelayManager()->Connect(&eos_slot, "eos");
                     }
                 }
+            }else
+            {
+                std::cout << "Load of " << file << " failed";
             }
         }, std::placeholders::_1));
         _slots.emplace_back(slot);
