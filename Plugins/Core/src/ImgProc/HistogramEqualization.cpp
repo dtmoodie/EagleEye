@@ -53,7 +53,7 @@ bool CLAHE::ProcessImpl()
     cv::cuda::GpuMat output;
     cv::cuda::merge(channels, hsv, Stream());
     cv::cuda::cvtColor(hsv, output, cv::COLOR_HSV2BGR, 0, Stream());
-    output_param.UpdateData(output, input_param.GetTimestamp(), _ctx);
+    output_param.UpdateData(output, mo::tag::_timestamp = input_param.GetTimestamp(), mo::tag::_context = _ctx);
     return true;
 }
 

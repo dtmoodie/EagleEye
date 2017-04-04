@@ -46,7 +46,7 @@ cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     for(int i = 1; i < _parameters.size(); ++i)
     {
         auto param = dynamic_cast<Parameters::ITypedParameter<boost::function<void(void)>>*>(_parameters[i]);
-        
+
         if(param)
         {
             if(param->Data() == nullptr)
@@ -119,6 +119,7 @@ void ExportRegionsOfInterest::NodeInit(bool firstInit)
     output.SetContext(_ctx);
     output.SetName("output");
     output.SetFlags(mo::ParameterType::Output_e);
+    output.AppendFlags(mo::Unstamped_e);
     AddParameter(&output);
 }
 

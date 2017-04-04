@@ -38,7 +38,6 @@ int findNextIndex(const std::string& dir, const std::string& extension, const st
                 }
             }
         }
-        output_directory_param._modified = false;
     }
     return frame_count;
 }
@@ -81,7 +80,7 @@ std::vector<DetectedObject> pruneDetections(const std::vector<DetectedObject>& i
 
 bool DetectionWriter::ProcessImpl()
 {
-    if(output_directory_param.modified)
+    if(output_directory_param._modified)
     {
         if(!boost::filesystem::exists(output_directory))
         {
@@ -93,7 +92,7 @@ bool DetectionWriter::ProcessImpl()
             int img_count = findNextIndex(output_directory.string(), ".png", image_stem);
             frame_count = std::max(img_count, std::max(json_count, frame_count));
         }
-        output_directory_param.modified = false;
+        output_directory_param._modified = false;
     }
     auto detections = pruneDetections(*this->detections, object_class);
 
@@ -155,7 +154,7 @@ DetectionWriterFolder::~DetectionWriterFolder()
 
 bool DetectionWriterFolder::ProcessImpl()
 {
-    if(root_dir_param.modified)
+    if(root_dir_param._modified)
     {
         for(int i = 0; i < labels->size(); ++i)
         {
@@ -171,7 +170,7 @@ bool DetectionWriterFolder::ProcessImpl()
         }
         if(start_count != -1)
             _frame_count = start_count;
-        root_dir_param.modified = false;
+        root_dir_param._modified = false;
         _per_class_count.clear();
         _per_class_count.resize(labels->size(), 0);
     }
