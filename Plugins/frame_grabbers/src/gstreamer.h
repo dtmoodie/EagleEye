@@ -9,25 +9,18 @@ namespace aq
 {
     namespace Nodes
     {
-        class frame_grabbers_EXPORT frame_grabber_gstreamer: public frame_grabber_cv
+        class frame_grabbers_EXPORT GrabberGstreamer: public GrabberCV
         {
         public:
-            MO_DERIVE(frame_grabber_gstreamer, frame_grabber_cv)
+            MO_DERIVE(GrabberGstreamer, GrabberCV)
                 PARAM(bool, loop, true);
                 MO_SIGNAL(void, eof);
             MO_END;
 
-            frame_grabber_gstreamer();
-            ~frame_grabber_gstreamer();
-            virtual bool LoadFile(const std::string& file_path);
-            virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
-            TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
-            static int CanLoadDocument(const std::string& document);
-            static std::vector<std::string> ListLoadableDocuments();
-        protected:
-            rcc::shared_ptr<ICoordinateManager>     coordinate_manager;
-            std::string                             loaded_file;
-            TS<SyncedMemory>                        current_frame;
+            bool Load(const std::string& file_path);
+            
+            static int CanLoad(const std::string& document);
+            static void ListPaths(std::vector<std::string>& paths);
         };
     }
 }

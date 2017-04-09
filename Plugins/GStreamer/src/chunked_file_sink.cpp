@@ -5,21 +5,18 @@
 using namespace aq;
 
 
-int chunked_file_sink::CanLoadDocument(const std::string& document)
+int chunked_file_sink::CanLoad(const std::string& document)
 {
     return 0; // Currently needs to be manually specified
 }
-int chunked_file_sink::LoadTimeout()
+int chunked_file_sink::Timeout()
 {
     return 3000;
 }
 
-
-
 GstFlowReturn chunked_file_sink::on_pull()
 {
     GstSample *sample = gst_base_sink_get_last_sample(GST_BASE_SINK(_appsink));
-    //g_signal_emit_by_name(_appsink, "pull-sample", &sample, NULL);
     if(sample)
     {
         GstBuffer *buffer;
@@ -54,7 +51,7 @@ GstFlowReturn chunked_file_sink::on_pull()
     }
     return GST_FLOW_OK;
 }
-bool chunked_file_sink::LoadFile(const std::string& file_path)
+bool chunked_file_sink::Load(const std::string& file_path)
 {
     if(gstreamer_src_base::create_pipeline(file_path))
     {
@@ -67,28 +64,11 @@ bool chunked_file_sink::LoadFile(const std::string& file_path)
     }
     return false;
 }
-TS<SyncedMemory> chunked_file_sink::GetCurrentFrame(cv::cuda::Stream& stream)
-{
-    return TS<SyncedMemory>();
-}
-long long chunked_file_sink::GetNumFrames()
-{
-    return -1;
-}
 
-rcc::shared_ptr<aq::ICoordinateManager> chunked_file_sink::GetCoordinateManager()
-{
-    return rcc::shared_ptr<aq::ICoordinateManager>();
-}
-
-bool chunked_file_sink::ProcessImpl()
-{
-    return false;
-}
 
 MO_REGISTER_CLASS(chunked_file_sink);
 
-int JpegKeyframer::CanLoadDocument(const std::string& doc)
+int JpegKeyframer::CanLoad(const std::string& doc)
 {
     if(doc.find("http") != std::string::npos && doc.find("mjpg") != std::string::npos)
     {
@@ -97,12 +77,12 @@ int JpegKeyframer::CanLoadDocument(const std::string& doc)
     return 0;
 }
 
-int JpegKeyframer::LoadTimeout()
+int JpegKeyframer::Timeout()
 {
     return 10000;
 }
 
-bool JpegKeyframer::LoadFile(const std::string& file_path)
+bool JpegKeyframer::Load(const std::string& file_path)
 {
     std::stringstream pipeline;
     pipeline << "souphttpsrc location=" << file_path;
@@ -135,27 +115,7 @@ GstFlowReturn JpegKeyframer::on_pull()
     }
     return GST_FLOW_OK;
 }
-    
-bool JpegKeyframer::ProcessImpl()
-{
-    return true;
-}
-TS<SyncedMemory> JpegKeyframer::GetCurrentFrame(cv::cuda::Stream& stream)
-{
-    return TS<SyncedMemory>();
-}
-long long JpegKeyframer::GetNumFrames()
-{
-    return -1;
-}
-long long JpegKeyframer::GetFrameNum()
-{
-    return keyframe_count;
-}
-rcc::shared_ptr<ICoordinateManager> JpegKeyframer::GetCoordinateManager()
-{
-    return rcc::shared_ptr<ICoordinateManager>();
-}
+
 MO_REGISTER_CLASS(JpegKeyframer);
 
 using namespace aq::Nodes;

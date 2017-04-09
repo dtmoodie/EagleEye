@@ -56,6 +56,15 @@ void PrintNodeTree(aq::Nodes::Node* node, int depth)
     }
 }
 
+std::ostream& operator<<(std::ostream& os, const std::vector<std::string>& strs)
+{
+    for( const auto & str : strs)
+    {
+        os << str << "\n ";
+    }
+    return os;
+}
+
 void PrintBuffers(aq::Nodes::Node* node, std::vector<std::string>& printed_nodes)
 {
     std::string name = node->GetTreeName();
@@ -411,7 +420,7 @@ int main(int argc, char* argv[])
                     auto fg_info = dynamic_cast<aq::Nodes::IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
                     if(fg_info)
                     {
-                        auto documents = fg_info->ListLoadableDocuments();
+                        auto documents = fg_info->ListLoadablePaths();
                         for(auto& document : documents)
                         {
                             std::cout << " - " << index << "  [" << fg_info->GetObjectName() << "] " << document << "\n";
@@ -470,7 +479,7 @@ int main(int argc, char* argv[])
                     {
                         if(auto frame_grabber = fg.DynamicCast<aq::Nodes::IFrameGrabber>())
                         {
-                            std::cout << " - " << frame_grabber->GetPerTypeId() << " - " << frame_grabber->GetSourceFilename() << "\n";
+                            std::cout << " - " << frame_grabber->GetPerTypeId() << " - " << frame_grabber->loaded_document << "\n";
                         }
                         else
                         {
@@ -563,7 +572,7 @@ int main(int argc, char* argv[])
                     {
                         if(auto f_g = fg.DynamicCast<aq::Nodes::IFrameGrabber>())
                         {
-                            std::cout << " - Datasource: " << f_g->GetSourceFilename() << "\n";
+                            std::cout << " - Datasource: " << f_g->loaded_document << "\n";
                         }
                     }
                 }

@@ -424,7 +424,7 @@ void WebUi::updatePlots()
 {
     if(bandwidthRawUpdated && bandwidthThrottledUpdated)
     {
-        timestamp.push_back(++current_timestamp);
+        timestamp.push_back(++current_framenumber);
         /*if(int(current_timestamp) % update_frequency == 0)
         {
             size_t num_samples = std::min(std::min(timestamp.size(), bandwidth_raw.size()), bandwidth_throttled.size());
@@ -459,7 +459,7 @@ void WebUi::updatePlots()
         }*/
         if(bandwidth_raw.size() == bandwidth_raw.capacity() &&
             bandwidth_throttled.size() == bandwidth_throttled.capacity() &&
-            int(current_timestamp) % update_frequency == 0)
+            int(current_framenumber) % update_frequency == 0)
         {
             cv::Mat plot(500, 500, CV_8UC3);
             plot.setTo(cv::Scalar(0, 0, 0));

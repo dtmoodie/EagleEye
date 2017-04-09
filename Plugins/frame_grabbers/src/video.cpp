@@ -4,7 +4,7 @@
 #include <ObjectInterfacePerModule.h>
 using namespace aq;
 using namespace aq::Nodes;
-frame_grabber_video::~frame_grabber_video()
+/*frame_grabber_video::~frame_grabber_video()
 {
     StopThreads();
 }
@@ -21,3 +21,4 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_video::GetCoordinateManager()
 }
 
 MO_REGISTER_CLASS(frame_grabber_video);
+*/
