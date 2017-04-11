@@ -5,7 +5,7 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-frame_grabber_directory::frame_grabber_directory()
+/*frame_grabber_directory::frame_grabber_directory()
 {
     frame_index = 0;
 }
@@ -32,7 +32,7 @@ void frame_grabber_directory::NodeInit(bool firstInit)
     {
         frame_index = 0;
         updateParameter("Frame Index", 0);
-    });*/
+    });
 }
 void frame_grabber_directory::Serialize(ISimpleSerializer* pSerializer)
 {
@@ -126,7 +126,7 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     if(index == files_on_disk.size() - 1)
         sig_eos();
     if(files_on_disk.empty())
-        return TS<SyncedMemory>(0.0, (long long)0);
+        return TS<SyncedMemory>(mo::time_t(0.0 * mo::ms), (size_t)0);
     if(index >= files_on_disk.size())
         index = static_cast<int>(files_on_disk.size() - 1);
     std::string file_name = files_on_disk[index];
@@ -134,11 +134,11 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     cv::Mat h_out = cv::imread(file_name);
 
     if(h_out.empty())
-        return TS<SyncedMemory>(0.0, (long long)0);
+        return TS<SyncedMemory>(mo::time_t(0.0*mo::ms), (size_t)0);
 
     this->_modified = true;
 
-    return TS<SyncedMemory>(0.0, (long long)index, h_out);
+    return TS<SyncedMemory>(mo::time_t(0.0 * mo::ms), (size_t)index, h_out);
 }
 
 TS<SyncedMemory> frame_grabber_directory::GetNextFrame(cv::cuda::Stream& stream)
@@ -209,3 +209,4 @@ int frame_grabber_directory::CanLoadDocument(const std::string& document)
 
 
 MO_REGISTER_CLASS(frame_grabber_directory);
+*/

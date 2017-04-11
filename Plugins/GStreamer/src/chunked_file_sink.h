@@ -5,43 +5,37 @@
 
 namespace aq
 {
-    class PLUGIN_EXPORTS chunked_file_sink: virtual public gstreamer_src_base, virtual public Nodes::FrameGrabberBuffered
+    class PLUGIN_EXPORTS chunked_file_sink: 
+        virtual public gstreamer_src_base, 
+        virtual public Nodes::IGrabber
     {
-    protected:
-        GstElement* _filesink;
     public:
-        MO_DERIVE(chunked_file_sink, Nodes::FrameGrabberBuffered)
-            PARAM(size_t, chunk_size, 10 * 1024 * 1024);
+        static int CanLoad(const std::string& doc);
+        static int Timeout();
+        MO_DERIVE(chunked_file_sink, Nodes::IGrabber)
+            PARAM(size_t, chunk_size, 10 * 1024 * 1024)
         MO_END;
-
-        static int CanLoadDocument(const std::string& doc);
-        static int LoadTimeout();
-
-        virtual bool LoadFile(const std::string& file_path);
-        virtual long long GetNumFrames();
-        virtual rcc::shared_ptr<aq::ICoordinateManager> GetCoordinateManager();
-        //virtual void Init(bool firstInit);
+        virtual bool Load(const std::string& file_path);
         virtual GstFlowReturn on_pull();
-        bool ProcessImpl();
-        virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
+    protected:
+        bool Grab(){return true;}
+        GstElement* _filesink;
     };
 
-    class PLUGIN_EXPORTS JpegKeyframer: virtual public gstreamer_src_base, virtual public Nodes::FrameGrabberBuffered
+    class PLUGIN_EXPORTS JpegKeyframer:
+        virtual public gstreamer_src_base,
+        virtual public Nodes::IGrabber
     {
     public:
-        MO_DERIVE(JpegKeyframer, Nodes::FrameGrabberBuffered);
-            PROPERTY(long long, keyframe_count, 0);
+        MO_DERIVE(JpegKeyframer, Nodes::IGrabber)
+            PROPERTY(long long, keyframe_count, 0)
         MO_END;
-        static int CanLoadDocument(const std::string& doc);
-        static int LoadTimeout();
-        TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
-        long long GetNumFrames();
-        long long GetFrameNum();
-        bool LoadFile(const std::string& file_path);
+        static int CanLoad(const std::string& doc);
+        static int Timeout();
+        bool Load(const std::string& file_path);
         GstFlowReturn on_pull();
-        rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
     protected:
-        bool ProcessImpl();
+        bool Grab(){return true;}
     };
     namespace Nodes
     {

@@ -6,7 +6,7 @@ namespace aq
 {
     namespace Nodes
     {
-    class frame_grabber_video : public frame_grabber_cv
+    /*class frame_grabber_video : public frame_grabber_cv
     {
     public:
         ~frame_grabber_video();
@@ -16,6 +16,6 @@ namespace aq
         static int CanLoadDocument(const std::string& document);
     protected:
         rcc::shared_ptr<ICoordinateManager>          coordinate_manager;
-    };
+    };*/
     }
 }

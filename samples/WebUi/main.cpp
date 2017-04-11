@@ -293,7 +293,7 @@ protected:
               auto fg_info = dynamic_cast< IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
               if (fg_info)
               {
-                  auto documents = fg_info->ListLoadableDocuments();
+                  auto documents = fg_info->ListLoadablePaths();
                   std::string fg_name = fg_info->GetDisplayName();
                   for(auto document : documents)
                   {

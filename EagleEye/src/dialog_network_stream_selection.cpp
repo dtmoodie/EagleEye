@@ -23,7 +23,7 @@ dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent
             auto fg_info = dynamic_cast<aq::Nodes::FrameGrabberInfo*>(info);
             if(fg_info)
             {
-                auto devices = fg_info->ListLoadableDocuments();
+                auto devices = fg_info->ListLoadablePaths();
                 if(devices.size())
                 {
                     for(auto& device : devices)

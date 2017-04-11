@@ -5,12 +5,9 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-frame_grabber_html5::frame_grabber_html5()
-{
 
-}
 
-bool frame_grabber_html5::LoadFile(const std::string& file_path)
+bool GrabberHTML::Load(const std::string& file_path)
 {
     std::string http("http://");
     if (file_path.compare(0, http.length(), http) == 0)
@@ -26,19 +23,12 @@ bool frame_grabber_html5::LoadFile(const std::string& file_path)
             ss << host;
             ss << ip;
         }
-
-        //h_LoadFile("tcpclientsrc ")
     }
     return false;
 }
 
-rcc::shared_ptr<ICoordinateManager> frame_grabber_html5::GetCoordinateManager()
-{
-    return rcc::shared_ptr<ICoordinateManager>();
-}
 
-
-int frame_grabber_html5::CanLoadDocument(const std::string& document)
+int GrabberHTML::CanLoad(const std::string& document)
 {
     std::string http("http://");
     if (document.compare(0, http.length(), http) == 0)

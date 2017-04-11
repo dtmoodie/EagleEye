@@ -1,64 +1,33 @@
 #include "image.h"
 #include "precompiled.hpp"
 #include <opencv2/imgcodecs.hpp>
+#include "Aquila/Nodes/GrabberInfo.hpp"
 
 
 using namespace aq;
-using namespace ::aq::Nodes;
+using namespace aq::Nodes;
 
-bool frame_grabber_image::LoadFile(const ::std::string& file_path)
+bool GrabberImage::Load(const std::string& path)
 {
-    h_image = cv::imread(file_path);
-    if(!h_image.empty())
+    image = cv::imread(path);
+    if(!image.empty())
     {
-        d_image.upload(h_image);
-        loaded_file = file_path;
+        output_param.UpdateData(image);
+        return true;
+    }
+    return false;
+}
+bool GrabberImage::Grab()
+{
+    if(!image.empty())
+    {
+        output_param.UpdateData(image);
         return true;
     }
     return false;
 }
 
-long long frame_grabber_image::GetFrameNumber()
-{
-    return 0;
-}
-
-long long frame_grabber_image::GetNumFrames()
-{
-    return 1;
-}
-
-::std::string frame_grabber_image::GetSourceFilename()
-{
-    return loaded_file;
-}
-
-TS<SyncedMemory> frame_grabber_image::GetCurrentFrame(cv::cuda::Stream& stream)
-{
-    return GetFrame(0, stream);
-}
-TS<SyncedMemory> frame_grabber_image::GetFrame(int index, cv::cuda::Stream& stream)
-{
-    cv::cuda::GpuMat d_out;
-    cv::Mat h_out;
-    d_image.copyTo(d_out, stream);
-    h_image.copyTo(h_out);
-    return TS<SyncedMemory>(0.0, (long long)0, h_out, d_out);
-}
-TS<SyncedMemory> frame_grabber_image::GetNextFrame(cv::cuda::Stream& stream)
-{
-    return GetFrame(0, stream);
-}
-TS<SyncedMemory> frame_grabber_image::GetFrameRelative(int index, cv::cuda::Stream& stream)
-{
-    return GetFrame(0, stream);
-}
-rcc::shared_ptr<ICoordinateManager> frame_grabber_image::GetCoordinateManager()
-{
-    return coordinate_manager;
-}
-
-int frame_grabber_image::CanLoadDocument(const std::string& document)
+int GrabberImage::CanLoad(const std::string& document)
 {
     auto path = boost::filesystem::path(document);
     auto ext = path.extension().string();
@@ -66,5 +35,10 @@ int frame_grabber_image::CanLoadDocument(const std::string& document)
     return (ext == ".jpg" || ext == ".png" || ext == ".tif") ? 3 : 0;
 }
 
+int GrabberImage::Timeout()
+{
+    return 5000;
+}
 
-MO_REGISTER_CLASS(frame_grabber_image);
+
+MO_REGISTER_CLASS(GrabberImage);

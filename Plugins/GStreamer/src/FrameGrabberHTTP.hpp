@@ -8,23 +8,18 @@ namespace Nodes
 
 class GStreamer_EXPORT FrameGrabberHTTP:
         virtual public gstreamer_src_base,
-        virtual public FrameGrabberBuffered
+        virtual public IGrabber
 {
 public:
-    static int CanLoadDocument(const std::string& doc);
-    static int LoadTimeout(){return 10000;}
+    static int CanLoad(const std::string& doc);
+    static int Timeout(){return 10000;}
 
-    long long GetNumFrames() {return -1;}
-    rcc::shared_ptr<aq::ICoordinateManager> GetCoordinateManager()
-    {
-        return {};
-    }
-
-    MO_DERIVE(FrameGrabberHTTP, FrameGrabberBuffered)
-
+    MO_DERIVE(FrameGrabberHTTP, IGrabber)
+        OUTPUT(SyncedMemory, image, {})
     MO_END;
     virtual GstFlowReturn on_pull();
-    bool LoadFile(const ::std::string& file_path);
+    bool Load(const ::std::string& file_path);
+    bool Grab(){return true;}
 protected:
 };
 
