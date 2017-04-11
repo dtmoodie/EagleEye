@@ -41,7 +41,7 @@ RCC_LINK_LIB(Segmentation
 
 
 IF(TARGET fastms)
-    
+
     add_dependencies(Segmentation fastms)
     RCC_LINK_LIB(Segmentation fastms ${fastms_LIBS})
     TARGET_LINK_LIBRARIES(Segmentation fastms)

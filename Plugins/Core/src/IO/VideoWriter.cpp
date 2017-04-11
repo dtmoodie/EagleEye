@@ -2,14 +2,38 @@
 #include <boost/filesystem.hpp>
 #include "MetaObject/Logging/Profiling.hpp"
 
+
 using namespace aq;
 using namespace aq::Nodes;
 
 
+VideoWriter::~VideoWriter()
+{
+    _write_thread.interrupt();
+    _write_thread.join();
+}
+
 void VideoWriter::NodeInit(bool firstInit)
 {
 
+    _write_thread = boost::thread(
+    [this]()
+    {
+        while(!boost::this_thread::interruption_requested())
+        {
+            cv::Mat mat;
+            if(_write_queue.try_dequeue(mat) && h_writer)
+            {
+                mo::scoped_profile profile("Writing video");
+                h_writer->write(mat);
+            }else
+            {
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+            }
+        }
+    });
 }
+
 bool VideoWriter::ProcessImpl()
 {
     if(image->empty())
@@ -33,7 +57,7 @@ bool VideoWriter::ProcessImpl()
                 using_gpu_writer_param.UpdateData(false);
             }
         }
-        
+
         if(!using_gpu_writer)
         {
             h_writer.reset(new cv::VideoWriter);
@@ -50,11 +74,12 @@ bool VideoWriter::ProcessImpl()
     if(h_writer)
     {
         cv::Mat h_img = image->GetMat(Stream());
-        cuda::enqueue_callback_async([h_img, this]()
+        cuda::enqueue_callback([h_img, this]()
         {
-            mo::scoped_profile profile("Writing video");
-            h_writer->write(h_img);
-        }, _write_thread.GetId(), Stream());
+            _write_queue.enqueue(h_img);
+            //mo::scoped_profile profile("Writing video");
+            //h_writer->write(h_img);
+        },  Stream());
 
     }
     return true;
