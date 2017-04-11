@@ -739,7 +739,7 @@ int main(int argc, char* argv[])
         bool quit_on_eos = vm["quit-on-eos"].as<bool>();
         mo::TypedSlot<void()> eos_slot(std::bind([&quit]()
         {
-            LOG(info) << "End Of Stream received, shutting down";
+            LOG_FIRST_N(info, 1) << "End Of Stream received, shutting down";
             quit = true;
         }));
         std::vector<std::shared_ptr<mo::Connection>> eos_connections;
@@ -1551,8 +1551,11 @@ int main(int argc, char* argv[])
                 }
                 else
                 {
-                    LOG(warning) << "Invalid command: " << command_line;
-                    print_options();
+                    if(command_line.size())
+                    {
+                        LOG(warning) << "Invalid command: " << command_line;
+                        print_options();
+                    }
                 }
 
             }
