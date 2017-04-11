@@ -7,7 +7,7 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-std::vector<std::string> RosSubscriber::ListLoadableDocuments()
+std::vector<std::string> RosSubscriber::ListLoadablePaths()
 {
     return ros::IMessageReader::ListSubscribableTopics();
 }
@@ -16,7 +16,7 @@ int RosSubscriber::CanLoadDocument(const std::string& topic)
     return ros::IMessageReader::CanLoadTopic(topic);
 }
 
-bool RosSubscriber::LoadFile(const std::string& file_path)
+bool RosSubscriber::Load(std::string file_path)
 {
     for(auto reader : _readers)
     {
@@ -35,40 +35,6 @@ bool RosSubscriber::LoadFile(const std::string& file_path)
     return false;
 }
 
-long long RosSubscriber::GetFrameNumber()
-{
-    return 0;
-}
-
-long long RosSubscriber::GetNumFrames()
-{
-    return 0;
-}
-
-TS<SyncedMemory> RosSubscriber::GetCurrentFrame(cv::cuda::Stream& stream)
-{
-    return TS<SyncedMemory>();
-}
-
-TS<SyncedMemory> RosSubscriber::GetFrame(int index, cv::cuda::Stream& stream)
-{
-    return TS<SyncedMemory>();
-}
-
-TS<SyncedMemory> RosSubscriber::GetNextFrame(cv::cuda::Stream& stream)
-{
-    return TS<SyncedMemory>();
-}
-
-TS<SyncedMemory> RosSubscriber::GetFrameRelative(int index, cv::cuda::Stream& stream)
-{
-    return TS<SyncedMemory>();
-}
-
-rcc::shared_ptr<ICoordinateManager> RosSubscriber::GetCoordinateManager()
-{
-    return rcc::shared_ptr<ICoordinateManager>();
-}
 
 void RosSubscriber::AddComponent(rcc::weak_ptr<Algorithm> component)
 {

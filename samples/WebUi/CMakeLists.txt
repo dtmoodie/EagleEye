@@ -15,8 +15,9 @@ if(Wt_FOUND)
     optimized;${Wt_LIBRARY}
     optimized;${Wt_HTTP_LIBRARY}
   )
-  TARGET_COMPILE_OPTIONS(WebUi PUBLIC "/bigobj")
+
   IF(WIN32)
+  TARGET_COMPILE_OPTIONS(WebUi PUBLIC "/bigobj")
   set(PROJECT_BIN_DIRS_DEBUG "")
   set(PROJECT_BIN_DIRS_RELEASE "")
   set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")

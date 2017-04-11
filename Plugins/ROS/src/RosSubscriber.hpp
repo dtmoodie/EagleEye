@@ -10,18 +10,12 @@ namespace aq
         class ROS_EXPORT RosSubscriber : public IFrameGrabber
         {
         public:
-            static std::vector<std::string> ListLoadableDocuments();
+            static std::vector<std::string> ListLoadablePaths();
             static int CanLoadDocument(const std::string& topic);
+            static int LoadTimeout(){return 10000;}
             MO_DERIVE(RosSubscriber, IFrameGrabber)
             MO_END
-            bool LoadFile(const std::string& file_path);
-            long long GetFrameNumber();
-            long long GetNumFrames();
-            TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
-            TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
-            TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
-
-            TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
+            bool Load(std::string file_path);
 
             rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
             void AddComponent(rcc::weak_ptr<Algorithm> component);
