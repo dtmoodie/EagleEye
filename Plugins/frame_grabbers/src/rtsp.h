@@ -7,28 +7,15 @@ namespace aq
 {
     namespace Nodes
     {
-    
-    class frame_grabbers_EXPORT frame_grabber_rtsp: public frame_grabber_gstreamer
+        
+    class frame_grabbers_EXPORT GrabberRTSP: public GrabberGstreamer
     {
     public:
-        
-        frame_grabber_rtsp();
-        virtual void NodeInit(bool firstInit);
-        virtual bool LoadFile(const std::string& file_path = "");
-        virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
-
-        virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
-
-        MO_DERIVE(frame_grabber_rtsp, frame_grabber_gstreamer)
-            MO_SLOT(void, seek_relative_msec, double);
+        MO_DERIVE(GrabberRTSP, GrabberGstreamer)
         MO_END;
-
-        static int CanLoadDocument(const std::string& document);
-        static int LoadTimeout();
-    protected:
-        rcc::shared_ptr<ICoordinateManager>          coordinate_manager;
-        size_t frame_count;
-        bool _reconnect;
+        bool Load(const std::string& file_path);
+        static int CanLoad(const std::string& document);
+        static int Timeout();
     };
     }
 }

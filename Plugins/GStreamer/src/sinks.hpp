@@ -38,7 +38,7 @@ namespace aq
             bool _initialized = false;
         };
 
-        class GStreamer_EXPORT BufferedHeartbeatRtsp : public FrameGrabberBuffered, public gstreamer_src_base
+        class GStreamer_EXPORT BufferedHeartbeatRtsp : public IGrabber, public gstreamer_src_base
         {
         public:
             virtual void NodeInit(bool firstInit);

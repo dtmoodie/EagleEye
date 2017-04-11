@@ -66,7 +66,7 @@ namespace vclick
 
         bool bandwidthRawUpdated = false;
         bool bandwidthThrottledUpdated = false;
-        double current_timestamp = 0.0;
+        size_t current_framenumber = 0;
         Wt::WBatchEditProxyModel* model_proxy;
         Wt::WStandardItemModel* model;
         Wt::Chart::WCartesianChart *chart;

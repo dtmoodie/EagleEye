@@ -4,14 +4,14 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-int FrameGrabberHTTP::CanLoadDocument(const std::string& doc)
+int FrameGrabberHTTP::CanLoad(const std::string& doc)
 {
     if(doc.find("http://") != std::string::npos)
         return 10;
     return 0;
 }
 
-bool FrameGrabberHTTP::LoadFile(const ::std::string& file_path_)
+bool FrameGrabberHTTP::Load(const ::std::string& file_path_)
 {
     std::stringstream ss;
     auto pos = file_path_.find("http://");
@@ -83,7 +83,8 @@ GstFlowReturn FrameGrabberHTTP::on_pull()
         {
             cv::Mat mapped(height, width, CV_8UC3);
             memcpy(mapped.data, map.data, map.size);
-            PushFrame(TS<SyncedMemory>(0.0, (long long) buffer->pts, mapped));
+            image_param.UpdateData(mapped, mo::tag::_timestamp = mo::time_t(buffer->pts * mo::ns));
+            //PushFrame(TS<SyncedMemory>(0.0, (long long) buffer->pts, mapped));
         }
         gst_sample_unref (sample);
     }

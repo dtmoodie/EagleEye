@@ -6,30 +6,56 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-
-int frame_grabber_rtsp::CanLoadDocument(const std::string& document)
+int GrabberRTSP::CanLoad(const std::string& document)
 {
     std::string rtsp("rtsp");
-    if(document.compare(0, rtsp.length(), rtsp) == 0)
+    if (document.compare(0, rtsp.length(), rtsp) == 0)
     {
         return 10;
     }
     return 0;
 }
-
-int frame_grabber_rtsp::LoadTimeout()
+int GrabberRTSP::Timeout()
 {
     return 10000;
 }
-
-frame_grabber_rtsp::frame_grabber_rtsp():
-    frame_grabber_gstreamer()
+bool GrabberRTSP::Load(const std::string& file_path)
 {
-    frame_count = 0;
-    _reconnect = false;
-    _is_stream = true;
+    //rtspsrc location=rtsp://root:12369pp@192.168.1.52:554/axis-media/media.amp ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink
+    std::string file_to_load;
+    if (loaded_document.size() && !file_path.size())
+        file_to_load = loaded_document;
+    else
+        file_to_load = file_path;
+#ifdef JETSON
+    std::string gstreamer_string = "rtspsrc location=" + file_path + " ! rtph264depay ! h264parse ! omxh264dec ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
+#else
+    std::string gstreamer_string = "rtspsrc location=" + file_to_load + " ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw ! appsink";
+#endif
+
+    h_cam.release();
+    LOG(info) << "Attemping to load " << file_to_load;
+    LOG(debug) << "Gstreamer string: " << gstreamer_string;
+    try
+    {
+        h_cam.reset(new cv::VideoCapture());
+        if (h_cam)
+        {
+            if (h_cam->open(gstreamer_string, cv::CAP_GSTREAMER))
+            {
+                loaded_document = file_to_load;
+                
+                return true;
+            }
+        }
+    }
+    catch (cv::Exception& e)
+    {
+    }
+    return false;
 }
 
+/*
 TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
 {
     if(_reconnect)
@@ -45,7 +71,7 @@ TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
                 {
                     cv::cuda::GpuMat d_mat;
                     d_mat.upload(h_mat, stream);
-                    current_frame = TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (long long)frame_count++, h_mat, d_mat);
+                    current_frame = TS<SyncedMemory>(mo::time_t(mo::ms*h_cam->get(cv::CAP_PROP_POS_MSEC)), (size_t)frame_count++, h_mat, d_mat);
                     return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
                 }
             }
@@ -130,5 +156,5 @@ rcc::shared_ptr<ICoordinateManager> frame_grabber_rtsp::GetCoordinateManager()
 }
 
 MO_REGISTER_CLASS(frame_grabber_rtsp);
-
+*/
 #endif

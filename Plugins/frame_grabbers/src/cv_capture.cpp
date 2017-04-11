@@ -1,10 +1,15 @@
 #include "cv_capture.h"
 #include "precompiled.hpp"
+#include "Aquila/Nodes/GrabberInfo.hpp"
+
 #if _MSC_VER
 RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
 #endif
 using namespace aq;
 using namespace aq::Nodes;
+
+
+
 
 template <class T> void SafeRelease(T **ppT)
 {
@@ -16,25 +21,19 @@ template <class T> void SafeRelease(T **ppT)
 }
 
 
-frame_grabber_cv::frame_grabber_cv():
-    FrameGrabberThreaded()
+bool GrabberCV::Load(const std::string& file_path)
 {
-    playback_frame_number = -1;
-}
-
-bool frame_grabber_cv::LoadFile(const std::string& file_path)
-{
-    if(d_LoadFile(file_path))
+    if(LoadGPU(file_path))
     {
         return true;
     }else
     {
-        return h_LoadFile(file_path);
+        return LoadCPU(file_path);
     }
     return false;
 }
 
-bool frame_grabber_cv::d_LoadFile(const std::string& file_path)
+bool GrabberCV::LoadGPU(const std::string& file_path)
 {
     d_cam.release();
     try
@@ -54,17 +53,11 @@ bool frame_grabber_cv::d_LoadFile(const std::string& file_path)
     return false;
 }
 
-bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
+bool GrabberCV::LoadCPU(const std::string& file_path)
 {
     h_cam.release();
     //LOG(info) << "Attemping to load " << file_path;
-    BOOST_LOG_TRIVIAL(info ) << "[" << GetTreeName() << "::h_loadFile] Trying to load: \"" << file_path << "\"";
-    boost::mutex::scoped_lock lock(buffer_mtx);
-
-    frame_buffer.clear();
-    buffer_begin_frame_number = 0;
-    buffer_end_frame_number = 0;
-    playback_frame_number = -1;
+    BOOST_LOG_TRIVIAL(info ) << "[" << GetTypeName() << "::h_loadFile] Trying to load: \"" << file_path << "\"";
     try
     {
         h_cam.reset(new cv::VideoCapture());
@@ -81,7 +74,6 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
                 if (h_cam->open(file_path))
                 {
                     loaded_document = file_path;
-                    playback_frame_number = 0;
                     return true;
                 }
             }
@@ -90,7 +82,7 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
                 if (h_cam->open(index))
                 {
                     loaded_document = file_path;
-                    playback_frame_number = 0;
+                    initial_time = boost::posix_time::microsec_clock::universal_time();
                     return true;
                 }
             }
@@ -103,77 +95,62 @@ bool frame_grabber_cv::h_LoadFile(const std::string& file_path)
     return false;
 }
 
-long long frame_grabber_cv::GetNumFrames()
+bool GrabberCV::Grab()
 {
-    if (d_cam)
+    if(d_cam)
     {
-        return -1;
-    }
-    if (h_cam)
-    {
-        return h_cam->get(cv::CAP_PROP_FRAME_COUNT);
-    }
-    return -1;
-}
-
-TS<SyncedMemory> frame_grabber_cv::GetCurrentFrame(cv::cuda::Stream& stream)
-{
-    return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
-}
-
-TS<SyncedMemory> frame_grabber_cv::GetFrameImpl(int index, cv::cuda::Stream& stream)
-{
-    if (d_cam)
-    {
-
-    }
-    if (h_cam)
-    {
-        if (h_cam->set(cv::CAP_PROP_POS_FRAMES, index))
+        cv::cuda::GpuMat img;
+        if(d_cam->nextFrame(img))
         {
-            return GetNextFrameImpl(stream);
+            image_param.UpdateData(img);
+            return true;
         }
-    }
-    return TS<SyncedMemory>();
-}
-
-TS<SyncedMemory> frame_grabber_cv::GetNextFrameImpl(cv::cuda::Stream& stream)
-{
-    if (d_cam)
+    }else if(h_cam)
     {
-
-    }
-    if (h_cam)
-    {
-        cv::Mat h_mat;
-        if (h_cam->read(h_mat))
+        cv::Mat img;
+        if(h_cam->read(img))
         {
-            if (!h_mat.empty())
+            double fn = h_cam->get(CV_CAP_PROP_POS_FRAMES);
+            double ts_ = h_cam->get(CV_CAP_PROP_POS_MSEC);
+            mo::time_t ts;
+            
+            if(ts_ == -1)
             {
-                got_frame = true;
-                cv::cuda::GpuMat d_mat;
-                d_mat.upload(h_mat, stream);
-                return TS<SyncedMemory>(h_cam->get(cv::CAP_PROP_POS_MSEC), (long long)h_cam->get(cv::CAP_PROP_POS_FRAMES), h_mat, d_mat);
+                ts = mo::time_t((boost::posix_time::microsec_clock::universal_time() - initial_time).total_microseconds() * mo::ms);
             }else
             {
-                if(got_frame)
-                    sig_eos();
+                ts = mo::time_t(ts_* mo::ms);
             }
+            if(fn == -1)
+            {
+                image_param.UpdateData(img, mo::tag::_timestamp = ts, _ctx);
+            }else
+            {
+                image_param.UpdateData(img, mo::tag::_timestamp = ts, mo::tag::_frame_number = fn, _ctx);
+            }
+            return true;
         }
-        if(got_frame)
-            sig_eos();
     }
-    return TS<SyncedMemory>();
+    return false;
 }
 
+class GrabberCamera:public GrabberCV
+{
+public:
+    MO_DERIVE(GrabberCamera, GrabberCV)
 
-frame_grabber_camera::frame_grabber_camera()
+    MO_END;
+    bool Load(const std::string& path);
+    static void ListPaths(std::vector<std::string>& paths);
+    static int CanLoad(const std::string& doc);
+    static int Timeout()
+    {
+        return 5000;
+    }
+};  
+
+void GrabberCamera::ListPaths(std::vector<std::string>& paths)
 {
-    this->_is_stream = true;
-}
-::std::vector<::std::string> frame_grabber_camera::ListLoadableDocuments()
-{
-    ::std::vector<::std::string> output;
 #ifdef _MSC_VER
     MFStartup(MF_VERSION);
     HRESULT hr = S_OK;
@@ -192,7 +169,7 @@ frame_grabber_camera::frame_grabber_camera()
         hr = pAttributes->SetGUID(
             MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
             MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID
-            );
+        );
     }
     // Enumerate devices.
     if (SUCCEEDED(hr))
@@ -207,9 +184,9 @@ frame_grabber_camera::frame_grabber_camera()
             MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,
             &ppszName,
             NULL
-            );
+        );
         std::wstring wstring(ppszName);
-        output.push_back(boost::lexical_cast<std::string>(i) + " - " + std::string(wstring.begin(), wstring.end()));
+        paths.push_back(boost::lexical_cast<std::string>(i) + " - " + std::string(wstring.begin(), wstring.end()));
     }
 
 
@@ -230,109 +207,91 @@ frame_grabber_camera::frame_grabber_camera()
 
 
 #endif
-    return output;
 }
-int frame_grabber_camera::CanLoadDocument(const std::string& doc)
+
+int GrabberCamera::CanLoad(const std::string& doc)
 {
     auto pos = doc.find(" - ");
-    if(pos != std::string::npos)
+    if (pos != std::string::npos)
     {
         int index = 0;
-        if(boost::conversion::detail::try_lexical_convert(doc.substr(pos), index))
-        {
-            return 10;
-        }
-    }else
-    {
-        int index = 0;
-        if(boost::conversion::detail::try_lexical_convert(doc, index))
+        if (boost::conversion::detail::try_lexical_convert(doc.substr(pos), index))
         {
             return 10;
         }
     }
-    auto cameras = ListLoadableDocuments();
-    for(const auto& camera : cameras)
+    else
     {
-        if(camera == doc)
+        int index = 0;
+        if (boost::conversion::detail::try_lexical_convert(doc, index))
+        {
+            return 10;
+        }
+    }
+    std::vector<std::string> cameras;
+    ListPaths(cameras);
+    for (const auto& camera : cameras)
+    {
+        if (camera == doc)
             return 10;
     }
     return 0;
 }
-rcc::shared_ptr<ICoordinateManager> frame_grabber_camera::GetCoordinateManager()
-{
-    return rcc::shared_ptr<ICoordinateManager>();
-}
-TS<SyncedMemory> frame_grabber_camera::GetNextFrameImpl(cv::cuda::Stream& stream)
-{
-    if (d_cam)
-    {
 
-    }
-    if (h_cam)
-    {
-        cv::Mat h_mat;
-        if (h_cam->read(h_mat))
-        {
-            if (!h_mat.empty())
-            {
-                cv::cuda::GpuMat d_mat;
-                d_mat.upload(h_mat, stream);
-                return TS<SyncedMemory>(0.0, current_timestamp++, h_mat, d_mat);
-            }else
-            {
-                LOG_EVERY_N(warning, 90) << "h_cam->read returned empty frame";
-            }
-        }else
-        {
-            LOG_EVERY_N(warning, 90) << "h_cam->read(h_mat) failed";
-        }
-    }
-    if(!d_cam && !h_cam)
-    {
-        LOG_EVERY_N(warning, 10000) << "no video capture device specified";
-    }
-    return TS<SyncedMemory>();
-}
-bool frame_grabber_camera::LoadFile(const std::string& file_path)
+bool GrabberCamera::Load(const std::string& file_path)
 {
     int index = 0;
-    if(boost::conversion::detail::try_lexical_convert(file_path, index))
+    if (boost::conversion::detail::try_lexical_convert(file_path, index))
     {
         h_cam.reset(new cv::VideoCapture(index));
+        initial_time = boost::posix_time::microsec_clock::universal_time();
         return true;
-    }else
+    }
+    else
     {
         index = 0;
     }
-    auto cameras = ListLoadableDocuments();
-    for(auto camera : cameras)
+    std::vector<std::string> cameras;
+    ListPaths(cameras);
+    for(int i = 0; i < cameras.size(); ++i)
     {
-        if(camera == file_path)
+        if (cameras[i] == file_path)
         {
             h_cam.reset(new cv::VideoCapture());
-            return h_cam->open(index);
+            
+            if(h_cam->open(i))
+            {
+                initial_time = boost::posix_time::microsec_clock::universal_time();
+                return true;
+            }
         }
         ++index;
     }
-    auto func = [&cameras]() 
+    auto func = [&cameras]()
     {
-        std::stringstream ss; 
-        for (auto& cam : cameras) 
-            ss << cam << ", "; 
-        return ss.str(); 
+        std::stringstream ss;
+        for (auto& cam : cameras)
+            ss << cam << ", ";
+        return ss.str();
     };
     LOG(debug) << "Unable to load " << file_path << " queried cameras: " << func() << " trying to requery";
-    cameras = ListLoadableDocuments();
-    for (auto camera : cameras)
+
+    ListPaths(cameras);
+    for(int i = 0; i < cameras.size(); ++i)
     {
-        if (camera == file_path)
+        if (cameras[i] == file_path)
         {
             h_cam.reset(new cv::VideoCapture());
-            return h_cam->open(index);
+            if(h_cam->open(i))
+            {
+                initial_time = boost::posix_time::microsec_clock::universal_time();
+                return true;
+            }
         }
         ++index;
     }
     LOG(warning) << "Unable to load " << file_path << " queried cameras: " << func();
     return false;
 }
-MO_REGISTER_CLASS(frame_grabber_camera);
+
+MO_REGISTER_CLASS(GrabberCamera)
