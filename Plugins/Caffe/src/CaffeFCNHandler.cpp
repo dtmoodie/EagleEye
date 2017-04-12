@@ -44,19 +44,19 @@ void FCNHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::
     auto blob = net.blob_by_name(output_blob_name);
     if(!blob)
         return;
-    /*cv::Mat label, confidence;
-    aq::Caffe::argMax(blob.get(), label, confidence);
-    label.setTo(0, confidence < min_confidence);
-    cv::resize(label, label, input_image_size, 0, 0, cv::INTER_NEAREST);
-    cv::resize(confidence, confidence, input_image_size, 0, 0, cv::INTER_NEAREST);
-    label_param.UpdateData(label, timestamp, _ctx);
-    confidence_param.UpdateData(confidence, timestamp, _ctx);*/
-
     cv::cuda::GpuMat label, confidence;
     aq::Caffe::argMax(blob.get(), label, confidence, _ctx->GetStream());
+
+
     cv::cuda::GpuMat resized_label, resized_confidence;
     cv::cuda::resize(label, resized_label, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->GetStream());
     cv::cuda::resize(confidence, resized_confidence, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->GetStream());
+
+    cv::cuda::GpuMat mask;
+    cv::cuda::threshold(resized_confidence, mask, min_confidence, 255, cv::THRESH_BINARY_INV, _ctx->GetStream());
+    resized_label.setTo(cv::Scalar::all(0), mask, _ctx->GetStream());
+
+
     label_param.UpdateData(resized_label, timestamp, _ctx);
     confidence_param.UpdateData(resized_confidence, timestamp, _ctx);
 }

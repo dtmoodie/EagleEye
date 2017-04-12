@@ -14,7 +14,8 @@
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
 #include "MetaObject/Logging/Log.hpp"
-
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 #include "caffe_include.h"
 #include <boost/tokenizer.hpp>
 
