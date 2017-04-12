@@ -1,7 +1,8 @@
 #include "DetectionWriter.hpp"
 #include "Aquila/utilities/CudaCallbacks.hpp"
 #include "Aquila/Nodes/NodeInfo.hpp"
-
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
 #include <Aquila/rcc/external_includes/cv_imgcodec.hpp>
 
@@ -173,6 +174,7 @@ bool DetectionWriterFolder::ProcessImpl()
         root_dir_param._modified = false;
         _per_class_count.clear();
         _per_class_count.resize(labels->size(), 0);
+        start_count = _frame_count;
     }
     auto detections = pruneDetections(*this->detections, object_class);
     if(image->GetSyncState() == image->DEVICE_UPDATED)

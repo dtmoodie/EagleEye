@@ -1,5 +1,7 @@
 #include "Binary.h"
 #include "opencv2/imgproc.hpp"
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;
@@ -11,7 +13,7 @@ bool MorphologyFilter::ProcessImpl()
 {
     if (input_image)
     {
-        if (structuring_element_type_param._modified || morphology_type_param._modified || 
+        if (structuring_element_type_param._modified || morphology_type_param._modified ||
             anchor_point_param._modified || iterations_param._modified ||
             filter == nullptr)
         {
@@ -21,7 +23,7 @@ bool MorphologyFilter::ProcessImpl()
                     ::cv::Size(structuring_element_size, structuring_element_size), anchor_point));
 
             filter = ::cv::cuda::createMorphologyFilter(
-                morphology_type.currentSelection, input_image->GetMat(Stream()).type(), 
+                morphology_type.currentSelection, input_image->GetMat(Stream()).type(),
                 structuring_element, anchor_point, iterations);
 
             structuring_element_size_param._modified = false;
@@ -51,7 +53,7 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                             cv::Size(size,size),anchor));
 
         updateFilter = true;
-        _parameters[0]->changed = false; 
+        _parameters[0]->changed = false;
         _parameters[2]->changed = false;
         //log(Status,"Structuring element updated");
         NODE_LOG(info) << "Structuring element updated";
@@ -65,7 +67,7 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                 *getParameter<cv::Point>(3)->Data(),
                 *getParameter<int>(5)->Data()));
         NODE_LOG(info) << "Filter updated";
-        _parameters[1]->changed = false; 
+        _parameters[1]->changed = false;
     }
     cv::cuda::GpuMat output;
     (*getParameter<cv::Ptr<cv::cuda::Filter>>(6)->Data())->apply(img,output,stream);
@@ -112,7 +114,7 @@ MO_REGISTER_CLASS(FindContours)
         *getParameter<std::vector<cv::Vec4i>>(3)->Data(),
         getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
         getParameter<Parameters::EnumParameter>(1)->Data()->currentSelection);
-    
+
     updateParameter<int>("Contours found", contours.size())->type =  Parameters::Parameter::State;
     updateParameter("Contours", contours)->type = Parameters::Parameter::Output;
     updateParameter("Hierarchy", hierarchy)->type = Parameters::Parameter::Output;
@@ -182,13 +184,13 @@ bool ContourBoundingBox::ProcessImpl()
         std::vector<cv::Rect> boxes;
         for(size_t i = 0; i < contours->size(); ++i)
         {
-            boxes.push_back(cv::boundingRect((*contours)[i]));   
+            boxes.push_back(cv::boundingRect((*contours)[i]));
         }
         if(merge_contours)
         {
             for(size_t i = 0; i < boxes.size(); ++i)
             {
-            
+
             }
         }
     }
@@ -256,7 +258,7 @@ bool ContourBoundingBox::ProcessImpl()
             cv::rectangle(h_img, boxes[i].tl(), boxes[i].br(),replace, lineWidth);
         }
     }
-    
+
     return TS<SyncedMemory>(img.timestamp, img.frame_number, h_img);
 }*/
 
@@ -342,7 +344,7 @@ void HistogramThreshold::runFilter()
         // As well as for all values below the max, then we AND them together.
         cv::cuda::threshold(img, lowerMask, thresholdMin, 255, cv::THRESH_BINARY, stream);
         cv::cuda::threshold(img, upperMask, thresholdMax, 255, cv::THRESH_BINARY_INV, stream);
-        
+
         cv::cuda::bitwise_and(lowerMask, upperMask, output, cv::noArray(), stream);
         return output;
     case SuppressCenter:
@@ -409,8 +411,8 @@ MO_REGISTER_CLASS(DrawContours)
 {
     if(firstInit)
     {
-        addInputParameter<std::vector<std::vector<cv::Point>>>("Input Contours");    
-    }    
+        addInputParameter<std::vector<std::vector<cv::Point>>>("Input Contours");
+    }
 }*/
 
 /*TS<SyncedMemory> DrawContours::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
@@ -419,7 +421,7 @@ MO_REGISTER_CLASS(DrawContours)
     if(input)
     {
         cv::Mat h_mat = img.GetMat(stream);
-        //cv::drawContours(h_mat, *input, -1, 
+        //cv::drawContours(h_mat, *input, -1,
     }
     return img;
 }*/

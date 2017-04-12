@@ -23,7 +23,19 @@ namespace Nodes
         boost::posix_time::ptime prevTime;
         boost::optional<mo::time_t> _previous_frame_timestamp;
     };
-    
+
+    class DetectFrameSkip: public Node
+    {
+    public:
+        MO_DERIVE(DetectFrameSkip, Node)
+            INPUT(SyncedMemory, input, nullptr)
+        MO_END;
+    protected:
+        bool ProcessImpl();
+        boost::optional<mo::time_t> _prev_time;
+        boost::optional<mo::time_t> _initial_time; // used to zero base time
+    };
+
     class FrameLimiter : public Node
     {
     public:
@@ -48,7 +60,7 @@ namespace Nodes
         MO_END;
     protected:
         bool ProcessImpl();
-        
+
     };
     class SetMatrixValues: public Node
     {
@@ -59,7 +71,7 @@ namespace Nodes
             PARAM(cv::Scalar, replace_value, cv::Scalar::all(0))
     protected:
         bool ProcessImpl();
-        
+
     };
     class Resize : public Node
     {

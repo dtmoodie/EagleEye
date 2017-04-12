@@ -1,7 +1,8 @@
 #include "Calibration.h"
 #include <Aquila/rcc/external_includes/cv_calib3d.hpp>
 #include <Aquila/rcc/external_includes/cv_highgui.hpp>
-
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 
@@ -55,7 +56,7 @@ void CalibrateCamera::Save()
         fs << "Camera Matrix" << camera_matrix;
         fs << "Distortion Matrix" << distortion_matrix;
     }
- 
+
 }
 void CalibrateCamera::Clear()
 {
@@ -104,12 +105,12 @@ bool CalibrateCamera::ProcessImpl()
 //        std::vector<cv::Mat> rvecs;
         //std::vector<cv::Mat> tvecs;
         double quality = cv::calibrateCamera(
-            object_point_collection, 
+            object_point_collection,
             image_point_collection,
-            image->GetSize(), 
-            camera_matrix, 
-            distortion_matrix, 
-            rotation_vecs, 
+            image->GetSize(),
+            camera_matrix,
+            distortion_matrix,
+            rotation_vecs,
             translation_vecs);
         if(quality < 1)
         {
@@ -203,17 +204,17 @@ bool CalibrateStereoPair::ProcessImpl()
     if(imagePointCollection1.size() > lastCalibration + 20)
     {
         reprojection_error = cv::stereoCalibrate(
-            objectPointCollection, 
-            imagePointCollection1, 
-            imagePointCollection2, 
+            objectPointCollection,
+            imagePointCollection1,
+            imagePointCollection2,
             *camera_matrix_1,
-            *distortion_matrix_1, 
-            *camera_matrix_2, 
-            *distortion_matrix_2, 
-            image->GetSize(), 
-            rotation_matrix, 
-            translation_matrix, 
-            essential_matrix, 
+            *distortion_matrix_1,
+            *camera_matrix_2,
+            *distortion_matrix_2,
+            image->GetSize(),
+            rotation_matrix,
+            translation_matrix,
+            essential_matrix,
             fundamental_matrix);
         reprojection_error_param.Commit();
         rotation_matrix_param.Commit();

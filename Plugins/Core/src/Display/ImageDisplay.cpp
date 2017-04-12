@@ -4,7 +4,8 @@
 #include <Aquila/utilities/CudaCallbacks.hpp>
 #include <Aquila/utilities/UiCallbackHandlers.h>
 #include <MetaObject/Logging/Profiling.hpp>
-
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 
 
 using namespace aq;
@@ -120,19 +121,24 @@ bool DetectionDisplay::ProcessImpl()
 
 bool OGLImageDisplay::ProcessImpl()
 {
-    //cv::namedWindow(name, cv::WINDOW_OPENGL);
     std::string name = GetTreeName();
-    //_pixel_buffer.copyFrom(image->GetGpuMat(Stream()), Stream());
     size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
     cv::cuda::GpuMat gpumat = image->GetGpuMat(Stream());
+    auto ts = image_param.GetTimestamp();
+    if(!_prev_time)
+        _prev_time = ts;
+    auto prev = _prev_time;
     aq::cuda::enqueue_callback_async(
-                [name, this, gpumat]()->void
+                [name, this, gpumat, ts, prev]()->void
     {
         PROFILE_RANGE(imshow);
-        //cv::imshow(name, _pixel_buffer);
-        //GetDataStream()->GetWindowCallbackManager()->imshowb(name, _pixel_buffer, cv::WINDOW_OPENGL);
         GetDataStream()->GetWindowCallbackManager()->imshowd(name, gpumat, cv::WINDOW_OPENGL);
+        if(ts)
+        {
+            //std::cout << *ts - *prev  << std::endl;
+        }
     }, gui_thread_id, Stream());
+    _prev_time = ts;
     return true;
 }
 

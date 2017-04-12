@@ -2,7 +2,8 @@
 #include "Aquila/rcc/external_includes/cv_cudawarping.hpp"
 #include "Aquila/rcc/external_includes/cv_cudaarithm.hpp"
 #include <Aquila/Qualifiers.hpp>
-
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;
@@ -23,6 +24,31 @@ bool FrameRate::ProcessImpl()
     _previous_frame_timestamp = input_param.GetTimestamp();
     return true;
 }
+MO_REGISTER_CLASS(FrameRate)
+
+bool DetectFrameSkip::ProcessImpl()
+{
+    auto cur_time = input_param.GetTimestamp();
+
+    if(cur_time)
+    {
+        if(!_initial_time)
+            _initial_time = cur_time;
+        std::cout << *cur_time - *_initial_time << std::endl;
+        if(_prev_time)
+        {
+            if(*cur_time < *_prev_time)
+            {
+                LOG(warning) << "Received frame that is " << *_prev_time - *cur_time << " older than last frame";
+                return false;
+            }
+        }
+        _prev_time = cur_time;
+    }
+
+    return true;
+}
+MO_REGISTER_CLASS(DetectFrameSkip)
 
 bool FrameLimiter::ProcessImpl()
 {
@@ -36,6 +62,7 @@ bool FrameLimiter::ProcessImpl()
     }
     return true;
 }
+MO_REGISTER_CLASS(FrameLimiter)
 
 bool CreateMat::ProcessImpl()
 {
@@ -47,12 +74,13 @@ bool CreateMat::ProcessImpl()
         data_type_param._modified = false;
         channels_param._modified = false;
         width_param._modified = false;
-        height_param._modified = false; 
+        height_param._modified = false;
         fill_param._modified = false;
     }
     output.GetGpuMatMutable(Stream()).setTo(fill, Stream());
     return true;
 }
+MO_REGISTER_CLASS(CreateMat)
 
 bool SetMatrixValues::ProcessImpl()
 {
@@ -66,6 +94,7 @@ bool SetMatrixValues::ProcessImpl()
     }*/
     return true;
 }
+//MO_REGISTER_CLASS(SetMatrixValues)
 
 bool Resize::ProcessImpl()
 {
@@ -88,6 +117,7 @@ bool Resize::ProcessImpl()
     }
     return false;
 }
+MO_REGISTER_CLASS(Resize)
 
 bool Subtract::ProcessImpl()
 {
@@ -100,15 +130,8 @@ bool Subtract::ProcessImpl()
     }
     return true;
 }
-
-
-
-//MO_REGISTER_CLASS(SetMatrixValues)
-MO_REGISTER_CLASS(FrameRate)
-MO_REGISTER_CLASS(FrameLimiter)
-MO_REGISTER_CLASS(CreateMat)
-MO_REGISTER_CLASS(Resize)
 MO_REGISTER_CLASS(Subtract)
+
 bool RescaleContours::ProcessImpl()
 {
     output.resize(input->size());
