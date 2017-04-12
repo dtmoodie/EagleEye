@@ -104,7 +104,8 @@ void sig_handler(int s)
     }
     case SIGINT:
     {
-        //std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
+        std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
+        quit = true;
         break;
     }
     case SIGILL:
@@ -128,7 +129,7 @@ void sig_handler(int s)
     quit = true;
 
     //exit(EXIT_FAILURE);
-    std::abort();
+    //std::abort();
 }
 
 int main(int argc, char* argv[])
