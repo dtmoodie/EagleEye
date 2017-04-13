@@ -1,7 +1,6 @@
 #include "FeatureDetection.h"
-
-
-
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;
@@ -23,7 +22,7 @@ bool GoodFeaturesToTrack::ProcessImpl()
         detector = cv::cuda::createGoodFeaturesToTrackDetector(input->GetDepth(), max_corners, quality_level, min_distance, block_size, use_harris);
         max_corners_param._modified = false;
         quality_level_param._modified  = false;
-        min_distance_param._modified = false; 
+        min_distance_param._modified = false;
         block_size_param._modified = false;
         use_harris_param._modified = false;
     }

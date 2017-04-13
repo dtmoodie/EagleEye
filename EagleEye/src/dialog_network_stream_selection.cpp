@@ -1,7 +1,7 @@
 #include "dialog_network_stream_selection.h"
 #include "ui_dialog_network_stream_selection.h"
 #include <qlistwidget.h>
-
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 #include <Aquila/Nodes/IFrameGrabber.hpp>
 
 dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent) :

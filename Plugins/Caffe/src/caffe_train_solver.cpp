@@ -8,6 +8,8 @@
 #include "Caffe.h"
 #include "caffe_include.h"
 #include "caffe_init.h"
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 using namespace aq;
 using namespace aq::Nodes;
 
@@ -35,7 +37,7 @@ bool caffe_solver::ProcessImpl()
             try
             {
                 caffe::ReadSolverParamsFromTextFileOrDie(solver_description.string(), &solver_params);
-                
+
                 if(snapshot_prefix.size())
                 {
                     //solver_params.clear_snapshot_prefix();
@@ -50,8 +52,8 @@ bool caffe_solver::ProcessImpl()
             {
                 throw mo::ExceptionWithCallStack<std::string>(std::string(""), e.CallStack());
             }
-            
-            
+
+
             if(solver_params.has_test_interval())
                 test_interval = solver_params.test_interval();
             if(solver_params.has_base_lr())
@@ -68,7 +70,7 @@ bool caffe_solver::ProcessImpl()
             }
             auto input_blobs_ = neural_network->input_blobs();
             // map input blobs
-            
+
             for(int i = 0; i < input_blobs_.size(); ++i)
             {
                 auto wrapped_blob = aq::Nodes::CaffeBase::WrapBlob(*input_blobs_[i]);
@@ -86,7 +88,7 @@ bool caffe_solver::ProcessImpl()
                     if(i != 0)
                         ss << ",";
                     ss << weight_files[i];
-                }                
+                }
             }
             //CopyLayers(solver.get(), ss.str());
         }
@@ -104,7 +106,7 @@ bool caffe_solver::ProcessImpl()
     if(solver && (input_blobs_param.HasSubscriptions() || input_blobs.empty()))
     {
         sig_fill_blobs();
-        
+
         solver->Step(steps_per_iteration);
         if(input_blobs.empty())
             sig_update();
@@ -126,11 +128,11 @@ TS<SyncedMemory> Nodes::caffe_network::doProcess(TS<SyncedMemory> input, cv::cud
         if(boost::filesystem::is_regular_file(nn_description))
         {
             neural_network.reset(new caffe::Net<float>(nn_description.string(), caffe::TRAIN));
-            
+
             auto inputs = neural_network->input_blobs();
             //updateParameter("input blobs", inputs)->type = Parameters::Parameter::Output;
             nn_description_param._modified = false;
-        }        
+        }
     }
     return input;
 }

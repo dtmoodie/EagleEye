@@ -3,7 +3,8 @@
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
-
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 using namespace aq;
 using namespace aq::Nodes;
 
@@ -60,9 +61,9 @@ bool DensePyrLKOpticalFlow::ProcessImpl()
         use_initial_flow_param._modified ||
         opt_flow == nullptr)
     {
-        
+
         opt_flow = cv::cuda::DensePyrLKOpticalFlow::create(
-            cv::Size(window_size, window_size), 
+            cv::Size(window_size, window_size),
             pyramid_levels,
             iterations,
             use_initial_flow);

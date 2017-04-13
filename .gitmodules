@@ -13,3 +13,6 @@
 [submodule "EagleEye/dependencies/nodeeditor"]
         path = EagleEye/dependencies/NodeEditor
         url = http://github.com/dtmoodie/nodeeditor
+[submodule "Plugins/gta5"]
+	path = Plugins/gta5
+	url = /home/dan/remotes/gta5/

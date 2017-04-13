@@ -1,7 +1,8 @@
 #include "DisplayHelpers.h"
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
 #include <Aquila/utilities/GpuDrawing.hpp>
-
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 #include <fstream>
 
 using namespace aq;
@@ -108,10 +109,10 @@ bool DrawDetections::ProcessImpl()
 bool Normalize::ProcessImpl()
 {
     cv::cuda::GpuMat normalized;
-    
+
     if(input_image->GetChannels() == 1)
     {
-        cv::cuda::normalize(input_image->GetGpuMat(Stream()), 
+        cv::cuda::normalize(input_image->GetGpuMat(Stream()),
             normalized,
             alpha,
             beta,
@@ -123,7 +124,7 @@ bool Normalize::ProcessImpl()
     }else
     {
         std::vector<cv::cuda::GpuMat> channels;
-        
+
         if (input_image->GetNumMats() == 1)
         {
             cv::cuda::split(input_image->GetGpuMat(Stream()), channels, Stream());
@@ -151,7 +152,7 @@ bool Normalize::ProcessImpl()
             normalized_output_param.UpdateData(normalized_channels, input_image_param.GetTimestamp(), _ctx);
         }
         return true;
-    }   
+    }
     return false;
 }
 

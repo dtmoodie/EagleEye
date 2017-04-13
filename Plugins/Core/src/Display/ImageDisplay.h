@@ -37,6 +37,8 @@ namespace Nodes
             INPUT(SyncedMemory, image, nullptr)
         MO_END;
         bool ProcessImpl();
+    protected:
+        boost::optional<mo::time_t> _prev_time;
     };
 
 

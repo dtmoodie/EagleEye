@@ -1,7 +1,7 @@
 #include "cv_capture.h"
 #include "precompiled.hpp"
 #include "Aquila/Nodes/GrabberInfo.hpp"
-
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 #if _MSC_VER
 RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
 #endif

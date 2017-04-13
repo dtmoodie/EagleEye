@@ -16,6 +16,7 @@
 #include "caffe/net.hpp"
 #include "caffe/common.hpp"
 #include "CaffeExport.hpp"
+#include "Aquila/rcc/external_includes/Caffe_link_libs.hpp"
 #ifdef _MSC_VER // Windows
   #ifdef _DEBUG
     RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib")
@@ -23,7 +24,7 @@
     RUNTIME_COMPILER_LINKLIBRARY("opencv_calib3d" CV_VERSION_ ".lib")
   #endif
 #else // Linux
-  RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
+//  RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 #endif
 extern "C" Caffe_EXPORT void InitModule();
 namespace aq

@@ -1,7 +1,8 @@
 #include "VideoWriter.h"
 #include <boost/filesystem.hpp>
 #include "MetaObject/Logging/Profiling.hpp"
-
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;
