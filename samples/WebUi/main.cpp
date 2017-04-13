@@ -20,7 +20,7 @@
 #include <MetaObject/Thread/ThreadPool.hpp>
 #include <MetaObject/Parameters/UI/Wt/IParameterInputProxy.hpp>
 #include <MetaObject/Parameters/UI/Wt/IParameterOutputProxy.hpp>
-
+#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
 #include "FileBrowseWidget.hpp"
 #include "MetaParameters.hpp"
 
