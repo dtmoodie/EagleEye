@@ -1,4 +1,5 @@
 #include "SaveAnnotations.hpp"
+#include "Aquila/ObjectDetectionSerialization.hpp"
 #include <fstream>
 #include <Aquila/Nodes/NodeInfo.hpp>
 #include "Aquila/utilities/UiCallbackHandlers.h"

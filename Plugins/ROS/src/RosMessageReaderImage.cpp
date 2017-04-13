@@ -25,6 +25,7 @@ public:
 
     static int CanHandleTopic(const std::string& topic)
     {
+        aq::RosInterface::Instance();
         ros::master::V_TopicInfo ti;
         if(!ros::master::getTopics(ti))
             return 0;

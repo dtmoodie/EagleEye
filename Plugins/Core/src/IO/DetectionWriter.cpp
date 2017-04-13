@@ -1,4 +1,5 @@
 #include "DetectionWriter.hpp"
+#include "Aquila/ObjectDetectionSerialization.hpp"
 #include "Aquila/utilities/CudaCallbacks.hpp"
 #include "Aquila/Nodes/NodeInfo.hpp"
 #include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
