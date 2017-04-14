@@ -1,6 +1,8 @@
 #ifdef HAVE_WT
 #include "WebSink.hpp"
 #include <Aquila/Nodes/NodeInfo.hpp>
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 using namespace vclick;
 
 WebSink::WebSink():

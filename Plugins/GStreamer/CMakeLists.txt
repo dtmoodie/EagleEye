@@ -77,6 +77,7 @@ IF(GSTREAMER_FOUND)
         ${Glib_LIBRARY}
         ${GLIB_LIBRARY}
         ${GOBJECT_LIBRARY}
+        MetaParameters
     )
     IF(${GSTREAMER_gstrtspserver_LIBRARY})
         RCC_LINK_LIB(Gstreamer ${GSTREAMER_gstrtspserver_LIBRARY})

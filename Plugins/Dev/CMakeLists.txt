@@ -37,6 +37,7 @@ RCC_LINK_LIB(Dev
     ${OpenCV_LIBS}
     ${CUDA_CUBLAS_LIBRARIES} 
     Aquila
+    MetaParameters
 )
 
 INCLUDE(../PluginTemplate.cmake)
