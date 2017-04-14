@@ -9,7 +9,7 @@
 
 #define FLANN_USE_CUDA
 #include "flann/flann.hpp"
-SETUP_PROJECT_DEF;
+
 
 RUNTIME_COMPILER_LINKLIBRARY("cudart_static.lib")
 RUNTIME_COMPILER_LINKLIBRARY("cublas.lib")
@@ -21,7 +21,7 @@ RUNTIME_COMPILER_LINKLIBRARY("flann_cpp_s.lib")
 RUNTIME_COMPILER_LINKLIBRARY("flann_cuda_s.lib")
 #endif
 
-namespace Aquila
+namespace aq
 {
     namespace Nodes
     {

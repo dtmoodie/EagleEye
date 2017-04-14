@@ -31,7 +31,7 @@ namespace aq
 {
     namespace Nodes
     {
-        class CaffeBase : public Node
+        class Caffe_EXPORT CaffeBase : public Node
         {
         public:
             typedef std::vector<SyncedMemory> WrappedBlob_t;
@@ -86,7 +86,7 @@ namespace aq
             NetworkType _network_type;
         };
 
-        class CaffeImageClassifier : public CaffeBase
+        class Caffe_EXPORT CaffeImageClassifier : public CaffeBase
         {
         public:
             MO_DERIVE(CaffeImageClassifier, CaffeBase)
@@ -98,7 +98,7 @@ namespace aq
             std::vector<rcc::shared_ptr<Caffe::NetHandler>> net_handlers;
         };
 
-        class CaffeDetector: public CaffeBase
+        class Caffe_EXPORT CaffeDetector: public CaffeBase
         {
         public:
 

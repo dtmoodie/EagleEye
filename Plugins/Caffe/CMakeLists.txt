@@ -27,19 +27,7 @@ if(Caffe_FOUND)
     file(GLOB_RECURSE src "*.h" "*.hpp" "*.cpp" "*.cu")
     cuda_add_library(Caffe SHARED ${src})
     add_dependencies(Caffe Aquila)
-
-
-    IF(WIN32)
-      if(TARGET libcaffe)
-        get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
-      endif(TARGET libcaffe)
-      get_filename_component(CAFFE_BIN_DIR_ "${CAFFE_BIN}" DIRECTORY)
-      set(CAFFE_BIN_DIR ${CAFFE_BIN_DIR_} CACHE PATH "" FORCE)
-      SET(CAFFE_BIN_DIR_DBG ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
-      SET(CAFFE_BIN_DIR_OPT ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
-      SET(BIN_DIRS "${BIN_DIRS};CAFFE;CUDNN" CACHE STRING "" FORCE)
-      set_target_properties(libcaffe PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
-      RCC_LINK_LIB(Caffe
+	RCC_LINK_LIB(Caffe
           Aquila
           ${CUDA_LIBRARIES}
           ${CUDA_CUFFT_LIBRARIES}
@@ -51,30 +39,38 @@ if(Caffe_FOUND)
           ${CUDA_nppc_LIBRARY}
           ${CUDA_nppc_LIBRARY}
           ${CUDA_npps_LIBRARY}
-          libcaffe
           ${GLOG_LIBRARY}
           ${CUDNN_LIBRARY}
+    )
+
+    IF(WIN32)
+		if(TARGET libcaffe)
+		get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
+		endif(TARGET libcaffe)
+		get_filename_component(CAFFE_BIN_DIR_ "${CAFFE_BIN}" DIRECTORY)
+		set(CAFFE_BIN_DIR ${CAFFE_BIN_DIR_} CACHE PATH "" FORCE)
+		SET(CAFFE_BIN_DIR_DBG ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
+		SET(CAFFE_BIN_DIR_OPT ${CAFFE_BIN_DIR} CACHE PATH "" FORCE)
+		SET(BIN_DIRS "${BIN_DIRS};CAFFE;CUDNN" CACHE STRING "" FORCE)
+		set_target_properties(libcaffe PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+		RCC_LINK_LIB(Caffe
+          libcaffe
         )
     ELSE(WIN32)
         RCC_LINK_LIB(Caffe
-          Aquila
-          caffe
-          ${CUDA_LIBRARIES}
-          ${CUDA_CUFFT_LIBRARIES}
-          ${CUDA_CUBLAS_LIBRARIES}
-          ${CUDA_cupti_LIBRARY}
-          ${CUDA_curand_LIBRARY}
-          ${CUDA_cusparse_LIBRARY}
-          ${CUDA_npp_LIBRARY}
-          ${CUDA_nppc_LIBRARY}
-          ${CUDA_nppc_LIBRARY}
-          ${CUDA_npps_LIBRARY}
+			caffe
         )
     ENDIF(WIN32)
     INCLUDE(../PluginTemplate.cmake)
+
   else()
     message("CUDNN not found")
-    message(STATUS "CUDNN lib: ${CUDNN_LIBRARY}\n  include: ${CUDNN_INCLUDE_DIR}\n  lib dir: ${CUDNN_LIB_DIR}\n  bin dir:${CUDNN_BIN_DIR}")
+    message(STATUS 
+	    "  CUDNN lib: ${CUDNN_LIBRARY}\n"
+		"	include: ${CUDNN_INCLUDE_DIR}\n"
+		"   lib dir: ${CUDNN_LIB_DIR}\n"
+		"   bin dir:${CUDNN_BIN_DIR}\n"
+	)
   endif()
 else()
   message("Caffe not found")

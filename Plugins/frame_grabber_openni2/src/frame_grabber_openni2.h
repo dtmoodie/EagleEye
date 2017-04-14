@@ -1,17 +1,17 @@
 #pragma once
 
 #include "OpenNI.h"
-#include <EagleLib/Nodes/IFrameGrabber.hpp>
+#include <Aquila/Nodes/IFrameGrabber.hpp>
 #include "RuntimeLinkLibrary.h"
-SETUP_PROJECT_DEF
+
 RUNTIME_COMPILER_LINKLIBRARY("OpenNI2.lib");
 
-namespace EagleLib
+namespace aq
 {
     namespace Nodes
     {
         
-        class PLUGIN_EXPORTS frame_grabber_openni2: public FrameGrabberBuffered, public openni::VideoStream::NewFrameListener
+        class frame_grabber_openni2: public FrameGrabberBuffered, public openni::VideoStream::NewFrameListener
         {
             openni::VideoFrameRef _frame;
             std::shared_ptr<openni::Device> _device;

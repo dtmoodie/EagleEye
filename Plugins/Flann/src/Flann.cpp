@@ -9,11 +9,11 @@
 #include <Aquila/Nodes/NodeInfo.hpp>
 
 #include "RuntimeSourceDependency.h"
-SETUP_PROJECT_IMPL
 
 
-using namespace Aquila;
-using namespace Aquila::Nodes;
+
+using namespace aq;
+using namespace aq::Nodes;
 
 
 

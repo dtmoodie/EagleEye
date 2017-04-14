@@ -1,12 +1,10 @@
 #include "frame_grabber_openni2.h"
 #include "openni2_initializer.h"
-#include <EagleLib/ICoordinateManager.h>
-#include <EagleLib/Nodes/FrameGrabberInfo.hpp>
+#include <Aquila/ICoordinateManager.h>
+#include <Aquila/Nodes/FrameGrabberInfo.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
-SETUP_PROJECT_IMPL
-
+using namespace aq;
+using namespace aq::Nodes;
 
 
 int frame_grabber_openni2::CanLoadDocument(const std::string& document)

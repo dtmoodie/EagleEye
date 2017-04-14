@@ -2,10 +2,10 @@
 #include "OpenNI.h"
 #include <opencv2/core.hpp>
 #include <ObjectInterfacePerModule.h>
-#include <EagleLib/rcc/SystemTable.hpp>
+#include <Aquila/rcc/SystemTable.hpp>
 
 
-using namespace EagleLib;
+using namespace aq;
 initializer_NI2::initializer_NI2()
 {
     openni::Status rc = openni::OpenNI::initialize();

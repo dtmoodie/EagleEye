@@ -14,25 +14,24 @@ namespace vclick
     public:
         WebSink();
         MO_DERIVE(WebSink, aq::Nodes::Node)
-            INPUT(aq::SyncedMemory, background_model, nullptr);
-            INPUT(aq::SyncedMemory, foreground_mask, nullptr);
-            INPUT(aq::SyncedMemory, point_cloud, nullptr);
-            OPTIONAL_INPUT(cv::Mat, jpeg_buffer, nullptr);
-            OPTIONAL_INPUT(aq::SyncedMemory, raw_image, nullptr);
+            INPUT(aq::SyncedMemory, background_model, nullptr)
+            INPUT(aq::SyncedMemory, foreground_mask, nullptr)
+            INPUT(aq::SyncedMemory, point_cloud, nullptr)
+            OPTIONAL_INPUT(cv::Mat, jpeg_buffer, nullptr)
+            OPTIONAL_INPUT(aq::SyncedMemory, raw_image, nullptr)
             
-            OUTPUT(cv::Mat, foreground_points, cv::Mat());
-            OUTPUT(cv::Mat, output_jpeg, cv::Mat());
-            OUTPUT(aq::SyncedMemory, output_image, aq::SyncedMemory());
-            OUTPUT(double, throttled_bandwidth, 0.0);
-            OUTPUT(double, raw_bandwidth, 0.0);
+            OUTPUT(cv::Mat, foreground_points, cv::Mat())
+            OUTPUT(cv::Mat, output_jpeg, cv::Mat())
+            OUTPUT(aq::SyncedMemory, output_image, aq::SyncedMemory())
+            OUTPUT(double, throttled_bandwidth, 0.0)
+            OUTPUT(double, raw_bandwidth, 0.0)
 
-            PARAM(std::vector<BoundingBox>, bounding_boxes, std::vector<BoundingBox>());
-            PARAM(std::vector<Moment>, moments, std::vector<Moment>());
-            PARAM(std::vector<float>, thresholds, std::vector<float>());
-            PARAM(int, min_points, 100);
-            PARAM(int, heartbeat_ms, 1000);
-            PARAM(bool, force_active, false);
-            
+            PARAM(std::vector<BoundingBox>, bounding_boxes, std::vector<BoundingBox>())
+            PARAM(std::vector<Moment>, moments, std::vector<Moment>())
+            PARAM(std::vector<float>, thresholds, std::vector<float>())
+            PARAM(int, min_points, 100)
+            PARAM(int, heartbeat_ms, 1000)
+            PARAM(bool, force_active, false)
         MO_END;
         void  SetContext(mo::Context* ctx, bool overwrite = false);
         std::vector<mo::IParameter*> GetParameters(const std::string& filter) const;
