@@ -615,7 +615,7 @@ int main(int argc, char* argv[])
                         ss << "Potential inputs: \n";
                         for(auto& input : potential_inputs)
                         {
-                            ss << " - " << input->GetName() << "\n";
+                            ss << " - " << input->GetTreeName() << "\n";
                         }
                         std::cout << ss.str() << std::endl;
                         return;
@@ -630,7 +630,7 @@ int main(int argc, char* argv[])
                     {
                         if(param->CheckFlags(mo::Input_e))
                         {
-                            ss << " -- " << param->GetName() << " [ " << param->GetTypeInfo().name() << " ]\n";
+                            ss << " -- " << param->GetTreeName() << " [ " << param->GetTypeInfo().name() << " ]\n";
                             auto potential_inputs = current_node->GetDataStream()->GetVariableManager()->GetOutputParameters(param->GetTypeInfo());
                             for(auto& input : potential_inputs)
                             {
