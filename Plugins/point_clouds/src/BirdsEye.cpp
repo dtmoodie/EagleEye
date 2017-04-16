@@ -1,6 +1,7 @@
+#ifdef HAVE_PCL
 #include "BirdsEye.hpp"
 #include "Aquila/Nodes/NodeInfo.hpp"
-#ifdef HAVE_PCL
+
 using namespace aq::Nodes;
 
 bool BirdsEye::ProcessImpl()
