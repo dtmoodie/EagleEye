@@ -1,20 +1,9 @@
 #pragma once
-
-
 #include "vlc/vlc.h"
-#include <Aquila/nodes/Node.h>
+#include <Aquila/Nodes/IFrameGrabber.hpp>
 #include <Aquila/Project_defs.hpp>
-#if defined( PROJECT_INCLUDES_) && !defined(PROJECT_INCLUDES)
-#define PROJECT_INCLUDES PROJECT_INCLUDES_
-#endif
-#if defined( PROJECT_LIB_DIRS_) && !defined(PROJECT_LIB_DIRS)
-#define PROJECT_LIB_DIRS PROJECT_LIB_DIRS_
-#endif
-
-
-
+#include <MetaObject/Detail/ConcurrentQueue.hpp>
 #include <mutex>
-#include "ObjectInterfacePerModule.h"
 
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Cored.lib");
@@ -35,23 +24,20 @@ namespace aq
 {
     namespace Nodes
     {
-    
-	class vlcCamera : public Node
+	class vlcCamera : public IFrameGrabber
 	{
-		
-		libvlc_instance_t* vlcInstance;
-		libvlc_media_player_t* mp;
-		libvlc_media_t* media;
 	public:
-		vlcCamera();
+        MO_DERIVE(vlcCamera, IFrameGrabber)
+            SOURCE(SyncedMemory, image, {})    
+        MO_END;
 		~vlcCamera();
-		void onSourceChange();
-		virtual void Init(bool firstInit);
-		virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-		virtual bool SkipEmpty() const;
-		ConstBuffer<cv::cuda::HostMem> h_dest;
-		ConstBuffer<cv::cuda::GpuMat> d_dest;
-		concurrent_queue<cv::cuda::HostMem*> imgQueue;
+		bool Load(std::string file);
+		void NodeInit(bool firstInit);
+        bool ProcessImpl();
+        libvlc_instance_t* vlcInstance;
+        libvlc_media_player_t* mp;
+        libvlc_media_t* media;
+        moodycamel::ConcurrentQueue<cv::Mat> img_queue;
 	};
     }
 }
