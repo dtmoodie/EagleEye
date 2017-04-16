@@ -1,8 +1,8 @@
 
+#ifdef FASTMS_FOUND
 #include "FastMS.h"
 #include <Aquila/Nodes/NodeInfo.hpp>
-
-#ifdef FASTMS_FOUND
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;
