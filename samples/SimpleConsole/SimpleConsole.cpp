@@ -452,7 +452,7 @@ int main(int argc, char* argv[])
         connections.push_back(manager.Connect(slot, "load_file"));
 
         slot = new mo::TypedSlot<void(std::string)>(
-            std::bind([&quit](std::string)->void
+            std::bind([](std::string)->void
         {
             quit = true;
         }, std::placeholders::_1));
@@ -738,7 +738,7 @@ int main(int argc, char* argv[])
         connections.push_back(manager.Connect(slot, "profile"));
 
         bool quit_on_eos = vm["quit-on-eos"].as<bool>();
-        mo::TypedSlot<void()> eos_slot(std::bind([&quit]()
+        mo::TypedSlot<void()> eos_slot(std::bind([]()
         {
             LOG_FIRST_N(info, 1) << "End Of Stream received, shutting down";
             quit = true;
