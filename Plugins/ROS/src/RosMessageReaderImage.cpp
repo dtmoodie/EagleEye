@@ -107,9 +107,6 @@ public:
             cv::cuda::demosaicing(gpu_buf, color, cvBayerCode(enc), -1, _ctx->GetStream());
             gpu_buf = color;
         }
-        //cv_bridge::CvImageConstPtr img = cv_bridge::toCvCopy(msg, msg->encoding);
-
-        //cv::Mat i = img->image;
         image_param.UpdateData(gpu_buf, mo::tag::_timestamp = mo::second * msg->header.stamp.toSec(),
                                mo::tag::_frame_number = msg->header.seq, _ctx);
     }

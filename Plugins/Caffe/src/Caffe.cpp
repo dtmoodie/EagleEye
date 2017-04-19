@@ -382,9 +382,9 @@ bool CaffeImageClassifier::ProcessImpl()
         defaultROI.clear();
         for(const auto& itr : *input_detections)
         {
-            if(itr.detections.size() && detection_class != -1)
+            if(detection_class != -1)
             {
-                if(itr.detections[0].classNumber != detection_class)
+                if(itr.classification.classNumber != detection_class)
                     continue;
             }
 

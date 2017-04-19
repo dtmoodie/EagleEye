@@ -93,6 +93,7 @@ void PrintBuffers(aq::Nodes::Node* node, std::vector<std::string>& printed_nodes
 }
 
 static volatile bool quit;
+
 void sig_handler(int s)
 {
     switch(s)
@@ -104,9 +105,10 @@ void sig_handler(int s)
     }
     case SIGINT:
     {
-        std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
+        //std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
+        std::cout << "Caught SIGINT, shutting down" << std::endl;
         quit = true;
-        break;
+        return;
     }
     case SIGILL:
     {
@@ -126,10 +128,6 @@ void sig_handler(int s)
     }
 #endif
     }
-    quit = true;
-
-    //exit(EXIT_FAILURE);
-    //std::abort();
 }
 
 int main(int argc, char* argv[])
@@ -166,10 +164,7 @@ int main(int argc, char* argv[])
         aq::SetupLogging();
 
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
-    signal(SIGINT, sig_handler);
-    signal(SIGILL, sig_handler);
-    signal(SIGTERM, sig_handler);
-    signal(SIGSEGV, sig_handler);
+
     auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
     cv::cuda::GpuMat::setDefaultAllocator(g_allocator);
     cv::Mat::setDefaultAllocator(g_allocator);
@@ -183,7 +178,6 @@ int main(int argc, char* argv[])
     {
         LOG(info) << "Unable to set thread specific cpu allocator in opencv";
     }
-
 
     auto unrecognized = boost::program_options::collect_unrecognized(parsed_options.options, boost::program_options::include_positional);
     std::map<std::string, std::string> replace_map;
@@ -248,8 +242,6 @@ int main(int argc, char* argv[])
 
         }
     }
-
-
 
     if (vm.count("log"))
     {
@@ -459,7 +451,6 @@ int main(int argc, char* argv[])
         _slots.emplace_back(slot);
         connections.push_back(manager.Connect(slot, "load_file"));
 
-        bool quit = false;
         slot = new mo::TypedSlot<void(std::string)>(
             std::bind([&quit](std::string)->void
         {
@@ -1534,7 +1525,8 @@ int main(int argc, char* argv[])
             else
             {
                 if(!disable_input)
-                    std::getline(std::cin, command_line);
+                    if(std::cin.peek())
+                        std::getline(std::cin, command_line);
             }
             if(!skip)
             {
@@ -1592,7 +1584,7 @@ int main(int argc, char* argv[])
             run_time = vm["profile-for"].as<int>();
         }
         boost::thread io_thread = boost::thread(std::bind(
-        [&io_func, &quit, &_dataStreams, run_time]()
+        [&io_func, &_dataStreams, run_time]()
         {
             auto start = boost::posix_time::microsec_clock::universal_time();
             while(!quit)
@@ -1611,6 +1603,8 @@ int main(int argc, char* argv[])
             std::cout << "IO thread shutting down\n";
         }));
         boost::posix_time::ptime last_compile_check_time = boost::posix_time::microsec_clock::universal_time();
+
+        signal(SIGINT, sig_handler);
         while(!quit)
         {
             auto current_time = boost::posix_time::microsec_clock::universal_time();
@@ -1623,8 +1617,7 @@ int main(int argc, char* argv[])
                 boost::this_thread::sleep_for(boost::chrono::seconds(1));
             }
         }
-
-        io_thread.join();
+        io_thread.~thread();
         gui_thread.interrupt();
         gui_thread.join();
         for (auto& ds : _dataStreams)
