@@ -31,7 +31,7 @@ void SaveAnnotations::select_rect(std::string window_name, cv::Rect rect, int fl
             DetectedObject obj;
             obj.boundingBox = cv::Rect2f(float(rect.x) / _original_image.cols, float(rect.y) / _original_image.rows,
                                          float(rect.width) / _original_image.cols, float(rect.height) / _original_image.rows);
-            obj.detections.emplace_back((*labels)[current_class], 1.0, current_class);
+            obj.classification = Classification((*labels)[current_class], 1.0, current_class);
             _annotations.push_back(obj);
             draw();
         }
@@ -69,7 +69,7 @@ void SaveAnnotations::on_key(int key)
             {
                 if(object_class != -1)
                 {
-                    if(detection.detections.size() && detection.detections[0].classNumber == object_class)
+                    if(detection.classification.classNumber == object_class)
                     {
                         objs.push_back(detection);
                     }
@@ -113,17 +113,16 @@ void SaveAnnotations::draw()
         auto bb = _annotations[i].boundingBox;
         cv::rectangle(draw_image, cv::Rect(bb.x * draw_image.cols, bb.y * draw_image.rows,
                                            bb.width * draw_image.cols, bb.height * draw_image.rows),
-                      h_lut.at<cv::Vec3b>(_annotations[i].detections[0].classNumber), 5);
+                      h_lut.at<cv::Vec3b>(_annotations[i].classification.classNumber), 5);
     }
     if(detections)
     {
         for(const auto& detection : *detections)
         {
             auto bb = detection.boundingBox;
-            if(detection.detections.size())
             cv::rectangle(draw_image, cv::Rect(bb.x * draw_image.cols, bb.y * draw_image.rows,
                                                bb.width * draw_image.cols, bb.height * draw_image.rows),
-                          h_lut.at<cv::Vec3b>(detection.detections[0].classNumber), 5);
+                        h_lut.at<cv::Vec3b>(detection.classification.classNumber), 5);
         }
     }
     if( labels && current_class != -1 && current_class < labels->size())

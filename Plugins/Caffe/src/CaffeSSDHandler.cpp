@@ -60,20 +60,21 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::
             obj.boundingBox.width = (xmax[i][0] - xmin[i][0]) * bounding_boxes[num].width;
             obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * bounding_boxes[num].height;
             obj.timestamp = timestamp;
+            obj.id = current_id++;
             // Check all current objects iou value
             bool append = true;
 
             if (this->labels && labels[i][0] < this->labels->size())
-                obj.detections.emplace_back((*this->labels)[int(labels[i][0])], confidence[i][0], int(labels[i][0]));
+                obj.classification = Classification((*this->labels)[int(labels[i][0])], confidence[i][0], int(labels[i][0]));
             else
-                obj.detections.emplace_back("", confidence[i][0], int(labels[i][0]));
+                obj.classification = Classification("", confidence[i][0], int(labels[i][0]));
 
             for(auto itr = objects.begin(); itr != objects.end(); ++itr)
             {
                 float iou_val = iou(obj.boundingBox, itr->boundingBox);
                 if(iou_val > 0.2)
                 {
-                    if(obj.detections[0].confidence > itr->detections[0].confidence)
+                    if(obj.classification.confidence > itr->classification.confidence)
                     {
                         // Current object has higher prediction, replace
                         *itr = obj;

@@ -1,16 +1,59 @@
 
 set(mxnet_ROOT "" CACHE PATH "Root directory of mxnet install")
-rcc_find_library(mxnet_LIBRARY_RELEASE mxnet PATHS ${mxnet_ROOT}/lib ${mxnet_ROOT}/build)
-rcc_find_library(mxnet_LIBRARY_DEBUG mxnetd PATHS ${mxnet_ROOT}/lib ${mxnet_ROOT}/build)
+rcc_find_library(mxnet_LIBRARY_RELEASE mxnet 
+  PATHS 
+    ${mxnet_ROOT}/lib 
+    ${mxnet_ROOT}/build 
+    ${mxnet_ROOT}/RelWithDebInfo
+    ${mxnet_ROOT}/Release
+)
 
-rcc_find_path(mxnet_INCLUDE mxnet/mxrtc.h PATHS ${mxnet_ROOT}/include)
-rcc_find_path(mxnet_BIN_DIR mxnet.dll PATHS ${mxnet_ROOT}/bin)
+rcc_find_library(mxnet_LIBRARY_DEBUG mxnetd 
+  PATHS 
+    ${mxnet_ROOT}/lib 
+    ${mxnet_ROOT}/build 
+    ${mxnet_ROOT}/Debug
+)
 
-rcc_find_path(dmlc_INCLUDE dmlc/base.h PATHS ${mxnet_ROOT}/dmlc-core/include)
-rcc_find_path(mshadow_INCLUDE mshadow/tensor.h PATHS ${mxnet_ROOT}/mshadow)
+rcc_find_path(mxnet_INCLUDE mxnet/mxrtc.h 
+  PATHS 
+    ${mxnet_ROOT}/include 
+    ${mxnet_ROOT}/../include
+)
 
-rcc_find_library(dmlc_CORE_LIBRARY_RELEASE dmlccore PATHS ${mxnet_ROOT}/lib ${mxnet_ROOT}/build/dmlc-core)
-rcc_find_library(dmlc_CORE_LIBRARY_DEBUG dmlccored PATHS ${mxnet_ROOT}/lib ${mxnet_ROOT}/build/dmlc-core)
+rcc_find_path(mxnet_BIN_DIR mxnet.dll 
+  PATHS 
+    ${mxnet_ROOT}/bin 
+    ${mxnet_ROOT}/Debug 
+    ${mxnet_ROOT}/RelWithDebInfo 
+    ${mxnet_ROOT}/Release
+)
+
+rcc_find_path(dmlc_INCLUDE dmlc/base.h 
+  PATHS 
+    ${mxnet_ROOT}/dmlc-core/include 
+    ${mxnet_ROOT}/../dmlc-core/include
+)
+
+rcc_find_path(mshadow_INCLUDE mshadow/tensor.h 
+  PATHS 
+  ${mxnet_ROOT}/mshadow 
+  ${mxnet_ROOT}/../mshadow
+)
+
+rcc_find_library(dmlc_CORE_LIBRARY_RELEASE dmlccore 
+  PATHS 
+    ${mxnet_ROOT}/lib 
+    ${mxnet_ROOT}/build/dmlc-core 
+    ${mxnet_ROOT}/build/dmlc-core/RelWithDebInfo 
+    ${mxnet_ROOT}/build/dmlc-core/Release
+)
+
+rcc_find_library(dmlc_CORE_LIBRARY_DEBUG dmlccored 
+  PATHS 
+    ${mxnet_ROOT}/lib 
+    ${mxnet_ROOT}/build/dmlc-core/Debug
+)
 
 find_package(OpenBLAS QUIET)
 

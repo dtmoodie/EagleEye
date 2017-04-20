@@ -36,6 +36,7 @@ public:
         PARAM(int, object_class, -1)
         PARAM(std::string, image_stem, "image")
         PARAM(int, max_subfolder_size, 1000)
+        PARAM(std::string, dataset_name, "")
         INPUT(SyncedMemory, image, nullptr)
         INPUT(std::vector<std::string>, labels, nullptr)
         INPUT(std::vector<DetectedObject>, detections, nullptr)
@@ -45,12 +46,12 @@ public:
 protected:
     void NodeInit(bool firstInit);
     bool ProcessImpl();
-    //std::vector<int> _frame_counts;
     int _frame_count;
     moodycamel::ConcurrentQueue<std::pair<cv::Mat, std::string>> _write_queue;
     boost::thread _write_thread;
     std::vector<int> _per_class_count;
-
+    std::shared_ptr<std::ofstream> _summary_ofs;
+    std::shared_ptr<cereal::JSONOutputArchive> _summary_ar;
 };
 
 }

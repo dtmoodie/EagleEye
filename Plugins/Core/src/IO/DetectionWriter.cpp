@@ -2,10 +2,11 @@
 #include "Aquila/ObjectDetectionSerialization.hpp"
 #include "Aquila/utilities/CudaCallbacks.hpp"
 #include "Aquila/Nodes/NodeInfo.hpp"
+#include <Aquila/rcc/external_includes/cv_imgcodec.hpp>
+
 #include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
 #include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
-#include <Aquila/rcc/external_includes/cv_imgcodec.hpp>
 
 #include "cereal/archives/json.hpp"
 #include <cereal/types/vector.hpp>
@@ -53,7 +54,7 @@ std::vector<DetectedObject> pruneDetections(const std::vector<DetectedObject>& i
         found = false;
         for(const auto& detection : input)
         {
-            if(detection.detections.size() && detection.detections[0].classNumber == object_class)
+            if(detection.classification.classNumber == object_class)
             {
                 found = true;
                 break;
@@ -70,8 +71,7 @@ std::vector<DetectedObject> pruneDetections(const std::vector<DetectedObject>& i
 
     for(const auto& detection : input)
     {
-        if((detection.detections.size() &&
-            detection.detections[0].classNumber == object_class) ||
+        if((detection.classification.classNumber == object_class) ||
             object_class == -1)
         {
             detections.push_back(detection);
@@ -152,10 +152,54 @@ DetectionWriterFolder::~DetectionWriterFolder()
         _write_thread.interrupt();
         _write_thread.join();
     }
+    _summary_ar.reset();
+    _summary_ofs.reset();
 }
+struct FrameDetections
+{
+    FrameDetections(const std::vector<aq::DetectedObject2d>& det):
+        detections(det)
+    {
+    }
+
+    std::string source_path;
+    mo::time_t timestamp;
+    size_t frame_number;
+    const std::vector<aq::DetectedObject2d>& detections;
+    std::vector<std::string> written_detections;
+    template<class AR> void serialize(AR& ar)
+    {
+        ar(CEREAL_NVP(source_path));
+        ar(CEREAL_NVP(timestamp));
+        ar(CEREAL_NVP(frame_number));
+        ar(CEREAL_NVP(detections));
+    }
+};
+struct WritePair
+{
+    WritePair(const DetectedObject2d& det, const std::string& name):
+        detection(det), patch_name(name){}
+    DetectedObject2d detection;
+    std::string patch_name;
+    template<class AR> void serialize(AR& ar)
+    {
+        ar(CEREAL_NVP(detection), CEREAL_NVP(patch_name));
+    }
+};
 
 bool DetectionWriterFolder::ProcessImpl()
 {
+    if(!_summary_ofs)
+    {
+        if(!boost::filesystem::is_directory(root_dir))
+        {
+            boost::filesystem::create_directories(root_dir);
+        }
+        _summary_ofs.reset(new std::ofstream());
+        _summary_ofs->open(root_dir.string() + "/summary.json");
+        _summary_ar.reset(new cereal::JSONOutputArchive(*_summary_ofs));
+        (*_summary_ar)(CEREAL_NVP(dataset_name));
+    }
     if(root_dir_param._modified)
     {
         for(int i = 0; i < labels->size(); ++i)
@@ -178,12 +222,11 @@ bool DetectionWriterFolder::ProcessImpl()
         start_count = _frame_count;
     }
     auto detections = pruneDetections(*this->detections, object_class);
+    std::vector<WritePair> written_detections;
     if(image->GetSyncState() == image->DEVICE_UPDATED)
     {
         const cv::cuda::GpuMat img = image->GetGpuMat(Stream());
         cv::Rect img_rect(cv::Point(0,0), img.size());
-
-
         for(const aq::DetectedObject2d& detection : detections)
         {
             cv::Rect rect = img_rect & cv::Rect(detection.boundingBox.x - padding, detection.boundingBox.y - padding, detection.boundingBox.width + 2*padding, detection.boundingBox.height + 2*padding);
@@ -191,7 +234,7 @@ bool DetectionWriterFolder::ProcessImpl()
             std::stringstream ss;
             cv::Mat save_img;
             img(rect).download(save_img, Stream());
-            int idx = detection.detections[0].classNumber;
+            int idx = detection.classification.classNumber;
             ++_per_class_count[idx];
             {
                 std::stringstream folderss;
@@ -210,6 +253,7 @@ bool DetectionWriterFolder::ProcessImpl()
             {
                 this->_write_queue.enqueue(std::make_pair(save_img, save_name));
             }, Stream());
+            written_detections.emplace_back(detection, save_name);
         }
     }else
     {
@@ -220,7 +264,7 @@ bool DetectionWriterFolder::ProcessImpl()
             cv::Rect rect = img_rect & cv::Rect(detection.boundingBox.x - padding, detection.boundingBox.y - padding, detection.boundingBox.width + 2*padding, detection.boundingBox.height + 2*padding);
             std::string save_name;
             std::stringstream ss;
-            ss << root_dir.string() << "/" << (*labels)[detection.detections[0].classNumber] << "/" << image_stem << std::setw(8) << std::setfill('0') << _frame_count++ << ".png";
+            ss << root_dir.string() << "/" << (*labels)[detection.classification.classNumber] << "/" << image_stem << std::setw(8) << std::setfill('0') << _frame_count++ << ".png";
             save_name = ss.str();
             cuda::enqueue_callback([this, rect, img, save_name]()
             {
@@ -229,6 +273,10 @@ bool DetectionWriterFolder::ProcessImpl()
                 this->_write_queue.enqueue(std::make_pair(save_img, save_name));
             }, Stream());
         }
+    }
+    if(written_detections.size())
+    {
+        (*_summary_ar)(written_detections);
     }
     return true;
 

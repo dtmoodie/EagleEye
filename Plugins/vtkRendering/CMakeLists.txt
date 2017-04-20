@@ -1,22 +1,23 @@
 PROJECT(vtkRendering)
 CMAKE_POLICY(SET CMP0020 NEW)
 find_package(VTK QUIET
-                 COMPONENTS 
-                 vtkInteractionStyle 
-				 vtkInteractionWidgets
-                 vtkRenderingLOD 
-                 vtkIOPLY 
-                 vtkFiltersTexture 
-                 vtkRenderingFreeType 
-                 vtkIOExport 
-                 vtkRenderingOpenGL2 
+                 COMPONENTS
+                 vtkInteractionStyle
+                 vtkInteractionWidgets
+                 vtkRenderingLOD
+                 vtkIOPLY
+                 vtkFiltersTexture
+                 vtkRenderingFreeType
+                 vtkIOExport
+                 vtkRenderingOpenGL2
                  vtkRenderingQt
                  vtkGUISupportQt
                  vtkGUISupportQtOpenGL
                  vtkRenderingAnnotation
-				 vtkRenderingVolume
-				 vtkRenderingVolumeOpenGL2
-                 )
+                 vtkRenderingVolume
+                 vtkRenderingVolumeOpenGL2
+)
+
 if(VTK_FOUND)
 
   include(${VTK_USE_FILE})
@@ -25,14 +26,14 @@ if(VTK_FOUND)
   LINK_DIRECTORIES(${vtk_lib_dir})
   INCLUDE_DIRECTORIES(${VTK_INCLUDE_DIRS})
 
-  MESSAGE(STATUS  
+  MESSAGE(STATUS
   "============ vtk libs =================
   ${VTK_LIBRARIES}
   ${vtk_core}
   ${vtk_lib_dir}")
 
 FIND_PACKAGE(CUDA REQUIRED)
-  INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})  
+  INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
 
 FIND_PACKAGE(Qt5 REQUIRED Core Widgets OpenGL)
 
@@ -44,7 +45,7 @@ find_package(PCL QUIET COMPONENTS visualization)
     add_definitions(-DHAVE_PCL)
     include_directories(${PCL_INCLUDE_DIRS})
   endif()
-set(link_libs_ 
+set(link_libs_
   EagleLib
   ${OpenCV_LIBS}
   ${VTK_LIBRARIES}
@@ -84,7 +85,7 @@ MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
                                            OBJECT_OUTPUTS "${PrecompiledBinary}")
     SET_SOURCE_FILES_PROPERTIES(${Sources}
                                 PROPERTIES COMPILE_FLAGS "/Yu\"${PrecompiledHeader}\" /FI\"${PrecompiledHeader}\" /Fp\"${PrecompiledBinary}\""
-                                           OBJECT_DEPENDS "${PrecompiledBinary}")  
+                                           OBJECT_DEPENDS "${PrecompiledBinary}")
     # Add precompiled header to SourcesVar
     LIST(APPEND ${SourcesVar} ${PrecompiledSource})
   ELSE(MSVC)

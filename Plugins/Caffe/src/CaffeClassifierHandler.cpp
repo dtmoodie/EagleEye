@@ -101,10 +101,10 @@ void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, boost::option
             obj.timestamp = timestamp;
             if(labels && idx[0] < labels->size())
             {
-                obj.detections.emplace_back((*labels)[idx[0]], (data + i * num)[idx[0]], idx[0]);
+                obj.classification = Classification((*labels)[idx[0]], (data + i * num)[idx[0]], idx[0]);
             }else
             {
-                obj.detections.emplace_back("", (data + i * num)[idx[0]], idx[0]);
+                obj.classification =  Classification("", (data + i * num)[idx[0]], idx[0]);
             }
             obj.boundingBox = cv::Rect2f(bounding_boxes[i].x, bounding_boxes[i].y, bounding_boxes[i].width, bounding_boxes[i].height);
             objects.push_back(obj);

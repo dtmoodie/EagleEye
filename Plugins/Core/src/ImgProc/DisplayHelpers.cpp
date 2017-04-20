@@ -59,23 +59,21 @@ bool DrawDetections::ProcessImpl()
             std::stringstream ss;
             if(labels->size())
             {
-                if(detection.detections.size())
+                color = colors[detection.classification.classNumber];
+                if(detection.classification.classNumber > 0 && detection.classification.classNumber < labels->size())
                 {
-                    color = colors[detection.detections[0].classNumber];
-                    if(detection.detections[0].classNumber > 0 && detection.detections[0].classNumber < labels->size())
-                    {
-                        ss << (*labels)[detection.detections[0].classNumber] << " : " << std::setprecision(3) << detection.detections[0].confidence;
-                    }else
-                    {
-                        ss << std::setprecision(3) << detection.detections[0].confidence;
-                    }
+                    ss << (*labels)[detection.classification.classNumber] << " : " << std::setprecision(3) << detection.classification.confidence;
+                }else
+                {
+                    ss << std::setprecision(3) << detection.classification.confidence;
                 }
+                ss << " - " << detection.id;
             }else
             {
                 // random color for each different detection
-                if(detection.detections[0].classNumber >= colors.size())
+                if(detection.classification.classNumber >= colors.size())
                 {
-                    colors.resize(detection.detections[0].classNumber + 1);
+                    colors.resize(detection.classification.classNumber + 1);
                     for(int i = 0; i < colors.size(); ++i)
                     {
                         colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
@@ -83,7 +81,7 @@ bool DrawDetections::ProcessImpl()
                     cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
                     cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
                 }
-                color = colors[detection.detections[0].classNumber];
+                color = colors[detection.classification.classNumber];
             }
             cv::cuda::rectangle(draw_image, rect, color, 3, Stream());
 
