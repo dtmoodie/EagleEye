@@ -55,8 +55,6 @@ namespace aq
                 PARAM(int, num_classifications, 5)
                 OPTIONAL_INPUT(std::vector<cv::Rect2f>, bounding_boxes, nullptr)
                 OPTIONAL_INPUT(std::vector<DetectedObject>, input_detections, nullptr)
-                PARAM(int, detection_class, -1)
-                TOOLTIP(detection_class, "When given an input_detections, decide which class of input detections should be used to select regions of interest for this classifier")
                 INPUT(SyncedMemory, input, nullptr)
                 OUTPUT(std::vector<std::string>, labels, {})
                 APPEND_FLAGS(labels, mo::Unstamped_e)

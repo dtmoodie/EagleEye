@@ -15,7 +15,7 @@ namespace aq
                 STATUS(int, num_detections, 0)
             MO_END
             virtual void StartBatch(){ current_id = 0;}
-            void HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size);
+            void HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size, const std::vector<DetectedObject2d>& objs);
             int current_id;
         };
 

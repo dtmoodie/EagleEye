@@ -15,7 +15,7 @@ namespace aq
                 PARAM(float, classification_threshold, 0.5)
             MO_END
             void StartBatch();
-            void HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size);
+            void HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size, const std::vector<DetectedObject2d>& objs);
             void EndBatch(boost::optional<mo::time_t> timestamp);
         };
     }

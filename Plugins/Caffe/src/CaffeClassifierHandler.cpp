@@ -85,7 +85,7 @@ void ClassifierHandler::StartBatch()
     objects.clear();
 }
 
-void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size)
+void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size, const std::vector<DetectedObject2d>& objs)
 {
     auto output_blob = net.blob_by_name(output_blob_name);
     if(output_blob)
@@ -107,6 +107,11 @@ void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, boost::option
                 obj.classification =  Classification("", (data + i * num)[idx[0]], idx[0]);
             }
             obj.boundingBox = cv::Rect2f(bounding_boxes[i].x, bounding_boxes[i].y, bounding_boxes[i].width, bounding_boxes[i].height);
+            if(objs.size() == bounding_boxes.size())
+            {
+                obj.id = objs[i].id;
+                obj.framenumber = objs[i].framenumber;
+            }
             objects.push_back(obj);
         }
     }

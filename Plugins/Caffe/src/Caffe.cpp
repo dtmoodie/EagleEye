@@ -382,12 +382,6 @@ bool CaffeImageClassifier::ProcessImpl()
         defaultROI.clear();
         for(const auto& itr : *input_detections)
         {
-            if(detection_class != -1)
-            {
-                if(itr.classification.classNumber != detection_class)
-                    continue;
-            }
-
             defaultROI.emplace_back(
                     itr.boundingBox.x / input_shape[2],
                     itr.boundingBox.y / input_shape[1],
@@ -554,13 +548,19 @@ bool CaffeImageClassifier::ProcessImpl()
         }
         mo::scoped_profile profile_handlers("Handle neural net output", &_rmt_hash, &_rmt_cuda_hash, &Stream());
         std::vector<cv::Rect> batch_bounding_boxes;
+        std::vector<DetectedObject2d> batch_objects;
         for(int j = start; j < end; ++j)
         {
             batch_bounding_boxes.push_back(pixel_bounding_boxes[j]);
         }
+        if(input_detections != nullptr && bounding_boxes == &defaultROI)
+        {
+            for(int j = start; j < end; ++j)
+                batch_objects.push_back((*input_detections)[j]);
+        }
         for(auto& handler : net_handlers)
         {
-            handler->HandleOutput(*NN, input_param.GetTimestamp(), batch_bounding_boxes, input_image_size);
+            handler->HandleOutput(*NN, input_param.GetTimestamp(), batch_bounding_boxes, input_image_size, batch_objects);
         }
     }
     for(auto& handler : net_handlers)
