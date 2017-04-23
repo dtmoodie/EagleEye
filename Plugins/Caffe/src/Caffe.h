@@ -11,7 +11,7 @@
 #include "CaffeNetHandler.hpp"
 #include "MetaObject/MetaObject.hpp"
 #include "MetaObject/Parameters/Types.hpp"
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include "caffe/blob.hpp"
 #include "caffe/net.hpp"
 #include "caffe/common.hpp"

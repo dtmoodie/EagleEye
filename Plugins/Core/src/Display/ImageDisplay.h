@@ -1,4 +1,4 @@
-#include "Aquila/Nodes/Sink.h"
+#include <Aquila/Nodes/Node.h>
 #include "../CoreExport.hpp"
 
 namespace cv

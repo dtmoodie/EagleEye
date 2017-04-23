@@ -2,7 +2,7 @@
 #include "Aquila/plotters/Plotter.h"
 
 #include "qcustomplot.h"
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("opencv_core300d.lib")
 RUNTIME_COMPILER_LINKLIBRARY("libParameterd.lib")

@@ -1,6 +1,5 @@
 #include "chunked_file_sink.h"
 #include <Aquila/Nodes/FrameGrabberInfo.hpp>
-#include <Aquila/ICoordinateManager.h>
 #include <gst/base/gstbasesink.h>
 using namespace aq;
 

@@ -22,7 +22,7 @@
 #include <MetaObject/Parameters/UI/Wt/IParameterOutputProxy.hpp>
 #include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
 #include "FileBrowseWidget.hpp"
-#include "MetaParameters.hpp"
+#include "MetaObject/MetaParameters.hpp"
 
 #include <Wt/WBreak>
 #include <Wt/WContainerWidget>

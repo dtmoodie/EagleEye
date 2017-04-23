@@ -5,7 +5,7 @@
 #include <MetaObject/MetaObjectFactory.hpp>
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Detail/IMetaObjectImpl.hpp>
-#include "ObjectInterfacePerModule.h"
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #ifdef HAVE_GSTREAMER

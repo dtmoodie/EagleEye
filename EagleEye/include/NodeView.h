@@ -5,7 +5,7 @@
 #include <Aquila/Nodes/Node.h>
 #include <QNodeWidget.h>
 #include <QMenu>
-#include <shared_ptr.hpp>
+#include <RuntimeObjectSystem/shared_ptr.hpp>
 class signal_dialog;
 class NodeView : public QGraphicsView
 {

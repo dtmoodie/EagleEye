@@ -17,7 +17,7 @@ find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawa
   set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
   
 
-  
+find_package(Aquila REQUIRED)
 find_package(CUDA REQUIRED)
   include_directories(${CUDA_INCLUDE_DIRS})
 
@@ -69,6 +69,15 @@ target_link_libraries(SimpleConsole
     ${link_libs}
     MetaParameters
 )
+if(MetaObject_WITH_WT AND Wt_FOUND)
+	target_compile_definitions(SimpleConsole
+		PRIVATE "-DHAVE_WT"
+	)
+	target_include_directories(SimpleConsole
+		PRIVATE ${Wt_INCLUDE_DIR}
+	)
+endif()
+
 if(WITH_PYTHON AND HAVE_PYTHON)
   target_link_libraries(SimpleConsole ${PYTHON_LIBRARY})
 endif(WITH_PYTHON AND HAVE_PYTHON)
@@ -105,6 +114,7 @@ IF(WIN32)
 	APPEND_BIN_DIR(${dir}_BIN_DIR PROJECT_BIN_DIRS_RELEASE)
 	APPEND_BIN_DIR(${dir}_BIN_DIR PROJECT_BIN_DIRS_RELWITHDEBINFO)
   ENDFOREACH(dir ${BIN_DIRS})
+  list(APPEND PROJECT_BIN_DIRS_DEBUG ${Aquila_BIN_DIRS})
   if(RCC_VERBOSE_CONFIG)
       message(STATUS "SimpleConsole binary runtime directories:\n ${PROJECT_BIN_DIRS_DEBUG}")
   endif()

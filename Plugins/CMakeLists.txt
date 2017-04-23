@@ -13,6 +13,7 @@ ENDMACRO()
 
 
 project(Plugins)
+find_package(MetaObject REQUIRED)
 SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
 message(STATUS "------------------- Plugins -------------------------")
 FOREACH(subdir ${SUBDIRS})

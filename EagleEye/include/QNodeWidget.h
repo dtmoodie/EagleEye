@@ -19,7 +19,7 @@
 
 #include <boost/thread/recursive_mutex.hpp>
 
-#include <shared_ptr.hpp>
+#include <RuntimeObjectSystem/shared_ptr.hpp>
 #include <MetaObject/Parameters/UI/Qt/IParameterProxy.hpp>
 
 namespace Ui {

@@ -4,7 +4,7 @@
 #include "Aquila/Detail/Export.hpp"
 #include <Aquila/utilities/CudaUtils.hpp>
 #include <Aquila/Project_defs.hpp>
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 
 
 #define FLANN_USE_CUDA

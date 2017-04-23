@@ -1,7 +1,7 @@
 #include "openni2_initializer.h"
 #include "OpenNI.h"
 #include <opencv2/core.hpp>
-#include <ObjectInterfacePerModule.h>
+#include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 #include <Aquila/rcc/SystemTable.hpp>
 
 

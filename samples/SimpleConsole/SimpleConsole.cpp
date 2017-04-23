@@ -13,7 +13,7 @@
 #include <MetaObject/Thread/ThreadPool.hpp>
 #include <MetaObject/Parameters/Buffers/IBuffer.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
-#include <RuntimeObjectSystem.h>
+#include <RuntimeObjectSystem/RuntimeObjectSystem.h>
 
 #include <boost/program_options.hpp>
 #include <boost/log/core.hpp>
@@ -33,7 +33,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
-#include "MetaParameters.hpp"
+#include "MetaObject/MetaParameters.hpp"
 
 
 #ifdef HAVE_WT
@@ -159,9 +159,9 @@ int main(int argc, char* argv[])
     mo::MetaParameters::initialize();
 
     if(vm.count("log-dir"))
-        aq::SetupLogging(vm["log-dir"].as<std::string>());
+        aq::Init(vm["log-dir"].as<std::string>());
     else
-        aq::SetupLogging();
+        aq::Init();
 
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
 
@@ -1038,18 +1038,35 @@ int main(int argc, char* argv[])
 
         slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string filter)->void
         {
-            auto nodes = aq::NodeFactory::Instance()->GetConstructableNodes();
-            for(auto& node : nodes)
+            if (filter.size())
             {
-                if(filter.size())
+                auto nodes = aq::NodeFactory::Instance()->GetConstructableNodes();
+                for(auto& node : nodes)
                 {
                     if(node.find(filter) != std::string::npos)
                     {
                         std::cout << " - " << node << "\n";
                     }
-                }else
+                }
+            }else
+            {
+                auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors();
+                std::map<std::string, std::vector<IObjectConstructor*>> interface_map;
+                for(auto constructor : constructors)
                 {
-                    std::cout << " - " << node << "\n";
+                    IObjectInfo* info = constructor->GetObjectInfo();
+                    if(info)
+                    {
+                        interface_map[info->GetInterfaceName()].push_back(constructor);
+                    }
+                }
+                for(auto itr = interface_map.begin(); itr != interface_map.end(); ++itr)
+                {
+                    std::cout << "========= " << itr->first << std::endl;
+                    for(auto ctr : itr->second)
+                    {
+                        std::cout << "  " << ctr->GetObjectInfo()->GetObjectName() << std::endl;
+                    }
                 }
             }
         }, std::placeholders::_1));

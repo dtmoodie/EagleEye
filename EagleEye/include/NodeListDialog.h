@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include "Aquila/Nodes/Node.h"
-#include <shared_ptr.hpp>
+#include <RuntimeObjectSystem/shared_ptr.hpp>
 
 
 

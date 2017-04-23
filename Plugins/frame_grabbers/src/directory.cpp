@@ -156,11 +156,6 @@ TS<SyncedMemory> frame_grabber_directory::GetFrameRelative(int index, cv::cuda::
     return GetFrame(index, stream);
 }
 
-rcc::shared_ptr<ICoordinateManager> frame_grabber_directory::GetCoordinateManager()
-{
-    return coordinate_manager;
-}
-
 int frame_grabber_directory::CanLoadDocument(const std::string& document)
 {
     auto path = boost::filesystem::path(document);

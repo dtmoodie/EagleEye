@@ -1,8 +1,7 @@
 #pragma once
 
 #include "cv_capture.h"
-#include "Aquila/ICoordinateManager.h"
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include "frame_grabbersExport.hpp"
 
 namespace aq

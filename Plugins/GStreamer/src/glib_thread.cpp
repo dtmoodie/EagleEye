@@ -1,7 +1,7 @@
 #include "glib_thread.h"
 #include "Aquila/rcc/SystemTable.hpp"
 
-#include "ObjectInterfacePerModule.h"
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
 #include <MetaObject/Logging/Log.hpp>
 #include <MetaObject/Thread/BoostThread.h>

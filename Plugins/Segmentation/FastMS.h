@@ -3,7 +3,7 @@
 #include "Aquila/Nodes/Node.h"
 #include <MetaObject/Parameters/ParameterMacros.hpp>
 #include "libfastms/solver/solver.h"
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
 #else

@@ -7,8 +7,8 @@
 #include <MetaObject/Parameters/ParameterMacros.hpp>
 #include <MetaObject/Parameters/TypedInputParameter.hpp>
 
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
+#include "RuntimeObjectSystem/RuntimeInclude.h"
+#include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace aq

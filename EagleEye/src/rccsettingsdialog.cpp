@@ -3,8 +3,9 @@
 #include <qfiledialog.h>
 #include <boost/log/trivial.hpp>
 #include <MetaObject/MetaObjectFactory.hpp>
-#include <IRuntimeObjectSystem.h>
-#include <FileSystemUtils.h>
+#include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
+#include <RuntimeCompiler/FileSystemUtils.h>
+
 RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RCCSettingsDialog)

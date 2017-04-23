@@ -4,7 +4,7 @@
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudalegacy.hpp>
 #include <Aquila/Nodes/NodeInfo.hpp>
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
