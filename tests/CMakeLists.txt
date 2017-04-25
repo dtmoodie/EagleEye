@@ -7,7 +7,7 @@ ENDIF()
 
 cmake_policy(SET CMP0020 NEW)
 
-set(BOOST_REQUIRED_MODULES program_options)
+set(BOOST_REQUIRED_MODULES program_options thread)
 find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
@@ -32,7 +32,7 @@ FOREACH( test ${CPP_TESTS} )
   get_filename_component( name ${test} NAME_WE )
   add_executable(${name} ${test})
   add_dependencies(${name} Aquila)
-  target_link_libraries(${name} ${LINK_LIBS} ${Boost_LIBRARIES})
+  target_link_libraries(${name} ${LINK_LIBS} ${Boost_LIBRARIES} ${Aquila_LIBRARIES})
   if(WITH_PYTHON AND HAVE_PYTHON)
 	target_link_libraries(${name} ${PYTHON_LIBRARY})
   endif()

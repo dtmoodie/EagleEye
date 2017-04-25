@@ -1,7 +1,7 @@
 #pragma once
 
-#include "RuntimeSourceDependency.h"
-#include "RuntimeInclude.h"
+#include "RuntimeObjectSystem/RuntimeSourceDependency.h"
+#include "RuntimeObjectSystem/RuntimeInclude.h"
 
 #include "cuda.h"
 #include "cuda_runtime.h"

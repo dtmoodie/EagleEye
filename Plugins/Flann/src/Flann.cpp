@@ -8,7 +8,7 @@
 #include <Aquila/rcc/external_includes/cv_imgproc.hpp>
 #include <Aquila/Nodes/NodeInfo.hpp>
 
-#include "RuntimeSourceDependency.h"
+#include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 
 
 
@@ -33,7 +33,7 @@ void ForegroundEstimate::BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& 
 bool ForegroundEstimate::ProcessImpl()
 {
     SCOPED_PROFILE_NODE
-    const cv::cuda::GpuMat& input = input_point_cloud->GetGpuMat(Stream());
+    cv::cuda::GpuMat input = input_point_cloud->GetGpuMat(Stream());
     cv::cuda::GpuMat cv32f;
     if (input.depth() != CV_32F)
     {

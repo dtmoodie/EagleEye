@@ -15,10 +15,13 @@ namespace vclick
         WebSink();
         MO_DERIVE(WebSink, aq::Nodes::Node)
             INPUT(aq::SyncedMemory, background_model, nullptr)
+            APPEND_FLAGS(background_model, mo::Desynced_e)
             INPUT(aq::SyncedMemory, foreground_mask, nullptr)
             INPUT(aq::SyncedMemory, point_cloud, nullptr)
             OPTIONAL_INPUT(cv::Mat, jpeg_buffer, nullptr)
+            APPEND_FLAGS(background_model, mo::Desynced_e)
             OPTIONAL_INPUT(aq::SyncedMemory, raw_image, nullptr)
+            APPEND_FLAGS(background_model, mo::Desynced_e)
             
             OUTPUT(cv::Mat, foreground_points, cv::Mat())
             OUTPUT(cv::Mat, output_jpeg, cv::Mat())

@@ -1,6 +1,5 @@
 #include "frame_grabber_openni2.h"
 #include "openni2_initializer.h"
-#include <Aquila/ICoordinateManager.h>
 #include <Aquila/Nodes/FrameGrabberInfo.hpp>
 #include <MetaObject/Logging/Profiling.hpp>
 using namespace aq;
@@ -32,12 +31,12 @@ int frame_grabber_openni2::CanLoadDocument(const std::string& document)
     return 0;
 }
 
-int frame_grabber_openni2::LoadTimeout()
+int frame_grabber_openni2::Timeout()
 {
     return 10000;
 }
 
-std::vector<std::string> frame_grabber_openni2::ListLoadableDocuments()
+std::vector<std::string> frame_grabber_openni2::ListLoadablePaths()
 {
     initializer_NI2::instance();
     openni::Array<openni::DeviceInfo> devices;
@@ -52,12 +51,6 @@ std::vector<std::string> frame_grabber_openni2::ListLoadableDocuments()
     return output;
 }
 
-
-
-frame_grabber_openni2::frame_grabber_openni2()
-{
-    _is_stream = true;
-}
 frame_grabber_openni2::~frame_grabber_openni2()
 {
     if(_depth)
@@ -70,12 +63,8 @@ frame_grabber_openni2::~frame_grabber_openni2()
         }
     }
 }
-long long frame_grabber_openni2::GetNumFrames()
-{
-    return -1;
-}
 
-bool frame_grabber_openni2::LoadFile(const std::string& file_path)
+bool frame_grabber_openni2::Load(std::string file_path)
 {
     std::string doc = file_path;
     std::transform(doc.begin(), doc.end(), doc.begin(), ::tolower);
@@ -157,15 +146,11 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
         }
         if(fn != 1)
             mo::PopCpu();
-        FrameGrabberBuffered::PushFrame(TS<SyncedMemory>(double(ts), (long long)fn, XYZ), false);
+        //FrameGrabberBuffered::PushFrame(TS<SyncedMemory>(double(ts), (long long)fn, XYZ), false);
+        xyz_param.UpdateData(XYZ, mo::tag::_timestamp = mo::time_t(ts * mo::us), mo::tag::_frame_number = fn);
         mo::PushCpu("openni2 frame grabber waiting on frame");
         break;
     }
-}
-
-rcc::shared_ptr<ICoordinateManager> frame_grabber_openni2::GetCoordinateManager()
-{
-    return rcc::shared_ptr<ICoordinateManager>();
 }
 
 MO_REGISTER_CLASS(frame_grabber_openni2);

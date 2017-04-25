@@ -1,5 +1,5 @@
 #include "HeartBeatBuffer.h"
-#include <shared_ptr.hpp>
+#include <RuntimeObjectSystem/shared_ptr.hpp>
 
 using namespace aq;
 using namespace aq::Nodes;

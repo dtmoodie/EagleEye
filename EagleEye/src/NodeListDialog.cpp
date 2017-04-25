@@ -25,7 +25,7 @@ void NodeListDialog::update()
 {
     ui->NodeList->clear();
     //auto nodes = aq::NodeManager::getInstance().getConstructableNodes();
-    auto nodes = mo::MetaObjectFactory::Instance()->GetConstructors(IID_NodeObject);
+    auto nodes = mo::MetaObjectFactory::Instance()->GetConstructors(aq::Nodes::Node::s_interfaceID);
     for(size_t i = 0; i < nodes.size(); ++i)
     {
         //ui->NodeList->addItem(QString::fromStdString(nodes[i]));

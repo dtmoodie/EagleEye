@@ -4,8 +4,8 @@
 #include "thrust/host_vector.h"
 
 
-#include "RuntimeSourceDependency.h"
-#include "RuntimeInclude.h"
+#include "RuntimeObjectSystem/RuntimeSourceDependency.h"
+#include "RuntimeObjectSystem/RuntimeInclude.h"
 
 RUNTIME_MODIFIABLE_INCLUDE;// If this file changes, update files that include this
 RUNTIME_COMPILER_SOURCEDEPENDENCY_FILE("mil_boost", ".cu");// If the cuda implementation file changes, recompile dependents

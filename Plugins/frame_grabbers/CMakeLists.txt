@@ -15,7 +15,7 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 find_package(CUDA REQUIRED)
     include_directories(${CUDA_INCLUDE_DIRS})
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core imgcodecs cudacodec)
+find_package(OpenCV 3.0 QUIET COMPONENTS core imgcodecs cudacodec cudaarithm)
     include_directories(${OpenCV_INCLUDE_DIRS})
     set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 

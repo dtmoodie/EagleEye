@@ -14,7 +14,7 @@
 #endif
 
 
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #ifdef WIN32
 #ifdef _DEBUG
   RUNTIME_COMPILER_LINKLIBRARY("@PLUGIN_NAME@d.lib")

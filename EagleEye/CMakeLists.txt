@@ -6,8 +6,9 @@ CMAKE_POLICY(SET CMP0053 OLD)
 ENDIF()
 find_package(Qt5 COMPONENTS Gui Widgets Core OpenGL PrintSupport)
 IF(Qt5_FOUND)
+    find_package(Aquila REQUIRED)
     find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
-
+	find_package(nodeeditor REQUIRED)
     
     find_package(CUDA REQUIRED)
 
@@ -132,9 +133,9 @@ IF(Qt5_FOUND)
         APPEND_BIN_DIR(GSTREAMER_gst_BIN_DIR PROJECT_BIN_DIRS_RELEASE)
         APPEND_BIN_DIR(GSTREAMER_gst_BIN_DIR PROJECT_BIN_DIRS_RELWITHDEBINFO)
         
-        set(PROJECT_BIN_DIRS_DEBUG ${PROJECT_BIN_DIRS_DEBUG} CACHE PATH "")
-        set(PROJECT_BIN_DIRS_RELEASE ${PROJECT_BIN_DIRS_RELEASE} CACHE PATH "")
-        set(PROJECT_BIN_DIRS_RELWITHDEBINFO ${PROJECT_BIN_DIRS_RELWITHDEBINFO} CACHE PATH "")
+        set(PROJECT_BIN_DIRS_DEBUG ${PROJECT_BIN_DIRS_DEBUG})
+        set(PROJECT_BIN_DIRS_RELEASE ${PROJECT_BIN_DIRS_RELEASE})
+        set(PROJECT_BIN_DIRS_RELWITHDEBINFO ${PROJECT_BIN_DIRS_RELWITHDEBINFO})
 
         CONFIGURE_FILE(EagleEye.vcxproj.user.in ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
     ENDIF(WIN32)
@@ -158,7 +159,7 @@ IF(Qt5_FOUND)
         )
     endif()
  
-    TARGET_LINK_LIBRARIES(${executable_name}
+    RCC_LINK_LIB(${executable_name}
         Qt5::Gui
         Qt5::Widgets
         Qt5::Core
@@ -167,29 +168,19 @@ IF(Qt5_FOUND)
         Aquila
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS}
+		nodes
     )
     if(UNIX)
         TARGET_LINK_LIBRARIES(${executable_name} dl)
     endif()
 	IF(WIN32)
-		set(PROJECT_BIN_DIRS_DEBUG "")
-		set(PROJECT_BIN_DIRS_RELEASE "")
-		set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
-	  MACRO(APPEND_BIN_DIR ARG1 ARG2)
-		IF(EXISTS "${${ARG1}}" AND IS_DIRECTORY "${${ARG1}}")
-			LIST(APPEND ${ARG2} ${${ARG1}})
-		ELSE()
-			if(RCC_VERBOSE_CONFIG)
-			  MESSAGE("${ARG1} : ${${ARG1}} is not a valid directory")
-			endif()
-		ENDIF()
-	  ENDMACRO(APPEND_BIN_DIR)
-
-	  FOREACH(dir ${BIN_DIRS})
-		APPEND_BIN_DIR(${dir}_BIN_DIR_DBG PROJECT_BIN_DIRS_DEBUG)
-		APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELEASE)
-		APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELWITHDEBINFO)
-	  ENDFOREACH(dir ${BIN_DIRS})
-	  CONFIGURE_FILE("../../Aquila/tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
+		configure_bin_dirs(EagleEye)
+		get_target_property(nodes_dll nodes IMPORTED_LOCATION_DEBUG)
+		if(nodes_dll)
+			get_filename_component(nodes_bin_dir ${nodes_dll} DIRECTORY)
+			list(APPEND PROJECT_BIN_DIRS_DEBUG ${nodes_bin_dir})
+		endif()
+		message(${PROJECT_BIN_DIRS_DEBUG})
+		CONFIGURE_FILE("../Aquila/tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
 	endif(WIN32)
 ENDIF(Qt5_FOUND)

@@ -62,7 +62,7 @@ if(WIN32)
         "include_dirs:\n${target_include_dirs_}\n${CMAKE_CURRENT_LIST_DIR}/src\n"
         "lib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
         "lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
-        "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"Aquila/Detail/PluginExport.hpp\""
+        "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME}"
   )
 
   FILE(WRITE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo/${PROJECT_NAME}_config.txt"
@@ -70,7 +70,7 @@ if(WIN32)
         "include_dirs:\n${target_include_dirs_}\n${CMAKE_CURRENT_LIST_DIR}/src\n"
         "lib_dirs_debug:\n${link_dirs_debug}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug\n"
         "lib_dirs_release:\n${link_dirs_release}\n${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo\n"
-        "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME} /FI\"Aquila/Detail/PluginExport.hpp\""
+        "compile_options:\n/DPROJECT_BUILD_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\" ${WIN_DEFS} /DPLUGIN_NAME=${PROJECT_NAME}"
   )
   set(outfile_ "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug/${PROJECT_NAME}_config.txt")
 else(WIN32)
@@ -111,7 +111,7 @@ LINK_DIRECTORIES(${LINK_DIRS})
 
 # ============= Write out a file containing external include info
 
-set(external_include_file "#pragma once\n\n#include \"RuntimeLinkLibrary.h\"\n\n#ifdef _MSC_VER\n")
+set(external_include_file "#pragma once\n\n#include \"RuntimeObjectSystem/RuntimeLinkLibrary.h\"\n\n#ifdef _MSC_VER\n")
 # wndows link libs
 if(LINK_LIBS_RELEASE)
   LIST(REMOVE_DUPLICATES LINK_LIBS_RELEASE)

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Aquila/Nodes/IFrameGrabber.hpp"
-#include "Aquila/ICoordinateManager.h"
 #include "frame_grabbersExport.hpp"
 namespace aq
 {

@@ -1,5 +1,5 @@
 #include "caffe_init.h"
-#include "ObjectInterfacePerModule.h"
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include "Aquila/rcc/SystemTable.hpp"
 
 #include <caffe/caffe.hpp>

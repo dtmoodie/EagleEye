@@ -1,6 +1,6 @@
 #include <Aquila/plotters/PlotManager.h>
 #include "Aquila/plotters/Plotter.h"
-
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 #include "plotwizarddialog.h"
 #include "ui_plotwizarddialog.h"
 

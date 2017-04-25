@@ -6,7 +6,7 @@
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 
-#include <IRuntimeObjectSystem.h>
+#include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
 
 
 using namespace aq;

@@ -1,7 +1,6 @@
 #pragma once
 #ifdef HAVE_GSTREAMER
 #include "gstreamer.h"
-#include "Aquila/ICoordinateManager.h"
 
 namespace aq
 {

@@ -44,6 +44,7 @@ bool WebSink::ProcessImpl()
         return false;
     cv::Mat mask = foreground_mask->GetMat(Stream());
     cv::Mat ptCloud = point_cloud->GetMat(Stream());
+    Stream().waitForCompletion();
     int num_points = cv::countNonZero(mask);
     cv::Mat foreground_points(1, num_points, CV_32FC3);
     int count = 0;

@@ -2,8 +2,8 @@
 #include <src/precompiled.hpp>
 #include <Aquila/rcc/external_includes/cv_videoio.hpp>
 #include <Aquila/rcc/external_includes/cv_cudacodec.hpp>
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
+#include "RuntimeObjectSystem/RuntimeInclude.h"
+#include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 #include "MetaObject/Thread/ThreadHandle.hpp"
 #include "MetaObject/Thread/ThreadPool.hpp"
 #include "MetaObject/Detail/ConcurrentQueue.hpp"

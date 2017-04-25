@@ -1,6 +1,5 @@
 #pragma once
 #include "Aquila/Nodes/IFrameGrabber.hpp"
-#include "Aquila/ICoordinateManager.h"
 
 namespace aq
 {
@@ -27,7 +26,6 @@ namespace aq
     private:
         cv::cuda::GpuMat                d_image;
         cv::Mat                         h_image;
-        rcc::shared_ptr<ICoordinateManager>  coordinate_manager;
         std::string                     loaded_file;
         std::vector<std::string>        files_on_disk;
         //int frame_index;

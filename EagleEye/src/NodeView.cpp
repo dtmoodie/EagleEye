@@ -3,7 +3,6 @@
 #include "qdrag.h"
 #include <qmimedata.h>
 
-#include <Aquila/Signals.h>
 #include <Aquila/Nodes/NodeFactory.h>
 #include "signal_dialog.h"
 #include <Aquila/plotters/PlotManager.h>

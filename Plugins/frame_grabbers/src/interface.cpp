@@ -1,3 +1,3 @@
-#include "ObjectInterfacePerModule.h"
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include "MetaObject/MetaObjectFactory.hpp"
-#include "IRuntimeObjectSystem.h"
+#include "RuntimeObjectSystem/IRuntimeObjectSystem.h"

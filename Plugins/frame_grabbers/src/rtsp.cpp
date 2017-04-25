@@ -150,11 +150,6 @@ void frame_grabber_rtsp::seek_relative_msec(double msec)
     }
 }
 
-rcc::shared_ptr<ICoordinateManager> frame_grabber_rtsp::GetCoordinateManager()
-{
-    return coordinate_manager;
-}
-
 MO_REGISTER_CLASS(frame_grabber_rtsp);
 */
 #endif
