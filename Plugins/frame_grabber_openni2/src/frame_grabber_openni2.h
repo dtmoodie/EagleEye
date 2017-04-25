@@ -19,6 +19,7 @@ namespace aq
         public:
             MO_DERIVE(frame_grabber_openni2, IFrameGrabber)
                 SOURCE(SyncedMemory, xyz, {})
+                APPEND_FLAGS(xyz, mo::RequestBuffered_e)
             MO_END;
             
             ~frame_grabber_openni2();

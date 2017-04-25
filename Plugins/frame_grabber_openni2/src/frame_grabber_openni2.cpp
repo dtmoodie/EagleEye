@@ -147,7 +147,7 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
         if(fn != 1)
             mo::PopCpu();
         //FrameGrabberBuffered::PushFrame(TS<SyncedMemory>(double(ts), (long long)fn, XYZ), false);
-        xyz_param.UpdateData(XYZ, mo::tag::_timestamp = mo::time_t(ts * mo::ms));
+        xyz_param.UpdateData(XYZ, mo::tag::_timestamp = mo::time_t(ts * mo::us), mo::tag::_frame_number = fn);
         mo::PushCpu("openni2 frame grabber waiting on frame");
         break;
     }

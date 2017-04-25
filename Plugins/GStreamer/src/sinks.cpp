@@ -150,11 +150,12 @@ GstFlowReturn JPEGSink::on_pull()
         {
             cv::Mat mapped(1, map.size, CV_8U);
             memcpy(mapped.data, map.data, map.size);
-            this->jpeg_buffer_param.UpdateData(mapped, buffer->pts, &gstreamer_context);
+            mo::time_t ts(buffer->pts * mo::ns);
+            this->jpeg_buffer_param.UpdateData(mapped, ts, &gstreamer_context);
             if(decoded_param.HasSubscriptions())
             {
                 decoded_param.UpdateData(cv::imdecode(jpeg_buffer, cv::IMREAD_UNCHANGED, &decode_buffer),
-                    buffer->pts, &gstreamer_context);
+                    ts, &gstreamer_context);
             }
         }
         gst_sample_unref(sample);

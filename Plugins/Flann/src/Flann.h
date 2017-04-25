@@ -3,7 +3,6 @@
 #include "Aquila/Nodes/Node.h"
 #include "Aquila/Detail/Export.hpp"
 #include <Aquila/utilities/CudaUtils.hpp>
-#include <Aquila/Project_defs.hpp>
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 
 
@@ -29,16 +28,17 @@ namespace aq
         {
         public:
             MO_DERIVE(ForegroundEstimate, Node)
-                INPUT(SyncedMemory, input_point_cloud, nullptr);
-                PARAM(float, radius, 5.0);
-                PARAM(float, epsilon, 1.0);
-                PARAM(int, checks, -1);
-                PARAM(bool, build_model, false);
-                OUTPUT(SyncedMemory, background_model, SyncedMemory());
-                OUTPUT(SyncedMemory, index, SyncedMemory());
-                OUTPUT(SyncedMemory, distance, SyncedMemory());
-                OUTPUT(SyncedMemory, point_mask, SyncedMemory());
-                OUTPUT(SyncedMemory, foreground, SyncedMemory());
+                INPUT(SyncedMemory, input_point_cloud, nullptr)
+                APPEND_FLAGS(input_point_cloud, mo::Sync_e)
+                PARAM(float, radius, 5.0)
+                PARAM(float, epsilon, 1.0)
+                PARAM(int, checks, -1)
+                PARAM(bool, build_model, false)
+                OUTPUT(SyncedMemory, background_model, SyncedMemory())
+                OUTPUT(SyncedMemory, index, SyncedMemory())
+                OUTPUT(SyncedMemory, distance, SyncedMemory())
+                OUTPUT(SyncedMemory, point_mask, SyncedMemory())
+                OUTPUT(SyncedMemory, foreground, SyncedMemory())
             MO_END;
         protected:
             bool ProcessImpl();

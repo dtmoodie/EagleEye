@@ -34,7 +34,7 @@
 #include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
 #include "MetaObject/MetaParameters.hpp"
-
+#include "Aquila/rcc/SystemTable.hpp"
 
 #ifdef HAVE_WT
 #include "vclick.hpp"
@@ -133,10 +133,13 @@ void sig_handler(int s)
 int main(int argc, char* argv[])
 {
     boost::program_options::options_description desc("Allowed options");
-
+    SystemTable table;
+    mo::MetaObjectFactory::Instance(&table);
+    
     desc.add_options()
         ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
         ("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")
+        ("launch", boost::program_options::value<std::string>(), "Optional - File containing node structure")
         ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")
         ("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")
         ("log-dir", boost::program_options::value<std::string>(), "directory for log output")
@@ -1469,6 +1472,12 @@ int main(int argc, char* argv[])
         {
             std::stringstream ss;
             ss << "load " << vm["config"].as<std::string>();
+            command_list.emplace_back(ss.str());
+        }
+        if(vm.count("launch"))
+        {
+            std::stringstream ss;
+            ss << "load " << vm["launch"].as<std::string>();
             command_list.emplace_back(ss.str());
         }
 
