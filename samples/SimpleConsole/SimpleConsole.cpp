@@ -1512,6 +1512,13 @@ int main(int argc, char* argv[])
                 }
             }
         };
+
+        slot = new mo::TypedSlot<void(std::string)>(std::bind([&rcc_enabled](std::string value)
+        {
+            rcc_enabled = boost::lexical_cast<bool>(value);
+        }, std::placeholders::_1));
+        connections.push_back(manager.Connect(slot, "rcc"));
+
         bool disable_input = vm["disable-input"].as<bool>();
         auto io_func = [&command_list, &manager, &print_options, disable_input]()
         {
