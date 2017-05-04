@@ -59,11 +59,12 @@ cuda_add_library(frame_grabbers SHARED ${src} ${hdr} ${knl})
 
 add_dependencies(frame_grabbers Aquila)
 
-RCC_LINK_LIB(frame_grabbers 
-        Aquila 
-        ${OpenCV_LIBS} 
-        ${CUDA_CUBLAS_LIBRARIES} 
-        
+RCC_LINK_LIB(frame_grabbers
+        Aquila
+        ${OpenCV_LIBS}
+        ${CUDA_CUBLAS_LIBRARIES}
+        aquila_types
+        aquila_metatypes
 )
 if(GSTREAMER_FOUND)
     RCC_LINK_LIB(frame_grabbers
@@ -87,9 +88,8 @@ if(GSTREAMER_FOUND)
 endif()
 
 # ------------- tests
-add_subdirectory("tests")
-
-
-
+if(BUILD_TESTS)
+    add_subdirectory("tests")
+endif()
 INCLUDE(../PluginTemplate.cmake)
 
