@@ -1,5 +1,4 @@
 #include "RosSubscriber.hpp"
-#include "Aquila/ICoordinateManager.h"
 #include <Aquila/Nodes/FrameGrabberInfo.hpp>
 #include "RosInterface.hpp"
 #include <ros/ros.h>

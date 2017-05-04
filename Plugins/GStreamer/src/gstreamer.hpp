@@ -9,6 +9,7 @@
 #include "Aquila/Detail/Export.hpp"
 #include "Aquila/Detail/PluginExport.hpp"
 #include <Aquila/utilities/CudaUtils.hpp>
+#include <Aquila/types/Stamped.hpp>
 #include <MetaObject/MetaObject.hpp>
 
 #include <gst/gst.h>
@@ -45,7 +46,7 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5OpenGLd.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgetsd.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Guid.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Cored.lib");
-#else 
+#else
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Network.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5OpenGL.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
@@ -110,7 +111,7 @@ namespace aq
         public:
             gstreamer_sink_base();
             virtual ~gstreamer_sink_base();
-            
+
             virtual bool create_pipeline(const std::string& pipeline_);
             virtual bool set_caps(cv::Size image_size, int channels, int depth = CV_8U);
             virtual bool set_caps(const std::string& caps);
@@ -148,7 +149,7 @@ namespace aq
             cv::Size imgSize;
             boost::thread glibThread;
             ConstBuffer<cv::cuda::HostMem> bufferPool;
-        
+
             guint need_data_id;
             guint enough_data_id;
 

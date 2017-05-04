@@ -6,7 +6,7 @@
 #include "MessageReaderInfo.hpp"
 #include "RosInterface.hpp"
 #include <cv_bridge/cv_bridge.h>
-#include <Aquila/SyncedMemory.h>
+#include <Aquila/types/SyncedMemory.hpp>
 #include "MetaObject/Detail/AllocatorImpl.hpp"
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>

@@ -28,11 +28,11 @@ typedef class gstreamer_sink_base App;
 static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
 {
     LOG(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
-    
-    
-    switch (GST_MESSAGE_TYPE(message)) 
+
+
+    switch (GST_MESSAGE_TYPE(message))
     {
-    case GST_MESSAGE_ERROR: 
+    case GST_MESSAGE_ERROR:
     {
         GError *err = NULL;
         gchar *dbg_info = NULL;
@@ -45,7 +45,7 @@ static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
         break;
     }
     case GST_MESSAGE_EOS:
-        break; 
+        break;
     case GST_MESSAGE_STATE_CHANGED:
     {
         GstState oldstate, newstate, pendingstate;
@@ -58,7 +58,7 @@ static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
         case GST_STATE_PAUSED: {LOG(debug) << "State changed to GST_STATE_PAUSED"; break; }
         case GST_STATE_PLAYING: {LOG(debug) << "State changed to GST_STATE_PLAYING"; break; }
         }
-        
+
     }
     default:
         break;
@@ -88,7 +88,7 @@ gstreamer_sink_base::gstreamer_sink_base():
     _enough_data_id = 0;
     _feed_enabled = false;
     _caps_set = false;
-    
+
     gst_debug_set_active(1);
 
 
@@ -129,7 +129,7 @@ void gstreamer_base::cleanup()
         gst_element_set_state(_pipeline, GST_STATE_NULL);
         gst_object_unref(_pipeline);
         _pipeline = nullptr;
-    }    
+    }
 }
 
 void gstreamer_sink_base::cleanup()
@@ -152,7 +152,7 @@ bool gstreamer_base::create_pipeline(const std::string& pipeline_)
 
     GError* error = nullptr;
     _pipeline = gst_parse_launch(pipeline_.c_str(), &error);
-    
+
     if (_pipeline == nullptr)
     {
         LOG(error) << "Error parsing pipeline";
@@ -161,7 +161,7 @@ bool gstreamer_base::create_pipeline(const std::string& pipeline_)
     {
         LOG(info) << "Successfully created pipeline: " << pipeline_;
     }
-    
+
     if (error != nullptr)
     {
         LOG(error) << "Error parsing pipeline " << error->message;
@@ -216,7 +216,7 @@ gstreamer_src_base::~gstreamer_src_base()
 bool gstreamer_src_base::create_pipeline(const std::string& pipeline_)
 {
     if(gstreamer_base::create_pipeline(pipeline_))
-    {    
+    {
         _appsink = gst_bin_get_by_name(GST_BIN(_pipeline), "appsink0");
         if(!_appsink)
             _appsink = gst_bin_get_by_name(GST_BIN(_pipeline), "mysink");
@@ -291,9 +291,9 @@ bool gstreamer_sink_base::set_caps(cv::Size img_size, int channels, int depth)
     gst_app_src_set_caps(GST_APP_SRC(_source), caps);
 
     g_object_set(
-        G_OBJECT(_source), 
-        "stream-type", GST_APP_STREAM_TYPE_STREAM, 
-        "format", GST_FORMAT_TIME, 
+        G_OBJECT(_source),
+        "stream-type", GST_APP_STREAM_TYPE_STREAM,
+        "format", GST_FORMAT_TIME,
         NULL);
     LOG(debug) << "Connecting need/enough data callbacks";
     _need_data_id   = g_signal_connect(_source, "need-data",   G_CALLBACK(_start_feed), this);
@@ -359,7 +359,7 @@ bool gstreamer_base::pause_pipeline()
     if(!_pipeline)
         return false;
     GstStateChangeReturn ret = gst_element_set_state(_pipeline, GST_STATE_PAUSED);
-    
+
     if(ret == GST_STATE_CHANGE_FAILURE)
     {
         LOG(error) << "Unable to pause pipeline";
@@ -568,13 +568,13 @@ std::vector<std::string> gstreamer_base::get_gstreamer_features(const std::strin
             }else
             {
                 plugin_names.push_back(name);
-            }   
+            }
             features = features->next;
         }
         gst_plugin_feature_list_free(features);
         plugins = plugins->next;
     }
-    gst_plugin_list_free(plugins);    
+    gst_plugin_list_free(plugins);
     return plugin_names;
 }
 bool gstreamer_base::check_feature(const std::string& feature_name)
@@ -590,8 +590,8 @@ bool gstreamer_base::check_feature(const std::string& feature_name)
 }
 bool gstreamer_base::is_pipeline(const std::string& string)
 {
-    
-    return true;    
+
+    return true;
 }
 // ---------------------------------------------------------------------------
 
@@ -611,7 +611,7 @@ RTSP_server::~RTSP_server()
     {
         gst_element_set_state(pipeline, GST_STATE_NULL);
     }
-    
+
 #ifdef _MSC_VER
     PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton<GMainLoop>(nullptr);
 #endif
@@ -620,7 +620,7 @@ RTSP_server::~RTSP_server()
         g_main_loop_quit(glib_MainLoop);
         glibThread.join();
         g_main_loop_unref(glib_MainLoop);
-        
+
     }
     if (pipeline)
     {
@@ -631,7 +631,7 @@ RTSP_server::~RTSP_server()
         g_signal_handler_disconnect(source_OpenCV, need_data_id);
         g_signal_handler_disconnect(source_OpenCV, enough_data_id);
         gst_object_unref(source_OpenCV);
-    }    
+    }
 }
 
 void RTSP_server::gst_loop()
@@ -651,7 +651,7 @@ void RTSP_server::onPipeChange()
 
 void RTSP_server::setup(std::string pipeOverride)
 {
-    
+
     gst_debug_set_active(1);
 
     if (!gst_is_initialized())
@@ -708,7 +708,7 @@ void RTSP_server::setup(std::string pipeOverride)
             case UDP:
             {
                 ss << "udpsink host=";
-                
+
                 if (host.size())
                 {
                     ss << host;
@@ -723,7 +723,7 @@ void RTSP_server::setup(std::string pipeOverride)
             }
         }
         ss << " port=" << port;
-        
+
         pipeOverride = ss.str();
     }
     else
@@ -731,10 +731,10 @@ void RTSP_server::setup(std::string pipeOverride)
         //updateParameter<std::string>("gst pipeline", pipeOverride);
         gst_pipeline_param.UpdateData(pipeOverride);
     }
-    
+
     LOG(info) << pipeOverride;
 
-    
+
     if (pipeline)
     {
         gst_element_set_state(pipeline, GST_STATE_NULL);
@@ -745,23 +745,23 @@ void RTSP_server::setup(std::string pipeOverride)
     }
 
 
-    
+
     pipeline = gst_parse_launch(pipeOverride.c_str(), &error);
-    
+
     if (pipeline == nullptr)
     {
         LOG(error) << "Error parsing pipeline";
         feed_enabled = false;
         return;
     }
-    
+
     if (error != nullptr)
     {
         LOG(error) << "Error parsing pipeline " << error->message;
     }
-    
+
     source_OpenCV = gst_bin_get_by_name(GST_BIN(pipeline), "mysource");
-    
+
     GstCaps* caps = gst_caps_new_simple(
         "video/x-raw",
         "format", G_TYPE_STRING, "BGR",
@@ -778,14 +778,14 @@ void RTSP_server::setup(std::string pipeOverride)
 
     gst_app_src_set_caps(GST_APP_SRC(source_OpenCV), caps);
     g_object_set(
-        G_OBJECT(source_OpenCV), 
-        "stream-type", GST_APP_STREAM_TYPE_STREAM, 
-        "format", GST_FORMAT_TIME, 
+        G_OBJECT(source_OpenCV),
+        "stream-type", GST_APP_STREAM_TYPE_STREAM,
+        "format", GST_FORMAT_TIME,
         NULL);
-    
+
     need_data_id = g_signal_connect(source_OpenCV, "need-data", G_CALLBACK(_start_feed), this);
     enough_data_id = g_signal_connect(source_OpenCV, "enough-data", G_CALLBACK(_stop_feed), this);
-    
+
     // Error callback
     auto bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
     CV_Assert(bus);
@@ -793,13 +793,13 @@ void RTSP_server::setup(std::string pipeOverride)
     gst_object_unref(bus);
 
     GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
-    CV_Assert(ret != GST_STATE_CHANGE_FAILURE); 
+    CV_Assert(ret != GST_STATE_CHANGE_FAILURE);
 }
 
 
 void RTSP_server::push_image()
 {
-    
+
     GstBuffer* buffer;
     auto h_buffer = bufferPool.getBack();
     if (h_buffer)
@@ -812,12 +812,12 @@ void RTSP_server::push_image()
         memcpy(map.data, h_buffer->data, map.size);
         gst_buffer_unmap(buffer, &map);
 
-        GST_BUFFER_PTS(buffer) = timestamp; 
-        
+        GST_BUFFER_PTS(buffer) = timestamp;
+
         GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale_int(delta, GST_SECOND, 1000);
         timestamp += GST_BUFFER_DURATION(buffer);
 
-        
+
         GstFlowReturn rw;
         g_signal_emit_by_name(source_OpenCV, "push-buffer", buffer, &rw);
 
@@ -830,16 +830,16 @@ void RTSP_server::push_image()
 }
 
 
-void RTSP_serverCallback(int status, void* userData) 
+void RTSP_serverCallback(int status, void* userData)
 {
     static_cast<RTSP_server*>(userData)->push_image();
 }
 
-cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream) 
+cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream)
 {
-    if (imgSize != img.size()) 
+    if (imgSize != img.size())
     {
-        imgSize = img.size(); 
+        imgSize = img.size();
         setup();
     }
     auto curTime = clock();
@@ -867,9 +867,9 @@ RTSP_server::RTSP_server():
     pipeline = nullptr;
     glib_MainLoop = nullptr;
     feed_enabled = false;
-    need_data_id = 0; 
+    need_data_id = 0;
     enough_data_id = 0;
-}                    
+}
 bool RTSP_server::ProcessImpl()
 {
     return false;
@@ -901,7 +901,7 @@ RTSP_server_new::~RTSP_server_new()
             NODE_LOG(debug) << "gst_element_set_state(pipeline, GST_STATE_NULL) != GST_STATE_CHANGE_SUCCESS";
         }
     }
-        
+
     g_main_loop_quit(loop);
     if(factory)
         gst_object_unref(factory);
@@ -910,7 +910,7 @@ RTSP_server_new::~RTSP_server_new()
         g_source_remove(server_id);
         gst_object_unref(server);
     }
-        
+
     glib_thread.join();
     if(loop)
         g_main_loop_unref(loop);
@@ -938,7 +938,7 @@ void RTSP_server_new::glibThread()
 }
 void RTSP_server_new::setup(std::string pipeOverride)
 {
-    
+
 }
 void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpointer user_data)
 {
@@ -950,7 +950,7 @@ void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpoin
     {
         int bufferlength = h_buffer.cols * h_buffer.rows * h_buffer.channels();
         auto buffer = gst_buffer_new_and_alloc(bufferlength);
-        
+
         GstMapInfo map;
         gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
         memcpy(map.data, h_buffer.data, map.size);
@@ -996,7 +996,7 @@ bus_message_new(GstBus * bus, GstMessage * message, RTSP_server_new * app)
         break;
     }
     case GST_MESSAGE_EOS:
-        g_main_loop_quit(app->loop); 
+        g_main_loop_quit(app->loop);
         break;
     default:
         break;
@@ -1026,18 +1026,18 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, aq::No
         return;
     }
 
-    // get the element used for providing the streams of the media 
+    // get the element used for providing the streams of the media
     node->pipeline = gst_rtsp_media_get_element(media);
 
-    // get our appsrc, we named it 'mysrc' with the name property 
+    // get our appsrc, we named it 'mysrc' with the name property
     node->appsrc = gst_bin_get_by_name_recurse_up(GST_BIN(node->pipeline), "mysrc");
 
     BOOST_LOG(info) << "[RTSP Server] Configuring pipeline " << node->clientCount << " " << node->pipeline << " " << node->appsrc;
 
-    // this instructs appsrc that we will be dealing with timed buffer 
+    // this instructs appsrc that we will be dealing with timed buffer
     gst_util_set_object_arg(G_OBJECT(node->appsrc), "format", "time");
 
-    // configure the caps of the video 
+    // configure the caps of the video
     g_object_set(G_OBJECT(node->appsrc), "caps",
         gst_caps_new_simple("video/x-raw",
             "format", G_TYPE_STRING, "BGR",
@@ -1046,7 +1046,7 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, aq::No
             "framerate", GST_TYPE_FRACTION, 30, 1, NULL), NULL);
 
 
-    // install the callback that will be called when a buffer is needed 
+    // install the callback that will be called when a buffer is needed
     g_signal_connect(node->appsrc, "need-data", (GCallback)rtsp_server_new_need_data_callback, node);
     //gst_object_unref(appsrc);
     //gst_object_unref(element);
@@ -1087,28 +1087,28 @@ void RTSP_server_new::NodeInit(bool firstInit)
             NODE_LOG(debug) << "Creating glib event loop";
             loop = g_main_loop_new(NULL, FALSE);
         }
-            
 
-        // create a server instance 
+
+        // create a server instance
         if (!server)
         {
             LOG(debug) << "Creating new rtsp server";
             server = gst_rtsp_server_new();
         }
-        
+
         // get the mount points for this server, every server has a default object
-        // that be used to map uri mount points to media factories 
+        // that be used to map uri mount points to media factories
         if (!mounts)
         {
             LOG(debug) << "Creating new mount points";
             mounts = gst_rtsp_server_get_mount_points(server);
         }
-            
+
 
         // make a media factory for a test stream. The default media factory can use
         // gst-launch syntax to create pipelines.
         // any launch line works as long as it contains elements named pay%d. Each
-        // element with pay%d names will be a stream 
+        // element with pay%d names will be a stream
         if (!factory)
         {
             LOG(debug) << "Creating rtsp media factory";
@@ -1120,19 +1120,19 @@ void RTSP_server_new::NodeInit(bool firstInit)
             "( appsrc name=mysrc ! videoconvert ! openh264enc ! rtph264pay name=pay0 pt=96 )");
 
         // notify when our media is ready, This is called whenever someone asks for
-        // the media and a new pipeline with our appsrc is created 
+        // the media and a new pipeline with our appsrc is created
         //g_signal_connect(factory, "media-configure", G_CALLBACK(media_configure), this);
 
-        // attach the test factory to the /test url 
+        // attach the test factory to the /test url
         gst_rtsp_mount_points_add_factory(mounts, "/test", factory);
 
-        // don't need the ref to the mounts anymore 
+        // don't need the ref to the mounts anymore
         g_object_unref(mounts);
 
-        // attach the server to the default maincontext 
+        // attach the server to the default maincontext
         server_id = gst_rtsp_server_attach(server, NULL);
         g_signal_connect(server, "client-connected",G_CALLBACK(new_client_handler), this);
-        
+
         glib_thread = boost::thread(std::bind(&RTSP_server_new::glibThread, this));
     }
 }

@@ -8,7 +8,7 @@
 #include <Aquila/utilities/CudaUtils.hpp>
 #include "Aquila/utilities/CudaCallbacks.hpp"
 #include "Aquila/rcc/SystemTable.hpp"
-
+#include <Aquila/types/Stamped.hpp>
 
 
 #include <MetaObject/MetaObject.hpp>

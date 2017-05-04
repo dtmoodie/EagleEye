@@ -20,12 +20,10 @@ IF(Aquila_FLANN_LIBRARY_DEBUG AND Aquila_FLANN_CUDA_LIBRARY_DEBUG)
     FILE(GLOB_RECURSE src "src/*.cpp")
     FILE(GLOB_RECURSE hdr "src/*.hpp" "src/*.h")
     FILE(GLOB_RECURSE knl "src/*.cu")
-    
+
     LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
     LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
-
-        #LIST(APPEND CUDA_NVCC_FLAGS_DEBUG "-g;-G;-lineinfo")
-        SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+        #SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
     INCLUDE_DIRECTORIES(
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${OpenCV_INCLUDE_DIRS}
@@ -42,13 +40,13 @@ IF(Aquila_FLANN_LIBRARY_DEBUG AND Aquila_FLANN_CUDA_LIBRARY_DEBUG)
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}
         )
-    
+
     target_link_libraries(Flann debug;${Aquila_FLANN_CUDA_LIBRARY_DEBUG};
                                 debug;${Aquila_FLANN_LIBRARY_DEBUG};
                                 optimized;${Aquila_FLANN_CUDA_LIBRARY_RELEASE};
                                 optimized;${Aquila_FLANN_LIBRARY_RELEASE})
-    
-    
+
+
 
     #TARGET_LINK_LIBRARIES(Flann debug ${Aquila_FLANN_CUDA_LIBRARY_DEBUG} ${Aquila_FLANN_LIBRARY_DEBUG})
     #TARGET_LINK_LIBRARIES(Flann optimized ${Aquila_FLANN_CUDA_LIBRARY_RELEASE} ${Aquila_FLANN_LIBRARY_RELEASE})

@@ -18,7 +18,7 @@ INCLUDE_DIRECTORIES(
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
-    
+
 )
 
 file(GLOB_RECURSE src "src/*.cpp")
@@ -26,16 +26,14 @@ file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp" "src/*.cuh")
 
 IF(WIN32)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-ELSE()
-    #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
 ENDIF()
 
 cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})
 
 add_dependencies(Dev Aquila)
-RCC_LINK_LIB(Dev 
+RCC_LINK_LIB(Dev
     ${OpenCV_LIBS}
-    ${CUDA_CUBLAS_LIBRARIES} 
+    ${CUDA_CUBLAS_LIBRARIES}
     Aquila
     MetaParameters
 )

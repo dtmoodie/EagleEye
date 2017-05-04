@@ -17,7 +17,6 @@ namespace aq
             MO_END
             bool Load(std::string file_path);
 
-            rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
             void AddComponent(rcc::weak_ptr<Algorithm> component);
             void NodeInit(bool firstInit);
         protected:

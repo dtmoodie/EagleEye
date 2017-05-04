@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 2.8)
+# requires a rather new version of cmake to correctly handle target_include_directories when compiling .cu files
+cmake_minimum_required(VERSION 3.7)
 
 project(EagleEye)
 SET(BIN_DIRS "" CACHE STRING "" FORCE)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
+option(BUILD_DEPENDENCIES "Build dependencies within the AquilOS family" ON)
 find_package(CUDA REQUIRED)
   include_directories(${CUDA_INCLUDE_DIRS})
 
@@ -32,7 +33,7 @@ ELSE(WIN32)
   ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
 ENDIF(WIN32)
 find_package(Boost REQUIRED)
-	include_directories(${Boost_INCLUDE_DIRS})
+    include_directories(${Boost_INCLUDE_DIRS})
 
 IF(WIN32)
   add_definitions(-DWIN32)
@@ -62,18 +63,18 @@ ELSE(WIN32)
 ENDIF(WIN32)
 
 SET(Aquila_JETSON FALSE CACHE BOOL "True if building for jetson platform")
-find_package(Aquila QUIET)
-if(Aquila_FOUND)
-	include_directories(${Aquila_INCLUDE_DIRS})
+if(NOT BUILD_DEPENDENCIES)
+    find_package(Aquila REQUIRED)
+    include_directories(${Aquila_INCLUDE_DIRS})
 else()
-	message(STATUS "Building Aquila as part of project")
-	add_subdirectory(Aquila)
+    message(STATUS "Building Aquila as part of project")
+    add_subdirectory(Aquila)
 endif()
 
 LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
 LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
-INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
 
+INCLUDE_DIRECTORIES(${Aquila_INCLUDE_DIRS})
 add_subdirectory(Plugins)
 add_subdirectory(samples)
 add_subdirectory(tests)

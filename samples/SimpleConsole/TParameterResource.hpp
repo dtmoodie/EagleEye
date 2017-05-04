@@ -1,7 +1,7 @@
 #ifdef HAVE_WT
 #pragma once
 #include "IParameterResource.hpp"
-#include <Aquila/SyncedMemory.h>
+#include <Aquila/types/SyncedMemory.hpp>
 #include <MetaObject/Parameters/TypedInputParameter.hpp>
 namespace vclick
 {

@@ -15,7 +15,7 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
   set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
-  
+
 
 find_package(Aquila REQUIRED)
 find_package(CUDA REQUIRED)
@@ -51,6 +51,9 @@ INCLUDE_DIRECTORIES(
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 file(GLOB src "*.cpp")
 file(GLOB hdr "*.h" "*.hpp")
+
+SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
 add_executable(SimpleConsole ${src} ${hdr})
 add_dependencies(SimpleConsole Aquila)
 target_link_libraries(SimpleConsole
@@ -70,12 +73,12 @@ target_link_libraries(SimpleConsole
     MetaParameters
 )
 if(MetaObject_WITH_WT AND Wt_FOUND)
-	target_compile_definitions(SimpleConsole
-		PRIVATE "-DHAVE_WT"
-	)
-	target_include_directories(SimpleConsole
-		PRIVATE ${Wt_INCLUDE_DIR}
-	)
+    target_compile_definitions(SimpleConsole
+        PRIVATE "-DHAVE_WT"
+    )
+    target_include_directories(SimpleConsole
+        PRIVATE ${Wt_INCLUDE_DIR}
+    )
 endif()
 
 if(WITH_PYTHON AND HAVE_PYTHON)
@@ -91,6 +94,11 @@ if(Wt_FOUND AND WITH_WT)
     )
 endif(Wt_FOUND AND WITH_WT)
 
+INSTALL(TARGETS SimpleConsole
+        RUNTIME DESTINATION bin
+)
+
+set_property(TARGET SimpleConsole PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 IF(WIN32)
   set(PROJECT_BIN_DIRS_DEBUG "")
@@ -110,9 +118,9 @@ IF(WIN32)
     APPEND_BIN_DIR(${dir}_BIN_DIR_DBG PROJECT_BIN_DIRS_DEBUG)
     APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELEASE)
     APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELWITHDEBINFO)
-	APPEND_BIN_DIR(${dir}_BIN_DIR PROJECT_BIN_DIRS_DEBUG)
-	APPEND_BIN_DIR(${dir}_BIN_DIR PROJECT_BIN_DIRS_RELEASE)
-	APPEND_BIN_DIR(${dir}_BIN_DIR PROJECT_BIN_DIRS_RELWITHDEBINFO)
+    APPEND_BIN_DIR(${dir}_BIN_DIR PROJECT_BIN_DIRS_DEBUG)
+    APPEND_BIN_DIR(${dir}_BIN_DIR PROJECT_BIN_DIRS_RELEASE)
+    APPEND_BIN_DIR(${dir}_BIN_DIR PROJECT_BIN_DIRS_RELWITHDEBINFO)
   ENDFOREACH(dir ${BIN_DIRS})
   list(APPEND PROJECT_BIN_DIRS_DEBUG ${Aquila_BIN_DIRS})
   if(RCC_VERBOSE_CONFIG)
@@ -120,5 +128,5 @@ IF(WIN32)
   endif()
   CONFIGURE_FILE("../../Aquila/tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/samples/SimpleConsole/SimpleConsole.vcxproj.user @ONLY)
 endif(WIN32)
-    
-    
+
+

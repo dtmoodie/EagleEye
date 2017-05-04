@@ -1,21 +1,22 @@
 #include "src/precompiled.hpp"
+
 using namespace aq;
 using namespace ::aq::Nodes;
 
 class MorphologyFilter: public Node
 {
 public:
-    MO_DERIVE(MorphologyFilter, Node);
-        INPUT(SyncedMemory, input_image, nullptr);
-        OUTPUT(SyncedMemory, output, SyncedMemory());
-        ENUM_PARAM(structuring_element_type, cv::MORPH_RECT, cv::MORPH_CROSS, cv::MORPH_ELLIPSE);
-        ENUM_PARAM(morphology_type, cv::MORPH_ERODE, cv::MORPH_DILATE, cv::MORPH_OPEN, cv::MORPH_CLOSE, cv::MORPH_GRADIENT, cv::MORPH_TOPHAT, cv::MORPH_BLACKHAT);
-        PARAM(int, iterations, 1);
-        PARAM(cv::Mat, structuring_element, cv::getStructuringElement(0, cv::Size(5,5)));
-        PARAM(cv::Point, anchor_point, cv::Point(-1,-1));
-        PARAM(int, structuring_element_size, 5);
+    MO_DERIVE(MorphologyFilter, Node)
+        INPUT(SyncedMemory, input_image, nullptr)
+        OUTPUT(SyncedMemory, output, SyncedMemory())
+        ENUM_PARAM(structuring_element_type, cv::MORPH_RECT, cv::MORPH_CROSS, cv::MORPH_ELLIPSE)
+        ENUM_PARAM(morphology_type, cv::MORPH_ERODE, cv::MORPH_DILATE, cv::MORPH_OPEN, cv::MORPH_CLOSE, cv::MORPH_GRADIENT, cv::MORPH_TOPHAT, cv::MORPH_BLACKHAT)
+        PARAM(int, iterations, 1)
+        PARAM(cv::Mat, structuring_element, cv::getStructuringElement(0, cv::Size(5,5)))
+        PARAM(cv::Point, anchor_point, cv::Point(-1,-1))
+        PARAM(int, structuring_element_size, 5)
     MO_END;
-        
+
 protected:
     bool ProcessImpl();
     ::cv::Ptr<::cv::cuda::Filter> filter;
@@ -37,7 +38,7 @@ public:
 
 protected:
     bool ProcessImpl();
-        
+
     //virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
 };
 

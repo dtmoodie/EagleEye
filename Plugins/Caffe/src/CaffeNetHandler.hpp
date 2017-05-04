@@ -1,7 +1,7 @@
 #pragma once
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/IMetaObjectInfo.hpp>
-#include <Aquila/SyncedMemory.h>
+#include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/Algorithm.h>
 #include "Aquila/ObjectDetection.hpp"
 #include <caffe/net.hpp>
@@ -17,7 +17,7 @@ namespace aq
             virtual std::map<int, int> CanHandleNetwork(const caffe::Net<float>& net) const = 0;
         };
         class NetHandler:
-              public TInterface<ctcrc32("aq::Caffe::NetHandler"), Algorithm>
+              public TInterface<NetHandler, Algorithm>
         {
         public:
             static std::vector<boost::shared_ptr<caffe::Layer<float>>> GetOutputLayers(const caffe::Net<float>& net);

@@ -32,11 +32,11 @@ int findNextIndex(const std::string& dir, const std::string& extension, const st
             std::string stem = itr->path().stem().string();
             if(stem.find(stem) == 0)
             {
-                auto start = stem.find_first_of("0123456789");
+                auto start = stem.find_last_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_");
                 auto end = stem.find_last_of("0123456789");
-                if(start != std::string::npos && end != std::string::npos)
+                if(stem.size() && end != std::string::npos)
                 {
-                    int idx = boost::lexical_cast<int>(stem.substr(start, end));
+                    int idx = boost::lexical_cast<int>(stem.substr(start == std::string::npos ? 0 : start + 1, end));
                     frame_count = std::max(frame_count, idx + 1);
                 }
             }

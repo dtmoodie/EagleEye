@@ -3,7 +3,7 @@
 #include "ros/node_handle.h"
 
 #include "Aquila/rcc/SystemTable.hpp"
-#include "ObjectInterfacePerModule.h"
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
 using namespace aq;
 

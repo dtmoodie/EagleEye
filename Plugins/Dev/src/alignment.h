@@ -1,5 +1,6 @@
 #pragma once
 #include "Aquila/Nodes/Node.h"
+#include <Aquila/types/Stamped.hpp>
 #include <boost/circular_buffer.hpp>
 
 namespace aq

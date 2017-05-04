@@ -1,4 +1,5 @@
 #include <Aquila/Nodes/Node.h>
+#include <Aquila/types/Stamped.hpp>
 #include "../CoreExport.hpp"
 
 namespace cv

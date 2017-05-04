@@ -1,6 +1,6 @@
 #pragma once
 #include "Aquila/Nodes/Node.h"
-#include "Aquila/SyncedMemory.h"
+#include "Aquila/types/SyncedMemory.hpp"
 namespace aq
 {
     namespace Nodes

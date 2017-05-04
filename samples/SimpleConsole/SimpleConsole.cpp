@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
     boost::program_options::options_description desc("Allowed options");
     SystemTable table;
     mo::MetaObjectFactory::Instance(&table);
-    
+
     desc.add_options()
         ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
         ("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")

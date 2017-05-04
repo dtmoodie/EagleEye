@@ -15,7 +15,7 @@ public:
     virtual void ListTopics(std::vector<std::string>& topics) const = 0;
 };
 
-class IMessageReader: public TInterface<ctcrc32("IMessageReader"), aq::Algorithm>
+class IMessageReader: public TInterface<IMessageReader, aq::Algorithm>
 {
 public:
     template<class T, int P> static int CanHandleTopic(const std::string& topic)

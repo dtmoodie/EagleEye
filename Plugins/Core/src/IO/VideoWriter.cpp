@@ -41,6 +41,10 @@ bool VideoWriter::ProcessImpl()
         return false;
     if(h_writer == nullptr && d_writer == nullptr)
     {
+        if(!boost::filesystem::exists(filename.parent_path()))
+        {
+            boost::filesystem::create_directories(filename.parent_path());
+        }
         if (boost::filesystem::exists(filename.string()))
         {
             LOG(info) << "File exists, overwriting";

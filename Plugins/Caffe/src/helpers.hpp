@@ -1,7 +1,7 @@
 #pragma once
 #include "CaffeExport.hpp"
 #include <opencv2/core/cuda.hpp>
-#include <Aquila/SyncedMemory.h>
+#include <Aquila/types/SyncedMemory.hpp>
 namespace caffe
 {
     template<class T> class Blob;
