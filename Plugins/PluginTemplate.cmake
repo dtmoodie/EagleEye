@@ -11,7 +11,14 @@ get_target_property(target_include_dirs_ ${PROJECT_NAME} INCLUDE_DIRECTORIES)
 get_target_property(target_link_libs_    ${PROJECT_NAME} LINK_LIBRARIES)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER Plugins)
-set_target_properties(${PROJECT_NAME} PROPERTIES CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Plugins)
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+        CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/Plugins
+        CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/Plugins
+        CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/Plugins
+)
+set_target_properties(${PROJECT_NAME} PROPERTIES LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin/Plugins)
+
 
 ocv_add_precompiled_header_to_target(${PROJECT_NAME} src/precompiled.hpp)
 
