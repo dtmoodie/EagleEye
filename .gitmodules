@@ -10,9 +10,9 @@
 [submodule "Aquila"]
 	path = Aquila
 	url = http://github.com/dtmoodie/Aquila
-[submodule "EagleEye/dependencies/nodeeditor"]
-        path = EagleEye/dependencies/NodeEditor
-        url = http://github.com/dtmoodie/nodeeditor
 [submodule "Plugins/gta5"]
 	path = Plugins/gta5
 	url = /home/dan/remotes/gta5/
+[submodule "EagleEye/dependencies/nodeeditor"]
+	path = EagleEye/dependencies/nodeeditor
+	url = http://github.com/dtmoodie/nodeeditor
