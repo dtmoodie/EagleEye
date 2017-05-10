@@ -71,6 +71,8 @@ target_link_libraries(SimpleConsole
     ${CUDA_CUDART_LIBRARY}
     ${link_libs}
     MetaParameters
+    aquila_types
+    aquila_metatypes
 )
 if(MetaObject_WITH_WT AND Wt_FOUND)
     target_compile_definitions(SimpleConsole
