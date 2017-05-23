@@ -29,8 +29,8 @@ std::map<int, int> SSDHandler::CanHandleNetwork(const caffe::Net<float>& net)
     return output;
 }
 
-void SSDHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size, const std::vector<DetectedObject2d>& objs)
-{
+
+void SSDHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
     auto output_blob= net.blob_by_name(output_blob_name);
     if(!output_blob)
         return;
@@ -59,7 +59,8 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::
             obj.boundingBox.y = ymin[i][0] * bounding_boxes[num].height + bounding_boxes[num].y;
             obj.boundingBox.width = (xmax[i][0] - xmin[i][0]) * bounding_boxes[num].width;
             obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * bounding_boxes[num].height;
-            obj.timestamp = timestamp;
+            obj.timestamp = input_param.GetTimestamp();
+            obj.framenumber = input_param.GetFrameNumber();
             obj.id = current_id++;
             // Check all current objects iou value
             bool append = true;
@@ -89,11 +90,11 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::
     begin += output_blob->width() * output_blob->height() * num_detections;
     if(objects.size())
     {
-        LOG(trace) << "Detected " << objects.size() << " objets in frame " << timestamp;
+        LOG(trace) << "Detected " << objects.size() << " objets in frame " << input_param.GetFrameNumber();
     }
-    num_detections_param.UpdateData(objects.size(), timestamp, _ctx);
+    num_detections_param.UpdateData(objects.size(), input_param.GetTimestamp(), input_param.GetFrameNumber(), _ctx);
 
-    detections_param.UpdateData(objects, timestamp, _ctx);
+    detections_param.UpdateData(objects, input_param.GetTimestamp(), input_param.GetFrameNumber(), _ctx);
 }
 
 MO_REGISTER_CLASS(SSDHandler)

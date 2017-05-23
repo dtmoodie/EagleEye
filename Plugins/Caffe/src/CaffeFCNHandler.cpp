@@ -39,8 +39,8 @@ std::map<int, int> FCNHandler::CanHandleNetwork(const caffe::Net<float>& net)
     return output;
 }
 
-void FCNHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp,  const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size, const std::vector<DetectedObject2d>& objs)
-{
+void FCNHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
+    auto input_image_size = input_param.GetDataPtr()->GetSize();
     auto blob = net.blob_by_name(output_blob_name);
     if(!blob)
         return;
@@ -57,8 +57,8 @@ void FCNHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::
     resized_label.setTo(cv::Scalar::all(0), mask, _ctx->GetStream());
 
 
-    label_param.UpdateData(resized_label, timestamp, _ctx);
-    confidence_param.UpdateData(resized_confidence, timestamp, _ctx);
+    label_param.UpdateData(resized_label, input_param.GetTimestamp(), _ctx);
+    confidence_param.UpdateData(resized_confidence, input_param.GetTimestamp(), _ctx);
 }
 
 MO_REGISTER_CLASS(FCNHandler)
@@ -94,13 +94,11 @@ std::map<int, int> FCNSingleClassHandler::CanHandleNetwork(const caffe::Net<floa
     return output;
 }
 
-void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp,  const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size, const std::vector<DetectedObject2d>& objs)
-{
+void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
     auto blob = net.blob_by_name(output_blob_name);
     if(blob)
     {
         blob->gpu_data();
-        //blob->cpu_data();
         auto wrapped = aq::Nodes::CaffeBase::WrapBlob(*blob);
         if(class_index < blob->channels() && blob->num())
         {
@@ -110,8 +108,8 @@ void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, boost::op
             cv::cuda::threshold(confidence, confidence_out, min_confidence, 255, cv::THRESH_BINARY, _ctx->GetStream());
             cv::cuda::GpuMat mask_out;
             confidence_out.convertTo(mask_out, CV_8UC1, _ctx->GetStream());
-            label_param.UpdateData(mask_out, timestamp, _ctx);
-            confidence_param.UpdateData(confidence, timestamp, _ctx);
+            label_param.UpdateData(mask_out, input_param.GetTimestamp(), _ctx);
+            confidence_param.UpdateData(confidence, input_param.GetTimestamp(), _ctx);
         }
     }
 }

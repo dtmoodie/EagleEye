@@ -560,7 +560,7 @@ bool CaffeImageClassifier::ProcessImpl()
         }
         for(auto& handler : net_handlers)
         {
-            handler->HandleOutput(*NN, input_param.GetTimestamp(), batch_bounding_boxes, input_image_size, batch_objects);
+            handler->HandleOutput(*NN, batch_bounding_boxes, input_param, batch_objects);
         }
     }
     for(auto& handler : net_handlers)

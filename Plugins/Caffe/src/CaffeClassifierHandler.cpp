@@ -85,20 +85,18 @@ void ClassifierHandler::StartBatch()
     objects.clear();
 }
 
-void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size, const std::vector<DetectedObject2d>& objs)
-{
+void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
     auto output_blob = net.blob_by_name(output_blob_name);
     if(output_blob)
     {
         float* data = output_blob->mutable_cpu_data();
         int num = output_blob->channels();
-        //objects.resize(output_blob->num());
 
         for(int i = 0; i  < output_blob->num() && i < bounding_boxes.size(); ++i)
         {
             auto idx = sort_indexes_ascending(data + i * num, num);
             DetectedObject obj;
-            obj.timestamp = timestamp;
+            obj.timestamp = input_param.GetTimestamp();
             if(labels && idx[0] < labels->size())
             {
                 obj.classification = Classification((*labels)[idx[0]], (data + i * num)[idx[0]], idx[0]);
@@ -111,11 +109,14 @@ void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, boost::option
             {
                 obj.id = objs[i].id;
                 obj.framenumber = objs[i].framenumber;
+                obj.timestamp = objs[i].timestamp;
+                obj.boundingBox = objs[i].boundingBox;
             }
             objects.push_back(obj);
         }
     }
 }
+
 void ClassifierHandler::EndBatch(boost::optional<mo::time_t>timestamp)
 {
     objects_param.Commit(timestamp, _ctx);

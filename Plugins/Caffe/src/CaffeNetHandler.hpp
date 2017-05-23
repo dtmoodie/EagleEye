@@ -30,7 +30,7 @@ namespace aq
             MO_END
             virtual void SetOutputBlob(const caffe::Net<float>& net, int output_blob_index);
             virtual void StartBatch(){}
-            virtual void HandleOutput(const caffe::Net<float>& net, boost::optional<mo::time_t> timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size, const std::vector<DetectedObject2d>& objs) = 0;
+            virtual void HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs) = 0;
             virtual void EndBatch(boost::optional<mo::time_t> timestamp){}
             void SetLabels(std::vector<std::string>* labels){this->labels = labels;}
         protected:
