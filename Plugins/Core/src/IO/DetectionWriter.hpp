@@ -9,21 +9,46 @@ namespace aq
 {
 namespace Nodes
 {
-class DetectionWriter: public Node
-{
+enum Extension{
+    jpg,
+    png,
+    tiff,
+    bmp
+};
+
+class IDetectionWriter: public Node{
 public:
-    MO_DERIVE(DetectionWriter, Node)
+    typedef std::pair<cv::Mat, std::vector<aq::DetectedObject2d>> WriteData_t;
+    typedef moodycamel::ConcurrentQueue<WriteData_t> WriteQueue_t;
+    ~IDetectionWriter();
+    MO_DERIVE(IDetectionWriter, Node)
         PARAM(mo::WriteDirectory, output_directory, {})
-        PARAM(std::string, json_stem, "detection")
+        PARAM(std::string, annotation_stem, "detection")
         PARAM(std::string, image_stem, "image")
         PARAM(int, object_class, -1)
+        PARAM(bool, skip_empty, true)
+        PARAM(bool, pad, true)
+        ENUM_PARAM(extension, jpg, png, tiff, bmp)
         INPUT(SyncedMemory, image, nullptr)
         INPUT(std::vector<DetectedObject>, detections, nullptr)
-        PROPERTY(mo::ThreadHandle, _write_thread, mo::ThreadPool::Instance()->RequestThread())
+        PROPERTY(std::shared_ptr<boost::thread>, _write_thread, {})
+        PROPERTY(std::shared_ptr<WriteQueue_t>, _write_queue, {})
     MO_END
 protected:
     bool ProcessImpl();
-    int frame_count = 0;
+    void NodeInit(bool firstInit);
+    virtual void writeThread() = 0;
+    size_t frame_count = 0;
+};
+
+
+class DetectionWriter: public IDetectionWriter
+{
+public:
+    MO_DERIVE(DetectionWriter, IDetectionWriter)
+    MO_END
+protected:
+    virtual void writeThread();
 };
 
 class DetectionWriterFolder: public Node
@@ -37,6 +62,7 @@ public:
         PARAM(std::string, image_stem, "image")
         PARAM(int, max_subfolder_size, 1000)
         PARAM(std::string, dataset_name, "")
+        ENUM_PARAM(extension, jpg, png, tiff, bmp)
         INPUT(SyncedMemory, image, nullptr)
         INPUT(std::vector<std::string>, labels, nullptr)
         INPUT(std::vector<DetectedObject>, detections, nullptr)

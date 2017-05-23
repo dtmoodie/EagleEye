@@ -39,6 +39,8 @@ namespace aq
             INPUT(SyncedMemory, image, nullptr)
             INPUT(std::vector<std::string>, labels, nullptr)
             OPTIONAL_INPUT(std::vector<DetectedObject>, detections, nullptr)
+            PARAM(bool, draw_class_label, true)
+            PARAM(bool, draw_detection_id, true)
             PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>())
             OUTPUT(SyncedMemory, image_with_detections, SyncedMemory())
         MO_END

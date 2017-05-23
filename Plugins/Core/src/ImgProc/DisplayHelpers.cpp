@@ -62,12 +62,15 @@ bool DrawDetections::ProcessImpl()
                 color = colors[detection.classification.classNumber];
                 if(detection.classification.classNumber > 0 && detection.classification.classNumber < labels->size())
                 {
-                    ss << (*labels)[detection.classification.classNumber] << " : " << std::setprecision(3) << detection.classification.confidence;
+                    if(draw_class_label)
+                        ss << (*labels)[detection.classification.classNumber] << " : " << std::setprecision(3) << detection.classification.confidence;
                 }else
                 {
-                    ss << std::setprecision(3) << detection.classification.confidence;
+                    if(draw_class_label)
+                        ss << std::setprecision(3) << detection.classification.confidence;
                 }
-                ss << " - " << detection.id;
+                if(draw_detection_id)
+                    ss << " - ";
             }else
             {
                 // random color for each different detection
@@ -83,6 +86,8 @@ bool DrawDetections::ProcessImpl()
                 }
                 color = colors[detection.classification.classNumber];
             }
+            if(draw_detection_id)
+                ss << detection.id;
             cv::cuda::rectangle(draw_image, rect, color, 3, Stream());
 
             cv::Rect text_rect = cv::Rect(rect.tl() + cv::Point(10,20), cv::Size(200,20));

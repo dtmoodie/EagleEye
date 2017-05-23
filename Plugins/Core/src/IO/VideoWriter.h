@@ -23,16 +23,24 @@ namespace Nodes
             PROPERTY(cv::Ptr<cv::cudacodec::VideoWriter>, d_writer, cv::Ptr<cv::cudacodec::VideoWriter>())
             PROPERTY(cv::Ptr<cv::VideoWriter>, h_writer, cv::Ptr<cv::VideoWriter>())
             PARAM(mo::EnumParameter, codec, mo::EnumParameter())
+            PARAM(mo::WriteDirectory, outdir, {})
             PARAM(mo::WriteFile, filename, mo::WriteFile("video.avi"))
             PARAM(bool, using_gpu_writer, true)
             MO_SLOT(void, write_out)
-            //PROPERTY(mo::ThreadHandle, _write_thread, mo::ThreadPool::Instance()->RequestThread())
+            PARAM(bool, write_metadata, false)
+            PARAM(std::string, metadata_stem, "metadata")
+            PARAM(std::string, dataset_name, "")
         MO_END;
         void NodeInit(bool firstInit);
     protected:
         bool ProcessImpl();
         boost::thread _write_thread;
-        moodycamel::ConcurrentQueue<cv::Mat> _write_queue;
+        struct WriteData{
+            cv::Mat img;
+            boost::optional<mo::time_t> ts;
+            size_t fn;
+        };
+        moodycamel::ConcurrentQueue<WriteData> _write_queue;
     };
 #ifdef HAVE_FFMPEG
     class VideoWriterFFMPEG: public Node
