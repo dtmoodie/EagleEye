@@ -1262,8 +1262,10 @@ int main(int argc, char* argv[])
                     std::stringstream ss;
                     ss << value;
                     boost::recursive_mutex::scoped_lock lock(current_param->mtx());
-                    func(current_param, ss);
-                    std::cout << "Successfully set " << current_param->GetTreeName() << " to " << value << std::endl;
+                    if(func(current_param, ss))
+                        std::cout << "Successfully set " << current_param->GetTreeName() << " to " << value << std::endl;
+                    else
+                        std::cout << "Failed to set " << current_param->GetTreeName() << " to " << value << std::endl;
                     return;
                 }else
                 {
