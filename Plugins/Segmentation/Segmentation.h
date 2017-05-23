@@ -1,9 +1,12 @@
 #include "Aquila/Nodes/Node.h"
-#include <Aquila/SyncedMemory.h>
+#include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/rcc/external_includes/cv_cudabgsegm.hpp>
 #include "Aquila/utilities/CudaUtils.hpp"
+#include <Aquila/metatypes/SyncedMemoryMetaParams.hpp>
 #include "Segmentation_impl.h"
+#ifdef FASTMS_FOUND
 #include "libfastms/solver/solver.h"
+#endif
 #include <MetaObject/Detail/MetaObjectMacros.hpp>
 
 
@@ -12,7 +15,7 @@ namespace aq
 {
     namespace Nodes
     {
-    
+
     class OtsuThreshold: public Node
     {
     public:
@@ -54,21 +57,9 @@ namespace aq
     protected:
         bool ProcessImpl();
     };
-    
-
-    /*class SegmentGrabCut: public Node
-    {
-        cv::Mat bgdModel;
-        cv::Mat fgdModel;
-        ConstBuffer<cv::Mat> maskBuf;
-    public:
-        SegmentGrabCut();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };*/
 
     void kmeans_impl(cv::cuda::GpuMat input, cv::cuda::GpuMat& labels, cv::cuda::GpuMat& clusters, int k, cv::cuda::Stream stream, cv::cuda::GpuMat weights = cv::cuda::GpuMat());
-    
+
 
     class KMeans: public Node
     {
@@ -121,6 +112,7 @@ namespace aq
         virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+    #ifdef FASTMS_FOUND
     class SLaT : public Node
     {
         cv::cuda::HostMem imageBuffer;
@@ -136,6 +128,6 @@ namespace aq
         virtual void NodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+#endif
     }
-
 }

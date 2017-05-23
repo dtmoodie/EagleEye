@@ -4,6 +4,8 @@ IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 ENDIF()
 CMAKE_POLICY(SET CMP0020 NEW)
 
+option(BUILD_FASTMS FALSE)
+
 IF(NOT WIN32)
     set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 ENDIF(NOT WIN32)
@@ -14,9 +16,20 @@ find_package(CUDA REQUIRED)
 
 find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+if(BUILD_FASTMS)
+    ADD_SUBDIRECTORY(fastms)
+    set_target_properties(fastms PROPERTIES FOLDER Dependencies)
+    set_target_properties(fastms
+        PROPERTIES
+            CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+            CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+            CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+            ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+            LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+endif()
 
-ADD_SUBDIRECTORY(fastms)
-set_target_properties(fastms PROPERTIES FOLDER Dependencies)
 INCLUDE_DIRECTORIES(
         ${INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
@@ -37,19 +50,17 @@ RCC_LINK_LIB(Segmentation
     Aquila
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
+    aquila_types
+    aquila_metatypes
 )
 
 
 IF(TARGET fastms)
-
     add_dependencies(Segmentation fastms)
     RCC_LINK_LIB(Segmentation fastms ${fastms_LIBS})
     TARGET_LINK_LIBRARIES(Segmentation fastms)
     add_definitions(-DFASTMS_FOUND)
     add_definitions(-DFASTMS_INCLUDE=${fastms_INCLUDE_DIRECTORIES})
-    LIST(APPEND DEFS -DFASTMS_FOUND)
     INCLUDE_DIRECTORIES(${fastms_INCLUDE_DIRECTORIES})
-    #message(STATUS "FastMS include: ${fastms_INCLUDE_DIRECTORIES}")
-
 ENDIF()
 INCLUDE(../PluginTemplate.cmake)

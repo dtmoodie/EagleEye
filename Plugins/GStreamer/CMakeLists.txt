@@ -78,6 +78,9 @@ IF(GSTREAMER_FOUND)
         ${GLIB_LIBRARY}
         ${GOBJECT_LIBRARY}
         MetaParameters
+        MetaObject
+        aquila_metatypes
+        aquila_types
     )
     IF(${GSTREAMER_gstrtspserver_LIBRARY})
         RCC_LINK_LIB(Gstreamer ${GSTREAMER_gstrtspserver_LIBRARY})
