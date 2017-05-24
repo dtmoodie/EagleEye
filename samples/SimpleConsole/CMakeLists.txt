@@ -16,8 +16,9 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec)
   set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
-
-find_package(Aquila REQUIRED)
+if(NOT TARGET aquila_core)
+	find_package(Aquila REQUIRED COMPONENTS core)
+endif()
 find_package(CUDA REQUIRED)
   include_directories(${CUDA_INCLUDE_DIRS})
 
@@ -55,7 +56,7 @@ file(GLOB hdr "*.h" "*.hpp")
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 add_executable(SimpleConsole ${src} ${hdr})
-add_dependencies(SimpleConsole Aquila)
+
 target_link_libraries(SimpleConsole
     metaobject_core
     aquila_core
@@ -70,7 +71,7 @@ target_link_libraries(SimpleConsole
     ${CUDA_nppc_LIBRARY}
     ${CUDA_CUDART_LIBRARY}
     ${link_libs}
-    MetaParameters
+    metaobject_metaparams
     aquila_types
     aquila_metatypes
 )

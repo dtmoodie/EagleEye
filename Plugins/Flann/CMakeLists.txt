@@ -36,21 +36,18 @@ IF(Aquila_FLANN_LIBRARY_DEBUG AND Aquila_FLANN_CUDA_LIBRARY_DEBUG)
 
 
     RCC_LINK_LIB(Flann aquila_core
+		metaobject_core metaobject_object metaobject_params metaobject_metaparams
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}
-        )
+	)
 
     target_link_libraries(Flann debug;${Aquila_FLANN_CUDA_LIBRARY_DEBUG};
                                 debug;${Aquila_FLANN_LIBRARY_DEBUG};
                                 optimized;${Aquila_FLANN_CUDA_LIBRARY_RELEASE};
-                                optimized;${Aquila_FLANN_LIBRARY_RELEASE})
+                                optimized;${Aquila_FLANN_LIBRARY_RELEASE}
+	)
 
-
-
-    #TARGET_LINK_LIBRARIES(Flann debug ${Aquila_FLANN_CUDA_LIBRARY_DEBUG} ${Aquila_FLANN_LIBRARY_DEBUG})
-    #TARGET_LINK_LIBRARIES(Flann optimized ${Aquila_FLANN_CUDA_LIBRARY_RELEASE} ${Aquila_FLANN_LIBRARY_RELEASE})
     INCLUDE(../PluginTemplate.cmake)
-
 ELSE()
 MESSAGE("-- Flann:\t\tNotFound")
 ENDIF()

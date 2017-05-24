@@ -26,12 +26,11 @@ add_definitions(-DPROJECT_INCLUDE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/include")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 add_library(Plotting SHARED ${src} ${hdr} ${knl})
-add_dependencies(Plotting EagleLib)
 add_dependencies(Plotting QCustomPlot)
 set_target_properties(QCustomPlot PROPERTIES FOLDER Dependencies)
 
 RCC_LINK_LIB(Plotting 
-    EagleLib 
+    metaobject_core metaobject_object metaobject_params metaobject_metaparams
     QCustomPlot
     )
 INCLUDE(../PluginTemplate.cmake)

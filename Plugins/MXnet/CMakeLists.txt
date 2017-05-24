@@ -20,7 +20,7 @@ if(mxnet_FOUND)
         ${OpenBLAS_LIB}
         ${CUDNN_LIBRARY}
         aquila_core
-        MetaObject
+        metaobject_core metaobject_object metaobject_params metaobject_metaparams
       )
       INCLUDE(../PluginTemplate.cmake)
     else(CUDNN_INCLUDE_DIR)

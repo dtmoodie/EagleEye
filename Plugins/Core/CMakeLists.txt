@@ -7,7 +7,6 @@ ENDIF()
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 
 find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
-find_package(MetaObject REQUIRED)
 
 find_package(CUDA REQUIRED)
   include_directories(${CUDA_TOOLKIT_INCLUDE})
@@ -43,7 +42,7 @@ file(GLOB_RECURSE hdr "*.h" "*.hpp")
 cuda_add_library(Core SHARED ${src} ${hdr} ${knl})
 ocv_add_precompiled_header_to_target(Core nodes/precompiled.hpp)
 
-RCC_LINK_LIB(Core aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} MetaObject MetaParameters)
+RCC_LINK_LIB(Core aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} metaobject_core metaobject_object metaobject_params)
 
 INCLUDE(../PluginTemplate.cmake)
 

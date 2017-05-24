@@ -94,9 +94,8 @@ ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
 
 ADD_LIBRARY(vtkRendering SHARED ${src} ${hdr} ${knl})
 
-ADD_DEPENDENCIES(vtkRendering EagleLib)
 RCC_LINK_LIB(vtkRendering
-  ${link_libs_}
+  metaobject_core metaobject_object metaobject_params metaobject_metaparams
 )
 if(Plugin_point_clouds_INCLUDES)
   add_dependencies(vtkRendering point_clouds)

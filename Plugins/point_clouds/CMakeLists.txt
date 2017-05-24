@@ -12,10 +12,8 @@ file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "src/*.hpp" "src/*.h")
 
 add_library(point_clouds SHARED ${src} ${knl} ${hdr})
 
-add_dependencies(point_clouds Aquila)
-
 RCC_LINK_LIB(point_clouds
-      Aquila
+      metaobject_core metaobject_object metaobject_params metaobject_metaparams
       ${OpenCV_LIBS}
       ${PCL_LIBRARIES}
       ${VTK_LIBRARIES}

@@ -44,10 +44,8 @@ file(GLOB knl "*.cu")
 
 cuda_add_library(Segmentation SHARED ${src} ${hdr})
 
-add_dependencies(Segmentation Aquila)
-
 RCC_LINK_LIB(Segmentation
-    Aquila
+    metaobject_core metaobject_object metaobject_params metaobject_metaparams
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     aquila_types

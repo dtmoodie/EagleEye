@@ -47,18 +47,15 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-#ADD_DEFINITIONS(-DPROJECT_INCLUDES="${CMAKE_CURRENT_SOURCE_DIR}")
-
-
 file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp")
-
 
 cuda_add_library(frame_grabbers SHARED ${src} ${hdr} ${knl})
 
 RCC_LINK_LIB(frame_grabbers
         aquila_core
+		metaobject_core metaobject_object metaobject_params metaobject_metaparams
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}
         aquila_types

@@ -20,10 +20,10 @@ IF(LIBVLC_FOUND)
 
     IF(LIBVLC_LIBRARY)
         CUDA_ADD_LIBRARY(VLC SHARED ${src} ${hdr})
-        ADD_DEPENDENCIES(VLC Aquila)
         RCC_LINK_LIB(VLC
             ${OpenCV_LIBS}
             aquila_core
+			metaobject_core metaobject_object metaobject_params metaobject_metaparams
         )
         TARGET_LINK_LIBRARIES(VLC
             ${LINK_LIBS}

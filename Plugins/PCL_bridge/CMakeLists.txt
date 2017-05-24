@@ -49,13 +49,11 @@ IF(PCL_FOUND)
 		
 		FILE(GLOB_RECURSE SRC "*.cpp")
 		FILE(GLOB_RECURSE HDR "*.h")
-		#FILE(GLOB_RECURSE knl "*.cu")
         REMOVE_VTK_DEFINITIONS()
 		cuda_add_library(PCL_bridge SHARED ${SRC} ${HDR} ${knl})
-		add_dependencies(PCL_bridge EagleLib)
-
+		
 		RCC_LINK_LIB(PCL_bridge
-			EagleLib
+			metaobject_core metaobject_object metaobject_params metaobject_metaparams
 			${CUDA_LIBRARIES}
 		)
 		

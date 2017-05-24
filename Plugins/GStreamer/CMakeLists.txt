@@ -77,8 +77,7 @@ IF(GSTREAMER_FOUND)
         ${Glib_LIBRARY}
         ${GLIB_LIBRARY}
         ${GOBJECT_LIBRARY}
-        MetaParameters
-        MetaObject
+        metaobject_core metaobject_object metaobject_params metaobject_metaparams
         aquila_metatypes
         aquila_types
     )

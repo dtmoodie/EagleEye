@@ -47,7 +47,7 @@ if(Caffe_FOUND)
 
     IF(WIN32)
         if(TARGET libcaffe)
-        get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
+			get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
         endif(TARGET libcaffe)
         get_filename_component(CAFFE_BIN_DIR_ "${CAFFE_BIN}" DIRECTORY)
         set(CAFFE_BIN_DIR ${CAFFE_BIN_DIR_} CACHE PATH "" FORCE)

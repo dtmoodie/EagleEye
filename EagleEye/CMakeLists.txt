@@ -11,7 +11,9 @@ if(NOT nodeeditor_FOUND)
 endif()
 
 IF(Qt5_FOUND AND nodeeditor_FOUND)
-    find_package(Aquila REQUIRED)
+	if(NOT TARGET aquila_core)
+		find_package(Aquila REQUIRED COMPONENTS core)
+	endif()
     find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
 
     find_package(CUDA REQUIRED)
@@ -126,9 +128,6 @@ IF(Qt5_FOUND AND nodeeditor_FOUND)
 
         CONFIGURE_FILE(EagleEye.vcxproj.user.in ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
     ENDIF(WIN32)
-
-    add_dependencies(EagleEye Aquila frame_grabbers Core)
-    GET_TARGET_PROPERTY(LIB_DIR_RELEASE Aquila IMPORTED_LINK_DEPENDENT_LIBRARIES)
 
     LINK_DIRECTORIES(${LINK_DIRS})
     SOURCE_GROUP("MOC"  FILES ${MOC} ${UIS})
