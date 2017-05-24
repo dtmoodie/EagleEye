@@ -6,7 +6,7 @@
  *
  *
 */
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY

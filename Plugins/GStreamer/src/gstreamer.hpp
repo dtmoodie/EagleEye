@@ -5,7 +5,7 @@
 #ifdef HAVE_GST_RTSPSERVER
 #include <gst/rtsp-server/rtsp-server.h>
 #endif
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include "Aquila/Detail/Export.hpp"
 #include "Aquila/Detail/PluginExport.hpp"
 #include <Aquila/utilities/CudaUtils.hpp>
@@ -380,7 +380,7 @@ main( int argc, char **argv ) {
     std::cout << "Start GLib_MainLoop..." << std::endl;
     io_service->post( GLib_MainLoop );
 
-    /// Create some Workerthreads
+    /// create some Workerthreads
     for( std::size_t i = 0; i < 3; ++i )  {
         threadgroup->create_thread( boost::bind( &boost::asio::io_service::run, &( *io_service ) ) );
     }
@@ -395,7 +395,7 @@ main( int argc, char **argv ) {
     GstElement *sink_TCPServer;
 
 
-    /// Create GStreamer Elements
+    /// create GStreamer Elements
 
     pipeline = gst_pipeline_new( "OpenCV_to_TCPServer" );
 

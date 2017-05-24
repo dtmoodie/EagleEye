@@ -1,6 +1,6 @@
 #pragma once
 #define PARAMTERS_GENERATE_PERSISTENCE
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/Types.hpp>
 

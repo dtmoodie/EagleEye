@@ -42,8 +42,8 @@ file(GLOB_RECURSE hdr "*.h" "*.hpp")
 
 cuda_add_library(Core SHARED ${src} ${hdr} ${knl})
 ocv_add_precompiled_header_to_target(Core nodes/precompiled.hpp)
-add_dependencies(Core Aquila)
-RCC_LINK_LIB(Core Aquila ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} MetaObject MetaParameters)
+
+RCC_LINK_LIB(Core aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} MetaObject MetaParameters)
 
 INCLUDE(../PluginTemplate.cmake)
 

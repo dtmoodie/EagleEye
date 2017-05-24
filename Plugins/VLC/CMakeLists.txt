@@ -6,10 +6,10 @@ IF(LIBVLC_FOUND)
     set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
     FIND_PACKAGE(Qt5Network)
     INCLUDE_DIRECTORIES(
-		${CMAKE_CURRENT_SOURCE_DIR}/include
-		${INCLUDE_DIRS}
-		${LIBVLC_INCLUDE_DIR}
-		${INCLUDE_DIRS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${INCLUDE_DIRS}
+        ${LIBVLC_INCLUDE_DIR}
+        ${INCLUDE_DIRS}
     )
 
     LINK_DIRECTORIES(${CUDA_TOOLKIT_ROOT_DIR}/lib/x64)
@@ -23,9 +23,9 @@ IF(LIBVLC_FOUND)
         ADD_DEPENDENCIES(VLC Aquila)
         RCC_LINK_LIB(VLC
             ${OpenCV_LIBS}
-            Aquila
+            aquila_core
         )
-        TARGET_LINK_LIBRARIES(VLC 
+        TARGET_LINK_LIBRARIES(VLC
             ${LINK_LIBS}
             ${LIBVLC_LIBRARY} ${Boost_LIBRARIES}
             ${LIBVLCCORE_LIBRARY}

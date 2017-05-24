@@ -6,8 +6,8 @@
 #include <cereal/types/vector.hpp>
 using namespace vclick;
 
-INSTANTIATE_META_PARAMETER(BoundingBox);
-INSTANTIATE_META_PARAMETER(std::vector<BoundingBox>);
+INSTANTIATE_META_PARAM(BoundingBox);
+INSTANTIATE_META_PARAM(std::vector<BoundingBox>);
 
 cv::Mat BoundingBox::Contains(std::vector<cv::Vec3f>& points)
 {

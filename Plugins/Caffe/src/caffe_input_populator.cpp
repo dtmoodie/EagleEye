@@ -56,13 +56,13 @@ using namespace aq::Nodes;
             {
                 auto& permutation = sample_permutation[i];
                 
-                cv::Mat mat; // = (*fb)[permutation.first].GetMat();
+                cv::Mat mat; // = (*fb)[permutation.first].getMat();
                 if(permutation.second != -1)
                 {
-                    mat = (*fb)[permutation.first].GetMat(cv::cuda::Stream::Null())((*roi)[permutation.first][permutation.second].first);
+                    mat = (*fb)[permutation.first].getMat(cv::cuda::Stream::Null())((*roi)[permutation.first][permutation.second].first);
                 }else
                 {
-                    mat = (*fb)[permutation.first].GetMat(cv::cuda::Stream::Null());
+                    mat = (*fb)[permutation.first].getMat(cv::cuda::Stream::Null());
                 }
                 // Check if we need to resize or do channel stuff
                 if(mat.size() != cv::Size(width, height))

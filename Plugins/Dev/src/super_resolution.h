@@ -1,7 +1,7 @@
 #pragma once
 #include "precompiled.hpp"
 #include <Aquila/rcc/external_includes/cv_superres.hpp>
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
 
 namespace aq
 {

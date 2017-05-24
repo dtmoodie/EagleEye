@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Aquila/Nodes/IFrameGrabber.hpp"
+#include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include "gstreamer.hpp"
 
 namespace aq

@@ -1,5 +1,5 @@
 #include "gstreamer.hpp"
-#include "Aquila/Nodes/IFrameGrabber.hpp"
+#include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include "GStreamerExport.hpp"
 namespace aq
 {

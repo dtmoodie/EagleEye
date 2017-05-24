@@ -28,7 +28,7 @@ ros::NodeHandle* RosInterface::nh() const
 RosInterface* RosInterface::Instance()
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    RosInterface* singleton = table->GetSingleton<RosInterface>();
+    RosInterface* singleton = table->getSingleton<RosInterface>();
     if(singleton)
     {
         return singleton;

@@ -1,5 +1,5 @@
 #include "DrawRegionsOfInterest.hpp"
-#include "Aquila/Nodes/NodeInfo.hpp"
+#include "Aquila/nodes/NodeInfo.hpp"
 #include "Aquila/utilities/GpuDrawing.hpp"
 
 using namespace aq::Nodes;
@@ -7,7 +7,7 @@ using namespace aq::Nodes;
 bool DrawRegionsOfInterest::ProcessImpl()
 {
     cv::cuda::GpuMat draw_image;
-    image->Clone(draw_image, Stream());
+    image->clone(draw_image, Stream());
     auto image_size = image->GetSize();
     for(const auto& roi : *bounding_boxes)
     {

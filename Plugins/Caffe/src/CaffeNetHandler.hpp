@@ -1,8 +1,8 @@
 #pragma once
 #include <MetaObject/MetaObject.hpp>
-#include <MetaObject/IMetaObjectInfo.hpp>
+#include <MetaObject/object/IMetaObjectInfo.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
-#include <Aquila/Algorithm.h>
+#include <Aquila/core/Algorithm.hpp>
 #include "Aquila/ObjectDetection.hpp"
 #include <caffe/net.hpp>
 

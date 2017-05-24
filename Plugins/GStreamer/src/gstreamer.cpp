@@ -2,7 +2,7 @@
 #include "glib_thread.h"
 
 #include <Aquila/rcc/SystemTable.hpp>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <Aquila/utilities/CudaCallbacks.hpp>
 
 #include <gst/video/video.h>
@@ -377,7 +377,7 @@ void gstreamer_sink_base::PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stre
     LOG(trace) << "Estimated frame time: " << _delta << " ms";
     if (!_caps_set)
     {
-        if (set_caps(img.GetMat(stream).size(), img.GetMat(stream).channels()))
+        if (set_caps(img.getMat(stream).size(), img.getMat(stream).channels()))
         {
             _caps_set = true;
             start_pipeline();
@@ -386,8 +386,8 @@ void gstreamer_sink_base::PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stre
 
     if (_feed_enabled)
     {
-        cv::Mat h_img = img.GetMat(stream);
-        if(img.GetSyncState() < img.DEVICE_UPDATED)
+        cv::Mat h_img = img.getMat(stream);
+        if(img.getSyncState() < img.DEVICE_UPDATED)
         {
             int bufferlength = h_img.cols * h_img.rows * h_img.channels();
             GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
@@ -448,7 +448,7 @@ void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
     LOG(trace) << "Estimated frame time: " << _delta << " ms";
     if (!_caps_set)
     {
-        if (set_caps(img.GetMat(stream).size(), img.GetMat(stream).channels()))
+        if (set_caps(img.getMat(stream).size(), img.getMat(stream).channels()))
         {
             _caps_set = true;
             start_pipeline();
@@ -457,8 +457,8 @@ void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
 
     if (_feed_enabled)
     {
-        cv::Mat h_img = img.GetMat(stream);
-        if(img.GetSyncState() < img.DEVICE_UPDATED)
+        cv::Mat h_img = img.getMat(stream);
+        if(img.getSyncState() < img.DEVICE_UPDATED)
         {
             int bufferlength = h_img.cols * h_img.rows * h_img.channels();
             GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
@@ -1154,7 +1154,7 @@ TS<SyncedMemory> RTSP_server_new::doProcess(TS<SyncedMemory> img, cv::cuda::Stre
     auto curTime = clock();
     delta = curTime - prevTime;
     prevTime = curTime;
-    cv::Mat h_image = img.GetMat(stream);
+    cv::Mat h_image = img.getMat(stream);
     imgSize = h_image.size();
     cuda::enqueue_callback_async([h_image, this]()->void
     {

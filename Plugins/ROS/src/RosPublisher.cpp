@@ -1,7 +1,7 @@
 #include "RosPublisher.hpp"
 #include "RosInterface.hpp"
 #include "Aquila/utilities/CudaCallbacks.hpp"
-#include "Aquila/Nodes/NodeInfo.hpp"
+#include "Aquila/nodes/NodeInfo.hpp"
 
 #include <ros/node_handle.h>
 #include <cv_bridge/cv_bridge.h>
@@ -19,9 +19,9 @@ void ImagePublisher::NodeInit(bool firstInit)
 bool ImagePublisher::ProcessImpl()
 {
     // Check where the data resides
-    SyncedMemory::SYNC_STATE state = input->GetSyncState();
+    SyncedMemory::SYNC_STATE state = input->getSyncState();
     // Download to the CPU
-    cv::Mat h_input = input->GetMat(Stream());
+    cv::Mat h_input = input->getMat(Stream());
     // If data is already on the cpu, we don't need to wait for the async download to finish
     if(state < SyncedMemory::DEVICE_UPDATED)
     {

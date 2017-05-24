@@ -1,5 +1,5 @@
 #include "precompiled.hpp"
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include <MetaObject/MetaObject.hpp>
 #include <MetaObject/Parameters/ParameterMacros.hpp>
 #include <MetaObject/Parameters/Types.hpp>

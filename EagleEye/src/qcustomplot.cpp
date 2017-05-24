@@ -692,7 +692,7 @@ void QCPScatterStyle::drawShape(QCPPainter *painter, double x, double y) const
   "background" layer. Of course, the layer affiliation of the individual objects can be changed as
   required (\ref QCPLayerable::setLayer).
   
-  Controlling the ordering of objects is easy: Create a new layer in the position you want it to
+  Controlling the ordering of objects is easy: create a new layer in the position you want it to
   be, e.g. above "main", with QCustomPlot::addLayer. Then set the current layer with
   QCustomPlot::setCurrentLayer to that new layer and finally create the objects normally. They will
   be placed on the new layer automatically, due to the current layer setting. Alternatively you

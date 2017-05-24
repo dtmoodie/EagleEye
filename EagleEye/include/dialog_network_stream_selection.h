@@ -19,7 +19,7 @@ public:
     QString preferred_loader;
     bool accepted;
     bool eventFilter(QObject *object, QEvent *event);
-    std::vector<mo::IParameter*> GetParameters();
+    std::vector<mo::IParam*> GetParameters();
 public slots:
     void accept();
     void cancel();

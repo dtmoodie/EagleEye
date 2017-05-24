@@ -1,5 +1,5 @@
 #pragma once
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include "qgraphicsitem.h"
 #include "qwidget.h"
 #include <boost/type_traits.hpp>
@@ -37,9 +37,9 @@ class QInputProxy : public QWidget
 {
     Q_OBJECT
 public:
-    QInputProxy(mo::IParameter* parameter, rcc::weak_ptr<aq::Nodes::Node> node_, QWidget* parent);
-    void updateParameter(mo::IParameter* parameter);
-    virtual void updateUi(mo::IParameter*, mo::Context*, bool init = false);
+    QInputProxy(mo::IParam* parameter, rcc::weak_ptr<aq::Nodes::Node> node_, QWidget* parent);
+    void updateParameter(mo::IParam* parameter);
+    virtual void updateUi(mo::IParam*, mo::Context*, bool init = false);
     virtual QWidget* getWidget(int num = 0);
     bool eventFilter(QObject* obj, QEvent* event);
 
@@ -48,13 +48,13 @@ private slots:
     void on_valueChanged(int);
 private:
     int prevIdx;
-    void onParamDelete(mo::IParameter const* parameter);
+    void onParamDelete(mo::IParam const* parameter);
     std::shared_ptr<mo::Connection> update_connection;
     std::shared_ptr<mo::Connection> delete_connection;
     rcc::weak_ptr<aq::Nodes::Node> node;
     QComboBox* box;
-    mo::TypedSlot<void(mo::IParameter*, mo::Context*)> onParameterUpdateSlot;
-    mo::TypedSlot<void(mo::IParameter const*)> onParameterDeleteSlot;
+    mo::TypedSlot<void(mo::IParam*, mo::Context*)> onParameterUpdateSlot;
+    mo::TypedSlot<void(mo::IParam const*)> onParameterDeleteSlot;
 };
 
 class CV_EXPORTS QNodeWidget : public QWidget
@@ -70,7 +70,7 @@ public:
     void on_nodeUpdate();
     void on_logReceive(boost::log::trivial::severity_level verb, const std::string& msg);
     bool eventFilter(QObject *object, QEvent *event);
-    void addParameterWidgetMap(QWidget* widget, mo::IParameter* param);
+    void addParameterWidgetMap(QWidget* widget, mo::IParam* param);
     QWidget* mainWindow;
 private slots:
     void on_enableClicked(bool state);
@@ -79,7 +79,7 @@ private slots:
     void log(boost::log::trivial::severity_level verb, const std::string& msg);
 signals:
     void eLog(boost::log::trivial::severity_level verb, const std::string& msg);
-    void parameterClicked(mo::IParameter* param, QPoint pos);
+    void parameterClicked(mo::IParam* param, QPoint pos);
 private:
     QLineEdit* profileDisplay;
     QLineEdit* traceDisplay;
@@ -89,7 +89,7 @@ private:
     QLineEdit* errorDisplay;
 
     void on_object_recompile(mo::IMetaObject* obj);
-    std::map<QWidget*, mo::IParameter*> widgetParamMap;
+    std::map<QWidget*, mo::IParam*> widgetParamMap;
     Ui::QNodeWidget* ui;
     rcc::weak_ptr<aq::Nodes::Node> node;
     std::map<std::string, mo::UI::qt::IParameterProxy::Ptr> parameterProxies;
@@ -119,14 +119,14 @@ private:
     Ui::DataStreamWidget* ui;
     std::vector<QInputProxy*> inputProxies;
     std::map<std::string, mo::UI::qt::IParameterProxy::Ptr> parameterProxies;
-    std::map<QWidget*, mo::IParameter*> widgetParamMap;
+    std::map<QWidget*, mo::IParam*> widgetParamMap;
 };
 
 class DraggableLabel: public QLabel
 {
-    mo::IParameter* param;
+    mo::IParam* param;
 public:
-    DraggableLabel(QString name, mo::IParameter* param_);
+    DraggableLabel(QString name, mo::IParam* param_);
     void dropEvent(QDropEvent* event);
     void dragLeaveEvent(QDragLeaveEvent* event);
     void dragMoveEvent(QDragMoveEvent* event);
@@ -143,9 +143,9 @@ public:
     virtual int getNumWidgets(){return 1;}
     virtual QWidget* getTypename()
     {        return new QLabel(QString::fromStdString(parameter->GetTypeInfo().name()));    }
-    mo::IParameter* parameter;
+    mo::IParam* parameter;
 };
-IQNodeProxy* dispatchParameter(IQNodeInterop* parent, mo::IParameter* parameter, rcc::weak_ptr<aq::Nodes::Node> node);
+IQNodeProxy* dispatchParameter(IQNodeInterop* parent, mo::IParam* parameter, rcc::weak_ptr<aq::Nodes::Node> node);
 
 
 // Interface class for the interop class
@@ -153,11 +153,11 @@ class CV_EXPORTS IQNodeInterop: public QWidget
 {
     Q_OBJECT
 public:
-    IQNodeInterop(mo::IParameter* parameter_, QNodeWidget* parent = nullptr, rcc::weak_ptr<aq::Nodes::Node> node_= rcc::weak_ptr<aq::Nodes::Node>());
+    IQNodeInterop(mo::IParam* parameter_, QNodeWidget* parent = nullptr, rcc::weak_ptr<aq::Nodes::Node> node_= rcc::weak_ptr<aq::Nodes::Node>());
     virtual ~IQNodeInterop();
 
     IQNodeProxy* proxy;
-    mo::IParameter* parameter;
+    mo::IParam* parameter;
     std::shared_ptr<mo::Connection> bc;
     boost::posix_time::ptime previousUpdateTime;
 public slots:
@@ -168,12 +168,12 @@ private slots:
     void on_valueChanged(bool value);
     void on_valueChanged(QString value);
     void on_valueChanged();
-    void onParameterUpdate(mo::IParameter* parameter, mo::Context* ctx);
+    void onParameterUpdate(mo::IParam* parameter, mo::Context* ctx);
     //void onParameterUpdate();
 signals:
     void updateNeeded();
 protected:
-    mo::TypedSlot<void(mo::IParameter*, mo::Context*)> onParameterUpdateSlot;
+    mo::TypedSlot<void(mo::IParam*, mo::Context*)> onParameterUpdateSlot;
     QLabel* nameElement;    
     QGridLayout* layout;
     rcc::weak_ptr<aq::Nodes::Node> node;

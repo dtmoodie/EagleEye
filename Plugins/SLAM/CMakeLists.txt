@@ -45,7 +45,7 @@ if(EIGEN_INCLUDE_DIRS)
     RCC_LINK_LIB(SLAM
       ${OpenCV_LIBS}
       ${CUDA_CUBLAS_LIBRARIES}
-      Aquila
+      aquila_core
       OpenDTAM
     )
 

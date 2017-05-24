@@ -1,5 +1,5 @@
 #include "WhiteBalance.hpp"
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudaarithm.hpp>
 
@@ -13,10 +13,10 @@ bool WhiteBalance::ProcessImpl()
     cv::cuda::GpuMat output;
     auto lower = cv::Scalar(lower_blue, lower_green, lower_red);
     auto upper = cv::Scalar(upper_blue, upper_green, upper_red);
-    applyWhiteBalance(input->GetGpuMat(Stream()),
+    applyWhiteBalance(input->getGpuMat(Stream()),
                       output, lower, upper, rois, weight, dtype, Stream());
     output_param.UpdateData(output, input_param.GetTimestamp(), _ctx);
-    /*const cv::Mat& in = input->GetMat(Stream());
+    /*const cv::Mat& in = input->getMat(Stream());
     cv::Mat out;
     Stream().waitForCompletion();
     CV_Assert(in.channels() == 3);
@@ -95,7 +95,7 @@ MO_REGISTER_CLASS(WhiteBalance)
 
 bool StaticWhiteBalance::ProcessImpl()
 {
-    const cv::cuda::GpuMat& in = input->GetGpuMat(Stream());
+    const cv::cuda::GpuMat& in = input->getGpuMat(Stream());
     std::vector<cv::cuda::GpuMat> channels;
     cv::cuda::split(in, channels, Stream());
     for(int i = 0; i < 3; ++i)
@@ -116,7 +116,7 @@ MO_REGISTER_CLASS(StaticWhiteBalance)
 
 bool WhiteBalanceMean::ProcessImpl()
 {
-    const cv::cuda::GpuMat& in = input->GetGpuMat(Stream());
+    const cv::cuda::GpuMat& in = input->getGpuMat(Stream());
     std::vector<cv::cuda::GpuMat> channels;
     channels.resize(in.channels());
     for(int i = 0; i < in.channels(); ++i)

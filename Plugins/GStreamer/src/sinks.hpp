@@ -2,7 +2,7 @@
 #include "GStreamerExport.hpp"
 #include "MetaObject/MetaObject.hpp"
 #include "gstreamer.hpp"
-#include "Aquila/Nodes/IFrameGrabber.hpp"
+#include "Aquila/framegrabbers/IFrameGrabber.hpp"
 
 namespace aq
 {

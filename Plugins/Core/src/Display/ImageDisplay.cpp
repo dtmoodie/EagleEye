@@ -18,7 +18,7 @@ bool QtImageDisplay::ProcessImpl()
     bool overlay = overlay_timestamp;
     if(image && !image->empty())
     {
-        mat = image->GetMat(Stream());
+        mat = image->getMat(Stream());
         ts = image_param.GetTimestamp();
     }
     if(cpu_mat)
@@ -76,7 +76,7 @@ bool HistogramDisplay::ProcessImpl()
         draw.upload(h_draw, Stream());
     }
     cv::cuda::GpuMat output_image;
-    cv::cuda::drawHistogram(histogram->GetGpuMat(Stream()), output_image, cv::noArray(), Stream());
+    cv::cuda::drawHistogram(histogram->getGpuMat(Stream()), output_image, cv::noArray(), Stream());
     std::string name = GetTreeName();
     size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
     //draw.copyTo(output_image, Stream());
@@ -104,9 +104,9 @@ bool HistogramOverlay::ProcessImpl()
         draw.upload(h_draw, Stream());
     }
     cv::cuda::GpuMat output_image;
-    image->Clone(output_image, Stream());
+    image->clone(output_image, Stream());
 
-    cv::cuda::drawHistogram(histogram->GetGpuMat(Stream()), output_image(cv::Rect(0,0, 256, 100)), cv::noArray(), Stream());
+    cv::cuda::drawHistogram(histogram->getGpuMat(Stream()), output_image(cv::Rect(0,0, 256, 100)), cv::noArray(), Stream());
     //draw.copyTo(output_image(cv::Rect(0,0,256,100)), Stream());
     cv::cuda::add(output_image(cv::Rect(0,0,256,100)), draw, output_image(cv::Rect(0,0,256,100)),
                   cv::noArray(), -1, Stream());
@@ -123,7 +123,7 @@ bool OGLImageDisplay::ProcessImpl()
 {
     std::string name = GetTreeName();
     size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
-    cv::cuda::GpuMat gpumat = image->GetGpuMat(Stream());
+    cv::cuda::GpuMat gpumat = image->getGpuMat(Stream());
     auto ts = image_param.GetTimestamp();
     if(!_prev_time)
         _prev_time = ts;

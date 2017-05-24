@@ -21,11 +21,11 @@ size_t IPyrOpticalFlow::PrepPyramid()
 {
     if (input->GetChannels() != 1)
     {
-        cv::cuda::cvtColor(input->GetGpuMat(Stream()), greyImg[0], cv::COLOR_BGR2GRAY, 1, Stream());
+        cv::cuda::cvtColor(input->getGpuMat(Stream()), greyImg[0], cv::COLOR_BGR2GRAY, 1, Stream());
     }
     else
     {
-        greyImg[0] = input->GetGpuMat(Stream());
+        greyImg[0] = input->getGpuMat(Stream());
     }
     size_t fn;
     if (image_pyramid == nullptr)
@@ -114,12 +114,12 @@ bool SparsePyrLKOpticalFlow::ProcessImpl()
         cv::cuda::GpuMat tracked_points, status, error;
         if(input_points_param.GetInput(ts - 1))
         {
-            optFlow->calc(prevGreyImg, greyImg, input_points->GetGpuMat(Stream()), tracked_points, status, error, Stream());
+            optFlow->calc(prevGreyImg, greyImg, input_points->getGpuMat(Stream()), tracked_points, status, error, Stream());
         }else
         {
             if(!prev_key_points.empty())
             {
-                prev_key_points = input_points->GetGpuMat(Stream());
+                prev_key_points = input_points->getGpuMat(Stream());
                 return false;
             }else
             {

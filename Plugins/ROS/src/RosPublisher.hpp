@@ -1,6 +1,6 @@
 #pragma once
 #include "ROSExport.hpp"
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include "IRosMessageWriter.hpp"
 #include "ros/publisher.h"
 namespace aq

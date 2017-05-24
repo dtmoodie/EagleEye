@@ -102,8 +102,8 @@ void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, const std
         auto wrapped = aq::Nodes::CaffeBase::WrapBlob(*blob);
         if(class_index < blob->channels() && blob->num())
         {
-            const cv::cuda::GpuMat& confidence = wrapped[0].GetGpuMat(_ctx->GetStream(), class_index);
-            //cv::Mat dbg = wrapped[0].GetMat(_ctx->GetStream(), class_index);
+            const cv::cuda::GpuMat& confidence = wrapped[0].getGpuMat(_ctx->GetStream(), class_index);
+            //cv::Mat dbg = wrapped[0].getMat(_ctx->GetStream(), class_index);
             cv::cuda::GpuMat confidence_out;
             cv::cuda::threshold(confidence, confidence_out, min_confidence, 255, cv::THRESH_BINARY, _ctx->GetStream());
             cv::cuda::GpuMat mask_out;

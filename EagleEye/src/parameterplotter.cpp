@@ -3,7 +3,7 @@
 //#include "Manager.h"
 
 
-//QList<ParameterPlotterFactory*> ParameterPlotter::getPlotters(mo::IParameter::Ptr param)
+//QList<ParameterPlotterFactory*> ParameterPlotter::getPlotters(mo::IParam::Ptr param)
 //{
 //    QList<ParameterPlotterFactory*> output;
 //    for(auto it = g_factories.begin(); it != g_factories.end(); ++it)
@@ -15,12 +15,12 @@
 //}
 
 
-//ParameterPlotter* ParameterPlotter::getPlot(mo::IParameter::Ptr param)
+//ParameterPlotter* ParameterPlotter::getPlot(mo::IParam::Ptr param)
 //{
 
 //}
 
-//ParameterPlotter::ParameterPlotter(mo::IParameter::Ptr param_, QCustomPlot *plot_):
+//ParameterPlotter::ParameterPlotter(mo::IParam::Ptr param_, QCustomPlot *plot_):
 //    param(param_), plot(plot_)
 //{
 //    param->onUpdate.connect(boost::bind(&ParameterPlotter::onUpdate, this));
@@ -44,14 +44,14 @@
 
 
 //static PlotterFactory<HistogramPlotter, SingleChannelPolicy, VectorSizePolicy, TypePolicy<cv::Mat>, TypePolicy<cv::cuda::GpuMat>, TypePolicy<cv::cuda::HostMem>> histPlotter("HistogramPlotter");
-//bool HistogramPlotter::acceptsType(mo::IParameter::Ptr param)
+//bool HistogramPlotter::acceptsType(mo::IParam::Ptr param)
 //{
 //    return aq::acceptsType<cv::Mat>(param->typeInfo) ||
 //            aq::acceptsType<cv::cuda::GpuMat>(param->typeInfo) ||
 //            aq::acceptsType<cv::cuda::HostMem>(param->typeInfo);
 //}
 
-//HistogramPlotter::HistogramPlotter(mo::IParameter::Ptr param, QCustomPlot* plot_):
+//HistogramPlotter::HistogramPlotter(mo::IParam::Ptr param, QCustomPlot* plot_):
 //    ParameterPlotter(param, plot_)
 //{
 //    connect(this, SIGNAL(update()),this, SLOT(doUpdate()), Qt::QueuedConnection);
@@ -115,7 +115,7 @@
 //}
 //void HistogramPlotter::onScaleChange(QString name)
 //{
-//    mo::IParameter::Ptr param = aq::NodeManager::getInstance().getParameter(name.toStdString());
+//    mo::IParam::Ptr param = aq::NodeManager::getInstance().getParameter(name.toStdString());
 //    if(param)
 //        scale = getParamArrayData(param,0);
 //}

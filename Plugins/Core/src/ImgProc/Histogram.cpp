@@ -1,6 +1,6 @@
 #include "Histogram.hpp"
 #include "opencv2/cudaimgproc.hpp"
-#include "Aquila/Nodes/NodeInfo.hpp"
+#include "Aquila/nodes/NodeInfo.hpp"
 using namespace aq::Nodes;
 
 bool HistogramRange::ProcessImpl()
@@ -15,7 +15,7 @@ bool HistogramRange::ProcessImpl()
     if(input->GetChannels() == 1 || input->GetChannels() == 4)
     {
         cv::cuda::GpuMat hist;
-        cv::cuda::histRange(input->GetGpuMat(Stream()), hist, levels.GetGpuMat(Stream()), Stream());
+        cv::cuda::histRange(input->getGpuMat(Stream()), hist, levels.getGpuMat(Stream()), Stream());
         histogram_param.UpdateData(hist, input_param.GetTimestamp(), _ctx);
         return true;
     }
@@ -46,7 +46,7 @@ void HistogramRange::updateLevels(int type)
 bool Histogram::ProcessImpl()
 {
     cv::cuda::GpuMat bins, hist;
-    cv::cuda::histogram(input->GetGpuMat(Stream()), bins, hist, min, max, Stream());
+    cv::cuda::histogram(input->getGpuMat(Stream()), bins, hist, min, max, Stream());
     histogram_param.UpdateData(hist, input_param.GetTimestamp(), _ctx);
     return true;
 }

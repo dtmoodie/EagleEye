@@ -2,7 +2,7 @@
 #include "opencv2/core/cuda_stream_accessor.hpp"
 #include <opencv2/cudaarithm.hpp>
 
-#include "Aquila/Thrust_interop.hpp"
+#include "Aquila/utilities/thrust/thrust_interop.hpp"
 #include <thrust/transform.h>
 #include <thrust/sort.h>
 #include <thrust/system/cuda/execution_policy.h>
@@ -35,8 +35,8 @@ __device__ __host__ float sigmoid(float x)
 }
 // This is used for running ALL of the different weak classifiers in training
 __global__ void classify_set(
-    const cv::cuda::PtrStepSzf X, 
-    KernelArray<stump> stumps, 
+    const cv::cuda::PtrStepSzf X,
+    KernelArray<stump> stumps,
     cv::cuda::PtrStepSzf result, bool use_sigmoid)
 {
     // Two dimensional grid stride loop stuffs
@@ -58,8 +58,8 @@ __global__ void classify_set(
 }
 
 __global__ void update_set(
-    const cv::cuda::PtrStepSzf pos, 
-    const cv::cuda::PtrStepSzf neg, 
+    const cv::cuda::PtrStepSzf pos,
+    const cv::cuda::PtrStepSzf neg,
     KernelArray<stump> stumps)
 {
     for(int i =  blockIdx.x * blockDim.x + threadIdx.x; i < stumps._size; i += blockDim.x * gridDim.x)
@@ -71,7 +71,7 @@ __global__ void update_set(
 
 __device__ __host__ stump::stump(int index):
     _ind(index)
-{   
+{
     init();
 }
 
@@ -303,7 +303,7 @@ __global__ void classifyF_kernel(KernelArray<int> selectors, const cv::cuda::Ptr
         }
     }
 }
-// per element Y = sigmoid(X) 
+// per element Y = sigmoid(X)
 __global__ void sigmoid_kernel(cv::cuda::PtrStepSzf X, cv::cuda::PtrStepSzf Y)
 {
     for(int y = blockIdx.y * blockDim.y + threadIdx.y; y < X.rows; y += blockDim.y * gridDim.y)
@@ -341,12 +341,12 @@ void mil_tree::update(const cv::cuda::GpuMat& pos, const cv::cuda::GpuMat& neg, 
 
         // Sort the likelihood and pick the best classifier
         thrust::sequence(thrust::system::cuda::par.on(stream_), GpuMatBeginItr<int>(ordering), GpuMatEndItr<int>(ordering));
-        
-        thrust::sort_by_key(thrust::system::cuda::par.on(stream_), GpuMatBeginItr<float>(likl), GpuMatEndItr<float>(likl), 
+
+        thrust::sort_by_key(thrust::system::cuda::par.on(stream_), GpuMatBeginItr<float>(likl), GpuMatEndItr<float>(likl),
             GpuMatBeginItr<int>(ordering),thrust::greater<float>());// Sort into descending order
 
         select_classifier<<<1, 1, 0, stream_>>>(d_selectors, likl, ordering);
-        
+
         // Update H_pos / H_neg
         update_H<<<1, 1, 0, stream_>>>(d_selectors, H_pos, pos_results, i);
         update_H<<<1, 1, 0, stream_>>>(d_selectors, H_neg, neg_results, i);
@@ -360,9 +360,9 @@ void mil_tree::classifyF(const cv::Mat& X, cv::Mat& output, bool logR)
 }
 
 void mil_tree::classifyF(
-    const cv::cuda::GpuMat& X, 
-    cv::cuda::GpuMat& output, 
-    bool logR, 
+    const cv::cuda::GpuMat& X,
+    cv::cuda::GpuMat& output,
+    bool logR,
     cv::cuda::Stream& stream)
 {
     auto stream_ = cv::cuda::StreamAccessor::getStream(stream);
@@ -370,7 +370,7 @@ void mil_tree::classifyF(
     buffer.create(X.rows, num_weak_classifiers, CV_32F);
     classifyF_kernel<<<1, 1, 0, stream_>>>(d_selectors, X, d_stumps, buffer);
     // Sum the predictions of all classifiers
-    cv::cuda::reduce(buffer, output, 1, CV_REDUCE_SUM, -1, stream);   
+    cv::cuda::reduce(buffer, output, 1, CV_REDUCE_SUM, -1, stream);
     if(logR)
     {
         sigmoid_kernel<<<1, 1, 0, stream_>>>(output, output);

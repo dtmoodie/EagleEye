@@ -12,7 +12,7 @@
 #include <opencv2/core/cuda_types.hpp>
 #include <opencv2/core/cuda.hpp>
 
-//#include "Aquila/Algorithm.h"
+//#include "Aquila/core/Algorithm.hpp"
 
 #include "thrust/device_vector.h"
 #include "thrust/host_vector.h"
@@ -24,7 +24,7 @@ namespace aq {
 namespace ML {
 namespace classifiers {
 namespace MIL {
-    namespace device 
+    namespace device
     {
         // Multiple instance learning boostded decision tree
         class stump
@@ -54,7 +54,7 @@ namespace MIL {
             float log_n1, log_n0;
             float e1, e0;
             float lRate;
-            
+
         };
     } // namespace device
 
@@ -74,7 +74,7 @@ class mil_tree// : public Aquila::Algorithm
     int num_weak_classifiers;
 public:
     void NodeInit(bool firstInit);
-    
+
     //virtual std::vector<Parameters::Parameter::Ptr> GetParameters();
 
     void update(const cv::Mat& pos, const cv::Mat& neg);

@@ -19,10 +19,10 @@ bool FFT::ProcessImpl()
         int in_cols = input->GetSize().width;
         int rows = cv::getOptimalDFTSize(in_rows);
         int cols = cv::getOptimalDFTSize(in_cols);
-        cv::cuda::copyMakeBorder(input->GetGpuMat(Stream()), padded, 0, rows - in_rows, 0, cols - in_cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), Stream());
+        cv::cuda::copyMakeBorder(input->getGpuMat(Stream()), padded, 0, rows - in_rows, 0, cols - in_cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), Stream());
     }else
     {
-        padded = input->GetGpuMat(Stream());
+        padded = input->getGpuMat(Stream());
     }
     if(padded.depth() != CV_32F)
     {
@@ -86,7 +86,7 @@ bool FFTPreShiftImage::ProcessImpl()
         d_shiftMat.upload(getShiftMat(input->GetSize()), Stream());
     }
     cv::cuda::GpuMat result;
-    cv::cuda::multiply(d_shiftMat, input->GetGpuMat(Stream()), result, 1, -1, Stream());
+    cv::cuda::multiply(d_shiftMat, input->getGpuMat(Stream()), result, 1, -1, Stream());
     output_param.UpdateData(result, input_param.GetTimestamp(), _ctx);
     return true;
 }
@@ -102,7 +102,7 @@ bool FFTPostShift::ProcessImpl()
         cv::cuda::merge(channels, d_shiftMat, Stream());
     }
     cv::cuda::GpuMat result;
-    cv::cuda::multiply(d_shiftMat, input->GetGpuMat(Stream()), result, 1 / float(input->GetSize().area()), -1, Stream());
+    cv::cuda::multiply(d_shiftMat, input->getGpuMat(Stream()), result, 1 / float(input->GetSize().area()), -1, Stream());
     return true;
 }
 

@@ -8,7 +8,7 @@ namespace vclick
     template<class T> class TParameterResource : public IParameterResource
     {
     public:
-        TParameterResource(Wt::WApplication* app, mo::IParameter* param, const std::string& name = "default"):
+        TParameterResource(Wt::WApplication* app, mo::IParam* param, const std::string& name = "default"):
             IParameterResource(app)
         {
             data = nullptr;
@@ -30,7 +30,7 @@ namespace vclick
     template<> class TParameterResourceRaw<cv::Mat>: public IParameterResource
     {
     public:
-        TParameterResourceRaw(Wt::WApplication* app, mo::IParameter* param, const std::string& name = "default") :
+        TParameterResourceRaw(Wt::WApplication* app, mo::IParam* param, const std::string& name = "default") :
             IParameterResource(app)
         {
             data = nullptr;
@@ -40,7 +40,7 @@ namespace vclick
             data_param.SetMtx(&param->mtx());
             this->setParam(&data_param);
         }
-        void handleParamUpdate(mo::Context* ctx, mo::IParameter* param);
+        void handleParamUpdate(mo::Context* ctx, mo::IParam* param);
     private:
         const cv::Mat* data;
         mo::TypedInputParameterPtr<cv::Mat> data_param;
@@ -49,7 +49,7 @@ namespace vclick
     template<> class TParameterResource<aq::SyncedMemory> : public IParameterResource
     {
     public:
-        TParameterResource(Wt::WApplication* app, mo::IParameter* param,
+        TParameterResource(Wt::WApplication* app, mo::IParam* param,
             const std::string& name = "default") :
             IParameterResource(app)
         {
@@ -60,7 +60,7 @@ namespace vclick
             data_param.SetMtx(&param->mtx());
             this->setParam(&data_param);
         }
-        void handleParamUpdate(mo::Context* ctx, mo::IParameter* param);
+        void handleParamUpdate(mo::Context* ctx, mo::IParam* param);
 
     private:
         const aq::SyncedMemory* data;

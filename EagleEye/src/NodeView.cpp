@@ -3,7 +3,7 @@
 #include "qdrag.h"
 #include <qmimedata.h>
 
-#include <Aquila/Nodes/NodeFactory.h>
+#include <Aquila/nodes/NodeFactory.hpp>
 #include "signal_dialog.h"
 #include <Aquila/plotters/PlotManager.h>
 
@@ -62,7 +62,7 @@ QGraphicsProxyWidget* NodeView::getWidget(aq::IDataStream* id)
         return itr->second;
     else return nullptr;
 }
-void NodeView::on_parameter_clicked(mo::IParameter* param, QPoint pos)
+void NodeView::on_parameter_clicked(mo::IParam* param, QPoint pos)
 {
     // Spawn the right click dialog
     if (param != nullptr)
@@ -117,7 +117,7 @@ void NodeView::on_deleteNode()
         auto stream = streamWidget->GetStream();
         stream->StartThread();
         emit widgetDeleted(streamWidget);
-        dataStreamWidget.erase(stream.Get());
+        dataStreamWidget.erase(stream.get());
     }
     scene()->removeItem(currentWidget);
     delete currentWidget;

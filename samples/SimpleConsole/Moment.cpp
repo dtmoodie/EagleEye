@@ -7,8 +7,8 @@
 
 using namespace vclick;
 
-INSTANTIATE_META_PARAMETER(Moment);
-INSTANTIATE_META_PARAMETER(std::vector<Moment>);
+INSTANTIATE_META_PARAM(Moment);
+INSTANTIATE_META_PARAM(std::vector<Moment>);
 Moment::Moment(float Px_, float Py_, float Pz_) :
     Px(Px_), Py(Py_), Pz(Pz_)
 {

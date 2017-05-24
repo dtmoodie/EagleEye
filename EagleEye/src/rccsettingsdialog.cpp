@@ -11,9 +11,9 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
     ui(new Ui::RCCSettingsDialog)
 {
     ui->setupUi(this);
-    ui->numModules->setText(QString::number(mo::MetaObjectFactory::Instance()->ListLoadedPlugins().size()));
+    ui->numModules->setText(QString::number(mo::MetaObjectFactory::instance()->listLoadedPlugins().size()));
     this->on_constructors_added = mo::TypedSlot<void(void)>(std::bind(&RCCSettingsDialog::updateDisplay, this));
-    mo::MetaObjectFactory::Instance()->ConnectConstructorAdded(&this->on_constructors_added);
+    mo::MetaObjectFactory::instance()->ConnectConstructorAdded(&this->on_constructors_added);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[0]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[1]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[2]);
@@ -26,7 +26,7 @@ void RCCSettingsDialog::updateDisplay()
     
     ui->linkDirs->clear();
     ui->incDirs->clear();
-    auto projects = mo::MetaObjectFactory::Instance()->ListLoadedPlugins();
+    auto projects = mo::MetaObjectFactory::instance()->listLoadedPlugins();
     std::map<int, QTreeWidgetItem*> libDirItems;
     std::map<int, QTreeWidgetItem*> incDirItems;
     for (int i = 0; i < projects.size(); ++i)
@@ -36,8 +36,8 @@ void RCCSettingsDialog::updateDisplay()
 
         libItem->setText(0,QString::fromStdString(projects[i]));
         incItem->setText(0,QString::fromStdString(projects[i]));
-        auto inc = mo::MetaObjectFactory::Instance()->GetObjectSystem()->GetIncludeDirList(i);
-        auto lib = mo::MetaObjectFactory::Instance()->GetObjectSystem()->GetLinkDirList(i);
+        auto inc = mo::MetaObjectFactory::instance()->getObjectSystem()->GetIncludeDirList(i);
+        auto lib = mo::MetaObjectFactory::instance()->getObjectSystem()->GetLinkDirList(i);
         for (auto dir : inc)
         {
             if (dir.Exists())
@@ -59,7 +59,7 @@ void RCCSettingsDialog::updateDisplay()
         }
 
     }
-    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors();
+    auto constructors = mo::MetaObjectFactory::instance()->getConstructors();
     ui->linkTree->clear();
     ui->linkTree->setColumnCount(2);
     for(auto& constructor : constructors)

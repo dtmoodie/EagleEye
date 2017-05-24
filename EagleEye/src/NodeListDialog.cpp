@@ -1,7 +1,7 @@
 #include "NodeListDialog.h"
 #include "ui_nodelistdialog.h"
 #include "MetaObject/MetaObjectFactory.hpp"
-#include "Aquila/Nodes/NodeInfo.hpp"
+#include "Aquila/nodes/NodeInfo.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
 #include "QListWidgetItem"
 
@@ -11,7 +11,7 @@ NodeListDialog::NodeListDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     update_slot = mo::TypedSlot<void(void)>(std::bind(&NodeListDialog::update, this));
-    connection = mo::MetaObjectFactory::Instance()->ConnectConstructorAdded(&update_slot), "update", "update", update_slot.GetSignature();
+    connection = mo::MetaObjectFactory::instance()->ConnectConstructorAdded(&update_slot), "update", "update", update_slot.GetSignature();
     update();
 }
 
@@ -25,7 +25,7 @@ void NodeListDialog::update()
 {
     ui->NodeList->clear();
     //auto nodes = aq::NodeManager::getInstance().getConstructableNodes();
-    auto nodes = mo::MetaObjectFactory::Instance()->GetConstructors(aq::Nodes::Node::s_interfaceID);
+    auto nodes = mo::MetaObjectFactory::instance()->getConstructors(aq::Nodes::Node::s_interfaceID);
     for(size_t i = 0; i < nodes.size(); ++i)
     {
         //ui->NodeList->addItem(QString::fromStdString(nodes[i]));

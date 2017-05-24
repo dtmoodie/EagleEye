@@ -1,5 +1,5 @@
 #include "FrameSkip.hpp"
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 
 using namespace aq::Nodes;
 

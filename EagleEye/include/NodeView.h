@@ -2,7 +2,7 @@
 #include <qgraphicsview.h>
 #include <qevent.h>
 #include <qgraphicsproxywidget.h>
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
 #include <QNodeWidget.h>
 #include <QMenu>
 #include <RuntimeObjectSystem/shared_ptr.hpp>
@@ -36,17 +36,17 @@ signals:
     void startThread();
     void widgetDeleted(QNodeWidget*);
     void widgetDeleted(DataStreamWidget*);
-    void plotData(mo::IParameter* param);
-    void displayImage(mo::IParameter* param);
+    void plotData(mo::IParam* param);
+    void displayImage(mo::IParam* param);
 private slots:
-    void on_parameter_clicked(mo::IParameter* param, QPoint pos);
+    void on_parameter_clicked(mo::IParam* param, QPoint pos);
     void on_deleteNode();
     void on_displayImage();
     void on_plotData();
     void on_display_signals();
     bool eventFilter(QObject *object, QEvent *event);
 private:
-    mo::IParameter* currentParam;
+    mo::IParam* currentParam;
     QGraphicsProxyWidget* currentWidget;
     QPoint mousePressPosition;
     std::map<ObjectId, QGraphicsProxyWidget*> widgetMap;

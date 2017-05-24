@@ -45,16 +45,10 @@ IF(LIBUSB_1_FOUND AND LIBFREENECT_FOUND)
     file(GLOB_RECURSE knl "*.cu")
     file(GLOB_RECURSE hdr "*.h" "*.hpp" "*.cuh")
 
-    IF(WIN32)
-
-    ELSE()
-        #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
-    ENDIF()
-
     cuda_add_library(freenect SHARED ${src} ${hdr} ${knl})
-    add_dependencies(freenect Aquila)
+
     RCC_LINK_LIB(freenect
-        Aquila
+        aquila_core
         ${LIBFREENECT_LIBRARY}
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}

@@ -10,7 +10,7 @@ class UIPersistence
 public:
     UIPersistence();
     virtual ~UIPersistence(){}
-    virtual std::vector<mo::IParameter*> GetParameters() = 0;
+    virtual std::vector<mo::IParam*> GetParameters() = 0;
 };
 
 class VariableStorage
@@ -24,6 +24,6 @@ public:
 private:
     VariableStorage();
     ~VariableStorage();
-    std::map<std::string, std::map<std::string, mo::IParameter*>> loaded_parameters;
+    std::map<std::string, std::map<std::string, mo::IParam*>> loaded_parameters;
 };
 

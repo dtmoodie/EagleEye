@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Aquila/Nodes/Node.h>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include "Aquila/Detail/PluginExport.hpp"
-#include "Aquila/IDataStream.hpp"
+#include "Aquila/core/IDataStream.hpp"
 #include <Aquila/ObjectDetection.hpp>
 #include <Aquila/utilities/CudaUtils.hpp>
 #include "Aquila/utilities/CudaCallbacks.hpp"

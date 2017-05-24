@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
 #include "Aquila/utilities/CudaUtils.hpp"
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"

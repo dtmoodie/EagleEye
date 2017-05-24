@@ -5,7 +5,7 @@
 #include <Aquila/rcc/external_includes/cv_calib3d.hpp>
 #include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 
 #include <MetaObject/Thread/InterThread.hpp>
 

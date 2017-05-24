@@ -9,7 +9,7 @@
 #include <cereal/types/vector.hpp>
 #include <Aquila/IO/cvMat.hpp>
 #include "Aquila/IO/memory.hpp"
-#include "Aquila/Nodes/NodeFactory.h"
+#include "Aquila/nodes/NodeFactory.hpp"
 
 
 #include <Wt/WBreak>
@@ -135,7 +135,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         auto rb = g_sink->GetParameter<double>("raw_bandwidth");
 
         onBandwidthRawUpdateSlot.reset(new mo::ParameterUpdateSlot(std::bind(
-            [this, rb](mo::Context* ctx, mo::IParameter* param)
+            [this, rb](mo::Context* ctx, mo::IParam* param)
         {
             this->bandwidthRawUpdated = true;
             this->bandwidth_raw.push_back(rb->GetData());
@@ -144,7 +144,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         onRawBandwidthUpdateConnection = rb->RegisterUpdateNotifier(onBandwidthRawUpdateSlot.get());
 
         onBandwidthThrottledUpdateSlot.reset(new mo::ParameterUpdateSlot(std::bind(
-            [this, tb](mo::Context* ctx, mo::IParameter* param)
+            [this, tb](mo::Context* ctx, mo::IParam* param)
         {
             this->bandwidthThrottledUpdated = true;
             this->bandwidth_throttled.push_back(tb->GetData());
@@ -244,8 +244,8 @@ WebUi::WebUi(const Wt::WEnvironment& env):
             {
                 video_feed->pause();
             }));
-            onActivate.reset(new mo::TypedSlot<void(mo::Context*, mo::IParameter*)>(std::bind(
-                [=](mo::Context* ctx, mo::IParameter* param)
+            onActivate.reset(new mo::TypedSlot<void(mo::Context*, mo::IParam*)>(std::bind(
+                [=](mo::Context* ctx, mo::IParam* param)
             {
                 if(param->GetData<bool>())
                 {

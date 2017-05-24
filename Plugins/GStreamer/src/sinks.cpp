@@ -1,6 +1,6 @@
 #include "sinks.hpp"
 #include <gst/gst.h>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <gst/base/gstbasesink.h>
 #include <opencv2/imgcodecs.hpp>
 #include "glib_thread.h"

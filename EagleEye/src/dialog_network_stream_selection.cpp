@@ -2,7 +2,7 @@
 #include "ui_dialog_network_stream_selection.h"
 #include <qlistwidget.h>
 #include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
-#include <Aquila/Nodes/IFrameGrabber.hpp>
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
 
 dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent) :
     QDialog(parent),
@@ -14,7 +14,7 @@ dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent
     ui->list_url_history->installEventFilter(this);
     QObject::connect(ui->list_url_history, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(on_item_clicked(QListWidgetItem*)));
 
-    auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
+    auto constructors = mo::MetaObjectFactory::instance()->getConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
     for(auto constructor : constructors)
     {
         auto info = constructor->GetObjectInfo();
@@ -97,9 +97,9 @@ bool dialog_network_stream_selection::eventFilter(QObject *object, QEvent *event
     }
     return false;
 }
-std::vector<mo::IParameter*> dialog_network_stream_selection::GetParameters()
+std::vector<mo::IParam*> dialog_network_stream_selection::GetParameters()
 {
-    std::vector<mo::IParameter*> output;
+    std::vector<mo::IParam*> output;
     output.push_back(&url_history_param);
     return output;
 }

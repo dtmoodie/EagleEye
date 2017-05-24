@@ -23,7 +23,7 @@ bool MorphologyFilter::ProcessImpl()
                     ::cv::Size(structuring_element_size, structuring_element_size), anchor_point));
 
             filter = ::cv::cuda::createMorphologyFilter(
-                morphology_type.currentSelection, input_image->GetMat(Stream()).type(),
+                morphology_type.currentSelection, input_image->getMat(Stream()).type(),
                 structuring_element, anchor_point, iterations);
 
             structuring_element_size_param._modified = false;
@@ -32,7 +32,7 @@ bool MorphologyFilter::ProcessImpl()
             iterations_param._modified = false;
         }
         cv::cuda::GpuMat out;
-        filter->apply(input_image->GetGpuMat(Stream()), out, Stream());
+        filter->apply(input_image->getGpuMat(Stream()), out, Stream());
         this->output_param.UpdateData(out, input_image_param.GetTimestamp(), _ctx);
         return true;
     }
@@ -80,7 +80,7 @@ bool FindContours::ProcessImpl()
 {
     if(input_image)
     {
-        ::cv::Mat h_mat = input_image->GetMat(Stream());
+        ::cv::Mat h_mat = input_image->getMat(Stream());
         if(::cv::countNonZero(h_mat) <= 1)
         {
             this->contours.clear();
@@ -101,7 +101,7 @@ bool FindContours::ProcessImpl()
 MO_REGISTER_CLASS(FindContours)
 /*TS<SyncedMemory> FindContours::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
 {
-    cv::Mat h_mat = img.GetMat(stream).clone();
+    cv::Mat h_mat = img.getMat(stream).clone();
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
     if(cv::countNonZero(h_mat) <= 1)
@@ -234,7 +234,7 @@ bool ContourBoundingBox::ProcessImpl()
         }
     }
 
-    cv::Mat h_img = img.GetMat(stream);
+    cv::Mat h_img = img.getMat(stream);
     stream.waitForCompletion();
     h_img = h_img.clone();
     cv::Scalar replace;
@@ -385,7 +385,7 @@ void HistogramThreshold::runFilter()
 
 bool DrawContours::ProcessImpl()
 {
-    const cv::Mat& image = input_image->GetMat(Stream());
+    const cv::Mat& image = input_image->getMat(Stream());
     cv::Mat output_image;
     image.copyTo(output_image);
     int largest_idx =  -1;
@@ -420,7 +420,7 @@ MO_REGISTER_CLASS(DrawContours)
     auto input = getParameter<std::vector<std::vector<cv::Point>>>("Input Contours")->Data();
     if(input)
     {
-        cv::Mat h_mat = img.GetMat(stream);
+        cv::Mat h_mat = img.getMat(stream);
         //cv::drawContours(h_mat, *input, -1,
     }
     return img;

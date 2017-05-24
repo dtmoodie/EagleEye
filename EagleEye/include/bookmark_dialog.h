@@ -16,7 +16,7 @@ public:
     explicit bookmark_dialog(QWidget *parent = 0);
     ~bookmark_dialog();
     void update();
-    std::vector<mo::IParameter*> GetParameters();
+    std::vector<mo::IParam*> GetParameters();
 public slots:
     void append_history(std::string dir);
 

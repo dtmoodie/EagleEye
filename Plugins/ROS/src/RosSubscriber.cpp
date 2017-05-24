@@ -24,7 +24,7 @@ bool RosSubscriber::Load(std::string file_path)
             return true;
         }
     }
-    auto reader = ros::IMessageReader::Create(file_path);
+    auto reader = ros::IMessageReader::create(file_path);
     if(reader)
     {
         _readers.push_back(reader);

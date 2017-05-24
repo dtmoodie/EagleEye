@@ -8,7 +8,7 @@
 int main(int argc, char *argv[])
 {
     SystemTable table;
-    mo::MetaObjectFactory::Instance(&table);
+    mo::MetaObjectFactory::instance(&table);
 #if QT_VERSION > 0x050400
     QApplication::setAttribute(Qt::AA_ShareOpenGLContexts, true);
 #endif
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 #endif
                 {
                     std::string file = itr->path().string();
-                    mo::MetaObjectFactory::Instance()->LoadPlugin(file);
+                    mo::MetaObjectFactory::instance()->loadPlugin(file);
                 }
             }
         }
@@ -66,13 +66,13 @@ int main(int argc, char *argv[])
 #endif
                 {
                     std::string file = itr->path().string();
-                    mo::MetaObjectFactory::Instance()->LoadPlugin(file);
+                    mo::MetaObjectFactory::instance()->loadPlugin(file);
                 }
             }
         }
     }
-    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
-    rcc::shared_ptr<MainWindow> w = rcc::shared_ptr<MainWindow>::Create();
+    mo::MetaObjectFactory::instance()->registerTranslationUnit();
+    rcc::shared_ptr<MainWindow> w = rcc::shared_ptr<MainWindow>::create();
 
 
     w->show();

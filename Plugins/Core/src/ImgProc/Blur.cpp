@@ -1,7 +1,7 @@
 #include "Blur.hpp"
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
-#include "Aquila/Nodes/NodeInfo.hpp"
+#include "Aquila/nodes/NodeInfo.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;
@@ -16,7 +16,7 @@ bool MedianBlur::ProcessImpl()
     if(input->GetChannels() != 1 && false)
     {
         std::vector<cv::cuda::GpuMat> channels;
-        cv::cuda::split(input->GetGpuMat(Stream()), channels, Stream());
+        cv::cuda::split(input->getGpuMat(Stream()), channels, Stream());
         std::vector<cv::cuda::GpuMat> blurred(channels.size());
         for(int i = 0; i < channels.size(); ++i)
         {
@@ -25,7 +25,7 @@ bool MedianBlur::ProcessImpl()
         cv::cuda::merge(blurred, output, Stream());
     }else
     {
-        _median_filter->apply(input->GetGpuMat(Stream()), output, Stream());
+        _median_filter->apply(input->getGpuMat(Stream()), output, Stream());
     }
     output_param.UpdateData(output, input_param.GetTimestamp(), _ctx);
 

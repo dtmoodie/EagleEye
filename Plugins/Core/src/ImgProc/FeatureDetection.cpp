@@ -11,10 +11,10 @@ bool GoodFeaturesToTrack::ProcessImpl()
     cv::cuda::GpuMat grey;
     if(input->GetChannels() != 1)
     {
-        cv::cuda::cvtColor(input->GetGpuMat(Stream()), grey, cv::COLOR_BGR2GRAY, 0, Stream());
+        cv::cuda::cvtColor(input->getGpuMat(Stream()), grey, cv::COLOR_BGR2GRAY, 0, Stream());
     }else
     {
-        grey = input->GetGpuMat(Stream());
+        grey = input->getGpuMat(Stream());
     }
     if(!detector || max_corners_param._modified || quality_level_param._modified || min_distance_param._modified || block_size_param._modified
         || use_harris_param._modified/* || harris_K_param._modified*/)
@@ -29,7 +29,7 @@ bool GoodFeaturesToTrack::ProcessImpl()
     cv::cuda::GpuMat keypoints;
     if(mask)
     {
-        detector->detect(grey, keypoints, mask->GetGpuMat(Stream()), Stream());
+        detector->detect(grey, keypoints, mask->getGpuMat(Stream()), Stream());
     }
     else
     {
@@ -55,10 +55,10 @@ bool FastFeatureDetector::ProcessImpl()
     cv::cuda::GpuMat keypoints;
     if(mask)
     {
-        detector->detectAsync(input->GetGpuMat(Stream()), keypoints, mask->GetGpuMat(Stream()), Stream());
+        detector->detectAsync(input->getGpuMat(Stream()), keypoints, mask->getGpuMat(Stream()), Stream());
     }else
     {
-        detector->detectAsync(input->GetGpuMat(Stream()), keypoints, cv::noArray(), Stream());
+        detector->detectAsync(input->getGpuMat(Stream()), keypoints, cv::noArray(), Stream());
     }
     if(!keypoints.empty())
     {
@@ -100,10 +100,10 @@ bool ORBFeatureDetector::ProcessImpl()
     cv::cuda::GpuMat descriptors;
     if(mask)
     {
-        detector->detectAndComputeAsync(input->GetGpuMat(Stream()), mask->GetGpuMat(Stream()), keypoints, descriptors, false, Stream());
+        detector->detectAndComputeAsync(input->getGpuMat(Stream()), mask->getGpuMat(Stream()), keypoints, descriptors, false, Stream());
     }else
     {
-        detector->detectAndComputeAsync(input->GetGpuMat(Stream()), cv::noArray(), keypoints, descriptors, false, Stream());
+        detector->detectAndComputeAsync(input->getGpuMat(Stream()), cv::noArray(), keypoints, descriptors, false, Stream());
     }
     keypoints_param.UpdateData(keypoints, input_param.GetTimestamp(), _ctx);
     descriptors_param.UpdateData(descriptors, input_param.GetTimestamp(), _ctx);
@@ -120,7 +120,7 @@ bool CornerHarris::ProcessImpl()
         detector = cv::cuda::createHarrisCorner(input->GetType(), block_size, sobel_aperature_size, harris_free_parameter);
     }
     cv::cuda::GpuMat score;
-    detector->compute(input->GetGpuMat(Stream()), score, Stream());
+    detector->compute(input->getGpuMat(Stream()), score, Stream());
     score_param.UpdateData(score, input_param.GetTimestamp(), _ctx);
     return true;
 }
@@ -134,7 +134,7 @@ bool CornerMinEigenValue::ProcessImpl()
         detector = cv::cuda::createMinEigenValCorner(input->GetType(), block_size, sobel_aperature_size, harris_free_parameter);
     }
     cv::cuda::GpuMat score;
-    detector->compute(input->GetGpuMat(Stream()), score, Stream());
+    detector->compute(input->getGpuMat(Stream()), score, Stream());
     score_param.UpdateData(score, input_param.GetTimestamp(), _ctx);
     return true;
 }

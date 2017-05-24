@@ -1,5 +1,5 @@
 
-#include <Aquila/Thrust_interop.hpp>
+#include <Aquila/utilities/thrust/thrust_interop.hpp>
 #include <vector_types.h>
 #include <thrust/for_each.h>
 #include <thrust/iterator/zip_iterator.h>

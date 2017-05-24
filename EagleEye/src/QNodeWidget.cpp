@@ -9,13 +9,13 @@
 #include "qevent.h"
 
 #include "Aquila/logger.hpp"
-#include <Aquila/Nodes/IFrameGrabber.hpp>
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
 #include <MetaObject/Logging/Log.hpp>
 #include <MetaObject/Parameters/UI/WidgetFactory.hpp>
 #include <MetaObject/Parameters/IVariableManager.h>
 
 
-IQNodeInterop::IQNodeInterop(mo::IParameter* parameter_, 
+IQNodeInterop::IQNodeInterop(mo::IParam* parameter_, 
                              QNodeWidget* parent, 
                              rcc::weak_ptr<aq::Nodes::Node> node_) :
     QWidget(parent),
@@ -39,7 +39,7 @@ IQNodeInterop::IQNodeInterop(mo::IParameter* parameter_,
     layout->addWidget(nameElement, 0, 0);
     nameElement->installEventFilter(parent);
     connect(this, SIGNAL(updateNeeded()), this, SLOT(updateUi()), Qt::QueuedConnection);
-    onParameterUpdateSlot = mo::TypedSlot<void(mo::IParameter*, mo::Context*)>(std::bind(&IQNodeInterop::onParameterUpdate, this, std::placeholders::_1, std::placeholders::_2));
+    onParameterUpdateSlot = mo::TypedSlot<void(mo::IParam*, mo::Context*)>(std::bind(&IQNodeInterop::onParameterUpdate, this, std::placeholders::_1, std::placeholders::_2));
     bc = parameter->RegisterUpdateNotifier(&onParameterUpdateSlot);
     
     QLabel* typeElement = new QLabel(QString::fromStdString(parameter_->GetTypeInfo().name()));
@@ -99,11 +99,11 @@ void IQNodeInterop::on_valueChanged()
     if (proxy)
         proxy->onUiUpdated(static_cast<QWidget*>(sender()));
 }
-void IQNodeInterop::onParameterUpdate(mo::IParameter* parameter, mo::Context* ctx)
+void IQNodeInterop::onParameterUpdate(mo::IParam* parameter, mo::Context* ctx)
 {
     updateUi();
 }
-DraggableLabel::DraggableLabel(QString name, mo::IParameter* param_):
+DraggableLabel::DraggableLabel(QString name, mo::IParam* param_):
     QLabel(name), param(param_)
 {
     setAcceptDrops(true);
@@ -282,7 +282,7 @@ bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
-void QNodeWidget::addParameterWidgetMap(QWidget* widget, mo::IParameter* param)
+void QNodeWidget::addParameterWidgetMap(QWidget* widget, mo::IParam* param)
 {
     
 }
@@ -310,7 +310,7 @@ void QNodeWidget::updateUi(bool parameterUpdate, aq::Nodes::Node *node_)
     {
         profileDisplay->hide();
     }*/
-    if(parameterUpdate && node_ == node.Get())
+    if(parameterUpdate && node_ == node.get())
     {
         auto parameters = node->GetDisplayParameters();
         if (parameters.size() != (parameterProxies.size() + inputProxies.size()))
@@ -365,7 +365,7 @@ void QNodeWidget::updateUi(bool parameterUpdate, aq::Nodes::Node *node_)
             }
         }
     }
-    if(parameterUpdate && node_ != node.Get())
+    if(parameterUpdate && node_ != node.get())
     {
         for(auto& proxy : inputProxies)
         {
@@ -483,12 +483,12 @@ void DataStreamWidget::update_ui()
         for (int i = 0; i < parameters.size(); ++i)
         {
             int col = 0;
-            if (parameters[i]->type & mo::IParameter::Input)
+            if (parameters[i]->type & mo::IParam::Input)
             {
                 
             }
 
-            if (parameters[i]->type & mo::IParameter::Control || parameters[i]->type & mo::IParameter::State || parameters[i]->type & mo::IParameter::Output)
+            if (parameters[i]->type & mo::IParam::Control || parameters[i]->type & mo::IParam::State || parameters[i]->type & mo::IParam::Output)
             {
                 auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
                 if (interop)
@@ -526,7 +526,7 @@ void DataStreamWidget::SetSelected(bool state)
 
 
 
-QInputProxy::QInputProxy(mo::IParameter* parameter_, rcc::weak_ptr<aq::Nodes::Node> node_, QWidget* parent):
+QInputProxy::QInputProxy(mo::IParam* parameter_, rcc::weak_ptr<aq::Nodes::Node> node_, QWidget* parent):
     node(node_), QWidget(parent)
 {
     box = new QComboBox(this);
@@ -535,8 +535,8 @@ QInputProxy::QInputProxy(mo::IParameter* parameter_, rcc::weak_ptr<aq::Nodes::No
 
     //bc = parameter_->RegisterNotifier(boost::bind(&QInputProxy::updateUi, this, false));
     //dc = parameter_->RegisterDeleteNotifier(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
-    onParameterUpdateSlot = mo::TypedSlot<void(mo::IParameter*, mo::Context*)>(std::bind(&QInputProxy::updateUi, this, std::placeholders::_1, std::placeholders::_2, false));
-    onParameterDeleteSlot = mo::TypedSlot<void(mo::IParameter const*)>(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
+    onParameterUpdateSlot = mo::TypedSlot<void(mo::IParam*, mo::Context*)>(std::bind(&QInputProxy::updateUi, this, std::placeholders::_1, std::placeholders::_2, false));
+    onParameterDeleteSlot = mo::TypedSlot<void(mo::IParam const*)>(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
     update_connection = parameter_->RegisterUpdateNotifier(&onParameterUpdateSlot);
     delete_connection = parameter_->RegisterDeleteNotifier(&onParameterDeleteSlot);
     //dc = parameter_->RegisterDeleteNotifier(&onParameterUpdateSlot);
@@ -547,14 +547,14 @@ QInputProxy::QInputProxy(mo::IParameter* parameter_, rcc::weak_ptr<aq::Nodes::No
     box->installEventFilter(this);
 }
 
-void QInputProxy::updateParameter(mo::IParameter* parameter)
+void QInputProxy::updateParameter(mo::IParam* parameter)
 {
     delete_connection = parameter->RegisterDeleteNotifier(&onParameterDeleteSlot);
     update_connection = parameter->RegisterUpdateNotifier(&onParameterUpdateSlot);
     inputParameter = dynamic_cast<mo::InputParameter*>(parameter);
 }
 
-void QInputProxy::onParamDelete(mo::IParameter const* parameter)
+void QInputProxy::onParamDelete(mo::IParam const* parameter)
 {
     inputParameter = nullptr;
 }
@@ -569,7 +569,7 @@ void QInputProxy::on_valueChanged(int idx)
         return;
     }
     QString inputName = box->currentText();
-    LOG(debug) << "Input changed to " << inputName.toStdString() << " for variable " << dynamic_cast<mo::IParameter*>(inputParameter)->GetName();
+    LOG(debug) << "Input changed to " << inputName.toStdString() << " for variable " << dynamic_cast<mo::IParam*>(inputParameter)->GetName();
     auto tokens = inputName.split(":");
     //auto var_manager = node->GetVariableManager();
     //auto tmp_param = var_manager->GetOutputParameter(inputName.toStdString());
@@ -580,7 +580,7 @@ void QInputProxy::on_valueChanged(int idx)
     /*if(tmp_param)
     {
         inputParameter->SetInput(tmp_param);
-        dynamic_cast<mo::IParameter*>(inputParameter)->changed = true;
+        dynamic_cast<mo::IParam*>(inputParameter)->changed = true;
     }*/
 }
 QWidget* QInputProxy::getWidget(int num)
@@ -602,13 +602,13 @@ bool QInputProxy::eventFilter(QObject* obj, QEvent* event)
 // This only needs to be called when a new output parameter is added to the environment......
 // The best way of doing this would be to add a signal that each node emits when a new parameter is added
 // to the environment, this signal is then caught and used to update all input proxies.
-void QInputProxy::updateUi(mo::IParameter*, mo::Context*, bool init)
+void QInputProxy::updateUi(mo::IParam*, mo::Context*, bool init)
 {
     auto var_man = node->GetVariableManager();
     auto inputs = var_man->GetOutputParameters(inputParameter->GetTypeInfo());
     if(box->count() == 0)
     {
-        box->addItem(QString::fromStdString(dynamic_cast<mo::IParameter*>(inputParameter)->GetTreeName()));    
+        box->addItem(QString::fromStdString(dynamic_cast<mo::IParam*>(inputParameter)->GetTreeName()));    
     }
     for(size_t i = 0; i < inputs.size(); ++i)
     {

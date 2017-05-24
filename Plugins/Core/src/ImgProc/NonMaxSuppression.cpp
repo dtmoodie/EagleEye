@@ -6,7 +6,7 @@ using namespace aq;
 using namespace aq::Nodes;
 bool MinMax::ProcessImpl()
 {
-    cv::cuda::minMax(input->GetGpuMat(Stream()), &min_value, &max_value);
+    cv::cuda::minMax(input->getGpuMat(Stream()), &min_value, &max_value);
     min_value_param.Commit(input_param.GetTimestamp(), _ctx);
     max_value_param.Commit(input_param.GetTimestamp(), _ctx);
     return true;
@@ -24,23 +24,23 @@ bool Threshold::ProcessImpl()
     {
         if(source_value)
         {
-            cv::cuda::threshold(input->GetGpuMat(Stream()), upper_mask, max, replace_value, inverse? 3 : 4, Stream());
+            cv::cuda::threshold(input->getGpuMat(Stream()), upper_mask, max, replace_value, inverse? 3 : 4, Stream());
         }else
         {
-            cv::cuda::threshold(input->GetGpuMat(Stream()), upper_mask, max, replace_value, inverse ? 1 : 0, Stream());
+            cv::cuda::threshold(input->getGpuMat(Stream()), upper_mask, max, replace_value, inverse ? 1 : 0, Stream());
         }
     }
     if(truncate)
     {
-        cv::cuda::threshold(input->GetGpuMat(Stream()), lower_mask, min, replace_value, 2, Stream());
+        cv::cuda::threshold(input->getGpuMat(Stream()), lower_mask, min, replace_value, 2, Stream());
     }else
     {
         if(source_value)
         {
-            cv::cuda::threshold(input->GetGpuMat(Stream()), lower_mask, min, 0.0, inverse? 4 : 3, Stream());
+            cv::cuda::threshold(input->getGpuMat(Stream()), lower_mask, min, 0.0, inverse? 4 : 3, Stream());
         }else
         {
-            cv::cuda::threshold(input->GetGpuMat(Stream()), lower_mask, min, replace_value, inverse? 1: 0, Stream());
+            cv::cuda::threshold(input->getGpuMat(Stream()), lower_mask, min, replace_value, inverse? 1: 0, Stream());
         }
     }
     cv::cuda::GpuMat mask;

@@ -1,6 +1,6 @@
 #include "JSONWriter.hpp"
 #include <MetaObject/Parameters/TypedParameter.hpp>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <MetaObject/Parameters/InputParameterAny.hpp>
 #include <boost/lexical_cast.hpp>
@@ -25,17 +25,17 @@ public:
     }
 
     // This gets a pointer to the variable that feeds into this input
-    virtual IParameter* GetInputParam()
+    virtual IParam* GetInputParam()
     {
         return input;   
     }
-    virtual bool SetInput(std::shared_ptr<mo::IParameter> param)
+    virtual bool SetInput(std::shared_ptr<mo::IParam> param)
     {
         input = param.get();
         Commit();
         return true;
     }
-    virtual bool SetInput(mo::IParameter* param = nullptr)
+    virtual bool SetInput(mo::IParam* param = nullptr)
     {
         input = param;
         param->RegisterDeleteNotifier(&_delete_slot);
@@ -44,11 +44,11 @@ public:
         return true;
     }
 
-    virtual bool AcceptsInput(std::weak_ptr<mo::IParameter> param) const
+    virtual bool AcceptsInput(std::weak_ptr<mo::IParam> param) const
     {
         return true;
     }
-    virtual bool AcceptsInput(mo::IParameter* param) const
+    virtual bool AcceptsInput(mo::IParam* param) const
     {
         return true;
     }
@@ -60,24 +60,24 @@ public:
     {
         return _void_type_info;
     }
-    void on_param_update(mo::Context* ctx, mo::IParameter* param)
+    void on_param_update(mo::Context* ctx, mo::IParam* param)
     {
         Commit(-1, ctx); // Notify owning parent of update
     }
-    void on_param_delete(mo::IParameter const *)
+    void on_param_delete(mo::IParam const *)
     {
         input = nullptr;
     }
-    IParameter* input = nullptr;
+    IParam* input = nullptr;
     static mo::TypeInfo _void_type_info;
-    mo::TypedSlot<void(mo::Context*, mo::IParameter*)> _update_slot;
-    mo::TypedSlot<void(mo::IParameter const*)> _delete_slot;
+    mo::TypedSlot<void(mo::Context*, mo::IParam*)> _update_slot;
+    mo::TypedSlot<void(mo::IParam const*)> _delete_slot;
 };
 mo::TypeInfo InputParameterAny::_void_type_info;*/
 
 JSONWriter::JSONWriter()
 {
-    AddParameter(std::shared_ptr<mo::IParameter>(new mo::InputParameterAny("input-0")));
+    AddParameter(std::shared_ptr<mo::IParam>(new mo::InputParameterAny("input-0")));
 }
 JSONWriter::~JSONWriter()
 {
@@ -129,14 +129,14 @@ bool JSONWriter::ProcessImpl()
     return false;
 }
 
-void JSONWriter::on_output_file_modified( mo::Context* ctx, mo::IParameter* param)
+void JSONWriter::on_output_file_modified( mo::Context* ctx, mo::IParam* param)
 {
     ofs.close();
     ofs.open(output_file.c_str(), std::ios::out);
     ar.reset(new cereal::JSONOutputArchive(ofs));
 }
 
-void JSONWriter::on_input_set(mo::Context* ctx, mo::IParameter* param)
+void JSONWriter::on_input_set(mo::Context* ctx, mo::IParam* param)
 {
     auto inputs = GetInputs();
     int count= 0;
@@ -148,7 +148,7 @@ void JSONWriter::on_input_set(mo::Context* ctx, mo::IParameter* param)
         }
         ++count;
     }
-    AddParameter(std::shared_ptr<mo::IParameter>(new mo::InputParameterAny("input-" + boost::lexical_cast<std::string>(count))));
+    AddParameter(std::shared_ptr<mo::IParam>(new mo::InputParameterAny("input-" + boost::lexical_cast<std::string>(count))));
 }
 
 MO_REGISTER_CLASS(JSONWriter)
@@ -157,7 +157,7 @@ JSONReader::JSONReader()
 {
     input = new mo::InputParameterAny("input-0");
     input->SetFlags(mo::Optional_e);
-    AddParameter(std::shared_ptr<mo::IParameter>(input));
+    AddParameter(std::shared_ptr<mo::IParam>(input));
 }
 
 bool JSONReader::ProcessImpl()

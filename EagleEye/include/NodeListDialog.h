@@ -2,7 +2,7 @@
 #define NODELISTDIALOG_H
 
 #include <QDialog>
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include <RuntimeObjectSystem/shared_ptr.hpp>
 
 
@@ -26,7 +26,7 @@ private slots:
 
 private:
     Ui::NodeListDialog *ui;
-    mo::TypedSignal<void(std::string)> add_node_signal;
+    mo::TSignal<void(std::string)> add_node_signal;
     std::shared_ptr<mo::Connection> connection;
 };
 

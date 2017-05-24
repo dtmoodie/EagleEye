@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include "Aquila/ObjectDetection.hpp"
 #include "MetaObject/Thread/ThreadHandle.hpp"
 #include "MetaObject/Thread/ThreadPool.hpp"

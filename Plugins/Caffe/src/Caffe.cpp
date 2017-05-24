@@ -2,8 +2,8 @@
 #include "Caffe.h"
 #include "caffe_init.h"
 #include "helpers.hpp"
-#include "Aquila/Nodes/Node.h"
-#include "Aquila/Nodes/NodeInfo.hpp"
+#include "Aquila/nodes/Node.hpp"
+#include "Aquila/nodes/NodeInfo.hpp"
 #include <Aquila/ObjectDetection.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
@@ -157,7 +157,7 @@ bool CaffeBase::CheckInput()
             {
                 for(int k = 0; k < itr->second[j].GetNumMats(); ++k)
                 {
-                    const cv::cuda::GpuMat& mat = itr->second[j].GetGpuMat(Stream(), k);
+                    const cv::cuda::GpuMat& mat = itr->second[j].getGpuMat(Stream(), k);
                     if(data != (float*)mat.data)
                     {
                         return false;
@@ -434,11 +434,11 @@ bool CaffeImageClassifier::ProcessImpl()
 
     if (input->GetDepth() != CV_32F)
     {
-        input->GetGpuMat(Stream()).convertTo(float_image, CV_32F, Stream());
+        input->getGpuMat(Stream()).convertTo(float_image, CV_32F, Stream());
     }
     else
     {
-        input->GetGpuMat(Stream()).copyTo(float_image, Stream());
+        input->getGpuMat(Stream()).copyTo(float_image, Stream());
     }
 
     cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, Stream());
@@ -485,7 +485,7 @@ bool CaffeImageClassifier::ProcessImpl()
             {
                 resized = float_image(pixel_bounding_boxes[i]);
             }
-            cv::cuda::split(resized, data_itr->second[j].GetGpuMatVecMutable(Stream()), Stream());
+            cv::cuda::split(resized, data_itr->second[j].getGpuMatVecMutable(Stream()), Stream());
             end = start + j + 1;
         }
         // Signal update on all inputs
@@ -502,7 +502,7 @@ bool CaffeImageClassifier::ProcessImpl()
 
         if(net_handlers.empty())
         {
-            auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(Caffe::NetHandler::s_interfaceID);
+            auto constructors = mo::MetaObjectFactory::instance()->getConstructors(Caffe::NetHandler::s_interfaceID);
             // For each blob, we check each handler and pick the handler with the highest priority
             std::map<int, std::vector<std::pair<int, IObjectConstructor*>>> blob_priority_map;
             for(auto& constructor : constructors)

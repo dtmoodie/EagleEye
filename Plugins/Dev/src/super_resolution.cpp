@@ -12,7 +12,7 @@ my_frame_source::my_frame_source()
 void my_frame_source::nextFrame(cv::OutputArray frame)
 {
     if(current_source && current_stream)
-        frame.getGpuMatRef() = current_source->GetGpuMatMutable(*current_stream);
+        frame.getGpuMatRef() = current_source->getGpuMatMutable(*current_stream);
 }
 
 void my_frame_source::reset()

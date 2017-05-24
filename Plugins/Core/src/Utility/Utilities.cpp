@@ -1,6 +1,6 @@
 #include "Utilities.h"
 #include <boost/lexical_cast.hpp>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 using namespace aq;
 using namespace aq::Nodes;
 
@@ -90,19 +90,19 @@ bool RegionOfInterest::ProcessImpl()
         state.resize(num);
         for(int i = 0; i < num; ++i)
         {
-            state[i] = image->GetSyncState(i);
+            state[i] = image->getSyncState(i);
             if(state[i] == SyncedMemory::HOST_UPDATED)
             {
                 // host is ahead
-                h_mats[i] = image->GetMat(Stream(), i)(pixel_roi);
+                h_mats[i] = image->getMat(Stream(), i)(pixel_roi);
             }else if(state[i] == SyncedMemory::SYNCED)
             {
-                h_mats[i] = image->GetMat(Stream(), i)(pixel_roi);
-                d_mats[i] = image->GetGpuMat(Stream(), i)(pixel_roi);
+                h_mats[i] = image->getMat(Stream(), i)(pixel_roi);
+                d_mats[i] = image->getGpuMat(Stream(), i)(pixel_roi);
             }else
             {
                 // device is ahead
-                d_mats[i] = image->GetGpuMat(Stream(), i)(pixel_roi);
+                d_mats[i] = image->getGpuMat(Stream(), i)(pixel_roi);
             }
         }
         ROI_param.UpdateData(SyncedMemory(h_mats, d_mats, state), image_param.GetTimestamp(), _ctx);

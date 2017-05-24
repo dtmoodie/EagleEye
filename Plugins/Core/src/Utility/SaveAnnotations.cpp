@@ -1,7 +1,7 @@
 #include "SaveAnnotations.hpp"
 #include "Aquila/ObjectDetectionSerialization.hpp"
 #include <fstream>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include "Aquila/utilities/UiCallbackHandlers.h"
 #include "Aquila/utilities/CudaCallbacks.hpp"
 #include <opencv2/imgproc.hpp>
@@ -192,10 +192,10 @@ bool SaveAnnotations::ProcessImpl()
     }
     _annotations.clear();
     size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
-    if(input->GetSyncState() == aq::SyncedMemory::DEVICE_UPDATED)
+    if(input->getSyncState() == aq::SyncedMemory::DEVICE_UPDATED)
     {
-        cv::Mat img = input->GetMat(Stream());
-        //cv::Mat img = input->GetMat(Stream());
+        cv::Mat img = input->getMat(Stream());
+        //cv::Mat img = input->getMat(Stream());
 
         aq::cuda::enqueue_callback_async([img, this]()
         {
@@ -204,8 +204,8 @@ bool SaveAnnotations::ProcessImpl()
         _original_image = img;
     }else
     {
-        //cv::Mat img = input->GetMat(Stream());
-        cv::Mat img = input->GetMat(Stream());
+        //cv::Mat img = input->getMat(Stream());
+        cv::Mat img = input->getMat(Stream());
 
         mo::ThreadSpecificQueue::Push([img, this]()
         {

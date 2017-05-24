@@ -14,13 +14,13 @@ IParameterResource::IParameterResource(Wt::WApplication* app_):
     onParamUpdate = nullptr;
     ss = nullptr;
 }
-void IParameterResource::setParam(mo::IParameter* param_)
+void IParameterResource::setParam(mo::IParam* param_)
 {
     std::lock_guard<std::mutex> lock(mtx);
     param = param_;
     if(param)
     {
-        onParamUpdate = new mo::TypedSlot<void(mo::Context*, mo::IParameter*)>(std::bind(
+        onParamUpdate = new mo::TypedSlot<void(mo::Context*, mo::IParam*)>(std::bind(
             &IParameterResource::handleParamUpdate, this, std::placeholders::_1, std::placeholders::_2));
         this->connection = param->RegisterUpdateNotifier(onParamUpdate);
         ss = nullptr;
@@ -45,7 +45,7 @@ void IParameterResource::handleRequest(const Wt::Http::Request& request, Wt::Htt
     }
 }
 
-void IParameterResource::handleParamUpdate(mo::Context* ctx, mo::IParameter* param)
+void IParameterResource::handleParamUpdate(mo::Context* ctx, mo::IParam* param)
 {
     std::lock_guard<std::mutex> lock(mtx);
     std::stringstream* new_ss = new std::stringstream();

@@ -1,6 +1,6 @@
 #ifdef HAVE_WT
 #include "WebSink.hpp"
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
 #include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 using namespace vclick;
@@ -9,7 +9,7 @@ WebSink::WebSink():
     raw_bandwidth_mean(boost::accumulators::tag::rolling_window::window_size = 100),
     throttled_bandwidth_mean(boost::accumulators::tag::rolling_window::window_size = 100)
 {
-    h264_pass_through = mo::MetaObjectFactory::Instance()->Create("h264_pass_through");
+    h264_pass_through = mo::MetaObjectFactory::instance()->create("h264_pass_through");
     active_switch = h264_pass_through->GetParameter<bool>("active");
     moments.emplace_back(2, 0, 0);
     moments.emplace_back(0, 2, 0);
@@ -21,7 +21,7 @@ void WebSink::SetContext(mo::Context* ctx, bool overwrite)
     Node::SetContext(ctx, overwrite);
     h264_pass_through->SetContext(ctx, overwrite);
 }
-std::vector<mo::IParameter*> WebSink::GetParameters(const std::string& filter) const
+std::vector<mo::IParam*> WebSink::GetParameters(const std::string& filter) const
 {
     auto h264_params = h264_pass_through->GetParameters();
     auto my_params = Node::GetParameters();
@@ -42,8 +42,8 @@ bool WebSink::ProcessImpl()
     }
     if(foreground_mask->empty() || point_cloud->empty())
         return false;
-    cv::Mat mask = foreground_mask->GetMat(Stream());
-    cv::Mat ptCloud = point_cloud->GetMat(Stream());
+    cv::Mat mask = foreground_mask->getMat(Stream());
+    cv::Mat ptCloud = point_cloud->getMat(Stream());
     Stream().waitForCompletion();
     int num_points = cv::countNonZero(mask);
     cv::Mat foreground_points(1, num_points, CV_32FC3);

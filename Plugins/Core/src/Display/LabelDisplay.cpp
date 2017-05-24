@@ -1,5 +1,5 @@
 #include "LabelDisplay.hpp"
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <Aquila/ObjectDetection.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/cudaimgproc.hpp>
@@ -56,10 +56,10 @@ bool LabelDisplay::ProcessImpl()
                                                               cv::getStructuringElement(cv::MORPH_CROSS, {dilate, dilate}));
             dilate_param._modified = false;
         }
-        _dilate_filter->apply(label->GetGpuMat(Stream()), input, Stream());
+        _dilate_filter->apply(label->getGpuMat(Stream()), input, Stream());
     }else
     {
-        input = label->GetGpuMat(Stream());
+        input = label->getGpuMat(Stream());
     }
     cv::cuda::GpuMat output;
     aq::applyColormap(input, output, d_lut, Stream());
@@ -70,7 +70,7 @@ bool LabelDisplay::ProcessImpl()
         return true;
     }else
     {
-        cv::cuda::GpuMat input = original_image->GetGpuMat(Stream());
+        cv::cuda::GpuMat input = original_image->getGpuMat(Stream());
         cv::cuda::GpuMat resized;
         if(output.size() != input.size())
         {

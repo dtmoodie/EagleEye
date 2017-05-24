@@ -11,7 +11,7 @@ using namespace aq::Nodes;
 bool Scale::ProcessImpl()
 {
     cv::cuda::GpuMat scaled;
-    cv::cuda::multiply(input->GetGpuMat(Stream()), cv::Scalar(scale_factor), scaled, 1, -1, Stream());
+    cv::cuda::multiply(input->getGpuMat(Stream()), cv::Scalar(scale_factor), scaled, 1, -1, Stream());
     output_param.UpdateData(scaled, input_param.GetTimestamp(), _ctx);
     return true;
 }
@@ -20,7 +20,7 @@ MO_REGISTER_CLASS(Scale)
 bool AutoScale::ProcessImpl()
 {
     std::vector<cv::cuda::GpuMat> channels;
-    cv::cuda::split(input_image->GetGpuMat(Stream()), channels, Stream());
+    cv::cuda::split(input_image->getGpuMat(Stream()), channels, Stream());
     for(size_t i = 0; i < channels.size(); ++i)
     {
         double minVal, maxVal;
@@ -30,7 +30,7 @@ bool AutoScale::ProcessImpl()
         UpdateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal)->SetFlags(mo::State_e);
         UpdateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->SetFlags(mo::State_e);
     }
-    cv::cuda::merge(channels,output_image.GetGpuMat(Stream()), Stream());
+    cv::cuda::merge(channels,output_image.getGpuMat(Stream()), Stream());
     return true;
 }
 
@@ -47,7 +47,7 @@ bool DrawDetections::ProcessImpl()
         cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
     }
     cv::cuda::GpuMat draw_image;
-    image->Clone(draw_image, Stream());
+    image->clone(draw_image, Stream());
     std::vector<cv::Mat> drawn_text;
 
     if(detections)
@@ -115,12 +115,12 @@ bool Normalize::ProcessImpl()
 
     if(input_image->GetChannels() == 1)
     {
-        cv::cuda::normalize(input_image->GetGpuMat(Stream()),
+        cv::cuda::normalize(input_image->getGpuMat(Stream()),
             normalized,
             alpha,
             beta,
             norm_type.currentSelection, input_image->GetDepth(),
-            mask == NULL ? cv::noArray(): mask->GetGpuMat(Stream()),
+            mask == NULL ? cv::noArray(): mask->getGpuMat(Stream()),
             Stream());
         normalized_output_param.UpdateData(normalized, input_image_param.GetTimestamp(), _ctx);
         return true;
@@ -130,10 +130,10 @@ bool Normalize::ProcessImpl()
 
         if (input_image->GetNumMats() == 1)
         {
-            cv::cuda::split(input_image->GetGpuMat(Stream()), channels, Stream());
+            cv::cuda::split(input_image->getGpuMat(Stream()), channels, Stream());
         }else
         {
-            channels = input_image->GetGpuMatVec(Stream());
+            channels = input_image->getGpuMatVec(Stream());
         }
         std::vector<cv::cuda::GpuMat> normalized_channels;
         normalized_channels.resize(channels.size());
@@ -143,7 +143,7 @@ bool Normalize::ProcessImpl()
                 alpha,
                 beta,
                 norm_type.getValue(), input_image->GetDepth(),
-                mask == NULL ? cv::noArray() : mask->GetGpuMat(Stream()),
+                mask == NULL ? cv::noArray() : mask->getGpuMat(Stream()),
                 Stream());
         }
         if(input_image->GetNumMats() == 1)

@@ -1,5 +1,5 @@
 #pragma once
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
 #include <cereal/archives/json.hpp>
 #include <fstream>
@@ -14,8 +14,8 @@ namespace aq
             ~JSONWriter();
             MO_DERIVE(JSONWriter, Node);
                 PARAM(mo::WriteFile, output_file, mo::WriteFile("output_file.json"));
-                MO_SLOT(void, on_output_file_modified, mo::Context*, mo::IParameter*);
-                MO_SLOT(void, on_input_set, mo::Context*, mo::IParameter*)
+                MO_SLOT(void, on_output_file_modified, mo::Context*, mo::IParam*);
+                MO_SLOT(void, on_input_set, mo::Context*, mo::IParam*)
             MO_END;
         protected:
             bool ProcessImpl();

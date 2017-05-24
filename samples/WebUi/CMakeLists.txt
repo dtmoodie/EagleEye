@@ -1,19 +1,16 @@
 
 find_package(Wt QUIET)
-if(Wt_FOUND)
+if(Wt_FOUND AND TARGET metaobject_wtgui)
   find_package(CUDA REQUIRED)
   include_directories(${Wt_INCLUDE_DIR})
   INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
   file(GLOB_RECURSE src "*.cpp" "*.hpp")
   add_executable(WebUi ${src})
-  target_link_libraries(WebUi 
-    Aquila 
-    MetaObject 
-    MetaParameters
-    debug;${Wt_HTTP_DEBUG_LIBRARY}
-    debug;${Wt_DEBUG_LIBRARY}
-    optimized;${Wt_LIBRARY}
-    optimized;${Wt_HTTP_LIBRARY}
+  target_link_libraries(WebUi
+    aquila_core
+    metaobject_core
+    metaobject_metaparams
+    metaobject_wtgui
   )
 
   IF(WIN32)

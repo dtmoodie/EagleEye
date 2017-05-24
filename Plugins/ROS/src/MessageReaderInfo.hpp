@@ -1,7 +1,7 @@
 #pragma once
 
 #include "MetaObject/Detail/HelperMacros.hpp"
-#include "MetaObject/MetaObjectInfo.hpp"
+#include "MetaObject/object/MetaObjectInfo.hpp"
 #include "IRosMessageReader.hpp"
 
 namespace mo

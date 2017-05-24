@@ -73,7 +73,7 @@ void register_to_reference::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream&
     }
     if(ref_descriptors.empty() || ref_keypoints.empty() || d_reference_original.empty())
         return;
-    auto gpu_mat = input.GetGpuMat(stream);
+    auto gpu_mat = input.getGpuMat(stream);
     cv::cuda::GpuMat grey;
     if(gpu_mat.channels() == 3)
         cv::cuda::cvtColor(gpu_mat, grey, cv::COLOR_BGR2GRAY, 0, stream);
@@ -117,7 +117,7 @@ void register_to_reference::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream&
     cv::cuda::GpuMat mask(gpu_mat.size(), CV_32F);
     mask.setTo(cv::Scalar(1.0), stream);
     cv::cuda::GpuMat warped_input, warped_input_mask;
-    cv::cuda::warpPerspective(input.GetGpuMat(stream), warped_input, H, gpu_mat.size(), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, 0, cv::Scalar(), stream);
+    cv::cuda::warpPerspective(input.getGpuMat(stream), warped_input, H, gpu_mat.size(), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, 0, cv::Scalar(), stream);
     cv::cuda::warpPerspective(mask, warped_input_mask, H, gpu_mat.size(), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, 0, cv::Scalar(), stream);
     cv::cuda::bitwise_and(mask, warped_input_mask, warped_input_mask, cv::noArray(), stream);
     cv::cuda::GpuMat blended;

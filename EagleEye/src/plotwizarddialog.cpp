@@ -12,7 +12,7 @@ PlotWizardDialog::PlotWizardDialog(QWidget *parent) :
     ui(new Ui::PlotWizardDialog)
 {
     ui->setupUi(this);
-    // Create plots for each plotter for demonstration purposes.
+    // create plots for each plotter for demonstration purposes.
     setup();
     connect(this, SIGNAL(update(int)), this, SLOT(handleUpdate(int)), Qt::QueuedConnection);
 }
@@ -119,7 +119,7 @@ void PlotWizardDialog::handleUpdate(int idx)
     //previewPlotters[idx]->doUpdate();
 }
 
-void PlotWizardDialog::plotParameter(mo::IParameter* param)
+void PlotWizardDialog::plotParameter(mo::IParam* param)
 {
     this->show();
     //ui->tabWidget->setCurrentIndex(0);

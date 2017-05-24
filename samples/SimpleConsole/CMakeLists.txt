@@ -57,8 +57,8 @@ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 add_executable(SimpleConsole ${src} ${hdr})
 add_dependencies(SimpleConsole Aquila)
 target_link_libraries(SimpleConsole
-    MetaObject
-    Aquila
+    metaobject_core
+    aquila_core
     ${Boost_LIBRARIES}
     RuntimeObjectSystem
     RuntimeCompiler

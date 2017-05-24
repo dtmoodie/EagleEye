@@ -1,6 +1,6 @@
 #ifdef HAVE_WT
 #pragma once
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
 #include <boost/date_time.hpp>
 #include "BoundingBox.hpp"
 #include "Moment.hpp"
@@ -37,7 +37,7 @@ namespace vclick
             PARAM(bool, force_active, false)
         MO_END;
         void  SetContext(mo::Context* ctx, bool overwrite = false);
-        std::vector<mo::IParameter*> GetParameters(const std::string& filter) const;
+        std::vector<mo::IParam*> GetParameters(const std::string& filter) const;
         rcc::shared_ptr<aq::Nodes::Node> h264_pass_through;
         mo::ITypedParameter<bool>* active_switch;
     protected:

@@ -136,7 +136,7 @@ namespace aq
                 OUTPUT(cv::Mat, P1, cv::Mat());
                 OUTPUT(cv::Mat, P2, cv::Mat());
                 OUTPUT(cv::Mat, Q, cv::Mat());
-                MO_SLOT(void, OnCalibrationFileChange, mo::Context*, mo::IParameter*);
+                MO_SLOT(void, OnCalibrationFileChange, mo::Context*, mo::IParam*);
             MO_END;
         protected:
             bool ProcessImpl();

@@ -3,7 +3,7 @@
 #endif
 
 #include "user_interface_persistence.h"
-#include <MetaObject/Parameters/IParameter.hpp>
+#include <MetaObject/Parameters/IParam.hpp>
 
 void VariableStorage::LoadParams(UIPersistence* obj, const std::string& name)
 {
@@ -70,7 +70,7 @@ void VariableStorage::LoadUI(const std::string& file_name)
                 auto param = Parameters::Persistence::cv::DeSerialize(&node);
                 if (param)
                 {
-                    param_vec[param->GetName()] = std::shared_ptr<mo::IParameter>(param);
+                    param_vec[param->GetName()] = std::shared_ptr<mo::IParam>(param);
                 }
             }
         }

@@ -41,13 +41,13 @@ bool ImageWriter::ProcessImpl()
         ss << save_directory.string() << "/" << base_name << std::setfill('0') << std::setw(4) << frame_count << ext;
         ++frame_count;
         std::string save_name = ss.str();
-        if(input_image->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
+        if(input_image->getSyncState() < SyncedMemory::DEVICE_UPDATED)
         {
-            cv::imwrite(save_name, input_image->GetMat(Stream()));
+            cv::imwrite(save_name, input_image->getMat(Stream()));
         }else
         {
-            input_image->Synchronize(Stream());
-            cv::Mat mat = input_image->GetMat(Stream());
+            input_image->synchronize(Stream());
+            cv::Mat mat = input_image->getMat(Stream());
             cuda::enqueue_callback_async([mat, save_name]()->void
             {
                 cv::imwrite(save_name, mat);

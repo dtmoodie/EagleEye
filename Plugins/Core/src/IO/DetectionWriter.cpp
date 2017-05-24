@@ -1,7 +1,7 @@
 #include "DetectionWriter.hpp"
 #include "Aquila/ObjectDetectionSerialization.hpp"
 #include "Aquila/utilities/CudaCallbacks.hpp"
-#include "Aquila/Nodes/NodeInfo.hpp"
+#include "Aquila/nodes/NodeInfo.hpp"
 #include <Aquila/rcc/external_includes/cv_imgcodec.hpp>
 
 #include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
@@ -109,7 +109,7 @@ bool IDetectionWriter::ProcessImpl()
     auto detections = pruneDetections(*this->detections, object_class);
 
     if(detections.size() || skip_empty == false){
-        cv::Mat h_mat = image->GetMat(Stream());
+        cv::Mat h_mat = image->getMat(Stream());
         cuda::enqueue_callback([h_mat, this, detections](){
             this->_write_queue->enqueue(std::make_pair(h_mat, detections));
         },  Stream());
@@ -246,9 +246,9 @@ bool DetectionWriterFolder::ProcessImpl()
     }
     auto detections = pruneDetections(*this->detections, object_class);
     std::vector<WritePair> written_detections;
-    if(image->GetSyncState() == image->DEVICE_UPDATED)
+    if(image->getSyncState() == image->DEVICE_UPDATED)
     {
-        const cv::cuda::GpuMat img = image->GetGpuMat(Stream());
+        const cv::cuda::GpuMat img = image->getGpuMat(Stream());
         cv::Rect img_rect(cv::Point(0,0), img.size());
         for(const aq::DetectedObject2d& detection : detections)
         {
@@ -283,7 +283,7 @@ bool DetectionWriterFolder::ProcessImpl()
         }
     }else
     {
-        cv::Mat img = image->GetMat(Stream());
+        cv::Mat img = image->getMat(Stream());
         cv::Rect img_rect(cv::Point(0,0), img.size());
         for(const aq::DetectedObject2d& detection : detections)
         {

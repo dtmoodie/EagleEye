@@ -11,14 +11,14 @@
 //{
 //    Q_OBJECT
 //protected:
-//    mo::IParameter::Ptr param;
+//    mo::IParam::Ptr param;
 //    QCustomPlot* plot;
 //public:
-//    static QList<ParameterPlotterFactory*> getPlotters(mo::IParameter::Ptr param);
-//    static bool acceptsType(mo::IParameter::Ptr param);
-//    static ParameterPlotter* getPlot(mo::IParameter::Ptr param);
+//    static QList<ParameterPlotterFactory*> getPlotters(mo::IParam::Ptr param);
+//    static bool acceptsType(mo::IParam::Ptr param);
+//    static ParameterPlotter* getPlot(mo::IParam::Ptr param);
 
-//    ParameterPlotter(mo::IParameter::Ptr param, QCustomPlot* plot_ = nullptr);
+//    ParameterPlotter(mo::IParam::Ptr param, QCustomPlot* plot_ = nullptr);
 //    ~ParameterPlotter();
 
 //    virtual void setPlot(QCustomPlot* plot_);
@@ -42,8 +42,8 @@
 //    Q_OBJECT
 //    QVector<double> scale;
 //public:
-//    static bool acceptsType(mo::IParameter::Ptr param);
-//    HistogramPlotter(mo::IParameter::Ptr param, QCustomPlot* plot_);
+//    static bool acceptsType(mo::IParam::Ptr param);
+//    HistogramPlotter(mo::IParam::Ptr param, QCustomPlot* plot_);
 //    ~HistogramPlotter();
 
 //    virtual void setPlot(QCustomPlot* plot_);

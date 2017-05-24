@@ -1,5 +1,5 @@
 #pragma once
-#include "Aquila/Nodes/IFrameGrabber.hpp"
+#include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include "Aquila/rcc/external_includes/cv_cudacodec.hpp"
 #include "Aquila/rcc/external_includes/cv_imgcodec.hpp"
 #include "Aquila/rcc/external_includes/cv_videoio.hpp"

@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <Aquila/Nodes/Node.h>
-#include <Aquila/Nodes/IFrameGrabber.hpp>
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
 #include <MetaObject/MetaObjectFactory.hpp>
 #include <nodes/FlowScene>
 #include <nodes/FlowView>
@@ -24,7 +24,7 @@ namespace aq{
 
     class ParamOutProxy: virtual public NodeOutProxy{
     public:
-        ParamOutProxy(mo::IParameter* param_, const rcc::shared_ptr<Nodes::Node>& node_):
+        ParamOutProxy(mo::IParam* param_, const rcc::shared_ptr<Nodes::Node>& node_):
         param(param_), NodeOutProxy(node_){
         }
         virtual QtNodes::NodeDataType type() const{
@@ -33,7 +33,7 @@ namespace aq{
             out.id = QString::fromStdString(param->GetTypeInfo().name());
             return out;
         }
-        mo::IParameter* param;
+        mo::IParam* param;
     };
 
     class NodeProxy: virtual public QtNodes::NodeDataModel{
@@ -95,7 +95,7 @@ namespace aq{
             if(port == 0){
                 std::shared_ptr<NodeOutProxy> typed = std::dynamic_pointer_cast<NodeOutProxy>(nodeData);
                 if(typed){
-                    m_obj->AddParent(typed->node.Get());
+                    m_obj->AddParent(typed->node.get());
                     return;
                 }
             }
@@ -134,7 +134,7 @@ namespace aq{
         virtual QString caption() const{return "DataStream";}
         virtual QString name() const{return "DataStream";}
         virtual std::unique_ptr<QtNodes::NodeDataModel> clone() const{
-            return std::unique_ptr<DataStreamProxy>(new DataStreamProxy(std::move(aq::IDataStream::Create("", ""))));
+            return std::unique_ptr<DataStreamProxy>(new DataStreamProxy(std::move(aq::IDataStream::create("", ""))));
         }
         virtual unsigned int nPorts(QtNodes::PortType portType) const{
             if(portType == QtNodes::PortType::Out) return 1;
@@ -211,7 +211,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow){
     ui->setupUi(this);
     std::shared_ptr<QtNodes::DataModelRegistry> registry = std::make_shared<QtNodes::DataModelRegistry>();
-    auto ctrs = mo::MetaObjectFactory::Instance()->GetConstructors(aq::Nodes::Node::s_interfaceID);
+    auto ctrs = mo::MetaObjectFactory::instance()->getConstructors(aq::Nodes::Node::s_interfaceID);
     std::vector<int> ids;
     std::vector<std::string> interfces_names;
     for(auto ctr : ctrs){
@@ -219,7 +219,7 @@ MainWindow::MainWindow(QWidget *parent) :
         interfces_names.push_back(ctr->GetInterfaceName());
     }
     registry->registerModel<aq::DataStreamProxy>("DataStream");
-    ctrs = mo::MetaObjectFactory::Instance()->GetConstructors();
+    ctrs = mo::MetaObjectFactory::instance()->getConstructors();
     for(auto ctr : ctrs){
         if(ctr->GetInterfaceName() == aq::Nodes::Node::GetInterfaceName())
             registry->registerModel<aq::NodeConstructor>("nodes", std::make_unique<aq::NodeConstructor>(ctr));

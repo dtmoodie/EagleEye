@@ -1,5 +1,5 @@
 #include "HistogramEqualization.hpp"
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 
@@ -12,7 +12,7 @@ bool HistogramEqualization::ProcessImpl()
     if(!per_channel)
     {
         cv::cuda::GpuMat hsv;
-        cv::cuda::cvtColor(input->GetGpuMat(Stream()), hsv, cv::COLOR_BGR2HSV, 0, Stream());
+        cv::cuda::cvtColor(input->getGpuMat(Stream()), hsv, cv::COLOR_BGR2HSV, 0, Stream());
         cv::cuda::split(hsv, channels, Stream());
         cv::cuda::GpuMat equalized;
         cv::cuda::equalizeHist(channels[2], equalized, Stream());
@@ -21,7 +21,7 @@ bool HistogramEqualization::ProcessImpl()
         cv::cuda::cvtColor(hsv, output, cv::COLOR_HSV2BGR, 0, Stream());
     }else
     {
-        cv::cuda::split(input->GetGpuMat(Stream()), channels, Stream());
+        cv::cuda::split(input->getGpuMat(Stream()), channels, Stream());
         for(int i = 0; i < channels.size(); ++i)
         {
             cv::cuda::GpuMat equalized;
@@ -46,7 +46,7 @@ bool CLAHE::ProcessImpl()
         grid_size_param._modified = false;
     }
     cv::cuda::GpuMat hsv;
-    cv::cuda::cvtColor(input->GetGpuMat(Stream()), hsv, cv::COLOR_BGR2HSV, 0, Stream());
+    cv::cuda::cvtColor(input->getGpuMat(Stream()), hsv, cv::COLOR_BGR2HSV, 0, Stream());
     std::vector<cv::cuda::GpuMat> channels;
     cv::cuda::split(hsv, channels, Stream());
     _clahe->apply(channels[2], channels[2], Stream());

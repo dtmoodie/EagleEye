@@ -152,7 +152,7 @@ IF(Qt5_FOUND AND nodeeditor_FOUND)
         Qt5::Core
         Qt5::OpenGL
         Qt5::PrintSupport
-        Aquila
+        aquila_core
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS}
         nodes

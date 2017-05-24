@@ -1,5 +1,5 @@
 #pragma once
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
 #include "Aquila/rcc/external_includes/cv_cudafilters.hpp"
 namespace aq
 {

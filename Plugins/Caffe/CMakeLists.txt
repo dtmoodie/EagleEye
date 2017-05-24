@@ -26,9 +26,8 @@ if(Caffe_FOUND)
     LINK_DIRECTORIES(${CUDNN_LIB_DIR})
     file(GLOB_RECURSE src "*.h" "*.hpp" "*.cpp" "*.cu")
     cuda_add_library(Caffe SHARED ${src})
-    add_dependencies(Caffe Aquila)
+
     RCC_LINK_LIB(Caffe
-          Aquila
           ${CUDA_LIBRARIES}
           ${CUDA_CUFFT_LIBRARIES}
           ${CUDA_CUBLAS_LIBRARIES}
@@ -43,6 +42,7 @@ if(Caffe_FOUND)
           ${CUDNN_LIBRARY}
           aquila_types
           aquila_metatypes
+          aquila_core
     )
 
     IF(WIN32)

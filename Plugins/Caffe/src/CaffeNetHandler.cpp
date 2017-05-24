@@ -5,7 +5,7 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
 #include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
-INSTANTIATE_META_PARAMETER(std::vector<rcc::shared_ptr<aq::Caffe::NetHandler>>);
+INSTANTIATE_META_PARAM(std::vector<rcc::shared_ptr<aq::Caffe::NetHandler>>);
 
 std::vector<boost::shared_ptr<caffe::Layer<float>>>
 aq::Caffe::NetHandler::GetOutputLayers(const caffe::Net<float>& net)

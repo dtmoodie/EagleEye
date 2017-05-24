@@ -1,6 +1,6 @@
 #pragma once
 #include "ROSExport.hpp"
-#include <Aquila/Nodes/IFrameGrabber.hpp>
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
 #include "IRosMessageReader.hpp"
 
 namespace aq

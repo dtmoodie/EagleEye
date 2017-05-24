@@ -34,7 +34,7 @@ bool FindCheckerboard::ProcessImpl()
         num_corners_y_param._modified = false;
         corner_distance_param._modified = false;
     }
-    auto& mat = input->GetMat(Stream());
+    auto& mat = input->getMat(Stream());
     Stream().waitForCompletion();
     bool found = cv::findChessboardCorners(mat, cv::Size(num_corners_x, num_corners_y), image_points);
     if (drawn_corners_param.HasSubscriptions())
@@ -228,7 +228,7 @@ bool CalibrateStereoPair::ProcessImpl()
 
 
 
-void ReadStereoCalibration::OnCalibrationFileChange(mo::Context* ctx, mo::IParameter* param)
+void ReadStereoCalibration::OnCalibrationFileChange(mo::Context* ctx, mo::IParam* param)
 {
     cv::FileStorage fs(calibration_file.string(), cv::FileStorage::READ);
     fs["K1"] >> camera_matrix_1;

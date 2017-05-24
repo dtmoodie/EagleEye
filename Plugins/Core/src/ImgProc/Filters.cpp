@@ -16,7 +16,7 @@ bool Canny::ProcessImpl()
         detector = cv::cuda::createCannyEdgeDetector(low_thresh, high_thresh, aperature_size, L2_gradient);
     }
     cv::cuda::GpuMat edges;
-    detector->detect(input->GetGpuMat(Stream()), edges, Stream());
+    detector->detect(input->getGpuMat(Stream()), edges, Stream());
     edges_param.UpdateData(edges, input_param.GetTimestamp(), _ctx);
     return true;
 }

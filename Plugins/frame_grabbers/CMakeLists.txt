@@ -57,10 +57,8 @@ file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp")
 
 cuda_add_library(frame_grabbers SHARED ${src} ${hdr} ${knl})
 
-add_dependencies(frame_grabbers Aquila)
-
 RCC_LINK_LIB(frame_grabbers
-        Aquila
+        aquila_core
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}
         aquila_types

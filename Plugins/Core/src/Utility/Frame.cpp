@@ -77,7 +77,7 @@ bool CreateMat::ProcessImpl()
         height_param._modified = false;
         fill_param._modified = false;
     }
-    output.GetGpuMatMutable(Stream()).setTo(fill, Stream());
+    output.getGpuMatMutable(Stream()).setTo(fill, Stream());
     return true;
 }
 MO_REGISTER_CLASS(CreateMat)
@@ -87,10 +87,10 @@ bool SetMatrixValues::ProcessImpl()
 
     /*if(mask)
     {
-        input->GetGpuMatMutable(Stream()).setTo(replace_value, mask->GetGpuMat(Stream()), Stream());
+        input->getGpuMatMutable(Stream()).setTo(replace_value, mask->getGpuMat(Stream()), Stream());
     }else
     {
-        input->GetGpuMatMutable(Stream()).setTo(replace_value, Stream());
+        input->getGpuMatMutable(Stream()).setTo(replace_value, Stream());
     }*/
     return true;
 }
@@ -100,17 +100,17 @@ bool Resize::ProcessImpl()
 {
     if(input && !input->empty())
     {
-        if (input->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
+        if (input->getSyncState() < SyncedMemory::DEVICE_UPDATED)
         {
             cv::Mat resized;
-            cv::resize(input->GetMat(Stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue());
+            cv::resize(input->getMat(Stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue());
             output_param.UpdateData(resized, input_param.GetTimestamp(), _ctx);
             return true;
         }
         else
         {
             cv::cuda::GpuMat resized;
-            cv::cuda::resize(input->GetGpuMat(Stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue(), Stream());
+            cv::cuda::resize(input->getGpuMat(Stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue(), Stream());
             output_param.UpdateData(resized, input_param.GetTimestamp(), _ctx);
             return true;
         }
@@ -121,12 +121,12 @@ MO_REGISTER_CLASS(Resize)
 
 bool Subtract::ProcessImpl()
 {
-    if (input->GetSyncState() < SyncedMemory::DEVICE_UPDATED)
+    if (input->getSyncState() < SyncedMemory::DEVICE_UPDATED)
     {
-        cv::subtract(input->GetMat(Stream()), value, output.GetMatMutable(Stream()), mask ? mask->GetMat(Stream()) : cv::noArray(),  dtype.getValue());
+        cv::subtract(input->getMat(Stream()), value, output.getMatMutable(Stream()), mask ? mask->getMat(Stream()) : cv::noArray(),  dtype.getValue());
     }else
     {
-        cv::cuda::subtract(input->GetGpuMat(Stream()), value, output.GetGpuMatMutable(Stream()), mask ? mask->GetGpuMat(Stream()) : cv::noArray(), dtype.getValue(), Stream());
+        cv::cuda::subtract(input->getGpuMat(Stream()), value, output.getGpuMatMutable(Stream()), mask ? mask->getGpuMat(Stream()) : cv::noArray(), dtype.getValue(), Stream());
     }
     return true;
 }

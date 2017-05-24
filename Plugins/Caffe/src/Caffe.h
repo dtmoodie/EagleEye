@@ -4,7 +4,7 @@
 #define USE_CUDNN
 #endif
 #include "Aquila/Detail/PluginExport.hpp"
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include "Aquila/ObjectDetection.hpp"
 #include "Aquila/rcc/external_includes/cv_calib3d.hpp"
 #include "Aquila/ObjectDetection.hpp"

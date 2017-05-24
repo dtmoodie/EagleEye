@@ -1,7 +1,7 @@
 
 #include <Aquila/Aquila.hpp>
 #include <Aquila/Logging.h>
-#include <Aquila/Nodes/NodeFactory.h>
+#include <Aquila/nodes/NodeFactory.hpp>
 #include <Aquila/utilities/UiCallbackHandlers.h>
 
 #include <MetaObject/MetaObject.hpp>
@@ -52,7 +52,7 @@ void PrintNodeTree(aq::Nodes::Node* node, int depth)
     auto children = node->GetChildren();
     for(int i = 0; i < children.size(); ++i)
     {
-        PrintNodeTree(children[i].Get(), depth + 1);
+        PrintNodeTree(children[i].get(), depth + 1);
     }
 }
 
@@ -77,7 +77,7 @@ void PrintBuffers(aq::Nodes::Node* node, std::vector<std::string>& printed_nodes
     std::cout << "--------\n" << name << std::endl;
     for(mo::InputParameter* input : inputs)
     {
-        mo::IParameter* param = input->GetInputParam();
+        mo::IParam* param = input->GetInputParam();
         mo::Buffer::IBuffer* buf = dynamic_cast<mo::Buffer::IBuffer*>(param);
         if(buf)
         {
@@ -88,7 +88,7 @@ void PrintBuffers(aq::Nodes::Node* node, std::vector<std::string>& printed_nodes
     auto children = node->GetChildren();
     for(auto child : children)
     {
-        PrintBuffers(child.Get(), printed_nodes);
+        PrintBuffers(child.get(), printed_nodes);
     }
 }
 
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
 {
     boost::program_options::options_description desc("Allowed options");
     SystemTable table;
-    mo::MetaObjectFactory::Instance(&table);
+    mo::MetaObjectFactory::instance(&table);
 
     desc.add_options()
         ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
@@ -166,9 +166,9 @@ int main(int argc, char* argv[])
     else
         aq::Init();
 
-    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+    mo::MetaObjectFactory::instance()->registerTranslationUnit();
 
-    auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
+    auto g_allocator = mo::Allocator::getThreadSafeAllocator();
     cv::cuda::GpuMat::setDefaultAllocator(g_allocator);
     cv::Mat::setDefaultAllocator(g_allocator);
 
@@ -286,7 +286,7 @@ int main(int argc, char* argv[])
 #endif
                 {
                     std::string file = itr->path().string();
-                    mo::MetaObjectFactory::Instance()->LoadPlugin(file);
+                    mo::MetaObjectFactory::instance()->loadPlugin(file);
                 }
             }
         }
@@ -299,7 +299,7 @@ int main(int argc, char* argv[])
             mo::SetThreadName("SimpleConsole GUI thread");
             try
             {
-                mo::ThreadSpecificQueue::Run();
+                mo::ThreadSpecificQueue::run();
             }
             catch (boost::thread_interrupted& err)
             {
@@ -346,7 +346,7 @@ int main(int argc, char* argv[])
 #endif
                 {
                     std::string file = itr->path().string();
-                    mo::MetaObjectFactory::Instance()->LoadPlugin(file);
+                    mo::MetaObjectFactory::instance()->loadPlugin(file);
                 }
             }
         }
@@ -360,14 +360,14 @@ int main(int argc, char* argv[])
         std::vector<rcc::shared_ptr<aq::IDataStream>> _dataStreams;
         rcc::weak_ptr<aq::IDataStream> current_stream;
         rcc::weak_ptr<aq::Nodes::Node> current_node;
-        mo::IParameter* current_param = nullptr;
+        mo::IParam* current_param = nullptr;
 
         auto print_options = []()->void
         {
             std::cout <<
                 "- Options: \n"
                 " - list_devices     -- List available connected devices for streaming access\n"
-                " - load_file        -- Create a frame grabber for a document\n"
+                " - load_file        -- create a frame grabber for a document\n"
                 "    document        -- Name of document to load\n"
                 " - add              -- Add a node to the current selected object\n"
                 "    node            -- name of node, names are listed with list\n"
@@ -409,7 +409,7 @@ int main(int argc, char* argv[])
             std::bind([&documents_list](std::string null)->void
             {
                 documents_list.clear();
-                auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
+                auto constructors = mo::MetaObjectFactory::instance()->getConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
                 int index = 0;
                 for(auto constructor : constructors)
                 {
@@ -444,7 +444,7 @@ int main(int argc, char* argv[])
                 doc = documents_list[index].first;
                 fg_override = documents_list[index].second;
             }
-            auto ds = aq::IDataStream::Create(doc, fg_override);
+            auto ds = aq::IDataStream::create(doc, fg_override);
             if(ds)
             {
                 ds->StartThread();
@@ -493,17 +493,17 @@ int main(int argc, char* argv[])
                     auto nodes = current_stream->GetNodes();
                     for(auto& node : nodes)
                     {
-                        PrintNodeTree(node.Get(), 0);
+                        PrintNodeTree(node.get(), 0);
                     }
                 }
                 else if(current_node)
                 {
-                    PrintNodeTree(current_node.Get(), 0);
+                    PrintNodeTree(current_node.get(), 0);
                 }
             }
             if(what == "parameters")
             {
-                std::vector<mo::IParameter*> parameters;
+                std::vector<mo::IParam*> parameters;
                 if(current_node)
                 {
                     parameters = current_node->GetAllParameters();
@@ -537,7 +537,7 @@ int main(int argc, char* argv[])
                         }
                         else
                         {
-                            auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                            auto func = mo::SerializationFunctionRegistry::Instance()->getTextSerializationFunction(itr->GetTypeInfo());
                             if (func)
                             {
                                 std::stringstream ss;
@@ -590,7 +590,7 @@ int main(int argc, char* argv[])
                     current_node->GetSignalInfo(infos);
                     for(auto& info : infos)
                     {
-                        std::cout << info->Print();
+                        std::cout << info->print();
                     }
                 }
                 if (current_stream)
@@ -649,7 +649,7 @@ int main(int argc, char* argv[])
             }
             if(what == "plugins")
             {
-                auto plugins = mo::MetaObjectFactory::Instance()->ListLoadedPlugins();
+                auto plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins();
                 std::stringstream ss;
                 ss << "\n";
                 for(auto& plugin : plugins)
@@ -667,14 +667,14 @@ int main(int argc, char* argv[])
                     auto nodes = current_stream->GetNodes();
                     for (auto& node : nodes)
                     {
-                        PrintNodeTree(node.Get(), 0);
+                        PrintNodeTree(node.get(), 0);
                     }
                 }
                 else if (current_node)
                 {
                     auto nodes = current_node->GetDataStream()->GetNodes();
                     for(auto node : nodes)
-                        PrintNodeTree(node.Get(), 0);
+                        PrintNodeTree(node.get(), 0);
                 }
             }
             if(what == "buffers")
@@ -685,7 +685,7 @@ int main(int argc, char* argv[])
                     std::vector<std::string> printed;
                     for(auto node : nodes)
                     {
-                        PrintBuffers(node.Get(), printed);
+                        PrintBuffers(node.get(), printed);
                     }
                 }
             }
@@ -697,13 +697,13 @@ int main(int argc, char* argv[])
         slot = new mo::TypedSlot<void(std::string)>(
                     std::bind([](std::string obj)
         {
-            IObjectConstructor* constructor = mo::MetaObjectFactory::Instance()->GetConstructor(obj.c_str());
+            IObjectConstructor* constructor = mo::MetaObjectFactory::instance()->GetConstructor(obj.c_str());
             if(constructor)
             {
                 mo::IMetaObjectInfo* info = dynamic_cast<mo::IMetaObjectInfo*>(constructor->GetObjectInfo());
                 if(info)
                 {
-                    std::cout << info->Print();
+                    std::cout << info->print();
                 }
             }else
             {
@@ -750,7 +750,7 @@ int main(int argc, char* argv[])
         slot = new mo::TypedSlot<void(std::string)>(
         std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file)
         {
-            auto streams = aq::IDataStream::Load(file, variable_replace_map, replace_map);
+            auto streams = aq::IDataStream::load(file, variable_replace_map, replace_map);
 
             if(streams.size())
             {
@@ -800,13 +800,13 @@ int main(int argc, char* argv[])
                     {
                         if(itr->GetPerTypeId() == idx)
                         {
-                            current_stream = itr.Get();
+                            current_stream = itr.get();
                             current_node.reset();
                             current_param = nullptr;
                             auto nodes = current_stream->GetNodes();
                             for (auto& node : nodes)
                             {
-                                PrintNodeTree(node.Get(), 0);
+                                PrintNodeTree(node.get(), 0);
                             }
                             return;
                         }
@@ -829,11 +829,11 @@ int main(int argc, char* argv[])
                 auto child = current_node->GetChild(what);
                 if(child)
                 {
-                    current_node = child.Get();
+                    current_node = child.get();
                     current_stream.reset();
                     current_param = nullptr;
                     std::cout << "Successfully set node to " << child->GetTreeName() << "\n";
-                    std::vector<mo::IParameter*> parameters;
+                    std::vector<mo::IParam*> parameters;
                     if(current_node)
                     {
                         parameters = current_node->GetAllParameters();
@@ -867,7 +867,7 @@ int main(int argc, char* argv[])
                             }
                             else
                             {
-                                auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                                auto func = mo::SerializationFunctionRegistry::Instance()->getTextSerializationFunction(itr->GetTypeInfo());
                                 if (func)
                                 {
                                     std::stringstream ss;
@@ -897,7 +897,7 @@ int main(int argc, char* argv[])
                         current_stream.reset();
                         current_param = nullptr;
                         std::cout << "Successfully set node to " << node->GetTreeName() << "\n";
-                        std::vector<mo::IParameter*> parameters;
+                        std::vector<mo::IParam*> parameters;
                         if(current_node)
                         {
                             parameters = current_node->GetAllParameters();
@@ -931,7 +931,7 @@ int main(int argc, char* argv[])
                                 }
                                 else
                                 {
-                                    auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                                    auto func = mo::SerializationFunctionRegistry::Instance()->getTextSerializationFunction(itr->GetTypeInfo());
                                     if (func)
                                     {
                                         std::stringstream ss;
@@ -1002,7 +1002,7 @@ int main(int argc, char* argv[])
         {
             if(current_stream)
             {
-                auto itr = std::find(_dataStreams.begin(), _dataStreams.end(), current_stream.Get());
+                auto itr = std::find(_dataStreams.begin(), _dataStreams.end(), current_stream.get());
                 if(itr != _dataStreams.end())
                 {
                     _dataStreams.erase(itr);
@@ -1017,14 +1017,14 @@ int main(int argc, char* argv[])
                 {
                     for(auto parent : parents)
                     {
-                        parent->RemoveChild(current_node.Get());
+                        parent->RemoveChild(current_node.get());
                     }
                     current_node.reset();
                     std::cout << "Sucessfully removed node from parent node\n";
                     return;
                 }else if (auto stream = current_node->GetDataStream())
                 {
-                    stream->RemoveNode(current_node.Get());
+                    stream->RemoveNode(current_node.get());
                     current_node.reset();
                     std::cout << "Sucessfully removed node from datastream\n";
                     return;
@@ -1053,7 +1053,7 @@ int main(int argc, char* argv[])
                 }
             }else
             {
-                auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors();
+                auto constructors = mo::MetaObjectFactory::instance()->getConstructors();
                 std::map<std::string, std::vector<IObjectConstructor*>> interface_map;
                 for(auto constructor : constructors)
                 {
@@ -1077,7 +1077,7 @@ int main(int argc, char* argv[])
 
         slot = new mo::TypedSlot<void(std::string)>(std::bind([](std::string null)->void
         {
-            auto plugins = mo::MetaObjectFactory::Instance()->ListLoadedPlugins();
+            auto plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins();
             std::stringstream ss;
             ss << "Loaded / failed plugins:\n";
             for(auto& plugin: plugins)
@@ -1094,10 +1094,10 @@ int main(int argc, char* argv[])
         {
             if(current_stream)
             {
-                auto added_nodes = current_stream->AddNode(name);
+                auto added_nodes = current_stream->addNode(name);
                 if(added_nodes.size())
                     current_node = added_nodes[0];
-                std::vector<mo::IParameter*> parameters;
+                std::vector<mo::IParam*> parameters;
                 if(current_node)
                 {
                     parameters = current_node->GetAllParameters();
@@ -1127,7 +1127,7 @@ int main(int argc, char* argv[])
                         }
                         else
                         {
-                            auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                            auto func = mo::SerializationFunctionRegistry::Instance()->getTextSerializationFunction(itr->GetTypeInfo());
                             if (func)
                             {
                                 std::stringstream ss;
@@ -1151,12 +1151,12 @@ int main(int argc, char* argv[])
             }
             if(current_node)
             {
-                auto added_nodes = aq::NodeFactory::Instance()->AddNode(name, current_node.Get());
+                auto added_nodes = aq::NodeFactory::Instance()->addNode(name, current_node.get());
                 if(added_nodes.size() == 1)
                 {
                     current_node = added_nodes[0];
                 }
-                std::vector<mo::IParameter*> parameters;
+                std::vector<mo::IParam*> parameters;
                 if(current_node)
                 {
                     parameters = current_node->GetAllParameters();
@@ -1186,7 +1186,7 @@ int main(int argc, char* argv[])
                         }
                         else
                         {
-                            auto func = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(itr->GetTypeInfo());
+                            auto func = mo::SerializationFunctionRegistry::Instance()->getTextSerializationFunction(itr->GetTypeInfo());
                             if (func)
                             {
                                 std::stringstream ss;
@@ -1256,7 +1256,7 @@ int main(int argc, char* argv[])
 
             }else
             {
-                auto func = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(current_param->GetTypeInfo());
+                auto func = mo::SerializationFunctionRegistry::Instance()->getTextDeSerializationFunction(current_param->GetTypeInfo());
                 if(func)
                 {
                     std::stringstream ss;
@@ -1384,8 +1384,8 @@ int main(int argc, char* argv[])
                 rcc::shared_ptr<vclick::WebSink> sink = current_stream->GetNode("WebSink0");
                 if(!sink)
                 {
-                    sink = rcc::shared_ptr<vclick::WebSink>::Create();
-                    current_stream->AddNode(sink);
+                    sink = rcc::shared_ptr<vclick::WebSink>::create();
+                    current_stream->addNode(sink);
                     auto fg = current_stream->GetNode("frame_grabber_openni20");
                     sink->ConnectInput(fg, fg->GetParameter("current_frame"), sink->GetInput("point_cloud"));
 
@@ -1435,7 +1435,7 @@ int main(int argc, char* argv[])
                 idx = boost::lexical_cast<int>(directory.substr(0, pos));
                 directory = directory.substr(pos + 1);
             }
-            mo::MetaObjectFactory::Instance()->GetObjectSystem()->AddLibraryDir(directory.c_str(), idx);
+            mo::MetaObjectFactory::instance()->getObjectSystem()->AddLibraryDir(directory.c_str(), idx);
         }, std::placeholders::_1));
 
         connections.push_back(manager.Connect(slot, "link"));
@@ -1497,12 +1497,12 @@ int main(int argc, char* argv[])
         bool compiling = false;
         bool rcc_enabled = !vm["disable-rcc"].as<bool>();
         if(rcc_enabled)
-            mo::MetaObjectFactory::Instance()->CheckCompile();
+            mo::MetaObjectFactory::instance()->CheckCompile();
         auto compile_check_function = [&_dataStreams, &compiling, rcc_enabled]()
         {
             if(rcc_enabled)
             {
-                if (mo::MetaObjectFactory::Instance()->CheckCompile())
+                if (mo::MetaObjectFactory::instance()->CheckCompile())
                 {
                     std::cout << "Recompiling...\n";
                     for (auto& ds : _dataStreams)
@@ -1513,7 +1513,7 @@ int main(int argc, char* argv[])
                 }
                 if (compiling)
                 {
-                    if (!mo::MetaObjectFactory::Instance()->IsCompileComplete())
+                    if (!mo::MetaObjectFactory::instance()->IsCompileComplete())
                     {
                         std::cout << "Still compiling\n";
                     }
@@ -1523,7 +1523,7 @@ int main(int argc, char* argv[])
                         {
                             ds->StopThread();
                         }
-                        if (mo::MetaObjectFactory::Instance()->SwapObjects())
+                        if (mo::MetaObjectFactory::instance()->SwapObjects())
                         {
                             std::cout << "Object swap success\n";
                             for (auto& ds : _dataStreams)
@@ -1659,7 +1659,7 @@ int main(int argc, char* argv[])
         {
             ds->StopThread();
         }
-        mo::ThreadSpecificQueue::Cleanup();
+        mo::ThreadSpecificQueue::cleanup();
         _dataStreams.clear();
         LOG(info) << "Gui thread shut down complete";
         mo::ThreadPool::Instance()->Cleanup();

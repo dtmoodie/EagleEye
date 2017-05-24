@@ -3,7 +3,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <caffe/util/upgrade_proto.hpp>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <algorithm>
 #include "Caffe.h"
 #include "caffe_include.h"

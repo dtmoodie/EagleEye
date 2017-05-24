@@ -49,9 +49,9 @@ void bookmark_dialog::on_file_selected(QListWidgetItem* item)
     }
     emit open_file(name);
 }
-std::vector<mo::IParameter*> bookmark_dialog::GetParameters()
+std::vector<mo::IParam*> bookmark_dialog::GetParameters()
 {
-    std::vector<mo::IParameter*> output;
+    std::vector<mo::IParam*> output;
     output.push_back(&bookmarks_param);
     output.push_back(&history_param);
     return output;

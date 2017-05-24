@@ -59,7 +59,7 @@ IF(GSTREAMER_FOUND)
     ADD_LIBRARY(GStreamer SHARED ${src} ${hdr})
     RCC_LINK_LIB(GStreamer
         ${OpenCV_LIBS}
-        Aquila
+        aquila_core
         Qt5::Network
         ${GSTREAMER_gstapp_LIBRARY}
         ${GSTREAMER_gstaudio_LIBRARY}

@@ -1,26 +1,26 @@
-#include "MetaObject/Parameters/UI/Wt/POD.hpp"
-#include "MetaObject/Parameters/UI/Wt/IParameterProxy.hpp"
-#include <Aquila/IDataStream.hpp>
-#include <Aquila/Nodes/Node.h>
-#include <Aquila/Logging.h>
-#include <Aquila/Nodes/IFrameGrabber.hpp>
-#include <Aquila/Nodes/NodeFactory.h>
+#include "MetaObject/params/ui/Wt/POD.hpp"
+#include "MetaObject/params/ui/Wt/IParamProxy.hpp"
+#include <Aquila/core/IDataStream.hpp>
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/core/Logging.hpp>
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
+#include <Aquila/nodes/NodeFactory.hpp>
 
-#include <MetaObject/MetaObject.hpp>
-#include <MetaObject/Parameters/Demangle.hpp>
-#include <MetaObject/Parameters/Types.hpp>
-#include <MetaObject/Parameters/UI/WidgetFactory.hpp>
-#include <MetaObject/Parameters/UI/WT.hpp>
-#include <MetaObject/Parameters/UI/Wt/IParameterInputProxy.hpp>
-#include <MetaObject/Parameters/UI/Wt/IParameterProxy.hpp>
-#include <MetaObject/Parameters/UI/Wt/IParameterOutputProxy.hpp>
-#include <MetaObject/Logging/Profiling.hpp>
-#include <MetaObject/Logging/Log.hpp>
-#include <MetaObject/Detail/Allocator.hpp>
-#include <MetaObject/Thread/ThreadPool.hpp>
-#include <MetaObject/Parameters/UI/Wt/IParameterInputProxy.hpp>
-#include <MetaObject/Parameters/UI/Wt/IParameterOutputProxy.hpp>
-#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
+#include <MetaObject/object/MetaObject.hpp>
+#include <MetaObject/core/Demangle.hpp>
+#include <MetaObject/params/Types.hpp>
+#include <MetaObject/params/ui/WidgetFactory.hpp>
+#include <MetaObject/params/ui/WT.hpp>
+#include <MetaObject/params/ui/Wt/IParamInputProxy.hpp>
+#include <MetaObject/params/ui/Wt/IParamProxy.hpp>
+#include <MetaObject/params/ui/Wt/IParamOutputProxy.hpp>
+#include <MetaObject/logging/Profiling.hpp>
+#include <MetaObject/logging/Log.hpp>
+#include <MetaObject/core/detail/Allocator.hpp>
+#include <MetaObject/thread/ThreadPool.hpp>
+#include <MetaObject/params/ui/Wt/IParamInputProxy.hpp>
+#include <MetaObject/params/ui/Wt/IParamOutputProxy.hpp>
+#include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include "FileBrowseWidget.hpp"
 #include "MetaObject/MetaParameters.hpp"
 
@@ -49,22 +49,22 @@ using namespace aq::Nodes;
 using namespace mo;
 using namespace Wt;
 
-INSTANTIATE_META_PARAMETER(bool);
-INSTANTIATE_META_PARAMETER(int);
-INSTANTIATE_META_PARAMETER(unsigned short);
-INSTANTIATE_META_PARAMETER(unsigned int);
-INSTANTIATE_META_PARAMETER(char);
-INSTANTIATE_META_PARAMETER(unsigned char);
-INSTANTIATE_META_PARAMETER(float);
-INSTANTIATE_META_PARAMETER(double);
-INSTANTIATE_META_PARAMETER(std::string);
+INSTANTIATE_META_PARAM(bool);
+INSTANTIATE_META_PARAM(int);
+INSTANTIATE_META_PARAM(unsigned short);
+INSTANTIATE_META_PARAM(unsigned int);
+INSTANTIATE_META_PARAM(char);
+INSTANTIATE_META_PARAM(unsigned char);
+INSTANTIATE_META_PARAM(float);
+INSTANTIATE_META_PARAM(double);
+INSTANTIATE_META_PARAM(std::string);
 
 struct GlobalContext
 {
     std::vector<rcc::shared_ptr<IDataStream>> _data_streams;
 
-    TypedSignal<void(void)> onStreamAdded;
-    TypedSignal<void(IDataStream*, Nodes::Node*)> onNodeAdded;
+    TSignal<void(void)> onStreamAdded;
+    TSignal<void(IDataStream*, Nodes::Node*)> onNodeAdded;
     boost::filesystem::path _current_dir;
 };
 GlobalContext g_ctx;
@@ -81,7 +81,7 @@ public:
           _btn_add_node = new WPushButton(_action_list_container);
           _btn_add_node->setText("Add node");
           _btn_add_node->clicked().connect(std::bind(&MainApplication::onAddNodeClicked, this));
-          
+
           _btn_load_data = new WPushButton(_action_list_container);
           _btn_load_data->setText("Load data");
           _btn_load_data->clicked().connect(std::bind(&MainApplication::onLoadDataClicked, this));
@@ -98,7 +98,7 @@ public:
               WTable* table = new WTable(dlg->contents());
               table->elementAt(0, 0)->addWidget(new WText("Plugin name"));
               //table->elementAt(0, 1)->addWidget(new WText("Plugin path"));
-              std::vector<std::string> plugins = mo::MetaObjectFactory::Instance()->ListLoadedPlugins();
+              std::vector<std::string> plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins();
               for(int i = 0; i < plugins.size(); ++i)
               {
                   table->elementAt(i + 1, 0)->addWidget(new WText(plugins[i]));
@@ -145,8 +145,8 @@ protected:
             {
                 rcc::shared_ptr<IDataStream> ds_(ds);
                 std::string save_file = widget->hostFile();
-                aq::IDataStream::Save(save_file, ds_);
-                ds_->StartThread();
+                aq::IDataStream::save(save_file, ds_);
+                ds_->startThread();
                 delete _current_dialog;
                 _current_dialog = nullptr;
             }));
@@ -182,10 +182,10 @@ protected:
             boost::filesystem::rename(file, new_name);
             file = new_name.string();
         }
-        auto streams = aq::IDataStream::Load(file);
+        auto streams = aq::IDataStream::load(file);
         for(auto stream : streams)
         {
-            stream->StartThread();
+            stream->startThread();
             g_ctx._data_streams.push_back(stream);
             this->onStreamAdded(stream, file);
         }
@@ -199,7 +199,7 @@ protected:
         {
             WDialog* dialog = new WDialog("Select node", this);
 
-            auto constructors = MetaObjectFactory::Instance()->GetConstructors(Nodes::Node::s_interfaceID);
+            auto constructors = MetaObjectFactory::instance()->getConstructors(Nodes::Node::s_interfaceID);
 
             WTable* table = new WTable(dialog->contents());
             table->setHeaderCount(1);
@@ -225,11 +225,11 @@ protected:
                         {
                             if(_current_stream && !_current_node)
                             {
-                                _current_stream->AddNode(node_name);
+                                _current_stream->addNode(node_name);
                             }
                             if(_current_node && _current_stream)
                             {
-                                auto added_nodes = NodeFactory::Instance()->AddNode(node_name, _current_node.Get());
+                                auto added_nodes = NodeFactory::Instance()->addNode(node_name, _current_node.get());
                                 if (added_nodes.size() == 0)
                                     return;
                                 WTreeNode* root = _node_tree->treeRoot();
@@ -278,7 +278,7 @@ protected:
     {
         WDialog* dialog = new WDialog("Select data to load", this);
 
-        auto constructors = mo::MetaObjectFactory::Instance()->GetConstructors(IFrameGrabber::s_interfaceID);
+        auto constructors = mo::MetaObjectFactory::instance()->getConstructors(IFrameGrabber::s_interfaceID);
         std::vector<std::pair<std::string, std::string>> data;
 
         WTable *table = new Wt::WTable(dialog->contents());
@@ -387,7 +387,7 @@ protected:
 
         dialog->show();
     }
-    
+
     void onFilterModel(const WString& data_)
     {
         std::cout << "on filter model " << data_ << std::endl;
@@ -427,7 +427,7 @@ protected:
 
     void loadData(const std::string& data, const std::string& fg = "")
     {
-        auto ds = IDataStream::Create(data, fg);
+        auto ds = IDataStream::create(data, fg);
         if (ds)
         {
             ds->StartThread();
@@ -450,7 +450,7 @@ protected:
             this->onStreamSelected(weak_ptr, display_name);
         }));*/
     }
-    
+
     WTreeNode* populateTree(rcc::weak_ptr<Nodes::Node> current_node, WTreeNode* display_node, const std::string& desired_return = "")
     {
         WTreeNode* new_node = new WTreeNode(current_node->GetTreeName(), 0, display_node);
@@ -481,13 +481,13 @@ protected:
         _current_parameter = nullptr;
         delete _node_tree->treeRoot();
         _display_nodes.clear();
-        
+
         WTreeNode* root_node = new WTreeNode(display);
         _node_tree->setTreeRoot(root_node);
         root_node->label()->setTextFormat(Wt::PlainText);
 
         std::vector<rcc::weak_ptr<Nodes::Node>> nodes = stream->GetTopLevelNodes();
-        
+
         for(auto& node : nodes)
         {
             populateTree(node, root_node);
@@ -605,7 +605,7 @@ protected:
 
     rcc::weak_ptr<IDataStream> _current_stream;
     rcc::weak_ptr<Nodes::Node> _current_node;
-    IParameter* _current_parameter;
+    IParam* _current_parameter;
 
     WContainerWidget* _data_stream_list_container;
     WContainerWidget* _action_list_container;
@@ -628,10 +628,10 @@ WApplication* createApplication(const WEnvironment& env)
 
 int main(int argc, char** argv)
 {
-    mo::MetaParameters::initialize();
+    mo::MetaParams::initialize();
     aq::SetupLogging();
-    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
-    auto g_allocator = mo::Allocator::GetThreadSafeAllocator();
+    mo::MetaObjectFactory::instance()->registerTranslationUnit();
+    auto g_allocator = mo::Allocator::getThreadSafeAllocator();
     g_allocator->SetName("Global Allocator");
     //mo::SetGpuAllocatorHelper<cv::cuda::GpuMat>(g_allocator);
     //mo::SetCpuAllocatorHelper<cv::Mat>(g_allocator);
@@ -661,7 +661,7 @@ int main(int argc, char** argv)
 #endif
                 {
                     std::string file = itr->path().string();
-                    mo::MetaObjectFactory::Instance()->LoadPlugin(file);
+                    mo::MetaObjectFactory::instance()->loadPlugin(file);
                 }
             }
         }

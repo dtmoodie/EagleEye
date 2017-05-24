@@ -25,7 +25,7 @@ int main()
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     while (boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - start).total_seconds() < 60)
     {
-        mo::ThreadSpecificQueue::Run();
+        mo::ThreadSpecificQueue::run();
     }
     thread.interrupt();
     thread.join();

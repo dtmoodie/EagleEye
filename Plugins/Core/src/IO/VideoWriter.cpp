@@ -72,10 +72,10 @@ bool VideoWriter::ProcessImpl()
         }
     }
     if(d_writer){
-        d_writer->write(image->GetGpuMat(Stream()));
+        d_writer->write(image->getGpuMat(Stream()));
     }
     if(h_writer){
-        cv::Mat h_img = image->GetMat(Stream());
+        cv::Mat h_img = image->getMat(Stream());
         WriteData data;
         data.img = h_img;
         data.fn = image_param.GetFrameNumber();

@@ -5,15 +5,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/thread.hpp>
-#include <Aquila/Nodes/IFrameGrabber.hpp>
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
 #include <MetaObject/MetaObjectFactory.hpp>
 #include <MetaObject/Parameters/ITypedParameter.hpp>
 
 BOOST_AUTO_TEST_CASE(gstreamer_load)
 {
-    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
-    mo::MetaObjectFactory::Instance()->LoadPlugins("");
-    auto plugins = mo::MetaObjectFactory::Instance()->ListLoadedPlugins();
+    mo::MetaObjectFactory::instance()->registerTranslationUnit();
+    mo::MetaObjectFactory::instance()->LoadPlugins("");
+    auto plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins();
     bool found = false;
     for(const auto& plugin : plugins)
     {
@@ -33,13 +33,13 @@ BOOST_AUTO_TEST_CASE(gstreamer_construct_static)
 
 BOOST_AUTO_TEST_CASE(gstreamer_construct_dynamic)
 {
-    rcc::shared_ptr<aq::Nodes::IFrameGrabber> obj = mo::MetaObjectFactory::Instance()->Create("frame_grabber_gstreamer");
+    rcc::shared_ptr<aq::Nodes::IFrameGrabber> obj = mo::MetaObjectFactory::instance()->create("frame_grabber_gstreamer");
     BOOST_REQUIRE(obj);
 }
 
 BOOST_AUTO_TEST_CASE(gstreamer_videotestsrc)
 {
-    auto fg = aq::Nodes::IFrameGrabber::Create("videotestsrc ! appsink", "frame_grabber_gstreamer");
+    auto fg = aq::Nodes::IFrameGrabber::create("videotestsrc ! appsink", "frame_grabber_gstreamer");
     BOOST_REQUIRE(fg);
     auto output = fg->GetOutput("current_frame");
     mo::ITypedParameter<aq::SyncedMemory>* typed = dynamic_cast<mo::ITypedParameter<aq::SyncedMemory>*>(output);
