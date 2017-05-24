@@ -1,14 +1,14 @@
-#include <MetaObject/Parameters/IO/CerealPolicy.hpp>
-#include <MetaObject/Parameters/IO/CerealMemory.hpp>
+#include <MetaObject/params/IO/CerealPolicy.hpp>
+#include <MetaObject/params/IO/CerealMemory.hpp>
 #include "CaffeNetHandler.hpp"
 #include "Aquila/IO/JsonArchive.hpp"
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
-#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
+#include "MetaObject/params/detail/MetaParametersDetail.hpp"
 INSTANTIATE_META_PARAM(std::vector<rcc::shared_ptr<aq::Caffe::NetHandler>>);
 
 std::vector<boost::shared_ptr<caffe::Layer<float>>>
-aq::Caffe::NetHandler::GetOutputLayers(const caffe::Net<float>& net)
+aq::Caffe::NetHandler::getOutputLayers(const caffe::Net<float>& net)
 {
     const std::vector<int>& out_idx = net.output_blob_indices();
     auto layer_names = net.layer_names();

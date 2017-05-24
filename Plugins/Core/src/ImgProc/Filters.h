@@ -1,6 +1,7 @@
 #include "src/precompiled.hpp"
 #include <Aquila/rcc/external_includes/cv_cudafeatures3d.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -9,7 +10,7 @@ namespace aq
 {
     namespace Nodes
     {
-    
+
     class Sobel: public Node
     {
     public:
@@ -30,33 +31,33 @@ namespace aq
             OUTPUT(SyncedMemory, edges, SyncedMemory());
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class Laplacian: public Node
     {
     public:
-    
+
     };
     class BiLateral: public Node
     {
     public:
-    
+
     };
     class MeanShiftFilter: public Node
     {
     public:
-    
+
     };
     class MeanShiftProc: public Node
     {
     public:
-    
+
     };
     class MeanShiftSegmentation: public Node
     {
     public:
-    
+
     };
     }
 }

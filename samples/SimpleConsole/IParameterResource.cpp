@@ -1,7 +1,7 @@
 #ifdef HAVE_WT
 #include "IParameterResource.hpp"
 #include <Wt/WApplication>
-#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
+#include <MetaObject/serialization/SerializationFactory.hpp>
 #include <cereal/archives/json.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 using namespace vclick;
@@ -20,9 +20,9 @@ void IParameterResource::setParam(mo::IParam* param_)
     param = param_;
     if(param)
     {
-        onParamUpdate = new mo::TypedSlot<void(mo::Context*, mo::IParam*)>(std::bind(
+        onParamUpdate = new mo::TSlot<void(mo::Context*, mo::IParam*)>(std::bind(
             &IParameterResource::handleParamUpdate, this, std::placeholders::_1, std::placeholders::_2));
-        this->connection = param->RegisterUpdateNotifier(onParamUpdate);
+        this->connection = param->registerUpdateNotifier(onParamUpdate);
         ss = nullptr;
     }
 }
@@ -52,7 +52,7 @@ void IParameterResource::handleParamUpdate(mo::Context* ctx, mo::IParam* param)
     if(this->param)
     {
         auto func = mo::SerializationFunctionRegistry::Instance()->
-            GetJsonSerializationFunction(this->param->GetTypeInfo());
+            GetJsonSerializationFunction(this->param->getTypeInfo());
         if (func)
         {
             {

@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include "Aquila/rcc/SystemTable.hpp"
-#include <MetaObject/MetaObjectFactory.hpp>
+#include <MetaObject/object/MetaObjectFactory.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 

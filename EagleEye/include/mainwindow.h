@@ -1,9 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include <QMainWindow>
-#include <MetaObject/MetaObject.hpp>
-#include <MetaObject/Detail/MetaObjectMacros.hpp>
-#include <MetaObject/Signals/detail/SignalMacros.hpp>
+#include <MetaObject/object/MetaObject.hpp>
+#include <MetaObject/object/detail/MetaObjectMacros.hpp>
+#include <MetaObject/signals/detail/SignalMacros.hpp>
 
 namespace aq
 {

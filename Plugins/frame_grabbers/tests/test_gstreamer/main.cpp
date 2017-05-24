@@ -6,8 +6,8 @@
 
 #include <boost/thread.hpp>
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
-#include <MetaObject/MetaObjectFactory.hpp>
-#include <MetaObject/Parameters/ITypedParameter.hpp>
+#include <MetaObject/object/MetaObjectFactory.hpp>
+#include <MetaObject/params/ITypedParameter.hpp>
 
 BOOST_AUTO_TEST_CASE(gstreamer_load)
 {
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(gstreamer_videotestsrc)
 {
     auto fg = aq::Nodes::IFrameGrabber::create("videotestsrc ! appsink", "frame_grabber_gstreamer");
     BOOST_REQUIRE(fg);
-    auto output = fg->GetOutput("current_frame");
+    auto output = fg->getOutput("current_frame");
     mo::ITypedParameter<aq::SyncedMemory>* typed = dynamic_cast<mo::ITypedParameter<aq::SyncedMemory>*>(output);
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     fg->Process();

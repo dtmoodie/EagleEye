@@ -1,6 +1,5 @@
 #pragma once
 #include "src/precompiled.hpp"
-
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -18,7 +17,7 @@ namespace aq
                 OUTPUT(SyncedMemory, grey_image, SyncedMemory());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
 
         class ConvertToHSV: public ::aq::Nodes::Node
@@ -29,7 +28,7 @@ namespace aq
             OUTPUT(SyncedMemory, hsv_image, SyncedMemory());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
         class ConvertToLab : public ::aq::Nodes::Node
         {
@@ -39,7 +38,7 @@ namespace aq
             OUTPUT(SyncedMemory, lab_image, SyncedMemory())
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
 
         class ConvertTo: public aq::Nodes::Node
@@ -53,12 +52,12 @@ namespace aq
                 PARAM(float, beta, 0.0)
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
 
         class ConvertColorspace : public Node
         {
-        
+
         public:
             MO_DERIVE(ConvertColorspace, ::aq::Nodes::Node)
                 INPUT(SyncedMemory, input_image, nullptr)
@@ -66,7 +65,7 @@ namespace aq
                 OUTPUT(SyncedMemory, output_image, SyncedMemory())
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
         class Magnitude : public ::aq::Nodes::Node
         {
@@ -76,7 +75,7 @@ namespace aq
             OUTPUT(SyncedMemory, output_magnitude, SyncedMemory());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
         class SplitChannels: public ::aq::Nodes::Node
         {
@@ -86,7 +85,7 @@ namespace aq
                 OUTPUT(SyncedMemory, channels, SyncedMemory());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
         class ConvertDataType: public ::aq::Nodes::Node
         {
@@ -100,7 +99,7 @@ namespace aq
             PARAM(bool, continuous, false);
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
         class MergeChannels: public ::aq::Nodes::Node
         {
@@ -110,7 +109,7 @@ namespace aq
                 OUTPUT(SyncedMemory, merged_image, SyncedMemory());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
         class Reshape: public ::aq::Nodes::Node
         {
@@ -122,8 +121,8 @@ namespace aq
                 PARAM(int, rows, 0);
             MO_END;
         protected:
-            bool ProcessImpl();
-        
+            bool processImpl();
+
         };
     }
 }

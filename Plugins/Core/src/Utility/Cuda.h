@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Aquila/nodes/Node.hpp>
-#include "Aquila/utilities/CudaUtils.hpp"
+#include "Aquila/utilities/cuda/CudaUtils.hpp"
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -18,7 +18,7 @@ namespace aq
     public:
         SetDevice();
         virtual bool SkipEmpty() const;
-        virtual void NodeInit(bool firstInit);
+        virtual void nodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };
     }

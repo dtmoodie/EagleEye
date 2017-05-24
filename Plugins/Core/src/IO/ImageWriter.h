@@ -38,7 +38,7 @@ namespace aq
             MO_SLOT(void, snap)
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         
     };
     }

@@ -1,8 +1,8 @@
 #ifdef HAVE_WT
 #include "WebSink.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
-#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 using namespace vclick;
 
 WebSink::WebSink():
@@ -29,7 +29,7 @@ std::vector<mo::IParam*> WebSink::GetParameters(const std::string& filter) const
     return my_params;
 }
 
-bool WebSink::ProcessImpl()
+bool WebSink::processImpl()
 {
     if(moments.empty())
     {
@@ -42,9 +42,9 @@ bool WebSink::ProcessImpl()
     }
     if(foreground_mask->empty() || point_cloud->empty())
         return false;
-    cv::Mat mask = foreground_mask->getMat(Stream());
-    cv::Mat ptCloud = point_cloud->getMat(Stream());
-    Stream().waitForCompletion();
+    cv::Mat mask = foreground_mask->getMat(stream());
+    cv::Mat ptCloud = point_cloud->getMat(stream());
+    stream().waitForCompletion();
     int num_points = cv::countNonZero(mask);
     cv::Mat foreground_points(1, num_points, CV_32FC3);
     int count = 0;
@@ -59,7 +59,7 @@ bool WebSink::ProcessImpl()
             }
         }
     }
-    foreground_points_param.UpdateData(foreground_points, point_cloud_param.GetTimestamp(), _ctx);
+    foreground_points_param.updateData(foreground_points, point_cloud_param.getTimestamp(), _ctx);
     bool activated = force_active;
     for (auto& bb : bounding_boxes)
     {
@@ -95,7 +95,7 @@ bool WebSink::ProcessImpl()
             }
         }
     }
-    active_switch->UpdateData(activated, point_cloud_param.GetTimestamp(), _ctx);
+    active_switch->updateData(activated, point_cloud_param.getTimestamp(), _ctx);
     
     h264_pass_through->Process();
     
@@ -105,12 +105,12 @@ bool WebSink::ProcessImpl()
         if(jpeg_buffer && !jpeg_buffer->empty())
         {
             last_keyframe_time = current_time;
-            output_jpeg_param.UpdateData(*jpeg_buffer, jpeg_buffer_param.GetTimestamp(), _ctx);
+            output_jpeg_param.updateData(*jpeg_buffer, jpeg_buffer_param.getTimestamp(), _ctx);
         }
         if(raw_image && !raw_image->empty())
         {
             last_keyframe_time = current_time;
-            output_image_param.UpdateData(*raw_image, raw_image_param.GetTimestamp(), _ctx);
+            output_image_param.updateData(*raw_image, raw_image_param.getTimestamp(), _ctx);
         }
         if(jpeg_buffer)
         {
@@ -124,8 +124,8 @@ bool WebSink::ProcessImpl()
     {
         raw_bandwidth_mean(jpeg_buffer->size().area());
     }
-    raw_bandwidth_param.UpdateData(boost::accumulators::rolling_mean(raw_bandwidth_mean), background_model_param.GetTimestamp(), _ctx);
-    throttled_bandwidth_param.UpdateData(boost::accumulators::rolling_mean(throttled_bandwidth_mean), background_model_param.GetTimestamp(), _ctx);
+    raw_bandwidth_param.updateData(boost::accumulators::rolling_mean(raw_bandwidth_mean), background_model_param.getTimestamp(), _ctx);
+    throttled_bandwidth_param.updateData(boost::accumulators::rolling_mean(throttled_bandwidth_mean), background_model_param.getTimestamp(), _ctx);
     return true;
 }
 MO_REGISTER_CLASS(WebSink);

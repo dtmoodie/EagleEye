@@ -1,6 +1,6 @@
 #pragma once
 #include "CaffeNetHandler.hpp"
-#include "Aquila/ObjectDetection.hpp"
+#include "Aquila/types/ObjectDetection.hpp"
 namespace aq
 {
     namespace Caffe
@@ -16,7 +16,7 @@ namespace aq
             MO_END
             void StartBatch();
             virtual void HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs);
-            void EndBatch(boost::optional<mo::time_t> timestamp);
+            void EndBatch(boost::optional<mo::Time_t> timestamp);
         };
     }
 }

@@ -1,5 +1,5 @@
 #include "video.h"
-#include "Aquila/Nodes/FrameGrabberInfo.hpp"
+#include "Aquila/framegrabbers/FrameGrabberInfo.hpp"
 #include "boost/filesystem.hpp"
 #include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 using namespace aq;

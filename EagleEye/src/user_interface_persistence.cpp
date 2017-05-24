@@ -3,7 +3,7 @@
 #endif
 
 #include "user_interface_persistence.h"
-#include <MetaObject/Parameters/IParam.hpp>
+#include <MetaObject/params/IParam.hpp>
 
 void VariableStorage::LoadParams(UIPersistence* obj, const std::string& name)
 {
@@ -13,10 +13,10 @@ void VariableStorage::LoadParams(UIPersistence* obj, const std::string& name)
         auto params = obj->GetParameters();
         for(auto param : params)
         {
-            auto itr2 = itr->second.find(param->GetName());
+            auto itr2 = itr->second.find(param->getName());
             if(itr2 != itr->second.end())
             {
-                
+
             }
         }
     }
@@ -27,7 +27,7 @@ void VariableStorage::SaveParams(UIPersistence* obj, const std::string& name)
     auto all_params = This->getParameters();
     for(auto& param: all_params)
     {
-        params[param->GetName()] = param->DeepCopy();
+        params[param->getName()] = param->DeepCopy();
     }*/
 }
 void VariableStorage::SaveUI(const std::string& file_name)
@@ -49,7 +49,7 @@ void VariableStorage::SaveUI(const std::string& file_name)
         fs << "}"; // End widgets
         ++index;
     }*/
-    
+
 }
 void VariableStorage::LoadUI(const std::string& file_name)
 {
@@ -70,14 +70,14 @@ void VariableStorage::LoadUI(const std::string& file_name)
                 auto param = Parameters::Persistence::cv::DeSerialize(&node);
                 if (param)
                 {
-                    param_vec[param->GetName()] = std::shared_ptr<mo::IParam>(param);
+                    param_vec[param->getName()] = std::shared_ptr<mo::IParam>(param);
                 }
             }
         }
-        
+
     }catch(...)
     {
-    
+
     }*/
 }
 

@@ -1,36 +1,35 @@
 #include "Channels.h"
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <Aquila/Qualifiers.hpp>
 using namespace aq;
 using namespace aq::Nodes;
 
 
-bool ConvertToGrey::ProcessImpl()
+bool ConvertToGrey::processImpl()
 {
     if(input_image)
     {
         cv::cuda::GpuMat grey;
-        cv::cuda::cvtColor(input_image->getGpuMat(Stream()), grey, cv::COLOR_BGR2GRAY, 0, Stream());
-        grey_image_param.UpdateData(grey, input_image_param.GetTimestamp(), _ctx);
+        cv::cuda::cvtColor(input_image->getGpuMat(stream()), grey, cv::COLOR_BGR2GRAY, 0, stream());
+        grey_image_param.updateData(grey, input_image_param.getTimestamp(), _ctx);
         return true;
     }
     return false;
 }
 
-bool ConvertToHSV::ProcessImpl()
+bool ConvertToHSV::processImpl()
 {
     if (input_image)
     {
         ::cv::cuda::GpuMat hsv;
-        ::cv::cuda::cvtColor(input_image->getGpuMat(Stream()), hsv, cv::COLOR_BGR2HSV, 0, Stream());
-        hsv_image_param.UpdateData(hsv, input_image_param.GetTimestamp(), this->_ctx);
+        ::cv::cuda::cvtColor(input_image->getGpuMat(stream()), hsv, cv::COLOR_BGR2HSV, 0, stream());
+        hsv_image_param.updateData(hsv, input_image_param.getTimestamp(), this->_ctx);
         return true;
     }
     return false;
 }
-/*void ConvertColorspace::NodeInit(bool firstInit)
+/*void ConvertColorspace::nodeInit(bool firstInit)
 {
-    mo::EnumParameter param;
+    mo::EnumParam param;
     param.addEnum(ENUM(cv::COLOR_BGR2BGRA));
     param.addEnum(ENUM(cv::COLOR_RGB2RGBA));
     param.addEnum(ENUM(cv::COLOR_BGRA2BGR));
@@ -113,70 +112,70 @@ bool ConvertToHSV::ProcessImpl()
     return buf->data;
 }*/
 
-bool ConvertTo::ProcessImpl()
+bool ConvertTo::processImpl()
 {
     if(input->getSyncState() < SyncedMemory::DEVICE_UPDATED )
     {
         cv::Mat output;
-        input->getMat(Stream()).convertTo(output, datatype.getValue(), alpha, beta);
-        this->output_param.UpdateData(output, input_param.GetTimestamp(), _ctx);
+        input->getMat(stream()).convertTo(output, datatype.getValue(), alpha, beta);
+        this->output_param.updateData(output, input_param.getTimestamp(), _ctx);
         return true;
     }else
     {
         cv::cuda::GpuMat output;
-        input->getGpuMat(Stream()).convertTo(output, datatype.getValue(), alpha, beta, Stream());
-        this->output_param.UpdateData(output, input_param.GetTimestamp(), _ctx);
+        input->getGpuMat(stream()).convertTo(output, datatype.getValue(), alpha, beta, stream());
+        this->output_param.updateData(output, input_param.getTimestamp(), _ctx);
         return true;
     }
 }
 MO_REGISTER_CLASS(ConvertTo)
 
-bool Magnitude::ProcessImpl()
+bool Magnitude::processImpl()
 {
     if(input_image)
     {
         ::cv::cuda::GpuMat magnitude;
-        ::cv::cuda::magnitude(input_image->getGpuMat(Stream()), magnitude, Stream());
-        output_magnitude_param.UpdateData(magnitude, input_image_param.GetTimestamp(), _ctx);
+        ::cv::cuda::magnitude(input_image->getGpuMat(stream()), magnitude, stream());
+        output_magnitude_param.updateData(magnitude, input_image_param.getTimestamp(), _ctx);
         return true;
     }
     return false;
 }
 
-bool SplitChannels::ProcessImpl()
+bool SplitChannels::processImpl()
 {
     if(input_image)
     {
         std::vector<cv::cuda::GpuMat> _channels;
-        ::cv::cuda::split(input_image->getGpuMat(Stream()), _channels, Stream());
-        channels_param.UpdateData(_channels, input_image_param.GetTimestamp(), _ctx);
+        ::cv::cuda::split(input_image->getGpuMat(stream()), _channels, stream());
+        channels_param.updateData(_channels, input_image_param.getTimestamp(), _ctx);
         return true;
     }
     return false;
 }
 
-bool ConvertDataType::ProcessImpl()
+bool ConvertDataType::processImpl()
 {
     if(input_image)
     {
         ::cv::cuda::GpuMat output;
         if (continuous)
         {
-            ::cv::cuda::createContinuous(input_image->GetSize(), data_type.currentSelection, output);
+            ::cv::cuda::createContinuous(input_image->getSize(), data_type.currentSelection, output);
         }
-        input_image->getGpuMat(Stream()).convertTo(output, data_type.currentSelection, alpha, beta, Stream());
+        input_image->getGpuMat(stream()).convertTo(output, data_type.currentSelection, alpha, beta, stream());
     }
     return false;
 }
 
-/*void Merge::NodeInit(bool firstInit)
+/*void Merge::nodeInit(bool firstInit)
 {
     if(firstInit)
     {
-        addInputParameter<cv::cuda::GpuMat>("Channel1")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
-        addInputParameter<cv::cuda::GpuMat>("Channel2")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
-        addInputParameter<cv::cuda::GpuMat>("Channel3")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
-        addInputParameter<cv::cuda::GpuMat>("Channel4")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
+        addInputParam<cv::cuda::GpuMat>("Channel1")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
+        addInputParam<cv::cuda::GpuMat>("Channel2")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
+        addInputParam<cv::cuda::GpuMat>("Channel3")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
+        addInputParam<cv::cuda::GpuMat>("Channel4")->SetQualifier(MatQualifier<cv::cuda::GpuMat>::get(-1,-1,1));
     }
     qualifiersSet = false;
 }*/
@@ -226,23 +225,23 @@ bool ConvertDataType::ProcessImpl()
     cv::cuda::merge(channels, mergedChannels,stream);
     return mergedChannels;
 }*/
-bool ConvertColorspace::ProcessImpl()
+bool ConvertColorspace::processImpl()
 {
     cv::cuda::GpuMat output;
-    cv::cuda::cvtColor(input_image->getGpuMat(Stream()),output, conversion_code.getValue(), 0, Stream());
-    output_image_param.UpdateData(output, input_image_param.GetTimestamp(), _ctx);
+    cv::cuda::cvtColor(input_image->getGpuMat(stream()),output, conversion_code.getValue(), 0, stream());
+    output_image_param.updateData(output, input_image_param.getTimestamp(), _ctx);
     return true;
 }
 
-bool MergeChannels::ProcessImpl()
+bool MergeChannels::processImpl()
 {
     return false;
 }
 
 
-bool Reshape::ProcessImpl()
+bool Reshape::processImpl()
 {
-    reshaped_image_param.UpdateData(input_image->getGpuMat(Stream()).reshape(channels, rows), input_image_param.GetTimestamp(), _ctx);
+    reshaped_image_param.updateData(input_image->getGpuMat(stream()).reshape(channels, rows), input_image_param.getTimestamp(), _ctx);
     return true;
 }
 

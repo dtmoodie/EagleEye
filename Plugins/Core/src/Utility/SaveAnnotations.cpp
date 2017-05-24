@@ -1,13 +1,14 @@
 #include "SaveAnnotations.hpp"
-#include "Aquila/ObjectDetectionSerialization.hpp"
+#include "Aquila/types/ObjectDetectionSerialization.hpp"
 #include <fstream>
 #include <Aquila/nodes/NodeInfo.hpp>
-#include "Aquila/utilities/UiCallbackHandlers.h"
-#include "Aquila/utilities/CudaCallbacks.hpp"
+#include "Aquila/gui/UiCallbackHandlers.h"
+#include "Aquila/utilities/cuda/CudaCallbacks.hpp"
 #include <opencv2/imgproc.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cereal/archives/json.hpp>
 #include <cereal/types/vector.hpp>
+#include <iomanip>
 #include <fstream>
 using namespace aq;
 using namespace aq::Nodes;
@@ -18,7 +19,7 @@ SaveAnnotations::SaveAnnotations()
 
 void SaveAnnotations::on_class_change(int new_class)
 {
-    current_class_param.UpdateData(new_class);
+    current_class_param.updateData(new_class);
     draw();
 }
 
@@ -60,7 +61,7 @@ void SaveAnnotations::on_key(int key)
         std::string image_path = ss.str();
         cereal::JSONOutputArchive ar(ofs);
         ar(cereal::make_nvp("ImageFile", image_path));
-        ar(cereal::make_nvp("Timestamp", input_param.GetTimestamp()));
+        ar(cereal::make_nvp("Timestamp", input_param.getTimestamp()));
         ar(cereal::make_nvp("Annotations", _annotations));
         if(detections && detections->size() > 0)
         {
@@ -130,17 +131,17 @@ void SaveAnnotations::draw()
         //cv::putText(draw_image, (*labels)[current_class], cv::Point(15, 25), cv::FONT_HERSHEY_COMPLEX, 0.7, h_lut.at<cv::Vec3b>(current_class));
     }
 
-    size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
-    mo::ThreadSpecificQueue::Push([draw_image, this]()
+    size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
+    mo::ThreadSpecificQueue::push([draw_image, this]()
     {
-        GetDataStream()->GetWindowCallbackManager()->imshow("original", draw_image);
-        //GetDataStream()->GetWindowCallbackManager()->imshow("legend", h_legend);
+        getDataStream()->getWindowCallbackManager()->imshow("original", draw_image);
+        //getDataStream()->GetWindowCallbackManager()->imshow("legend", h_legend);
     }, gui_thread_id, this);
 }
 
-bool SaveAnnotations::ProcessImpl()
+bool SaveAnnotations::processImpl()
 {
-    /*if(label_file_param._modified)
+    /*if(label_file_param.modified())
     {
         labels.clear();
         std::ifstream ifs;
@@ -180,8 +181,8 @@ bool SaveAnnotations::ProcessImpl()
                         cv::Scalar(color[0], color[1], color[2]));
         }
 
-        label_file_param._modified = false;
-        GetDataStream()->GetWindowCallbackManager()->imshow("legend", h_legend);
+        label_file_param.modified(false);
+        getDataStream()->GetWindowCallbackManager()->imshow("legend", h_legend);
     }*/
     if(h_lut.cols != labels->size())
     {
@@ -191,25 +192,25 @@ bool SaveAnnotations::ProcessImpl()
         cv::cvtColor(h_lut, h_lut, cv::COLOR_HSV2BGR);
     }
     _annotations.clear();
-    size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
+    size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
     if(input->getSyncState() == aq::SyncedMemory::DEVICE_UPDATED)
     {
-        cv::Mat img = input->getMat(Stream());
-        //cv::Mat img = input->getMat(Stream());
+        cv::Mat img = input->getMat(stream());
+        //cv::Mat img = input->getMat(stream());
 
         aq::cuda::enqueue_callback_async([img, this]()
         {
-            GetDataStream()->GetWindowCallbackManager()->imshow("original", img);
-        }, gui_thread_id ,Stream());
+            getDataStream()->GetWindowCallbackManager()->imshow("original", img);
+        }, gui_thread_id ,stream());
         _original_image = img;
     }else
     {
-        //cv::Mat img = input->getMat(Stream());
-        cv::Mat img = input->getMat(Stream());
+        //cv::Mat img = input->getMat(stream());
+        cv::Mat img = input->getMat(stream());
 
-        mo::ThreadSpecificQueue::Push([img, this]()
+        mo::ThreadSpecificQueue::push([img, this]()
         {
-            GetDataStream()->GetWindowCallbackManager()->imshow("original", img);
+            getDataStream()->GetWindowCallbackManager()->imshow("original", img);
         }, gui_thread_id, this);
         _original_image = img;
     }

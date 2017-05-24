@@ -8,8 +8,8 @@
 #include "Caffe.h"
 #include "caffe_include.h"
 #include "caffe_init.h"
-#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 using namespace aq;
 using namespace aq::Nodes;
 
@@ -25,11 +25,11 @@ void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
         }
     }
 }
-bool caffe_solver::ProcessImpl()
+bool caffe_solver::processImpl()
 {
     if(::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
         ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
-    if(solver_description_param._modified && solver_description.string().size())
+    if(solver_description_param.modified() && solver_description.string().size())
     {
         if(boost::filesystem::is_regular_file(solver_description))
         {
@@ -76,7 +76,7 @@ bool caffe_solver::ProcessImpl()
                 auto wrapped_blob = aq::Nodes::CaffeBase::WrapBlob(*input_blobs_[i]);
                 input_blobs[input_names[i]] = wrapped_blob;
             }
-            input_blobs_param.Commit();
+            input_blobs_param.emitUpdate();
         }
         if(weight_files.size())
         {
@@ -97,7 +97,7 @@ bool caffe_solver::ProcessImpl()
             if(boost::filesystem::is_regular_file(previous_solver_state))
                 solver->Restore(previous_solver_state.string().c_str());
         }
-        solver_description_param._modified = false;
+        solver_description_param.modified(false);
     }
     if(!solver)
     {
@@ -123,7 +123,7 @@ bool caffe_solver::ProcessImpl()
 TS<SyncedMemory> Nodes::caffe_network::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
     // asdf
-    if(nn_description_param._modified && nn_description.size())
+    if(nn_description_param.modified() && nn_description.size())
     {
         if(boost::filesystem::is_regular_file(nn_description))
         {
@@ -131,7 +131,7 @@ TS<SyncedMemory> Nodes::caffe_network::doProcess(TS<SyncedMemory> input, cv::cud
 
             auto inputs = neural_network->input_blobs();
             //updateParameter("input blobs", inputs)->type = Parameters::Parameter::Output;
-            nn_description_param._modified = false;
+            nn_description_param.modified(false);
         }
     }
     return input;

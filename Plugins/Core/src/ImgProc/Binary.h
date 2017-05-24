@@ -1,5 +1,5 @@
 #include "src/precompiled.hpp"
-
+#include <Aquila/types/SyncedMemory.hpp>
 using namespace aq;
 using namespace ::aq::Nodes;
 
@@ -18,7 +18,7 @@ public:
     MO_END;
 
 protected:
-    bool ProcessImpl();
+    bool processImpl();
     ::cv::Ptr<::cv::cuda::Filter> filter;
 };
 
@@ -37,7 +37,7 @@ public:
     MO_END
 
 protected:
-    bool ProcessImpl();
+    bool processImpl();
 
     //virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
 };
@@ -51,7 +51,7 @@ public:
     MO_END
     PruneContours();
 
-    virtual void NodeInit(bool firstInit);
+    virtual void nodeInit(bool firstInit);
     virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
 };
 
@@ -71,9 +71,9 @@ public:
     OUTPUT(contour_area_t, contour_area, contour_area_t())
     MO_END
 protected:
-    bool ProcessImpl();
+    bool processImpl();
     ContourBoundingBox();
-    //virtual void NodeInit(bool firstInit);
+    //virtual void nodeInit(bool firstInit);
     //virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
 };
 
@@ -94,7 +94,7 @@ class HistogramThreshold: public Node
 public:
 
     HistogramThreshold();
-    virtual void NodeInit(bool firstInit);
+    virtual void nodeInit(bool firstInit);
     virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     void runFilter();
 };
@@ -117,7 +117,7 @@ public:
         OUTPUT(SyncedMemory, output, {})
     MO_END
 protected:
-    bool ProcessImpl();
+    bool processImpl();
 
 };
 
@@ -125,12 +125,10 @@ class DrawRects: public Node
 {
 public:
     DrawRects();
-    virtual void NodeInit(bool firstInit);
+    virtual void nodeInit(bool firstInit);
     virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
 };
 
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-
-SETUP_PROJECT_DEF

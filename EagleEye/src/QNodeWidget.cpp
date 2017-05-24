@@ -8,15 +8,15 @@
 #include <QDateTime>
 #include "qevent.h"
 
-#include "Aquila/logger.hpp"
+#include "Aquila/core/Logger.hpp"
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
-#include <MetaObject/Logging/Log.hpp>
-#include <MetaObject/Parameters/UI/WidgetFactory.hpp>
-#include <MetaObject/Parameters/IVariableManager.h>
+#include <MetaObject/logging/Log.hpp>
+#include <MetaObject/params/ui/WidgetFactory.hpp>
+#include <MetaObject/params/IVariableManager.hpp>
 
 
-IQNodeInterop::IQNodeInterop(mo::IParam* parameter_, 
-                             QNodeWidget* parent, 
+IQNodeInterop::IQNodeInterop(mo::IParam* parameter_,
+                             QNodeWidget* parent,
                              rcc::weak_ptr<aq::Nodes::Node> node_) :
     QWidget(parent),
     parameter(parameter_),
@@ -24,7 +24,7 @@ IQNodeInterop::IQNodeInterop(mo::IParam* parameter_,
 {
     layout = new QGridLayout(this);
     layout->setVerticalSpacing(0);
-    nameElement = new QLabel(QString::fromStdString(parameter_->GetName()), parent);
+    nameElement = new QLabel(QString::fromStdString(parameter_->getName()), parent);
     nameElement->setSizePolicy(QSizePolicy::Policy::MinimumExpanding, QSizePolicy::Policy::Fixed);
     //proxy = dispatchParameter(this, parameter_, node_);
     int pos = 1;
@@ -39,10 +39,10 @@ IQNodeInterop::IQNodeInterop(mo::IParam* parameter_,
     layout->addWidget(nameElement, 0, 0);
     nameElement->installEventFilter(parent);
     connect(this, SIGNAL(updateNeeded()), this, SLOT(updateUi()), Qt::QueuedConnection);
-    onParameterUpdateSlot = mo::TypedSlot<void(mo::IParam*, mo::Context*)>(std::bind(&IQNodeInterop::onParameterUpdate, this, std::placeholders::_1, std::placeholders::_2));
-    bc = parameter->RegisterUpdateNotifier(&onParameterUpdateSlot);
-    
-    QLabel* typeElement = new QLabel(QString::fromStdString(parameter_->GetTypeInfo().name()));
+    onParameterUpdateSlot = mo::TSlot<void(mo::IParam*, mo::Context*)>(std::bind(&IQNodeInterop::onParameterUpdate, this, std::placeholders::_1, std::placeholders::_2));
+    bc = parameter->registerUpdateNotifier(&onParameterUpdateSlot);
+
+    QLabel* typeElement = new QLabel(QString::fromStdString(parameter_->getTypeInfo().name()));
 
     typeElement->installEventFilter(parent);
     parent->addParameterWidgetMap(typeElement, parameter_);
@@ -162,29 +162,29 @@ QNodeWidget::QNodeWidget(QWidget* parent, rcc::weak_ptr<aq::Nodes::Node> node_) 
         connect(ui->chkEnabled, SIGNAL(clicked(bool)), this, SLOT(on_enableClicked(bool)));
         connect(ui->profile, SIGNAL(clicked(bool)), this, SLOT(on_profileClicked(bool)));
         ui->nodeName->setText(QString::fromStdString(node->GetTypeName()));
-        ui->nodeName->setToolTip(QString::fromStdString(node->GetTreeName()));
+        ui->nodeName->setToolTip(QString::fromStdString(node->getTreeName()));
         ui->nodeName->setMaximumWidth(200);
         ui->gridLayout->setSpacing(0);
-        auto parameters = node->GetDisplayParameters();
+        auto parameters = node->getDisplayParams();
         for (size_t i = 0; i < parameters.size(); ++i)
         {
             int col = 0;
-            if (parameters[i]->CheckFlags(mo::Input_e))
+            if (parameters[i]->checkFlags(mo::Input_e))
             {
                 QInputProxy* proxy = new QInputProxy(parameters[i], node, this);
                 ui->gridLayout->addWidget(proxy->getWidget(0), i+7, col, 1,1);
-                inputProxies[parameters[i]->GetTreeName()] = std::shared_ptr<QInputProxy>(proxy);
+                inputProxies[parameters[i]->getTreeName()] = std::shared_ptr<QInputProxy>(proxy);
                 ++col;
             }
-            
-            if(parameters[i]->CheckFlags(mo::Control_e)|| parameters[i]->CheckFlags(mo::State_e) || parameters[i]->CheckFlags(mo::Output_e))
+
+            if(parameters[i]->checkFlags(mo::Control_e)|| parameters[i]->checkFlags(mo::State_e) || parameters[i]->checkFlags(mo::Output_e))
             {
                 //auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
                 auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(parameters[i]);
                 if (proxy)
                 {
-                    parameterProxies[parameters[i]->GetTreeName()] = proxy;
-                    auto widget = proxy->GetParameterWidget(this);
+                    parameterProxies[parameters[i]->getTreeName()] = proxy;
+                    auto widget = proxy->getParameterWidget(this);
                     widget->installEventFilter(this);
                     widgetParamMap[widget] = parameters[i];
                     ui->gridLayout->addWidget(widget, i + 7, col, 1,1);
@@ -192,7 +192,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, rcc::weak_ptr<aq::Nodes::Node> node_) 
             }
         }
         /*log_connection = aq::ui_collector::get_object_log_handler(node->getFullTreeName()).connect(std::bind(&QNodeWidget::on_logReceive, this, std::placeholders::_1, std::placeholders::_2));
-        if (auto stream = node->GetDataStream())
+        if (auto stream = node->getDataStream())
         {
             if (auto sig_mgr = stream->GetSignalManager())
             {
@@ -215,45 +215,45 @@ void QNodeWidget::on_object_recompile(mo::IMetaObject* obj)
     {
         if (obj->GetObjectId() == node->GetObjectId())
         {
-            auto params = node->GetDisplayParameters();
+            auto params = node->getDisplayParams();
             int idx = -1;
             for (auto& param : params)
             {
                 ++idx;
                 {
-                    auto itr = parameterProxies.find(param->GetTreeName());
+                    auto itr = parameterProxies.find(param->getTreeName());
                     if (itr != parameterProxies.end())
                     {
-                        itr->second->SetParameter(param);
+                        itr->second->setParam(param);
                         break;
                     }
                 }
                 {
-                    auto itr = inputProxies.find(param->GetTreeName());
+                    auto itr = inputProxies.find(param->getTreeName());
                     if (itr != inputProxies.end())
                     {
                         itr->second->updateParameter(param);
                         break;
                     }
                 }
-                LOG(debug) << "Adding new parameter after recompile: " << param->GetTreeName();
+                LOG(debug) << "Adding new parameter after recompile: " << param->getTreeName();
                 int col = 0;
-                if (param->CheckFlags(mo::Input_e))
+                if (param->checkFlags(mo::Input_e))
                 {
                     QInputProxy* proxy = new QInputProxy(param, node, this);
                     ui->gridLayout->addWidget(proxy->getWidget(0), idx + 7, col, 1, 1);
-                    inputProxies[param->GetTreeName()] = std::shared_ptr<QInputProxy>(proxy);
+                    inputProxies[param->getTreeName()] = std::shared_ptr<QInputProxy>(proxy);
                     ++col;
                 }
 
-                if (param->CheckFlags(mo::Control_e) || param->CheckFlags(mo::State_e) || param->CheckFlags(mo::Output_e))
+                if (param->checkFlags(mo::Control_e) || param->checkFlags(mo::State_e) || param->checkFlags(mo::Output_e))
                 {
                     //auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(param);
                     auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(param);
                     if (proxy)
                     {
-                        parameterProxies[param->GetTreeName()] = proxy;
-                        auto widget = proxy->GetParameterWidget(this);
+                        parameterProxies[param->getTreeName()] = proxy;
+                        auto widget = proxy->getParameterWidget(this);
                         widget->installEventFilter(this);
                         widgetParamMap[widget] = param;
                         ui->gridLayout->addWidget(widget, idx + 7, col, 1, 1);
@@ -270,7 +270,7 @@ bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
         QMouseEvent* mev = dynamic_cast<QMouseEvent*>(event);
         if (mev->button() == Qt::RightButton)
         {
-            
+
             auto itr = widgetParamMap.find(static_cast<QWidget*>(object));
             if (itr != widgetParamMap.end())
             {
@@ -284,7 +284,7 @@ bool QNodeWidget::eventFilter(QObject *object, QEvent *event)
 
 void QNodeWidget::addParameterWidgetMap(QWidget* widget, mo::IParam* param)
 {
-    
+
 }
 
 void QNodeWidget::updateUi(bool parameterUpdate, aq::Nodes::Node *node_)
@@ -312,7 +312,7 @@ void QNodeWidget::updateUi(bool parameterUpdate, aq::Nodes::Node *node_)
     }*/
     if(parameterUpdate && node_ == node.get())
     {
-        auto parameters = node->GetDisplayParameters();
+        auto parameters = node->getDisplayParams();
         if (parameters.size() != (parameterProxies.size() + inputProxies.size()))
         {
             for(size_t i = 0; i < parameters.size(); ++i)
@@ -320,42 +320,42 @@ void QNodeWidget::updateUi(bool parameterUpdate, aq::Nodes::Node *node_)
                 bool found = false;
                 // Check normal parameters
                 {
-                    auto itr = parameterProxies.find(parameters[i]->GetTreeName());
+                    auto itr = parameterProxies.find(parameters[i]->getTreeName());
                     if(itr != parameterProxies.end())
                     {
-                        if(itr->second->CheckParameter(parameters[i]));
+                        if(itr->second->checkParam(parameters[i]));
                         found = true;
                     }
                 }
                 // Check inputs
                 if(!found)
                 {
-                    auto itr = inputProxies.find(parameters[i]->GetTreeName());
+                    auto itr = inputProxies.find(parameters[i]->getTreeName());
                     if(itr != inputProxies.end())
                     {
-                        found = itr->second->inputParameter == dynamic_cast<mo::InputParameter*>(parameters[i]);
+                        found = itr->second->inputParameter == dynamic_cast<mo::InputParam*>(parameters[i]);
                     }
                 }
-                
+
                 if(found == false)
                 {
                     int col = 0;
-                    if (parameters[i]->CheckFlags(mo::Input_e))
+                    if (parameters[i]->checkFlags(mo::Input_e))
                     {
                         QInputProxy* proxy = new QInputProxy(parameters[i], node, this);
                         ui->gridLayout->addWidget(proxy->getWidget(0), i + 7, col, 1, 1);
-                        inputProxies[parameters[i]->GetTreeName()] = std::shared_ptr<QInputProxy>(proxy);
+                        inputProxies[parameters[i]->getTreeName()] = std::shared_ptr<QInputProxy>(proxy);
                         ++col;
                     }
 
-                    if (parameters[i]->CheckFlags(mo::Control_e) || parameters[i]->CheckFlags(mo::State_e) || parameters[i]->CheckFlags(mo::Output_e))
+                    if (parameters[i]->checkFlags(mo::Control_e) || parameters[i]->checkFlags(mo::State_e) || parameters[i]->checkFlags(mo::Output_e))
                     {
                         //auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
                         auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(parameters[i]);
                         if (proxy)
                         {
-                            parameterProxies[parameters[i]->GetTreeName()] = proxy;
-                            auto widget = proxy->GetParameterWidget(this);
+                            parameterProxies[parameters[i]->getTreeName()] = proxy;
+                            auto widget = proxy->getParameterWidget(this);
                             widget->installEventFilter(this);
                             widgetParamMap[widget] = parameters[i];
                             ui->gridLayout->addWidget(widget, i + 7, col, 1, 1);
@@ -435,14 +435,14 @@ QNodeWidget::~QNodeWidget()
 }
 
 void QNodeWidget::on_enableClicked(bool state)
-{    
-    //node->enabled = state;     
+{
+    //node->enabled = state;
 }
 void QNodeWidget::on_profileClicked(bool state)
 {
     /*if(node != nullptr)
         node->profile = state;*/
-    
+
 }
 
 rcc::weak_ptr<aq::Nodes::Node> QNodeWidget::getNode()
@@ -463,7 +463,7 @@ void QNodeWidget::setSelected(bool state)
 }
 
 DataStreamWidget::DataStreamWidget(QWidget* parent, aq::IDataStream::Ptr stream):
-    QWidget(parent), 
+    QWidget(parent),
     _dataStream(stream),
     ui(new Ui::DataStreamWidget())
 {
@@ -485,7 +485,7 @@ void DataStreamWidget::update_ui()
             int col = 0;
             if (parameters[i]->type & mo::IParam::Input)
             {
-                
+
             }
 
             if (parameters[i]->type & mo::IParam::Control || parameters[i]->type & mo::IParam::State || parameters[i]->type & mo::IParam::Output)
@@ -493,8 +493,8 @@ void DataStreamWidget::update_ui()
                 auto interop = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i]);
                 if (interop)
                 {
-                    parameterProxies[parameters[i]->GetTreeName()] = interop;
-                    auto widget = interop->GetParameterWidget(this);
+                    parameterProxies[parameters[i]->getTreeName()] = interop;
+                    auto widget = interop->getParameterWidget(this);
                     widget->installEventFilter(this);
                     widgetParamMap[widget] = parameters[i];
                     ui->parameter_layout->addWidget(widget, i, col, 1, 1);
@@ -534,13 +534,13 @@ QInputProxy::QInputProxy(mo::IParam* parameter_, rcc::weak_ptr<aq::Nodes::Node> 
     box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     //bc = parameter_->RegisterNotifier(boost::bind(&QInputProxy::updateUi, this, false));
-    //dc = parameter_->RegisterDeleteNotifier(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
-    onParameterUpdateSlot = mo::TypedSlot<void(mo::IParam*, mo::Context*)>(std::bind(&QInputProxy::updateUi, this, std::placeholders::_1, std::placeholders::_2, false));
-    onParameterDeleteSlot = mo::TypedSlot<void(mo::IParam const*)>(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
-    update_connection = parameter_->RegisterUpdateNotifier(&onParameterUpdateSlot);
-    delete_connection = parameter_->RegisterDeleteNotifier(&onParameterDeleteSlot);
-    //dc = parameter_->RegisterDeleteNotifier(&onParameterUpdateSlot);
-    inputParameter = dynamic_cast<mo::InputParameter*>(parameter_);
+    //dc = parameter_->registerDeleteNotifier(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
+    onParameterUpdateSlot = mo::TSlot<void(mo::IParam*, mo::Context*)>(std::bind(&QInputProxy::updateUi, this, std::placeholders::_1, std::placeholders::_2, false));
+    onParameterDeleteSlot = mo::TSlot<void(mo::IParam const*)>(std::bind(&QInputProxy::onParamDelete, this, std::placeholders::_1));
+    update_connection = parameter_->registerUpdateNotifier(&onParameterUpdateSlot);
+    delete_connection = parameter_->registerDeleteNotifier(&onParameterDeleteSlot);
+    //dc = parameter_->registerDeleteNotifier(&onParameterUpdateSlot);
+    inputParameter = dynamic_cast<mo::InputParam*>(parameter_);
     updateUi(nullptr, nullptr, true);
     connect(box, SIGNAL(currentIndexChanged(int)), this, SLOT(on_valueChanged(int)));
     prevIdx = 0;
@@ -549,9 +549,9 @@ QInputProxy::QInputProxy(mo::IParam* parameter_, rcc::weak_ptr<aq::Nodes::Node> 
 
 void QInputProxy::updateParameter(mo::IParam* parameter)
 {
-    delete_connection = parameter->RegisterDeleteNotifier(&onParameterDeleteSlot);
-    update_connection = parameter->RegisterUpdateNotifier(&onParameterUpdateSlot);
-    inputParameter = dynamic_cast<mo::InputParameter*>(parameter);
+    delete_connection = parameter->registerDeleteNotifier(&onParameterDeleteSlot);
+    update_connection = parameter->registerUpdateNotifier(&onParameterUpdateSlot);
+    inputParameter = dynamic_cast<mo::InputParam*>(parameter);
 }
 
 void QInputProxy::onParamDelete(mo::IParam const* parameter)
@@ -565,21 +565,21 @@ void QInputProxy::on_valueChanged(int idx)
     prevIdx = idx;
     if (idx == 0)
     {
-        inputParameter->SetInput(nullptr);
+        inputParameter->setInput(nullptr);
         return;
     }
     QString inputName = box->currentText();
-    LOG(debug) << "Input changed to " << inputName.toStdString() << " for variable " << dynamic_cast<mo::IParam*>(inputParameter)->GetName();
+    LOG(debug) << "Input changed to " << inputName.toStdString() << " for variable " << dynamic_cast<mo::IParam*>(inputParameter)->getName();
     auto tokens = inputName.split(":");
     //auto var_manager = node->GetVariableManager();
-    //auto tmp_param = var_manager->GetOutputParameter(inputName.toStdString());
-    
+    //auto tmp_param = var_manager->getOutputParameter(inputName.toStdString());
+
     //auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
     //DOIF(sourceNode == nullptr, "Unable to find source node"; return;, debug);
     //auto param = sourceNode->getParameter(tokens[1].toStdString());
     /*if(tmp_param)
     {
-        inputParameter->SetInput(tmp_param);
+        inputParameter->setInput(tmp_param);
         dynamic_cast<mo::IParam*>(inputParameter)->changed = true;
     }*/
 }
@@ -604,15 +604,15 @@ bool QInputProxy::eventFilter(QObject* obj, QEvent* event)
 // to the environment, this signal is then caught and used to update all input proxies.
 void QInputProxy::updateUi(mo::IParam*, mo::Context*, bool init)
 {
-    auto var_man = node->GetVariableManager();
-    auto inputs = var_man->GetOutputParameters(inputParameter->GetTypeInfo());
+    auto var_man = node->getVariableManager();
+    auto inputs = var_man->getOutputParameters(inputParameter->getTypeInfo());
     if(box->count() == 0)
     {
-        box->addItem(QString::fromStdString(dynamic_cast<mo::IParam*>(inputParameter)->GetTreeName()));    
+        box->addItem(QString::fromStdString(dynamic_cast<mo::IParam*>(inputParameter)->getTreeName()));
     }
     for(size_t i = 0; i < inputs.size(); ++i)
     {
-        QString text = QString::fromStdString(inputs[i]->GetTreeName());
+        QString text = QString::fromStdString(inputs[i]->getTreeName());
         bool found = false;
         for(int j = 0; j < box->count(); ++j)
         {
@@ -622,10 +622,10 @@ void QInputProxy::updateUi(mo::IParam*, mo::Context*, bool init)
         if(!found)
             box->addItem(text);
     }
-    auto input = inputParameter->GetInputParam();
+    auto input = inputParameter->getInputParam();
     if (input)
     {
-        auto currentInputName = input->GetTreeName();
+        auto currentInputName = input->getTreeName();
         if (currentInputName.size())
         {
             QString inputName = QString::fromStdString(currentInputName);

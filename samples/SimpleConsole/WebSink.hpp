@@ -41,7 +41,7 @@ namespace vclick
         rcc::shared_ptr<aq::Nodes::Node> h264_pass_through;
         mo::ITypedParameter<bool>* active_switch;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     public:
         boost::posix_time::ptime last_keyframe_time;
         boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::rolling_mean>> raw_bandwidth_mean;

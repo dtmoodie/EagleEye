@@ -3,8 +3,8 @@
 
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
-#include <MetaObject/Logging/Log.hpp>
-#include <MetaObject/Thread/BoostThread.h>
+#include <MetaObject/logging/Log.hpp>
+#include <MetaObject/thread/BoostThread.h>
 glib_thread::glib_thread()
 {
     _main_loop = nullptr;

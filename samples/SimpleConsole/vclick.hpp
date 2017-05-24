@@ -6,7 +6,7 @@
 
 #include <Wt/WApplication>
 #include <Aquila/nodes/Node.hpp>
-#include <MetaObject/Parameters/TypedParameterPtr.hpp>
+#include <MetaObject/params/TParamPtr.hpp>
 #include <sstream>
 #include <mutex>
 namespace Wt
@@ -52,7 +52,7 @@ namespace vclick
         std::shared_ptr<TParameterResource<std::vector<BoundingBox>>> boundingBoxStream;
         std::shared_ptr<TParameterResourceRaw<cv::Mat>> heartbeatStream;
         std::shared_ptr<TParameterResourceRaw<cv::Mat>> rawStream;
-        std::shared_ptr<mo::TypedSlot<void(mo::Context*, mo::IParam*)>> onActivate;
+        std::shared_ptr<mo::TSlot<void(mo::Context*, mo::IParam*)>> onActivate;
         std::shared_ptr<mo::Connection> onActivateConntection;
         std::shared_ptr<mo::Connection> onRawBandwidthUpdateConnection;
         std::shared_ptr<mo::Connection> onThrottledBandwidthUpdateConnection;

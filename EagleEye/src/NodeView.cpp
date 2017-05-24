@@ -71,8 +71,8 @@ void NodeView::on_parameter_clicked(mo::IParam* param, QPoint pos)
         {
             actions[2]->setEnabled(true);
             actions[3]->setEnabled(true);
-            actions[2]->setText("Display as image (" + QString::fromStdString(param->GetName()) + ")");
-            actions[3]->setText("Plot (" + QString::fromStdString(param->GetName()) + ")");
+            actions[2]->setText("Display as image (" + QString::fromStdString(param->getName()) + ")");
+            actions[3]->setText("Plot (" + QString::fromStdString(param->getName()) + ")");
             currentParam = param;
         }
     }
@@ -147,10 +147,10 @@ void NodeView::on_display_signals()
             auto node = node_widget->getNode();
             if(_signal_dialog)
             {
-                _signal_dialog->update(node->GetDataStream()->GetRelayManager());
+                _signal_dialog->update(node->getDataStream()->GetRelayManager());
             }else
             {
-                _signal_dialog = new signal_dialog(node->GetDataStream()->GetRelayManager(), this);
+                _signal_dialog = new signal_dialog(node->getDataStream()->GetRelayManager(), this);
             }
             _signal_dialog->show();
         }
@@ -184,7 +184,7 @@ void NodeView::mousePressEvent(QMouseEvent* event)
                 {
                     auto id = node->GetObjectId();
                     if(id.IsValid())
-                        fileName = aq::NodeFactory::Instance()->GetNodeFile(id);
+                        fileName = aq::NodeFactory::Instance()->getNodeFile(id);
                 }
                 QDrag* drag = new QDrag(this);
                 QMimeData* mimeData = new QMimeData();
@@ -370,7 +370,7 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
         }
         
         /*{
-            auto streamWidget = getWidget(node->GetDataStream());
+            auto streamWidget = getWidget(node->getDataStream());
             if(streamWidget)
             {
                 auto center = streamWidget->pos() += QPointF(streamWidget->size().width() / 2, streamWidget->size().height() / 2);

@@ -7,7 +7,7 @@
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
 
-#include <MetaObject/Thread/InterThread.hpp>
+#include <MetaObject/thread/InterThread.hpp>
 
 
 using namespace aq;
@@ -97,7 +97,7 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
     delete data;
 }
 */
-bool KeyFrameTracker::ProcessImpl()
+bool KeyFrameTracker::processImpl()
 {
 
     return false;
@@ -230,11 +230,11 @@ bool KeyFrameTracker::ProcessImpl()
     return img;
 }*/
 
-bool CMT::ProcessImpl()
+bool CMT::processImpl()
 {
     return false;
 }
-bool TLD::ProcessImpl()
+bool TLD::processImpl()
 {
     return false;
 }

@@ -1,8 +1,8 @@
 #include "VideoWriter.h"
 #include <boost/filesystem.hpp>
-#include "MetaObject/Logging/Profiling.hpp"
-#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include "MetaObject/logging/Profiling.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include <fstream>
 
 using namespace aq;
@@ -14,7 +14,7 @@ VideoWriter::~VideoWriter()
     _write_thread.join();
 }
 
-void VideoWriter::NodeInit(bool firstInit){
+void VideoWriter::nodeInit(bool firstInit){
     _write_thread = boost::thread(
     [this](){
         size_t video_frame_number = 0;
@@ -42,7 +42,7 @@ void VideoWriter::NodeInit(bool firstInit){
     });
 }
 
-bool VideoWriter::ProcessImpl()
+bool VideoWriter::processImpl()
 {
     if(image->empty())
         return false;
@@ -57,32 +57,32 @@ bool VideoWriter::ProcessImpl()
         if(using_gpu_writer){
             try{
                 cv::cudacodec::EncoderParams params;
-                d_writer = cv::cudacodec::createVideoWriter(outdir.string() + "/" + filename.string(), image->GetSize(), 30, params);
+                d_writer = cv::cudacodec::createVideoWriter(outdir.string() + "/" + filename.string(), image->getSize(), 30, params);
             }catch (...){
-                using_gpu_writer_param.UpdateData(false);
+                using_gpu_writer_param.updateData(false);
             }
         }
 
         if(!using_gpu_writer){
             h_writer.reset(new cv::VideoWriter);
             if(!h_writer->open(outdir.string() + "/" + filename.string(), cv::VideoWriter::fourcc('M', 'P', 'E', 'G'), 30,
-                               image->GetSize(), image->GetChannels() == 3)){
+                               image->getSize(), image->getChannels() == 3)){
                 LOG(warning) << "Unable to open video writer for file " << filename;
             }
         }
     }
     if(d_writer){
-        d_writer->write(image->getGpuMat(Stream()));
+        d_writer->write(image->getGpuMat(stream()));
     }
     if(h_writer){
-        cv::Mat h_img = image->getMat(Stream());
+        cv::Mat h_img = image->getMat(stream());
         WriteData data;
         data.img = h_img;
         data.fn = image_param.GetFrameNumber();
-        data.ts = image_param.GetTimestamp();
+        data.ts = image_param.getTimestamp();
         cuda::enqueue_callback([data, this](){
             _write_queue.enqueue(data);
-        },  Stream());
+        },  stream());
     }
     return true;
 }

@@ -1,26 +1,26 @@
 #include "DisplayHelpers.h"
-#include <MetaObject/Detail/IMetaObjectImpl.hpp>
+#include <MetaObject/object/detail/IMetaObjectImpl.hpp>
 #include <Aquila/utilities/GpuDrawing.hpp>
-#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include <fstream>
 
 using namespace aq;
 using namespace aq::Nodes;
 
-bool Scale::ProcessImpl()
+bool Scale::processImpl()
 {
     cv::cuda::GpuMat scaled;
-    cv::cuda::multiply(input->getGpuMat(Stream()), cv::Scalar(scale_factor), scaled, 1, -1, Stream());
-    output_param.UpdateData(scaled, input_param.GetTimestamp(), _ctx);
+    cv::cuda::multiply(input->getGpuMat(stream()), cv::Scalar(scale_factor), scaled, 1, -1, stream());
+    output_param.updateData(scaled, input_param.getTimestamp(), _ctx);
     return true;
 }
 MO_REGISTER_CLASS(Scale)
 
-bool AutoScale::ProcessImpl()
+bool AutoScale::processImpl()
 {
     std::vector<cv::cuda::GpuMat> channels;
-    cv::cuda::split(input_image->getGpuMat(Stream()), channels, Stream());
+    cv::cuda::split(input_image->getGpuMat(stream()), channels, stream());
     for(size_t i = 0; i < channels.size(); ++i)
     {
         double minVal, maxVal;
@@ -30,11 +30,11 @@ bool AutoScale::ProcessImpl()
         UpdateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal)->SetFlags(mo::State_e);
         UpdateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->SetFlags(mo::State_e);
     }
-    cv::cuda::merge(channels,output_image.getGpuMat(Stream()), Stream());
+    cv::cuda::merge(channels,output_image.getGpuMat(stream()), stream());
     return true;
 }
 
-bool DrawDetections::ProcessImpl()
+bool DrawDetections::processImpl()
 {
     if(colors.size() != labels->size())
     {
@@ -47,7 +47,7 @@ bool DrawDetections::ProcessImpl()
         cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
     }
     cv::cuda::GpuMat draw_image;
-    image->clone(draw_image, Stream());
+    image->clone(draw_image, stream());
     std::vector<cv::Mat> drawn_text;
 
     if(detections)
@@ -88,7 +88,7 @@ bool DrawDetections::ProcessImpl()
             }
             if(draw_detection_id)
                 ss << detection.id;
-            cv::cuda::rectangle(draw_image, rect, color, 3, Stream());
+            cv::cuda::rectangle(draw_image, rect, color, 3, stream());
 
             cv::Rect text_rect = cv::Rect(rect.tl() + cv::Point(10,20), cv::Size(200,20));
             if((cv::Rect({0,0}, draw_image.size()) & text_rect) == text_rect)
@@ -97,32 +97,32 @@ bool DrawDetections::ProcessImpl()
                 text_image.setTo(cv::Scalar::all(0));
                 cv::putText(text_image, ss.str(), {0, 15}, cv::FONT_HERSHEY_COMPLEX, 0.4, color);
                 cv::cuda::GpuMat d_text;
-                d_text.upload(text_image, Stream());
+                d_text.upload(text_image, stream());
                 cv::cuda::GpuMat text_roi = draw_image(text_rect);
-                cv::cuda::add(text_roi, d_text, text_roi, cv::noArray(), -1, Stream());
+                cv::cuda::add(text_roi, d_text, text_roi, cv::noArray(), -1, stream());
                 drawn_text.push_back(text_image); // need to prevent recycling of the images too early
             }
 
         }
     }
-    image_with_detections_param.UpdateData(draw_image, image_param.GetTimestamp(), _ctx);
+    image_with_detections_param.updateData(draw_image, image_param.getTimestamp(), _ctx);
     return true;
 }
 
-bool Normalize::ProcessImpl()
+bool Normalize::processImpl()
 {
     cv::cuda::GpuMat normalized;
 
-    if(input_image->GetChannels() == 1)
+    if(input_image->getChannels() == 1)
     {
-        cv::cuda::normalize(input_image->getGpuMat(Stream()),
+        cv::cuda::normalize(input_image->getGpuMat(stream()),
             normalized,
             alpha,
             beta,
-            norm_type.currentSelection, input_image->GetDepth(),
-            mask == NULL ? cv::noArray(): mask->getGpuMat(Stream()),
-            Stream());
-        normalized_output_param.UpdateData(normalized, input_image_param.GetTimestamp(), _ctx);
+            norm_type.currentSelection, input_image->getDepth(),
+            mask == NULL ? cv::noArray(): mask->getGpuMat(stream()),
+            stream());
+        normalized_output_param.updateData(normalized, input_image_param.getTimestamp(), _ctx);
         return true;
     }else
     {
@@ -130,10 +130,10 @@ bool Normalize::ProcessImpl()
 
         if (input_image->GetNumMats() == 1)
         {
-            cv::cuda::split(input_image->getGpuMat(Stream()), channels, Stream());
+            cv::cuda::split(input_image->getGpuMat(stream()), channels, stream());
         }else
         {
-            channels = input_image->getGpuMatVec(Stream());
+            channels = input_image->getGpuMatVec(stream());
         }
         std::vector<cv::cuda::GpuMat> normalized_channels;
         normalized_channels.resize(channels.size());
@@ -142,17 +142,17 @@ bool Normalize::ProcessImpl()
             cv::cuda::normalize(channels[i], normalized_channels,
                 alpha,
                 beta,
-                norm_type.getValue(), input_image->GetDepth(),
-                mask == NULL ? cv::noArray() : mask->getGpuMat(Stream()),
-                Stream());
+                norm_type.getValue(), input_image->getDepth(),
+                mask == NULL ? cv::noArray() : mask->getGpuMat(stream()),
+                stream());
         }
         if(input_image->GetNumMats() == 1)
         {
-            cv::cuda::merge(channels, normalized, Stream());
-            normalized_output_param.UpdateData(normalized, input_image_param.GetTimestamp(), _ctx);
+            cv::cuda::merge(channels, normalized, stream());
+            normalized_output_param.updateData(normalized, input_image_param.getTimestamp(), _ctx);
         }else
         {
-            normalized_output_param.UpdateData(normalized_channels, input_image_param.GetTimestamp(), _ctx);
+            normalized_output_param.updateData(normalized_channels, input_image_param.getTimestamp(), _ctx);
         }
         return true;
     }

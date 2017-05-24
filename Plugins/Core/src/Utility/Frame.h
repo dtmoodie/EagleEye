@@ -1,6 +1,6 @@
 #pragma once
 #include <src/precompiled.hpp>
-#include <MetaObject/Parameters/ParameterMacros.hpp>
+#include <MetaObject/params/ParamMacros.hpp>
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 
@@ -15,13 +15,13 @@ namespace Nodes
     public:
         MO_DERIVE(FrameRate, Node)
             STATUS(double, framerate, 0.0)
-            STATUS(mo::time_t, frametime, {})
+            STATUS(mo::Time_t, frametime, {})
             INPUT(SyncedMemory, input, nullptr)
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         boost::posix_time::ptime prevTime;
-        boost::optional<mo::time_t> _previous_frame_timestamp;
+        boost::optional<mo::Time_t> _previous_frame_timestamp;
     };
 
     class DetectFrameSkip: public Node
@@ -31,9 +31,9 @@ namespace Nodes
             INPUT(SyncedMemory, input, nullptr)
         MO_END;
     protected:
-        bool ProcessImpl();
-        boost::optional<mo::time_t> _prev_time;
-        boost::optional<mo::time_t> _initial_time; // used to zero base time
+        bool processImpl();
+        boost::optional<mo::Time_t> _prev_time;
+        boost::optional<mo::Time_t> _initial_time; // used to zero base time
     };
 
     class FrameLimiter : public Node
@@ -43,7 +43,7 @@ namespace Nodes
             PARAM(double, desired_framerate, 30.0)
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         boost::posix_time::ptime lastTime;
     };
 
@@ -59,7 +59,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
 
     };
     class SetMatrixValues: public Node
@@ -70,7 +70,7 @@ namespace Nodes
             OPTIONAL_INPUT(SyncedMemory, mask, nullptr)
             PARAM(cv::Scalar, replace_value, cv::Scalar::all(0))
     protected:
-        bool ProcessImpl();
+        bool processImpl();
 
     };
     class Resize : public Node
@@ -84,7 +84,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     class RescaleContours: public Node
     {
@@ -96,7 +96,7 @@ namespace Nodes
             PARAM(float, scale_y, 1.0)
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class Subtract : public Node
@@ -110,7 +110,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 }
 }

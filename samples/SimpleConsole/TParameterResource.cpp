@@ -1,7 +1,7 @@
 #ifdef HAVE_WT
 #include "TParameterResource.hpp"
 #include <Wt/WApplication>
-#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
+#include <MetaObject/serialization/SerializationFactory.hpp>
 #include <cereal/archives/json.hpp>
 using namespace vclick;
 
@@ -10,7 +10,7 @@ void TParameterResource<aq::SyncedMemory>::handleParamUpdate(mo::Context* ctx, m
     std::lock_guard<std::mutex> this_lock(mtx);
     std::stringstream* new_ss = new std::stringstream();
     auto func = mo::SerializationFunctionRegistry::Instance()->
-        GetJsonSerializationFunction(this->param->GetTypeInfo());
+        GetJsonSerializationFunction(this->param->getTypeInfo());
     boost::recursive_mutex::scoped_lock lock(this->param->mtx());
     dynamic_cast<mo::ITypedParameter<aq::SyncedMemory>*>(this->param)->GetDataPtr()->synchronize();
     if (func)

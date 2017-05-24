@@ -5,29 +5,29 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-bool FFT::ProcessImpl()
+bool FFT::processImpl()
 {
     cv::cuda::GpuMat padded;
-    if(input->GetChannels() > 2)
+    if(input->getChannels() > 2)
     {
-        LOG(debug) << "Too many channels, can only handle 1 or 2 channel input. Input has " << input->GetChannels() << " channels.";
+        LOG(debug) << "Too many channels, can only handle 1 or 2 channel input. Input has " << input->getChannels() << " channels.";
         return false;
     }
     if(use_optimized_size)
     {
-        int in_rows = input->GetSize().height;
-        int in_cols = input->GetSize().width;
+        int in_rows = input->getSize().height;
+        int in_cols = input->getSize().width;
         int rows = cv::getOptimalDFTSize(in_rows);
         int cols = cv::getOptimalDFTSize(in_cols);
-        cv::cuda::copyMakeBorder(input->getGpuMat(Stream()), padded, 0, rows - in_rows, 0, cols - in_cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), Stream());
+        cv::cuda::copyMakeBorder(input->getGpuMat(stream()), padded, 0, rows - in_rows, 0, cols - in_cols, cv::BORDER_CONSTANT, cv::Scalar::all(0), stream());
     }else
     {
-        padded = input->getGpuMat(Stream());
+        padded = input->getGpuMat(stream());
     }
     if(padded.depth() != CV_32F)
     {
         cv::cuda::GpuMat float_img;
-        padded.convertTo(float_img, CV_MAKETYPE(CV_32F, padded.channels()), Stream());
+        padded.convertTo(float_img, CV_MAKETYPE(CV_32F, padded.channels()), stream());
         padded = float_img;
     }
     int flags = 0;
@@ -40,27 +40,27 @@ bool FFT::ProcessImpl()
     if (dft_real_output)
         flags = flags | cv::DFT_REAL_OUTPUT;
     cv::cuda::GpuMat result;
-    cv::cuda::dft(padded, result, input->GetSize(),flags, Stream());
-    coefficients_param.UpdateData(result, input_param.GetTimestamp(), _ctx);
+    cv::cuda::dft(padded, result, input->getSize(),flags, stream());
+    coefficients_param.updateData(result, input_param.getTimestamp(), _ctx);
     if(magnitude_param.HasSubscriptions())
     {
         cv::cuda::GpuMat magnitude;
-        cv::cuda::magnitude(result,magnitude, Stream());
+        cv::cuda::magnitude(result,magnitude, stream());
         
         if(log_scale)
         {
-            cv::cuda::add(magnitude, cv::Scalar::all(1), magnitude, cv::noArray(), -1, Stream());
-            cv::cuda::log(magnitude, magnitude, Stream());
+            cv::cuda::add(magnitude, cv::Scalar::all(1), magnitude, cv::noArray(), -1, stream());
+            cv::cuda::log(magnitude, magnitude, stream());
         }
-        this->magnitude_param.UpdateData(magnitude, input_param.GetTimestamp(), _ctx);
+        this->magnitude_param.updateData(magnitude, input_param.getTimestamp(), _ctx);
     }
     if(phase_param.HasSubscriptions())
     {
         std::vector<cv::cuda::GpuMat> channels;
-        cv::cuda::split(result, channels, Stream());
+        cv::cuda::split(result, channels, stream());
         cv::cuda::GpuMat phase;
-        cv::cuda::phase(channels[0], channels[1], phase, false, Stream());
-        this->phase_param.UpdateData(phase, input_param.GetTimestamp(), _ctx);
+        cv::cuda::phase(channels[0], channels[1], phase, false, stream());
+        this->phase_param.updateData(phase, input_param.getTimestamp(), _ctx);
     }
     return true;
 }
@@ -79,30 +79,30 @@ cv::Mat getShiftMat(cv::Size matSize)
     return shift;
 }
 
-bool FFTPreShiftImage::ProcessImpl()
+bool FFTPreShiftImage::processImpl()
 {
-    if (d_shiftMat.size() != input->GetSize())
+    if (d_shiftMat.size() != input->getSize())
     {
-        d_shiftMat.upload(getShiftMat(input->GetSize()), Stream());
+        d_shiftMat.upload(getShiftMat(input->getSize()), stream());
     }
     cv::cuda::GpuMat result;
-    cv::cuda::multiply(d_shiftMat, input->getGpuMat(Stream()), result, 1, -1, Stream());
-    output_param.UpdateData(result, input_param.GetTimestamp(), _ctx);
+    cv::cuda::multiply(d_shiftMat, input->getGpuMat(stream()), result, 1, -1, stream());
+    output_param.updateData(result, input_param.getTimestamp(), _ctx);
     return true;
 }
 
-bool FFTPostShift::ProcessImpl()
+bool FFTPostShift::processImpl()
 {
-    if (d_shiftMat.size() != input->GetSize())
+    if (d_shiftMat.size() != input->getSize())
     {
-        d_shiftMat.upload(getShiftMat(input->GetSize()), Stream());
+        d_shiftMat.upload(getShiftMat(input->getSize()), stream());
         std::vector<cv::cuda::GpuMat> channels;
         channels.push_back(d_shiftMat);
         channels.push_back(d_shiftMat);
-        cv::cuda::merge(channels, d_shiftMat, Stream());
+        cv::cuda::merge(channels, d_shiftMat, stream());
     }
     cv::cuda::GpuMat result;
-    cv::cuda::multiply(d_shiftMat, input->getGpuMat(Stream()), result, 1 / float(input->GetSize().area()), -1, Stream());
+    cv::cuda::multiply(d_shiftMat, input->getGpuMat(stream()), result, 1 / float(input->getSize().area()), -1, stream());
     return true;
 }
 

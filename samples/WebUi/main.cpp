@@ -215,7 +215,7 @@ protected:
                 Nodes::NodeInfo* info = dynamic_cast<Nodes::NodeInfo*>(constructors[i]->GetObjectInfo());
                 if(info)
                 {
-                    WPushButton* name = new WPushButton(info->GetDisplayName());
+                    WPushButton* name = new WPushButton(info->getDisplayName());
                     table->elementAt(row, column * 2)->addWidget(name);
                     WPushButton* btn = new WPushButton();
                     btn->setText("Detailed info");
@@ -238,8 +238,8 @@ protected:
                                     root->removeChildNode(node.second);
                                 }
                                 _display_nodes.clear();
-                                std::vector<rcc::weak_ptr<Nodes::Node>> nodes = _current_stream->GetTopLevelNodes();
-                                std::string new_node_name = added_nodes[0]->GetTreeName();
+                                std::vector<rcc::weak_ptr<Nodes::Node>> nodes = _current_stream->getTopLevelNodes();
+                                std::string new_node_name = added_nodes[0]->getTreeName();
                                 for(auto& node : nodes)
                                 {
                                     if(auto ret = populateTree(node, root, new_node_name))
@@ -293,8 +293,8 @@ protected:
               auto fg_info = dynamic_cast< IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
               if (fg_info)
               {
-                  auto documents = fg_info->ListLoadablePaths();
-                  std::string fg_name = fg_info->GetDisplayName();
+                  auto documents = fg_info->listLoadablePaths();
+                  std::string fg_name = fg_info->getDisplayName();
                   for(auto document : documents)
                   {
                       table->elementAt(count, 0)->addWidget(new WText(document));
@@ -430,7 +430,7 @@ protected:
         auto ds = IDataStream::create(data, fg);
         if (ds)
         {
-            ds->StartThread();
+            ds->startThread();
             g_ctx._data_streams.push_back(ds);
         }
         std::string display_name;
@@ -453,18 +453,18 @@ protected:
 
     WTreeNode* populateTree(rcc::weak_ptr<Nodes::Node> current_node, WTreeNode* display_node, const std::string& desired_return = "")
     {
-        WTreeNode* new_node = new WTreeNode(current_node->GetTreeName(), 0, display_node);
+        WTreeNode* new_node = new WTreeNode(current_node->getTreeName(), 0, display_node);
         WTreeNode* output = nullptr;
-        if(current_node->GetTreeName() == desired_return)
+        if(current_node->getTreeName() == desired_return)
             output = new_node;
-        _display_nodes[current_node->GetTreeName()] = new_node;
+        _display_nodes[current_node->getTreeName()] = new_node;
         new_node->selected().connect(
             std::bind([this, current_node]()
             {
                 this->onNodeSelected(current_node);
 
             }));
-        auto children = current_node->GetChildren();
+        auto children = current_node->getChildren();
         for(auto& child : children)
         {
             auto ret = populateTree(child, new_node, desired_return);
@@ -486,7 +486,7 @@ protected:
         _node_tree->setTreeRoot(root_node);
         root_node->label()->setTextFormat(Wt::PlainText);
 
-        std::vector<rcc::weak_ptr<Nodes::Node>> nodes = stream->GetTopLevelNodes();
+        std::vector<rcc::weak_ptr<Nodes::Node>> nodes = stream->getTopLevelNodes();
 
         for(auto& node : nodes)
         {
@@ -499,7 +499,7 @@ protected:
         this->_current_node = node;
         _parameter_display->show();
         _parameter_display->clear();
-        auto params = node->GetAllParameters();
+        auto params = node->getAllParams();
         for(auto param : params)
         {
             auto widget = UI::wt::WidgetFactory::Instance()->CreateWidget(param, this);
@@ -540,23 +540,23 @@ protected:
                 }
             }else
             {
-                if(param->CheckFlags(Input_e))
+                if(param->checkFlags(Input_e))
                 {
                     // Get a list of all possible input parameters
                     auto box = new WComboBox();
-                    box->addItem(param->GetTreeName());
-                    auto all_nodes = node->GetDataStream()->GetAllNodes();
-                    auto input = dynamic_cast<InputParameter*>(param);
+                    box->addItem(param->getTreeName());
+                    auto all_nodes = node->getDataStream()->getAllNodes();
+                    auto input = dynamic_cast<InputParam*>(param);
                     if(input)
                     {
                         for(auto output_node : all_nodes)
                         {
-                            auto output_params = output_node->GetAllParameters();
+                            auto output_params = output_node->getAllParams();
                             for(auto output : output_params)
                             {
-                                if(input->AcceptsInput(output))
+                                if(input->acceptsInput(output))
                                 {
-                                    box->addItem(output->GetTreeName());
+                                    box->addItem(output->getTreeName());
                                 }
                             }
                         }
@@ -566,32 +566,32 @@ protected:
                     {
                         rcc::shared_ptr<Nodes::Node> node_ = node;
                         auto output_name = box->currentText().toUTF8();
-                        if(output_name == input->GetTreeName())
+                        if(output_name == input->getTreeName())
                         {
-                            input->SetInput(nullptr);
+                            input->setInput(nullptr);
                             return;
                         }
                         auto pos = output_name.find(':');
                         if(pos == std::string::npos)
                             return;
-                        auto output_node = node_->GetDataStream()->GetNode(output_name.substr(0, pos));
+                        auto output_node = node_->getDataStream()->getNode(output_name.substr(0, pos));
                         if(output_node)
                         {
-                            auto output_param = output_node->GetOutput(output_name.substr(pos + 1));
+                            auto output_param = output_node->getOutput(output_name.substr(pos + 1));
                             if(output_param)
                             {
-                                input->SetInput(output_param);
+                                input->setInput(output_param);
                             }
                         }
                     }));
                     _parameter_display->addWidget(box);
-                }else if(param->CheckFlags(Output_e))
+                }else if(param->checkFlags(Output_e))
                 {
 
                 }else
                 {
-                    auto text = new WText(param->GetTreeName());
-                    text->setToolTip(param->GetTypeInfo().name());
+                    auto text = new WText(param->getTreeName());
+                    text->setToolTip(param->getTypeInfo().name());
                     _parameter_display->addWidget(text);
                 }
 
@@ -632,7 +632,7 @@ int main(int argc, char** argv)
     aq::SetupLogging();
     mo::MetaObjectFactory::instance()->registerTranslationUnit();
     auto g_allocator = mo::Allocator::getThreadSafeAllocator();
-    g_allocator->SetName("Global Allocator");
+    g_allocator->setName("Global Allocator");
     //mo::SetGpuAllocatorHelper<cv::cuda::GpuMat>(g_allocator);
     //mo::SetCpuAllocatorHelper<cv::Mat>(g_allocator);
     GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(g_allocator);

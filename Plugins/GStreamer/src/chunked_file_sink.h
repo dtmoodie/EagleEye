@@ -47,7 +47,7 @@ namespace aq
             PARAM(std::string, pipeline, "");
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     }
 }

@@ -1,6 +1,6 @@
 #pragma once
-
 #include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 
 namespace aq
 {
@@ -15,7 +15,7 @@ namespace aq
                 PARAM(int, frame_skip, 30)
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             int frame_count = 0;
         };
     }

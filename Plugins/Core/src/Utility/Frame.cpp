@@ -1,34 +1,33 @@
 #include "Frame.h"
 #include "Aquila/rcc/external_includes/cv_cudawarping.hpp"
 #include "Aquila/rcc/external_includes/cv_cudaarithm.hpp"
-#include <Aquila/Qualifiers.hpp>
-#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;
 
 
-bool FrameRate::ProcessImpl()
+bool FrameRate::processImpl()
 {
     boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta = currentTime - prevTime;
     prevTime = currentTime;
-    framerate_param.UpdateData(1000.0 / (double)delta.total_milliseconds());
-    auto ts = input_param.GetTimestamp();
+    framerate_param.updateData(1000.0 / (double)delta.total_milliseconds());
+    auto ts = input_param.getTimestamp();
     if(ts && _previous_frame_timestamp)
     {
-        mo::time_t ts_delta =  *ts - *_previous_frame_timestamp;
-        frametime_param.UpdateData(ts_delta);
+        mo::Time_t ts_delta =  *ts - *_previous_frame_timestamp;
+        frametime_param.updateData(ts_delta);
     }
-    _previous_frame_timestamp = input_param.GetTimestamp();
+    _previous_frame_timestamp = input_param.getTimestamp();
     return true;
 }
 MO_REGISTER_CLASS(FrameRate)
 
-bool DetectFrameSkip::ProcessImpl()
+bool DetectFrameSkip::processImpl()
 {
-    auto cur_time = input_param.GetTimestamp();
+    auto cur_time = input_param.getTimestamp();
 
     if(cur_time)
     {
@@ -50,7 +49,7 @@ bool DetectFrameSkip::ProcessImpl()
 }
 MO_REGISTER_CLASS(DetectFrameSkip)
 
-bool FrameLimiter::ProcessImpl()
+bool FrameLimiter::processImpl()
 {
     auto currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta(currentTime - lastTime);
@@ -64,54 +63,54 @@ bool FrameLimiter::ProcessImpl()
 }
 MO_REGISTER_CLASS(FrameLimiter)
 
-bool CreateMat::ProcessImpl()
+bool CreateMat::processImpl()
 {
-    if(data_type_param._modified || channels_param._modified || width_param._modified || height_param._modified || fill_param._modified)
+    if(data_type_param.modified() || channels_param.modified() || width_param.modified() || height_param.modified() || fill_param.modified())
     {
         cv::cuda::GpuMat mat;
         mat.create(height, width, CV_MAKETYPE(data_type.getValue(), channels));
-        output_param.UpdateData(mat);
-        data_type_param._modified = false;
-        channels_param._modified = false;
-        width_param._modified = false;
-        height_param._modified = false;
-        fill_param._modified = false;
+        output_param.updateData(mat);
+        data_type_param.modified(false);
+        channels_param.modified(false);
+        width_param.modified(false);
+        height_param.modified(false);
+        fill_param.modified(false);
     }
-    output.getGpuMatMutable(Stream()).setTo(fill, Stream());
+    output.getGpuMatMutable(stream()).setTo(fill, stream());
     return true;
 }
 MO_REGISTER_CLASS(CreateMat)
 
-bool SetMatrixValues::ProcessImpl()
+bool SetMatrixValues::processImpl()
 {
 
     /*if(mask)
     {
-        input->getGpuMatMutable(Stream()).setTo(replace_value, mask->getGpuMat(Stream()), Stream());
+        input->getGpuMatMutable(stream()).setTo(replace_value, mask->getGpuMat(stream()), stream());
     }else
     {
-        input->getGpuMatMutable(Stream()).setTo(replace_value, Stream());
+        input->getGpuMatMutable(stream()).setTo(replace_value, stream());
     }*/
     return true;
 }
 //MO_REGISTER_CLASS(SetMatrixValues)
 
-bool Resize::ProcessImpl()
+bool Resize::processImpl()
 {
     if(input && !input->empty())
     {
         if (input->getSyncState() < SyncedMemory::DEVICE_UPDATED)
         {
             cv::Mat resized;
-            cv::resize(input->getMat(Stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue());
-            output_param.UpdateData(resized, input_param.GetTimestamp(), _ctx);
+            cv::resize(input->getMat(stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue());
+            output_param.updateData(resized, input_param.getTimestamp(), _ctx);
             return true;
         }
         else
         {
             cv::cuda::GpuMat resized;
-            cv::cuda::resize(input->getGpuMat(Stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue(), Stream());
-            output_param.UpdateData(resized, input_param.GetTimestamp(), _ctx);
+            cv::cuda::resize(input->getGpuMat(stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue(), stream());
+            output_param.updateData(resized, input_param.getTimestamp(), _ctx);
             return true;
         }
     }
@@ -119,20 +118,20 @@ bool Resize::ProcessImpl()
 }
 MO_REGISTER_CLASS(Resize)
 
-bool Subtract::ProcessImpl()
+bool Subtract::processImpl()
 {
     if (input->getSyncState() < SyncedMemory::DEVICE_UPDATED)
     {
-        cv::subtract(input->getMat(Stream()), value, output.getMatMutable(Stream()), mask ? mask->getMat(Stream()) : cv::noArray(),  dtype.getValue());
+        cv::subtract(input->getMat(stream()), value, output.getMatMutable(stream()), mask ? mask->getMat(stream()) : cv::noArray(),  dtype.getValue());
     }else
     {
-        cv::cuda::subtract(input->getGpuMat(Stream()), value, output.getGpuMatMutable(Stream()), mask ? mask->getGpuMat(Stream()) : cv::noArray(), dtype.getValue(), Stream());
+        cv::cuda::subtract(input->getGpuMat(stream()), value, output.getGpuMatMutable(stream()), mask ? mask->getGpuMat(stream()) : cv::noArray(), dtype.getValue(), stream());
     }
     return true;
 }
 MO_REGISTER_CLASS(Subtract)
 
-bool RescaleContours::ProcessImpl()
+bool RescaleContours::processImpl()
 {
     output.resize(input->size());
     for(int i = 0; i < input->size(); ++i)
@@ -144,7 +143,7 @@ bool RescaleContours::ProcessImpl()
             output[i][j].y = (*input)[i][j].y * scale_y;
         }
     }
-    output_param.Commit(input_param.GetTimestamp(), _ctx);
+    output_param.emitUpdate(input_param.getTimestamp(), _ctx);
     return true;
 }
 

@@ -1,12 +1,12 @@
 #include "RosSubscriber.hpp"
-#include <Aquila/Nodes/FrameGrabberInfo.hpp>
+#include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
 #include "RosInterface.hpp"
 #include <ros/ros.h>
 
 using namespace aq;
 using namespace aq::Nodes;
 
-std::vector<std::string> RosSubscriber::ListLoadablePaths()
+std::vector<std::string> RosSubscriber::listLoadablePaths()
 {
     return ros::IMessageReader::ListSubscribableTopics();
 }
@@ -15,7 +15,7 @@ int RosSubscriber::CanLoadDocument(const std::string& topic)
     return ros::IMessageReader::CanLoadTopic(topic);
 }
 
-bool RosSubscriber::Load(std::string file_path)
+bool RosSubscriber::loadData(std::string file_path)
 {
     for(auto reader : _readers)
     {
@@ -28,28 +28,28 @@ bool RosSubscriber::Load(std::string file_path)
     if(reader)
     {
         _readers.push_back(reader);
-        this->AddComponent(reader);
+        this->addComponent(reader);
         return true;
     }
     return false;
 }
 
 
-void RosSubscriber::AddComponent(rcc::weak_ptr<Algorithm> component)
+void RosSubscriber::addComponent(rcc::weak_ptr<Algorithm> component)
 {
     auto typed = component.DynamicCast<ros::IMessageReader>();
     if(typed)
     {
         _readers.push_back(typed);
-        Algorithm::AddComponent(component);
+        Algorithm::addComponent(component);
     }
 }
-void RosSubscriber::NodeInit(bool firstInit)
+void RosSubscriber::nodeInit(bool firstInit)
 {
     aq::RosInterface::Instance();
 }
 
-bool RosSubscriber::ProcessImpl()
+bool RosSubscriber::processImpl()
 {
     Node* This = this;
     sig_node_updated(This);

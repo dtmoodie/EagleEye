@@ -1,6 +1,6 @@
 #include <Aquila/plotters/PlotManager.h>
 #include "Aquila/plotters/Plotter.h"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include "plotwizarddialog.h"
 #include "ui_plotwizarddialog.h"
 
@@ -123,12 +123,12 @@ void PlotWizardDialog::plotParameter(mo::IParam* param)
 {
     this->show();
     //ui->tabWidget->setCurrentIndex(0);
-    ui->inputDataType->setText(QString::fromStdString(param->GetTypeInfo().name()));
+    ui->inputDataType->setText(QString::fromStdString(param->getTypeInfo().name()));
     for(int i = 0; i < previewPlotters.size(); ++i)
     {
         if(previewPlotters[i]->AcceptsParameter(param))
         {
-            previewPlotters[i]->SetInput(param);
+            previewPlotters[i]->setInput(param);
             previewPlots[i]->show();
             previewPlots[i]->setMinimumHeight(200);
             auto itr = previewPlotControllers.find(previewPlots[i]);
@@ -138,7 +138,7 @@ void PlotWizardDialog::plotParameter(mo::IParam* param)
             }
         }else
         {
-            previewPlotters[i]->SetInput();
+            previewPlotters[i]->setInput();
             previewPlots[i]->hide();
             auto itr = previewPlotControllers.find(previewPlots[i]);
             if (itr != previewPlotControllers.end())

@@ -71,7 +71,7 @@ TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
                 {
                     cv::cuda::GpuMat d_mat;
                     d_mat.upload(h_mat, stream);
-                    current_frame = TS<SyncedMemory>(mo::time_t(mo::ms*h_cam->get(cv::CAP_PROP_POS_MSEC)), (size_t)frame_count++, h_mat, d_mat);
+                    current_frame = TS<SyncedMemory>(mo::Time_t(mo::ms*h_cam->get(cv::CAP_PROP_POS_MSEC)), (size_t)frame_count++, h_mat, d_mat);
                     return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
                 }
             }
@@ -87,7 +87,7 @@ TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
     _reconnect = true;
     return TS<SyncedMemory>();
 }
-void frame_grabber_rtsp::NodeInit(bool firstInit)
+void frame_grabber_rtsp::nodeInit(bool firstInit)
 {
     frame_grabber_cv::Init(firstInit);
     _reconnect = false;

@@ -1,53 +1,53 @@
 #include "FeatureDetection.h"
-#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;
 
 
-bool GoodFeaturesToTrack::ProcessImpl()
+bool GoodFeaturesToTrack::processImpl()
 {
     cv::cuda::GpuMat grey;
-    if(input->GetChannels() != 1)
+    if(input->getChannels() != 1)
     {
-        cv::cuda::cvtColor(input->getGpuMat(Stream()), grey, cv::COLOR_BGR2GRAY, 0, Stream());
+        cv::cuda::cvtColor(input->getGpuMat(stream()), grey, cv::COLOR_BGR2GRAY, 0, stream());
     }else
     {
-        grey = input->getGpuMat(Stream());
+        grey = input->getGpuMat(stream());
     }
-    if(!detector || max_corners_param._modified || quality_level_param._modified || min_distance_param._modified || block_size_param._modified
-        || use_harris_param._modified/* || harris_K_param._modified*/)
+    if(!detector || max_corners_param.modified() || quality_level_param.modified() || min_distance_param.modified() || block_size_param.modified()
+        || use_harris_param.modified()/* || harris_K_param.modified()*/)
     {
-        detector = cv::cuda::createGoodFeaturesToTrackDetector(input->GetDepth(), max_corners, quality_level, min_distance, block_size, use_harris);
-        max_corners_param._modified = false;
-        quality_level_param._modified  = false;
-        min_distance_param._modified = false;
-        block_size_param._modified = false;
-        use_harris_param._modified = false;
+        detector = cv::cuda::createGoodFeaturesToTrackDetector(input->getDepth(), max_corners, quality_level, min_distance, block_size, use_harris);
+        max_corners_param.modified(false);
+        quality_level_param.modified()  = false;
+        min_distance_param.modified(false);
+        block_size_param.modified(false);
+        use_harris_param.modified(false);
     }
     cv::cuda::GpuMat keypoints;
     if(mask)
     {
-        detector->detect(grey, keypoints, mask->getGpuMat(Stream()), Stream());
+        detector->detect(grey, keypoints, mask->getGpuMat(stream()), stream());
     }
     else
     {
-        detector->detect(grey, keypoints, cv::noArray(), Stream());
+        detector->detect(grey, keypoints, cv::noArray(), stream());
     }
-    key_points_param.UpdateData(keypoints, input_param.GetTimestamp(), _ctx);
-    num_corners_param.UpdateData(keypoints.cols, input_param.GetTimestamp(), _ctx);
+    key_points_param.updateData(keypoints, input_param.getTimestamp(), _ctx);
+    num_corners_param.updateData(keypoints.cols, input_param.getTimestamp(), _ctx);
     return true;
 }
 
 
 
-bool FastFeatureDetector::ProcessImpl()
+bool FastFeatureDetector::processImpl()
 {
-    if(threshold_param._modified ||
-        use_nonmax_suppression_param._modified ||
-        fast_type_param._modified ||
-        max_points_param._modified ||
+    if(threshold_param.modified() ||
+        use_nonmax_suppression_param.modified() ||
+        fast_type_param.modified() ||
+        max_points_param.modified() ||
         detector == nullptr)
     {
         detector = cv::cuda::FastFeatureDetector::create(threshold, use_nonmax_suppression, fast_type.getValue(), max_points);
@@ -55,14 +55,14 @@ bool FastFeatureDetector::ProcessImpl()
     cv::cuda::GpuMat keypoints;
     if(mask)
     {
-        detector->detectAsync(input->getGpuMat(Stream()), keypoints, mask->getGpuMat(Stream()), Stream());
+        detector->detectAsync(input->getGpuMat(stream()), keypoints, mask->getGpuMat(stream()), stream());
     }else
     {
-        detector->detectAsync(input->getGpuMat(Stream()), keypoints, cv::noArray(), Stream());
+        detector->detectAsync(input->getGpuMat(stream()), keypoints, cv::noArray(), stream());
     }
     if(!keypoints.empty())
     {
-        keypoints_param.UpdateData(keypoints, input_param.GetTimestamp(), _ctx);
+        keypoints_param.updateData(keypoints, input_param.getTimestamp(), _ctx);
     }
     return true;
 }
@@ -75,67 +75,67 @@ bool FastFeatureDetector::ProcessImpl()
 
 
 
-bool ORBFeatureDetector::ProcessImpl()
+bool ORBFeatureDetector::processImpl()
 {
-    if(num_features_param._modified || scale_factor_param._modified ||
-        num_levels_param._modified || edge_threshold_param._modified ||
-        first_level_param._modified || WTA_K_param._modified || score_type_param._modified ||
-        patch_size_param._modified || fast_threshold_param._modified || blur_for_descriptor_param._modified ||
+    if(num_features_param.modified() || scale_factor_param.modified() ||
+        num_levels_param.modified() || edge_threshold_param.modified() ||
+        first_level_param.modified() || WTA_K_param.modified() || score_type_param.modified() ||
+        patch_size_param.modified() || fast_threshold_param.modified() || blur_for_descriptor_param.modified() ||
         detector == nullptr)
     {
         detector = cv::cuda::ORB::create(num_features, scale_factor, num_levels, edge_threshold, first_level,
             WTA_K, score_type.getValue(), patch_size, fast_threshold, blur_for_descriptor);
-        num_features_param._modified = false;
-        scale_factor_param._modified = false;
-        num_levels_param._modified = false;
-        edge_threshold_param._modified = false;
-        first_level_param._modified = false;
-        WTA_K_param._modified = false;
-        score_type_param._modified = false;
-        patch_size_param._modified = false;
-        fast_threshold_param._modified = false;
-        blur_for_descriptor_param._modified = false;
+        num_features_param.modified(false);
+        scale_factor_param.modified(false);
+        num_levels_param.modified(false);
+        edge_threshold_param.modified(false);
+        first_level_param.modified(false);
+        WTA_K_param.modified(false);
+        score_type_param.modified(false);
+        patch_size_param.modified(false);
+        fast_threshold_param.modified(false);
+        blur_for_descriptor_param.modified(false);
     }
     cv::cuda::GpuMat keypoints;
     cv::cuda::GpuMat descriptors;
     if(mask)
     {
-        detector->detectAndComputeAsync(input->getGpuMat(Stream()), mask->getGpuMat(Stream()), keypoints, descriptors, false, Stream());
+        detector->detectAndComputeAsync(input->getGpuMat(stream()), mask->getGpuMat(stream()), keypoints, descriptors, false, stream());
     }else
     {
-        detector->detectAndComputeAsync(input->getGpuMat(Stream()), cv::noArray(), keypoints, descriptors, false, Stream());
+        detector->detectAndComputeAsync(input->getGpuMat(stream()), cv::noArray(), keypoints, descriptors, false, stream());
     }
-    keypoints_param.UpdateData(keypoints, input_param.GetTimestamp(), _ctx);
-    descriptors_param.UpdateData(descriptors, input_param.GetTimestamp(), _ctx);
+    keypoints_param.updateData(keypoints, input_param.getTimestamp(), _ctx);
+    descriptors_param.updateData(descriptors, input_param.getTimestamp(), _ctx);
     return true;
 }
 
 
 
 
-bool CornerHarris::ProcessImpl()
+bool CornerHarris::processImpl()
 {
-    if(block_size_param._modified || sobel_aperature_size_param._modified || harris_free_parameter_param._modified || detector == nullptr)
+    if(block_size_param.modified() || sobel_aperature_size_param.modified() || harris_free_parameter_param.modified() || detector == nullptr)
     {
         detector = cv::cuda::createHarrisCorner(input->GetType(), block_size, sobel_aperature_size, harris_free_parameter);
     }
     cv::cuda::GpuMat score;
-    detector->compute(input->getGpuMat(Stream()), score, Stream());
-    score_param.UpdateData(score, input_param.GetTimestamp(), _ctx);
+    detector->compute(input->getGpuMat(stream()), score, stream());
+    score_param.updateData(score, input_param.getTimestamp(), _ctx);
     return true;
 }
 
 
 
-bool CornerMinEigenValue::ProcessImpl()
+bool CornerMinEigenValue::processImpl()
 {
-    if (block_size_param._modified || sobel_aperature_size_param._modified || harris_free_parameter_param._modified || detector == nullptr)
+    if (block_size_param.modified() || sobel_aperature_size_param.modified() || harris_free_parameter_param.modified() || detector == nullptr)
     {
         detector = cv::cuda::createMinEigenValCorner(input->GetType(), block_size, sobel_aperature_size, harris_free_parameter);
     }
     cv::cuda::GpuMat score;
-    detector->compute(input->getGpuMat(Stream()), score, Stream());
-    score_param.UpdateData(score, input_param.GetTimestamp(), _ctx);
+    detector->compute(input->getGpuMat(stream()), score, stream());
+    score_param.updateData(score, input_param.getTimestamp(), _ctx);
     return true;
 }
 

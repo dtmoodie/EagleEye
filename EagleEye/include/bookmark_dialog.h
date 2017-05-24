@@ -30,8 +30,8 @@ private:
     Ui::bookmark_dialog *ui;
     std::set<std::string> bookmarks;
     std::set<std::string> history;
-    mo::TypedParameterPtr<std::set<std::string>> history_param;
-    mo::TypedParameterPtr<std::set<std::string>> bookmarks_param;
+    mo::TParamPtr<std::set<std::string>> history_param;
+    mo::TParamPtr<std::set<std::string>> bookmarks_param;
 };
 
 #endif // BOOKMARK_DIALOG_H

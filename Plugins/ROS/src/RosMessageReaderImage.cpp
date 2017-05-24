@@ -7,7 +7,7 @@
 #include "RosInterface.hpp"
 #include <cv_bridge/cv_bridge.h>
 #include <Aquila/types/SyncedMemory.hpp>
-#include "MetaObject/Detail/AllocatorImpl.hpp"
+#include "MetaObject/core/detail/AllocatorImpl.hpp"
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 
@@ -65,7 +65,7 @@ public:
         return true;
     }
 
-    bool ProcessImpl()
+    bool processImpl()
     {
         return true;
     }
@@ -100,14 +100,14 @@ public:
         size_t src_stride = (depth==CV_8U ? 1 : 2) * msg->width * c;
         cudaMemcpy2DAsync(gpu_buf.datastart, gpu_buf.step, (const void*)msg->data.data(),
                      src_stride, src_stride, msg->height, cudaMemcpyHostToDevice,
-                          cv::cuda::StreamAccessor::getStream(_ctx->GetStream()));
+                          _ctx->getCudaStream());
         if(c == 1 && sensor_msgs::image_encodings::isBayer(enc))
         {
             cv::cuda::GpuMat color;
-            cv::cuda::demosaicing(gpu_buf, color, cvBayerCode(enc), -1, _ctx->GetStream());
+            cv::cuda::demosaicing(gpu_buf, color, cvBayerCode(enc), -1, _ctx->getStream());
             gpu_buf = color;
         }
-        image_param.UpdateData(gpu_buf, mo::tag::_timestamp = mo::second * msg->header.stamp.toSec(),
+        image_param.updateData(gpu_buf, mo::tag::_timestamp = mo::second * msg->header.stamp.toSec(),
                                mo::tag::_frame_number = msg->header.seq, _ctx);
     }
 

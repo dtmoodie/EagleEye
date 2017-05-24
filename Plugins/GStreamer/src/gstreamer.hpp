@@ -6,11 +6,11 @@
 #include <gst/rtsp-server/rtsp-server.h>
 #endif
 #include "Aquila/nodes/Node.hpp"
-#include "Aquila/Detail/Export.hpp"
+#include "Aquila/core/detail/Export.hpp"
 #include "Aquila/Detail/PluginExport.hpp"
-#include <Aquila/utilities/CudaUtils.hpp>
+#include <Aquila/utilities/cuda/CudaUtils.hpp>
 #include <Aquila/types/Stamped.hpp>
-#include <MetaObject/MetaObject.hpp>
+#include <MetaObject/object/MetaObject.hpp>
 
 #include <gst/gst.h>
 #include <gst/gstelement.h>
@@ -170,7 +170,7 @@ namespace aq
                 PROPERTY(GstClockTime, timestamp, 0);
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
 #ifdef HAVE_GST_RTSPSERVER
         class PLUGIN_EXPORTS RTSP_server_new : public Node
@@ -197,7 +197,7 @@ namespace aq
             void onPipeChange();
             void setup(std::string pipeOverride = std::string());
             ~RTSP_server_new();
-            virtual void NodeInit(bool firstInit);
+            virtual void nodeInit(bool firstInit);
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
             cv::Size imgSize;
         };

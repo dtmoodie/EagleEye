@@ -1,8 +1,7 @@
 #pragma once
-
-#include "Aquila/nodes/Node.hpp"
-
-#include "Aquila/utilities/GpuDrawing.hpp"
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
+#include <Aquila/utilities/GpuDrawing.hpp>
 
 namespace aq
 {
@@ -17,7 +16,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, {})
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 }
 }

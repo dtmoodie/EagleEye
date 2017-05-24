@@ -1,35 +1,35 @@
 #include "ImageDisplay.h"
 #include "../precompiled.hpp"
-#include <MetaObject/Thread/InterThread.hpp>
-#include <Aquila/utilities/CudaCallbacks.hpp>
-#include <Aquila/utilities/UiCallbackHandlers.h>
-#include <MetaObject/Logging/Profiling.hpp>
-#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include <MetaObject/thread/InterThread.hpp>
+#include <Aquila/utilities/cuda/CudaCallbacks.hpp>
+#include <Aquila/gui/UiCallbackHandlers.h>
+#include <MetaObject/logging/Profiling.hpp>
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 
 
 using namespace aq;
 using namespace aq::Nodes;
 
-bool QtImageDisplay::ProcessImpl()
+bool QtImageDisplay::processImpl()
 {
     cv::Mat mat;
-    boost::optional<mo::time_t> ts;
+    boost::optional<mo::Time_t> ts;
     bool overlay = overlay_timestamp;
     if(image && !image->empty())
     {
-        mat = image->getMat(Stream());
-        ts = image_param.GetTimestamp();
+        mat = image->getMat(stream());
+        ts = image_param.getTimestamp();
     }
     if(cpu_mat)
     {
         mat = *cpu_mat;
     }
 
-    std::string name = GetTreeName();
+    std::string name = getTreeName();
     if(!mat.empty())
     {
-        size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
+        size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
 
         aq::cuda::enqueue_callback_async(
             [mat, name, overlay, ts, this]()->void
@@ -43,8 +43,8 @@ bool QtImageDisplay::ProcessImpl()
                 ss << "Timestamp: " << ts;
                 cv::putText(mat, ss.str(), cv::Point(20,40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0,255,0));
             }
-            GetDataStream()->GetWindowCallbackManager()->imshow(name, draw_img);
-        }, gui_thread_id, Stream());
+            getDataStream()->GetWindowCallbackManager()->imshow(name, draw_img);
+        }, gui_thread_id, stream());
 
         return true;
     }
@@ -52,79 +52,79 @@ bool QtImageDisplay::ProcessImpl()
 }
 
 
-bool KeyPointDisplay::ProcessImpl()
+bool KeyPointDisplay::processImpl()
 {
     return true;
 }
 
-bool FlowVectorDisplay::ProcessImpl()
+bool FlowVectorDisplay::processImpl()
 {
     return true;
 }
 
-bool HistogramDisplay::ProcessImpl()
+bool HistogramDisplay::processImpl()
 {
     if(draw.empty())
     {
         cv::Mat h_draw;
-        h_draw.create(100, 256, CV_MAKE_TYPE(CV_8U, histogram->GetChannels()));
+        h_draw.create(100, 256, CV_MAKE_TYPE(CV_8U, histogram->getChannels()));
         h_draw.setTo(cv::Scalar::all(0));
         // Add tick marks to the top of the histogram
         cv::line(h_draw, {256/2, 0}, {256/2, 5}, cv::Scalar::all(255));
         cv::line(h_draw, {256/4, 0}, {256/4, 3}, cv::Scalar::all(255));
         cv::line(h_draw, {3*256/4, 0}, {3*256/4, 3}, cv::Scalar::all(255));
-        draw.upload(h_draw, Stream());
+        draw.upload(h_draw, stream());
     }
     cv::cuda::GpuMat output_image;
-    cv::cuda::drawHistogram(histogram->getGpuMat(Stream()), output_image, cv::noArray(), Stream());
-    std::string name = GetTreeName();
-    size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
-    //draw.copyTo(output_image, Stream());
-    cv::cuda::add(output_image, draw, output_image, cv::noArray(), -1, Stream());
+    cv::cuda::drawHistogram(histogram->getGpuMat(stream()), output_image, cv::noArray(), stream());
+    std::string name = getTreeName();
+    size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
+    //draw.copyTo(output_image, stream());
+    cv::cuda::add(output_image, draw, output_image, cv::noArray(), -1, stream());
     aq::cuda::enqueue_callback_async(
                 [name, output_image, this]()->void
     {
         PROFILE_RANGE(imshow);
-        GetDataStream()->GetWindowCallbackManager()->imshowd(name, output_image, cv::WINDOW_OPENGL);
-    }, gui_thread_id, Stream());
+        getDataStream()->GetWindowCallbackManager()->imshowd(name, output_image, cv::WINDOW_OPENGL);
+    }, gui_thread_id, stream());
     return true;
 }
 
-bool HistogramOverlay::ProcessImpl()
+bool HistogramOverlay::processImpl()
 {
     if(draw.empty())
     {
         cv::Mat h_draw;
-        h_draw.create(100, 256, CV_MAKE_TYPE(CV_8U, histogram->GetChannels()));
+        h_draw.create(100, 256, CV_MAKE_TYPE(CV_8U, histogram->getChannels()));
         h_draw.setTo(cv::Scalar::all(0));
         // Add tick marks to the top of the histogram
         cv::line(h_draw, {256/2, 0}, {256/2, 5}, cv::Scalar::all(255));
         cv::line(h_draw, {256/4, 0}, {256/4, 3}, cv::Scalar::all(255));
         cv::line(h_draw, {3*256/4, 0}, {3*256/4, 3}, cv::Scalar::all(255));
-        draw.upload(h_draw, Stream());
+        draw.upload(h_draw, stream());
     }
     cv::cuda::GpuMat output_image;
-    image->clone(output_image, Stream());
+    image->clone(output_image, stream());
 
-    cv::cuda::drawHistogram(histogram->getGpuMat(Stream()), output_image(cv::Rect(0,0, 256, 100)), cv::noArray(), Stream());
-    //draw.copyTo(output_image(cv::Rect(0,0,256,100)), Stream());
+    cv::cuda::drawHistogram(histogram->getGpuMat(stream()), output_image(cv::Rect(0,0, 256, 100)), cv::noArray(), stream());
+    //draw.copyTo(output_image(cv::Rect(0,0,256,100)), stream());
     cv::cuda::add(output_image(cv::Rect(0,0,256,100)), draw, output_image(cv::Rect(0,0,256,100)),
-                  cv::noArray(), -1, Stream());
-    output_param.UpdateData(output_image, image_param.GetTimestamp(), _ctx);
+                  cv::noArray(), -1, stream());
+    output_param.updateData(output_image, image_param.getTimestamp(), _ctx);
     return true;
 }
 
-bool DetectionDisplay::ProcessImpl()
+bool DetectionDisplay::processImpl()
 {
     return true;
 }
 
-bool OGLImageDisplay::ProcessImpl()
+bool OGLImageDisplay::processImpl()
 {
-    std::string name = GetTreeName();
-    size_t gui_thread_id = mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI);
-    cv::cuda::GpuMat gpumat = image->getGpuMat(Stream());
-    auto ts = image_param.GetTimestamp();
+    std::string name = getTreeName();
+    size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
+    cv::cuda::GpuMat gpumat = image->getGpuMat(stream());
+    auto ts = image_param.getTimestamp();
     if(!_prev_time)
         _prev_time = ts;
     auto prev = _prev_time;
@@ -132,12 +132,12 @@ bool OGLImageDisplay::ProcessImpl()
                 [name, this, gpumat, ts, prev]()->void
     {
         PROFILE_RANGE(imshow);
-        GetDataStream()->GetWindowCallbackManager()->imshowd(name, gpumat, cv::WINDOW_OPENGL);
+        getDataStream()->GetWindowCallbackManager()->imshowd(name, gpumat, cv::WINDOW_OPENGL);
         if(ts)
         {
             //std::cout << *ts - *prev  << std::endl;
         }
-    }, gui_thread_id, Stream());
+    }, gui_thread_id, stream());
     _prev_time = ts;
     return true;
 }

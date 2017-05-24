@@ -1,6 +1,6 @@
 #pragma once
 #include "CaffeNetHandler.hpp"
-#include "Aquila/ObjectDetection.hpp"
+#include "Aquila/types/ObjectDetection.hpp"
 namespace aq
 {
     namespace Caffe

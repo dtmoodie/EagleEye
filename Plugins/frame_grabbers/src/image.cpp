@@ -12,7 +12,7 @@ bool GrabberImage::Load(const std::string& path)
     image = cv::imread(path);
     if(!image.empty())
     {
-        output_param.UpdateData(image);
+        output_param.updateData(image);
         return true;
     }
     return false;
@@ -21,7 +21,7 @@ bool GrabberImage::Grab()
 {
     if(!image.empty())
     {
-        output_param.UpdateData(image);
+        output_param.updateData(image);
         return true;
     }
     return false;

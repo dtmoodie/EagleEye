@@ -1,18 +1,18 @@
 #include "bookmark_dialog.h"
 #include "ui_bookmark_dialog.h"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 bookmark_dialog::bookmark_dialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::bookmark_dialog)
 {
     ui->setupUi(this);
-    bookmarks_param.UpdatePtr(&bookmarks);
-    history_param.UpdatePtr(&history);
+    bookmarks_param.updatePtr(&bookmarks);
+    history_param.updatePtr(&history);
     VariableStorage::Instance()->LoadParams(this, "bookmarks");
     update();
     QObject::connect(ui->list_bookmarks, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(on_file_selected(QListWidgetItem*)));
     QObject::connect(ui->list_history, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this,SLOT(on_file_selected(QListWidgetItem*)));
-    
+
 }
 
 bookmark_dialog::~bookmark_dialog()
@@ -41,11 +41,11 @@ void bookmark_dialog::on_file_selected(QListWidgetItem* item)
     auto name = item->text();
     if(sender() == ui->list_bookmarks)
     {
-        
+
     }
     if(sender() == ui->list_history)
     {
-        
+
     }
     emit open_file(name);
 }

@@ -1,11 +1,10 @@
 #pragma once
-
+#include "../precompiled.hpp"
 #include <Aquila/nodes/Node.hpp>
-//#include <Aquila/Nodes/VideoProc/Tracking.hpp>
 #include <boost/circular_buffer.hpp>
 
-#include <MetaObject/Parameters/ParameterMacros.hpp>
-#include <MetaObject/Parameters/TypedInputParameter.hpp>
+#include <MetaObject/params/ParamMacros.hpp>
+#include <MetaObject/params/TInputParam.hpp>
 
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
@@ -15,7 +14,7 @@ namespace aq
 {
     namespace Nodes
     {
-    
+
     class KeyFrameTracker: public Node
     {
     public:
@@ -28,7 +27,7 @@ namespace aq
             PARAM(int, min_keypoints, 200);
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class CMT: public Node
@@ -37,7 +36,7 @@ namespace aq
         MO_DERIVE(CMT, Node);
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class TLD:public Node
@@ -46,8 +45,8 @@ namespace aq
         MO_DERIVE(TLD, Node);
         MO_END;
     protected:
-        bool ProcessImpl();
-        
+        bool processImpl();
+
     };
     }
 }

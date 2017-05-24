@@ -1,7 +1,7 @@
 #pragma once
 #include <src/precompiled.hpp>
-#include <Aquila/ObjectDetection.hpp>
-
+#include <Aquila/types/ObjectDetection.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/utilities/ColorMapping.hpp>
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
@@ -19,7 +19,7 @@ namespace aq
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class AutoScale: public Node
@@ -30,7 +30,7 @@ namespace aq
         OUTPUT(SyncedMemory, output_image, SyncedMemory())
     MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     class DrawDetections: public Node
     {
@@ -45,7 +45,7 @@ namespace aq
             OUTPUT(SyncedMemory, image_with_detections, SyncedMemory())
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     class Normalize: public Node
     {
@@ -59,7 +59,7 @@ namespace aq
             PARAM(double, beta, 1);
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     }
 }

@@ -1,6 +1,6 @@
 #include "LabelDisplay.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <Aquila/ObjectDetection.hpp>
+#include <Aquila/types/ObjectDetection.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudawarping.hpp>
@@ -10,21 +10,21 @@
 #include <boost/filesystem.hpp>
 using namespace aq::Nodes;
 
-bool LabelDisplay::ProcessImpl()
+bool LabelDisplay::processImpl()
 {
     if(d_lut.empty() ||
-       (display_legend && d_legend.size() != label->GetSize()))
+       (display_legend && d_legend.size() != label->getSize()))
     {
 
         CreateColormap(h_lut, labels->size(), ignore_class);
 
-        d_lut.upload(h_lut, Stream());
+        d_lut.upload(h_lut, stream());
         if(display_legend)
         {
-            cv::Mat legend;//(label->GetSize(), CV_8UC3);
+            cv::Mat legend;//(label->getSize(), CV_8UC3);
             if(original_image)
             {
-                legend.create(original_image->GetSize(), CV_8UC3);
+                legend.create(original_image->getSize(), CV_8UC3);
                 legend.setTo(0);
                 legend_width = 100;
                 int max_width = 0;
@@ -42,7 +42,7 @@ bool LabelDisplay::ProcessImpl()
                                 cv::FONT_HERSHEY_COMPLEX, 0.7,
                                 cv::Scalar(color[0], color[1], color[2]));
                 }
-                d_legend.upload(legend, Stream());
+                d_legend.upload(legend, stream());
             }
         }
     }
@@ -50,31 +50,31 @@ bool LabelDisplay::ProcessImpl()
     cv::cuda::GpuMat input;
     if(dilate != 0)
     {
-        if(!_dilate_filter || dilate_param._modified)
+        if(!_dilate_filter || dilate_param.modified())
         {
-            _dilate_filter = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE,label->GetType(),
+            _dilate_filter = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE, label->getType(),
                                                               cv::getStructuringElement(cv::MORPH_CROSS, {dilate, dilate}));
-            dilate_param._modified = false;
+            dilate_param.modified(false);
         }
-        _dilate_filter->apply(label->getGpuMat(Stream()), input, Stream());
+        _dilate_filter->apply(label->getGpuMat(stream()), input, stream());
     }else
     {
-        input = label->getGpuMat(Stream());
+        input = label->getGpuMat(stream());
     }
     cv::cuda::GpuMat output;
-    aq::applyColormap(input, output, d_lut, Stream());
+    aq::applyColormap(input, output, d_lut, stream());
 
     if(original_image == nullptr)
     {
-        colorized_param.UpdateData(output,label_param.GetTimestamp(), _ctx);
+        colorized_param.updateData(output,label_param.getTimestamp(), _ctx);
         return true;
     }else
     {
-        cv::cuda::GpuMat input = original_image->getGpuMat(Stream());
+        cv::cuda::GpuMat input = original_image->getGpuMat(stream());
         cv::cuda::GpuMat resized;
         if(output.size() != input.size())
         {
-            cv::cuda::resize(output, resized, input.size(),0, 0, cv::INTER_LINEAR, Stream());
+            cv::cuda::resize(output, resized, input.size(),0, 0, cv::INTER_LINEAR, stream());
         }else
         {
             resized = output;
@@ -82,13 +82,13 @@ bool LabelDisplay::ProcessImpl()
 
 
         cv::cuda::GpuMat combined;
-        cv::cuda::addWeighted(input, 1.0 - label_weight, resized, label_weight, 0.0, combined, -1, Stream());
+        cv::cuda::addWeighted(input, 1.0 - label_weight, resized, label_weight, 0.0, combined, -1, stream());
         if(display_legend && d_legend.size() == combined.size())
         {
-            combined(cv::Rect(3,3,legend_width , labels->size()*20 + 15)).setTo(cv::Scalar::all(0), Stream());
-            cv::cuda::add(combined, d_legend, combined, cv::noArray(), -1, Stream());
+            combined(cv::Rect(3,3,legend_width , labels->size()*20 + 15)).setTo(cv::Scalar::all(0), stream());
+            cv::cuda::add(combined, d_legend, combined, cv::noArray(), -1, stream());
         }
-        colorized_param.UpdateData(combined, original_image_param.GetTimestamp(), _ctx);
+        colorized_param.updateData(combined, original_image_param.getTimestamp(), _ctx);
         return true;
     }
     return false;

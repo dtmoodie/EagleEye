@@ -1,10 +1,10 @@
 #pragma once
-
 #include "Aquila/nodes/Node.hpp"
-#include "Aquila/ObjectDetection.hpp"
-#include "MetaObject/Thread/ThreadHandle.hpp"
-#include "MetaObject/Thread/ThreadPool.hpp"
-#include "MetaObject/Detail/ConcurrentQueue.hpp"
+#include "Aquila/types/SyncedMemory.hpp"
+#include "Aquila/types/ObjectDetection.hpp"
+#include "MetaObject/thread/ThreadHandle.hpp"
+#include "MetaObject/thread/ThreadPool.hpp"
+#include "MetaObject/core/detail/ConcurrentQueue.hpp"
 namespace aq
 {
 namespace Nodes
@@ -35,8 +35,8 @@ public:
         PROPERTY(std::shared_ptr<WriteQueue_t>, _write_queue, {})
     MO_END
 protected:
-    bool ProcessImpl();
-    void NodeInit(bool firstInit);
+    bool processImpl();
+    void nodeInit(bool firstInit);
     virtual void writeThread() = 0;
     size_t frame_count = 0;
 };
@@ -70,8 +70,8 @@ public:
     MO_END;
 
 protected:
-    void NodeInit(bool firstInit);
-    bool ProcessImpl();
+    void nodeInit(bool firstInit);
+    bool processImpl();
     int _frame_count;
     moodycamel::ConcurrentQueue<std::pair<cv::Mat, std::string>> _write_queue;
     boost::thread _write_thread;

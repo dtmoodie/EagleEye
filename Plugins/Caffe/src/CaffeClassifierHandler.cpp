@@ -96,7 +96,7 @@ void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, const std::ve
         {
             auto idx = sort_indexes_ascending(data + i * num, num);
             DetectedObject obj;
-            obj.timestamp = input_param.GetTimestamp();
+            obj.timestamp = input_param.getTimestamp();
             if(labels && idx[0] < labels->size())
             {
                 obj.classification = Classification((*labels)[idx[0]], (data + i * num)[idx[0]], idx[0]);
@@ -117,9 +117,9 @@ void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, const std::ve
     }
 }
 
-void ClassifierHandler::EndBatch(boost::optional<mo::time_t>timestamp)
+void ClassifierHandler::EndBatch(boost::optional<mo::Time_t>timestamp)
 {
-    objects_param.Commit(timestamp, _ctx);
+    objects_param.emitUpdate(timestamp, _ctx);
 }
 
 MO_REGISTER_CLASS(ClassifierHandler)

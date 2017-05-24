@@ -1,6 +1,6 @@
 #pragma once
 #include "GStreamerExport.hpp"
-#include "MetaObject/MetaObject.hpp"
+#include "MetaObject/object/MetaObject.hpp"
 #include "gstreamer.hpp"
 #include "Aquila/framegrabbers/IFrameGrabber.hpp"
 
@@ -22,8 +22,8 @@ namespace aq
             MO_END;
             tcpserver();
             ~tcpserver();
-            virtual void NodeInit(bool firstInit);
-            bool ProcessImpl();
+            virtual void nodeInit(bool firstInit);
+            bool processImpl();
         };
 
         class GStreamer_EXPORT GStreamerSink: public gstreamer_sink_base
@@ -34,14 +34,14 @@ namespace aq
                 PARAM(std::string, gstreamer_pipeline, "")
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             bool _initialized = false;
         };
 
         class GStreamer_EXPORT BufferedHeartbeatRtsp : public IGrabber, public gstreamer_src_base
         {
         public:
-            virtual void NodeInit(bool firstInit);
+            virtual void nodeInit(bool firstInit);
         protected:
         };
 
@@ -55,7 +55,7 @@ namespace aq
                 SOURCE(aq::SyncedMemory, decoded, {});
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             virtual GstFlowReturn on_pull();
             cv::Mat decode_buffer;
             mo::Context gstreamer_context;

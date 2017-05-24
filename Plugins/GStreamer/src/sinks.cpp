@@ -19,7 +19,7 @@ tcpserver::~tcpserver()
 
 }
 
-void tcpserver::NodeInit(bool firstInit)
+void tcpserver::nodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -41,19 +41,19 @@ void tcpserver::NodeInit(bool firstInit)
             if(check_feature("vp8enc"))
                 encoders.addEnum(4, "vp8enc");
         }
-        encoders_param.Commit();
+        encoders_param.emitUpdate();
         auto interfaces = get_interfaces();
         for(int i = 0; i < interfaces.size(); ++i)
         {
             this->interfaces.addEnum(i, interfaces[i]);
         }
-        this->interfaces_param.Commit();
+        this->interfaces_param.emitUpdate();
     }
 }
 
-bool tcpserver::ProcessImpl()
+bool tcpserver::processImpl()
 {
-    if (!_initialized || encoders_param._modified || interfaces_param._modified)
+    if (!_initialized || encoders_param.modified() || interfaces_param.modified())
     {
         if (encoders.getValue() != -1)
         {
@@ -74,34 +74,34 @@ bool tcpserver::ProcessImpl()
             _initialized = create_pipeline(ss.str());
             if (_initialized)
             {
-                encoders_param._modified = false;
-                interfaces_param._modified = false;
+                encoders_param.modified(false);
+                interfaces_param.modified(false);
             }
         }
     }
     if(_initialized)
     {
-        PushImage(*image, Stream());
+        PushImage(*image, stream());
         return true;
     }
     return false;
 }
 MO_REGISTER_CLASS(tcpserver);
 
-bool GStreamerSink::ProcessImpl()
+bool GStreamerSink::processImpl()
 {
-    if(!_initialized || gstreamer_pipeline_param._modified)
+    if(!_initialized || gstreamer_pipeline_param.modified())
     {
         cleanup();
         _initialized = create_pipeline(gstreamer_pipeline);
         if(_initialized)
         {
-            gstreamer_pipeline_param._modified = false;
+            gstreamer_pipeline_param.modified(false);
         }
     }
     if(_initialized)
     {
-        PushImage(*image, Stream());
+        PushImage(*image, stream());
         return true;
     }
     return false;
@@ -116,15 +116,15 @@ JPEGSink::JPEGSink()
 }
 
 
-bool JPEGSink::ProcessImpl()
+bool JPEGSink::processImpl()
 {
-    if(gstreamer_pipeline_param._modified)
+    if(gstreamer_pipeline_param.modified())
     {
         this->cleanup();
         this->create_pipeline(gstreamer_pipeline);
         this->set_caps("image/jpeg");
         this->start_pipeline();
-        gstreamer_pipeline_param._modified = false;
+        gstreamer_pipeline_param.modified(false);
     }
     _modified = true;
     return true;
@@ -150,11 +150,11 @@ GstFlowReturn JPEGSink::on_pull()
         {
             cv::Mat mapped(1, map.size, CV_8U);
             memcpy(mapped.data, map.data, map.size);
-            mo::time_t ts(buffer->pts * mo::ns);
-            this->jpeg_buffer_param.UpdateData(mapped, ts, &gstreamer_context);
+            mo::Time_t ts(buffer->pts * mo::ns);
+            this->jpeg_buffer_param.updateData(mapped, ts, &gstreamer_context);
             if(decoded_param.HasSubscriptions())
             {
-                decoded_param.UpdateData(cv::imdecode(jpeg_buffer, cv::IMREAD_UNCHANGED, &decode_buffer),
+                decoded_param.updateData(cv::imdecode(jpeg_buffer, cv::IMREAD_UNCHANGED, &decode_buffer),
                     ts, &gstreamer_context);
             }
         }
@@ -166,7 +166,7 @@ GstFlowReturn JPEGSink::on_pull()
 
 MO_REGISTER_CLASS(JPEGSink)
 
-void BufferedHeartbeatRtsp::NodeInit(bool firstInit)
+void BufferedHeartbeatRtsp::nodeInit(bool firstInit)
 {
 
 }

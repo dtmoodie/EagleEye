@@ -1,5 +1,6 @@
 #pragma once
 #include "Aquila/nodes/Node.hpp"
+#include <Aquila/core/IDataStream.hpp>
 #include "qgraphicsitem.h"
 #include "qwidget.h"
 #include <boost/type_traits.hpp>
@@ -20,7 +21,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 
 #include <RuntimeObjectSystem/shared_ptr.hpp>
-#include <MetaObject/Parameters/UI/Qt/IParameterProxy.hpp>
+#include <MetaObject/params/ui/Qt/IParamProxy.hpp>
 
 namespace Ui {
     class QNodeWidget;
@@ -43,7 +44,7 @@ public:
     virtual QWidget* getWidget(int num = 0);
     bool eventFilter(QObject* obj, QEvent* event);
 
-    mo::InputParameter* inputParameter;
+    mo::InputParam* inputParameter;
 private slots:
     void on_valueChanged(int);
 private:
@@ -53,8 +54,8 @@ private:
     std::shared_ptr<mo::Connection> delete_connection;
     rcc::weak_ptr<aq::Nodes::Node> node;
     QComboBox* box;
-    mo::TypedSlot<void(mo::IParam*, mo::Context*)> onParameterUpdateSlot;
-    mo::TypedSlot<void(mo::IParam const*)> onParameterDeleteSlot;
+    mo::TSlot<void(mo::IParam*, mo::Context*)> onParameterUpdateSlot;
+    mo::TSlot<void(mo::IParam const*)> onParameterDeleteSlot;
 };
 
 class CV_EXPORTS QNodeWidget : public QWidget
@@ -92,7 +93,7 @@ private:
     std::map<QWidget*, mo::IParam*> widgetParamMap;
     Ui::QNodeWidget* ui;
     rcc::weak_ptr<aq::Nodes::Node> node;
-    std::map<std::string, mo::UI::qt::IParameterProxy::Ptr> parameterProxies;
+    std::map<std::string, mo::UI::qt::IParamProxy::Ptr> parameterProxies;
     std::map<std::string, std::shared_ptr<QInputProxy>> inputProxies;
     QNodeWidget* parentWidget;
     std::vector<QNodeWidget*> childWidgets;
@@ -118,7 +119,7 @@ private:
     aq::IDataStream::Ptr _dataStream;
     Ui::DataStreamWidget* ui;
     std::vector<QInputProxy*> inputProxies;
-    std::map<std::string, mo::UI::qt::IParameterProxy::Ptr> parameterProxies;
+    std::map<std::string, mo::UI::qt::IParamProxy::Ptr> parameterProxies;
     std::map<QWidget*, mo::IParam*> widgetParamMap;
 };
 
@@ -142,7 +143,7 @@ public:
     virtual QWidget* getWidget(int num = 0) = 0;
     virtual int getNumWidgets(){return 1;}
     virtual QWidget* getTypename()
-    {        return new QLabel(QString::fromStdString(parameter->GetTypeInfo().name()));    }
+    {        return new QLabel(QString::fromStdString(parameter->getTypeInfo().name()));    }
     mo::IParam* parameter;
 };
 IQNodeProxy* dispatchParameter(IQNodeInterop* parent, mo::IParam* parameter, rcc::weak_ptr<aq::Nodes::Node> node);
@@ -173,8 +174,8 @@ private slots:
 signals:
     void updateNeeded();
 protected:
-    mo::TypedSlot<void(mo::IParam*, mo::Context*)> onParameterUpdateSlot;
-    QLabel* nameElement;    
+    mo::TSlot<void(mo::IParam*, mo::Context*)> onParameterUpdateSlot;
+    QLabel* nameElement;
     QGridLayout* layout;
     rcc::weak_ptr<aq::Nodes::Node> node;
 };

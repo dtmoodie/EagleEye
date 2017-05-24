@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 
 namespace aq
 {
@@ -15,7 +16,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, {})
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     class AddBinary : public Node
     {
@@ -28,7 +29,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, {})
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 }
 }

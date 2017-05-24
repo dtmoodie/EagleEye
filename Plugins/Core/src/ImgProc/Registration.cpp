@@ -8,14 +8,14 @@
 using namespace aq;
 using namespace aq::Nodes;
 /*
-void register_to_reference::NodeInit(bool firstInit)
+void register_to_reference::nodeInit(bool firstInit)
 {
     d_matcher = cv::cuda::DescriptorMatcher::createBFMatcher(cv::NORM_HAMMING);
     d_orb = cv::cuda::ORB::create(500, 1.2, 8, 31, 0, 2, cv::cuda::ORB::HARRIS_SCORE, 31, 20, true);
 
     if(firstInit)
     {
-        addInputParameter<cv::cuda::GpuMat>("Reference image");
+        addInputParam<cv::cuda::GpuMat>("Reference image");
         updateParameter<int>("Num features", 500);
         updateParameter<float>("Scale factor", 1.2);
         updateParameter<int>("Pyramid levels", 8);

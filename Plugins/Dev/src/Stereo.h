@@ -1,11 +1,12 @@
 #include "precompiled.hpp"
 #include "Aquila/nodes/Node.hpp"
-#include <MetaObject/MetaObject.hpp>
-#include <MetaObject/Parameters/ParameterMacros.hpp>
-#include <MetaObject/Parameters/Types.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
+#include <MetaObject/object/MetaObject.hpp>
+#include <MetaObject/params/ParamMacros.hpp>
+#include <MetaObject/params/Types.hpp>
 #include "opencv2/cudastereo.hpp"
 #include <opencv2/imgproc.hpp>
-#include "Aquila/utilities/CudaUtils.hpp"
+#include "Aquila/utilities/cuda/CudaUtils.hpp"
 namespace aq
 {
     namespace Nodes
@@ -27,7 +28,7 @@ namespace aq
             PARAM(int, block_size, 19)
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         cv::Ptr<cv::cuda::StereoBM> stereoBM;
     };
     class StereoBilateralFilter: public Node
@@ -37,7 +38,7 @@ namespace aq
 
         MO_END
     protected:
-        bool ProcessImpl(){return false;}
+        bool processImpl(){return false;}
     };
 
     class StereoBeliefPropagation: public StereoBase
@@ -48,9 +49,9 @@ namespace aq
             PARAM(int, num_levels, 5)
             ENUM_PARAM(message_type, CV_16S, CV_32F)
         MO_END
-        
+
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         cv::Ptr<cv::cuda::StereoBeliefPropagation> bp;
     };
 
@@ -65,7 +66,7 @@ namespace aq
             ENUM_PARAM(message_type, CV_16SC1, CV_32FC1)
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class UndistortStereo: public Node
@@ -84,7 +85,7 @@ namespace aq
             OUTPUT(SyncedMemory, mapY, SyncedMemory())
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     }
 }

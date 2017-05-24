@@ -8,7 +8,7 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-void SetDevice::NodeInit(bool firstInit)
+void SetDevice::nodeInit(bool firstInit)
 {
     if (firstInit)
     {
@@ -44,7 +44,7 @@ cv::cuda::GpuMat SetDevice::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& s
             //if(onUpdate)
             //    onUpdate(this);
             cv::cuda::setDevice(device);
-            stream = cv::cuda::Stream();
+            stream = cv::cuda::stream();
             return cv::cuda::GpuMat();
         }
         _parameters[0]->changed = false;

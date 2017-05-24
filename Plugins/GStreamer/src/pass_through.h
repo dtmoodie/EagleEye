@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/MetaObject.hpp>
+#include <MetaObject/object/MetaObject.hpp>
 #include "gstreamer.hpp"
 
 namespace aq
@@ -15,7 +15,7 @@ namespace aq
                 PARAM(bool, active, false);
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             GstElement* valve = nullptr;
             bool previously_active = false;
         };

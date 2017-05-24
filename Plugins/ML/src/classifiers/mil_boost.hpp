@@ -73,7 +73,7 @@ class mil_tree// : public Aquila::Algorithm
     // how many from the top performing classifiers will be used
     int num_weak_classifiers;
 public:
-    void NodeInit(bool firstInit);
+    void nodeInit(bool firstInit);
 
     //virtual std::vector<Parameters::Parameter::Ptr> GetParameters();
 

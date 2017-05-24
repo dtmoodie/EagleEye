@@ -21,7 +21,7 @@ namespace aq
                 OUTPUT(SyncedMemory, output, {})
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
         class Rotate: public Node
         {
@@ -32,7 +32,7 @@ namespace aq
                 OUTPUT(SyncedMemory, output,{})
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
     }
 }

@@ -25,7 +25,7 @@ namespace aq
                 
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
     } // namespace nodes
 } // namespace aq 

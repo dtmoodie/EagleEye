@@ -2,7 +2,7 @@
 #include "ui_rccsettingsdialog.h"
 #include <qfiledialog.h>
 #include <boost/log/trivial.hpp>
-#include <MetaObject/MetaObjectFactory.hpp>
+#include <MetaObject/object/MetaObjectFactory.hpp>
 #include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
 #include <RuntimeCompiler/FileSystemUtils.h>
 
@@ -12,8 +12,8 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->numModules->setText(QString::number(mo::MetaObjectFactory::instance()->listLoadedPlugins().size()));
-    this->on_constructors_added = mo::TypedSlot<void(void)>(std::bind(&RCCSettingsDialog::updateDisplay, this));
-    mo::MetaObjectFactory::instance()->ConnectConstructorAdded(&this->on_constructors_added);
+    this->on_constructors_added = mo::TSlot<void(void)>(std::bind(&RCCSettingsDialog::updateDisplay, this));
+    mo::MetaObjectFactory::instance()->connectConstructorAdded(&this->on_constructors_added);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[0]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[1]);
     ui->comboBox->addItem(RCppOptimizationLevelStrings[2]);
@@ -23,7 +23,7 @@ RCCSettingsDialog::RCCSettingsDialog(QWidget *parent) :
 }
 void RCCSettingsDialog::updateDisplay()
 {
-    
+
     ui->linkDirs->clear();
     ui->incDirs->clear();
     auto projects = mo::MetaObjectFactory::instance()->listLoadedPlugins();
@@ -46,7 +46,7 @@ void RCCSettingsDialog::updateDisplay()
                 dependency->setText(0, QString::fromStdString(dir.m_string));
                 incItem->addChild(dependency);
             }
-                
+
         }
         for (auto dir : lib)
         {
@@ -118,7 +118,7 @@ void RCCSettingsDialog::on_btnAddIncludeDir_clicked()
         }
         projectId = ui->incDirs->indexOfTopLevelItem(item);
     }
-        
+
     //aq::ObjectManager::Instance().addIncludeDir(dir.toStdString(), projectId);
     ui->includeDir->clear();
     updateDisplay();

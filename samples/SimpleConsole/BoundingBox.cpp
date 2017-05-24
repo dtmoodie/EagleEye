@@ -1,8 +1,8 @@
 #include "BoundingBox.hpp"
-#include "MetaObject/Parameters/IO/CerealPolicy.hpp"
-#include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
-#include "MetaObject/Parameters/MetaParameter.hpp"
-#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
+#include "MetaObject/params/IO/CerealPolicy.hpp"
+#include "MetaObject/serialization/SerializationFactory.hpp"
+#include "MetaObject/params/MetaParameter.hpp"
+#include "MetaObject/params/detail/MetaParametersDetail.hpp"
 #include <cereal/types/vector.hpp>
 using namespace vclick;
 

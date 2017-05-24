@@ -17,7 +17,7 @@ namespace aq
                 OUTPUT(double, max_value, 0.0);
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             
         };
         class Threshold : public Node
@@ -38,7 +38,7 @@ namespace aq
                 INPUT(SyncedMemory, input, nullptr);
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
 
         class NonMaxSuppression: public Node

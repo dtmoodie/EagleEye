@@ -1,5 +1,5 @@
 #include "FrameGrabberHTTP.hpp"
-#include "Aquila/Nodes/FrameGrabberInfo.hpp"
+#include "Aquila/framegrabbers/FrameGrabberInfo.hpp"
 #include <gst/base/gstbasesink.h>
 using namespace aq;
 using namespace aq::Nodes;
@@ -83,7 +83,7 @@ GstFlowReturn FrameGrabberHTTP::on_pull()
         {
             cv::Mat mapped(height, width, CV_8UC3);
             memcpy(mapped.data, map.data, map.size);
-            image_param.UpdateData(mapped, mo::tag::_timestamp = mo::time_t(buffer->pts * mo::ns));
+            image_param.updateData(mapped, mo::tag::_timestamp = mo::Time_t(buffer->pts * mo::ns));
             //PushFrame(TS<SyncedMemory>(0.0, (long long) buffer->pts, mapped));
         }
         gst_sample_unref (sample);

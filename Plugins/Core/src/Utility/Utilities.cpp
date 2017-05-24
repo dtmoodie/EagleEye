@@ -9,7 +9,7 @@ using namespace aq::Nodes;
 
 bool functionQualifier(Parameters::Parameter* parameter)
 {
-    if (parameter->GetTypeInfo() == mo::TypeInfo(typeid(boost::function<void(void)>)))
+    if (parameter->getTypeInfo() == mo::TypeInfo(typeid(boost::function<void(void)>)))
     {
         if (parameter->type & Parameters::Parameter::Output || parameter->type & Parameters::Parameter::Control)
             return true;
@@ -18,12 +18,12 @@ bool functionQualifier(Parameters::Parameter* parameter)
     return false;
 }
 
-void SyncFunctionCall::NodeInit(bool firstInit)
+void SyncFunctionCall::nodeInit(bool firstInit)
 {
     updateParameter<boost::function<void(void)>>("Call all input functions", boost::bind(&SyncFunctionCall::call, this));
     if(firstInit)
     {
-        addInputParameter<boost::function<void(void)>>("Input 1")->SetQualifier(boost::bind(&functionQualifier, _1));
+        addInputParam<boost::function<void(void)>>("Input 1")->SetQualifier(boost::bind(&functionQualifier, _1));
     }
 }
 
@@ -55,7 +55,7 @@ cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
     }
     if(full == true)
     {
-        addInputParameter<boost::function<void(void)>>("Input " + boost::lexical_cast<std::string>(_parameters.size()))->SetQualifier(boost::bind(&functionQualifier, _1));
+        addInputParam<boost::function<void(void)>>("Input " + boost::lexical_cast<std::string>(_parameters.size()))->SetQualifier(boost::bind(&functionQualifier, _1));
     }
     return img;
 }
@@ -64,15 +64,15 @@ cv::cuda::GpuMat SyncFunctionCall::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SyncFunctionCall, Utility)
 */
 
-bool RegionOfInterest::ProcessImpl()
+bool RegionOfInterest::processImpl()
 {
     if(roi.area())
     {
-        //auto img_roi = cv::Rect2f(cv::Point2f(0.0,0.0), image->GetSize());
+        //auto img_roi = cv::Rect2f(cv::Point2f(0.0,0.0), image->getSize());
         auto img_roi = cv::Rect2f(0.0f, 0.0f, 1.0f, 1.0f);
         auto used_roi = img_roi & roi;
-        //cv::Rect2f img_size(cv::Point2f(0.0f, 0.0f), image->GetSize());
-        auto img_size = image->GetSize();
+        //cv::Rect2f img_size(cv::Point2f(0.0f, 0.0f), image->getSize());
+        auto img_size = image->getSize();
         cv::Rect pixel_roi;
         pixel_roi.x = used_roi.x * img_size.width;
         pixel_roi.y = used_roi.y * img_size.height;
@@ -84,7 +84,7 @@ bool RegionOfInterest::ProcessImpl()
         std::vector<cv::Mat> h_mats;
         std::vector<cv::cuda::GpuMat> d_mats;
         std::vector<SyncedMemory::SYNC_STATE> state;
-        const int num = image->GetNumMats();
+        const int num = image->getNumMats();
         h_mats.resize(num);
         d_mats.resize(num);
         state.resize(num);
@@ -94,36 +94,36 @@ bool RegionOfInterest::ProcessImpl()
             if(state[i] == SyncedMemory::HOST_UPDATED)
             {
                 // host is ahead
-                h_mats[i] = image->getMat(Stream(), i)(pixel_roi);
+                h_mats[i] = image->getMat(stream(), i)(pixel_roi);
             }else if(state[i] == SyncedMemory::SYNCED)
             {
-                h_mats[i] = image->getMat(Stream(), i)(pixel_roi);
-                d_mats[i] = image->getGpuMat(Stream(), i)(pixel_roi);
+                h_mats[i] = image->getMat(stream(), i)(pixel_roi);
+                d_mats[i] = image->getGpuMat(stream(), i)(pixel_roi);
             }else
             {
                 // device is ahead
-                d_mats[i] = image->getGpuMat(Stream(), i)(pixel_roi);
+                d_mats[i] = image->getGpuMat(stream(), i)(pixel_roi);
             }
         }
-        ROI_param.UpdateData(SyncedMemory(h_mats, d_mats, state), image_param.GetTimestamp(), _ctx);
+        ROI_param.updateData(SyncedMemory(h_mats, d_mats, state), image_param.getTimestamp(), _ctx);
         return true;
     }
     return false;
 }
 MO_REGISTER_CLASS(RegionOfInterest);
 
-void ExportRegionsOfInterest::NodeInit(bool firstInit)
+void ExportRegionsOfInterest::nodeInit(bool firstInit)
 {
-    output.SetMtx(_mtx);
-    output.UpdatePtr(&rois);
-    output.SetContext(_ctx);
-    output.SetName("output");
-    output.SetFlags(mo::ParameterType::Output_e);
-    output.AppendFlags(mo::Unstamped_e);
-    AddParameter(&output);
+    output.setMtx(_mtx);
+    output.updatePtr(&rois);
+    output.setContext(_ctx);
+    output.setName("output");
+    output.setFlags(mo::ParamFlags::Output_e);
+    output.appendFlags(mo::Unstamped_e);
+    addParameter(&output);
 }
 
-bool ExportRegionsOfInterest::ProcessImpl()
+bool ExportRegionsOfInterest::processImpl()
 {
     return true;
 }

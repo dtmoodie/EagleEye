@@ -6,28 +6,28 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-bool MedianBlur::ProcessImpl()
+bool MedianBlur::processImpl()
 {
-    if(!_median_filter || window_size_param._modified || partition_param._modified)
+    if(!_median_filter || window_size_param.modified() || partition_param.modified())
     {
-        _median_filter = cv::cuda::createMedianFilter(input->GetDepth(), window_size, partition);
+        _median_filter = cv::cuda::createMedianFilter(input->getDepth(), window_size, partition);
     }
     cv::cuda::GpuMat output;
-    if(input->GetChannels() != 1 && false)
+    if(input->getChannels() != 1 && false)
     {
         std::vector<cv::cuda::GpuMat> channels;
-        cv::cuda::split(input->getGpuMat(Stream()), channels, Stream());
+        cv::cuda::split(input->getGpuMat(stream()), channels, stream());
         std::vector<cv::cuda::GpuMat> blurred(channels.size());
         for(int i = 0; i < channels.size(); ++i)
         {
-            _median_filter->apply(channels[i],blurred[i], Stream());
+            _median_filter->apply(channels[i],blurred[i], stream());
         }
-        cv::cuda::merge(blurred, output, Stream());
+        cv::cuda::merge(blurred, output, stream());
     }else
     {
-        _median_filter->apply(input->getGpuMat(Stream()), output, Stream());
+        _median_filter->apply(input->getGpuMat(stream()), output, stream());
     }
-    output_param.UpdateData(output, input_param.GetTimestamp(), _ctx);
+    output_param.updateData(output, input_param.getTimestamp(), _ctx);
 
     return true;
 }

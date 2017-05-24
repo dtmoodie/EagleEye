@@ -29,57 +29,57 @@ void my_frame_source::input_frame(SyncedMemory& image, cv::cuda::Stream& stream)
 
 
 
-bool super_resolution::ProcessImpl()
+bool super_resolution::processImpl()
 {
-    if(scale_param._modified)
+    if(scale_param.modified())
     {
         super_res->setScale(scale);
-        scale_param._modified = false;
+        scale_param.modified(false);
     }
-    if(iterations_param._modified)
+    if(iterations_param.modified())
     {
         super_res->setIterations(iterations);
-        iterations_param._modified = false;
+        iterations_param.modified(false);
     }
-    if(tau_param._modified)
+    if(tau_param.modified())
     {
         super_res->setTau(tau);
-        tau_param._modified = false;
+        tau_param.modified(false);
     }
-    if(lambda_param._modified)
+    if(lambda_param.modified())
     {
         super_res->setLabmda(lambda);
-        lambda_param._modified = false;
+        lambda_param.modified(false);
     }
-    if(alpha_param._modified)
+    if(alpha_param.modified())
     {
         super_res->setAlpha(alpha);
-        alpha_param._modified = false;
+        alpha_param.modified(false);
     }
-    if(kernel_size_param._modified)
+    if(kernel_size_param.modified())
     {
         super_res->setKernelSize(kernel_size);
-        kernel_size_param._modified = false;
+        kernel_size_param.modified(false);
     }
-    if(blur_size_param._modified)
+    if(blur_size_param.modified())
     {
         super_res->setBlurKernelSize(blur_size);
-        blur_size_param._modified = false;
+        blur_size_param.modified(false);
     }
-    if(blur_sigma_param._modified)
+    if(blur_sigma_param.modified())
     {
         super_res->setBlurSigma(blur_sigma);
-        blur_sigma_param._modified = false;
+        blur_sigma_param.modified(false);
     }
-    if(temporal_radius_param._modified)
+    if(temporal_radius_param.modified())
     {
         super_res->setTemporalAreaRadius(temporal_radius);
-        temporal_radius_param._modified = false;
+        temporal_radius_param.modified(false);
     }
     cv::cuda::GpuMat result;
-    
-    //frame_source->input_frame(*input, Stream());
-    
+
+    //frame_source->input_frame(*input, stream());
+
     return true;
 }
 

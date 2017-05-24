@@ -26,12 +26,12 @@ public slots:
     void on_item_clicked(QListWidgetItem* item);
 signals:
     void on_network_stream_selection(QString url);
-    
+
 private:
     void refresh_history();
     Ui::dialog_network_stream_selection *ui;
     UrlHistory_t url_history;
-    mo::TypedParameterPtr<UrlHistory_t> url_history_param;
+    mo::TParamPtr<UrlHistory_t> url_history_param;
 };
 
 #endif // DIALOG_NETWORK_STREAM_SELECTION_H

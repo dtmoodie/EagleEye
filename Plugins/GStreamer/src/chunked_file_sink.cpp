@@ -1,5 +1,5 @@
 #include "chunked_file_sink.h"
-#include <Aquila/Nodes/FrameGrabberInfo.hpp>
+#include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
 #include <gst/base/gstbasesink.h>
 using namespace aq;
 
@@ -118,9 +118,9 @@ GstFlowReturn JpegKeyframer::on_pull()
 MO_REGISTER_CLASS(JpegKeyframer);
 
 using namespace aq::Nodes;
-bool GstreamerSink::ProcessImpl()
+bool GstreamerSink::processImpl()
 {
-    if(pipeline_param._modified && !image->empty())
+    if(pipeline_param.modified() && !image->empty())
     {
         this->cleanup();
         if(!this->create_pipeline(pipeline))
@@ -128,7 +128,7 @@ bool GstreamerSink::ProcessImpl()
             LOG(warning) << "Unable to create pipeline " << pipeline;
             return false;
         }
-        if(!this->set_caps(image->GetSize(), image->GetChannels(), image->GetDepth()))
+        if(!this->set_caps(image->getSize(), image->getChannels(), image->getDepth()))
         {
             LOG(warning) << "Unable to set caps on pipeline";
             return false;
@@ -138,11 +138,11 @@ bool GstreamerSink::ProcessImpl()
             LOG(warning) << "Unable to start pipeline " << pipeline;
             return false;
         }
-        pipeline_param._modified = false;
+        pipeline_param.modified(false);
     }
     if(_source && _feed_enabled)
     {
-        PushImage(*image, Stream());
+        PushImage(*image, stream());
         return true;
     }
     return false;

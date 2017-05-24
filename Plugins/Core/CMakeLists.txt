@@ -38,11 +38,21 @@ INCLUDE_DIRECTORIES(
 file(GLOB_RECURSE knl "*.cu")
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp")
-
+set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+set(CUDA_NVCC_FLAGS "-std=c++11;--expt-relaxed-constexpr;${CUDA_NVCC_FLAGS}")
 cuda_add_library(Core SHARED ${src} ${hdr} ${knl})
 ocv_add_precompiled_header_to_target(Core nodes/precompiled.hpp)
 
-RCC_LINK_LIB(Core aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} metaobject_core metaobject_object metaobject_params)
+RCC_LINK_LIB(Core aquila_core
+    aquila_utilities
+    aquila_serialization
+    aquila_types
+    ${OpenCV_LIBS}
+    ${CUDA_CUBLAS_LIBRARIES}
+    metaobject_core
+    metaobject_object
+    metaobject_params
+)
 
 INCLUDE(../PluginTemplate.cmake)
 

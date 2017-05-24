@@ -1,8 +1,8 @@
 #pragma once
 #define PARAMTERS_GENERATE_PERSISTENCE
 #include <Aquila/nodes/Node.hpp>
-#include <MetaObject/MetaObject.hpp>
-#include <MetaObject/Parameters/Types.hpp>
+#include <MetaObject/object/MetaObject.hpp>
+#include <MetaObject/params/Types.hpp>
 
 #include <caffe/solver.hpp>
 #include <caffe/parallel.hpp>
@@ -47,7 +47,7 @@ namespace aq
                 ENUM_PARAM(solver_type, caffe::SolverParameter::SGD, caffe::SolverParameter::ADADELTA, caffe::SolverParameter::ADAGRAD, caffe::SolverParameter::ADAM, caffe::SolverParameter::NESTEROV, caffe::SolverParameter::RMSPROP)
                 ENUM_PARAM(learning_rate_policy, step, fixed, exponential, inverse, multistep, poly, sigmoid)
             MO_END;
-            bool ProcessImpl();
+            bool processImpl();
         };
     }
 }

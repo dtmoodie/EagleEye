@@ -1,23 +1,23 @@
 #include "JSONWriter.hpp"
-#include <MetaObject/Parameters/TypedParameter.hpp>
+#include <MetaObject/params/TParam.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
-#include <MetaObject/Parameters/InputParameterAny.hpp>
+#include <MetaObject/serialization/SerializationFactory.hpp>
+#include <MetaObject/params/InputParamAny.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 using namespace aq;
 using namespace aq::Nodes;
 
-/*class InputParameterAny: public mo::InputParameter
+/*class InputParamAny: public mo::InputParam
 {
 public:
-    InputParameterAny(const std::string& name):
-        _update_slot(std::bind(&InputParameterAny::on_param_update, this, std::placeholders::_1, std::placeholders::_2)),
-        _delete_slot(std::bind(&InputParameterAny::on_param_delete, this, std::placeholders::_1))
+    InputParamAny(const std::string& name):
+        _update_slot(std::bind(&InputParamAny::on_param_update, this, std::placeholders::_1, std::placeholders::_2)),
+        _delete_slot(std::bind(&InputParamAny::on_param_delete, this, std::placeholders::_1))
     {
-        this->SetName(name);
+        this->setName(name);
         _void_type_info = mo::TypeInfo(typeid(void));
-        this->AppendFlags(mo::Input_e);
+        this->appendFlags(mo::Input_e);
     }
     virtual bool GetInput(long long ts = -1)
     {
@@ -27,19 +27,19 @@ public:
     // This gets a pointer to the variable that feeds into this input
     virtual IParam* GetInputParam()
     {
-        return input;   
+        return input;
     }
-    virtual bool SetInput(std::shared_ptr<mo::IParam> param)
+    virtual bool setInput(std::shared_ptr<mo::IParam> param)
     {
         input = param.get();
         Commit();
         return true;
     }
-    virtual bool SetInput(mo::IParam* param = nullptr)
+    virtual bool setInput(mo::IParam* param = nullptr)
     {
         input = param;
-        param->RegisterDeleteNotifier(&_delete_slot);
-        param->RegisterUpdateNotifier(&_update_slot);
+        param->registerDeleteNotifier(&_delete_slot);
+        param->registerUpdateNotifier(&_update_slot);
         Commit();
         return true;
     }
@@ -56,7 +56,7 @@ public:
     {
         return true;
     }
-    mo::TypeInfo& GetTypeInfo() const
+    mo::TypeInfo& getTypeInfo() const
     {
         return _void_type_info;
     }
@@ -70,21 +70,21 @@ public:
     }
     IParam* input = nullptr;
     static mo::TypeInfo _void_type_info;
-    mo::TypedSlot<void(mo::Context*, mo::IParam*)> _update_slot;
-    mo::TypedSlot<void(mo::IParam const*)> _delete_slot;
+    mo::TSlot<void(mo::Context*, mo::IParam*)> _update_slot;
+    mo::TSlot<void(mo::IParam const*)> _delete_slot;
 };
-mo::TypeInfo InputParameterAny::_void_type_info;*/
+mo::TypeInfo InputParamAny::_void_type_info;*/
 
 JSONWriter::JSONWriter()
 {
-    AddParameter(std::shared_ptr<mo::IParam>(new mo::InputParameterAny("input-0")));
+    addParameter(std::shared_ptr<mo::IParam>(new mo::InputParamAny("input-0")));
 }
 JSONWriter::~JSONWriter()
 {
     ar.reset();
     ofs.close();
 }
-bool JSONWriter::ProcessImpl()
+bool JSONWriter::processImpl()
 {
     if(ar == nullptr && output_file.string().size())
     {
@@ -94,15 +94,15 @@ bool JSONWriter::ProcessImpl()
     }
     if(ar)
     {
-        auto input_params = GetInputs();
+        auto input_params = getInputs();
         bool found = false;
         size_t fn = 0;
         for(auto param : input_params)
         {
-            if(auto input = param->GetInputParam())
+            if(auto input = param->getInputParam())
             {
                 found = true;
-                fn = input->GetFrameNumber();
+                fn = input->getFrameNumber();
             }
         }
         if(found == false)
@@ -113,10 +113,10 @@ bool JSONWriter::ProcessImpl()
         ar->startNode();
         for (auto param : input_params)
         {
-            auto input_param = param->GetInputParam();
+            auto input_param = param->getInputParam();
             if(input_param)
             {
-                auto func = mo::SerializationFunctionRegistry::Instance()->GetJsonSerializationFunction(input_param->GetTypeInfo());
+                auto func = mo::SerializationFactory::instance()->getJsonSerializationFunction(input_param->getTypeInfo());
                 if (func)
                 {
                     func(input_param, *ar);
@@ -138,29 +138,29 @@ void JSONWriter::on_output_file_modified( mo::Context* ctx, mo::IParam* param)
 
 void JSONWriter::on_input_set(mo::Context* ctx, mo::IParam* param)
 {
-    auto inputs = GetInputs();
+    auto inputs = getInputs();
     int count= 0;
     for(auto input : inputs)
     {
-        if(input->GetInputParam() == nullptr)
+        if(input->getInputParam() == nullptr)
         {
             return;
         }
         ++count;
     }
-    AddParameter(std::shared_ptr<mo::IParam>(new mo::InputParameterAny("input-" + boost::lexical_cast<std::string>(count))));
+    addParameter(std::shared_ptr<mo::IParam>(new mo::InputParamAny("input-" + boost::lexical_cast<std::string>(count))));
 }
 
 MO_REGISTER_CLASS(JSONWriter)
 
 JSONReader::JSONReader()
 {
-    input = new mo::InputParameterAny("input-0");
-    input->SetFlags(mo::Optional_e);
-    AddParameter(std::shared_ptr<mo::IParam>(input));
+    input = new mo::InputParamAny("input-0");
+    input->setFlags(mo::Optional_e);
+    addParameter(std::shared_ptr<mo::IParam>(input));
 }
 
-bool JSONReader::ProcessImpl()
+bool JSONReader::processImpl()
 {
     if(!ar && boost::filesystem::is_regular_file(input_file))
     {
@@ -173,9 +173,9 @@ bool JSONReader::ProcessImpl()
 
     if(input)
     {
-        if(auto input_param = input->GetInputParam())
+        if(auto input_param = input->getInputParam())
         {
-            input_param->GetTimestamp();
+            input_param->getTimestamp();
         }
     }
     return false;

@@ -5,7 +5,7 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-bool ImageWriter::ProcessImpl()
+bool ImageWriter::processImpl()
 {
     std::string ext;
     switch ((Extensions)extension.getValue())
@@ -32,7 +32,7 @@ bool ImageWriter::ProcessImpl()
         return true;
     if (request_write || (frameSkip >= frequency) || frequency == -1)
     {
-        request_write_param.UpdateData(false);
+        request_write_param.updateData(false);
         std::stringstream ss;
         if(!boost::filesystem::exists(save_directory))
         {
@@ -43,15 +43,15 @@ bool ImageWriter::ProcessImpl()
         std::string save_name = ss.str();
         if(input_image->getSyncState() < SyncedMemory::DEVICE_UPDATED)
         {
-            cv::imwrite(save_name, input_image->getMat(Stream()));
+            cv::imwrite(save_name, input_image->getMat(stream()));
         }else
         {
-            input_image->synchronize(Stream());
-            cv::Mat mat = input_image->getMat(Stream());
+            input_image->synchronize(stream());
+            cv::Mat mat = input_image->getMat(stream());
             cuda::enqueue_callback_async([mat, save_name]()->void
             {
                 cv::imwrite(save_name, mat);
-            }, Stream());
+            }, stream());
         }
         frameSkip = 0;
     }
@@ -60,7 +60,7 @@ bool ImageWriter::ProcessImpl()
 }
 void ImageWriter::snap()
 {
-    request_write_param.UpdateData(true);
+    request_write_param.updateData(true);
 }
 
 MO_REGISTER_CLASS(ImageWriter)

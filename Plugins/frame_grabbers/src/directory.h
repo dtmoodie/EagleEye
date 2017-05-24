@@ -11,7 +11,7 @@ namespace aq
         frame_grabber_directory();
         virtual bool LoadFile(const std::string& file_path);
         
-        virtual void NodeInit(bool firstInit);
+        virtual void nodeInit(bool firstInit);
         virtual void Serialize(ISimpleSerializer* pSerializer);
         
         MO_DERIVE(frame_grabber_directory, IFrameGrabber)
@@ -22,7 +22,7 @@ namespace aq
         
         static int CanLoad(const std::string& doc);
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     private:
         cv::cuda::GpuMat                d_image;
         cv::Mat                         h_image;

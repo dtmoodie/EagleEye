@@ -36,7 +36,7 @@ using namespace aq::Nodes;
     LOG(error) << "Unknown exception";                                      \
 }
 
-/*void HeartBeatBuffer::NodeInit(bool firstInit)
+/*void HeartBeatBuffer::nodeInit(bool firstInit)
 {
     if (firstInit)
     {

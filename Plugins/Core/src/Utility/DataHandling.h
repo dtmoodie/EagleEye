@@ -1,7 +1,7 @@
 #pragma once
 
 #include "src/precompiled.hpp"
-#include "Aquila/utilities/CudaUtils.hpp"
+#include "Aquila/utilities/cuda/CudaUtils.hpp"
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -26,9 +26,9 @@ namespace aq
                 STATUS(double, playrate, 0.0)
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             boost::posix_time::ptime last_iteration_time;
-            boost::optional<mo::time_t> last_timestamp;
+            boost::optional<mo::Time_t> last_timestamp;
         };
 
         class ImageInfo: public Node
@@ -45,7 +45,7 @@ namespace aq
                 STATUS(int, ref_count, 0)
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
         
         class Mat2Tensor: public Node
@@ -58,7 +58,7 @@ namespace aq
                 PARAM(bool, include_position, true)
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             cv::cuda::GpuMat position_mat;
         };
         class ConcatTensor: public Node
@@ -67,7 +67,7 @@ namespace aq
         public:
             ConcatTensor();
             virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-            virtual void NodeInit(bool firstInit);
+            virtual void nodeInit(bool firstInit);
         };
         class LagBuffer : public Node
         {
@@ -78,7 +78,7 @@ namespace aq
         public:
             LagBuffer();
             virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-            virtual void NodeInit(bool firstInit);
+            virtual void nodeInit(bool firstInit);
         };
 
         class CameraSync : public Node
@@ -86,7 +86,7 @@ namespace aq
         public:
             CameraSync();
             virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-            virtual void NodeInit(bool firstInit);
+            virtual void nodeInit(bool firstInit);
             bool SkipEmpty() const;
         };
     } // namespace nodes

@@ -36,6 +36,7 @@ RCC_LINK_LIB(Dev
     ${CUDA_CUBLAS_LIBRARIES}
     aquila_core
     aquila_types
+    aquila_utilities
     metaobject_core metaobject_object metaobject_params metaobject_metaparams
 )
 

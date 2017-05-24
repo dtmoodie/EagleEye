@@ -5,12 +5,12 @@
 #endif
 #include "Aquila/Detail/PluginExport.hpp"
 #include "Aquila/nodes/Node.hpp"
-#include "Aquila/ObjectDetection.hpp"
+#include "Aquila/types/ObjectDetection.hpp"
 #include "Aquila/rcc/external_includes/cv_calib3d.hpp"
-#include "Aquila/ObjectDetection.hpp"
+#include "Aquila/types/ObjectDetection.hpp"
 #include "CaffeNetHandler.hpp"
-#include "MetaObject/MetaObject.hpp"
-#include "MetaObject/Parameters/Types.hpp"
+#include "MetaObject/object/MetaObject.hpp"
+#include "MetaObject/params/Types.hpp"
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include "caffe/blob.hpp"
 #include "caffe/net.hpp"
@@ -59,7 +59,7 @@ namespace aq
                 OUTPUT(std::vector<std::string>, labels, {})
                 APPEND_FLAGS(labels, mo::Unstamped_e)
             MO_END
-            virtual void NodeInit(bool firstInit);
+            virtual void nodeInit(bool firstInit);
             static std::vector<SyncedMemory> WrapBlob(caffe::Blob<float>& blob, bool bgr_swap = false);
             static std::vector<SyncedMemory> WrapBlob(caffe::Blob<double>& blob, bool bgr_swap = false);
         protected:
@@ -92,7 +92,7 @@ namespace aq
             MO_END
             void       PostSerializeInit();
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             std::vector<rcc::shared_ptr<Caffe::NetHandler>> net_handlers;
         };
 

@@ -2,7 +2,7 @@
 #pragma once
 #include "IParameterResource.hpp"
 #include <Aquila/types/SyncedMemory.hpp>
-#include <MetaObject/Parameters/TypedInputParameter.hpp>
+#include <MetaObject/params/TypedInputParam.hpp>
 namespace vclick
 {
     template<class T> class TParameterResource : public IParameterResource
@@ -13,14 +13,14 @@ namespace vclick
         {
             data = nullptr;
             data_param.SetUserDataPtr(&data);
-            data_param.SetName(name);
-            data_param.SetInput(param);
+            data_param.setName(name);
+            data_param.setInput(param);
             data_param.SetMtx(&param->mtx());
             this->setParam(&data_param);
         }
     private:
         const T* data;
-        mo::TypedInputParameterPtr<T> data_param;
+        mo::TypedInputParamPtr<T> data_param;
     };
     template<class T> class TParameterResourceRaw: public IParameterResource
     {
@@ -35,15 +35,15 @@ namespace vclick
         {
             data = nullptr;
             data_param.SetUserDataPtr(&data);
-            data_param.SetName(name);
-            data_param.SetInput(param);
+            data_param.setName(name);
+            data_param.setInput(param);
             data_param.SetMtx(&param->mtx());
             this->setParam(&data_param);
         }
         void handleParamUpdate(mo::Context* ctx, mo::IParam* param);
     private:
         const cv::Mat* data;
-        mo::TypedInputParameterPtr<cv::Mat> data_param;
+        mo::TypedInputParamPtr<cv::Mat> data_param;
     };
 
     template<> class TParameterResource<aq::SyncedMemory> : public IParameterResource
@@ -55,8 +55,8 @@ namespace vclick
         {
             data = nullptr;
             data_param.SetUserDataPtr(&data);
-            data_param.SetName(name);
-            data_param.SetInput(param);
+            data_param.setName(name);
+            data_param.setInput(param);
             data_param.SetMtx(&param->mtx());
             this->setParam(&data_param);
         }
@@ -64,7 +64,7 @@ namespace vclick
 
     private:
         const aq::SyncedMemory* data;
-        mo::TypedInputParameterPtr<aq::SyncedMemory> data_param;
+        mo::TypedInputParamPtr<aq::SyncedMemory> data_param;
     };
 }
 #endif

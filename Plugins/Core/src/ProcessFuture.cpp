@@ -17,7 +17,7 @@ ProcessFuture::~ProcessFuture()
     _thread.join();
 }
 
-void ProcessFuture::NodeInit(bool firstInit)
+void ProcessFuture::nodeInit(bool firstInit)
 {
     updateParameter("Num Frames Ahead", 5);
     _thread = boost::thread(boost::bind(&ProcessFuture::process_ahead, this));
@@ -40,7 +40,7 @@ TS<SyncedMemory> ProcessFuture::doProcess(TS<SyncedMemory>& input, cv::cuda::Str
 void ProcessFuture::process_ahead()
 {
     std::unique_lock<std::recursive_mutex> lock(mtx);
-    auto frame_grabber = GetDataStream()->GetFrameGrabber();
+    auto frame_grabber = getDataStream()->GetFrameGrabber();
     rmt_SetCurrentThreadName("ProcessFuture_thread");
     if(!frame_grabber)
     {

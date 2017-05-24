@@ -11,9 +11,9 @@ if(NOT nodeeditor_FOUND)
 endif()
 
 IF(Qt5_FOUND AND nodeeditor_FOUND)
-	if(NOT TARGET aquila_core)
-		find_package(Aquila REQUIRED COMPONENTS core)
-	endif()
+    if(NOT TARGET aquila_core)
+        find_package(Aquila REQUIRED COMPONENTS core)
+    endif()
     find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
 
     find_package(CUDA REQUIRED)
@@ -152,6 +152,7 @@ IF(Qt5_FOUND AND nodeeditor_FOUND)
         Qt5::OpenGL
         Qt5::PrintSupport
         aquila_core
+        metaobject_qtgui
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS}
         nodes

@@ -3,20 +3,20 @@
 #include "Aquila/nodes/NodeInfo.hpp"
 using namespace aq::Nodes;
 
-bool HistogramRange::ProcessImpl()
+bool HistogramRange::processImpl()
 {
-    if(lower_bound_param._modified || upper_bound_param._modified || bins_param._modified)
+    if(lower_bound_param.modified() || upper_bound_param.modified() || bins_param.modified())
     {
-        updateLevels(input->GetDepth());
-        lower_bound_param._modified = false;
-        upper_bound_param._modified = false;
-        bins_param._modified = false;
+        updateLevels(input->getDepth());
+        lower_bound_param.modified(false);
+        upper_bound_param.modified(false);
+        bins_param.modified(false);
     }
-    if(input->GetChannels() == 1 || input->GetChannels() == 4)
+    if(input->getChannels() == 1 || input->getChannels() == 4)
     {
         cv::cuda::GpuMat hist;
-        cv::cuda::histRange(input->getGpuMat(Stream()), hist, levels.getGpuMat(Stream()), Stream());
-        histogram_param.UpdateData(hist, input_param.GetTimestamp(), _ctx);
+        cv::cuda::histRange(input->getGpuMat(stream()), hist, levels.getGpuMat(stream()), stream());
+        histogram_param.updateData(hist, input_param.getTimestamp(), _ctx);
         return true;
     }
     return false;
@@ -40,14 +40,14 @@ void HistogramRange::updateLevels(int type)
         if(type == CV_8U)
             h_mat.at<int>(i) = val;
     }
-    levels_param.UpdateData(h_mat);
+    levels_param.updateData(h_mat);
 }
 
-bool Histogram::ProcessImpl()
+bool Histogram::processImpl()
 {
     cv::cuda::GpuMat bins, hist;
-    cv::cuda::histogram(input->getGpuMat(Stream()), bins, hist, min, max, Stream());
-    histogram_param.UpdateData(hist, input_param.GetTimestamp(), _ctx);
+    cv::cuda::histogram(input->getGpuMat(stream()), bins, hist, min, max, stream());
+    histogram_param.updateData(hist, input_param.getTimestamp(), _ctx);
     return true;
 }
 

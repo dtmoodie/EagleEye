@@ -18,7 +18,7 @@ namespace aq
         }
 
         ~TestNode(){}
-        void NodeInit(bool firstInit)
+        void nodeInit(bool firstInit)
         {
             updateParameter<int>("int",0);
             updateParameter<short>("short",0);

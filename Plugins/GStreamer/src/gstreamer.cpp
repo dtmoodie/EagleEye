@@ -3,7 +3,7 @@
 
 #include <Aquila/rcc/SystemTable.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <Aquila/utilities/CudaCallbacks.hpp>
+#include <Aquila/utilities/cuda/CudaCallbacks.hpp>
 
 #include <gst/video/video.h>
 #include <gst/app/gstappsrc.h>
@@ -696,7 +696,7 @@ void RTSP_server::setup(std::string pipeOverride)
                             {
                                 LOG(info) << "Setting interface to " << inter.name().toStdString() << " " <<
                                     entry.ip().toString().toStdString() << " " << inter.hardwareAddress().toStdString();
-                                host_param.UpdateData(entry.ip().toString().toStdString());
+                                host_param.updateData(entry.ip().toString().toStdString());
                                 ss << entry.ip().toString().toStdString();
                                 break;
                             }
@@ -716,7 +716,7 @@ void RTSP_server::setup(std::string pipeOverride)
                 else
                 {
                     LOG(warning) << "host not set, setting to localhost";
-                    host_param.UpdateData("127.0.0.1");
+                    host_param.updateData("127.0.0.1");
                     ss << "127.0.0.1";
                 }
                 break;
@@ -729,7 +729,7 @@ void RTSP_server::setup(std::string pipeOverride)
     else
     {
         //updateParameter<std::string>("gst pipeline", pipeOverride);
-        gst_pipeline_param.UpdateData(pipeOverride);
+        gst_pipeline_param.updateData(pipeOverride);
     }
 
     LOG(info) << pipeOverride;
@@ -870,7 +870,7 @@ RTSP_server::RTSP_server():
     need_data_id = 0;
     enough_data_id = 0;
 }
-bool RTSP_server::ProcessImpl()
+bool RTSP_server::processImpl()
 {
     return false;
 }
@@ -1066,7 +1066,7 @@ void new_client_handler(GstRTSPServer *server, GstRTSPClient *client, aq::Nodes:
 }
 
 
-void RTSP_server_new::NodeInit(bool firstInit)
+void RTSP_server_new::nodeInit(bool firstInit)
 {
     if (firstInit)
     {

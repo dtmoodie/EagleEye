@@ -1,7 +1,7 @@
 #include "dialog_network_stream_selection.h"
 #include "ui_dialog_network_stream_selection.h"
 #include <qlistwidget.h>
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
 
 dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent) :
@@ -9,7 +9,7 @@ dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent
     ui(new Ui::dialog_network_stream_selection)
 {
     ui->setupUi(this);
-    url_history_param.UpdatePtr(&url_history);
+    url_history_param.updatePtr(&url_history);
     VariableStorage::Instance()->LoadParams(this, "Network Streams");
     ui->list_url_history->installEventFilter(this);
     QObject::connect(ui->list_url_history, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(on_item_clicked(QListWidgetItem*)));
@@ -23,7 +23,7 @@ dialog_network_stream_selection::dialog_network_stream_selection(QWidget *parent
             auto fg_info = dynamic_cast<aq::Nodes::FrameGrabberInfo*>(info);
             if(fg_info)
             {
-                auto devices = fg_info->ListLoadablePaths();
+                auto devices = fg_info->listLoadablePaths();
                 if(devices.size())
                 {
                     for(auto& device : devices)

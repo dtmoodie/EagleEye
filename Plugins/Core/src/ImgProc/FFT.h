@@ -1,7 +1,8 @@
 #pragma once
 #include <src/precompiled.hpp>
 #include <Aquila/nodes/Node.hpp>
-#include "Aquila/utilities/CudaUtils.hpp"
+#include <Aquila/types/SyncedMemory.hpp>
+#include "Aquila/utilities/cuda/CudaUtils.hpp"
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -10,7 +11,7 @@ namespace aq
 {
     namespace Nodes
     {
-    
+
     class FFT: public Node
     {
     public:
@@ -27,7 +28,7 @@ namespace aq
             OUTPUT(SyncedMemory, coefficients, SyncedMemory());
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class FFTPreShiftImage: public Node
@@ -39,7 +40,7 @@ namespace aq
             OUTPUT(SyncedMemory, output, SyncedMemory());
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class FFTPostShift: public Node
@@ -51,7 +52,7 @@ namespace aq
             OUTPUT(SyncedMemory, output, SyncedMemory());
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         //FFTPostShift();
         //virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };

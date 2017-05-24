@@ -2,7 +2,7 @@
 #include "precompiled.hpp"
 #include <Aquila/rcc/external_includes/cv_superres.hpp>
 #include <Aquila/nodes/Node.hpp>
-
+#include <Aquila/types/SyncedMemory.hpp>
 namespace aq
 {
     namespace Nodes
@@ -37,7 +37,7 @@ namespace aq
                 OUTPUT(SyncedMemory, output, SyncedMemory());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
     }
 }

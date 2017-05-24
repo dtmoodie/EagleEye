@@ -2,7 +2,8 @@
 #include "ui_mainwindow.h"
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
-#include <MetaObject/MetaObjectFactory.hpp>
+#include <Aquila/core/IDataStream.hpp>
+#include <MetaObject/object/MetaObjectFactory.hpp>
 #include <nodes/FlowScene>
 #include <nodes/FlowView>
 #include <nodes/DataModelRegistry>
@@ -15,7 +16,7 @@ namespace aq{
             node(node_){}
         virtual QtNodes::NodeDataType type() const{
             QtNodes::NodeDataType out;
-            out.name = QString::fromStdString(node->GetTreeName());
+            out.name = QString::fromStdString(node->getTreeName());
             out.id = QString::fromStdString("aq::Nodes::Node");
             return out;
         }
@@ -29,8 +30,8 @@ namespace aq{
         }
         virtual QtNodes::NodeDataType type() const{
             QtNodes::NodeDataType out;
-            out.name = QString::fromStdString(param->GetName());
-            out.id = QString::fromStdString(param->GetTypeInfo().name());
+            out.name = QString::fromStdString(param->getName());
+            out.id = QString::fromStdString(param->getTypeInfo().name());
             return out;
         }
         mo::IParam* param;
@@ -41,7 +42,7 @@ namespace aq{
         NodeProxy(rcc::shared_ptr<aq::Nodes::Node>&& obj):
             m_obj(std::move(obj)){}
         virtual QString caption() const{
-            return QString::fromStdString(m_obj->GetTreeName());
+            return QString::fromStdString(m_obj->getTreeName());
         }
         virtual QString name() const{return caption();}
         virtual std::unique_ptr<QtNodes::NodeDataModel> clone()const{
@@ -53,8 +54,8 @@ namespace aq{
 
         virtual unsigned int nPorts(QtNodes::PortType portType) const{
             switch(portType){
-                case QtNodes::PortType::In: return m_obj->GetInputs().size() + 1;
-                case QtNodes::PortType::Out: return m_obj->GetOutputs().size() + 1;
+                case QtNodes::PortType::In: return m_obj->getInputs().size() + 1;
+                case QtNodes::PortType::Out: return m_obj->getOutputs().size() + 1;
             }
             return 0;
         }
@@ -67,10 +68,10 @@ namespace aq{
                         output.id = "aq::Nodes::Node";
                         output.name = "parents";
                     }else{
-                        auto inputs = m_obj->GetInputs();
+                        auto inputs = m_obj->getInputs();
                         if(portIndex <= inputs.size() && portIndex > 0){
-                            output.id = QString::fromStdString(inputs[portIndex - 1]->GetTypeInfo().name());
-                            output.name = QString::fromStdString(inputs[portIndex - 1]->GetName());
+                            output.id = QString::fromStdString(inputs[portIndex - 1]->getTypeInfo().name());
+                            output.name = QString::fromStdString(inputs[portIndex - 1]->getName());
                         }
                     }
                     break;
@@ -80,10 +81,10 @@ namespace aq{
                         output.id = "aq::Nodes::Node";
                         output.name = "children";
                     }else{
-                        auto outputs = m_obj->GetOutputs();
+                        auto outputs = m_obj->getOutputs();
                         if(portIndex > 0 && portIndex <= outputs.size()){
-                            output.id = QString::fromStdString(outputs[portIndex - 1]->GetTypeInfo().name());
-                            output.name = QString::fromStdString(outputs[portIndex - 1]->GetName());
+                            output.id = QString::fromStdString(outputs[portIndex - 1]->getTypeInfo().name());
+                            output.name = QString::fromStdString(outputs[portIndex - 1]->getName());
                         }
                     }
                 }
@@ -95,15 +96,15 @@ namespace aq{
             if(port == 0){
                 std::shared_ptr<NodeOutProxy> typed = std::dynamic_pointer_cast<NodeOutProxy>(nodeData);
                 if(typed){
-                    m_obj->AddParent(typed->node.get());
+                    m_obj->addParent(typed->node.get());
                     return;
                 }
             }
             std::shared_ptr<ParamOutProxy> typed = std::dynamic_pointer_cast<ParamOutProxy>(nodeData);
             if(typed){
-                auto inputs = m_obj->GetInputs();
+                auto inputs = m_obj->getInputs();
                 if(port >= 0 && port < inputs.size()){
-                    m_obj->ConnectInput(typed->node, typed->param, inputs[port]);
+                    m_obj->connectInput(typed->node, typed->param, inputs[port]);
                 }
             }
         }
@@ -112,7 +113,7 @@ namespace aq{
             if(port == 0){
                 return std::make_shared<NodeOutProxy>(m_obj);
             }
-            auto outputs = m_obj->GetOutputs();
+            auto outputs = m_obj->getOutputs();
             if(port > 0 && port <= outputs.size()){
                 return std::make_shared<ParamOutProxy>(outputs[port - 1], m_obj);
             }

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <MetaObject/IMetaObject.hpp>
-#include <MetaObject/Detail/MetaObjectMacros.hpp>
-#include <MetaObject/Parameters/ParameterMacros.hpp>
+#include <MetaObject/object/IMetaObject.hpp>
+#include <MetaObject/object/detail/MetaObjectMacros.hpp>
+#include <MetaObject/params/ParamMacros.hpp>
 #include <map>
 
 class UIPersistence

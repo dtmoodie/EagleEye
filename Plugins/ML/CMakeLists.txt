@@ -27,7 +27,8 @@ file(GLOB_RECURSE knl "*.cu")
 file(GLOB_RECURSE knl_hdr "*.cuh")
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp")
-
+set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+set(CUDA_NVCC_FLAGS "-std=c++11;--expt-relaxed-constexpr;${CUDA_NVCC_FLAGS}")
 cuda_add_library(ML SHARED ${src} ${hdr} ${knl} ${knl_hdr})
 
 RCC_LINK_LIB(ML aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} RuntimeObjectSystem)

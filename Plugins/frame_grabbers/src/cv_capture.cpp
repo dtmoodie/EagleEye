@@ -1,7 +1,7 @@
 #include "cv_capture.h"
 #include "precompiled.hpp"
 #include "Aquila/Nodes/GrabberInfo.hpp"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #if _MSC_VER
 RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
 #endif
@@ -102,7 +102,7 @@ bool GrabberCV::Grab()
         cv::cuda::GpuMat img;
         if(d_cam->nextFrame(img))
         {
-            image_param.UpdateData(img);
+            image_param.updateData(img);
             return true;
         }
     }else if(h_cam)
@@ -112,21 +112,21 @@ bool GrabberCV::Grab()
         {
             double fn = h_cam->get(CV_CAP_PROP_POS_FRAMES);
             double ts_ = h_cam->get(CV_CAP_PROP_POS_MSEC);
-            mo::time_t ts;
+            mo::Time_t ts;
             
             if(ts_ == -1)
             {
-                ts = mo::time_t((boost::posix_time::microsec_clock::universal_time() - initial_time).total_microseconds() * mo::ms);
+                ts = mo::Time_t((boost::posix_time::microsec_clock::universal_time() - initial_time).total_microseconds() * mo::ms);
             }else
             {
-                ts = mo::time_t(ts_* mo::ms);
+                ts = mo::Time_t(ts_* mo::ms);
             }
             if(fn == -1)
             {
-                image_param.UpdateData(img, mo::tag::_timestamp = ts, _ctx);
+                image_param.updateData(img, mo::tag::_timestamp = ts, _ctx);
             }else
             {
-                image_param.UpdateData(img, mo::tag::_timestamp = ts, mo::tag::_frame_number = fn, _ctx);
+                image_param.updateData(img, mo::tag::_timestamp = ts, mo::tag::_frame_number = fn, _ctx);
             }
             return true;
         }

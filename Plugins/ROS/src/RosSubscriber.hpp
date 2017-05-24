@@ -10,18 +10,18 @@ namespace aq
         class ROS_EXPORT RosSubscriber : public IFrameGrabber
         {
         public:
-            static std::vector<std::string> ListLoadablePaths();
+            static std::vector<std::string> listLoadablePaths();
             static int CanLoadDocument(const std::string& topic);
             static int LoadTimeout(){return 10000;}
             MO_DERIVE(RosSubscriber, IFrameGrabber)
             MO_END
-            bool Load(std::string file_path);
+            bool loadData(std::string file_path);
 
-            void AddComponent(rcc::weak_ptr<Algorithm> component);
-            void NodeInit(bool firstInit);
+            void addComponent(rcc::weak_ptr<Algorithm> component);
+            void nodeInit(bool firstInit);
         protected:
             std::vector<rcc::shared_ptr<ros::IMessageReader>> _readers;
-            bool ProcessImpl();
+            bool processImpl();
         };
     }
 }

@@ -4,9 +4,9 @@
 #include <Aquila/rcc/external_includes/cv_cudacodec.hpp>
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
-#include "MetaObject/Thread/ThreadHandle.hpp"
-#include "MetaObject/Thread/ThreadPool.hpp"
-#include "MetaObject/Detail/ConcurrentQueue.hpp"
+#include "MetaObject/thread/ThreadHandle.hpp"
+#include "MetaObject/thread/ThreadPool.hpp"
+#include "MetaObject/core/detail/ConcurrentQueue.hpp"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace aq
@@ -22,7 +22,7 @@ namespace Nodes
             INPUT(SyncedMemory, image, nullptr)
             PROPERTY(cv::Ptr<cv::cudacodec::VideoWriter>, d_writer, cv::Ptr<cv::cudacodec::VideoWriter>())
             PROPERTY(cv::Ptr<cv::VideoWriter>, h_writer, cv::Ptr<cv::VideoWriter>())
-            PARAM(mo::EnumParameter, codec, mo::EnumParameter())
+            PARAM(mo::EnumParam, codec, mo::EnumParam())
             PARAM(mo::WriteDirectory, outdir, {})
             PARAM(mo::WriteFile, filename, mo::WriteFile("video.avi"))
             PARAM(bool, using_gpu_writer, true)
@@ -31,13 +31,13 @@ namespace Nodes
             PARAM(std::string, metadata_stem, "metadata")
             PARAM(std::string, dataset_name, "")
         MO_END;
-        void NodeInit(bool firstInit);
+        void nodeInit(bool firstInit);
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         boost::thread _write_thread;
         struct WriteData{
             cv::Mat img;
-            boost::optional<mo::time_t> ts;
+            boost::optional<mo::Time_t> ts;
             size_t fn;
         };
         moodycamel::ConcurrentQueue<WriteData> _write_queue;

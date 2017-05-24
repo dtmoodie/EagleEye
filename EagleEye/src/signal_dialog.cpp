@@ -1,7 +1,7 @@
 #include "signal_dialog.h"
 #include "ui_signal_dialog.h"
-#include <MetaObject/Signals/RelayManager.hpp>
-#include <MetaObject/Signals/ISignalRelay.hpp>
+#include <MetaObject/object/RelayManager.hpp>
+#include <MetaObject/signals/ISignalRelay.hpp>
 #include <qinputdialog.h>
 
 signal_dialog::signal_dialog(mo::RelayManager* manager, QWidget *parent) :
@@ -18,7 +18,7 @@ void signal_dialog::update(mo::RelayManager* manager)
 {
     _manager = manager;
     ui->treeWidget->clear();
-    auto all_relays = manager->GetAllRelays();
+    auto all_relays = manager->getAllRelays();
     std::map<std::string, QTreeWidgetItem*> top_level_items;
     for(auto& relay : all_relays )
     {
@@ -37,7 +37,7 @@ void signal_dialog::update(mo::RelayManager* manager)
         {
             QTreeWidgetItem* child = new QTreeWidgetItem(parent);
             child->setText(0, QString::fromStdString(relay.second));
-            child->setText(2, QString::fromStdString(relay.first->GetSignature().name()));
+            child->setText(2, QString::fromStdString(relay.first->getSignature().name()));
             //child->setText(1, QString::fromStdString(receiver.description));
             //child->setToolTip(0, QString::fromStdString(receiver.tooltip));
         }

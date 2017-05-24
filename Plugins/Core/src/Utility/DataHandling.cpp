@@ -5,42 +5,42 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-bool PlaybackInfo::ProcessImpl()
+bool PlaybackInfo::processImpl()
 {
-    auto current_ts = input_param.GetTimestamp();
+    auto current_ts = input_param.getTimestamp();
     double framerate = 30.0;
     if(current_ts && last_timestamp)
     {
-        mo::time_t ts_delta = (*current_ts - *last_timestamp);
+        mo::Time_t ts_delta = (*current_ts - *last_timestamp);
         framerate = 1000.0 / ts_delta.value();
     }
 
     auto now = boost::posix_time::microsec_clock::local_time();
     double processrate = 1000.0 / (double)boost::posix_time::time_duration(now - last_iteration_time).total_milliseconds();
 
-    framerate_param.UpdateData(processrate);
-    source_framerate_param.UpdateData(framerate);
-    playrate_param.UpdateData(processrate / framerate);
-    last_timestamp = input_param.GetTimestamp();
+    framerate_param.updateData(processrate);
+    source_framerate_param.updateData(framerate);
+    playrate_param.updateData(processrate / framerate);
+    last_timestamp = input_param.getTimestamp();
     last_iteration_time = now;
     return true;
 }
 MO_REGISTER_CLASS(PlaybackInfo);
-bool ImageInfo::ProcessImpl()
+bool ImageInfo::processImpl()
 {
-    auto ts = input_param.GetTimestamp();
+    auto ts = input_param.getTimestamp();
     auto shape = input->GetShape();
-    count_param.UpdateData(shape[0], ts, _ctx);
-    height_param.UpdateData(shape[1], ts, _ctx);
-    width_param.UpdateData(shape[2], ts, _ctx);
-    channels_param.UpdateData(shape[3], ts, _ctx);
+    count_param.updateData(shape[0], ts, _ctx);
+    height_param.updateData(shape[1], ts, _ctx);
+    width_param.updateData(shape[2], ts, _ctx);
+    channels_param.updateData(shape[3], ts, _ctx);
     return true;
 }
 
 MO_REGISTER_CLASS(ImageInfo);
-bool Mat2Tensor::ProcessImpl()
+bool Mat2Tensor::processImpl()
 {
-    int new_channels = input->GetChannels();
+    int new_channels = input->getChannels();
     if(include_position)
     {
         new_channels += 2;
@@ -145,7 +145,7 @@ cv::cuda::GpuMat ConcatTensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     }
     if(full == true)
     {
-        addInputParameter<cv::cuda::GpuMat>("Input " + boost::lexical_cast<std::string>(_parameters.size()-1));
+        addInputParam<cv::cuda::GpuMat>("Input " + boost::lexical_cast<std::string>(_parameters.size()-1));
     }
     int cols = 0;
     int rows = 0;
@@ -173,10 +173,10 @@ cv::cuda::GpuMat ConcatTensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
         return buf->data;
 }
 
-void ConcatTensor::NodeInit(bool firstInit)
+void ConcatTensor::nodeInit(bool firstInit)
 {
     updateParameter("Include Input", true);
-    addInputParameter<cv::cuda::GpuMat>("Input 0");
+    addInputParam<cv::cuda::GpuMat>("Input 0");
     
 }
 cv::cuda::GpuMat LagBuffer::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
@@ -207,13 +207,13 @@ cv::cuda::GpuMat LagBuffer::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& s
     }
     return cv::cuda::GpuMat();
 }
-void LagBuffer::NodeInit(bool firstInit)
+void LagBuffer::nodeInit(bool firstInit)
 {
     imageBuffer.resize(20);
     putItr = 0;
     getItr = 0;
     lagFrames = 20;
-    _parameters.push_back(new Parameters::TypedInputParameterCopy<unsigned int>("Lag frames", 
+    _parameters.push_back(new Parameters::TypedInputParamCopy<unsigned int>("Lag frames", 
                                 &lagFrames, Parameters::Parameter::ParameterType(Parameters::Parameter::Input | Parameters::Parameter::Control), 
                                 "Number of frames for this video stream to lag behind"));
 
@@ -250,7 +250,7 @@ bool CameraSync::SkipEmpty() const
 {
     return false;
 }
-void CameraSync::NodeInit(bool firstInit)
+void CameraSync::nodeInit(bool firstInit)
 {
     updateParameter<int>("Camera offset", 0);
     updateParameter<unsigned int>("Camera 1 offset", 0)->type =  Parameters::Parameter::Output;
@@ -259,7 +259,7 @@ void CameraSync::NodeInit(bool firstInit)
 }
 
 
-NODE_DEFAULT_CONSTRUCTOR_IMPL(GetOutputImage, Image, Processing)
+NODE_DEFAULT_CONSTRUCTOR_IMPL(getOutputImage, Image, Processing)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ImageInfo, Image, Processing)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(ExportInputImage, Image, Extractor)
 NODE_DEFAULT_CONSTRUCTOR_IMPL(Mat2Tensor, Converter)

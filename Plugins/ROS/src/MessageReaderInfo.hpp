@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MetaObject/Detail/HelperMacros.hpp"
+#include "MetaObject/core/detail/HelperMacros.hpp"
 #include "MetaObject/object/MetaObjectInfo.hpp"
 #include "IRosMessageReader.hpp"
 

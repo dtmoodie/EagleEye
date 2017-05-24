@@ -73,15 +73,15 @@ using namespace aq::Nodes;
         }
     }
 }
-void caffe_input_populator::NodeInit(bool firstInit)
+void caffe_input_populator::nodeInit(bool firstInit)
 {
     if(firstInit)
     {
-        addInputParameter<std::vector<TS<SyncedMemory>>>("frame cache");
-        addInputParameter<std::map<int, std::vector<std::pair<cv::Rect, int>>>>("regions of interest");
-        addInputParameter<std::map<int, int>>("class map");
-        addInputParameter<std::vector<std::vector<std::vector<cv::Mat>>>>("network input blobs");
-        addInputParameter<std::vector<std::string>>("input blob names");
+        addInputParam<std::vector<TS<SyncedMemory>>>("frame cache");
+        addInputParam<std::map<int, std::vector<std::pair<cv::Rect, int>>>>("regions of interest");
+        addInputParam<std::map<int, int>>("class map");
+        addInputParam<std::vector<std::vector<std::vector<cv::Mat>>>>("network input blobs");
+        addInputParam<std::vector<std::string>>("input blob names");
     }
     auto f = [this](cv::cuda::Stream* stream)
     {

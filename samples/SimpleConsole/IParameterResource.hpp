@@ -1,8 +1,8 @@
 #ifdef HAVE_WT
 #pragma once
 #include <Wt/WStreamResource>
-#include <MetaObject/Parameters/IParam.hpp>
-#include <MetaObject/Signals/TypedSlot.hpp>
+#include <MetaObject/params/IParam.hpp>
+#include <MetaObject/signals/TSlot.hpp>
 #include <sstream>
 #include <mutex>
 
@@ -19,7 +19,7 @@ namespace vclick
     protected:
         mo::IParam* param;
         std::shared_ptr<mo::Connection> connection;
-        mo::TypedSlot<void(mo::Context*, mo::IParam*)>* onParamUpdate;
+        mo::TSlot<void(mo::Context*, mo::IParam*)>* onParamUpdate;
         std::iostream* ss;
         std::mutex mtx;
         Wt::WApplication* app;

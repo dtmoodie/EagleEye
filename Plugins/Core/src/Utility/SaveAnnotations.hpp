@@ -1,6 +1,7 @@
 #pragma once
 #include "Aquila/nodes/Node.hpp"
-#include "Aquila/ObjectDetection.hpp"
+#include <Aquila/types/SyncedMemory.hpp>
+#include "Aquila/types/ObjectDetection.hpp"
 
 namespace aq
 {
@@ -30,7 +31,7 @@ namespace Nodes
         MO_END
         SaveAnnotations();
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         void draw();
         //std::vector<std::string> _labels;
         //cv::Mat h_legend;

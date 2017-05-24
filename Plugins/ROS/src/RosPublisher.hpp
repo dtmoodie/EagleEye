@@ -1,6 +1,7 @@
 #pragma once
 #include "ROSExport.hpp"
 #include "Aquila/nodes/Node.hpp"
+#include <Aquila/types/SyncedMemory.hpp>
 #include "IRosMessageWriter.hpp"
 #include "ros/publisher.h"
 namespace aq
@@ -23,9 +24,9 @@ public:
         INPUT(SyncedMemory, input, nullptr)
         PARAM(std::string, topic_name, "image")
     MO_END
-    void NodeInit(bool firstInit);
+    void nodeInit(bool firstInit);
 protected:
-    bool ProcessImpl();
+    bool processImpl();
     ros::Publisher _image_publisher;
 };
 

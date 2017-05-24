@@ -4,56 +4,56 @@
 
 using namespace aq;
 using namespace aq::Nodes;
-bool MinMax::ProcessImpl()
+bool MinMax::processImpl()
 {
-    cv::cuda::minMax(input->getGpuMat(Stream()), &min_value, &max_value);
-    min_value_param.Commit(input_param.GetTimestamp(), _ctx);
-    max_value_param.Commit(input_param.GetTimestamp(), _ctx);
+    cv::cuda::minMax(input->getGpuMat(stream()), &min_value, &max_value);
+    min_value_param.emitUpdate(input_param.getTimestamp(), _ctx);
+    max_value_param.emitUpdate(input_param.getTimestamp(), _ctx);
     return true;
 }
 
 
-bool Threshold::ProcessImpl()
+bool Threshold::processImpl()
 {
     if(input_max)
-        max_param.UpdateData(*input_max * input_percent);
+        max_param.updateData(*input_max * input_percent);
     if(input_min)
-        min_param.UpdateData(*input_min * input_percent);
+        min_param.updateData(*input_min * input_percent);
     cv::cuda::GpuMat upper_mask, lower_mask;
     if(two_sided)
     {
         if(source_value)
         {
-            cv::cuda::threshold(input->getGpuMat(Stream()), upper_mask, max, replace_value, inverse? 3 : 4, Stream());
+            cv::cuda::threshold(input->getGpuMat(stream()), upper_mask, max, replace_value, inverse? 3 : 4, stream());
         }else
         {
-            cv::cuda::threshold(input->getGpuMat(Stream()), upper_mask, max, replace_value, inverse ? 1 : 0, Stream());
+            cv::cuda::threshold(input->getGpuMat(stream()), upper_mask, max, replace_value, inverse ? 1 : 0, stream());
         }
     }
     if(truncate)
     {
-        cv::cuda::threshold(input->getGpuMat(Stream()), lower_mask, min, replace_value, 2, Stream());
+        cv::cuda::threshold(input->getGpuMat(stream()), lower_mask, min, replace_value, 2, stream());
     }else
     {
         if(source_value)
         {
-            cv::cuda::threshold(input->getGpuMat(Stream()), lower_mask, min, 0.0, inverse? 4 : 3, Stream());
+            cv::cuda::threshold(input->getGpuMat(stream()), lower_mask, min, 0.0, inverse? 4 : 3, stream());
         }else
         {
-            cv::cuda::threshold(input->getGpuMat(Stream()), lower_mask, min, replace_value, inverse? 1: 0, Stream());
+            cv::cuda::threshold(input->getGpuMat(stream()), lower_mask, min, replace_value, inverse? 1: 0, stream());
         }
     }
     cv::cuda::GpuMat mask;
     if(upper_mask.empty())
     {
         mask = lower_mask;
-        //mask_param.UpdateData(lower_mask, input_param.GetTimestamp(), _ctx);   
+        //mask_param.updateData(lower_mask, input_param.getTimestamp(), _ctx);   
     }else
     {
-        cv::cuda::bitwise_and(upper_mask, lower_mask, mask, cv::noArray(), Stream());
+        cv::cuda::bitwise_and(upper_mask, lower_mask, mask, cv::noArray(), stream());
     }
-    mask.convertTo(mask, input->GetType(), Stream());
-    mask_param.UpdateData(mask, input_param.GetTimestamp(), _ctx);
+    mask.convertTo(mask, input->GetType(), stream());
+    mask_param.updateData(mask, input_param.getTimestamp(), _ctx);
     return true;
 }
 

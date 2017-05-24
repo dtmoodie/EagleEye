@@ -1,8 +1,8 @@
 #include "NodeListDialog.h"
 #include "ui_nodelistdialog.h"
-#include "MetaObject/MetaObjectFactory.hpp"
+#include "MetaObject/object/MetaObjectFactory.hpp"
 #include "Aquila/nodes/NodeInfo.hpp"
-#include "MetaObject/Detail/IMetaObjectImpl.hpp"
+#include "MetaObject/object/detail/IMetaObjectImpl.hpp"
 #include "QListWidgetItem"
 
 NodeListDialog::NodeListDialog(QWidget *parent) :
@@ -10,8 +10,8 @@ NodeListDialog::NodeListDialog(QWidget *parent) :
     ui(new Ui::NodeListDialog)
 {
     ui->setupUi(this);
-    update_slot = mo::TypedSlot<void(void)>(std::bind(&NodeListDialog::update, this));
-    connection = mo::MetaObjectFactory::instance()->ConnectConstructorAdded(&update_slot), "update", "update", update_slot.GetSignature();
+    update_slot = mo::TSlot<void(void)>(std::bind(&NodeListDialog::update, this));
+    connection = mo::MetaObjectFactory::instance()->connectConstructorAdded(&update_slot), "update", "update", update_slot.getSignature();
     update();
 }
 
@@ -29,14 +29,14 @@ void NodeListDialog::update()
     for(size_t i = 0; i < nodes.size(); ++i)
     {
         //ui->NodeList->addItem(QString::fromStdString(nodes[i]));
-        //auto info  = aq::NodeManager::getInstance().GetNodeInfo(nodes[i]);
+        //auto info  = aq::NodeManager::getInstance().getNodeInfo(nodes[i]);
         auto info = nodes[i]->GetObjectInfo();
         QTreeWidgetItem* parent = nullptr;
         if (auto node_info = dynamic_cast<aq::Nodes::NodeInfo*>(info))
         {
-            auto category = node_info->GetNodeCategory();
+            auto category = node_info->getNodeCategory();
             if(category.size() == 0)
-                category.push_back(node_info->GetDisplayName());
+                category.push_back(node_info->getDisplayName());
             for (int j = 0; j < ui->NodeList->topLevelItemCount(); ++j)
             {
                 if (ui->NodeList->topLevelItem(j)->text(0) == QString::fromStdString(category[0]))
@@ -48,7 +48,7 @@ void NodeListDialog::update()
             {
                 parent = new QTreeWidgetItem(ui->NodeList);
                 ui->NodeList->addTopLevelItem(parent);
-                parent->setText(0, QString::fromStdString(node_info->GetDisplayName()));
+                parent->setText(0, QString::fromStdString(node_info->getDisplayName()));
             }
             for (int k = 1; k < category.size(); ++k)
             {
@@ -71,13 +71,13 @@ void NodeListDialog::update()
                 }
             }
             auto node = new QTreeWidgetItem(parent);
-            node->setText(0, QString::fromStdString(node_info->GetDisplayName()));
+            node->setText(0, QString::fromStdString(node_info->getDisplayName()));
             parent->addChild(node);
         }
         else
         {
             QTreeWidgetItem* item = new QTreeWidgetItem(ui->NodeList);
-            item->setText(0, QString::fromStdString(node_info->GetDisplayName()));
+            item->setText(0, QString::fromStdString(node_info->getDisplayName()));
             ui->NodeList->addTopLevelItem(item);
         }
     }

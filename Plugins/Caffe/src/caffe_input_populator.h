@@ -1,6 +1,6 @@
 #pragma once
 #include <Aquila/nodes/Node.hpp>
-#include <MetaObject/Parameters/ParameterMacros.hpp>
+#include <MetaObject/params/ParamMacros.hpp>
 #include "CaffeExport.hpp"
 namespace aq
 {

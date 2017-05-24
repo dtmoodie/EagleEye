@@ -3,8 +3,8 @@
 #include "WebSink.hpp"
 #include "vclick.hpp"
 
-#include "MetaObject/Detail/IMetaObjectImpl.hpp"
-#include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
+#include "MetaObject/object/detail/IMetaObjectImpl.hpp"
+#include "MetaObject/serialization/SerializationFactory.hpp"
 
 #include <cereal/types/vector.hpp>
 #include <Aquila/IO/cvMat.hpp>
@@ -110,8 +110,8 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     setTitle("vclick3d demo");
     Wt::WLogger& logger = env.server()->logger();
     logger.configure("* -debug -info");
-    auto stream = g_sink->GetDataStream();
-    auto fg = stream->GetNode("ForegroundEstimate0");
+    auto stream = g_sink->getDataStream();
+    auto fg = stream->getNode("ForegroundEstimate0");
 
     auto bg_param = fg->GetParameter("background_model");
     backgroundStream.reset(new TParameterResource<aq::SyncedMemory>(this,
@@ -141,7 +141,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
             this->bandwidth_raw.push_back(rb->GetData());
             this->updatePlots();
         }, std::placeholders::_1, std::placeholders::_2)));
-        onRawBandwidthUpdateConnection = rb->RegisterUpdateNotifier(onBandwidthRawUpdateSlot.get());
+        onRawBandwidthUpdateConnection = rb->registerUpdateNotifier(onBandwidthRawUpdateSlot.get());
 
         onBandwidthThrottledUpdateSlot.reset(new mo::ParameterUpdateSlot(std::bind(
             [this, tb](mo::Context* ctx, mo::IParam* param)
@@ -150,7 +150,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
             this->bandwidth_throttled.push_back(tb->GetData());
             this->updatePlots();
         }, std::placeholders::_1, std::placeholders::_2)));
-        onThrottledBandwidthUpdateConnection = tb->RegisterUpdateNotifier(onBandwidthThrottledUpdateSlot.get());
+        onThrottledBandwidthUpdateConnection = tb->registerUpdateNotifier(onBandwidthThrottledUpdateSlot.get());
     if (false)
     {
         Wt::WAnimation animation(Wt::WAnimation::SlideInFromTop,
@@ -201,7 +201,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         g_sink->GetParameter("output_jpeg"), "heartbeat");
     heartbeatStream->handleParamUpdate(nullptr, nullptr);*/
 
-    /*auto jpeg_node = stream->GetNode("JPEGSink0");
+    /*auto jpeg_node = stream->getNode("JPEGSink0");
     rawStream = nullptr;
     if(jpeg_node)
     {
@@ -244,7 +244,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
             {
                 video_feed->pause();
             }));
-            onActivate.reset(new mo::TypedSlot<void(mo::Context*, mo::IParam*)>(std::bind(
+            onActivate.reset(new mo::TSlot<void(mo::Context*, mo::IParam*)>(std::bind(
                 [=](mo::Context* ctx, mo::IParam* param)
             {
                 if(param->GetData<bool>())
@@ -253,7 +253,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
                     video_feed->play();
                 }
             }, std::placeholders::_1, std::placeholders::_2)));
-            onActivateConntection = g_sink->active_switch->RegisterUpdateNotifier(onActivate.get());
+            onActivateConntection = g_sink->active_switch->registerUpdateNotifier(onActivate.get());
     }*/
 
     auto background_link = Wt::WLink(backgroundStream.get());
@@ -349,7 +349,7 @@ void WebUi::handleMove(int index, float x, float y, float z)
         g_sink->bounding_boxes[index].x = x;
         g_sink->bounding_boxes[index].y = y;
         g_sink->bounding_boxes[index].z = z;
-        g_sink->bounding_boxes_param.Commit();
+        g_sink->bounding_boxes_param.emitUpdate();
     }
 }
 
@@ -365,7 +365,7 @@ void WebUi::handleResize(int index, float x, float y, float z)
 
 void WebUi::handleActivate()
 {
-    g_sink->active_switch->UpdateData(!g_sink->active_switch->GetData());
+    g_sink->active_switch->updateData(!g_sink->active_switch->GetData());
 }
 
 void WebUi::handleAddbb()
@@ -378,19 +378,19 @@ void WebUi::handleAddbb()
     bb.height = 1200;
     bb.depth = 800;
     g_sink->bounding_boxes.push_back(bb);
-    g_sink->bounding_boxes_param.Commit();
+    g_sink->bounding_boxes_param.emitUpdate();
 }
 
 void WebUi::handleRebuildModel()
 {
-    auto stream = g_sink->GetDataStream();
-    auto node = stream->GetNode("ForegroundEstimate0");
+    auto stream = g_sink->getDataStream();
+    auto node = stream->getNode("ForegroundEstimate0");
     if(node)
     {
         auto param = node->GetParameter<bool>("build_model");
         if(param)
         {
-            param->UpdateData(true);
+            param->updateData(true);
         }
     }
 }
@@ -474,11 +474,11 @@ void WebUi::updatePlots()
                 plot.at<cv::Vec3b>(value, x) = cv::Vec3b(0, 255, 0);
                 ++x;
             }
-            mo::ThreadSpecificQueue::Push(
+            mo::ThreadSpecificQueue::push(
                 [plot]()
                 {
                     cv::imshow("bandwidth plot", plot);
-                },mo::ThreadRegistry::Instance()->GetThread(mo::ThreadRegistry::GUI));
+                },mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI));
         }
         
         

@@ -1,9 +1,9 @@
 #pragma once
-#include <MetaObject/MetaObject.hpp>
+#include <MetaObject/object/MetaObject.hpp>
 #include <MetaObject/object/IMetaObjectInfo.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/core/Algorithm.hpp>
-#include "Aquila/ObjectDetection.hpp"
+#include "Aquila/types/ObjectDetection.hpp"
 #include <caffe/net.hpp>
 
 namespace aq
@@ -20,7 +20,7 @@ namespace aq
               public TInterface<NetHandler, Algorithm>
         {
         public:
-            static std::vector<boost::shared_ptr<caffe::Layer<float>>> GetOutputLayers(const caffe::Net<float>& net);
+            static std::vector<boost::shared_ptr<caffe::Layer<float>>> getOutputLayers(const caffe::Net<float>& net);
             typedef std::vector<SyncedMemory> WrappedBlob_t;
             typedef std::map<std::string, WrappedBlob_t> BlobMap_t;
             typedef NetHandlerInfo InterfaceInfo;
@@ -31,10 +31,10 @@ namespace aq
             virtual void SetOutputBlob(const caffe::Net<float>& net, int output_blob_index);
             virtual void StartBatch(){}
             virtual void HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs) = 0;
-            virtual void EndBatch(boost::optional<mo::time_t> timestamp){}
+            virtual void EndBatch(boost::optional<mo::Time_t> timestamp){}
             void SetLabels(std::vector<std::string>* labels){this->labels = labels;}
         protected:
-            bool ProcessImpl() { return true;}
+            bool processImpl() { return true;}
             std::vector<std::string>* labels = nullptr;
         };
     }

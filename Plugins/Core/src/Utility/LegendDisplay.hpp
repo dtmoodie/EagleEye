@@ -15,7 +15,7 @@ public:
         MO_SIGNAL(void, on_class_change, std::string)
     MO_END;
 protected:
-    bool ProcessImpl();
+    bool processImpl();
     cv::Mat h_lut, h_legend;
 };
 }

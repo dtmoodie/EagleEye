@@ -1,7 +1,7 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <MetaObject/Thread/InterThread.hpp>
-#include <MetaObject/Logging/Log.hpp>
+#include <MetaObject/thread/InterThread.hpp>
+#include <MetaObject/logging/Log.hpp>
 
 
 int main()
@@ -14,7 +14,7 @@ int main()
         while (!boost::this_thread::interruption_requested())
         {
             LOG(info) << "Launching callback from work thread";
-            mo::ThreadSpecificQueue::Push(
+            mo::ThreadSpecificQueue::push(
                 boost::bind<void>([]()->void
             {
                 LOG(info) << "Running callback from main thread";

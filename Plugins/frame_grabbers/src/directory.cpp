@@ -9,12 +9,12 @@ using namespace aq::Nodes;
 {
     frame_index = 0;
 }
-bool frame_grabber_directory::ProcessImpl()
+bool frame_grabber_directory::processImpl()
 {
-    auto frame = GetNextFrame(Stream());
+    auto frame = GetNextFrame(stream());
     if(!frame.empty())
     {
-        this->current_frame_param.UpdateData(frame, frame.frame_number, _ctx);
+        this->current_frame_param.updateData(frame, frame.frame_number, _ctx);
         return true;
     }
     return false;
@@ -24,7 +24,7 @@ void frame_grabber_directory::Restart()
 
 }
 
-void frame_grabber_directory::NodeInit(bool firstInit)
+void frame_grabber_directory::nodeInit(bool firstInit)
 {
     //updateParameter("Frame Index", 0);
     //updateParameter("Loaded file", std::string(""));
@@ -126,7 +126,7 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     if(index == files_on_disk.size() - 1)
         sig_eos();
     if(files_on_disk.empty())
-        return TS<SyncedMemory>(mo::time_t(0.0 * mo::ms), (size_t)0);
+        return TS<SyncedMemory>(mo::Time_t(0.0 * mo::ms), (size_t)0);
     if(index >= files_on_disk.size())
         index = static_cast<int>(files_on_disk.size() - 1);
     std::string file_name = files_on_disk[index];
@@ -134,11 +134,11 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     cv::Mat h_out = cv::imread(file_name);
 
     if(h_out.empty())
-        return TS<SyncedMemory>(mo::time_t(0.0*mo::ms), (size_t)0);
+        return TS<SyncedMemory>(mo::Time_t(0.0*mo::ms), (size_t)0);
 
     this->_modified = true;
 
-    return TS<SyncedMemory>(mo::time_t(0.0 * mo::ms), (size_t)index, h_out);
+    return TS<SyncedMemory>(mo::Time_t(0.0 * mo::ms), (size_t)index, h_out);
 }
 
 TS<SyncedMemory> frame_grabber_directory::GetNextFrame(cv::cuda::Stream& stream)

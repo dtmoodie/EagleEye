@@ -59,7 +59,7 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv
             obj.boundingBox.y = ymin[i][0] * bounding_boxes[num].height + bounding_boxes[num].y;
             obj.boundingBox.width = (xmax[i][0] - xmin[i][0]) * bounding_boxes[num].width;
             obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * bounding_boxes[num].height;
-            obj.timestamp = input_param.GetTimestamp();
+            obj.timestamp = input_param.getTimestamp();
             obj.framenumber = input_param.GetFrameNumber();
             obj.id = current_id++;
             // Check all current objects iou value
@@ -92,9 +92,9 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv
     {
         LOG(trace) << "Detected " << objects.size() << " objets in frame " << input_param.GetFrameNumber();
     }
-    num_detections_param.UpdateData(objects.size(), input_param.GetTimestamp(), input_param.GetFrameNumber(), _ctx);
+    num_detections_param.updateData(objects.size(), input_param.getTimestamp(), input_param.GetFrameNumber(), _ctx);
 
-    detections_param.UpdateData(objects, input_param.GetTimestamp(), input_param.GetFrameNumber(), _ctx);
+    detections_param.updateData(objects, input_param.getTimestamp(), input_param.GetFrameNumber(), _ctx);
 }
 
 MO_REGISTER_CLASS(SSDHandler)

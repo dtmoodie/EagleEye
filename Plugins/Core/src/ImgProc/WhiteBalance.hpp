@@ -1,6 +1,6 @@
 #pragma once
-
 #include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 #include <opencv2/imgproc.hpp>
 namespace aq
 {
@@ -38,7 +38,7 @@ namespace aq
                 OUTPUT(SyncedMemory, output, {})
             MO_END
             protected:
-                bool ProcessImpl();
+                bool processImpl();
         };
         class StaticWhiteBalance: public Node
         {
@@ -53,7 +53,7 @@ namespace aq
                 PARAM(float, max, 255)
             MO_END
             protected:
-                bool ProcessImpl();
+                bool processImpl();
         };
         class WhiteBalanceMean: public Node
         {
@@ -64,7 +64,7 @@ namespace aq
                 PARAM(float, K, 0.8)
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             cv::Mat h_m;
             cv::cuda::GpuMat d_m;
         };

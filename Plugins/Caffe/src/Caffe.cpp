@@ -4,18 +4,18 @@
 #include "helpers.hpp"
 #include "Aquila/nodes/Node.hpp"
 #include "Aquila/nodes/NodeInfo.hpp"
-#include <Aquila/ObjectDetection.hpp>
+#include <Aquila/types/ObjectDetection.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
 #include "helpers.hpp"
-#include <MetaObject/MetaObject.hpp>
-#include <MetaObject/Parameters/Types.hpp>
-#include <MetaObject/Detail/IMetaObjectImpl.hpp>
-#include <MetaObject/Logging/Profiling.hpp>
-#include "MetaObject/Logging/Log.hpp"
-#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include <MetaObject/object/MetaObject.hpp>
+#include <MetaObject/params/Types.hpp>
+#include <MetaObject/object/detail/IMetaObjectImpl.hpp>
+#include <MetaObject/logging/Profiling.hpp>
+#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include "caffe_include.h"
 #include <boost/tokenizer.hpp>
 
@@ -157,7 +157,7 @@ bool CaffeBase::CheckInput()
             {
                 for(int k = 0; k < itr->second[j].GetNumMats(); ++k)
                 {
-                    const cv::cuda::GpuMat& mat = itr->second[j].getGpuMat(Stream(), k);
+                    const cv::cuda::GpuMat& mat = itr->second[j].getGpuMat(stream(), k);
                     if(data != (float*)mat.data)
                     {
                         return false;
@@ -222,7 +222,7 @@ bool CaffeBase::InitNetwork()
 {
     if (::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
         ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
-    if (nn_model_file_param._modified)
+    if (nn_model_file_param.modified())
     {
         if (boost::filesystem::exists(nn_model_file))
         {
@@ -236,7 +236,7 @@ bool CaffeBase::InitNetwork()
             }
             WrapInput();
             WrapOutput();
-            nn_model_file_param._modified = false;
+            nn_model_file_param.modified(false);
         }
         else
         {
@@ -244,7 +244,7 @@ bool CaffeBase::InitNetwork()
         }
     }
 
-    if (nn_weight_file_param._modified && NN)
+    if (nn_weight_file_param.modified() && NN)
     {
         if (boost::filesystem::exists(nn_weight_file))
         {
@@ -269,7 +269,7 @@ bool CaffeBase::InitNetwork()
             BOOST_LOG_TRIVIAL(info) << "Weights loaded";
             weightsLoaded = true;
             //UpdateParameter("Loaded layers", layerNames);
-            nn_weight_file_param._modified = false;
+            nn_weight_file_param.modified(false);
         }
         else
         {
@@ -277,7 +277,7 @@ bool CaffeBase::InitNetwork()
         }
     }
 
-    if ((label_file_param._modified || labels.empty()) && boost::filesystem::exists(label_file))
+    if ((label_file_param.modified() || labels.empty()) && boost::filesystem::exists(label_file))
     {
         labels.clear();
         std::ifstream ifs(label_file.string().c_str());
@@ -292,11 +292,11 @@ bool CaffeBase::InitNetwork()
             labels.push_back(line);
         }
         BOOST_LOG_TRIVIAL(info) << "Loaded " << labels.size() << " classes";
-        labels_param.Commit();
-        label_file_param._modified = false;
+        labels_param.emitUpdate();
+        label_file_param.modified(false);
     }
 
-    if (mean_file_param._modified)
+    if (mean_file_param.modified())
     {
         if (boost::filesystem::exists(mean_file))
         {
@@ -334,7 +334,7 @@ bool CaffeBase::InitNetwork()
     return true;
 }
 
-void CaffeBase::NodeInit(bool firstInit)
+void CaffeBase::nodeInit(bool firstInit)
 {
     aq::caffe_init_singleton::inst();
     if (::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
@@ -346,7 +346,7 @@ bool operator !=(const cv::Size_<T1>& lhs, const cv::Size_<T2>& rhs)
     return lhs.width == rhs.width && lhs.height == rhs.height;
 }
 
-bool CaffeImageClassifier::ProcessImpl()
+bool CaffeImageClassifier::processImpl()
 {
      if(!InitNetwork())
         return false;
@@ -393,7 +393,7 @@ bool CaffeImageClassifier::ProcessImpl()
             for(auto& handler : net_handlers)
             {
                 handler->StartBatch();
-                handler->EndBatch(input_param.GetTimestamp());
+                handler->EndBatch(input_param.getTimestamp());
             }
             if(bounding_boxes == &defaultROI)
             {
@@ -432,17 +432,17 @@ bool CaffeImageClassifier::ProcessImpl()
 
     cv::cuda::GpuMat float_image;
 
-    if (input->GetDepth() != CV_32F)
+    if (input->getDepth() != CV_32F)
     {
-        input->getGpuMat(Stream()).convertTo(float_image, CV_32F, Stream());
+        input->getGpuMat(stream()).convertTo(float_image, CV_32F, stream());
     }
     else
     {
-        input->getGpuMat(Stream()).copyTo(float_image, Stream());
+        input->getGpuMat(stream()).copyTo(float_image, stream());
     }
 
-    cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, Stream());
-    cv::cuda::multiply(float_image, cv::Scalar::all(pixel_scale), float_image, 1.0, -1, Stream());
+    cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, stream());
+    cv::cuda::multiply(float_image, cv::Scalar::all(pixel_scale), float_image, 1.0, -1, stream());
 
     auto data_itr = wrapped_inputs.find("data");
     if(data_itr == wrapped_inputs.end())
@@ -471,7 +471,7 @@ bool CaffeImageClassifier::ProcessImpl()
     {
         handler->StartBatch();
     }
-    cv::Size input_image_size = input->GetSize();
+    cv::Size input_image_size = input->getSize();
     for(int i = 0; i < pixel_bounding_boxes.size();) // for each roi
     {
         int start = i, end = 0;
@@ -479,13 +479,13 @@ bool CaffeImageClassifier::ProcessImpl()
         {
             if (pixel_bounding_boxes[i].size() != input_size)
             {
-                cv::cuda::resize(float_image(pixel_bounding_boxes[i]), resized, input_size, 0, 0, cv::INTER_LINEAR, Stream());
+                cv::cuda::resize(float_image(pixel_bounding_boxes[i]), resized, input_size, 0, 0, cv::INTER_LINEAR, stream());
             }
             else
             {
                 resized = float_image(pixel_bounding_boxes[i]);
             }
-            cv::cuda::split(resized, data_itr->second[j].getGpuMatVecMutable(Stream()), Stream());
+            cv::cuda::split(resized, data_itr->second[j].getGpuMatVecMutable(stream()), stream());
             end = start + j + 1;
         }
         // Signal update on all inputs
@@ -496,7 +496,7 @@ bool CaffeImageClassifier::ProcessImpl()
 
         float loss;
         {
-            mo::scoped_profile profile_forward("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &Stream());
+            mo::scoped_profile profile_forward("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &stream());
             NN->Forward(&loss);
         }
 
@@ -546,7 +546,7 @@ bool CaffeImageClassifier::ProcessImpl()
                 // construct the handlers with largest priority
             }
         }
-        mo::scoped_profile profile_handlers("Handle neural net output", &_rmt_hash, &_rmt_cuda_hash, &Stream());
+        mo::scoped_profile profile_handlers("Handle neural net output", &_rmt_hash, &_rmt_cuda_hash, &stream());
         std::vector<cv::Rect> batch_bounding_boxes;
         std::vector<DetectedObject2d> batch_objects;
         for(int j = start; j < end; ++j)
@@ -565,7 +565,7 @@ bool CaffeImageClassifier::ProcessImpl()
     }
     for(auto& handler : net_handlers)
     {
-        handler->EndBatch(input_param.GetTimestamp());
+        handler->EndBatch(input_param.getTimestamp());
     }
     if(bounding_boxes == &defaultROI)
     {

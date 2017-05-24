@@ -2,7 +2,7 @@
 #include <src/precompiled.hpp>
 
 #include <Aquila/rcc/external_includes/cv_cudaoptflow.hpp>
-#include "Aquila/utilities/CudaUtils.hpp"
+#include "Aquila/utilities/cuda/CudaUtils.hpp"
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
@@ -34,7 +34,7 @@ namespace aq
             MO_DERIVE(DensePyrLKOpticalFlow, IPyrOpticalFlow)
                 OUTPUT(SyncedMemory, flow_field, SyncedMemory());
             MO_END;
-            bool ProcessImpl();
+            bool processImpl();
         protected:
             cv::Ptr<cv::cuda::DensePyrLKOpticalFlow> opt_flow;
         };
@@ -50,7 +50,7 @@ namespace aq
                 OUTPUT(SyncedMemory, error, SyncedMemory());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             cv::cuda::GpuMat prev_key_points;
             cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> optFlow;
         };

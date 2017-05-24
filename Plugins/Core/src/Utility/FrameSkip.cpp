@@ -3,12 +3,12 @@
 
 using namespace aq::Nodes;
 
-bool FrameSkip::ProcessImpl()
+bool FrameSkip::processImpl()
 {
     ++frame_count;
     if(frame_count > frame_skip)
     {
-        output_param.UpdateData(*input, input_param.GetTimestamp(), _ctx);
+        output_param.updateData(*input, input_param.getTimestamp(), _ctx);
         frame_count = 0;
         return true;
     }

@@ -18,7 +18,7 @@ public:
     explicit NodeListDialog(QWidget *parent = 0);
     ~NodeListDialog();
     void update();
-    mo::TypedSlot<void()> update_slot;
+    mo::TSlot<void()> update_slot;
 private slots:
     void on_pushButton_clicked();
 

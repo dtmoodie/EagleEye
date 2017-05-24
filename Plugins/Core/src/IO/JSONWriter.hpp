@@ -1,6 +1,6 @@
 #pragma once
 #include "Aquila/nodes/Node.hpp"
-#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
+#include <MetaObject/serialization/SerializationFactory.hpp>
 #include <cereal/archives/json.hpp>
 #include <fstream>
 namespace aq
@@ -18,7 +18,7 @@ namespace aq
                 MO_SLOT(void, on_input_set, mo::Context*, mo::IParam*)
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             std::ofstream ofs;
             std::shared_ptr<cereal::JSONOutputArchive> ar;
         };
@@ -31,10 +31,10 @@ namespace aq
                 PARAM(mo::ReadFile, input_file, mo::ReadFile("output_file.json"));
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             std::shared_ptr<cereal::JSONInputArchive> ar;
             std::ifstream ifs;
-            mo::InputParameter* input;
+            mo::InputParam* input;
         };
 
     }
