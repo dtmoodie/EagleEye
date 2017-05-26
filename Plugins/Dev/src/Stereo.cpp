@@ -34,7 +34,7 @@ bool StereoBM::processImpl()
     }
     cv::cuda::GpuMat disparity;
     stereoBM->compute(left_image->getGpuMat(stream()), right_image->getGpuMat(stream()),disparity, stream());
-    this->disparity_param.updateData(disparity, left_image_param.getTimestamp(), _ctx);
+    this->disparity_param.updateData(disparity, left_image_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -55,7 +55,7 @@ bool StereoBeliefPropagation::processImpl()
     }
     cv::cuda::GpuMat disparity;
     bp->compute(left_image->getGpuMat(stream()), right_image->getGpuMat(stream()), disparity, stream());
-    disparity_param.updateData(disparity, left_image_param.getTimestamp(), _ctx);
+    disparity_param.updateData(disparity, left_image_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -98,7 +98,7 @@ bool StereoConstantSpaceBP::processImpl()
     }
     cv::cuda::GpuMat disparity;
     csbp->compute(left_image->getGpuMat(stream()), right_image->getGpuMat(stream()),disparity, stream());
-    this->disparity_param.updateData(disparity, left_image_param.getTimestamp(), _ctx);
+    this->disparity_param.updateData(disparity, left_image_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -110,14 +110,14 @@ bool UndistortStereo::processImpl()
         cv::Mat X, Y;
         cv::initUndistortRectifyMap(*camera_matrix, *distortion_matrix,
             *rotation_matrix, *projection_matrix, input->getSize(), CV_32FC1, X, Y);
-        mapX_param.updateData(X, -1, _ctx);
-        mapY_param.updateData(Y, -1, _ctx);
+        mapX_param.updateData(X, -1, _ctx.get());
+        mapY_param.updateData(Y, -1, _ctx.get());
     }
     cv::cuda::GpuMat remapped;
     cv::cuda::remap(input->getGpuMat(stream()), remapped,
         mapX.getGpuMat(stream()), mapY.getGpuMat(stream()),
         interpolation_method.getValue(), boarder_mode.getValue(), cv::Scalar(), stream());
-    undistorted_param.updateData(remapped, input_param.getTimestamp(), _ctx);
+    undistorted_param.updateData(remapped, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 

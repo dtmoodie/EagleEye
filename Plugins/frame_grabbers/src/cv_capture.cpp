@@ -123,10 +123,10 @@ bool GrabberCV::Grab()
             }
             if(fn == -1)
             {
-                image_param.updateData(img, mo::tag::_timestamp = ts, _ctx);
+                image_param.updateData(img, mo::tag::_timestamp = ts, _ctx.get());
             }else
             {
-                image_param.updateData(img, mo::tag::_timestamp = ts, mo::tag::_frame_number = fn, _ctx);
+                image_param.updateData(img, mo::tag::_timestamp = ts, mo::tag::_frame_number = fn, _ctx.get());
             }
             return true;
         }

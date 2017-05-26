@@ -1,5 +1,6 @@
 #include "LegendDisplay.hpp"
 #include "Aquila/gui/UiCallbackHandlers.h"
+#include "Aquila/core/IDataStream.hpp"
 #include "Aquila/utilities/cuda/CudaCallbacks.hpp"
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>

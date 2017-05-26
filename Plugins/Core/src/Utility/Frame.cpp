@@ -103,14 +103,14 @@ bool Resize::processImpl()
         {
             cv::Mat resized;
             cv::resize(input->getMat(stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue());
-            output_param.updateData(resized, input_param.getTimestamp(), _ctx);
+            output_param.updateData(resized, input_param.getTimestamp(), _ctx.get());
             return true;
         }
         else
         {
             cv::cuda::GpuMat resized;
             cv::cuda::resize(input->getGpuMat(stream()), resized, cv::Size(width, height), 0.0, 0.0, interpolation_method.getValue(), stream());
-            output_param.updateData(resized, input_param.getTimestamp(), _ctx);
+            output_param.updateData(resized, input_param.getTimestamp(), _ctx.get());
             return true;
         }
     }
@@ -143,7 +143,7 @@ bool RescaleContours::processImpl()
             output[i][j].y = (*input)[i][j].y * scale_y;
         }
     }
-    output_param.emitUpdate(input_param.getTimestamp(), _ctx);
+    output_param.emitUpdate(input_param.getTimestamp(), _ctx.get());
     return true;
 }
 

@@ -66,7 +66,7 @@ bool LabelDisplay::processImpl()
 
     if(original_image == nullptr)
     {
-        colorized_param.updateData(output,label_param.getTimestamp(), _ctx);
+        colorized_param.updateData(output,label_param.getTimestamp(), _ctx.get());
         return true;
     }else
     {
@@ -88,7 +88,7 @@ bool LabelDisplay::processImpl()
             combined(cv::Rect(3,3,legend_width , labels->size()*20 + 15)).setTo(cv::Scalar::all(0), stream());
             cv::cuda::add(combined, d_legend, combined, cv::noArray(), -1, stream());
         }
-        colorized_param.updateData(combined, original_image_param.getTimestamp(), _ctx);
+        colorized_param.updateData(combined, original_image_param.getTimestamp(), _ctx.get());
         return true;
     }
     return false;

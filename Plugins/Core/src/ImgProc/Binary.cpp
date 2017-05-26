@@ -30,7 +30,7 @@ bool MorphologyFilter::processImpl()
         }
         cv::cuda::GpuMat out;
         filter->apply(input_image->getGpuMat(stream()), out, stream());
-        this->output_param.updateData(out, input_image_param.getTimestamp(), _ctx);
+        this->output_param.updateData(out, input_image_param.getTimestamp(), _ctx.get().get());
         return true;
     }
     return false;
@@ -87,9 +87,9 @@ bool FindContours::processImpl()
         auto ts = input_image_param.getTimestamp();
         stream().waitForCompletion();
         cv::findContours(h_mat,contours, hierarchy, mode.currentSelection, method.currentSelection);
-        contours_param.emitUpdate(ts, _ctx);
-        hierarchy_param.emitUpdate(ts, _ctx);
-        num_contours_param.updateData(contours.size(), ts, _ctx);
+        contours_param.emitUpdate(ts, _ctx.get());
+        hierarchy_param.emitUpdate(ts, _ctx.get());
+        num_contours_param.updateData(contours.size(), ts, _ctx.get());
         return true;
     }
     return false;
@@ -399,7 +399,7 @@ bool DrawContours::processImpl()
         }
     }
     cv::drawContours(output_image, *input_contours, largest_idx, cv::Scalar(0,255,0));
-    output_param.updateData(output_image, input_image_param.getTimestamp(), _ctx);
+    output_param.updateData(output_image, input_image_param.getTimestamp(), _ctx.get());
     return true;
 }
 MO_REGISTER_CLASS(DrawContours)

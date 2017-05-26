@@ -16,7 +16,7 @@ bool HistogramRange::processImpl()
     {
         cv::cuda::GpuMat hist;
         cv::cuda::histRange(input->getGpuMat(stream()), hist, levels.getGpuMat(stream()), stream());
-        histogram_param.updateData(hist, input_param.getTimestamp(), _ctx);
+        histogram_param.updateData(hist, input_param.getTimestamp(), _ctx.get());
         return true;
     }
     return false;
@@ -47,7 +47,7 @@ bool Histogram::processImpl()
 {
     cv::cuda::GpuMat bins, hist;
     cv::cuda::histogram(input->getGpuMat(stream()), bins, hist, min, max, stream());
-    histogram_param.updateData(hist, input_param.getTimestamp(), _ctx);
+    histogram_param.updateData(hist, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 

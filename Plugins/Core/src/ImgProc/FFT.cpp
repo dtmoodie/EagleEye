@@ -41,7 +41,7 @@ bool FFT::processImpl()
         flags = flags | cv::DFT_REAL_OUTPUT;
     cv::cuda::GpuMat result;
     cv::cuda::dft(padded, result, input->getSize(),flags, stream());
-    coefficients_param.updateData(result, input_param.getTimestamp(), _ctx);
+    coefficients_param.updateData(result, input_param.getTimestamp(), _ctx.get());
     if(magnitude_param.HasSubscriptions())
     {
         cv::cuda::GpuMat magnitude;
@@ -52,7 +52,7 @@ bool FFT::processImpl()
             cv::cuda::add(magnitude, cv::Scalar::all(1), magnitude, cv::noArray(), -1, stream());
             cv::cuda::log(magnitude, magnitude, stream());
         }
-        this->magnitude_param.updateData(magnitude, input_param.getTimestamp(), _ctx);
+        this->magnitude_param.updateData(magnitude, input_param.getTimestamp(), _ctx.get());
     }
     if(phase_param.HasSubscriptions())
     {
@@ -60,7 +60,7 @@ bool FFT::processImpl()
         cv::cuda::split(result, channels, stream());
         cv::cuda::GpuMat phase;
         cv::cuda::phase(channels[0], channels[1], phase, false, stream());
-        this->phase_param.updateData(phase, input_param.getTimestamp(), _ctx);
+        this->phase_param.updateData(phase, input_param.getTimestamp(), _ctx.get());
     }
     return true;
 }
@@ -87,7 +87,7 @@ bool FFTPreShiftImage::processImpl()
     }
     cv::cuda::GpuMat result;
     cv::cuda::multiply(d_shiftMat, input->getGpuMat(stream()), result, 1, -1, stream());
-    output_param.updateData(result, input_param.getTimestamp(), _ctx);
+    output_param.updateData(result, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 

@@ -17,7 +17,7 @@ bool Canny::processImpl()
     }
     cv::cuda::GpuMat edges;
     detector->detect(input->getGpuMat(stream()), edges, stream());
-    edges_param.updateData(edges, input_param.getTimestamp(), _ctx);
+    edges_param.updateData(edges, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 

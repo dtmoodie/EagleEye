@@ -105,7 +105,7 @@ bool RegionOfInterest::processImpl()
                 d_mats[i] = image->getGpuMat(stream(), i)(pixel_roi);
             }
         }
-        ROI_param.updateData(SyncedMemory(h_mats, d_mats, state), image_param.getTimestamp(), _ctx);
+        ROI_param.updateData(SyncedMemory(h_mats, d_mats, state), image_param.getTimestamp(), _ctx.get());
         return true;
     }
     return false;
@@ -116,7 +116,7 @@ void ExportRegionsOfInterest::nodeInit(bool firstInit)
 {
     output.setMtx(_mtx);
     output.updatePtr(&rois);
-    output.setContext(_ctx);
+    output.setContext(_ctx.get());
     output.setName("output");
     output.setFlags(mo::ParamFlags::Output_e);
     output.appendFlags(mo::Unstamped_e);

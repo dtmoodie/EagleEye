@@ -15,7 +15,7 @@ bool WhiteBalance::processImpl()
     auto upper = cv::Scalar(upper_blue, upper_green, upper_red);
     applyWhiteBalance(input->getGpuMat(stream()),
                       output, lower, upper, rois, weight, dtype, stream());
-    output_param.updateData(output, input_param.getTimestamp(), _ctx);
+    output_param.updateData(output, input_param.getTimestamp(), _ctx.get());
     /*const cv::Mat& in = input->getMat(stream());
     cv::Mat out;
     stream().waitForCompletion();
@@ -85,7 +85,7 @@ bool WhiteBalance::processImpl()
     }
 
     merge(tmpsplit,out);
-    output_param.updateData(out, input_param.getTimestamp(), _ctx);*/
+    output_param.updateData(out, input_param.getTimestamp(), _ctx.get());*/
     return true;
 }
 
@@ -108,7 +108,7 @@ bool StaticWhiteBalance::processImpl()
     }
     cv::cuda::GpuMat output;
     cv::cuda::merge(channels, output, stream());
-    output_param.updateData(output, input_param.getTimestamp(), _ctx);
+    output_param.updateData(output, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -179,7 +179,7 @@ bool WhiteBalanceMean::processImpl()
     in.copyTo(output, stream());
     colorCorrect(output, d_m, stream());
     //cv::cuda::multiply(in, gain, output, 1, -1, stream());
-    output_param.updateData(output, input_param.getTimestamp(), _ctx);
+    output_param.updateData(output, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 

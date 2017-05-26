@@ -8,7 +8,7 @@ int main()
 {
     //aq::SetupLogging();
     LOG(info) << "Main thread started";
-    size_t main_thread_id = mo::GetThisThread();
+    size_t main_thread_id = mo::getThisThread();
     boost::thread thread(boost::bind<void>([main_thread_id]()->void
     {
         while (!boost::this_thread::interruption_requested())

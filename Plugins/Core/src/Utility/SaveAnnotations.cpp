@@ -1,6 +1,6 @@
 #include "SaveAnnotations.hpp"
 #include "Aquila/types/ObjectDetectionSerialization.hpp"
-#include <fstream>
+#include "Aquila/core/IDataStream.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
 #include "Aquila/gui/UiCallbackHandlers.h"
 #include "Aquila/utilities/cuda/CudaCallbacks.hpp"
@@ -9,6 +9,7 @@
 #include <cereal/archives/json.hpp>
 #include <cereal/types/vector.hpp>
 #include <iomanip>
+#include <fstream>
 #include <fstream>
 using namespace aq;
 using namespace aq::Nodes;

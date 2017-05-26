@@ -1,12 +1,9 @@
 #pragma once
-
+#include "Aquila/types/SyncedMemory.hpp"
 #include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include "frame_grabbersExport.hpp"
-namespace aq
-{
-    namespace Nodes
-    {
-    
+namespace aq{
+    namespace Nodes{
     class frame_grabbers_EXPORT GrabberImage: public IGrabber
     {
     public:

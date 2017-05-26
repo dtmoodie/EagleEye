@@ -14,7 +14,7 @@ bool frame_grabber_directory::processImpl()
     auto frame = GetNextFrame(stream());
     if(!frame.empty())
     {
-        this->current_frame_param.updateData(frame, frame.frame_number, _ctx);
+        this->current_frame_param.updateData(frame, frame.frame_number, _ctx.get());
         return true;
     }
     return false;

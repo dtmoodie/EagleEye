@@ -7,8 +7,8 @@ using namespace aq::Nodes;
 bool MinMax::processImpl()
 {
     cv::cuda::minMax(input->getGpuMat(stream()), &min_value, &max_value);
-    min_value_param.emitUpdate(input_param.getTimestamp(), _ctx);
-    max_value_param.emitUpdate(input_param.getTimestamp(), _ctx);
+    min_value_param.emitUpdate(input_param.getTimestamp(), _ctx.get());
+    max_value_param.emitUpdate(input_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -47,13 +47,13 @@ bool Threshold::processImpl()
     if(upper_mask.empty())
     {
         mask = lower_mask;
-        //mask_param.updateData(lower_mask, input_param.getTimestamp(), _ctx);   
+        //mask_param.updateData(lower_mask, input_param.getTimestamp(), _ctx.get());   
     }else
     {
         cv::cuda::bitwise_and(upper_mask, lower_mask, mask, cv::noArray(), stream());
     }
     mask.convertTo(mask, input->GetType(), stream());
-    mask_param.updateData(mask, input_param.getTimestamp(), _ctx);
+    mask_param.updateData(mask, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 

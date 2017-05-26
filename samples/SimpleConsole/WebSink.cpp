@@ -59,7 +59,7 @@ bool WebSink::processImpl()
             }
         }
     }
-    foreground_points_param.updateData(foreground_points, point_cloud_param.getTimestamp(), _ctx);
+    foreground_points_param.updateData(foreground_points, point_cloud_param.getTimestamp(), _ctx.get());
     bool activated = force_active;
     for (auto& bb : bounding_boxes)
     {
@@ -95,7 +95,7 @@ bool WebSink::processImpl()
             }
         }
     }
-    active_switch->updateData(activated, point_cloud_param.getTimestamp(), _ctx);
+    active_switch->updateData(activated, point_cloud_param.getTimestamp(), _ctx.get());
     
     h264_pass_through->Process();
     
@@ -105,12 +105,12 @@ bool WebSink::processImpl()
         if(jpeg_buffer && !jpeg_buffer->empty())
         {
             last_keyframe_time = current_time;
-            output_jpeg_param.updateData(*jpeg_buffer, jpeg_buffer_param.getTimestamp(), _ctx);
+            output_jpeg_param.updateData(*jpeg_buffer, jpeg_buffer_param.getTimestamp(), _ctx.get());
         }
         if(raw_image && !raw_image->empty())
         {
             last_keyframe_time = current_time;
-            output_image_param.updateData(*raw_image, raw_image_param.getTimestamp(), _ctx);
+            output_image_param.updateData(*raw_image, raw_image_param.getTimestamp(), _ctx.get());
         }
         if(jpeg_buffer)
         {
@@ -124,8 +124,8 @@ bool WebSink::processImpl()
     {
         raw_bandwidth_mean(jpeg_buffer->size().area());
     }
-    raw_bandwidth_param.updateData(boost::accumulators::rolling_mean(raw_bandwidth_mean), background_model_param.getTimestamp(), _ctx);
-    throttled_bandwidth_param.updateData(boost::accumulators::rolling_mean(throttled_bandwidth_mean), background_model_param.getTimestamp(), _ctx);
+    raw_bandwidth_param.updateData(boost::accumulators::rolling_mean(raw_bandwidth_mean), background_model_param.getTimestamp(), _ctx.get());
+    throttled_bandwidth_param.updateData(boost::accumulators::rolling_mean(throttled_bandwidth_mean), background_model_param.getTimestamp(), _ctx.get());
     return true;
 }
 MO_REGISTER_CLASS(WebSink);

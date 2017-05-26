@@ -41,7 +41,7 @@ bool FindCheckerboard::processImpl()
     {
         cv::Mat display = mat.clone();
         cv::drawChessboardCorners(display, cv::Size(num_corners_x, num_corners_y), image_points, found);
-        drawn_corners_param.updateData(display, input_param.getTimestamp(), _ctx);
+        drawn_corners_param.updateData(display, input_param.getTimestamp(), _ctx.get());
     }
     return found;
 }

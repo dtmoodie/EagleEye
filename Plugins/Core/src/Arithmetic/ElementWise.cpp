@@ -11,13 +11,13 @@ bool Equal::processImpl()
         const cv::Mat& in = input->getMat(stream());
         cv::Mat out;
         cv::compare(in, cv::Scalar(value), out, cv::CMP_EQ);
-        output_param.updateData(out, input_param.getTimestamp(), _ctx);
+        output_param.updateData(out, input_param.getTimestamp(), _ctx.get());
     }else
     {
         const cv::cuda::GpuMat& in = input->getGpuMat(stream());
         cv::cuda::GpuMat out;
         cv::cuda::compare(in, cv::Scalar(value), out, cv::CMP_EQ, stream());
-        output_param.updateData(out, input_param.getTimestamp(), _ctx);
+        output_param.updateData(out, input_param.getTimestamp(), _ctx.get());
     }
 
     return true;
@@ -40,7 +40,7 @@ bool AddBinary::processImpl()
         {
             out = in1_mat + in2_mat;
         }
-        output_param.updateData(out, in1_param.getTimestamp(), _ctx);
+        output_param.updateData(out, in1_param.getTimestamp(), _ctx.get());
     }else
     {
         const cv::cuda::GpuMat& in1_mat = in1->getGpuMat(stream());
@@ -55,7 +55,7 @@ bool AddBinary::processImpl()
             //out = in1_mat + in2_mat;
             cv::cuda::add(in1_mat, in2_mat, out, cv::noArray(), -1, stream());
         }
-        output_param.updateData(out, in1_param.getTimestamp(), _ctx);
+        output_param.updateData(out, in1_param.getTimestamp(), _ctx.get());
     }
     return true;
 }

@@ -35,8 +35,8 @@ bool GoodFeaturesToTrack::processImpl()
     {
         detector->detect(grey, keypoints, cv::noArray(), stream());
     }
-    key_points_param.updateData(keypoints, input_param.getTimestamp(), _ctx);
-    num_corners_param.updateData(keypoints.cols, input_param.getTimestamp(), _ctx);
+    key_points_param.updateData(keypoints, input_param.getTimestamp(), _ctx.get());
+    num_corners_param.updateData(keypoints.cols, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -62,7 +62,7 @@ bool FastFeatureDetector::processImpl()
     }
     if(!keypoints.empty())
     {
-        keypoints_param.updateData(keypoints, input_param.getTimestamp(), _ctx);
+        keypoints_param.updateData(keypoints, input_param.getTimestamp(), _ctx.get());
     }
     return true;
 }
@@ -105,8 +105,8 @@ bool ORBFeatureDetector::processImpl()
     {
         detector->detectAndComputeAsync(input->getGpuMat(stream()), cv::noArray(), keypoints, descriptors, false, stream());
     }
-    keypoints_param.updateData(keypoints, input_param.getTimestamp(), _ctx);
-    descriptors_param.updateData(descriptors, input_param.getTimestamp(), _ctx);
+    keypoints_param.updateData(keypoints, input_param.getTimestamp(), _ctx.get());
+    descriptors_param.updateData(descriptors, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -121,7 +121,7 @@ bool CornerHarris::processImpl()
     }
     cv::cuda::GpuMat score;
     detector->compute(input->getGpuMat(stream()), score, stream());
-    score_param.updateData(score, input_param.getTimestamp(), _ctx);
+    score_param.updateData(score, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -135,7 +135,7 @@ bool CornerMinEigenValue::processImpl()
     }
     cv::cuda::GpuMat score;
     detector->compute(input->getGpuMat(stream()), score, stream());
-    score_param.updateData(score, input_param.getTimestamp(), _ctx);
+    score_param.updateData(score, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 

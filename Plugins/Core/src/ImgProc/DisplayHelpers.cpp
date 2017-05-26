@@ -12,7 +12,7 @@ bool Scale::processImpl()
 {
     cv::cuda::GpuMat scaled;
     cv::cuda::multiply(input->getGpuMat(stream()), cv::Scalar(scale_factor), scaled, 1, -1, stream());
-    output_param.updateData(scaled, input_param.getTimestamp(), _ctx);
+    output_param.updateData(scaled, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 MO_REGISTER_CLASS(Scale)
@@ -27,8 +27,9 @@ bool AutoScale::processImpl()
         cv::cuda::minMax(channels[i], &minVal, &maxVal);
         double scaleFactor = 255.0 / (maxVal - minVal);
         channels[i].convertTo(channels[0], CV_8U, scaleFactor, minVal*scaleFactor);
-        UpdateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal)->SetFlags(mo::State_e);
-        UpdateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->SetFlags(mo::State_e);
+        // TODO update to new api
+        //updateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal)->setFlags(mo::State_e);
+        //updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->setFlags(mo::State_e);
     }
     cv::cuda::merge(channels,output_image.getGpuMat(stream()), stream());
     return true;
@@ -105,7 +106,7 @@ bool DrawDetections::processImpl()
 
         }
     }
-    image_with_detections_param.updateData(draw_image, image_param.getTimestamp(), _ctx);
+    image_with_detections_param.updateData(draw_image, image_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -122,7 +123,7 @@ bool Normalize::processImpl()
             norm_type.currentSelection, input_image->getDepth(),
             mask == NULL ? cv::noArray(): mask->getGpuMat(stream()),
             stream());
-        normalized_output_param.updateData(normalized, input_image_param.getTimestamp(), _ctx);
+        normalized_output_param.updateData(normalized, input_image_param.getTimestamp(), _ctx.get());
         return true;
     }else
     {
@@ -149,10 +150,10 @@ bool Normalize::processImpl()
         if(input_image->GetNumMats() == 1)
         {
             cv::cuda::merge(channels, normalized, stream());
-            normalized_output_param.updateData(normalized, input_image_param.getTimestamp(), _ctx);
+            normalized_output_param.updateData(normalized, input_image_param.getTimestamp(), _ctx.get());
         }else
         {
-            normalized_output_param.updateData(normalized_channels, input_image_param.getTimestamp(), _ctx);
+            normalized_output_param.updateData(normalized_channels, input_image_param.getTimestamp(), _ctx.get());
         }
         return true;
     }

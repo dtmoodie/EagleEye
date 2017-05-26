@@ -10,7 +10,7 @@ bool ConvertToGrey::processImpl()
     {
         cv::cuda::GpuMat grey;
         cv::cuda::cvtColor(input_image->getGpuMat(stream()), grey, cv::COLOR_BGR2GRAY, 0, stream());
-        grey_image_param.updateData(grey, input_image_param.getTimestamp(), _ctx);
+        grey_image_param.updateData(grey, input_image_param.getTimestamp(), _ctx.get());
         return true;
     }
     return false;
@@ -22,7 +22,7 @@ bool ConvertToHSV::processImpl()
     {
         ::cv::cuda::GpuMat hsv;
         ::cv::cuda::cvtColor(input_image->getGpuMat(stream()), hsv, cv::COLOR_BGR2HSV, 0, stream());
-        hsv_image_param.updateData(hsv, input_image_param.getTimestamp(), this->_ctx);
+        hsv_image_param.updateData(hsv, input_image_param.getTimestamp(), this->_ctx.get());
         return true;
     }
     return false;
@@ -118,13 +118,13 @@ bool ConvertTo::processImpl()
     {
         cv::Mat output;
         input->getMat(stream()).convertTo(output, datatype.getValue(), alpha, beta);
-        this->output_param.updateData(output, input_param.getTimestamp(), _ctx);
+        this->output_param.updateData(output, input_param.getTimestamp(), _ctx.get());
         return true;
     }else
     {
         cv::cuda::GpuMat output;
         input->getGpuMat(stream()).convertTo(output, datatype.getValue(), alpha, beta, stream());
-        this->output_param.updateData(output, input_param.getTimestamp(), _ctx);
+        this->output_param.updateData(output, input_param.getTimestamp(), _ctx.get());
         return true;
     }
 }
@@ -136,7 +136,7 @@ bool Magnitude::processImpl()
     {
         ::cv::cuda::GpuMat magnitude;
         ::cv::cuda::magnitude(input_image->getGpuMat(stream()), magnitude, stream());
-        output_magnitude_param.updateData(magnitude, input_image_param.getTimestamp(), _ctx);
+        output_magnitude_param.updateData(magnitude, input_image_param.getTimestamp(), _ctx.get());
         return true;
     }
     return false;
@@ -148,7 +148,7 @@ bool SplitChannels::processImpl()
     {
         std::vector<cv::cuda::GpuMat> _channels;
         ::cv::cuda::split(input_image->getGpuMat(stream()), _channels, stream());
-        channels_param.updateData(_channels, input_image_param.getTimestamp(), _ctx);
+        channels_param.updateData(_channels, input_image_param.getTimestamp(), _ctx.get());
         return true;
     }
     return false;
@@ -229,7 +229,7 @@ bool ConvertColorspace::processImpl()
 {
     cv::cuda::GpuMat output;
     cv::cuda::cvtColor(input_image->getGpuMat(stream()),output, conversion_code.getValue(), 0, stream());
-    output_image_param.updateData(output, input_image_param.getTimestamp(), _ctx);
+    output_image_param.updateData(output, input_image_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -241,7 +241,7 @@ bool MergeChannels::processImpl()
 
 bool Reshape::processImpl()
 {
-    reshaped_image_param.updateData(input_image->getGpuMat(stream()).reshape(channels, rows), input_image_param.getTimestamp(), _ctx);
+    reshaped_image_param.updateData(input_image->getGpuMat(stream()).reshape(channels, rows), input_image_param.getTimestamp(), _ctx.get());
     return true;
 }
 

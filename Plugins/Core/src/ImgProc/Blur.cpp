@@ -27,7 +27,7 @@ bool MedianBlur::processImpl()
     {
         _median_filter->apply(input->getGpuMat(stream()), output, stream());
     }
-    output_param.updateData(output, input_param.getTimestamp(), _ctx);
+    output_param.updateData(output, input_param.getTimestamp(), _ctx.get());
 
     return true;
 }

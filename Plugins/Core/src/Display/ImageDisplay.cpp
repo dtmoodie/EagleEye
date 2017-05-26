@@ -110,7 +110,7 @@ bool HistogramOverlay::processImpl()
     //draw.copyTo(output_image(cv::Rect(0,0,256,100)), stream());
     cv::cuda::add(output_image(cv::Rect(0,0,256,100)), draw, output_image(cv::Rect(0,0,256,100)),
                   cv::noArray(), -1, stream());
-    output_param.updateData(output_image, image_param.getTimestamp(), _ctx);
+    output_param.updateData(output_image, image_param.getTimestamp(), _ctx.get());
     return true;
 }
 

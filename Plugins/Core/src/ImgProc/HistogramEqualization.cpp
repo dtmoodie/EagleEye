@@ -31,7 +31,7 @@ bool HistogramEqualization::processImpl()
         cv::cuda::merge(channels, output, stream());
     }
 
-    output_param.updateData(output, input_param.getTimestamp(), _ctx);
+    output_param.updateData(output, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -53,7 +53,7 @@ bool CLAHE::processImpl()
     cv::cuda::GpuMat output;
     cv::cuda::merge(channels, hsv, stream());
     cv::cuda::cvtColor(hsv, output, cv::COLOR_HSV2BGR, 0, stream());
-    output_param.updateData(output, mo::tag::_timestamp = input_param.getTimestamp(), mo::tag::_context = _ctx);
+    output_param.updateData(output, mo::tag::_timestamp = input_param.getTimestamp(), mo::tag::_context = _ctx.get());
     return true;
 }
 

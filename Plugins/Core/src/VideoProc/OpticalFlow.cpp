@@ -85,7 +85,7 @@ bool DensePyrLKOpticalFlow::processImpl()
     opt_flow->calc(prevGreyImg, *image_pyramid, flow, stream());
 
     prevGreyImg = greyImg;
-    flow_field_param.updateData(flow, fn, _ctx);
+    flow_field_param.updateData(flow, fn, _ctx.get());
     return true;
 }
 
@@ -126,9 +126,9 @@ bool SparsePyrLKOpticalFlow::processImpl()
                 optFlow->calc(prevGreyImg, greyImg, prev_key_points, tracked_points, status, error, stream());
             }
         }
-        tracked_points_param.updateData(tracked_points, ts, _ctx);
-        status_param.updateData(status, ts, _ctx);
-        error_param.updateData(error, ts, _ctx);
+        tracked_points_param.updateData(tracked_points, ts, _ctx.get());
+        status_param.updateData(status, ts, _ctx.get());
+        error_param.updateData(error, ts, _ctx.get());
         return true;
     }
     return false;

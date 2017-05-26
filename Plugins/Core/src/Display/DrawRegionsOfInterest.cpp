@@ -18,7 +18,7 @@ bool DrawRegionsOfInterest::processImpl()
         pixelRect.height = roi.height* image_size.height;
         cv::cuda::rectangle(draw_image, pixelRect, cv::Scalar(0,128,0), 2, stream());
     }
-    output_param.updateData(draw_image, image_param.getTimestamp(), _ctx);
+    output_param.updateData(draw_image, image_param.getTimestamp(), _ctx.get());
     return true;
 }
 

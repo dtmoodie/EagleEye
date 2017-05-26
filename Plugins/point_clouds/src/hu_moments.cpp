@@ -1,7 +1,7 @@
 #include "hu_moments.h"
 #include <MetaObject/Parameters/IO/CerealPolicy.hpp>
 #include <MetaObject/Parameters/MetaParameter.hpp>
-#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
+#include "MetaObject/Parameters/detail/MetaParamImpl.hpp"
 #include <cereal/types/vector.hpp>
 
 

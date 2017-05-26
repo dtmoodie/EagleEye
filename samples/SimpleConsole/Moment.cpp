@@ -1,7 +1,7 @@
 #include "Moment.hpp"
-#include <MetaObject/params/IO/CerealPolicy.hpp>
-#include <MetaObject/params/MetaParameter.hpp>
-#include "MetaObject/params/detail/MetaParametersDetail.hpp"
+#include <MetaObject/serialization/CerealPolicy.hpp>
+#include <MetaObject/params/MetaParam.hpp>
+#include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include <cereal/types/vector.hpp>
 
 

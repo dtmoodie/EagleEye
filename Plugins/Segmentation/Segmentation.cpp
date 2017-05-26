@@ -172,7 +172,7 @@ bool MOG2::ProcessImpl()
     }
     cv::cuda::GpuMat mask;
     mog2->apply(image->GetGpuMat(Stream()), mask, learning_rate, Stream());
-    background_param.UpdateData(mask, image_param.GetTimestamp(), _ctx);
+    background_param.UpdateData(mask, image_param.GetTimestamp(), _ctx.get());
     return true;
 }
 
@@ -181,7 +181,7 @@ bool Watershed::ProcessImpl()
     const cv::Mat& img = image->GetMat(Stream());
     cv::Mat mask = marker_mask->GetMat(Stream()).clone();
     cv::watershed(img,mask);
-    mask_param.UpdateData(mask, image_param.GetTimestamp(), _ctx);
+    mask_param.UpdateData(mask, image_param.GetTimestamp(), _ctx.get());
     return true;
 }
 
@@ -267,9 +267,9 @@ bool KMeans::ProcessImpl()
     cv::TermCriteria termCrit(cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS, iterations, epsilon);
     cv::Mat labels, clusters;
     double ret = cv::kmeans(img, k, labels, termCrit, attempts, flags.getValue(), clusters);
-    clusters_param.UpdateData(clusters, image_param.GetTimestamp(), _ctx);
-    labels_param.UpdateData(labels, image_param.GetTimestamp(), _ctx);
-    compactness_param.UpdateData(ret, image_param.GetTimestamp(), _ctx);
+    clusters_param.UpdateData(clusters, image_param.GetTimestamp(), _ctx.get());
+    labels_param.UpdateData(labels, image_param.GetTimestamp(), _ctx.get());
+    compactness_param.UpdateData(ret, image_param.GetTimestamp(), _ctx.get());
     return true;
 }
 
@@ -303,7 +303,7 @@ bool MeanShift::ProcessImpl()
         min_size,
         cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, max_iters,
         epsilon), Stream());
-    output_param.UpdateData(dest, image_param.GetTimestamp(), _ctx);
+    output_param.UpdateData(dest, image_param.GetTimestamp(), _ctx.get());
     return true;
 }
 

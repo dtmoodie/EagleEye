@@ -29,11 +29,11 @@ MO_REGISTER_CLASS(PlaybackInfo);
 bool ImageInfo::processImpl()
 {
     auto ts = input_param.getTimestamp();
-    auto shape = input->GetShape();
-    count_param.updateData(shape[0], ts, _ctx);
-    height_param.updateData(shape[1], ts, _ctx);
-    width_param.updateData(shape[2], ts, _ctx);
-    channels_param.updateData(shape[3], ts, _ctx);
+    auto shape = input->getShape();
+    count_param.updateData(shape[0], ts, _ctx.get());
+    height_param.updateData(shape[1], ts, _ctx.get());
+    width_param.updateData(shape[2], ts, _ctx.get());
+    channels_param.updateData(shape[3], ts, _ctx.get());
     return true;
 }
 
