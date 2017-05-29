@@ -43,7 +43,7 @@ bool QtImageDisplay::processImpl()
                 ss << "Timestamp: " << ts;
                 cv::putText(mat, ss.str(), cv::Point(20,40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0,255,0));
             }
-            getDataStream()->GetWindowCallbackManager()->imshow(name, draw_img);
+            getDataStream()->getWindowCallbackManager()->imshow(name, draw_img);
         }, gui_thread_id, stream());
 
         return true;
@@ -85,7 +85,7 @@ bool HistogramDisplay::processImpl()
                 [name, output_image, this]()->void
     {
         PROFILE_RANGE(imshow);
-        getDataStream()->GetWindowCallbackManager()->imshowd(name, output_image, cv::WINDOW_OPENGL);
+        getDataStream()->getWindowCallbackManager()->imshowd(name, output_image, cv::WINDOW_OPENGL);
     }, gui_thread_id, stream());
     return true;
 }
@@ -132,7 +132,7 @@ bool OGLImageDisplay::processImpl()
                 [name, this, gpumat, ts, prev]()->void
     {
         PROFILE_RANGE(imshow);
-        getDataStream()->GetWindowCallbackManager()->imshowd(name, gpumat, cv::WINDOW_OPENGL);
+        getDataStream()->getWindowCallbackManager()->imshowd(name, gpumat, cv::WINDOW_OPENGL);
         if(ts)
         {
             //std::cout << *ts - *prev  << std::endl;

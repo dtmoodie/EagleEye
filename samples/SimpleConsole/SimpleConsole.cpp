@@ -1,15 +1,18 @@
 
-#include <Aquila/Aquila.hpp>
-#include <Aquila/Logging.h>
+#include <Aquila/core/Aquila.hpp>
+#include <Aquila/core/Logging.hpp>
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/core/IDataStream.hpp>
 #include <Aquila/nodes/NodeFactory.hpp>
 #include <Aquila/gui/UiCallbackHandlers.h>
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
 
 #include <MetaObject/object/MetaObject.hpp>
 #include <MetaObject/object/RelayManager.hpp>
-#include <MetaObject/params/IVariableManager.h>
+#include <MetaObject/params/IVariableManager.hpp>
 #include <MetaObject/serialization/SerializationFactory.hpp>
 #include <MetaObject/logging/Profiling.hpp>
-#include <MetaObject/Detail/Allocator.hpp>
+#include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
 #include <MetaObject/params/Buffers/IBuffer.hpp>
 #include <MetaObject/logging/Profiling.hpp>
@@ -49,7 +52,7 @@ void PrintNodeTree(aq::Nodes::Node* node, int depth)
         std::cout << "=";
     }
     std::cout << node->getTreeName() << std::endl;
-    auto children = node->GetChildren();
+    auto children = node->getChildren();
     for(int i = 0; i < children.size(); ++i)
     {
         PrintNodeTree(children[i].get(), depth + 1);
@@ -73,11 +76,11 @@ void PrintBuffers(aq::Nodes::Node* node, std::vector<std::string>& printed_nodes
         return;
     }
     printed_nodes.push_back(name);
-    std::vector<mo::InputParam*> inputs = node->GetInputs();
+    std::vector<mo::InputParam*> inputs = node->getInputs();
     std::cout << "--------\n" << name << std::endl;
     for(mo::InputParam* input : inputs)
     {
-        mo::IParam* param = input->GetInputParam();
+        mo::IParam* param = input->getInputParam();
         mo::Buffer::IBuffer* buf = dynamic_cast<mo::Buffer::IBuffer*>(param);
         if(buf)
         {
@@ -85,7 +88,7 @@ void PrintBuffers(aq::Nodes::Node* node, std::vector<std::string>& printed_nodes
         }
     }
 
-    auto children = node->GetChildren();
+    auto children = node->getChildren();
     for(auto child : children)
     {
         PrintBuffers(child.get(), printed_nodes);
@@ -159,7 +162,7 @@ int main(int argc, char* argv[])
     boost::program_options::variables_map vm;
     auto parsed_options = boost::program_options::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
     boost::program_options::store(parsed_options, vm);
-    mo::MetaParameters::initialize();
+    mo::MetaParams::initialize();
 
     if(vm.count("log-dir"))
         aq::Init(vm["log-dir"].as<std::string>());
@@ -229,7 +232,7 @@ int main(int argc, char* argv[])
 
     if(vm["profile"].as<bool>())
     {
-        mo::InitProfiling();
+        mo::initProfiling();
     }
     cv::cuda::setDevice(vm["gpu"].as<int>());
     {
@@ -293,10 +296,10 @@ int main(int argc, char* argv[])
     }
     boost::thread gui_thread([]
     {
-        mo::ThreadRegistry::instance()->RegisterThread(mo::ThreadRegistry::GUI);
+        mo::ThreadRegistry::instance()->registerThread(mo::ThreadRegistry::GUI);
         while(!boost::this_thread::interruption_requested())
         {
-            mo::SetThreadName("SimpleConsole GUI thread");
+            mo::setThreadName("SimpleConsole GUI thread");
             try
             {
                 mo::ThreadSpecificQueue::run();
@@ -419,7 +422,7 @@ int main(int argc, char* argv[])
                         auto documents = fg_info->listLoadablePaths();
                         for(auto& document : documents)
                         {
-                            std::cout << " - " << index << "  [" << fg_info->GetObjectName() << "] " << document << "\n";
+                            std::cout << " - " << index << "  [" << fg_info->getObjectName() << "] " << document << "\n";
                             documents_list.emplace_back(document, fg_info->getDisplayName());
                             ++index;
                         }
@@ -427,7 +430,7 @@ int main(int argc, char* argv[])
                 }
             }, std::placeholders::_1));
         _slots.emplace_back(slot);
-        connections.push_back(manager.Connect(slot, "list_devices"));
+        connections.push_back(manager.connect(slot, "list_devices"));
 
 
         slot = new mo::TSlot<void(std::string)>(
@@ -447,12 +450,12 @@ int main(int argc, char* argv[])
             auto ds = aq::IDataStream::create(doc, fg_override);
             if(ds)
             {
-                ds->StartThread();
+                ds->startThread();
                 _dataStreams.push_back(ds);
             }
         }, std::placeholders::_1));
         _slots.emplace_back(slot);
-        connections.push_back(manager.Connect(slot, "load_file"));
+        connections.push_back(manager.connect(slot, "load_file"));
 
         slot = new mo::TSlot<void(std::string)>(
             std::bind([](std::string)->void
@@ -460,7 +463,7 @@ int main(int argc, char* argv[])
             quit = true;
         }, std::placeholders::_1));
         _slots.emplace_back(slot);
-        connections.push_back(manager.Connect(slot, "quit"));
+        connections.push_back(manager.connect(slot, "quit"));
 
 
         auto func = [&_dataStreams, &current_stream, &current_node, &current_param](std::string what)->void
@@ -469,7 +472,7 @@ int main(int argc, char* argv[])
             {
                 for(auto& itr : _dataStreams)
                 {
-                    auto fgs = itr->GetTopLevelNodes();
+                    auto fgs = itr->getTopLevelNodes();
                     for(auto& fg : fgs)
                     {
                         if(auto frame_grabber = fg.DynamicCast<aq::Nodes::IFrameGrabber>())
@@ -506,7 +509,7 @@ int main(int argc, char* argv[])
                 std::vector<mo::IParam*> parameters;
                 if(current_node)
                 {
-                    parameters = current_node->GetAllParameters();
+                    parameters = current_node->getAllParams();
                 }
                 if(current_stream)
                 {
@@ -523,7 +526,7 @@ int main(int argc, char* argv[])
                             {
                                 std::stringstream ss;
                                 ss << " - " << itr->getTreeName() << " [";
-                                auto input_param = input->GetInputParam();
+                                auto input_param = input->getInputParam();
                                 if(input_param)
                                 {
                                     ss << input_param->getTreeName();
@@ -537,7 +540,7 @@ int main(int argc, char* argv[])
                         }
                         else
                         {
-                            auto func = mo::SerializationFunctionRegistry::Instance()->getTextSerializationFunction(itr->getTypeInfo());
+                            auto func = mo::SerializationFactory::instance()->getTextSerializationFunction(itr->getTypeInfo());
                             if (func)
                             {
                                 std::stringstream ss;
@@ -562,7 +565,7 @@ int main(int argc, char* argv[])
             {
                 if(current_stream)
                 {
-                    auto fgs = current_stream->GetTopLevelNodes();
+                    auto fgs = current_stream->getTopLevelNodes();
                     for(auto& fg : fgs)
                     {
                         if(auto f_g = fg.DynamicCast<aq::Nodes::IFrameGrabber>())
@@ -587,7 +590,7 @@ int main(int argc, char* argv[])
                 if (current_node)
                 {
                     std::vector<mo::SignalInfo*> infos;
-                    current_node->GetSignalInfo(infos);
+                    current_node->getSignalInfo(infos);
                     for(auto& info : infos)
                     {
                         std::cout << info->print();
@@ -602,7 +605,7 @@ int main(int argc, char* argv[])
             {
                 if(current_param && current_node)
                 {
-                    auto potential_inputs = current_node->getDataStream()->GetVariableManager()->getOutputParameters(current_param->getTypeInfo());
+                    auto potential_inputs = current_node->getDataStream()->getVariableManager()->getOutputParams(current_param->getTypeInfo());
                     std::stringstream ss;
                     if(potential_inputs.size())
                     {
@@ -618,14 +621,14 @@ int main(int argc, char* argv[])
                 }
                 if(current_node)
                 {
-                    auto params = current_node->GetAllParameters();
+                    auto params = current_node->getAllParams();
                     std::stringstream ss;
                     for(auto param : params)
                     {
                         if(param->checkFlags(mo::Input_e))
                         {
                             ss << " -- " << param->getTreeName() << " [ " << param->getTypeInfo().name() << " ]\n";
-                            auto potential_inputs = current_node->getDataStream()->GetVariableManager()->getOutputParameters(param->getTypeInfo());
+                            auto potential_inputs = current_node->getDataStream()->getVariableManager()->getOutputParams(param->getTypeInfo());
                             for(auto& input : potential_inputs)
                             {
                                 ss << " - " << input->getTreeName();
@@ -692,12 +695,12 @@ int main(int argc, char* argv[])
         };
         slot = new mo::TSlot<void(std::string)>(std::bind(func, std::placeholders::_1));
         _slots.emplace_back(slot);
-        connections.push_back(manager.Connect(slot, "print"));
-        connections.push_back(manager.Connect(slot, "ls"));
+        connections.push_back(manager.connect(slot, "print"));
+        connections.push_back(manager.connect(slot, "ls"));
         slot = new mo::TSlot<void(std::string)>(
                     std::bind([](std::string obj)
         {
-            IObjectConstructor* constructor = mo::MetaObjectFactory::instance()->GetConstructor(obj.c_str());
+            IObjectConstructor* constructor = mo::MetaObjectFactory::instance()->getConstructor(obj.c_str());
             if(constructor)
             {
                 mo::IMetaObjectInfo* info = dynamic_cast<mo::IMetaObjectInfo*>(constructor->GetObjectInfo());
@@ -711,7 +714,7 @@ int main(int argc, char* argv[])
             }
         }, std::placeholders::_1));
         _slots.emplace_back(slot);
-        connections.push_back(manager.Connect(slot, "info"));
+        connections.push_back(manager.connect(slot, "info"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind(
         [&current_stream, &current_node, &variable_replace_map, &replace_map](std::string file)
@@ -722,8 +725,8 @@ int main(int argc, char* argv[])
                 rcc::shared_ptr<aq::IDataStream> stream(current_stream);
                 std::vector<rcc::shared_ptr<aq::IDataStream>> streams;
                 streams.push_back(stream);
-                aq::IDataStream::Save(file, streams, variable_replace_map, replace_map);
-                stream->StartThread();
+                aq::IDataStream::save(file, streams, variable_replace_map, replace_map);
+                stream->startThread();
             }
             else if (current_node)
             {
@@ -731,14 +734,14 @@ int main(int argc, char* argv[])
             }
         }, std::placeholders::_1));
         _slots.emplace_back(slot);
-        connections.push_back(manager.Connect(slot, "save"));
+        connections.push_back(manager.connect(slot, "save"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([](std::string null)
         {
             //mo::InitProfiling();
         }, std::placeholders::_1));
         _slots.emplace_back(slot);
-        connections.push_back(manager.Connect(slot, "profile"));
+        connections.push_back(manager.connect(slot, "profile"));
 
         bool quit_on_eos = vm["quit-on-eos"].as<bool>();
         mo::TSlot<void()> eos_slot(std::bind([]()
@@ -756,11 +759,11 @@ int main(int argc, char* argv[])
             {
                 for(auto& stream : streams)
                 {
-                    stream->StartThread();
+                    stream->startThread();
                     _dataStreams.push_back(stream);
                     if(quit_on_eos)
                     {
-                        stream->GetRelayManager()->Connect(&eos_slot, "eos");
+                        stream->getRelayManager()->connect(&eos_slot, "eos");
                     }
                 }
             }else
@@ -769,7 +772,7 @@ int main(int argc, char* argv[])
             }
         }, std::placeholders::_1));
         _slots.emplace_back(slot);
-        connections.push_back(manager.Connect(slot, "load"));
+        connections.push_back(manager.connect(slot, "load"));
 
         slot = new mo::TSlot<void(std::string)>(
             std::bind([&_dataStreams,&current_stream, &current_node, &current_param](std::string what)
@@ -826,7 +829,7 @@ int main(int argc, char* argv[])
             }
             if(current_node)
             {
-                auto child = current_node->GetChild(what);
+                auto child = current_node->getChild(what);
                 if(child)
                 {
                     current_node = child.get();
@@ -836,7 +839,7 @@ int main(int argc, char* argv[])
                     std::vector<mo::IParam*> parameters;
                     if(current_node)
                     {
-                        parameters = current_node->GetAllParameters();
+                        parameters = current_node->getAllParams();
                     }
                     if(current_stream)
                     {
@@ -853,7 +856,7 @@ int main(int argc, char* argv[])
                                 {
                                     std::stringstream ss;
                                     ss << " - " << itr->getTreeName() << " [";
-                                    auto input_param = input->GetInputParam();
+                                    auto input_param = input->getInputParam();
                                     if(input_param)
                                     {
                                         ss << input_param->getTreeName();
@@ -867,7 +870,7 @@ int main(int argc, char* argv[])
                             }
                             else
                             {
-                                auto func = mo::SerializationFunctionRegistry::Instance()->getTextSerializationFunction(itr->getTypeInfo());
+                                auto func = mo::SerializationFactory::instance()->getTextSerializationFunction(itr->getTypeInfo());
                                 if (func)
                                 {
                                     std::stringstream ss;
@@ -900,7 +903,7 @@ int main(int argc, char* argv[])
                         std::vector<mo::IParam*> parameters;
                         if(current_node)
                         {
-                            parameters = current_node->GetAllParameters();
+                            parameters = current_node->getAllParams();
                         }
                         if(current_stream)
                         {
@@ -917,7 +920,7 @@ int main(int argc, char* argv[])
                                     {
                                         std::stringstream ss;
                                         ss << " - " << itr->getTreeName() << " [";
-                                        auto input_param = input->GetInputParam();
+                                        auto input_param = input->getInputParam();
                                         if(input_param)
                                         {
                                             ss << input_param->getTreeName();
@@ -931,7 +934,7 @@ int main(int argc, char* argv[])
                                 }
                                 else
                                 {
-                                    auto func = mo::SerializationFunctionRegistry::Instance()->getTextSerializationFunction(itr->getTypeInfo());
+                                    auto func = mo::SerializationFactory::instance()->getTextSerializationFunction(itr->getTypeInfo());
                                     if (func)
                                     {
                                         std::stringstream ss;
@@ -955,7 +958,7 @@ int main(int argc, char* argv[])
                     }
                     else
                     {
-                        auto params = current_node->GetAllParameters();
+                        auto params = current_node->getAllParams();
                         for(auto& param : params)
                         {
                             std::string name = param->getName();
@@ -994,7 +997,7 @@ int main(int argc, char* argv[])
         }, std::placeholders::_1));
 
 
-        connections.push_back(manager.Connect(slot,"select"));
+        connections.push_back(manager.connect(slot,"select"));
 
 
         slot = new mo::TSlot<void(std::string)>(
@@ -1012,19 +1015,19 @@ int main(int argc, char* argv[])
                 }
             }else if(current_node)
             {
-                auto parents = current_node->GetParents();
+                auto parents = current_node->getParents();
                 if(parents.size())
                 {
                     for(auto parent : parents)
                     {
-                        parent->RemoveChild(current_node.get());
+                        parent->removeChild(current_node.get());
                     }
                     current_node.reset();
                     std::cout << "Sucessfully removed node from parent node\n";
                     return;
                 }else if (auto stream = current_node->getDataStream())
                 {
-                    stream->RemoveNode(current_node.get());
+                    stream->removeNode(current_node.get());
                     current_node.reset();
                     std::cout << "Sucessfully removed node from datastream\n";
                     return;
@@ -1033,11 +1036,11 @@ int main(int argc, char* argv[])
             std::cout << "Unable to delete item\n";
         }, std::placeholders::_1));
 
-        connections.push_back(manager.Connect(slot, "delete"));
+        connections.push_back(manager.connect(slot, "delete"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([&print_options](std::string)->void {print_options(); }, std::placeholders::_1));
 
-        connections.push_back(manager.Connect(slot,"help" ));
+        connections.push_back(manager.connect(slot,"help" ));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([](std::string filter)->void
         {
@@ -1060,7 +1063,7 @@ int main(int argc, char* argv[])
                     IObjectInfo* info = constructor->GetObjectInfo();
                     if(info)
                     {
-                        interface_map[info->GetInterfaceName()].push_back(constructor);
+                        interface_map[info->getInterfaceName()].push_back(constructor);
                     }
                 }
                 for(auto itr = interface_map.begin(); itr != interface_map.end(); ++itr)
@@ -1068,12 +1071,12 @@ int main(int argc, char* argv[])
                     std::cout << "========= " << itr->first << std::endl;
                     for(auto ctr : itr->second)
                     {
-                        std::cout << "  " << ctr->GetObjectInfo()->GetObjectName() << std::endl;
+                        std::cout << "  " << ctr->GetObjectInfo()->getObjectName() << std::endl;
                     }
                 }
             }
         }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "list"));
+        connections.push_back(manager.connect(slot, "list"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([](std::string null)->void
         {
@@ -1088,7 +1091,7 @@ int main(int argc, char* argv[])
         }, std::placeholders::_1));
 
 
-        connections.push_back(manager.Connect(slot, "plugins"));
+        connections.push_back(manager.connect(slot, "plugins"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node, &current_stream](std::string name)->void
         {
@@ -1100,7 +1103,7 @@ int main(int argc, char* argv[])
                 std::vector<mo::IParam*> parameters;
                 if(current_node)
                 {
-                    parameters = current_node->GetAllParameters();
+                    parameters = current_node->getAllParams();
                 }
                 for(auto& itr : parameters)
                 {
@@ -1113,7 +1116,7 @@ int main(int argc, char* argv[])
                             {
                                 std::stringstream ss;
                                 ss << " - " << itr->getTreeName() << " [";
-                                auto input_param = input->GetInputParam();
+                                auto input_param = input->getInputParam();
                                 if(input_param)
                                 {
                                     ss << input_param->getTreeName();
@@ -1127,7 +1130,7 @@ int main(int argc, char* argv[])
                         }
                         else
                         {
-                            auto func = mo::SerializationFunctionRegistry::Instance()->getTextSerializationFunction(itr->getTypeInfo());
+                            auto func = mo::SerializationFactory::instance()->getTextSerializationFunction(itr->getTypeInfo());
                             if (func)
                             {
                                 std::stringstream ss;
@@ -1159,7 +1162,7 @@ int main(int argc, char* argv[])
                 std::vector<mo::IParam*> parameters;
                 if(current_node)
                 {
-                    parameters = current_node->GetAllParameters();
+                    parameters = current_node->getAllParams();
                 }
                 for(auto& itr : parameters)
                 {
@@ -1172,7 +1175,7 @@ int main(int argc, char* argv[])
                             {
                                 std::stringstream ss;
                                 ss << " - " << itr->getTreeName() << " [";
-                                auto input_param = input->GetInputParam();
+                                auto input_param = input->getInputParam();
                                 if(input_param)
                                 {
                                     ss << input_param->getTreeName();
@@ -1186,7 +1189,7 @@ int main(int argc, char* argv[])
                         }
                         else
                         {
-                            auto func = mo::SerializationFunctionRegistry::Instance()->getTextSerializationFunction(itr->getTypeInfo());
+                            auto func = mo::SerializationFactory::instance()->getTextSerializationFunction(itr->getTypeInfo());
                             if (func)
                             {
                                 std::stringstream ss;
@@ -1208,7 +1211,7 @@ int main(int argc, char* argv[])
                     std::cout << "No parameters exist\n";
             }
         }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "add"));
+        connections.push_back(manager.connect(slot, "add"));
 
 
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node, &current_stream, &current_param](std::string value)->void
@@ -1221,12 +1224,12 @@ int main(int argc, char* argv[])
                     auto stream = current_node->getDataStream();
                     auto space_index = value.substr(token_index+1).find(' ');
                     std::string output_name;
-                    mo::ParameterTypeFlags flags = mo::BlockingStreamBuffer_e;
+                    mo::ParamType flags = mo::BlockingStreamBuffer_e;
                     if(space_index != std::string::npos)
                     {
                         output_name = value.substr(token_index + 1, space_index);
                         std::string buffer_type = value.substr(token_index + space_index + 2);
-                        flags = mo::ParameterTypeFlags(mo::StringToParameterTypeFlags(buffer_type) | mo::ForceBufferedConnection_e);
+                        flags = mo::ParamType(mo::stringToParamType(buffer_type) | mo::ForceBufferedConnection_e);
                     }else
                     {
                         output_name = value.substr(token_index + 1);
@@ -1241,7 +1244,7 @@ int main(int argc, char* argv[])
                             auto input_param = dynamic_cast<mo::InputParam*>(current_param);
                             if(input_param)
                             {
-                                if(current_node->ConnectInput(output_node, output_param, input_param, flags))
+                                if(current_node->connectInput(output_node, output_param, input_param, flags))
                                 {
                                     std::cout << "Successfully set input of " << current_param->getName() << " to " << output_param->getName() << "\n";
                                     return;
@@ -1256,12 +1259,12 @@ int main(int argc, char* argv[])
 
             }else
             {
-                auto func = mo::SerializationFunctionRegistry::Instance()->getTextDeSerializationFunction(current_param->getTypeInfo());
+                auto func = mo::SerializationFactory::instance()->getTextDeSerializationFunction(current_param->getTypeInfo());
                 if(func)
                 {
                     std::stringstream ss;
                     ss << value;
-                    boost::recursive_mutex::scoped_lock lock(current_param->mtx());
+                    mo::Mutex_t::scoped_lock lock(current_param->mtx());
                     if(func(current_param, ss))
                         std::cout << "Successfully set " << current_param->getTreeName() << " to " << value << std::endl;
                     else
@@ -1274,7 +1277,7 @@ int main(int argc, char* argv[])
             }
             if (current_node)
             {
-                auto params = current_node->GetAllParameters();
+                auto params = current_node->getAllParams();
                 for(auto& param : params)
                 {
                     auto pos = value.find(param->getName());
@@ -1292,7 +1295,7 @@ int main(int argc, char* argv[])
                 if(pos == 0)
                 {
                     pos = value.find(' ');
-                    current_node->SetSyncInput(value.substr(pos + 1));
+                    current_node->setSyncInput(value.substr(pos + 1));
                 }
 
             }else if(current_stream)
@@ -1300,39 +1303,39 @@ int main(int argc, char* argv[])
             }
             std::cout << "Unable to set value to " << value << std::endl;
         }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "set"));
+        connections.push_back(manager.connect(slot, "set"));
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node](std::string name)
         {
             if(current_node)
             {
-                current_node->SetTreeName(name);
+                current_node->setTreeName(name);
             }
         }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "rename"));
+        connections.push_back(manager.connect(slot, "rename"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node, &current_stream](std::string name)
         {
             mo::RelayManager* mgr = nullptr;
             if (current_node)
             {
-                mgr = current_node->getDataStream()->GetRelayManager();
+                mgr = current_node->getDataStream()->getRelayManager();
             }
             if (current_stream)
             {
-                mgr = current_stream->GetRelayManager();
+                mgr = current_stream->getRelayManager();
             }
             std::vector<std::shared_ptr<mo::ISignalRelay>> relays;
             if (mgr)
             {
-                relays = mgr->GetRelays(name);
+                relays = mgr->getRelays(name);
             }
             auto table = PerModuleInterface::GetInstance()->GetSystemTable();
             if (table)
             {
-                auto global_signal_manager = table->GetSingleton<mo::RelayManager>();
+                auto global_signal_manager = table->getSingleton<mo::RelayManager>();
                 if(global_signal_manager)
                 {
-                    auto global_relays = global_signal_manager->GetRelays(name);
+                    auto global_relays = global_signal_manager->getRelays(name);
                     relays.insert(relays.end(), global_relays.begin(), global_relays.end());
                 }
             }
@@ -1347,7 +1350,7 @@ int main(int argc, char* argv[])
             {
                 for (auto relay_ : relays)
                 {
-                    std::cout << idx << " - " << relay_->GetSignature().name();
+                    std::cout << idx << " - " << relay_->getSignature().name();
                     ++idx;
                 }
                 std::cin >> idx;
@@ -1358,7 +1361,7 @@ int main(int argc, char* argv[])
                 relay = relays[0].get();
             }
 
-            mo::TypedSignalRelay<void(void)>* typed = dynamic_cast<mo::TypedSignalRelay<void(void)>*>(relay);
+            mo::TSignalRelay<void(void)>* typed = dynamic_cast<mo::TSignalRelay<void(void)>*>(relay);
             if(typed)
             {
                 (*typed)();
@@ -1372,7 +1375,7 @@ int main(int argc, char* argv[])
                 delete proxy;
             }*/
         }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "emit"));
+        connections.push_back(manager.connect(slot, "emit"));
 
 #ifdef HAVE_WT
         boost::thread web_thread;
@@ -1406,7 +1409,7 @@ int main(int argc, char* argv[])
             }
         }, std::placeholders::_1));
 
-        connections.push_back(manager.Connect(slot, "web-ui"));
+        connections.push_back(manager.connect(slot, "web-ui"));
 #endif
         slot = new mo::TSlot<void(std::string)>(std::bind(
             [](std::string level)
@@ -1424,7 +1427,7 @@ int main(int argc, char* argv[])
         if (level == "fatal")
             boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
         }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "log"));
+        connections.push_back(manager.connect(slot, "log"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind(
         [](std::string directory)
@@ -1438,14 +1441,14 @@ int main(int argc, char* argv[])
             mo::MetaObjectFactory::instance()->getObjectSystem()->AddLibraryDir(directory.c_str(), idx);
         }, std::placeholders::_1));
 
-        connections.push_back(manager.Connect(slot, "link"));
+        connections.push_back(manager.connect(slot, "link"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([](std::string ms)
         {
             boost::this_thread::sleep_for(boost::chrono::milliseconds(boost::lexical_cast<int>(ms)));
         }, std::placeholders::_1));
 
-        connections.push_back(manager.Connect(slot, "wait"));
+        connections.push_back(manager.connect(slot, "wait"));
 
 
         std::vector<std::string> command_list;
@@ -1469,7 +1472,7 @@ int main(int argc, char* argv[])
             }
 
         }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "run"));
+        connections.push_back(manager.connect(slot, "run"));
         if (vm.count("config"))
         {
             std::stringstream ss;
@@ -1485,7 +1488,7 @@ int main(int argc, char* argv[])
 
         if (vm.count("file"))
         {
-            auto relay = manager.GetRelay<void(std::string)>("load_file");
+            auto relay = manager.getRelay<void(std::string)>("load_file");
             if(relay)
             {
                 std::string file = vm["file"].as<std::string>();
@@ -1497,23 +1500,23 @@ int main(int argc, char* argv[])
         bool compiling = false;
         bool rcc_enabled = !vm["disable-rcc"].as<bool>();
         if(rcc_enabled)
-            mo::MetaObjectFactory::instance()->CheckCompile();
+            mo::MetaObjectFactory::instance()->checkCompile();
         auto compile_check_function = [&_dataStreams, &compiling, rcc_enabled]()
         {
             if(rcc_enabled)
             {
-                if (mo::MetaObjectFactory::instance()->CheckCompile())
+                if (mo::MetaObjectFactory::instance()->checkCompile())
                 {
                     std::cout << "Recompiling...\n";
                     for (auto& ds : _dataStreams)
                     {
-                        ds->StopThread();
+                        ds->stopThread();
                     }
                     compiling = true;
                 }
                 if (compiling)
                 {
-                    if (!mo::MetaObjectFactory::instance()->IsCompileComplete())
+                    if (!mo::MetaObjectFactory::instance()->isCompileComplete())
                     {
                         std::cout << "Still compiling\n";
                     }
@@ -1521,14 +1524,14 @@ int main(int argc, char* argv[])
                     {
                         for (auto& ds : _dataStreams)
                         {
-                            ds->StopThread();
+                            ds->stopThread();
                         }
-                        if (mo::MetaObjectFactory::instance()->SwapObjects())
+                        if (mo::MetaObjectFactory::instance()->swapObjects())
                         {
                             std::cout << "Object swap success\n";
                             for (auto& ds : _dataStreams)
                             {
-                                ds->StartThread();
+                                ds->startThread();
                             }
                         }
                         else
@@ -1545,7 +1548,7 @@ int main(int argc, char* argv[])
         {
             rcc_enabled = boost::lexical_cast<bool>(value);
         }, std::placeholders::_1));
-        connections.push_back(manager.Connect(slot, "rcc"));
+        connections.push_back(manager.connect(slot, "rcc"));
 
         bool disable_input = vm["disable-input"].as<bool>();
         auto io_func = [&command_list, &manager, &print_options, disable_input]()
@@ -1569,7 +1572,7 @@ int main(int argc, char* argv[])
                 ss << command_line;
                 std::string command;
                 std::getline(ss, command, ' ');
-                auto relay = manager.GetRelay<void(std::string)>(command);
+                auto relay = manager.getRelay<void(std::string)>(command);
                 if (relay)
                 {
                     std::string rest;
@@ -1601,12 +1604,12 @@ int main(int argc, char* argv[])
             }
 
             for (int i = 0; i < 20; ++i)
-                mo::ThreadSpecificQueue::RunOnce();
+                mo::ThreadSpecificQueue::runOnce();
         };
 
         if(vm.count("script"))
         {
-            auto relay = manager.GetRelay<void(std::string)>("run");
+            auto relay = manager.getRelay<void(std::string)>("run");
             if(relay)
             {
                 std::string file = vm["script"].as<std::string>();
@@ -1657,7 +1660,7 @@ int main(int argc, char* argv[])
         gui_thread.join();
         for (auto& ds : _dataStreams)
         {
-            ds->StopThread();
+            ds->stopThread();
         }
         mo::ThreadSpecificQueue::cleanup();
         _dataStreams.clear();
@@ -1665,7 +1668,7 @@ int main(int argc, char* argv[])
         mo::ThreadPool::Instance()->Cleanup();
         LOG(info) << "Thread pool cleanup complete";
         delete g_allocator;
-        mo::Allocator::CleanupThreadSpecificAllocator();
+        mo::Allocator::cleanupThreadSpecificAllocator();
         return 0;
     }
     gui_thread.interrupt();

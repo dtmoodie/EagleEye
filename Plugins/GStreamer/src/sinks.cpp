@@ -108,18 +108,16 @@ bool GStreamerSink::processImpl()
 }
 MO_REGISTER_CLASS(GStreamerSink);
 
-JPEGSink::JPEGSink()
-{
+JPEGSink::JPEGSink(){
     glib_thread::instance()->start_thread();
-    gstreamer_context.thread_id = glib_thread::instance()->get_thread_id();
+    gstreamer_context = mo::Context::create();
+    gstreamer_context->thread_id = glib_thread::instance()->get_thread_id();
     //this->_ctx = &gstreamer_context;
 }
 
 
-bool JPEGSink::processImpl()
-{
-    if(gstreamer_pipeline_param.modified())
-    {
+bool JPEGSink::processImpl(){
+    if(gstreamer_pipeline_param.modified()){
         this->cleanup();
         this->create_pipeline(gstreamer_pipeline);
         this->set_caps("image/jpeg");
@@ -130,30 +128,25 @@ bool JPEGSink::processImpl()
     return true;
 }
 
-GstFlowReturn JPEGSink::on_pull()
-{
+GstFlowReturn JPEGSink::on_pull(){
     GstSample *sample = gst_base_sink_get_last_sample(GST_BASE_SINK(_appsink));
-    if (sample)
-    {
+    if (sample){
         GstBuffer *buffer;
         GstCaps *caps;
         //GstStructure *s;
         GstMapInfo map;
         caps = gst_sample_get_caps(sample);
-        if (!caps)
-        {
+        if (!caps){
             LOG(debug) << "could not get sample caps";
             return GST_FLOW_OK;
         }
         buffer = gst_sample_get_buffer(sample);
-        if (gst_buffer_map(buffer, &map, GST_MAP_READ))
-        {
+        if (gst_buffer_map(buffer, &map, GST_MAP_READ)){
             cv::Mat mapped(1, map.size, CV_8U);
             memcpy(mapped.data, map.data, map.size);
             mo::Time_t ts(buffer->pts * mo::ns);
             this->jpeg_buffer_param.updateData(mapped, ts, &gstreamer_context);
-            if(decoded_param.HasSubscriptions())
-            {
+            if(decoded_param.hasSubscriptions()){
                 decoded_param.updateData(cv::imdecode(jpeg_buffer, cv::IMREAD_UNCHANGED, &decode_buffer),
                     ts, &gstreamer_context);
             }

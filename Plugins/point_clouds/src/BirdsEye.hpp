@@ -1,5 +1,5 @@
 #pragma once
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 

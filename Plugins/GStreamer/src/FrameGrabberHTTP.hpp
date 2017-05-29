@@ -18,8 +18,8 @@ public:
         OUTPUT(SyncedMemory, image, {})
     MO_END;
     virtual GstFlowReturn on_pull();
-    bool Load(const ::std::string& file_path);
-    bool Grab(){return true;}
+    bool loadData(const ::std::string& file_path);
+    bool grab(){return true;}
 protected:
 };
 

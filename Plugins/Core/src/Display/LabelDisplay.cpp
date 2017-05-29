@@ -1,6 +1,7 @@
 #include "LabelDisplay.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <Aquila/types/ObjectDetection.hpp>
+#include <Aquila/utilities/ColorMapping.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudawarping.hpp>
@@ -16,7 +17,7 @@ bool LabelDisplay::processImpl()
        (display_legend && d_legend.size() != label->getSize()))
     {
 
-        CreateColormap(h_lut, labels->size(), ignore_class);
+        createColormap(h_lut, labels->size(), ignore_class);
 
         d_lut.upload(h_lut, stream());
         if(display_legend)

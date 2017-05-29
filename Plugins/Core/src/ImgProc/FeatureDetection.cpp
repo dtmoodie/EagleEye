@@ -21,7 +21,7 @@ bool GoodFeaturesToTrack::processImpl()
     {
         detector = cv::cuda::createGoodFeaturesToTrackDetector(input->getDepth(), max_corners, quality_level, min_distance, block_size, use_harris);
         max_corners_param.modified(false);
-        quality_level_param.modified()  = false;
+        quality_level_param.modified(false);
         min_distance_param.modified(false);
         block_size_param.modified(false);
         use_harris_param.modified(false);
@@ -117,7 +117,7 @@ bool CornerHarris::processImpl()
 {
     if(block_size_param.modified() || sobel_aperature_size_param.modified() || harris_free_parameter_param.modified() || detector == nullptr)
     {
-        detector = cv::cuda::createHarrisCorner(input->GetType(), block_size, sobel_aperature_size, harris_free_parameter);
+        detector = cv::cuda::createHarrisCorner(input->getType(), block_size, sobel_aperature_size, harris_free_parameter);
     }
     cv::cuda::GpuMat score;
     detector->compute(input->getGpuMat(stream()), score, stream());
@@ -131,7 +131,7 @@ bool CornerMinEigenValue::processImpl()
 {
     if (block_size_param.modified() || sobel_aperature_size_param.modified() || harris_free_parameter_param.modified() || detector == nullptr)
     {
-        detector = cv::cuda::createMinEigenValCorner(input->GetType(), block_size, sobel_aperature_size, harris_free_parameter);
+        detector = cv::cuda::createMinEigenValCorner(input->getType(), block_size, sobel_aperature_size, harris_free_parameter);
     }
     cv::cuda::GpuMat score;
     detector->compute(input->getGpuMat(stream()), score, stream());

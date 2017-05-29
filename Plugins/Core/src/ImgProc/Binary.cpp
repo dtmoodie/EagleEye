@@ -30,7 +30,7 @@ bool MorphologyFilter::processImpl()
         }
         cv::cuda::GpuMat out;
         filter->apply(input_image->getGpuMat(stream()), out, stream());
-        this->output_param.updateData(out, input_image_param.getTimestamp(), _ctx.get().get());
+        this->output_param.updateData(out, input_image_param.getTimestamp(), _ctx.get());
         return true;
     }
     return false;

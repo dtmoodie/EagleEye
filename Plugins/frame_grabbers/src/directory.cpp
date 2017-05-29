@@ -101,7 +101,7 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
     return false;
 }
 
-long long frame_grabber_directory::GetFrameNumber()
+long long frame_grabber_directory::getFrameNumber()
 {
     return frame_index;
 }

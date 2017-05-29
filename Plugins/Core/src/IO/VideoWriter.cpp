@@ -78,7 +78,7 @@ bool VideoWriter::processImpl()
         cv::Mat h_img = image->getMat(stream());
         WriteData data;
         data.img = h_img;
-        data.fn = image_param.GetFrameNumber();
+        data.fn = image_param.getFrameNumber();
         data.ts = image_param.getTimestamp();
         cuda::enqueue_callback([data, this](){
             _write_queue.enqueue(data);

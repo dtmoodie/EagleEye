@@ -47,7 +47,7 @@ bool BirdsEye::ProcessImpl()
                         std::min<float>(1.0f,log(cell_count.at<float>(i,j) + 1) / log(64.0f));
             }
         }
-        birds_eye_view_param.UpdateData(slices, point_cloud_param.GetTimestamp());
+        birds_eye_view_param.updateData(slices, point_cloud_param.getTimestamp());
     }
     return true;
 }

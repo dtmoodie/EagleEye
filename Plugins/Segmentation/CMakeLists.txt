@@ -14,7 +14,7 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 find_package(CUDA REQUIRED)
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo)
+find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo cudabgsegm)
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 if(BUILD_FASTMS)
     ADD_SUBDIRECTORY(fastms)
@@ -45,11 +45,15 @@ file(GLOB knl "*.cu")
 cuda_add_library(Segmentation SHARED ${src} ${hdr})
 
 RCC_LINK_LIB(Segmentation
-    metaobject_core metaobject_object metaobject_params metaobject_metaparams
+    metaobject_core
+	metaobject_object
+	metaobject_params
+	metaobject_metaparams
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     aquila_types
     aquila_metatypes
+	aquila_utilities
 )
 
 

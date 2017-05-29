@@ -12,7 +12,7 @@ bool FastMumfordShah::ProcessImpl()
 {
     if(!solver)
         solver.reset(new Solver());
-    cv::Mat h_img = input->GetMat(Stream());
+    cv::Mat h_img = input->getMat(stream());
 
     Par param;
     param.lambda = lambda;
@@ -24,9 +24,9 @@ bool FastMumfordShah::ProcessImpl()
     param.adapt_params = adapt_params;
     param.weight = weight;
     param.edges = overlay_edges;
-    Stream().waitForCompletion();
+    stream().waitForCompletion();
     cv::Mat result = solver->run(h_img, param);
-    segmented_param.UpdateData(result, input_param.GetTimestamp(), _ctx.get());
+    segmented_param.updateData(result, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 

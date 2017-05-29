@@ -4,19 +4,14 @@
 #include <Aquila/types/SyncedMemory.hpp>
 #include <boost/circular_buffer.hpp>
 
-namespace aq
-{
-    namespace Nodes
-    {
-        class TrackCameraMotion : public Node
-        {
-            boost::circular_buffer<TS<cv::Mat>> relative_motions;
-
+namespace aq{
+namespace Nodes{
+        class TrackCameraMotion : public Node{
         public:
-            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
-
+        protected:
+            virtual bool processImpl();
+            boost::circular_buffer<TS<cv::Mat>> relative_motions;
         };
 
-    }
-
-}
+} // namespace aq::Nodes
+} // namespace a

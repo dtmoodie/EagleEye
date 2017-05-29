@@ -1,13 +1,13 @@
 #include "image.h"
 #include "precompiled.hpp"
 #include <opencv2/imgcodecs.hpp>
-#include "Aquila/Nodes/GrabberInfo.hpp"
+#include "Aquila/framegrabbers/GrabberInfo.hpp"
 
 
 using namespace aq;
 using namespace aq::Nodes;
 
-bool GrabberImage::Load(const std::string& path)
+bool GrabberImage::loadData(const std::string& path)
 {
     image = cv::imread(path);
     if(!image.empty())
@@ -17,7 +17,7 @@ bool GrabberImage::Load(const std::string& path)
     }
     return false;
 }
-bool GrabberImage::Grab()
+bool GrabberImage::grab()
 {
     if(!image.empty())
     {

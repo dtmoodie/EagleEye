@@ -33,11 +33,11 @@ size_t IPyrOpticalFlow::PrepPyramid()
         image_pyramid = &greyImg;
         THROW(debug) << "Need to reimplement and redesign";
 
-        fn= input_param.GetFrameNumber();
+        fn= input_param.getFrameNumber();
     }
     else
     {
-        fn = image_pyramid_param.GetFrameNumber();
+        fn = image_pyramid_param.getFrameNumber();
     }
     return fn;
 }
@@ -112,7 +112,7 @@ bool SparsePyrLKOpticalFlow::processImpl()
     if(ts)
     {
         cv::cuda::GpuMat tracked_points, status, error;
-        if(input_points_param.GetInput(ts - 1))
+        if(input_points_param.getInput(ts - 1))
         {
             optFlow->calc(prevGreyImg, greyImg, input_points->getGpuMat(stream()), tracked_points, status, error, stream());
         }else

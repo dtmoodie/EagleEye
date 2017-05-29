@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Aquila/Nodes/Node.h"
-#include <MetaObject/MetaObject.hpp>
+#include "Aquila/nodes/Node.hpp"
+#include <MetaObject/object/MetaObject.hpp>
 namespace aq
 {
     namespace Nodes
@@ -13,7 +13,7 @@ namespace aq
 
             MO_END;
             static std::vector<std::vector<std::string>> GetParentalDependencies();
-            bool ProcessImpl();
+            bool processImpl();
         };
     }
 }

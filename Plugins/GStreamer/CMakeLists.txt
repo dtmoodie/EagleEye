@@ -44,7 +44,7 @@ IF(GSTREAMER_FOUND)
     LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glibconfig_INCLUDE_DIR})
     LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glib_INCLUDE_DIR})
     FIND_PACKAGE(Qt5 REQUIRED Network)
-    FIND_PACKAGE(OpenCV REQUIRED core)
+    FIND_PACKAGE(OpenCV REQUIRED core imgcodecs)
     FILE(GLOB_RECURSE src "src/*.cpp")
     FILE(GLOB_RECURSE hdr "src/*.hpp" "src/*.h")
     INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
@@ -77,9 +77,13 @@ IF(GSTREAMER_FOUND)
         ${Glib_LIBRARY}
         ${GLIB_LIBRARY}
         ${GOBJECT_LIBRARY}
-        metaobject_core metaobject_object metaobject_params metaobject_metaparams
+        metaobject_core 
+		metaobject_object 
+		metaobject_params 
+		metaobject_metaparams
         aquila_metatypes
         aquila_types
+		aquila_utilities
     )
     IF(${GSTREAMER_gstrtspserver_LIBRARY})
         RCC_LINK_LIB(Gstreamer ${GSTREAMER_gstrtspserver_LIBRARY})

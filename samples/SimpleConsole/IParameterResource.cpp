@@ -51,7 +51,7 @@ void IParameterResource::handleParamUpdate(mo::Context* ctx, mo::IParam* param)
     std::stringstream* new_ss = new std::stringstream();
     if(this->param)
     {
-        auto func = mo::SerializationFunctionRegistry::Instance()->
+        auto func = mo::SerializationFactory::instance()->
             GetJsonSerializationFunction(this->param->getTypeInfo());
         if (func)
         {

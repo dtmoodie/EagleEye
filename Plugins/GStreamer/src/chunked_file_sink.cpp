@@ -50,7 +50,7 @@ GstFlowReturn chunked_file_sink::on_pull()
     }
     return GST_FLOW_OK;
 }
-bool chunked_file_sink::Load(const std::string& file_path)
+bool chunked_file_sink::loadData(const std::string& file_path)
 {
     if(gstreamer_src_base::create_pipeline(file_path))
     {
@@ -63,7 +63,6 @@ bool chunked_file_sink::Load(const std::string& file_path)
     }
     return false;
 }
-
 
 MO_REGISTER_CLASS(chunked_file_sink);
 
@@ -81,7 +80,7 @@ int JpegKeyframer::Timeout()
     return 10000;
 }
 
-bool JpegKeyframer::Load(const std::string& file_path)
+bool JpegKeyframer::loadData(const std::string& file_path)
 {
     std::stringstream pipeline;
     pipeline << "souphttpsrc location=" << file_path;

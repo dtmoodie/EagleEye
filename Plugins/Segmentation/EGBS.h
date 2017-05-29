@@ -26,7 +26,7 @@
 
 #ifndef __EfficientGraphBasedImageSegmentation__EGBS__
 #define __EfficientGraphBasedImageSegmentation__EGBS__
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include "DisjointSetForest.h"

@@ -16,7 +16,7 @@ namespace aq
                 MO_SIGNAL(void, eof);
             MO_END;
 
-            bool Load(const std::string& file_path);
+            bool loadData(const std::string& file_path);
             
             static int CanLoad(const std::string& document);
             static void ListPaths(std::vector<std::string>& paths);

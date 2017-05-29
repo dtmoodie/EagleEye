@@ -136,7 +136,7 @@ void SaveAnnotations::draw()
     mo::ThreadSpecificQueue::push([draw_image, this]()
     {
         getDataStream()->getWindowCallbackManager()->imshow("original", draw_image);
-        //getDataStream()->GetWindowCallbackManager()->imshow("legend", h_legend);
+        //getDataStream()->getWindowCallbackManager()->imshow("legend", h_legend);
     }, gui_thread_id, this);
 }
 
@@ -183,7 +183,7 @@ bool SaveAnnotations::processImpl()
         }
 
         label_file_param.modified(false);
-        getDataStream()->GetWindowCallbackManager()->imshow("legend", h_legend);
+        getDataStream()->getWindowCallbackManager()->imshow("legend", h_legend);
     }*/
     if(h_lut.cols != labels->size())
     {
@@ -201,7 +201,7 @@ bool SaveAnnotations::processImpl()
 
         aq::cuda::enqueue_callback_async([img, this]()
         {
-            getDataStream()->GetWindowCallbackManager()->imshow("original", img);
+            getDataStream()->getWindowCallbackManager()->imshow("original", img);
         }, gui_thread_id ,stream());
         _original_image = img;
     }else
@@ -211,7 +211,7 @@ bool SaveAnnotations::processImpl()
 
         mo::ThreadSpecificQueue::push([img, this]()
         {
-            getDataStream()->GetWindowCallbackManager()->imshow("original", img);
+            getDataStream()->getWindowCallbackManager()->imshow("original", img);
         }, gui_thread_id, this);
         _original_image = img;
     }

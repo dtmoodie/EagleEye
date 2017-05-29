@@ -21,8 +21,8 @@ namespace aq
                 OUTPUT(SyncedMemory, image, {})
                 APPEND_FLAGS(image, mo::Source_e)
             MO_END;
-            bool Load(const std::string& path);
-            bool Grab();
+            bool loadData(const std::string& path);
+            bool grab();
         protected:
             virtual bool LoadGPU(const std::string& path);
             virtual bool LoadCPU(const std::string& path);

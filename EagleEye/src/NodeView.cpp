@@ -103,9 +103,9 @@ void NodeView::on_deleteNode()
             boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
 
             //Parameters::UI::ProcessingThreadCallbackService::run();
-            auto parents = node->GetParents();
+            auto parents = node->getParents();
             for(auto parent : parents)
-                parent->RemoveChild(node);
+                parent->removeChild(node);
 
             emit selectionChanged(nullptr);
             emit widgetDeleted(nodeWidget);
@@ -147,10 +147,10 @@ void NodeView::on_display_signals()
             auto node = node_widget->getNode();
             if(_signal_dialog)
             {
-                _signal_dialog->update(node->getDataStream()->GetRelayManager());
+                _signal_dialog->update(node->getDataStream()->getRelayManager());
             }else
             {
-                _signal_dialog = new signal_dialog(node->getDataStream()->GetRelayManager(), this);
+                _signal_dialog = new signal_dialog(node->getDataStream()->getRelayManager(), this);
             }
             _signal_dialog->show();
         }
@@ -159,10 +159,10 @@ void NodeView::on_display_signals()
             auto stream = stream_widget->GetStream();
             if(_signal_dialog)
             {
-                _signal_dialog->update(stream->GetRelayManager());
+                _signal_dialog->update(stream->getRelayManager());
             }else
             {
-                _signal_dialog = new signal_dialog(stream->GetRelayManager(), this);
+                _signal_dialog = new signal_dialog(stream->getRelayManager(), this);
             }
             _signal_dialog->show();
         }
@@ -357,7 +357,7 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
     }
     if(nodeWidget)
     {
-        auto parents = node->GetParents();
+        auto parents = node->getParents();
         for(auto parent : parents)
         {
             QGraphicsProxyWidget* parentWidget = getWidget(parent->GetObjectId());
@@ -382,7 +382,7 @@ QGraphicsLineItem* NodeView::drawLine2Parent(QGraphicsProxyWidget* child)
 }
 QGraphicsProxyWidget* NodeView::getParent(aq::Nodes::Node::Ptr child)
 {
-    auto parents = child->GetParents();
+    auto parents = child->getParents();
     for(auto parent : parents)
     {
         // TODO figure out how this should correctly be used
@@ -394,7 +394,7 @@ QGraphicsProxyWidget* NodeView::getParent(aq::Nodes::Node::Ptr child)
 std::vector<QGraphicsProxyWidget*> NodeView::getParents(aq::Nodes::Node::Ptr child)
 {
     std::vector<QGraphicsProxyWidget*> output;
-    auto parents = child->GetParents();
+    auto parents = child->getParents();
     for (auto parent : parents)
     {
         // TODO figure out how this should correctly be used

@@ -12,8 +12,8 @@ namespace aq{
         MO_DERIVE(GrabberImage, IGrabber);
             OUTPUT(SyncedMemory, output, {})
         MO_END;
-        virtual bool Load(const std::string& path);
-        virtual bool Grab();
+        virtual bool loadData(const std::string& path);
+        virtual bool grab();
         cv::Mat image;
         
     };

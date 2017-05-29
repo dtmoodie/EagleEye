@@ -25,7 +25,7 @@ public:
     }
 
     // This gets a pointer to the variable that feeds into this input
-    virtual IParam* GetInputParam()
+    virtual IParam* getInputParam()
     {
         return input;
     }

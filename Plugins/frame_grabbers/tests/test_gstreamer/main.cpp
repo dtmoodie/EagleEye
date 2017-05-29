@@ -44,5 +44,7 @@ BOOST_AUTO_TEST_CASE(gstreamer_videotestsrc)
     mo::ITParam<aq::SyncedMemory>* typed = dynamic_cast<mo::ITParam<aq::SyncedMemory>*>(output);
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     fg->process();
-    BOOST_REQUIRE(!typed->GetDataPtr()->empty());
+    aq::SyncedMemory data;
+    typed->getData(data);
+    BOOST_REQUIRE(!data.empty());
 }

@@ -1,6 +1,6 @@
 #pragma once
 #ifdef FASTMS_FOUND
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include <MetaObject/Parameters/ParameterMacros.hpp>
 #include "libfastms/solver/solver.h"
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"

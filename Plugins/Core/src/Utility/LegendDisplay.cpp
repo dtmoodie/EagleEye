@@ -47,7 +47,7 @@ bool LegendDisplay::processImpl()
                     cv::FONT_HERSHEY_COMPLEX, 0.7,
                     cv::Scalar(color[0], color[1], color[2]));
     }
-    getDataStream()->GetWindowCallbackManager()->imshow("legend", h_legend);
+    getDataStream()->getWindowCallbackManager()->imshow("legend", h_legend);
     return true;
 }
 

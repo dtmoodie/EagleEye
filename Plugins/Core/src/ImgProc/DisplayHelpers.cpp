@@ -129,7 +129,7 @@ bool Normalize::processImpl()
     {
         std::vector<cv::cuda::GpuMat> channels;
 
-        if (input_image->GetNumMats() == 1)
+        if (input_image->getNumMats() == 1)
         {
             cv::cuda::split(input_image->getGpuMat(stream()), channels, stream());
         }else
@@ -147,7 +147,7 @@ bool Normalize::processImpl()
                 mask == NULL ? cv::noArray() : mask->getGpuMat(stream()),
                 stream());
         }
-        if(input_image->GetNumMats() == 1)
+        if(input_image->getNumMats() == 1)
         {
             cv::cuda::merge(channels, normalized, stream());
             normalized_output_param.updateData(normalized, input_image_param.getTimestamp(), _ctx.get());

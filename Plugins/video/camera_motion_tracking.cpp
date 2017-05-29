@@ -12,7 +12,7 @@ std::vector<std::vector<std::string>> track_camera_motion::GetParentalDependenci
     return output;
 }
 
-bool track_camera_motion::ProcessImpl()
+bool track_camera_motion::processImpl()
 {
     return false;
 }

@@ -52,7 +52,7 @@ bool Threshold::processImpl()
     {
         cv::cuda::bitwise_and(upper_mask, lower_mask, mask, cv::noArray(), stream());
     }
-    mask.convertTo(mask, input->GetType(), stream());
+    mask.convertTo(mask, input->getType(), stream());
     mask_param.updateData(mask, input_param.getTimestamp(), _ctx.get());
     return true;
 }

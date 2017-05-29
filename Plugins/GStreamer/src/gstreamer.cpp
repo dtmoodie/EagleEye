@@ -9,18 +9,10 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 
-
-
 #include <QtNetwork/qnetworkinterface.h>
-
-
-
 
 using namespace aq;
 using namespace aq::Nodes;
-
-
-SETUP_PROJECT_IMPL
 
 typedef class gstreamer_sink_base App;
 
@@ -67,13 +59,13 @@ static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
 }
 
 
-static void _start_feed(GstElement * pipeline, guint size, App * app)
+static void _start_feed(GstElement * pipeline, guint size, gstreamer_sink_base * app)
 {
     LOG(trace);
     app->start_feed();
 }
 
-static void _stop_feed(GstElement * pipeline, App *app)
+static void _stop_feed(GstElement * pipeline, gstreamer_sink_base *app)
 {
     LOG(trace);
     app->stop_feed();
@@ -613,7 +605,7 @@ RTSP_server::~RTSP_server()
     }
 
 #ifdef _MSC_VER
-    PerModuleInterface::GetInstance()->GetSystemTable()->SetSingleton<GMainLoop>(nullptr);
+    PerModuleInterface::GetInstance()->GetSystemTable()->setSingleton<GMainLoop>(nullptr);
 #endif
     if (glib_MainLoop)
     {
@@ -649,28 +641,22 @@ void RTSP_server::onPipeChange()
     }
 }
 
-void RTSP_server::setup(std::string pipeOverride)
-{
-
+void RTSP_server::setup(std::string pipeOverride){
     gst_debug_set_active(1);
-
-    if (!gst_is_initialized())
-    {
+    if (!gst_is_initialized()){
         char** argv;
         argv = new char*{ "-vvv" };
         int argc = 1;
         gst_init(&argc, &argv);
     }
 
-    if (!glib_MainLoop)
-    {
+    if (!glib_MainLoop){
         glib_MainLoop = g_main_loop_new(NULL, 0);
     }
     glibThread = boost::thread(std::bind(&RTSP_server::gst_loop, this));
     GError* error = nullptr;
     std::stringstream ss;
-    if (pipeOverride.size() == 0)
-    {
+    if (pipeOverride.size() == 0){
         ss << "appsrc name=mysource ! videoconvert ! ";
 #ifdef JETSON
         ss << "omxh264enc ! ";
@@ -679,21 +665,15 @@ void RTSP_server::setup(std::string pipeOverride)
 #endif
         ss << "rtph264pay config-interval=1 pt=96 ! gdppay ! ";
 
-        switch (server_type.getValue())
-        {
-            case TCP:
-            {
+        switch (server_type.getValue()){
+            case TCP:{
                 ss << "tcpserversink host=";
 
-                foreach(auto inter, QNetworkInterface::allInterfaces())
-                {
+                foreach(auto inter, QNetworkInterface::allInterfaces()){
                     if (inter.flags().testFlag(QNetworkInterface::IsUp) &&
-                        !inter.flags().testFlag(QNetworkInterface::IsLoopBack))
-                    {
-                        foreach(auto entry, inter.addressEntries())
-                        {
-                            if (inter.hardwareAddress() != "00:00:00:00:00:00" && entry.ip().toString().contains("."))
-                            {
+                        !inter.flags().testFlag(QNetworkInterface::IsLoopBack)){
+                        foreach(auto entry, inter.addressEntries()){
+                            if (inter.hardwareAddress() != "00:00:00:00:00:00" && entry.ip().toString().contains(".")){
                                 LOG(info) << "Setting interface to " << inter.name().toStdString() << " " <<
                                     entry.ip().toString().toStdString() << " " << inter.hardwareAddress().toStdString();
                                 host_param.updateData(entry.ip().toString().toStdString());
@@ -705,16 +685,12 @@ void RTSP_server::setup(std::string pipeOverride)
                 }
                 break;
             }
-            case UDP:
-            {
+            case UDP:{
                 ss << "udpsink host=";
 
-                if (host.size())
-                {
+                if (host.size()){
                     ss << host;
-                }
-                else
-                {
+                }else{
                     LOG(warning) << "host not set, setting to localhost";
                     host_param.updateData("127.0.0.1");
                     ss << "127.0.0.1";
@@ -725,18 +701,13 @@ void RTSP_server::setup(std::string pipeOverride)
         ss << " port=" << port;
 
         pipeOverride = ss.str();
-    }
-    else
-    {
-        //updateParameter<std::string>("gst pipeline", pipeOverride);
+    }else{
         gst_pipeline_param.updateData(pipeOverride);
     }
 
     LOG(info) << pipeOverride;
 
-
-    if (pipeline)
-    {
+    if (pipeline){
         gst_element_set_state(pipeline, GST_STATE_NULL);
         gst_object_unref(pipeline);
         g_signal_handler_disconnect(source_OpenCV, need_data_id);
@@ -744,19 +715,15 @@ void RTSP_server::setup(std::string pipeOverride)
         gst_object_unref(source_OpenCV);
     }
 
-
-
     pipeline = gst_parse_launch(pipeOverride.c_str(), &error);
 
-    if (pipeline == nullptr)
-    {
+    if (pipeline == nullptr){
         LOG(error) << "Error parsing pipeline";
         feed_enabled = false;
         return;
     }
 
-    if (error != nullptr)
-    {
+    if (error != nullptr){
         LOG(error) << "Error parsing pipeline " << error->message;
     }
 
@@ -771,8 +738,7 @@ void RTSP_server::setup(std::string pipeOverride)
         "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
         NULL);
 
-    if (caps == nullptr)
-    {
+    if (caps == nullptr){
        LOG(error) << "Error creating caps for appsrc";
     }
 

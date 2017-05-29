@@ -42,7 +42,7 @@ bool FFT::processImpl()
     cv::cuda::GpuMat result;
     cv::cuda::dft(padded, result, input->getSize(),flags, stream());
     coefficients_param.updateData(result, input_param.getTimestamp(), _ctx.get());
-    if(magnitude_param.HasSubscriptions())
+    if(magnitude_param.hasSubscriptions())
     {
         cv::cuda::GpuMat magnitude;
         cv::cuda::magnitude(result,magnitude, stream());
@@ -54,7 +54,7 @@ bool FFT::processImpl()
         }
         this->magnitude_param.updateData(magnitude, input_param.getTimestamp(), _ctx.get());
     }
-    if(phase_param.HasSubscriptions())
+    if(phase_param.hasSubscriptions())
     {
         std::vector<cv::cuda::GpuMat> channels;
         cv::cuda::split(result, channels, stream());

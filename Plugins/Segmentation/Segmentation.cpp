@@ -16,9 +16,9 @@ using namespace aq::Nodes;
 
 
 
-bool OtsuThreshold::ProcessImpl()
+bool OtsuThreshold::processImpl()
 {
-    if(image->GetChannels() != 1)
+    if(image->getChannels() != 1)
     {
         LOG_EVERY_N(warning, 100) << "Currently only supports single channel images!";
         return false;
@@ -28,7 +28,7 @@ bool OtsuThreshold::ProcessImpl()
     {
         cv::Mat h_levels(1,200,CV_32F);
         double minVal, maxVal;
-        cv::cuda::minMax(image->GetGpuMat(Stream()), &minVal, &maxVal);
+        cv::cuda::minMax(image->getGpuMat(stream()), &minVal, &maxVal);
         // Generate 300 equally spaced bins over the space
         double step = (maxVal - minVal) / double(200);
 
@@ -37,7 +37,7 @@ bool OtsuThreshold::ProcessImpl()
         {
             h_levels.at<float>(i) = val;
         }
-        cv::cuda::histRange(image->GetGpuMat(Stream()), hist, cv::cuda::GpuMat(h_levels), Stream());
+        cv::cuda::histRange(image->getGpuMat(stream()), hist, cv::cuda::GpuMat(h_levels), stream());
     }else
     {
         if(range == nullptr)
@@ -45,18 +45,18 @@ bool OtsuThreshold::ProcessImpl()
             LOG_EVERY_N(error, 100) << "Histogram provided but range not provided";
             return false;
         }
-        if(range->GetChannels() != 1)
+        if(range->getChannels() != 1)
         {
             LOG_EVERY_N(error, 100) << "Currently only support equal bins accross all histograms";
             return false;
         }
-        hist = histogram->GetGpuMat(Stream());
+        hist = histogram->getGpuMat(stream());
     }
     // Normalize histogram
-    hist.convertTo(hist, CV_32F, 1 / float(image->GetSize().area()), 0, Stream());
+    hist.convertTo(hist, CV_32F, 1 / float(image->getSize().area()), 0, stream());
     cv::cuda::HostMem h_hist;
-    hist.download(h_hist, Stream());
-    Stream().waitForCompletion();
+    hist.download(h_hist, stream());
+    stream().waitForCompletion();
     cv::Mat h_hist_ = h_hist.createMatHeader();
     int channels = h_hist_.channels();
     std::vector<double> optValue(channels);
@@ -79,7 +79,7 @@ bool OtsuThreshold::ProcessImpl()
 
         // Currently we only support equal bins accross all channels
         float val = 0;
-        cv::Mat bins = range->GetMat(Stream());
+        cv::Mat bins = range->getMat(stream());
         for (int i = 0; i < bins.cols - 1; ++i)
         {
             val = h_hist_.at<float>(i);
@@ -101,7 +101,7 @@ bool OtsuThreshold::ProcessImpl()
     }
     else
     {
-        cv::Mat bins = range->GetMat(Stream());
+        cv::Mat bins = range->getMat(stream());
         if (channels == 4)
         {
             for (int c = 0; c < channels; ++c)
@@ -153,35 +153,35 @@ bool OtsuThreshold::ProcessImpl()
 }
 
 
-bool MOG2::ProcessImpl()
+bool MOG2::processImpl()
 {
     if(mog2 == nullptr)
     {
         mog2 = cv::cuda::createBackgroundSubtractorMOG2(history, threshold, detect_shadows);
-        history_param._modified = false;
+        history_param.modified(false);
     }
-    if(history_param._modified)
+    if(history_param.modified())
     {
         mog2->setHistory(history);
-        history_param._modified = false;
+        history_param.modified(false);
     }
-    if(threshold_param._modified)
+    if(threshold_param.modified())
     {
         mog2->setVarThreshold(threshold);
-        threshold_param._modified = false;
+        threshold_param.modified(false);
     }
     cv::cuda::GpuMat mask;
-    mog2->apply(image->GetGpuMat(Stream()), mask, learning_rate, Stream());
-    background_param.UpdateData(mask, image_param.GetTimestamp(), _ctx.get());
+    mog2->apply(image->getGpuMat(stream()), mask, learning_rate, stream());
+    background_param.updateData(mask, image_param.getTimestamp(), _ctx.get());
     return true;
 }
 
-bool Watershed::ProcessImpl()
+bool Watershed::processImpl()
 {
-    const cv::Mat& img = image->GetMat(Stream());
-    cv::Mat mask = marker_mask->GetMat(Stream()).clone();
+    const cv::Mat& img = image->getMat(stream());
+    cv::Mat mask = marker_mask->getMat(stream()).clone();
     cv::watershed(img,mask);
-    mask_param.UpdateData(mask, image_param.GetTimestamp(), _ctx.get());
+    mask_param.updateData(mask, image_param.getTimestamp(), _ctx.get());
     return true;
 }
 
@@ -261,40 +261,40 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
 
 
 
-bool KMeans::ProcessImpl()
+bool KMeans::processImpl()
 {
-    const cv::Mat& img = image->GetMat(Stream());
+    const cv::Mat& img = image->getMat(stream());
     cv::TermCriteria termCrit(cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS, iterations, epsilon);
     cv::Mat labels, clusters;
     double ret = cv::kmeans(img, k, labels, termCrit, attempts, flags.getValue(), clusters);
-    clusters_param.UpdateData(clusters, image_param.GetTimestamp(), _ctx.get());
-    labels_param.UpdateData(labels, image_param.GetTimestamp(), _ctx.get());
-    compactness_param.UpdateData(ret, image_param.GetTimestamp(), _ctx.get());
+    clusters_param.updateData(clusters, image_param.getTimestamp(), _ctx.get());
+    labels_param.updateData(labels, image_param.getTimestamp(), _ctx.get());
+    compactness_param.updateData(ret, image_param.getTimestamp(), _ctx.get());
     return true;
 }
 
-bool MeanShift::ProcessImpl()
+bool MeanShift::processImpl()
 {
-    if(image->GetDepth() != CV_8U)
+    if(image->getDepth() != CV_8U)
     {
         LOG_EVERY_N(debug, 100) << "Image not CV_8U type";
         return false;
     }
     cv::cuda::GpuMat img;
-    if(image->GetChannels() != 4)
+    if(image->getChannels() != 4)
     {
         if(blank.size() != img.size())
         {
             blank.create(img.size(), CV_8U);
-            blank.setTo(cv::Scalar(0), Stream());
+            blank.setTo(cv::Scalar(0), stream());
         }
         std::vector<cv::cuda::GpuMat> channels;
-        cv::cuda::split(image->GetGpuMat(Stream()),channels, Stream());
+        cv::cuda::split(image->getGpuMat(stream()),channels, stream());
         channels.push_back(blank);
-        cv::cuda::merge(channels, img, Stream());
+        cv::cuda::merge(channels, img, stream());
     }else
     {
-        img = image->GetGpuMat(Stream());
+        img = image->getGpuMat(stream());
     }
     cv::cuda::GpuMat dest;
     cv::cuda::meanShiftSegmentation(img, dest,
@@ -302,8 +302,8 @@ bool MeanShift::ProcessImpl()
         color_radius,
         min_size,
         cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, max_iters,
-        epsilon), Stream());
-    output_param.UpdateData(dest, image_param.GetTimestamp(), _ctx.get());
+        epsilon), stream());
+    output_param.updateData(dest, image_param.getTimestamp(), _ctx.get());
     return true;
 }
 

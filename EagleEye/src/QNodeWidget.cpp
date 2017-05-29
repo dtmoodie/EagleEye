@@ -184,7 +184,7 @@ QNodeWidget::QNodeWidget(QWidget* parent, rcc::weak_ptr<aq::Nodes::Node> node_) 
                 if (proxy)
                 {
                     parameterProxies[parameters[i]->getTreeName()] = proxy;
-                    auto widget = proxy->getParameterWidget(this);
+                    auto widget = proxy->getParamWidget(this);
                     widget->installEventFilter(this);
                     widgetParamMap[widget] = parameters[i];
                     ui->gridLayout->addWidget(widget, i + 7, col, 1,1);
@@ -253,7 +253,7 @@ void QNodeWidget::on_object_recompile(mo::IMetaObject* obj)
                     if (proxy)
                     {
                         parameterProxies[param->getTreeName()] = proxy;
-                        auto widget = proxy->getParameterWidget(this);
+                        auto widget = proxy->getParamWidget(this);
                         widget->installEventFilter(this);
                         widgetParamMap[widget] = param;
                         ui->gridLayout->addWidget(widget, idx + 7, col, 1, 1);
@@ -355,7 +355,7 @@ void QNodeWidget::updateUi(bool parameterUpdate, aq::Nodes::Node *node_)
                         if (proxy)
                         {
                             parameterProxies[parameters[i]->getTreeName()] = proxy;
-                            auto widget = proxy->getParameterWidget(this);
+                            auto widget = proxy->getParamWidget(this);
                             widget->installEventFilter(this);
                             widgetParamMap[widget] = parameters[i];
                             ui->gridLayout->addWidget(widget, i + 7, col, 1, 1);
@@ -571,7 +571,7 @@ void QInputProxy::on_valueChanged(int idx)
     QString inputName = box->currentText();
     LOG(debug) << "Input changed to " << inputName.toStdString() << " for variable " << dynamic_cast<mo::IParam*>(inputParameter)->getName();
     auto tokens = inputName.split(":");
-    //auto var_manager = node->GetVariableManager();
+    //auto var_manager = node->getVariableManager();
     //auto tmp_param = var_manager->getOutputParameter(inputName.toStdString());
 
     //auto sourceNode = node->getNodeInScope(tokens[0].toStdString());
@@ -605,7 +605,7 @@ bool QInputProxy::eventFilter(QObject* obj, QEvent* event)
 void QInputProxy::updateUi(mo::IParam*, mo::Context*, bool init)
 {
     auto var_man = node->getVariableManager();
-    auto inputs = var_man->getOutputParameters(inputParameter->getTypeInfo());
+    auto inputs = var_man->getOutputParams(inputParameter->getTypeInfo());
     if(box->count() == 0)
     {
         box->addItem(QString::fromStdString(dynamic_cast<mo::IParam*>(inputParameter)->getTreeName()));

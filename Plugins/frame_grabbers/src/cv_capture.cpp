@@ -1,6 +1,6 @@
 #include "cv_capture.h"
 #include "precompiled.hpp"
-#include "Aquila/Nodes/GrabberInfo.hpp"
+#include "Aquila/framegrabbers/GrabberInfo.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #if _MSC_VER
 RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
@@ -21,7 +21,7 @@ template <class T> void SafeRelease(T **ppT)
 }
 
 
-bool GrabberCV::Load(const std::string& file_path)
+bool GrabberCV::loadData(const std::string& file_path)
 {
     if(LoadGPU(file_path))
     {
@@ -95,7 +95,7 @@ bool GrabberCV::LoadCPU(const std::string& file_path)
     return false;
 }
 
-bool GrabberCV::Grab()
+bool GrabberCV::grab()
 {
     if(d_cam)
     {
@@ -140,7 +140,7 @@ public:
     MO_DERIVE(GrabberCamera, GrabberCV)
 
     MO_END;
-    bool Load(const std::string& path);
+    bool loadData(const std::string& path);
     static void ListPaths(std::vector<std::string>& paths);
     static int CanLoad(const std::string& doc);
     static int Timeout()
@@ -238,7 +238,7 @@ int GrabberCamera::CanLoad(const std::string& doc)
     return 0;
 }
 
-bool GrabberCamera::Load(const std::string& file_path)
+bool GrabberCamera::loadData(const std::string& file_path)
 {
     int index = 0;
     if (boost::conversion::detail::try_lexical_convert(file_path, index))

@@ -37,7 +37,7 @@ void GrabberGstreamer::ListPaths(std::vector<std::string>& paths)
 
 
 
-bool GrabberGstreamer::Load(const std::string& file_path_)
+bool GrabberGstreamer::loadData(const std::string& file_path_)
 {
     std::string file_path = file_path_;
 

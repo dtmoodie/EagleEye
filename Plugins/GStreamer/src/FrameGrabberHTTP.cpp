@@ -11,7 +11,7 @@ int FrameGrabberHTTP::CanLoad(const std::string& doc)
     return 0;
 }
 
-bool FrameGrabberHTTP::Load(const ::std::string& file_path_)
+bool FrameGrabberHTTP::loadData(const ::std::string& file_path_)
 {
     std::stringstream ss;
     auto pos = file_path_.find("http://");

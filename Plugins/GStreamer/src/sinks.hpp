@@ -58,7 +58,7 @@ namespace aq
             bool processImpl();
             virtual GstFlowReturn on_pull();
             cv::Mat decode_buffer;
-            mo::Context gstreamer_context;
+            std::shared_ptr<mo::Context> gstreamer_context;
         };
     }
 }

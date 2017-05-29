@@ -9,7 +9,7 @@ void TParameterResource<aq::SyncedMemory>::handleParamUpdate(mo::Context* ctx, m
 {
     std::lock_guard<std::mutex> this_lock(mtx);
     std::stringstream* new_ss = new std::stringstream();
-    auto func = mo::SerializationFunctionRegistry::Instance()->
+    auto func = mo::SerializationFactory::instance()->
         GetJsonSerializationFunction(this->param->getTypeInfo());
     boost::recursive_mutex::scoped_lock lock(this->param->mtx());
     dynamic_cast<mo::ITypedParameter<aq::SyncedMemory>*>(this->param)->GetDataPtr()->synchronize();

@@ -18,7 +18,8 @@ bool FrameRate::processImpl()
     if(ts && _previous_frame_timestamp)
     {
         mo::Time_t ts_delta =  *ts - *_previous_frame_timestamp;
-        frametime_param.updateData(ts_delta);
+        frametime = ts_delta;
+        frametime_param.emitUpdate(input_param);
     }
     _previous_frame_timestamp = input_param.getTimestamp();
     return true;

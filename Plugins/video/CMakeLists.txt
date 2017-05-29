@@ -14,7 +14,7 @@ cuda_add_library(video SHARED ${src})
 RCC_LINK_LIB(video
     ${OpenCV_LIBS}
     ${CUDA_CUBLAS_LIBRARIES} 
-    metaobject_core metaobject_object metaobject_params metaobject_metaparams
+    metaobject_core metaobject_object metaobject_params metaobject_metaparams aquila_core
 )
 
 INCLUDE(../PluginTemplate.cmake)
