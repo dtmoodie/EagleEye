@@ -7,10 +7,10 @@
 #include "MetaObject/serialization/SerializationFactory.hpp"
 
 #include <cereal/types/vector.hpp>
-#include <Aquila/IO/cvMat.hpp>
-#include "Aquila/IO/memory.hpp"
+#include <Aquila/serialization/cereal/Mat.hpp>
+#include "Aquila/serialization/cereal/memory.hpp"
 #include "Aquila/nodes/NodeFactory.hpp"
-
+#include <Aquila/core/IDataStream.hpp>
 
 #include <Wt/WBreak>
 #include <Wt/WContainerWidget>
@@ -113,44 +113,44 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     auto stream = g_sink->getDataStream();
     auto fg = stream->getNode("ForegroundEstimate0");
 
-    auto bg_param = fg->GetParameter("background_model");
+    auto bg_param = fg->getParam("background_model");
     backgroundStream.reset(new TParameterResource<aq::SyncedMemory>(this,
-        fg->GetParameter("background_model"), "background_model"));
+        fg->getParam("background_model"), "background_model"));
     backgroundStream->handleParamUpdate(nullptr, nullptr);
 
     foregroundStream.reset(new TParameterResource<cv::Mat>(this,
-        g_sink->GetParameter("foreground_points"), "foreground"));
+        g_sink->getParam("foreground_points"), "foreground"));
     foregroundStream->handleParamUpdate(nullptr, nullptr);
 
     boundingBoxStream.reset(new TParameterResource<std::vector<BoundingBox>>(this,
-        g_sink->GetParameter("bounding_boxes"), "bounding_boxes"));
+        g_sink->getParam("bounding_boxes"), "bounding_boxes"));
     boundingBoxStream->handleParamUpdate(nullptr, nullptr);
 
 
     
-        bandwidth_raw.set_capacity(500);
-        bandwidth_throttled.set_capacity(500);
-        timestamp.set_capacity(500);
-        auto tb = g_sink->GetParameter<double>("throttled_bandwidth");
-        auto rb = g_sink->GetParameter<double>("raw_bandwidth");
+    bandwidth_raw.set_capacity(500);
+    bandwidth_throttled.set_capacity(500);
+    timestamp.set_capacity(500);
+    auto tb = g_sink->getParam<double>("throttled_bandwidth");
+    auto rb = g_sink->getParam<double>("raw_bandwidth");
 
-        onBandwidthRawUpdateSlot.reset(new mo::ParameterUpdateSlot(std::bind(
-            [this, rb](mo::Context* ctx, mo::IParam* param)
-        {
-            this->bandwidthRawUpdated = true;
-            this->bandwidth_raw.push_back(rb->GetData());
-            this->updatePlots();
-        }, std::placeholders::_1, std::placeholders::_2)));
-        onRawBandwidthUpdateConnection = rb->registerUpdateNotifier(onBandwidthRawUpdateSlot.get());
+    onBandwidthRawUpdateSlot.reset(new mo::ITParam<double>::TUpdateSlot_t(std::bind(
+        [this, rb](double data, mo::IParam* param, mo::Context* ctx, mo::OptionalTime_t ts, size_t fn, mo::ICoordinateSystem* cs)
+    {
+        this->bandwidthRawUpdated = true;
+        //this->bandwidth_raw.push_back(rb->GetData());
+        this->updatePlots();
+    }, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6)));
+    onRawBandwidthUpdateConnection = rb->registerUpdateNotifier(onBandwidthRawUpdateSlot.get());
 
-        onBandwidthThrottledUpdateSlot.reset(new mo::ParameterUpdateSlot(std::bind(
-            [this, tb](mo::Context* ctx, mo::IParam* param)
-        {
-            this->bandwidthThrottledUpdated = true;
-            this->bandwidth_throttled.push_back(tb->GetData());
-            this->updatePlots();
-        }, std::placeholders::_1, std::placeholders::_2)));
-        onThrottledBandwidthUpdateConnection = tb->registerUpdateNotifier(onBandwidthThrottledUpdateSlot.get());
+    onBandwidthThrottledUpdateSlot.reset(new mo::ITParam<double>::TUpdateSlot_t(std::bind(
+        [this, tb](double data, mo::IParam* param, mo::Context* ctx, mo::OptionalTime_t ts, size_t fn, mo::ICoordinateSystem* cs)
+    {
+        this->bandwidthThrottledUpdated = true;
+        //this->bandwidth_throttled.push_back(tb->getData());
+        this->updatePlots();
+    }, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6)));
+    onThrottledBandwidthUpdateConnection = tb->registerUpdateNotifier(onBandwidthThrottledUpdateSlot.get());
     if (false)
     {
         Wt::WAnimation animation(Wt::WAnimation::SlideInFromTop,
@@ -365,7 +365,8 @@ void WebUi::handleResize(int index, float x, float y, float z)
 
 void WebUi::handleActivate()
 {
-    g_sink->active_switch->updateData(!g_sink->active_switch->GetData());
+    // TODO update
+    //g_sink->active_switch->updateData(!g_sink->active_switch->GetData());
 }
 
 void WebUi::handleAddbb()
@@ -387,7 +388,7 @@ void WebUi::handleRebuildModel()
     auto node = stream->getNode("ForegroundEstimate0");
     if(node)
     {
-        auto param = node->GetParameter<bool>("build_model");
+        auto param = node->getParam<bool>("build_model");
         if(param)
         {
             param->updateData(true);

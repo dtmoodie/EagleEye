@@ -28,11 +28,12 @@ namespace aq
             MO_BEGIN(NetHandler)
                 PARAM(std::string, output_blob_name, "score")
             MO_END
-            virtual void SetOutputBlob(const caffe::Net<float>& net, int output_blob_index);
-            virtual void StartBatch(){}
-            virtual void HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs) = 0;
-            virtual void EndBatch(boost::optional<mo::Time_t> timestamp){}
-            void SetLabels(std::vector<std::string>* labels){this->labels = labels;}
+            virtual void setOutputBlob(const caffe::Net<float>& net, int output_blob_index);
+            virtual void startBatch(){}
+            virtual void handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes,
+                                      mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs) = 0;
+            virtual void endBatch(boost::optional<mo::Time_t> timestamp){}
+            void setLabels(std::vector<std::string>* labels){this->labels = labels;}
         protected:
             bool processImpl() { return true;}
             std::vector<std::string>* labels = nullptr;

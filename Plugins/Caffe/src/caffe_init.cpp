@@ -20,10 +20,10 @@ caffe_init_singleton* caffe_init_singleton::inst()
     if (g_inst == nullptr)
     {
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-        if (!(g_inst = table->GetSingleton<caffe_init_singleton>()))
+        if (!(g_inst = table->getSingleton<caffe_init_singleton>()))
         {
             g_inst = new caffe_init_singleton();
-            table->SetSingleton<caffe_init_singleton>(g_inst);
+            table->setSingleton<caffe_init_singleton>(g_inst);
         }
     }    
     return g_inst;

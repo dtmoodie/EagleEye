@@ -1,6 +1,7 @@
 #include "result_cache.h"
-#include "Aquila/utilities/helper_macros.hpp"
-#include "Aquila/logger.hpp"
+//#include "Aquila/utilities/helper_macros.hpp"
+
+#include "Aquila/core/Logger.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;

@@ -3,7 +3,6 @@
 #ifndef USE_CUDNN
 #define USE_CUDNN
 #endif
-#include "Aquila/Detail/PluginExport.hpp"
 #include "Aquila/nodes/Node.hpp"
 #include "Aquila/types/ObjectDetection.hpp"
 #include "Aquila/rcc/external_includes/cv_calib3d.hpp"
@@ -70,18 +69,6 @@ namespace aq
             void ReshapeInput(int num, int channels, int height, int width);
             std::vector<caffe::Blob<float>*> input_blobs;
             std::vector<caffe::Blob<float>*> output_blobs;
-            /*
-            0 = classifier
-            1 = detector
-            2 = fcn
-            */
-            enum NetworkType
-            {
-                Classifier_e = 0,
-                Detector_e = 1,
-                FCN_e = 1 << 1
-            };
-            NetworkType _network_type;
         };
 
         class Caffe_EXPORT CaffeImageClassifier : public CaffeBase
@@ -90,7 +77,7 @@ namespace aq
             MO_DERIVE(CaffeImageClassifier, CaffeBase)
                 PARAM(int, num_classifications, 5)
             MO_END
-            void       PostSerializeInit();
+            void postSerializeInit();
         protected:
             bool processImpl();
             std::vector<rcc::shared_ptr<Caffe::NetHandler>> net_handlers;

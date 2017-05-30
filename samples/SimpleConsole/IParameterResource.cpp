@@ -45,19 +45,16 @@ void IParameterResource::handleRequest(const Wt::Http::Request& request, Wt::Htt
     }
 }
 
-void IParameterResource::handleParamUpdate(mo::Context* ctx, mo::IParam* param)
-{
+void IParameterResource::handleParamUpdate(mo::Context* ctx, mo::IParam* param){
     std::lock_guard<std::mutex> lock(mtx);
     std::stringstream* new_ss = new std::stringstream();
-    if(this->param)
-    {
+    if(this->param){
         auto func = mo::SerializationFactory::instance()->
-            GetJsonSerializationFunction(this->param->getTypeInfo());
-        if (func)
-        {
-            {
+            getJsonSerializationFunction(this->param->getTypeInfo());
+        if (func){{
                 cereal::JSONOutputArchive ar(*new_ss);
-                boost::recursive_mutex::scoped_lock lock(this->param->mtx());
+                //boost::recursive_mutex::scoped_lock lock(this->param->mtx());
+                mo::Mutex_t::scoped_lock lock(this->param->mtx());
                 func(this->param, ar);
             }
             std::iostream* old_ss;

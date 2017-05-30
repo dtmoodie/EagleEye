@@ -16,8 +16,10 @@ RCC_LINK_LIB(point_clouds
       metaobject_core metaobject_object metaobject_params metaobject_metaparams
       ${OpenCV_LIBS}
       ${PCL_LIBRARIES}
-      ${VTK_LIBRARIES}
-      ${VTK_LIBS}
+      #${VTK_LIBRARIES}
+      #${VTK_LIBS}
+      aquila_core
+      aquila_types
 )
 
 if(PCL_FOUND)

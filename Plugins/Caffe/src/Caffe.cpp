@@ -155,7 +155,7 @@ bool CaffeBase::CheckInput()
             const float* data = input_blobs[i]->gpu_data();
             for(int j = 0; j < itr->second.size(); ++j)
             {
-                for(int k = 0; k < itr->second[j].GetNumMats(); ++k)
+                for(int k = 0; k < itr->second[j].getNumMats(); ++k)
                 {
                     const cv::cuda::GpuMat& mat = itr->second[j].getGpuMat(stream(), k);
                     if(data != (float*)mat.data)
@@ -195,13 +195,8 @@ void CaffeBase::WrapOutput()
     wrapped_outputs.clear();
     auto output_idx = NN->output_blob_indices();
     wrapped_outputs.clear();
-    for(int i = 0; i < output_idx.size(); ++i)
-    {
+    for(int i = 0; i < output_idx.size(); ++i){
         wrapped_outputs[NN->blob_names()[output_idx[i]]] = WrapBlob(*outputs[i]);
-    }
-    if(NN->has_layer("detection_out"))
-    {
-        _network_type = Detector_e;
     }
     auto layers = NN->layers();
     bool has_fully_connected = false;
@@ -211,10 +206,6 @@ void CaffeBase::WrapOutput()
         {
             has_fully_connected = true;
         }
-    }
-    if(!has_fully_connected)
-    {
-        _network_type = (NetworkType)(_network_type | FCN_e);
     }
 }
 
@@ -356,7 +347,7 @@ bool CaffeImageClassifier::processImpl()
 
     if(!CheckInput())
         WrapInput();
-    auto input_shape = input->GetShape();
+    auto input_shape = input->getShape();
     if(input_blobs.empty())
     {
         LOG_EVERY_N(warning, 100) << "No input blobs to network, is this a deploy network?";
@@ -392,8 +383,8 @@ bool CaffeImageClassifier::processImpl()
         {
             for(auto& handler : net_handlers)
             {
-                handler->StartBatch();
-                handler->EndBatch(input_param.getTimestamp());
+                handler->startBatch();
+                handler->endBatch(input_param.getTimestamp());
             }
             if(bounding_boxes == &defaultROI)
             {
@@ -457,7 +448,7 @@ bool CaffeImageClassifier::processImpl()
 
         return false;
     }
-    auto shape = data_itr->second[0].GetShape();
+    auto shape = data_itr->second[0].getShape();
     cv::Size input_size(shape[2], shape[1]); // NN input size
 
     if(pixel_bounding_boxes.size() != input_shape[0] &&
@@ -469,7 +460,7 @@ bool CaffeImageClassifier::processImpl()
     cv::cuda::GpuMat resized;
     for(auto& handler : net_handlers)
     {
-        handler->StartBatch();
+        handler->startBatch();
     }
     cv::Size input_image_size = input->getSize();
     for(int i = 0; i < pixel_bounding_boxes.size();) // for each roi
@@ -477,26 +468,22 @@ bool CaffeImageClassifier::processImpl()
         int start = i, end = 0;
         for(int j = 0; j < data_itr->second.size() && i < pixel_bounding_boxes.size(); ++j, ++i) // for each mini batch
         {
-            if (pixel_bounding_boxes[i].size() != input_size)
-            {
+            if (pixel_bounding_boxes[i].size() != input_size){
                 cv::cuda::resize(float_image(pixel_bounding_boxes[i]), resized, input_size, 0, 0, cv::INTER_LINEAR, stream());
-            }
-            else
-            {
+            }else{
                 resized = float_image(pixel_bounding_boxes[i]);
             }
             cv::cuda::split(resized, data_itr->second[j].getGpuMatVecMutable(stream()), stream());
             end = start + j + 1;
         }
         // Signal update on all inputs
-        for(auto blob : input_blobs)
-        {
+        for(auto blob : input_blobs){
             blob->mutable_gpu_data();
         }
 
         float loss;
         {
-            mo::scoped_profile profile_forward("Neural Net forward pass", &_rmt_hash, &_rmt_cuda_hash, &stream());
+            mo::scoped_profile profile_forward("Neural Net forward pass", nullptr, nullptr, cudaStream());
             NN->Forward(&loss);
         }
 
@@ -532,12 +519,12 @@ bool CaffeImageClassifier::processImpl()
                 if(handler)
                 {
                     handler->Init(true);
-                    handler->SetContext(this->GetContext());
-                    handler->SetLabels(&this->labels);
+                    handler->setContext(this->getContext());
+                    handler->setLabels(&this->labels);
                     net_handlers.emplace_back(handler);
                     this->_algorithm_components.emplace_back(handler);
-                    handler->SetOutputBlob(*NN, itr.first);
-                    handler->StartBatch();
+                    handler->setOutputBlob(*NN, itr.first);
+                    handler->startBatch();
 
                 }else
                 {
@@ -546,26 +533,23 @@ bool CaffeImageClassifier::processImpl()
                 // construct the handlers with largest priority
             }
         }
-        mo::scoped_profile profile_handlers("Handle neural net output", &_rmt_hash, &_rmt_cuda_hash, &stream());
+        mo::scoped_profile profile_handlers("Handle neural net output", nullptr, nullptr, cudaStream());
         std::vector<cv::Rect> batch_bounding_boxes;
         std::vector<DetectedObject2d> batch_objects;
-        for(int j = start; j < end; ++j)
-        {
+        for(int j = start; j < end; ++j){
             batch_bounding_boxes.push_back(pixel_bounding_boxes[j]);
         }
-        if(input_detections != nullptr && bounding_boxes == &defaultROI)
-        {
+        if(input_detections != nullptr && bounding_boxes == &defaultROI){
             for(int j = start; j < end; ++j)
                 batch_objects.push_back((*input_detections)[j]);
         }
-        for(auto& handler : net_handlers)
-        {
-            handler->HandleOutput(*NN, batch_bounding_boxes, input_param, batch_objects);
+        for(auto& handler : net_handlers){
+            handler->handleOutput(*NN, batch_bounding_boxes, input_param, batch_objects);
         }
     }
     for(auto& handler : net_handlers)
     {
-        handler->EndBatch(input_param.getTimestamp());
+        handler->endBatch(input_param.getTimestamp());
     }
     if(bounding_boxes == &defaultROI)
     {
@@ -573,17 +557,17 @@ bool CaffeImageClassifier::processImpl()
     }
     return true;
 }
-void CaffeImageClassifier::PostSerializeInit()
+void CaffeImageClassifier::postSerializeInit()
 {
-    Node::PostSerializeInit();
+    Node::postSerializeInit();
     for(auto& component : _algorithm_components)
     {
         rcc::shared_ptr<Caffe::NetHandler> handler(component);
         if(handler)
         {
             net_handlers.push_back(handler);
-            handler->SetLabels(&this->labels);
-            handler->SetContext(this->GetContext());
+            handler->setLabels(&this->labels);
+            handler->setContext(this->getContext());
         }
     }
 }

@@ -39,8 +39,10 @@ std::map<int, int> FCNHandler::CanHandleNetwork(const caffe::Net<float>& net)
     return output;
 }
 
-void FCNHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
-    auto input_image_size = input_param.GetDataPtr()->getSize();
+void FCNHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
+    aq::SyncedMemory data;
+    input_param.getData(data);
+    auto input_image_size = data.getSize();
     auto blob = net.blob_by_name(output_blob_name);
     if(!blob)
         return;
@@ -94,7 +96,8 @@ std::map<int, int> FCNSingleClassHandler::CanHandleNetwork(const caffe::Net<floa
     return output;
 }
 
-void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
+void FCNSingleClassHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes,
+                                         mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
     auto blob = net.blob_by_name(output_blob_name);
     if(blob)
     {

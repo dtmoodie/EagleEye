@@ -14,9 +14,10 @@ namespace aq
                 OUTPUT(std::vector<DetectedObject>, objects, {})
                 PARAM(float, classification_threshold, 0.5)
             MO_END
-            void StartBatch();
-            virtual void HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs);
-            void EndBatch(boost::optional<mo::Time_t> timestamp);
+            virtual void startBatch();
+            virtual void handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes,
+                                      mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs);
+            virtual void endBatch(boost::optional<mo::Time_t> timestamp);
         };
     }
 }

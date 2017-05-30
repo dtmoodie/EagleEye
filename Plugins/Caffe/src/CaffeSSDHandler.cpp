@@ -30,7 +30,7 @@ std::map<int, int> SSDHandler::CanHandleNetwork(const caffe::Net<float>& net)
 }
 
 
-void SSDHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
+void SSDHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
     auto output_blob= net.blob_by_name(output_blob_name);
     if(!output_blob)
         return;
@@ -60,7 +60,7 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv
             obj.boundingBox.width = (xmax[i][0] - xmin[i][0]) * bounding_boxes[num].width;
             obj.boundingBox.height = (ymax[i][0] - ymin[i][0]) * bounding_boxes[num].height;
             obj.timestamp = input_param.getTimestamp();
-            obj.framenumber = input_param.GetFrameNumber();
+            obj.framenumber = input_param.getFrameNumber();
             obj.id = current_id++;
             // Check all current objects iou value
             bool append = true;
@@ -90,11 +90,11 @@ void SSDHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv
     begin += output_blob->width() * output_blob->height() * num_detections;
     if(objects.size())
     {
-        LOG(trace) << "Detected " << objects.size() << " objets in frame " << input_param.GetFrameNumber();
+        LOG(trace) << "Detected " << objects.size() << " objets in frame " << input_param.getFrameNumber();
     }
-    num_detections_param.updateData(objects.size(), input_param.getTimestamp(), input_param.GetFrameNumber(), _ctx);
+    num_detections_param.updateData(objects.size(), input_param.getTimestamp(), input_param.getFrameNumber(), _ctx);
 
-    detections_param.updateData(objects, input_param.getTimestamp(), input_param.GetFrameNumber(), _ctx);
+    detections_param.updateData(objects, input_param.getTimestamp(), input_param.getFrameNumber(), _ctx);
 }
 
 MO_REGISTER_CLASS(SSDHandler)

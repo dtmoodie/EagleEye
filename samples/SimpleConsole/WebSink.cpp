@@ -10,21 +10,21 @@ WebSink::WebSink():
     throttled_bandwidth_mean(boost::accumulators::tag::rolling_window::window_size = 100)
 {
     h264_pass_through = mo::MetaObjectFactory::instance()->create("h264_pass_through");
-    active_switch = h264_pass_through->GetParameter<bool>("active");
+    active_switch = h264_pass_through->getParam<bool>("active");
     moments.emplace_back(2, 0, 0);
     moments.emplace_back(0, 2, 0);
     moments.emplace_back(0, 0, 2);
     last_keyframe_time = boost::posix_time::microsec_clock::universal_time();
 }
-void WebSink::SetContext(mo::Context* ctx, bool overwrite)
+void WebSink::setContext(const std::shared_ptr<mo::Context> &ctx, bool overwrite)
 {
-    Node::SetContext(ctx, overwrite);
-    h264_pass_through->SetContext(ctx, overwrite);
+    Node::setContext(ctx, overwrite);
+    h264_pass_through->setContext(ctx, overwrite);
 }
-std::vector<mo::IParam*> WebSink::GetParameters(const std::string& filter) const
+std::vector<mo::IParam*> WebSink::getParams(const std::string& filter) const
 {
-    auto h264_params = h264_pass_through->GetParameters();
-    auto my_params = Node::GetParameters();
+    auto h264_params = h264_pass_through->getParams(filter);
+    auto my_params = Node::getParams(filter);
     my_params.insert(my_params.end(), h264_params.begin(), h264_params.end());
     return my_params;
 }
@@ -97,7 +97,7 @@ bool WebSink::processImpl()
     }
     active_switch->updateData(activated, point_cloud_param.getTimestamp(), _ctx.get());
     
-    h264_pass_through->Process();
+    h264_pass_through->process();
     
     auto current_time = boost::posix_time::microsec_clock::universal_time();
     if(boost::posix_time::time_duration(current_time - last_keyframe_time).total_milliseconds() > heartbeat_ms || activated == true)

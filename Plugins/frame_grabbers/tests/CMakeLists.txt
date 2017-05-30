@@ -5,7 +5,8 @@ foreach(test ${tests})
     file(GLOB_RECURSE test_knl "${test}/*.cu")
     cuda_add_executable(${test} ${test_hdr} ${test_src} ${test_knl})
     add_dependencies(${test} frame_grabbers)
-    target_link_libraries(${test} frame_grabbers Aquila MetaObject aquila_types
+    target_link_libraries(${test} frame_grabbers
+        aquila_types
         aquila_metatypes
     )
     set_target_properties(${test} PROPERTIES FOLDER Tests/Aquila/frame_grabbers)

@@ -1,5 +1,5 @@
 #include "camera_motion_tracking.hpp"
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 using namespace aq;
 using namespace aq::Nodes;
 

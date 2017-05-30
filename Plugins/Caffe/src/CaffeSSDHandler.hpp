@@ -14,8 +14,9 @@ namespace aq
                 OUTPUT(std::vector<DetectedObject>, detections, std::vector<DetectedObject>())
                 STATUS(int, num_detections, 0)
             MO_END
-            virtual void StartBatch(){ current_id = 0;}
-            virtual void HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs);
+            virtual void startBatch(){ current_id = 0;}
+            virtual void handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes,
+                                      mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs);
             int current_id;
         };
 

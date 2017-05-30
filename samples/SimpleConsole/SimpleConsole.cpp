@@ -14,7 +14,7 @@
 #include <MetaObject/logging/Profiling.hpp>
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
-#include <MetaObject/params/Buffers/IBuffer.hpp>
+#include <MetaObject/params/buffers/IBuffer.hpp>
 #include <MetaObject/logging/Profiling.hpp>
 #include <RuntimeObjectSystem/RuntimeObjectSystem.h>
 
@@ -1390,14 +1390,14 @@ int main(int argc, char* argv[])
                     sink = rcc::shared_ptr<vclick::WebSink>::create();
                     current_stream->addNode(sink);
                     auto fg = current_stream->getNode("frame_grabber_openni20");
-                    sink->ConnectInput(fg, fg->GetParameter("current_frame"), sink->GetInput("point_cloud"));
+                    sink->connectInput(fg, fg->getParam("current_frame"), sink->getInput("point_cloud"));
 
                     auto foreground_estimator = current_stream->getNode("ForegroundEstimate0");
-                    sink->ConnectInput(foreground_estimator, foreground_estimator->GetParameter("point_mask"),
-                        sink->GetInput("foreground_mask"));
+                    sink->connectInput(foreground_estimator, foreground_estimator->getParam("point_mask"),
+                        sink->getInput("foreground_mask"));
 
-                    sink->ConnectInput(foreground_estimator, foreground_estimator->GetParameter("background_model"),
-                        sink->GetInput("background_model"));
+                    sink->connectInput(foreground_estimator, foreground_estimator->getParam("background_model"),
+                        sink->getInput("background_model"));
                 }
 
 

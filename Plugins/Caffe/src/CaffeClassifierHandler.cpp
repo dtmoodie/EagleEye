@@ -80,33 +80,28 @@ std::map<int, int> ClassifierHandler::CanHandleNetwork(const caffe::Net<float>& 
     }
     return output;
 }
-void ClassifierHandler::StartBatch()
-{
+void ClassifierHandler::startBatch(){
     objects.clear();
 }
 
-void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITypedParameter<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
+void ClassifierHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes,
+                                     mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
     auto output_blob = net.blob_by_name(output_blob_name);
-    if(output_blob)
-    {
+    if(output_blob){
         float* data = output_blob->mutable_cpu_data();
         int num = output_blob->channels();
 
-        for(int i = 0; i  < output_blob->num() && i < bounding_boxes.size(); ++i)
-        {
+        for(int i = 0; i  < output_blob->num() && i < bounding_boxes.size(); ++i){
             auto idx = sort_indexes_ascending(data + i * num, num);
             DetectedObject obj;
             obj.timestamp = input_param.getTimestamp();
-            if(labels && idx[0] < labels->size())
-            {
+            if(labels && idx[0] < labels->size()){
                 obj.classification = Classification((*labels)[idx[0]], (data + i * num)[idx[0]], idx[0]);
-            }else
-            {
+            }else{
                 obj.classification =  Classification("", (data + i * num)[idx[0]], idx[0]);
             }
             obj.boundingBox = cv::Rect2f(bounding_boxes[i].x, bounding_boxes[i].y, bounding_boxes[i].width, bounding_boxes[i].height);
-            if(objs.size() == bounding_boxes.size())
-            {
+            if(objs.size() == bounding_boxes.size()){
                 obj.id = objs[i].id;
                 obj.framenumber = objs[i].framenumber;
                 obj.timestamp = objs[i].timestamp;
@@ -117,9 +112,9 @@ void ClassifierHandler::HandleOutput(const caffe::Net<float>& net, const std::ve
     }
 }
 
-void ClassifierHandler::EndBatch(boost::optional<mo::Time_t>timestamp)
+void ClassifierHandler::endBatch(boost::optional<mo::Time_t> timestamp)
 {
-    objects_param.emitUpdate(timestamp, _ctx);
+    objects_param.emitUpdate(timestamp, _ctx.get());
 }
 
 MO_REGISTER_CLASS(ClassifierHandler)

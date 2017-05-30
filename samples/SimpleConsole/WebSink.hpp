@@ -1,5 +1,6 @@
 #ifdef HAVE_WT
 #pragma once
+#include <Aquila/types/SyncedMemory.hpp>`
 #include <Aquila/nodes/Node.hpp>
 #include <boost/date_time.hpp>
 #include "BoundingBox.hpp"
@@ -36,10 +37,10 @@ namespace vclick
             PARAM(int, heartbeat_ms, 1000)
             PARAM(bool, force_active, false)
         MO_END;
-        void  SetContext(mo::Context* ctx, bool overwrite = false);
-        std::vector<mo::IParam*> GetParameters(const std::string& filter) const;
+        void setContext(const std::shared_ptr<mo::Context>& ctx, bool overwrite = false);
+        std::vector<mo::IParam*> getParams(const std::string& filter) const;
         rcc::shared_ptr<aq::Nodes::Node> h264_pass_through;
-        mo::ITypedParameter<bool>* active_switch;
+        mo::ITParam<bool>* active_switch;
     protected:
         bool processImpl();
     public:

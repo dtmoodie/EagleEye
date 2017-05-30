@@ -103,7 +103,7 @@ bool caffe_solver::processImpl()
     {
         caffe::SolverParameter solver_params;
     }
-    if(solver && (input_blobs_param.HasSubscriptions() || input_blobs.empty()))
+    if(solver && (input_blobs_param.hasSubscriptions() || input_blobs.empty()))
     {
         sig_fill_blobs();
 

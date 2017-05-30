@@ -56,8 +56,9 @@ namespace vclick
         std::shared_ptr<mo::Connection> onActivateConntection;
         std::shared_ptr<mo::Connection> onRawBandwidthUpdateConnection;
         std::shared_ptr<mo::Connection> onThrottledBandwidthUpdateConnection;
-        mo::ParameterUpdateSlotPtr onBandwidthRawUpdateSlot;
-        mo::ParameterUpdateSlotPtr onBandwidthThrottledUpdateSlot;
+
+        std::shared_ptr<mo::ITParam<double>::TUpdateSlot_t> onBandwidthRawUpdateSlot;
+        std::shared_ptr<mo::ITParam<double>::TUpdateSlot_t> onBandwidthThrottledUpdateSlot;
 
 
         boost::circular_buffer<double> bandwidth_raw;

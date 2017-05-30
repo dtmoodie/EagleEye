@@ -3,6 +3,10 @@ CMAKE_POLICY(SET CMP0020 NEW)
 find_package(Caffe QUIET)
 set(Plugin_Caffe_available "FALSE")
 if(Caffe_FOUND)
+    IF(UNIX)
+      set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+      set(CUDA_NVCC_FLAGS "-std=c++11;--expt-relaxed-constexpr;${CUDA_NVCC_FLAGS}")
+    ENDIF()
   set(Plugin_Caffe_available "TRUE")
   find_package(OpenCV QUIET)
 
@@ -43,11 +47,12 @@ if(Caffe_FOUND)
           aquila_types
           aquila_metatypes
           aquila_core
+          aquila_serialization
     )
 
     IF(WIN32)
         if(TARGET libcaffe)
-			get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
+            get_target_property(CAFFE_BIN libcaffe IMPORTED_LOCATION_DEBUG)
         endif(TARGET libcaffe)
         get_filename_component(CAFFE_BIN_DIR_ "${CAFFE_BIN}" DIRECTORY)
         set(CAFFE_BIN_DIR ${CAFFE_BIN_DIR_} CACHE PATH "" FORCE)

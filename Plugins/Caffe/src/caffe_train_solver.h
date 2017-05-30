@@ -1,5 +1,5 @@
 #pragma once
-#define PARAMTERS_GENERATE_PERSISTENCE
+#include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/nodes/Node.hpp>
 #include <MetaObject/object/MetaObject.hpp>
 #include <MetaObject/params/Types.hpp>

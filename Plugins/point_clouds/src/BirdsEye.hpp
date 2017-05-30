@@ -1,5 +1,6 @@
 #pragma once
-#include "Aquila/nodes/Node.hpp"
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -23,7 +24,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, birds_eye_view, {})
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 }
 }
