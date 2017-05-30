@@ -76,6 +76,8 @@ IF(GSTREAMER_FOUND)
         ${GSTREAMER_gstvideo_LIBRARY}
         ${Glib_LIBRARY}
         ${GLIB_LIBRARY}
+        ${GLIB2_LIBRARIES}
+
         ${GOBJECT_LIBRARY}
         metaobject_core 
         metaobject_object

@@ -103,7 +103,6 @@ else(WIN32)
        "-DPLUGIN_NAME=${PROJECT_NAME}\n"
     )
   set(outfile_ "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}_config.txt")
-  target_compile_options(${PROJECT_NAME} PRIVATE "-Wl,--no-undefined")
 endif(WIN32)
 
 set(${PROJECT_NAME}_PLUGIN_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}/src/" CACHE PATH "" FORCE)

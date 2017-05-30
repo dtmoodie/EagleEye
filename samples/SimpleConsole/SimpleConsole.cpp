@@ -1044,37 +1044,31 @@ int main(int argc, char* argv[])
 
         slot = new mo::TSlot<void(std::string)>(std::bind([](std::string filter)->void
         {
-            if (filter.size())
+            auto constructors = mo::MetaObjectFactory::instance()->getConstructors();
+            std::map<std::string, std::vector<IObjectConstructor*>> interface_map;
+            for(auto constructor : constructors)
             {
-                auto nodes = aq::NodeFactory::Instance()->GetConstructableNodes();
-                for(auto& node : nodes)
+                IObjectInfo* info = constructor->GetObjectInfo();
+                if(info)
                 {
-                    if(node.find(filter) != std::string::npos)
-                    {
-                        std::cout << " - " << node << "\n";
-                    }
-                }
-            }else
-            {
-                auto constructors = mo::MetaObjectFactory::instance()->getConstructors();
-                std::map<std::string, std::vector<IObjectConstructor*>> interface_map;
-                for(auto constructor : constructors)
-                {
-                    IObjectInfo* info = constructor->GetObjectInfo();
-                    if(info)
-                    {
-                        interface_map[info->getInterfaceName()].push_back(constructor);
-                    }
-                }
-                for(auto itr = interface_map.begin(); itr != interface_map.end(); ++itr)
-                {
-                    std::cout << "========= " << itr->first << std::endl;
-                    for(auto ctr : itr->second)
-                    {
-                        std::cout << "  " << ctr->GetObjectInfo()->getObjectName() << std::endl;
-                    }
+                    interface_map[info->getInterfaceName()].push_back(constructor);
                 }
             }
+            for(auto itr = interface_map.begin(); itr != interface_map.end(); ++itr)
+            {
+                std::cout << "========= " << itr->first << std::endl;
+                for(auto ctr : itr->second)
+                {
+                    std::string name = ctr->GetObjectInfo()->getObjectName();
+                    if(filter.size()){
+                        if(name.find(filter) == std::string::npos){
+                            continue;
+                        }
+                    }
+                    std::cout << "  " << name << std::endl;
+                }
+            }
+
         }, std::placeholders::_1));
         connections.push_back(manager.connect(slot, "list"));
 
