@@ -1,7 +1,7 @@
 #pragma once
 #ifdef FASTMS_FOUND
 #include "Aquila/nodes/Node.hpp"
-#include <MetaObject/Parameters/ParameterMacros.hpp>
+#include <MetaObject/params/ParameterMacros.hpp>
 #include "libfastms/solver/solver.h"
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #ifdef _DEBUG
@@ -32,7 +32,7 @@ namespace aq
             OUTPUT(SyncedMemory, segmented, SyncedMemory())
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     }
 }

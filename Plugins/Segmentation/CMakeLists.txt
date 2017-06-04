@@ -46,14 +46,14 @@ cuda_add_library(Segmentation SHARED ${src} ${hdr})
 
 RCC_LINK_LIB(Segmentation
     metaobject_core
-	metaobject_object
-	metaobject_params
-	metaobject_metaparams
+    metaobject_object
+    metaobject_params
+    metaobject_metaparams
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     aquila_types
     aquila_metatypes
-	aquila_utilities
+    aquila_utilities
 )
 
 
@@ -64,5 +64,7 @@ IF(TARGET fastms)
     add_definitions(-DFASTMS_FOUND)
     add_definitions(-DFASTMS_INCLUDE=${fastms_INCLUDE_DIRECTORIES})
     INCLUDE_DIRECTORIES(${fastms_INCLUDE_DIRECTORIES})
+
 ENDIF()
-INCLUDE(../PluginTemplate.cmake)
+#INCLUDE(../PluginTemplate.cmake)
+aquila_declare_plugin(Segmentation)

@@ -1,14 +1,14 @@
 
 #ifdef FASTMS_FOUND
 #include "FastMS.h"
-#include <Aquila/Nodes/NodeInfo.hpp>
-#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
+#include <Aquila/nodes/NodeInfo.hpp>
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;
 
 
-bool FastMumfordShah::ProcessImpl()
+bool FastMumfordShah::processImpl()
 {
     if(!solver)
         solver.reset(new Solver());

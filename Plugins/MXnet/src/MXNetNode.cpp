@@ -1,334 +1,288 @@
 #include "MXNetNode.hpp"
-
+#include "MXNetHandler.hpp"
+#include <Aquila/nodes/NodeInfo.hpp>
+#include <MetaObject/logging/Profiling.hpp>
+#include <mxnet-cpp/executor.hpp>
+#include <mxnet-cpp/io.hpp>
+#include <mxnet-cpp/kvstore.hpp>
+#include <mxnet-cpp/ndarray.hpp>
+#include <mxnet-cpp/symbol.hpp>
+#include <mxnet-cpp/symbol.hpp>
 #include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/cudaarithm.hpp>
+#include <opencv2/cudawarping.hpp>
 #include <opencv2/imgproc.hpp>
 
 #include <boost/filesystem.hpp>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 
-using namespace EagleLib;
-using namespace EagleLib::Nodes;
-
-class BufferFile {
-public:
-    std::string file_path_;
-    int length_;
-    char* buffer_;
-
-    explicit BufferFile(std::string file_path)
-        :file_path_(file_path) {
-
-        std::ifstream ifs(file_path.c_str(), std::ios::in | std::ios::binary);
-        if (!ifs) {
-            std::cerr << "Can't open the file. Please check " << file_path << ". \n";
-            assert(false);
+using namespace aq;
+using namespace aq::Nodes;
+// opencv uses BGR ordering, mxnet uses RGB
+std::vector<std::vector<cv::Mat> > aq::wrapInput(mxnet::cpp::NDArray& arr, bool swap_rgb)
+{
+    std::vector<std::vector<cv::Mat> > output;
+    auto shape = arr.GetShape();
+    CHECK_EQ(shape.size(), 4);
+    int num = shape[0];
+    int num_channels = shape[1];
+    int height = shape[2];
+    int width = shape[3];
+    float* ptr = const_cast<float*>(arr.GetData());
+    for (int i = 0; i < num; ++i) {
+        std::vector<cv::Mat> channels;
+        for (int i = 0; i < num_channels; ++i) {
+            channels.push_back(cv::Mat(height, width, CV_32F, ptr));
+            ptr += width * height;
         }
-
-        ifs.seekg(0, std::ios::end);
-        length_ = ifs.tellg();
-        ifs.seekg(0, std::ios::beg);
-        std::cout << file_path.c_str() << " ... " << length_ << " bytes\n";
-
-        buffer_ = new char[sizeof(char) * length_];
-        ifs.read(buffer_, length_);
-        ifs.close();
-    }
-
-    int GetLength() {
-        return length_;
-    }
-    char* GetBuffer() {
-        return buffer_;
-    }
-
-    ~BufferFile() {
-        delete[] buffer_;
-        buffer_ = NULL;
-    }
-};
-
-void GetMeanFile(const std::string image_file, mx_float* image_data,
-    const int channels, const cv::Size resize_size) {
-    // Read all kinds of file into a BGR color 3 channels image
-    cv::Mat im_ori = cv::imread(image_file, 1);
-
-    if (im_ori.empty()) {
-        std::cerr << "Can't open the image. Please check " << image_file << ". \n";
-        assert(false);
-    }
-
-    cv::Mat im;
-
-    cv::resize(im_ori, im, resize_size);
-
-    // Better to be read from a mean.nb file
-    float mean = 117.0;
-
-    int size = im.rows * im.cols * channels;
-
-    mx_float* ptr_image_r = image_data;
-    mx_float* ptr_image_g = image_data + size / 3;
-    mx_float* ptr_image_b = image_data + size / 3 * 2;
-
-    for (int i = 0; i < im.rows; i++) {
-        uchar* data = im.ptr<uchar>(i);
-
-        for (int j = 0; j < im.cols; j++) {
-            if (channels > 1)
-            {
-                mx_float b = static_cast<mx_float>(*data++) - mean;
-                mx_float g = static_cast<mx_float>(*data++) - mean;
-                *ptr_image_g++ = g;
-                *ptr_image_b++ = b;
-            }
-
-            mx_float r = static_cast<mx_float>(*data++) - mean;
-            *ptr_image_r++ = r;
-
+        if (swap_rgb && num_channels == 3) {
+            std::swap(channels[0], channels[2]);
         }
+        output.push_back(channels);
     }
-}
-
-// LoadSynsets
-// Code from : https://github.com/pertusa/mxnet_predict_cc/blob/master/mxnet_predict.cc
-std::vector<std::string> LoadSynset(const char *filename) {
-    std::ifstream fi(filename);
-
-    if (!fi.is_open()) {
-        std::cerr << "Error opening file " << filename << std::endl;
-        assert(false);
-    }
-
-    std::vector<std::string> output;
-
-    std::string synset, lemma;
-    while (fi >> synset) {
-        getline(fi, lemma);
-        output.push_back(lemma);
-    }
-
-    fi.close();
-
     return output;
 }
 
-void PrintOutputResult(const std::vector<float>& data, const std::vector<std::string>& synset) {
-    if (data.size() != synset.size()) {
-        std::cerr << "Result data and synset size does not match!" << std::endl;
-    }
-
-    float best_accuracy = 0.0;
-    int best_idx = 0;
-
-    for (int i = 0; i < static_cast<int>(data.size()); i++) {
-        printf("Accuracy[%d] = %.8f\n", i, data[i]);
-
-        if (data[i] > best_accuracy) {
-            best_accuracy = data[i];
-            best_idx = i;
-        }
-    }
-
-    printf("Best Result: [%s] id = %d, accuracy = %.8f\n",
-        synset[best_idx].c_str(), best_idx, best_accuracy);
-}
-using namespace mxnet;
-bool MXNet::ProcessImpl()
+std::vector<std::vector<cv::cuda::GpuMat> > aq::wrapInputGpu(mxnet::cpp::NDArray& arr, bool swap_rgb)
 {
-    if(model_file_param.modified || weight_file_param.modified)
-    {
-        if(boost::filesystem::exists(model_file) && boost::filesystem::exists(weight_file))
-        {
-            /*        int num_input_nodes = 0;
-            int num_output_nodes = 0;
-            mxnet::Symbol sym;
-            BufferFile ifs(model_file.string());
-            std::stringstream ss;
-            ss << ifs.GetBuffer();
-            dmlc::JSONReader reader(&ss);
-            mxnet::Symbol internal = sym.GetInternals();
-            std::vector<std::string> all_out = internal.ListOutputs();
-            num_output_nodes = all_out.size();
-            std::vector<mxnet::Symbol> out_syms(all_out.size());
-            for (mx_uint i = 0; i < out_syms.size(); ++i) {
-                for (size_t j = 0; j < all_out.size(); ++j) {
-                    out_syms[i] = internal[j];
-                    break;
-                }
-            }
-            sym = Symbol::CreateGroup(out_syms);
-
-            // Load parameters
-            
-            std::unordered_map<std::string, NDArray> arg_params, aux_params;
-            {
-                std::unordered_set<std::string> arg_names, aux_names;
-                std::vector<std::string> arg_names_vec = sym.ListArguments();
-                std::vector<std::string> aux_names_vec = sym.ListAuxiliaryStates();
-                for (size_t i = 0; i < arg_names_vec.size(); ++i) {
-                    arg_names.insert(arg_names_vec[i]);
-                }
-                for (size_t i = 0; i < aux_names_vec.size(); ++i) {
-                    aux_names.insert(aux_names_vec[i]);
-                }
-                std::vector<NDArray> data;
-                std::vector<std::string> names;
-                BufferFile params(model_file.string());
-                dmlc::MemoryFixedSizeStream fi((void*)params.GetBuffer(), params.GetLength());  // NOLINT(*)
-                NDArray::Load(&fi, &data, &names);
-                CHECK_EQ(names.size(), data.size())
-                    << "Invalid param file format";
-                for (size_t i = 0; i < names.size(); ++i) {
-                    if (!strncmp(names[i].c_str(), "aux:", 4)) {
-                        std::string name(names[i].c_str() + 4);
-                        if (aux_names.count(name) != 0) {
-                            aux_params[name] = data[i];
-                        }
-                    }
-                    if (!strncmp(names[i].c_str(), "arg:", 4)) {
-                        std::string name(names[i].c_str() + 4);
-                        if (arg_names.count(name) != 0) {
-                            arg_params[name] = data[i];
-                        }
-                    }
-                }
-            }
-
-            std::unordered_map<std::string, TShape> known_shape;
-            /*for (mx_uint i = 0; i < num_input_nodes; ++i) {
-                known_shape[std::string(input_keys[i])] =
-                    TShape(input_shape_data + input_shape_indptr[i],
-                        input_shape_data + input_shape_indptr[i + 1]);
-            }*/
-            /*std::vector<TShape> arg_shapes;
-            std::vector<std::string> arg_names = sym.ListArguments();
-            std::vector<std::string> aux_names = sym.ListAuxiliaryStates();
-            out_shapes.resize(sym.ListOutputs().size());
-            std::vector<TShape> aux_shapes(aux_names.size());
-            for (size_t i = 0; i < arg_names.size(); ++i) {
-                std::string key = arg_names[i];
-                key2arg[key] = i;
-                if (known_shape.count(key) != 0) {
-                    arg_shapes.push_back(known_shape[key]);
-                }
-                else {
-                    arg_shapes.push_back(TShape());
-                }
-            }
-            CHECK(sym.InferShape(&arg_shapes, &out_shapes, &aux_shapes))
-                << "The shape information of is not enough to get the shapes";
-
-            Context ctx = Context::Create(Context::DeviceType::kGPU, 0);
-
-            arg_arrays.clear();
-            aux_arrays.clear();
-            for (size_t i = 0; i < arg_shapes.size(); ++i) {
-                NDArray nd = NDArray(arg_shapes[i], ctx);
-                if (arg_params.count(arg_names[i]) != 0) {
-                    CopyFromTo(arg_params[arg_names[i]], &nd);
-                }
-                arg_arrays.push_back(nd);
-            }
-            for (size_t i = 0; i < aux_shapes.size(); ++i) {
-                NDArray nd = NDArray(aux_shapes[i], ctx);
-                if (aux_params.count(aux_names[i]) != 0) {
-                    CopyFromTo(aux_params[aux_names[i]], &nd);
-                }
-                aux_arrays.push_back(nd);
-            }
-
-            std::map<std::string, Context> ctx_map;
-            std::vector<NDArray> grad_store(arg_arrays.size());
-            std::vector<OpReqType> grad_req(arg_arrays.size(), kNullOp);
-            exec.reset(Executor::Bind(sym, ctx, ctx_map,
-                arg_arrays,
-                grad_store, grad_req,
-                aux_arrays));
-            out_arrays = exec->outputs();
-        
-*/
-            model_file_param.modified = false;
-            weight_file_param.modified = false;
+    std::vector<std::vector<cv::cuda::GpuMat> > output;
+    auto shape = arr.GetShape();
+    CHECK_EQ(shape.size(), 4);
+    int num = static_cast<int>(shape[0]);
+    int num_channels = static_cast<int>(shape[1]);
+    int height = static_cast<int>(shape[2]);
+    int width = static_cast<int>(shape[3]);
+    float* ptr = const_cast<float*>(arr.GetDataGpu());
+    for (int i = 0; i < num; ++i) {
+        std::vector<cv::cuda::GpuMat> channels;
+        for (int i = 0; i < num_channels; ++i) {
+            channels.push_back(cv::cuda::GpuMat(height, width, CV_32F, ptr));
+            ptr += width * height;
         }
+        if (swap_rgb && num_channels == 3) {
+            std::swap(channels[0], channels[2]);
+        }
+        output.push_back(channels);
     }
-    return false;
+    return output;
 }
 
-bool MXNetC::ProcessImpl()
+cv::Mat aq::wrapOutput(mxnet::cpp::NDArray& arr)
 {
-    if (model_file_param.modified || weight_file_param.modified)
-    {
-        if (boost::filesystem::exists(model_file) && boost::filesystem::exists(weight_file))
-        {
-            BufferFile json_data(model_file.string());
-            BufferFile param_data(weight_file.string());
-            int dev_type = 2;  // 1: cpu, 2: gpu
-            int dev_id = 0;  // arbitrary.
-            mx_uint num_input_nodes = 1;  // 1 for feedforward
-            const char* input_key[1] = { "data" };
-            const char** input_keys = input_key;
-            int channels = 3;
+    auto shape = arr.GetShape();
+    CHECK_EQ(shape.size(), 2);
+    int num = static_cast<int>(shape[0]);
+    int num_channels = static_cast<int>(shape[1]);
+    float* ptr = const_cast<float*>(arr.GetData());
+    return cv::Mat(num, num_channels, CV_32F, ptr);
+}
 
-            const mx_uint input_shape_indptr[2] = { 0, 4 };
-            // ( trained_width, trained_height, channel, num)
-            const mx_uint input_shape_data[4] = { 1,
-                static_cast<mx_uint>(channels),
-                static_cast<mx_uint>(width),
-                static_cast<mx_uint>(height) };
-            handle = 0;  // alias for void *
+// TODO batch size based on input rois
+// TODO GPU buffer instead of cpu buffer
+bool MXNet::processImpl()
+{
+    auto gpu_ctx = mxnet::cpp::Context::gpu();
 
-                                      //-- Create Predictor
-            MXPredCreate((const char*)json_data.GetBuffer(),
-                (const char*)param_data.GetBuffer(),
-                static_cast<size_t>(param_data.GetLength()),
-                dev_type,
-                dev_id,
-                num_input_nodes,
-                input_keys,
-                input_shape_indptr,
-                input_shape_data,
-                &handle);
+    if ((label_file_param.modified() || labels.empty()) && boost::filesystem::exists(label_file)) {
+        labels.clear();
+        std::ifstream ifs(label_file.string().c_str());
 
-            // Just a big enough memory 1000x1000x3
-            int image_size = width * height * channels;
-            std::vector<mx_float> image_data = std::vector<mx_float>(image_size);
+        std::string line;
+        while (std::getline(ifs, line, '\n')) {
+            labels.push_back(line);
+        }
+        BOOST_LOG_TRIVIAL(info) << "Loaded " << labels.size() << " classes";
+        labels_param.emitUpdate(input_param);
+        label_file_param.modified(false);
+    }
+    int batch_size = 5;
+    if ((!_executor && boost::filesystem::exists(model_file) && boost::filesystem::exists(weight_file)) || bounding_boxes_param.modified()) {
+        if (bounding_boxes) {
+            batch_size = static_cast<int>(bounding_boxes->size());
+        }
+        uint num_ops;
+        const char** out_names;
+        MXListAllOpNames(&num_ops, &out_names); // https://github.com/dmlc/mxnet/pull/4537
+
+        std::map<std::string, mxnet::cpp::NDArray> parameters;
+        mxnet::cpp::NDArray::Load(weight_file.string(), 0, &parameters);
+        // upload weights to the GPU... Why is this not automatic? -_-
+        for (const auto& k : parameters) {
+            if (k.first.substr(0, 4) == "aux:") {
+                auto name = k.first.substr(4, k.first.size() - 4);
+                _aux_map[name] = k.second.Copy(gpu_ctx); // copy to gpu
+            }
+            if (k.first.substr(0, 4) == "arg:") {
+                auto name = k.first.substr(4, k.first.size() - 4);
+                _args_map[name] = k.second.Copy(gpu_ctx);
+            }
+        }
+        mxnet::cpp::Symbol sym = mxnet::cpp::Symbol::Load(model_file.string());
+        auto out = sym.ListOutputs();
+        if (out.size() == 1)
+            _net = sym.GetInternals()[out[0]];
+        auto data = mxnet::cpp::NDArray(mxnet::cpp::Shape(batch_size, 3, network_height, network_width), gpu_ctx, false);
+        _args_map["data"] = data;
+        _inputs["data"] = data;
+        try {
+            _executor.reset(_net.SimpleBind(gpu_ctx, _args_map, std::map<std::string, mxnet::cpp::NDArray>(),
+                std::map<std::string, mxnet::cpp::OpReqType>(), _aux_map));
+        } catch (...) {
+            LOG(ERROR) << MXGetLastError();
+            return false;
+        }
+        _gpu_buffer = data;
+        //_gpu_buffer = mxnet::cpp::NDArray(mxnet::cpp::Shape(batch_size,3,network_height, network_width), gpu_ctx, false);
+        bounding_boxes_param.modified(false);
+    }
+    if (!_executor) {
+        if (!boost::filesystem::exists(model_file)) {
+            LOG(WARNING) << "NN model file '" << model_file.string() << "' does not exists!";
+        }
+        if (!boost::filesystem::exists(weight_file)) {
+            LOG(WARNING) << "NN weight file '" << weight_file.string() << "' does not exists!";
+        }
+        return false;
+    }
+    auto input_image_shape = input->getShape();
+    std::vector<cv::Rect2f> default_roi(1, cv::Rect2f(0, 0, 1.0, 1.0));
+    if (bounding_boxes == nullptr)
+        bounding_boxes = &default_roi;
+    if (input_detections != nullptr && bounding_boxes == &default_roi) {
+        default_roi.clear();
+        for (const auto& itr : *input_detections) {
+            default_roi.emplace_back(itr.boundingBox.x / float(input_image_shape[2]), itr.boundingBox.y / float(input_image_shape[1]),
+                itr.boundingBox.width / float(input_image_shape[2]), itr.boundingBox.height / float(input_image_shape[1]));
+        }
+        if (default_roi.size() == 0) {
+            for (auto& handler : _handlers) {
+                handler->startBatch();
+                handler->endBatch(input_param);
+            }
+            if (bounding_boxes == &default_roi) {
+                bounding_boxes = nullptr;
+            }
+            return false;
         }
     }
-    if(handle)
-    {
-        cv::Mat tmp;
-        if(input->GetSize() != cv::Size(width, height))
-        {
-            cv::Mat fullsize = input->GetMat(Stream());
-            Stream().waitForCompletion();
-            cv::resize(fullsize, tmp, cv::Size(width, height));
-        }else
-        {
-            tmp = input->GetMat(Stream());
-            Stream().waitForCompletion();
-        }
-        if(tmp.depth() != CV_32F)
-        {
-            tmp.convertTo(tmp, CV_32F);
-        }
-        MXPredSetInput(handle, "data", (float*)tmp.data, tmp.size().area());
-        MXPredForward(handle);
-        mx_uint *shape = 0;
-        mx_uint shape_len;
-        mx_uint output_index = 0;
-        //-- Get Output Result
-        MXPredGetOutputShape(handle, output_index, &shape, &shape_len);
-        size_t size = 1;
-        for (mx_uint i = 0; i < shape_len; ++i) size *= shape[i];
-        std::vector<std::vector<SyncedMemory>> output;
-        
 
+    std::vector<cv::Rect> pixel_bounding_boxes;
+    for (int i = 0; i < static_cast<int>(bounding_boxes->size()); ++i) {
+        cv::Rect bb;
+        bb.x = (*bounding_boxes)[i].x * input_image_shape[2];
+        bb.y = (*bounding_boxes)[i].y * input_image_shape[1];
+        bb.width = (*bounding_boxes)[i].width * input_image_shape[2];
+        bb.height = (*bounding_boxes)[i].height * input_image_shape[1];
+        if (bb.x + bb.width >= input_image_shape[2]) {
+            bb.x -= input_image_shape[2] - bb.width;
+        }
+        if (bb.y + bb.height >= input_image_shape[1]) {
+            bb.y -= input_image_shape[1] - bb.height;
+        }
+        bb.x = std::max(0, bb.x);
+        bb.y = std::max(0, bb.y);
+        pixel_bounding_boxes.push_back(bb);
+    }
+    cv::cuda::GpuMat d_in = input->getGpuMat(stream());
+    cv::cuda::GpuMat float_img;
+    if (d_in.depth() != CV_32F) {
+        d_in.convertTo(float_img, CV_32F, stream());
+    } else {
+        float_img = d_in;
+    }
+    cv::cuda::subtract(float_img, channel_mean, float_img, cv::noArray(), -1, stream());
+    if (pixel_scale != 1.0) {
+        cv::cuda::multiply(float_img, pixel_scale, float_img, 1.0, -1, stream());
+    }
+    // for testing resize whole input image and shove into network
 
+    mxnet::cpp::NDArray input = _inputs["data"];
+    auto wrapped = wrapInputGpu(_gpu_buffer, swap_bgr);
+    cv::Size nn_input_size = wrapped[0][0].size();
+    for (auto& handler : _handlers)
+        handler->startBatch();
+    for (int i = 0; i < pixel_bounding_boxes.size();) {
+        cv::cuda::GpuMat resized;
+        int start = i, end = 0;
+        for (int j = 0; j < wrapped.size() && i < pixel_bounding_boxes.size(); ++j, ++i) {
+            if (pixel_bounding_boxes[i].size() != nn_input_size) {
+                cv::cuda::resize(float_img(pixel_bounding_boxes[i]), resized, nn_input_size, 0, 0, cv::INTER_LINEAR, stream());
+            } else {
+                resized = float_img(pixel_bounding_boxes[i]);
+            }
+            cv::cuda::split(resized, wrapped[j], stream());
+            end = start + j + 1;
+        }
+        stream().waitForCompletion(); // TODO asyc copy into mxnet... Need to expand their api
+        _gpu_buffer.CopyTo(&input);
+        {
+            mo::scoped_profile profile_forward("MXNET Neural Net forward pass", nullptr, nullptr, cudaStream());
+            _executor->Forward(false);
+            MXNetHandler::OutputMapping_t outmap;
+            auto output_symbols = _net.ListOutputs();
+            for (int i = 0; i < output_symbols.size(); ++i) {
+                outmap[output_symbols[i]].push_back(_executor->outputs[i]);
+            }
+            if (_handlers.size() == 0) {
+                auto handlers = MXNetHandler::Create(_net);
+                if (handlers.size() == 0) {
+                    auto dbgprint = [&outmap]() {
+                        std::stringstream ss;
+                        for (const auto& itr : outmap) {
+                            ss << itr.first << ", ";
+                        }
+                        return ss.str();
+                    };
+                    LOG(WARNING) << "Unable to create network handler for network with outputs: " << dbgprint();
+                }
+                for (auto& handler : handlers) {
+                    handler->setContext(this->getContext());
+                    handler->setLabels(&this->labels);
+                    this->_algorithm_components.emplace_back(handler);
+                    handler->startBatch();
+                }
+                _handlers.insert(_handlers.end(), handlers.begin(), handlers.end());
+            }
+            std::vector<aq::DetectedObject2d> dets;
+            std::vector<cv::Rect> bbs;
+            if (input_detections != nullptr && bounding_boxes == &default_roi) {
+                for (int j = start; j < end; ++j) {
+                    dets.push_back((*input_detections)[j]);
+                }
+            }
+            for (int j = start; j < end; ++j) {
+                bbs.push_back(pixel_bounding_boxes[j]);
+            }
+            for (auto& handler : _handlers) {
+                handler->handleMiniBatch(outmap, bbs, dets, input_param);
+            }
+        }
+    }
+    for (auto& handler : _handlers) {
+        handler->endBatch(input_param);
+    }
+    //mxnet::cpp::NDArray out = executor->outputs[0].Copy(cpu_ctx);
+    if (bounding_boxes == &default_roi) {
+        bounding_boxes = nullptr;
     }
     return true;
 }
+
+void MXNet::postSerializeInit()
+{
+    Node::postSerializeInit();
+    for (auto& component : _algorithm_components) {
+        rcc::shared_ptr<MXNetHandler> handler(component);
+        if (handler) {
+            _handlers.push_back(handler);
+            handler->setLabels(&this->labels);
+            handler->setContext(this->getContext());
+        }
+    }
+}
+
+MO_REGISTER_CLASS(MXNet)

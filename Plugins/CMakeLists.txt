@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-
+include(PluginTemplate.cmake)
 MACRO(SUBDIRLIST result curdir)
   FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
   SET(dirlist "")

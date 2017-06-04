@@ -53,14 +53,13 @@ public:
 
     MO_BEGIN(IMessageReader)
         PARAM(std::string, subscribed_topic, "")
-        //MO_SLOT(void, on_subscribed_topic_modified, mo::Context*, mo::IParam*)
         PARAM_UPDATE_SLOT(subscribed_topic)
     MO_END;
     typedef MessageReaderInfo InterfaceInfo;
     static std::vector<std::string> ListSubscribableTopics();
     static rcc::shared_ptr<IMessageReader> create(const std::string& topic);
     static int CanLoadTopic(const std::string& topic);
-    virtual bool Subscribe(const std::string& topic) = 0;
+    virtual bool subscribe(const std::string& topic) = 0;
 };
 
 } // namespace ros

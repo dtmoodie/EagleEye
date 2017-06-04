@@ -31,4 +31,29 @@ TARGET_LINK_LIBRARIES(QCustomPlot
     Qt5::OpenGL
     Qt5::PrintSupport)
 
+export(TARGETS QCustomPlot FILE "${PROJECT_BINARY_DIR}/QCustomPlotTargets.cmake")
+export(PACKAGE QCustomPlot)
+
+install(
+    TARGETS QCustomPlot
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
+install(TARGETS QCustomPlot
+    DESTINATION lib
+    EXPORT QCustomPlotTargets
+)
+
+install(DIRECTORY include/
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h"
+)
+
+install(DIRECTORY include/
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.hpp"
+)
+
 ENDIF(Qt5_FOUND)

@@ -422,7 +422,7 @@ int main(int argc, char* argv[])
                         auto documents = fg_info->listLoadablePaths();
                         for(auto& document : documents)
                         {
-                            std::cout << " - " << index << "  [" << fg_info->getObjectName() << "] " << document << "\n";
+                            std::cout << " - " << index << "  [" << fg_info->GetObjectName() << "] " << document << "\n";
                             documents_list.emplace_back(document, fg_info->getDisplayName());
                             ++index;
                         }
@@ -700,13 +700,22 @@ int main(int argc, char* argv[])
         slot = new mo::TSlot<void(std::string)>(
                     std::bind([](std::string obj)
         {
+            auto pos = obj.find(' ');
+            IObjectInfo::Verbosity verb = IObjectInfo::INFO;
+            if(pos != std::string::npos){
+                if(obj.substr(pos+1) == "DEBUG")
+                    verb = IObjectInfo::DEBUG;
+                if(obj.substr(pos+1) == "RCC")
+                    verb = IObjectInfo::RCC;
+                obj = obj.substr(0,pos);
+            }
             IObjectConstructor* constructor = mo::MetaObjectFactory::instance()->getConstructor(obj.c_str());
             if(constructor)
             {
                 mo::IMetaObjectInfo* info = dynamic_cast<mo::IMetaObjectInfo*>(constructor->GetObjectInfo());
                 if(info)
                 {
-                    std::cout << info->print();
+                    std::cout << info->Print(verb);
                 }
             }else
             {
@@ -1051,7 +1060,7 @@ int main(int argc, char* argv[])
                 IObjectInfo* info = constructor->GetObjectInfo();
                 if(info)
                 {
-                    interface_map[info->getInterfaceName()].push_back(constructor);
+                    interface_map[info->GetInterfaceName()].push_back(constructor);
                 }
             }
             for(auto itr = interface_map.begin(); itr != interface_map.end(); ++itr)
@@ -1059,7 +1068,7 @@ int main(int argc, char* argv[])
                 std::cout << "========= " << itr->first << std::endl;
                 for(auto ctr : itr->second)
                 {
-                    std::string name = ctr->GetObjectInfo()->getObjectName();
+                    std::string name = ctr->GetObjectInfo()->GetObjectName();
                     if(filter.size()){
                         if(name.find(filter) == std::string::npos){
                             continue;

@@ -11,8 +11,8 @@ namespace aq
         {
         public:
             static std::vector<std::string> listLoadablePaths();
-            static int CanLoadDocument(const std::string& topic);
-            static int LoadTimeout(){return 10000;}
+            static int canLoadPath(const std::string& topic);
+            static int loadTimeout(){return 10000;}
             MO_DERIVE(RosSubscriber, IFrameGrabber)
             MO_END
             bool loadData(std::string file_path);

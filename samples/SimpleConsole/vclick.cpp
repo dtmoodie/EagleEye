@@ -113,7 +113,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     auto stream = g_sink->getDataStream();
     auto fg = stream->getNode("ForegroundEstimate0");
 
-    auto bg_param = fg->getParam("background_model");
+    //auto bg_param = fg->getParam("background_model");
     backgroundStream.reset(new TParameterResource<aq::SyncedMemory>(this,
         fg->getParam("background_model"), "background_model"));
     backgroundStream->handleParamUpdate(nullptr, nullptr);
@@ -127,7 +127,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     boundingBoxStream->handleParamUpdate(nullptr, nullptr);
 
 
-    
+
     bandwidth_raw.set_capacity(500);
     bandwidth_throttled.set_capacity(500);
     timestamp.set_capacity(500);
@@ -193,9 +193,9 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         chart->setMargin(10, Top | Bottom);            // add margin vertically
         chart->setMargin(WLength::Auto, Left | Right); // center horizontally
 
-        
+
     }
-    
+
 
     /*heartbeatStream = new TParameterResourceRaw<cv::Mat>(this,
         g_sink->GetParameter("output_jpeg"), "heartbeat");
@@ -209,9 +209,9 @@ WebUi::WebUi(const Wt::WEnvironment& env):
             jpeg_node->GetParameter("jpeg_buffer"), "rawvideo");
         rawStream->handleParamUpdate(nullptr, nullptr);
     }*/
-    
 
-    
+
+
 
     /*
     {
@@ -228,7 +228,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
             {
                 raw_feed->pause();
             }));
-            
+
     }
     {
         Wt::WPanel *video_panel = new Wt::WPanel(container);
@@ -293,7 +293,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
     ifs.open("../render_script.txt");
     if(ifs.is_open())
     {
-        std::string move_call = onMove.createCall("SELECTED.index", "SELECTED.position.x", 
+        std::string move_call = onMove.createCall("SELECTED.index", "SELECTED.position.x",
             "SELECTED.position.y", "SELECTED.position.z");
         std::string source((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
         std::stringstream ss;
@@ -301,7 +301,7 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         ss << "var background_url = \"" << background_link.url() << "\";\n";
         ss << "var foregorund_url = \"" << foreground_link.url() << "\";\n";
         ss << source;
-        ss << "\n" << 
+        ss << "\n" <<
             "function onDocumentKeydown(event) {"
             "    var key = event.which;"
             <<   onKeydown.createCall("key") <<
@@ -328,18 +328,18 @@ WebUi::WebUi(const Wt::WEnvironment& env):
         LOG(debug) << "\n" << js;
 
         render_window = new Wt::WText(container);
-        
+
         render_window->doJavaScript(js);
     }else
     {
         LOG(error) <<"Unable to open ../render_script.txt";
     }
-    
+
 }
 
 WebUi::~WebUi()
 {
-    
+
 }
 
 void WebUi::handleMove(int index, float x, float y, float z)
@@ -438,7 +438,7 @@ void WebUi::updatePlots()
                 x_axis.setRange(timestamp[0], timestamp[99]);
                 Wt::Chart::WAxis& y1_axis = chart->axis(Wt::Chart::Axis::Y1Axis);
                 Wt::Chart::WAxis& y2_axis = chart->axis(Wt::Chart::Axis::Y2Axis);
-                
+
                 y1_axis.setRange(0, maxBw);
                 y1_axis.setGridLinesEnabled(true);
                 y1_axis.setLabelInterval(maxBw/10);
@@ -481,8 +481,8 @@ void WebUi::updatePlots()
                     cv::imshow("bandwidth plot", plot);
                 },mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI));
         }
-        
-        
+
+
         bandwidthRawUpdated = false;
         bandwidthThrottledUpdated = false;
     }

@@ -186,7 +186,7 @@ bool Watershed::processImpl()
 }
 
 
-/*void SegmentGrabCut::NodeInit(bool firstInit)
+/*void SegmentGrabCut::nodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -308,7 +308,7 @@ bool MeanShift::processImpl()
 }
 
 /*
-void ManualMask::NodeInit(bool firstInit)
+void ManualMask::nodeInit(bool firstInit)
 {
 
     if(firstInit)
@@ -366,7 +366,7 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
     return img;
 }
 
-void SLaT::NodeInit(bool firstInit)
+void SLaT::nodeInit(bool firstInit)
 {
     updateParameter("Lambda", double(0.1))->SetTooltip( "For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities");
     updateParameter("Alpha", double(20.0))->SetTooltip("For bigger values, solution will be more flat, for smaller values, solution will be more rough.");

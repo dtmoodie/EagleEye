@@ -57,7 +57,7 @@ public:
         }
     }
 
-    bool Subscribe(const std::string& topic)
+    bool subscribe(const std::string& topic)
     {
         _sub = aq::RosInterface::Instance()->nh()->subscribe<PinnedImage>(topic, 5,
                 boost::bind(&MessageReaderImage::imageCb, this, _1));

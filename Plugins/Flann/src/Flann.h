@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 #include "Aquila/Detail/Export.hpp"
 #include <Aquila/utilities/CudaUtils.hpp>
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
@@ -41,7 +41,7 @@ namespace aq
                 OUTPUT(SyncedMemory, foreground, SyncedMemory())
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             void BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& stream);
             std::shared_ptr<flann::GpuIndex<flann::L2<float>>> nnIndex;
         };
