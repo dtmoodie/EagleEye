@@ -94,7 +94,7 @@ macro(aquila_declare_plugin tgt)
     set(external_include_file "${external_include_file}\n  #endif // NDEBUG\n")
 
     set(external_include_file "${external_include_file}\n#endif // _MSC_VER")
-    set(link_file_path "${CMAKE_CURRENT_LIST_DIR}/${tgt}/src/Aquila/rcc/external_includes/${tgt}_link_libs.hpp")
+    set(link_file_path "${CMAKE_CURRENT_LIST_DIR}/src/Aquila/rcc/external_includes/${tgt}_link_libs.hpp")
 
     if(EXISTS ${link_file_path})
         FILE(READ ${link_file_path} read_file)
