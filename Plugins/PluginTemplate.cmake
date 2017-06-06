@@ -20,7 +20,7 @@ macro(aquila_declare_plugin tgt)
             CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/Plugins
     )
     set_target_properties(${tgt} PROPERTIES LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin/Plugins)
-
+    INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/src)
 
     ocv_add_precompiled_header_to_target(${tgt} src/precompiled.hpp)
 
@@ -40,17 +40,17 @@ macro(aquila_declare_plugin tgt)
       SET(PROJECT_ID "1")
     ENDIF(temp)
 
-    RCC_TARGET_CONFIG(${tgt})
+    RCC_TARGET_CONFIG(${tgt} plugin_libararies)
+    set(LINK_LIBS_RELEASE ${plugin_libararies})
+    set(LINK_LIBS_DEBUG ${plugin_libararies})
 
     set(${tgt}_PLUGIN_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/" CACHE PATH "" FORCE)
     target_include_directories(${tgt}
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/>
     )
 
-    ADD_DEFINITIONS(-DPLUGIN_NAME=${tgt})
     set(PLUGIN_NAME "${tgt}")
     CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_CURRENT_LIST_DIR}/src/${tgt}Export.hpp" @ONLY)
-
 
     LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
     LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
@@ -72,9 +72,7 @@ macro(aquila_declare_plugin tgt)
         string(LENGTH ${lib} len)
         if(len GREATER 3)
             string(SUBSTRING "${lib}" 0 3 sub)
-            if(sub STREQUAL lib)
-                MESSAGE(${lib})
-                MESSAGE(${sub})
+            if(${sub} STREQUAL lib)
               string(SUBSTRING "${lib}" 3 -1 lib)
               set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
             else()
@@ -89,8 +87,20 @@ macro(aquila_declare_plugin tgt)
     set(external_include_file "${external_include_file}\n  #else\n")
 
     foreach(lib ${LINK_LIBS_DEBUG})
-        set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+        string(LENGTH ${lib} len)
+        if(len GREATER 3)
+            string(SUBSTRING "${lib}" 0 3 sub)
+            if(${sub} STREQUAL lib)
+                string(SUBSTRING "${lib}" 3 -1 lib)
+                set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+            else()
+                set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+            endif()
+        else()
+            set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+        endif()
     endforeach()
+
     set(external_include_file "${external_include_file}\n  #endif // NDEBUG\n")
 
     set(external_include_file "${external_include_file}\n#endif // _MSC_VER")
