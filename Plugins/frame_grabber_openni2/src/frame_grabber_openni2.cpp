@@ -1,12 +1,12 @@
 #include "frame_grabber_openni2.h"
 #include "openni2_initializer.h"
-#include <Aquila/Nodes/FrameGrabberInfo.hpp>
-#include <MetaObject/Logging/Profiling.hpp>
+#include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
+#include <MetaObject/logging/Profiling.hpp>
 using namespace aq;
 using namespace aq::Nodes;
 
 
-int frame_grabber_openni2::CanLoadDocument(const std::string& document)
+int frame_grabber_openni2::canLoadPath(const std::string& document)
 {
     std::string doc = document;
     std::transform(doc.begin(), doc.end(), doc.begin(), ::tolower);
@@ -31,12 +31,12 @@ int frame_grabber_openni2::CanLoadDocument(const std::string& document)
     return 0;
 }
 
-int frame_grabber_openni2::Timeout()
+int frame_grabber_openni2::loadTimeout()
 {
     return 10000;
 }
 
-std::vector<std::string> frame_grabber_openni2::ListLoadablePaths()
+std::vector<std::string> frame_grabber_openni2::listLoadablePaths()
 {
     initializer_NI2::instance();
     openni::Array<openni::DeviceInfo> devices;
@@ -144,11 +144,8 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
                 openni::CoordinateConverter::convertDepthToWorld(*_depth, j, i, ptr[j], &pt_ptr[j].val[0], &pt_ptr[j].val[1], &pt_ptr[j].val[2]);
             }
         }
-        if(fn != 1)
-            mo::PopCpu();
-        //FrameGrabberBuffered::PushFrame(TS<SyncedMemory>(double(ts), (long long)fn, XYZ), false);
-        xyz_param.UpdateData(XYZ, mo::tag::_timestamp = mo::time_t(ts * mo::us), mo::tag::_frame_number = fn);
-        mo::PushCpu("openni2 frame grabber waiting on frame");
+        xyz_param.updateData(XYZ, mo::tag::_timestamp = mo::Time_t(ts * mo::us), mo::tag::_frame_number = fn);
+
         break;
     }
 }
