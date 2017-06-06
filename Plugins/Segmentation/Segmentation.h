@@ -120,7 +120,7 @@ namespace aq{
         boost::shared_ptr<Solver> solver;
     public:
         SLaT();
-        virtual void NodeInit(bool firstInit);
+        virtual void nodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
 #endif

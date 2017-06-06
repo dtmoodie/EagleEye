@@ -31,7 +31,7 @@ namespace EagleLib
                 PROPERTY(vtkSmartPointer<vtkLODActor>, actor, vtkSmartPointer<vtkLODActor>());
             MO_END;            
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         private:
         };
     }

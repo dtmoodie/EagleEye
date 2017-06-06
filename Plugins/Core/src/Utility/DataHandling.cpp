@@ -134,7 +134,7 @@ cv::cuda::GpuMat ConcatTensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream
     int type = -1;
     for(int i = 1; i < _parameters.size(); ++i)
     {
-        auto param = dynamic_cast<Parameters::ITypedParameter<cv::cuda::GpuMat>*>(_parameters[i]);
+        auto param = dynamic_cast<Parameters::ITParam<cv::cuda::GpuMat>*>(_parameters[i]);
         if(param)
         {
             if(param->Data() == nullptr)

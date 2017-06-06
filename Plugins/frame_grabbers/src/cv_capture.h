@@ -4,7 +4,7 @@
 #include "Aquila/rcc/external_includes/cv_cudacodec.hpp"
 #include "Aquila/rcc/external_includes/cv_imgcodec.hpp"
 #include "Aquila/rcc/external_includes/cv_videoio.hpp"
-
+#include <MetaObject/params/detail/TParamPtrImpl.hpp>
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 
 namespace aq

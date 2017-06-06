@@ -1,6 +1,6 @@
 #ifdef HAVE_WT
 #pragma once
-#include <Aquila/types/SyncedMemory.hpp>`
+#include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/nodes/Node.hpp>
 #include <boost/date_time.hpp>
 #include "BoundingBox.hpp"
@@ -23,7 +23,7 @@ namespace vclick
             APPEND_FLAGS(background_model, mo::Desynced_e)
             OPTIONAL_INPUT(aq::SyncedMemory, raw_image, nullptr)
             APPEND_FLAGS(background_model, mo::Desynced_e)
-            
+
             OUTPUT(cv::Mat, foreground_points, cv::Mat())
             OUTPUT(cv::Mat, output_jpeg, cv::Mat())
             OUTPUT(aq::SyncedMemory, output_image, aq::SyncedMemory())

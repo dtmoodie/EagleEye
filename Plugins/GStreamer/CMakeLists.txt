@@ -79,7 +79,7 @@ IF(GSTREAMER_FOUND)
         ${GLIB2_LIBRARIES}
 
         ${GOBJECT_LIBRARY}
-        metaobject_core 
+        metaobject_core
         metaobject_object
         metaobject_params
         metaobject_metaparams
@@ -88,10 +88,11 @@ IF(GSTREAMER_FOUND)
         aquila_utilities
     )
     IF(${GSTREAMER_gstrtspserver_LIBRARY})
-        RCC_LINK_LIB(Gstreamer ${GSTREAMER_gstrtspserver_LIBRARY})
+        RCC_LINK_LIB(GStreamer ${GSTREAMER_gstrtspserver_LIBRARY})
     ENDIF()
 
-    INCLUDE(../PluginTemplate.cmake)
+    #INCLUDE(../PluginTemplate.cmake)
+    aquila_declare_plugin(GStreamer)
 else()
     message("Gstreamer not found")
 ENDIF()

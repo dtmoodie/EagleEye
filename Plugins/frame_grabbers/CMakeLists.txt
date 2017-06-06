@@ -55,7 +55,7 @@ cuda_add_library(frame_grabbers SHARED ${src} ${hdr} ${knl})
 
 RCC_LINK_LIB(frame_grabbers
         aquila_core
-		metaobject_core metaobject_object metaobject_params metaobject_metaparams
+        metaobject_core metaobject_object metaobject_params metaobject_metaparams
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}
         aquila_types
@@ -86,5 +86,6 @@ endif()
 if(BUILD_TESTS)
     add_subdirectory("tests")
 endif()
-INCLUDE(../PluginTemplate.cmake)
+#INCLUDE(../PluginTemplate.cmake)
+aquila_declare_plugin(frame_grabbers)
 

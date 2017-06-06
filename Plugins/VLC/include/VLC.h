@@ -1,8 +1,8 @@
 #pragma once
 #include "vlc/vlc.h"
-#include <Aquila/Nodes/IFrameGrabber.hpp>
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
 #include <Aquila/Project_defs.hpp>
-#include <MetaObject/Detail/ConcurrentQueue.hpp>
+#include <MetaObject/core/detail/ConcurrentQueue.hpp>
 #include <mutex>
 
 #ifdef _DEBUG
@@ -32,8 +32,8 @@ namespace aq
         MO_END;
 		~vlcCamera();
 		bool Load(std::string file);
-		void NodeInit(bool firstInit);
-        bool ProcessImpl();
+		void nodeInit(bool firstInit);
+        bool processImpl();
         libvlc_instance_t* vlcInstance;
         libvlc_media_player_t* mp;
         libvlc_media_t* media;

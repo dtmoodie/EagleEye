@@ -57,12 +57,12 @@ namespace EagleLib
             vtkImageViewer();
             ~vtkImageViewer();
             QWidget* CreatePlot(QWidget* parent);
-            virtual void SetInput(mo::IParameter* param_ = nullptr);
+            virtual void SetInput(mo::IParam* param_ = nullptr);
             virtual void OnParameterUpdate(cv::cuda::Stream* stream);
             //virtual std::string PlotName() const;
             virtual void Serialize(ISimpleSerializer *pSerializer);
             virtual void Init(bool firstInit);
-            static bool AcceptsParameter(mo::IParameter* param);
+            static bool AcceptsParameter(mo::IParam* param);
         };
     }
 }

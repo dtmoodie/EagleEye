@@ -56,6 +56,7 @@ namespace aq{
             switch(portType){
                 case QtNodes::PortType::In: return m_obj->getInputs().size() + 1;
                 case QtNodes::PortType::Out: return m_obj->getOutputs().size() + 1;
+                case QtNodes::PortType::None: return 0;
             }
             return 0;
         }
@@ -88,6 +89,8 @@ namespace aq{
                         }
                     }
                 }
+            case QtNodes::PortType::None:
+                break;
             }
             return output;
         }

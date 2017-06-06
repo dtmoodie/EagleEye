@@ -72,7 +72,7 @@ GstFlowReturn FrameGrabberHTTP::on_pull()
         gboolean res;
         res = gst_structure_get_int (s, "width", &width);
         res |= gst_structure_get_int (s, "height", &height);
-        const gchar* format = gst_structure_get_string(s, "format");
+        //const gchar* format = gst_structure_get_string(s, "format");
         if (!res)
         {
             LOG(debug) << "could not get snapshot dimenszion\n";

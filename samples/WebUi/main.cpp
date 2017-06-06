@@ -242,11 +242,11 @@ protected:
                                 std::string new_node_name = added_nodes[0]->getTreeName();
                                 for(auto& node : nodes)
                                 {
-                                    if(auto ret = populateTree(node, root, new_node_name))
+                                    /*if(auto ret = populateTree(node, root, new_node_name))
                                     {
                                         // When you add a node, select it in the tree
                                         //_node_tree->select(ret);
-                                    }
+                                    }*/
                                 }
                                 this->_current_node = added_nodes[0];
                             }

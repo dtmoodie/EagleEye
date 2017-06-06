@@ -5,7 +5,7 @@
 
 #include "vtkPlotter.h"
 #include "vtkMatDataBuffer.h"
-#include "MetaObject/Parameters/Types.hpp"
+#include "MetaObject/params/Types.hpp"
 
 #include <vtkPolyData.h>
 #include <vtkIdTypeArray.h>
@@ -45,14 +45,14 @@ namespace EagleLib
         public:
             vtkVolumetricPlotter();
             virtual ~vtkVolumetricPlotter();
-            static bool AcceptsParameter(mo::IParameter* param);
-            virtual void SetInput(mo::IParameter* param_ = nullptr);
+            static bool AcceptsParameter(mo::IParam* param);
+            virtual void SetInput(mo::IParam* param_ = nullptr);
             virtual void OnParameterUpdate(cv::cuda::Stream* stream);
             virtual void OnMatParameterUpdate(cv::cuda::Stream* stream);
             virtual void OnGpuMatParameterUpdate(cv::cuda::Stream* stream);
             virtual void OnSyncedMemUpdate(cv::cuda::Stream* stream);
             virtual std::string PlotName() const;
-            virtual void onUpdate(mo::IParameter* param = nullptr, cv::cuda::Stream* stream = nullptr);
+            virtual void onUpdate(mo::IParam* param = nullptr, cv::cuda::Stream* stream = nullptr);
             virtual void PlotInit(bool firstInit);
             
             MO_DERIVE(vtkVolumetricPlotter, vtkPlotterBase);

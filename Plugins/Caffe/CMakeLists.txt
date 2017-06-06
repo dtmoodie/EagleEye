@@ -16,7 +16,7 @@ if(Caffe_FOUND)
   find_path(CUDNN_LIB_DIR cudnn.lib cudnn.so libcudnn.so cudnn HINTS "${CUDNN_DIR}/lib/x64" "${CUDA_TOOLKIT_ROOT_DIR}/lib64")
   find_path(CUDNN_INCLUDE_DIR cudnn.h HINTS "${CUDNN_DIR}/include" "${CUDA_TOOLKIT_ROOT_DIR}/include")
   find_path(CUDNN_BIN_DIR cudnn64_4.dll cudnn64_3.dll libcudnn.so cudnn cudnn.so HINTS "${CUDNN_DIR}/bin" "${CUDA_TOOLKIT_ROOT_DIR}/lib64")
-  if(CUDNN_LIBRARY AND CUDNN_INCLUDE_DIR AND CUDNN_LIB_DIR AND CUDNN_BIN_DIR)
+  if(CUDNN_LIBRARY AND CUDNN_INCLUDE_DIR)
     include_directories(
       ${Caffe_INCLUDE_DIRS}
       ${Aquila_INCLUDE_DIRECTORIES}
@@ -27,7 +27,6 @@ if(Caffe_FOUND)
     add_definitions(-DUSE_CUDNN)
 
     LINK_DIRECTORIES(${LINK_DIRS})
-    LINK_DIRECTORIES(${CUDNN_LIB_DIR})
     file(GLOB_RECURSE src "*.h" "*.hpp" "*.cpp" "*.cu")
     cuda_add_library(Caffe SHARED ${src})
 
@@ -68,15 +67,16 @@ if(Caffe_FOUND)
             caffe
         )
     ENDIF(WIN32)
-    INCLUDE(../PluginTemplate.cmake)
+    #INCLUDE(../PluginTemplate.cmake)
+    aquila_declare_plugin(Caffe)
 
   else()
     message("CUDNN not found")
     message(STATUS
-        "  CUDNN lib: ${CUDNN_LIBRARY}\n"
-        "	include: ${CUDNN_INCLUDE_DIR}\n"
-        "   lib dir: ${CUDNN_LIB_DIR}\n"
-        "   bin dir:${CUDNN_BIN_DIR}\n"
+        " CUDNN lib: ${CUDNN_LIBRARY}\n"
+        "  include:  ${CUDNN_INCLUDE_DIR}\n"
+        "  lib dir:  ${CUDNN_LIB_DIR}\n"
+        "  bin dir:  ${CUDNN_BIN_DIR}\n"
     )
   endif()
 else()
