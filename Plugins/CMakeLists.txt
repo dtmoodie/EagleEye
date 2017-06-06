@@ -11,7 +11,10 @@ MACRO(SUBDIRLIST result curdir)
   SET(${result} ${dirlist})
 ENDMACRO()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--no-undefined")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	# TODO(clang): See if clang supports the same thing
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--no-undefined")
+endif()
 project(Plugins)
 SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
 message(STATUS "------------------- Plugins -------------------------")
