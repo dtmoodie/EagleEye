@@ -1,7 +1,7 @@
 #pragma once
-
 #include "OpenNI.h"
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 
 RUNTIME_COMPILER_LINKLIBRARY("OpenNI2.lib");
@@ -28,9 +28,9 @@ namespace aq
             void onNewFrame(openni::VideoStream& stream);
             bool processImpl(){return true;}
 
-            static int CanLoadDocument(const std::string& document);
-            static int Timeout();
-            static std::vector<std::string> ListLoadablePaths();
+            static int canLoadPath(const std::string& document);
+            static int loadTimeout();
+            static std::vector<std::string> listLoadablePaths();
         };
     }
 }
