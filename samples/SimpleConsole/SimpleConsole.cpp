@@ -40,7 +40,7 @@
 #include "Aquila/rcc/SystemTable.hpp"
 
 #ifdef HAVE_WT
-#include "vclick.hpp"
+//#include "vclick.hpp"
 #endif
 
 #include <fstream>
@@ -1372,7 +1372,7 @@ int main(int argc, char* argv[])
         connections.push_back(manager.connect(slot, "emit"));
 
 #ifdef HAVE_WT
-        boost::thread web_thread;
+        /*boost::thread web_thread;
         slot = new mo::TSlot<void(std::string)>(std::bind(
             [&current_stream, &web_thread, argc, argv](std::string null)->void
         {
@@ -1403,7 +1403,7 @@ int main(int argc, char* argv[])
             }
         }, std::placeholders::_1));
 
-        connections.push_back(manager.connect(slot, "web-ui"));
+        connections.push_back(manager.connect(slot, "web-ui"));*/
 #endif
         slot = new mo::TSlot<void(std::string)>(std::bind(
             [](std::string level)
