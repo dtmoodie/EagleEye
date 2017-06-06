@@ -10,7 +10,7 @@ std::vector<std::string> RosSubscriber::listLoadablePaths()
 {
     return ros::IMessageReader::ListSubscribableTopics();
 }
-int RosSubscriber::CanLoadDocument(const std::string& topic)
+int RosSubscriber::canLoadPath(const std::string& topic)
 {
     return ros::IMessageReader::CanLoadTopic(topic);
 }

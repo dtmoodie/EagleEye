@@ -1,7 +1,7 @@
 #pragma once
 
 #include "OpenNI.h"
-#include <Aquila/Nodes/IFrameGrabber.hpp>
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 
 RUNTIME_COMPILER_LINKLIBRARY("OpenNI2.lib");
@@ -26,7 +26,7 @@ namespace aq
         
             bool Load(std::string file_path);
             void onNewFrame(openni::VideoStream& stream);
-            bool ProcessImpl(){return true;}
+            bool processImpl(){return true;}
 
             static int CanLoadDocument(const std::string& document);
             static int Timeout();

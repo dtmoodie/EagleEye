@@ -35,7 +35,7 @@ RosInterface* RosInterface::Instance()
     }else
     {
         singleton = new RosInterface();
-        table->SetSingleton(singleton);
+        table->setSingleton(singleton);
         return singleton;
     }
 }

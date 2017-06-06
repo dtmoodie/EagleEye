@@ -35,5 +35,6 @@ cuda_add_library(ML SHARED ${src} ${hdr} ${knl} ${knl_hdr})
 
 RCC_LINK_LIB(ML aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} RuntimeObjectSystem)
 
-INCLUDE(../PluginTemplate.cmake)
+#INCLUDE(../PluginTemplate.cmake)
+aquila_declare_plugin(ML)
 

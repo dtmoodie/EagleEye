@@ -32,7 +32,7 @@ public:
     virtual bool setInput(std::shared_ptr<mo::IParam> param)
     {
         input = param.get();
-        Commit();
+        emitUpdate();
         return true;
     }
     virtual bool setInput(mo::IParam* param = nullptr)
@@ -40,7 +40,7 @@ public:
         input = param;
         param->registerDeleteNotifier(&_delete_slot);
         param->registerUpdateNotifier(&_update_slot);
-        Commit();
+        emitUpdate();
         return true;
     }
 
@@ -62,7 +62,7 @@ public:
     }
     void on_param_update(mo::Context* ctx, mo::IParam* param)
     {
-        Commit(-1, ctx); // Notify owning parent of update
+        emitUpdate(-1, ctx); // Notify owning parent of update
     }
     void on_param_delete(mo::IParam const *)
     {
@@ -129,14 +129,14 @@ bool JSONWriter::processImpl()
     return false;
 }
 
-void JSONWriter::on_output_file_modified( mo::Context* ctx, mo::IParam* param)
+void JSONWriter::on_output_file_modified( mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, mo::ICoordinateSystem*, mo::UpdateFlags)
 {
     ofs.close();
     ofs.open(output_file.c_str(), std::ios::out);
     ar.reset(new cereal::JSONOutputArchive(ofs));
 }
 
-void JSONWriter::on_input_set(mo::Context* ctx, mo::IParam* param)
+void JSONWriter::on_input_set(mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, mo::ICoordinateSystem*, mo::UpdateFlags)
 {
     auto inputs = getInputs();
     int count= 0;

@@ -46,9 +46,10 @@ if(EIGEN_INCLUDE_DIRS)
       ${CUDA_CUBLAS_LIBRARIES}
       aquila_core
       OpenDTAM
-	  metaobject_core metaobject_object metaobject_params metaobject_metaparams
+      metaobject_core metaobject_object metaobject_params metaobject_metaparams
     )
 
-    INCLUDE(../PluginTemplate.cmake)
+    #INCLUDE(../PluginTemplate.cmake)
+    aquila_declare_plugin(SLAM)
   endif(G2O_FOUND)
 endif()

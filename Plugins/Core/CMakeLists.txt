@@ -49,6 +49,7 @@ RCC_LINK_LIB(Core aquila_core
     aquila_utilities
     aquila_serialization
     aquila_types
+    aquila_metatypes
     ${OpenCV_LIBS}
     ${CUDA_CUBLAS_LIBRARIES}
     metaobject_core
@@ -56,5 +57,5 @@ RCC_LINK_LIB(Core aquila_core
     metaobject_params
 )
 
-INCLUDE(../PluginTemplate.cmake)
-
+#INCLUDE(../PluginTemplate.cmake)
+aquila_declare_plugin(Core)

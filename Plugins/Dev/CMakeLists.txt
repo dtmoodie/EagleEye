@@ -37,11 +37,13 @@ RCC_LINK_LIB(Dev
     aquila_core
     aquila_types
     aquila_utilities
-    metaobject_core 
-	metaobject_object 
-	metaobject_params
-	metaobject_metaparams
+    aquila_metatypes
+    metaobject_core
+    metaobject_object
+    metaobject_params
+    metaobject_metaparams
 )
 
-INCLUDE(../PluginTemplate.cmake)
+#INCLUDE(../PluginTemplate.cmake)
+aquila_declare_plugin(Dev)
 

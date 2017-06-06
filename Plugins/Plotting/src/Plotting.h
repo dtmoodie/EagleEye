@@ -1,4 +1,4 @@
-#include "Aquila/utilities/CudaCallbacks.hpp"
+#include "Aquila/utilities/cuda/CudaCallbacks.hpp"
 #include "Aquila/plotters/Plotter.h"
 
 #include "qcustomplot.h"

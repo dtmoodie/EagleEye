@@ -23,13 +23,14 @@ IF(LIBVLC_FOUND)
         RCC_LINK_LIB(VLC
             ${OpenCV_LIBS}
             aquila_core
-			metaobject_core metaobject_object metaobject_params metaobject_metaparams
+            metaobject_core metaobject_object metaobject_params metaobject_metaparams
         )
         TARGET_LINK_LIBRARIES(VLC
             ${LINK_LIBS}
             ${LIBVLC_LIBRARY} ${Boost_LIBRARIES}
             ${LIBVLCCORE_LIBRARY}
         )
-        INCLUDE(../PluginTemplate.cmake)
+        #INCLUDE(../PluginTemplate.cmake)
+        aquila_declare_plugin(VLC)
     ENDIF()
 ENDIF(LIBVLC_FOUND)

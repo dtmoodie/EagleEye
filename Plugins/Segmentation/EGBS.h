@@ -60,7 +60,7 @@ namespace aq
         cv::cuda::HostMem h_buf;
     public:
         SegmentEGBS();
-        //virtual void NodeInit(bool firstInit);
+        //virtual void nodeInit(bool firstInit);
         //virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
     }

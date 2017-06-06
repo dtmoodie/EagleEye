@@ -14,7 +14,7 @@ namespace EagleLib
         /*struct PLUGIN_EXPORTS vtkPointCloudPlotterInfo: public PlotterInfo
         {
             
-            virtual bool AcceptsParameter(mo::IParameter* param);
+            virtual bool AcceptsParameter(mo::IParam* param);
             virtual std::string GetObjectName();
             virtual std::string GetObjectTooltip();
             virtual std::string GetObjectHelp();
@@ -39,8 +39,8 @@ namespace EagleLib
             MO_DERIVE(vtkPointCloudPlotter, vtkPlotterBase)
             MO_END;
             ~vtkPointCloudPlotter();
-            static bool AcceptsParameter(mo::IParameter* param);
-            virtual void SetInput(mo::IParameter* param_ = nullptr);
+            static bool AcceptsParameter(mo::IParam* param);
+            virtual void SetInput(mo::IParam* param_ = nullptr);
             virtual void OnParameterUpdate(cv::cuda::Stream* stream);
             virtual void OnMatParameterUpdate(cv::cuda::Stream* stream);
             virtual void OnGpuMatParameterUpdate(cv::cuda::Stream* stream);
