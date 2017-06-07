@@ -39,6 +39,8 @@ IF(Aquila_FLANN_LIBRARY_DEBUG AND Aquila_FLANN_CUDA_LIBRARY_DEBUG)
         metaobject_core metaobject_object metaobject_params metaobject_metaparams
         ${OpenCV_LIBS}
         ${CUDA_CUBLAS_LIBRARIES}
+		aquila_types
+		aquila_metatypes
     )
 
     target_link_libraries(Flann debug;${Aquila_FLANN_CUDA_LIBRARY_DEBUG};

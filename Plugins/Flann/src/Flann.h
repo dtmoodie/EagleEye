@@ -1,14 +1,12 @@
 #pragma once
-
 #include "Aquila/nodes/Node.hpp"
-#include "Aquila/Detail/Export.hpp"
-#include <Aquila/utilities/CudaUtils.hpp>
+#include "Aquila/core/detail/Export.hpp"
+#include "Aquila/types/SyncedMemory.hpp"
+#include <Aquila/utilities/cuda/CudaUtils.hpp>
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
-
 
 #define FLANN_USE_CUDA
 #include "flann/flann.hpp"
-
 
 RUNTIME_COMPILER_LINKLIBRARY("cudart_static.lib")
 RUNTIME_COMPILER_LINKLIBRARY("cublas.lib")

@@ -10,12 +10,8 @@
 
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 
-
-
 using namespace aq;
 using namespace aq::Nodes;
-
-
 
 void ForegroundEstimate::BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& stream)
 {
@@ -30,15 +26,15 @@ void ForegroundEstimate::BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& 
     }
 }
 
-bool ForegroundEstimate::ProcessImpl()
+bool ForegroundEstimate::processImpl()
 {
     SCOPED_PROFILE_NODE
-    cv::cuda::GpuMat input = input_point_cloud->GetGpuMat(Stream());
+    cv::cuda::GpuMat input = input_point_cloud->getGpuMat(stream());
     cv::cuda::GpuMat cv32f;
     if (input.depth() != CV_32F)
     {
         cv::cuda::createContinuous(input.size(), CV_32F, cv32f);
-        input.convertTo(cv32f, CV_32F, Stream());
+        input.convertTo(cv32f, CV_32F, stream());
     }
     else
     {
@@ -47,7 +43,7 @@ bool ForegroundEstimate::ProcessImpl()
         else
         {
             cv::cuda::createContinuous(input.size(), CV_MAKE_TYPE(CV_32F, input.channels()), cv32f);
-            input.copyTo(cv32f, Stream());
+            input.copyTo(cv32f, stream());
         }
     }
     cv::cuda::GpuMat tensor = cv32f.reshape(1, cv32f.rows*cv32f.cols);
@@ -56,18 +52,17 @@ bool ForegroundEstimate::ProcessImpl()
     {
         cv::cuda::GpuMat tmp;
         cv::cuda::createContinuous(tensor.rows, 4, CV_32F, tmp);
-        tensor.copyTo(tmp.colRange(0, 3), Stream());
+        tensor.copyTo(tmp.colRange(0, 3), stream());
         tensor = tmp;
     }
     CV_Assert(tensor.cols == 4);
     if (build_model)
     {
-        BuildModel(tensor, Stream());
-        background_model_param.UpdateData(input, input_point_cloud_param.GetTimestamp(), _ctx);
+        BuildModel(tensor, stream());
+        background_model_param.updateData(input, mo::tag::_param = input_point_cloud_param, mo::tag::_context = _ctx.get());
         build_model = false;
         return true;
     }
-
 
     if (nnIndex)
     {
@@ -84,21 +79,21 @@ bool ForegroundEstimate::ProcessImpl()
         searchParams.eps = epsilon;
         searchParams.checks = checks;
         flann::Matrix<float> input_ = flann::Matrix<float>((float*)tensor.data, tensor.rows, 3, tensor.step);
-        nnIndex->radiusSearch(input_, d_idx, d_dist, radius, searchParams, cv::cuda::StreamAccessor::getStream(Stream()));
+        nnIndex->radiusSearch(input_, d_idx, d_dist, radius, searchParams, cudaStream());
         index = index.reshape(1, input.rows);
         distance = distance.reshape(1, input.rows);
-        index_param.UpdateData(index, input_point_cloud_param.GetTimestamp(), _ctx);
-        distance_param.UpdateData(distance, input_point_cloud_param.GetTimestamp(), _ctx);
+        index_param.updateData(index, mo::tag::_param =  input_point_cloud_param, _ctx.get());
+        distance_param.updateData(distance, mo::tag::_param =  input_point_cloud_param, _ctx.get());
         cv::cuda::GpuMat point_mask;
-        cv::cuda::threshold(index, point_mask, -1, 255, cv::THRESH_BINARY_INV, Stream());
+        cv::cuda::threshold(index, point_mask, -1, 255, cv::THRESH_BINARY_INV, stream());
         cv::cuda::GpuMat tmp;
-        point_mask.convertTo(tmp, CV_8U, Stream());
-        point_mask_param.UpdateData(tmp, input_point_cloud_param.GetTimestamp(), _ctx);
-        if(foreground_param.HasSubscriptions())
+        point_mask.convertTo(tmp, CV_8U, stream());
+        point_mask_param.updateData(tmp, mo::tag::_param =  input_point_cloud_param, _ctx.get());
+        if(foreground_param.hasSubscriptions())
         {
-            cv::Mat mask = this->point_mask.GetMat(Stream());
-            cv::Mat point_cloud = input_point_cloud->GetMat(Stream());
-            Stream().waitForCompletion();
+            cv::Mat mask = this->point_mask.getMat(stream());
+            cv::Mat point_cloud = input_point_cloud->getMat(stream());
+            stream().waitForCompletion();
             int points = cv::countNonZero(mask);
             cv::Mat foreground(1, points, CV_32FC3);
             int count = 0;
@@ -112,7 +107,7 @@ bool ForegroundEstimate::ProcessImpl()
                     }
                 }
             }
-            this->foreground_param.UpdateData(foreground, input_point_cloud_param.GetTimestamp(), _ctx);
+            this->foreground_param.updateData(foreground, mo::tag::_param = input_point_cloud_param, _ctx.get());
         }
         return true;
     }
