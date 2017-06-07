@@ -24,7 +24,7 @@ namespace aq
             
             ~frame_grabber_openni2();
         
-            bool Load(std::string file_path);
+            bool loadData(std::string file_path);
             void onNewFrame(openni::VideoStream& stream);
             bool processImpl(){return true;}
 

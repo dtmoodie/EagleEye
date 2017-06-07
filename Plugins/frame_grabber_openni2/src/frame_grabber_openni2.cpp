@@ -64,7 +64,7 @@ frame_grabber_openni2::~frame_grabber_openni2()
     }
 }
 
-bool frame_grabber_openni2::Load(std::string file_path)
+bool frame_grabber_openni2::loadData(std::string file_path)
 {
     std::string doc = file_path;
     std::transform(doc.begin(), doc.end(), doc.begin(), ::tolower);
