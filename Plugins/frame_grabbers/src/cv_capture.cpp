@@ -141,15 +141,15 @@ public:
 
     MO_END;
     bool loadData(const std::string& path);
-    static void ListPaths(std::vector<std::string>& paths);
-    static int CanLoad(const std::string& doc);
-    static int Timeout()
+    static void listPaths(std::vector<std::string>& paths);
+    static int canLoad(const std::string& doc);
+    static int loadTimeout()
     {
         return 5000;
     }
 };  
 
-void GrabberCamera::ListPaths(std::vector<std::string>& paths)
+void GrabberCamera::listPaths(std::vector<std::string>& paths)
 {
 #ifdef _MSC_VER
     MFStartup(MF_VERSION);
@@ -209,7 +209,7 @@ void GrabberCamera::ListPaths(std::vector<std::string>& paths)
 #endif
 }
 
-int GrabberCamera::CanLoad(const std::string& doc)
+int GrabberCamera::canLoad(const std::string& doc)
 {
     auto pos = doc.find(" - ");
     if (pos != std::string::npos)
@@ -229,7 +229,7 @@ int GrabberCamera::CanLoad(const std::string& doc)
         }
     }
     std::vector<std::string> cameras;
-    ListPaths(cameras);
+    listPaths(cameras);
     for (const auto& camera : cameras)
     {
         if (camera == doc)
@@ -252,7 +252,7 @@ bool GrabberCamera::loadData(const std::string& file_path)
         index = 0;
     }
     std::vector<std::string> cameras;
-    ListPaths(cameras);
+    listPaths(cameras);
     for(int i = 0; i < cameras.size(); ++i)
     {
         if (cameras[i] == file_path)
@@ -276,7 +276,7 @@ bool GrabberCamera::loadData(const std::string& file_path)
     };
     LOG(debug) << "Unable to load " << file_path << " queried cameras: " << func() << " trying to requery";
 
-    ListPaths(cameras);
+    listPaths(cameras);
     for(int i = 0; i < cameras.size(); ++i)
     {
         if (cameras[i] == file_path)

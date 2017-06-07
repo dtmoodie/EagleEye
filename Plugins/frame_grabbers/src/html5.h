@@ -14,7 +14,7 @@ namespace Nodes
 
         MO_END;
         virtual bool Load(const std::string& file_path);
-        static int CanLoad(const std::string& document);
+        static int canLoad(const std::string& document);
     };
 }
 }

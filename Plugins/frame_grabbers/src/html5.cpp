@@ -28,7 +28,7 @@ bool GrabberHTML::Load(const std::string& file_path)
 }
 
 
-int GrabberHTML::CanLoad(const std::string& document)
+int GrabberHTML::canLoad(const std::string& document)
 {
     std::string http("http://");
     if (document.compare(0, http.length(), http) == 0)

@@ -4,7 +4,7 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-int FrameGrabberHTTP::CanLoad(const std::string& doc)
+int FrameGrabberHTTP::canLoad(const std::string& doc)
 {
     if(doc.find("http://") != std::string::npos)
         return 10;

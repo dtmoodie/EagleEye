@@ -1,6 +1,6 @@
 #include "VLC.h"
-#include "Aquila/Nodes/Node.h"
-#include "Aquila/Nodes/FrameGrabberInfo.hpp"
+#include "Aquila/nodes/Node.hpp"
+#include "Aquila/framegrabbers/FrameGrabberInfo.hpp"
 
 using namespace aq;
 using namespace aq::Nodes;
@@ -26,7 +26,7 @@ void unlock(void* data, void* id, void* const* p_pixels)
 	//std::cout << "unlock called" << std::endl;
 }
 
-void vlcCamera::NodeInit(bool firstInit)
+void vlcCamera::nodeInit(bool firstInit)
 {
 	vlcInstance = nullptr;
 	mp = nullptr;
@@ -83,12 +83,12 @@ vlcCamera::~vlcCamera()
 	}
 }
 
-bool vlcCamera::ProcessImpl()
+bool vlcCamera::processImpl()
 {
     cv::Mat img;
     if(img_queue.try_dequeue(img))
     {
-        image_param.UpdateData(img);
+        image_param.updateData(img);
     }
     return true;
 }

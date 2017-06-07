@@ -1,7 +1,7 @@
 #pragma once
 #include "vlc/vlc.h"
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
-#include <Aquila/Project_defs.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 #include <MetaObject/core/detail/ConcurrentQueue.hpp>
 #include <mutex>
 

@@ -23,6 +23,8 @@ IF(LIBVLC_FOUND)
         RCC_LINK_LIB(VLC
             ${OpenCV_LIBS}
             aquila_core
+            aquila_types
+            aquila_metatypes
             metaobject_core metaobject_object metaobject_params metaobject_metaparams
         )
         TARGET_LINK_LIBRARIES(VLC

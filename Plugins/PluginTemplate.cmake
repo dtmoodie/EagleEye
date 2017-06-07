@@ -40,9 +40,9 @@ macro(aquila_declare_plugin tgt)
       SET(PROJECT_ID "1")
     ENDIF(temp)
 
-    RCC_TARGET_CONFIG(${tgt} plugin_libararies)
-    set(LINK_LIBS_RELEASE ${plugin_libararies})
-    set(LINK_LIBS_DEBUG ${plugin_libararies})
+    RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
+    set(LINK_LIBS_RELEASE ${plugin_libraries_release})
+    set(LINK_LIBS_DEBUG ${plugin_libraries_debug})
 
     set(${tgt}_PLUGIN_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/" CACHE PATH "" FORCE)
     target_include_directories(${tgt}
