@@ -10,8 +10,8 @@ namespace aq
         virtual public Nodes::IGrabber
     {
     public:
-        static int CanLoad(const std::string& doc);
-        static int Timeout();
+        static int canLoad(const std::string& doc);
+        static int loadTimeout();
         MO_DERIVE(chunked_file_sink, Nodes::IGrabber)
             PARAM(size_t, chunk_size, 10 * 1024 * 1024)
         MO_END;
@@ -30,8 +30,8 @@ namespace aq
         MO_DERIVE(JpegKeyframer, Nodes::IGrabber)
             PROPERTY(long long, keyframe_count, 0)
         MO_END;
-        static int CanLoad(const std::string& doc);
-        static int Timeout();
+        static int canLoad(const std::string& doc);
+        static int loadTimeout();
         bool loadData(const std::string& file_path);
         GstFlowReturn on_pull();
     protected:

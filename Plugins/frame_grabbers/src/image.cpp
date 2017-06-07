@@ -27,7 +27,7 @@ bool GrabberImage::grab()
     return false;
 }
 
-int GrabberImage::CanLoad(const std::string& document)
+int GrabberImage::canLoad(const std::string& document)
 {
     auto path = boost::filesystem::path(document);
     auto ext = path.extension().string();
@@ -35,7 +35,7 @@ int GrabberImage::CanLoad(const std::string& document)
     return (ext == ".jpg" || ext == ".png" || ext == ".tif") ? 3 : 0;
 }
 
-int GrabberImage::Timeout()
+int GrabberImage::loadTimeout()
 {
     return 5000;
 }

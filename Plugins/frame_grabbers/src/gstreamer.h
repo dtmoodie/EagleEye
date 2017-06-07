@@ -18,8 +18,8 @@ namespace aq
 
             bool loadData(const std::string& file_path);
             
-            static int CanLoad(const std::string& document);
-            static void ListPaths(std::vector<std::string>& paths);
+            static int canLoad(const std::string& document);
+            static void listPaths(std::vector<std::string>& paths);
         };
     }
 }

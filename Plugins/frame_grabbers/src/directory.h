@@ -20,7 +20,7 @@ namespace aq
             MO_SIGNAL(void, eos)
         MO_END;
         
-        static int CanLoad(const std::string& doc);
+        static int canLoad(const std::string& doc);
     protected:
         bool processImpl();
     private:

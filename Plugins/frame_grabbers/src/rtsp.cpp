@@ -6,7 +6,7 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-int GrabberRTSP::CanLoad(const std::string& document)
+int GrabberRTSP::canLoad(const std::string& document)
 {
     std::string rtsp("rtsp");
     if (document.compare(0, rtsp.length(), rtsp) == 0)
@@ -15,7 +15,7 @@ int GrabberRTSP::CanLoad(const std::string& document)
     }
     return 0;
 }
-int GrabberRTSP::Timeout()
+int GrabberRTSP::loadTimeout()
 {
     return 10000;
 }

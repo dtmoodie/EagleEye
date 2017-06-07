@@ -11,8 +11,8 @@ class GStreamer_EXPORT FrameGrabberHTTP:
         virtual public IGrabber
 {
 public:
-    static int CanLoad(const std::string& doc);
-    static int Timeout(){return 10000;}
+    static int canLoad(const std::string& doc);
+    static int loadTimeout(){return 10000;}
 
     MO_DERIVE(FrameGrabberHTTP, IGrabber)
         OUTPUT(SyncedMemory, image, {})

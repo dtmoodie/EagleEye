@@ -4,11 +4,11 @@
 using namespace aq;
 
 
-int chunked_file_sink::CanLoad(const std::string& document)
+int chunked_file_sink::canLoad(const std::string& document)
 {
     return 0; // Currently needs to be manually specified
 }
-int chunked_file_sink::Timeout()
+int chunked_file_sink::loadTimeout()
 {
     return 3000;
 }
@@ -66,7 +66,7 @@ bool chunked_file_sink::loadData(const std::string& file_path)
 
 MO_REGISTER_CLASS(chunked_file_sink);
 
-int JpegKeyframer::CanLoad(const std::string& doc)
+int JpegKeyframer::canLoad(const std::string& doc)
 {
     if(doc.find("http") != std::string::npos && doc.find("mjpg") != std::string::npos)
     {
@@ -75,7 +75,7 @@ int JpegKeyframer::CanLoad(const std::string& doc)
     return 0;
 }
 
-int JpegKeyframer::Timeout()
+int JpegKeyframer::loadTimeout()
 {
     return 10000;
 }

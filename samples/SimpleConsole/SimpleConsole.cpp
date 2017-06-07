@@ -170,6 +170,7 @@ void sig_handler(int s) {
 }
 
 int main(int argc, char* argv[]) {
+    BOOST_LOG_TRIVIAL(info) << "Initializing";
     boost::program_options::options_description desc("Allowed options");
     SystemTable                                 table;
     mo::MetaObjectFactory::instance(&table);
@@ -274,11 +275,26 @@ int main(int argc, char* argv[]) {
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
     }
     boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
-#ifdef _MSC_VER
-    currentDir = boost::filesystem::path(currentDir.string());
+#if _MSC_VER
+#ifdef _DEBUG
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_guid.dll");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_cored.dll");
 #else
-    currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_gui.dll");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_core.dll");
 #endif
+#else
+#ifdef NDEBUG
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_gui.so");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_core.so");
+#else
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_guid.so");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_cored.so");
+#endif
+#endif
+    
+    currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
+
     LOG(info) << "Looking for plugins in: " << currentDir.string();
     boost::filesystem::directory_iterator end_itr;
     if (boost::filesystem::is_directory(currentDir)) {

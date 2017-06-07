@@ -13,8 +13,8 @@ namespace aq
         MO_DERIVE(GrabberRTSP, GrabberGstreamer)
         MO_END;
         bool Load(const std::string& file_path);
-        static int CanLoad(const std::string& document);
-        static int Timeout();
+        static int canLoad(const std::string& document);
+        static int loadTimeout();
     };
     }
 }

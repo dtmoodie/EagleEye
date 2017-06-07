@@ -7,8 +7,8 @@ namespace aq{
     class frame_grabbers_EXPORT GrabberImage: public IGrabber
     {
     public:
-        static int CanLoad(const std::string& path);
-        static int Timeout();
+        static int canLoad(const std::string& path);
+        static int loadTimeout();
         MO_DERIVE(GrabberImage, IGrabber);
             OUTPUT(SyncedMemory, output, {})
         MO_END;

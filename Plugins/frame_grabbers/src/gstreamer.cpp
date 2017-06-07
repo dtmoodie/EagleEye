@@ -5,7 +5,7 @@
 using namespace aq;
 using namespace aq::Nodes;
 
-int GrabberGstreamer::CanLoad(const std::string& path)
+int GrabberGstreamer::canLoad(const std::string& path)
 {
     // oooor a gstreamer pipeline.... 
     std::string appsink = "appsink";
@@ -16,7 +16,7 @@ int GrabberGstreamer::CanLoad(const std::string& path)
     LOG(trace) << "Document is not a regular file";
     return 0;
 }
-void GrabberGstreamer::ListPaths(std::vector<std::string>& paths)
+void GrabberGstreamer::listPaths(std::vector<std::string>& paths)
 {
     if (boost::filesystem::exists("file_history.json"))
     {
