@@ -5,6 +5,25 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
+void loadDir(boost::filesystem::path path){
+    boost::filesystem::directory_iterator end_itr;
+    if(boost::filesystem::is_directory(path)){
+        for(boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr){
+            if(boost::filesystem::is_regular_file(itr->path())){
+#ifdef _MSC_VER
+                if(itr->path().extension() == ".dll")
+#else
+                if(itr->path().extension() == ".so")
+#endif
+                {
+                    std::string file = itr->path().string();
+                    mo::MetaObjectFactory::instance()->loadPlugin(file);
+                }
+            }
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
     SystemTable table;
@@ -24,30 +43,14 @@ int main(int argc, char *argv[])
     boost::program_options::variables_map vm;
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
 
-    boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
-    currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
-
-    LOG(info) << "Looking for plugins in: " << currentDir.string();
-    boost::filesystem::directory_iterator end_itr;
-    if(boost::filesystem::is_directory(currentDir))
-    {
-        for(boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr)
-        {
-            if(boost::filesystem::is_regular_file(itr->path()))
-            {
-#ifdef _MSC_VER
-                if(itr->path().extension() == ".dll")
-#else
-                if(itr->path().extension() == ".so")
-#endif
-                {
-                    std::string file = itr->path().string();
-                    mo::MetaObjectFactory::instance()->loadPlugin(file);
-                }
-            }
-        }
-    }
-
+    boost::filesystem::path current_dir("./"); // = boost::filesystem::path(argv[0]).parent_path();
+    current_dir = boost::filesystem::path(current_dir.string() + "/Plugins");
+    LOG(info) << "Looking for plugins in: " << current_dir.string();
+    loadDir(current_dir);
+    current_dir = boost::filesystem::path(argv[0]).parent_path();
+    current_dir = boost::filesystem::path(current_dir.string() + "/Plugins");
+    LOG(info) << "Looking for plugins in: " << current_dir.string();
+    loadDir(current_dir);
     if(vm.count("plugins"))
     {
         auto currentDir = boost::filesystem::path(vm["plugins"].as<boost::filesystem::path>());

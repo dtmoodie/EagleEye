@@ -4,11 +4,19 @@
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
 #include <Aquila/core/IDataStream.hpp>
 #include <MetaObject/object/MetaObjectFactory.hpp>
+#include <MetaObject/params/ui/WidgetFactory.hpp>
+#include <MetaObject/params/ui/Qt/IParamProxy.hpp>
+
 #include <nodes/FlowScene>
 #include <nodes/FlowView>
 #include <nodes/DataModelRegistry>
 #include <RuntimeObjectSystem/ObjectInterface.h>
 #include <IObject.h>
+
+#include <qwidget.h>
+#include <QLayout>
+#include <qgridlayout.h>
+
 namespace aq{
     class NodeOutProxy: virtual public QtNodes::NodeData{
     public:
@@ -144,80 +152,27 @@ namespace aq{
         }
         virtual QWidget * embeddedWidget(){
             // TODO
-            return nullptr;
+            QWidget* output = new QWidget();
+            QVBoxLayout* layout = new QVBoxLayout();
+            output->setLayout(layout);
+            auto params = m_obj->getParams();
+            for(auto param : params){
+                auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(param);
+                if(proxy){
+                    auto widget = proxy->getParamWidget(output);
+                    if(widget){
+                        layout->addWidget(widget);
+                    }
+                    m_param_proxies.emplace_back(proxy);
+                }
+            }
+
+            return output;
         }
 
         rcc::shared_ptr<aq::Nodes::Node> m_obj;
+        std::vector<std::shared_ptr<mo::UI::qt::IParamProxy>> m_param_proxies;
     };
-    class DataStreamProxy : virtual public QtNodes::NodeDataModel {
-    public:
-        DataStreamProxy(rcc::shared_ptr<aq::IDataStream>&& ds = rcc::shared_ptr<aq::IDataStream>()) :
-            m_obj(std::move(ds)) {
-        }
-
-        virtual QString caption() const { return "DataStream"; }
-        virtual QString name() const { return "DataStream"; }
-        virtual std::unique_ptr<QtNodes::NodeDataModel> clone() const {
-            return std::unique_ptr<DataStreamProxy>(new DataStreamProxy(std::move(aq::IDataStream::create("", ""))));
-        }
-        virtual unsigned int nPorts(QtNodes::PortType portType) const {
-            if (portType == QtNodes::PortType::Out) return 1;
-            return 0;
-        }
-        virtual QtNodes::NodeDataType dataType(QtNodes::PortType port_type, QtNodes::PortIndex port_index) const {
-            QtNodes::NodeDataType output;
-            if (port_type == QtNodes::PortType::Out) {
-                output.id = "aq::Nodes::Node";
-                output.name = "children";
-            }
-            return output;
-        }
-        virtual void setInData(std::shared_ptr<QtNodes::NodeData> nodeData, QtNodes::PortIndex port) {
-
-        }
-        virtual std::shared_ptr<QtNodes::NodeData> outData(QtNodes::PortIndex port) {
-            return std::make_shared<DSOutProxy>(m_obj);
-        }
-        virtual QWidget * embeddedWidget() {
-            // TODO
-            return nullptr;
-        }
-
-        rcc::shared_ptr<aq::IDataStream> m_obj;
-    };
-
-    class DataStreamConstructor: virtual public QtNodes::NodeDataModel{
-    public:
-        DataStreamConstructor(){}
-        virtual QString caption() const { return "DataStream"; }
-        virtual QString name() const { return "DataStream"; }
-        virtual unsigned int nPorts(QtNodes::PortType portType) const {
-            if (portType == QtNodes::PortType::Out) return 1;
-            return 0;
-        }
-        virtual std::unique_ptr<QtNodes::NodeDataModel> clone() const {
-            return std::unique_ptr<DataStreamProxy>(new DataStreamProxy(std::move(aq::IDataStream::create("", ""))));
-        }
-        virtual QtNodes::NodeDataType dataType(QtNodes::PortType port_type, QtNodes::PortIndex port_index) const {
-            QtNodes::NodeDataType output;
-            if (port_type == QtNodes::PortType::Out) {
-                output.id = "aq::Nodes::Node";
-                output.name = "children";
-            }
-            return output;
-        }
-        virtual void setInData(std::shared_ptr<QtNodes::NodeData> nodeData, QtNodes::PortIndex port) {
-
-        }
-        virtual std::shared_ptr<QtNodes::NodeData> outData(QtNodes::PortIndex port) {
-            return std::shared_ptr<QtNodes::NodeData>();
-        }
-        virtual QWidget * embeddedWidget() {
-            // TODO
-            return nullptr;
-        }
-    };
-
     class NodeConstructor: virtual public QtNodes::NodeDataModel{
     public:
         NodeConstructor(IObjectConstructor* constructor): m_constructor(constructor){}
@@ -259,6 +214,83 @@ namespace aq{
         }
         IObjectConstructor* m_constructor;
     };
+
+    class DataStreamProxy : virtual public QtNodes::NodeDataModel {
+    public:
+        DataStreamProxy(rcc::shared_ptr<aq::IDataStream>&& ds = rcc::shared_ptr<aq::IDataStream>()) :
+            m_obj(std::move(ds)) {
+        }
+
+        virtual QString caption() const { return "DataStream"; }
+        virtual QString name() const { return "DataStream"; }
+        virtual std::unique_ptr<QtNodes::NodeDataModel> clone() const {
+            return std::unique_ptr<DataStreamProxy>(new DataStreamProxy(std::move(aq::IDataStream::create("", ""))));
+        }
+        virtual unsigned int nPorts(QtNodes::PortType portType) const {
+            if (portType == QtNodes::PortType::Out) return 1;
+            return 0;
+        }
+        virtual QtNodes::NodeDataType dataType(QtNodes::PortType port_type, QtNodes::PortIndex port_index) const {
+            QtNodes::NodeDataType output;
+            if (port_type == QtNodes::PortType::Out) {
+                output.id = "aq::Nodes::Node";
+                output.name = "children";
+            }
+            return output;
+        }
+        virtual void setInData(std::shared_ptr<QtNodes::NodeData> nodeData, QtNodes::PortIndex port) {
+
+        }
+        virtual std::shared_ptr<QtNodes::NodeData> outData(QtNodes::PortIndex port) {
+            return std::make_shared<DSOutProxy>(m_obj);
+        }
+        virtual QWidget * embeddedWidget() {
+            // TODO
+            return nullptr;
+        }
+
+        rcc::shared_ptr<aq::IDataStream> m_obj;
+    };
+    class DataStreamConstructor: virtual public QtNodes::NodeDataModel{
+    public:
+        DataStreamConstructor(){}
+        virtual QString caption() const { return "DataStream"; }
+        virtual QString name() const { return "DataStream"; }
+        virtual unsigned int nPorts(QtNodes::PortType portType) const {
+            if (portType == QtNodes::PortType::Out) return 1;
+            return 0;
+        }
+        virtual std::unique_ptr<QtNodes::NodeDataModel> clone() const {
+            return std::unique_ptr<DataStreamProxy>(new DataStreamProxy(std::move(aq::IDataStream::create("", ""))));
+        }
+        virtual QtNodes::NodeDataType dataType(QtNodes::PortType port_type, QtNodes::PortIndex port_index) const {
+            QtNodes::NodeDataType output;
+            if (port_type == QtNodes::PortType::Out) {
+                output.id = "aq::Nodes::Node";
+                output.name = "children";
+            }
+            return output;
+        }
+        virtual void setInData(std::shared_ptr<QtNodes::NodeData> nodeData, QtNodes::PortIndex port) {
+
+        }
+        virtual std::shared_ptr<QtNodes::NodeData> outData(QtNodes::PortIndex port) {
+            return std::shared_ptr<QtNodes::NodeData>();
+        }
+        virtual QWidget * embeddedWidget() {
+            // TODO
+            return nullptr;
+        }
+    };
+
+    class FrameGrabberProxy: virtual public NodeProxy{
+    public:
+
+    };
+    class FrameGrabberConstructor: virtual public QtNodes::NodeDataModel{
+
+    };
+
 }
 
 MainWindow::MainWindow(QWidget *parent) :
