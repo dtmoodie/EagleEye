@@ -25,11 +25,8 @@ int main(int argc, char *argv[])
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
 
     boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
-#ifdef _MSC_VER
-    currentDir = boost::filesystem::path(currentDir.string());
-#else
     currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
-#endif
+
     LOG(info) << "Looking for plugins in: " << currentDir.string();
     boost::filesystem::directory_iterator end_itr;
     if(boost::filesystem::is_directory(currentDir))

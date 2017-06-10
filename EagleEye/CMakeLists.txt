@@ -6,6 +6,18 @@ if(NOT BUILD_DEPENDENCIES)
     find_package(nodeeditor QUIET)
 endif()
 if(NOT nodeeditor_FOUND)
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/Debug/")
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/Debug/")
+	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/Debug/")
+
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/Release/")
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/Release/")
+	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/Release/")
+
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/RelWithDebInfo/")
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/RelWithDebInfo/")
+	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/RelWithDebInfo/")
+	
     add_subdirectory(dependencies/nodeeditor)
     set(nodeeditor_FOUND TRUE)
 endif()
@@ -17,10 +29,6 @@ IF(Qt5_FOUND AND nodeeditor_FOUND)
     find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
 
     find_package(CUDA REQUIRED)
-
-    set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono log log_setup program_options)
-
-    find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 
     ADD_DEFINITIONS("-DQt5_FOUND")
     INCLUDE_DIRECTORIES(
@@ -42,7 +50,10 @@ IF(Qt5_FOUND AND nodeeditor_FOUND)
 
     QT5_WRAP_UI(UIS ${forms})
     QT5_WRAP_CPP(MOC ${headers})
-
+	link_directories(${Boost_LIBRARY_DIR})
+	link_directories(${Boost_BIN_DIR_DEBUG})
+	link_directories(${Boost_LIBRARY_DIR_RELEASE})
+	
     ADD_EXECUTABLE(EagleEye
         ${sources}
         ${MOC}
@@ -117,7 +128,7 @@ IF(Qt5_FOUND AND nodeeditor_FOUND)
                 ENDIF()
             ENDIF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
         ENDIF(Boost_LIBRARY_DIR_RELEASE AND EXISTS "${Boost_LIBRARY_DIR_RELEASE}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_RELEASE}")
-
+		
         APPEND_BIN_DIR(GSTREAMER_gst_BIN_DIR PROJECT_BIN_DIRS_DEBUG)
         APPEND_BIN_DIR(GSTREAMER_gst_BIN_DIR PROJECT_BIN_DIRS_RELEASE)
         APPEND_BIN_DIR(GSTREAMER_gst_BIN_DIR PROJECT_BIN_DIRS_RELWITHDEBINFO)
@@ -128,7 +139,7 @@ IF(Qt5_FOUND AND nodeeditor_FOUND)
 
         CONFIGURE_FILE(EagleEye.vcxproj.user.in ${CMAKE_BINARY_DIR}/EagleEye/EagleEye.vcxproj.user @ONLY)
     ENDIF(WIN32)
-
+	
     LINK_DIRECTORIES(${LINK_DIRS})
     SOURCE_GROUP("MOC"  FILES ${MOC} ${UIS})
     SOURCE_GROUP("UIs" FILES ${forms})
@@ -153,7 +164,7 @@ IF(Qt5_FOUND AND nodeeditor_FOUND)
         Qt5::PrintSupport
         aquila_core
         metaobject_qtgui
-        ${Boost_LIBRARIES}
+        ${Boost_TARGETS}
         ${OpenCV_LIBS}
         nodes
         RuntimeObjectSystem
