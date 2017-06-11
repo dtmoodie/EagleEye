@@ -6,7 +6,7 @@
 #include <MetaObject/object/MetaObjectFactory.hpp>
 #include <MetaObject/params/ui/WidgetFactory.hpp>
 #include <MetaObject/params/ui/Qt/IParamProxy.hpp>
-
+#include <MetaObject/MetaParameters.hpp>
 #include <nodes/FlowScene>
 #include <nodes/FlowView>
 #include <nodes/DataModelRegistry>
@@ -16,7 +16,7 @@
 #include <qwidget.h>
 #include <QLayout>
 #include <qgridlayout.h>
-
+#include <QComboBox>
 namespace aq{
     class NodeOutProxy: virtual public QtNodes::NodeData{
     public:
@@ -151,27 +151,28 @@ namespace aq{
             return std::shared_ptr<QtNodes::NodeData>();
         }
         virtual QWidget * embeddedWidget(){
-            // TODO
-            QWidget* output = new QWidget();
-            QVBoxLayout* layout = new QVBoxLayout();
-            output->setLayout(layout);
-            auto params = m_obj->getParams();
-            for(auto param : params){
-                auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(param);
-                if(proxy){
-                    auto widget = proxy->getParamWidget(output);
-                    if(widget){
-                        layout->addWidget(widget);
+            if(widget == nullptr){
+                widget = new QWidget();
+                QVBoxLayout* layout = new QVBoxLayout();
+                widget->setLayout(layout);
+                auto params = m_obj->getParams();
+                for(auto param : params){
+                    auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(param);
+                    if(proxy){
+                        auto widget_ = proxy->getParamWidget(widget);
+                        if(widget_){
+                            layout->addWidget(widget_);
+                        }
+                        m_param_proxies.emplace_back(proxy);
                     }
-                    m_param_proxies.emplace_back(proxy);
                 }
             }
-
-            return output;
+            return widget;
         }
 
         rcc::shared_ptr<aq::Nodes::Node> m_obj;
         std::vector<std::shared_ptr<mo::UI::qt::IParamProxy>> m_param_proxies;
+        QWidget* widget = nullptr;
     };
     class NodeConstructor: virtual public QtNodes::NodeDataModel{
     public:
@@ -285,10 +286,44 @@ namespace aq{
 
     class FrameGrabberProxy: virtual public NodeProxy{
     public:
-
+        FrameGrabberProxy(rcc::shared_ptr<aq::Nodes::Node>&& obj):
+            NodeProxy(std::move(obj)){
+            m_fg = m_obj.DynamicCast<aq::Nodes::IFrameGrabber>();
+        }
+        virtual QWidget * embeddedWidget(){
+            if(widget == nullptr){
+                NodeProxy::embeddedWidget();
+                aq::Nodes::FrameGrabberInfo* info = dynamic_cast<aq::Nodes::FrameGrabberInfo*>(m_obj->GetConstructor()->GetObjectInfo());
+                QComboBox* selector = new QComboBox(widget);
+                selector->setEditable(true);
+                if(info){
+                    auto paths = info->listLoadablePaths();
+                    if(paths.size()){
+                        for(const auto& path : paths){
+                            selector->addItem(QString::fromStdString(path));
+                        }
+                    }
+                }
+                connect(selector, SIGNAL(currentTextChanged(const QString&)), this, SLOT(onSelectionChanged(const QString&)));
+                widget->layout()->addWidget(selector);
+            }
+            return widget;
+        }
+    public slots:
+        void onSelectionChanged(const QString& text){
+            LOG(info) << "Loading " << text.toStdString();
+            m_fg->loadData(text.toStdString());
+        }
+        rcc::shared_ptr<aq::Nodes::IFrameGrabber> m_fg;
     };
-    class FrameGrabberConstructor: virtual public QtNodes::NodeDataModel{
-
+    class FrameGrabberConstructor: virtual public NodeConstructor{
+    public:
+        FrameGrabberConstructor(IObjectConstructor* constructor): NodeConstructor(constructor){}
+        virtual std::unique_ptr<QtNodes::NodeDataModel> clone() const{
+            rcc::shared_ptr<aq::Nodes::Node> node(m_constructor->Construct());
+            node->Init(true);
+            return std::unique_ptr<QtNodes::NodeDataModel>(new FrameGrabberProxy(std::move(node)));
+        }
     };
 
 }
@@ -296,6 +331,7 @@ namespace aq{
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow){
+    mo::MetaParams::initialize();
     ui->setupUi(this);
     std::shared_ptr<QtNodes::DataModelRegistry> registry = std::make_shared<QtNodes::DataModelRegistry>();
     auto ctrs = mo::MetaObjectFactory::instance()->getConstructors(aq::Nodes::Node::s_interfaceID);
@@ -306,14 +342,13 @@ MainWindow::MainWindow(QWidget *parent) :
         interfces_names.push_back(ctr->GetInterfaceName());
     }
     registry->registerModel<aq::DataStreamConstructor>("DataStream");
-    ctrs = mo::MetaObjectFactory::instance()->getConstructors();
+    ctrs = mo::MetaObjectFactory::instance()->getConstructors(aq::Nodes::Node::s_interfaceID);
     for(auto ctr : ctrs){
-        if(ctr->GetInterfaceName() == aq::Nodes::Node::GetInterfaceName())
-            registry->registerModel<aq::NodeConstructor>("nodes", std::make_unique<aq::NodeConstructor>(ctr));
+        registry->registerModel<aq::NodeConstructor>("nodes", std::make_unique<aq::NodeConstructor>(ctr));
     }
+    ctrs = mo::MetaObjectFactory::instance()->getConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
     for(auto ctr : ctrs){
-        if(ctr->GetInterfaceName() == aq::Nodes::IFrameGrabber::GetInterfaceName())
-            registry->registerModel<aq::NodeConstructor>("Frame grabbers", std::make_unique<aq::NodeConstructor>(ctr));
+        registry->registerModel<aq::FrameGrabberConstructor>("Frame grabbers", std::make_unique<aq::FrameGrabberConstructor>(ctr));
     }
 
     _flow_scene = new QtNodes::FlowScene(registry);
