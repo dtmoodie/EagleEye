@@ -4,7 +4,7 @@
 #include <MetaObject/object/MetaObjectFactory.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
-
+#include <MetaObject/MetaParameters.hpp>
 void loadDir(boost::filesystem::path path){
     boost::filesystem::directory_iterator end_itr;
     if(boost::filesystem::is_directory(path)){
@@ -26,6 +26,7 @@ void loadDir(boost::filesystem::path path){
 
 int main(int argc, char *argv[])
 {
+    mo::MetaParams::initialize();
     SystemTable table;
     mo::MetaObjectFactory::instance(&table);
 #if QT_VERSION > 0x050400

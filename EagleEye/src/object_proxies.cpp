@@ -127,8 +127,8 @@ void NodeProxy::setInData(std::shared_ptr<QtNodes::NodeData> nodeData, QtNodes::
     std::shared_ptr<ParamOutProxy> typed = std::dynamic_pointer_cast<ParamOutProxy>(nodeData);
     if (typed) {
         auto inputs = m_obj->getInputs();
-        if (port >= 0 && port < inputs.size()) {
-            m_obj->connectInput(typed->node, typed->param, inputs[port]);
+        if (port > 0 && port <= inputs.size()) {
+            m_obj->connectInput(typed->node, typed->param, inputs[port - 1]);
         }
     }
 }
