@@ -38,6 +38,7 @@ FOREACH( test ${CPP_TESTS} )
   set_target_properties(${name} PROPERTIES FOLDER Tests)
   #set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER Development)
 ENDFOREACH( test CPP_TESTS )
+
 #add_executable(test_shared_ptr test_shared_ptr.cpp)
 #add_dependencies(test_shared_ptr Aquila)
 #target_link_libraries(test_shared_ptr Aquila ${LINK_LIBS} ${Boost_LIBRARIES})
