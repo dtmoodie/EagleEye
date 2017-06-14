@@ -11,7 +11,7 @@ if(Caffe_FOUND)
   find_package(OpenCV QUIET)
 
   set(CUDNN_DIR "" CACHE PATH "cudnn directory")
-
+  LINK_DIRECTORIES("/usr/local/cuda/lib64")
   find_library(CUDNN_LIBRARY cudnn.lib cudnn.so libcudnn.so cudnn HINTS "${CUDNN_DIR}/lib/x64/" "${CUDA_TOOLKIT_ROOT_DIR}/lib64")
   find_path(CUDNN_LIB_DIR cudnn.lib cudnn.so libcudnn.so cudnn HINTS "${CUDNN_DIR}/lib/x64" "${CUDA_TOOLKIT_ROOT_DIR}/lib64")
   find_path(CUDNN_INCLUDE_DIR cudnn.h HINTS "${CUDNN_DIR}/include" "${CUDA_TOOLKIT_ROOT_DIR}/include")
@@ -67,8 +67,11 @@ if(Caffe_FOUND)
             caffe
         )
     ENDIF(WIN32)
-    #INCLUDE(../PluginTemplate.cmake)
     aquila_declare_plugin(Caffe)
+    print_target_properties(caffe)
+    get_target_property(propval caffe LOCATION)
+    get_filename_component(name_ ${propval} NAME_WE)
+    message ("caffe LOCATION = ${propval} - ${name_}")
 
   else()
     message("CUDNN not found")

@@ -81,7 +81,7 @@ std::map<int, int> ClassifierHandler::CanHandleNetwork(const caffe::Net<float>& 
     return output;
 }
 void ClassifierHandler::startBatch(){
-    objects.clear();
+    classified_detections.clear();
 }
 
 void ClassifierHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes,
@@ -107,14 +107,14 @@ void ClassifierHandler::handleOutput(const caffe::Net<float>& net, const std::ve
                 obj.timestamp = objs[i].timestamp;
                 obj.boundingBox = objs[i].boundingBox;
             }
-            objects.push_back(obj);
+            classified_detections.push_back(obj);
         }
     }
 }
 
 void ClassifierHandler::endBatch(boost::optional<mo::Time_t> timestamp)
 {
-    objects_param.emitUpdate(timestamp, _ctx.get());
+    classified_detections_param.emitUpdate(timestamp, _ctx.get());
 }
 
 MO_REGISTER_CLASS(ClassifierHandler)
