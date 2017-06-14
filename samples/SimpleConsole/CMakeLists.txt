@@ -1,5 +1,3 @@
-
-
 project(samples)
 CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
@@ -17,7 +15,7 @@ find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawa
   set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 if(NOT TARGET aquila_core)
-	find_package(Aquila REQUIRED COMPONENTS core)
+    find_package(Aquila REQUIRED COMPONENTS core)
 endif()
 find_package(CUDA REQUIRED)
   include_directories(${CUDA_INCLUDE_DIRS})
@@ -55,9 +53,9 @@ file(GLOB hdr "*.h" "*.hpp")
 
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-add_executable(SimpleConsole ${src} ${hdr})
+add_executable(GraphExecutor ${src} ${hdr})
 
-target_link_libraries(SimpleConsole
+target_link_libraries(GraphExecutor
     metaobject_core
     aquila_core
     ${Boost_LIBRARIES}
@@ -76,20 +74,20 @@ target_link_libraries(SimpleConsole
     aquila_metatypes
 )
 if(MetaObject_WITH_WT AND Wt_FOUND)
-    target_compile_definitions(SimpleConsole
+    target_compile_definitions(GraphExecutor
         PRIVATE "-DHAVE_WT"
     )
-    target_include_directories(SimpleConsole
+    target_include_directories(GraphExecutor
         PRIVATE ${Wt_INCLUDE_DIR}
     )
 endif()
 
 if(WITH_PYTHON AND HAVE_PYTHON)
-  target_link_libraries(SimpleConsole ${PYTHON_LIBRARY})
+  target_link_libraries(GraphExecutor ${PYTHON_LIBRARY})
 endif(WITH_PYTHON AND HAVE_PYTHON)
 
 if(Wt_FOUND AND WITH_WT)
-    target_link_libraries(SimpleConsole
+    target_link_libraries(GraphExecutor
         debug;${Wt_HTTP_DEBUG_LIBRARY}
         debug;${Wt_DEBUG_LIBRARY}
         optimized;${Wt_LIBRARY}
@@ -97,11 +95,11 @@ if(Wt_FOUND AND WITH_WT)
     )
 endif(Wt_FOUND AND WITH_WT)
 
-INSTALL(TARGETS SimpleConsole
+INSTALL(TARGETS GraphExecutor
         RUNTIME DESTINATION bin
 )
 
-set_property(TARGET SimpleConsole PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_property(TARGET GraphExecutor PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 IF(WIN32)
   set(PROJECT_BIN_DIRS_DEBUG "")
@@ -127,9 +125,9 @@ IF(WIN32)
   ENDFOREACH(dir ${BIN_DIRS})
   list(APPEND PROJECT_BIN_DIRS_DEBUG ${Aquila_BIN_DIRS})
   if(RCC_VERBOSE_CONFIG)
-      message(STATUS "SimpleConsole binary runtime directories:\n ${PROJECT_BIN_DIRS_DEBUG}")
+      message(STATUS "GraphExecutor binary runtime directories:\n ${PROJECT_BIN_DIRS_DEBUG}")
   endif()
-  CONFIGURE_FILE("../../Aquila/tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/samples/SimpleConsole/SimpleConsole.vcxproj.user @ONLY)
+  CONFIGURE_FILE("../../Aquila/tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/samples/SimpleConsole/GraphExecutor.vcxproj.user @ONLY)
 endif(WIN32)
 
 

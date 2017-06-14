@@ -48,7 +48,7 @@
 
 std::string printParam(mo::IParam* param) {
     std::stringstream ss;
-    ss << " - " << param->getTreeName();
+    ss << " - " << param->getTreeName() << " ";;
     if (param->checkFlags(mo::Input_e)) {
         if (auto input = dynamic_cast<mo::InputParam*>(param)) {
             ss << " [";
@@ -58,7 +58,7 @@ std::string printParam(mo::IParam* param) {
                 if (func) {
                     func(input_param, ss);
                 }
-                ss << input_param->getTreeName();
+                ss << input_param->getTreeName() << " ";
                 auto cs = input_param->getCoordinateSystem();
                 if (cs) {
                     ss << " " << cs->getName();
@@ -292,7 +292,7 @@ int main(int argc, char* argv[]) {
     mo::MetaObjectFactory::instance()->loadPlugin("aquila_cored.so");
 #endif
 #endif
-    
+
     currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
 
     LOG(info) << "Looking for plugins in: " << currentDir.string();
