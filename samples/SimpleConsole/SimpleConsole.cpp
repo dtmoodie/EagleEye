@@ -175,10 +175,27 @@ int main(int argc, char* argv[]) {
     SystemTable                                 table;
     mo::MetaObjectFactory::instance(&table);
 
-    desc.add_options()("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")("launch", boost::program_options::value<std::string>(), "Optional - File containing node structure")("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")("log-dir", boost::program_options::value<std::string>(), "directory for log output")("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")("script,s", boost::program_options::value<std::string>(), "Text file with scripting commands")("profile,p", boost::program_options::bool_switch(), "Profile application")("gpu", boost::program_options::value<int>()->default_value(0), "")("docroot", boost::program_options::value<std::string>(), "")("http-address", boost::program_options::value<std::string>(), "")("http-port", boost::program_options::value<std::string>(), "")("disable-rcc", boost::program_options::bool_switch(), "Disable rcc")("quit-on-eos", boost::program_options::bool_switch(), "Quit program on end of stream signal")("disable-input", boost::program_options::bool_switch(), "Disable input for batch scripting, and nvprof")("profile-for", boost::program_options::value<int>(), "Amount of time to run before quitting, use with profiler");
+    desc.add_options()("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
+        ("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")
+        ("launch", boost::program_options::value<std::string>(), "Optional - File containing node structure")
+        ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")
+        ("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")
+        ("log-dir", boost::program_options::value<std::string>(), "directory for log output")
+        ("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")
+        ("script,s", boost::program_options::value<std::string>(), "Text file with scripting commands")
+        ("profile,p", boost::program_options::bool_switch(), "Profile application")
+        ("gpu", boost::program_options::value<int>()->default_value(0), "")
+        ("docroot", boost::program_options::value<std::string>(), "")
+        ("http-address", boost::program_options::value<std::string>(), "")
+        ("http-port", boost::program_options::value<std::string>(), "")
+        ("disable-rcc", boost::program_options::bool_switch(), "Disable rcc")
+        ("quit-on-eos", boost::program_options::bool_switch(), "Quit program on end of stream signal")
+        ("disable-input", boost::program_options::bool_switch(), "Disable input for batch scripting, and nvprof")
+        ("profile-for", boost::program_options::value<int>(), "Amount of time to run before quitting, use with profiler");
 
     boost::program_options::variables_map vm;
-    auto                                  parsed_options = boost::program_options::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
+
+    auto parsed_options = boost::program_options::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
     boost::program_options::store(parsed_options, vm);
     mo::MetaParams::initialize();
 

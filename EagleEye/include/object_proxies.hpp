@@ -45,6 +45,7 @@ public:
 class NodeProxy : public QtNodes::NodeDataModel {
 public:
     NodeProxy(rcc::shared_ptr<aq::Nodes::Node>&& obj);
+    NodeProxy(const rcc::shared_ptr<aq::Nodes::Node>& obj);
     virtual QString caption() const;
     virtual QString name() const;
     virtual std::unique_ptr<QtNodes::NodeDataModel> clone()const;
@@ -71,6 +72,7 @@ private:
 class DataStreamProxy : virtual public QtNodes::NodeDataModel {
 public:
     DataStreamProxy(rcc::shared_ptr<aq::IDataStream>&& ds = rcc::shared_ptr<aq::IDataStream>());
+    DataStreamProxy(const rcc::shared_ptr<aq::IDataStream>& ds);
 
     virtual QString caption() const;
     virtual QString name() const;
@@ -89,6 +91,7 @@ class FrameGrabberProxy : public NodeProxy {
     Q_OBJECT
 public:
     FrameGrabberProxy(rcc::shared_ptr<aq::Nodes::Node>&& obj);
+    FrameGrabberProxy(const rcc::shared_ptr<aq::Nodes::Node>& obj);
     virtual QWidget * embeddedWidget();
 public slots:
     void onSelectionChanged();
