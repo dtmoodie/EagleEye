@@ -41,17 +41,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     _graph_scene  = new GraphScene(registry);
     ui->main_layout->addWidget(new QtNodes::FlowView(_graph_scene));
-    
-    
-
-    // WHY U NO WORK!?!?!
-    auto con1 = QObject::connect(ui->action_load, SIGNAL(triggered(bool)),
-        _graph_scene, SLOT(save()));
-    
-    auto con2 = QObject::connect(ui->action_save, SIGNAL(triggered(bool)),
-        _graph_scene, SLOT(load(bool)));
-    _graph_scene->load();
-
 }
 
 MainWindow::~MainWindow(){
@@ -59,3 +48,13 @@ MainWindow::~MainWindow(){
 }
 
 MO_REGISTER_CLASS(MainWindow)
+
+void MainWindow::on_action_load_triggered()
+{
+    _graph_scene->load();
+}
+
+void MainWindow::on_action_save_triggered()
+{
+    _graph_scene->save(true);
+}

@@ -32,6 +32,12 @@ public:
         this->sm = sm; this->vm = vm;
         _graph_scene->setVmSm(vm, sm);
     }
+
+private slots:
+    void on_action_load_triggered();
+
+    void on_action_save_triggered();
+
 protected:
     GraphScene* _graph_scene;
     Ui::MainWindow* ui;
