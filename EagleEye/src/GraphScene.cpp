@@ -42,7 +42,7 @@ void GraphScene::save(bool){
             aq::JSONOutputArchive ar(ofs, aq::JSONOutputArchive::Options(), *vm, *sm);
             auto ds_nodes = proxy->m_obj->getAllNodes();
             std::map<std::string, cv::Vec2f> node_position_map;
-            
+
             for(auto node_itr = this->_nodes.begin(); node_itr != this->_nodes.end(); ++node_itr){
                 if(auto node_proxy = dynamic_cast<aq::NodeProxy*>(node_itr->second->nodeDataModel())){
                     for(const auto& node : ds_nodes){
@@ -69,7 +69,7 @@ void GraphScene::save(bool){
             std::vector<rcc::shared_ptr<aq::IDataStream>> dsvec;
             dsvec.push_back(proxy->m_obj);
             aq::IDataStream::save(ar, dsvec);
-            
+
             return;
         }
     }
@@ -92,13 +92,38 @@ void GraphScene::load(){
     std::map<std::string, std::string>& sm = this->sm ? *this->sm : _sm;
 
     aq::JSONInputArchive ar(ifs, vm, sm);
+    aq::IDataStream::VariableMap defaultVM, defaultSM;
+    ar(cereal::make_optional_nvp("DefaultVariables", defaultVM, defaultVM));
+    ar(cereal::make_optional_nvp("DefaultStrings", defaultSM, defaultSM));
+    for (const auto& pair : defaultVM) {
+        if (vm.count(pair.first) == 0)
+            vm[pair.first] = pair.second;
+    }
+    for (const auto& pair : defaultSM) {
+        if (sm.count("${" + pair.first + "}") == 0)
+            sm["${" + pair.first + "}"] = pair.second;
+    }
+    if (sm.size()) {
+        std::stringstream ss;
+        for (const auto& pair : sm)
+            ss << "\n"
+               << pair.first << " = " << pair.second;
+        LOG(debug) << "Used string replacements: " << ss.str();
+    }
 
+    if (vm.size()) {
+        std::stringstream ss;
+        for (const auto& pair : vm)
+            ss << "\n"
+               << pair.first << " = " << pair.second;
+        LOG(debug) << "Used variable replacements: " << ss.str();
+    }
     auto dsvec = aq::IDataStream::load(ar);
     for(auto& ds : dsvec){
         load(ds);
     }
     std::map<std::string, cv::Vec2f> node_position_map;
-    ar(cereal::make_nvp("ui_node_positions", node_position_map));
+    ar(cereal::make_optional_nvp("ui_node_positions", node_position_map, node_position_map));
     for (auto node_itr = this->_nodes.begin(); node_itr != this->_nodes.end(); ++node_itr) {
         if (auto node_proxy = dynamic_cast<aq::NodeProxy*>(node_itr->second->nodeDataModel())) {
             auto itr = node_position_map.find(node_proxy->m_obj->getTreeName());
@@ -143,6 +168,10 @@ QtNodes::Node& GraphScene::load(const rcc::shared_ptr<aq::IDataStream>& ds){
 }
 
 QtNodes::Node& GraphScene::load(const rcc::shared_ptr<aq::Nodes::Node>& node, std::map<std::string, QtNodes::Node*>& nodemap){
+    auto itr = nodemap.find(node->getTreeName());
+    if(itr != nodemap.end()){
+        return *itr->second;
+    }
     rcc::shared_ptr<aq::Nodes::Node> node_ = node;
     std::unique_ptr<aq::NodeProxy> datamodel;
     if(node_->GetInterface(aq::Nodes::IFrameGrabber::s_interfaceID)){
