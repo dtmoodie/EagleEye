@@ -407,6 +407,7 @@ int main(int argc, char* argv[]) {
         mo::TSlot<void(std::string)>* slot;
         slot = new mo::TSlot<void(std::string)>(
             std::bind([&documents_list](std::string null) -> void {
+                       (void)null;
                 documents_list.clear();
                 auto constructors = mo::MetaObjectFactory::instance()->getConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
                 int  index        = 0;
@@ -433,9 +434,9 @@ int main(int argc, char* argv[]) {
                 if (!boost::conversion::detail::try_lexical_convert(doc, index)) {
                     index = -1;
                 }
-                if (index != -1 && index >= 0 && index < documents_list.size()) {
-                    doc         = documents_list[index].first;
-                    fg_override = documents_list[index].second;
+                if (index != -1 && index >= 0 && static_cast<size_t>(index) < documents_list.size()) {
+                    doc         = documents_list[static_cast<size_t>(index)].first;
+                    fg_override = documents_list[static_cast<size_t>(index)].second;
                 }
                 auto ds = aq::IDataStream::create(doc, fg_override);
                 if (ds) {
@@ -479,7 +480,7 @@ int main(int argc, char* argv[]) {
                     PrintNodeTree(current_node.get(), 0);
                 }
             }
-            if (what == "parameters") {
+            if (what == "parameters" || what == "params") {
                 std::vector<mo::IParam*> parameters;
                 if (current_node) {
                     parameters = current_node->getAllParams();
@@ -821,6 +822,7 @@ int main(int argc, char* argv[]) {
 
         slot = new mo::TSlot<void(std::string)>(
             std::bind([&_dataStreams, &current_stream, &current_node](std::string what) {
+                (void) what;
                 if (current_stream) {
                     auto itr = std::find(_dataStreams.begin(), _dataStreams.end(), current_stream.get());
                     if (itr != _dataStreams.end()) {
@@ -882,6 +884,7 @@ int main(int argc, char* argv[]) {
         connections.push_back(manager.connect(slot, "list"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([](std::string null) -> void {
+            (void)null;
             auto              plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins();
             std::stringstream ss;
             ss << "Loaded / failed plugins:\n";
@@ -1099,8 +1102,8 @@ int main(int argc, char* argv[]) {
                     ++idx;
                 }
                 std::cin >> idx;
-                if (idx >= 0 && idx < relays.size())
-                    relay = relays[idx].get();
+                if (idx >= 0 && static_cast<size_t>(idx) < relays.size())
+                    relay = relays[static_cast<size_t>(idx)].get();
             } else if (relays.size() == 1) {
                 relay = relays[0].get();
             }
@@ -1176,7 +1179,7 @@ int main(int argc, char* argv[]) {
                     idx       = boost::lexical_cast<int>(directory.substr(0, pos));
                     directory = directory.substr(pos + 1);
                 }
-                mo::MetaObjectFactory::instance()->getObjectSystem()->AddLibraryDir(directory.c_str(), idx);
+                mo::MetaObjectFactory::instance()->getObjectSystem()->AddLibraryDir(directory.c_str(), static_cast<unsigned short>(idx));
             },
             std::placeholders::_1));
 
@@ -1351,9 +1354,6 @@ int main(int argc, char* argv[]) {
         io_thread.~thread();
         gui_thread.interrupt();
         gui_thread.join();
-        for (auto& ds : _dataStreams) {
-            ds->stopThread();
-        }
         mo::ThreadSpecificQueue::cleanup();
         _dataStreams.clear();
         LOG(info) << "Gui thread shut down complete";
