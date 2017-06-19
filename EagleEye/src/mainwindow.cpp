@@ -10,7 +10,9 @@
 #include "Aquila/nodes/Node.hpp"
 #include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include <qwidget.h>
+#include <qmenubar.h>
 
+#include "GraphScene.hpp"
 #include "object_proxies.hpp"
 #include "object_constructors.hpp"
 
@@ -37,9 +39,8 @@ MainWindow::MainWindow(QWidget *parent) :
         registry->registerModel<aq::FrameGrabberConstructor>("Frame grabbers", std::make_unique<aq::FrameGrabberConstructor>(ctr));
     }
 
-    _flow_scene = new QtNodes::FlowScene(registry);
-    ui->main_layout->addWidget(new QtNodes::FlowView(_flow_scene));
-
+    _graph_scene  = new GraphScene(registry);
+    ui->main_layout->addWidget(new QtNodes::FlowView(_graph_scene));
 }
 
 MainWindow::~MainWindow(){
@@ -47,3 +48,13 @@ MainWindow::~MainWindow(){
 }
 
 MO_REGISTER_CLASS(MainWindow)
+
+void MainWindow::on_action_load_triggered()
+{
+    _graph_scene->load();
+}
+
+void MainWindow::on_action_save_triggered()
+{
+    _graph_scene->save(true);
+}

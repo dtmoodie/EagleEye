@@ -42,7 +42,49 @@ int main(int argc, char *argv[])
         ("preferred_loader", boost::program_options::value<std::string>(), "Preferred loader to initialize with");
 
     boost::program_options::variables_map vm;
-    boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
+
+    auto parsed_options = boost::program_options::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
+    boost::program_options::store(parsed_options, vm);
+    
+    auto unrecognized = boost::program_options::collect_unrecognized(parsed_options.options, boost::program_options::include_positional);
+    std::map<std::string, std::string> replace_map;
+    std::map<std::string, std::string> variable_replace_map;
+    for (auto& option : unrecognized) {
+        auto pos = option.find(":=");
+        if (pos != std::string::npos) {
+            std::string start = option.substr(0, pos);
+            std::string end = option.substr(pos + 2);
+            if (end[0] == '\"' && end[end.size() - 1] == '\"') {
+                end = end.substr(1, end.size() - 2);
+            }
+            replace_map["${" + start + "}"] = end;
+            continue;
+        }
+        pos = option.find("=");
+        if (option.find("--") == 0 && pos != std::string::npos) {
+            std::string var_name = option.substr(2, pos - 2);
+            std::string var_value = option.substr(pos + 1);
+            if (var_value[0] == '\"' && var_value[var_value.size() - 1] == '\"') {
+                var_value = var_value.substr(1, var_value.size() - 2);
+            }
+            variable_replace_map[var_name] = var_value;
+        }
+    }
+    if (replace_map.size()) {
+        std::stringstream ss;
+        for (const auto& pair : replace_map)
+            ss << "\n"
+            << pair.first << " = " << pair.second;
+        LOG(debug) << "Input string replacements: " << ss.str();
+    }
+
+    if (variable_replace_map.size()) {
+        std::stringstream ss;
+        for (const auto& pair : variable_replace_map)
+            ss << "\n"
+            << pair.first << " = " << pair.second;
+        LOG(debug) << "Input variable replacements: " << ss.str();
+    }
 
     boost::filesystem::path current_dir("./"); // = boost::filesystem::path(argv[0]).parent_path();
     current_dir = boost::filesystem::path(current_dir.string() + "/Plugins");
@@ -74,8 +116,7 @@ int main(int argc, char *argv[])
     }
     mo::MetaObjectFactory::instance()->registerTranslationUnit();
     rcc::shared_ptr<MainWindow> w = rcc::shared_ptr<MainWindow>::create();
-
-
+    w->setVmSm(&variable_replace_map, &replace_map);
     w->show();
 
     return a.exec();

@@ -20,61 +20,38 @@
     </item>
    </layout>
   </widget>
-  <action name="actionSave">
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1191</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="action_load"/>
+    <addaction name="action_save"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
+  <action name="action_load">
    <property name="text">
-    <string>Save config</string>
+    <string>Load</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="action_save">
+   <property name="text">
+    <string>Save</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
-   </property>
-  </action>
-  <action name="actionLoad">
-   <property name="text">
-    <string>Open config</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionLoad_Plugin">
-   <property name="text">
-    <string>Load Plugin</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+P</string>
-   </property>
-  </action>
-  <action name="actionRCC_settings">
-   <property name="text">
-    <string>RCC settings</string>
-   </property>
-  </action>
-  <action name="actionLog_settings">
-   <property name="text">
-    <string>Log settings</string>
-   </property>
-  </action>
-  <action name="actionOpen_file">
-   <property name="text">
-    <string>Open file</string>
-   </property>
-  </action>
-  <action name="actionOpen_Network">
-   <property name="text">
-    <string>Open Network Stream</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
-  </action>
-  <action name="actionOpen_directory">
-   <property name="text">
-    <string>Open directory</string>
-   </property>
-  </action>
-  <action name="actionBookmarks">
-   <property name="text">
-    <string>Open</string>
    </property>
   </action>
  </widget>

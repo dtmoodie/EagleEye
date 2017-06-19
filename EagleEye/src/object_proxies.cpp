@@ -53,6 +53,12 @@ NodeProxy::NodeProxy(rcc::shared_ptr<aq::Nodes::Node>&& obj) :
     m_slot_component_added.connect(m_obj->getSignal_componentAdded<void(aq::Algorithm*)>());
 }
 
+NodeProxy::NodeProxy(const rcc::shared_ptr<aq::Nodes::Node>& obj):
+    m_obj(obj),
+    m_slot_component_added(std::bind(&NodeProxy::onComponentAdded, this, std::placeholders::_1)) {
+    m_slot_component_added.connect(m_obj->getSignal_componentAdded<void(aq::Algorithm*)>());
+}
+
 QString NodeProxy::caption() const {
     return QString::fromStdString(m_obj->getTreeName());
 }
@@ -199,7 +205,10 @@ void NodeProxy::onComponentAdded(aq::Algorithm* cpt){
 DataStreamProxy::DataStreamProxy(rcc::shared_ptr<aq::IDataStream>&& ds) :
     m_obj(std::move(ds)) {
 }
+DataStreamProxy::DataStreamProxy(const rcc::shared_ptr<aq::IDataStream>& ds):
+    m_obj(ds){
 
+}
 QString DataStreamProxy::caption() const { return "DataStream"; }
 QString DataStreamProxy::name() const { return "DataStream"; }
 std::unique_ptr<QtNodes::NodeDataModel> DataStreamProxy::clone() const {
@@ -233,6 +242,10 @@ FrameGrabberProxy::FrameGrabberProxy(rcc::shared_ptr<aq::Nodes::Node>&& obj) :
     m_fg = m_obj.DynamicCast<aq::Nodes::IFrameGrabber>();
 }
 
+FrameGrabberProxy::FrameGrabberProxy(const rcc::shared_ptr<aq::Nodes::Node>& obj):
+    NodeProxy(std::move(obj)) {
+    m_fg = m_obj.DynamicCast<aq::Nodes::IFrameGrabber>();
+}
 QWidget * FrameGrabberProxy::embeddedWidget() {
     if (widget == nullptr) {
         NodeProxy::embeddedWidget();
