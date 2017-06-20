@@ -19,18 +19,19 @@ namespace aq
         public:
             MO_DERIVE(frame_grabber_openni2, IFrameGrabber)
                 SOURCE(SyncedMemory, xyz, {})
-                APPEND_FLAGS(xyz, mo::RequestBuffered_e)
             MO_END;
             
             ~frame_grabber_openni2();
         
             bool loadData(std::string file_path);
             void onNewFrame(openni::VideoStream& stream);
-            bool processImpl(){return true;}
+            bool processImpl();
 
             static int canLoadPath(const std::string& document);
             static int loadTimeout();
             static std::vector<std::string> listLoadablePaths();
+
+            cv::Mat new_frame;
         };
     }
 }

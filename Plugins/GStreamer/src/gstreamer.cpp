@@ -605,15 +605,15 @@ RTSP_server::~RTSP_server()
     }
 
 #ifdef _MSC_VER
-    PerModuleInterface::GetInstance()->GetSystemTable()->setSingleton<GMainLoop>(nullptr);
+    // handled by glib thread wrapper class
+    //PerModuleInterface::GetInstance()->GetSystemTable()->setSingleton<GMainLoop>(nullptr);
 #endif
-    if (glib_MainLoop)
+    /*if (glib_MainLoop)
     {
         g_main_loop_quit(glib_MainLoop);
         glibThread.join();
         g_main_loop_unref(glib_MainLoop);
-
-    }
+    }*/
     if (pipeline)
     {
         gst_object_unref(pipeline);

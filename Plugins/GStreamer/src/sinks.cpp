@@ -144,11 +144,11 @@ GstFlowReturn JPEGSink::on_pull(){
         if (gst_buffer_map(buffer, &map, GST_MAP_READ)){
             cv::Mat mapped(1, map.size, CV_8U);
             memcpy(mapped.data, map.data, map.size);
-            mo::Time_t ts(buffer->pts * mo::ns);
-            this->jpeg_buffer_param.updateData(mapped, ts, &gstreamer_context);
+            auto ts = std::chrono::high_resolution_clock::now();
+            this->jpeg_buffer_param.updateData(mapped, mo::tag::_timestamp = mo::Time_t(mo::ns * ts.time_since_epoch().count()), &gstreamer_context);
             if(decoded_param.hasSubscriptions()){
-                decoded_param.updateData(cv::imdecode(jpeg_buffer, cv::IMREAD_UNCHANGED, &decode_buffer),
-                    ts, &gstreamer_context);
+                decoded_param.updateData(cv::imdecode(mapped, cv::IMREAD_UNCHANGED, &decode_buffer),
+                    mo::tag::_timestamp = mo::Time_t(mo::ns * ts.time_since_epoch().count()), &gstreamer_context);
             }
         }
         gst_sample_unref(sample);
