@@ -5,15 +5,15 @@
 #include "libfastms/solver/solver.h"
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #ifdef _DEBUG
-RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
+RUNTIME_COMPILER_LINKLIBRARY("-lfastmsd")
 #else
-RUNTIME_COMPILER_LINKLIBRARY("fastms.lib")
+RUNTIME_COMPILER_LINKLIBRARY("-lfastms")
 #endif
 namespace aq
 {
     namespace Nodes
     {
-    
+
     class FastMumfordShah : public Node
     {
     public:

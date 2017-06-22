@@ -5,11 +5,12 @@
 #include <Aquila/rcc/external_includes/cv_cudalegacy.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
-
+#ifdef FASTMS_FOUND
 #ifdef _DEBUG
-RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
+RUNTIME_COMPILER_LINKLIBRARY("-lfastmsd")
 #else
-RUNTIME_COMPILER_LINKLIBRARY("fastms.lib")
+RUNTIME_COMPILER_LINKLIBRARY("-lfastms")
+#endif
 #endif
 using namespace aq;
 using namespace aq::Nodes;
@@ -386,7 +387,7 @@ cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream
 {
     // First we apply the mumford and shah algorithm to smooth the input image
     img.download(imageBuffer, stream);
-    
+
     Par param;
     param.lambda = *getParameter<double>(0)->Data();
     param.alpha = *getParameter<double>(1)->Data();
@@ -407,14 +408,14 @@ cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream
     tensor.create(rows, 6, CV_32F);
     smoothed_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(0, 3)));
     lab_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(3, 6)));
-    
+
     cv::kmeans(tensor, *getParameter<int>(9)->Data(), labels,
         cv::TermCriteria(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, *getParameter<int>(10)->Data(), *getParameter<double>(11)->Data()),
         1, cv::KMEANS_RANDOM_CENTERS, centers);
 
     labels = labels.reshape(1, img.rows);
     updateParameter("Labels", labels);
-    updateParameter("Centers", centers); 
+    updateParameter("Centers", centers);
     return img;
 }
 */
