@@ -30,7 +30,7 @@ std::map<int, int> SSDHandler::CanHandleNetwork(const caffe::Net<float>& net)
 }
 
 
-void SSDHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
+void SSDHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<aq::DetectedObject2d>& objs){
     auto output_blob= net.blob_by_name(output_blob_name);
     if(!output_blob)
         return;
