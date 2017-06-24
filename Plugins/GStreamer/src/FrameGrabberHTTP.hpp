@@ -3,7 +3,7 @@
 #include "GStreamerExport.hpp"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
 
 class GStreamer_EXPORT FrameGrabberHTTP:

@@ -3,7 +3,7 @@
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool HistogramEqualization::processImpl() {
     cv::cuda::GpuMat              output;

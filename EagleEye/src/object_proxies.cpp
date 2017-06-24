@@ -15,14 +15,14 @@
 
 using namespace aq;
 
-NodeOutProxy::NodeOutProxy(const rcc::shared_ptr<Nodes::Node>& node_) :
+NodeOutProxy::NodeOutProxy(const rcc::shared_ptr<nodes::Node>& node_) :
     node(node_) {
 }
 
 QtNodes::NodeDataType NodeOutProxy::type() const {
     QtNodes::NodeDataType out;
     out.name = QString::fromStdString(node->getTreeName());
-    out.id = QString::fromStdString("aq::Nodes::Node");
+    out.id = QString::fromStdString("aq::nodes::Node");
     return out;
 }
 
@@ -32,11 +32,11 @@ DSOutProxy::DSOutProxy(const rcc::shared_ptr<IDataStream>& ds) : m_ds(ds) {
 QtNodes::NodeDataType DSOutProxy::type() const {
     QtNodes::NodeDataType out;
     out.name = QString::fromStdString("ds");
-    out.id = QString::fromStdString("aq::Nodes::Node");
+    out.id = QString::fromStdString("aq::nodes::Node");
     return out;
 }
 
-ParamOutProxy::ParamOutProxy(mo::IParam* param_, const rcc::shared_ptr<Nodes::Node>& node_) :
+ParamOutProxy::ParamOutProxy(mo::IParam* param_, const rcc::shared_ptr<nodes::Node>& node_) :
     param(param_), NodeOutProxy(node_) {
 }
 QtNodes::NodeDataType ParamOutProxy::type() const {
@@ -47,13 +47,13 @@ QtNodes::NodeDataType ParamOutProxy::type() const {
 }
 
 
-NodeProxy::NodeProxy(rcc::shared_ptr<aq::Nodes::Node>&& obj) :
+NodeProxy::NodeProxy(rcc::shared_ptr<aq::nodes::Node>&& obj) :
     m_obj(std::move(obj)),
     m_slot_component_added(std::bind(&NodeProxy::onComponentAdded, this, std::placeholders::_1)){
     m_slot_component_added.connect(m_obj->getSignal_componentAdded<void(aq::Algorithm*)>());
 }
 
-NodeProxy::NodeProxy(const rcc::shared_ptr<aq::Nodes::Node>& obj):
+NodeProxy::NodeProxy(const rcc::shared_ptr<aq::nodes::Node>& obj):
     m_obj(obj),
     m_slot_component_added(std::bind(&NodeProxy::onComponentAdded, this, std::placeholders::_1)) {
     m_slot_component_added.connect(m_obj->getSignal_componentAdded<void(aq::Algorithm*)>());
@@ -68,7 +68,7 @@ QString NodeProxy::name() const {
 
 std::unique_ptr<QtNodes::NodeDataModel> NodeProxy::clone() const {
     IObjectConstructor* ctr = m_obj->GetConstructor();
-    rcc::shared_ptr<aq::Nodes::Node> node(ctr->Construct());
+    rcc::shared_ptr<aq::nodes::Node> node(ctr->Construct());
     node->Init(true);
     return std::unique_ptr<QtNodes::NodeDataModel>(new NodeProxy(std::move(node)));
 }
@@ -87,7 +87,7 @@ QtNodes::NodeDataType NodeProxy::dataType(QtNodes::PortType portType, QtNodes::P
     switch (portType) {
     case QtNodes::PortType::In: {
         if (portIndex == 0) {
-            output.id = "aq::Nodes::Node";
+            output.id = "aq::nodes::Node";
             output.name = "parents";
         }
         else {
@@ -101,7 +101,7 @@ QtNodes::NodeDataType NodeProxy::dataType(QtNodes::PortType portType, QtNodes::P
     }
     case QtNodes::PortType::Out: {
         if (portIndex == 0) {
-            output.id = "aq::Nodes::Node";
+            output.id = "aq::nodes::Node";
             output.name = "children";
         }
         else {
@@ -221,7 +221,7 @@ unsigned int DataStreamProxy::nPorts(QtNodes::PortType portType) const {
 QtNodes::NodeDataType DataStreamProxy::dataType(QtNodes::PortType port_type, QtNodes::PortIndex port_index) const {
     QtNodes::NodeDataType output;
     if (port_type == QtNodes::PortType::Out) {
-        output.id = "aq::Nodes::Node";
+        output.id = "aq::nodes::Node";
         output.name = "children";
     }
     return output;
@@ -237,19 +237,19 @@ QWidget * DataStreamProxy::embeddedWidget() {
     return nullptr;
 }
 
-FrameGrabberProxy::FrameGrabberProxy(rcc::shared_ptr<aq::Nodes::Node>&& obj) :
+FrameGrabberProxy::FrameGrabberProxy(rcc::shared_ptr<aq::nodes::Node>&& obj) :
     NodeProxy(std::move(obj)) {
-    m_fg = m_obj.DynamicCast<aq::Nodes::IFrameGrabber>();
+    m_fg = m_obj.DynamicCast<aq::nodes::IFrameGrabber>();
 }
 
-FrameGrabberProxy::FrameGrabberProxy(const rcc::shared_ptr<aq::Nodes::Node>& obj):
+FrameGrabberProxy::FrameGrabberProxy(const rcc::shared_ptr<aq::nodes::Node>& obj):
     NodeProxy(std::move(obj)) {
-    m_fg = m_obj.DynamicCast<aq::Nodes::IFrameGrabber>();
+    m_fg = m_obj.DynamicCast<aq::nodes::IFrameGrabber>();
 }
 QWidget * FrameGrabberProxy::embeddedWidget() {
     if (widget == nullptr) {
         NodeProxy::embeddedWidget();
-        aq::Nodes::FrameGrabberInfo* info = dynamic_cast<aq::Nodes::FrameGrabberInfo*>(m_obj->GetConstructor()->GetObjectInfo());
+        aq::nodes::FrameGrabberInfo* info = dynamic_cast<aq::nodes::FrameGrabberInfo*>(m_obj->GetConstructor()->GetObjectInfo());
         selector = new QComboBox(widget);
         selector->setEditable(true);
         selector->addItem("none");

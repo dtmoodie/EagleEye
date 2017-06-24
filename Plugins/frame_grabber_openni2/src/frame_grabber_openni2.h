@@ -8,7 +8,7 @@ RUNTIME_COMPILER_LINKLIBRARY("OpenNI2.lib");
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         
         class frame_grabber_openni2: public openni::VideoStream::NewFrameListener, public IFrameGrabber

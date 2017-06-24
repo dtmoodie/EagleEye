@@ -6,7 +6,7 @@
 RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
 #endif
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 

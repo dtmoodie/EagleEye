@@ -1,7 +1,7 @@
 #include "Channels.h"
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 bool ConvertToGrey::processImpl()

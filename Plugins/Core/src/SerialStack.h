@@ -13,7 +13,7 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
     
     class CV_EXPORTS SerialStack: public Node

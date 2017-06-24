@@ -12,7 +12,7 @@ namespace cuda
 }
 }
 namespace aq{
-namespace Nodes{
+namespace nodes{
     class HistogramRange : public Node{
     public:
         MO_DERIVE(HistogramRange, Node)

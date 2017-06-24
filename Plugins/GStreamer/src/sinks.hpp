@@ -6,7 +6,7 @@
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class GStreamer_EXPORT tcpserver: public gstreamer_sink_base
         {

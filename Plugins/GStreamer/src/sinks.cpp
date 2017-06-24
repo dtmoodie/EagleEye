@@ -5,7 +5,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include "glib_thread.h"
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 tcpserver::tcpserver():
     gstreamer_sink_base()
@@ -144,11 +144,11 @@ GstFlowReturn JPEGSink::on_pull(){
         if (gst_buffer_map(buffer, &map, GST_MAP_READ)){
             cv::Mat mapped(1, map.size, CV_8U);
             memcpy(mapped.data, map.data, map.size);
-            auto ts = std::chrono::high_resolution_clock::now();
-            this->jpeg_buffer_param.updateData(mapped, mo::tag::_timestamp = mo::Time_t(mo::ns * ts.time_since_epoch().count()), &gstreamer_context);
+            auto ts = mo::getCurrentTime();
+            this->jpeg_buffer_param.updateData(mapped, mo::tag::_timestamp = ts, &gstreamer_context);
             if(decoded_param.hasSubscriptions()){
                 decoded_param.updateData(cv::imdecode(mapped, cv::IMREAD_UNCHANGED, &decode_buffer),
-                    mo::tag::_timestamp = mo::Time_t(mo::ns * ts.time_since_epoch().count()), &gstreamer_context);
+                    mo::tag::_timestamp = ts, &gstreamer_context);
             }
         }
         gst_sample_unref(sample);

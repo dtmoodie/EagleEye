@@ -6,7 +6,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 /*class InputParamAny: public mo::InputParam
 {

@@ -3,7 +3,7 @@
 #include "Aquila/types/SyncedMemory.hpp"
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class Flip: public Node
         {

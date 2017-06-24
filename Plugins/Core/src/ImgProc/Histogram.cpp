@@ -1,7 +1,7 @@
 #include "Histogram.hpp"
 #include "opencv2/cudaimgproc.hpp"
 #include "Aquila/nodes/NodeInfo.hpp"
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool HistogramRange::processImpl()
 {

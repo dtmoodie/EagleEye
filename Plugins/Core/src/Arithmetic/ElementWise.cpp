@@ -2,7 +2,7 @@
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool Equal::processImpl()
 {

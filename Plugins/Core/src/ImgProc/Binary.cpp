@@ -4,7 +4,7 @@
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool MorphologyFilter::processImpl()
 {

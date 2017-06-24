@@ -10,7 +10,7 @@ namespace aq
     Core_EXPORT void applyColormap(const cv::cuda::GpuMat& input, cv::cuda::GpuMat& output, const cv::cuda::GpuMat& colormap, cv::cuda::Stream& stream);
 
 
-    namespace Nodes
+    namespace nodes
     {
         class LabelDisplay: public Node
         {

@@ -3,7 +3,7 @@
 
 #include <boost/lexical_cast.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool PlaybackInfo::processImpl()
 {

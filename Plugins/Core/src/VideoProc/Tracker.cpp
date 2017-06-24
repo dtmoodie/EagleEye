@@ -1,5 +1,5 @@
 #include "Tracker.h"
-//#include "Aquila/Nodes/VideoProc/Tracking.hpp"
+//#include "Aquila/nodes/VideoProc/Tracking.hpp"
 #include "Aquila/rcc/external_includes/cv_imgproc.hpp"
 #include <Aquila/rcc/external_includes/cv_highgui.hpp>
 #include <Aquila/rcc/external_includes/cv_calib3d.hpp>
@@ -11,7 +11,7 @@
 
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 MO_REGISTER_CLASS(KeyFrameTracker);
@@ -93,7 +93,7 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
 {
     std::pair<cv::cuda::GpuMat*, std::string>* data = (std::pair<cv::cuda::GpuMat*, std::string>*)userData;
     boost::function<void(void)> f = boost::bind(displayCallback, *data->first, data->second);
-    Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, mo::TypeInfo(typeid(aq::Nodes::Node))));
+    Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, mo::TypeInfo(typeid(aq::nodes::Node))));
     delete data;
 }
 */

@@ -5,7 +5,7 @@
 
 namespace po = boost::program_options;
 /*
-aq::Nodes::Node::Ptr setVideoFile(aq::Nodes::Node::Ptr node, const std::string& videoFile)
+aq::nodes::Node::Ptr setVideoFile(aq::nodes::Node::Ptr node, const std::string& videoFile)
 {
     if(node->getName() == "VideoLoader")
     {
@@ -21,7 +21,7 @@ aq::Nodes::Node::Ptr setVideoFile(aq::Nodes::Node::Ptr node, const std::string& 
             return retNode;
         }
     }
-    return aq::Nodes::Node::Ptr();
+    return aq::nodes::Node::Ptr();
 }
 
 int main(int argc, char* argv[])
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
     auto nodes = aq::NodeManager::getInstance().loadNodes(vm["nodeFile"].as<std::string>());
     aq::NodeManager::getInstance().printNodeTree();
-    aq::Nodes::Node::Ptr playbackNode;
+    aq::nodes::Node::Ptr playbackNode;
     bool loop = false;
     if(vm.count("loop"))
     {
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
         std::string fileName = vm["videoFile"].as<std::string>();
         for(size_t i = 0; i < nodes.size(); ++i)
         {
-           aq::Nodes::Node::Ptr tmpNode = setVideoFile(nodes[i], fileName);
+           aq::nodes::Node::Ptr tmpNode = setVideoFile(nodes[i], fileName);
            if(tmpNode != nullptr)
            {
                playbackNode = tmpNode;

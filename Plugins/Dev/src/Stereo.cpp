@@ -15,7 +15,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudastereo")
 
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 bool StereoBM::processImpl()

@@ -4,7 +4,7 @@
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class GStreamer_EXPORT h264_pass_through: public gstreamer_sink_base{
         public:

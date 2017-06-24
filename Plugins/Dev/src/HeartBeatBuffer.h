@@ -6,7 +6,7 @@
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
     class HeartBeatBuffer : public Node
     {

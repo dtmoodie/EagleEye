@@ -5,7 +5,7 @@
 #include <Aquila/types/SyncedMemory.hpp>
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class my_frame_source: public cv::superres::FrameSource
         {

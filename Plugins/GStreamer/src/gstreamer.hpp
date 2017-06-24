@@ -98,7 +98,7 @@ namespace aq{
     };
 
 
-    namespace Nodes{
+    namespace nodes{
         // Used to feed a gstreamer pipeline from EagleEye
         class GStreamer_EXPORT gstreamer_sink_base: virtual public gstreamer_base, virtual public Node{
         public:
@@ -186,7 +186,7 @@ namespace aq{
             cv::Size imgSize;
         };
 #endif
-    } // namespace aq::Nodes
+    } // namespace aq::nodes
 }
 /*
 References

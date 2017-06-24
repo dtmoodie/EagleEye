@@ -6,7 +6,7 @@
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class frame_grabbers_EXPORT GrabberGstreamer: public GrabberCV
         {

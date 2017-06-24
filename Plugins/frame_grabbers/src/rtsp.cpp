@@ -4,7 +4,7 @@
 
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 int GrabberRTSP::canLoad(const std::string& document)
 {

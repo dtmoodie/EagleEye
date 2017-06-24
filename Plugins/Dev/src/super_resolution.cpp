@@ -1,7 +1,7 @@
 #include "super_resolution.h"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 my_frame_source::my_frame_source()
 {

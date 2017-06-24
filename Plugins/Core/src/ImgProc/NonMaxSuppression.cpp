@@ -3,7 +3,7 @@
 
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 bool MinMax::processImpl()
 {
     cv::cuda::minMax(input->getGpuMat(stream()), &min_value, &max_value);

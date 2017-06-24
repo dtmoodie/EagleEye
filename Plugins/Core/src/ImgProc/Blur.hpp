@@ -4,7 +4,7 @@
 #include "Aquila/rcc/external_includes/cv_cudafilters.hpp"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
     class MedianBlur: public Node
     {

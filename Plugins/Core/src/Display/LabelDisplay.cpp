@@ -9,7 +9,7 @@
 
 #include <fstream>
 #include <boost/filesystem.hpp>
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool LabelDisplay::processImpl()
 {

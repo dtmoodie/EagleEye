@@ -18,7 +18,7 @@
 #include <fstream>
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 int findNextIndex(const std::string& dir, const std::string& extension, const std::string& stem)
 {

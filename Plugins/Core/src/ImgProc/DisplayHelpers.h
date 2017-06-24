@@ -8,7 +8,7 @@ RUNTIME_MODIFIABLE_INCLUDE
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
     class Scale:public Node
     {

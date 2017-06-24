@@ -2,7 +2,7 @@
 #include "BirdsEye.hpp"
 #include "Aquila/nodes/NodeInfo.hpp"
 
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool BirdsEye::processImpl()
 {

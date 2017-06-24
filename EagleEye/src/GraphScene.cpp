@@ -167,14 +167,14 @@ QtNodes::Node& GraphScene::load(const rcc::shared_ptr<aq::IDataStream>& ds){
     return *nodePtr;
 }
 
-QtNodes::Node& GraphScene::load(const rcc::shared_ptr<aq::Nodes::Node>& node, std::map<std::string, QtNodes::Node*>& nodemap){
+QtNodes::Node& GraphScene::load(const rcc::shared_ptr<aq::nodes::Node>& node, std::map<std::string, QtNodes::Node*>& nodemap){
     auto itr = nodemap.find(node->getTreeName());
     if(itr != nodemap.end()){
         return *itr->second;
     }
-    rcc::shared_ptr<aq::Nodes::Node> node_ = node;
+    rcc::shared_ptr<aq::nodes::Node> node_ = node;
     std::unique_ptr<aq::NodeProxy> datamodel;
-    if(node_->GetInterface(aq::Nodes::IFrameGrabber::s_interfaceID)){
+    if(node_->GetInterface(aq::nodes::IFrameGrabber::s_interfaceID)){
         datamodel = std::make_unique<aq::FrameGrabberProxy>(node_);
     }else{
         datamodel = std::make_unique<aq::NodeProxy>(node_);
@@ -194,7 +194,7 @@ QtNodes::Node& GraphScene::load(const rcc::shared_ptr<aq::Nodes::Node>& node, st
     nodemap[node->getTreeName()] = nodePtr;
     return *nodePtr;
 }
-void GraphScene::reconnectInputs(const rcc::shared_ptr<aq::Nodes::Node>& node, std::map<std::string, QtNodes::Node*>& nodemap){
+void GraphScene::reconnectInputs(const rcc::shared_ptr<aq::nodes::Node>& node, std::map<std::string, QtNodes::Node*>& nodemap){
     auto inputs = node->getInputs();
     auto input_node_itr = nodemap.find(node->getTreeName());
     if(input_node_itr != nodemap.end()){

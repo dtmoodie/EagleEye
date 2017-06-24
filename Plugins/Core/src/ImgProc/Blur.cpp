@@ -4,7 +4,7 @@
 #include "Aquila/nodes/NodeInfo.hpp"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool MedianBlur::processImpl()
 {

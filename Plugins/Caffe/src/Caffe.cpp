@@ -24,7 +24,7 @@
 #include "caffe/caffe.hpp"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 #ifndef _MSC_VER
 #include "dlfcn.h"
 #else

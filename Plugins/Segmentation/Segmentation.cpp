@@ -12,7 +12,7 @@ RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
 RUNTIME_COMPILER_LINKLIBRARY("fastms.lib")
 #endif
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 

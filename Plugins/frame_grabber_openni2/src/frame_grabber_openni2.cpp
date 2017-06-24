@@ -3,7 +3,7 @@
 #include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
 #include <MetaObject/logging/Profiling.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 int frame_grabber_openni2::canLoadPath(const std::string& document)
@@ -152,8 +152,8 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
 
 bool frame_grabber_openni2::processImpl(){
     if(!new_frame.empty()){
-        auto ts = std::chrono::high_resolution_clock::now();
-        xyz_param.updateData(new_frame, mo::tag::_timestamp = mo::Time_t(ts.time_since_epoch().count() * mo::ns));
+        
+        xyz_param.updateData(new_frame, mo::tag::_timestamp = mo::getCurrentTime());
         new_frame.release();
     }
     return true;

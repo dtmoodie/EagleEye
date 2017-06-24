@@ -8,7 +8,7 @@ if(Caffe_FOUND)
       set(CUDA_NVCC_FLAGS "-std=c++11;--expt-relaxed-constexpr;${CUDA_NVCC_FLAGS}")
     ENDIF()
   set(Plugin_Caffe_available "TRUE")
-  find_package(OpenCV QUIET)
+  find_package(OpenCV QUIET COMPONENTS cudawarping cudaimgproc)
 
   set(CUDNN_DIR "" CACHE PATH "cudnn directory")
   LINK_DIRECTORIES("/usr/local/cuda/lib64")
@@ -47,6 +47,7 @@ if(Caffe_FOUND)
           aquila_metatypes
           aquila_core
           aquila_serialization
+		  ${OpenCV_LIBS}
     )
 
     IF(WIN32)

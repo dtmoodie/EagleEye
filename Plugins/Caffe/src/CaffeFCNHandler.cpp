@@ -39,7 +39,7 @@ std::map<int, int> FCNHandler::CanHandleNetwork(const caffe::Net<float>& net)
     return output;
 }
 
-void FCNHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
+void FCNHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<aq::DetectedObject2d>& objs){
     aq::SyncedMemory data;
     input_param.getData(data);
     auto input_image_size = data.getSize();
@@ -97,12 +97,12 @@ std::map<int, int> FCNSingleClassHandler::CanHandleNetwork(const caffe::Net<floa
 }
 
 void FCNSingleClassHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes,
-                                         mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs){
+                                         mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<aq::DetectedObject2d>& objs){
     auto blob = net.blob_by_name(output_blob_name);
     if(blob)
     {
         blob->gpu_data();
-        auto wrapped = aq::Nodes::CaffeBase::WrapBlob(*blob);
+        auto wrapped = aq::nodes::CaffeBase::WrapBlob(*blob);
         if(class_index < blob->channels() && blob->num())
         {
             const cv::cuda::GpuMat& confidence = wrapped[0].getGpuMat(_ctx->getStream(), class_index);

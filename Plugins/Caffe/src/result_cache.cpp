@@ -4,7 +4,7 @@
 #include "Aquila/core/Logger.hpp"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 /*TS<SyncedMemory> result_cache::process(TS<SyncedMemory>& input, cv::cuda::Stream& stream)
 {
@@ -45,5 +45,5 @@ bool result_cache::pre_check(const TS<SyncedMemory>& input)
     return true;
 }
 
-static aq::Nodes::NodeInfo g_registerer_result_cache("result_cache", { "utilities"});
+static aq::nodes::NodeInfo g_registerer_result_cache("result_cache", { "utilities"});
 REGISTERCLASS(result_cache, &g_registerer_result_cache);*/

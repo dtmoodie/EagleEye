@@ -4,7 +4,7 @@
 #include <Aquila/frame_grabber_base.h>
 #include "Aquila/Signals.h"
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 ProcessFuture::ProcessFuture()
 {

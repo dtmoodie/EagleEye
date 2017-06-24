@@ -3,7 +3,7 @@
 #include "Aquila/nodes/Node.hpp"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
 class LegendDisplay: public Node
 {

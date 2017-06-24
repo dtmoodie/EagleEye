@@ -51,7 +51,7 @@ protected:
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
     
     class SegmentEGBS: public Node

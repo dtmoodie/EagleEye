@@ -3,7 +3,7 @@
 #include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include "frame_grabbersExport.hpp"
 namespace aq{
-    namespace Nodes{
+    namespace nodes{
     class frame_grabbers_EXPORT GrabberImage: public IGrabber
     {
     public:

@@ -14,7 +14,7 @@ namespace aq
     void colorCorrect(cv::cuda::GpuMat& input_output,
                       const cv::cuda::GpuMat& color_matrix,
                       cv::cuda::Stream& stream);
-    namespace Nodes
+    namespace nodes
     {
         class WhiteBalance: public Node
         {

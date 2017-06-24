@@ -3,7 +3,7 @@
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         /*class PLUGIN_EXPORTS result_cache: public Node
         {

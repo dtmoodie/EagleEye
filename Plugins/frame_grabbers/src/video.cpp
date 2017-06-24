@@ -3,7 +3,7 @@
 #include "boost/filesystem.hpp"
 #include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 /*frame_grabber_video::~frame_grabber_video()
 {
     StopThreads();

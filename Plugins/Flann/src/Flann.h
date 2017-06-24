@@ -20,7 +20,7 @@ RUNTIME_COMPILER_LINKLIBRARY("flann_cuda_s.lib")
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class ForegroundEstimate : public Node
         {

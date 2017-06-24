@@ -15,16 +15,16 @@ namespace aq{
 
 class IDataStream;
 class Algorithm;
-namespace Nodes{
+namespace nodes{
     class Node;
     class IFrameGrabber;
 }
 
 class NodeOutProxy : virtual public QtNodes::NodeData {
 public:
-    NodeOutProxy(const rcc::shared_ptr<Nodes::Node>& node_);
+    NodeOutProxy(const rcc::shared_ptr<nodes::Node>& node_);
     virtual QtNodes::NodeDataType type() const;
-    rcc::shared_ptr<Nodes::Node> node;
+    rcc::shared_ptr<nodes::Node> node;
 };
 
 class DSOutProxy : virtual public QtNodes::NodeData {
@@ -37,15 +37,15 @@ public:
 
 class ParamOutProxy : virtual public NodeOutProxy {
 public:
-    ParamOutProxy(mo::IParam* param_, const rcc::shared_ptr<Nodes::Node>& node_);
+    ParamOutProxy(mo::IParam* param_, const rcc::shared_ptr<nodes::Node>& node_);
     virtual QtNodes::NodeDataType type() const;
     mo::IParam* param;
 };
 
 class NodeProxy : public QtNodes::NodeDataModel {
 public:
-    NodeProxy(rcc::shared_ptr<aq::Nodes::Node>&& obj);
-    NodeProxy(const rcc::shared_ptr<aq::Nodes::Node>& obj);
+    NodeProxy(rcc::shared_ptr<aq::nodes::Node>&& obj);
+    NodeProxy(const rcc::shared_ptr<aq::nodes::Node>& obj);
     virtual QString caption() const;
     virtual QString name() const;
     virtual std::unique_ptr<QtNodes::NodeDataModel> clone()const;
@@ -59,7 +59,7 @@ public:
     virtual std::shared_ptr<QtNodes::NodeData> outData(QtNodes::PortIndex port);
     virtual QWidget * embeddedWidget();
 
-    rcc::shared_ptr<aq::Nodes::Node> m_obj;
+    rcc::shared_ptr<aq::nodes::Node> m_obj;
     std::vector<std::shared_ptr<mo::UI::qt::IParamProxy>> m_param_proxies;
     QWidget* widget = nullptr;
 protected:
@@ -90,14 +90,14 @@ public:
 class FrameGrabberProxy : public NodeProxy {
     Q_OBJECT
 public:
-    FrameGrabberProxy(rcc::shared_ptr<aq::Nodes::Node>&& obj);
-    FrameGrabberProxy(const rcc::shared_ptr<aq::Nodes::Node>& obj);
+    FrameGrabberProxy(rcc::shared_ptr<aq::nodes::Node>&& obj);
+    FrameGrabberProxy(const rcc::shared_ptr<aq::nodes::Node>& obj);
     virtual QWidget * embeddedWidget();
 public slots:
     void onSelectionChanged();
     void onSelectionChanged(int idx);
 protected:
-    rcc::shared_ptr<aq::Nodes::IFrameGrabber> m_fg;
+    rcc::shared_ptr<aq::nodes::IFrameGrabber> m_fg;
     QComboBox* selector = nullptr;
 };
 } // namespace aq

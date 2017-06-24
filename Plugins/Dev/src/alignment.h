@@ -5,7 +5,7 @@
 #include <boost/circular_buffer.hpp>
 
 namespace aq{
-namespace Nodes{
+namespace nodes{
         class TrackCameraMotion : public Node{
         public:
         protected:
@@ -13,5 +13,5 @@ namespace Nodes{
             boost::circular_buffer<TS<cv::Mat>> relative_motions;
         };
 
-} // namespace aq::Nodes
+} // namespace aq::nodes
 } // namespace a
