@@ -4,6 +4,14 @@
 #include <MetaObject/object/MetaObjectFactory.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/common.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/exceptions.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sinks.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/file.hpp>
 #include <MetaObject/MetaParameters.hpp>
 void loadDir(boost::filesystem::path path){
     boost::filesystem::directory_iterator end_itr;
@@ -39,10 +47,28 @@ int main(int argc, char *argv[])
         ("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")
         ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")
         ("file", boost::program_options::value<std::string>(), "Path to file to initialize with")
-        ("preferred_loader", boost::program_options::value<std::string>(), "Preferred loader to initialize with");
+        ("preferred_loader", boost::program_options::value<std::string>(), "Preferred loader to initialize with")
+        ("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal");
 
     boost::program_options::variables_map vm;
-
+    if (vm.count("log")) {
+        std::string verbosity = vm["log"].as<std::string>();
+        if (verbosity == "trace")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
+        if (verbosity == "debug")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
+        if (verbosity == "info")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+        if (verbosity == "warning")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning);
+        if (verbosity == "error")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error);
+        if (verbosity == "fatal")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
+    }
+    else {
+        boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+    }
     auto parsed_options = boost::program_options::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
     boost::program_options::store(parsed_options, vm);
     
