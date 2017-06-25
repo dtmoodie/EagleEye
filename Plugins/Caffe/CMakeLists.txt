@@ -69,11 +69,6 @@ if(Caffe_FOUND)
         )
     ENDIF(WIN32)
     aquila_declare_plugin(Caffe)
-    print_target_properties(caffe)
-    get_target_property(propval caffe LOCATION)
-    get_filename_component(name_ ${propval} NAME_WE)
-    message ("caffe LOCATION = ${propval} - ${name_}")
-
   else()
     message("CUDNN not found")
     message(STATUS
