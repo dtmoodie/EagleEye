@@ -118,7 +118,7 @@ macro(aquila_declare_plugin tgt)
       FILE(WRITE ${link_file_path} "${external_include_file}")
     endif()
 
-    FILE(WRITE "${CMAKE_CURRENT_LIST_DIR}/${tgt}/src/.gitignore" "Aquila\n${tgt}Export.hpp\nprecompiled.hpp")
+    FILE(WRITE "${CMAKE_CURRENT_LIST_DIR}/src/.gitignore" "Aquila\n${tgt}Export.hpp\nprecompiled.hpp\nplugin_config.cpp")
 
     INSTALL(TARGETS ${tgt}
             LIBRARY DESTINATION bin/Plugins
