@@ -3,6 +3,9 @@
 #include <MetaObject/params/ParamMacros.hpp>
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <boost/accumulators/statistics/rolling_mean.hpp>
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
@@ -13,15 +16,19 @@ namespace Nodes
     class FrameRate: public Node
     {
     public:
+        FrameRate();
         MO_DERIVE(FrameRate, Node)
             STATUS(double, framerate, 0.0)
             STATUS(mo::Time_t, frametime, {})
+            PARAM(bool, draw_fps, true)
             INPUT(SyncedMemory, input, nullptr)
+            OUTPUT(SyncedMemory, output, {})
         MO_END
     protected:
         bool processImpl();
         boost::posix_time::ptime prevTime;
         boost::optional<mo::Time_t> _previous_frame_timestamp;
+        boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::rolling_mean>>  m_framerate_rolling_mean;
     };
 
     class DetectFrameSkip: public Node
