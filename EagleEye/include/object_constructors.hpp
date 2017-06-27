@@ -4,7 +4,7 @@
 struct IObjectConstructor;
 
 namespace aq{
-    namespace Nodes{
+    namespace nodes{
         class Node;
     }
 class NodeConstructor : virtual public QtNodes::NodeDataModel {

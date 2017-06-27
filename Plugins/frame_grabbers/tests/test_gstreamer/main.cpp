@@ -32,13 +32,13 @@ BOOST_AUTO_TEST_CASE(gstreamer_construct_static)
 
 BOOST_AUTO_TEST_CASE(gstreamer_construct_dynamic)
 {
-    rcc::shared_ptr<aq::Nodes::IFrameGrabber> obj = mo::MetaObjectFactory::instance()->create("frame_grabber_gstreamer");
+    rcc::shared_ptr<aq::nodes::IFrameGrabber> obj = mo::MetaObjectFactory::instance()->create("frame_grabber_gstreamer");
     BOOST_REQUIRE(obj);
 }
 
 BOOST_AUTO_TEST_CASE(gstreamer_videotestsrc)
 {
-    auto fg = aq::Nodes::IFrameGrabber::create("videotestsrc ! appsink", "frame_grabber_gstreamer");
+    auto fg = aq::nodes::IFrameGrabber::create("videotestsrc ! appsink", "frame_grabber_gstreamer");
     BOOST_REQUIRE(fg);
     auto output = fg->getOutput("current_frame");
     mo::ITParam<aq::SyncedMemory>* typed = dynamic_cast<mo::ITParam<aq::SyncedMemory>*>(output);

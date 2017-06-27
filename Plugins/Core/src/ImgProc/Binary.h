@@ -1,7 +1,7 @@
 #include "src/precompiled.hpp"
 #include <Aquila/types/SyncedMemory.hpp>
 using namespace aq;
-using namespace ::aq::Nodes;
+using namespace ::aq::nodes;
 
 class MorphologyFilter: public Node
 {

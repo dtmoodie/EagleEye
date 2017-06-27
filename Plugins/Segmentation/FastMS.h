@@ -11,7 +11,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lfastms")
 #endif
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
 
     class FastMumfordShah : public Node

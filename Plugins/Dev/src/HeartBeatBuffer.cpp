@@ -2,7 +2,7 @@
 #include <RuntimeObjectSystem/shared_ptr.hpp>
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 #define CATCH_MACRO                                                         \
     catch (boost::thread_resource_error& err)                               \
 {                                                                           \

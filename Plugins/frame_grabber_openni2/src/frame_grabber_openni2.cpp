@@ -3,7 +3,7 @@
 #include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
 #include <MetaObject/logging/Profiling.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 int frame_grabber_openni2::canLoadPath(const std::string& document)
@@ -124,7 +124,7 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
     }
     int height = _frame.getHeight();
     int width = _frame.getWidth();
-    auto ts = _frame.getTimestamp();
+    //auto ts = _frame.getTimestamp();
     auto fn = _frame.getFrameIndex();
     int scale = 1;
     switch(_frame.getVideoMode().getPixelFormat())
@@ -144,10 +144,19 @@ void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
                 openni::CoordinateConverter::convertDepthToWorld(*_depth, j, i, ptr[j], &pt_ptr[j].val[0], &pt_ptr[j].val[1], &pt_ptr[j].val[2]);
             }
         }
-        xyz_param.updateData(XYZ, mo::tag::_timestamp = mo::Time_t(ts * mo::us), mo::tag::_frame_number = fn);
-
+        mo::Mutex_t::scoped_lock lock(*_mtx);
+        new_frame = XYZ;
         break;
     }
+}
+
+bool frame_grabber_openni2::processImpl(){
+    if(!new_frame.empty()){
+        
+        xyz_param.updateData(new_frame, mo::tag::_timestamp = mo::getCurrentTime());
+        new_frame.release();
+    }
+    return true;
 }
 
 MO_REGISTER_CLASS(frame_grabber_openni2);

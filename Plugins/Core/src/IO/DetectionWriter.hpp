@@ -7,7 +7,7 @@
 #include "MetaObject/core/detail/ConcurrentQueue.hpp"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
 enum Extension{
     jpg,

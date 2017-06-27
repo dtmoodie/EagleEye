@@ -7,7 +7,7 @@
 #include <boost/lexical_cast.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 void LegendDisplay::click_left(std::string window_name, cv::Point pt, int, cv::Mat)
 {

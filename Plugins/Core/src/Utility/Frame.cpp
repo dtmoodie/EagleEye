@@ -7,7 +7,7 @@
 #include <opencv2/highgui.hpp>
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 FrameRate::FrameRate():

@@ -11,7 +11,7 @@
 #include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
@@ -73,7 +73,7 @@ bool caffe_solver::processImpl()
 
             for(int i = 0; i < input_blobs_.size(); ++i)
             {
-                auto wrapped_blob = aq::Nodes::CaffeBase::WrapBlob(*input_blobs_[i]);
+                auto wrapped_blob = aq::nodes::CaffeBase::WrapBlob(*input_blobs_[i]);
                 input_blobs[input_names[i]] = wrapped_blob;
             }
             input_blobs_param.emitUpdate();

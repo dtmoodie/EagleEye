@@ -28,7 +28,7 @@
 extern "C" Caffe_EXPORT void InitModule();
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class Caffe_EXPORT CaffeBase : public Node
         {

@@ -2,7 +2,7 @@
 #include <caffe/blob.hpp>
 #include <Aquila/rcc/external_includes/cv_imgproc.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 
@@ -109,5 +109,5 @@ bool caffe_input_populator::pre_check(const TS<SyncedMemory>& input)
     return true;
 }
 
-static aq::Nodes::NodeInfo g_registerer_caffe_input_populator("caffe_input_populator", { "caffe"});
+static aq::nodes::NodeInfo g_registerer_caffe_input_populator("caffe_input_populator", { "caffe"});
 REGISTERCLASS(caffe_input_populator, &g_registerer_caffe_input_populator);*/

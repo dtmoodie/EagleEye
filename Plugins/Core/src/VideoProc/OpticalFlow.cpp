@@ -1,12 +1,12 @@
 #include "OpticalFlow.h"
-//#include "Aquila/Nodes/VideoProc/Tracking.hpp"
+//#include "Aquila/nodes/VideoProc/Tracking.hpp"
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
 #include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 #if __linux
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_core -lopencv_cudaoptflow")

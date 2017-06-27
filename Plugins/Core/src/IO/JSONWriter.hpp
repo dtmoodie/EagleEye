@@ -5,7 +5,7 @@
 #include <fstream>
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class JSONWriter: public Node
         {

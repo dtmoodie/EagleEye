@@ -9,7 +9,7 @@ NodeConstructor::NodeConstructor(IObjectConstructor* constructor) : m_constructo
 QString NodeConstructor::caption() const { return m_constructor->GetName(); }
 QString NodeConstructor::name() const { return caption(); }
 std::unique_ptr<QtNodes::NodeDataModel> NodeConstructor::clone() const {
-    rcc::shared_ptr<aq::Nodes::Node> node(m_constructor->Construct());
+    rcc::shared_ptr<aq::nodes::Node> node(m_constructor->Construct());
     node->Init(true);
     return std::unique_ptr<QtNodes::NodeDataModel>(new NodeProxy(std::move(node)));
 }
@@ -54,7 +54,7 @@ std::unique_ptr<QtNodes::NodeDataModel> DataStreamConstructor::clone() const {
 QtNodes::NodeDataType DataStreamConstructor::dataType(QtNodes::PortType port_type, QtNodes::PortIndex port_index) const {
     QtNodes::NodeDataType output;
     if (port_type == QtNodes::PortType::Out) {
-        output.id = "aq::Nodes::Node";
+        output.id = "aq::nodes::Node";
         output.name = "children";
     }
     return output;
@@ -75,7 +75,7 @@ QWidget * DataStreamConstructor::embeddedWidget() {
 
 FrameGrabberConstructor::FrameGrabberConstructor(IObjectConstructor* constructor) : NodeConstructor(constructor) {}
 std::unique_ptr<QtNodes::NodeDataModel> FrameGrabberConstructor::clone() const {
-    rcc::shared_ptr<aq::Nodes::Node> node(m_constructor->Construct());
+    rcc::shared_ptr<aq::nodes::Node> node(m_constructor->Construct());
     node->Init(true);
     return std::unique_ptr<QtNodes::NodeDataModel>(new FrameGrabberProxy(std::move(node)));
 }

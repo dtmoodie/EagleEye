@@ -5,7 +5,7 @@
 
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool GrabberImage::loadData(const std::string& path)
 {

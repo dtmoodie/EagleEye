@@ -6,7 +6,7 @@
 
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
     // Initial implementaiton of birds eye view transform from
     // https://arxiv.org/pdf/1611.07759.pdf

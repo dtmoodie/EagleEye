@@ -9,7 +9,7 @@
 
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool QtImageDisplay::processImpl()
 {
@@ -133,10 +133,6 @@ bool OGLImageDisplay::processImpl()
     {
         PROFILE_RANGE(imshow);
         getDataStream()->getWindowCallbackManager()->imshowd(name, gpumat, cv::WINDOW_OPENGL);
-        if(ts)
-        {
-            //std::cout << *ts - *prev  << std::endl;
-        }
     }, gui_thread_id, stream());
     _prev_time = ts;
     return true;

@@ -4,7 +4,7 @@
 #include <opencv2/cudaarithm.hpp>
 
 #include <iostream>
-using namespace aq::Nodes;
+using namespace aq::nodes;
 using namespace cv;
 
 

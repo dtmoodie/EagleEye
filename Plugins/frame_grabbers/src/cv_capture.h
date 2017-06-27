@@ -9,7 +9,7 @@
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class GrabberCV : public IGrabber
         {

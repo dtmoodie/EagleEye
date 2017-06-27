@@ -10,7 +10,7 @@
 #include <MetaObject/object/detail/MetaObjectMacros.hpp>
 
 namespace aq{
-    namespace Nodes{
+    namespace nodes{
     class OtsuThreshold: public Node
     {
     public:

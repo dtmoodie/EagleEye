@@ -4,7 +4,7 @@
 #include <MetaObject/object/MetaObject.hpp>
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class track_camera_motion : public Node
         {

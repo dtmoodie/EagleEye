@@ -9,7 +9,7 @@
 #include "Aquila/utilities/cuda/CudaUtils.hpp"
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class StereoBase: public Node
         {

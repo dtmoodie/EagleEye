@@ -19,7 +19,7 @@ namespace cuda
 }
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
     class QtImageDisplay: public Node
     {
@@ -100,5 +100,5 @@ namespace Nodes
     protected:
         bool processImpl();
     };
-} // namespace Nodes
+} // namespace nodes
 } // namespace aq

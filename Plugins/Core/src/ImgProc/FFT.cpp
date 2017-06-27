@@ -3,7 +3,7 @@
 
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool FFT::processImpl()
 {

@@ -4,7 +4,7 @@
 #include "CaffeExport.hpp"
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class Caffe_EXPORT caffe_input_populator: public Node
         {

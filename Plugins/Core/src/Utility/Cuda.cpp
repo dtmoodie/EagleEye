@@ -6,7 +6,7 @@
 
 /*RUNTIME_COMPILER_LINKLIBRARY("-lcudart")
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 void SetDevice::nodeInit(bool firstInit)
 {

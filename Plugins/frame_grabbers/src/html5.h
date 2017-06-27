@@ -4,7 +4,7 @@
 #include "frame_grabbersExport.hpp"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
     
     class frame_grabbers_EXPORT GrabberHTML : public GrabberGstreamer

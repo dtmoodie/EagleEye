@@ -3,7 +3,7 @@
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
     /*class frame_grabber_directory: public IFrameGrabber
     {

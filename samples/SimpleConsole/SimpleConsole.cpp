@@ -97,7 +97,7 @@ std::string printParam(mo::IParam* param) {
     return ss.str();
 }
 
-void PrintNodeTree(aq::Nodes::Node* node, int depth) {
+void PrintNodeTree(aq::nodes::Node* node, int depth) {
     if (!node)
         return;
     for (int i = 0; i < depth; ++i) {
@@ -117,7 +117,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<std::string>& strs)
     return os;
 }
 
-void PrintBuffers(aq::Nodes::Node* node, std::vector<std::string>& printed_nodes) {
+void PrintBuffers(aq::nodes::Node* node, std::vector<std::string>& printed_nodes) {
     std::string name = node->getTreeName();
     if (std::find(printed_nodes.begin(), printed_nodes.end(), name) != printed_nodes.end()) {
         return;
@@ -232,6 +232,9 @@ int main(int argc, char* argv[]) {
     currentDate << std::setfill('0') << std::setw(2) << timeLocal.time_of_day().hours() << std::setfill('0') << std::setw(2) << timeLocal.time_of_day().minutes();
     replace_map["${hour}"] = currentDate.str();
     replace_map["${pid}"] = boost::lexical_cast<std::string>(boost::log::aux::this_process::get_id());
+    if(vm.count("config")){
+        replace_map["${config_file_dir}"] = boost::filesystem::path(vm["config"].as<std::string>()).parent_path().string();
+    }
     for (auto& option : unrecognized) {
         auto pos = option.find(":=");
         if (pos != std::string::npos) {
@@ -303,7 +306,7 @@ int main(int argc, char* argv[]) {
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
     }
     boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
-#if _MSC_VER
+#ifdef _MSC_VER
 #ifdef _DEBUG
     mo::MetaObjectFactory::instance()->loadPlugin("aquila_guid.dll");
     mo::MetaObjectFactory::instance()->loadPlugin("aquila_cored.dll");
@@ -347,6 +350,7 @@ int main(int argc, char* argv[]) {
             try {
                 mo::ThreadSpecificQueue::run();
             } catch (boost::thread_interrupted& err) {
+                (void)err;
                 break;
             } catch (...) {
                 LOG(debug) << "Unknown / unhandled exception thrown in gui thread event handler";
@@ -355,9 +359,10 @@ int main(int argc, char* argv[]) {
                 //cv::waitKey(1);
                 aq::WindowCallbackHandler::EventLoop::Instance()->run();
             } catch (mo::ExceptionWithCallStack<cv::Exception>& e) {
+                (void)e;
 
             } catch (cv::Exception& e) {
-
+                (void)e;
             } catch (boost::thread_interrupted& err) {
                 break;
             } catch (...) {
@@ -389,7 +394,7 @@ int main(int argc, char* argv[]) {
     } else {
         std::vector<rcc::shared_ptr<aq::IDataStream> > _dataStreams;
         rcc::weak_ptr<aq::IDataStream>                 current_stream;
-        rcc::weak_ptr<aq::Nodes::Node>                 current_node;
+        rcc::weak_ptr<aq::nodes::Node>                 current_node;
         mo::IParam*                                    current_param = nullptr;
 
         auto print_options = []() -> void {
@@ -437,10 +442,10 @@ int main(int argc, char* argv[]) {
             std::bind([&documents_list](std::string null) -> void {
                        (void)null;
                 documents_list.clear();
-                auto constructors = mo::MetaObjectFactory::instance()->getConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
+                auto constructors = mo::MetaObjectFactory::instance()->getConstructors(aq::nodes::IFrameGrabber::s_interfaceID);
                 int  index        = 0;
                 for (auto constructor : constructors) {
-                    auto fg_info = dynamic_cast<aq::Nodes::IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
+                    auto fg_info = dynamic_cast<aq::nodes::IFrameGrabber::InterfaceInfo*>(constructor->GetObjectInfo());
                     if (fg_info) {
                         auto documents = fg_info->listLoadablePaths();
                         for (auto& document : documents) {
@@ -489,7 +494,7 @@ int main(int argc, char* argv[]) {
                 for (auto& itr : _dataStreams) {
                     auto fgs = itr->getTopLevelNodes();
                     for (auto& fg : fgs) {
-                        if (auto frame_grabber = fg.DynamicCast<aq::Nodes::IFrameGrabber>()) {
+                        if (auto frame_grabber = fg.DynamicCast<aq::nodes::IFrameGrabber>()) {
                             std::cout << " - " << frame_grabber->GetPerTypeId() << " - " << frame_grabber->loaded_document << "\n";
                         } else {
                         }
@@ -528,7 +533,7 @@ int main(int argc, char* argv[]) {
                 if (current_stream) {
                     auto fgs = current_stream->getTopLevelNodes();
                     for (auto& fg : fgs) {
-                        if (auto f_g = fg.DynamicCast<aq::Nodes::IFrameGrabber>()) {
+                        if (auto f_g = fg.DynamicCast<aq::nodes::IFrameGrabber>()) {
                             std::cout << " - Datasource: " << f_g->loaded_document << "\n";
                         }
                     }
@@ -585,14 +590,6 @@ int main(int argc, char* argv[]) {
             }
             if (what == "projects") {
                 THROW(debug) << "Needs to be reimplemented";
-                //auto project_count = aq::ObjectManager::Instance().getProjectCount();
-                /*std::stringstream ss;
-                ss << "\n";
-                for(int i = 0; i < project_count; ++i)
-                {
-                    ss << i << " - " << aq::ObjectManager::Instance().getProjectName(i) << "\n";
-                }
-                std::cout << ss.str() << std::endl;*/
             }
             if (what == "plugins") {
                 auto              plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins();
@@ -671,35 +668,18 @@ int main(int argc, char* argv[]) {
             std::placeholders::_1));
         _slots.emplace_back(slot);
         connections.push_back(manager.connect(slot, "save"));
-        
-        /*std::vector<std::shared_ptr<mo::ParamMonitor>> monitors;
-        slot = new mo::TSlot<void(std::string)>(std::bind(
-                                                   [&current_param, &monitors](std::string null){
-                                                   (void)null;
-                                                   if(current_param){
-                                                       monitors.emplace_back(new mo::ParamMonitor(std::cout, current_param));
-                                                   }
-                                               }, std::placeholders::_1));
-        _slots.emplace_back(slot);
-        connections.push_back(manager.connect(slot, "monitor"));*/
-        
-        slot = new mo::TSlot<void(std::string)>(std::bind([](std::string null) {
-            //mo::InitProfiling();
-        },
-                                                          std::placeholders::_1));
-        _slots.emplace_back(slot);
-        connections.push_back(manager.connect(slot, "profile"));
 
         bool              quit_on_eos = vm["quit-on-eos"].as<bool>();
         mo::TSlot<void()> eos_slot(std::bind([]() {
             LOG_FIRST_N(info, 1) << "End Of Stream received, shutting down";
             quit = true;
         }));
+        
         std::vector<std::shared_ptr<mo::Connection> > eos_connections;
         slot = new mo::TSlot<void(std::string)>(
             std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file) {
+                replace_map["${config_file_dir}"] = boost::filesystem::path(file).parent_path().string();
                 auto streams = aq::IDataStream::load(file, variable_replace_map, replace_map);
-
                 if (streams.size()) {
                     for (auto& stream : streams) {
                         stream->startThread();
@@ -1098,15 +1078,14 @@ int main(int argc, char* argv[]) {
             } else if (current_stream) {
             }
             std::cout << "Unable to set value to " << value << std::endl;
-        },
-                                                          std::placeholders::_1));
+        },std::placeholders::_1));
+
         connections.push_back(manager.connect(slot, "set"));
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node](std::string name) {
             if (current_node) {
                 current_node->setTreeName(name);
             }
-        },
-                                                          std::placeholders::_1));
+        },std::placeholders::_1));
         connections.push_back(manager.connect(slot, "rename"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node, &current_stream](std::string name) {
@@ -1153,46 +1132,9 @@ int main(int argc, char* argv[]) {
                 return;
             }
             THROW(debug) << "Signal serialization needs to be reimplemented";
-            /*auto proxy = Signals::serialization::text::factory::instance()->get_proxy(signals[idx]);
-            if(proxy)
-            {
-                proxy->send(signals[idx], "");
-                delete proxy;
-            }*/
-        },
-                                                          std::placeholders::_1));
+        },std::placeholders::_1));
         connections.push_back(manager.connect(slot, "emit"));
 
-#ifdef HAVE_WT
-        /*boost::thread web_thread;
-        slot = new mo::TSlot<void(std::string)>(std::bind(
-            [&current_stream, &web_thread, argc, argv](std::string null) -> void {
-                if (current_stream) {
-                    rcc::shared_ptr<vclick::WebSink> sink = current_stream->getNode("WebSink0");
-                    if (!sink) {
-                        sink = rcc::shared_ptr<vclick::WebSink>::create();
-                        current_stream->addNode(sink);
-                        auto fg = current_stream->getNode("frame_grabber_openni20");
-                        sink->connectInput(fg, fg->getParam("current_frame"), sink->getInput("point_cloud"));
-
-                        auto foreground_estimator = current_stream->getNode("ForegroundEstimate0");
-                        sink->connectInput(foreground_estimator, foreground_estimator->getParam("point_mask"),
-                                           sink->getInput("foreground_mask"));
-
-                        sink->connectInput(foreground_estimator, foreground_estimator->getParam("background_model"),
-                                           sink->getInput("background_model"));
-                    }
-
-                    web_thread = boost::thread(std::bind(
-                        [argc, argv, sink]() -> void {
-                            vclick::WebUi::StartServer(argc, argv, sink);
-                        }));
-                }
-            },
-            std::placeholders::_1));
-
-        connections.push_back(manager.connect(slot, "web-ui"));*/
-#endif
         slot = new mo::TSlot<void(std::string)>(std::bind(
             [](std::string level) {
                 if (level == "trace")
@@ -1219,15 +1161,13 @@ int main(int argc, char* argv[]) {
                     directory = directory.substr(pos + 1);
                 }
                 mo::MetaObjectFactory::instance()->getObjectSystem()->AddLibraryDir(directory.c_str(), static_cast<unsigned short>(idx));
-            },
-            std::placeholders::_1));
+            }, std::placeholders::_1));
 
         connections.push_back(manager.connect(slot, "link"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([](std::string ms) {
             boost::this_thread::sleep_for(boost::chrono::milliseconds(boost::lexical_cast<int>(ms)));
-        },
-                                                          std::placeholders::_1));
+        }, std::placeholders::_1));
 
         connections.push_back(manager.connect(slot, "wait"));
 
@@ -1246,11 +1186,11 @@ int main(int argc, char* argv[]) {
             } else {
                 LOG(warning) << "Unable to load scripting file: " << filename;
             }
+        }, std::placeholders::_1));
 
-        },
-                                                          std::placeholders::_1));
         connections.push_back(manager.connect(slot, "run"));
         if (vm.count("config")) {
+            LOG(info) << "Loading " << vm["config"].as<std::string>();
             std::stringstream ss;
             ss << "load " << vm["config"].as<std::string>();
             command_list.emplace_back(ss.str());

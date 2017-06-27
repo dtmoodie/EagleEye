@@ -13,7 +13,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lfastms")
 #endif
 #endif
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 

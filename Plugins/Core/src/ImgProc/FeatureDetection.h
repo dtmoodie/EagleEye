@@ -1,6 +1,6 @@
 
 #include "src/precompiled.hpp"
-//#include "Aquila/Nodes/VideoProc/Tracking.hpp"
+//#include "Aquila/nodes/VideoProc/Tracking.hpp"
 #include "Aquila/rcc/external_includes/cv_cudafeatures2d.hpp"
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -8,7 +8,7 @@ RUNTIME_MODIFIABLE_INCLUDE
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class GoodFeaturesToTrack : public Node
         {

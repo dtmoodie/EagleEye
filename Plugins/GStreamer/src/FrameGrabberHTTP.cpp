@@ -2,7 +2,7 @@
 #include "Aquila/framegrabbers/FrameGrabberInfo.hpp"
 #include <gst/base/gstbasesink.h>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 int FrameGrabberHTTP::canLoad(const std::string& doc)
 {

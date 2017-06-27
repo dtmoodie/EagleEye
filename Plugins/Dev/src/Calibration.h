@@ -7,7 +7,7 @@ namespace aq
 {
     typedef std::vector<cv::Point2f> ImagePoints;
     typedef std::vector<cv::Point3f> ObjectPoints;
-    namespace Nodes
+    namespace nodes
     {
         class FindCheckerboard : public Node
         {

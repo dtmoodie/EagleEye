@@ -4,7 +4,7 @@
 #include <opencv2/cudawarping.hpp>
 #include "opencv2/imgproc.hpp"
 
-using namespace aq::Nodes;
+using namespace aq::nodes;
 bool Flip::processImpl()
 {
     auto state = input->getSyncState();

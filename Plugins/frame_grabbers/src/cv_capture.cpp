@@ -6,7 +6,7 @@
 RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
 #endif
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 
@@ -212,26 +212,20 @@ void GrabberCamera::listPaths(std::vector<std::string>& paths)
 int GrabberCamera::canLoad(const std::string& doc)
 {
     auto pos = doc.find(" - ");
-    if (pos != std::string::npos)
-    {
+    if (pos != std::string::npos){
         int index = 0;
-        if (boost::conversion::detail::try_lexical_convert(doc.substr(pos), index))
-        {
+        if (boost::conversion::detail::try_lexical_convert(doc.substr(0, pos), index)){
             return 10;
         }
-    }
-    else
-    {
+    }else{
         int index = 0;
-        if (boost::conversion::detail::try_lexical_convert(doc, index))
-        {
+        if (boost::conversion::detail::try_lexical_convert(doc, index)){
             return 10;
         }
     }
     std::vector<std::string> cameras;
     listPaths(cameras);
-    for (const auto& camera : cameras)
-    {
+    for (const auto& camera : cameras){
         if (camera == doc)
             return 10;
     }

@@ -5,7 +5,7 @@
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class HistogramEqualization: public Node
         {

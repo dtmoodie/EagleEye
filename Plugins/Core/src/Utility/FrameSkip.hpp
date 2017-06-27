@@ -4,7 +4,7 @@
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class FrameSkip: public Node
         {

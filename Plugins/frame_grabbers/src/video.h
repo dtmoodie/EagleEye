@@ -3,7 +3,7 @@
 #include "cv_capture.h"
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
     /*class frame_grabber_video : public frame_grabber_cv
     {

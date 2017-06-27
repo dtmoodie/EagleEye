@@ -116,7 +116,7 @@ GstFlowReturn JpegKeyframer::on_pull()
 
 MO_REGISTER_CLASS(JpegKeyframer);
 
-using namespace aq::Nodes;
+using namespace aq::nodes;
 bool GstreamerSink::processImpl()
 {
     if(pipeline_param.modified() && !image->empty())

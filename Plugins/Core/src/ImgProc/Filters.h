@@ -8,7 +8,7 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
 
     class Sobel: public Node

@@ -6,7 +6,7 @@
 #include <fstream>
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 bool Scale::processImpl()
 {

@@ -9,7 +9,7 @@
 #include "CaffeExport.hpp"
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class Caffe_EXPORT caffe_solver: public Node
         {

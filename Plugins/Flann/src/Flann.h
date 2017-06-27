@@ -20,19 +20,19 @@ RUNTIME_COMPILER_LINKLIBRARY("flann_cuda_s.lib")
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class ForegroundEstimate : public Node
         {
         public:
             MO_DERIVE(ForegroundEstimate, Node)
                 INPUT(SyncedMemory, input_point_cloud, nullptr)
-                APPEND_FLAGS(input_point_cloud, mo::Sync_e)
                 PARAM(float, radius, 5.0)
                 PARAM(float, epsilon, 1.0)
                 PARAM(int, checks, -1)
                 PARAM(bool, build_model, false)
                 OUTPUT(SyncedMemory, background_model, SyncedMemory())
+                APPEND_FLAGS(background_model, mo::Unstamped_e)
                 OUTPUT(SyncedMemory, index, SyncedMemory())
                 OUTPUT(SyncedMemory, distance, SyncedMemory())
                 OUTPUT(SyncedMemory, point_mask, SyncedMemory())

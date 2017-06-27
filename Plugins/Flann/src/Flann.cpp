@@ -6,12 +6,12 @@
 #include <MetaObject/Logging/Profiling.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_imgproc.hpp>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 void ForegroundEstimate::BuildModel(cv::cuda::GpuMat& tensor, cv::cuda::Stream& stream)
 {
