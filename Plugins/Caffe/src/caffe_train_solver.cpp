@@ -116,7 +116,7 @@ bool caffe_solver::processImpl()
 }
 
 /*caffe_network::caffe_network():
-    Nodes::Node()
+    nodes::Node()
 {
 
 }

@@ -10,7 +10,8 @@ namespace aq
         public:
             static std::map<int, int> CanHandleNetwork(const caffe::Net<float>& net);
             MO_DERIVE(SSDHandler, NetHandler)
-                PARAM(std::vector<float>, detection_threshold, {0.75})
+                PARAM(std::vector<float>, detection_threshold, {0.75f})
+                PARAM(float, overlap_threshold, 0.2f)
                 OUTPUT(std::vector<DetectedObject>, detections, std::vector<DetectedObject>())
                 STATUS(int, num_detections, 0)
             MO_END
