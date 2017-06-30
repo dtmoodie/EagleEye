@@ -17,6 +17,7 @@
 #include <MetaObject/params/buffers/IBuffer.hpp>
 #include <MetaObject/serialization/SerializationFactory.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
+#include <MetaObject/thread/BoostThread.hpp>
 //#include <MetaObject/serialization/ParamMonitor.hpp>
 #include <RuntimeObjectSystem/RuntimeObjectSystem.h>
 
@@ -105,7 +106,7 @@ void PrintNodeTree(aq::nodes::Node* node, int depth) {
     }
     std::cout << node->getTreeName() << std::endl;
     auto children = node->getChildren();
-    for (int i = 0; i < children.size(); ++i) {
+    for (size_t i = 0; i < children.size(); ++i) {
         PrintNodeTree(children[i].get(), depth + 1);
     }
 }
@@ -370,6 +371,7 @@ int main(int argc, char* argv[]) {
         }
         LOG(info) << "Gui thread shutting down naturally";
     });
+    mo::setThreadName(gui_thread, "Gui-thread");
     mo::RelayManager manager;
 
     if (vm.count("plugins")) {
@@ -688,8 +690,9 @@ int main(int argc, char* argv[]) {
                             stream->getRelayManager()->connect(&eos_slot, "eos");
                         }
                     }
+                    std::cout << "Load of " << file << " complete" << std::endl;;
                 } else {
-                    std::cout << "Load of " << file << " failed";
+                    std::cout << "Load of " << file << " failed" << std::endl;;
                 }
             },
                       std::placeholders::_1));
@@ -1318,6 +1321,7 @@ int main(int argc, char* argv[]) {
 
                 std::cout << "IO thread shutting down\n";
             }));
+        mo::setThreadName(io_thread, "io-thread");
         boost::posix_time::ptime last_compile_check_time = boost::posix_time::microsec_clock::universal_time();
 
         signal(SIGINT, sig_handler);
