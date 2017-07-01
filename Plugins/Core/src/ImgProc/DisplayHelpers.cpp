@@ -40,12 +40,20 @@ bool DrawDetections::processImpl()
     if(colors.size() != labels->size())
     {
         colors.resize(labels->size());
-        for(int i = 0; i < colors.size(); ++i)
-        {
-            colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
+        if(colormap.size() == labels->size()){
+            for(int i = 0; i < labels->size(); ++i){
+                colors[i] = colormap[(*labels)[i]];
+            }
+        }else{
+            for(int i = 0; i < colors.size(); ++i)
+            {
+                colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
+                colormap[(*labels)[i]] = colors[i];
+            }
+            cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
+            cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
         }
-        cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
-        cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
+
     }
     cv::cuda::GpuMat draw_image;
     image->clone(draw_image, stream());
@@ -106,7 +114,7 @@ bool DrawDetections::processImpl()
 
         }
     }
-    image_with_detections_param.updateData(draw_image, image_param.getTimestamp(), _ctx.get());
+    output_param.updateData(draw_image, image_param.getTimestamp(), _ctx.get());
     return true;
 }
 

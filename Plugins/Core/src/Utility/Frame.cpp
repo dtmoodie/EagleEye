@@ -3,17 +3,26 @@
 #include "Aquila/rcc/external_includes/cv_cudaarithm.hpp"
 #include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
 
 using namespace aq;
 using namespace aq::nodes;
 
 
-bool FrameRate::processImpl()
-{
+FrameRate::FrameRate():
+    m_framerate_rolling_mean(boost::accumulators::tag::rolling_window::window_size = 30){
+    
+}
+
+bool FrameRate::processImpl(){
     boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta = currentTime - prevTime;
     prevTime = currentTime;
-    framerate_param.updateData(1000.0 / (double)delta.total_milliseconds());
+    double inst_frame_rate = 1000.0 / static_cast<double>(delta.total_milliseconds());
+    m_framerate_rolling_mean(inst_frame_rate);
+    double mean_fr = boost::accumulators::rolling_mean(m_framerate_rolling_mean);
+    framerate_param.updateData(mean_fr);
     auto ts = input_param.getTimestamp();
     if(ts && _previous_frame_timestamp)
     {
@@ -22,6 +31,27 @@ bool FrameRate::processImpl()
         frametime_param.emitUpdate(input_param);
     }
     _previous_frame_timestamp = input_param.getTimestamp();
+    if(draw_fps && output_param.hasSubscriptions()){
+        cv::Mat draw_roi(25, 100, input->getType());
+        draw_roi.setTo(cv::Scalar::all(0));
+        std::stringstream ss;
+        ss << std::setprecision(4) << mean_fr;
+        cv::putText(draw_roi, ss.str(), cv::Point(0, 23), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(0,255,0));
+        SyncedMemory::SYNC_STATE state = input->getSyncState();
+        if(state == SyncedMemory::HOST_UPDATED){
+            cv::Mat draw_img;
+            input->clone(draw_img, stream());
+            draw_roi.copyTo(draw_img(cv::Rect(cv::Point(0,0), cv::Size(100, 25))));
+            output_param.updateData(draw_img, mo::tag::_param = input_param, mo::tag::_context = _ctx.get());
+        }else{
+            cv::cuda::GpuMat draw_gpu;
+            draw_gpu.upload(draw_roi, stream());
+            cv::cuda::GpuMat draw_img;
+            input->clone(draw_img, stream());
+            draw_gpu.copyTo(draw_img(cv::Rect(cv::Point(0,0), cv::Size(100, 25))), stream());
+            output_param.updateData(draw_img, mo::tag::_param = input_param, mo::tag::_context = _ctx.get());
+        }
+    }
     return true;
 }
 MO_REGISTER_CLASS(FrameRate)

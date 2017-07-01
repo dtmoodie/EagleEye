@@ -17,6 +17,8 @@
 #include <MetaObject/params/buffers/IBuffer.hpp>
 #include <MetaObject/serialization/SerializationFactory.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
+#include <MetaObject/thread/BoostThread.hpp>
+//#include <MetaObject/serialization/ParamMonitor.hpp>
 #include <RuntimeObjectSystem/RuntimeObjectSystem.h>
 
 #include <boost/date_time.hpp>
@@ -32,6 +34,7 @@
 #include <boost/program_options.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/version.hpp>
+#include <boost/asio.hpp>
 #include <signal.h> // SIGINT, etc
 
 #include "Aquila/rcc/SystemTable.hpp"
@@ -101,7 +104,7 @@ void PrintNodeTree(aq::nodes::Node* node, int depth) {
     }
     std::cout << node->getTreeName() << std::endl;
     auto children = node->getChildren();
-    for (int i = 0; i < children.size(); ++i) {
+    for (size_t i = 0; i < children.size(); ++i) {
         PrintNodeTree(children[i].get(), depth + 1);
     }
 }
@@ -219,6 +222,18 @@ int main(int argc, char* argv[]) {
     auto unrecognized = boost::program_options::collect_unrecognized(parsed_options.options, boost::program_options::include_positional);
     std::map<std::string, std::string> replace_map;
     std::map<std::string, std::string> variable_replace_map;
+    std::stringstream currentDate;
+    boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
+    currentDate << timeLocal.date().year() << "-" << std::setfill('0') << std::setw(2) << timeLocal.date().month().as_number() << "-" << std::setfill('0') << std::setw(2) << timeLocal.date().day().as_number();
+    replace_map["${date}"] = currentDate.str();
+    replace_map["${hostname}"] = boost::asio::ip::host_name();
+    currentDate.str(std::string());
+    currentDate << std::setfill('0') << std::setw(2) << timeLocal.time_of_day().hours() << std::setfill('0') << std::setw(2) << timeLocal.time_of_day().minutes();
+    replace_map["${hour}"] = currentDate.str();
+    replace_map["${pid}"] = boost::lexical_cast<std::string>(boost::log::aux::this_process::get_id());
+    if(vm.count("config")){
+        replace_map["${config_file_dir}"] = boost::filesystem::path(vm["config"].as<std::string>()).parent_path().string();
+    }
     for (auto& option : unrecognized) {
         auto pos = option.find(":=");
         if (pos != std::string::npos) {
@@ -256,7 +271,7 @@ int main(int argc, char* argv[]) {
         LOG(debug) << "Input variable replacements: " << ss.str();
     }
 
-    if (vm["profile"].as<bool>()) {
+    if (vm["profile"].as<bool>() || vm.count("profile-for")) {
         mo::initProfiling();
     }
     cv::cuda::setDevice(vm["gpu"].as<int>());
@@ -290,7 +305,7 @@ int main(int argc, char* argv[]) {
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
     }
     boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
-#if _MSC_VER
+#ifdef _MSC_VER
 #ifdef _DEBUG
     mo::MetaObjectFactory::instance()->loadPlugin("aquila_guid.dll");
     mo::MetaObjectFactory::instance()->loadPlugin("aquila_cored.dll");
@@ -354,6 +369,7 @@ int main(int argc, char* argv[]) {
         }
         LOG(info) << "Gui thread shutting down naturally";
     });
+    mo::setThreadName(gui_thread, "Gui-thread");
     mo::RelayManager manager;
 
     if (vm.count("plugins")) {
@@ -658,11 +674,12 @@ int main(int argc, char* argv[]) {
             LOG_FIRST_N(info, 1) << "End Of Stream received, shutting down";
             quit = true;
         }));
+        
         std::vector<std::shared_ptr<mo::Connection> > eos_connections;
         slot = new mo::TSlot<void(std::string)>(
             std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file) {
+                replace_map["${config_file_dir}"] = boost::filesystem::path(file).parent_path().string();
                 auto streams = aq::IDataStream::load(file, variable_replace_map, replace_map);
-
                 if (streams.size()) {
                     for (auto& stream : streams) {
                         stream->startThread();
@@ -671,8 +688,9 @@ int main(int argc, char* argv[]) {
                             stream->getRelayManager()->connect(&eos_slot, "eos");
                         }
                     }
+                    std::cout << "Load of " << file << " complete" << std::endl;;
                 } else {
-                    std::cout << "Load of " << file << " failed";
+                    std::cout << "Load of " << file << " failed" << std::endl;;
                 }
             },
                       std::placeholders::_1));
@@ -1194,7 +1212,7 @@ int main(int argc, char* argv[]) {
 
         print_options();
         bool compiling   = false;
-        bool rcc_enabled = !vm["disable-rcc"].as<bool>();
+        bool rcc_enabled = !vm["disable-rcc"].as<bool>() && (vm.count("profile-for") == 0);
         if (rcc_enabled)
             mo::MetaObjectFactory::instance()->checkCompile();
         auto compile_check_function = [&_dataStreams, &compiling, rcc_enabled]() {
@@ -1233,7 +1251,7 @@ int main(int argc, char* argv[]) {
                                                           std::placeholders::_1));
         connections.push_back(manager.connect(slot, "rcc"));
 
-        bool disable_input = vm["disable-input"].as<bool>();
+        bool disable_input = vm["disable-input"].as<bool>() || vm.count("profile-for");
         auto io_func       = [&command_list, &manager, &print_options, disable_input]() {
             std::string command_line;
             bool        skip = (command_list.size() == 0) && disable_input;
@@ -1301,6 +1319,7 @@ int main(int argc, char* argv[]) {
 
                 std::cout << "IO thread shutting down\n";
             }));
+        mo::setThreadName(io_thread, "io-thread");
         boost::posix_time::ptime last_compile_check_time = boost::posix_time::microsec_clock::universal_time();
 
         signal(SIGINT, sig_handler);
@@ -1323,6 +1342,9 @@ int main(int argc, char* argv[]) {
         LOG(info) << "Thread pool cleanup complete";
         delete g_allocator;
         mo::Allocator::cleanupThreadSpecificAllocator();
+        LOG(info) << "Cleaning up singletons";
+        table.cleanUp();
+        std::cout << "Program exiting" << std::endl;
         return 0;
     }
     gui_thread.interrupt();
@@ -1332,5 +1354,8 @@ int main(int argc, char* argv[]) {
     mo::ThreadPool::Instance()->Cleanup();
     LOG(info) << "Thread pool cleanup complete";
     delete g_allocator;
+    table.cleanUp();
+    std::cout << "Program exiting" << std::endl;
+    std::cout << "Program exiting" << std::endl;
     return 0;
 }

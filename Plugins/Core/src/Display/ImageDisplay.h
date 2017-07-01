@@ -1,7 +1,7 @@
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/types/Stamped.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
-#include "../CoreExport.hpp"
+#include "CoreExport.hpp"
 
 namespace cv
 {

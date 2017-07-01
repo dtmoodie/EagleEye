@@ -28,3 +28,6 @@
   RUNTIME_COMPILER_LINKLIBRARY("-l@PLUGIN_NAME@d")
 #endif
 #endif
+
+extern "C" @PLUGIN_NAME@_EXPORT const char* getPluginBuildInfo();
+

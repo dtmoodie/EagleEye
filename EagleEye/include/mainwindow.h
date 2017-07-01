@@ -32,13 +32,17 @@ public:
         this->sm = sm; this->vm = vm;
         _graph_scene->setVmSm(vm, sm);
     }
-
+signals:
+    void sigCallbackAdded();
 private slots:
     void on_action_load_triggered();
 
     void on_action_save_triggered();
-
+    void handleGuiCallback();
 protected:
+    // called from non gui thread
+    void onGuiPush();
+    
     GraphScene* _graph_scene;
     Ui::MainWindow* ui;
     std::map<std::string, std::string>* sm = nullptr;

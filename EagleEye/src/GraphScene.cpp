@@ -8,7 +8,9 @@
 #include "Aquila/serialization/cereal/JsonArchive.hpp"
 #include "object_proxies.hpp"
 #include "MetaObject/serialization/cereal_map.hpp"
+#include <boost/asio.hpp>
 
+#include <boost/log/attributes.hpp>
 #include <fstream>
 
 namespace cereal{
@@ -36,7 +38,7 @@ void GraphScene::save(bool){
                 QFileDialog::getSaveFileName(nullptr,
                     tr("Open Flow Scene"),
                     QDir::homePath(),
-                    tr("Flow Scene Files (*.flow, *.json)"));
+                    tr("Flow Scene Files (*.json)"));
 
             std::ofstream ofs(filename.toStdString());
             aq::JSONOutputArchive ar(ofs, aq::JSONOutputArchive::Options(), *vm, *sm);
@@ -82,7 +84,7 @@ void GraphScene::load(){
         QFileDialog::getOpenFileName(nullptr,
             tr("Open Flow Scene"),
             QDir::homePath(),
-            tr("Flow Scene Files (*.flow, *.json)"));
+            tr("Flow Scene Files (*.json)"));
 
     if (!QFileInfo::exists(fileName))
         return;
@@ -93,6 +95,19 @@ void GraphScene::load(){
 
     aq::JSONInputArchive ar(ifs, vm, sm);
     aq::IDataStream::VariableMap defaultVM, defaultSM;
+    
+    std::stringstream currentDate;
+    boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
+    currentDate << timeLocal.date().year() << "-" << std::setfill('0') << std::setw(2) << timeLocal.date().month().as_number() << "-" << std::setfill('0') << std::setw(2) << timeLocal.date().day().as_number();
+    sm["${date}"] = currentDate.str();
+    sm["${hostname}"] = boost::asio::ip::host_name();
+    currentDate.str(std::string());
+    currentDate << std::setfill('0') << std::setw(2) << timeLocal.time_of_day().hours() << std::setfill('0') << std::setw(2) << timeLocal.time_of_day().minutes();
+    sm["${hour}"] = currentDate.str();
+    sm["${pid}"] = boost::lexical_cast<std::string>(boost::log::aux::this_process::get_id());
+    sm["${config_file_dir}"] = boost::filesystem::path(fileName.toStdString()).parent_path().string();
+    
+    
     ar(cereal::make_optional_nvp("DefaultVariables", defaultVM, defaultVM));
     ar(cereal::make_optional_nvp("DefaultStrings", defaultSM, defaultSM));
     for (const auto& pair : defaultVM) {
@@ -137,6 +152,9 @@ void GraphScene::load(){
                 node_itr->second->nodeGraphicsObject().setPos(itr->second.val[0], itr->second.val[1]);
             }
         }
+    }
+    for(auto& connection : this->_connections){
+        connection.second->getConnectionGraphicsObject().move();
     }
 }
 

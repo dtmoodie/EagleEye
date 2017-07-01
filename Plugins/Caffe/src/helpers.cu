@@ -9,7 +9,7 @@
 float aq::Caffe::iou(const cv::Rect& r1, const cv::Rect& r2)
 {
     float intersection = (r1 & r2).area();
-    float rect_union = (r1.area() + r2.area()) - intersection;
+    float rect_union = (r1 | r2).area();
     return intersection / rect_union;
 }
 

@@ -11,7 +11,8 @@
 #include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include <qwidget.h>
 #include <qmenubar.h>
-
+#include <MetaObject/thread/InterThread.hpp>
+#include <MetaObject/thread/ThreadRegistry.hpp>
 #include "GraphScene.hpp"
 #include "object_proxies.hpp"
 #include "object_constructors.hpp"
@@ -41,6 +42,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     _graph_scene  = new GraphScene(registry);
     ui->main_layout->addWidget(new QtNodes::FlowView(_graph_scene));
+    mo::ThreadRegistry::instance()->registerThread(mo::ThreadRegistry::GUI);
+    mo::ThreadSpecificQueue::registerNotifier(std::bind(&MainWindow::onGuiPush, this));
+    QObject::connect(this, SIGNAL(sigCallbackAdded()), this, SLOT(handleGuiCallback()), Qt::QueuedConnection);
 }
 
 MainWindow::~MainWindow(){
@@ -57,4 +61,12 @@ void MainWindow::on_action_load_triggered()
 void MainWindow::on_action_save_triggered()
 {
     _graph_scene->save(true);
+}
+
+void MainWindow::onGuiPush(){
+    emit sigCallbackAdded();
+}
+
+void MainWindow::handleGuiCallback(){
+    mo::ThreadSpecificQueue::run();
 }

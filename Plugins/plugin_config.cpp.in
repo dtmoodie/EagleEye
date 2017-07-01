@@ -1,0 +1,24 @@
+#include "@PLUGIN_NAME@Export.hpp"
+
+
+const char* getPluginBuildInfo(){
+    return "@PLUGIN_NAME@\n"
+           "  Compiler         : @CMAKE_CXX_COMPILER_ID@\n"
+           "    version        : @CMAKE_CXX_COMPILER_VERSION@\n"
+           "  Build date       : @BUILD_DATE@\n"
+           "  git branch       : @GIT_BRANCH@\n"
+           "  git hash         : @GIT_COMMIT_HASH@\n"
+           "  Aquila version   : @Aquila_VERSION@\n"
+           "  Aquila branch    : @AQUILA_GIT_BRANCH@\n"
+           "  Aquila hash      : @AQUILA_GIT_COMMIT_HASH@\n"
+           "  MetaObject branch: @MO_GIT_BRANCH@\n"
+           "  MetaObject hash  : @MO_GIT_COMMIT_HASH@\n"
+           "  cxx flags        : @CMAKE_CXX_FLAGS@\n"
+#ifdef _DEBUG
+           "  debug flags      : @CMAKE_CXX_FLAGS_DEBUG@\n"
+#else
+           "  release flags    : @CMAKE_CXX_FLAGS_RELEASE@\n"
+#endif
+           "  CUDA VERSION     : @CUDA_VERSION@\n"
+           "  builder          : @GIT_USERNAME@ - @GIT_EMAIL@\n";
+}

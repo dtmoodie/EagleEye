@@ -42,7 +42,8 @@ namespace aq
             PARAM(bool, draw_class_label, true)
             PARAM(bool, draw_detection_id, true)
             PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>())
-            OUTPUT(SyncedMemory, image_with_detections, SyncedMemory())
+            PARAM((std::map<std::string, cv::Vec3b>), colormap, {})
+            OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
         bool processImpl();
