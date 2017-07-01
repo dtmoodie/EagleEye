@@ -46,7 +46,9 @@ GstFlowReturn chunked_file_sink::on_pull()
             memcpy(mapped.data, map.data, map.size);
 
         }
-        gst_sample_unref (sample);
+        gst_buffer_unmap(buffer, &map);
+        gst_sample_unref(sample);
+        gst_buffer_unref(buffer);
     }
     return GST_FLOW_OK;
 }

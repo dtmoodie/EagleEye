@@ -151,8 +151,9 @@ GstFlowReturn JPEGSink::on_pull(){
                     mo::tag::_timestamp = ts, &gstreamer_context);
             }
         }
+        gst_buffer_unmap(buffer, &map);
         gst_sample_unref(sample);
-        
+        gst_buffer_unref(buffer);
     }
     return GST_FLOW_OK;
 }
