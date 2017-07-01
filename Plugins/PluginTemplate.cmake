@@ -49,8 +49,77 @@ macro(aquila_declare_plugin tgt)
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/>
     )
 
-    set(PLUGIN_NAME "${tgt}")
-    CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_CURRENT_LIST_DIR}/src/${tgt}Export.hpp" @ONLY)
+    set(PLUGIN_NAME ${tgt})
+    string(TIMESTAMP BUILD_DATE "%Y-%m-%d:%H:%M")
+    
+    execute_process(
+      COMMAND git rev-parse --abbrev-ref HEAD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Aquila
+      OUTPUT_VARIABLE AQUILA_GIT_BRANCH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET OUTPUT_QUIET
+    )
+    execute_process(
+      COMMAND git log -1 --format=%H
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Aquila
+      OUTPUT_VARIABLE AQUILA_GIT_COMMIT_HASH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET OUTPUT_QUIET
+    )
+    
+    execute_process(
+      COMMAND git rev-parse --abbrev-ref HEAD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
+      OUTPUT_VARIABLE MO_GIT_BRANCH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET OUTPUT_QUIET
+    )
+    execute_process(
+      COMMAND git log -1 --format=%H
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
+      OUTPUT_VARIABLE MO_GIT_COMMIT_HASH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET OUTPUT_QUIET
+    )
+    
+    execute_process(
+      COMMAND git rev-parse --abbrev-ref HEAD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+      OUTPUT_VARIABLE GIT_BRANCH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET OUTPUT_QUIET
+    )
+    execute_process(
+      COMMAND git log -1 --format=%H
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+      OUTPUT_VARIABLE GIT_COMMIT_HASH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET OUTPUT_QUIET
+    )
+    
+    execute_process(
+      COMMAND git config user.name
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+      OUTPUT_VARIABLE GIT_USERNAME
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET OUTPUT_QUIET
+    )
+    execute_process(
+      COMMAND git config user.email
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+      OUTPUT_VARIABLE GIT_EMAIL
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET OUTPUT_QUIET
+    )
+    
+    CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}Export.hpp" @ONLY)
+    target_include_directories(${tgt}
+        PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Plugins/${tgt}/>
+    )
+    CONFIGURE_FILE("../plugin_config.cpp.in" "${CMAKE_BINARY_DIR}/Plugins/${tgt}/plugin_config.cpp" @ONLY)
+    
+    set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/Plugins/${tgt}/plugin_config.cpp")
+    set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}Export.hpp")
 
     LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
     LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
@@ -104,7 +173,7 @@ macro(aquila_declare_plugin tgt)
     set(external_include_file "${external_include_file}\n  #endif // NDEBUG\n")
 
     set(external_include_file "${external_include_file}\n#endif // _MSC_VER")
-    set(link_file_path "${CMAKE_CURRENT_LIST_DIR}/src/Aquila/rcc/external_includes/${tgt}_link_libs.hpp")
+    set(link_file_path "${CMAKE_BINARY_DIR}/Plugins/${tgt}/Aquila/rcc/external_includes/${tgt}_link_libs.hpp")
 
     if(EXISTS ${link_file_path})
         FILE(READ ${link_file_path} read_file)
@@ -117,8 +186,6 @@ macro(aquila_declare_plugin tgt)
     else()
       FILE(WRITE ${link_file_path} "${external_include_file}")
     endif()
-
-    FILE(WRITE "${CMAKE_CURRENT_LIST_DIR}/src/.gitignore" "Aquila\n${tgt}Export.hpp\nprecompiled.hpp\nplugin_config.cpp")
 
     INSTALL(TARGETS ${tgt}
             LIBRARY DESTINATION bin/Plugins
