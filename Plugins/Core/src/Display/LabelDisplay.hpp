@@ -2,7 +2,7 @@
 
 #include <Aquila/nodes/Node.hpp>
 #include <opencv2/cudaarithm.hpp>
-#include "../CoreExport.hpp"
+#include "CoreExport.hpp"
 #include <Aquila/rcc/external_includes/cv_cudafilters.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
 namespace aq
