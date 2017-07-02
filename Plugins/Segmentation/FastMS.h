@@ -1,19 +1,19 @@
 #pragma once
 #ifdef FASTMS_FOUND
-#include "Aquila/Nodes/Node.h"
-#include <MetaObject/Parameters/ParameterMacros.hpp>
+#include "Aquila/nodes/Node.hpp"
+#include <MetaObject/params/ParameterMacros.hpp>
 #include "libfastms/solver/solver.h"
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #ifdef _DEBUG
-RUNTIME_COMPILER_LINKLIBRARY("fastmsd.lib")
+RUNTIME_COMPILER_LINKLIBRARY("-lfastmsd")
 #else
-RUNTIME_COMPILER_LINKLIBRARY("fastms.lib")
+RUNTIME_COMPILER_LINKLIBRARY("-lfastms")
 #endif
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
-    
+
     class FastMumfordShah : public Node
     {
     public:
@@ -32,7 +32,7 @@ namespace aq
             OUTPUT(SyncedMemory, segmented, SyncedMemory())
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     }
 }

@@ -3,13 +3,15 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <caffe/util/upgrade_proto.hpp>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <algorithm>
 #include "Caffe.h"
 #include "caffe_include.h"
 #include "caffe_init.h"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
@@ -23,11 +25,11 @@ void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
         }
     }
 }
-bool caffe_solver::ProcessImpl()
+bool caffe_solver::processImpl()
 {
     if(::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
         ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
-    if(solver_description_param.modified && solver_description.string().size())
+    if(solver_description_param.modified() && solver_description.string().size())
     {
         if(boost::filesystem::is_regular_file(solver_description))
         {
@@ -35,7 +37,7 @@ bool caffe_solver::ProcessImpl()
             try
             {
                 caffe::ReadSolverParamsFromTextFileOrDie(solver_description.string(), &solver_params);
-                
+
                 if(snapshot_prefix.size())
                 {
                     //solver_params.clear_snapshot_prefix();
@@ -50,8 +52,8 @@ bool caffe_solver::ProcessImpl()
             {
                 throw mo::ExceptionWithCallStack<std::string>(std::string(""), e.CallStack());
             }
-            
-            
+
+
             if(solver_params.has_test_interval())
                 test_interval = solver_params.test_interval();
             if(solver_params.has_base_lr())
@@ -68,13 +70,13 @@ bool caffe_solver::ProcessImpl()
             }
             auto input_blobs_ = neural_network->input_blobs();
             // map input blobs
-            
+
             for(int i = 0; i < input_blobs_.size(); ++i)
             {
-                auto wrapped_blob = aq::Nodes::CaffeBase::WrapBlob(*input_blobs_[i]);
+                auto wrapped_blob = aq::nodes::CaffeBase::WrapBlob(*input_blobs_[i]);
                 input_blobs[input_names[i]] = wrapped_blob;
             }
-            input_blobs_param.Commit();
+            input_blobs_param.emitUpdate();
         }
         if(weight_files.size())
         {
@@ -86,7 +88,7 @@ bool caffe_solver::ProcessImpl()
                     if(i != 0)
                         ss << ",";
                     ss << weight_files[i];
-                }                
+                }
             }
             //CopyLayers(solver.get(), ss.str());
         }
@@ -95,16 +97,16 @@ bool caffe_solver::ProcessImpl()
             if(boost::filesystem::is_regular_file(previous_solver_state))
                 solver->Restore(previous_solver_state.string().c_str());
         }
-        solver_description_param.modified = false;
+        solver_description_param.modified(false);
     }
     if(!solver)
     {
         caffe::SolverParameter solver_params;
     }
-    if(solver && (input_blobs_param.HasSubscriptions() || input_blobs.empty()))
+    if(solver && (input_blobs_param.hasSubscriptions() || input_blobs.empty()))
     {
         sig_fill_blobs();
-        
+
         solver->Step(steps_per_iteration);
         if(input_blobs.empty())
             sig_update();
@@ -114,23 +116,23 @@ bool caffe_solver::ProcessImpl()
 }
 
 /*caffe_network::caffe_network():
-    Nodes::Node()
+    nodes::Node()
 {
 
 }
 TS<SyncedMemory> Nodes::caffe_network::doProcess(TS<SyncedMemory> input, cv::cuda::Stream& stream)
 {
     // asdf
-    if(nn_description_param.modified && nn_description.size())
+    if(nn_description_param.modified() && nn_description.size())
     {
         if(boost::filesystem::is_regular_file(nn_description))
         {
             neural_network.reset(new caffe::Net<float>(nn_description.string(), caffe::TRAIN));
-            
+
             auto inputs = neural_network->input_blobs();
             //updateParameter("input blobs", inputs)->type = Parameters::Parameter::Output;
-            nn_description_param.modified = false;
-        }        
+            nn_description_param.modified(false);
+        }
     }
     return input;
 }

@@ -1,33 +1,25 @@
 #pragma once
 
 #include "cv_capture.h"
-#include "Aquila/ICoordinateManager.h"
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include "frame_grabbersExport.hpp"
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
-        class frame_grabbers_EXPORT frame_grabber_gstreamer: public frame_grabber_cv
+        class frame_grabbers_EXPORT GrabberGstreamer: public GrabberCV
         {
         public:
-            MO_DERIVE(frame_grabber_gstreamer, frame_grabber_cv)
+            MO_DERIVE(GrabberGstreamer, GrabberCV)
                 PARAM(bool, loop, true);
                 MO_SIGNAL(void, eof);
             MO_END;
 
-            frame_grabber_gstreamer();
-            ~frame_grabber_gstreamer();
-            virtual bool LoadFile(const std::string& file_path);
-            virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
-            TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
-            static int CanLoadDocument(const std::string& document);
-            static std::vector<std::string> ListLoadableDocuments();
-        protected:
-            rcc::shared_ptr<ICoordinateManager>     coordinate_manager;
-            std::string                             loaded_file;
-            TS<SyncedMemory>                        current_frame;
+            bool loadData(const std::string& file_path);
+            
+            static int canLoad(const std::string& document);
+            static void listPaths(std::vector<std::string>& paths);
         };
     }
 }

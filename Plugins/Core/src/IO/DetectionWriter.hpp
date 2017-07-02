@@ -1,29 +1,54 @@
 #pragma once
-
-#include "Aquila/Nodes/Node.h"
-#include "Aquila/ObjectDetection.hpp"
-#include "MetaObject/Thread/ThreadHandle.hpp"
-#include "MetaObject/Thread/ThreadPool.hpp"
-#include "MetaObject/Detail/ConcurrentQueue.hpp"
+#include "Aquila/nodes/Node.hpp"
+#include "Aquila/types/SyncedMemory.hpp"
+#include "Aquila/types/ObjectDetection.hpp"
+#include "MetaObject/thread/ThreadHandle.hpp"
+#include "MetaObject/thread/ThreadPool.hpp"
+#include "MetaObject/core/detail/ConcurrentQueue.hpp"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
-class DetectionWriter: public Node
-{
+enum Extension{
+    jpg,
+    png,
+    tiff,
+    bmp
+};
+
+class IDetectionWriter: public Node{
 public:
-    MO_DERIVE(DetectionWriter, Node)
+    typedef std::pair<cv::Mat, std::vector<aq::DetectedObject2d>> WriteData_t;
+    typedef moodycamel::ConcurrentQueue<WriteData_t> WriteQueue_t;
+    ~IDetectionWriter();
+    MO_DERIVE(IDetectionWriter, Node)
         PARAM(mo::WriteDirectory, output_directory, {})
-        PARAM(std::string, json_stem, "detection")
+        PARAM(std::string, annotation_stem, "detection")
         PARAM(std::string, image_stem, "image")
         PARAM(int, object_class, -1)
+        PARAM(bool, skip_empty, true)
+        PARAM(bool, pad, true)
+        ENUM_PARAM(extension, jpg, png, tiff, bmp)
         INPUT(SyncedMemory, image, nullptr)
         INPUT(std::vector<DetectedObject>, detections, nullptr)
-        PROPERTY(mo::ThreadHandle, _write_thread, mo::ThreadPool::Instance()->RequestThread())
+        PROPERTY(std::shared_ptr<boost::thread>, _write_thread, {})
+        PROPERTY(std::shared_ptr<WriteQueue_t>, _write_queue, {})
     MO_END
 protected:
-    bool ProcessImpl();
-    int frame_count = 0;
+    bool processImpl();
+    void nodeInit(bool firstInit);
+    virtual void writeThread() = 0;
+    size_t frame_count = 0;
+};
+
+
+class DetectionWriter: public IDetectionWriter
+{
+public:
+    MO_DERIVE(DetectionWriter, IDetectionWriter)
+    MO_END
+protected:
+    virtual void writeThread();
 };
 
 class DetectionWriterFolder: public Node
@@ -36,6 +61,8 @@ public:
         PARAM(int, object_class, -1)
         PARAM(std::string, image_stem, "image")
         PARAM(int, max_subfolder_size, 1000)
+        PARAM(std::string, dataset_name, "")
+        ENUM_PARAM(extension, jpg, png, tiff, bmp)
         INPUT(SyncedMemory, image, nullptr)
         INPUT(std::vector<std::string>, labels, nullptr)
         INPUT(std::vector<DetectedObject>, detections, nullptr)
@@ -43,14 +70,14 @@ public:
     MO_END;
 
 protected:
-    void NodeInit(bool firstInit);
-    bool ProcessImpl();
-    //std::vector<int> _frame_counts;
+    void nodeInit(bool firstInit);
+    bool processImpl();
     int _frame_count;
     moodycamel::ConcurrentQueue<std::pair<cv::Mat, std::string>> _write_queue;
     boost::thread _write_thread;
     std::vector<int> _per_class_count;
-
+    std::shared_ptr<std::ofstream> _summary_ofs;
+    std::shared_ptr<cereal::JSONOutputArchive> _summary_ar;
 };
 
 }

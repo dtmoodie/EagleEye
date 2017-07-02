@@ -27,18 +27,14 @@ file(GLOB_RECURSE knl "*.cu")
 file(GLOB_RECURSE knl_hdr "*.cuh")
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp")
-
-IF(NOT WIN32)
-    #SET(CUDA_NVCC_FLAGS "-ccbin g++;-O2;-std=c++11;${CUDA_NVCC_FLAGS}")
-ENDIF(NOT WIN32)
-
+IF(UNIX)
+  set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+  set(CUDA_NVCC_FLAGS "-std=c++11;--expt-relaxed-constexpr;${CUDA_NVCC_FLAGS}")
+ENDIF()
 cuda_add_library(ML SHARED ${src} ${hdr} ${knl} ${knl_hdr})
 
-add_dependencies(ML Aquila)
-RCC_LINK_LIB(ML Aquila ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES})
-#RCC_LINK_LIB(Core Aquila)
-#RCC_LINK_LIB(Core ${OpenCV_LIBS})
-#RCC_LINK_LIB(Core ${CUDA_CUBLAS_LIBRARIES})
+RCC_LINK_LIB(ML aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} RuntimeObjectSystem)
 
-INCLUDE(../PluginTemplate.cmake)
+#INCLUDE(../PluginTemplate.cmake)
+aquila_declare_plugin(ML)
 

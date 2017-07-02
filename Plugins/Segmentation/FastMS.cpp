@@ -1,18 +1,18 @@
 
-#include "FastMS.h"
-#include <Aquila/Nodes/NodeInfo.hpp>
-
 #ifdef FASTMS_FOUND
+#include "FastMS.h"
+#include <Aquila/nodes/NodeInfo.hpp>
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
-bool FastMumfordShah::ProcessImpl()
+bool FastMumfordShah::processImpl()
 {
     if(!solver)
         solver.reset(new Solver());
-    cv::Mat h_img = input->GetMat(Stream());
+    cv::Mat h_img = input->getMat(stream());
 
     Par param;
     param.lambda = lambda;
@@ -24,9 +24,9 @@ bool FastMumfordShah::ProcessImpl()
     param.adapt_params = adapt_params;
     param.weight = weight;
     param.edges = overlay_edges;
-    Stream().waitForCompletion();
+    stream().waitForCompletion();
     cv::Mat result = solver->run(h_img, param);
-    segmented_param.UpdateData(result, input_param.GetTimestamp(), _ctx);
+    segmented_param.updateData(result, input_param.getTimestamp(), _ctx.get());
     return true;
 }
 

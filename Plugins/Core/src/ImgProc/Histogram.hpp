@@ -1,6 +1,7 @@
 #pragma once
+#include "Aquila/nodes/Node.hpp"
+#include <Aquila/types/SyncedMemory.hpp>
 
-#include "Aquila/Nodes/Node.h"
 namespace cv
 {
 namespace cuda
@@ -10,12 +11,9 @@ namespace cuda
                    cv::cuda::Stream& stream = cv::cuda::Stream::Null());
 }
 }
-namespace aq
-{
-namespace Nodes
-{
-    class HistogramRange : public Node
-    {
+namespace aq{
+namespace nodes{
+    class HistogramRange : public Node{
     public:
         MO_DERIVE(HistogramRange, Node)
             PARAM(double, lower_bound, 0.0)
@@ -26,11 +24,10 @@ namespace Nodes
             OUTPUT(SyncedMemory, levels, SyncedMemory())
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         void updateLevels(int type);
     };
-    class Histogram: public Node
-    {
+    class Histogram: public Node{
     public:
         MO_DERIVE(Histogram, Node)
             INPUT(SyncedMemory, input, nullptr)
@@ -40,7 +37,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, bins, {})
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 }
 }

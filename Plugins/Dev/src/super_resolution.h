@@ -1,11 +1,11 @@
 #pragma once
 #include "precompiled.hpp"
 #include <Aquila/rcc/external_includes/cv_superres.hpp>
-#include <Aquila/Nodes/Node.h>
-
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class my_frame_source: public cv::superres::FrameSource
         {
@@ -37,7 +37,7 @@ namespace aq
                 OUTPUT(SyncedMemory, output, SyncedMemory());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
     }
 }

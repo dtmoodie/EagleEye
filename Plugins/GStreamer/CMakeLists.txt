@@ -44,7 +44,7 @@ IF(GSTREAMER_FOUND)
     LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glibconfig_INCLUDE_DIR})
     LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glib_INCLUDE_DIR})
     FIND_PACKAGE(Qt5 REQUIRED Network)
-    FIND_PACKAGE(OpenCV REQUIRED core)
+    FIND_PACKAGE(OpenCV REQUIRED core imgcodecs)
     FILE(GLOB_RECURSE src "src/*.cpp")
     FILE(GLOB_RECURSE hdr "src/*.hpp" "src/*.h")
     INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
@@ -59,7 +59,7 @@ IF(GSTREAMER_FOUND)
     ADD_LIBRARY(GStreamer SHARED ${src} ${hdr})
     RCC_LINK_LIB(GStreamer
         ${OpenCV_LIBS}
-        Aquila
+        aquila_core
         Qt5::Network
         ${GSTREAMER_gstapp_LIBRARY}
         ${GSTREAMER_gstaudio_LIBRARY}
@@ -76,14 +76,23 @@ IF(GSTREAMER_FOUND)
         ${GSTREAMER_gstvideo_LIBRARY}
         ${Glib_LIBRARY}
         ${GLIB_LIBRARY}
+        ${GLIB2_LIBRARIES}
+
         ${GOBJECT_LIBRARY}
+        metaobject_core
+        metaobject_object
+        metaobject_params
+        metaobject_metaparams
+        aquila_metatypes
+        aquila_types
+        aquila_utilities
     )
     IF(${GSTREAMER_gstrtspserver_LIBRARY})
-        RCC_LINK_LIB(Gstreamer ${GSTREAMER_gstrtspserver_LIBRARY})
+        RCC_LINK_LIB(GStreamer ${GSTREAMER_gstrtspserver_LIBRARY})
     ENDIF()
 
-    INCLUDE(../PluginTemplate.cmake)
-    ADD_DEPENDENCIES(GStreamer Aquila)
+    #INCLUDE(../PluginTemplate.cmake)
+    aquila_declare_plugin(GStreamer)
 else()
     message("Gstreamer not found")
 ENDIF()

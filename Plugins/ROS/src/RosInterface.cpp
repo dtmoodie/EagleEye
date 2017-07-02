@@ -3,7 +3,7 @@
 #include "ros/node_handle.h"
 
 #include "Aquila/rcc/SystemTable.hpp"
-#include "ObjectInterfacePerModule.h"
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
 using namespace aq;
 
@@ -28,14 +28,14 @@ ros::NodeHandle* RosInterface::nh() const
 RosInterface* RosInterface::Instance()
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    RosInterface* singleton = table->GetSingleton<RosInterface>();
+    RosInterface* singleton = table->getSingleton<RosInterface>();
     if(singleton)
     {
         return singleton;
     }else
     {
         singleton = new RosInterface();
-        table->SetSingleton(singleton);
+        table->setSingleton(singleton);
         return singleton;
     }
 }

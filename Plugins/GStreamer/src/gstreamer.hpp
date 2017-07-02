@@ -5,12 +5,13 @@
 #ifdef HAVE_GST_RTSPSERVER
 #include <gst/rtsp-server/rtsp-server.h>
 #endif
-#include "Aquila/Nodes/Node.h"
-#include "Aquila/Detail/Export.hpp"
-#include "Aquila/Detail/PluginExport.hpp"
-#include <Aquila/utilities/CudaUtils.hpp>
-#include <MetaObject/MetaObject.hpp>
-
+#include "GStreamerExport.hpp"
+#include "Aquila/nodes/Node.hpp"
+#include "Aquila/core/detail/Export.hpp"
+#include <Aquila/utilities/cuda/CudaUtils.hpp>
+#include <Aquila/types/Stamped.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
+#include <MetaObject/object/MetaObject.hpp>
 #include <gst/gst.h>
 #include <gst/gstelement.h>
 #include <gst/gstelementfactory.h>
@@ -20,7 +21,7 @@
 
 #include <boost/thread.hpp>
 
-SETUP_PROJECT_DEF
+
 #ifdef _MSC_VER
 RUNTIME_COMPILER_LINKLIBRARY("gstapp-1.0.lib");
 RUNTIME_COMPILER_LINKLIBRARY("gstaudio-1.0.lib");
@@ -45,7 +46,7 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5OpenGLd.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgetsd.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Guid.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Cored.lib");
-#else 
+#else
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Network.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5OpenGL.lib");
 RUNTIME_COMPILER_LINKLIBRARY("Qt5Widgets.lib");
@@ -54,21 +55,9 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
 #endif
 #endif
 
-namespace aq
-{
-    class PLUGIN_EXPORTS gstreamer_base
-    {
-    protected:
-        // The gstreamer pipeline
-        GstElement*     _pipeline;
-        GstClockTime    _timestamp;
-        time_t          _prevTime;
-        time_t          _delta;
-        virtual void cleanup();
-        bool _caps_set;
+namespace aq{
+    class GStreamer_EXPORT gstreamer_base{
     public:
-
-
         gstreamer_base();
         virtual ~gstreamer_base();
 
@@ -83,10 +72,17 @@ namespace aq
         static bool check_feature(const std::string& feature_name);
         // Attempt to detect if a string is a valid gstreamer pipeline
         static bool is_pipeline(const std::string& string);
+    protected:
+        // The gstreamer pipeline
+        GstElement*     _pipeline;
+        GstClockTime    _timestamp;
+        time_t          _prevTime;
+        time_t          _delta;
+        virtual void cleanup();
+        bool _caps_set;
     };
     // used to feed data into EagleEye from gstreamer, use when creating frame grabbers
-    class PLUGIN_EXPORTS gstreamer_src_base: virtual public gstreamer_base
-    {
+    class GStreamer_EXPORT gstreamer_src_base: virtual public gstreamer_base{
     public:
         gstreamer_src_base();
         virtual ~gstreamer_src_base();
@@ -102,60 +98,34 @@ namespace aq
     };
 
 
-    namespace Nodes
-    {
+    namespace nodes{
         // Used to feed a gstreamer pipeline from EagleEye
-        class PLUGIN_EXPORTS gstreamer_sink_base: virtual public gstreamer_base, virtual public Node
-        {
+        class GStreamer_EXPORT gstreamer_sink_base: virtual public gstreamer_base, virtual public Node{
         public:
             gstreamer_sink_base();
             virtual ~gstreamer_sink_base();
-            
+
             virtual bool create_pipeline(const std::string& pipeline_);
             virtual bool set_caps(cv::Size image_size, int channels, int depth = CV_8U);
             virtual bool set_caps(const std::string& caps);
 
-            void PushImage(SyncedMemory img, cv::cuda::Stream& stream);
-            void PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stream);
+            void PushImage(aq::SyncedMemory img, cv::cuda::Stream& stream);
+            void PushImage(TS<aq::SyncedMemory> img, cv::cuda::Stream& stream);
             // Used for gstreamer to indicate that the appsrc needs to either feed data or stop feeding data
             virtual void start_feed();
             virtual void stop_feed();
         protected:
-            // The output of Aquila's processing pipeline and the input to the gstreamer pipeline
-            GstAppSrc*     _source;
-            // id for the need data signal
-            guint           _need_data_id;
-            // id for the enough data signal
-            guint           _enough_data_id;
+            GstAppSrc*     _source; // The output of Aquila's processing pipeline and the input to the gstreamer pipeline
+            guint           _need_data_id; // id for the need data signal
+            guint           _enough_data_id; // id for the enough data signal
 
             bool _feed_enabled;
             virtual void cleanup();
         };
-
-
-        class PLUGIN_EXPORTS RTSP_server: public Node
-        {
+        // Decpricated ?
+        class GStreamer_EXPORT RTSP_server: public Node{
         public:
-            enum ServerType
-            {
-                TCP = 0,
-                UDP = 1
-            };
-            bool feed_enabled;
-            GstElement* source_OpenCV;
-            GstElement* pipeline;
-            GMainLoop* glib_MainLoop;
-            cv::Size imgSize;
-            boost::thread glibThread;
-            ConstBuffer<cv::cuda::HostMem> bufferPool;
-        
-            guint need_data_id;
-            guint enough_data_id;
-
-            void gst_loop();
-            void push_image();
-            void onPipeChange();
-            void setup(std::string pipeOverride = std::string());
+            enum ServerType{   TCP = 0, UDP = 1 };
             RTSP_server();
             ~RTSP_server();
             virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
@@ -168,11 +138,26 @@ namespace aq
                 PROPERTY(time_t, prevTime, 0);
                 PROPERTY(GstClockTime, timestamp, 0);
             MO_END;
+            void gst_loop();
+            void push_image();
+            void onPipeChange();
+            void setup(std::string pipeOverride = std::string());
+
+            bool feed_enabled;
+            GstElement* source_OpenCV;
+            GstElement* pipeline;
+            GMainLoop* glib_MainLoop;
+            cv::Size imgSize;
+            boost::thread glibThread;
+            ConstBuffer<cv::cuda::HostMem> bufferPool;
+            guint need_data_id;
+            guint enough_data_id;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
+
 #ifdef HAVE_GST_RTSPSERVER
-        class PLUGIN_EXPORTS RTSP_server_new : public Node
+        class GStreamer_EXPORT RTSP_server_new : public Node
         {
         public:
             GstClockTime timestamp;
@@ -196,12 +181,12 @@ namespace aq
             void onPipeChange();
             void setup(std::string pipeOverride = std::string());
             ~RTSP_server_new();
-            virtual void NodeInit(bool firstInit);
+            virtual void nodeInit(bool firstInit);
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
             cv::Size imgSize;
         };
 #endif
-    }
+    } // namespace aq::nodes
 }
 /*
 References
@@ -379,7 +364,7 @@ main( int argc, char **argv ) {
     std::cout << "Start GLib_MainLoop..." << std::endl;
     io_service->post( GLib_MainLoop );
 
-    /// Create some Workerthreads
+    /// create some Workerthreads
     for( std::size_t i = 0; i < 3; ++i )  {
         threadgroup->create_thread( boost::bind( &boost::asio::io_service::run, &( *io_service ) ) );
     }
@@ -394,7 +379,7 @@ main( int argc, char **argv ) {
     GstElement *sink_TCPServer;
 
 
-    /// Create GStreamer Elements
+    /// create GStreamer Elements
 
     pipeline = gst_pipeline_new( "OpenCV_to_TCPServer" );
 

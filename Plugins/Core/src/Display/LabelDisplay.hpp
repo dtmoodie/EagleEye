@@ -1,15 +1,16 @@
 #pragma once
 
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
 #include <opencv2/cudaarithm.hpp>
-#include "../CoreExport.hpp"
+#include "CoreExport.hpp"
 #include <Aquila/rcc/external_includes/cv_cudafilters.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 namespace aq
 {
     Core_EXPORT void applyColormap(const cv::cuda::GpuMat& input, cv::cuda::GpuMat& output, const cv::cuda::GpuMat& colormap, cv::cuda::Stream& stream);
 
 
-    namespace Nodes
+    namespace nodes
     {
         class LabelDisplay: public Node
         {
@@ -25,7 +26,7 @@ namespace aq
                 PARAM(int, dilate, 0)
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             cv::cuda::GpuMat d_lut;
             cv::cuda::GpuMat d_legend;
             cv::Mat h_lut;

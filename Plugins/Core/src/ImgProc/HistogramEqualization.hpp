@@ -1,11 +1,11 @@
 #pragma once
-
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 #include <opencv2/cudaimgproc.hpp>
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class HistogramEqualization: public Node
         {
@@ -16,7 +16,7 @@ namespace aq
                 OUTPUT(SyncedMemory, output, {})
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
         class CLAHE: public Node
         {
@@ -28,7 +28,7 @@ namespace aq
                 OUTPUT(SyncedMemory, output, {})
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             cv::Ptr<cv::cuda::CLAHE> _clahe;
         };
     }

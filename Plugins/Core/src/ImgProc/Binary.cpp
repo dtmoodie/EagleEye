@@ -1,37 +1,36 @@
 #include "Binary.h"
 #include "opencv2/imgproc.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
-
-SETUP_PROJECT_IMPL
-
-bool MorphologyFilter::ProcessImpl()
+bool MorphologyFilter::processImpl()
 {
     if (input_image)
     {
-        if (structuring_element_type_param.modified || morphology_type_param.modified || 
-            anchor_point_param.modified || iterations_param.modified ||
+        if (structuring_element_type_param.modified() || morphology_type_param.modified() ||
+            anchor_point_param.modified() || iterations_param.modified() ||
             filter == nullptr)
         {
-            structuring_element_param.UpdateData(
+            structuring_element_param.updateData(
                 cv::getStructuringElement(
                     structuring_element_type.currentSelection,
                     ::cv::Size(structuring_element_size, structuring_element_size), anchor_point));
 
             filter = ::cv::cuda::createMorphologyFilter(
-                morphology_type.currentSelection, input_image->GetMat(Stream()).type(), 
+                morphology_type.currentSelection, input_image->getMat(stream()).type(),
                 structuring_element, anchor_point, iterations);
 
-            structuring_element_size_param.modified = false;
-            morphology_type_param.modified = false;
-            anchor_point_param.modified = false;
-            iterations_param.modified = false;
+            structuring_element_size_param.modified(false);
+            morphology_type_param.modified(false);
+            anchor_point_param.modified(false);
+            iterations_param.modified(false);
         }
         cv::cuda::GpuMat out;
-        filter->apply(input_image->GetGpuMat(Stream()), out, Stream());
-        this->output_param.UpdateData(out, input_image_param.GetTimestamp(), _ctx);
+        filter->apply(input_image->getGpuMat(stream()), out, stream());
+        this->output_param.updateData(out, mo::tag::_param = input_image_param, _ctx.get());
         return true;
     }
     return false;
@@ -51,7 +50,7 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                             cv::Size(size,size),anchor));
 
         updateFilter = true;
-        _parameters[0]->changed = false; 
+        _parameters[0]->changed = false;
         _parameters[2]->changed = false;
         //log(Status,"Structuring element updated");
         NODE_LOG(info) << "Structuring element updated";
@@ -65,7 +64,7 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
                 *getParameter<cv::Point>(3)->Data(),
                 *getParameter<int>(5)->Data()));
         NODE_LOG(info) << "Filter updated";
-        _parameters[1]->changed = false; 
+        _parameters[1]->changed = false;
     }
     cv::cuda::GpuMat output;
     (*getParameter<cv::Ptr<cv::cuda::Filter>>(6)->Data())->apply(img,output,stream);
@@ -74,23 +73,23 @@ cv::cuda::GpuMat MorphologyFilter::doProcess(cv::cuda::GpuMat &img, cv::cuda::St
 */
 
 
-bool FindContours::ProcessImpl()
+bool FindContours::processImpl()
 {
     if(input_image)
     {
-        ::cv::Mat h_mat = input_image->GetMat(Stream());
+        ::cv::Mat h_mat = input_image->getMat(stream());
         if(::cv::countNonZero(h_mat) <= 1)
         {
             this->contours.clear();
             num_contours = 0;
             return false;
         }
-        long long ts = input_image_param.GetTimestamp();
-        Stream().waitForCompletion();
+        auto ts = input_image_param.getTimestamp();
+        stream().waitForCompletion();
         cv::findContours(h_mat,contours, hierarchy, mode.currentSelection, method.currentSelection);
-        contours_param.Commit(ts, _ctx);
-        hierarchy_param.Commit(ts, _ctx);
-        num_contours_param.UpdateData(contours.size(), ts, _ctx);
+        contours_param.emitUpdate(ts, _ctx.get());
+        hierarchy_param.emitUpdate(ts, _ctx.get());
+        num_contours_param.updateData(contours.size(), ts, _ctx.get());
         return true;
     }
     return false;
@@ -99,7 +98,7 @@ bool FindContours::ProcessImpl()
 MO_REGISTER_CLASS(FindContours)
 /*TS<SyncedMemory> FindContours::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
 {
-    cv::Mat h_mat = img.GetMat(stream).clone();
+    cv::Mat h_mat = img.getMat(stream).clone();
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
     if(cv::countNonZero(h_mat) <= 1)
@@ -112,7 +111,7 @@ MO_REGISTER_CLASS(FindContours)
         *getParameter<std::vector<cv::Vec4i>>(3)->Data(),
         getParameter<Parameters::EnumParameter>(0)->Data()->currentSelection,
         getParameter<Parameters::EnumParameter>(1)->Data()->currentSelection);
-    
+
     updateParameter<int>("Contours found", contours.size())->type =  Parameters::Parameter::State;
     updateParameter("Contours", contours)->type = Parameters::Parameter::Output;
     updateParameter("Hierarchy", hierarchy)->type = Parameters::Parameter::Output;
@@ -161,34 +160,34 @@ MO_REGISTER_CLASS(FindContours)
 }*/
 
 
-/*void ContourBoundingBox::NodeInit(bool firstInit)
+/*void ContourBoundingBox::nodeInit(bool firstInit)
 {
     if(firstInit)
     {
-        addInputParameter<std::vector<std::vector<cv::Point>>>("Contours");
-        addInputParameter<std::vector<cv::Vec4i>>("Hierarchy");
+        addInputParam<std::vector<std::vector<cv::Point>>>("Contours");
+        addInputParam<std::vector<cv::Vec4i>>("Hierarchy");
         ParameteredObject::addParameter<cv::Scalar>("Box color", cv::Scalar(0,0,255));
         ParameteredObject::addParameter<int>("Line thickness", 2);
-        addInputParameter<std::vector<std::pair<int,double>>>("Contour Area");
+        addInputParam<std::vector<std::pair<int,double>>>("Contour Area");
         updateParameter<bool>("Use filtered area", false);
     }
     updateParameter<bool>("Merge contours", false);
 
 }*/
-bool ContourBoundingBox::ProcessImpl()
+bool ContourBoundingBox::processImpl()
 {
     if(this->contours && this->input_image)
     {
         std::vector<cv::Rect> boxes;
         for(size_t i = 0; i < contours->size(); ++i)
         {
-            boxes.push_back(cv::boundingRect((*contours)[i]));   
+            boxes.push_back(cv::boundingRect((*contours)[i]));
         }
         if(merge_contours)
         {
             for(size_t i = 0; i < boxes.size(); ++i)
             {
-            
+
             }
         }
     }
@@ -232,7 +231,7 @@ bool ContourBoundingBox::ProcessImpl()
         }
     }
 
-    cv::Mat h_img = img.GetMat(stream);
+    cv::Mat h_img = img.getMat(stream);
     stream.waitForCompletion();
     h_img = h_img.clone();
     cv::Scalar replace;
@@ -256,12 +255,12 @@ bool ContourBoundingBox::ProcessImpl()
             cv::rectangle(h_img, boxes[i].tl(), boxes[i].br(),replace, lineWidth);
         }
     }
-    
+
     return TS<SyncedMemory>(img.timestamp, img.frame_number, h_img);
 }*/
 
 
-/*void HistogramThreshold::NodeInit(bool firstInit)
+/*void HistogramThreshold::nodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -270,10 +269,10 @@ bool ContourBoundingBox::ProcessImpl()
         param.addEnum(ENUM(SuppressCenter));
         updateParameter("Threshold type", param);
         updateParameter("Threshold width", 0.5)->SetTooltip("Percent of histogram to threshold");
-        addInputParameter<cv::cuda::GpuMat>("Input histogram");
-        addInputParameter<cv::cuda::GpuMat>("Input image");
-        addInputParameter<cv::cuda::GpuMat>("Input mask");
-        addInputParameter<cv::Mat>("Histogram bins");
+        addInputParam<cv::cuda::GpuMat>("Input histogram");
+        addInputParam<cv::cuda::GpuMat>("Input image");
+        addInputParam<cv::cuda::GpuMat>("Input mask");
+        addInputParam<cv::Mat>("Histogram bins");
     }
 }*/
 
@@ -342,7 +341,7 @@ void HistogramThreshold::runFilter()
         // As well as for all values below the max, then we AND them together.
         cv::cuda::threshold(img, lowerMask, thresholdMin, 255, cv::THRESH_BINARY, stream);
         cv::cuda::threshold(img, upperMask, thresholdMax, 255, cv::THRESH_BINARY_INV, stream);
-        
+
         cv::cuda::bitwise_and(lowerMask, upperMask, output, cv::noArray(), stream);
         return output;
     case SuppressCenter:
@@ -354,11 +353,11 @@ void HistogramThreshold::runFilter()
     return output;
 }*/
 
-/*void PruneContours::NodeInit(bool firstInit)
+/*void PruneContours::nodeInit(bool firstInit)
 {
     if(firstInit)
     {
-        addInputParameter<std::vector<std::vector<cv::Point>>>("Input Contours");
+        addInputParam<std::vector<std::vector<cv::Point>>>("Input Contours");
     }
 }*/
 
@@ -381,9 +380,9 @@ void HistogramThreshold::runFilter()
     return img;
 }*/
 
-bool DrawContours::ProcessImpl()
+bool DrawContours::processImpl()
 {
-    const cv::Mat& image = input_image->GetMat(Stream());
+    const cv::Mat& image = input_image->getMat(stream());
     cv::Mat output_image;
     image.copyTo(output_image);
     int largest_idx =  -1;
@@ -400,17 +399,17 @@ bool DrawContours::ProcessImpl()
         }
     }
     cv::drawContours(output_image, *input_contours, largest_idx, cv::Scalar(0,255,0));
-    output_param.UpdateData(output_image, input_image_param.GetTimestamp(), _ctx);
+    output_param.updateData(output_image, input_image_param.getTimestamp(), _ctx.get());
     return true;
 }
 MO_REGISTER_CLASS(DrawContours)
 
-/*void DrawContours::NodeInit(bool firstInit)
+/*void DrawContours::nodeInit(bool firstInit)
 {
     if(firstInit)
     {
-        addInputParameter<std::vector<std::vector<cv::Point>>>("Input Contours");    
-    }    
+        addInputParam<std::vector<std::vector<cv::Point>>>("Input Contours");
+    }
 }*/
 
 /*TS<SyncedMemory> DrawContours::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
@@ -418,13 +417,13 @@ MO_REGISTER_CLASS(DrawContours)
     auto input = getParameter<std::vector<std::vector<cv::Point>>>("Input Contours")->Data();
     if(input)
     {
-        cv::Mat h_mat = img.GetMat(stream);
-        //cv::drawContours(h_mat, *input, -1, 
+        cv::Mat h_mat = img.getMat(stream);
+        //cv::drawContours(h_mat, *input, -1,
     }
     return img;
 }*/
 
-/*void DrawRects::NodeInit(bool firstInit)
+/*void DrawRects::nodeInit(bool firstInit)
 {
 }
 cv::cuda::GpuMat DrawRects::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)

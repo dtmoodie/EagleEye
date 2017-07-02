@@ -173,8 +173,8 @@ cv::Mat EGBS::recolor( bool random_color) {
 
 
 using namespace aq;
-using namespace aq::Nodes;
-/*void SegmentEGBS::NodeInit(bool firstInit)
+using namespace aq::nodes;
+/*void SegmentEGBS::nodeInit(bool firstInit)
 {
     updateParameter("Sigma", float(0.5));;
     updateParameter("Threshold", float(1500));

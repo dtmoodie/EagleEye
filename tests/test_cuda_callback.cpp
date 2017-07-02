@@ -1,7 +1,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/core/cuda.hpp>
 
-#include "Aquila/utilities/CudaCallbacks.hpp"
+#include "Aquila/utilities/cuda/CudaCallbacks.hpp"
 
 int main()
 {

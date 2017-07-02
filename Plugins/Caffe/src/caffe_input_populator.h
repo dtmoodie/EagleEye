@@ -1,10 +1,10 @@
 #pragma once
-#include <Aquila/Nodes/Node.h>
-#include <MetaObject/Parameters/ParameterMacros.hpp>
+#include <Aquila/nodes/Node.hpp>
+#include <MetaObject/params/ParamMacros.hpp>
 #include "CaffeExport.hpp"
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class Caffe_EXPORT caffe_input_populator: public Node
         {

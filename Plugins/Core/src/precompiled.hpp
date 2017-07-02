@@ -1,22 +1,20 @@
 #pragma once
 
-#include <Aquila/Nodes/Node.h>
-#include <Aquila/Nodes/NodeInfo.hpp>
-#include "Aquila/Detail/PluginExport.hpp"
-#include "Aquila/IDataStream.hpp"
-#include <Aquila/ObjectDetection.hpp>
-#include <Aquila/utilities/CudaUtils.hpp>
-#include "Aquila/utilities/CudaCallbacks.hpp"
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
+#include "Aquila/core/IDataStream.hpp"
+#include <Aquila/types/ObjectDetection.hpp>
+#include <Aquila/utilities/cuda/CudaUtils.hpp>
+#include "Aquila/utilities/cuda/CudaCallbacks.hpp"
 #include "Aquila/rcc/SystemTable.hpp"
+#include <Aquila/types/Stamped.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 
-
-
-#include <MetaObject/MetaObject.hpp>
-#include <MetaObject/Parameters/Types.hpp>
-#include <IRuntimeObjectSystem.h>
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
-
+#include <MetaObject/object/MetaObject.hpp>
+#include <MetaObject/params/Types.hpp>
+#include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
+#include "RuntimeObjectSystem/RuntimeInclude.h"
+#include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 
 #include <Aquila/rcc/external_includes/cv_core.hpp>
 #include <Aquila/rcc/external_includes/cv_imgproc.hpp>

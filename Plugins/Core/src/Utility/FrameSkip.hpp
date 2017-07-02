@@ -1,10 +1,10 @@
 #pragma once
-
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class FrameSkip: public Node
         {
@@ -15,7 +15,7 @@ namespace aq
                 PARAM(int, frame_skip, 30)
             MO_END
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             int frame_count = 0;
         };
     }

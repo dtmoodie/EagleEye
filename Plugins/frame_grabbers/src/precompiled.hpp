@@ -1,11 +1,11 @@
 #pragma once
 
-#include <Aquila/Nodes/IFrameGrabber.hpp>
-#include <Aquila/Nodes/FrameGrabberInfo.hpp>
-#include <MetaObject/MetaObjectFactory.hpp>
-#include <MetaObject/MetaObject.hpp>
-#include <MetaObject/Detail/IMetaObjectImpl.hpp>
-#include "ObjectInterfacePerModule.h"
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
+#include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
+#include <MetaObject/object/MetaObjectFactory.hpp>
+#include <MetaObject/object/MetaObject.hpp>
+#include <MetaObject/object/detail/IMetaObjectImpl.hpp>
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #ifdef HAVE_GSTREAMER

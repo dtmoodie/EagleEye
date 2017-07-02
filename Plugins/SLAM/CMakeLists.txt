@@ -40,15 +40,16 @@ if(EIGEN_INCLUDE_DIRS)
 
     cuda_add_library(SLAM SHARED ${src} ${hdr} ${knl})
 
-    add_dependencies(SLAM Aquila)
     add_dependencies(SLAM OpenDTAM)
     RCC_LINK_LIB(SLAM
       ${OpenCV_LIBS}
       ${CUDA_CUBLAS_LIBRARIES}
-      Aquila
+      aquila_core
       OpenDTAM
+      metaobject_core metaobject_object metaobject_params metaobject_metaparams
     )
 
-    INCLUDE(../PluginTemplate.cmake)
+    #INCLUDE(../PluginTemplate.cmake)
+    aquila_declare_plugin(SLAM)
   endif(G2O_FOUND)
 endif()

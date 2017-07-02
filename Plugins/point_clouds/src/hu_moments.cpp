@@ -1,13 +1,14 @@
 #include "hu_moments.h"
-#include <MetaObject/Parameters/IO/CerealPolicy.hpp>
-#include <MetaObject/Parameters/MetaParameter.hpp>
+#include <MetaObject/serialization/CerealPolicy.hpp>
+#include <MetaObject/params/MetaParam.hpp>
+#include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include <cereal/types/vector.hpp>
 
 
 using namespace point_clouds;
 
-INSTANTIATE_META_PARAMETER(Moment)
-INSTANTIATE_META_PARAMETER(std::vector<Moment>)
+INSTANTIATE_META_PARAM(Moment);
+INSTANTIATE_META_PARAM(std::vector<Moment>);
 
 Moment::Moment(float Px_, float Py_, float Pz_) :
     Px(Px_), Py(Py_), Pz(Pz_)

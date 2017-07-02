@@ -2,7 +2,7 @@
 
 #include <parameters/ParameteredObjectImpl.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 NODE_DEFAULT_CONSTRUCTOR_IMPL(SerialStack, Utility);
 

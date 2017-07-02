@@ -1,14 +1,14 @@
 #pragma once
 #include <src/precompiled.hpp>
-#include <Aquila/ObjectDetection.hpp>
-
+#include <Aquila/types/ObjectDetection.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/utilities/ColorMapping.hpp>
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
     class Scale:public Node
     {
@@ -19,7 +19,7 @@ namespace aq
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class AutoScale: public Node
@@ -30,20 +30,24 @@ namespace aq
         OUTPUT(SyncedMemory, output_image, SyncedMemory())
     MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     class DrawDetections: public Node
     {
     public:
+        typedef std::map<std::string, cv::Vec3b> Colormap_t;
         MO_DERIVE(DrawDetections, Node)
             INPUT(SyncedMemory, image, nullptr)
             INPUT(std::vector<std::string>, labels, nullptr)
             OPTIONAL_INPUT(std::vector<DetectedObject>, detections, nullptr)
+            PARAM(bool, draw_class_label, true)
+            PARAM(bool, draw_detection_id, true)
             PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>())
-            OUTPUT(SyncedMemory, image_with_detections, SyncedMemory())
+            PARAM(Colormap_t, colormap, {})
+            OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     class Normalize: public Node
     {
@@ -57,7 +61,7 @@ namespace aq
             PARAM(double, beta, 1);
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     }
 }

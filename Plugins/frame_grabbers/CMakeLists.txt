@@ -15,7 +15,7 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 find_package(CUDA REQUIRED)
     include_directories(${CUDA_INCLUDE_DIRS})
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core imgcodecs cudacodec)
+find_package(OpenCV 3.0 QUIET COMPONENTS core imgcodecs cudacodec cudaarithm)
     include_directories(${OpenCV_INCLUDE_DIRS})
     set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
@@ -47,23 +47,19 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-#ADD_DEFINITIONS(-DPROJECT_INCLUDES="${CMAKE_CURRENT_SOURCE_DIR}")
-
-
 file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp")
 
-
 cuda_add_library(frame_grabbers SHARED ${src} ${hdr} ${knl})
 
-add_dependencies(frame_grabbers Aquila)
-
-RCC_LINK_LIB(frame_grabbers 
-        Aquila 
-        ${OpenCV_LIBS} 
-        ${CUDA_CUBLAS_LIBRARIES} 
-        
+RCC_LINK_LIB(frame_grabbers
+        aquila_core
+        metaobject_core metaobject_object metaobject_params metaobject_metaparams
+        ${OpenCV_LIBS}
+        ${CUDA_CUBLAS_LIBRARIES}
+        aquila_types
+        aquila_metatypes
 )
 if(GSTREAMER_FOUND)
     RCC_LINK_LIB(frame_grabbers
@@ -87,9 +83,9 @@ if(GSTREAMER_FOUND)
 endif()
 
 # ------------- tests
-add_subdirectory("tests")
-
-
-
-INCLUDE(../PluginTemplate.cmake)
+if(BUILD_TESTS)
+    add_subdirectory("tests")
+endif()
+#INCLUDE(../PluginTemplate.cmake)
+aquila_declare_plugin(frame_grabbers)
 

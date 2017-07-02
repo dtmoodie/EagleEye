@@ -29,29 +29,29 @@ namespace aq
         std::mutex mtx;
         
         std::vector<std::shared_ptr<mo::UI::qt::IParameterProxy>> parameterProxies;
-        std::vector<mo::IParameter*> parameters;
+        std::vector<mo::IParam*> parameters;
         //Parameters::Converters::Double::IConverter* converter;
     public:
         QtPlotterImpl();
         ~QtPlotterImpl();
         virtual QWidget* GetControlWidget(QWidget* parent);
         virtual void Serialize(ISimpleSerializer *pSerializer);
-        template<typename T> typename mo::ITypedParameter<T>* GetParameter(const std::string& name)
+        template<typename T> typename mo::ITParam<T>* GetParameter(const std::string& name)
         {
             for (auto& itr : parameters)
             {
                 if (itr->GetName() == name)
                 {
-                    return dynamic_cast<typename mo::ITypedParameter<T>*>(itr);
+                    return dynamic_cast<typename mo::ITParam<T>*>(itr);
                 }
             }
             return nullptr;
         }
-        template<typename T> typename mo::ITypedParameter<T>::Ptr GetParameter(size_t index)
+        template<typename T> typename mo::ITParam<T>::Ptr GetParameter(size_t index)
         {
             if(index < parameters.size())
-                return std::dynamic_pointer_cast<typename mo::ITypedParameter<T>>(parameters[index]);
-            return typename mo::ITypedParameter<T>::Ptr();
+                return std::dynamic_pointer_cast<typename mo::ITParam<T>>(parameters[index]);
+            return typename mo::ITParam<T>::Ptr();
         }
 
         virtual void OnParameterUpdate(cv::cuda::Stream* stream);
@@ -102,16 +102,16 @@ namespace aq
 
 
 template<typename T>
-T* getParameterPtr(mo::IParameter* param)
+T* getParameterPtr(mo::IParam* param)
 {
-    auto typedParam = dynamic_cast<mo::ITypedParameter<T>*>(param);
+    auto typedParam = dynamic_cast<mo::ITParam<T>*>(param);
     if (typedParam)
         return typedParam->Data();
     return nullptr;
 }
 
 
-cv::Size inline getSize(mo::IParameter* param)
+cv::Size inline getSize(mo::IParam* param)
 {
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
     if(gpuParam)
@@ -125,7 +125,7 @@ cv::Size inline getSize(mo::IParameter* param)
 
     return cv::Size(0,0);
 }
-int inline getChannels(mo::IParameter* param)
+int inline getChannels(mo::IParam* param)
 {
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
     if(gpuParam)
@@ -175,7 +175,7 @@ QVector<double> inline getParamArrayDataHelper(cv::Mat h_data, int channel)
     return output;
 }
 
-QVector<double> inline getParamArrayData(mo::IParameter* param, int channel)
+QVector<double> inline getParamArrayData(mo::IParam* param, int channel)
 {
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
     if(gpuParam)
@@ -193,7 +193,7 @@ QVector<double> inline getParamArrayData(mo::IParameter* param, int channel)
 }
 
 template<typename T>
-bool inline getData(mo::IParameter* param, double& data)
+bool inline getData(mo::IParam* param, double& data)
 {
     auto ptr = getParameterPtr<T>(param);
     if(ptr)
@@ -205,7 +205,7 @@ bool inline getData(mo::IParameter* param, double& data)
 
 }
 template<typename T>
-bool inline getDataVec(mo::IParameter* param, int channel, double& data)
+bool inline getDataVec(mo::IParam* param, int channel, double& data)
 {
     auto ptr = getParameterPtr<T>(param);
     if(ptr)
@@ -313,7 +313,7 @@ template<typename T> struct TypePolicy
 {
     static bool acceptsType(mo::Parameter* param)
     {
-    return mo::TypeInfo(typeid(T)) == param->GetTypeInfo();
+    return mo::TypeInfo(typeid(T)) == param->getTypeInfo();
     }
 };
 struct StaticPlotPolicy
@@ -321,7 +321,7 @@ struct StaticPlotPolicy
     int size;
     int channel;
     QVector<double> data;
-    void addPlotData(mo::IParameter* param, cv::cuda::Stream* stream)
+    void addPlotData(mo::IParam* param, cv::cuda::Stream* stream)
     {
         data = getParamArrayData(param, channel);
     }
@@ -346,7 +346,7 @@ struct SlidingWindowPlotPolicy
     int channel;
 
     boost::circular_buffer<double> plotData;
-    void addPlotData(mo::IParameter* param)
+    void addPlotData(mo::IParam* param)
     {
         plotData.push_back(getParamData(param, channel));
     }

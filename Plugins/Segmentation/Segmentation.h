@@ -1,18 +1,16 @@
-#include "Aquila/Nodes/Node.h"
-#include <Aquila/SyncedMemory.h>
+#include "Aquila/nodes/Node.hpp"
+#include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/rcc/external_includes/cv_cudabgsegm.hpp>
-#include "Aquila/utilities/CudaUtils.hpp"
+#include "Aquila/utilities/cuda/CudaUtils.hpp"
+#include <Aquila/metatypes/SyncedMemoryMetaParams.hpp>
 #include "Segmentation_impl.h"
+#ifdef FASTMS_FOUND
 #include "libfastms/solver/solver.h"
-#include <MetaObject/Detail/MetaObjectMacros.hpp>
+#endif
+#include <MetaObject/object/detail/MetaObjectMacros.hpp>
 
-
-
-namespace aq
-{
-    namespace Nodes
-    {
-    
+namespace aq{
+    namespace nodes{
     class OtsuThreshold: public Node
     {
     public:
@@ -23,7 +21,7 @@ namespace aq
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class MOG2: public Node
@@ -39,7 +37,7 @@ namespace aq
         MO_END;
 
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         cv::Ptr<cv::cuda::BackgroundSubtractorMOG2> mog2;
     };
 
@@ -52,23 +50,11 @@ namespace aq
             OUTPUT(SyncedMemory, mask, SyncedMemory())
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
-    
-
-    /*class SegmentGrabCut: public Node
-    {
-        cv::Mat bgdModel;
-        cv::Mat fgdModel;
-        ConstBuffer<cv::Mat> maskBuf;
-    public:
-        SegmentGrabCut();
-        virtual void NodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };*/
 
     void kmeans_impl(cv::cuda::GpuMat input, cv::cuda::GpuMat& labels, cv::cuda::GpuMat& clusters, int k, cv::cuda::Stream stream, cv::cuda::GpuMat weights = cv::cuda::GpuMat());
-    
+
 
     class KMeans: public Node
     {
@@ -88,7 +74,7 @@ namespace aq
             OUTPUT(double, compactness, 0.0)
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class MeanShift: public Node
@@ -105,7 +91,7 @@ namespace aq
             PARAM(double, epsilon, 1.0)
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class ManualMask: public Node
@@ -118,9 +104,10 @@ namespace aq
         cv::cuda::GpuMat mask;
     public:
         ManualMask();
-        virtual void NodeInit(bool firstInit);
+        virtual void nodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+    #ifdef FASTMS_FOUND
     class SLaT : public Node
     {
         cv::cuda::HostMem imageBuffer;
@@ -133,9 +120,9 @@ namespace aq
         boost::shared_ptr<Solver> solver;
     public:
         SLaT();
-        virtual void NodeInit(bool firstInit);
+        virtual void nodeInit(bool firstInit);
         virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
     };
+#endif
     }
-
 }

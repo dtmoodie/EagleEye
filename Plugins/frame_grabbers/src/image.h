@@ -1,37 +1,21 @@
 #pragma once
-
-#include "Aquila/Nodes/IFrameGrabber.hpp"
-#include "Aquila/ICoordinateManager.h"
+#include "Aquila/types/SyncedMemory.hpp"
+#include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include "frame_grabbersExport.hpp"
-namespace aq
-{
-    namespace Nodes
-    {
-    
-    class frame_grabbers_EXPORT frame_grabber_image: public IFrameGrabber
+namespace aq{
+    namespace nodes{
+    class frame_grabbers_EXPORT GrabberImage: public IGrabber
     {
     public:
-        MO_DERIVE(frame_grabber_image, IFrameGrabber);
+        static int canLoad(const std::string& path);
+        static int loadTimeout();
+        MO_DERIVE(GrabberImage, IGrabber);
+            OUTPUT(SyncedMemory, output, {})
         MO_END;
-
-
-        virtual bool LoadFile(const ::std::string& file_path);
-        virtual long long GetFrameNumber();
-        virtual long long GetNumFrames();
-        virtual ::std::string GetSourceFilename();
-
-        virtual TS<SyncedMemory> GetCurrentFrame(cv::cuda::Stream& stream);
-        virtual TS<SyncedMemory> GetFrame(int index, cv::cuda::Stream& stream);
-        virtual TS<SyncedMemory> GetNextFrame(cv::cuda::Stream& stream);
-        virtual TS<SyncedMemory> GetFrameRelative(int index, cv::cuda::Stream& stream);
-
-        virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
-        static int CanLoadDocument(const ::std::string& document);
-    private:
-        cv::cuda::GpuMat                d_image;
-        cv::Mat                         h_image;
-        rcc::shared_ptr<ICoordinateManager>  coordinate_manager;
-        ::std::string                     loaded_file;
+        virtual bool loadData(const std::string& path);
+        virtual bool grab();
+        cv::Mat image;
+        
     };
     }
 }

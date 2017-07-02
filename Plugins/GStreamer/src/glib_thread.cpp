@@ -1,10 +1,11 @@
 #include "glib_thread.h"
 #include "Aquila/rcc/SystemTable.hpp"
 
-#include "ObjectInterfacePerModule.h"
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
-#include <MetaObject/Logging/Log.hpp>
-#include <MetaObject/Thread/BoostThread.h>
+#include <MetaObject/logging/Log.hpp>
+#include <MetaObject/thread/BoostThread.hpp>
+
 glib_thread::glib_thread()
 {
     _main_loop = nullptr;
@@ -28,11 +29,11 @@ void glib_thread::loop()
 glib_thread* glib_thread::instance()
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    auto instance = table->GetSingleton<glib_thread>();
+    auto instance = table->getSingleton<glib_thread>();
     if(!instance)
     {
         LOG(info) << "Creating new instance of glib_thread";
-        instance = table->SetSingleton(new glib_thread());
+        instance = table->setSingleton(new glib_thread());
     }
     return instance;
 }
@@ -70,5 +71,5 @@ void glib_thread::start_thread()
 }
 size_t glib_thread::get_thread_id()
 {
-    return mo::GetThreadId(_thread);
+    return mo::getThreadId(_thread);
 }

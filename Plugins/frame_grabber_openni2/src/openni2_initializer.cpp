@@ -1,11 +1,11 @@
 #include "openni2_initializer.h"
 #include "OpenNI.h"
 #include <opencv2/core.hpp>
-#include <ObjectInterfacePerModule.h>
-#include <EagleLib/rcc/SystemTable.hpp>
+#include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
+#include <Aquila/rcc/SystemTable.hpp>
 
 
-using namespace EagleLib;
+using namespace aq;
 initializer_NI2::initializer_NI2()
 {
     openni::Status rc = openni::OpenNI::initialize();
@@ -20,11 +20,11 @@ initializer_NI2* initializer_NI2::instance()
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         if(table)
         {
-            inst = table->GetSingleton<initializer_NI2>();
+            inst = table->getSingleton<initializer_NI2>();
             if(inst == nullptr)
             {
                 inst = new initializer_NI2();
-                table->SetSingleton<initializer_NI2>(inst);
+                table->setSingleton<initializer_NI2>(inst);
             }
         }else
         {

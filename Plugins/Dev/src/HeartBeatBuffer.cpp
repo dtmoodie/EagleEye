@@ -1,8 +1,8 @@
 #include "HeartBeatBuffer.h"
-#include <shared_ptr.hpp>
+#include <RuntimeObjectSystem/shared_ptr.hpp>
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 #define CATCH_MACRO                                                         \
     catch (boost::thread_resource_error& err)                               \
 {                                                                           \
@@ -36,7 +36,7 @@ using namespace aq::Nodes;
     LOG(error) << "Unknown exception";                                      \
 }
 
-/*void HeartBeatBuffer::NodeInit(bool firstInit)
+/*void HeartBeatBuffer::nodeInit(bool firstInit)
 {
     if (firstInit)
     {

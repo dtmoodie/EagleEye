@@ -39,26 +39,28 @@ std::map<int, int> FCNHandler::CanHandleNetwork(const caffe::Net<float>& net)
     return output;
 }
 
-void FCNHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,  const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size)
-{
+void FCNHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes, mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<aq::DetectedObject2d>& objs){
+    aq::SyncedMemory data;
+    input_param.getData(data);
+    auto input_image_size = data.getSize();
     auto blob = net.blob_by_name(output_blob_name);
     if(!blob)
         return;
-    /*cv::Mat label, confidence;
-    aq::Caffe::argMax(blob.get(), label, confidence);
-    label.setTo(0, confidence < min_confidence);
-    cv::resize(label, label, input_image_size, 0, 0, cv::INTER_NEAREST);
-    cv::resize(confidence, confidence, input_image_size, 0, 0, cv::INTER_NEAREST);
-    label_param.UpdateData(label, timestamp, _ctx);
-    confidence_param.UpdateData(confidence, timestamp, _ctx);*/
-
     cv::cuda::GpuMat label, confidence;
-    aq::Caffe::argMax(blob.get(), label, confidence, _ctx->GetStream());
+    aq::Caffe::argMax(blob.get(), label, confidence, _ctx->getStream());
+
+
     cv::cuda::GpuMat resized_label, resized_confidence;
-    cv::cuda::resize(label, resized_label, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->GetStream());
-    cv::cuda::resize(confidence, resized_confidence, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->GetStream());
-    label_param.UpdateData(resized_label, timestamp, _ctx);
-    confidence_param.UpdateData(resized_confidence, timestamp, _ctx);
+    cv::cuda::resize(label, resized_label, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->getStream());
+    cv::cuda::resize(confidence, resized_confidence, input_image_size, 0, 0, cv::INTER_NEAREST, _ctx->getStream());
+
+    cv::cuda::GpuMat mask;
+    cv::cuda::threshold(resized_confidence, mask, min_confidence, 255, cv::THRESH_BINARY_INV, _ctx->getStream());
+    resized_label.setTo(cv::Scalar::all(0), mask, _ctx->getStream());
+
+
+    label_param.updateData(resized_label, input_param.getTimestamp(), _ctx);
+    confidence_param.updateData(resized_confidence, input_param.getTimestamp(), _ctx);
 }
 
 MO_REGISTER_CLASS(FCNHandler)
@@ -94,24 +96,23 @@ std::map<int, int> FCNSingleClassHandler::CanHandleNetwork(const caffe::Net<floa
     return output;
 }
 
-void FCNSingleClassHandler::HandleOutput(const caffe::Net<float>& net, long long timestamp,  const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size)
-{
+void FCNSingleClassHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes,
+                                         mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<aq::DetectedObject2d>& objs){
     auto blob = net.blob_by_name(output_blob_name);
     if(blob)
     {
         blob->gpu_data();
-        //blob->cpu_data();
-        auto wrapped = aq::Nodes::CaffeBase::WrapBlob(*blob);
+        auto wrapped = aq::nodes::CaffeBase::WrapBlob(*blob);
         if(class_index < blob->channels() && blob->num())
         {
-            const cv::cuda::GpuMat& confidence = wrapped[0].GetGpuMat(_ctx->GetStream(), class_index);
-            //cv::Mat dbg = wrapped[0].GetMat(_ctx->GetStream(), class_index);
+            const cv::cuda::GpuMat& confidence = wrapped[0].getGpuMat(_ctx->getStream(), class_index);
+            //cv::Mat dbg = wrapped[0].getMat(_ctx->getStream(), class_index);
             cv::cuda::GpuMat confidence_out;
-            cv::cuda::threshold(confidence, confidence_out, min_confidence, 255, cv::THRESH_BINARY, _ctx->GetStream());
+            cv::cuda::threshold(confidence, confidence_out, min_confidence, 255, cv::THRESH_BINARY, _ctx->getStream());
             cv::cuda::GpuMat mask_out;
-            confidence_out.convertTo(mask_out, CV_8UC1, _ctx->GetStream());
-            label_param.UpdateData(mask_out, timestamp, _ctx);
-            confidence_param.UpdateData(confidence, timestamp, _ctx);
+            confidence_out.convertTo(mask_out, CV_8UC1, _ctx->getStream());
+            label_param.updateData(mask_out, input_param.getTimestamp(), _ctx);
+            confidence_param.updateData(confidence, input_param.getTimestamp(), _ctx);
         }
     }
 }

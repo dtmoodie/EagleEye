@@ -1,14 +1,14 @@
 #include "FrameSkip.hpp"
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
-bool FrameSkip::ProcessImpl()
+bool FrameSkip::processImpl()
 {
     ++frame_count;
     if(frame_count > frame_skip)
     {
-        output_param.UpdateData(*input, input_param.GetTimestamp(), _ctx);
+        output_param.updateData(*input, input_param.getTimestamp(), _ctx.get());
         frame_count = 0;
         return true;
     }

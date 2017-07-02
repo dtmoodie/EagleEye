@@ -4,16 +4,17 @@
 #include "frame_grabbersExport.hpp"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
     
-    class frame_grabbers_EXPORT frame_grabber_html5 : public frame_grabber_gstreamer
+    class frame_grabbers_EXPORT GrabberHTML : public GrabberGstreamer
     {
     public:
-        frame_grabber_html5();
-        virtual bool LoadFile(const std::string& file_path);
-        virtual rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
-        static int CanLoadDocument(const std::string& document);
+        MO_DERIVE(GrabberHTML, GrabberGstreamer)
+
+        MO_END;
+        virtual bool Load(const std::string& file_path);
+        static int canLoad(const std::string& document);
     };
 }
 }

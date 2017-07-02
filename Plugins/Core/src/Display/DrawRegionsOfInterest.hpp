@@ -1,12 +1,11 @@
 #pragma once
-
-#include "Aquila/Nodes/Node.h"
-
-#include "Aquila/utilities/GpuDrawing.hpp"
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
+#include <Aquila/utilities/GpuDrawing.hpp>
 
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
     class DrawRegionsOfInterest: public Node
     {
@@ -17,7 +16,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, {})
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 }
 }

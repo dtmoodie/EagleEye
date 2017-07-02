@@ -52,7 +52,7 @@ void bounding_box::contains(cv::InputArray points, cv::InputOutputArray mask, cv
     }else
     {
         cv::Mat _points = points.getMat();
-        cv::Mat& _mask = mask.getMatRef();
+        //cv::Mat& _mask = mask.getMatRef();
         _points = _points.reshape(1);
         cv::transform(_points, _points, _inv_transform);
         cv::inRange(_points, cv::Scalar::all(0), _size, mask);

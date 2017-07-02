@@ -1,16 +1,17 @@
 #pragma once
 #include <src/precompiled.hpp>
-#include <Aquila/Nodes/Node.h>
-#include "Aquila/utilities/CudaUtils.hpp"
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
+#include "Aquila/utilities/cuda/CudaUtils.hpp"
+#include "RuntimeObjectSystem/RuntimeInclude.h"
+#include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
-    
+
     class FFT: public Node
     {
     public:
@@ -27,7 +28,7 @@ namespace aq
             OUTPUT(SyncedMemory, coefficients, SyncedMemory());
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class FFTPreShiftImage: public Node
@@ -39,7 +40,7 @@ namespace aq
             OUTPUT(SyncedMemory, output, SyncedMemory());
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class FFTPostShift: public Node
@@ -51,7 +52,7 @@ namespace aq
             OUTPUT(SyncedMemory, output, SyncedMemory());
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         //FFTPostShift();
         //virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     };

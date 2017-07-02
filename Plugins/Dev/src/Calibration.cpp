@@ -1,24 +1,25 @@
 #include "Calibration.h"
 #include <Aquila/rcc/external_includes/cv_calib3d.hpp>
 #include <Aquila/rcc/external_includes/cv_highgui.hpp>
-
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 
-#include <IRuntimeObjectSystem.h>
+#include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
 
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 IPerModuleInterface* GetModule()
 {
     return PerModuleInterface::GetInstance();
 }
-SETUP_PROJECT_IMPL
-bool FindCheckerboard::ProcessImpl()
+
+bool FindCheckerboard::processImpl()
 {
-    if(num_corners_x_param.modified || num_corners_y_param.modified ||
-        corner_distance_param.modified || object_points.empty())
+    if(num_corners_x_param.modified() || num_corners_y_param.modified() ||
+        corner_distance_param.modified() || object_points.empty())
     {
         object_points.resize(num_corners_x * num_corners_y);
         int count = 0;
@@ -29,18 +30,18 @@ bool FindCheckerboard::ProcessImpl()
                 object_points[count] = cv::Point3f(corner_distance*j, corner_distance*i, 0);
             }
         }
-        num_corners_x_param.modified = false;
-        num_corners_y_param.modified = false;
-        corner_distance_param.modified = false;
+        num_corners_x_param.modified(false);
+        num_corners_y_param.modified(false);
+        corner_distance_param.modified(false);
     }
-    auto& mat = input->GetMat(Stream());
-    Stream().waitForCompletion();
+    auto& mat = input->getMat(stream());
+    stream().waitForCompletion();
     bool found = cv::findChessboardCorners(mat, cv::Size(num_corners_x, num_corners_y), image_points);
-    if (drawn_corners_param.HasSubscriptions())
+    if (drawn_corners_param.hasSubscriptions())
     {
         cv::Mat display = mat.clone();
         cv::drawChessboardCorners(display, cv::Size(num_corners_x, num_corners_y), image_points, found);
-        drawn_corners_param.UpdateData(display, input_param.GetTimestamp(), _ctx);
+        drawn_corners_param.updateData(display, input_param.getTimestamp(), _ctx.get());
     }
     return found;
 }
@@ -55,7 +56,7 @@ void CalibrateCamera::Save()
         fs << "Camera Matrix" << camera_matrix;
         fs << "Distortion Matrix" << distortion_matrix;
     }
- 
+
 }
 void CalibrateCamera::Clear()
 {
@@ -72,14 +73,14 @@ void CalibrateCamera::SaveCalibration()
 {
 
 }
-bool CalibrateCamera::ProcessImpl()
+bool CalibrateCamera::processImpl()
 {
     if(image_points->size() != object_points->size())
     {
         LOG(trace) << "image_points->size() != object_points->size()";
         return false;
     }
-    //cv::Size size = image->GetSize();
+    //cv::Size size = image->getSize();
     cv::Vec2f centroid(0,0);
     for (int i = 0; i < image_points->size(); ++i)
     {
@@ -104,22 +105,22 @@ bool CalibrateCamera::ProcessImpl()
 //        std::vector<cv::Mat> rvecs;
         //std::vector<cv::Mat> tvecs;
         double quality = cv::calibrateCamera(
-            object_point_collection, 
+            object_point_collection,
             image_point_collection,
-            image->GetSize(), 
-            camera_matrix, 
-            distortion_matrix, 
-            rotation_vecs, 
+            image->getSize(),
+            camera_matrix,
+            distortion_matrix,
+            rotation_vecs,
             translation_vecs);
         if(quality < 1)
         {
             // consider disabling the optimization because we have sufficient quality
         }
-        camera_matrix_param.Commit();
-        distortion_matrix_param.Commit();
-        rotation_vecs_param.Commit();
-        translation_vecs_param.Commit();
-        reprojection_error_param.UpdateData(quality);
+        camera_matrix_param.emitUpdate();
+        distortion_matrix_param.emitUpdate();
+        rotation_vecs_param.emitUpdate();
+        translation_vecs_param.emitUpdate();
+        reprojection_error_param.updateData(quality);
         lastCalibration = object_point_collection.size();
     }
     return true;
@@ -147,7 +148,7 @@ void CalibrateStereoPair::Save()
     fs << "P2" << P2;
     fs << "Q" << Q;
 }
-bool CalibrateStereoPair::ProcessImpl()
+bool CalibrateStereoPair::processImpl()
 {
     if(camera_points_1->size() != camera_points_2->size())
         return false;
@@ -199,27 +200,27 @@ bool CalibrateStereoPair::ProcessImpl()
     imagePointCollection1.push_back(*camera_points_1);
     imagePointCollection2.push_back(*camera_points_2);
     objectPointCollection.push_back(*object_points);
-    image_pairs_param.UpdateData(imagePointCollection1.size());
+    image_pairs_param.updateData(imagePointCollection1.size());
     if(imagePointCollection1.size() > lastCalibration + 20)
     {
         reprojection_error = cv::stereoCalibrate(
-            objectPointCollection, 
-            imagePointCollection1, 
-            imagePointCollection2, 
+            objectPointCollection,
+            imagePointCollection1,
+            imagePointCollection2,
             *camera_matrix_1,
-            *distortion_matrix_1, 
-            *camera_matrix_2, 
-            *distortion_matrix_2, 
-            image->GetSize(), 
-            rotation_matrix, 
-            translation_matrix, 
-            essential_matrix, 
+            *distortion_matrix_1,
+            *camera_matrix_2,
+            *distortion_matrix_2,
+            image->getSize(),
+            rotation_matrix,
+            translation_matrix,
+            essential_matrix,
             fundamental_matrix);
-        reprojection_error_param.Commit();
-        rotation_matrix_param.Commit();
-        translation_matrix_param.Commit();
-        essential_matrix_param.Commit();
-        fundamental_matrix_param.Commit();
+        reprojection_error_param.emitUpdate();
+        rotation_matrix_param.emitUpdate();
+        translation_matrix_param.emitUpdate();
+        essential_matrix_param.emitUpdate();
+        fundamental_matrix_param.emitUpdate();
         Save();
     }
     return true;
@@ -227,7 +228,7 @@ bool CalibrateStereoPair::ProcessImpl()
 
 
 
-void ReadStereoCalibration::OnCalibrationFileChange(mo::Context* ctx, mo::IParameter* param)
+void ReadStereoCalibration::OnCalibrationFileChange(mo::Context* ctx, mo::IParam* param)
 {
     cv::FileStorage fs(calibration_file.string(), cv::FileStorage::READ);
     fs["K1"] >> camera_matrix_1;
@@ -243,22 +244,22 @@ void ReadStereoCalibration::OnCalibrationFileChange(mo::Context* ctx, mo::IParam
     fs["P1"] >> P1;
     fs["P2"] >> P2;
     fs["Q"] >> Q;
-    camera_matrix_1_param.Commit();
-    camera_matrix_2_param.Commit();
-    distortion_matrix_1_param.Commit();
-    distortion_matrix_2_param.Commit();
-    rotation_matrix_param.Commit();
-    translation_matrix_param.Commit();
-    essential_matrix_param.Commit();
-    fundamental_matrix_param.Commit();
-    R1_param.Commit();
-    R2_param.Commit();
-    P1_param.Commit();
-    P2_param.Commit();
-    Q_param.Commit();
+    camera_matrix_1_param.emitUpdate();
+    camera_matrix_2_param.emitUpdate();
+    distortion_matrix_1_param.emitUpdate();
+    distortion_matrix_2_param.emitUpdate();
+    rotation_matrix_param.emitUpdate();
+    translation_matrix_param.emitUpdate();
+    essential_matrix_param.emitUpdate();
+    fundamental_matrix_param.emitUpdate();
+    R1_param.emitUpdate();
+    R2_param.emitUpdate();
+    P1_param.emitUpdate();
+    P2_param.emitUpdate();
+    Q_param.emitUpdate();
 }
 
-bool ReadStereoCalibration::ProcessImpl()
+bool ReadStereoCalibration::processImpl()
 {
     return true;
 }

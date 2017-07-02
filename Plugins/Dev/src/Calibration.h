@@ -1,18 +1,13 @@
 #pragma once
 #include "precompiled.hpp"
 #include <boost/circular_buffer.hpp>
-#include "Aquila/Detail/Export.hpp"
-#include <Aquila/Detail/PluginExport.hpp>
-#include <MetaObject/Parameters/Types.hpp>
-
-SETUP_PROJECT_DEF
-
-
+#include <MetaObject/params/Types.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 namespace aq
 {
     typedef std::vector<cv::Point2f> ImagePoints;
     typedef std::vector<cv::Point3f> ObjectPoints;
-    namespace Nodes
+    namespace nodes
     {
         class FindCheckerboard : public Node
         {
@@ -27,7 +22,7 @@ namespace aq
                 OUTPUT(SyncedMemory, drawn_corners, SyncedMemory());
             MO_END;
 
-            bool ProcessImpl();
+            bool processImpl();
             //virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
         };
         class LoadCameraCalibration : public Node
@@ -38,7 +33,7 @@ namespace aq
             MO_DERIVE(LoadCameraCalibration, Node)
             MO_END;
         private:
-            bool ProcessImpl() { return false; }
+            bool processImpl() { return false; }
 
         };
 
@@ -70,8 +65,8 @@ namespace aq
                 OUTPUT(std::vector<cv::Mat>, translation_vecs, std::vector<cv::Mat>());
                 PROPERTY(int, lastCalibration, 0);
             MO_END;
-            bool ProcessImpl();
-        
+            bool processImpl();
+
         };
 
         class CalibrateStereoPair: public Node
@@ -83,7 +78,7 @@ namespace aq
 
             std::vector<ImagePoints> imagePointCollection1;
             std::vector<ImagePoints> imagePointCollection2;
-        
+
             std::vector<cv::Vec2f> imagePointCentroids1;
             std::vector<cv::Vec2f> imagePointCentroids2;
 
@@ -114,12 +109,12 @@ namespace aq
                 MO_END;
 
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
 
         class ReadStereoCalibration: public Node
         {
-        
+
         public:
             MO_DERIVE(ReadStereoCalibration, Node)
                 PARAM(mo::ReadFile, calibration_file, mo::ReadFile("StereoCalibration.yml"));
@@ -136,10 +131,10 @@ namespace aq
                 OUTPUT(cv::Mat, P1, cv::Mat());
                 OUTPUT(cv::Mat, P2, cv::Mat());
                 OUTPUT(cv::Mat, Q, cv::Mat());
-                MO_SLOT(void, OnCalibrationFileChange, mo::Context*, mo::IParameter*);
+                MO_SLOT(void, OnCalibrationFileChange, mo::Context*, mo::IParam*);
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
 
         class ReadCameraCalibration: public Node
@@ -152,7 +147,7 @@ namespace aq
                 OUTPUT(cv::Mat, distortion_matrix, cv::Mat());
             MO_END;
         protected:
-            bool ProcessImpl(){ return false; }
+            bool processImpl(){ return false; }
         };
     }
 }

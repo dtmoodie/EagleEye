@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #ifdef _MSC_VER
   #ifdef _DEBUG
     RUNTIME_COMPILER_LINKLIBRARY("libcaffe-d.lib");

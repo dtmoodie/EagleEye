@@ -1,6 +1,6 @@
 
 #include "src/precompiled.hpp"
-//#include "Aquila/Nodes/VideoProc/Tracking.hpp"
+//#include "Aquila/nodes/VideoProc/Tracking.hpp"
 #include "Aquila/rcc/external_includes/cv_cudafeatures2d.hpp"
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
@@ -8,7 +8,7 @@ RUNTIME_MODIFIABLE_INCLUDE
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class GoodFeaturesToTrack : public Node
         {
@@ -29,7 +29,7 @@ namespace aq
                 STATUS(int, num_corners, 0);
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
 
             
         };
@@ -48,7 +48,7 @@ namespace aq
                 PROPERTY(cv::Ptr<cv::cuda::Feature2DAsync>, detector, cv::Ptr<cv::cuda::Feature2DAsync>());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
 
         class ORBFeatureDetector : public Node
@@ -72,7 +72,7 @@ namespace aq
                 OUTPUT(SyncedMemory, descriptors, SyncedMemory());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
 
         };
 
@@ -90,7 +90,7 @@ namespace aq
                 OUTPUT(SyncedMemory, score, SyncedMemory());
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
         class CornerMinEigenValue : public Node
         {
@@ -104,7 +104,7 @@ namespace aq
                 OUTPUT(SyncedMemory, score, SyncedMemory());
                 MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
     }
 }

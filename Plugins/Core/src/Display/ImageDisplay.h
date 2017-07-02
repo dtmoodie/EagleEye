@@ -1,5 +1,7 @@
-#include "Aquila/Nodes/Sink.h"
-#include "../CoreExport.hpp"
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/Stamped.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
+#include "CoreExport.hpp"
 
 namespace cv
 {
@@ -17,7 +19,7 @@ namespace cuda
 }
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
     class QtImageDisplay: public Node
     {
@@ -28,7 +30,7 @@ namespace Nodes
             PARAM(bool, overlay_timestamp, true)
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     class OGLImageDisplay: public Node
     {
@@ -36,7 +38,9 @@ namespace Nodes
         MO_DERIVE(OGLImageDisplay, Node)
             INPUT(SyncedMemory, image, nullptr)
         MO_END;
-        bool ProcessImpl();
+        bool processImpl();
+    protected:
+        boost::optional<mo::Time_t> _prev_time;
     };
 
 
@@ -50,7 +54,7 @@ namespace Nodes
             INPUT(cv::Mat, cpu_points, nullptr)
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     class FlowVectorDisplay: public Node
     {
@@ -59,7 +63,7 @@ namespace Nodes
             INPUT(TS<SyncedMemory>, image, nullptr)
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class HistogramDisplay: public Node
@@ -70,7 +74,7 @@ namespace Nodes
             OPTIONAL_INPUT(SyncedMemory, bins, nullptr)
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         cv::cuda::GpuMat draw;
     };
     class HistogramOverlay: public Node
@@ -83,7 +87,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, {})
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         cv::cuda::GpuMat draw;
     };
 
@@ -94,7 +98,7 @@ namespace Nodes
         INPUT(TS<SyncedMemory>, image, nullptr);
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
-} // namespace Nodes
+} // namespace nodes
 } // namespace aq

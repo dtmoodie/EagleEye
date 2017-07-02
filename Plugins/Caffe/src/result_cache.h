@@ -1,9 +1,9 @@
 #pragma once
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         /*class PLUGIN_EXPORTS result_cache: public Node
         {

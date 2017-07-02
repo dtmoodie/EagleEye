@@ -4,7 +4,8 @@
 #include <opencv2/core/cuda_stream_accessor.hpp>
 #include <opencv2/core/cuda/utility.hpp>
 
-#include "Aquila/utilities/GPUSortingPriv.hpp"
+#include "Aquila/utilities/cuda/GPUSortingPriv.hpp"
+
 
 template<class T>
 void __global__ accum_kernel(const T* in, float* out)

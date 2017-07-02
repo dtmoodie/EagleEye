@@ -1,12 +1,12 @@
 #pragma once
 #include "GStreamerExport.hpp"
-#include "MetaObject/MetaObject.hpp"
+#include "MetaObject/object/MetaObject.hpp"
 #include "gstreamer.hpp"
-#include "Aquila/Nodes/IFrameGrabber.hpp"
+#include "Aquila/framegrabbers/IFrameGrabber.hpp"
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class GStreamer_EXPORT tcpserver: public gstreamer_sink_base
         {
@@ -22,26 +22,14 @@ namespace aq
             MO_END;
             tcpserver();
             ~tcpserver();
-            virtual void NodeInit(bool firstInit);
-            bool ProcessImpl();
+            virtual void nodeInit(bool firstInit);
+            bool processImpl();
         };
 
-        class GStreamer_EXPORT GStreamerSink: public gstreamer_sink_base
+        class GStreamer_EXPORT BufferedHeartbeatRtsp : public IGrabber, public gstreamer_src_base
         {
         public:
-            MO_DERIVE(GStreamerSink, gstreamer_sink_base)
-                INPUT(SyncedMemory, image, nullptr)
-                PARAM(std::string, gstreamer_pipeline, "")
-            MO_END
-        protected:
-            bool ProcessImpl();
-            bool _initialized = false;
-        };
-
-        class GStreamer_EXPORT BufferedHeartbeatRtsp : public FrameGrabberBuffered, public gstreamer_src_base
-        {
-        public:
-            virtual void NodeInit(bool firstInit);
+            virtual void nodeInit(bool firstInit);
         protected:
         };
 
@@ -51,14 +39,14 @@ namespace aq
             JPEGSink();
             MO_DERIVE(JPEGSink, Node)
                 PARAM(std::string, gstreamer_pipeline, "");
-                OUTPUT(cv::Mat, jpeg_buffer, cv::Mat());
-                OUTPUT(cv::Mat, decoded, cv::Mat());
+                SOURCE(cv::Mat, jpeg_buffer, cv::Mat());
+                SOURCE(aq::SyncedMemory, decoded, {});
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             virtual GstFlowReturn on_pull();
             cv::Mat decode_buffer;
-            mo::Context gstreamer_context;
+            std::shared_ptr<mo::Context> gstreamer_context;
         };
     }
 }

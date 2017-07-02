@@ -1,11 +1,11 @@
 #include "sinks.hpp"
 #include <gst/gst.h>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <gst/base/gstbasesink.h>
 #include <opencv2/imgcodecs.hpp>
 #include "glib_thread.h"
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 tcpserver::tcpserver():
     gstreamer_sink_base()
@@ -19,7 +19,7 @@ tcpserver::~tcpserver()
 
 }
 
-void tcpserver::NodeInit(bool firstInit)
+void tcpserver::nodeInit(bool firstInit)
 {
     if(firstInit)
     {
@@ -41,19 +41,19 @@ void tcpserver::NodeInit(bool firstInit)
             if(check_feature("vp8enc"))
                 encoders.addEnum(4, "vp8enc");
         }
-        encoders_param.Commit();
+        encoders_param.emitUpdate();
         auto interfaces = get_interfaces();
         for(int i = 0; i < interfaces.size(); ++i)
         {
             this->interfaces.addEnum(i, interfaces[i]);
         }
-        this->interfaces_param.Commit();
+        this->interfaces_param.emitUpdate();
     }
 }
 
-bool tcpserver::ProcessImpl()
+bool tcpserver::processImpl()
 {
-    if (!_initialized || encoders_param.modified || interfaces_param.modified)
+    if (!_initialized || encoders_param.modified() || interfaces_param.modified())
     {
         if (encoders.getValue() != -1)
         {
@@ -74,98 +74,73 @@ bool tcpserver::ProcessImpl()
             _initialized = create_pipeline(ss.str());
             if (_initialized)
             {
-                encoders_param.modified = false;
-                interfaces_param.modified = false;
+                encoders_param.modified(false);
+                interfaces_param.modified(false);
             }
         }
     }
     if(_initialized)
     {
-        PushImage(*image, Stream());
+        PushImage(*image, stream());
         return true;
     }
     return false;
 }
 MO_REGISTER_CLASS(tcpserver);
 
-bool GStreamerSink::ProcessImpl()
-{
-    if(!_initialized || gstreamer_pipeline_param.modified)
-    {
-        cleanup();
-        _initialized = create_pipeline(gstreamer_pipeline);
-        if(_initialized)
-        {
-            gstreamer_pipeline_param.modified = false;
-        }
-    }
-    if(_initialized)
-    {
-        PushImage(*image, Stream());
-        return true;
-    }
-    return false;
-}
-MO_REGISTER_CLASS(GStreamerSink);
-
-JPEGSink::JPEGSink()
-{
+JPEGSink::JPEGSink(){
     glib_thread::instance()->start_thread();
-    gstreamer_context.thread_id = glib_thread::instance()->get_thread_id();
+    gstreamer_context = mo::Context::create();
+    gstreamer_context->thread_id = glib_thread::instance()->get_thread_id();
     //this->_ctx = &gstreamer_context;
 }
 
 
-bool JPEGSink::ProcessImpl()
-{
-    if(gstreamer_pipeline_param.modified)
-    {
+bool JPEGSink::processImpl(){
+    if(gstreamer_pipeline_param.modified()){
         this->cleanup();
         this->create_pipeline(gstreamer_pipeline);
         this->set_caps("image/jpeg");
         this->start_pipeline();
-        gstreamer_pipeline_param.modified = false;
+        gstreamer_pipeline_param.modified(false);
     }
     _modified = true;
     return true;
 }
 
-GstFlowReturn JPEGSink::on_pull()
-{
+GstFlowReturn JPEGSink::on_pull(){
     GstSample *sample = gst_base_sink_get_last_sample(GST_BASE_SINK(_appsink));
-    if (sample)
-    {
+    if (sample){
         GstBuffer *buffer;
         GstCaps *caps;
         //GstStructure *s;
         GstMapInfo map;
         caps = gst_sample_get_caps(sample);
-        if (!caps)
-        {
+        if (!caps){
             LOG(debug) << "could not get sample caps";
             return GST_FLOW_OK;
         }
         buffer = gst_sample_get_buffer(sample);
-        if (gst_buffer_map(buffer, &map, GST_MAP_READ))
-        {
+        if (gst_buffer_map(buffer, &map, GST_MAP_READ)){
             cv::Mat mapped(1, map.size, CV_8U);
             memcpy(mapped.data, map.data, map.size);
-            this->jpeg_buffer_param.UpdateData(mapped, buffer->pts, &gstreamer_context);
-            if(decoded_param.HasSubscriptions())
-            {
-                decoded_param.UpdateData(cv::imdecode(jpeg_buffer, cv::IMREAD_UNCHANGED, &decode_buffer),
-                    buffer->pts, &gstreamer_context);
+            auto ts = mo::getCurrentTime();
+            this->jpeg_buffer_param.updateData(mapped, mo::tag::_timestamp = ts, &gstreamer_context);
+            if(decoded_param.hasSubscriptions()){
+                decoded_param.updateData(cv::imdecode(mapped, cv::IMREAD_UNCHANGED, &decode_buffer),
+                    mo::tag::_timestamp = ts, &gstreamer_context);
             }
         }
+        gst_buffer_unmap(buffer, &map);
         gst_sample_unref(sample);
-        
+        gst_buffer_unref(buffer);
     }
     return GST_FLOW_OK;
 }
 
 MO_REGISTER_CLASS(JPEGSink)
 
-void BufferedHeartbeatRtsp::NodeInit(bool firstInit)
+void BufferedHeartbeatRtsp::nodeInit(bool firstInit)
 {
 
 }

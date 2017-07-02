@@ -1,10 +1,10 @@
 #include "video.h"
-#include "Aquila/Nodes/FrameGrabberInfo.hpp"
+#include "Aquila/framegrabbers/FrameGrabberInfo.hpp"
 #include "boost/filesystem.hpp"
-#include <ObjectInterfacePerModule.h>
+#include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 using namespace aq;
-using namespace aq::Nodes;
-frame_grabber_video::~frame_grabber_video()
+using namespace aq::nodes;
+/*frame_grabber_video::~frame_grabber_video()
 {
     StopThreads();
 }
@@ -15,9 +15,7 @@ int frame_grabber_video::CanLoadDocument(const std::string& document)
     return (extension == ".avi" || extension == ".mp4") ? 1 : 0;
 }
 
-rcc::shared_ptr<ICoordinateManager> frame_grabber_video::GetCoordinateManager()
-{
-    return coordinate_manager;
-}
+
 
 MO_REGISTER_CLASS(frame_grabber_video);
+*/

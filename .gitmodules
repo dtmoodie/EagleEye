@@ -1,18 +1,18 @@
 [submodule "Plugins/Segmentation/fastms"]
 	path = Plugins/Segmentation/fastms
 	url = http://github.com/dtmoodie/fastms
-[submodule "EagleLib/pplx"]
-	path = EagleLib/pplx
-	url = https://github.com/dtmoodie/pplx
 [submodule "Plugins/SLAM/dtam"]
 	path = Plugins/SLAM/dtam
 	url = https://github.com/dtmoodie/opendtam
 [submodule "Plugins/SLAM/lsd_slam"]
 	path = Plugins/SLAM/lsd_slam
 	url = https://github.com/dtmoodie/lsd_slam
-[submodule "EagleLib/MetaObject"]
-	path = EagleLib/MetaObject
-	url = http://github.com/dtmoodie/MetaObject
 [submodule "Aquila"]
 	path = Aquila
 	url = http://github.com/dtmoodie/Aquila
+[submodule "Plugins/gta5"]
+	path = Plugins/gta5
+	url = /home/dan/remotes/gta5/
+[submodule "EagleEye/dependencies/nodeeditor"]
+	path = EagleEye/dependencies/nodeeditor
+	url = http://github.com/dtmoodie/nodeeditor

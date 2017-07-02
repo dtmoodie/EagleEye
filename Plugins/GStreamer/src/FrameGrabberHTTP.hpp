@@ -1,30 +1,25 @@
 #include "gstreamer.hpp"
-#include "Aquila/Nodes/IFrameGrabber.hpp"
+#include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include "GStreamerExport.hpp"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
 
 class GStreamer_EXPORT FrameGrabberHTTP:
         virtual public gstreamer_src_base,
-        virtual public FrameGrabberBuffered
+        virtual public IGrabber
 {
 public:
-    static int CanLoadDocument(const std::string& doc);
-    static int LoadTimeout(){return 10000;}
+    static int canLoad(const std::string& doc);
+    static int loadTimeout(){return 10000;}
 
-    long long GetNumFrames() {return -1;}
-    rcc::shared_ptr<aq::ICoordinateManager> GetCoordinateManager()
-    {
-        return {};
-    }
-
-    MO_DERIVE(FrameGrabberHTTP, FrameGrabberBuffered)
-
+    MO_DERIVE(FrameGrabberHTTP, IGrabber)
+        OUTPUT(SyncedMemory, image, {})
     MO_END;
     virtual GstFlowReturn on_pull();
-    bool LoadFile(const ::std::string& file_path);
+    bool loadData(const ::std::string& file_path);
+    bool grab(){return true;}
 protected:
 };
 

@@ -3,18 +3,18 @@
 #include "precompiled.hpp"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
-frame_grabber_directory::frame_grabber_directory()
+/*frame_grabber_directory::frame_grabber_directory()
 {
     frame_index = 0;
 }
-bool frame_grabber_directory::ProcessImpl()
+bool frame_grabber_directory::processImpl()
 {
-    auto frame = GetNextFrame(Stream());
+    auto frame = GetNextFrame(stream());
     if(!frame.empty())
     {
-        this->current_frame_param.UpdateData(frame, frame.frame_number, _ctx);
+        this->current_frame_param.updateData(frame, frame.frame_number, _ctx.get());
         return true;
     }
     return false;
@@ -24,7 +24,7 @@ void frame_grabber_directory::Restart()
 
 }
 
-void frame_grabber_directory::NodeInit(bool firstInit)
+void frame_grabber_directory::nodeInit(bool firstInit)
 {
     //updateParameter("Frame Index", 0);
     //updateParameter("Loaded file", std::string(""));
@@ -32,7 +32,7 @@ void frame_grabber_directory::NodeInit(bool firstInit)
     {
         frame_index = 0;
         updateParameter("Frame Index", 0);
-    });*/
+    });
 }
 void frame_grabber_directory::Serialize(ISimpleSerializer* pSerializer)
 {
@@ -62,8 +62,8 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
         {
             std::sort(itr.second.begin(), itr.second.end());
         }
-        auto constructors = mo::MetaObjectFactory::Instance()->
-                GetConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
+        auto constructors = mo::MetaObjectFactory::instance()->
+                getConstructors(aq::nodes::IFrameGrabber::s_interfaceID);
         std::vector<int> load_count(constructors.size(), 0);
         std::vector<int> priorities(constructors.size(), 0);
         for(int i = 0; i < constructors.size(); ++i)
@@ -101,7 +101,7 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
     return false;
 }
 
-long long frame_grabber_directory::GetFrameNumber()
+long long frame_grabber_directory::getFrameNumber()
 {
     return frame_index;
 }
@@ -126,7 +126,7 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     if(index == files_on_disk.size() - 1)
         sig_eos();
     if(files_on_disk.empty())
-        return TS<SyncedMemory>(0.0, (long long)0);
+        return TS<SyncedMemory>(mo::Time_t(0.0 * mo::ms), (size_t)0);
     if(index >= files_on_disk.size())
         index = static_cast<int>(files_on_disk.size() - 1);
     std::string file_name = files_on_disk[index];
@@ -134,11 +134,11 @@ TS<SyncedMemory> frame_grabber_directory::GetFrame(int index, cv::cuda::Stream& 
     cv::Mat h_out = cv::imread(file_name);
 
     if(h_out.empty())
-        return TS<SyncedMemory>(0.0, (long long)0);
+        return TS<SyncedMemory>(mo::Time_t(0.0*mo::ms), (size_t)0);
 
     this->_modified = true;
 
-    return TS<SyncedMemory>(0.0, (long long)index, h_out);
+    return TS<SyncedMemory>(mo::Time_t(0.0 * mo::ms), (size_t)index, h_out);
 }
 
 TS<SyncedMemory> frame_grabber_directory::GetNextFrame(cv::cuda::Stream& stream)
@@ -154,11 +154,6 @@ TS<SyncedMemory> frame_grabber_directory::GetFrameRelative(int index, cv::cuda::
     index = std::max((int)files_on_disk.size() - 1, index);
     index = std::min(0, index);
     return GetFrame(index, stream);
-}
-
-rcc::shared_ptr<ICoordinateManager> frame_grabber_directory::GetCoordinateManager()
-{
-    return coordinate_manager;
 }
 
 int frame_grabber_directory::CanLoadDocument(const std::string& document)
@@ -178,8 +173,8 @@ int frame_grabber_directory::CanLoadDocument(const std::string& document)
             }
         }
 
-        auto constructors = mo::MetaObjectFactory::Instance()->
-                GetConstructors(aq::Nodes::IFrameGrabber::s_interfaceID);
+        auto constructors = mo::MetaObjectFactory::instance()->
+                getConstructors(aq::nodes::IFrameGrabber::s_interfaceID);
         std::vector<int> load_count(constructors.size(), 0);
         std::vector<int> priorities(constructors.size(), 0);
         for (int i = 0; i < constructors.size(); ++i)
@@ -209,3 +204,4 @@ int frame_grabber_directory::CanLoadDocument(const std::string& document)
 
 
 MO_REGISTER_CLASS(frame_grabber_directory);
+*/

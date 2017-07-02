@@ -1,23 +1,24 @@
 #include "src/precompiled.hpp"
+#include <Aquila/types/SyncedMemory.hpp>
 using namespace aq;
-using namespace ::aq::Nodes;
+using namespace ::aq::nodes;
 
 class MorphologyFilter: public Node
 {
 public:
-    MO_DERIVE(MorphologyFilter, Node);
-        INPUT(SyncedMemory, input_image, nullptr);
-        OUTPUT(SyncedMemory, output, SyncedMemory());
-        ENUM_PARAM(structuring_element_type, cv::MORPH_RECT, cv::MORPH_CROSS, cv::MORPH_ELLIPSE);
-        ENUM_PARAM(morphology_type, cv::MORPH_ERODE, cv::MORPH_DILATE, cv::MORPH_OPEN, cv::MORPH_CLOSE, cv::MORPH_GRADIENT, cv::MORPH_TOPHAT, cv::MORPH_BLACKHAT);
-        PARAM(int, iterations, 1);
-        PARAM(cv::Mat, structuring_element, cv::getStructuringElement(0, cv::Size(5,5)));
-        PARAM(cv::Point, anchor_point, cv::Point(-1,-1));
-        PARAM(int, structuring_element_size, 5);
+    MO_DERIVE(MorphologyFilter, Node)
+        INPUT(SyncedMemory, input_image, nullptr)
+        OUTPUT(SyncedMemory, output, SyncedMemory())
+        ENUM_PARAM(structuring_element_type, cv::MORPH_RECT, cv::MORPH_CROSS, cv::MORPH_ELLIPSE)
+        ENUM_PARAM(morphology_type, cv::MORPH_ERODE, cv::MORPH_DILATE, cv::MORPH_OPEN, cv::MORPH_CLOSE, cv::MORPH_GRADIENT, cv::MORPH_TOPHAT, cv::MORPH_BLACKHAT)
+        PARAM(int, iterations, 1)
+        PARAM(cv::Mat, structuring_element, cv::getStructuringElement(0, cv::Size(5,5)))
+        PARAM(cv::Point, anchor_point, cv::Point(-1,-1))
+        PARAM(int, structuring_element_size, 5)
     MO_END;
-        
+
 protected:
-    bool ProcessImpl();
+    bool processImpl();
     ::cv::Ptr<::cv::cuda::Filter> filter;
 };
 
@@ -36,8 +37,8 @@ public:
     MO_END
 
 protected:
-    bool ProcessImpl();
-        
+    bool processImpl();
+
     //virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
 };
 
@@ -50,7 +51,7 @@ public:
     MO_END
     PruneContours();
 
-    virtual void NodeInit(bool firstInit);
+    virtual void nodeInit(bool firstInit);
     virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
 };
 
@@ -70,9 +71,9 @@ public:
     OUTPUT(contour_area_t, contour_area, contour_area_t())
     MO_END
 protected:
-    bool ProcessImpl();
+    bool processImpl();
     ContourBoundingBox();
-    //virtual void NodeInit(bool firstInit);
+    //virtual void nodeInit(bool firstInit);
     //virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
 };
 
@@ -93,7 +94,7 @@ class HistogramThreshold: public Node
 public:
 
     HistogramThreshold();
-    virtual void NodeInit(bool firstInit);
+    virtual void nodeInit(bool firstInit);
     virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
     void runFilter();
 };
@@ -116,7 +117,7 @@ public:
         OUTPUT(SyncedMemory, output, {})
     MO_END
 protected:
-    bool ProcessImpl();
+    bool processImpl();
 
 };
 
@@ -124,12 +125,10 @@ class DrawRects: public Node
 {
 public:
     DrawRects();
-    virtual void NodeInit(bool firstInit);
+    virtual void nodeInit(bool firstInit);
     virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream);
 };
 
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-
-SETUP_PROJECT_DEF

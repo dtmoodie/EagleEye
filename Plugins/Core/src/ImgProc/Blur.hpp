@@ -1,9 +1,10 @@
 #pragma once
-#include <Aquila/Nodes/Node.h>
+#include <Aquila/nodes/Node.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 #include "Aquila/rcc/external_includes/cv_cudafilters.hpp"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
     class MedianBlur: public Node
     {
@@ -15,7 +16,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, {})
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
 
         cv::Ptr<cv::cuda::Filter> _median_filter;
     };

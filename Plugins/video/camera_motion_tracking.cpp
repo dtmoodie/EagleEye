@@ -1,7 +1,7 @@
 #include "camera_motion_tracking.hpp"
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 std::vector<std::vector<std::string>> track_camera_motion::GetParentalDependencies()
@@ -12,7 +12,7 @@ std::vector<std::vector<std::string>> track_camera_motion::GetParentalDependenci
     return output;
 }
 
-bool track_camera_motion::ProcessImpl()
+bool track_camera_motion::processImpl()
 {
     return false;
 }

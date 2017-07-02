@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Aquila/Nodes/Node.h"
+#include "Aquila/nodes/Node.hpp"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
 class LegendDisplay: public Node
 {
@@ -15,7 +15,7 @@ public:
         MO_SIGNAL(void, on_class_change, std::string)
     MO_END;
 protected:
-    bool ProcessImpl();
+    bool processImpl();
     cv::Mat h_lut, h_legend;
 };
 }

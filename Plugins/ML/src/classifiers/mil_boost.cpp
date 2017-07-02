@@ -6,7 +6,7 @@ using namespace aq::ML::classifiers;
 using namespace aq::ML::classifiers::MIL;
 
 
-void mil_tree::NodeInit(bool firstInit)
+void mil_tree::nodeInit(bool firstInit)
 {
     if(firstInit)
     {

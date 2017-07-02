@@ -115,7 +115,15 @@ RCC_FIND_LIBRARY(GSTREAMER_gstvideo_LIBRARY NAMES gstvideo-1.0 libgstvideo-1.0
                                         PATHS ${GSTREAMER_DIR}/bin ${GSTREAMER_DIR}/win32/bin ${GSTREAMER_DIR}/bin/bin C:/gstreamer/bin ${GSTREAMER_DIR}/lib ${GSTREAMER_DIR}/win32/lib /usr/local/lib /usr/lib
                                         ENV LIB
                                         DOC "gstvideo library to link with"
-                                        NO_SYSTEM_ENVIRONMENT_PATH)
+                                        NO_SYSTEM_ENVIRONMENT_PATH
+                                        )
+
+RCC_FIND_LIBRARY(GOBJECT_LIBRARY NAMES libobject-2.0 gobject-2.0
+    PATHS ${GSTREAMER_DIR}/lib
+    ENV LIB
+    DOC "Glib library"
+    NO_SYSTEM_ENVIRONMENT_PATH
+)
 
 SET(GSTREAMER_FOUND FALSE)
 set(GStreamer_FOUND FALSE)

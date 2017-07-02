@@ -1,14 +1,14 @@
 #pragma once
 #include <src/precompiled.hpp>
 #include "FeatureDetection.h"
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
+#include "RuntimeObjectSystem/RuntimeInclude.h"
+#include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
 namespace aq
 { 
-    namespace Nodes
+    namespace nodes
     {
         class RegisterToReference: public Node
         {
@@ -25,7 +25,7 @@ namespace aq
                 
             MO_END;
         protected:
-            bool ProcessImpl();
+            bool processImpl();
         };
     } // namespace nodes
 } // namespace aq 

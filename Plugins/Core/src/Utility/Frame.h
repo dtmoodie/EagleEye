@@ -1,29 +1,48 @@
 #pragma once
 #include <src/precompiled.hpp>
-#include <MetaObject/Parameters/ParameterMacros.hpp>
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
+#include <MetaObject/params/ParamMacros.hpp>
+#include "RuntimeObjectSystem/RuntimeInclude.h"
+#include "RuntimeObjectSystem/RuntimeSourceDependency.h"
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <boost/accumulators/statistics/rolling_mean.hpp>
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
     class FrameRate: public Node
     {
     public:
+        FrameRate();
         MO_DERIVE(FrameRate, Node)
             STATUS(double, framerate, 0.0)
-            STATUS(double, frametime, 0.0)
+            STATUS(mo::Time_t, frametime, {})
+            PARAM(bool, draw_fps, true)
             INPUT(SyncedMemory, input, nullptr)
+            OUTPUT(SyncedMemory, output, {})
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         boost::posix_time::ptime prevTime;
-        long long _previous_frame_timestamp = 0;
+        boost::optional<mo::Time_t> _previous_frame_timestamp;
+        boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::rolling_mean>>  m_framerate_rolling_mean;
     };
-    
+
+    class DetectFrameSkip: public Node
+    {
+    public:
+        MO_DERIVE(DetectFrameSkip, Node)
+            INPUT(SyncedMemory, input, nullptr)
+        MO_END;
+    protected:
+        bool processImpl();
+        boost::optional<mo::Time_t> _prev_time;
+        boost::optional<mo::Time_t> _initial_time; // used to zero base time
+    };
+
     class FrameLimiter : public Node
     {
     public:
@@ -31,7 +50,7 @@ namespace Nodes
             PARAM(double, desired_framerate, 30.0)
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         boost::posix_time::ptime lastTime;
     };
 
@@ -47,8 +66,8 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END;
     protected:
-        bool ProcessImpl();
-        
+        bool processImpl();
+
     };
     class SetMatrixValues: public Node
     {
@@ -58,8 +77,8 @@ namespace Nodes
             OPTIONAL_INPUT(SyncedMemory, mask, nullptr)
             PARAM(cv::Scalar, replace_value, cv::Scalar::all(0))
     protected:
-        bool ProcessImpl();
-        
+        bool processImpl();
+
     };
     class Resize : public Node
     {
@@ -72,7 +91,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
     class RescaleContours: public Node
     {
@@ -84,7 +103,7 @@ namespace Nodes
             PARAM(float, scale_y, 1.0)
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 
     class Subtract : public Node
@@ -98,7 +117,7 @@ namespace Nodes
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
-        bool ProcessImpl();
+        bool processImpl();
     };
 }
 }

@@ -3,19 +3,19 @@
 #ifndef USE_CUDNN
 #define USE_CUDNN
 #endif
-#include "Aquila/Detail/PluginExport.hpp"
-#include "Aquila/Nodes/Node.h"
-#include "Aquila/ObjectDetection.hpp"
+#include "Aquila/nodes/Node.hpp"
+#include "Aquila/types/ObjectDetection.hpp"
 #include "Aquila/rcc/external_includes/cv_calib3d.hpp"
-#include "Aquila/ObjectDetection.hpp"
+#include "Aquila/types/ObjectDetection.hpp"
 #include "CaffeNetHandler.hpp"
-#include "MetaObject/MetaObject.hpp"
-#include "MetaObject/Parameters/Types.hpp"
-#include "RuntimeLinkLibrary.h"
+#include "MetaObject/object/MetaObject.hpp"
+#include "MetaObject/params/Types.hpp"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include "caffe/blob.hpp"
 #include "caffe/net.hpp"
 #include "caffe/common.hpp"
 #include "CaffeExport.hpp"
+#include "Aquila/rcc/external_includes/Caffe_link_libs.hpp"
 #ifdef _MSC_VER // Windows
   #ifdef _DEBUG
     RUNTIME_COMPILER_LINKLIBRARY("libcaffe.lib")
@@ -23,14 +23,14 @@
     RUNTIME_COMPILER_LINKLIBRARY("opencv_calib3d" CV_VERSION_ ".lib")
   #endif
 #else // Linux
-  RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
+//  RUNTIME_COMPILER_LINKLIBRARY("-lcaffe")
 #endif
 extern "C" Caffe_EXPORT void InitModule();
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
-        class CaffeBase : public Node
+        class Caffe_EXPORT CaffeBase : public Node
         {
         public:
             typedef std::vector<SyncedMemory> WrappedBlob_t;
@@ -54,12 +54,11 @@ namespace aq
                 PARAM(int, num_classifications, 5)
                 OPTIONAL_INPUT(std::vector<cv::Rect2f>, bounding_boxes, nullptr)
                 OPTIONAL_INPUT(std::vector<DetectedObject>, input_detections, nullptr)
-                PARAM(int, detection_class, -1)
-                TOOLTIP(detection_class, "When given an input_detections, decide which class of input detections should be used to select regions of interest for this classifier")
                 INPUT(SyncedMemory, input, nullptr)
                 OUTPUT(std::vector<std::string>, labels, {})
+                APPEND_FLAGS(labels, mo::Unstamped_e)
             MO_END
-            virtual void NodeInit(bool firstInit);
+            virtual void nodeInit(bool firstInit);
             static std::vector<SyncedMemory> WrapBlob(caffe::Blob<float>& blob, bool bgr_swap = false);
             static std::vector<SyncedMemory> WrapBlob(caffe::Blob<double>& blob, bool bgr_swap = false);
         protected:
@@ -70,33 +69,21 @@ namespace aq
             void ReshapeInput(int num, int channels, int height, int width);
             std::vector<caffe::Blob<float>*> input_blobs;
             std::vector<caffe::Blob<float>*> output_blobs;
-            /*
-            0 = classifier
-            1 = detector
-            2 = fcn
-            */
-            enum NetworkType
-            {
-                Classifier_e = 0,
-                Detector_e = 1,
-                FCN_e = 1 << 1
-            };
-            NetworkType _network_type;
         };
 
-        class CaffeImageClassifier : public CaffeBase
+        class Caffe_EXPORT CaffeImageClassifier : public CaffeBase
         {
         public:
             MO_DERIVE(CaffeImageClassifier, CaffeBase)
                 PARAM(int, num_classifications, 5)
             MO_END
-            void       PostSerializeInit();
+            void postSerializeInit();
         protected:
-            bool ProcessImpl();
+            bool processImpl();
             std::vector<rcc::shared_ptr<Caffe::NetHandler>> net_handlers;
         };
-        
-        class CaffeDetector: public CaffeBase
+
+        class Caffe_EXPORT CaffeDetector: public CaffeBase
         {
         public:
 

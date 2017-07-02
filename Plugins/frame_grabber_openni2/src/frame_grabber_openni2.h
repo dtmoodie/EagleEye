@@ -1,35 +1,37 @@
 #pragma once
-
 #include "OpenNI.h"
-#include <EagleLib/Nodes/IFrameGrabber.hpp>
-#include "RuntimeLinkLibrary.h"
-SETUP_PROJECT_DEF
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
+
 RUNTIME_COMPILER_LINKLIBRARY("OpenNI2.lib");
 
-namespace EagleLib
+namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         
-        class PLUGIN_EXPORTS frame_grabber_openni2: public FrameGrabberBuffered, public openni::VideoStream::NewFrameListener
+        class frame_grabber_openni2: public openni::VideoStream::NewFrameListener, public IFrameGrabber
         {
             openni::VideoFrameRef _frame;
             std::shared_ptr<openni::Device> _device;
             std::shared_ptr<openni::VideoStream> _depth;
         public:
-            MO_DERIVE(frame_grabber_openni2, FrameGrabberBuffered)
+            MO_DERIVE(frame_grabber_openni2, IFrameGrabber)
+                SOURCE(SyncedMemory, xyz, {})
             MO_END;
-            frame_grabber_openni2();
+            
             ~frame_grabber_openni2();
         
-            bool LoadFile(const std::string& file_path);
-            rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
-            long long GetNumFrames();
+            bool loadData(std::string file_path);
             void onNewFrame(openni::VideoStream& stream);
+            bool processImpl();
 
-            static int CanLoadDocument(const std::string& document);
-            static int LoadTimeout();
-            static std::vector<std::string> ListLoadableDocuments();
+            static int canLoadPath(const std::string& document);
+            static int loadTimeout();
+            static std::vector<std::string> listLoadablePaths();
+
+            cv::Mat new_frame;
         };
     }
 }

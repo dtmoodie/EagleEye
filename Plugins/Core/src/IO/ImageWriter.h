@@ -6,7 +6,7 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
     
     class ImageWriter: public Node
@@ -38,7 +38,7 @@ namespace aq
             MO_SLOT(void, snap)
         MO_END;
     protected:
-        bool ProcessImpl();
+        bool processImpl();
         
     };
     }

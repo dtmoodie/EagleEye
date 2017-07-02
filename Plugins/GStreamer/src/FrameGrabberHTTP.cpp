@@ -1,17 +1,17 @@
 #include "FrameGrabberHTTP.hpp"
-#include "Aquila/Nodes/FrameGrabberInfo.hpp"
+#include "Aquila/framegrabbers/FrameGrabberInfo.hpp"
 #include <gst/base/gstbasesink.h>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
-int FrameGrabberHTTP::CanLoadDocument(const std::string& doc)
+int FrameGrabberHTTP::canLoad(const std::string& doc)
 {
     if(doc.find("http://") != std::string::npos)
         return 10;
     return 0;
 }
 
-bool FrameGrabberHTTP::LoadFile(const ::std::string& file_path_)
+bool FrameGrabberHTTP::loadData(const ::std::string& file_path_)
 {
     std::stringstream ss;
     auto pos = file_path_.find("http://");
@@ -72,7 +72,7 @@ GstFlowReturn FrameGrabberHTTP::on_pull()
         gboolean res;
         res = gst_structure_get_int (s, "width", &width);
         res |= gst_structure_get_int (s, "height", &height);
-        const gchar* format = gst_structure_get_string(s, "format");
+        //const gchar* format = gst_structure_get_string(s, "format");
         if (!res)
         {
             LOG(debug) << "could not get snapshot dimenszion\n";
@@ -83,9 +83,11 @@ GstFlowReturn FrameGrabberHTTP::on_pull()
         {
             cv::Mat mapped(height, width, CV_8UC3);
             memcpy(mapped.data, map.data, map.size);
-            PushFrame(TS<SyncedMemory>(0.0, (long long) buffer->pts, mapped));
+            image_param.updateData(mapped, mo::tag::_timestamp = mo::Time_t(buffer->pts * mo::ns));
         }
-        gst_sample_unref (sample);
+        gst_buffer_unmap(buffer, &map);
+        gst_sample_unref(sample);
+        gst_buffer_unref(buffer);
     }
     return GST_FLOW_OK;
 }

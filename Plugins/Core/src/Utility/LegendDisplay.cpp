@@ -1,12 +1,13 @@
 #include "LegendDisplay.hpp"
-#include "Aquila/utilities/UiCallbackHandlers.h"
-#include "Aquila/utilities/CudaCallbacks.hpp"
+#include "Aquila/gui/UiCallbackHandlers.h"
+#include "Aquila/core/IDataStream.hpp"
+#include "Aquila/utilities/cuda/CudaCallbacks.hpp"
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <boost/lexical_cast.hpp>
-#include <Aquila/Nodes/NodeInfo.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 void LegendDisplay::click_left(std::string window_name, cv::Point pt, int, cv::Mat)
 {
@@ -19,7 +20,7 @@ void LegendDisplay::click_left(std::string window_name, cv::Point pt, int, cv::M
     }
 }
 
-bool LegendDisplay::ProcessImpl()
+bool LegendDisplay::processImpl()
 {
     h_lut.create(1, labels->size(), CV_8UC3);
     for(int i = 0; i < labels->size(); ++i)
@@ -46,7 +47,7 @@ bool LegendDisplay::ProcessImpl()
                     cv::FONT_HERSHEY_COMPLEX, 0.7,
                     cv::Scalar(color[0], color[1], color[2]));
     }
-    GetDataStream()->GetWindowCallbackManager()->imshow("legend", h_legend);
+    getDataStream()->getWindowCallbackManager()->imshow("legend", h_legend);
     return true;
 }
 

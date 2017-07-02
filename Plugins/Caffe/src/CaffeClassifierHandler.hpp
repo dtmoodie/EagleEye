@@ -1,6 +1,6 @@
 #pragma once
 #include "CaffeNetHandler.hpp"
-#include "Aquila/ObjectDetection.hpp"
+#include "Aquila/types/ObjectDetection.hpp"
 namespace aq
 {
     namespace Caffe
@@ -11,12 +11,13 @@ namespace aq
             static std::map<int, int> CanHandleNetwork(const caffe::Net<float>& net);
 
             MO_DERIVE(ClassifierHandler, NetHandler)
-                OUTPUT(std::vector<DetectedObject>, objects, {})
+                OUTPUT(std::vector<DetectedObject>, classified_detections, {})
                 PARAM(float, classification_threshold, 0.5)
             MO_END
-            void StartBatch();
-            void HandleOutput(const caffe::Net<float>& net, long long timestamp, const std::vector<cv::Rect>& bounding_boxes, cv::Size input_image_size);
-            void EndBatch(long long timestamp);
+            virtual void startBatch();
+            virtual void handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes,
+                                      mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<DetectedObject2d>& objs);
+            virtual void endBatch(boost::optional<mo::Time_t> timestamp);
         };
     }
 }

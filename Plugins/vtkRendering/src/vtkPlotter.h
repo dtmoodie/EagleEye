@@ -136,8 +136,8 @@ namespace EagleLib
         public:
             vtkPlotterBase();
             virtual ~vtkPlotterBase();
-            virtual bool AcceptsParameter(mo::IParameter* param);
-            virtual void SetInput(mo::IParameter* param_ = nullptr);
+            virtual bool AcceptsParameter(mo::IParam* param);
+            virtual void SetInput(mo::IParam* param_ = nullptr);
             virtual void OnParameterUpdate(cv::cuda::Stream* stream);
             virtual void PlotInit(bool firstInit);
             virtual void AddPlot(QWidget* plot_);

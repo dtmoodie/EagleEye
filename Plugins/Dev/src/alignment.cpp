@@ -1,10 +1,8 @@
 #include "alignment.h"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
-TS<SyncedMemory> TrackCameraMotion::doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream)
-{
-
-    return img;
+bool TrackCameraMotion::processImpl(){
+    return true;
 }

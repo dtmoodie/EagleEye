@@ -2,7 +2,7 @@
 #include <caffe/blob.hpp>
 #include <Aquila/rcc/external_includes/cv_imgproc.hpp>
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 
@@ -56,13 +56,13 @@ using namespace aq::Nodes;
             {
                 auto& permutation = sample_permutation[i];
                 
-                cv::Mat mat; // = (*fb)[permutation.first].GetMat();
+                cv::Mat mat; // = (*fb)[permutation.first].getMat();
                 if(permutation.second != -1)
                 {
-                    mat = (*fb)[permutation.first].GetMat(cv::cuda::Stream::Null())((*roi)[permutation.first][permutation.second].first);
+                    mat = (*fb)[permutation.first].getMat(cv::cuda::Stream::Null())((*roi)[permutation.first][permutation.second].first);
                 }else
                 {
-                    mat = (*fb)[permutation.first].GetMat(cv::cuda::Stream::Null());
+                    mat = (*fb)[permutation.first].getMat(cv::cuda::Stream::Null());
                 }
                 // Check if we need to resize or do channel stuff
                 if(mat.size() != cv::Size(width, height))
@@ -73,15 +73,15 @@ using namespace aq::Nodes;
         }
     }
 }
-void caffe_input_populator::NodeInit(bool firstInit)
+void caffe_input_populator::nodeInit(bool firstInit)
 {
     if(firstInit)
     {
-        addInputParameter<std::vector<TS<SyncedMemory>>>("frame cache");
-        addInputParameter<std::map<int, std::vector<std::pair<cv::Rect, int>>>>("regions of interest");
-        addInputParameter<std::map<int, int>>("class map");
-        addInputParameter<std::vector<std::vector<std::vector<cv::Mat>>>>("network input blobs");
-        addInputParameter<std::vector<std::string>>("input blob names");
+        addInputParam<std::vector<TS<SyncedMemory>>>("frame cache");
+        addInputParam<std::map<int, std::vector<std::pair<cv::Rect, int>>>>("regions of interest");
+        addInputParam<std::map<int, int>>("class map");
+        addInputParam<std::vector<std::vector<std::vector<cv::Mat>>>>("network input blobs");
+        addInputParam<std::vector<std::string>>("input blob names");
     }
     auto f = [this](cv::cuda::Stream* stream)
     {
@@ -109,5 +109,5 @@ bool caffe_input_populator::pre_check(const TS<SyncedMemory>& input)
     return true;
 }
 
-static aq::Nodes::NodeInfo g_registerer_caffe_input_populator("caffe_input_populator", { "caffe"});
+static aq::nodes::NodeInfo g_registerer_caffe_input_populator("caffe_input_populator", { "caffe"});
 REGISTERCLASS(caffe_input_populator, &g_registerer_caffe_input_populator);*/
