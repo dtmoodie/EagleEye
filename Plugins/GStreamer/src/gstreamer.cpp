@@ -19,8 +19,9 @@ typedef class gstreamer_sink_base App;
 // handled messages from the pipeline
 static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
 {
+    (void)bus;
+    (void)app;
     LOG(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
-
 
     switch (GST_MESSAGE_TYPE(message))
     {
@@ -50,7 +51,7 @@ static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
         case GST_STATE_PAUSED: {LOG(debug) << "State changed to GST_STATE_PAUSED"; break; }
         case GST_STATE_PLAYING: {LOG(debug) << "State changed to GST_STATE_PLAYING"; break; }
         }
-
+        break;
     }
     default:
         break;
@@ -61,12 +62,15 @@ static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
 
 static void _start_feed(GstElement * pipeline, guint size, gstreamer_sink_base * app)
 {
+    (void)pipeline;
+    (void)size;
     LOG(trace);
     app->start_feed();
 }
 
 static void _stop_feed(GstElement * pipeline, gstreamer_sink_base *app)
 {
+    (void)pipeline;
     LOG(trace);
     app->stop_feed();
 }
@@ -381,7 +385,7 @@ void gstreamer_sink_base::PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stre
         cv::Mat h_img = img.getMat(stream);
         if(img.getSyncState() < img.DEVICE_UPDATED)
         {
-            int bufferlength = h_img.cols * h_img.rows * h_img.channels();
+            gsize bufferlength = static_cast<gsize>(h_img.cols * h_img.rows * h_img.channels());
             GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
             GstMapInfo map;
             gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
@@ -406,7 +410,7 @@ void gstreamer_sink_base::PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stre
             cuda::enqueue_callback_async(
                 [h_img, this]()->void
             {
-                int bufferlength = h_img.cols * h_img.rows * h_img.channels();
+                gsize bufferlength = static_cast<gsize>(h_img.cols * h_img.rows * h_img.channels());
                 GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
                 GstMapInfo map;
                 gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
@@ -477,7 +481,7 @@ void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
             cuda::enqueue_callback_async(
                 [h_img, this]()->void
             {
-                int bufferlength = h_img.cols * h_img.rows * h_img.channels();
+                gsize bufferlength = static_cast<gsize>(h_img.cols * h_img.rows * h_img.channels());
                 GstBuffer* buffer = gst_buffer_new_and_alloc(bufferlength);
                 GstMapInfo map;
                 gst_buffer_map(buffer, &map, (GstMapFlags)GST_MAP_WRITE);
@@ -547,11 +551,11 @@ std::vector<std::string> gstreamer_base::get_gstreamer_features(const std::strin
     std::vector<std::string> plugin_names;
     while(plugins)
     {
-        auto features = gst_registry_get_feature_list_by_plugin(registry,gst_plugin_get_name((GstPlugin*)plugins->data));
+        auto features = gst_registry_get_feature_list_by_plugin(registry,gst_plugin_get_name(static_cast<GstPlugin*>(plugins->data)));
         GstPluginFeature* feature;
         while(features)
         {
-            feature = (GstPluginFeature*)features->data;
+            feature = static_cast<GstPluginFeature*>(features->data);
             std::string name(gst_plugin_feature_get_name(feature));
             if(filter.size())
             {
@@ -582,7 +586,7 @@ bool gstreamer_base::check_feature(const std::string& feature_name)
 }
 bool gstreamer_base::is_pipeline(const std::string& string)
 {
-
+    (void)string;
     return true;
 }
 // ---------------------------------------------------------------------------
