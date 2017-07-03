@@ -6,7 +6,7 @@
 #include "ros/publisher.h"
 namespace aq
 {
-namespace Nodes
+namespace nodes
 {
 class ROS_EXPORT RosPublisher: public Node
 {

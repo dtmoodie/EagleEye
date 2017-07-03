@@ -5,7 +5,7 @@
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
         class ROS_EXPORT RosSubscriber : public IFrameGrabber
         {

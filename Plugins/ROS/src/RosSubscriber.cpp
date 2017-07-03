@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 std::vector<std::string> RosSubscriber::listLoadablePaths()
 {

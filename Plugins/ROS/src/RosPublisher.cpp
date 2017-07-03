@@ -8,7 +8,7 @@
 
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 
 void ImagePublisher::nodeInit(bool firstInit)
