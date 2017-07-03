@@ -26,7 +26,7 @@ bool FrameRate::processImpl(){
     auto ts = input_param.getTimestamp();
     if(ts && _previous_frame_timestamp)
     {
-        mo::Time_t ts_delta =  *ts - *_previous_frame_timestamp;
+        auto ts_delta = std::chrono::duration_cast<std::chrono::milliseconds>(*ts - *_previous_frame_timestamp);
         frametime = ts_delta;
         frametime_param.emitUpdate(input_param);
     }
@@ -64,7 +64,6 @@ bool DetectFrameSkip::processImpl()
     {
         if(!_initial_time)
             _initial_time = cur_time;
-        std::cout << *cur_time - *_initial_time << std::endl;
         if(_prev_time)
         {
             if(*cur_time < *_prev_time)

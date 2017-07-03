@@ -11,8 +11,8 @@ bool PlaybackInfo::processImpl()
     double framerate = 30.0;
     if(current_ts && last_timestamp)
     {
-        mo::Time_t ts_delta = (*current_ts - *last_timestamp);
-        framerate = 1000.0 / ts_delta.value();
+        std::chrono::milliseconds ts_delta = std::chrono::duration_cast<std::chrono::milliseconds>(*current_ts - *last_timestamp);
+        framerate = 1000.0 / std::chrono::duration_cast<std::chrono::seconds>(ts_delta).count(); // TODO check
     }
 
     auto now = boost::posix_time::microsec_clock::local_time();

@@ -19,7 +19,7 @@ namespace nodes
         FrameRate();
         MO_DERIVE(FrameRate, Node)
             STATUS(double, framerate, 0.0)
-            STATUS(mo::Time_t, frametime, {})
+            STATUS(std::chrono::milliseconds, frametime, {})
             PARAM(bool, draw_fps, true)
             INPUT(SyncedMemory, input, nullptr)
             OUTPUT(SyncedMemory, output, {})
