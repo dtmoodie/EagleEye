@@ -43,7 +43,7 @@ IF(UNIX)
   set(CUDA_NVCC_FLAGS "-std=c++11;--expt-relaxed-constexpr;${CUDA_NVCC_FLAGS}")
 ENDIF()
 cuda_add_library(Core SHARED ${src} ${hdr} ${knl})
-ocv_add_precompiled_header_to_target(Core nodes/precompiled.hpp)
+ocv_add_precompiled_header_to_target(Core src/precompiled.hpp)
 
 RCC_LINK_LIB(Core aquila_core
     aquila_utilities

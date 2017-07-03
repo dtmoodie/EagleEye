@@ -88,26 +88,6 @@ bool tcpserver::processImpl()
 }
 MO_REGISTER_CLASS(tcpserver);
 
-bool GStreamerSink::processImpl()
-{
-    if(!_initialized || gstreamer_pipeline_param.modified())
-    {
-        cleanup();
-        _initialized = create_pipeline(gstreamer_pipeline);
-        if(_initialized)
-        {
-            gstreamer_pipeline_param.modified(false);
-        }
-    }
-    if(_initialized)
-    {
-        PushImage(*image, stream());
-        return true;
-    }
-    return false;
-}
-MO_REGISTER_CLASS(GStreamerSink);
-
 JPEGSink::JPEGSink(){
     glib_thread::instance()->start_thread();
     gstreamer_context = mo::Context::create();
@@ -151,8 +131,9 @@ GstFlowReturn JPEGSink::on_pull(){
                     mo::tag::_timestamp = ts, &gstreamer_context);
             }
         }
+        gst_buffer_unmap(buffer, &map);
         gst_sample_unref(sample);
-        
+        gst_buffer_unref(buffer);
     }
     return GST_FLOW_OK;
 }

@@ -43,9 +43,7 @@
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 
-#ifdef HAVE_WT
-//#include "vclick.hpp"
-#endif
+
 
 #include <fstream>
 

@@ -144,6 +144,7 @@ void gstreamer_sink_base::cleanup()
 bool gstreamer_base::create_pipeline(const std::string& pipeline_)
 {
     cleanup();
+    MO_ASSERT(!pipeline_.empty());
     glib_thread::instance()->start_thread();
 
     GError* error = nullptr;
@@ -151,7 +152,7 @@ bool gstreamer_base::create_pipeline(const std::string& pipeline_)
 
     if (_pipeline == nullptr)
     {
-        LOG(error) << "Error parsing pipeline";
+        LOG(error) << "Error parsing pipeline " << pipeline_;
         return false;
     }else
     {

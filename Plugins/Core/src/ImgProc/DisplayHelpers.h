@@ -35,6 +35,7 @@ namespace aq
     class DrawDetections: public Node
     {
     public:
+        typedef std::map<std::string, cv::Vec3b> Colormap_t;
         MO_DERIVE(DrawDetections, Node)
             INPUT(SyncedMemory, image, nullptr)
             INPUT(std::vector<std::string>, labels, nullptr)
@@ -42,7 +43,7 @@ namespace aq
             PARAM(bool, draw_class_label, true)
             PARAM(bool, draw_detection_id, true)
             PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>())
-            PARAM((std::map<std::string, cv::Vec3b>), colormap, {})
+            PARAM(Colormap_t, colormap, {})
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:

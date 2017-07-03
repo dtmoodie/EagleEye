@@ -26,18 +26,6 @@ namespace aq
             bool processImpl();
         };
 
-        class GStreamer_EXPORT GStreamerSink: public gstreamer_sink_base
-        {
-        public:
-            MO_DERIVE(GStreamerSink, gstreamer_sink_base)
-                INPUT(SyncedMemory, image, nullptr)
-                PARAM(std::string, gstreamer_pipeline, "")
-            MO_END
-        protected:
-            bool processImpl();
-            bool _initialized = false;
-        };
-
         class GStreamer_EXPORT BufferedHeartbeatRtsp : public IGrabber, public gstreamer_src_base
         {
         public:
