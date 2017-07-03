@@ -51,67 +51,93 @@ macro(aquila_declare_plugin tgt)
 
     set(PLUGIN_NAME ${tgt})
     string(TIMESTAMP BUILD_DATE "%Y-%m-%d:%H:%M")
-    
     execute_process(
-      COMMAND git rev-parse --abbrev-ref HEAD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Aquila
-      OUTPUT_VARIABLE AQUILA_GIT_BRANCH
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET OUTPUT_QUIET
-    )
-    execute_process(
-      COMMAND git log -1 --format=%H
-      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Aquila
-      OUTPUT_VARIABLE AQUILA_GIT_COMMIT_HASH
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET OUTPUT_QUIET
-    )
-    
-    execute_process(
-      COMMAND git rev-parse --abbrev-ref HEAD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
-      OUTPUT_VARIABLE MO_GIT_BRANCH
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET OUTPUT_QUIET
-    )
-    execute_process(
-      COMMAND git log -1 --format=%H
-      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
-      OUTPUT_VARIABLE MO_GIT_COMMIT_HASH
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET OUTPUT_QUIET
-    )
-    
-    execute_process(
-      COMMAND git rev-parse --abbrev-ref HEAD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-      OUTPUT_VARIABLE GIT_BRANCH
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET OUTPUT_QUIET
-    )
-    execute_process(
-      COMMAND git log -1 --format=%H
-      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-      OUTPUT_VARIABLE GIT_COMMIT_HASH
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET OUTPUT_QUIET
-    )
-    
-    execute_process(
-      COMMAND git config user.name
-      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-      OUTPUT_VARIABLE GIT_USERNAME
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET OUTPUT_QUIET
-    )
-    execute_process(
-      COMMAND git config user.email
-      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-      OUTPUT_VARIABLE GIT_EMAIL
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET OUTPUT_QUIET
-    )
-    
+	  COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
+	  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila
+	  OUTPUT_VARIABLE AQUILA_GIT_BRANCH
+	  OUTPUT_STRIP_TRAILING_WHITESPACE
+	  ERROR_QUIET
+	)
+	execute_process(
+	  COMMAND ${GITCOMMAND} log -1 --format=%H
+	  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila
+	  OUTPUT_VARIABLE AQUILA_GIT_COMMIT_HASH
+	  OUTPUT_STRIP_TRAILING_WHITESPACE
+	  ERROR_QUIET
+	)
+	
+	execute_process(
+	  COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
+	  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
+	  OUTPUT_VARIABLE MO_GIT_BRANCH
+	  OUTPUT_STRIP_TRAILING_WHITESPACE
+	  ERROR_QUIET
+	)
+	execute_process(
+	  COMMAND ${GITCOMMAND} log -1 --format=%H
+	  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
+	  OUTPUT_VARIABLE MO_GIT_COMMIT_HASH
+	  OUTPUT_STRIP_TRAILING_WHITESPACE
+	  ERROR_QUIET
+	)
+	execute_process(
+		COMMAND ${GITCOMMAND} status
+		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+		RESULT_VARIABLE IS_GIT_REPO
+		OUTPUT_VARIABLE _IGNORE_
+		ERROR_QUIET
+	)
+	
+	if(NOT ${IS_GIT_REPO}) # return code of 0 if success
+		execute_process(
+		  COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
+		  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+		  OUTPUT_VARIABLE GIT_BRANCH
+		  OUTPUT_STRIP_TRAILING_WHITESPACE
+		  ERROR_QUIET
+		)
+		execute_process(
+		  COMMAND ${GITCOMMAND} log -1 --format=%H
+		  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+		  OUTPUT_VARIABLE GIT_COMMIT_HASH
+		  OUTPUT_STRIP_TRAILING_WHITESPACE
+		  ERROR_QUIET
+		)
+		
+		execute_process(
+		  COMMAND ${GITCOMMAND} config user.name
+		  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+		  OUTPUT_VARIABLE GIT_USERNAME
+		  OUTPUT_STRIP_TRAILING_WHITESPACE
+		  ERROR_QUIET
+		)
+		execute_process(
+		  COMMAND ${GITCOMMAND} config user.email
+		  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+		  OUTPUT_VARIABLE GIT_EMAIL
+		  OUTPUT_STRIP_TRAILING_WHITESPACE
+		  ERROR_QUIET
+		)
+	ELSE(NOT ${IS_GIT_REPO})
+		# check if it's an SVN repoo
+		IF(SVNCOMMAND)
+			execute_process(
+				COMMAND ${SVNCOMMAND} status
+				WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+				OUTPUT_VARIABLE _IGNORE_
+				RESULT_VARIABLE IS_SVN_REPO
+				ERROR_QUIET
+			)
+			IF(NOT ${IS_SVN_REPO})
+				execute_process(
+					COMMAND ${SVNCOMMAND} svn info --show-item revision
+					WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+					OUTPUT_VARIABLE GIT_COMMIT_HASH
+					ERROR_QUIET
+				)
+			endif(NOT ${IS_SVN_REPO})
+		endif()
+    ENDIF(NOT ${IS_GIT_REPO})
     CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}Export.hpp" @ONLY)
     target_include_directories(${tgt}
         PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Plugins/${tgt}/>
