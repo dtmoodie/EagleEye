@@ -1,5 +1,7 @@
 set(plugin_export_template_path "${CMAKE_CURRENT_LIST_DIR}/PluginExport.hpp.in" CACHE INTERNAL "")
 macro(aquila_declare_plugin tgt)
+    set(options SVN)
+    cmake_parse_arguments(aquila_declare_plugin "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
     macro(RCC_HANDLE_LIB TARGET)
       if(RCC_VERBOSE_CONFIG)
         message(STATUS "===================================================================\n"
@@ -40,7 +42,6 @@ macro(aquila_declare_plugin tgt)
       SET(PROJECT_ID "1")
     ENDIF(temp)
 
-    RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
     set(LINK_LIBS_RELEASE ${plugin_libraries_release})
     set(LINK_LIBS_DEBUG ${plugin_libraries_debug})
 
@@ -88,7 +89,8 @@ macro(aquila_declare_plugin tgt)
 		ERROR_QUIET
 	)
 	
-	if(NOT ${IS_GIT_REPO}) # return code of 0 if success
+	if(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN}) # return code of 0 if success
+        set(REPO_TYPE "git")
 		execute_process(
 		  COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
@@ -118,7 +120,7 @@ macro(aquila_declare_plugin tgt)
 		  OUTPUT_STRIP_TRAILING_WHITESPACE
 		  ERROR_QUIET
 		)
-	ELSE(NOT ${IS_GIT_REPO})
+	ELSE(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN})
 		# check if it's an SVN repoo
 		IF(SVNCOMMAND)
 			execute_process(
@@ -129,15 +131,24 @@ macro(aquila_declare_plugin tgt)
 				ERROR_QUIET
 			)
 			IF(NOT ${IS_SVN_REPO})
+                set(REPO_TYPE "svn")
 				execute_process(
-					COMMAND ${SVNCOMMAND} svn info --show-item revision
+					COMMAND ${SVNCOMMAND} info --show-item revision
 					WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 					OUTPUT_VARIABLE GIT_COMMIT_HASH
 					ERROR_QUIET
 				)
+                string(REGEX REPLACE "\n" "" GIT_COMMIT_HASH ${GIT_COMMIT_HASH})
+                execute_process(
+                  COMMAND ${SVNCOMMAND} info --show-item relative-url
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                  OUTPUT_VARIABLE GIT_BRANCH
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  ERROR_QUIET
+                )
 			endif(NOT ${IS_SVN_REPO})
 		endif()
-    ENDIF(NOT ${IS_GIT_REPO})
+    ENDIF(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN})
     CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}Export.hpp" @ONLY)
     target_include_directories(${tgt}
         PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Plugins/${tgt}/>
@@ -212,7 +223,7 @@ macro(aquila_declare_plugin tgt)
     else()
       FILE(WRITE ${link_file_path} "${external_include_file}")
     endif()
-
+    RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
     INSTALL(TARGETS ${tgt}
             LIBRARY DESTINATION bin/Plugins
             RUNTIME DESTINATION bin
