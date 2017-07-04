@@ -1,7 +1,9 @@
+#define NOMINMAX
 #include "frame_grabber_openni2.h"
 #include "openni2_initializer.h"
 #include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
 #include <MetaObject/logging/Profiling.hpp>
+
 using namespace aq;
 using namespace aq::nodes;
 
