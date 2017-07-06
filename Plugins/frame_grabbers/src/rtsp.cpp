@@ -34,8 +34,8 @@ bool GrabberRTSP::Load(const std::string& file_path)
 #endif
 
     h_cam.release();
-    LOG(info) << "Attemping to load " << file_to_load;
-    LOG(debug) << "Gstreamer string: " << gstreamer_string;
+    MO_LOG(info) << "Attemping to load " << file_to_load;
+    MO_LOG(debug) << "Gstreamer string: " << gstreamer_string;
     try
     {
         h_cam.reset(new cv::VideoCapture());

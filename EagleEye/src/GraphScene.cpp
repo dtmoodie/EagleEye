@@ -123,7 +123,7 @@ void GraphScene::load(){
         for (const auto& pair : sm)
             ss << "\n"
                << pair.first << " = " << pair.second;
-        LOG(debug) << "Used string replacements: " << ss.str();
+        MO_LOG(debug) << "Used string replacements: " << ss.str();
     }
 
     if (vm.size()) {
@@ -131,7 +131,7 @@ void GraphScene::load(){
         for (const auto& pair : vm)
             ss << "\n"
                << pair.first << " = " << pair.second;
-        LOG(debug) << "Used variable replacements: " << ss.str();
+        MO_LOG(debug) << "Used variable replacements: " << ss.str();
     }
     auto dsvec = aq::IDataStream::load(ar);
     for(auto& ds : dsvec){

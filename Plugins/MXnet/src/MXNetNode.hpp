@@ -1,3 +1,4 @@
+#define ALIAS_BOOST_LOG_SEVERITIES
 #include "MXnetExport.hpp"
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/types/ObjectDetection.hpp>
@@ -17,7 +18,7 @@ class MXNetHandler;
 std::vector<std::vector<cv::Mat> > wrapInput(mxnet::cpp::NDArray& arr, bool swap_rgb = true);
 std::vector<std::vector<cv::cuda::GpuMat> > wrapInputGpu(mxnet::cpp::NDArray& arr, bool swap_rgb = true);
 cv::Mat wrapOutput(mxnet::cpp::NDArray& arr);
-namespace Nodes {
+namespace nodes {
 
     class MXnet_EXPORT MXNet : public Node {
     public:
@@ -27,8 +28,8 @@ namespace Nodes {
         OPTIONAL_INPUT(std::vector<aq::DetectedObject>, input_detections, nullptr)
         PARAM(cv::Scalar, channel_mean, cv::Scalar(104, 117, 123))
         PARAM(float, pixel_scale, 1.0)
-        PARAM(int, network_width, 600)
-        PARAM(int, network_height, 300)
+        PARAM(unsigned int, network_width, 600)
+        PARAM(unsigned int, network_height, 300)
         PARAM(mo::ReadFile, model_file, mo::ReadFile())
         PARAM(mo::ReadFile, weight_file, mo::ReadFile())
         PARAM(mo::ReadFile, label_file, mo::ReadFile())
@@ -43,11 +44,11 @@ namespace Nodes {
         std::map<std::string, mxnet::cpp::NDArray> _args_map; // these are the learned weights and biases
         std::map<std::string, mxnet::cpp::NDArray> _aux_map; // these are additional data members of the layers
         std::unique_ptr<mxnet::cpp::Executor> _executor;
-        mxnet::cpp::Symbol _net;
+        mxnet::cpp::Symbol                    _net;
         std::map<std::string, mxnet::cpp::NDArray> _inputs;
-        mxnet::cpp::NDArray _gpu_buffer;
+        mxnet::cpp::NDArray                         _gpu_buffer;
         std::vector<rcc::shared_ptr<MXNetHandler> > _handlers;
     }; // class MXNet
 
-} // namespace aq::Nodes
+} // namespace aq::nodes
 } // namespace aq

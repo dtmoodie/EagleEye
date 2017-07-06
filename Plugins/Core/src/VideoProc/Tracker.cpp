@@ -215,7 +215,7 @@ bool KeyFrameTracker::processImpl()
     if(addKeyFrame)
     {
         //log(Status, "Adding key frame " + boost::lexical_cast<std::string>(frameCount));
-        NODE_LOG(info) << "Adding key frame " + frameCount;
+        NODE_MO_LOG(info) << "Adding key frame " + frameCount;
         TrackedFrame tf(img,frameCount);
         cv::cuda::GpuMat& keyPoints = tf.keyFrame.getKeyPoints();
         (*detector)(img,

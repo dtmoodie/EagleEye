@@ -155,7 +155,7 @@ bool SaveAnnotations::processImpl()
                 labels.push_back(label);
             }
         }
-        LOG(info) << "Loaded " << labels.size() << " class labels from " << label_file.string();
+        MO_LOG(info) << "Loaded " << labels.size() << " class labels from " << label_file.string();
 
         h_lut.create(1, labels.size(), CV_8UC3);
         for(int i = 0; i < labels.size(); ++i)

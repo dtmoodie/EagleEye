@@ -31,7 +31,7 @@ using namespace aq::nodes;
         else
         {
             ui_collector::set_node_name(getFullTreeName());
-            NODE_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
+            NODE_MO_LOG(error) << "Null child with idx: " + boost::lexical_cast<std::string>(i);
         }
     }
     cache.push_back(result);

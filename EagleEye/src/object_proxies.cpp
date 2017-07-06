@@ -271,12 +271,12 @@ QWidget * FrameGrabberProxy::embeddedWidget() {
 
 void FrameGrabberProxy::onSelectionChanged() {
     QString text = selector->lineEdit()->text();
-    LOG(info) << "Loading " << text.toStdString();
+    MO_LOG(info) << "Loading " << text.toStdString();
     m_fg->loadData(text.toStdString());
 }
 
 void FrameGrabberProxy::onSelectionChanged(int value) {
     QString text = selector->currentText();
-    LOG(info) << "Loading " << text.toStdString();
+    MO_LOG(info) << "Loading " << text.toStdString();
     m_fg->loadData(text.toStdString());
 }

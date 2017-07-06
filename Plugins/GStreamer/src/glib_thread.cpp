@@ -3,8 +3,8 @@
 
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
-#include <MetaObject/logging/Log.hpp>
-#include <MetaObject/thread/BoostThread.hpp>
+#include <MetaObject/logging/logging.hpp>
+#include <MetaObject/thread/boost_thread.hpp>
 
 glib_thread::glib_thread()
 {
@@ -20,10 +20,10 @@ void glib_thread::loop()
 {
     if (!g_main_loop_is_running(_main_loop))
     {
-        LOG(info) << "glib event loop starting";
+        MO_LOG(info) << "glib event loop starting";
         g_main_loop_run(_main_loop);
     }
-    LOG(info) << "glib event loop ending";
+    MO_LOG(info) << "glib event loop ending";
 }
 
 glib_thread* glib_thread::instance()
@@ -32,7 +32,7 @@ glib_thread* glib_thread::instance()
     auto instance = table->getSingleton<glib_thread>();
     if(!instance)
     {
-        LOG(info) << "Creating new instance of glib_thread";
+        MO_LOG(info) << "Creating new instance of glib_thread";
         instance = table->setSingleton(new glib_thread());
     }
     return instance;
@@ -42,7 +42,7 @@ GMainLoop* glib_thread::get_main_loop()
 {
     if(!_main_loop)
     {
-        LOG(info) << "Creating new glib event loop";
+        MO_LOG(info) << "Creating new glib event loop";
         _main_loop = g_main_loop_new(NULL, 0);
     }
     return _main_loop;
@@ -59,12 +59,12 @@ void glib_thread::start_thread()
 {
     if(!_main_loop)
     {
-        LOG(info) << "Creating new glib event loop";
+        MO_LOG(info) << "Creating new glib event loop";
         _main_loop = g_main_loop_new(NULL, 0);
     }
     if(g_main_loop_is_running(_main_loop))
     {
-        LOG(debug) << "glib main loop already running";
+        MO_LOG(debug) << "glib main loop already running";
         return;
     }
     _thread = boost::thread(boost::bind(&glib_thread::loop, this));
