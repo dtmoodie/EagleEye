@@ -63,7 +63,7 @@ bool DrawDetections::processImpl()
     {
         for(auto& detection : *detections)
         {
-            cv::Rect rect(detection.boundingBox.x, detection.boundingBox.y, detection.boundingBox.width, detection.boundingBox.height);
+            cv::Rect rect(detection.bounding_box.x, detection.bounding_box.y, detection.bounding_box.width, detection.bounding_box.height);
             cv::Scalar color;
             std::stringstream ss;
             if(labels->size())

@@ -31,7 +31,7 @@ void SaveAnnotations::select_rect(std::string window_name, cv::Rect rect, int fl
         if(labels && current_class >= 0 && current_class < labels->size())
         {
             DetectedObject obj;
-            obj.boundingBox = cv::Rect2f(float(rect.x) / _original_image.cols, float(rect.y) / _original_image.rows,
+            obj.bounding_box = cv::Rect2f(float(rect.x) / _original_image.cols, float(rect.y) / _original_image.rows,
                                          float(rect.width) / _original_image.cols, float(rect.height) / _original_image.rows);
             obj.classification = Classification((*labels)[current_class], 1.0, current_class);
             _annotations.push_back(obj);
@@ -112,7 +112,7 @@ void SaveAnnotations::draw()
     cv::Mat draw_image = _draw_image;
     for(int i = 0; i < _annotations.size(); ++i)
     {
-        auto bb = _annotations[i].boundingBox;
+        auto bb = _annotations[i].bounding_box;
         cv::rectangle(draw_image, cv::Rect(bb.x * draw_image.cols, bb.y * draw_image.rows,
                                            bb.width * draw_image.cols, bb.height * draw_image.rows),
                       h_lut.at<cv::Vec3b>(_annotations[i].classification.classNumber), 5);
@@ -121,7 +121,7 @@ void SaveAnnotations::draw()
     {
         for(const auto& detection : *detections)
         {
-            auto bb = detection.boundingBox;
+            auto bb = detection.bounding_box;
             cv::rectangle(draw_image, cv::Rect(bb.x * draw_image.cols, bb.y * draw_image.rows,
                                                bb.width * draw_image.cols, bb.height * draw_image.rows),
                         h_lut.at<cv::Vec3b>(detection.classification.classNumber), 5);
