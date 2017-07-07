@@ -100,12 +100,12 @@ void ClassifierHandler::handleOutput(const caffe::Net<float>& net, const std::ve
             }else{
                 obj.classification =  Classification("", (data + i * num)[idx[0]], idx[0]);
             }
-            obj.boundingBox = cv::Rect2f(bounding_boxes[i].x, bounding_boxes[i].y, bounding_boxes[i].width, bounding_boxes[i].height);
+            obj.bounding_box = cv::Rect2f(bounding_boxes[i].x, bounding_boxes[i].y, bounding_boxes[i].width, bounding_boxes[i].height);
             if(objs.size() == bounding_boxes.size()){
                 obj.id = objs[i].id;
                 obj.framenumber = objs[i].framenumber;
                 obj.timestamp = objs[i].timestamp;
-                obj.boundingBox = objs[i].boundingBox;
+                obj.bounding_box = objs[i].bounding_box;
             }
             classified_detections.push_back(obj);
         }
