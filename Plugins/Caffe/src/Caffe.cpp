@@ -36,7 +36,7 @@ void InitModule() {
 #endif
 }
 
-std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<float>& blob, bool bgr_swap) {
+std::vector<SyncedMemory> CaffeImageClassifier::WrapBlob(caffe::Blob<float>& blob, bool bgr_swap) {
     std::vector<SyncedMemory> wrapped_blob;
     int                       height = blob.height();
     int                       width  = blob.width();
@@ -63,7 +63,7 @@ std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<float>& blob, bool bgr
     return wrapped_blob;
 }
 
-std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<double>& blob, bool bgr_swap) {
+std::vector<SyncedMemory> CaffeImageClassifier::WrapBlob(caffe::Blob<double>& blob, bool bgr_swap) {
     std::vector<SyncedMemory> wrapped_blob;
     int                       height = blob.height();
     int                       width  = blob.width();
@@ -90,7 +90,7 @@ std::vector<SyncedMemory> CaffeBase::WrapBlob(caffe::Blob<double>& blob, bool bg
     return wrapped_blob;
 }
 
-void CaffeBase::WrapInput() {
+void CaffeImageClassifier::WrapInput() {
     if (NN == nullptr) {
         MO_LOG_EVERY_N(error, 100) << "Neural network not defined";
         return;
@@ -119,7 +119,7 @@ void CaffeBase::WrapInput() {
     }
 }
 
-bool CaffeBase::CheckInput() {
+bool CaffeImageClassifier::CheckInput() {
     if (NN == nullptr)
         return false;
     const auto&              input_blob_indecies = NN->input_blob_indices();
@@ -148,7 +148,7 @@ bool CaffeBase::CheckInput() {
     return true;
 }
 
-bool CaffeBase::reshapeNetwork(unsigned int num, unsigned int channels, unsigned int height, unsigned int width) {
+bool CaffeImageClassifier::reshapeNetwork(unsigned int num, unsigned int channels, unsigned int height, unsigned int width) {
     input_blobs = NN->input_blobs();
     for (auto input_blob : input_blobs) {
         input_blob->Reshape(num, channels, height, width);
@@ -158,7 +158,7 @@ bool CaffeBase::reshapeNetwork(unsigned int num, unsigned int channels, unsigned
     return true;
 }
 
-void CaffeBase::WrapOutput() {
+void CaffeImageClassifier::WrapOutput() {
     if (NN == nullptr) {
         BOOST_LOG_TRIVIAL(error) << "Neural network not defined";
         return;
@@ -182,7 +182,7 @@ void CaffeBase::WrapOutput() {
     }
 }
 
-bool CaffeBase::initNetwork() {
+bool CaffeImageClassifier::initNetwork() {
     if (::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
         ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
     if (model_file_param.modified()) {
@@ -275,7 +275,7 @@ bool CaffeBase::initNetwork() {
     return true;
 }
 
-void CaffeBase::nodeInit(bool firstInit) {
+void CaffeImageClassifier::nodeInit(bool firstInit) {
     (void)firstInit;
     aq::caffe_init_singleton::inst();
     if (::caffe::Caffe::mode() != ::caffe::Caffe::GPU)
@@ -286,7 +286,7 @@ bool operator!=(const cv::Size_<T1>& lhs, const cv::Size_<T2>& rhs) {
     return lhs.width == rhs.width && lhs.height == rhs.height;
 }
 
-std::vector<std::vector<cv::cuda::GpuMat> > CaffeBase::getNetImageInput(int requested_batch_size) {
+std::vector<std::vector<cv::cuda::GpuMat> > CaffeImageClassifier::getNetImageInput(int requested_batch_size) {
     (void)requested_batch_size;
     std::vector<std::vector<cv::cuda::GpuMat> > output;
     auto                                        data_itr = wrapped_inputs.find("data");
@@ -306,7 +306,7 @@ std::vector<std::vector<cv::cuda::GpuMat> > CaffeBase::getNetImageInput(int requ
     return output;
 }
 
-cv::Scalar_<unsigned int> CaffeBase::getNetworkShape() const {
+cv::Scalar_<unsigned int> CaffeImageClassifier::getNetworkShape() const {
     cv::Scalar_<unsigned int> output;
     auto                      data_itr = wrapped_inputs.find("data");
     if (data_itr != wrapped_inputs.end()) {
@@ -319,15 +319,15 @@ cv::Scalar_<unsigned int> CaffeBase::getNetworkShape() const {
     return output;
 }
 
-void CaffeBase::preBatch(int batch_size) {
+void CaffeImageClassifier::preBatch(int batch_size) {
     (void)batch_size;
     for (auto& handler : net_handlers) {
         handler->startBatch();
     }
 }
 
-void CaffeBase::postMiniBatch(const std::vector<cv::Rect>& batch_bb,
-    const std::vector<DetectedObject2d>&                   dets) {
+void CaffeImageClassifier::postMiniBatch(const std::vector<cv::Rect>& batch_bb,
+    const std::vector<DetectedObject2d>&                              dets) {
     if (net_handlers.empty()) {
         auto constructors = mo::MetaObjectFactory::instance()->getConstructors(Caffe::NetHandler::s_interfaceID);
         // For each blob, we check each handler and pick the handler with the highest priority
@@ -348,6 +348,7 @@ void CaffeBase::postMiniBatch(const std::vector<cv::Rect>& batch_bb,
             if (itr.second.size() == 0) {
                 continue;
             }
+            // construct the handlers with largest priority
             auto obj     = itr.second[0].second->Construct();
             auto handler = dynamic_cast<Caffe::NetHandler*>(obj);
             if (handler) {
@@ -362,7 +363,6 @@ void CaffeBase::postMiniBatch(const std::vector<cv::Rect>& batch_bb,
             } else {
                 delete obj;
             }
-            // construct the handlers with largest priority
         }
     }
     for (auto& handler : net_handlers) {
@@ -370,13 +370,13 @@ void CaffeBase::postMiniBatch(const std::vector<cv::Rect>& batch_bb,
     }
 }
 
-void CaffeBase::postBatch() {
+void CaffeImageClassifier::postBatch() {
     for (auto& handler : net_handlers) {
         handler->endBatch(input_param.getTimestamp());
     }
 }
 
-bool CaffeBase::forwardMinibatch() {
+bool CaffeImageClassifier::forwardMinibatch() {
     float              loss;
     mo::scoped_profile profile_forward("Neural Net forward pass", nullptr, nullptr, cudaStream());
     NN->Forward(&loss);

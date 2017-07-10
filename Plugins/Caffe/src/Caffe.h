@@ -26,16 +26,16 @@ extern "C" Caffe_EXPORT void InitModule();
 
 namespace aq {
 namespace nodes {
-    class Caffe_EXPORT CaffeBase : public INeuralNet {
+    class Caffe_EXPORT CaffeImageClassifier : public INeuralNet {
     public:
         typedef std::vector<SyncedMemory> WrappedBlob_t;
         typedef std::map<std::string, WrappedBlob_t> BlobMap_t;
-        MO_DERIVE(CaffeBase, INeuralNet)
+
+        MO_DERIVE(CaffeImageClassifier, INeuralNet)
         PROPERTY(boost::shared_ptr<caffe::Net<float> >, NN, boost::shared_ptr<caffe::Net<float> >())
         PROPERTY(BlobMap_t, wrapped_outputs, BlobMap_t())
         PROPERTY(BlobMap_t, wrapped_inputs, BlobMap_t())
         PROPERTY(bool, weightsLoaded, false)
-
         MO_END
         virtual void nodeInit(bool firstInit);
         static std::vector<SyncedMemory> WrapBlob(caffe::Blob<float>& blob, bool bgr_swap = false);
@@ -55,23 +55,11 @@ namespace nodes {
         void WrapInput();
         bool CheckInput();
         void WrapOutput();
+        void postSerializeInit();
 
         std::vector<caffe::Blob<float>*>                 input_blobs;
         std::vector<caffe::Blob<float>*>                 output_blobs;
         std::vector<rcc::shared_ptr<Caffe::NetHandler> > net_handlers;
-    };
-
-    class Caffe_EXPORT CaffeImageClassifier : public CaffeBase {
-    public:
-        MO_DERIVE(CaffeImageClassifier, CaffeBase)
-        PARAM(int, num_classifications, 5)
-        MO_END
-        void postSerializeInit();
-    };
-
-    class Caffe_EXPORT CaffeDetector : public CaffeBase {
-    public:
-    protected:
     };
 }
 }
