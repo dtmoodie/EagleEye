@@ -77,7 +77,7 @@ bool CalibrateCamera::processImpl()
 {
     if(image_points->size() != object_points->size())
     {
-        LOG(trace) << "image_points->size() != object_points->size()";
+        MO_LOG(trace) << "image_points->size() != object_points->size()";
         return false;
     }
     //cv::Size size = image->getSize();

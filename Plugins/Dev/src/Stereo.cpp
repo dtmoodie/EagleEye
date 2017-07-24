@@ -29,7 +29,7 @@ bool StereoBM::processImpl()
     if (left_image->getSize() != right_image->getSize())
     {
         //log(Error, "Images are of mismatched size");
-        LOG(debug) << "Images are of mismatched size";
+        MO_LOG(debug) << "Images are of mismatched size";
         return false;
     }
     cv::cuda::GpuMat disparity;

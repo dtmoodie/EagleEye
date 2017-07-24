@@ -8,8 +8,8 @@
 #include <Aquila/nodes/NodeFactory.hpp>
 
 #include <MetaObject/core/detail/Allocator.hpp>
-#include <MetaObject/logging/Profiling.hpp>
-#include <MetaObject/logging/Profiling.hpp>
+#include <MetaObject/logging/profiling.hpp>
+#include <MetaObject/logging/profiling.hpp>
 #include <MetaObject/object/MetaObject.hpp>
 #include <MetaObject/object/RelayManager.hpp>
 #include <MetaObject/params/ICoordinateSystem.hpp>
@@ -17,10 +17,11 @@
 #include <MetaObject/params/buffers/IBuffer.hpp>
 #include <MetaObject/serialization/SerializationFactory.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
-#include <MetaObject/thread/BoostThread.hpp>
+#include <MetaObject/thread/boost_thread.hpp>
 //#include <MetaObject/serialization/ParamMonitor.hpp>
 #include <RuntimeObjectSystem/RuntimeObjectSystem.h>
 
+#include <boost/asio.hpp>
 #include <boost/date_time.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/log/attributes.hpp>
@@ -34,7 +35,6 @@
 #include <boost/program_options.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/version.hpp>
-#include <boost/asio.hpp>
 #include <signal.h> // SIGINT, etc
 
 #include "Aquila/rcc/SystemTable.hpp"
@@ -43,13 +43,12 @@
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 
-
-
 #include <fstream>
 
 std::string printParam(mo::IParam* param) {
     std::stringstream ss;
-    ss << " - " << param->getTreeName() << " ";;
+    ss << " - " << param->getTreeName() << " ";
+    ;
     if (param->checkFlags(mo::Input_e)) {
         if (auto input = dynamic_cast<mo::InputParam*>(param)) {
             ss << " [";
@@ -176,23 +175,7 @@ int main(int argc, char* argv[]) {
     SystemTable                                 table;
     mo::MetaObjectFactory::instance(&table);
 
-    desc.add_options()("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
-        ("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")
-        ("launch", boost::program_options::value<std::string>(), "Optional - File containing node structure")
-        ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")
-        ("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")
-        ("log-dir", boost::program_options::value<std::string>(), "directory for log output")
-        ("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")
-        ("script,s", boost::program_options::value<std::string>(), "Text file with scripting commands")
-        ("profile,p", boost::program_options::bool_switch(), "Profile application")
-        ("gpu", boost::program_options::value<int>()->default_value(0), "")
-        ("docroot", boost::program_options::value<std::string>(), "")
-        ("http-address", boost::program_options::value<std::string>(), "")
-        ("http-port", boost::program_options::value<std::string>(), "")
-        ("disable-rcc", boost::program_options::bool_switch(), "Disable rcc")
-        ("quit-on-eos", boost::program_options::bool_switch(), "Quit program on end of stream signal")
-        ("disable-input", boost::program_options::bool_switch(), "Disable input for batch scripting, and nvprof")
-        ("profile-for", boost::program_options::value<int>(), "Amount of time to run before quitting, use with profiler");
+    desc.add_options()("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")("launch", boost::program_options::value<std::string>(), "Optional - File containing node structure")("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")("log-dir", boost::program_options::value<std::string>(), "directory for log output")("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")("script,s", boost::program_options::value<std::string>(), "Text file with scripting commands")("profile,p", boost::program_options::bool_switch(), "Profile application")("gpu", boost::program_options::value<int>()->default_value(0), "")("docroot", boost::program_options::value<std::string>(), "")("http-address", boost::program_options::value<std::string>(), "")("http-port", boost::program_options::value<std::string>(), "")("disable-rcc", boost::program_options::bool_switch(), "Disable rcc")("quit-on-eos", boost::program_options::bool_switch(), "Quit program on end of stream signal")("disable-input", boost::program_options::bool_switch(), "Disable input for batch scripting, and nvprof")("profile-for", boost::program_options::value<int>(), "Amount of time to run before quitting, use with profiler");
 
     boost::program_options::variables_map vm;
 
@@ -213,25 +196,25 @@ int main(int argc, char* argv[]) {
 
     g_allocator->setName("Global Allocator");
     if (!mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(g_allocator)) {
-        LOG(info) << "Unable to set thread specific gpu allocator in opencv";
+        MO_LOG(info) << "Unable to set thread specific gpu allocator in opencv";
     }
     if (!mo::CpuThreadAllocatorSetter<cv::Mat>::Set(g_allocator)) {
-        LOG(info) << "Unable to set thread specific cpu allocator in opencv";
+        MO_LOG(info) << "Unable to set thread specific cpu allocator in opencv";
     }
 
     auto unrecognized = boost::program_options::collect_unrecognized(parsed_options.options, boost::program_options::include_positional);
     std::map<std::string, std::string> replace_map;
     std::map<std::string, std::string> variable_replace_map;
-    std::stringstream currentDate;
+    std::stringstream        currentDate;
     boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
     currentDate << timeLocal.date().year() << "-" << std::setfill('0') << std::setw(2) << timeLocal.date().month().as_number() << "-" << std::setfill('0') << std::setw(2) << timeLocal.date().day().as_number();
-    replace_map["${date}"] = currentDate.str();
+    replace_map["${date}"]     = currentDate.str();
     replace_map["${hostname}"] = boost::asio::ip::host_name();
     currentDate.str(std::string());
     currentDate << std::setfill('0') << std::setw(2) << timeLocal.time_of_day().hours() << std::setfill('0') << std::setw(2) << timeLocal.time_of_day().minutes();
     replace_map["${hour}"] = currentDate.str();
-    replace_map["${pid}"] = boost::lexical_cast<std::string>(boost::log::aux::this_process::get_id());
-    if(vm.count("config")){
+    replace_map["${pid}"]  = boost::lexical_cast<std::string>(boost::log::aux::this_process::get_id());
+    if (vm.count("config")) {
         replace_map["${config_file_dir}"] = boost::filesystem::path(vm["config"].as<std::string>()).parent_path().string();
     }
     for (auto& option : unrecognized) {
@@ -260,7 +243,7 @@ int main(int argc, char* argv[]) {
         for (const auto& pair : replace_map)
             ss << "\n"
                << pair.first << " = " << pair.second;
-        LOG(debug) << "Input string replacements: " << ss.str();
+        MO_LOG(debug) << "Input string replacements: " << ss.str();
     }
 
     if (variable_replace_map.size()) {
@@ -268,7 +251,7 @@ int main(int argc, char* argv[]) {
         for (const auto& pair : variable_replace_map)
             ss << "\n"
                << pair.first << " = " << pair.second;
-        LOG(debug) << "Input variable replacements: " << ss.str();
+        MO_LOG(debug) << "Input variable replacements: " << ss.str();
     }
 
     if (vm["profile"].as<bool>() || vm.count("profile-for")) {
@@ -277,13 +260,13 @@ int main(int argc, char* argv[]) {
     cv::cuda::setDevice(vm["gpu"].as<int>());
     {
         boost::posix_time::ptime initialization_start = boost::posix_time::microsec_clock::universal_time();
-        LOG(info) << "Initializing GPU...";
+        MO_LOG(info) << "Initializing GPU...";
         cv::cuda::GpuMat(10, 10, CV_32F);
         boost::posix_time::ptime initialization_end = boost::posix_time::microsec_clock::universal_time();
         if (boost::posix_time::time_duration(initialization_end - initialization_start).total_seconds() > 1) {
             cudaDeviceProp props;
             cudaGetDeviceProperties(&props, cv::cuda::getDevice());
-            LOG(warning) << "Initialization took " << boost::posix_time::time_duration(initialization_end - initialization_start).total_milliseconds() << " ms.  CUDA code likely not generated for this architecture (" << props.major << "." << props.minor << ")";
+            MO_LOG(warning) << "Initialization took " << boost::posix_time::time_duration(initialization_end - initialization_start).total_milliseconds() << " ms.  CUDA code likely not generated for this architecture (" << props.major << "." << props.minor << ")";
         }
     }
 
@@ -325,7 +308,7 @@ int main(int argc, char* argv[]) {
 
     currentDir = boost::filesystem::path(currentDir.string() + "/Plugins");
 
-    LOG(info) << "Looking for plugins in: " << currentDir.string();
+    MO_LOG(info) << "Looking for plugins in: " << currentDir.string();
     boost::filesystem::directory_iterator end_itr;
     if (boost::filesystem::is_directory(currentDir)) {
         for (boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr) {
@@ -344,15 +327,22 @@ int main(int argc, char* argv[]) {
     }
     boost::thread gui_thread([] {
         mo::ThreadRegistry::instance()->registerThread(mo::ThreadRegistry::GUI);
+        boost::mutex              dummy_mtx; // needed for cv
+        boost::condition_variable cv;
+        mo::ThreadSpecificQueue::registerNotifier([&cv]() {
+            cv.notify_all();
+        });
         while (!boost::this_thread::interruption_requested()) {
             mo::setThreadName("SimpleConsole GUI thread");
             try {
+                boost::mutex::scoped_lock lock(dummy_mtx);
+                cv.wait(lock);
                 mo::ThreadSpecificQueue::run();
             } catch (boost::thread_interrupted& err) {
                 (void)err;
                 break;
             } catch (...) {
-                LOG(debug) << "Unknown / unhandled exception thrown in gui thread event handler";
+                MO_LOG(debug) << "Unknown / unhandled exception thrown in gui thread event handler";
             }
             try {
                 //cv::waitKey(1);
@@ -367,7 +357,7 @@ int main(int argc, char* argv[]) {
             } catch (...) {
             }
         }
-        LOG(info) << "Gui thread shutting down naturally";
+        MO_LOG(info) << "Gui thread shutting down naturally";
     });
     mo::setThreadName(gui_thread, "Gui-thread");
     mo::RelayManager manager;
@@ -440,7 +430,7 @@ int main(int argc, char* argv[]) {
         mo::TSlot<void(std::string)>* slot;
         slot = new mo::TSlot<void(std::string)>(
             std::bind([&documents_list](std::string null) -> void {
-                       (void)null;
+                (void)null;
                 documents_list.clear();
                 auto constructors = mo::MetaObjectFactory::instance()->getConstructors(aq::nodes::IFrameGrabber::s_interfaceID);
                 int  index        = 0;
@@ -456,7 +446,7 @@ int main(int argc, char* argv[]) {
                     }
                 }
             },
-                      std::placeholders::_1));
+                std::placeholders::_1));
         _slots.emplace_back(slot);
         connections.push_back(manager.connect(slot, "list_devices"));
 
@@ -477,7 +467,7 @@ int main(int argc, char* argv[]) {
                     _dataStreams.push_back(ds);
                 }
             },
-                      std::placeholders::_1));
+                std::placeholders::_1));
         _slots.emplace_back(slot);
         connections.push_back(manager.connect(slot, "load_file"));
 
@@ -485,7 +475,7 @@ int main(int argc, char* argv[]) {
             std::bind([](std::string) -> void {
                 quit = true;
             },
-                      std::placeholders::_1));
+                std::placeholders::_1));
         _slots.emplace_back(slot);
         connections.push_back(manager.connect(slot, "quit"));
 
@@ -649,7 +639,7 @@ int main(int argc, char* argv[]) {
                     std::cout << "No constructor found for " << obj;
                 }
             },
-                      std::placeholders::_1));
+                std::placeholders::_1));
         _slots.emplace_back(slot);
         connections.push_back(manager.connect(slot, "info"));
 
@@ -671,15 +661,15 @@ int main(int argc, char* argv[]) {
 
         bool              quit_on_eos = vm["quit-on-eos"].as<bool>();
         mo::TSlot<void()> eos_slot(std::bind([]() {
-            LOG_FIRST_N(info, 1) << "End Of Stream received, shutting down";
+            MO_LOG_FIRST_N(info, 1) << "End Of Stream received, shutting down";
             quit = true;
         }));
-        
+
         std::vector<std::shared_ptr<mo::Connection> > eos_connections;
         slot = new mo::TSlot<void(std::string)>(
             std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file) {
                 replace_map["${config_file_dir}"] = boost::filesystem::path(file).parent_path().string();
-                auto streams = aq::IDataStream::load(file, variable_replace_map, replace_map);
+                auto streams                      = aq::IDataStream::load(file, variable_replace_map, replace_map);
                 if (streams.size()) {
                     for (auto& stream : streams) {
                         stream->startThread();
@@ -688,12 +678,14 @@ int main(int argc, char* argv[]) {
                             stream->getRelayManager()->connect(&eos_slot, "eos");
                         }
                     }
-                    std::cout << "Load of " << file << " complete" << std::endl;;
+                    std::cout << "Load of " << file << " complete" << std::endl;
+                    ;
                 } else {
-                    std::cout << "Load of " << file << " failed" << std::endl;;
+                    std::cout << "Load of " << file << " failed" << std::endl;
+                    ;
                 }
             },
-                      std::placeholders::_1));
+                std::placeholders::_1));
         _slots.emplace_back(slot);
         connections.push_back(manager.connect(slot, "load"));
 
@@ -836,13 +828,13 @@ int main(int argc, char* argv[]) {
                     }
                 }
             },
-                      std::placeholders::_1));
+                std::placeholders::_1));
 
         connections.push_back(manager.connect(slot, "select"));
 
         slot = new mo::TSlot<void(std::string)>(
             std::bind([&_dataStreams, &current_stream, &current_node](std::string what) {
-                (void) what;
+                (void)what;
                 if (current_stream) {
                     auto itr = std::find(_dataStreams.begin(), _dataStreams.end(), current_stream.get());
                     if (itr != _dataStreams.end()) {
@@ -869,7 +861,7 @@ int main(int argc, char* argv[]) {
                 }
                 std::cout << "Unable to delete item\n";
             },
-                      std::placeholders::_1));
+                std::placeholders::_1));
 
         connections.push_back(manager.connect(slot, "delete"));
 
@@ -900,7 +892,7 @@ int main(int argc, char* argv[]) {
             }
 
         },
-                                                          std::placeholders::_1));
+            std::placeholders::_1));
         connections.push_back(manager.connect(slot, "list"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([](std::string null) -> void {
@@ -914,7 +906,7 @@ int main(int argc, char* argv[]) {
             std::cout << ss.str() << std::endl;
             ;
         },
-                                                          std::placeholders::_1));
+            std::placeholders::_1));
 
         connections.push_back(manager.connect(slot, "plugins"));
 
@@ -1006,7 +998,7 @@ int main(int argc, char* argv[]) {
                     std::cout << "No parameters exist\n";
             }
         },
-                                                          std::placeholders::_1));
+            std::placeholders::_1));
         connections.push_back(manager.connect(slot, "add"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node, &current_stream, &current_param](std::string value) -> void {
@@ -1079,14 +1071,16 @@ int main(int argc, char* argv[]) {
             } else if (current_stream) {
             }
             std::cout << "Unable to set value to " << value << std::endl;
-        },std::placeholders::_1));
+        },
+            std::placeholders::_1));
 
         connections.push_back(manager.connect(slot, "set"));
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node](std::string name) {
             if (current_node) {
                 current_node->setTreeName(name);
             }
-        },std::placeholders::_1));
+        },
+            std::placeholders::_1));
         connections.push_back(manager.connect(slot, "rename"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node, &current_stream](std::string name) {
@@ -1133,7 +1127,8 @@ int main(int argc, char* argv[]) {
                 return;
             }
             THROW(debug) << "Signal serialization needs to be reimplemented";
-        },std::placeholders::_1));
+        },
+            std::placeholders::_1));
         connections.push_back(manager.connect(slot, "emit"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind(
@@ -1162,13 +1157,15 @@ int main(int argc, char* argv[]) {
                     directory = directory.substr(pos + 1);
                 }
                 mo::MetaObjectFactory::instance()->getObjectSystem()->AddLibraryDir(directory.c_str(), static_cast<unsigned short>(idx));
-            }, std::placeholders::_1));
+            },
+            std::placeholders::_1));
 
         connections.push_back(manager.connect(slot, "link"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([](std::string ms) {
             boost::this_thread::sleep_for(boost::chrono::milliseconds(boost::lexical_cast<int>(ms)));
-        }, std::placeholders::_1));
+        },
+            std::placeholders::_1));
 
         connections.push_back(manager.connect(slot, "wait"));
 
@@ -1185,16 +1182,22 @@ int main(int argc, char* argv[]) {
                 if (command_list.size())
                     std::reverse(command_list.begin(), command_list.end());
             } else {
-                LOG(warning) << "Unable to load scripting file: " << filename;
+                MO_LOG(warning) << "Unable to load scripting file: " << filename;
             }
-        }, std::placeholders::_1));
+        },
+            std::placeholders::_1));
 
         connections.push_back(manager.connect(slot, "run"));
         if (vm.count("config")) {
-            LOG(info) << "Loading " << vm["config"].as<std::string>();
-            std::stringstream ss;
-            ss << "load " << vm["config"].as<std::string>();
-            command_list.emplace_back(ss.str());
+            MO_LOG(info) << "Loading " << vm["config"].as<std::string>();
+            if (vm.count("disable-input") != 0) {
+                auto relay = manager.getRelay<void(std::string)>("load");
+                (*relay)(vm["config"].as<std::string>());
+            } else {
+                std::stringstream ss;
+                ss << "load " << vm["config"].as<std::string>();
+                command_list.emplace_back(ss.str());
+            }
         }
         if (vm.count("launch")) {
             std::stringstream ss;
@@ -1248,50 +1251,10 @@ int main(int argc, char* argv[]) {
         slot = new mo::TSlot<void(std::string)>(std::bind([&rcc_enabled](std::string value) {
             rcc_enabled = boost::lexical_cast<bool>(value);
         },
-                                                          std::placeholders::_1));
+            std::placeholders::_1));
         connections.push_back(manager.connect(slot, "rcc"));
 
         bool disable_input = vm["disable-input"].as<bool>() || vm.count("profile-for");
-        auto io_func       = [&command_list, &manager, &print_options, disable_input]() {
-            std::string command_line;
-            bool        skip = (command_list.size() == 0) && disable_input;
-            if (command_list.size()) {
-                command_line = command_list.back();
-                command_list.pop_back();
-            } else {
-                if (!disable_input)
-                    if (std::cin.peek())
-                        std::getline(std::cin, command_line);
-            }
-            if (!skip) {
-                std::stringstream ss;
-                ss << command_line;
-                std::string command;
-                std::getline(ss, command, ' ');
-                auto relay = manager.getRelay<void(std::string)>(command);
-                if (relay) {
-                    std::string rest;
-                    std::getline(ss, rest);
-                    try {
-                        LOG(debug) << "Running command (" << command << ") with arguments: " << rest;
-                        (*relay)(rest);
-                    } catch (std::exception& e) {
-                        LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed due to: "
-                                     << "[" << typeid(e).name() << "] - " << e.what();
-                    } catch (...) {
-                        LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed miserably";
-                    }
-                } else {
-                    if (command_line.size()) {
-                        LOG(warning) << "Invalid command: " << command_line;
-                        print_options();
-                    }
-                }
-            }
-
-            for (int i = 0; i < 20; ++i)
-                mo::ThreadSpecificQueue::runOnce();
-        };
 
         if (vm.count("script")) {
             auto relay = manager.getRelay<void(std::string)>("run");
@@ -1305,10 +1268,46 @@ int main(int argc, char* argv[]) {
             run_time = vm["profile-for"].as<int>();
         }
         boost::thread io_thread = boost::thread(std::bind(
-            [&io_func, &_dataStreams, run_time]() {
+            [&_dataStreams, &manager, run_time, &command_list, &disable_input, &print_options]() {
                 auto start = boost::posix_time::microsec_clock::universal_time();
                 while (!quit) {
-                    io_func();
+                    std::string command_line;
+                    bool        skip = (command_list.size() == 0) && disable_input;
+                    if (command_list.size()) {
+                        command_line = command_list.back();
+                        command_list.pop_back();
+                    } else {
+                        if (!disable_input)
+                            if (std::cin.peek())
+                                std::getline(std::cin, command_line);
+                    }
+                    if (!skip) {
+                        std::stringstream ss;
+                        ss << command_line;
+                        std::string command;
+                        std::getline(ss, command, ' ');
+                        auto relay = manager.getRelay<void(std::string)>(command);
+                        if (relay) {
+                            std::string rest;
+                            std::getline(ss, rest);
+                            try {
+                                MO_LOG(debug) << "Running command (" << command << ") with arguments: " << rest;
+                                (*relay)(rest);
+                            } catch (std::exception& e) {
+                                MO_LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed due to: "
+                                                << "[" << typeid(e).name() << "] - " << e.what();
+                            } catch (...) {
+                                MO_LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed miserably";
+                            }
+                        } else {
+                            if (command_line.size()) {
+                                MO_LOG(warning) << "Invalid command: " << command_line;
+                                print_options();
+                            }
+                        }
+                    }
+                    mo::ThreadSpecificQueue::run();
+                    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
                     if (run_time != -1) {
                         auto now = boost::posix_time::microsec_clock::universal_time();
                         if (boost::posix_time::time_duration(now - start).total_seconds() > run_time) {
@@ -1320,9 +1319,11 @@ int main(int argc, char* argv[]) {
                 std::cout << "IO thread shutting down\n";
             }));
         mo::setThreadName(io_thread, "io-thread");
+
         boost::posix_time::ptime last_compile_check_time = boost::posix_time::microsec_clock::universal_time();
 
         signal(SIGINT, sig_handler);
+        mo::setThisThreadName("RCC");
         while (!quit) {
             auto current_time = boost::posix_time::microsec_clock::universal_time();
             if (boost::posix_time::time_duration(current_time - last_compile_check_time).total_milliseconds() > 1000) {
@@ -1337,12 +1338,12 @@ int main(int argc, char* argv[]) {
         gui_thread.join();
         mo::ThreadSpecificQueue::cleanup();
         _dataStreams.clear();
-        LOG(info) << "Gui thread shut down complete";
-        mo::ThreadPool::Instance()->Cleanup();
-        LOG(info) << "Thread pool cleanup complete";
+        MO_LOG(info) << "Gui thread shut down complete";
+        mo::ThreadPool::instance()->cleanup();
+        MO_LOG(info) << "Thread pool cleanup complete";
         delete g_allocator;
         mo::Allocator::cleanupThreadSpecificAllocator();
-        LOG(info) << "Cleaning up singletons";
+        MO_LOG(info) << "Cleaning up singletons";
         table.cleanUp();
         std::cout << "Program exiting" << std::endl;
         return 0;
@@ -1350,9 +1351,9 @@ int main(int argc, char* argv[]) {
     gui_thread.interrupt();
     gui_thread.join();
 
-    LOG(info) << "Gui thread shut down complete, cleaning up thread pool";
-    mo::ThreadPool::Instance()->Cleanup();
-    LOG(info) << "Thread pool cleanup complete";
+    MO_LOG(info) << "Gui thread shut down complete, cleaning up thread pool";
+    mo::ThreadPool::instance()->cleanup();
+    MO_LOG(info) << "Thread pool cleanup complete";
     delete g_allocator;
     table.cleanUp();
     std::cout << "Program exiting" << std::endl;

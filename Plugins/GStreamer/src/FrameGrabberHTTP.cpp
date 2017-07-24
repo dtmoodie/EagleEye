@@ -24,7 +24,7 @@ bool FrameGrabberHTTP::loadData(const ::std::string& file_path_)
     pos = file_path.find(':');
     if(pos == std::string::npos)
         return false;
-    LOG(info) << "Trying to load " << file_path.substr(0, pos) << " at port " << file_path.substr(pos + 1);
+    MO_LOG(info) << "Trying to load " << file_path.substr(0, pos) << " at port " << file_path.substr(pos + 1);
     ss << "tcpclientsrc host=" << file_path.substr(0, pos);
     ss << " port=" << file_path.substr(pos + 1);
     ss << " ! matroskademux ! h264parse ! ";
@@ -38,12 +38,12 @@ bool FrameGrabberHTTP::loadData(const ::std::string& file_path_)
     ss << "videoconvert ! appsink";
     if(!this->create_pipeline(ss.str()))
     {
-        LOG(warning) << "Unable to create pipeline for " << ss.str();
+        MO_LOG(warning) << "Unable to create pipeline for " << ss.str();
         return false;
     }
     if(!this->set_caps())
     {
-        LOG(warning) << "Unable to set caps";
+        MO_LOG(warning) << "Unable to set caps";
         return false;
     }
     this->pause_pipeline();
@@ -64,7 +64,7 @@ GstFlowReturn FrameGrabberHTTP::on_pull()
         caps = gst_sample_get_caps (sample);
         if (!caps)
         {
-            LOG(debug) << "could not get sample caps";
+            MO_LOG(debug) << "could not get sample caps";
             return GST_FLOW_OK;
         }
         s = gst_caps_get_structure (caps, 0);
@@ -75,7 +75,7 @@ GstFlowReturn FrameGrabberHTTP::on_pull()
         //const gchar* format = gst_structure_get_string(s, "format");
         if (!res)
         {
-            LOG(debug) << "could not get snapshot dimenszion\n";
+            MO_LOG(debug) << "could not get snapshot dimenszion\n";
             return GST_FLOW_OK;
         }
         buffer = gst_sample_get_buffer (sample);

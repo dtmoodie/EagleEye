@@ -117,7 +117,7 @@ GstFlowReturn JPEGSink::on_pull(){
         GstMapInfo map;
         caps = gst_sample_get_caps(sample);
         if (!caps){
-            LOG(debug) << "could not get sample caps";
+            MO_LOG(debug) << "could not get sample caps";
             return GST_FLOW_OK;
         }
         buffer = gst_sample_get_buffer(sample);

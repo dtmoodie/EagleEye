@@ -56,7 +56,7 @@ bool GrabberCV::LoadGPU(const std::string& file_path)
 bool GrabberCV::LoadCPU(const std::string& file_path)
 {
     h_cam.release();
-    //LOG(info) << "Attemping to load " << file_path;
+    //MO_LOG(info) << "Attemping to load " << file_path;
     BOOST_LOG_TRIVIAL(info ) << "[" << GetTypeName() << "::h_loadFile] Trying to load: \"" << file_path << "\"";
     try
     {
@@ -90,7 +90,7 @@ bool GrabberCV::LoadCPU(const std::string& file_path)
     }
     catch (cv::Exception& e)
     {
-        LOG(debug) << "Unable to load " << file_path << " due to " << e.what();
+        MO_LOG(debug) << "Unable to load " << file_path << " due to " << e.what();
     }
     return false;
 }
@@ -268,7 +268,7 @@ bool GrabberCamera::loadData(const std::string& file_path)
             ss << cam << ", ";
         return ss.str();
     };
-    LOG(debug) << "Unable to load " << file_path << " queried cameras: " << func() << " trying to requery";
+    MO_LOG(debug) << "Unable to load " << file_path << " queried cameras: " << func() << " trying to requery";
 
     listPaths(cameras);
     for(int i = 0; i < cameras.size(); ++i)
@@ -284,7 +284,7 @@ bool GrabberCamera::loadData(const std::string& file_path)
         }
         ++index;
     }
-    LOG(warning) << "Unable to load " << file_path << " queried cameras: " << func();
+    MO_LOG(warning) << "Unable to load " << file_path << " queried cameras: " << func();
     return false;
 }
 

@@ -44,7 +44,7 @@ void ProcessFuture::process_ahead()
     rmt_SetCurrentThreadName("ProcessFuture_thread");
     if(!frame_grabber)
     {
-        LOG(debug) << "No valid frame grabber";
+        MO_LOG(debug) << "No valid frame grabber";
         return;
     }
     cv::cuda::Stream stream;

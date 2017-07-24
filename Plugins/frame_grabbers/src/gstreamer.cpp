@@ -13,7 +13,7 @@ int GrabberGstreamer::canLoad(const std::string& path)
         return 9;
     if (boost::filesystem::exists(path))
         return 2;
-    LOG(trace) << "Document is not a regular file";
+    MO_LOG(trace) << "Document is not a regular file";
     return 0;
 }
 void GrabberGstreamer::listPaths(std::vector<std::string>& paths)

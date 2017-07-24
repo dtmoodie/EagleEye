@@ -12,8 +12,8 @@
 #include <MetaObject/object/MetaObject.hpp>
 #include <MetaObject/params/Types.hpp>
 #include <MetaObject/object/detail/IMetaObjectImpl.hpp>
-#include <MetaObject/logging/Profiling.hpp>
-#include "MetaObject/logging/Log.hpp"
+#include <MetaObject/logging/profiling.hpp>
+#include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include "caffe_include.h"
@@ -104,7 +104,7 @@ void CaffeBase::WrapInput()
 {
     if(NN == nullptr)
     {
-        LOG_EVERY_N(error, 100) << "Neural network not defined";
+        MO_LOG_EVERY_N(error, 100) << "Neural network not defined";
         return;
     }
     if(NN->num_inputs() == 0)
@@ -126,7 +126,7 @@ void CaffeBase::WrapInput()
         ss << "   input channels: " << input_blobs[i]->channels() << "\n";
         ss << "   input size: (" << input_blobs[i]->width() << ", " << input_blobs[i]->height() << ")\n";
     }
-    //LOG(debug) << ss.str();
+    //MO_LOG(debug) << ss.str();
 
     for(int k = 0; k < input_blobs.size(); ++k)
     {
@@ -231,7 +231,7 @@ bool CaffeBase::InitNetwork()
         }
         else
         {
-            LOG_EVERY_N(warning, 100) << "Architecture file does not exist " << nn_model_file.string();
+            MO_LOG_EVERY_N(warning, 100) << "Architecture file does not exist " << nn_model_file.string();
         }
     }
 
@@ -264,7 +264,7 @@ bool CaffeBase::InitNetwork()
         }
         else
         {
-            LOG_EVERY_N(warning, 100) << "Weight file does not exist " << nn_weight_file.string();
+            MO_LOG_EVERY_N(warning, 100) << "Weight file does not exist " << nn_weight_file.string();
         }
     }
 
@@ -274,7 +274,7 @@ bool CaffeBase::InitNetwork()
         std::ifstream ifs(label_file.string().c_str());
         if (!ifs)
         {
-            LOG_EVERY_N(warning, 100) << "Unable to load label file";
+            MO_LOG_EVERY_N(warning, 100) << "Unable to load label file";
         }
 
         std::string line;
@@ -319,7 +319,7 @@ bool CaffeBase::InitNetwork()
     }
     if (NN == nullptr || weightsLoaded == false)
     {
-        LOG_EVERY_N(debug, 1000) << "Model not loaded";
+        MO_LOG_EVERY_N(debug, 1000) << "Model not loaded";
         return false;
     }
     return true;
@@ -350,12 +350,12 @@ bool CaffeImageClassifier::processImpl()
     auto input_shape = input->getShape();
     if(input_blobs.empty())
     {
-        LOG_EVERY_N(warning, 100) << "No input blobs to network, is this a deploy network?";
+        MO_LOG_EVERY_N(warning, 100) << "No input blobs to network, is this a deploy network?";
         return false;
     }
     if(input_shape[3] != input_blobs[0]->channels())
     {
-        LOG(warning) << "Cannot handle image with " << input_shape[3] << " channels with network "
+        MO_LOG(warning) << "Cannot handle image with " << input_shape[3] << " channels with network "
                      << " designed for " << input_blobs[0]->channels() << " channels";
         return false;
     }
@@ -444,7 +444,7 @@ bool CaffeImageClassifier::processImpl()
                 ss << input.first;
             return ss.str();
         };
-        LOG(warning) << "Input blob \"data\" not found in network input blobs, existing blobs: " << f();
+        MO_LOG(warning) << "Input blob \"data\" not found in network input blobs, existing blobs: " << f();
 
         return false;
     }

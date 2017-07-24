@@ -68,7 +68,7 @@ bool DetectFrameSkip::processImpl()
         {
             if(*cur_time < *_prev_time)
             {
-                LOG(warning) << "Received frame that is " << *_prev_time - *cur_time << " older than last frame";
+                MO_LOG(warning) << "Received frame that is " << *_prev_time - *cur_time << " older than last frame";
                 return false;
             }
         }

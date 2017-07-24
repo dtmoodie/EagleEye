@@ -38,12 +38,9 @@ rcc_find_path(nnvm_INCLUDE_DIR  nnvm/c_api.h
     PATHS ${mxnet_ROOT}/nnvm/include
 )
 
-rcc_find_library(nnvm_LIBRARY nnvm
-    PATHS ${mxnet_ROOT}/nnvm/lib
-)
-
 rcc_find_path(mxnet_cpp_INCLUDE mxnet-cpp/MxNetCpp.h
     PATHS ${mxnet_ROOT}/cpp-package/include
+          ${mxnet_ROOT}/include
 )
 
 rcc_find_path(dmlc_INCLUDE dmlc/base.h
@@ -55,6 +52,7 @@ rcc_find_path(dmlc_INCLUDE dmlc/base.h
 rcc_find_path(mshadow_INCLUDE mshadow/tensor.h
   PATHS
   ${mxnet_ROOT}/mshadow
+  ${mxnet_ROOT}/mshadow/include
   ${mxnet_ROOT}/../mshadow
 )
 
@@ -67,7 +65,7 @@ rcc_find_library(dmlc_CORE_LIBRARY_RELEASE dmlccore dmlc
     ${mxnet_ROOT}/dmlc-core
 )
 
-rcc_find_library(dmlc_CORE_LIBRARY_DEBUG dmlccored
+rcc_find_library(dmlc_CORE_LIBRARY_DEBUG dmlccored dmlc
   PATHS
     ${mxnet_ROOT}/lib
     ${mxnet_ROOT}/build/dmlc-core/Debug
@@ -92,17 +90,6 @@ if(OpenBLAS_FOUND)
                 "${mxnet_cpp_INCLUDE};${OpenBLAS_INCLUDE_DIR};${CUDNN_INCLUDE_DIR};${mxnet_INCLUDE};${nnvm_INCLUDE_DIR};${dmlc_INCLUDE};${CUDA_TOOLKIT_INCLUDE}"
         )
       endif((mxnet_LIBRARY_DEBUG OR mxnet_LIBRARY_RELEASE) AND (dmlc_CORE_LIBRARY_DEBUG OR dmlc_CORE_LIBRARY_RELEASE))
-
-      if(nnvm_LIBRARY)
-          add_library(nnvm STATIC IMPORTED)
-          set_property(TARGET nnvm APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-          set_target_properties(nnvm PROPERTIES
-              IMPORTED_IMPLIB_RELEASE ${nnvm_LIBRARY}
-            )
-            set_target_properties(nnvm
-              PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${nnvm_INCLUDE_DIR}
-            )
-      endif()
 
       if(dmlc_CORE_LIBRARY_DEBUG OR dmlc_CORE_LIBRARY_RELEASE)
         add_library(dmlc_core STATIC IMPORTED)
@@ -136,7 +123,7 @@ if(OpenBLAS_FOUND)
         set_property(TARGET mxnet APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
         set_target_properties(mxnet PROPERTIES
           IMPORTED_IMPLIB_DEBUG ${mxnet_LIBRARY_DEBUG}
-          IMPORTED_LINK_INTERFACE_LIBRARIES_DEBUG "dmlc_core;cudnn;${OpenBLAS_LIB};nnvm"
+          IMPORTED_LINK_INTERFACE_LIBRARIES_DEBUG "dmlc_core;cudnn;${OpenBLAS_LIB}"
         )
         if(MSVC)
             set_target_properties(mxnet PROPERTIES
@@ -150,7 +137,7 @@ if(OpenBLAS_FOUND)
           set_property(TARGET mxnet APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
           set_target_properties(mxnet PROPERTIES
             IMPORTED_IMPLIB_DEBUG ${mxnet_LIBRARY_RELEASE}
-            IMPORTED_LINK_INTERFACE_LIBRARIES_DEBUG "dmlc_core;cudnn;${OpenBLAS_LIB};nnvm"
+            IMPORTED_LINK_INTERFACE_LIBRARIES_DEBUG "dmlc_core;cudnn;${OpenBLAS_LIB}"
           )
 
       endif(mxnet_LIBRARY_DEBUG)
@@ -159,13 +146,13 @@ if(OpenBLAS_FOUND)
         set_property(TARGET mxnet APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
         set_target_properties(mxnet PROPERTIES
           IMPORTED_IMPLIB_RELEASE ${mxnet_LIBRARY_RELEASE}
-          IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE "dmlc_core;cudnn;${OpenBLAS_LIB};nnvm"
+          IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE "dmlc_core;cudnn;${OpenBLAS_LIB}"
         )
 
         set_property(TARGET mxnet APPEND PROPERTY IMPORTED_CONFIGURATIONS RELWITHDEBINFO)
         set_target_properties(mxnet PROPERTIES
           IMPORTED_IMPLIB_RELWITHDEBINFO ${mxnet_LIBRARY_RELEASE}
-          IMPORTED_LINK_INTERFACE_LIBRARIES_RELWITHDEBINFO "dmlc_core;cudnn;${OpenBLAS_LIB};nnvm"
+          IMPORTED_LINK_INTERFACE_LIBRARIES_RELWITHDEBINFO "dmlc_core;cudnn;${OpenBLAS_LIB}"
         )
         if(MSVC)
           set_target_properties(mxnet PROPERTIES
@@ -177,7 +164,7 @@ if(OpenBLAS_FOUND)
         endif(MSVC)
       endif(mxnet_LIBRARY_RELEASE)
       set_target_properties(mxnet PROPERTIES
-        IMPORTED_LINK_INTERFACE_LIBRARIES "dmlc_core;cudnn;${OpenBLAS_LIB};nnvm"
+        IMPORTED_LINK_INTERFACE_LIBRARIES "dmlc_core;cudnn;${OpenBLAS_LIB}"
       )
     endif(mxnet_INCLUDE AND mxnet_cpp_INCLUDE AND nnvm_INCLUDE_DIR)
   endif(CUDNN_FOUND)

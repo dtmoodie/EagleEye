@@ -3,7 +3,7 @@
 #include <MetaObject/thread/InterThread.hpp>
 #include <Aquila/utilities/cuda/CudaCallbacks.hpp>
 #include <Aquila/gui/UiCallbackHandlers.h>
-#include <MetaObject/logging/Profiling.hpp>
+#include <MetaObject/logging/profiling.hpp>
 #include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
 

@@ -6,34 +6,34 @@ using namespace aq::nodes;
 #define CATCH_MACRO                                                         \
     catch (boost::thread_resource_error& err)                               \
 {                                                                           \
-    LOG(error) << err.what();                                               \
+    MO_LOG(error) << err.what();                                               \
 }                                                                           \
     catch (boost::thread_interrupted& err)                                  \
 {                                                                           \
-    LOG(error) << "Thread interrupted";                                     \
+    MO_LOG(error) << "Thread interrupted";                                     \
     /* Needs to pass this back up to the chain to the processing thread.*/  \
     /* That way it knowns it needs to exit this thread */                   \
     throw err;                                                              \
 }                                                                           \
     catch (boost::thread_exception& err)                                    \
 {                                                                           \
-    LOG(error) << err.what();                                               \
+    MO_LOG(error) << err.what();                                               \
 }                                                                           \
     catch (cv::Exception &err)                                              \
 {                                                                           \
-    LOG(error) << err.what();                                               \
+    MO_LOG(error) << err.what();                                               \
 }                                                                           \
     catch (boost::exception &err)                                           \
 {                                                                           \
-    LOG(error) << "Boost error";                                            \
+    MO_LOG(error) << "Boost error";                                            \
 }                                                                           \
     catch (std::exception &err)                                             \
 {                                                                           \
-    LOG(error) << err.what();                                               \
+    MO_LOG(error) << err.what();                                               \
 }                                                                           \
     catch (...)                                                             \
 {                                                                           \
-    LOG(error) << "Unknown exception";                                      \
+    MO_LOG(error) << "Unknown exception";                                      \
 }
 
 /*void HeartBeatBuffer::nodeInit(bool firstInit)
@@ -61,7 +61,7 @@ void HeartBeatBuffer::onActivation()
 
     if (input.empty() && SkipEmpty())
     {
-        LOG(trace) << " Skipped due to empty input";
+        MO_LOG(trace) << " Skipped due to empty input";
     }
     else
     {

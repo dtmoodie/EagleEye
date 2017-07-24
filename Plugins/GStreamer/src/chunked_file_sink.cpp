@@ -25,7 +25,7 @@ GstFlowReturn chunked_file_sink::on_pull()
         caps = gst_sample_get_caps (sample);
         if (!caps) 
         {
-            LOG(debug) << "could not get sample caps";
+            MO_LOG(debug) << "could not get sample caps";
             return GST_FLOW_OK;
         }
         s = gst_caps_get_structure (caps, 0);
@@ -36,7 +36,7 @@ GstFlowReturn chunked_file_sink::on_pull()
         //const gchar* format = gst_structure_get_string(s, "format");
         if (!res) 
         {
-            LOG(debug) << "could not get snapshot dimension\n";
+            MO_LOG(debug) << "could not get snapshot dimension\n";
             return GST_FLOW_OK;
         }
         buffer = gst_sample_get_buffer (sample);
@@ -108,7 +108,7 @@ GstFlowReturn JpegKeyframer::on_pull()
         caps = gst_sample_get_caps(sample);
         if (!caps)
         {
-            LOG(debug) << "could not get sample caps";
+            MO_LOG(debug) << "could not get sample caps";
             return GST_FLOW_OK;
         }
         ++keyframe_count;
@@ -126,17 +126,17 @@ bool GstreamerSink::processImpl()
         this->cleanup();
         if(!this->create_pipeline(pipeline))
         {
-            LOG(warning) << "Unable to create pipeline " << pipeline;
+            MO_LOG(warning) << "Unable to create pipeline " << pipeline;
             return false;
         }
         if(!this->set_caps(image->getSize(), image->getChannels(), image->getDepth()))
         {
-            LOG(warning) << "Unable to set caps on pipeline";
+            MO_LOG(warning) << "Unable to set caps on pipeline";
             return false;
         }
         if(!this->start_pipeline())
         {
-            LOG(warning) << "Unable to start pipeline " << pipeline;
+            MO_LOG(warning) << "Unable to start pipeline " << pipeline;
             return false;
         }
         pipeline_param.modified(false);

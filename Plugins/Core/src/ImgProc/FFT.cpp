@@ -10,7 +10,7 @@ bool FFT::processImpl()
     cv::cuda::GpuMat padded;
     if(input->getChannels() > 2)
     {
-        LOG(debug) << "Too many channels, can only handle 1 or 2 channel input. Input has " << input->getChannels() << " channels.";
+        MO_LOG(debug) << "Too many channels, can only handle 1 or 2 channel input. Input has " << input->getChannels() << " channels.";
         return false;
     }
     if(use_optimized_size)

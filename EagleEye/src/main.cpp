@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
         for (const auto& pair : replace_map)
             ss << "\n"
             << pair.first << " = " << pair.second;
-        LOG(debug) << "Input string replacements: " << ss.str();
+        MO_LOG(debug) << "Input string replacements: " << ss.str();
     }
 
     if (variable_replace_map.size()) {
@@ -109,16 +109,16 @@ int main(int argc, char *argv[])
         for (const auto& pair : variable_replace_map)
             ss << "\n"
             << pair.first << " = " << pair.second;
-        LOG(debug) << "Input variable replacements: " << ss.str();
+        MO_LOG(debug) << "Input variable replacements: " << ss.str();
     }
 
     boost::filesystem::path current_dir("./"); // = boost::filesystem::path(argv[0]).parent_path();
     current_dir = boost::filesystem::path(current_dir.string() + "/Plugins");
-    LOG(info) << "Looking for plugins in: " << current_dir.string();
+    MO_LOG(info) << "Looking for plugins in: " << current_dir.string();
     loadDir(current_dir);
     current_dir = boost::filesystem::path(argv[0]).parent_path();
     current_dir = boost::filesystem::path(current_dir.string() + "/Plugins");
-    LOG(info) << "Looking for plugins in: " << current_dir.string();
+    MO_LOG(info) << "Looking for plugins in: " << current_dir.string();
     loadDir(current_dir);
     if(vm.count("plugins"))
     {

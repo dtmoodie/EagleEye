@@ -21,7 +21,7 @@ static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
 {
     (void)bus;
     (void)app;
-    LOG(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
+    MO_LOG(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
 
     switch (GST_MESSAGE_TYPE(message))
     {
@@ -31,8 +31,8 @@ static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
         gchar *dbg_info = NULL;
 
         gst_message_parse_error(message, &err, &dbg_info);
-        LOG(error) << "Error from element " << GST_OBJECT_NAME(message->src) << ": " << err->message;
-        LOG(error) << "Debugging info: " << (dbg_info ? dbg_info : "none");
+        MO_LOG(error) << "Error from element " << GST_OBJECT_NAME(message->src) << ": " << err->message;
+        MO_LOG(error) << "Debugging info: " << (dbg_info ? dbg_info : "none");
         g_error_free(err);
         g_free(dbg_info);
         break;
@@ -45,11 +45,11 @@ static gboolean bus_message(GstBus * bus, GstMessage * message, void * app)
         gst_message_parse_state_changed(message, &oldstate, &newstate, &pendingstate);
         switch(newstate)
         {
-        case GST_STATE_VOID_PENDING: {LOG(debug) << "State changed to GST_STATE_VOID_PENDING"; break; }
-        case GST_STATE_NULL: {LOG(debug) << "State changed to GST_STATE_NULL"; break; }
-        case GST_STATE_READY: {LOG(debug) << "State changed to GST_STATE_READY"; break; }
-        case GST_STATE_PAUSED: {LOG(debug) << "State changed to GST_STATE_PAUSED"; break; }
-        case GST_STATE_PLAYING: {LOG(debug) << "State changed to GST_STATE_PLAYING"; break; }
+        case GST_STATE_VOID_PENDING: {MO_LOG(debug) << "State changed to GST_STATE_VOID_PENDING"; break; }
+        case GST_STATE_NULL: {MO_LOG(debug) << "State changed to GST_STATE_NULL"; break; }
+        case GST_STATE_READY: {MO_LOG(debug) << "State changed to GST_STATE_READY"; break; }
+        case GST_STATE_PAUSED: {MO_LOG(debug) << "State changed to GST_STATE_PAUSED"; break; }
+        case GST_STATE_PLAYING: {MO_LOG(debug) << "State changed to GST_STATE_PLAYING"; break; }
         }
         break;
     }
@@ -64,14 +64,14 @@ static void _start_feed(GstElement * pipeline, guint size, gstreamer_sink_base *
 {
     (void)pipeline;
     (void)size;
-    LOG(trace);
+    MO_LOG(trace);
     app->start_feed();
 }
 
 static void _stop_feed(GstElement * pipeline, gstreamer_sink_base *app)
 {
     (void)pipeline;
-    LOG(trace);
+    MO_LOG(trace);
     app->stop_feed();
 }
 
@@ -103,12 +103,12 @@ gstreamer_base::gstreamer_base()
 }
 gstreamer_base::~gstreamer_base()
 {
-    LOG(trace);
+    MO_LOG(trace);
     cleanup();
 }
 gstreamer_sink_base::~gstreamer_sink_base()
 {
-    LOG(trace);
+    MO_LOG(trace);
     if(_source)
     {
         gst_app_src_end_of_stream(_source);
@@ -118,10 +118,10 @@ gstreamer_sink_base::~gstreamer_sink_base()
 
 void gstreamer_base::cleanup()
 {
-    LOG(trace);
+    MO_LOG(trace);
     if (_pipeline)
     {
-        LOG(debug) << "Cleaning up pipeline";
+        MO_LOG(debug) << "Cleaning up pipeline";
         gst_element_set_state(_pipeline, GST_STATE_NULL);
         gst_object_unref(_pipeline);
         _pipeline = nullptr;
@@ -132,7 +132,7 @@ void gstreamer_sink_base::cleanup()
 {
     if(_pipeline && _source)
     {
-        LOG(debug) << "Disconnecting data request signals";
+        MO_LOG(debug) << "Disconnecting data request signals";
         g_signal_handler_disconnect(_source, _need_data_id);
         g_signal_handler_disconnect(_source, _enough_data_id);
         gst_object_unref(_source);
@@ -152,29 +152,29 @@ bool gstreamer_base::create_pipeline(const std::string& pipeline_)
 
     if (_pipeline == nullptr)
     {
-        LOG(error) << "Error parsing pipeline " << pipeline_;
+        MO_LOG(error) << "Error parsing pipeline " << pipeline_;
         return false;
     }else
     {
-        LOG(info) << "Successfully created pipeline: " << pipeline_;
+        MO_LOG(info) << "Successfully created pipeline: " << pipeline_;
     }
 
     if (error != nullptr)
     {
-        LOG(error) << "Error parsing pipeline " << error->message;
+        MO_LOG(error) << "Error parsing pipeline " << error->message;
         return false;
     }
-    LOG(debug) << "Input pipeline parsed " << pipeline_;
+    MO_LOG(debug) << "Input pipeline parsed " << pipeline_;
     // Error callback
     auto bus = gst_pipeline_get_bus(GST_PIPELINE(_pipeline));
     if(!bus)
     {
-        LOG(error) << "Unable to get bus from pipeline";
+        MO_LOG(error) << "Unable to get bus from pipeline";
         return false;
     }
     gst_bus_add_watch(bus, (GstBusFunc)bus_message, this);
     gst_object_unref(bus);
-    LOG(debug) << "Successfully created pipeline";
+    MO_LOG(debug) << "Successfully created pipeline";
     return true;
 }
 bool gstreamer_sink_base::create_pipeline(const std::string& pipeline_)
@@ -184,7 +184,7 @@ bool gstreamer_sink_base::create_pipeline(const std::string& pipeline_)
         _source = (GstAppSrc*)gst_bin_get_by_name(GST_BIN(_pipeline), "mysource");
         if(!_source)
         {
-            LOG(warning) << "No appsrc with name \"mysource\" found";
+            MO_LOG(warning) << "No appsrc with name \"mysource\" found";
             return false;
         }
         return true;
@@ -219,7 +219,7 @@ bool gstreamer_src_base::create_pipeline(const std::string& pipeline_)
             _appsink = gst_bin_get_by_name(GST_BIN(_pipeline), "mysink");
         if(!_appsink)
         {
-            LOG(warning) << "No appsink with name \"mysink\" found";
+            MO_LOG(warning) << "No appsink with name \"mysink\" found";
             return false;
         }
         g_object_set(G_OBJECT(_appsink), "emit-signals", true, NULL);
@@ -238,7 +238,7 @@ bool gstreamer_src_base::set_caps(const std::string& caps_)
     GstCaps* caps = gst_caps_new_simple(caps_.c_str(), nullptr);
     if(caps == nullptr)
     {
-        LOG(error) << "Error creating caps \"" << caps_ << "\"";
+        MO_LOG(error) << "Error creating caps \"" << caps_ << "\"";
         return false;
     }
     gst_app_sink_set_caps(GST_APP_SINK(_appsink), caps);
@@ -254,7 +254,7 @@ bool gstreamer_src_base::set_caps()
                                         nullptr);
     if(caps == nullptr)
     {
-        LOG(error) << "Error creating caps \"" << caps << "\"";
+        MO_LOG(error) << "Error creating caps \"" << caps << "\"";
         return false;
     }
     gst_app_sink_set_caps(GST_APP_SINK(_appsink), caps);
@@ -281,7 +281,7 @@ bool gstreamer_sink_base::set_caps(cv::Size img_size, int channels, int depth)
 
     if (caps == nullptr)
     {
-        LOG(error) << "Error creating caps for appsrc";
+        MO_LOG(error) << "Error creating caps for appsrc";
         return false;
     }
 
@@ -292,7 +292,7 @@ bool gstreamer_sink_base::set_caps(cv::Size img_size, int channels, int depth)
         "stream-type", GST_APP_STREAM_TYPE_STREAM,
         "format", GST_FORMAT_TIME,
         NULL);
-    LOG(debug) << "Connecting need/enough data callbacks";
+    MO_LOG(debug) << "Connecting need/enough data callbacks";
     _need_data_id   = g_signal_connect(_source, "need-data",   G_CALLBACK(_start_feed), this);
     _enough_data_id = g_signal_connect(_source, "enough-data", G_CALLBACK(_stop_feed),  this);
     _caps_set = true;
@@ -307,7 +307,7 @@ bool gstreamer_sink_base::set_caps(const std::string& caps_)
 
     if (caps == nullptr)
     {
-        LOG(error) << "Error creating caps for appsrc";
+        MO_LOG(error) << "Error creating caps for appsrc";
         return false;
     }
 
@@ -319,7 +319,7 @@ bool gstreamer_sink_base::set_caps(const std::string& caps_)
         "format", GST_FORMAT_TIME,
         NULL);
 
-    LOG(debug) << "Connecting need/enough data callbacks";
+    MO_LOG(debug) << "Connecting need/enough data callbacks";
     _need_data_id = g_signal_connect(_source, "need-data", G_CALLBACK(_start_feed), this);
     _enough_data_id = g_signal_connect(_source, "enough-data", G_CALLBACK(_stop_feed), this);
     return true;
@@ -332,10 +332,10 @@ bool gstreamer_base::start_pipeline()
     GstStateChangeReturn ret = gst_element_set_state(_pipeline, GST_STATE_PLAYING);
     if(ret == GST_STATE_CHANGE_FAILURE)
     {
-        LOG(error) << "Unable to start pipeline";
+        MO_LOG(error) << "Unable to start pipeline";
         return false;
     }
-    LOG(debug) << "Starting pipeline";
+    MO_LOG(debug) << "Starting pipeline";
     return true;
 }
 bool gstreamer_base::stop_pipeline()
@@ -345,10 +345,10 @@ bool gstreamer_base::stop_pipeline()
     GstStateChangeReturn ret = gst_element_set_state(_pipeline, GST_STATE_NULL);
     if(ret == GST_STATE_CHANGE_FAILURE)
     {
-        LOG(error) << "Unable to stop pipeline";
+        MO_LOG(error) << "Unable to stop pipeline";
         return false;
     }
-    LOG(debug) << "Stopping pipeline";
+    MO_LOG(debug) << "Stopping pipeline";
     return true;
 }
 bool gstreamer_base::pause_pipeline()
@@ -359,19 +359,19 @@ bool gstreamer_base::pause_pipeline()
 
     if(ret == GST_STATE_CHANGE_FAILURE)
     {
-        LOG(error) << "Unable to pause pipeline";
+        MO_LOG(error) << "Unable to pause pipeline";
         return false;
     }
-    LOG(debug) <<"Pausing pipeline";
+    MO_LOG(debug) <<"Pausing pipeline";
     return true;
 }
 void gstreamer_sink_base::PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stream)
 {
-    LOG_EVERY_N(debug, 100) << "Pushing image onto pipeline";
+    MO_LOG_EVERY_N(debug, 100) << "Pushing image onto pipeline";
     auto curTime = clock();
     _delta = curTime - _prevTime;
     _prevTime = curTime;
-    LOG(trace) << "Estimated frame time: " << _delta << " ms";
+    MO_LOG(trace) << "Estimated frame time: " << _delta << " ms";
     if (!_caps_set)
     {
         if (set_caps(img.getMat(stream).size(), img.getMat(stream).channels()))
@@ -403,7 +403,7 @@ void gstreamer_sink_base::PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stre
 
             if (rw != GST_FLOW_OK)
             {
-                LOG(error) << "Error pushing buffer into appsrc " << rw;
+                MO_LOG(error) << "Error pushing buffer into appsrc " << rw;
             }
             gst_buffer_unref(buffer);
         }else
@@ -428,7 +428,7 @@ void gstreamer_sink_base::PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stre
 
                 if (rw != GST_FLOW_OK)
                 {
-                    LOG(error) << "Error pushing buffer into appsrc " << rw;
+                    MO_LOG(error) << "Error pushing buffer into appsrc " << rw;
                 }
                 gst_buffer_unref(buffer);
             }, stream);
@@ -438,11 +438,11 @@ void gstreamer_sink_base::PushImage(TS<SyncedMemory> img, cv::cuda::Stream& stre
 
 void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
 {
-    LOG_EVERY_N(debug, 100) << "Pushing image onto pipeline";
+    MO_LOG_EVERY_N(debug, 100) << "Pushing image onto pipeline";
     auto curTime = clock();
     _delta = curTime - _prevTime;
     _prevTime = curTime;
-    LOG(trace) << "Estimated frame time: " << _delta << " ms";
+    MO_LOG(trace) << "Estimated frame time: " << _delta << " ms";
     if (!_caps_set)
     {
         if (set_caps(img.getMat(stream).size(), img.getMat(stream).channels()))
@@ -474,7 +474,7 @@ void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
 
             if (rw != GST_FLOW_OK)
             {
-                LOG(error) << "Error pushing buffer into appsrc " << rw;
+                MO_LOG(error) << "Error pushing buffer into appsrc " << rw;
             }
             gst_buffer_unref(buffer);
         }else
@@ -499,7 +499,7 @@ void gstreamer_sink_base::PushImage(SyncedMemory img, cv::cuda::Stream& stream)
 
                 if (rw != GST_FLOW_OK)
                 {
-                    LOG(error) << "Error pushing buffer into appsrc " << rw;
+                    MO_LOG(error) << "Error pushing buffer into appsrc " << rw;
                 }
                 gst_buffer_unref(buffer);
             }, stream);
@@ -603,7 +603,7 @@ bool gstreamer_base::is_pipeline(const std::string& string)
 // This only actually gets called when gstreamer.cpp gets recompiled or the node is deleted
 RTSP_server::~RTSP_server()
 {
-    LOG(info) << "RTSP server destructor";
+    MO_LOG(info) << "RTSP server destructor";
     if (pipeline)
     {
         gst_element_set_state(pipeline, GST_STATE_NULL);
@@ -679,7 +679,7 @@ void RTSP_server::setup(std::string pipeOverride){
                         !inter.flags().testFlag(QNetworkInterface::IsLoopBack)){
                         foreach(auto entry, inter.addressEntries()){
                             if (inter.hardwareAddress() != "00:00:00:00:00:00" && entry.ip().toString().contains(".")){
-                                LOG(info) << "Setting interface to " << inter.name().toStdString() << " " <<
+                                MO_LOG(info) << "Setting interface to " << inter.name().toStdString() << " " <<
                                     entry.ip().toString().toStdString() << " " << inter.hardwareAddress().toStdString();
                                 host_param.updateData(entry.ip().toString().toStdString());
                                 ss << entry.ip().toString().toStdString();
@@ -696,7 +696,7 @@ void RTSP_server::setup(std::string pipeOverride){
                 if (host.size()){
                     ss << host;
                 }else{
-                    LOG(warning) << "host not set, setting to localhost";
+                    MO_LOG(warning) << "host not set, setting to localhost";
                     host_param.updateData("127.0.0.1");
                     ss << "127.0.0.1";
                 }
@@ -710,7 +710,7 @@ void RTSP_server::setup(std::string pipeOverride){
         gst_pipeline_param.updateData(pipeOverride);
     }
 
-    LOG(info) << pipeOverride;
+    MO_LOG(info) << pipeOverride;
 
     if (pipeline){
         gst_element_set_state(pipeline, GST_STATE_NULL);
@@ -723,13 +723,13 @@ void RTSP_server::setup(std::string pipeOverride){
     pipeline = gst_parse_launch(pipeOverride.c_str(), &error);
 
     if (pipeline == nullptr){
-        LOG(error) << "Error parsing pipeline";
+        MO_LOG(error) << "Error parsing pipeline";
         feed_enabled = false;
         return;
     }
 
     if (error != nullptr){
-        LOG(error) << "Error parsing pipeline " << error->message;
+        MO_LOG(error) << "Error parsing pipeline " << error->message;
     }
 
     source_OpenCV = gst_bin_get_by_name(GST_BIN(pipeline), "mysource");
@@ -744,7 +744,7 @@ void RTSP_server::setup(std::string pipeOverride){
         NULL);
 
     if (caps == nullptr){
-       LOG(error) << "Error creating caps for appsrc";
+       MO_LOG(error) << "Error creating caps for appsrc";
     }
 
     gst_app_src_set_caps(GST_APP_SRC(source_OpenCV), caps);
@@ -794,7 +794,7 @@ void RTSP_server::push_image()
 
         if (rw != GST_FLOW_OK)
         {
-            LOG(error) << "Error pushing buffer into appsrc " << rw;
+            MO_LOG(error) << "Error pushing buffer into appsrc " << rw;
         }
         gst_buffer_unref(buffer);
     }
@@ -819,7 +819,7 @@ cv::cuda::GpuMat RTSP_server::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream 
     if (!g_main_loop_is_running(glib_MainLoop))
     {
         glibThread = boost::thread(std::bind(&RTSP_server::gst_loop, this));
-        LOG(error) << "Main glib loop not running";
+        MO_LOG(error) << "Main glib loop not running";
         return img;
     }
     if (feed_enabled)
@@ -864,12 +864,12 @@ RTSP_server_new::RTSP_server_new()
 }
 RTSP_server_new::~RTSP_server_new()
 {
-    NODE_LOG(info) << "Shutting down rtsp server";
+    NODE_MO_LOG(info) << "Shutting down rtsp server";
     if(pipeline)
     {
         if(gst_element_set_state(pipeline, GST_STATE_NULL) != GST_STATE_CHANGE_SUCCESS)
         {
-            NODE_LOG(debug) << "gst_element_set_state(pipeline, GST_STATE_NULL) != GST_STATE_CHANGE_SUCCESS";
+            NODE_MO_LOG(debug) << "gst_element_set_state(pipeline, GST_STATE_NULL) != GST_STATE_CHANGE_SUCCESS";
         }
     }
 
@@ -900,12 +900,12 @@ void RTSP_server_new::onPipeChange()
 }
 void RTSP_server_new::glibThread()
 {
-    LOG(info) << "Starting gmain loop";
+    MO_LOG(info) << "Starting gmain loop";
     if (!g_main_loop_is_running(loop))
     {
         g_main_loop_run(loop);
     }
-    LOG(info) << "[RTSP Server] Gmain loop quitting";
+    MO_LOG(info) << "[RTSP Server] Gmain loop quitting";
 }
 void RTSP_server_new::setup(std::string pipeOverride)
 {
@@ -913,7 +913,7 @@ void RTSP_server_new::setup(std::string pipeOverride)
 }
 void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpointer user_data)
 {
-    LOG(debug) << __FUNCTION__;
+    MO_LOG(debug) << __FUNCTION__;
     auto node = static_cast<aq::nodes::RTSP_server_new*>(user_data);
     cv::Mat h_buffer;
     node->notifier.wait_and_pop(h_buffer);
@@ -938,7 +938,7 @@ void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpoin
 
         if (rw != GST_FLOW_OK)
         {
-            NODE_LOG(error) << "Error pushing buffer into appsrc " << rw;
+            NODE_MO_LOG(error) << "Error pushing buffer into appsrc " << rw;
         }
         gst_buffer_unref(buffer);
     }
@@ -949,7 +949,7 @@ void rtsp_server_new_need_data_callback(GstElement * appsrc, guint unused, gpoin
 static gboolean
 bus_message_new(GstBus * bus, GstMessage * message, RTSP_server_new * app)
 {
-    LOG(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
+    MO_LOG(debug) << "Received message type: " << gst_message_type_get_name(GST_MESSAGE_TYPE(message));
 
     switch (GST_MESSAGE_TYPE(message))
     {
@@ -959,8 +959,8 @@ bus_message_new(GstBus * bus, GstMessage * message, RTSP_server_new * app)
         gchar *dbg_info = NULL;
 
         gst_message_parse_error(message, &err, &dbg_info);
-        BOOST_LOG(error) << "Error from element " << GST_OBJECT_NAME(message->src) << ": " << err->message;
-        BOOST_LOG(error) << "Debugging info: " << (dbg_info) ? dbg_info : "none";
+        BOOST_MO_LOG(error) << "Error from element " << GST_OBJECT_NAME(message->src) << ": " << err->message;
+        BOOST_MO_LOG(error) << "Debugging info: " << (dbg_info) ? dbg_info : "none";
         g_error_free(err);
         g_free(dbg_info);
         g_main_loop_quit(app->loop);
@@ -977,10 +977,10 @@ bus_message_new(GstBus * bus, GstMessage * message, RTSP_server_new * app)
 void client_close_handler(GstRTSPClient *client, aq::nodes::RTSP_server_new* node)
 {
     node->clientCount--;
-    LOG(info) << "[RTSP Server] Client Disconnected " << node->clientCount << " " << client;
+    MO_LOG(info) << "[RTSP Server] Client Disconnected " << node->clientCount << " " << client;
     if (node->clientCount == 0)
     {
-        BOOST_LOG(info) << "[RTSP Server] Setting pipeline state to GST_STATE_NULL and unreffing old pipeline";
+        BOOST_MO_LOG(info) << "[RTSP Server] Setting pipeline state to GST_STATE_NULL and unreffing old pipeline";
         gst_element_set_state(node->pipeline,GST_STATE_NULL);
         gst_object_unref(node->pipeline);
         gst_object_unref(node->appsrc);
@@ -991,7 +991,7 @@ void client_close_handler(GstRTSPClient *client, aq::nodes::RTSP_server_new* nod
 }
 void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, aq::nodes::RTSP_server_new* node)
 {
-    BOOST_LOG(debug) << __FUNCTION__;
+    BOOST_MO_LOG(debug) << __FUNCTION__;
     if (node->imgSize.area() == 0)
     {
         return;
@@ -1003,7 +1003,7 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, aq::no
     // get our appsrc, we named it 'mysrc' with the name property
     node->appsrc = gst_bin_get_by_name_recurse_up(GST_BIN(node->pipeline), "mysrc");
 
-    BOOST_LOG(info) << "[RTSP Server] Configuring pipeline " << node->clientCount << " " << node->pipeline << " " << node->appsrc;
+    BOOST_MO_LOG(info) << "[RTSP Server] Configuring pipeline " << node->clientCount << " " << node->pipeline << " " << node->appsrc;
 
     // this instructs appsrc that we will be dealing with timed buffer
     gst_util_set_object_arg(G_OBJECT(node->appsrc), "format", "time");
@@ -1024,10 +1024,10 @@ void media_configure(GstRTSPMediaFactory * factory, GstRTSPMedia * media, aq::no
 }
 void new_client_handler(GstRTSPServer *server, GstRTSPClient *client, aq::nodes::RTSP_server_new* node)
 {
-    LOG(debug) << __FUNCTION__;
+    MO_LOG(debug) << __FUNCTION__;
     node->clientCount++;
     node->connected = true;
-    LOG(info) << "New client connected " << node->clientCount << " " << client;
+    MO_LOG(info) << "New client connected " << node->clientCount << " " << client;
     if (node->first_run)
     {
         g_signal_connect(node->factory, "media-configure", G_CALLBACK(media_configure), node);
@@ -1047,7 +1047,7 @@ void RTSP_server_new::nodeInit(bool firstInit)
         prevTime = clock();
         if (!gst_is_initialized())
         {
-            NODE_LOG(debug) << "Initializing gstreamer";
+            NODE_MO_LOG(debug) << "Initializing gstreamer";
             char** argv;
             argv = new char*{ "-vvv" };
             int argc = 1;
@@ -1055,7 +1055,7 @@ void RTSP_server_new::nodeInit(bool firstInit)
         }
         if (!loop)
         {
-            NODE_LOG(debug) << "Creating glib event loop";
+            NODE_MO_LOG(debug) << "Creating glib event loop";
             loop = g_main_loop_new(NULL, FALSE);
         }
 
@@ -1063,7 +1063,7 @@ void RTSP_server_new::nodeInit(bool firstInit)
         // create a server instance
         if (!server)
         {
-            LOG(debug) << "Creating new rtsp server";
+            MO_LOG(debug) << "Creating new rtsp server";
             server = gst_rtsp_server_new();
         }
 
@@ -1071,7 +1071,7 @@ void RTSP_server_new::nodeInit(bool firstInit)
         // that be used to map uri mount points to media factories
         if (!mounts)
         {
-            LOG(debug) << "Creating new mount points";
+            MO_LOG(debug) << "Creating new mount points";
             mounts = gst_rtsp_server_get_mount_points(server);
         }
 
@@ -1082,7 +1082,7 @@ void RTSP_server_new::nodeInit(bool firstInit)
         // element with pay%d names will be a stream
         if (!factory)
         {
-            LOG(debug) << "Creating rtsp media factory";
+            MO_LOG(debug) << "Creating rtsp media factory";
             factory = gst_rtsp_media_factory_new();
         }
         gst_rtsp_media_factory_set_shared(factory, true);

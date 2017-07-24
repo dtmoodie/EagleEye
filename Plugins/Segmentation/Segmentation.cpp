@@ -21,7 +21,7 @@ bool OtsuThreshold::processImpl()
 {
     if(image->getChannels() != 1)
     {
-        LOG_EVERY_N(warning, 100) << "Currently only supports single channel images!";
+        MO_LOG_EVERY_N(warning, 100) << "Currently only supports single channel images!";
         return false;
     }
     cv::cuda::GpuMat hist;
@@ -43,12 +43,12 @@ bool OtsuThreshold::processImpl()
     {
         if(range == nullptr)
         {
-            LOG_EVERY_N(error, 100) << "Histogram provided but range not provided";
+            MO_LOG_EVERY_N(error, 100) << "Histogram provided but range not provided";
             return false;
         }
         if(range->getChannels() != 1)
         {
-            LOG_EVERY_N(error, 100) << "Currently only support equal bins accross all histograms";
+            MO_LOG_EVERY_N(error, 100) << "Currently only support equal bins accross all histograms";
             return false;
         }
         hist = histogram->getGpuMat(stream());
@@ -278,7 +278,7 @@ bool MeanShift::processImpl()
 {
     if(image->getDepth() != CV_8U)
     {
-        LOG_EVERY_N(debug, 100) << "Image not CV_8U type";
+        MO_LOG_EVERY_N(debug, 100) << "Image not CV_8U type";
         return false;
     }
     cv::cuda::GpuMat img;
