@@ -374,10 +374,10 @@ bool CaffeImageClassifier::processImpl()
         for(const auto& itr : *input_detections)
         {
             defaultROI.emplace_back(
-                    itr.boundingBox.x / input_shape[2],
-                    itr.boundingBox.y / input_shape[1],
-                    itr.boundingBox.width / input_shape[2],
-                    itr.boundingBox.height / input_shape[1]);
+                    itr.bounding_box.x / input_shape[2],
+                    itr.bounding_box.y / input_shape[1],
+                    itr.bounding_box.width / input_shape[2],
+                    itr.bounding_box.height / input_shape[1]);
         }
         if(defaultROI.size() == 0)
         {

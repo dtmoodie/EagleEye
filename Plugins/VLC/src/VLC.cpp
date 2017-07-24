@@ -3,7 +3,7 @@
 #include "Aquila/framegrabbers/FrameGrabberInfo.hpp"
 
 using namespace aq;
-using namespace aq::Nodes;
+using namespace aq::nodes;
 
 void* lock(void* data, void**p_pixels)
 {
@@ -39,27 +39,27 @@ bool vlcCamera::Load(std::string file)
     vlcInstance = libvlc_new(sizeof(vlc_args) / sizeof(vlc_args[0]), vlc_args);
     if (vlcInstance == nullptr)
     {
-        LOG(error) << "vlcInstance == nullptr";
+        MO_LOG(error) << "vlcInstance == nullptr";
         return false;
     }
 
     media = libvlc_media_new_location(vlcInstance, file.c_str());
     if (media == nullptr)
     {
-        LOG(error) << "media == nullptr";
+        MO_LOG(error) << "media == nullptr";
         return false;
     }
 
     mp = libvlc_media_player_new_from_media(media);
     if (mp == nullptr)
     {
-        LOG(error) << "mp == nullptr";
+        MO_LOG(error) << "mp == nullptr";
         return false;
     }
     libvlc_media_release(media);
     libvlc_video_set_callbacks(mp, lock, unlock, display, this);
     libvlc_video_set_format(mp, "RV24", 1920, 1080, 1920 * 3);
-    LOG(info) << "Source setup correctly";
+    MO_LOG(info) << "Source setup correctly";
 
     int height = libvlc_video_get_height(mp);
     int width = libvlc_video_get_width(mp);

@@ -48,10 +48,10 @@ void SSDHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv
         {
             size_t num = static_cast<size_t>(roi_num[static_cast<int>(i)][0]);
             DetectedObject obj;
-            obj.boundingBox.x = xmin[static_cast<int>(i)][0] * bounding_boxes[num].width + bounding_boxes[num].x;
-            obj.boundingBox.y = ymin[static_cast<int>(i)][0] * bounding_boxes[num].height + bounding_boxes[num].y;
-            obj.boundingBox.width = (xmax[static_cast<int>(i)][0] - xmin[static_cast<int>(i)][0]) * bounding_boxes[num].width;
-            obj.boundingBox.height = (ymax[static_cast<int>(i)][0] - ymin[static_cast<int>(i)][0]) * bounding_boxes[num].height;
+            obj.bounding_box.x = xmin[static_cast<int>(i)][0] * bounding_boxes[num].width + bounding_boxes[num].x;
+            obj.bounding_box.y = ymin[static_cast<int>(i)][0] * bounding_boxes[num].height + bounding_boxes[num].y;
+            obj.bounding_box.width = (xmax[static_cast<int>(i)][0] - xmin[static_cast<int>(i)][0]) * bounding_boxes[num].width;
+            obj.bounding_box.height = (ymax[static_cast<int>(i)][0] - ymin[static_cast<int>(i)][0]) * bounding_boxes[num].height;
             obj.timestamp = input_param.getTimestamp();
             obj.framenumber = input_param.getFrameNumber();
             obj.id = current_id++;
@@ -65,7 +65,7 @@ void SSDHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv
 
             for(auto itr = objects.begin(); itr != objects.end(); ++itr)
             {
-                float iou_val = iou(obj.boundingBox, itr->boundingBox);
+                float iou_val = iou(obj.bounding_box, itr->bounding_box);
                 if(iou_val > overlap_threshold)
                 {
                     if(obj.classification.confidence > itr->classification.confidence)

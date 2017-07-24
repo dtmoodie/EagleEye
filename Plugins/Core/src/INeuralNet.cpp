@@ -20,10 +20,10 @@ bool aq::nodes::INeuralNet::forwardAll(){
         defaultROI.clear();
         for (const auto& itr : *input_detections){
             defaultROI.emplace_back(
-                itr.boundingBox.x / input_image_shape[2],
-                itr.boundingBox.y / input_image_shape[1],
-                itr.boundingBox.width / input_image_shape[2],
-                itr.boundingBox.height / input_image_shape[1]);
+                itr.bounding_box.x / input_image_shape[2],
+                itr.bounding_box.y / input_image_shape[1],
+                itr.bounding_box.width / input_image_shape[2],
+                itr.bounding_box.height / input_image_shape[1]);
         }
         if (defaultROI.size() == 0)
             return false;

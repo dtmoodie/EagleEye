@@ -22,7 +22,7 @@ RUNTIME_COMPILER_LINKLIBRARY("libvlc.lib");
 
 namespace aq
 {
-    namespace Nodes
+    namespace nodes
     {
 	class vlcCamera : public IFrameGrabber
 	{

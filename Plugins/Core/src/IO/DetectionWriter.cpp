@@ -224,10 +224,10 @@ bool DetectionWriterFolder::processImpl() {
         const cv::cuda::GpuMat img = image->getGpuMat(stream());
         cv::Rect               img_rect(cv::Point(0, 0), img.size());
         for (const aq::DetectedObject2d& detection : detections) {
-            cv::Rect rect = img_rect & cv::Rect(detection.boundingBox.x - padding,
-                                           detection.boundingBox.y - padding,
-                                           detection.boundingBox.width + 2 * padding,
-                                           detection.boundingBox.height + 2 * padding);
+            cv::Rect rect = img_rect & cv::Rect(detection.bounding_box.x - padding,
+                                           detection.bounding_box.y - padding,
+                                           detection.bounding_box.width + 2 * padding,
+                                           detection.bounding_box.height + 2 * padding);
             std::string       save_name;
             std::stringstream ss;
             cv::Mat           save_img;
@@ -256,7 +256,7 @@ bool DetectionWriterFolder::processImpl() {
         cv::Mat  img = image->getMat(stream());
         cv::Rect img_rect(cv::Point(0, 0), img.size());
         for (const aq::DetectedObject2d& detection : detections) {
-            cv::Rect          rect = img_rect & cv::Rect(detection.boundingBox.x - padding, detection.boundingBox.y - padding, detection.boundingBox.width + 2 * padding, detection.boundingBox.height + 2 * padding);
+            cv::Rect          rect = img_rect & cv::Rect(detection.bounding_box.x - padding, detection.bounding_box.y - padding, detection.bounding_box.width + 2 * padding, detection.bounding_box.height + 2 * padding);
             std::string       save_name;
             std::stringstream ss;
             int               idx = detection.classification.classNumber;

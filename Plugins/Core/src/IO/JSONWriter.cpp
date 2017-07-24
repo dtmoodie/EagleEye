@@ -129,7 +129,7 @@ bool JSONWriter::processImpl()
     return false;
 }
 
-void JSONWriter::on_output_file_modified( mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, mo::ICoordinateSystem*, mo::UpdateFlags)
+void JSONWriter::on_output_file_modified(mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, const std::shared_ptr<mo::ICoordinateSystem>&, mo::UpdateFlags)
 {
     ofs.close();
     ofs.open(output_file.c_str(), std::ios::out);
