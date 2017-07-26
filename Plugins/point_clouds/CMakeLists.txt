@@ -30,5 +30,5 @@ if(vtk_FOUND)
     target_compile_definitions(point_clouds PRIVATE HAVE_VTK)
 endif()
 
-INCLUDE(../PluginTemplate.cmake)
+aquila_declare_plugin(point_clouds)
 
