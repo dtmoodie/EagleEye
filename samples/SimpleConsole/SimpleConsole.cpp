@@ -645,12 +645,17 @@ int main(int argc, char* argv[]) {
 
         slot = new mo::TSlot<void(std::string)>(std::bind(
             [&current_stream, &current_node, &variable_replace_map, &replace_map](std::string file) {
+                std::string preset = "Default";
+                auto pos = file.find(' ');
+                if(pos != std::string::npos){
+                    preset = file.substr(pos + 1);
+                    file = file.substr(0, pos);
+                }
                 if (current_stream) {
-                    //current_stream->SaveStream(file);
                     rcc::shared_ptr<aq::IDataStream>               stream(current_stream);
                     std::vector<rcc::shared_ptr<aq::IDataStream> > streams;
                     streams.push_back(stream);
-                    aq::IDataStream::save(file, streams, variable_replace_map, replace_map);
+                    aq::IDataStream::save(file, streams, variable_replace_map, replace_map, preset);
                     stream->startThread();
                 } else if (current_node) {
                 }
@@ -668,8 +673,14 @@ int main(int argc, char* argv[]) {
         std::vector<std::shared_ptr<mo::Connection> > eos_connections;
         slot = new mo::TSlot<void(std::string)>(
             std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file) {
+                std::string preset = "Default";
+                auto pos = file.find(' ');
+                if(pos != std::string::npos){
+                    preset = file.substr(pos + 1);
+                    file = file.substr(0, pos);
+                }
                 replace_map["${config_file_dir}"] = boost::filesystem::path(file).parent_path().string();
-                auto streams                      = aq::IDataStream::load(file, variable_replace_map, replace_map);
+                auto streams                      = aq::IDataStream::load(file, variable_replace_map, replace_map, preset);
                 if (streams.size()) {
                     for (auto& stream : streams) {
                         stream->startThread();
