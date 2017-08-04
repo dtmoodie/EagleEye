@@ -1,10 +1,8 @@
 #pragma once
-#include <src/precompiled.hpp>
+#include "../precompiled.hpp"
 #include <Aquila/types/ObjectDetection.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/utilities/ColorMapping.hpp>
-RUNTIME_COMPILER_SOURCEDEPENDENCY
-RUNTIME_MODIFIABLE_INCLUDE
 
 namespace aq
 {
@@ -32,18 +30,29 @@ namespace aq
     protected:
         bool processImpl();
     };
-    class DrawDetections: public Node
-    {
+
+    class IDrawDetections: public Node{
     public:
         typedef std::map<std::string, cv::Vec3b> Colormap_t;
-        MO_DERIVE(DrawDetections, Node)
-            INPUT(SyncedMemory, image, nullptr)
+        MO_DERIVE(IDrawDetections, Node)
             INPUT(std::vector<std::string>, labels, nullptr)
+            //APPEND_FLAGS(labels, mo::Desynced_e)
+            PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>())
+            PARAM(Colormap_t, colormap, {})
+        MO_END;
+    protected:
+        void createColormap();
+    };
+
+    class DrawDetections: public IDrawDetections
+    {
+    public:
+
+        MO_DERIVE(DrawDetections, IDrawDetections)
+            INPUT(SyncedMemory, image, nullptr)
             OPTIONAL_INPUT(std::vector<DetectedObject>, detections, nullptr)
             PARAM(bool, draw_class_label, true)
             PARAM(bool, draw_detection_id, true)
-            PROPERTY(std::vector<cv::Vec3b>, colors, std::vector<cv::Vec3b>())
-            PARAM(Colormap_t, colormap, {})
             OUTPUT(SyncedMemory, output, SyncedMemory())
         MO_END
     protected:
