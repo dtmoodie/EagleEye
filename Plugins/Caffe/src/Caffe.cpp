@@ -270,8 +270,7 @@ bool CaffeImageClassifier::initNetwork() {
         MO_LOG_EVERY_N(debug, 1000) << "Model not loaded";
         return false;
     }
-    if (!CheckInput())
-        WrapInput();
+
     return true;
 }
 
@@ -320,6 +319,8 @@ cv::Scalar_<unsigned int> CaffeImageClassifier::getNetworkShape() const {
 }
 
 void CaffeImageClassifier::preBatch(int batch_size) {
+    if (!CheckInput())
+        WrapInput();
     (void)batch_size;
     for (auto& handler : net_handlers) {
         handler->startBatch();
