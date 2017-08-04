@@ -47,6 +47,7 @@ namespace nodes {
         virtual void writeThread();
     };
 
+
     class DetectionWriterFolder : public Node {
     public:
         ~DetectionWriterFolder();

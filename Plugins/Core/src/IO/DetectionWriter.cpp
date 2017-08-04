@@ -186,6 +186,7 @@ void DetectionWriterFolder::nodeInit(bool firstInit) {
             });
     }
 }
+
 DetectionWriterFolder::~DetectionWriterFolder() {
     if (_write_thread.joinable()) {
         _write_thread.interrupt();
@@ -194,6 +195,7 @@ DetectionWriterFolder::~DetectionWriterFolder() {
     _summary_ar.reset();
     _summary_ofs.reset();
 }
+
 struct FrameDetections {
     FrameDetections(const std::vector<aq::DetectedObject2d>& det)
         : detections(det) {
@@ -212,6 +214,7 @@ struct FrameDetections {
         ar(CEREAL_NVP(detections));
     }
 };
+
 struct WritePair {
     WritePair(const aq::NClassDetectedObject& det, const std::string& name)
         : detection(det)
@@ -283,13 +286,17 @@ bool DetectionWriterFolder::processImpl() {
                 }
                 ss << folderss.str() << "/";
             }
-
-            ss << image_stem << std::setw(8) << std::setfill('0') << _frame_count++ << "." + extension.getEnum();
+            ++_frame_count;
+            ss << image_stem << std::setw(8) << std::setfill('0') << _frame_count << "." + extension.getEnum();
             save_name = ss.str();
             cuda::enqueue_callback([this, save_img, save_name]() {
                 this->_write_queue.enqueue(std::make_pair(save_img, save_name));
             },
                 stream());
+            ss = std::stringstream();
+            ss << (*labels)[idx] << "/" << std::setw(4) << std::setfill('0') << _per_class_count[idx] / max_subfolder_size;
+            ss << image_stem << std::setw(8) << std::setfill('0') << _frame_count << "." + extension.getEnum();
+            save_name = ss.str();
             written_detections.emplace_back(detection, save_name);
         }
     } else {

@@ -77,7 +77,7 @@ mo::TypeInfo InputParamAny::_void_type_info;*/
 
 JSONWriter::JSONWriter()
 {
-    addParameter(std::shared_ptr<mo::IParam>(new mo::InputParamAny("input-0")));
+    addParam(std::shared_ptr<mo::IParam>(new mo::InputParamAny("input-0")));
 }
 JSONWriter::~JSONWriter()
 {
@@ -129,14 +129,14 @@ bool JSONWriter::processImpl()
     return false;
 }
 
-void JSONWriter::on_output_file_modified( mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, mo::ICoordinateSystem*, mo::UpdateFlags)
+void JSONWriter::on_output_file_modified( mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, const std::shared_ptr<mo::ICoordinateSystem>&, mo::UpdateFlags)
 {
     ofs.close();
     ofs.open(output_file.c_str(), std::ios::out);
     ar.reset(new cereal::JSONOutputArchive(ofs));
 }
 
-void JSONWriter::on_input_set(mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, mo::ICoordinateSystem*, mo::UpdateFlags)
+void JSONWriter::on_input_set(mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, const std::shared_ptr<mo::ICoordinateSystem>&, mo::UpdateFlags)
 {
     auto inputs = getInputs();
     int count= 0;
@@ -148,7 +148,7 @@ void JSONWriter::on_input_set(mo::IParam*, mo::Context*, mo::OptionalTime_t, siz
         }
         ++count;
     }
-    addParameter(std::shared_ptr<mo::IParam>(new mo::InputParamAny("input-" + boost::lexical_cast<std::string>(count))));
+    addParam(std::shared_ptr<mo::IParam>(new mo::InputParamAny("input-" + boost::lexical_cast<std::string>(count))));
 }
 
 MO_REGISTER_CLASS(JSONWriter)
@@ -157,7 +157,7 @@ JSONReader::JSONReader()
 {
     input = new mo::InputParamAny("input-0");
     input->setFlags(mo::Optional_e);
-    addParameter(std::shared_ptr<mo::IParam>(input));
+    addParam(std::shared_ptr<mo::IParam>(input));
 }
 
 bool JSONReader::processImpl()
