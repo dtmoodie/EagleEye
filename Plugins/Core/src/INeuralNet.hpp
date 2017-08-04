@@ -16,6 +16,7 @@ namespace nodes {
 
         PARAM(mo::ReadFile, weight_file, mo::ReadFile())
         TOOLTIP(weight_file, "File containing weights for neural net")
+        PARAM_UPDATE_SLOT(weight_file)
 
         PARAM(cv::Scalar, channel_mean, cv::Scalar(104, 117, 123))
         TOOLTIP(channel_mean, "Mean BGR pixel values to subtract from input before passing into net")
@@ -24,7 +25,7 @@ namespace nodes {
         TOOLTIP(mean_file, "File containing a per pixel mean value to subtract from the input")
 
         PARAM(float, pixel_scale, 0.00390625f)
-        TOOLTIP(pixel_scale, "Scale factor to multiply the image by, after mean subtraction")
+        TOOLTIP(pixel_scale, "Pixel value scale to multiply image by after subtraction")
 
         PARAM(float, image_scale, 1.0)
         TOOLTIP(image_scale, "Scale factor for input of network. 1.0 = network is resized to input image size, -1.0 = image is resized to network input size")

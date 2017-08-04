@@ -1,6 +1,14 @@
 #include "INeuralNet.hpp"
 #include <opencv2/cudaarithm.hpp>
 #include <opencv2/cudawarping.hpp>
+#ifndef NDEBUG
+#include <opencv2/imgproc.hpp>
+#endif
+
+void aq::nodes::INeuralNet::on_weight_file_modified(mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t,
+                                                    const std::shared_ptr<mo::ICoordinateSystem>&, mo::UpdateFlags){
+    initNetwork();
+}
 
 void aq::nodes::INeuralNet::preBatch(int batch_size) {
     (void)batch_size;
@@ -39,7 +47,15 @@ bool aq::nodes::INeuralNet::forwardAll() {
             postBatch();
             return false;
         }
+
     }
+
+#ifndef NDEBUG
+    cv::Mat dbg_img;
+    input->clone(dbg_img, stream());
+    stream().waitForCompletion();
+#endif
+
     std::vector<cv::Rect> pixel_bounding_boxes;
     for (size_t i = 0; i < bounding_boxes->size(); ++i) {
         cv::Rect bb;
@@ -56,7 +72,11 @@ bool aq::nodes::INeuralNet::forwardAll() {
         bb.x = std::max(0, bb.x);
         bb.y = std::max(0, bb.y);
         pixel_bounding_boxes.push_back(bb);
+#ifndef NDEBUG
+        cv::rectangle(dbg_img, bb, cv::Scalar(0,255,0), 2);
+#endif
     }
+
     cv::Scalar_<unsigned int> network_input_shape = getNetworkShape();
     if (image_scale > 0) {
         reshapeNetwork(static_cast<unsigned int>(bounding_boxes->size()),
@@ -77,15 +97,17 @@ bool aq::nodes::INeuralNet::forwardAll() {
     } else {
         input->clone(float_image, stream());
     }
-    cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, stream());
+    if (channel_mean[0] != 0.0 || channel_mean[1] != 0.0 || channel_mean[2] != 0.0)
+        cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, stream());
     if (pixel_scale != 1.0f) {
         cv::cuda::multiply(float_image, cv::Scalar::all(static_cast<double>(pixel_scale)), float_image, 1.0, -1, stream());
     }
-    int batch_size = 1;
-    preBatch(batch_size);
+
+    preBatch(static_cast<int>(pixel_bounding_boxes.size()));
     cv::cuda::GpuMat resized;
     auto             net_input = getNetImageInput();
     MO_ASSERT(net_input.size());
+    MO_ASSERT(net_input[0].size() == static_cast<size_t>(input->getChannels()));
     cv::Size net_input_size = net_input[0][0].size();
     for (size_t i = 0; i < pixel_bounding_boxes.size();) { // for each roi
         size_t start = i, end = 0;
