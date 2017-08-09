@@ -55,7 +55,8 @@ bool aq::nodes::INeuralNet::forwardAll() {
     input->clone(dbg_img, stream());
     stream().waitForCompletion();
 #endif
-
+    cv::Scalar_<unsigned int> network_input_shape = getNetworkShape();
+    float net_ar = float(network_input_shape[3]) / float(network_input_shape[2]);
     std::vector<cv::Rect> pixel_bounding_boxes;
     for (size_t i = 0; i < bounding_boxes->size(); ++i) {
         cv::Rect bb;
@@ -71,13 +72,17 @@ bool aq::nodes::INeuralNet::forwardAll() {
         }
         bb.x = std::max(0, bb.x);
         bb.y = std::max(0, bb.y);
+        float bb_ar = float(bb.width) / float(bb.height);
+        if(abs(bb_ar - net_ar) > 0.1){
+            MO_LOG_FIRST_N(warning, 5) << "Neural net aspect ratio (" << net_ar << ") differs from bounding box aspect ratio (" << bb_ar << ")";
+        }
         pixel_bounding_boxes.push_back(bb);
 #ifndef NDEBUG
         cv::rectangle(dbg_img, bb, cv::Scalar(0,255,0), 2);
 #endif
     }
 
-    cv::Scalar_<unsigned int> network_input_shape = getNetworkShape();
+
     if (image_scale > 0) {
         reshapeNetwork(static_cast<unsigned int>(bounding_boxes->size()),
             static_cast<unsigned int>(input_image_shape[3]),
@@ -109,6 +114,7 @@ bool aq::nodes::INeuralNet::forwardAll() {
     MO_ASSERT(net_input.size());
     MO_ASSERT(net_input[0].size() == static_cast<size_t>(input->getChannels()));
     cv::Size net_input_size = net_input[0][0].size();
+
     for (size_t i = 0; i < pixel_bounding_boxes.size();) { // for each roi
         size_t start = i, end = 0;
         for (size_t j = 0; j < net_input.size() && i < pixel_bounding_boxes.size(); ++j, ++i) { // for each image in the mini batch
