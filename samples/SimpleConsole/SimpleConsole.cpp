@@ -48,6 +48,7 @@
 std::string printParam(mo::IParam* param) {
     std::stringstream ss;
     ss << " - " << param->getTreeName() << " ";
+    ;
     if (param->checkFlags(mo::Input_e)) {
         if (auto input = dynamic_cast<mo::InputParam*>(param)) {
             ss << " [";
@@ -167,6 +168,7 @@ void sig_handler(int s) {
         break;
     }
     case SIGINT: {
+        //std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
         std::cout << "Caught SIGINT, shutting down" << std::endl;
         static int count = 0;
         quit = true;
@@ -1405,6 +1407,8 @@ int main(int argc, char* argv[]) {
         MO_LOG(info) << "Gui thread shut down complete";
         mo::ThreadPool::instance()->cleanup();
         MO_LOG(info) << "Thread pool cleanup complete";
+        delete g_allocator;
+        mo::Allocator::cleanupThreadSpecificAllocator();
         MO_LOG(info) << "Cleaning up singletons";
         table.cleanUp();
         std::cout << "Program exiting" << std::endl;

@@ -11,12 +11,19 @@
 #include "helpers.hpp"
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
 #include <Aquila/types/ObjectDetection.hpp>
 #include <MetaObject/logging/profiling.hpp>
 #include <MetaObject/object/MetaObject.hpp>
 #include <MetaObject/object/detail/IMetaObjectImpl.hpp>
 #include <MetaObject/params/Types.hpp>
+#include <MetaObject/object/detail/IMetaObjectImpl.hpp>
+#include <MetaObject/logging/profiling.hpp>
+#include "MetaObject/logging/logging.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
+#include "caffe_include.h"
 #include <boost/tokenizer.hpp>
 
 #include <string>
@@ -364,6 +371,19 @@ void CaffeImageClassifier::postMiniBatch(const std::vector<cv::Rect>& batch_bb,
             } else {
                 delete obj;
             }
+        }
+        mo::scoped_profile profile_handlers("Handle neural net output", nullptr, nullptr, cudaStream());
+        std::vector<cv::Rect> batch_bounding_boxes;
+        std::vector<DetectedObject2d> batch_objects;
+        for(int j = start; j < end; ++j){
+            batch_bounding_boxes.push_back(pixel_bounding_boxes[j]);
+        }
+        if(input_detections != nullptr && bounding_boxes == &defaultROI){
+            for(int j = start; j < end; ++j)
+                batch_objects.push_back((*input_detections)[j]);
+        }
+        for(auto& handler : net_handlers){
+            handler->handleOutput(*NN, batch_bounding_boxes, input_param, batch_objects);
         }
     }
     for (auto& handler : net_handlers) {
