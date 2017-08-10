@@ -84,13 +84,16 @@ void ClassifierHandler::startBatch(){
     classified_detections.clear();
 }
 
-void ClassifierHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv::Rect>& bounding_boxes,
-                                     mo::ITParam<aq::SyncedMemory>& input_param, const std::vector<aq::DetectedObject2d>& objs){
+void ClassifierHandler::handleOutput(const caffe::Net<float>& net,
+                                     const std::vector<cv::Rect>& bounding_boxes,
+                                     mo::ITParam<aq::SyncedMemory>& input_param,
+                                     const std::vector<aq::DetectedObject2d>& objs){
     auto output_blob = net.blob_by_name(output_blob_name);
     if(output_blob){
         float* data = output_blob->mutable_cpu_data();
         int num = output_blob->channels();
-
+        cv::Mat wrapped(output_blob->num(), output_blob->channels(), CV_32F, data);
+        (void)wrapped;
         for(int i = 0; i  < output_blob->num() && i < bounding_boxes.size(); ++i){
             auto idx = sort_indexes_ascending(data + i * num, num);
             DetectedObject obj;

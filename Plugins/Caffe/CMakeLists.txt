@@ -48,6 +48,7 @@ if(Caffe_FOUND)
           aquila_core
           aquila_serialization
 		  ${OpenCV_LIBS}
+          Core
     )
 
     IF(WIN32)

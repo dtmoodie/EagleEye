@@ -112,7 +112,7 @@ void ExportRegionsOfInterest::nodeInit(bool firstInit) {
     output.setName("output");
     output.setFlags(mo::ParamFlags::Output_e);
     output.appendFlags(mo::Unstamped_e);
-    addParameter(&output);
+    addParam(&output);
 }
 
 bool ExportRegionsOfInterest::processImpl() {

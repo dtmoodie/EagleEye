@@ -15,7 +15,7 @@ namespace aq
             MO_DERIVE(JSONWriter, Node)
                 PARAM(mo::WriteFile, output_file, mo::WriteFile("output_file.json"))
                 PARAM_UPDATE_SLOT(output_file)
-                MO_SLOT(void, on_input_set, mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, mo::ICoordinateSystem*, mo::UpdateFlags)
+                MO_SLOT(void, on_input_set, mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, const std::shared_ptr<mo::ICoordinateSystem>&, mo::UpdateFlags)
             MO_END;
         protected:
             bool processImpl();
