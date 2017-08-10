@@ -1,5 +1,5 @@
 # requires a rather new version of cmake to correctly handle target_include_directories when compiling .cu files
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.5)
 
 project(EagleEye)
 SET(BIN_DIRS "" CACHE STRING "" FORCE)
