@@ -23,7 +23,7 @@ macro(aquila_declare_plugin tgt)
     )
     set_target_properties(${tgt} PROPERTIES LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin/Plugins)
     INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/src)
-
+    RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
     ocv_add_precompiled_header_to_target(${tgt} src/precompiled.hpp)
 
     if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${tgt}_config.txt")
@@ -51,7 +51,7 @@ macro(aquila_declare_plugin tgt)
     )
 
     set(PLUGIN_NAME ${tgt})
-    string(TIMESTAMP BUILD_DATE "%Y-%m-%d:%H:%M")
+    string(TIMESTAMP BUILD_DATE "%Y-%m-%d %H:%M")
     execute_process(
 	  COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
 	  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila
@@ -130,7 +130,7 @@ macro(aquila_declare_plugin tgt)
 				RESULT_VARIABLE IS_SVN_REPO
 				ERROR_QUIET
 			)
-			IF(NOT ${IS_SVN_REPO})
+			IF(NOT ${IS_SVN_REPO}) # return code is 0 if success
                 set(REPO_TYPE "svn")
 				execute_process(
 					COMMAND ${SVNCOMMAND} info --show-item revision
@@ -138,7 +138,7 @@ macro(aquila_declare_plugin tgt)
 					OUTPUT_VARIABLE GIT_COMMIT_HASH
 					ERROR_QUIET
 				)
-                string(REGEX REPLACE "\n" "" GIT_COMMIT_HASH ${GIT_COMMIT_HASH})
+                string(REGEX REPLACE "\n" "" GIT_COMMIT_HASH "${GIT_COMMIT_HASH}")
                 execute_process(
                   COMMAND ${SVNCOMMAND} info --show-item relative-url
                   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
@@ -146,6 +146,11 @@ macro(aquila_declare_plugin tgt)
                   OUTPUT_STRIP_TRAILING_WHITESPACE
                   ERROR_QUIET
                 )
+                if(WIN32)
+                    set(GIT_USERNAME "$ENV{USERNAME}")
+                else()
+                    set(GIT_USERNAME "$ENV{USER}")
+                endif()
 			endif(NOT ${IS_SVN_REPO})
 		endif()
     ENDIF(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN})
@@ -223,7 +228,7 @@ macro(aquila_declare_plugin tgt)
     else()
       FILE(WRITE ${link_file_path} "${external_include_file}")
     endif()
-    RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
+    
     INSTALL(TARGETS ${tgt}
             LIBRARY DESTINATION bin/Plugins
             RUNTIME DESTINATION bin

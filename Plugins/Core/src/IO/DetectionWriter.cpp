@@ -42,9 +42,9 @@ int findNextIndex(const std::string& dir, const std::string& extension, const st
     return frame_count;
 }
 
-std::vector<DetectedObject> pruneDetections(const std::vector<DetectedObject>& input, int object_class) {
-    std::vector<DetectedObject> detections;
-    bool                        found;
+aq::NClassDetectedObject::DetectionList pruneDetections(const std::vector<DetectedObject>& input, int object_class) {
+    aq::NClassDetectedObject::DetectionList detections;
+    bool                                    found;
     if (object_class != -1) {
         found = false;
         for (const auto& detection : input) {
@@ -63,11 +63,44 @@ std::vector<DetectedObject> pruneDetections(const std::vector<DetectedObject>& i
 
     for (const auto& detection : input) {
         if ((detection.classification.classNumber == object_class) || object_class == -1) {
-            detections.push_back(detection);
+            detections.emplace_back(detection);
         }
     }
     return detections;
 }
+
+aq::NClassDetectedObject::DetectionList pruneDetections(const aq::NClassDetectedObject::DetectionList& input, int object_class) {
+    aq::NClassDetectedObject::DetectionList detections;
+    bool                                    found;
+    if (object_class != -1) {
+        found = false;
+        for (const auto& detection : input) {
+            for (size_t i = 0; i < detection.classification.size(); ++i) {
+                if (detection.classification[i].classNumber == object_class) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+    } else {
+        if (input.size() == 0)
+            return detections;
+        found = true;
+    }
+    if (!found)
+        return detections;
+
+    for (const auto& detection : input) {
+        for (size_t i = 0; i < detection.classification.size(); ++i) {
+            if ((detection.classification[i].classNumber == object_class) || object_class == -1) {
+                detections.push_back(detection);
+                break;
+            }
+        }
+    }
+    return detections;
+}
+
 IDetectionWriter::~IDetectionWriter() {
     if (_write_thread && !IsRuntimeDelete()) {
         _write_thread->interrupt();
@@ -153,6 +186,7 @@ void DetectionWriterFolder::nodeInit(bool firstInit) {
             });
     }
 }
+
 DetectionWriterFolder::~DetectionWriterFolder() {
     if (_write_thread.joinable()) {
         _write_thread.interrupt();
@@ -161,6 +195,7 @@ DetectionWriterFolder::~DetectionWriterFolder() {
     _summary_ar.reset();
     _summary_ofs.reset();
 }
+
 struct FrameDetections {
     FrameDetections(const std::vector<aq::DetectedObject2d>& det)
         : detections(det) {
@@ -179,12 +214,13 @@ struct FrameDetections {
         ar(CEREAL_NVP(detections));
     }
 };
+
 struct WritePair {
-    WritePair(const DetectedObject2d& det, const std::string& name)
+    WritePair(const aq::NClassDetectedObject& det, const std::string& name)
         : detection(det)
         , patch_name(name) {}
-    DetectedObject2d detection;
-    std::string      patch_name;
+    DetectedObject_<2, -1> detection;
+    std::string patch_name;
     template <class AR>
     void serialize(AR& ar) {
         ar(CEREAL_NVP(detection), CEREAL_NVP(patch_name));
@@ -218,12 +254,19 @@ bool DetectionWriterFolder::processImpl() {
         _per_class_count.resize(labels->size(), 0);
         start_count = _frame_count;
     }
-    auto                   detections = pruneDetections(*this->detections, object_class);
+
+    aq::NClassDetectedObject::DetectionList detections;
+    if (this->detections) {
+        detections = pruneDetections(*this->detections, object_class);
+    } else if (this->multiclass_detections) {
+        detections = pruneDetections(*this->multiclass_detections, object_class);
+    }
+
     std::vector<WritePair> written_detections;
     if (image->getSyncState() == image->DEVICE_UPDATED) {
         const cv::cuda::GpuMat img = image->getGpuMat(stream());
         cv::Rect               img_rect(cv::Point(0, 0), img.size());
-        for (const aq::DetectedObject2d& detection : detections) {
+        for (const auto& detection : detections) {
             cv::Rect rect = img_rect & cv::Rect(detection.bounding_box.x - padding,
                                            detection.bounding_box.y - padding,
                                            detection.bounding_box.width + 2 * padding,
@@ -232,7 +275,7 @@ bool DetectionWriterFolder::processImpl() {
             std::stringstream ss;
             cv::Mat           save_img;
             img(rect).download(save_img, stream());
-            int idx = detection.classification.classNumber;
+            int idx = detection.classification[0].classNumber;
             ++_per_class_count[idx];
             {
                 std::stringstream folderss;
@@ -243,23 +286,27 @@ bool DetectionWriterFolder::processImpl() {
                 }
                 ss << folderss.str() << "/";
             }
-
-            ss << image_stem << std::setw(8) << std::setfill('0') << _frame_count++ << "." + extension.getEnum();
+            ++_frame_count;
+            ss << image_stem << std::setw(8) << std::setfill('0') << _frame_count << "." + extension.getEnum();
             save_name = ss.str();
             cuda::enqueue_callback([this, save_img, save_name]() {
                 this->_write_queue.enqueue(std::make_pair(save_img, save_name));
             },
                 stream());
+            ss = std::stringstream();
+            ss << (*labels)[idx] << "/" << std::setw(4) << std::setfill('0') << _per_class_count[idx] / max_subfolder_size;
+            ss << image_stem << std::setw(8) << std::setfill('0') << _frame_count << "." + extension.getEnum();
+            save_name = ss.str();
             written_detections.emplace_back(detection, save_name);
         }
     } else {
         cv::Mat  img = image->getMat(stream());
         cv::Rect img_rect(cv::Point(0, 0), img.size());
-        for (const aq::DetectedObject2d& detection : detections) {
+        for (const auto& detection : detections) {
             cv::Rect          rect = img_rect & cv::Rect(detection.bounding_box.x - padding, detection.bounding_box.y - padding, detection.bounding_box.width + 2 * padding, detection.bounding_box.height + 2 * padding);
             std::string       save_name;
             std::stringstream ss;
-            int               idx = detection.classification.classNumber;
+            int               idx = detection.classification[0].classNumber;
             ++_per_class_count[idx];
             {
                 std::stringstream folderss;

@@ -138,6 +138,27 @@ void PrintBuffers(aq::nodes::Node* node, std::vector<std::string>& printed_nodes
     }
 }
 
+void printStatus(aq::nodes::Node* node, std::vector<std::string>& printed_nodes){
+    std::string name = node->getTreeName();
+    if (std::find(printed_nodes.begin(), printed_nodes.end(), name) != printed_nodes.end()) {
+        return;
+    }
+    printed_nodes.push_back(name);
+    std::cout << "--------\n"
+              << name << std::endl;
+    if(node->getMutex().try_lock()){
+        std::cout << "Locked: unlocked. Modified: " << node->getModified() << std::endl;
+        node->getMutex().unlock();
+    }else{
+        std::cout << "Locked: locked. Modified: " << node->getModified() << std::endl;
+    }
+
+    auto children = node->getChildren();
+    for (auto child : children) {
+        printStatus(child.get(), printed_nodes);
+    }
+}
+
 static volatile bool quit;
 
 void sig_handler(int s) {
@@ -149,23 +170,31 @@ void sig_handler(int s) {
     case SIGINT: {
         //std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
         std::cout << "Caught SIGINT, shutting down" << std::endl;
+        static int count = 0;
         quit = true;
+        ++count;
+        if(count > 2){
+            std::terminate();
+        }
         return;
     }
     case SIGILL: {
-        //std::cout  << "Caught SIGILL " << mo::print_callstack(2, true);
+        std::cout  << "Caught SIGILL " << std::endl;
         break;
     }
     case SIGTERM: {
-        //std::cout  << "Caught SIGTERM " << mo::print_callstack(2, true);
+        std::cout  << "Caught SIGTERM " << std::endl;
         break;
     }
 #ifndef _MSC_VER
     case SIGKILL: {
-        //std::cout  << "Caught SIGKILL " << mo::print_callstack(2, true);
+        std::cout  << "Caught SIGKILL " << std::endl;
         break;
     }
 #endif
+    default:{
+        std::cout << "Caught signal " << s << std::endl;
+    }
     }
 }
 
@@ -174,9 +203,27 @@ int main(int argc, char* argv[]) {
     boost::program_options::options_description desc("Allowed options");
     SystemTable                                 table;
     mo::MetaObjectFactory::instance(&table);
-
-    desc.add_options()("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")("launch", boost::program_options::value<std::string>(), "Optional - File containing node structure")("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")("log-dir", boost::program_options::value<std::string>(), "directory for log output")("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")("script,s", boost::program_options::value<std::string>(), "Text file with scripting commands")("profile,p", boost::program_options::bool_switch(), "Profile application")("gpu", boost::program_options::value<int>()->default_value(0), "")("docroot", boost::program_options::value<std::string>(), "")("http-address", boost::program_options::value<std::string>(), "")("http-port", boost::program_options::value<std::string>(), "")("disable-rcc", boost::program_options::bool_switch(), "Disable rcc")("quit-on-eos", boost::program_options::bool_switch(), "Quit program on end of stream signal")("disable-input", boost::program_options::bool_switch(), "Disable input for batch scripting, and nvprof")("profile-for", boost::program_options::value<int>(), "Amount of time to run before quitting, use with profiler");
-
+    // clang-format off
+    desc.add_options()
+            ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
+            ("config", boost::program_options::value<std::string>(), "Optional - File containing node structure")
+            ("launch", boost::program_options::value<std::string>(), "Optional - File containing node structure")
+            ("plugins", boost::program_options::value<boost::filesystem::path>(), "Path to additional plugins to load")
+            ("log", boost::program_options::value<std::string>()->default_value("info"), "Logging verbosity. trace, debug, info, warning, error, fatal")
+            ("log-dir", boost::program_options::value<std::string>(), "directory for log output")
+            ("mode", boost::program_options::value<std::string>()->default_value("interactive"), "Processing mode, options are interactive or batch")
+            ("script,s", boost::program_options::value<std::string>(), "Text file with scripting commands")
+            ("profile,p", boost::program_options::bool_switch(), "Profile application")
+            ("gpu", boost::program_options::value<int>()->default_value(0), "")
+            ("docroot", boost::program_options::value<std::string>(), "")
+            ("http-address", boost::program_options::value<std::string>(), "")
+            ("http-port", boost::program_options::value<std::string>(), "")
+            ("disable-rcc", boost::program_options::bool_switch(), "Disable rcc")
+            ("quit-on-eos", boost::program_options::bool_switch(), "Quit program on end of stream signal")
+            ("disable-input", boost::program_options::bool_switch(), "Disable input for batch scripting, and nvprof")
+            ("profile-for", boost::program_options::value<int>(), "Amount of time to run before quitting, use with profiler")
+            ("preset", boost::program_options::value<std::string>()->default_value("Default"), "Preset config file setting");
+    // clang-format on
     boost::program_options::variables_map vm;
 
     auto parsed_options = boost::program_options::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
@@ -329,7 +376,7 @@ int main(int argc, char* argv[]) {
         mo::ThreadRegistry::instance()->registerThread(mo::ThreadRegistry::GUI);
         boost::mutex              dummy_mtx; // needed for cv
         boost::condition_variable cv;
-        mo::ThreadSpecificQueue::registerNotifier([&cv]() {
+        auto notifier = mo::ThreadSpecificQueue::registerNotifier([&cv]() {
             cv.notify_all();
         });
         while (!boost::this_thread::interruption_requested()) {
@@ -357,6 +404,7 @@ int main(int argc, char* argv[]) {
             } catch (...) {
             }
         }
+        mo::ThreadSpecificQueue::cleanup();
         MO_LOG(info) << "Gui thread shutting down naturally";
     });
     mo::setThreadName(gui_thread, "Gui-thread");
@@ -530,6 +578,7 @@ int main(int argc, char* argv[]) {
                 }
                 if (current_node) {
                     std::cout << " - Current node: " << current_node->getTreeName() << "\n";
+                    std::cout << "    Type: " << current_node->GetTypeName() << std::endl;
                 }
                 if (current_param) {
                     std::cout << " - Current parameter: " << current_param->getTreeName() << "\n";
@@ -613,6 +662,16 @@ int main(int argc, char* argv[]) {
                     }
                 }
             }
+            if(what == "status"){
+                if(current_stream){
+                    std::cout << "Datastream modified: " << current_stream->getDirty() << std::endl;
+                    auto                     nodes = current_stream->getNodes();
+                    std::vector<std::string> printed;
+                    for (auto node : nodes) {
+                        printStatus(node.get(), printed);
+                    }
+                }
+            }
         };
         slot = new mo::TSlot<void(std::string)>(std::bind(func, std::placeholders::_1));
         _slots.emplace_back(slot);
@@ -645,17 +704,12 @@ int main(int argc, char* argv[]) {
 
         slot = new mo::TSlot<void(std::string)>(std::bind(
             [&current_stream, &current_node, &variable_replace_map, &replace_map](std::string file) {
-                std::string preset = "Default";
-                auto pos = file.find(' ');
-                if(pos != std::string::npos){
-                    preset = file.substr(pos + 1);
-                    file = file.substr(0, pos);
-                }
                 if (current_stream) {
+                    //current_stream->SaveStream(file);
                     rcc::shared_ptr<aq::IDataStream>               stream(current_stream);
                     std::vector<rcc::shared_ptr<aq::IDataStream> > streams;
                     streams.push_back(stream);
-                    aq::IDataStream::save(file, streams, variable_replace_map, replace_map, preset);
+                    aq::IDataStream::save(file, streams, variable_replace_map, replace_map);
                     stream->startThread();
                 } else if (current_node) {
                 }
@@ -673,10 +727,11 @@ int main(int argc, char* argv[]) {
         std::vector<std::shared_ptr<mo::Connection> > eos_connections;
         slot = new mo::TSlot<void(std::string)>(
             std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file) {
-                std::string preset = "Default";
                 auto pos = file.find(' ');
+                std::string preset = "Default";
                 if(pos != std::string::npos){
                     preset = file.substr(pos + 1);
+                    MO_LOG(info) << "Using preset '" << preset << "'";
                     file = file.substr(0, pos);
                 }
                 replace_map["${config_file_dir}"] = boost::filesystem::path(file).parent_path().string();
@@ -1203,10 +1258,10 @@ int main(int argc, char* argv[]) {
             MO_LOG(info) << "Loading " << vm["config"].as<std::string>();
             if (vm.count("disable-input") != 0) {
                 auto relay = manager.getRelay<void(std::string)>("load");
-                (*relay)(vm["config"].as<std::string>());
+                (*relay)(vm["config"].as<std::string>() + " " + vm["preset"].as<std::string>());
             } else {
                 std::stringstream ss;
-                ss << "load " << vm["config"].as<std::string>();
+                ss << "load " << vm["config"].as<std::string>() << " " << vm["preset"].as<std::string>();
                 command_list.emplace_back(ss.str());
             }
         }
@@ -1357,11 +1412,13 @@ int main(int argc, char* argv[]) {
         MO_LOG(info) << "Cleaning up singletons";
         table.cleanUp();
         std::cout << "Program exiting" << std::endl;
+        delete g_allocator;
+        mo::Allocator::cleanupThreadSpecificAllocator();
         return 0;
     }
     gui_thread.interrupt();
     gui_thread.join();
-
+    mo::ThreadSpecificQueue::cleanup();
     MO_LOG(info) << "Gui thread shut down complete, cleaning up thread pool";
     mo::ThreadPool::instance()->cleanup();
     MO_LOG(info) << "Thread pool cleanup complete";

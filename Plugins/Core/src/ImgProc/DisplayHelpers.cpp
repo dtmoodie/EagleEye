@@ -1,4 +1,6 @@
 #include "DisplayHelpers.h"
+
+#include <Aquila/rcc/external_includes/Core_link_libs.hpp>
 #include <MetaObject/object/detail/IMetaObjectImpl.hpp>
 #include <Aquila/utilities/GpuDrawing.hpp>
 #include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
@@ -27,37 +29,39 @@ bool AutoScale::processImpl()
         cv::cuda::minMax(channels[i], &minVal, &maxVal);
         double scaleFactor = 255.0 / (maxVal - minVal);
         channels[i].convertTo(channels[0], CV_8U, scaleFactor, minVal*scaleFactor);
-        // TODO update to new api
-        //updateParameter<double>("Min-" + boost::lexical_cast<std::string>(i), minVal)->setFlags(mo::State_e);
-        //updateParameter<double>("Max-" + boost::lexical_cast<std::string>(i), maxVal)->setFlags(mo::State_e);
     }
     cv::cuda::merge(channels,output_image.getGpuMat(stream()), stream());
     return true;
 }
 
+void IDrawDetections::createColormap(){
+    if(labels && (colors.size() != labels->size() || colormap_param.modified())){
+        colors.resize(labels->size());
+        for(int i = 0; i < colors.size(); ++i){
+            colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
+        }
+        cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
+        cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
+        for(size_t i = 0; i < labels->size(); ++i){
+            auto itr = colormap.find((*labels)[i]);
+            if(itr != colormap.end()){
+                colors[i] = itr->second;
+            }
+        }
+        colormap_param.modified(false);
+    }
+}
+
 bool DrawDetections::processImpl()
 {
-    if(colors.size() != labels->size())
-    {
-        colors.resize(labels->size());
-        if(colormap.size() == labels->size()){
-            for(int i = 0; i < labels->size(); ++i){
-                colors[i] = colormap[(*labels)[i]];
-            }
-        }else{
-            for(int i = 0; i < colors.size(); ++i)
-            {
-                colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
-                colormap[(*labels)[i]] = colors[i];
-            }
-            cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
-            cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
-        }
-
-    }
+    createColormap();
     cv::cuda::GpuMat draw_image;
     image->clone(draw_image, stream());
     std::vector<cv::Mat> drawn_text;
+    auto det_ts = detections_param.getTimestamp();
+    if(det_ts != image_param.getTimestamp()){
+        return true;
+    }
 
     if(detections)
     {
@@ -66,10 +70,13 @@ bool DrawDetections::processImpl()
             cv::Rect rect(detection.bounding_box.x, detection.bounding_box.y, detection.bounding_box.width, detection.bounding_box.height);
             cv::Scalar color;
             std::stringstream ss;
+            if(detection.timestamp != det_ts){
+                MO_LOG(info) << "Detection timestamp does not match detection set timestamp";
+            }
             if(labels->size())
             {
                 color = colors[detection.classification.classNumber];
-                if(detection.classification.classNumber > 0 && detection.classification.classNumber < labels->size())
+                if(detection.classification.classNumber >= 0 && detection.classification.classNumber < labels->size())
                 {
                     if(draw_class_label)
                         ss << (*labels)[detection.classification.classNumber] << " : " << std::setprecision(3) << detection.classification.confidence;
@@ -111,10 +118,9 @@ bool DrawDetections::processImpl()
                 cv::cuda::add(text_roi, d_text, text_roi, cv::noArray(), -1, stream());
                 drawn_text.push_back(text_image); // need to prevent recycling of the images too early
             }
-
         }
     }
-    output_param.updateData(draw_image, image_param.getTimestamp(), _ctx.get());
+    output_param.updateData(draw_image, mo::tag::_param = image_param, _ctx.get());
     return true;
 }
 
