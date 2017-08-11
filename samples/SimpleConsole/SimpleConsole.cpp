@@ -961,9 +961,14 @@ int main(int argc, char* argv[]) {
             std::placeholders::_1));
         connections.push_back(manager.connect(slot, "list"));
 
-        slot = new mo::TSlot<void(std::string)>(std::bind([](std::string null) -> void {
-            (void)null;
-            auto              plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins();
+        slot = new mo::TSlot<void(std::string)>(std::bind([](std::string verbosity) -> void {
+            
+            mo::MetaObjectFactory::PluginVerbosity verb = mo::MetaObjectFactory::brief;
+            if(verbosity == "info")
+                verb = mo::MetaObjectFactory::info;
+            if(verbosity == "debug")
+                verb = mo::MetaObjectFactory::debug;
+            auto              plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins(verb);
             std::stringstream ss;
             ss << "Loaded / failed plugins:\n";
             for (auto& plugin : plugins) {
