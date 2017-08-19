@@ -26,7 +26,7 @@ namespace aq
         protected:
             virtual bool LoadGPU(const std::string& path);
             virtual bool LoadCPU(const std::string& path);
-            boost::posix_time::ptime initial_time;
+            mo::OptionalTime_t initial_time;
         };
     }
 }
