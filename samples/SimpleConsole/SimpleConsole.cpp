@@ -388,6 +388,12 @@ int main(int argc, char* argv[]) {
             } catch (boost::thread_interrupted& err) {
                 (void)err;
                 break;
+            } catch(mo::ExceptionWithCallStack<cv::Exception>& e){
+                MO_LOG(debug) << "Opencv exception with callstack " << e.what() << " " << e.callStack();
+            } catch(mo::IExceptionWithCallStackBase& e){
+                MO_LOG(debug) << "Exception with callstack " << e.callStack();
+            } catch(cv::Exception& e){
+                MO_LOG(debug) << "OpenCV exception: " << e.what();
             } catch (...) {
                 MO_LOG(debug) << "Unknown / unhandled exception thrown in gui thread event handler";
             }
