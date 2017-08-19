@@ -119,22 +119,40 @@ bool DetectionDisplay::processImpl()
     return true;
 }
 
-bool OGLImageDisplay::processImpl()
-{
+bool OGLImageDisplay::processImpl(){
     std::string name = getTreeName();
     size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
-    cv::cuda::GpuMat gpumat = image->getGpuMat(stream());
-    auto ts = image_param.getTimestamp();
-    if(!_prev_time)
+    if(m_use_opengl){
+        cv::cuda::GpuMat gpumat = image->getGpuMat(stream());
+        auto ts = image_param.getTimestamp();
+        if(!_prev_time)
+            _prev_time = ts;
+        auto prev = _prev_time;
+        aq::cuda::enqueue_callback_async(
+                    [name, this, gpumat, ts, prev]()->void
+        {
+            PROFILE_RANGE(imshow);
+            try{
+                getDataStream()->getWindowCallbackManager()->imshowd(name, gpumat, cv::WINDOW_OPENGL);
+            }catch(mo::ExceptionWithCallStack<cv::Exception>& e){
+                m_use_opengl = false;
+            }
+        }, gui_thread_id, stream());
         _prev_time = ts;
-    auto prev = _prev_time;
-    aq::cuda::enqueue_callback_async(
-                [name, this, gpumat, ts, prev]()->void
-    {
-        PROFILE_RANGE(imshow);
-        getDataStream()->getWindowCallbackManager()->imshowd(name, gpumat, cv::WINDOW_OPENGL);
-    }, gui_thread_id, stream());
-    _prev_time = ts;
+    }else{
+        cv::Mat mat = image->getMat(stream());
+        aq::cuda::enqueue_callback_async(
+            [name, this, mat]()->void
+        {
+            PROFILE_RANGE(imshow);
+            try {
+                getDataStream()->getWindowCallbackManager()->imshow(name, mat);
+            }
+            catch (mo::ExceptionWithCallStack<cv::Exception>& e) {
+                
+            }
+        }, gui_thread_id, stream());
+    }
     return true;
 }
 

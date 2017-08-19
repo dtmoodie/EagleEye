@@ -21,8 +21,7 @@ namespace aq
 {
 namespace nodes
 {
-    class QtImageDisplay: public Node
-    {
+    class QtImageDisplay: public Node{
     public:
         MO_DERIVE(QtImageDisplay, Node)
             OPTIONAL_INPUT(SyncedMemory, image, nullptr)
@@ -32,8 +31,8 @@ namespace nodes
     protected:
         bool processImpl();
     };
-    class OGLImageDisplay: public Node
-    {
+
+    class OGLImageDisplay: public Node{
     public:
         MO_DERIVE(OGLImageDisplay, Node)
             INPUT(SyncedMemory, image, nullptr)
@@ -41,6 +40,7 @@ namespace nodes
         bool processImpl();
     protected:
         boost::optional<mo::Time_t> _prev_time;
+        bool m_use_opengl = true;
     };
 
 
