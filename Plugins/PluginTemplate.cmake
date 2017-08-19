@@ -23,6 +23,12 @@ macro(aquila_declare_plugin tgt)
     )
     set_target_properties(${tgt} PROPERTIES LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin/Plugins)
     INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/src)
+	target_include_directories(${tgt}
+        PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/>
+    )
+	target_include_directories(${tgt}
+        PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Plugins/${tgt}/>
+    )
     RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
     ocv_add_precompiled_header_to_target(${tgt} src/precompiled.hpp)
 
@@ -46,9 +52,6 @@ macro(aquila_declare_plugin tgt)
     set(LINK_LIBS_DEBUG ${plugin_libraries_debug})
 
     set(${tgt}_PLUGIN_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/" CACHE PATH "" FORCE)
-    target_include_directories(${tgt}
-        PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/>
-    )
 
     set(PLUGIN_NAME ${tgt})
     string(TIMESTAMP BUILD_DATE "%Y-%m-%d %H:%M")
@@ -155,9 +158,7 @@ macro(aquila_declare_plugin tgt)
 		endif()
     ENDIF(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN})
     CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}Export.hpp" @ONLY)
-    target_include_directories(${tgt}
-        PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Plugins/${tgt}/>
-    )
+    
     CONFIGURE_FILE("../plugin_config.cpp.in" "${CMAKE_BINARY_DIR}/Plugins/${tgt}/plugin_config.cpp" @ONLY)
     
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/Plugins/${tgt}/plugin_config.cpp")
@@ -169,33 +170,40 @@ macro(aquila_declare_plugin tgt)
 
     # ============= Write out a file containing external include info
 
-    set(external_include_file "#pragma once\n\n#include \"RuntimeObjectSystem/RuntimeLinkLibrary.h\"\n\n#ifdef _MSC_VER\n")
+    set(external_include_file "#pragma once\n\n#include \"RuntimeObjectSystem/RuntimeLinkLibrary.h\"\n\n")
     # wndows link libs
     if(LINK_LIBS_RELEASE)
       LIST(REMOVE_DUPLICATES LINK_LIBS_RELEASE)
+	  list(SORT LINK_LIBS_RELEASE)
     endif()
     if(LINK_LIBS_DEBUG)
       LIST(REMOVE_DUPLICATES LINK_LIBS_DEBUG)
+	  list(SORT LINK_LIBS_DEBUG)
     endif()
-    set(external_include_file "${external_include_file}\n#else\n\n  #ifdef NDEBUG\n")
-
+    set(external_include_file "${external_include_file}\n#if defined(NDEBUG) && !defined(_DEBUG)\n\n")
+	if(WIN32)
+		set(prefix "")
+		set(postfix ".lib")
+	else(WIN32)
+		set(prefix "-l")
+		set(postfix "")
+	endif(WIN32)
     foreach(lib ${LINK_LIBS_RELEASE})
         string(LENGTH ${lib} len)
         if(len GREATER 3)
             string(SUBSTRING "${lib}" 0 3 sub)
             if(${sub} STREQUAL lib)
               string(SUBSTRING "${lib}" 3 -1 lib)
-              set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+              set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"${prefix}${lib}${postfix}\")\n")
             else()
-              set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+              set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"${prefix}${lib}${postfix}\")\n")
             endif()
         else()
-            set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+            set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"${prefix}${lib}${postfix}\")\n")
         endif()
-
     endforeach()
 
-    set(external_include_file "${external_include_file}\n  #else\n")
+    set(external_include_file "${external_include_file}\n  #else\n\n")
 
     foreach(lib ${LINK_LIBS_DEBUG})
         string(LENGTH ${lib} len)
@@ -203,18 +211,18 @@ macro(aquila_declare_plugin tgt)
             string(SUBSTRING "${lib}" 0 3 sub)
             if(${sub} STREQUAL lib)
                 string(SUBSTRING "${lib}" 3 -1 lib)
-                set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+                set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"${prefix}${lib}${postfix}\")\n")
             else()
-                set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+                set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"${prefix}${lib}${postfix}\")\n")
             endif()
         else()
-            set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"-l${lib}\")\n")
+            set(external_include_file "${external_include_file}    RUNTIME_COMPILER_LINKLIBRARY(\"${prefix}${lib}${postfix}\")\n")
         endif()
     endforeach()
 
     set(external_include_file "${external_include_file}\n  #endif // NDEBUG\n")
 
-    set(external_include_file "${external_include_file}\n#endif // _MSC_VER")
+    set(external_include_file "${external_include_file}\n")
     set(link_file_path "${CMAKE_BINARY_DIR}/Plugins/${tgt}/Aquila/rcc/external_includes/${tgt}_link_libs.hpp")
 
     if(EXISTS ${link_file_path})
