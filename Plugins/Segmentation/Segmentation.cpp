@@ -31,23 +31,20 @@ bool OtsuThreshold::processImpl()
         double minVal, maxVal;
         cv::cuda::minMax(image->getGpuMat(stream()), &minVal, &maxVal);
         // Generate 300 equally spaced bins over the space
-        double step = (maxVal - minVal) / double(200);
+        float step = float((maxVal - minVal) / float(200));
 
-        double val = minVal;
+        float val = minVal;
         for(int i = 0; i < 200; ++i, val += step)
         {
             h_levels.at<float>(i) = val;
         }
         cv::cuda::histRange(image->getGpuMat(stream()), hist, cv::cuda::GpuMat(h_levels), stream());
-    }else
-    {
-        if(range == nullptr)
-        {
+    }else{
+        if(range == nullptr){
             MO_LOG_EVERY_N(error, 100) << "Histogram provided but range not provided";
             return false;
         }
-        if(range->getChannels() != 1)
-        {
+        if(range->getChannels() != 1){
             MO_LOG_EVERY_N(error, 100) << "Currently only support equal bins accross all histograms";
             return false;
         }
