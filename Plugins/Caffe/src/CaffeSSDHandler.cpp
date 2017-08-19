@@ -77,7 +77,6 @@ void SSDHandler::handleOutput(const caffe::Net<float>& net, const std::vector<cv
     if (objects.size()) {
         MO_LOG(trace) << "Detected " << objects.size() << " objets in frame " << input_param.getFrameNumber();
     }
-    num_detections_param.updateData(static_cast<int>(objects.size()), input_param.getTimestamp(), input_param.getFrameNumber(), _ctx);
 
     detections_param.updateData(objects, mo::tag::_param = input_param, _ctx);
 }

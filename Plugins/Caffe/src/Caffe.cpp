@@ -367,23 +367,9 @@ void CaffeImageClassifier::postMiniBatch(const std::vector<cv::Rect>& batch_bb,
                 this->_algorithm_components.emplace_back(handler);
                 handler->setOutputBlob(*NN, itr.first);
                 handler->startBatch();
-
             } else {
                 delete obj;
             }
-        }
-        mo::scoped_profile profile_handlers("Handle neural net output", nullptr, nullptr, cudaStream());
-        std::vector<cv::Rect> batch_bounding_boxes;
-        std::vector<DetectedObject2d> batch_objects;
-        for(int j = start; j < end; ++j){
-            batch_bounding_boxes.push_back(pixel_bounding_boxes[j]);
-        }
-        if(input_detections != nullptr && bounding_boxes == &defaultROI){
-            for(int j = start; j < end; ++j)
-                batch_objects.push_back((*input_detections)[j]);
-        }
-        for(auto& handler : net_handlers){
-            handler->handleOutput(*NN, batch_bounding_boxes, input_param, batch_objects);
         }
     }
     for (auto& handler : net_handlers) {
