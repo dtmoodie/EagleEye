@@ -84,7 +84,7 @@ bool FrameLimiter::processImpl()
     auto currentTime = boost::posix_time::microsec_clock::universal_time();
     boost::posix_time::time_duration delta(currentTime - lastTime);
     lastTime = currentTime;
-    int goalTime = 1000.0 / desired_framerate;
+    int goalTime = int(1000.0 / desired_framerate);
     if (delta.total_milliseconds() < goalTime)
     {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(goalTime - delta.total_milliseconds()));
@@ -113,7 +113,6 @@ MO_REGISTER_CLASS(CreateMat)
 
 bool SetMatrixValues::processImpl()
 {
-
     /*if(mask)
     {
         input->getGpuMatMutable(stream()).setTo(replace_value, mask->getGpuMat(stream()), stream());
@@ -161,16 +160,13 @@ bool Subtract::processImpl()
 }
 MO_REGISTER_CLASS(Subtract)
 
-bool RescaleContours::processImpl()
-{
+bool RescaleContours::processImpl(){
     output.resize(input->size());
-    for(int i = 0; i < input->size(); ++i)
-    {
+    for(int i = 0; i < input->size(); ++i){
         output[i].resize((*input)[i].size());
-        for(int j = 0; j < (*input)[i].size(); ++j)
-        {
-            output[i][j].x = (*input)[i][j].x * scale_x;
-            output[i][j].y = (*input)[i][j].y * scale_y;
+        for(int j = 0; j < (*input)[i].size(); ++j){
+            output[i][j].x = int((*input)[i][j].x * scale_x);
+            output[i][j].y = int((*input)[i][j].y * scale_y);
         }
     }
     output_param.emitUpdate(input_param.getTimestamp(), _ctx.get());

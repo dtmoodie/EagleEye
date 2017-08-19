@@ -16,7 +16,7 @@ namespace aq
                 INPUT(SyncedMemory, input, nullptr);
                 PARAM(int, num_corners_x, 6);
                 PARAM(int, num_corners_y, 9);
-                PARAM(double, corner_distance, 18.75);
+                PARAM(float, corner_distance, 18.75f);
                 OUTPUT(ImagePoints, image_points, ImagePoints());
                 OUTPUT(ObjectPoints, object_points, ObjectPoints());
                 OUTPUT(SyncedMemory, drawn_corners, SyncedMemory());

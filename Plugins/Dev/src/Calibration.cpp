@@ -88,9 +88,8 @@ bool CalibrateCamera::processImpl()
     }
     centroid /= float(image_points->size());
     float minDist = std::numeric_limits<float>::max();
-    for(auto& other : image_point_centroids)
-    {
-        float dist = cv::norm(other - centroid);
+    for(auto& other : image_point_centroids){
+        double dist = cv::norm(other - centroid);
         if (dist < minDist)
             minDist = dist;
     }
@@ -121,7 +120,7 @@ bool CalibrateCamera::processImpl()
         rotation_vecs_param.emitUpdate();
         translation_vecs_param.emitUpdate();
         reprojection_error_param.updateData(quality);
-        lastCalibration = object_point_collection.size();
+        lastCalibration = int(object_point_collection.size());
     }
     return true;
 }
@@ -169,40 +168,34 @@ bool CalibrateStereoPair::processImpl()
     float minDist1 = std::numeric_limits<float>::max();
     float minDist2 = std::numeric_limits<float>::max();
 
-    for (cv::Vec2f& other : imagePointCentroids1)
-    {
-        float dist = cv::norm(other - centroid1);
+    for (cv::Vec2f& other : imagePointCentroids1){
+        double dist = cv::norm(other - centroid1);
         if (dist < minDist1)
             minDist1 = dist;
     }
-    for (cv::Vec2f& other : imagePointCentroids2)
-    {
-        float dist = cv::norm(other - centroid2);
+    for (cv::Vec2f& other : imagePointCentroids2){
+        double dist = cv::norm(other - centroid2);
         if (dist < minDist2)
             minDist2 = dist;
     }
-    if (minDist1 < 100 || minDist2 < 100)
-    {
+    if (minDist1 < 100 || minDist2 < 100){
         return false;
     }
     cv::Vec2f motionSum1(0, 0);
     cv::Vec2f motionSum2(0, 0);
 
-    for (int i = 1; i < centroidHistory1.size(); ++i)
-    {
+    for (int i = 1; i < centroidHistory1.size(); ++i){
         motionSum1 += centroidHistory1[i] - centroidHistory1[i - 1];
     }
 
-    for (int i = 1; i < centroidHistory2.size(); ++i)
-    {
+    for (int i = 1; i < centroidHistory2.size(); ++i){
         motionSum2 += centroidHistory2[i] - centroidHistory2[i - 1];
     }
     imagePointCollection1.push_back(*camera_points_1);
     imagePointCollection2.push_back(*camera_points_2);
     objectPointCollection.push_back(*object_points);
     image_pairs_param.updateData(imagePointCollection1.size());
-    if(imagePointCollection1.size() > lastCalibration + 20)
-    {
+    if(int(imagePointCollection1.size()) > lastCalibration + 20){
         reprojection_error = cv::stereoCalibrate(
             objectPointCollection,
             imagePointCollection1,

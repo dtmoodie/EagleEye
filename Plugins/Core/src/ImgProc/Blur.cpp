@@ -6,8 +6,7 @@
 using namespace aq;
 using namespace aq::nodes;
 
-bool MedianBlur::processImpl()
-{
+bool MedianBlur::processImpl(){
     if(!_median_filter || window_size_param.modified() || partition_param.modified())
     {
         _median_filter = cv::cuda::createMedianFilter(input->getDepth(), window_size, partition);

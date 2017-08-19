@@ -4,6 +4,7 @@
 #include <gst/base/gstbasesink.h>
 #include <opencv2/imgcodecs.hpp>
 #include "glib_thread.h"
+#include <Aquila/rcc/external_includes/cv_imgcodec.hpp>
 using namespace aq;
 using namespace aq::nodes;
 

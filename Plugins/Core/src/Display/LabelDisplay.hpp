@@ -20,7 +20,7 @@ namespace aq
                 OPTIONAL_INPUT(SyncedMemory, original_image, nullptr)
                 INPUT(std::vector<std::string>, labels, nullptr)
                 OUTPUT(SyncedMemory, colorized, SyncedMemory())
-                PARAM(float, label_weight, 0.7)
+                PARAM(float, label_weight, 0.7f)
                 PARAM(int, ignore_class, -1)
                 PARAM(bool, display_legend, true)
                 PARAM(int, dilate, 0)

@@ -9,12 +9,9 @@
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-namespace aq
-{
-namespace nodes
-{
-    class FrameRate: public Node
-    {
+namespace aq{
+namespace nodes{
+    class FrameRate: public Node{
     public:
         FrameRate();
         MO_DERIVE(FrameRate, Node)
@@ -31,8 +28,7 @@ namespace nodes
         boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::rolling_mean>>  m_framerate_rolling_mean;
     };
 
-    class DetectFrameSkip: public Node
-    {
+    class DetectFrameSkip: public Node{
     public:
         MO_DERIVE(DetectFrameSkip, Node)
             INPUT(SyncedMemory, input, nullptr)
@@ -43,8 +39,7 @@ namespace nodes
         boost::optional<mo::Time_t> _initial_time; // used to zero base time
     };
 
-    class FrameLimiter : public Node
-    {
+    class FrameLimiter : public Node{
     public:
         MO_DERIVE(FrameLimiter, Node)
             PARAM(double, desired_framerate, 30.0)
@@ -54,8 +49,7 @@ namespace nodes
         boost::posix_time::ptime lastTime;
     };
 
-    class CreateMat: public Node
-    {
+    class CreateMat: public Node{
     public:
         MO_DERIVE(CreateMat, Node)
             ENUM_PARAM(data_type, CV_8U, CV_8S, CV_16U, CV_32S, CV_32F, CV_64F)
@@ -69,8 +63,8 @@ namespace nodes
         bool processImpl();
 
     };
-    class SetMatrixValues: public Node
-    {
+
+    class SetMatrixValues: public Node{
     public:
         MO_DERIVE(SetMatrixValues, Node)
             INPUT(SyncedMemory, input, nullptr)
@@ -78,10 +72,9 @@ namespace nodes
             PARAM(cv::Scalar, replace_value, cv::Scalar::all(0))
     protected:
         bool processImpl();
-
     };
-    class Resize : public Node
-    {
+
+    class Resize : public Node{
     public:
         MO_DERIVE(Resize, Node)
             INPUT(SyncedMemory, input, nullptr)
@@ -93,6 +86,7 @@ namespace nodes
     protected:
         bool processImpl();
     };
+
     class RescaleContours: public Node
     {
     public:

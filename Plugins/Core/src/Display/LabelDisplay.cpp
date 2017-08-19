@@ -17,7 +17,7 @@ bool LabelDisplay::processImpl()
        (display_legend && d_legend.size() != label->getSize()))
     {
 
-        createColormap(h_lut, labels->size(), ignore_class);
+        createColormap(h_lut, static_cast<int>(labels->size()), ignore_class);
 
         d_lut.upload(h_lut, stream());
         if(display_legend)
@@ -31,7 +31,7 @@ bool LabelDisplay::processImpl()
                 int max_width = 0;
                 legend_width += max_width * 15;
 
-                cv::Rect legend_outline(3,3,legend_width , labels->size() * 20 + 15);
+                cv::Rect legend_outline(3,3,legend_width , static_cast<int>(labels->size() * 20 + 15));
                 cv::rectangle(legend, legend_outline, cv::Scalar(0,255,0));
 
                 for(int i = 0; i < labels->size(); ++i)
@@ -86,7 +86,7 @@ bool LabelDisplay::processImpl()
         cv::cuda::addWeighted(input, 1.0 - label_weight, resized, label_weight, 0.0, combined, -1, stream());
         if(display_legend && d_legend.size() == combined.size())
         {
-            combined(cv::Rect(3,3,legend_width , labels->size()*20 + 15)).setTo(cv::Scalar::all(0), stream());
+            combined(cv::Rect(3,3,legend_width , static_cast<int>(labels->size()*20 + 15))).setTo(cv::Scalar::all(0), stream());
             cv::cuda::add(combined, d_legend, combined, cv::noArray(), -1, stream());
         }
         colorized_param.updateData(combined, original_image_param.getTimestamp(), _ctx.get());
