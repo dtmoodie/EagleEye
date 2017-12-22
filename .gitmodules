@@ -9,7 +9,7 @@
 	url = https://github.com/dtmoodie/lsd_slam
 [submodule "Aquila"]
 	path = Aquila
-	url = http://github.com/dtmoodie/Aquila
+	url = ../Aquila
 [submodule "Plugins/gta5"]
 	path = Plugins/gta5
 	url = /home/dan/remotes/gta5/
