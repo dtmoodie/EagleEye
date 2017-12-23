@@ -19,7 +19,7 @@ namespace aq
                 PROPERTY(cv::Ptr<cv::cudacodec::VideoReader>, d_cam, cv::Ptr<cv::cudacodec::VideoReader>())
                 MO_SIGNAL(void, eos)
                 SOURCE(SyncedMemory, image, {})
-                APPEND_FLAGS(image, mo::Source_e)
+                APPEND_FLAGS(image, mo::ParamFlags::Source_e)
             MO_END;
             bool loadData(const std::string& path);
             bool grab();

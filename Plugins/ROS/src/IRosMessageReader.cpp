@@ -31,10 +31,12 @@ int IMessageReader::CanLoadTopic(const std::string& topic)
     }
     return 0;
 }
-void IMessageReader::on_subscribed_topic_modified(mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, mo::ICoordinateSystem*, mo::UpdateFlags)
+
+void IMessageReader::on_subscribed_topic_modified(mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, const std::shared_ptr<mo::ICoordinateSystem>&, mo::UpdateFlags)
 {
     this->subscribe(subscribed_topic);
 }
+
 rcc::shared_ptr<IMessageReader> IMessageReader::create(const std::string& topic)
 {
     std::map<int, IObjectConstructor*> constructor_priority;

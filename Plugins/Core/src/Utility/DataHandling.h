@@ -37,7 +37,7 @@ namespace aq
             MO_DERIVE(ImageInfo, Node)
                 INPUT(SyncedMemory, input, nullptr)
                 ENUM_PARAM(data_type, CV_8U, CV_8S, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F)
-                APPEND_FLAGS(data_type, mo::State_e)
+                APPEND_FLAGS(data_type, mo::ParamFlags::State_e)
                 STATUS(int, count, 0)
                 STATUS(int, height, 0)
                 STATUS(int, width, 0)

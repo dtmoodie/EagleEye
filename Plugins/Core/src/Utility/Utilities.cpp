@@ -111,7 +111,7 @@ void ExportRegionsOfInterest::nodeInit(bool firstInit) {
     output.setContext(_ctx.get());
     output.setName("output");
     output.setFlags(mo::ParamFlags::Output_e);
-    output.appendFlags(mo::Unstamped_e);
+    output.appendFlags(mo::ParamFlags::Unstamped_e);
     addParam(&output);
 }
 

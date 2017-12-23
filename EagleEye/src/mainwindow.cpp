@@ -6,7 +6,7 @@
 #include <nodes/FlowView>
 #include <nodes/DataModelRegistry>
 #include <RuntimeObjectSystem/ObjectInterface.h>
-#include <IObject.h>
+#include <RuntimeObjectSystem/IObject.h>
 #include "Aquila/nodes/Node.hpp"
 #include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include <qwidget.h>

@@ -156,7 +156,7 @@ MO_REGISTER_CLASS(JSONWriter)
 JSONReader::JSONReader()
 {
     input = new mo::InputParamAny("input-0");
-    input->setFlags(mo::Optional_e);
+    input->setFlags(mo::ParamFlags::Optional_e);
     addParam(std::shared_ptr<mo::IParam>(input));
 }
 

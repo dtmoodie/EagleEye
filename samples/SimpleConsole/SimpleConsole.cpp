@@ -49,7 +49,7 @@ std::string printParam(mo::IParam* param) {
     std::stringstream ss;
     ss << " - " << param->getTreeName() << " ";
     ;
-    if (param->checkFlags(mo::Input_e)) {
+    if (param->checkFlags(mo::ParamFlags::Input_e)) {
         if (auto input = dynamic_cast<mo::InputParam*>(param)) {
             ss << " [";
             auto input_param = input->getInputParam();
@@ -238,16 +238,10 @@ int main(int argc, char* argv[]) {
     mo::MetaObjectFactory::instance()->registerTranslationUnit();
 
     auto g_allocator = mo::Allocator::getThreadSafeAllocator();
-    cv::cuda::GpuMat::setDefaultAllocator(g_allocator);
-    cv::Mat::setDefaultAllocator(g_allocator);
+    cv::cuda::GpuMat::setDefaultAllocator(g_allocator.get());
+    cv::Mat::setDefaultAllocator(g_allocator.get());
 
     g_allocator->setName("Global Allocator");
-    if (!mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(g_allocator)) {
-        MO_LOG(info) << "Unable to set thread specific gpu allocator in opencv";
-    }
-    if (!mo::CpuThreadAllocatorSetter<cv::Mat>::Set(g_allocator)) {
-        MO_LOG(info) << "Unable to set thread specific cpu allocator in opencv";
-    }
 
     auto unrecognized = boost::program_options::collect_unrecognized(parsed_options.options, boost::program_options::include_positional);
     std::map<std::string, std::string> replace_map;
@@ -622,7 +616,7 @@ int main(int argc, char* argv[]) {
                     auto              params = current_node->getAllParams();
                     std::stringstream ss;
                     for (auto param : params) {
-                        if (param->checkFlags(mo::Input_e)) {
+                        if (param->checkFlags(mo::ParamFlags::Input_e)) {
                             ss << " -- " << param->getTreeName() << " [ " << param->getTypeInfo().name() << " ]\n";
                             auto potential_inputs = current_node->getDataStream()->getVariableManager()->getOutputParams(param->getTypeInfo());
                             for (auto& input : potential_inputs) {
@@ -819,7 +813,7 @@ int main(int argc, char* argv[]) {
                         for (auto& itr : parameters) {
                             std::stringstream ss;
                             try {
-                                if (itr->checkFlags(mo::Input_e)) {
+                                if (itr->checkFlags(mo::ParamFlags::Input_e)) {
                                     if (auto input = dynamic_cast<mo::InputParam*>(itr)) {
                                         std::stringstream ss;
                                         ss << " - " << itr->getTreeName() << " [";
@@ -999,7 +993,7 @@ int main(int argc, char* argv[]) {
                 for (auto& itr : parameters) {
                     std::stringstream ss;
                     try {
-                        if (itr->checkFlags(mo::Input_e)) {
+                        if (itr->checkFlags(mo::ParamFlags::Input_e)) {
                             if (auto input = dynamic_cast<mo::InputParam*>(itr)) {
                                 std::stringstream ss;
                                 ss << " - " << itr->getTreeName() << " [";
@@ -1043,7 +1037,7 @@ int main(int argc, char* argv[]) {
                 for (auto& itr : parameters) {
                     std::stringstream ss;
                     try {
-                        if (itr->checkFlags(mo::Input_e)) {
+                        if (itr->checkFlags(mo::ParamFlags::Input_e)) {
                             if (auto input = dynamic_cast<mo::InputParam*>(itr)) {
                                 std::stringstream ss;
                                 ss << " - " << itr->getTreeName() << " [";
@@ -1079,7 +1073,7 @@ int main(int argc, char* argv[]) {
         connections.push_back(manager.connect(slot, "add"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node, &current_stream, &current_param](std::string value) -> void {
-            if (current_param && current_node && current_param->checkFlags(mo::Input_e)) {
+            if (current_param && current_node && current_param->checkFlags(mo::ParamFlags::Input_e)) {
                 auto token_index = value.find(':');
                 if (token_index != std::string::npos) {
                     auto          stream      = current_node->getDataStream();
@@ -1364,20 +1358,26 @@ int main(int argc, char* argv[]) {
                         std::string command;
                         std::getline(ss, command, ' ');
                         auto relay = manager.getRelay<void(std::string)>(command);
-                        if (relay) {
+                        if (relay)
+                        {
                             std::string rest;
                             std::getline(ss, rest);
-                            try {
+                            try
+                            {
                                 MO_LOG(debug) << "Running command (" << command << ") with arguments: " << rest;
                                 (*relay)(rest);
-                            } catch (std::exception& e) {
+                            } catch (std::exception& e)
+                            {
                                 MO_LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed due to: "
                                                 << "[" << typeid(e).name() << "] - " << e.what();
-                            } catch (...) {
+                            } catch (...)
+                            {
                                 MO_LOG(warning) << "Executing command (" << command << ") with arguments: " << rest << " failed miserably";
                             }
-                        } else {
-                            if (command_line.size()) {
+                        } else
+                        {
+                            if (command_line.size())
+                            {
                                 MO_LOG(warning) << "Invalid command: " << command_line;
                                 print_options();
                             }
@@ -1418,13 +1418,9 @@ int main(int argc, char* argv[]) {
         MO_LOG(info) << "Gui thread shut down complete";
         mo::ThreadPool::instance()->cleanup();
         MO_LOG(info) << "Thread pool cleanup complete";
-        delete g_allocator;
-        mo::Allocator::cleanupThreadSpecificAllocator();
         MO_LOG(info) << "Cleaning up singletons";
         table.cleanUp();
         std::cout << "Program exiting" << std::endl;
-        delete g_allocator;
-        mo::Allocator::cleanupThreadSpecificAllocator();
         return 0;
     }
     gui_thread.interrupt();
@@ -1433,9 +1429,7 @@ int main(int argc, char* argv[]) {
     MO_LOG(info) << "Gui thread shut down complete, cleaning up thread pool";
     mo::ThreadPool::instance()->cleanup();
     MO_LOG(info) << "Thread pool cleanup complete";
-    delete g_allocator;
     table.cleanUp();
-    std::cout << "Program exiting" << std::endl;
     std::cout << "Program exiting" << std::endl;
     return 0;
 }

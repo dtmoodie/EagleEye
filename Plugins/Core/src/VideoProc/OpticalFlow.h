@@ -44,7 +44,7 @@ namespace aq
         public:
             MO_DERIVE(SparsePyrLKOpticalFlow, IPyrOpticalFlow)
                 INPUT(SyncedMemory, input_points, nullptr);
-                APPEND_FLAGS(input_points, mo::Buffer_e);
+                APPEND_FLAGS(input_points, mo::ParamFlags::Buffer_e);
                 OUTPUT(SyncedMemory, tracked_points, SyncedMemory());
                 OUTPUT(SyncedMemory, status, SyncedMemory());
                 OUTPUT(SyncedMemory, error, SyncedMemory());
