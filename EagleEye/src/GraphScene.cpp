@@ -2,7 +2,7 @@
 #include "object_proxies.hpp"
 #include <qfiledialog.h>
 #include "Node.hpp"
-#include "Aquila/core/IDataStream.hpp"
+#include "Aquila/core/IGraph.hpp"
 #include "Aquila/nodes/Node.hpp"
 #include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include "Aquila/serialization/cereal/JsonArchive.hpp"
@@ -32,7 +32,7 @@ GraphScene::GraphScene(std::shared_ptr<QtNodes::DataModelRegistry> registry):
 void GraphScene::save(bool){
     auto selected_nodes = selectedNodes();
     for(auto node : selected_nodes){
-        auto proxy = dynamic_cast<aq::DataStreamProxy*>(node->nodeDataModel());
+        auto proxy = dynamic_cast<aq::GraphProxy*>(node->nodeDataModel());
         if(proxy){
             QString filename =
                 QFileDialog::getSaveFileName(nullptr,
@@ -68,9 +68,9 @@ void GraphScene::save(bool){
                 }
             }
             ar(cereal::make_nvp("ui_node_positions", node_position_map));
-            std::vector<rcc::shared_ptr<aq::IDataStream>> dsvec;
+            std::vector<rcc::shared_ptr<aq::IGraph>> dsvec;
             dsvec.push_back(proxy->m_obj);
-            aq::IDataStream::save(ar, dsvec);
+            aq::IGraph::save(ar, dsvec);
 
             return;
         }
@@ -94,7 +94,7 @@ void GraphScene::load(){
     std::map<std::string, std::string>& sm = this->sm ? *this->sm : _sm;
 
     aq::JSONInputArchive ar(ifs, vm, sm);
-    aq::IDataStream::VariableMap defaultVM, defaultSM;
+    aq::IGraph::VariableMap defaultVM, defaultSM;
     
     std::stringstream currentDate;
     boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
@@ -133,7 +133,7 @@ void GraphScene::load(){
                << pair.first << " = " << pair.second;
         MO_LOG(debug) << "Used variable replacements: " << ss.str();
     }
-    auto dsvec = aq::IDataStream::load(ar);
+    auto dsvec = aq::IGraph::load(ar);
     for(auto& ds : dsvec){
         load(ds);
     }
@@ -162,9 +162,9 @@ void GraphScene::loadFromMemory(const QByteArray& data){
 
 }
 
-QtNodes::Node& GraphScene::load(const rcc::shared_ptr<aq::IDataStream>& ds){
-    rcc::shared_ptr<aq::IDataStream> ds_ = ds;
-    std::unique_ptr<aq::DataStreamProxy> datamodel(new aq::DataStreamProxy(ds));
+QtNodes::Node& GraphScene::load(const rcc::shared_ptr<aq::IGraph>& ds){
+    rcc::shared_ptr<aq::IGraph> ds_ = ds;
+    std::unique_ptr<aq::GraphProxy> datamodel(new aq::GraphProxy(ds));
     auto node = std::make_unique<QtNodes::Node>(std::move(datamodel));
     auto ngo = std::make_unique<QtNodes::NodeGraphicsObject>(*this, *node);
     node->setGraphicsObject(std::move(ngo));

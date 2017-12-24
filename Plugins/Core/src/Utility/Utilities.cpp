@@ -106,7 +106,7 @@ bool RegionOfInterest::processImpl() {
 MO_REGISTER_CLASS(RegionOfInterest);
 
 void ExportRegionsOfInterest::nodeInit(bool firstInit) {
-    output.setMtx(_mtx);
+    output.setMtx(&getMutex());
     output.updatePtr(&rois);
     output.setContext(_ctx.get());
     output.setName("output");

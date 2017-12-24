@@ -1,6 +1,6 @@
 #include "SaveAnnotations.hpp"
 #include "Aquila/types/ObjectDetectionSerialization.hpp"
-#include "Aquila/core/IDataStream.hpp"
+#include "Aquila/core/IGraph.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
 #include "Aquila/gui/UiCallbackHandlers.h"
 #include "Aquila/utilities/cuda/CudaCallbacks.hpp"
@@ -135,8 +135,8 @@ void SaveAnnotations::draw()
     size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
     mo::ThreadSpecificQueue::push([draw_image, this]()
     {
-        getDataStream()->getWindowCallbackManager()->imshow("original", draw_image);
-        //getDataStream()->getWindowCallbackManager()->imshow("legend", h_legend);
+        getGraph()->getWindowCallbackManager()->imshow("original", draw_image);
+        //getGraph()->getWindowCallbackManager()->imshow("legend", h_legend);
     }, gui_thread_id, this);
 }
 
@@ -183,7 +183,7 @@ bool SaveAnnotations::processImpl()
         }
 
         label_file_param.modified(false);
-        getDataStream()->getWindowCallbackManager()->imshow("legend", h_legend);
+        getGraph()->getWindowCallbackManager()->imshow("legend", h_legend);
     }*/
     if(h_lut.cols != labels->size())
     {
@@ -201,7 +201,7 @@ bool SaveAnnotations::processImpl()
 
         aq::cuda::enqueue_callback_async([img, this]()
         {
-            getDataStream()->getWindowCallbackManager()->imshow("original", img);
+            getGraph()->getWindowCallbackManager()->imshow("original", img);
         }, gui_thread_id ,stream());
         _original_image = img;
     }else
@@ -211,7 +211,7 @@ bool SaveAnnotations::processImpl()
 
         mo::ThreadSpecificQueue::push([img, this]()
         {
-            getDataStream()->getWindowCallbackManager()->imshow("original", img);
+            getGraph()->getWindowCallbackManager()->imshow("original", img);
         }, gui_thread_id, this);
         _original_image = img;
     }

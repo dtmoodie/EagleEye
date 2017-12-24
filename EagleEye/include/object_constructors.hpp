@@ -26,9 +26,9 @@ public:
     IObjectConstructor* m_constructor;
 };
 
-class DataStreamConstructor : virtual public QtNodes::NodeDataModel {
+class GraphConstructor : virtual public QtNodes::NodeDataModel {
 public:
-    DataStreamConstructor();
+    GraphConstructor();
     virtual QString caption() const;
     virtual QString name() const;
     virtual unsigned int nPorts(QtNodes::PortType portType) const;

@@ -7,7 +7,7 @@
 
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
-#include <Aquila/core/IDataStream.hpp>
+#include <Aquila/core/IGraph.hpp>
 #include <QLayout>
 #include <qgridlayout.h>
 #include <QComboBox>
@@ -26,7 +26,7 @@ QtNodes::NodeDataType NodeOutProxy::type() const {
     return out;
 }
 
-DSOutProxy::DSOutProxy(const rcc::shared_ptr<IDataStream>& ds) : m_ds(ds) {
+DSOutProxy::DSOutProxy(const rcc::shared_ptr<IGraph>& ds) : m_ds(ds) {
 }
 
 QtNodes::NodeDataType DSOutProxy::type() const {
@@ -202,23 +202,23 @@ void NodeProxy::onComponentAdded(aq::Algorithm* cpt){
         emit portsChanged();
     }
 }
-DataStreamProxy::DataStreamProxy(rcc::shared_ptr<aq::IDataStream>&& ds) :
+GraphProxy::GraphProxy(rcc::shared_ptr<aq::IGraph>&& ds) :
     m_obj(std::move(ds)) {
 }
-DataStreamProxy::DataStreamProxy(const rcc::shared_ptr<aq::IDataStream>& ds):
+GraphProxy::GraphProxy(const rcc::shared_ptr<aq::IGraph>& ds):
     m_obj(ds){
 
 }
-QString DataStreamProxy::caption() const { return "DataStream"; }
-QString DataStreamProxy::name() const { return "DataStream"; }
-std::unique_ptr<QtNodes::NodeDataModel> DataStreamProxy::clone() const {
-    return std::unique_ptr<DataStreamProxy>(new DataStreamProxy(std::move(aq::IDataStream::create("", ""))));
+QString GraphProxy::caption() const { return "Graph"; }
+QString GraphProxy::name() const { return "Graph"; }
+std::unique_ptr<QtNodes::NodeDataModel> GraphProxy::clone() const {
+    return std::unique_ptr<GraphProxy>(new GraphProxy(std::move(aq::IGraph::create("", ""))));
 }
-unsigned int DataStreamProxy::nPorts(QtNodes::PortType portType) const {
+unsigned int GraphProxy::nPorts(QtNodes::PortType portType) const {
     if (portType == QtNodes::PortType::Out) return 1;
     return 0;
 }
-QtNodes::NodeDataType DataStreamProxy::dataType(QtNodes::PortType port_type, QtNodes::PortIndex port_index) const {
+QtNodes::NodeDataType GraphProxy::dataType(QtNodes::PortType port_type, QtNodes::PortIndex port_index) const {
     QtNodes::NodeDataType output;
     if (port_type == QtNodes::PortType::Out) {
         output.id = "aq::nodes::Node";
@@ -226,13 +226,13 @@ QtNodes::NodeDataType DataStreamProxy::dataType(QtNodes::PortType port_type, QtN
     }
     return output;
 }
-void DataStreamProxy::setInData(std::shared_ptr<QtNodes::NodeData> nodeData, QtNodes::PortIndex port) {
+void GraphProxy::setInData(std::shared_ptr<QtNodes::NodeData> nodeData, QtNodes::PortIndex port) {
 
 }
-std::shared_ptr<QtNodes::NodeData> DataStreamProxy::outData(QtNodes::PortIndex port) {
+std::shared_ptr<QtNodes::NodeData> GraphProxy::outData(QtNodes::PortIndex port) {
     return std::make_shared<DSOutProxy>(m_obj);
 }
-QWidget * DataStreamProxy::embeddedWidget() {
+QWidget * GraphProxy::embeddedWidget() {
     // TODO
     return nullptr;
 }

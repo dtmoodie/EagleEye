@@ -43,7 +43,7 @@ bool QtImageDisplay::processImpl()
                 ss << "Timestamp: " << ts;
                 cv::putText(mat, ss.str(), cv::Point(20,40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0,255,0));
             }
-            getDataStream()->getWindowCallbackManager()->imshow(name, draw_img);
+            getGraph()->getWindowCallbackManager()->imshow(name, draw_img);
         }, gui_thread_id, stream());
 
         return true;
@@ -85,7 +85,7 @@ bool HistogramDisplay::processImpl()
                 [name, output_image, this]()->void
     {
         PROFILE_RANGE(imshow);
-        getDataStream()->getWindowCallbackManager()->imshowd(name, output_image, cv::WINDOW_OPENGL);
+        getGraph()->getWindowCallbackManager()->imshowd(name, output_image, cv::WINDOW_OPENGL);
     }, gui_thread_id, stream());
     return true;
 }
@@ -133,7 +133,7 @@ bool OGLImageDisplay::processImpl(){
         {
             PROFILE_RANGE(imshow);
             try{
-                getDataStream()->getWindowCallbackManager()->imshowd(name, gpumat, cv::WINDOW_OPENGL);
+                getGraph()->getWindowCallbackManager()->imshowd(name, gpumat, cv::WINDOW_OPENGL);
             }catch(mo::ExceptionWithCallStack<cv::Exception>& e){
                 m_use_opengl = false;
             }
@@ -146,7 +146,7 @@ bool OGLImageDisplay::processImpl(){
         {
             PROFILE_RANGE(imshow);
             try {
-                getDataStream()->getWindowCallbackManager()->imshow(name, mat);
+                getGraph()->getWindowCallbackManager()->imshow(name, mat);
             }
             catch (mo::ExceptionWithCallStack<cv::Exception>& e) {
                 

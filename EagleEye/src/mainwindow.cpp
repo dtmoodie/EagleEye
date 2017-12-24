@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ids.push_back(ctr->GetInterfaceId());
         interfces_names.push_back(ctr->GetInterfaceName());
     }
-    registry->registerModel<aq::DataStreamConstructor>("DataStream");
+    registry->registerModel<aq::GraphConstructor>("Graph");
     ctrs = mo::MetaObjectFactory::instance()->getConstructors(aq::nodes::Node::s_interfaceID);
     for(auto ctr : ctrs){
         registry->registerModel<aq::NodeConstructor>("nodes", std::make_unique<aq::NodeConstructor>(ctr));

@@ -13,7 +13,7 @@ namespace mo{
 
 namespace aq{
 
-class IDataStream;
+class IGraph;
 class Algorithm;
 namespace nodes{
     class Node;
@@ -29,9 +29,9 @@ public:
 
 class DSOutProxy : virtual public QtNodes::NodeData {
 public:
-    DSOutProxy(const rcc::shared_ptr<IDataStream>& ds);
+    DSOutProxy(const rcc::shared_ptr<IGraph>& ds);
     virtual QtNodes::NodeDataType type() const;
-    rcc::shared_ptr<IDataStream> m_ds;
+    rcc::shared_ptr<IGraph> m_ds;
 };
 
 
@@ -69,10 +69,10 @@ private:
 };
 
 
-class DataStreamProxy : virtual public QtNodes::NodeDataModel {
+class GraphProxy : virtual public QtNodes::NodeDataModel {
 public:
-    DataStreamProxy(rcc::shared_ptr<aq::IDataStream>&& ds = rcc::shared_ptr<aq::IDataStream>());
-    DataStreamProxy(const rcc::shared_ptr<aq::IDataStream>& ds);
+    GraphProxy(rcc::shared_ptr<aq::IGraph>&& ds = rcc::shared_ptr<aq::IGraph>());
+    GraphProxy(const rcc::shared_ptr<aq::IGraph>& ds);
 
     virtual QString caption() const;
     virtual QString name() const;
@@ -83,7 +83,7 @@ public:
     virtual std::shared_ptr<QtNodes::NodeData> outData(QtNodes::PortIndex port);
     virtual QWidget * embeddedWidget();
 
-    rcc::shared_ptr<aq::IDataStream> m_obj;
+    rcc::shared_ptr<aq::IGraph> m_obj;
 };
 
 

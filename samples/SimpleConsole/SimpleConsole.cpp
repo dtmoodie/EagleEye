@@ -1,6 +1,6 @@
 
 #include <Aquila/core/Aquila.hpp>
-#include <Aquila/core/IDataStream.hpp>
+#include <Aquila/core/IGraph.hpp>
 #include <Aquila/core/Logging.hpp>
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
 #include <Aquila/gui/UiCallbackHandlers.h>
@@ -430,8 +430,8 @@ int main(int argc, char* argv[]) {
     if (vm["mode"].as<std::string>() == "batch") {
 
     } else {
-        std::vector<rcc::shared_ptr<aq::IDataStream> > _dataStreams;
-        rcc::weak_ptr<aq::IDataStream>                 current_stream;
+        std::vector<rcc::shared_ptr<aq::IGraph> > _Graphs;
+        rcc::weak_ptr<aq::IGraph>                 current_stream;
         rcc::weak_ptr<aq::nodes::Node>                 current_node;
         mo::IParam*                                    current_param = nullptr;
 
@@ -499,7 +499,7 @@ int main(int argc, char* argv[]) {
         connections.push_back(manager.connect(slot, "list_devices"));
 
         slot = new mo::TSlot<void(std::string)>(
-            std::bind([&_dataStreams, &documents_list](std::string doc) -> void {
+            std::bind([&_Graphs, &documents_list](std::string doc) -> void {
                 std::string fg_override;
                 int         index = -1;
                 if (!boost::conversion::detail::try_lexical_convert(doc, index)) {
@@ -509,10 +509,10 @@ int main(int argc, char* argv[]) {
                     doc         = documents_list[static_cast<size_t>(index)].first;
                     fg_override = documents_list[static_cast<size_t>(index)].second;
                 }
-                auto ds = aq::IDataStream::create(doc, fg_override);
+                auto ds = aq::IGraph::create(doc, fg_override);
                 if (ds) {
                     ds->startThread();
-                    _dataStreams.push_back(ds);
+                    _Graphs.push_back(ds);
                 }
             },
                 std::placeholders::_1));
@@ -527,9 +527,9 @@ int main(int argc, char* argv[]) {
         _slots.emplace_back(slot);
         connections.push_back(manager.connect(slot, "quit"));
 
-        auto func = [&_dataStreams, &current_stream, &current_node, &current_param](std::string what) -> void {
+        auto func = [&_Graphs, &current_stream, &current_node, &current_param](std::string what) -> void {
             if (what == "streams") {
-                for (auto& itr : _dataStreams) {
+                for (auto& itr : _Graphs) {
                     auto fgs = itr->getTopLevelNodes();
                     for (auto& fg : fgs) {
                         if (auto frame_grabber = fg.DynamicCast<aq::nodes::IFrameGrabber>()) {
@@ -538,7 +538,7 @@ int main(int argc, char* argv[]) {
                         }
                     }
                 }
-                if (_dataStreams.empty())
+                if (_Graphs.empty())
                     std::cout << "No streams exist\n";
             }
             if (what == "nodes") {
@@ -600,7 +600,7 @@ int main(int argc, char* argv[]) {
             }
             if (what == "inputs") {
                 if (current_param && current_node) {
-                    auto              potential_inputs = current_node->getDataStream()->getVariableManager()->getOutputParams(current_param->getTypeInfo());
+                    auto              potential_inputs = current_node->getGraph()->getVariableManager()->getOutputParams(current_param->getTypeInfo());
                     std::stringstream ss;
                     if (potential_inputs.size()) {
                         ss << "Potential inputs: \n";
@@ -618,7 +618,7 @@ int main(int argc, char* argv[]) {
                     for (auto param : params) {
                         if (param->checkFlags(mo::ParamFlags::Input_e)) {
                             ss << " -- " << param->getTreeName() << " [ " << param->getTypeInfo().name() << " ]\n";
-                            auto potential_inputs = current_node->getDataStream()->getVariableManager()->getOutputParams(param->getTypeInfo());
+                            auto potential_inputs = current_node->getGraph()->getVariableManager()->getOutputParams(param->getTypeInfo());
                             for (auto& input : potential_inputs) {
                                 ss << " - " << input->getTreeName();
                             }
@@ -648,7 +648,7 @@ int main(int argc, char* argv[]) {
                         PrintNodeTree(node.get(), 0);
                     }
                 } else if (current_node) {
-                    auto nodes = current_node->getDataStream()->getNodes();
+                    auto nodes = current_node->getGraph()->getNodes();
                     for (auto node : nodes)
                         PrintNodeTree(node.get(), 0);
                 }
@@ -664,7 +664,7 @@ int main(int argc, char* argv[]) {
             }
             if(what == "status"){
                 if(current_stream){
-                    std::cout << "Datastream modified: " << current_stream->getDirty() << std::endl;
+                    std::cout << "Graph modified: " << current_stream->getDirty() << std::endl;
                     auto                     nodes = current_stream->getNodes();
                     std::vector<std::string> printed;
                     for (auto node : nodes) {
@@ -706,10 +706,10 @@ int main(int argc, char* argv[]) {
             [&current_stream, &current_node, &variable_replace_map, &replace_map](std::string file) {
                 if (current_stream) {
                     //current_stream->SaveStream(file);
-                    rcc::shared_ptr<aq::IDataStream>               stream(current_stream);
-                    std::vector<rcc::shared_ptr<aq::IDataStream> > streams;
+                    rcc::shared_ptr<aq::IGraph>               stream(current_stream);
+                    std::vector<rcc::shared_ptr<aq::IGraph> > streams;
                     streams.push_back(stream);
-                    aq::IDataStream::save(file, streams, variable_replace_map, replace_map);
+                    aq::IGraph::save(file, streams, variable_replace_map, replace_map);
                     stream->startThread();
                 } else if (current_node) {
                 }
@@ -726,7 +726,7 @@ int main(int argc, char* argv[]) {
 
         std::vector<std::shared_ptr<mo::Connection> > eos_connections;
         slot = new mo::TSlot<void(std::string)>(
-            std::bind([&_dataStreams, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file) {
+            std::bind([&_Graphs, &current_stream, &current_node, quit_on_eos, &eos_connections, &eos_slot, &variable_replace_map, &replace_map](std::string file) {
                 auto pos = file.find(' ');
                 std::string preset = "Default";
                 if(pos != std::string::npos){
@@ -735,11 +735,11 @@ int main(int argc, char* argv[]) {
                     file = file.substr(0, pos);
                 }
                 replace_map["${config_file_dir}"] = boost::filesystem::path(file).parent_path().string();
-                auto streams                      = aq::IDataStream::load(file, variable_replace_map, replace_map, preset);
+                auto streams                      = aq::IGraph::load(file, variable_replace_map, replace_map, preset);
                 if (streams.size()) {
                     for (auto& stream : streams) {
                         stream->startThread();
-                        _dataStreams.push_back(stream);
+                        _Graphs.push_back(stream);
                         if (quit_on_eos) {
                             stream->getRelayManager()->connect(&eos_slot, "eos");
                         }
@@ -756,7 +756,7 @@ int main(int argc, char* argv[]) {
         connections.push_back(manager.connect(slot, "load"));
 
         slot = new mo::TSlot<void(std::string)>(
-            std::bind([&_dataStreams, &current_stream, &current_node, &current_param](std::string what) {
+            std::bind([&_Graphs, &current_stream, &current_node, &current_param](std::string what) {
                 if (what == "null") {
                     current_stream.reset();
                     current_node.reset();
@@ -773,7 +773,7 @@ int main(int argc, char* argv[]) {
                 }
                 if (idx != -1) {
                     std::cout << "Selecting stream " << idx << std::endl;
-                    for (auto& itr : _dataStreams) {
+                    for (auto& itr : _Graphs) {
                         if (itr != nullptr) {
                             if (itr->GetPerTypeId() == idx) {
                                 current_stream = itr.get();
@@ -845,7 +845,7 @@ int main(int argc, char* argv[]) {
                             std::cout << "No parameters exist\n";
                         return;
                     } else {
-                        auto stream = current_node->getDataStream();
+                        auto stream = current_node->getGraph();
                         if (auto node = stream->getNode(what)) {
                             current_node = node;
                             current_stream.reset();
@@ -899,12 +899,12 @@ int main(int argc, char* argv[]) {
         connections.push_back(manager.connect(slot, "select"));
 
         slot = new mo::TSlot<void(std::string)>(
-            std::bind([&_dataStreams, &current_stream, &current_node](std::string what) {
+            std::bind([&_Graphs, &current_stream, &current_node](std::string what) {
                 (void)what;
                 if (current_stream) {
-                    auto itr = std::find(_dataStreams.begin(), _dataStreams.end(), current_stream.get());
-                    if (itr != _dataStreams.end()) {
-                        _dataStreams.erase(itr);
+                    auto itr = std::find(_Graphs.begin(), _Graphs.end(), current_stream.get());
+                    if (itr != _Graphs.end()) {
+                        _Graphs.erase(itr);
                         current_stream.reset();
                         std::cout << "Sucessfully deleted stream\n";
                         return;
@@ -918,10 +918,10 @@ int main(int argc, char* argv[]) {
                         current_node.reset();
                         std::cout << "Sucessfully removed node from parent node\n";
                         return;
-                    } else if (auto stream = current_node->getDataStream()) {
+                    } else if (auto stream = current_node->getGraph()) {
                         stream->removeNode(current_node.get());
                         current_node.reset();
-                        std::cout << "Sucessfully removed node from datastream\n";
+                        std::cout << "Sucessfully removed node from Graph\n";
                         return;
                     }
                 }
@@ -1076,7 +1076,7 @@ int main(int argc, char* argv[]) {
             if (current_param && current_node && current_param->checkFlags(mo::ParamFlags::Input_e)) {
                 auto token_index = value.find(':');
                 if (token_index != std::string::npos) {
-                    auto          stream      = current_node->getDataStream();
+                    auto          stream      = current_node->getGraph();
                     auto          space_index = value.substr(token_index + 1).find(' ');
                     std::string   output_name;
                     mo::ParamType flags = mo::BlockingStreamBuffer_e;
@@ -1157,7 +1157,7 @@ int main(int argc, char* argv[]) {
         slot = new mo::TSlot<void(std::string)>(std::bind([&current_node, &current_stream](std::string name) {
             mo::RelayManager* mgr = nullptr;
             if (current_node) {
-                mgr = current_node->getDataStream()->getRelayManager();
+                mgr = current_node->getGraph()->getRelayManager();
             }
             if (current_stream) {
                 mgr = current_stream->getRelayManager();
@@ -1289,11 +1289,11 @@ int main(int argc, char* argv[]) {
         bool rcc_enabled = !vm["disable-rcc"].as<bool>() && (vm.count("profile-for") == 0);
         if (rcc_enabled)
             mo::MetaObjectFactory::instance()->checkCompile();
-        auto compile_check_function = [&_dataStreams, &compiling, rcc_enabled]() {
+        auto compile_check_function = [&_Graphs, &compiling, rcc_enabled]() {
             if (rcc_enabled) {
                 if (mo::MetaObjectFactory::instance()->checkCompile()) {
                     std::cout << "Recompiling...\n";
-                    for (auto& ds : _dataStreams) {
+                    for (auto& ds : _Graphs) {
                         ds->stopThread();
                     }
                     compiling = true;
@@ -1302,12 +1302,12 @@ int main(int argc, char* argv[]) {
                     if (!mo::MetaObjectFactory::instance()->isCompileComplete()) {
                         std::cout << "Still compiling\n";
                     } else {
-                        for (auto& ds : _dataStreams) {
+                        for (auto& ds : _Graphs) {
                             ds->stopThread();
                         }
                         if (mo::MetaObjectFactory::instance()->swapObjects()) {
                             std::cout << "Object swap success\n";
-                            for (auto& ds : _dataStreams) {
+                            for (auto& ds : _Graphs) {
                                 ds->startThread();
                             }
                         } else {
@@ -1339,7 +1339,7 @@ int main(int argc, char* argv[]) {
             run_time = vm["profile-for"].as<int>();
         }
         boost::thread io_thread = boost::thread(std::bind(
-            [&_dataStreams, &manager, run_time, &command_list, &disable_input, &print_options]() {
+            [&_Graphs, &manager, run_time, &command_list, &disable_input, &print_options]() {
                 auto start = boost::posix_time::microsec_clock::universal_time();
                 while (!quit) {
                     std::string command_line;
@@ -1414,7 +1414,7 @@ int main(int argc, char* argv[]) {
         gui_thread.interrupt();
         gui_thread.join();
         mo::ThreadSpecificQueue::cleanup();
-        _dataStreams.clear();
+        _Graphs.clear();
         MO_LOG(info) << "Gui thread shut down complete";
         mo::ThreadPool::instance()->cleanup();
         MO_LOG(info) << "Thread pool cleanup complete";

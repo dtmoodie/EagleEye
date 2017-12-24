@@ -7,7 +7,7 @@
 #include "GraphScene.hpp"
 namespace aq
 {
-    class IDataStream;
+    class IGraph;
 }
 
 namespace Ui {
@@ -15,7 +15,7 @@ namespace Ui {
 }
 
 class GraphScene;
-class MainWindow : public QMainWindow, public mo::IMetaObject
+class MainWindow : public QMainWindow, public mo::MetaObject
 {
     Q_OBJECT
 public:

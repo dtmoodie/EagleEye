@@ -18,7 +18,7 @@ namespace aq
             ProcessFuture();
             ~ProcessFuture();
             virtual void nodeInit(bool firstInit);
-            virtual void SetDataStream(IDataStream* stream);
+            virtual void SetGraph(IGraph* stream);
             virtual TS<SyncedMemory> process(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
             virtual TS<SyncedMemory> doProcess(TS<SyncedMemory>& input, cv::cuda::Stream& stream);
             virtual void process_ahead();

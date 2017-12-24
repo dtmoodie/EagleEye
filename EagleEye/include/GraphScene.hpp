@@ -2,7 +2,7 @@
 #include "FlowScene.hpp"
 #include <RuntimeObjectSystem/shared_ptr.hpp>
 namespace aq{
-    class IDataStream;
+    class IGraph;
     namespace nodes{
         class Node;
     }
@@ -17,7 +17,7 @@ public slots:
     void load();
 public:
     virtual void loadFromMemory(const QByteArray& data);
-    virtual QtNodes::Node& load(const rcc::shared_ptr<aq::IDataStream>& ds);
+    virtual QtNodes::Node& load(const rcc::shared_ptr<aq::IGraph>& ds);
     virtual QtNodes::Node& load(const rcc::shared_ptr<aq::nodes::Node>& node, std::map<std::string, QtNodes::Node*>& nodemap);
     virtual void reconnectInputs(const rcc::shared_ptr<aq::nodes::Node>& node, std::map<std::string, QtNodes::Node*>& nodemap);
     void setVmSm(std::map<std::string, std::string>* vm, std::map<std::string, std::string>* sm) {

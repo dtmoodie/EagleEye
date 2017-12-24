@@ -1,6 +1,6 @@
 #include "LegendDisplay.hpp"
 #include "Aquila/gui/UiCallbackHandlers.h"
-#include "Aquila/core/IDataStream.hpp"
+#include "Aquila/core/IGraph.hpp"
 #include "Aquila/utilities/cuda/CudaCallbacks.hpp"
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -47,7 +47,7 @@ bool LegendDisplay::processImpl()
                     cv::FONT_HERSHEY_COMPLEX, 0.7,
                     cv::Scalar(color[0], color[1], color[2]));
     }
-    getDataStream()->getWindowCallbackManager()->imshow("legend", h_legend);
+    getGraph()->getWindowCallbackManager()->imshow("legend", h_legend);
     return true;
 }
 

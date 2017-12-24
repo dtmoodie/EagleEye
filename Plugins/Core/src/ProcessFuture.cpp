@@ -1,5 +1,5 @@
 /*#include "ProcessFuture.h"
-#include "Aquila/DataStreamManager.h"
+#include "Aquila/GraphManager.h"
 #include "Remotery.h"
 #include <Aquila/frame_grabber_base.h>
 #include "Aquila/Signals.h"
@@ -40,7 +40,7 @@ TS<SyncedMemory> ProcessFuture::doProcess(TS<SyncedMemory>& input, cv::cuda::Str
 void ProcessFuture::process_ahead()
 {
     std::unique_lock<std::recursive_mutex> lock(mtx);
-    auto frame_grabber = getDataStream()->GetFrameGrabber();
+    auto frame_grabber = getGraph()->GetFrameGrabber();
     rmt_SetCurrentThreadName("ProcessFuture_thread");
     if(!frame_grabber)
     {
@@ -66,9 +66,9 @@ void ProcessFuture::process_ahead()
         process(frame, stream);
     }
 }
-void ProcessFuture::SetDataStream(IDataStream* stream)
+void ProcessFuture::SetGraph(IGraph* stream)
 {
-    Node::SetDataStream(stream);
+    Node::SetGraph(stream);
     _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&ProcessFuture::start_thread, this), this));
     _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&ProcessFuture::stop_thread, this), this));
 }

@@ -1,7 +1,7 @@
 #include "object_constructors.hpp"
 #include "object_proxies.hpp"
 #include "Aquila/nodes/Node.hpp"
-#include "Aquila/core/IDataStream.hpp"
+#include "Aquila/core/IGraph.hpp"
 #include "RuntimeObjectSystem/ObjectInterface.h"
 using namespace aq;
 
@@ -40,18 +40,18 @@ QWidget * NodeConstructor::embeddedWidget() {
     return nullptr;
 }
 
-DataStreamConstructor::DataStreamConstructor() {}
-QString DataStreamConstructor::caption() const { return "DataStream"; }
-QString DataStreamConstructor::name() const { return "DataStream"; }
-unsigned int DataStreamConstructor::nPorts(QtNodes::PortType portType) const {
+GraphConstructor::GraphConstructor() {}
+QString GraphConstructor::caption() const { return "Graph"; }
+QString GraphConstructor::name() const { return "Graph"; }
+unsigned int GraphConstructor::nPorts(QtNodes::PortType portType) const {
     if (portType == QtNodes::PortType::Out) return 1;
     return 0;
 }
-std::unique_ptr<QtNodes::NodeDataModel> DataStreamConstructor::clone() const {
-    return std::unique_ptr<DataStreamProxy>(new DataStreamProxy(std::move(aq::IDataStream::create("", ""))));
+std::unique_ptr<QtNodes::NodeDataModel> GraphConstructor::clone() const {
+    return std::unique_ptr<GraphProxy>(new GraphProxy(std::move(aq::IGraph::create("", ""))));
 }
 
-QtNodes::NodeDataType DataStreamConstructor::dataType(QtNodes::PortType port_type, QtNodes::PortIndex port_index) const {
+QtNodes::NodeDataType GraphConstructor::dataType(QtNodes::PortType port_type, QtNodes::PortIndex port_index) const {
     QtNodes::NodeDataType output;
     if (port_type == QtNodes::PortType::Out) {
         output.id = "aq::nodes::Node";
@@ -60,15 +60,15 @@ QtNodes::NodeDataType DataStreamConstructor::dataType(QtNodes::PortType port_typ
     return output;
 }
 
-void DataStreamConstructor::setInData(std::shared_ptr<QtNodes::NodeData> nodeData, QtNodes::PortIndex port) {
+void GraphConstructor::setInData(std::shared_ptr<QtNodes::NodeData> nodeData, QtNodes::PortIndex port) {
 
 }
 
-std::shared_ptr<QtNodes::NodeData> DataStreamConstructor::outData(QtNodes::PortIndex port) {
+std::shared_ptr<QtNodes::NodeData> GraphConstructor::outData(QtNodes::PortIndex port) {
     return std::shared_ptr<QtNodes::NodeData>();
 }
 
-QWidget * DataStreamConstructor::embeddedWidget() {
+QWidget * GraphConstructor::embeddedWidget() {
     // TODO
     return nullptr;
 }
