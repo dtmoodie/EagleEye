@@ -6,10 +6,8 @@
 #endif
 #include <gl/GL.h>
 
-vtkMatDataBuffer::vtkMatDataBuffer():
-    vtkTextureObject()
+vtkMatDataBuffer::vtkMatDataBuffer() : vtkTextureObject()
 {
-    
 }
 vtkMatDataBuffer* vtkMatDataBuffer::New()
 {
@@ -19,31 +17,41 @@ vtkTextureDataBuffer* vtkTextureDataBuffer::New()
 {
     return new vtkTextureDataBuffer();
 }
-vtkTextureDataBuffer::vtkTextureDataBuffer():
-    vtkMatDataBuffer()
+vtkTextureDataBuffer::vtkTextureDataBuffer() : vtkMatDataBuffer()
 {
-
 }
 void vtkTextureDataBuffer::compile_texture()
 {
     try
     {
 #ifdef AUTO_BUFFER
-        if(image_buffer)
+        if (image_buffer)
         {
 
-            image_buffer->bind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);           
-            if ((this->Width != image_buffer->cols() || this->Height != image_buffer->rows() || this->Components != image_buffer->channels()) && Context)
+            image_buffer->bind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+            if ((this->Width != image_buffer->cols() || this->Height != image_buffer->rows() ||
+                 this->Components != image_buffer->channels()) &&
+                Context)
             {
                 InternalFormat = GL_RGB8;
                 int vtk_type = 0;
-                switch(image_buffer->depth())
+                switch (image_buffer->depth())
                 {
-                case CV_8U: vtk_type = VTK_UNSIGNED_CHAR; break;
-                case CV_16U: vtk_type = VTK_UNSIGNED_SHORT; break;
-                case CV_32S: vtk_type = VTK_INT; break;
-                case CV_32F: vtk_type = VTK_FLOAT; break;
-                case CV_64F: vtk_type = VTK_DOUBLE; break;
+                case CV_8U:
+                    vtk_type = VTK_UNSIGNED_CHAR;
+                    break;
+                case CV_16U:
+                    vtk_type = VTK_UNSIGNED_SHORT;
+                    break;
+                case CV_32S:
+                    vtk_type = VTK_INT;
+                    break;
+                case CV_32F:
+                    vtk_type = VTK_FLOAT;
+                    break;
+                case CV_64F:
+                    vtk_type = VTK_DOUBLE;
+                    break;
                 }
                 Allocate2D(image_buffer->cols(), image_buffer->rows(), image_buffer->channels(), vtk_type);
             }
@@ -57,25 +65,41 @@ void vtkTextureDataBuffer::compile_texture()
             Modified();
         }
 #else
-        data_buffer.bind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);           
-        if ((this->Width != data_buffer.cols() || this->Height != data_buffer.rows() || this->Components != data_buffer.channels()) && Context)
+        data_buffer.bind(cv::ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        if ((this->Width != data_buffer.cols() || this->Height != data_buffer.rows() ||
+             this->Components != data_buffer.channels()) &&
+            Context)
         {
-            switch(data_buffer.type())
+            switch (data_buffer.type())
             {
-            case CV_8U: InternalFormat = GL_INTENSITY8; break;
-            case CV_8UC3: InternalFormat = GL_RGB8; break;
+            case CV_8U:
+                InternalFormat = GL_INTENSITY8;
+                break;
+            case CV_8UC3:
+                InternalFormat = GL_RGB8;
+                break;
             default:
-                throw "Invalid datatype";                
+                throw "Invalid datatype";
             }
             InternalFormat = GL_RGB8;
             int vtk_type = 0;
-            switch(data_buffer.depth())
+            switch (data_buffer.depth())
             {
-            case CV_8U: vtk_type = VTK_UNSIGNED_CHAR; break;
-            case CV_16U: vtk_type = VTK_UNSIGNED_SHORT; break;
-            case CV_32S: vtk_type = VTK_INT; break;
-            case CV_32F: vtk_type = VTK_FLOAT; break;
-            case CV_64F: vtk_type = VTK_DOUBLE; break;
+            case CV_8U:
+                vtk_type = VTK_UNSIGNED_CHAR;
+                break;
+            case CV_16U:
+                vtk_type = VTK_UNSIGNED_SHORT;
+                break;
+            case CV_32S:
+                vtk_type = VTK_INT;
+                break;
+            case CV_32F:
+                vtk_type = VTK_FLOAT;
+                break;
+            case CV_64F:
+                vtk_type = VTK_DOUBLE;
+                break;
             }
             Allocate2D(data_buffer.cols(), data_buffer.rows(), data_buffer.channels(), vtk_type);
         }
@@ -89,7 +113,6 @@ void vtkTextureDataBuffer::compile_texture()
         Modified();
 
 #endif
-
     }
     catch (cv::Exception& e)
     {
@@ -97,17 +120,13 @@ void vtkTextureDataBuffer::compile_texture()
     }
     catch (...)
     {
-
     }
 }
 
-vtkVertexDataBuffer::vtkVertexDataBuffer():
-    vtkMatDataBuffer()
+vtkVertexDataBuffer::vtkVertexDataBuffer() : vtkMatDataBuffer()
 {
-
 }
 vtkVertexDataBuffer* vtkVertexDataBuffer::New()
 {
     return new vtkVertexDataBuffer();
 }
-

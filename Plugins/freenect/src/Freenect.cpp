@@ -1,8 +1,8 @@
 #include "Freenect.h"
-#include "libfreenect/libfreenect.hpp"
-#include "freenect.cuh"
-#include "EagleLib/rcc/SystemTable.hpp"
 #include "EagleLib/rcc/ObjectManager.h"
+#include "EagleLib/rcc/SystemTable.hpp"
+#include "freenect.cuh"
+#include "libfreenect/libfreenect.hpp"
 #include <boost/lexical_cast.hpp>
 SETUP_PROJECT_IMPL
 using namespace EagleLib;
@@ -13,10 +13,9 @@ IPerModuleInterface* GetModule()
 
 class MyFreenectDevice : public Freenect::FreenectDevice
 {
-public:
-    MyFreenectDevice(freenect_context *_ctx, int _index)
-        : Freenect::FreenectDevice(_ctx, _index),
-          m_new_rgb_frame(false), m_new_depth_frame(false)
+  public:
+    MyFreenectDevice(freenect_context* _ctx, int _index)
+        : Freenect::FreenectDevice(_ctx, _index), m_new_rgb_frame(false), m_new_depth_frame(false)
     {
         setDepthFormat(FREENECT_DEPTH_REGISTERED);
         auto video_mode = freenect_find_video_mode(FREENECT_RESOLUTION_HIGH, FREENECT_VIDEO_RGB);
@@ -26,7 +25,7 @@ public:
     }
 
     // Do not call directly, even in child
-    void VideoCallback(void *_rgb, uint32_t timestamp)
+    void VideoCallback(void* _rgb, uint32_t timestamp)
     {
         std::lock_guard<std::mutex> lock(m_rgb_mutex);
         uint8_t* rgb = static_cast<uint8_t*>(_rgb);
@@ -36,7 +35,7 @@ public:
     }
 
     // Do not call directly, even in child
-    void DepthCallback(void *_depth, uint32_t timestamp)
+    void DepthCallback(void* _depth, uint32_t timestamp)
     {
         std::lock_guard<std::mutex> lock(m_depth_mutex);
         uint16_t* depth = static_cast<uint16_t*>(_depth);
@@ -72,7 +71,7 @@ public:
         return true;
     }
 
-private:
+  private:
     std::mutex m_rgb_mutex;
     std::mutex m_depth_mutex;
     cv::Mat m_buffer_video;
@@ -105,7 +104,7 @@ bool freenect::LoadFile(const std::string& file_path)
         {
             _myDevice = &freenect->createDevice<MyFreenectDevice>(boost::lexical_cast<int>(substr));
         }
-        catch (std::runtime_error & e)
+        catch (std::runtime_error& e)
         {
             LOG(error) << e.what();
             _myDevice = nullptr;

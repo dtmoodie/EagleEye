@@ -3,38 +3,20 @@
 
 using namespace aq;
 using namespace aq::nodes;
-#define CATCH_MACRO                                                         \
-    catch (boost::thread_resource_error& err)                               \
-{                                                                           \
-    MO_LOG(error) << err.what();                                               \
-}                                                                           \
-    catch (boost::thread_interrupted& err)                                  \
-{                                                                           \
-    MO_LOG(error) << "Thread interrupted";                                     \
-    /* Needs to pass this back up to the chain to the processing thread.*/  \
-    /* That way it knowns it needs to exit this thread */                   \
-    throw err;                                                              \
-}                                                                           \
-    catch (boost::thread_exception& err)                                    \
-{                                                                           \
-    MO_LOG(error) << err.what();                                               \
-}                                                                           \
-    catch (cv::Exception &err)                                              \
-{                                                                           \
-    MO_LOG(error) << err.what();                                               \
-}                                                                           \
-    catch (boost::exception &err)                                           \
-{                                                                           \
-    MO_LOG(error) << "Boost error";                                            \
-}                                                                           \
-    catch (std::exception &err)                                             \
-{                                                                           \
-    MO_LOG(error) << err.what();                                               \
-}                                                                           \
-    catch (...)                                                             \
-{                                                                           \
-    MO_LOG(error) << "Unknown exception";                                      \
-}
+#define CATCH_MACRO                                                                                                    \
+    catch (boost::thread_resource_error & err) { MO_LOG(error) << err.what(); }                                        \
+    catch (boost::thread_interrupted & err)                                                                            \
+    {                                                                                                                  \
+        MO_LOG(error) << "Thread interrupted";                                                                         \
+        /* Needs to pass this back up to the chain to the processing thread.*/                                         \
+        /* That way it knowns it needs to exit this thread */                                                          \
+        throw err;                                                                                                     \
+    }                                                                                                                  \
+    catch (boost::thread_exception & err) { MO_LOG(error) << err.what(); }                                             \
+    catch (cv::Exception & err) { MO_LOG(error) << err.what(); }                                                       \
+    catch (boost::exception & err) { MO_LOG(error) << "Boost error"; }                                                 \
+    catch (std::exception & err) { MO_LOG(error) << err.what(); }                                                      \
+    catch (...) { MO_LOG(error) << "Unknown exception"; }
 
 /*void HeartBeatBuffer::nodeInit(bool firstInit)
 {
@@ -46,7 +28,7 @@ using namespace aq::nodes;
         RegisterParameterCallback(2, boost::bind(&HeartBeatBuffer::onActivation, this));
         lastTime = clock();
         activated = false;
-        
+
     }
     image_buffer.set_capacity(*getParameter<int>(0)->Data());
 }
@@ -80,12 +62,12 @@ void HeartBeatBuffer::onActivation()
                     {
                         itr = childItr->doProcess(itr, stream);
                     }
-                } 
+                }
                 activated = false;
                 image_buffer.clear();
             }
             auto currentTime = clock();
-            if ((double(currentTime) - double(lastTime)) / 1000 > *getParameter<double>(1)->Data() || 
+            if ((double(currentTime) - double(lastTime)) / 1000 > *getParameter<double>(1)->Data() ||
                 *getParameter<bool>(2)->Data())
             {
                 lastTime = currentTime;
@@ -104,6 +86,4 @@ void HeartBeatBuffer::onActivation()
     return input;
 }*/
 
-
-
-//NODE_DEFAULT_CONSTRUCTOR_IMPL(HeartBeatBuffer, Utility)
+// NODE_DEFAULT_CONSTRUCTOR_IMPL(HeartBeatBuffer, Utility)

@@ -5,10 +5,12 @@
 
 using namespace aq::nodes;
 
-bool HistogramEqualization::processImpl() {
-    cv::cuda::GpuMat              output;
+bool HistogramEqualization::processImpl()
+{
+    cv::cuda::GpuMat output;
     std::vector<cv::cuda::GpuMat> channels;
-    if (!per_channel) {
+    if (!per_channel)
+    {
         cv::cuda::GpuMat hsv;
         cv::cuda::cvtColor(input->getGpuMat(stream()), hsv, cv::COLOR_BGR2HSV, 0, stream());
         cv::cuda::split(hsv, channels, stream());
@@ -17,9 +19,12 @@ bool HistogramEqualization::processImpl() {
         channels[2] = equalized;
         cv::cuda::merge(channels, hsv, stream());
         cv::cuda::cvtColor(hsv, output, cv::COLOR_HSV2BGR, 0, stream());
-    } else {
+    }
+    else
+    {
         cv::cuda::split(input->getGpuMat(stream()), channels, stream());
-        for (int i = 0; i < channels.size(); ++i) {
+        for (int i = 0; i < channels.size(); ++i)
+        {
             cv::cuda::GpuMat equalized;
             cv::cuda::equalizeHist(channels[i], equalized, stream());
             channels[i] = equalized;
@@ -33,8 +38,10 @@ bool HistogramEqualization::processImpl() {
 
 MO_REGISTER_CLASS(HistogramEqualization)
 
-bool CLAHE::processImpl() {
-    if (!_clahe || clip_limit_param.modified() || grid_size_param.modified()) {
+bool CLAHE::processImpl()
+{
+    if (!_clahe || clip_limit_param.modified() || grid_size_param.modified())
+    {
         _clahe = cv::cuda::createCLAHE(clip_limit, cv::Size(grid_size, grid_size));
         clip_limit_param.modified(false);
         grid_size_param.modified(false);

@@ -1,6 +1,6 @@
 #include "caffe_init.h"
-#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include "Aquila/rcc/SystemTable.hpp"
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
 #include <caffe/caffe.hpp>
 using namespace aq;
@@ -13,7 +13,6 @@ caffe_init_singleton::caffe_init_singleton()
     ::caffe::GlobalInit(&count, &argv);
     ::caffe::Caffe::set_mode(::caffe::Caffe::GPU);
 }
-
 
 caffe_init_singleton* caffe_init_singleton::inst()
 {

@@ -1,10 +1,10 @@
 #include "JSONWriter.hpp"
-#include <MetaObject/params/TParam.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <MetaObject/serialization/SerializationFactory.hpp>
 #include <MetaObject/params/InputParamAny.hpp>
-#include <boost/lexical_cast.hpp>
+#include <MetaObject/params/TParam.hpp>
+#include <MetaObject/serialization/SerializationFactory.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
 using namespace aq;
 using namespace aq::nodes;
 
@@ -86,26 +86,26 @@ JSONWriter::~JSONWriter()
 }
 bool JSONWriter::processImpl()
 {
-    if(ar == nullptr && output_file.string().size())
+    if (ar == nullptr && output_file.string().size())
     {
         ofs.close();
         ofs.open(output_file.c_str(), std::ios::out);
         ar.reset(new cereal::JSONOutputArchive(ofs));
     }
-    if(ar)
+    if (ar)
     {
         auto input_params = getInputs();
         bool found = false;
         size_t fn = 0;
-        for(auto param : input_params)
+        for (auto param : input_params)
         {
-            if(auto input = param->getInputParam())
+            if (auto input = param->getInputParam())
             {
                 found = true;
                 fn = input->getFrameNumber();
             }
         }
-        if(found == false)
+        if (found == false)
             return false;
 
         std::string name = "frame_" + boost::lexical_cast<std::string>(fn);
@@ -114,9 +114,10 @@ bool JSONWriter::processImpl()
         for (auto param : input_params)
         {
             auto input_param = param->getInputParam();
-            if(input_param)
+            if (input_param)
             {
-                auto func = mo::SerializationFactory::instance()->getJsonSerializationFunction(input_param->getTypeInfo());
+                auto func =
+                    mo::SerializationFactory::instance()->getJsonSerializationFunction(input_param->getTypeInfo());
                 if (func)
                 {
                     func(input_param, *ar);
@@ -129,20 +130,30 @@ bool JSONWriter::processImpl()
     return false;
 }
 
-void JSONWriter::on_output_file_modified( mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, const std::shared_ptr<mo::ICoordinateSystem>&, mo::UpdateFlags)
+void JSONWriter::on_output_file_modified(mo::IParam*,
+                                         mo::Context*,
+                                         mo::OptionalTime_t,
+                                         size_t,
+                                         const std::shared_ptr<mo::ICoordinateSystem>&,
+                                         mo::UpdateFlags)
 {
     ofs.close();
     ofs.open(output_file.c_str(), std::ios::out);
     ar.reset(new cereal::JSONOutputArchive(ofs));
 }
 
-void JSONWriter::on_input_set(mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, const std::shared_ptr<mo::ICoordinateSystem>&, mo::UpdateFlags)
+void JSONWriter::on_input_set(mo::IParam*,
+                              mo::Context*,
+                              mo::OptionalTime_t,
+                              size_t,
+                              const std::shared_ptr<mo::ICoordinateSystem>&,
+                              mo::UpdateFlags)
 {
     auto inputs = getInputs();
-    int count= 0;
-    for(auto input : inputs)
+    int count = 0;
+    for (auto input : inputs)
     {
-        if(input->getInputParam() == nullptr)
+        if (input->getInputParam() == nullptr)
         {
             return;
         }
@@ -162,18 +173,18 @@ JSONReader::JSONReader()
 
 bool JSONReader::processImpl()
 {
-    if(!ar && boost::filesystem::is_regular_file(input_file))
+    if (!ar && boost::filesystem::is_regular_file(input_file))
     {
         ifs.close();
         ifs.open(input_file.c_str(), std::ios::in);
         ar.reset(new cereal::JSONInputArchive(ifs));
     }
-    if(!ar)
+    if (!ar)
         return false;
 
-    if(input)
+    if (input)
     {
-        if(auto input_param = input->getInputParam())
+        if (auto input_param = input->getInputParam())
         {
             input_param->getTimestamp();
         }

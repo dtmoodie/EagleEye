@@ -1,10 +1,10 @@
 #include "Segmentation.h"
-#include <Aquila/rcc/external_includes/cv_imgproc.hpp>
-#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
-#include <Aquila/rcc/external_includes/cv_cudalegacy.hpp>
-#include <Aquila/nodes/NodeInfo.hpp>
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
+#include <Aquila/nodes/NodeInfo.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudalegacy.hpp>
+#include <Aquila/rcc/external_includes/cv_imgproc.hpp>
 #ifdef FASTMS_FOUND
 #ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("-lfastmsd")
@@ -15,36 +15,38 @@ RUNTIME_COMPILER_LINKLIBRARY("-lfastms")
 using namespace aq;
 using namespace aq::nodes;
 
-
-
 bool OtsuThreshold::processImpl()
 {
-    if(image->getChannels() != 1)
+    if (image->getChannels() != 1)
     {
         MO_LOG_EVERY_N(warning, 100) << "Currently only supports single channel images!";
         return false;
     }
     cv::cuda::GpuMat hist;
-    if(!histogram)
+    if (!histogram)
     {
-        cv::Mat h_levels(1,200,CV_32F);
+        cv::Mat h_levels(1, 200, CV_32F);
         double minVal, maxVal;
         cv::cuda::minMax(image->getGpuMat(stream()), &minVal, &maxVal);
         // Generate 300 equally spaced bins over the space
         float step = float((maxVal - minVal) / float(200));
 
         float val = minVal;
-        for(int i = 0; i < 200; ++i, val += step)
+        for (int i = 0; i < 200; ++i, val += step)
         {
             h_levels.at<float>(i) = val;
         }
         cv::cuda::histRange(image->getGpuMat(stream()), hist, cv::cuda::GpuMat(h_levels), stream());
-    }else{
-        if(range == nullptr){
+    }
+    else
+    {
+        if (range == nullptr)
+        {
             MO_LOG_EVERY_N(error, 100) << "Histogram provided but range not provided";
             return false;
         }
-        if(range->getChannels() != 1){
+        if (range->getChannels() != 1)
+        {
             MO_LOG_EVERY_N(error, 100) << "Currently only support equal bins accross all histograms";
             return false;
         }
@@ -59,10 +61,9 @@ bool OtsuThreshold::processImpl()
     int channels = h_hist_.channels();
     std::vector<double> optValue(channels);
 
-
     if (channels == 1)
     {
-        float prbn = 0;  // First order cumulative
+        float prbn = 0;    // First order cumulative
         float meanItr = 0; // Second order cumulative
         float meanGlb = 0; // Global mean level
         float param1 = 0;
@@ -72,7 +73,7 @@ bool OtsuThreshold::processImpl()
 
         for (int i = 0; i < h_hist_.size().area(); ++i)
         {
-            meanGlb += h_hist_.at<float>(i)*i;
+            meanGlb += h_hist_.at<float>(i) * i;
         }
 
         // Currently we only support equal bins accross all channels
@@ -85,7 +86,7 @@ bool OtsuThreshold::processImpl()
             meanItr += val * i;
 
             param1 = meanGlb * prbn - meanItr;
-            param2 = param1 * param1 / (prbn*(1 - prbn));
+            param2 = param1 * param1 / (prbn * (1 - prbn));
             if (param2 > param3)
             {
                 param3 = param2;
@@ -104,7 +105,7 @@ bool OtsuThreshold::processImpl()
         {
             for (int c = 0; c < channels; ++c)
             {
-                float prbn = 0;  // First order cumulative
+                float prbn = 0;    // First order cumulative
                 float meanItr = 0; // Second order cumulative
                 float meanGlb = 0; // Global mean level
                 float param1 = 0;
@@ -117,8 +118,6 @@ bool OtsuThreshold::processImpl()
                     meanGlb += h_hist_.at<cv::Vec4f>(i).val[c] * i;
                 }
 
-
-
                 // Currently we only support equal bins accross all channels
                 float val = 0;
                 for (int i = 0; i < bins.size().area(); ++i)
@@ -128,7 +127,7 @@ bool OtsuThreshold::processImpl()
                     meanItr += val * i;
 
                     param1 = meanGlb * prbn - meanItr;
-                    param2 = param1 * param1 / (prbn*(1 - prbn));
+                    param2 = param1 * param1 / (prbn * (1 - prbn));
                     if (param2 > param3)
                     {
                         param3 = param2;
@@ -145,25 +144,24 @@ bool OtsuThreshold::processImpl()
     }
     for (int i = 0; i < optValue.size(); ++i)
     {
-        //updateParameter("Optimal threshold " + boost::lexical_cast<std::string>(i), optValue[i]);
+        // updateParameter("Optimal threshold " + boost::lexical_cast<std::string>(i), optValue[i]);
     }
     return true;
 }
 
-
 bool MOG2::processImpl()
 {
-    if(mog2 == nullptr)
+    if (mog2 == nullptr)
     {
         mog2 = cv::cuda::createBackgroundSubtractorMOG2(history, threshold, detect_shadows);
         history_param.modified(false);
     }
-    if(history_param.modified())
+    if (history_param.modified())
     {
         mog2->setHistory(history);
         history_param.modified(false);
     }
-    if(threshold_param.modified())
+    if (threshold_param.modified())
     {
         mog2->setVarThreshold(threshold);
         threshold_param.modified(false);
@@ -178,11 +176,10 @@ bool Watershed::processImpl()
 {
     const cv::Mat& img = image->getMat(stream());
     cv::Mat mask = marker_mask->getMat(stream()).clone();
-    cv::watershed(img,mask);
+    cv::watershed(img, mask);
     mask_param.updateData(mask, image_param.getTimestamp(), _ctx.get());
     return true;
 }
-
 
 /*void SegmentGrabCut::nodeInit(bool firstInit)
 {
@@ -257,8 +254,6 @@ cv::cuda::GpuMat SegmentGrabCut::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stre
     return img;
 }*/
 
-
-
 bool KMeans::processImpl()
 {
     const cv::Mat& img = image->getMat(stream());
@@ -273,34 +268,37 @@ bool KMeans::processImpl()
 
 bool MeanShift::processImpl()
 {
-    if(image->getDepth() != CV_8U)
+    if (image->getDepth() != CV_8U)
     {
         MO_LOG_EVERY_N(debug, 100) << "Image not CV_8U type";
         return false;
     }
     cv::cuda::GpuMat img;
-    if(image->getChannels() != 4)
+    if (image->getChannels() != 4)
     {
-        if(blank.size() != img.size())
+        if (blank.size() != img.size())
         {
             blank.create(img.size(), CV_8U);
             blank.setTo(cv::Scalar(0), stream());
         }
         std::vector<cv::cuda::GpuMat> channels;
-        cv::cuda::split(image->getGpuMat(stream()),channels, stream());
+        cv::cuda::split(image->getGpuMat(stream()), channels, stream());
         channels.push_back(blank);
         cv::cuda::merge(channels, img, stream());
-    }else
+    }
+    else
     {
         img = image->getGpuMat(stream());
     }
     cv::cuda::GpuMat dest;
-    cv::cuda::meanShiftSegmentation(img, dest,
+    cv::cuda::meanShiftSegmentation(
+        img,
+        dest,
         spatial_radius,
         color_radius,
         min_size,
-        cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, max_iters,
-        epsilon), stream());
+        cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, max_iters, epsilon),
+        stream());
     output_param.updateData(dest, image_param.getTimestamp(), _ctx.get());
     return true;
 }
@@ -344,16 +342,20 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
         case Circular:
 
             if(inverted)
-                cv::circle(h_mask, cv::Point(origin.val[0], origin.val[1]), *getParameter<int>(3)->Data(), cv::Scalar(255), -1);
+                cv::circle(h_mask, cv::Point(origin.val[0], origin.val[1]), *getParameter<int>(3)->Data(),
+cv::Scalar(255), -1);
             else
-                cv::circle(h_mask, cv::Point(origin.val[0], origin.val[1]), *getParameter<int>(3)->Data(), cv::Scalar(0), -1);
+                cv::circle(h_mask, cv::Point(origin.val[0], origin.val[1]), *getParameter<int>(3)->Data(),
+cv::Scalar(0), -1);
             break;
         case Rectangular:
             cv::Scalar size = *getParameter<cv::Scalar>(2)->Data();
             if(inverted)
-                cv::rectangle(h_mask, cv::Rect(origin.val[0], origin.val[1], size.val[0], size.val[1]), cv::Scalar(255),-1);
+                cv::rectangle(h_mask, cv::Rect(origin.val[0], origin.val[1], size.val[0], size.val[1]),
+cv::Scalar(255),-1);
             else
-                cv::rectangle(h_mask, cv::Rect(origin.val[0], origin.val[1], size.val[0], size.val[1]), cv::Scalar(0),-1);
+                cv::rectangle(h_mask, cv::Rect(origin.val[0], origin.val[1], size.val[0], size.val[1]),
+cv::Scalar(0),-1);
         }
         updateParameter("Manually defined mask", cv::cuda::GpuMat(h_mask))->type = Parameters::Parameter::Output;
         _parameters[0]->changed = false;
@@ -366,14 +368,19 @@ cv::cuda::GpuMat ManualMask::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &
 
 void SLaT::nodeInit(bool firstInit)
 {
-    updateParameter("Lambda", double(0.1))->SetTooltip( "For bigger values, number of discontinuities will be smaller, for smaller values more discontinuities");
-    updateParameter("Alpha", double(20.0))->SetTooltip("For bigger values, solution will be more flat, for smaller values, solution will be more rough.");
-    updateParameter("Temporal", double(0.0))->SetTooltip("For bigger values, solution will be driven to be similar to the previous frame, smaller values will allow for more interframe independence");
+    updateParameter("Lambda", double(0.1))->SetTooltip( "For bigger values, number of discontinuities will be smaller,
+for smaller values more discontinuities");
+    updateParameter("Alpha", double(20.0))->SetTooltip("For bigger values, solution will be more flat, for smaller
+values, solution will be more rough.");
+    updateParameter("Temporal", double(0.0))->SetTooltip("For bigger values, solution will be driven to be similar to
+the previous frame, smaller values will allow for more interframe independence");
     updateParameter("Iterations", int(10000))->SetTooltip("Max number of iterations to perform");
     updateParameter("Epsilon", double(5e-5));
     updateParameter("Stop K", int(10))->SetTooltip("How often epsilon should be evaluated and checked");
-    updateParameter("Adapt Params", false)->SetTooltip("If true: lambda and alpha will be adapted so that the solution will look more or less the same, for one and the same input image and for different scalings.");
-    updateParameter("Weight", false)->SetTooltip("If true: The regularizer will be adjust to smooth less at pixels with high edge probability");
+    updateParameter("Adapt Params", false)->SetTooltip("If true: lambda and alpha will be adapted so that the solution
+will look more or less the same, for one and the same input image and for different scalings.");
+    updateParameter("Weight", false)->SetTooltip("If true: The regularizer will be adjust to smooth less at pixels with
+high edge probability");
     updateParameter("Overlay edges", false);
     updateParameter("K segments", int(10));
     updateParameter("KMeans iterations", int(5));
@@ -407,7 +414,8 @@ cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream
     lab_32f.reshape(1,rows).copyTo(tensor(cv::Range(), cv::Range(3, 6)));
 
     cv::kmeans(tensor, *getParameter<int>(9)->Data(), labels,
-        cv::TermCriteria(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, *getParameter<int>(10)->Data(), *getParameter<double>(11)->Data()),
+        cv::TermCriteria(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, *getParameter<int>(10)->Data(),
+*getParameter<double>(11)->Data()),
         1, cv::KMEANS_RANDOM_CENTERS, centers);
 
     labels = labels.reshape(1, img.rows);
@@ -419,11 +427,10 @@ cv::cuda::GpuMat SLaT::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream
 
 MO_REGISTER_CLASS(OtsuThreshold)
 MO_REGISTER_CLASS(MOG2)
-//MO_REGISTER_CLASS(GrabCut)
+// MO_REGISTER_CLASS(GrabCut)
 MO_REGISTER_CLASS(Watershed)
 MO_REGISTER_CLASS(KMeans)
-//NODE_DEFAULT_CONSTRUCTOR_IMPL(ManualMask, Image, Processing, Segmentation)
+// NODE_DEFAULT_CONSTRUCTOR_IMPL(ManualMask, Image, Processing, Segmentation)
 MO_REGISTER_CLASS(MeanShift)
-//MO_REGISTER_CLASS(CPMC)
-//NODE_DEFAULT_CONSTRUCTOR_IMPL(SLaT, Image, Processing, Segmentation)
-
+// MO_REGISTER_CLASS(CPMC)
+// NODE_DEFAULT_CONSTRUCTOR_IMPL(SLaT, Image, Processing, Segmentation)

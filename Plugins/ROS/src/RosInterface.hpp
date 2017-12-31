@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "ROSExport.hpp"
 
 namespace ros
@@ -16,11 +15,12 @@ namespace aq
      */
     class ROS_EXPORT RosInterface
     {
-    public:
+      public:
         static RosInterface* Instance();
         ros::NodeHandle* nh() const;
         ~RosInterface();
-    protected:
+
+      protected:
         RosInterface();
 
         ros::NodeHandle* _nh;

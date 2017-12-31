@@ -1,21 +1,20 @@
 #include "SaveAnnotations.hpp"
-#include "Aquila/types/ObjectDetectionSerialization.hpp"
 #include "Aquila/core/IGraph.hpp"
-#include <Aquila/nodes/NodeInfo.hpp>
 #include "Aquila/gui/UiCallbackHandlers.h"
+#include "Aquila/types/ObjectDetectionSerialization.hpp"
 #include "Aquila/utilities/cuda/CudaCallbacks.hpp"
-#include <opencv2/imgproc.hpp>
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cereal/archives/json.hpp>
 #include <cereal/types/vector.hpp>
+#include <fstream>
+#include <fstream>
 #include <iomanip>
-#include <fstream>
-#include <fstream>
+#include <opencv2/imgproc.hpp>
 using namespace aq;
 using namespace aq::nodes;
 SaveAnnotations::SaveAnnotations()
 {
-
 }
 
 void SaveAnnotations::on_class_change(int new_class)
@@ -26,13 +25,15 @@ void SaveAnnotations::on_class_change(int new_class)
 
 void SaveAnnotations::select_rect(std::string window_name, cv::Rect rect, int flags, cv::Mat img)
 {
-    if(window_name != "legend")
+    if (window_name != "legend")
     {
-        if(labels && current_class >= 0 && current_class < labels->size())
+        if (labels && current_class >= 0 && current_class < labels->size())
         {
             DetectedObject obj;
-            obj.bounding_box = cv::Rect2f(float(rect.x) / _original_image.cols, float(rect.y) / _original_image.rows,
-                                         float(rect.width) / _original_image.cols, float(rect.height) / _original_image.rows);
+            obj.bounding_box = cv::Rect2f(float(rect.x) / _original_image.cols,
+                                          float(rect.y) / _original_image.rows,
+                                          float(rect.width) / _original_image.cols,
+                                          float(rect.height) / _original_image.rows);
             obj.classification = Classification((*labels)[current_class], 1.0, current_class);
             _annotations.push_back(obj);
             draw();
@@ -42,40 +43,41 @@ void SaveAnnotations::select_rect(std::string window_name, cv::Rect rect, int fl
 
 void SaveAnnotations::on_key(int key)
 {
-    if(key == 'c')
+    if (key == 'c')
     {
         _annotations.clear();
         draw();
     }
-    if(key == 13)
+    if (key == 13)
     {
         std::ofstream ofs;
         std::stringstream ss;
-        ss << output_directory.string() << "/" << annotation_stem <<
-              std::setw(6) << std::setfill('0') << save_count << ".json";
+        ss << output_directory.string() << "/" << annotation_stem << std::setw(6) << std::setfill('0') << save_count
+           << ".json";
         ofs.open(ss.str());
 
         ss.str("");
-        ss << output_directory.string() << "/" << image_stem
-           << std::setw(6) << std::setfill('0') << save_count << ".png";
+        ss << output_directory.string() << "/" << image_stem << std::setw(6) << std::setfill('0') << save_count
+           << ".png";
 
         std::string image_path = ss.str();
         cereal::JSONOutputArchive ar(ofs);
         ar(cereal::make_nvp("ImageFile", image_path));
         ar(cereal::make_nvp("Timestamp", input_param.getTimestamp()));
         ar(cereal::make_nvp("Annotations", _annotations));
-        if(detections && detections->size() > 0)
+        if (detections && detections->size() > 0)
         {
             std::vector<DetectedObject> objs;
-            for(const auto& detection : *detections)
+            for (const auto& detection : *detections)
             {
-                if(object_class != -1)
+                if (object_class != -1)
                 {
-                    if(detection.classification.classNumber == object_class)
+                    if (detection.classification.classNumber == object_class)
                     {
                         objs.push_back(detection);
                     }
-                }else
+                }
+                else
                 {
                     objs.push_back(detection);
                 }
@@ -110,34 +112,45 @@ void SaveAnnotations::draw()
 {
     _draw_image = _original_image.clone();
     cv::Mat draw_image = _draw_image;
-    for(int i = 0; i < _annotations.size(); ++i)
+    for (int i = 0; i < _annotations.size(); ++i)
     {
         auto bb = _annotations[i].bounding_box;
-        cv::rectangle(draw_image, cv::Rect(bb.x * draw_image.cols, bb.y * draw_image.rows,
-                                           bb.width * draw_image.cols, bb.height * draw_image.rows),
-                      h_lut.at<cv::Vec3b>(_annotations[i].classification.classNumber), 5);
+        cv::rectangle(draw_image,
+                      cv::Rect(bb.x * draw_image.cols,
+                               bb.y * draw_image.rows,
+                               bb.width * draw_image.cols,
+                               bb.height * draw_image.rows),
+                      h_lut.at<cv::Vec3b>(_annotations[i].classification.classNumber),
+                      5);
     }
-    if(detections)
+    if (detections)
     {
-        for(const auto& detection : *detections)
+        for (const auto& detection : *detections)
         {
             auto bb = detection.bounding_box;
-            cv::rectangle(draw_image, cv::Rect(bb.x * draw_image.cols, bb.y * draw_image.rows,
-                                               bb.width * draw_image.cols, bb.height * draw_image.rows),
-                        h_lut.at<cv::Vec3b>(detection.classification.classNumber), 5);
+            cv::rectangle(draw_image,
+                          cv::Rect(bb.x * draw_image.cols,
+                                   bb.y * draw_image.rows,
+                                   bb.width * draw_image.cols,
+                                   bb.height * draw_image.rows),
+                          h_lut.at<cv::Vec3b>(detection.classification.classNumber),
+                          5);
         }
     }
-    if( labels && current_class != -1 && current_class < labels->size())
+    if (labels && current_class != -1 && current_class < labels->size())
     {
-        //cv::putText(draw_image, (*labels)[current_class], cv::Point(15, 25), cv::FONT_HERSHEY_COMPLEX, 0.7, h_lut.at<cv::Vec3b>(current_class));
+        // cv::putText(draw_image, (*labels)[current_class], cv::Point(15, 25), cv::FONT_HERSHEY_COMPLEX, 0.7,
+        // h_lut.at<cv::Vec3b>(current_class));
     }
 
     size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
-    mo::ThreadSpecificQueue::push([draw_image, this]()
-    {
-        getGraph()->getWindowCallbackManager()->imshow("original", draw_image);
-        //getGraph()->getWindowCallbackManager()->imshow("legend", h_legend);
-    }, gui_thread_id, this);
+    mo::ThreadSpecificQueue::push(
+        [draw_image, this]() {
+            getGraph()->getWindowCallbackManager()->imshow("original", draw_image);
+            // getGraph()->getWindowCallbackManager()->imshow("legend", h_legend);
+        },
+        gui_thread_id,
+        this);
 }
 
 bool SaveAnnotations::processImpl()
@@ -185,34 +198,33 @@ bool SaveAnnotations::processImpl()
         label_file_param.modified(false);
         getGraph()->getWindowCallbackManager()->imshow("legend", h_legend);
     }*/
-    if(h_lut.cols != labels->size())
+    if (h_lut.cols != labels->size())
     {
         h_lut.create(1, labels->size(), CV_8UC3);
-        for(int i = 0; i < labels->size(); ++i)
-            h_lut.at<cv::Vec3b>(i) = cv::Vec3b(i*180 / labels->size(), 200, 255);
+        for (int i = 0; i < labels->size(); ++i)
+            h_lut.at<cv::Vec3b>(i) = cv::Vec3b(i * 180 / labels->size(), 200, 255);
         cv::cvtColor(h_lut, h_lut, cv::COLOR_HSV2BGR);
     }
     _annotations.clear();
     size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
-    if(input->getSyncState() == aq::SyncedMemory::DEVICE_UPDATED)
+    if (input->getSyncState() == aq::SyncedMemory::DEVICE_UPDATED)
     {
         cv::Mat img = input->getMat(stream());
-        //cv::Mat img = input->getMat(stream());
+        // cv::Mat img = input->getMat(stream());
 
-        aq::cuda::enqueue_callback_async([img, this]()
-        {
-            getGraph()->getWindowCallbackManager()->imshow("original", img);
-        }, gui_thread_id ,stream());
+        aq::cuda::enqueue_callback_async(
+            [img, this]() { getGraph()->getWindowCallbackManager()->imshow("original", img); },
+            gui_thread_id,
+            stream());
         _original_image = img;
-    }else
+    }
+    else
     {
-        //cv::Mat img = input->getMat(stream());
+        // cv::Mat img = input->getMat(stream());
         cv::Mat img = input->getMat(stream());
 
-        mo::ThreadSpecificQueue::push([img, this]()
-        {
-            getGraph()->getWindowCallbackManager()->imshow("original", img);
-        }, gui_thread_id, this);
+        mo::ThreadSpecificQueue::push(
+            [img, this]() { getGraph()->getWindowCallbackManager()->imshow("original", img); }, gui_thread_id, this);
         _original_image = img;
     }
     return true;

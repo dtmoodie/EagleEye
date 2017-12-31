@@ -1,16 +1,15 @@
 
 #ifdef FASTMS_FOUND
 #include "FastMS.h"
-#include <Aquila/nodes/NodeInfo.hpp>
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
+#include <Aquila/nodes/NodeInfo.hpp>
 
 using namespace aq;
 using namespace aq::nodes;
 
-
 bool FastMumfordShah::processImpl()
 {
-    if(!solver)
+    if (!solver)
         solver.reset(new Solver());
     cv::Mat h_img = input->getMat(stream());
 
@@ -29,8 +28,6 @@ bool FastMumfordShah::processImpl()
     segmented_param.updateData(result, input_param.getTimestamp(), _ctx.get());
     return true;
 }
-
-
 
 MO_REGISTER_CLASS(FastMumfordShah);
 

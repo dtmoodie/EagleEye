@@ -1,16 +1,15 @@
 #include "vtkLogRedirect.h"
-#include "ObjectInterfacePerModule.h"
 #include "EagleLib/rcc/SystemTable.hpp"
+#include "ObjectInterfacePerModule.h"
 #include <MetaObject/Logging/Log.hpp>
-
 
 void vtkLogRedirect::init()
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
-    if(table)
+    if (table)
     {
         auto instance = table->GetSingleton<vtkLogRedirect>();
-        if(instance == nullptr)
+        if (instance == nullptr)
         {
             instance = new vtkLogRedirect();
             table->SetSingleton(instance);

@@ -31,7 +31,6 @@ macro(aquila_declare_plugin tgt)
     )
     RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
     ocv_add_precompiled_header_to_target(${tgt} src/precompiled.hpp)
-
     if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${tgt}_config.txt")
       FILE(READ "${CMAKE_CURRENT_BINARY_DIR}/${tgt}_config.txt" temp)
     endif()

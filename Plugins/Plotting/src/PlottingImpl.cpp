@@ -13,7 +13,6 @@ QtPlotterImpl::QtPlotterImpl()
 }
 QtPlotterImpl::~QtPlotterImpl()
 {
-
 }
 QWidget* QtPlotterImpl::GetControlWidget(QWidget* parent)
 {
@@ -39,7 +38,7 @@ QWidget* QtPlotterImpl::GetControlWidget(QWidget* parent)
     }
     return controlWidget.get();
 }
-void QtPlotterImpl::Serialize(ISimpleSerializer *pSerializer)
+void QtPlotterImpl::Serialize(ISimpleSerializer* pSerializer)
 {
     QtPlotter::Serialize(pSerializer);
     SERIALIZE(converter);
@@ -79,18 +78,18 @@ void HistoryPlotter::PlotInit(bool firstInit)
     }
     else
     {
-        connections.push_back(GetParameter<size_t>("History Size")->RegisterNotifier(std::bind(&HistoryPlotter::on_history_size_change, this)));
+        connections.push_back(GetParameter<size_t>("History Size")
+                                  ->RegisterNotifier(std::bind(&HistoryPlotter::on_history_size_change, this)));
     }
 }
 
-HistoryPlotter::HistoryPlotter(): 
-    QtPlotterImpl()
+HistoryPlotter::HistoryPlotter() : QtPlotterImpl()
 {
 }
 
 void HistoryPlotter::on_history_size_change()
 {
-    size_t capacity = *GetParameter<size_t>("History Size")->Data();    
+    size_t capacity = *GetParameter<size_t>("History Size")->Data();
     for (auto& itr : channelData)
     {
         itr.set_capacity(capacity);

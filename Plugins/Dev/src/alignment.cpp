@@ -3,6 +3,7 @@
 using namespace aq;
 using namespace aq::nodes;
 
-bool TrackCameraMotion::processImpl(){
+bool TrackCameraMotion::processImpl()
+{
     return true;
 }

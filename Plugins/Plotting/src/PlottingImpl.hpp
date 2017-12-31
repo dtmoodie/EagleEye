@@ -2,15 +2,15 @@
 
 #include "QVector"
 
-#include "opencv2/core.hpp"
-#include <opencv2/core/cuda.hpp>
-#include "boost/circular_buffer.hpp"
-#include <mutex>
-#include "PlottingExport.hpp"
 #include "Plotting.h"
-#include <memory>
+#include "PlottingExport.hpp"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
+#include "boost/circular_buffer.hpp"
+#include "opencv2/core.hpp"
+#include <memory>
+#include <mutex>
+#include <opencv2/core/cuda.hpp>
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
@@ -21,22 +21,23 @@ namespace aq
 {
     class Plotting_EXPORT QtPlotterImpl : public QtPlotter
     {
-    protected:
+      protected:
         int channels;
         cv::Size size;
         std::shared_ptr<QWidget> controlWidget;
         std::vector<std::shared_ptr<mo::Connection>> connections;
         std::mutex mtx;
-        
+
         std::vector<std::shared_ptr<mo::UI::qt::IParameterProxy>> parameterProxies;
         std::vector<mo::IParam*> parameters;
-        //Parameters::Converters::Double::IConverter* converter;
-    public:
+        // Parameters::Converters::Double::IConverter* converter;
+      public:
         QtPlotterImpl();
         ~QtPlotterImpl();
         virtual QWidget* GetControlWidget(QWidget* parent);
-        virtual void Serialize(ISimpleSerializer *pSerializer);
-        template<typename T> typename mo::ITParam<T>* GetParameter(const std::string& name)
+        virtual void Serialize(ISimpleSerializer* pSerializer);
+        template <typename T>
+        typename mo::ITParam<T>* GetParameter(const std::string& name)
         {
             for (auto& itr : parameters)
             {
@@ -47,9 +48,10 @@ namespace aq
             }
             return nullptr;
         }
-        template<typename T> typename mo::ITParam<T>::Ptr GetParameter(size_t index)
+        template <typename T>
+        typename mo::ITParam<T>::Ptr GetParameter(size_t index)
         {
-            if(index < parameters.size())
+            if (index < parameters.size())
                 return std::dynamic_pointer_cast<typename mo::ITParam<T>>(parameters[index]);
             return typename mo::ITParam<T>::Ptr();
         }
@@ -59,49 +61,40 @@ namespace aq
 
     class Plotting_EXPORT HistoryPlotter : public QtPlotterImpl
     {
-    protected:
+      protected:
         std::vector<boost::circular_buffer<double>> channelData;
         HistoryPlotter();
         void on_history_size_change();
 
-    public:
+      public:
         virtual void PlotInit(bool firstInit);
     };
     class Plotting_EXPORT StaticPlotter : public QtPlotterImpl
     {
-    protected:
+      protected:
         QVector<QVector<double>> channelData;
 
-
-    public:
+      public:
     };
 
-    template<typename T>
+    template <typename T>
     class Plotting_EXPORT VectorPlotter : public T
     {
-        virtual void OnParameterUpdate(cv::cuda::Stream* stream)
-        {
-
-        }
+        virtual void OnParameterUpdate(cv::cuda::Stream* stream) {}
     };
 
-    template<typename T>
+    template <typename T>
     class Plotting_EXPORT MatrixPlotter : public T
     {
-
     };
 
-    template<typename T>
+    template <typename T>
     class Plotting_EXPORT ScalarPlotter : public T
     {
-
     };
 }
 
-
-
-
-template<typename T>
+template <typename T>
 T* getParameterPtr(mo::IParam* param)
 {
     auto typedParam = dynamic_cast<mo::ITParam<T>*>(param);
@@ -110,31 +103,30 @@ T* getParameterPtr(mo::IParam* param)
     return nullptr;
 }
 
-
 cv::Size inline getSize(mo::IParam* param)
 {
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
-    if(gpuParam)
+    if (gpuParam)
         return gpuParam->size();
     auto cpuParam = getParameterPtr<cv::Mat>(param);
-    if(cpuParam)
+    if (cpuParam)
         return cpuParam->size();
     auto hostParam = getParameterPtr<cv::cuda::HostMem>(param);
-    if(hostParam)
+    if (hostParam)
         return hostParam->size();
 
-    return cv::Size(0,0);
+    return cv::Size(0, 0);
 }
 int inline getChannels(mo::IParam* param)
 {
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
-    if(gpuParam)
+    if (gpuParam)
         return gpuParam->channels();
     auto cpuParam = getParameterPtr<cv::Mat>(param);
-    if(cpuParam)
+    if (cpuParam)
         return cpuParam->channels();
     auto hostParam = getParameterPtr<cv::cuda::HostMem>(param);
-    if(hostParam)
+    if (hostParam)
         return hostParam->channels();
     return 0;
 }
@@ -145,31 +137,31 @@ QVector<double> inline getParamArrayDataHelper(cv::Mat h_data, int channel)
     const int numItems = h_data.size().area();
     output.reserve(numItems);
 
-    for(int i = 0; i < numItems; ++i)
+    for (int i = 0; i < numItems; ++i)
     {
-        if(h_data.depth() == CV_8U)
+        if (h_data.depth() == CV_8U)
             output.push_back(h_data.at<uchar>(i));
-        if(h_data.depth() == CV_8UC3)
+        if (h_data.depth() == CV_8UC3)
             output.push_back(h_data.at<cv::Vec2b>(i).val[channel]);
-        if(h_data.depth() == CV_16U)
+        if (h_data.depth() == CV_16U)
             output.push_back(h_data.at<unsigned short>(i));
-        if(h_data.depth() == CV_16UC3)
+        if (h_data.depth() == CV_16UC3)
             output.push_back(h_data.at<cv::Vec3w>(i).val[channel]);
-        if(h_data.depth() == CV_16S)
+        if (h_data.depth() == CV_16S)
             output.push_back(h_data.at<short>(i));
-        if(h_data.depth() == CV_16SC3)
+        if (h_data.depth() == CV_16SC3)
             output.push_back(h_data.at<cv::Vec3s>(i).val[channel]);
-        if(h_data.depth() == CV_32S)
+        if (h_data.depth() == CV_32S)
             output.push_back(h_data.at<int>(i));
-        if(h_data.depth() == CV_32SC3)
+        if (h_data.depth() == CV_32SC3)
             output.push_back(h_data.at<cv::Vec3i>(i).val[channel]);
-        if(h_data.depth() == CV_32F)
+        if (h_data.depth() == CV_32F)
             output.push_back(h_data.at<float>(i));
-        if(h_data.depth() == CV_32FC3)
+        if (h_data.depth() == CV_32FC3)
             output.push_back(h_data.at<cv::Vec3f>(i).val[channel]);
-        if(h_data.depth() == CV_64F)
+        if (h_data.depth() == CV_64F)
             output.push_back(h_data.at<double>(i));
-        if(h_data.depth() == CV_64FC3)
+        if (h_data.depth() == CV_64FC3)
             output.push_back(h_data.at<cv::Vec3d>(i).val[channel]);
     }
     return output;
@@ -178,37 +170,36 @@ QVector<double> inline getParamArrayDataHelper(cv::Mat h_data, int channel)
 QVector<double> inline getParamArrayData(mo::IParam* param, int channel)
 {
     auto gpuParam = getParameterPtr<cv::cuda::GpuMat>(param);
-    if(gpuParam)
+    if (gpuParam)
         return getParamArrayDataHelper(cv::Mat(*gpuParam), channel);
     auto cpuParam = getParameterPtr<cv::Mat>(param);
-    if(cpuParam)
+    if (cpuParam)
         return getParamArrayDataHelper(*cpuParam, channel);
     auto hostParam = getParameterPtr<cv::cuda::HostMem>(param);
-    if(hostParam)
+    if (hostParam)
         return getParamArrayDataHelper(hostParam->createMatHeader(), channel);
     auto vecParam = getParameterPtr<std::vector<double>>(param);
-    if(vecParam)
+    if (vecParam)
         return getParamArrayDataHelper(cv::Mat(*vecParam), 0);
     return QVector<double>();
 }
 
-template<typename T>
+template <typename T>
 bool inline getData(mo::IParam* param, double& data)
 {
     auto ptr = getParameterPtr<T>(param);
-    if(ptr)
+    if (ptr)
     {
         data = *ptr;
         return true;
     }
     return false;
-
 }
-template<typename T>
+template <typename T>
 bool inline getDataVec(mo::IParam* param, int channel, double& data)
 {
     auto ptr = getParameterPtr<T>(param);
-    if(ptr)
+    if (ptr)
     {
         data = ptr->val[channel];
         return true;
@@ -219,126 +210,108 @@ bool inline getDataVec(mo::IParam* param, int channel, double& data)
 double inline getParamData(mo::Parameter* data, int channel)
 {
     double output;
-    if(getData<double>(data, output))
+    if (getData<double>(data, output))
         return output;
-    if(getData<int>(data,output))
+    if (getData<int>(data, output))
         return output;
-    if(getData<char>(data,output))
+    if (getData<char>(data, output))
         return output;
-    if(getData<unsigned char>(data,output))
+    if (getData<unsigned char>(data, output))
         return output;
-    if(getData<float>(data,output))
+    if (getData<float>(data, output))
         return output;
-    if(getData<unsigned int>(data,output))
+    if (getData<unsigned int>(data, output))
         return output;
-    if(getData<short>(data,output))
+    if (getData<short>(data, output))
         return output;
-    if(getData<unsigned short>(data,output))
+    if (getData<unsigned short>(data, output))
         return output;
-    if(getDataVec<cv::Vec2b>(data, channel, output))
+    if (getDataVec<cv::Vec2b>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec3b>(data, channel, output))
+    if (getDataVec<cv::Vec3b>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec4b>(data, channel, output))
+    if (getDataVec<cv::Vec4b>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec2s>(data, channel, output))
+    if (getDataVec<cv::Vec2s>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec3s>(data, channel, output))
+    if (getDataVec<cv::Vec3s>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec4s>(data, channel, output))
+    if (getDataVec<cv::Vec4s>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec2i>(data, channel, output))
+    if (getDataVec<cv::Vec2i>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec3i>(data, channel, output))
+    if (getDataVec<cv::Vec3i>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec4i>(data, channel, output))
+    if (getDataVec<cv::Vec4i>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec6i>(data, channel, output))
+    if (getDataVec<cv::Vec6i>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec8i>(data, channel, output))
+    if (getDataVec<cv::Vec8i>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec2d>(data, channel, output))
+    if (getDataVec<cv::Vec2d>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec3d>(data, channel, output))
+    if (getDataVec<cv::Vec3d>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec4d>(data, channel, output))
+    if (getDataVec<cv::Vec4d>(data, channel, output))
         return output;
-    if(getDataVec<cv::Vec6d>(data, channel, output))
+    if (getDataVec<cv::Vec6d>(data, channel, output))
         return output;
-    if(getDataVec<cv::Scalar>(data, channel, output))
+    if (getDataVec<cv::Scalar>(data, channel, output))
         return output;
 }
-
 
 // Helper policies
 struct DefaultChannelPolicy
 {
-    static bool acceptsChannels(int channels){return channels != 0;}
+    static bool acceptsChannels(int channels) { return channels != 0; }
 };
 
 struct SingleChannelPolicy
 {
-    static bool acceptsChannels(int channels){ return channels == 1;}
+    static bool acceptsChannels(int channels) { return channels == 1; }
 };
 
 struct MultiChannelPolicy
 {
-    static bool acceptsChannels(int channels){ return channels > 1;}
+    static bool acceptsChannels(int channels) { return channels > 1; }
 };
 
 struct DefaultSizePolicy
 {
-    static bool acceptsSize(cv::Size size){ return true;}
+    static bool acceptsSize(cv::Size size) { return true; }
 };
 
 struct VectorSizePolicy
 {
-    static bool acceptsSize(cv::Size size){ return size.width == 1 || size.height == 1;}
+    static bool acceptsSize(cv::Size size) { return size.width == 1 || size.height == 1; }
 };
 
 struct MatrixSizePolicy
 {
-    static bool acceptsSize(cv::Size size){ return size.width != 1 && size.height != 1;}
+    static bool acceptsSize(cv::Size size) { return size.width != 1 && size.height != 1; }
 };
 
 struct DefaultTypePolicy
 {
-    static bool acceptsType(mo::Parameter::Ptr param)
-    {
-        return true;
-    }
+    static bool acceptsType(mo::Parameter::Ptr param) { return true; }
 };
 
-template<typename T> struct TypePolicy
+template <typename T>
+struct TypePolicy
 {
-    static bool acceptsType(mo::Parameter* param)
-    {
-    return mo::TypeInfo(typeid(T)) == param->getTypeInfo();
-    }
+    static bool acceptsType(mo::Parameter* param) { return mo::TypeInfo(typeid(T)) == param->getTypeInfo(); }
 };
 struct StaticPlotPolicy
 {
     int size;
     int channel;
     QVector<double> data;
-    void addPlotData(mo::IParam* param, cv::cuda::Stream* stream)
-    {
-        data = getParamArrayData(param, channel);
-    }
+    void addPlotData(mo::IParam* param, cv::cuda::Stream* stream) { data = getParamArrayData(param, channel); }
 
-    QVector<double>& getPlotData()
-    {
-        return data;
-    }
+    QVector<double>& getPlotData() { return data; }
 
-    void setSize(int size_)
-    {
-        size = size_;
-    }
-    void setChannel(int channel_)
-    {
-        channel = channel_;
-    }
+    void setSize(int size_) { size = size_; }
+    void setChannel(int channel_) { channel = channel_; }
 };
 
 struct SlidingWindowPlotPolicy
@@ -346,24 +319,18 @@ struct SlidingWindowPlotPolicy
     int channel;
 
     boost::circular_buffer<double> plotData;
-    void addPlotData(mo::IParam* param)
-    {
-        plotData.push_back(getParamData(param, channel));
-    }
+    void addPlotData(mo::IParam* param) { plotData.push_back(getParamData(param, channel)); }
 
     QVector<double> getPlotData()
     {
         QVector<double> data;
         data.reserve(plotData.size());
-        for(size_t i = 0; i < plotData.size(); ++i)
+        for (size_t i = 0; i < plotData.size(); ++i)
         {
             data.push_back(plotData[i]);
         }
         return data;
     }
 
-    void setSize(int size)
-    {
-        plotData.set_capacity(size);
-    }
+    void setSize(int size) { plotData.set_capacity(size); }
 };

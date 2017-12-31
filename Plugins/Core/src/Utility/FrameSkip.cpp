@@ -6,7 +6,7 @@ using namespace aq::nodes;
 bool FrameSkip::processImpl()
 {
     ++frame_count;
-    if(frame_count > frame_skip)
+    if (frame_count > frame_skip)
     {
         output_param.updateData(*input, input_param.getTimestamp(), _ctx.get());
         frame_count = 0;

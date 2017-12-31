@@ -3,9 +3,8 @@
 
 namespace Ros
 {
-    class IRosMessageWriter: public aq::Algorithm
+    class IRosMessageWriter : public aq::Algorithm
     {
-    public:
-
+      public:
     };
 }

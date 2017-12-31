@@ -1,10 +1,8 @@
 #include "caffe_input_populator.h"
-#include <caffe/blob.hpp>
 #include <Aquila/rcc/external_includes/cv_imgproc.hpp>
+#include <caffe/blob.hpp>
 using namespace aq;
 using namespace aq::nodes;
-
-
 
 /*void caffe_input_populator::fill_blobs()
 {
@@ -28,7 +26,7 @@ using namespace aq::nodes;
                         {
                             sample_permutation.push_back(std::make_pair((int)img.frame_number, i));
                         }
-                    }    
+                    }
                 }else if(class_map)
                 {
                     if(class_map->find(img.frame_number) != class_map->end())
@@ -55,11 +53,12 @@ using namespace aq::nodes;
             for(int i = sample_index; i < sample_index + num && i < sample_permutation.size(); ++i, ++count)
             {
                 auto& permutation = sample_permutation[i];
-                
+
                 cv::Mat mat; // = (*fb)[permutation.first].getMat();
                 if(permutation.second != -1)
                 {
-                    mat = (*fb)[permutation.first].getMat(cv::cuda::Stream::Null())((*roi)[permutation.first][permutation.second].first);
+                    mat =
+(*fb)[permutation.first].getMat(cv::cuda::Stream::Null())((*roi)[permutation.first][permutation.second].first);
                 }else
                 {
                     mat = (*fb)[permutation.first].getMat(cv::cuda::Stream::Null());

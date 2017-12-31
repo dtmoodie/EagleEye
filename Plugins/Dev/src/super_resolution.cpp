@@ -11,7 +11,7 @@ my_frame_source::my_frame_source()
 
 void my_frame_source::nextFrame(cv::OutputArray frame)
 {
-    if(current_source && current_stream)
+    if (current_source && current_stream)
         frame.getGpuMatRef() = current_source->getGpuMatMutable(*current_stream);
 }
 
@@ -27,61 +27,58 @@ void my_frame_source::input_frame(SyncedMemory& image, cv::cuda::Stream& stream)
     current_stream = &stream;
 }
 
-
-
 bool super_resolution::processImpl()
 {
-    if(scale_param.modified())
+    if (scale_param.modified())
     {
         super_res->setScale(scale);
         scale_param.modified(false);
     }
-    if(iterations_param.modified())
+    if (iterations_param.modified())
     {
         super_res->setIterations(iterations);
         iterations_param.modified(false);
     }
-    if(tau_param.modified())
+    if (tau_param.modified())
     {
         super_res->setTau(tau);
         tau_param.modified(false);
     }
-    if(lambda_param.modified())
+    if (lambda_param.modified())
     {
         super_res->setLabmda(lambda);
         lambda_param.modified(false);
     }
-    if(alpha_param.modified())
+    if (alpha_param.modified())
     {
         super_res->setAlpha(alpha);
         alpha_param.modified(false);
     }
-    if(kernel_size_param.modified())
+    if (kernel_size_param.modified())
     {
         super_res->setKernelSize(kernel_size);
         kernel_size_param.modified(false);
     }
-    if(blur_size_param.modified())
+    if (blur_size_param.modified())
     {
         super_res->setBlurKernelSize(blur_size);
         blur_size_param.modified(false);
     }
-    if(blur_sigma_param.modified())
+    if (blur_sigma_param.modified())
     {
         super_res->setBlurSigma(blur_sigma);
         blur_sigma_param.modified(false);
     }
-    if(temporal_radius_param.modified())
+    if (temporal_radius_param.modified())
     {
         super_res->setTemporalAreaRadius(temporal_radius);
         temporal_radius_param.modified(false);
     }
     cv::cuda::GpuMat result;
 
-    //frame_source->input_frame(*input, stream());
+    // frame_source->input_frame(*input, stream());
 
     return true;
 }
 
-
-//MO_REGISTER_CLASS(super_resolution)
+// MO_REGISTER_CLASS(super_resolution)

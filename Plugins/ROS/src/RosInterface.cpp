@@ -10,7 +10,7 @@ using namespace aq;
 RosInterface::RosInterface()
 {
     int argc = 1;
-    char** argv = new char*{ "EagleEye"};
+    char** argv = new char* {"EagleEye"};
     ros::init(argc, argv, "EagleEye");
     _nh = new ros::NodeHandle("EagleEye");
 }
@@ -29,10 +29,11 @@ RosInterface* RosInterface::Instance()
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     RosInterface* singleton = table->getSingleton<RosInterface>();
-    if(singleton)
+    if (singleton)
     {
         return singleton;
-    }else
+    }
+    else
     {
         singleton = new RosInterface();
         table->setSingleton(singleton);

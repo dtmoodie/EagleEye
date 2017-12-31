@@ -1,10 +1,10 @@
 #include "OpticalFlow.h"
 //#include "Aquila/nodes/VideoProc/Tracking.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
-#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
-#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 using namespace aq;
 using namespace aq::nodes;
 
@@ -33,7 +33,7 @@ size_t IPyrOpticalFlow::PrepPyramid()
         image_pyramid = &greyImg;
         THROW(debug) << "Need to reimplement and redesign";
 
-        fn= input_param.getFrameNumber();
+        fn = input_param.getFrameNumber();
     }
     else
     {
@@ -55,18 +55,12 @@ void IPyrOpticalFlow::build_pyramid(std::vector<cv::cuda::GpuMat>& pyramid)
 
 bool DensePyrLKOpticalFlow::processImpl()
 {
-    if(window_size_param.modified() ||
-        pyramid_levels_param.modified() ||
-        iterations_param.modified() ||
-        use_initial_flow_param.modified() ||
-        opt_flow == nullptr)
+    if (window_size_param.modified() || pyramid_levels_param.modified() || iterations_param.modified() ||
+        use_initial_flow_param.modified() || opt_flow == nullptr)
     {
 
         opt_flow = cv::cuda::DensePyrLKOpticalFlow::create(
-            cv::Size(window_size, window_size),
-            pyramid_levels,
-            iterations,
-            use_initial_flow);
+            cv::Size(window_size, window_size), pyramid_levels, iterations, use_initial_flow);
 
         window_size_param.modified(false);
         pyramid_levels_param.modified(false);
@@ -74,7 +68,7 @@ bool DensePyrLKOpticalFlow::processImpl()
         use_initial_flow_param.modified(false);
     }
     cv::cuda::GpuMat flow;
-    if(prevGreyImg.empty())
+    if (prevGreyImg.empty())
     {
         prevGreyImg = greyImg;
         return true;
@@ -91,17 +85,11 @@ bool DensePyrLKOpticalFlow::processImpl()
 
 bool SparsePyrLKOpticalFlow::processImpl()
 {
-    if (window_size_param.modified() ||
-        pyramid_levels_param.modified() ||
-        iterations_param.modified() ||
-        use_initial_flow_param.modified() ||
-        optFlow == nullptr)
+    if (window_size_param.modified() || pyramid_levels_param.modified() || iterations_param.modified() ||
+        use_initial_flow_param.modified() || optFlow == nullptr)
     {
         optFlow = cv::cuda::SparsePyrLKOpticalFlow::create(
-            cv::Size(window_size, window_size),
-            pyramid_levels,
-            iterations,
-            use_initial_flow);
+            cv::Size(window_size, window_size), pyramid_levels, iterations, use_initial_flow);
 
         window_size_param.modified(false);
         pyramid_levels_param.modified(false);
@@ -109,19 +97,22 @@ bool SparsePyrLKOpticalFlow::processImpl()
         use_initial_flow_param.modified(false);
     }
     auto ts = PrepPyramid();
-    if(ts)
+    if (ts)
     {
         cv::cuda::GpuMat tracked_points, status, error;
-        if(input_points_param.getInput(ts - 1))
+        if (input_points_param.getInput(ts - 1))
         {
-            optFlow->calc(prevGreyImg, greyImg, input_points->getGpuMat(stream()), tracked_points, status, error, stream());
-        }else
+            optFlow->calc(
+                prevGreyImg, greyImg, input_points->getGpuMat(stream()), tracked_points, status, error, stream());
+        }
+        else
         {
-            if(!prev_key_points.empty())
+            if (!prev_key_points.empty())
             {
                 prev_key_points = input_points->getGpuMat(stream());
                 return false;
-            }else
+            }
+            else
             {
                 optFlow->calc(prevGreyImg, greyImg, prev_key_points, tracked_points, status, error, stream());
             }

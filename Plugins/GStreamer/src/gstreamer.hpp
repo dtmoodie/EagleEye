@@ -5,22 +5,21 @@
 #ifdef HAVE_GST_RTSPSERVER
 #include <gst/rtsp-server/rtsp-server.h>
 #endif
-#include "GStreamerExport.hpp"
-#include "Aquila/nodes/Node.hpp"
 #include "Aquila/core/detail/Export.hpp"
-#include <Aquila/utilities/cuda/CudaUtils.hpp>
+#include "Aquila/nodes/Node.hpp"
+#include "GStreamerExport.hpp"
 #include <Aquila/types/Stamped.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
+#include <Aquila/utilities/cuda/CudaUtils.hpp>
 #include <MetaObject/object/MetaObject.hpp>
+#include <gst/app/gstappsrc.h>
 #include <gst/gst.h>
 #include <gst/gstelement.h>
 #include <gst/gstelementfactory.h>
-#include <gst/gstutils.h>
 #include <gst/gstpipeline.h>
-#include <gst/app/gstappsrc.h>
+#include <gst/gstutils.h>
 
 #include <boost/thread.hpp>
-
 
 #ifdef _MSC_VER
 RUNTIME_COMPILER_LINKLIBRARY("gstapp-1.0.lib");
@@ -55,9 +54,11 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
 #endif
 #endif
 
-namespace aq{
-    class GStreamer_EXPORT gstreamer_base{
-    public:
+namespace aq
+{
+    class GStreamer_EXPORT gstreamer_base
+    {
+      public:
         gstreamer_base();
         virtual ~gstreamer_base();
 
@@ -72,18 +73,20 @@ namespace aq{
         static bool check_feature(const std::string& feature_name);
         // Attempt to detect if a string is a valid gstreamer pipeline
         static bool is_pipeline(const std::string& string);
-    protected:
+
+      protected:
         // The gstreamer pipeline
-        GstElement*     _pipeline;
-        GstClockTime    _timestamp;
-        time_t          _prevTime;
-        time_t          _delta;
+        GstElement* _pipeline;
+        GstClockTime _timestamp;
+        time_t _prevTime;
+        time_t _delta;
         virtual void cleanup();
         bool _caps_set;
     };
     // used to feed data into EagleEye from gstreamer, use when creating frame grabbers
-    class GStreamer_EXPORT gstreamer_src_base: virtual public gstreamer_base{
-    public:
+    class GStreamer_EXPORT gstreamer_src_base : virtual public gstreamer_base
+    {
+      public:
         gstreamer_src_base();
         virtual ~gstreamer_src_base();
         virtual bool create_pipeline(const std::string& pipeline_);
@@ -91,17 +94,19 @@ namespace aq{
         virtual GstFlowReturn on_pull() = 0;
         virtual bool set_caps(const std::string& caps);
         virtual bool set_caps();
-    protected:
+
+      protected:
         GstElement* _appsink;
-        guint       _new_sample_id;
-        guint       _new_preroll_id;
+        guint _new_sample_id;
+        guint _new_preroll_id;
     };
 
-
-    namespace nodes{
+    namespace nodes
+    {
         // Used to feed a gstreamer pipeline from EagleEye
-        class GStreamer_EXPORT gstreamer_sink_base: virtual public gstreamer_base, virtual public Node{
-        public:
+        class GStreamer_EXPORT gstreamer_sink_base : virtual public gstreamer_base, virtual public Node
+        {
+          public:
             gstreamer_sink_base();
             virtual ~gstreamer_sink_base();
 
@@ -114,29 +119,35 @@ namespace aq{
             // Used for gstreamer to indicate that the appsrc needs to either feed data or stop feeding data
             virtual void start_feed();
             virtual void stop_feed();
-        protected:
-            GstAppSrc*     _source; // The output of Aquila's processing pipeline and the input to the gstreamer pipeline
-            guint           _need_data_id; // id for the need data signal
-            guint           _enough_data_id; // id for the enough data signal
+
+          protected:
+            GstAppSrc* _source;    // The output of Aquila's processing pipeline and the input to the gstreamer pipeline
+            guint _need_data_id;   // id for the need data signal
+            guint _enough_data_id; // id for the enough data signal
 
             bool _feed_enabled;
             virtual void cleanup();
         };
         // Decpricated ?
-        class GStreamer_EXPORT RTSP_server: public Node{
-        public:
-            enum ServerType{   TCP = 0, UDP = 1 };
+        class GStreamer_EXPORT RTSP_server : public Node
+        {
+          public:
+            enum ServerType
+            {
+                TCP = 0,
+                UDP = 1
+            };
             RTSP_server();
             ~RTSP_server();
-            virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
+            virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
             MO_DERIVE(RTSP_server, Node)
-                ENUM_PARAM(server_type, TCP, UDP);
-                PARAM(unsigned short, port, 8004);
-                PARAM(std::string, host, "");
-                PARAM(std::string, gst_pipeline, "");
-                PROPERTY(time_t, delta, 0);
-                PROPERTY(time_t, prevTime, 0);
-                PROPERTY(GstClockTime, timestamp, 0);
+            ENUM_PARAM(server_type, TCP, UDP);
+            PARAM(unsigned short, port, 8004);
+            PARAM(std::string, host, "");
+            PARAM(std::string, gst_pipeline, "");
+            PROPERTY(time_t, delta, 0);
+            PROPERTY(time_t, prevTime, 0);
+            PROPERTY(GstClockTime, timestamp, 0);
             MO_END;
             void gst_loop();
             void push_image();
@@ -152,24 +163,25 @@ namespace aq{
             ConstBuffer<cv::cuda::HostMem> bufferPool;
             guint need_data_id;
             guint enough_data_id;
-        protected:
+
+          protected:
             bool processImpl();
         };
 
 #ifdef HAVE_GST_RTSPSERVER
         class GStreamer_EXPORT RTSP_server_new : public Node
         {
-        public:
+          public:
             GstClockTime timestamp;
             time_t prevTime;
             time_t delta;
-            GMainLoop *loop;
-            GstRTSPServer *server;
+            GMainLoop* loop;
+            GstRTSPServer* server;
             int clientCount;
             bool connected;
             bool first_run;
             guint server_id;
-            GstRTSPMediaFactory *factory;
+            GstRTSPMediaFactory* factory;
             GstElement *pipeline, *appsrc;
 
             boost::thread glib_thread;
@@ -182,7 +194,7 @@ namespace aq{
             void setup(std::string pipeOverride = std::string());
             ~RTSP_server_new();
             virtual void nodeInit(bool firstInit);
-            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream &stream);
+            virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
             cv::Size imgSize;
         };
 #endif
@@ -196,11 +208,11 @@ http://stackoverflow.com/questions/20219401/how-to-push-opencv-images-into-gstre
 http://gstreamer.freedesktop.org/data/doc/gstreamer/head/manual/html/section-data-spoof.html
 
 // GStreamer
+#include <gstreamer-0.10/gst/app/gstappsrc.h>
 #include <gstreamer-0.10/gst/gst.h>
 #include <gstreamer-0.10/gst/gstelement.h>
 #include <gstreamer-0.10/gst/gstpipeline.h>
 #include <gstreamer-0.10/gst/gstutils.h>
-#include <gstreamer-0.10/gst/app/gstappsrc.h>
 
 // OpenCV
 // #include "cv.h"
@@ -255,10 +267,12 @@ Create_Image() {
     return image;
 }
 
-/// Creates a Graph of the created Pipeline including the contained Elements. The environment variable "GST_DEBUG_DUMP_DOT_DIR" must be set, e.g to /tmp/ to actually create the Graph.
+/// Creates a Graph of the created Pipeline including the contained Elements. The environment variable
+"GST_DEBUG_DUMP_DOT_DIR" must be set, e.g to /tmp/ to actually create the Graph.
 /// Furthermore GST_DEBUG needs to be activated, e.g. with "GST_DEBUG=3".
 /// So "GST_DEBUG=3 GST_DEBUG_DUMP_DOT_DIR=/tmp/" ./Sandbox would work.
-/// The .dot file can be converted to a e.g. svg-Graphic with the following command (Package GraphViz): dot -Tsvg -oPipelineGraph.svg PipelineGraph.dot
+/// The .dot file can be converted to a e.g. svg-Graphic with the following command (Package GraphViz): dot -Tsvg
+-oPipelineGraph.svg PipelineGraph.dot
 void
 Create_PipelineGraph( GstElement *pipeline ) {
     bool debug_active = gst_debug_is_active();
@@ -281,7 +295,8 @@ Push_new_Image( const boost::system::error_code &error ) {
 
     {
         /// How do i get the actual bpp and depth out of the cv::Mat?
-        GstCaps *caps = gst_caps_new_simple( "video/x-raw-rgb", "width", G_TYPE_INT, image.cols, "height", G_TYPE_INT, image.rows, "framerate", GST_TYPE_FRACTION, 0, 1, NULL );
+        GstCaps *caps = gst_caps_new_simple( "video/x-raw-rgb", "width", G_TYPE_INT, image.cols, "height", G_TYPE_INT,
+image.rows, "framerate", GST_TYPE_FRACTION, 0, 1, NULL );
         g_object_set( G_OBJECT( source_OpenCV ), "caps", caps, NULL );
         gst_caps_unref( caps );
 
@@ -304,7 +319,8 @@ Push_new_Image( const boost::system::error_code &error ) {
             GstCaps *caps_Source = NULL;
 
             std::stringstream video_caps_text;
-            video_caps_text << "video/x-raw-rgb,width=(int)" << image.cols << ",height=(int)" << image.rows << ",framerate=(fraction)0/1";
+            video_caps_text << "video/x-raw-rgb,width=(int)" << image.cols << ",height=(int)" << image.rows <<
+",framerate=(fraction)0/1";
             caps_Source = gst_caps_from_string( video_caps_text.str().c_str() );
 
             if( !GST_IS_CAPS( caps_Source ) ) {
@@ -348,11 +364,13 @@ main( int argc, char **argv ) {
     /// Initialise Sandbox
     /// ####################
     boost::shared_ptr<boost::asio::io_service> io_service = boost::make_shared<boost::asio::io_service>();
-    boost::shared_ptr<boost::asio::io_service::work> work = boost::make_shared<boost::asio::io_service::work>( *io_service );
+    boost::shared_ptr<boost::asio::io_service::work> work = boost::make_shared<boost::asio::io_service::work>(
+*io_service );
     boost::shared_ptr<boost::thread_group> threadgroup = boost::make_shared<boost::thread_group>();
 
     /// io_service Callback for continuously feeding into the pipeline of GStreamer.
-    /// I've using to push the Buffer into GStreamer as i come available instead of getting informed about an empty pipeline by GStreamer-Signals.
+    /// I've using to push the Buffer into GStreamer as i come available instead of getting informed about an empty
+pipeline by GStreamer-Signals.
     heartbeat_Intervall = 1000; ///< In Milliseconds
     heartbeat = boost::make_shared<boost::asio::deadline_timer>( ( *( io_service.get() ) ) );
 

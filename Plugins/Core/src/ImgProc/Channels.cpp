@@ -3,10 +3,9 @@
 using namespace aq;
 using namespace aq::nodes;
 
-
 bool ConvertToGrey::processImpl()
 {
-    if(input_image)
+    if (input_image)
     {
         cv::cuda::GpuMat grey;
         cv::cuda::cvtColor(input_image->getGpuMat(stream()), grey, cv::COLOR_BGR2GRAY, 0, stream());
@@ -105,22 +104,25 @@ bool ConvertToHSV::processImpl()
 
     updateParameter("Conversion Code", param);
 }*/
-/*cv::cuda::GpuMat ConvertColorspace::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
+/*cv::cuda::GpuMat ConvertColorspace::doProcess(cv::cuda::GpuMat& img,
+cv::cuda::Stream& stream)
 {
     auto buf =  resultBuffer.getFront();
-    cv::cuda::cvtColor(img, buf->data, getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), 0, stream);
+    cv::cuda::cvtColor(img, buf->data,
+getParameter<Parameters::EnumParameter>(0)->Data()->getValue(), 0, stream);
     return buf->data;
 }*/
 
 bool ConvertTo::processImpl()
 {
-    if(input->getSyncState() < SyncedMemory::DEVICE_UPDATED )
+    if (input->getSyncState() < SyncedMemory::DEVICE_UPDATED)
     {
         cv::Mat output;
         input->getMat(stream()).convertTo(output, datatype.getValue(), alpha, beta);
         this->output_param.updateData(output, input_param.getTimestamp(), _ctx.get());
         return true;
-    }else
+    }
+    else
     {
         cv::cuda::GpuMat output;
         input->getGpuMat(stream()).convertTo(output, datatype.getValue(), alpha, beta, stream());
@@ -132,7 +134,7 @@ MO_REGISTER_CLASS(ConvertTo)
 
 bool Magnitude::processImpl()
 {
-    if(input_image)
+    if (input_image)
     {
         ::cv::cuda::GpuMat magnitude;
         ::cv::cuda::magnitude(input_image->getGpuMat(stream()), magnitude, stream());
@@ -144,7 +146,7 @@ bool Magnitude::processImpl()
 
 bool SplitChannels::processImpl()
 {
-    if(input_image)
+    if (input_image)
     {
         std::vector<cv::cuda::GpuMat> _channels;
         ::cv::cuda::split(input_image->getGpuMat(stream()), _channels, stream());
@@ -156,14 +158,14 @@ bool SplitChannels::processImpl()
 
 bool ConvertDataType::processImpl()
 {
-    if(input_image)
+    if (input_image)
     {
         ::cv::cuda::GpuMat output;
         if (continuous)
         {
-            ::cv::cuda::createContinuous(input_image->getSize(), data_type.currentSelection, output);
+            ::cv::cuda::createContinuous(input_image->getSize(), data_type.current_selection, output);
         }
-        input_image->getGpuMat(stream()).convertTo(output, data_type.currentSelection, alpha, beta, stream());
+        input_image->getGpuMat(stream()).convertTo(output, data_type.current_selection, alpha, beta, stream());
     }
     return false;
 }
@@ -180,7 +182,8 @@ bool ConvertDataType::processImpl()
     qualifiersSet = false;
 }*/
 
-/*cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
+/*cv::cuda::GpuMat Merge::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream&
+stream)
 {
     auto chan1 = getParameter<cv::cuda::GpuMat>(0);
     auto chan2 = getParameter<cv::cuda::GpuMat>(1);
@@ -228,7 +231,7 @@ bool ConvertDataType::processImpl()
 bool ConvertColorspace::processImpl()
 {
     cv::cuda::GpuMat output;
-    cv::cuda::cvtColor(input_image->getGpuMat(stream()),output, conversion_code.getValue(), 0, stream());
+    cv::cuda::cvtColor(input_image->getGpuMat(stream()), output, conversion_code.getValue(), 0, stream());
     output_image_param.updateData(output, input_image_param.getTimestamp(), _ctx.get());
     return true;
 }
@@ -238,14 +241,12 @@ bool MergeChannels::processImpl()
     return false;
 }
 
-
 bool Reshape::processImpl()
 {
-    reshaped_image_param.updateData(input_image->getGpuMat(stream()).reshape(channels, rows), input_image_param.getTimestamp(), _ctx.get());
+    reshaped_image_param.updateData(
+        input_image->getGpuMat(stream()).reshape(channels, rows), input_image_param.getTimestamp(), _ctx.get());
     return true;
 }
-
-
 
 MO_REGISTER_CLASS(ConvertToGrey)
 MO_REGISTER_CLASS(ConvertToHSV)
@@ -255,5 +256,3 @@ MO_REGISTER_CLASS(ConvertDataType)
 MO_REGISTER_CLASS(MergeChannels)
 MO_REGISTER_CLASS(Reshape)
 MO_REGISTER_CLASS(Magnitude)
-
-

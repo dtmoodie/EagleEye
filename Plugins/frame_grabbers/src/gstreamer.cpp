@@ -1,13 +1,13 @@
 #include "gstreamer.h"
 #include "precompiled.hpp"
-#include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 using namespace aq;
 using namespace aq::nodes;
 
 int GrabberGstreamer::canLoad(const std::string& path)
 {
-    // oooor a gstreamer pipeline.... 
+    // oooor a gstreamer pipeline....
     std::string appsink = "appsink";
     if (path.find(appsink) != std::string::npos)
         return 9;
@@ -35,36 +35,34 @@ void GrabberGstreamer::listPaths(std::vector<std::string>& paths)
     }
 }
 
-
-
 bool GrabberGstreamer::loadData(const std::string& file_path_)
 {
     std::string file_path = file_path_;
 
     h_cam.reset(new cv::VideoCapture(file_path_, cv::CAP_GSTREAMER));
-    if(h_cam->isOpened())
+    if (h_cam->isOpened())
     {
         loaded_document = file_path;
         cv::Mat test;
-        
+
         if (!h_cam->read(test))
         {
             return false;
         }
         h_cam->set(cv::CAP_PROP_POS_FRAMES, 0);
         boost::property_tree::ptree file_history;
-        if(boost::filesystem::exists("file_history.json"))
+        if (boost::filesystem::exists("file_history.json"))
         {
             boost::property_tree::json_parser::read_json("file_history.json", file_history);
         }
         boost::property_tree::ptree child;
         child.put("path", file_path);
-        if(!file_history.get_child_optional("files"))
+        if (!file_history.get_child_optional("files"))
             file_history.add_child("files", boost::property_tree::ptree());
-        for(auto& paths : file_history.get_child("files"))
+        for (auto& paths : file_history.get_child("files"))
         {
             (void)paths;
-            if(child.get_child("path").get_value<std::string>() == file_path)
+            if (child.get_child("path").get_value<std::string>() == file_path)
             {
                 return true;
             }
@@ -75,8 +73,5 @@ bool GrabberGstreamer::loadData(const std::string& file_path_)
     }
     return false;
 }
-
-
-
 
 MO_REGISTER_CLASS(GrabberGstreamer);

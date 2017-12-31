@@ -1,6 +1,5 @@
 #include "DataHandling.h"
 
-
 #include <boost/lexical_cast.hpp>
 using namespace aq;
 using namespace aq::nodes;
@@ -9,14 +8,16 @@ bool PlaybackInfo::processImpl()
 {
     auto current_ts = input_param.getTimestamp();
     double framerate = 30.0;
-    if(current_ts && last_timestamp)
+    if (current_ts && last_timestamp)
     {
-        std::chrono::milliseconds ts_delta = std::chrono::duration_cast<std::chrono::milliseconds>(*current_ts - *last_timestamp);
+        std::chrono::milliseconds ts_delta =
+            std::chrono::duration_cast<std::chrono::milliseconds>(*current_ts - *last_timestamp);
         framerate = 1000.0 / std::chrono::duration_cast<std::chrono::seconds>(ts_delta).count(); // TODO check
     }
 
     auto now = boost::posix_time::microsec_clock::local_time();
-    double processrate = 1000.0 / (double)boost::posix_time::time_duration(now - last_iteration_time).total_milliseconds();
+    double processrate =
+        1000.0 / (double)boost::posix_time::time_duration(now - last_iteration_time).total_milliseconds();
 
     framerate_param.updateData(processrate);
     source_framerate_param.updateData(framerate);
@@ -41,13 +42,12 @@ MO_REGISTER_CLASS(ImageInfo);
 bool Mat2Tensor::processImpl()
 {
     int new_channels = input->getChannels();
-    if(include_position)
+    if (include_position)
     {
         new_channels += 2;
     }
     return false;
 }
-
 
 /*cv::cuda::GpuMat Mat2Tensor::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
@@ -61,7 +61,7 @@ bool Mat2Tensor::processImpl()
     if(img.type() == type)
     {
         typed = img;
-    }    
+    }
     else
     {
         cv::cuda::createContinuous(img.size(), type, typed);
@@ -177,7 +177,7 @@ void ConcatTensor::nodeInit(bool firstInit)
 {
     updateParameter("Include Input", true);
     addInputParam<cv::cuda::GpuMat>("Input 0");
-    
+
 }
 cv::cuda::GpuMat LagBuffer::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
@@ -213,11 +213,13 @@ void LagBuffer::nodeInit(bool firstInit)
     putItr = 0;
     getItr = 0;
     lagFrames = 20;
-    _parameters.push_back(new Parameters::TypedInputParamCopy<unsigned int>("Lag frames", 
-                                &lagFrames, Parameters::Parameter::ParameterType(Parameters::Parameter::Input | Parameters::Parameter::Control), 
+    _parameters.push_back(new Parameters::TypedInputParamCopy<unsigned int>("Lag frames",
+                                &lagFrames, Parameters::Parameter::ParameterType(Parameters::Parameter::Input |
+Parameters::Parameter::Control),
                                 "Number of frames for this video stream to lag behind"));
 
-    //    updateParameter<unsigned int>("Lag frames", &lagFrames, Parameters::Parameter::Control, "Number of frames for this video stream to lag behind");
+    //    updateParameter<unsigned int>("Lag frames", &lagFrames, Parameters::Parameter::Control, "Number of frames for
+this video stream to lag behind");
 }
 cv::cuda::GpuMat CameraSync::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream)
 {
@@ -241,7 +243,7 @@ cv::cuda::GpuMat CameraSync::doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& 
                 updateParameter<unsigned int>("Camera 1 offset", 0)->type = Parameters::Parameter::Output;
                 updateParameter<unsigned int>("Camera 2 offset", abs(offset))->type =  Parameters::Parameter::Output;
             }
-        }    
+        }
         _parameters[0]->changed = false;
     }
     return img;
@@ -255,7 +257,7 @@ void CameraSync::nodeInit(bool firstInit)
     updateParameter<int>("Camera offset", 0);
     updateParameter<unsigned int>("Camera 1 offset", 0)->type =  Parameters::Parameter::Output;
     updateParameter<unsigned int>("Camera 2 offset", 0)->type = Parameters::Parameter::Output;
-    
+
 }
 
 

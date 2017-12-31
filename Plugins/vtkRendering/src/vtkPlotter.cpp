@@ -1,22 +1,20 @@
 #include "vtkPlotter.h"
 #include "vtkLogRedirect.h"
-#include <vtkOpenGLRenderWindow.h>
-#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkAxesActor.h>
+#include <vtkGenericOpenGLRenderWindow.h>
+#include <vtkOpenGLRenderWindow.h>
 
 #include <QVTKWidget2.h>
 
-#include <qopengl.h>
-#include <QOpenGLContext>
 #include "QtOpenGL/QGLContext"
+#include <QOpenGLContext>
 #include <qgridlayout.h>
+#include <qopengl.h>
 
 using namespace EagleLib;
 using namespace EagleLib::Plotting;
 
-
-vtkPlotterBase::vtkPlotterBase():
-    QtPlotter()
+vtkPlotterBase::vtkPlotterBase() : QtPlotter()
 {
     renderer = vtkSmartPointer<vtkRenderer>::New();
     vtkLogRedirect::init();
@@ -25,7 +23,7 @@ vtkPlotterBase::vtkPlotterBase():
 vtkPlotterBase::~vtkPlotterBase()
 {
     mo::ThreadSpecificQueue::RemoveFromQueue(this);
-    for(auto prop : _auto_remove_props)
+    for (auto prop : _auto_remove_props)
     {
         renderer->RemoveViewProp(prop);
     }
@@ -35,7 +33,6 @@ bool vtkPlotterBase::AcceptsParameter(mo::IParameter* param)
     return false;
 }
 
-
 void vtkPlotterBase::SetInput(mo::IParameter* param_)
 {
     QtPlotter::SetInput(param_);
@@ -43,7 +40,6 @@ void vtkPlotterBase::SetInput(mo::IParameter* param_)
 
 void vtkPlotterBase::OnParameterUpdate(cv::cuda::Stream* stream)
 {
-
 }
 
 void vtkPlotterBase::AddPlot(QWidget* plot_)
@@ -77,15 +73,15 @@ QWidget* vtkPlotterBase::CreatePlot(QWidget* parent)
 void vtkPlotterBase::PlotInit(bool firstInit)
 {
     QtPlotter::PlotInit(firstInit);
-    if(firstInit)
+    if (firstInit)
     {
         vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
 
         this->renderer->AddActor(axes);
-    }    
+    }
 }
 
-void vtkPlotterBase::Serialize(ISimpleSerializer *pSerializer)
+void vtkPlotterBase::Serialize(ISimpleSerializer* pSerializer)
 {
     QtPlotter::Serialize(pSerializer);
     SERIALIZE(render_widgets);
@@ -116,4 +112,4 @@ void vtkPlotterBase::RenderAll()
         itr->GetRenderWindow()->Render();
     }
 }
-//MO_REGISTER_CLASS(vtkPlotterBase);
+// MO_REGISTER_CLASS(vtkPlotterBase);

@@ -6,15 +6,15 @@ namespace aq
 {
     namespace nodes
     {
-        class FrameSkip: public Node
+        class FrameSkip : public Node
         {
-        public:
+          public:
             MO_DERIVE(FrameSkip, Node)
-                INPUT(SyncedMemory, input, nullptr)
-                OUTPUT(SyncedMemory, output, {})
-                PARAM(int, frame_skip, 30)
+            INPUT(SyncedMemory, input, nullptr)
+            OUTPUT(SyncedMemory, output, {})
+            PARAM(int, frame_skip, 30)
             MO_END
-        protected:
+          protected:
             bool processImpl();
             int frame_count = 0;
         };

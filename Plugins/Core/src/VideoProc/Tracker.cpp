@@ -1,23 +1,20 @@
 #include "Tracker.h"
 //#include "Aquila/nodes/VideoProc/Tracking.hpp"
 #include "Aquila/rcc/external_includes/cv_imgproc.hpp"
-#include <Aquila/rcc/external_includes/cv_highgui.hpp>
-#include <Aquila/rcc/external_includes/cv_calib3d.hpp>
-#include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
-#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
+#include <Aquila/rcc/external_includes/cv_calib3d.hpp>
+#include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+#include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
+#include <Aquila/rcc/external_includes/cv_highgui.hpp>
 
 #include <MetaObject/thread/InterThread.hpp>
-
 
 using namespace aq;
 using namespace aq::nodes;
 
-
 MO_REGISTER_CLASS(KeyFrameTracker);
 MO_REGISTER_CLASS(CMT);
 MO_REGISTER_CLASS(TLD);
-
 
 /*void KeyFrameTracker::reset()
 {
@@ -93,7 +90,8 @@ void KeyFrameTracker_displayCallback(int status, void* userData)
 {
     std::pair<cv::cuda::GpuMat*, std::string>* data = (std::pair<cv::cuda::GpuMat*, std::string>*)userData;
     boost::function<void(void)> f = boost::bind(displayCallback, *data->first, data->second);
-    Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData, mo::TypeInfo(typeid(aq::nodes::Node))));
+    Parameters::UI::UiCallbackService::Instance()->post(f, std::make_pair(userData,
+mo::TypeInfo(typeid(aq::nodes::Node))));
     delete data;
 }
 */
@@ -208,7 +206,8 @@ bool KeyFrameTracker::processImpl()
                 cv::cuda::GpuMat* d_disp = d_displayBuffer.getFront();
                 cv::cuda::blendLinear(img, *warpBuffer, nonWarpedMask, *maskBuffer, *d_disp, workStreams[i]);
                 workStreams[i].enqueueHostCallback(KeyFrameTracker_displayCallback,
-                    new std::pair<cv::cuda::GpuMat*, std::string>(d_disp, "Warped image " + boost::lexical_cast<std::string>(i)));
+                    new std::pair<cv::cuda::GpuMat*, std::string>(d_disp, "Warped image " +
+boost::lexical_cast<std::string>(i)));
             }
         }
     }

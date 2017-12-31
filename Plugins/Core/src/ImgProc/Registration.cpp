@@ -1,9 +1,7 @@
 
 #include "Registration.h"
-#include <thrust/transform.h>
 #include <opencv2/core/cuda_stream_accessor.hpp>
-
-
+#include <thrust/transform.h>
 
 using namespace aq;
 using namespace aq::nodes;
@@ -66,7 +64,8 @@ void register_to_reference::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream&
                 d_reference_grey = tmp;
             }
             cv::cuda::GpuMat temp_ref_keypoints;
-            d_orb->detectAndComputeAsync(d_reference_grey, cv::noArray(), temp_ref_keypoints, ref_descriptors, false, stream);
+            d_orb->detectAndComputeAsync(d_reference_grey, cv::noArray(), temp_ref_keypoints, ref_descriptors, false,
+stream);
             temp_ref_keypoints.download(ref_keypoints, stream);
         }
         _parameters[0]->changed = false;
@@ -97,7 +96,7 @@ void register_to_reference::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream&
     float* dist = h_matches.ptr<float>(1);
     std::vector<cv::Point2f> ref_matched_points;
     std::vector<cv::Point2f> input_matched_points;
-    
+
     cv::Mat dist_mat(1, h_matches.cols, CV_32F, dist);
     cv::Scalar mean, stddev;
     cv::meanStdDev(dist_mat, mean, stddev);
@@ -108,7 +107,8 @@ void register_to_reference::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream&
     {
         if(dist[i] < threshold)
         {
-            ref_matched_points.push_back(cv::Point2f(ref_keypoints.at<float>(0, idx[i]), ref_keypoints.at<float>(1, idx[i])));
+            ref_matched_points.push_back(cv::Point2f(ref_keypoints.at<float>(0, idx[i]), ref_keypoints.at<float>(1,
+idx[i])));
             input_matched_points.push_back(cv::Point2f(h_keypoints.at<float>(0, i), h_keypoints.at<float>(1,i)));
         }
     }
@@ -117,8 +117,10 @@ void register_to_reference::doProcess(TS<SyncedMemory>& input, cv::cuda::Stream&
     cv::cuda::GpuMat mask(gpu_mat.size(), CV_32F);
     mask.setTo(cv::Scalar(1.0), stream);
     cv::cuda::GpuMat warped_input, warped_input_mask;
-    cv::cuda::warpPerspective(input.getGpuMat(stream), warped_input, H, gpu_mat.size(), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, 0, cv::Scalar(), stream);
-    cv::cuda::warpPerspective(mask, warped_input_mask, H, gpu_mat.size(), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, 0, cv::Scalar(), stream);
+    cv::cuda::warpPerspective(input.getGpuMat(stream), warped_input, H, gpu_mat.size(), cv::INTER_LINEAR |
+cv::WARP_INVERSE_MAP, 0, cv::Scalar(), stream);
+    cv::cuda::warpPerspective(mask, warped_input_mask, H, gpu_mat.size(), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, 0,
+cv::Scalar(), stream);
     cv::cuda::bitwise_and(mask, warped_input_mask, warped_input_mask, cv::noArray(), stream);
     cv::cuda::GpuMat blended;
     cv::cuda::blendLinear(warped_input, d_reference_original, warped_input_mask, mask,blended, stream);

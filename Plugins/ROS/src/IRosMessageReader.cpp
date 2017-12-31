@@ -5,9 +5,9 @@ std::vector<std::string> IMessageReader::ListSubscribableTopics()
 {
     std::vector<std::string> output;
     auto constructors = mo::MetaObjectFactory::instance()->getConstructors(IMessageReader::s_interfaceID);
-    for(auto constructor : constructors)
+    for (auto constructor : constructors)
     {
-        if(auto info = dynamic_cast<MessageReaderInfo*>(constructor->GetObjectInfo()))
+        if (auto info = dynamic_cast<MessageReaderInfo*>(constructor->GetObjectInfo()))
         {
             info->ListTopics(output);
         }
@@ -18,12 +18,12 @@ std::vector<std::string> IMessageReader::ListSubscribableTopics()
 int IMessageReader::CanLoadTopic(const std::string& topic)
 {
     auto constructors = mo::MetaObjectFactory::instance()->getConstructors(IMessageReader::s_interfaceID);
-    for(auto constructor : constructors)
+    for (auto constructor : constructors)
     {
-        if(auto info = dynamic_cast<MessageReaderInfo*>(constructor->GetObjectInfo()))
+        if (auto info = dynamic_cast<MessageReaderInfo*>(constructor->GetObjectInfo()))
         {
             int p = info->CanHandleTopic(topic);
-            if(p > 0)
+            if (p > 0)
             {
                 return p;
             }
@@ -32,7 +32,12 @@ int IMessageReader::CanLoadTopic(const std::string& topic)
     return 0;
 }
 
-void IMessageReader::on_subscribed_topic_modified(mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, const std::shared_ptr<mo::ICoordinateSystem>&, mo::UpdateFlags)
+void IMessageReader::on_subscribed_topic_modified(mo::IParam*,
+                                                  mo::Context*,
+                                                  mo::OptionalTime_t,
+                                                  size_t,
+                                                  const std::shared_ptr<mo::ICoordinateSystem>&,
+                                                  mo::UpdateFlags)
 {
     this->subscribe(subscribed_topic);
 }
@@ -41,29 +46,30 @@ rcc::shared_ptr<IMessageReader> IMessageReader::create(const std::string& topic)
 {
     std::map<int, IObjectConstructor*> constructor_priority;
     auto constructors = mo::MetaObjectFactory::instance()->getConstructors(IMessageReader::s_interfaceID);
-    for(auto constructor : constructors)
+    for (auto constructor : constructors)
     {
-        if(auto info = dynamic_cast<MessageReaderInfo*>(constructor->GetObjectInfo()))
+        if (auto info = dynamic_cast<MessageReaderInfo*>(constructor->GetObjectInfo()))
         {
             constructor_priority[info->CanHandleTopic(topic)] = constructor;
         }
     }
-    if(constructor_priority.size())
+    if (constructor_priority.size())
     {
-        if(constructor_priority.rbegin()->first > 0)
+        if (constructor_priority.rbegin()->first > 0)
         {
             IObject* obj = constructor_priority.rbegin()->second->Construct();
-            if(obj)
+            if (obj)
             {
                 obj->Init(true);
                 rcc::shared_ptr<IMessageReader> typed(obj);
-                if(typed)
+                if (typed)
                 {
-                    if(typed->subscribe(topic))
+                    if (typed->subscribe(topic))
                     {
                         return typed;
                     }
-                }else
+                }
+                else
                 {
                     delete obj;
                 }

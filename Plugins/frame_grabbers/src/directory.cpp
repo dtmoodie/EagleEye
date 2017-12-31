@@ -1,6 +1,6 @@
 #include "directory.h"
-#include <Aquila/rcc/external_includes/cv_imgcodec.hpp>
 #include "precompiled.hpp"
+#include <Aquila/rcc/external_includes/cv_imgcodec.hpp>
 
 using namespace aq;
 using namespace aq::nodes;
@@ -52,7 +52,7 @@ bool frame_grabber_directory::LoadFile(const std::string& file_path)
         std::map<std::string, std::vector<std::string>> extension_map;
         for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr)
         {
-            if (is_regular_file(itr->path())) 
+            if (is_regular_file(itr->path()))
             {
                 //files.push_back(itr->path().string());
                 extension_map[itr->path().extension().string()].push_back(itr->path().string());

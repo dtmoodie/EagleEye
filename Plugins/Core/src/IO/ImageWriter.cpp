@@ -1,7 +1,6 @@
 #include "ImageWriter.h"
 #include <boost/filesystem.hpp>
 
-
 using namespace aq;
 using namespace aq::nodes;
 
@@ -28,30 +27,28 @@ bool ImageWriter::processImpl()
     }
 
     ++frame_count;
-    if(frequency == 0 && request_write == false)
+    if (frequency == 0 && request_write == false)
         return true;
     if (request_write || (frameSkip >= frequency) || frequency == -1)
     {
         request_write_param.updateData(false);
         std::stringstream ss;
-        if(!boost::filesystem::exists(save_directory))
+        if (!boost::filesystem::exists(save_directory))
         {
             boost::filesystem::create_directories(save_directory);
         }
         ss << save_directory.string() << "/" << base_name << std::setfill('0') << std::setw(4) << frame_count << ext;
         ++frame_count;
         std::string save_name = ss.str();
-        if(input_image->getSyncState() < SyncedMemory::DEVICE_UPDATED)
+        if (input_image->getSyncState() < SyncedMemory::DEVICE_UPDATED)
         {
             cv::imwrite(save_name, input_image->getMat(stream()));
-        }else
+        }
+        else
         {
             input_image->synchronize(stream());
             cv::Mat mat = input_image->getMat(stream());
-            cuda::enqueue_callback_async([mat, save_name]()->void
-            {
-                cv::imwrite(save_name, mat);
-            }, stream());
+            cuda::enqueue_callback_async([mat, save_name]() -> void { cv::imwrite(save_name, mat); }, stream());
         }
         frameSkip = 0;
     }

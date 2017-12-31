@@ -1,57 +1,48 @@
-#include "PlottingImpl.hpp"
 #include "Plotting.h"
+#include "PlottingImpl.hpp"
 #include "QVector"
-
 
 using namespace EagleLib;
 
 namespace EagleLib
 {
-    class HistogramPlotter: public QtPlotterImpl, public StaticPlotPolicy
+    class HistogramPlotter : public QtPlotterImpl, public StaticPlotPolicy
     {
         QVector<QCPBars*> hists;
         QVector<double> bins;
-    public:
+
+      public:
         HistogramPlotter();
         virtual QWidget* CreatePlot(QWidget* parent);
-        
+
         virtual bool AcceptsParameter(Parameters::Parameter* param);
         virtual std::string PlotName() const;
 
         virtual QWidget* GetControlWidget(QWidget* parent);
 
-        virtual void AddPlot(QWidget *plot_);
+        virtual void AddPlot(QWidget* plot_);
 
         virtual void UpdatePlots(bool rescale = false); // called from ui thread
 
         virtual void SetInput(Parameters::Parameter* param_);
 
         virtual void OnParameterUpdate(cv::cuda::Stream* stream);
-        virtual void Serialize(ISimpleSerializer *pSerializer)
+        virtual void Serialize(ISimpleSerializer* pSerializer)
         {
             QtPlotterImpl::Serialize(pSerializer);
             SERIALIZE(hists);
             SERIALIZE(bins);
         }
-        virtual void RescalePlots()
-        {
-
-        }
+        virtual void RescalePlots() {}
     };
-    struct HistogramPlotterInfo: public PlotterInfo
+    struct HistogramPlotterInfo : public PlotterInfo
     {
-        virtual Plotter::PlotterType GetPlotType()
-        {
-            return Plotter::QT_Plotter;
-        }
+        virtual Plotter::PlotterType GetPlotType() { return Plotter::QT_Plotter; }
         virtual bool AcceptsParameter(Parameters::Parameter* param)
         {
             return VectorSizePolicy::acceptsSize(getSize(param));
         }
-        virtual std::string GetObjectName()
-        {
-            return "HistogramPlotter";
-        }
+        virtual std::string GetObjectName() { return "HistogramPlotter"; }
         virtual std::string GetObjectTooltip()
         {
             return "Used for plotting histograms, input must be a calculated histogram";
@@ -65,13 +56,9 @@ namespace EagleLib
 
 HistogramPlotterInfo hist_info;
 
-HistogramPlotter::HistogramPlotter() :
-    QtPlotterImpl()
+HistogramPlotter::HistogramPlotter() : QtPlotterImpl()
 {
-
 }
-
-
 
 QWidget* HistogramPlotter::CreatePlot(QWidget* parent)
 {
@@ -80,7 +67,6 @@ QWidget* HistogramPlotter::CreatePlot(QWidget* parent)
     AddPlot(plot);
     return plot;
 }
-
 
 bool HistogramPlotter::AcceptsParameter(Parameters::Parameter* param)
 {
@@ -95,10 +81,10 @@ QWidget* HistogramPlotter::GetControlWidget(QWidget* parent)
     return nullptr;
 }
 
-void HistogramPlotter::AddPlot(QWidget *plot_)
+void HistogramPlotter::AddPlot(QWidget* plot_)
 {
     QCustomPlot* _plot = dynamic_cast<QCustomPlot*>(plot_);
-    if(_plot == nullptr)
+    if (_plot == nullptr)
         return;
     QtPlotter::AddPlot(plot_);
     QCPBars* hist = new QCPBars(_plot->xAxis, _plot->yAxis);
@@ -106,11 +92,11 @@ void HistogramPlotter::AddPlot(QWidget *plot_)
     _plot->addPlottable(hist);
     _plot->rescaleAxes();
     _plot->replot();
-    if(_plot->plotLayout()->rowCount() == 0)
+    if (_plot->plotLayout()->rowCount() == 0)
     {
         QCPPlotTitle* title = new QCPPlotTitle(_plot, QString::fromStdString(this->PlotName()));
         _plot->plotLayout()->insertRow(0);
-        _plot->plotLayout()->addElement(0,0, title);
+        _plot->plotLayout()->addElement(0, 0, title);
     }
     hists.push_back(hist);
 }
@@ -146,7 +132,6 @@ void HistogramPlotter::UpdatePlots(bool rescale)
                 qcp->replot();
                 if (rescale)
                     qcp->rescaleAxes();
-                
             }
         }
     }
@@ -179,12 +164,11 @@ void HistogramPlotter::OnParameterUpdate(cv::cuda::Stream* stream)
             }
         }
         EagleLib::cuda::enqueue_callback_async(
-            [this, rescale]()->void
-        {
-            Parameters::UI::UiCallbackService::Instance()->post(std::bind(&HistogramPlotter::UpdatePlots, this, rescale));
-        }, *stream);
-            
+            [this, rescale]() -> void {
+                Parameters::UI::UiCallbackService::Instance()->post(
+                    std::bind(&HistogramPlotter::UpdatePlots, this, rescale));
+            },
+            *stream);
     }
 }
 REGISTERCLASS(HistogramPlotter, &hist_info)
-

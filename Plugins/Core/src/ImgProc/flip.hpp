@@ -5,9 +5,9 @@ namespace aq
 {
     namespace nodes
     {
-        class Flip: public Node
+        class Flip : public Node
         {
-        public:
+          public:
             enum Axis
             {
                 Diag = -1,
@@ -16,22 +16,23 @@ namespace aq
             };
 
             MO_DERIVE(Flip, Node)
-                INPUT(SyncedMemory, input, nullptr)
-                ENUM_PARAM(axis, X, Y, Diag)
-                OUTPUT(SyncedMemory, output, {})
+            INPUT(SyncedMemory, input, nullptr)
+            ENUM_PARAM(axis, X, Y, Diag)
+            OUTPUT(SyncedMemory, output, {})
             MO_END;
-        protected:
+
+          protected:
             bool processImpl();
         };
-        class Rotate: public Node
+        class Rotate : public Node
         {
-        public:
+          public:
             MO_DERIVE(Rotate, Node)
-                INPUT(SyncedMemory, input, nullptr)
-                PARAM(int, angle_degrees, 180)
-                OUTPUT(SyncedMemory, output,{})
+            INPUT(SyncedMemory, input, nullptr)
+            PARAM(int, angle_degrees, 180)
+            OUTPUT(SyncedMemory, output, {})
             MO_END
-        protected:
+          protected:
             bool processImpl();
         };
     }

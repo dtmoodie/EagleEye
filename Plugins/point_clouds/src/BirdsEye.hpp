@@ -6,14 +6,14 @@
 
 namespace aq
 {
-namespace nodes
-{
-    // Initial implementaiton of birds eye view transform from
-    // https://arxiv.org/pdf/1611.07759.pdf
-    class BirdsEye: public Node
+    namespace nodes
     {
-    public:
-        MO_DERIVE(BirdsEye, Node)
+        // Initial implementaiton of birds eye view transform from
+        // https://arxiv.org/pdf/1611.07759.pdf
+        class BirdsEye : public Node
+        {
+          public:
+            MO_DERIVE(BirdsEye, Node)
             INPUT(pcl::PointCloud<pcl::PointXYZI>::Ptr, point_cloud, nullptr)
             PARAM(float, resolution, 0.1)
             PARAM(int, width, 1024)
@@ -22,9 +22,10 @@ namespace nodes
             PARAM(float, min_z, 0)
             PARAM(float, max_z, 10)
             OUTPUT(SyncedMemory, birds_eye_view, {})
-        MO_END;
-    protected:
-        bool processImpl();
-    };
-}
+            MO_END;
+
+          protected:
+            bool processImpl();
+        };
+    }
 }

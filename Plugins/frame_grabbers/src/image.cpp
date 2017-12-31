@@ -1,8 +1,7 @@
 #include "image.h"
+#include "Aquila/framegrabbers/GrabberInfo.hpp"
 #include "precompiled.hpp"
 #include <opencv2/imgcodecs.hpp>
-#include "Aquila/framegrabbers/GrabberInfo.hpp"
-
 
 using namespace aq;
 using namespace aq::nodes;
@@ -10,7 +9,7 @@ using namespace aq::nodes;
 bool GrabberImage::loadData(const std::string& path)
 {
     image = cv::imread(path);
-    if(!image.empty())
+    if (!image.empty())
     {
         output_param.updateData(image);
         return true;
@@ -19,7 +18,7 @@ bool GrabberImage::loadData(const std::string& path)
 }
 bool GrabberImage::grab()
 {
-    if(!image.empty())
+    if (!image.empty())
     {
         output_param.updateData(image);
         return true;
@@ -39,6 +38,5 @@ int GrabberImage::loadTimeout()
 {
     return 5000;
 }
-
 
 MO_REGISTER_CLASS(GrabberImage);

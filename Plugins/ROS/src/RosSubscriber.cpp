@@ -1,6 +1,6 @@
 #include "RosSubscriber.hpp"
-#include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
 #include "RosInterface.hpp"
+#include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
 #include <ros/ros.h>
 
 using namespace aq;
@@ -17,15 +17,15 @@ int RosSubscriber::canLoadPath(const std::string& topic)
 
 bool RosSubscriber::loadData(std::string file_path)
 {
-    for(auto reader : _readers)
+    for (auto reader : _readers)
     {
-        if(reader->subscribed_topic == file_path)
+        if (reader->subscribed_topic == file_path)
         {
             return true;
         }
     }
     auto reader = ros::IMessageReader::create(file_path);
-    if(reader)
+    if (reader)
     {
         _readers.push_back(reader);
         this->addComponent(reader);
@@ -34,11 +34,10 @@ bool RosSubscriber::loadData(std::string file_path)
     return false;
 }
 
-
 void RosSubscriber::addComponent(rcc::weak_ptr<Algorithm> component)
 {
     auto typed = component.DynamicCast<ros::IMessageReader>();
-    if(typed)
+    if (typed)
     {
         _readers.push_back(typed);
         Algorithm::addComponent(component);

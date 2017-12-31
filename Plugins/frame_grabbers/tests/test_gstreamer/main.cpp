@@ -14,11 +14,11 @@ BOOST_AUTO_TEST_CASE(gstreamer_load)
     mo::MetaObjectFactory::instance()->loadPlugins("");
     auto plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins();
     bool found = false;
-    for(const auto& plugin : plugins)
+    for (const auto& plugin : plugins)
     {
-        if(plugin.find_first_of("frame_grabber") != std::string::npos)
+        if (plugin.find_first_of("frame_grabber") != std::string::npos)
         {
-            if(plugin.find_first_of("success") != std::string::npos)
+            if (plugin.find_first_of("success") != std::string::npos)
                 found = true;
         }
     }
@@ -27,12 +27,12 @@ BOOST_AUTO_TEST_CASE(gstreamer_load)
 
 BOOST_AUTO_TEST_CASE(gstreamer_construct_static)
 {
-    
 }
 
 BOOST_AUTO_TEST_CASE(gstreamer_construct_dynamic)
 {
-    rcc::shared_ptr<aq::nodes::IFrameGrabber> obj = mo::MetaObjectFactory::instance()->create("frame_grabber_gstreamer");
+    rcc::shared_ptr<aq::nodes::IFrameGrabber> obj =
+        mo::MetaObjectFactory::instance()->create("frame_grabber_gstreamer");
     BOOST_REQUIRE(obj);
 }
 

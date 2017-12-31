@@ -1,7 +1,5 @@
 #include "NonMaxSuppression.h"
 
-
-
 using namespace aq;
 using namespace aq::nodes;
 bool MinMax::processImpl()
@@ -12,43 +10,46 @@ bool MinMax::processImpl()
     return true;
 }
 
-
 bool Threshold::processImpl()
 {
-    if(input_max)
+    if (input_max)
         max_param.updateData(*input_max * input_percent);
-    if(input_min)
+    if (input_min)
         min_param.updateData(*input_min * input_percent);
     cv::cuda::GpuMat upper_mask, lower_mask;
-    if(two_sided)
+    if (two_sided)
     {
-        if(source_value)
+        if (source_value)
         {
-            cv::cuda::threshold(input->getGpuMat(stream()), upper_mask, max, replace_value, inverse? 3 : 4, stream());
-        }else
+            cv::cuda::threshold(input->getGpuMat(stream()), upper_mask, max, replace_value, inverse ? 3 : 4, stream());
+        }
+        else
         {
             cv::cuda::threshold(input->getGpuMat(stream()), upper_mask, max, replace_value, inverse ? 1 : 0, stream());
         }
     }
-    if(truncate)
+    if (truncate)
     {
         cv::cuda::threshold(input->getGpuMat(stream()), lower_mask, min, replace_value, 2, stream());
-    }else
+    }
+    else
     {
-        if(source_value)
+        if (source_value)
         {
-            cv::cuda::threshold(input->getGpuMat(stream()), lower_mask, min, 0.0, inverse? 4 : 3, stream());
-        }else
+            cv::cuda::threshold(input->getGpuMat(stream()), lower_mask, min, 0.0, inverse ? 4 : 3, stream());
+        }
+        else
         {
-            cv::cuda::threshold(input->getGpuMat(stream()), lower_mask, min, replace_value, inverse? 1: 0, stream());
+            cv::cuda::threshold(input->getGpuMat(stream()), lower_mask, min, replace_value, inverse ? 1 : 0, stream());
         }
     }
     cv::cuda::GpuMat mask;
-    if(upper_mask.empty())
+    if (upper_mask.empty())
     {
         mask = lower_mask;
-        //mask_param.updateData(lower_mask, input_param.getTimestamp(), _ctx.get());   
-    }else
+        // mask_param.updateData(lower_mask, input_param.getTimestamp(), _ctx.get());
+    }
+    else
     {
         cv::cuda::bitwise_and(upper_mask, lower_mask, mask, cv::noArray(), stream());
     }
@@ -56,7 +57,6 @@ bool Threshold::processImpl()
     mask_param.updateData(mask, input_param.getTimestamp(), _ctx.get());
     return true;
 }
-
 
 /*cv::cuda::GpuMat NonMaxSuppression::doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream& stream)
 {
@@ -116,6 +116,6 @@ bool Threshold::processImpl()
     return maxMask;
 }*/
 
-//MO_REGISTER_CLASS(NonMaxSuppression, Image, Processing)
+// MO_REGISTER_CLASS(NonMaxSuppression, Image, Processing)
 MO_REGISTER_CLASS(MinMax)
 MO_REGISTER_CLASS(Threshold)

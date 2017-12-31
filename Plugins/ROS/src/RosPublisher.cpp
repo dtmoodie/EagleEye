@@ -1,15 +1,13 @@
 #include "RosPublisher.hpp"
-#include "RosInterface.hpp"
-#include "Aquila/utilities/cuda/CudaCallbacks.hpp"
 #include "Aquila/nodes/NodeInfo.hpp"
+#include "Aquila/utilities/cuda/CudaCallbacks.hpp"
+#include "RosInterface.hpp"
 
-#include <ros/node_handle.h>
 #include <cv_bridge/cv_bridge.h>
-
+#include <ros/node_handle.h>
 
 using namespace aq;
 using namespace aq::nodes;
-
 
 void ImagePublisher::nodeInit(bool firstInit)
 {
@@ -23,23 +21,25 @@ bool ImagePublisher::processImpl()
     // Download to the CPU
     cv::Mat h_input = input->getMat(stream());
     // If data is already on the cpu, we don't need to wait for the async download to finish
-    if(state < SyncedMemory::DEVICE_UPDATED)
+    if (state < SyncedMemory::DEVICE_UPDATED)
     {
         // data already updated on cpu
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", h_input).toImageMsg();
         _image_publisher.publish(msg);
         ros::spinOnce();
-    }else
+    }
+    else
     {
         // data on gpu, do async publish
         size_t id = mo::getThisThread();
         aq::cuda::enqueue_callback_async(
-            [h_input, this]()->void
-        {
-            // This code is executed on cpu thead id after the download is complete
-            sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", h_input).toImageMsg();
-            _image_publisher.publish(msg);
-        }, id, stream());
+            [h_input, this]() -> void {
+                // This code is executed on cpu thead id after the download is complete
+                sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", h_input).toImageMsg();
+                _image_publisher.publish(msg);
+            },
+            id,
+            stream());
     }
     return true;
 }

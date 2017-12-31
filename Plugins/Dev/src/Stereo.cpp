@@ -1,26 +1,23 @@
 #include "Stereo.h"
-#include "Aquila/rcc/external_includes/cv_imgproc.hpp"
 #include "Aquila/rcc/external_includes/cv_cudawarping.hpp"
+#include "Aquila/rcc/external_includes/cv_imgproc.hpp"
 
 #if _WIN32
-    #if _DEBUG
-        RUNTIME_COMPILER_LINKLIBRARY("opencv_cudastereo300d.lib")
-    #else
-        RUNTIME_COMPILER_LINKLIBRARY("opencv_cudastereo300.lib")
-    #endif
+#if _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY("opencv_cudastereo300d.lib")
+#else
+RUNTIME_COMPILER_LINKLIBRARY("opencv_cudastereo300.lib")
+#endif
 #else
 RUNTIME_COMPILER_LINKLIBRARY("-lopencv_cudastereo")
 #endif
 
-
-
 using namespace aq;
 using namespace aq::nodes;
 
-
 bool StereoBM::processImpl()
 {
-    if(!stereoBM || num_disparities_param.modified() || block_size_param.modified())
+    if (!stereoBM || num_disparities_param.modified() || block_size_param.modified())
     {
         stereoBM = cv::cuda::createStereoBM(num_disparities, block_size);
         block_size_param.modified(false);
@@ -28,22 +25,19 @@ bool StereoBM::processImpl()
     }
     if (left_image->getSize() != right_image->getSize())
     {
-        //log(Error, "Images are of mismatched size");
+        // log(Error, "Images are of mismatched size");
         MO_LOG(debug) << "Images are of mismatched size";
         return false;
     }
     cv::cuda::GpuMat disparity;
-    stereoBM->compute(left_image->getGpuMat(stream()), right_image->getGpuMat(stream()),disparity, stream());
+    stereoBM->compute(left_image->getGpuMat(stream()), right_image->getGpuMat(stream()), disparity, stream());
     this->disparity_param.updateData(disparity, left_image_param.getTimestamp(), _ctx.get());
     return true;
 }
 
 bool StereoBeliefPropagation::processImpl()
 {
-    if(bp == nullptr ||
-        num_iters_param.modified() ||
-        num_disparities_param.modified() ||
-        num_levels_param.modified(),
+    if (bp == nullptr || num_iters_param.modified() || num_disparities_param.modified() || num_levels_param.modified(),
         message_type_param.modified())
     {
         bp = cv::cuda::createStereoBeliefPropagation(num_disparities, num_iters, num_levels, message_type.getValue());
@@ -59,8 +53,6 @@ bool StereoBeliefPropagation::processImpl()
     return true;
 }
 
-
-
 /*void StereoConstantSpaceBP::nodeInit(bool firstInit)
 {
     if(firstInit)
@@ -73,7 +65,8 @@ bool StereoBeliefPropagation::processImpl()
         param.addEnum(ENUM(CV_16SC1));
         param.addEnum(ENUM(CV_32FC1));
         updateParameter("Message type", param);
-        //createStereoConstantSpaceBP(int ndisp = 128, int iters = 8, int levels = 4, int nr_plane = 4, int msg_type = CV_32F);
+        //createStereoConstantSpaceBP(int ndisp = 128, int iters = 8, int levels = 4, int nr_plane = 4, int msg_type =
+CV_32F);
         addInputParam<cv::cuda::GpuMat>("Left image");
         addInputParam<cv::cuda::GpuMat>("Right image");
         csbp = cv::cuda::createStereoConstantSpaceBP();
@@ -84,43 +77,45 @@ bool StereoBeliefPropagation::processImpl()
 }*/
 bool StereoConstantSpaceBP::processImpl()
 {
-    if(num_levels_param.modified() || nr_plane_param.modified() ||
-        num_disparities_param.modified() || num_iterations_param.modified() || !csbp)
+    if (num_levels_param.modified() || nr_plane_param.modified() || num_disparities_param.modified() ||
+        num_iterations_param.modified() || !csbp)
     {
         csbp = cv::cuda::createStereoConstantSpaceBP(
-            num_disparities,
-            num_iterations,
-            num_levels, nr_plane, message_type.getValue());
+            num_disparities, num_iterations, num_levels, nr_plane, message_type.getValue());
         num_levels_param.modified(false);
         nr_plane_param.modified(false);
         num_disparities_param.modified(false);
         num_iterations_param.modified(false);
     }
     cv::cuda::GpuMat disparity;
-    csbp->compute(left_image->getGpuMat(stream()), right_image->getGpuMat(stream()),disparity, stream());
+    csbp->compute(left_image->getGpuMat(stream()), right_image->getGpuMat(stream()), disparity, stream());
     this->disparity_param.updateData(disparity, left_image_param.getTimestamp(), _ctx.get());
     return true;
 }
 
 bool UndistortStereo::processImpl()
 {
-    if(camera_matrix_param.modified() || distortion_matrix_param.modified() ||
-        rotation_matrix_param.modified() || projection_matrix_param.modified())
+    if (camera_matrix_param.modified() || distortion_matrix_param.modified() || rotation_matrix_param.modified() ||
+        projection_matrix_param.modified())
     {
         cv::Mat X, Y;
-        cv::initUndistortRectifyMap(*camera_matrix, *distortion_matrix,
-            *rotation_matrix, *projection_matrix, input->getSize(), CV_32FC1, X, Y);
+        cv::initUndistortRectifyMap(
+            *camera_matrix, *distortion_matrix, *rotation_matrix, *projection_matrix, input->getSize(), CV_32FC1, X, Y);
         mapX_param.updateData(X, -1, _ctx.get());
         mapY_param.updateData(Y, -1, _ctx.get());
     }
     cv::cuda::GpuMat remapped;
-    cv::cuda::remap(input->getGpuMat(stream()), remapped,
-        mapX.getGpuMat(stream()), mapY.getGpuMat(stream()),
-        interpolation_method.getValue(), boarder_mode.getValue(), cv::Scalar(), stream());
+    cv::cuda::remap(input->getGpuMat(stream()),
+                    remapped,
+                    mapX.getGpuMat(stream()),
+                    mapY.getGpuMat(stream()),
+                    interpolation_method.getValue(),
+                    boarder_mode.getValue(),
+                    cv::Scalar(),
+                    stream());
     undistorted_param.updateData(remapped, input_param.getTimestamp(), _ctx.get());
     return true;
 }
-
 
 MO_REGISTER_CLASS(StereoBM)
 MO_REGISTER_CLASS(StereoBilateralFilter)

@@ -1,8 +1,8 @@
 /*#include "ProcessFuture.h"
 #include "Aquila/GraphManager.h"
+#include "Aquila/Signals.h"
 #include "Remotery.h"
 #include <Aquila/frame_grabber_base.h>
-#include "Aquila/Signals.h"
 using namespace aq;
 using namespace aq::nodes;
 
@@ -48,7 +48,7 @@ void ProcessFuture::process_ahead()
         return;
     }
     cv::cuda::Stream stream;
-    
+
     while(!boost::this_thread::interruption_requested())
     {
         TS<SyncedMemory> frame;
@@ -69,8 +69,10 @@ void ProcessFuture::process_ahead()
 void ProcessFuture::SetGraph(IGraph* stream)
 {
     Node::SetGraph(stream);
-    _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads", std::bind(&ProcessFuture::start_thread, this), this));
-    _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads", std::bind(&ProcessFuture::stop_thread, this), this));
+    _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StartThreads",
+std::bind(&ProcessFuture::start_thread, this), this));
+    _callback_connections.push_back(stream->GetSignalManager()->connect<void()>("StopThreads",
+std::bind(&ProcessFuture::stop_thread, this), this));
 }
 void ProcessFuture::stop_thread()
 {

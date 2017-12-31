@@ -8,7 +8,7 @@ namespace aq
     {
         class track_camera_motion : public Node
         {
-        public:
+          public:
             MO_DERIVE(track_camera_motion, Node)
 
             MO_END;

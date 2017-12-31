@@ -1,7 +1,7 @@
 #include "cv_capture.h"
-#include "precompiled.hpp"
 #include "Aquila/framegrabbers/GrabberInfo.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
+#include "precompiled.hpp"
 
 #if _MSC_VER
 RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
@@ -10,92 +10,125 @@ RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
 using namespace aq;
 using namespace aq::nodes;
 
-template <class T> 
-void SafeRelease(T **ppT){
-    if (*ppT){
+template <class T>
+void SafeRelease(T** ppT)
+{
+    if (*ppT)
+    {
         (*ppT)->Release();
         *ppT = NULL;
     }
 }
 
-
-bool GrabberCV::loadData(const std::string& file_path){
-    if(LoadGPU(file_path)){
+bool GrabberCV::loadData(const std::string& file_path)
+{
+    if (LoadGPU(file_path))
+    {
         return true;
-    }else{
+    }
+    else
+    {
         return LoadCPU(file_path);
     }
     return false;
 }
 
-bool GrabberCV::LoadGPU(const std::string& file_path){
+bool GrabberCV::LoadGPU(const std::string& file_path)
+{
     d_cam.release();
-    try{
+    try
+    {
         auto d_temp = cv::cudacodec::createVideoReader(file_path);
-        if (d_temp){
+        if (d_temp)
+        {
             d_cam = d_temp;
             loaded_document = file_path;
             return true;
         }
-    }catch (cv::Exception& e){
+    }
+    catch (cv::Exception& e)
+    {
     }
     return false;
 }
 
-bool GrabberCV::LoadCPU(const std::string& file_path){
+bool GrabberCV::LoadCPU(const std::string& file_path)
+{
     h_cam.release();
-    //MO_LOG(info) << "Attemping to load " << file_path;
-    BOOST_LOG_TRIVIAL(info ) << "[" << GetTypeName() << "::h_loadFile] Trying to load: \"" << file_path << "\"";
-    try{
+    // MO_LOG(info) << "Attemping to load " << file_path;
+    BOOST_LOG_TRIVIAL(info) << "[" << GetTypeName() << "::h_loadFile] Trying to load: \"" << file_path << "\"";
+    try
+    {
         h_cam.reset(new cv::VideoCapture());
-        if (h_cam){
+        if (h_cam)
+        {
             int index = -1;
-            if(!boost::conversion::detail::try_lexical_convert(file_path, index)){
+            if (!boost::conversion::detail::try_lexical_convert(file_path, index))
+            {
                 index = -1;
             }
 
-            if (index == -1){
-                if (h_cam->open(file_path)){
+            if (index == -1)
+            {
+                if (h_cam->open(file_path))
+                {
                     loaded_document = file_path;
                     return true;
                 }
-            }else{
-                if (h_cam->open(index)){
+            }
+            else
+            {
+                if (h_cam->open(index))
+                {
                     loaded_document = file_path;
                     initial_time = mo::getCurrentTime();
                     return true;
                 }
             }
         }
-    }catch (cv::Exception& e){
+    }
+    catch (cv::Exception& e)
+    {
         MO_LOG(debug) << "Unable to load " << file_path << " due to " << e.what();
     }
     return false;
 }
 
-bool GrabberCV::grab(){
-    if(d_cam){
+bool GrabberCV::grab()
+{
+    if (d_cam)
+    {
         cv::cuda::GpuMat img;
-        if(d_cam->nextFrame(img)){
+        if (d_cam->nextFrame(img))
+        {
             image_param.updateData(img);
             return true;
         }
-    }else if(h_cam){
+    }
+    else if (h_cam)
+    {
         cv::Mat img;
-        if(h_cam->read(img)){
+        if (h_cam->read(img))
+        {
             double fn = h_cam->get(CV_CAP_PROP_POS_FRAMES);
             double ts_ = h_cam->get(CV_CAP_PROP_POS_MSEC);
             mo::Time_t ts;
-            if(ts_ == -1){
-                if(!initial_time)
+            if (ts_ == -1)
+            {
+                if (!initial_time)
                     initial_time = mo::getCurrentTime();
                 ts = mo::Time_t(mo::getCurrentTime() - *initial_time);
-            }else{
-                ts = mo::Time_t(ts_* mo::ms);
             }
-            if(fn == -1){
+            else
+            {
+                ts = mo::Time_t(ts_ * mo::ms);
+            }
+            if (fn == -1)
+            {
                 image_param.updateData(img, mo::tag::_timestamp = ts, _ctx.get());
-            }else{
+            }
+            else
+            {
                 image_param.updateData(img, mo::tag::_timestamp = ts, mo::tag::_frame_number = fn, _ctx.get());
             }
             return true;
@@ -104,58 +137,55 @@ bool GrabberCV::grab(){
     return false;
 }
 
-class GrabberCamera:public GrabberCV{
-public:
+class GrabberCamera : public GrabberCV
+{
+  public:
     MO_DERIVE(GrabberCamera, GrabberCV)
 
     MO_END;
     bool loadData(const std::string& path);
     static void listPaths(std::vector<std::string>& paths);
     static int canLoad(const std::string& doc);
-    static int loadTimeout(){
-        return 5000;
-    }
-};  
+    static int loadTimeout() { return 5000; }
+};
 
-void GrabberCamera::listPaths(std::vector<std::string>& paths){
+void GrabberCamera::listPaths(std::vector<std::string>& paths)
+{
 #ifdef _MSC_VER
     MFStartup(MF_VERSION);
     HRESULT hr = S_OK;
-    IMFAttributes *pAttributes = NULL;
-    UINT32      m_cDevices; // contains the number of devices
-    IMFActivate **m_ppDevices = NULL; // contains properties about each device
+    IMFAttributes* pAttributes = NULL;
+    UINT32 m_cDevices;                // contains the number of devices
+    IMFActivate** m_ppDevices = NULL; // contains properties about each device
 
-                                      // Initialize an attribute store. We will use this to
-                                      // specify the enumeration parameters.
+    // Initialize an attribute store. We will use this to
+    // specify the enumeration parameters.
 
     hr = MFCreateAttributes(&pAttributes, 1);
 
     // Ask for source type = video capture devices
-    if (SUCCEEDED(hr)){
-        hr = pAttributes->SetGUID(
-            MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
-            MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID
-        );
+    if (SUCCEEDED(hr))
+    {
+        hr = pAttributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
     }
     // Enumerate devices.
-    if (SUCCEEDED(hr)){
+    if (SUCCEEDED(hr))
+    {
         hr = MFEnumDeviceSources(pAttributes, &m_ppDevices, &m_cDevices);
     }
-    for (int i = 0; i < m_cDevices; ++i){
+    for (int i = 0; i < m_cDevices; ++i)
+    {
         HRESULT hr = S_OK;
         wchar_t* ppszName = nullptr;
-        hr = m_ppDevices[i]->GetAllocatedString(
-            MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,
-            &ppszName,
-            NULL
-        );
+        hr = m_ppDevices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, &ppszName, NULL);
         std::wstring wstring(ppszName);
         paths.push_back(boost::lexical_cast<std::string>(i) + " - " + std::string(wstring.begin(), wstring.end()));
     }
 
     SafeRelease(&pAttributes);
 
-    for (UINT32 i = 0; i < m_cDevices; i++){
+    for (UINT32 i = 0; i < m_cDevices; i++)
+    {
         SafeRelease(&m_ppDevices[i]);
     }
     CoTaskMemFree(m_ppDevices);
@@ -167,51 +197,65 @@ void GrabberCamera::listPaths(std::vector<std::string>& paths){
 #endif
 }
 
-int GrabberCamera::canLoad(const std::string& doc){
+int GrabberCamera::canLoad(const std::string& doc)
+{
     auto pos = doc.find(" - ");
-    if (pos != std::string::npos){
+    if (pos != std::string::npos)
+    {
         int index = 0;
-        if (boost::conversion::detail::try_lexical_convert(doc.substr(0, pos), index)){
+        if (boost::conversion::detail::try_lexical_convert(doc.substr(0, pos), index))
+        {
             return 10;
         }
-    }else{
+    }
+    else
+    {
         int index = 0;
-        if (boost::conversion::detail::try_lexical_convert(doc, index)){
+        if (boost::conversion::detail::try_lexical_convert(doc, index))
+        {
             return 10;
         }
     }
     std::vector<std::string> cameras;
     listPaths(cameras);
-    for (const auto& camera : cameras){
+    for (const auto& camera : cameras)
+    {
         if (camera == doc)
             return 10;
     }
     return 0;
 }
 
-bool GrabberCamera::loadData(const std::string& file_path){
+bool GrabberCamera::loadData(const std::string& file_path)
+{
     int index = 0;
-    if (boost::conversion::detail::try_lexical_convert(file_path, index)){
+    if (boost::conversion::detail::try_lexical_convert(file_path, index))
+    {
         h_cam.reset(new cv::VideoCapture(index));
         initial_time = mo::getCurrentTime();
         return true;
-    }else{
+    }
+    else
+    {
         index = 0;
     }
     std::vector<std::string> cameras;
     listPaths(cameras);
-    for(int i = 0; i < cameras.size(); ++i){
-        if (cameras[i] == file_path){
+    for (int i = 0; i < cameras.size(); ++i)
+    {
+        if (cameras[i] == file_path)
+        {
             h_cam.reset(new cv::VideoCapture());
-            
-            if(h_cam->open(i)){
+
+            if (h_cam->open(i))
+            {
                 initial_time = mo::getCurrentTime();
                 return true;
             }
         }
         ++index;
     }
-    auto func = [&cameras](){
+    auto func = [&cameras]() {
         std::stringstream ss;
         for (auto& cam : cameras)
             ss << cam << ", ";
@@ -220,10 +264,13 @@ bool GrabberCamera::loadData(const std::string& file_path){
     MO_LOG(debug) << "Unable to load " << file_path << " queried cameras: " << func() << " trying to requery";
 
     listPaths(cameras);
-    for(int i = 0; i < cameras.size(); ++i){
-        if (cameras[i] == file_path){
+    for (int i = 0; i < cameras.size(); ++i)
+    {
+        if (cameras[i] == file_path)
+        {
             h_cam.reset(new cv::VideoCapture());
-            if(h_cam->open(i)){
+            if (h_cam->open(i))
+            {
                 initial_time = mo::getCurrentTime();
                 return true;
             }

@@ -2,7 +2,6 @@
 #include "rtsp.h"
 #include "precompiled.hpp"
 
-
 using namespace aq;
 using namespace aq::nodes;
 
@@ -21,16 +20,20 @@ int GrabberRTSP::loadTimeout()
 }
 bool GrabberRTSP::Load(const std::string& file_path)
 {
-    //rtspsrc location=rtsp://root:12369pp@192.168.1.52:554/axis-media/media.amp ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink
+    // rtspsrc location=rtsp://root:12369pp@192.168.1.52:554/axis-media/media.amp ! rtph264depay ! h264parse !
+    // avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink
     std::string file_to_load;
     if (loaded_document.size() && !file_path.size())
         file_to_load = loaded_document;
     else
         file_to_load = file_path;
 #ifdef JETSON
-    std::string gstreamer_string = "rtspsrc location=" + file_path + " ! rtph264depay ! h264parse ! omxh264dec ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
+    std::string gstreamer_string =
+        "rtspsrc location=" + file_path +
+        " ! rtph264depay ! h264parse ! omxh264dec ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
 #else
-    std::string gstreamer_string = "rtspsrc location=" + file_to_load + " ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw ! appsink";
+    std::string gstreamer_string = "rtspsrc location=" + file_to_load +
+                                   " ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw ! appsink";
 #endif
 
     h_cam.release();
@@ -44,7 +47,7 @@ bool GrabberRTSP::Load(const std::string& file_path)
             if (h_cam->open(gstreamer_string, cv::CAP_GSTREAMER))
             {
                 loaded_document = file_to_load;
-                
+
                 return true;
             }
         }
@@ -71,8 +74,10 @@ TS<SyncedMemory> frame_grabber_rtsp::GetNextFrameImpl(cv::cuda::Stream& stream)
                 {
                     cv::cuda::GpuMat d_mat;
                     d_mat.upload(h_mat, stream);
-                    current_frame = TS<SyncedMemory>(mo::Time_t(mo::ms*h_cam->get(cv::CAP_PROP_POS_MSEC)), (size_t)frame_count++, h_mat, d_mat);
-                    return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number, current_frame.clone(stream));
+                    current_frame = TS<SyncedMemory>(mo::Time_t(mo::ms*h_cam->get(cv::CAP_PROP_POS_MSEC)),
+(size_t)frame_count++, h_mat, d_mat);
+                    return TS<SyncedMemory>(current_frame.timestamp, current_frame.frame_number,
+current_frame.clone(stream));
                 }
             }
         }
@@ -98,18 +103,21 @@ void frame_grabber_rtsp::nodeInit(bool firstInit)
 }
 bool frame_grabber_rtsp::LoadFile(const std::string& file_path)
 {
-    //rtspsrc location=rtsp://root:12369pp@192.168.1.52:554/axis-media/media.amp ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink
+    //rtspsrc location=rtsp://root:12369pp@192.168.1.52:554/axis-media/media.amp ! rtph264depay ! h264parse ! avdec_h264
+! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink
     std::string file_to_load;
     if(loaded_document.size() && !file_path.size())
         file_to_load = loaded_document;
     else
         file_to_load = file_path;
 #ifdef JETSON
-    std::string gstreamer_string = "rtspsrc location=" + file_path + " ! rtph264depay ! h264parse ! omxh264dec ! videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
+    std::string gstreamer_string = "rtspsrc location=" + file_path + " ! rtph264depay ! h264parse ! omxh264dec !
+videoconvert ! video/x-raw, width=1920, height=1080 ! appsink";
 #else
-    std::string gstreamer_string = "rtspsrc location=" + file_to_load + " ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw ! appsink";
+    std::string gstreamer_string = "rtspsrc location=" + file_to_load + " ! rtph264depay ! h264parse ! avdec_h264 !
+videoconvert ! video/x-raw ! appsink";
 #endif
-    
+
     h_cam.release();
     LOG_NODE(info) << "Attemping to load " << file_to_load;
     LOG_NODE(debug) << "Gstreamer string: " << gstreamer_string;

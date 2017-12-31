@@ -5,8 +5,6 @@
 using namespace aq;
 using namespace aq::nodes;
 
-
-
 bool GrabberHTML::Load(const std::string& file_path)
 {
     std::string http("http://");
@@ -26,7 +24,6 @@ bool GrabberHTML::Load(const std::string& file_path)
     }
     return false;
 }
-
 
 int GrabberHTML::canLoad(const std::string& document)
 {
