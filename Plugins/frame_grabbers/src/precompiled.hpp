@@ -1,4 +1,21 @@
 #pragma once
+#ifdef _MSC_VER
+#define NOMINMAX
+#include <windows.h>
+#include <Dbt.h>
+#include <Wmcodecdsp.h>
+#include <assert.h>
+#include <mfapi.h>
+#include <mfidl.h>
+#include <mfobjects.h>
+#include <mfplay.h>
+#include <mfreadwrite.h>
+#include <new>
+#include <shlwapi.h>
+#include <limits>
+#pragma comment(lib, "Mfplat.lib")
+#pragma comment(lib, "Mf.lib")
+#endif
 
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
@@ -13,20 +30,3 @@
 #include <gst/video/video.h>
 #endif
 
-#ifdef _MSC_VER
-#include <Dbt.h>
-#include <Wmcodecdsp.h>
-#include <assert.h>
-#include <mfapi.h>
-#include <mfidl.h>
-#include <mfobjects.h>
-#include <mfplay.h>
-#include <mfreadwrite.h>
-#include <new>
-#include <shlwapi.h>
-#include <windows.h>
-#pragma comment(lib, "Mfplat.lib")
-#pragma comment(lib, "Mf.lib")
-#else
-
-#endif

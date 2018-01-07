@@ -46,7 +46,7 @@ bool GrabberCV::LoadGPU(const std::string& file_path)
             return true;
         }
     }
-    catch (cv::Exception& e)
+    catch (cv::Exception& /*e*/)
     {
     }
     return false;
@@ -110,7 +110,7 @@ bool GrabberCV::grab()
         cv::Mat img;
         if (h_cam->read(img))
         {
-            double fn = h_cam->get(CV_CAP_PROP_POS_FRAMES);
+            size_t fn = static_cast<size_t>(h_cam->get(CV_CAP_PROP_POS_FRAMES));
             double ts_ = h_cam->get(CV_CAP_PROP_POS_MSEC);
             mo::Time_t ts;
             if (ts_ == -1)
@@ -173,7 +173,7 @@ void GrabberCamera::listPaths(std::vector<std::string>& paths)
     {
         hr = MFEnumDeviceSources(pAttributes, &m_ppDevices, &m_cDevices);
     }
-    for (int i = 0; i < m_cDevices; ++i)
+    for (uint32_t i = 0; i < m_cDevices; ++i)
     {
         HRESULT hr = S_OK;
         wchar_t* ppszName = nullptr;
