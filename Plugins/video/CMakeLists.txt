@@ -4,6 +4,7 @@ file(GLOB_RECURSE src "*.cpp" "*.cu" "*.h" "*.hpp")
 ADD_DEFINITIONS(${DEFS})
 
 INCLUDE_DIRECTORIES(
+    SYSTEM
     ${INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}

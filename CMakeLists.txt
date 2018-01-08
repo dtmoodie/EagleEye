@@ -37,7 +37,7 @@ ENDIF(WIN32)
 
 set(Boost_required_components system thread log log_setup program_options)
 find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
-    include_directories(${Boost_INCLUDE_DIRS})
+    include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
     set(Boost_TARGETS "")
     foreach(cmp ${Boost_required_components})
           list(APPEND Boost_TARGETS "Boost::${cmp}")

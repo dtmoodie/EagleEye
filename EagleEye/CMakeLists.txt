@@ -32,6 +32,7 @@ IF(Qt5_FOUND AND nodeeditor_FOUND)
 
     ADD_DEFINITIONS("-DQt5_FOUND")
     INCLUDE_DIRECTORIES(
+        SYSTEM
         ${OpenCV_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         ${Qt5Gui_INCLUDE_DIRS}
@@ -39,6 +40,9 @@ IF(Qt5_FOUND AND nodeeditor_FOUND)
         ${Qt5PrintSupport_INCLUDE_DIRS}
         ${Qt5Widgets_INCLUDE_DIRS}
         ${Qt5OpenGL_INCLUDE_DIRS}
+    )
+
+    INCLUDE_DIRECTORIES(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_BINARY_DIR}
         ${Aquila_INCLUDE_DIRECTORIES}

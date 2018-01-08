@@ -27,13 +27,15 @@ endif()
 ADD_DEFINITIONS(${DEFS})
 LINK_DIRECTORIES(${LINK_DIRS})
 INCLUDE_DIRECTORIES(
+    SYSTEM
     ${INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MetaObject_INCLUDE_DIRS}
 )
+
+include_directories(${MetaObject_INCLUDE_DIRS})
 
 file(GLOB_RECURSE knl "*.cu")
 file(GLOB_RECURSE src "*.cpp")

@@ -10,7 +10,7 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
   link_directories(${BOOST_LIBRARYDIR})
   link_directories(${Boost_LIBRARY_DIR_DEBUG})
   link_directories(${Boost_LIBRARY_DIR_RELEASE})
-  include_directories(${Boost_INCLUDE_DIRS})
+  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_package(CUDA REQUIRED)
     include_directories(${CUDA_INCLUDE_DIRS})
