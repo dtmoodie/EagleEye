@@ -1,5 +1,6 @@
 #include "sinks.hpp"
 #include "glib_thread.h"
+#include <Aquila/nodes/NodeImpl.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <Aquila/rcc/external_includes/cv_imgcodec.hpp>
 #include <gst/base/gstbasesink.h>
@@ -104,7 +105,7 @@ bool JPEGSink::processImpl()
         this->start_pipeline();
         gstreamer_pipeline_param.modified(false);
     }
-    _modified = true;
+    this->_node_pimpl->_modified = true;
     return true;
 }
 

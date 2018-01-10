@@ -1,29 +1,37 @@
 #pragma once
 #include "FlowScene.hpp"
 #include <RuntimeObjectSystem/shared_ptr.hpp>
-namespace aq{
+namespace aq
+{
     class IGraph;
-    namespace nodes{
-        class Node;
+    namespace nodes
+    {
+        class INode;
     }
 }
-class GraphScene: public QtNodes::FlowScene{
+class GraphScene : public QtNodes::FlowScene
+{
     Q_OBJECT
-public:
-    GraphScene(std::shared_ptr<QtNodes::DataModelRegistry> registry =
-                std::make_shared<QtNodes::DataModelRegistry>());
-public slots:
+  public:
+    GraphScene(std::shared_ptr<QtNodes::DataModelRegistry> registry = std::make_shared<QtNodes::DataModelRegistry>());
+  public slots:
     void save(bool);
     void load();
-public:
+
+  public:
     virtual void loadFromMemory(const QByteArray& data);
     virtual QtNodes::Node& load(const rcc::shared_ptr<aq::IGraph>& ds);
-    virtual QtNodes::Node& load(const rcc::shared_ptr<aq::nodes::Node>& node, std::map<std::string, QtNodes::Node*>& nodemap);
-    virtual void reconnectInputs(const rcc::shared_ptr<aq::nodes::Node>& node, std::map<std::string, QtNodes::Node*>& nodemap);
-    void setVmSm(std::map<std::string, std::string>* vm, std::map<std::string, std::string>* sm) {
-        this->sm = sm; this->vm = vm;
+    virtual QtNodes::Node& load(const rcc::shared_ptr<aq::nodes::INode>& node,
+                                std::map<std::string, QtNodes::Node*>& nodemap);
+    virtual void reconnectInputs(const rcc::shared_ptr<aq::nodes::INode>& node,
+                                 std::map<std::string, QtNodes::Node*>& nodemap);
+    void setVmSm(std::map<std::string, std::string>* vm, std::map<std::string, std::string>* sm)
+    {
+        this->sm = sm;
+        this->vm = vm;
     }
-protected:
+
+  protected:
     std::map<std::string, std::string>* sm = nullptr;
     std::map<std::string, std::string>* vm = nullptr;
 };
