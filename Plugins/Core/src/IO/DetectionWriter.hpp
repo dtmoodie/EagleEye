@@ -2,6 +2,7 @@
 #include "Aquila/nodes/Node.hpp"
 #include "Aquila/types/ObjectDetection.hpp"
 #include "Aquila/types/SyncedMemory.hpp"
+#include <MetaObject/params/Types.hpp>
 #include "MetaObject/core/detail/ConcurrentQueue.hpp"
 #include "MetaObject/thread/ThreadHandle.hpp"
 #include "MetaObject/thread/ThreadPool.hpp"

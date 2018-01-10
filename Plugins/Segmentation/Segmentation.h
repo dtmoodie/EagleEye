@@ -3,6 +3,7 @@
 #include <Aquila/rcc/external_includes/cv_cudabgsegm.hpp>
 #include "Aquila/utilities/cuda/CudaUtils.hpp"
 #include <Aquila/metatypes/SyncedMemoryMetaParams.hpp>
+#include <MetaObject/params/Types.hpp>
 #include "Segmentation_impl.h"
 #ifdef FASTMS_FOUND
 #include "libfastms/solver/solver.h"

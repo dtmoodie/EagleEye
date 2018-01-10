@@ -1,5 +1,6 @@
 #pragma once
 #include "Aquila/nodes/Node.hpp"
+#include <MetaObject/params/Types.hpp>
 #include "Aquila/types/SyncedMemory.hpp"
 namespace aq
 {
