@@ -12,7 +12,7 @@ find_package(CUDA REQUIRED)
   include_directories(${CUDA_TOOLKIT_INCLUDE})
 
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo videoio)
+find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaarithm cudaimgproc cudafilters cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo videoio imgcodecs)
   set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 find_package(PkgConfig QUIET)

@@ -518,7 +518,7 @@ int main(int argc, char* argv[])
     {
         std::vector<rcc::shared_ptr<aq::IGraph>> _Graphs;
         rcc::weak_ptr<aq::IGraph> current_stream;
-        rcc::weak_ptr<aq::nodes::Node> current_node;
+        rcc::weak_ptr<aq::nodes::INode> current_node;
         mo::IParam* current_param = nullptr;
 
         auto print_options = []() -> void {

@@ -1,3 +1,4 @@
+// TODO conditionally disable if not built against QT
 #include "object_proxies.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include <Aquila/nodes/Node.hpp>
