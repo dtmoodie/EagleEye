@@ -1,4 +1,4 @@
-#include "Aquila/rcc/SystemTable.hpp"
+#include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include <RuntimeObjectSystem/IObjectFactorySystem.h>
 #include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
@@ -47,8 +47,8 @@ public:
 
 int main(int argc, char** argv) {
     (void)argc;
-    SystemTable              table;
-    mo::MetaObjectFactory::instance(&table);
+    std::shared_ptr<SystemTable> table = SystemTable::instance();
+    mo::MetaObjectFactory::instance(table.get());
     std::vector<std::string> failures, success;
     BuildCallback           cb(failures, success);
     boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();

@@ -37,7 +37,7 @@
 #include <boost/version.hpp>
 #include <signal.h> // SIGINT, etc
 
-#include "Aquila/rcc/SystemTable.hpp"
+#include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/MetaParameters.hpp"
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -240,8 +240,8 @@ int main(int argc, char* argv[])
 {
     BOOST_LOG_TRIVIAL(info) << "Initializing";
     boost::program_options::options_description desc("Allowed options");
-    SystemTable table;
-    mo::MetaObjectFactory::instance(&table);
+    auto table = SystemTable::instance();
+    mo::MetaObjectFactory::instance(table.get());
     // clang-format off
     desc.add_options()
             ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
@@ -477,7 +477,7 @@ int main(int argc, char* argv[])
             {
                 (void)e;
             }
-            catch (boost::thread_interrupted& err)
+            catch (boost::thread_interrupted& /*err*/)
             {
                 break;
             }
@@ -1771,7 +1771,6 @@ int main(int argc, char* argv[])
         mo::ThreadPool::instance()->cleanup();
         MO_LOG(info) << "Thread pool cleanup complete";
         MO_LOG(info) << "Cleaning up singletons";
-        table.cleanUp();
         std::cout << "Program exiting" << std::endl;
         return 0;
     }
@@ -1781,7 +1780,6 @@ int main(int argc, char* argv[])
     MO_LOG(info) << "Gui thread shut down complete, cleaning up thread pool";
     mo::ThreadPool::instance()->cleanup();
     MO_LOG(info) << "Thread pool cleanup complete";
-    table.cleanUp();
     std::cout << "Program exiting" << std::endl;
     return 0;
 }

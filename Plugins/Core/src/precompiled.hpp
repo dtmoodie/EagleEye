@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Aquila/core/IGraph.hpp"
-#include "Aquila/rcc/SystemTable.hpp"
+#include "MetaObject/core/SystemTable.hpp"
 #include "Aquila/utilities/cuda/CudaCallbacks.hpp"
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>

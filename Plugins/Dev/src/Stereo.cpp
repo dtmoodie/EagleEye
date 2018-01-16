@@ -2,8 +2,8 @@
 #include "Aquila/rcc/external_includes/cv_cudawarping.hpp"
 #include "Aquila/rcc/external_includes/cv_imgproc.hpp"
 
-#if _WIN32
-#if _DEBUG
+#ifdef _WIN32
+#ifdef _DEBUG
 RUNTIME_COMPILER_LINKLIBRARY("opencv_cudastereo300d.lib")
 #else
 RUNTIME_COMPILER_LINKLIBRARY("opencv_cudastereo300.lib")
