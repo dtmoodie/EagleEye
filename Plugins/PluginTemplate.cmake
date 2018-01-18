@@ -10,7 +10,7 @@ macro(aquila_declare_plugin tgt)
       foreach(lib ${ARGN})
       endforeach(lib ${ARGN})
     endmacro(RCC_HANDLE_LIB target lib)
-
+    
     get_target_property(target_include_dirs_ ${tgt} INCLUDE_DIRECTORIES)
     get_target_property(target_link_libs_    ${tgt} LINK_LIBRARIES)
 
@@ -29,12 +29,14 @@ macro(aquila_declare_plugin tgt)
 	target_include_directories(${tgt}
         PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Plugins/${tgt}/>
     )
+    
     RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
+    message("asdf ${tgt}")
     ocv_add_precompiled_header_to_target(${tgt} src/precompiled.hpp)
     if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${tgt}_config.txt")
       FILE(READ "${CMAKE_CURRENT_BINARY_DIR}/${tgt}_config.txt" temp)
     endif()
-
+    
     SET(PROJECT_ID)
     IF(temp)
       STRING(FIND "${temp}" "\n" len)
@@ -68,7 +70,6 @@ macro(aquila_declare_plugin tgt)
 	  OUTPUT_STRIP_TRAILING_WHITESPACE
 	  ERROR_QUIET
 	)
-	
 	execute_process(
 	  COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
 	  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
@@ -156,13 +157,14 @@ macro(aquila_declare_plugin tgt)
 			endif(NOT ${IS_SVN_REPO})
 		endif()
     ENDIF(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN})
+
     CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}Export.hpp" @ONLY)
     
     CONFIGURE_FILE("../plugin_config.cpp.in" "${CMAKE_BINARY_DIR}/Plugins/${tgt}/plugin_config.cpp" @ONLY)
     
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/Plugins/${tgt}/plugin_config.cpp")
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}Export.hpp")
-
+    
     LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
     LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
     LINK_DIRECTORIES(${LINK_DIRS})
