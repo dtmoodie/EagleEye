@@ -2,8 +2,8 @@
 #include "glib_thread.h"
 
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <Aquila/rcc/SystemTable.hpp>
 #include <Aquila/utilities/cuda/CudaCallbacks.hpp>
+#include <MetaObject/core/SystemTable.hpp>
 
 #include <gst/app/gstappsink.h>
 #include <gst/app/gstappsrc.h>

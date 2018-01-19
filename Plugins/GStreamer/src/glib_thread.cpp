@@ -1,5 +1,5 @@
 #include "glib_thread.h"
-#include "Aquila/rcc/SystemTable.hpp"
+#include "MetaObject/core/SystemTable.hpp"
 
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
@@ -33,9 +33,10 @@ glib_thread* glib_thread::instance()
     if (!instance)
     {
         MO_LOG(info) << "Creating new instance of glib_thread";
-        instance = table->setSingleton(new glib_thread());
+        instance = std::make_shared<glib_thread>();
+        table->setSingleton(instance);
     }
-    return instance;
+    return instance.get();
 }
 
 GMainLoop* glib_thread::get_main_loop()
