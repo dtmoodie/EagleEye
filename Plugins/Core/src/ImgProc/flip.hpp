@@ -1,7 +1,8 @@
 #pragma once
 #include "Aquila/nodes/Node.hpp"
-#include <MetaObject/params/Types.hpp>
 #include "Aquila/types/SyncedMemory.hpp"
+#include <MetaObject/types/file_types.hpp>
+
 namespace aq
 {
     namespace nodes
@@ -17,9 +18,9 @@ namespace aq
             };
 
             MO_DERIVE(Flip, Node)
-            INPUT(SyncedMemory, input, nullptr)
-            ENUM_PARAM(axis, X, Y, Diag)
-            OUTPUT(SyncedMemory, output, {})
+                INPUT(SyncedMemory, input, nullptr)
+                ENUM_PARAM(axis, X, Y, Diag)
+                OUTPUT(SyncedMemory, output, {})
             MO_END;
 
           protected:
@@ -29,9 +30,9 @@ namespace aq
         {
           public:
             MO_DERIVE(Rotate, Node)
-            INPUT(SyncedMemory, input, nullptr)
-            PARAM(int, angle_degrees, 180)
-            OUTPUT(SyncedMemory, output, {})
+                INPUT(SyncedMemory, input, nullptr)
+                PARAM(int, angle_degrees, 180)
+                OUTPUT(SyncedMemory, output, {})
             MO_END
           protected:
             bool processImpl();

@@ -12,7 +12,7 @@ namespace aq
             MO_DERIVE(INeuralNet, IClassifier)
             INPUT(SyncedMemory, input, nullptr)
             OPTIONAL_INPUT(std::vector<cv::Rect2f>, bounding_boxes, nullptr)
-            OPTIONAL_INPUT(std::vector<aq::DetectedObject>, input_detections, nullptr)
+            OPTIONAL_INPUT(aq::DetectedObjectSet, input_detections, nullptr)
 
             PARAM(mo::ReadFile, model_file, mo::ReadFile())
             TOOLTIP(model_file, "File containing description of neural net")
@@ -31,8 +31,9 @@ namespace aq
             TOOLTIP(pixel_scale, "Pixel value scale to multiply image by after subtraction")
 
             PARAM(float, image_scale, 1.0)
-            TOOLTIP(image_scale, "Scale factor for input of network. 1.0 = network is resized to input image size, "
-                                 "-1.0 = image is resized to network input size")
+            TOOLTIP(image_scale,
+                    "Scale factor for input of network. 1.0 = network is resized to input image size, "
+                    "-1.0 = image is resized to network input size")
 
             PARAM(bool, swap_bgr, true)
             MO_END
@@ -49,7 +50,7 @@ namespace aq
 
             virtual void preBatch(int batch_size);
             virtual void postMiniBatch(const std::vector<cv::Rect>& batch_bb = std::vector<cv::Rect>(),
-                                       const std::vector<DetectedObject2d>& dets = std::vector<DetectedObject2d>()) = 0;
+                                       const DetectedObjectSet& dets = DetectedObjectSet()) = 0;
             virtual void postBatch();
 
             virtual bool forwardAll();

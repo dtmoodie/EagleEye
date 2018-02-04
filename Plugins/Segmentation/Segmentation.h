@@ -1,67 +1,75 @@
 #include "Aquila/nodes/Node.hpp"
-#include <Aquila/types/SyncedMemory.hpp>
-#include <Aquila/rcc/external_includes/cv_cudabgsegm.hpp>
 #include "Aquila/utilities/cuda/CudaUtils.hpp"
-#include <Aquila/metatypes/SyncedMemoryMetaParams.hpp>
-#include <MetaObject/params/Types.hpp>
 #include "Segmentation_impl.h"
+#include <Aquila/metatypes/SyncedMemoryMetaParams.hpp>
+#include <Aquila/rcc/external_includes/cv_cudabgsegm.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
+#include <MetaObject/types/file_types.hpp>
 #ifdef FASTMS_FOUND
 #include "libfastms/solver/solver.h"
 #endif
 #include <MetaObject/object/detail/MetaObjectMacros.hpp>
 
-namespace aq{
-    namespace nodes{
-    class OtsuThreshold: public Node
+namespace aq
+{
+    namespace nodes
     {
-    public:
-        MO_DERIVE(OtsuThreshold, Node)
+        class OtsuThreshold : public Node
+        {
+          public:
+            MO_DERIVE(OtsuThreshold, Node)
             INPUT(SyncedMemory, image, nullptr)
             OPTIONAL_INPUT(SyncedMemory, histogram, nullptr)
             OPTIONAL_INPUT(SyncedMemory, range, nullptr)
             OUTPUT(SyncedMemory, output, SyncedMemory())
-        MO_END
-    protected:
-        bool processImpl();
-    };
+            MO_END
+          protected:
+            bool processImpl();
+        };
 
-    class MOG2: public Node
-    {
-    public:
-        MO_DERIVE(MOG2, Node)
+        class MOG2 : public Node
+        {
+          public:
+            MO_DERIVE(MOG2, Node)
             INPUT(SyncedMemory, image, nullptr)
             PARAM(int, history, 500)
             PARAM(double, threshold, 15)
             PARAM(bool, detect_shadows, true)
             PARAM(double, learning_rate, 1.0)
             OUTPUT(SyncedMemory, background, SyncedMemory())
-        MO_END;
+            MO_END;
 
-    protected:
-        bool processImpl();
-        cv::Ptr<cv::cuda::BackgroundSubtractorMOG2> mog2;
-    };
+          protected:
+            bool processImpl();
+            cv::Ptr<cv::cuda::BackgroundSubtractorMOG2> mog2;
+        };
 
-    class Watershed: public Node
-    {
-    public:
-        MO_DERIVE(Watershed, Node)
+        class Watershed : public Node
+        {
+          public:
+            MO_DERIVE(Watershed, Node)
             INPUT(SyncedMemory, image, nullptr)
             INPUT(SyncedMemory, marker_mask, nullptr)
             OUTPUT(SyncedMemory, mask, SyncedMemory())
-        MO_END;
-    protected:
-        bool processImpl();
-    };
+            MO_END;
 
-    void kmeans_impl(cv::cuda::GpuMat input, cv::cuda::GpuMat& labels, cv::cuda::GpuMat& clusters, int k, cv::cuda::Stream stream, cv::cuda::GpuMat weights = cv::cuda::GpuMat());
+          protected:
+            bool processImpl();
+        };
 
+        void kmeans_impl(cv::cuda::GpuMat input,
+                         cv::cuda::GpuMat& labels,
+                         cv::cuda::GpuMat& clusters,
+                         int k,
+                         cv::cuda::Stream stream,
+                         cv::cuda::GpuMat weights = cv::cuda::GpuMat());
 
-    class KMeans: public Node
-    {
-        cv::cuda::HostMem hostBuf;
-    public:
-        MO_DERIVE(KMeans, Node)
+        class KMeans : public Node
+        {
+            cv::cuda::HostMem hostBuf;
+
+          public:
+            MO_DERIVE(KMeans, Node)
             INPUT(SyncedMemory, image, nullptr)
             ENUM_PARAM(flags, cv::KMEANS_PP_CENTERS, cv::KMEANS_RANDOM_CENTERS, cv::KMEANS_USE_INITIAL_LABELS)
             PARAM(int, k, 10)
@@ -73,17 +81,18 @@ namespace aq{
             OUTPUT(SyncedMemory, clusters, SyncedMemory())
             OUTPUT(SyncedMemory, labels, SyncedMemory())
             OUTPUT(double, compactness, 0.0)
-        MO_END;
-    protected:
-        bool processImpl();
-    };
+            MO_END;
 
-    class MeanShift: public Node
-    {
-        cv::cuda::GpuMat blank;
+          protected:
+            bool processImpl();
+        };
 
-    public:
-        MO_DERIVE(MeanShift, Node)
+        class MeanShift : public Node
+        {
+            cv::cuda::GpuMat blank;
+
+          public:
+            MO_DERIVE(MeanShift, Node)
             INPUT(SyncedMemory, image, nullptr)
             PARAM(int, spatial_radius, 5)
             PARAM(int, color_radius, 5)
@@ -91,39 +100,41 @@ namespace aq{
             PARAM(int, max_iters, 5)
             PARAM(double, epsilon, 1.0)
             OUTPUT(SyncedMemory, output, SyncedMemory())
-        MO_END
-        bool processImpl();
-    };
-
-    class ManualMask: public Node
-    {
-        enum MaskType
-        {
-            Circular = 0,
-            Rectangular = 1
+            MO_END
+            bool processImpl();
         };
-        cv::cuda::GpuMat mask;
-    public:
-        ManualMask();
-        virtual void nodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };
-    #ifdef FASTMS_FOUND
-    class SLaT : public Node
-    {
-        cv::cuda::HostMem imageBuffer;
-        cv::Mat lab;
-        cv::Mat smoothed_32f;
-        cv::Mat lab_32f;
-        cv::Mat tensor;
-        cv::Mat labels;
-        cv::Mat centers;
-        boost::shared_ptr<Solver> solver;
-    public:
-        SLaT();
-        virtual void nodeInit(bool firstInit);
-        virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat &img, cv::cuda::Stream &stream);
-    };
+
+        class ManualMask : public Node
+        {
+            enum MaskType
+            {
+                Circular = 0,
+                Rectangular = 1
+            };
+            cv::cuda::GpuMat mask;
+
+          public:
+            ManualMask();
+            virtual void nodeInit(bool firstInit);
+            virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+        };
+#ifdef FASTMS_FOUND
+        class SLaT : public Node
+        {
+            cv::cuda::HostMem imageBuffer;
+            cv::Mat lab;
+            cv::Mat smoothed_32f;
+            cv::Mat lab_32f;
+            cv::Mat tensor;
+            cv::Mat labels;
+            cv::Mat centers;
+            boost::shared_ptr<Solver> solver;
+
+          public:
+            SLaT();
+            virtual void nodeInit(bool firstInit);
+            virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
+        };
 #endif
     }
 }
