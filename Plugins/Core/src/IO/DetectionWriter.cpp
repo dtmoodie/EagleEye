@@ -9,6 +9,7 @@
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include "MetaObject/serialization/SerializationFactory.hpp"
 #include <MetaObject/thread/boost_thread.hpp>
+#include <ct/reflect/cereal.hpp>
 
 #include "cereal/archives/json.hpp"
 #include <cereal/types/vector.hpp>
@@ -47,16 +48,16 @@ int findNextIndex(const std::string& dir, const std::string& extension, const st
     return frame_count;
 }
 
-aq::NClassDetectedObject::DetectionList pruneDetections(const std::vector<DetectedObject>& input, int object_class)
+DetectedObjectSet pruneDetections(const DetectedObjectSet& input, int object_class)
 {
-    aq::NClassDetectedObject::DetectionList detections;
+    DetectedObjectSet detections;
     bool found;
     if (object_class != -1)
     {
         found = false;
         for (const auto& detection : input)
         {
-            if (detection.classification.classNumber == object_class)
+            if (detection.classifications[0].cat->index == object_class)
             {
                 found = true;
                 break;
@@ -74,7 +75,7 @@ aq::NClassDetectedObject::DetectionList pruneDetections(const std::vector<Detect
 
     for (const auto& detection : input)
     {
-        if ((detection.classification.classNumber == object_class) || object_class == -1)
+        if ((detection.classifications[0].cat->index == object_class) || object_class == -1)
         {
             detections.emplace_back(detection);
         }
@@ -82,48 +83,6 @@ aq::NClassDetectedObject::DetectionList pruneDetections(const std::vector<Detect
     return detections;
 }
 
-aq::NClassDetectedObject::DetectionList pruneDetections(const aq::NClassDetectedObject::DetectionList& input,
-                                                        int object_class)
-{
-    aq::NClassDetectedObject::DetectionList detections;
-    bool found;
-    if (object_class != -1)
-    {
-        found = false;
-        for (const auto& detection : input)
-        {
-            for (size_t i = 0; i < detection.classification.size(); ++i)
-            {
-                if (detection.classification[i].classNumber == object_class)
-                {
-                    found = true;
-                    break;
-                }
-            }
-        }
-    }
-    else
-    {
-        if (input.size() == 0)
-            return detections;
-        found = true;
-    }
-    if (!found)
-        return detections;
-
-    for (const auto& detection : input)
-    {
-        for (size_t i = 0; i < detection.classification.size(); ++i)
-        {
-            if ((detection.classification[i].classNumber == object_class) || object_class == -1)
-            {
-                detections.push_back(detection);
-                break;
-            }
-        }
-    }
-    return detections;
-}
 
 IDetectionWriter::~IDetectionWriter()
 {
@@ -143,7 +102,7 @@ void IDetectionWriter::nodeInit(bool firstInit)
     }
 }
 
-bool IDetectionWriter::processImpl()
+/*bool IDetectionWriter::processImpl()
 {
     if (output_directory_param.modified())
     {
@@ -165,24 +124,88 @@ bool IDetectionWriter::processImpl()
     if (detections.size() || skip_empty == false)
     {
         cv::Mat h_mat = image->getMat(stream());
-        cuda::enqueue_callback(
-            [h_mat, this, detections]() { this->_write_queue->enqueue(std::make_pair(h_mat, detections)); }, stream());
+        //cuda::enqueue_callback(
+          //  [h_mat, this, detections]() { this->_write_queue->enqueue(std::make_pair(h_mat, detections)); }, stream());
+    }
+    return true;
+}*/
+
+void IDetectionWriter::writeThread()
+{
+    std::function<void(void)> work;
+    while (!boost::this_thread::interruption_requested())
+    {
+        if (_write_queue->try_dequeue(work))
+        {
+            work();
+        }
+        else
+        {
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+        }
+    }
+}
+
+bool DetectionWriter::processImpl()
+{
+    if (output_directory_param.modified())
+    {
+        if (!boost::filesystem::exists(output_directory))
+        {
+            boost::filesystem::create_directories(output_directory);
+        }
+        else
+        {
+            // check if files exist, if they do, determine the current index and start appending
+            int json_count = findNextIndex(output_directory.string(), ".json", annotation_stem);
+            int img_count = findNextIndex(output_directory.string(), "." + extension.getEnum(), image_stem);
+            frame_count = std::max<size_t>(img_count, std::max<size_t>(json_count, frame_count));
+        }
+        output_directory_param.modified(false);
+    }
+    if (detections->size())
+    {
+        auto dets = pruneDetections(*detections, object_class);
+        cv::Mat h_mat = image->getMat(stream());
+        auto ts = image_param.getTimestamp();
+        auto fn = image_param.getFrameNumber();
+        size_t count = frame_count;
+        cuda::enqueue_callback([count, ts, fn, h_mat, dets, this]() {
+            this->_write_queue->enqueue([count, ts, fn, h_mat, dets, this]()
+            {
+                std::stringstream ss;
+                ss << output_directory.string();
+                ss << "/" << annotation_stem << std::setw(8) << std::setfill('0') << count << ".json";
+                std::ofstream ofs;
+                ofs.open(ss.str());
+                cereal::JSONOutputArchive ar(ofs);
+                ss = std::stringstream();
+                ss << output_directory.string() << "/" << image_stem << std::setw(8) << std::setfill('0') << count
+                    << "." << extension.getEnum();
+                cv::imwrite(ss.str(), h_mat);
+                ss = std::stringstream();
+                ss << image_stem << std::setw(8) << std::setfill('0') << frame_count << "." << extension.getEnum();
+                ar(cereal::make_nvp("ImageFile", ss.str()));
+                if (ts)
+                    ar(cereal::make_nvp("timestamp", *ts));
+                ar(cereal::make_nvp("framenumber", fn));
+                ar(cereal::make_nvp("detections", dets));
+            });
+        }, stream());
+        ++frame_count;
     }
     return true;
 }
 
-void DetectionWriter::writeThread()
-{
-    WriteData_t data;
+    /*WriteData_t data;
     mo::setThisThreadName("DetectionWriter");
     while (!boost::this_thread::interruption_requested())
     {
         if (this->_write_queue->try_dequeue(data))
         {
-            std::stringstream ss;
-            ss << output_directory.string();
+            
             if (pad)
-                ss << "/" << annotation_stem << std::setw(8) << std::setfill('0') << frame_count << ".json";
+                
             else
                 ss << "/" << annotation_stem << frame_count << ".json";
             std::ofstream ofs;
@@ -204,8 +227,7 @@ void DetectionWriter::writeThread()
             ar(cereal::make_nvp("detections", data.second));
             ++frame_count;
         }
-    }
-}
+    }*/
 
 MO_REGISTER_CLASS(DetectionWriter)
 
@@ -239,12 +261,12 @@ DetectionWriterFolder::~DetectionWriterFolder()
 
 struct FrameDetections
 {
-    FrameDetections(const std::vector<aq::DetectedObject2d>& det) : detections(det) {}
+    FrameDetections(const aq::DetectedObject<5>& det) : detections(det) {}
 
     std::string source_path;
     mo::Time_t timestamp;
     size_t frame_number;
-    const std::vector<aq::DetectedObject2d>& detections;
+    const aq::DetectedObject<5>& detections;
     std::vector<std::string> written_detections;
     template <class AR>
     void serialize(AR& ar)
@@ -258,8 +280,8 @@ struct FrameDetections
 
 struct WritePair
 {
-    WritePair(const aq::NClassDetectedObject& det, const std::string& name) : detection(det), patch_name(name) {}
-    DetectedObject_<2, -1> detection;
+    WritePair(const DetectedObject<5>& det, const std::string& name) : detection(det), patch_name(name) {}
+    DetectedObject<5> detection;
     std::string patch_name;
     template <class AR>
     void serialize(AR& ar)
@@ -283,17 +305,18 @@ bool DetectionWriterFolder::processImpl()
     }
     if (root_dir_param.modified())
     {
-        for (int i = 0; i < labels->size(); ++i)
+        auto cats = detections->getCatSet();
+        for (int i = 0; i < cats->size(); ++i)
         {
             int frame_count = 0;
-            if (!boost::filesystem::is_directory(root_dir.string() + "/" + (*labels)[i]))
+            if (!boost::filesystem::is_directory(root_dir.string() + "/" + (*cats)[i].name))
             {
-                boost::filesystem::create_directories(root_dir.string() + "/" + (*labels)[i]);
+                boost::filesystem::create_directories(root_dir.string() + "/" + (*cats)[i].name);
             }
             else
             {
                 frame_count =
-                    findNextIndex(root_dir.string() + "/" + (*labels)[i], "." + extension.getEnum(), image_stem);
+                    findNextIndex(root_dir.string() + "/" + (*cats)[i].name, "." + extension.getEnum(), image_stem);
             }
             _frame_count = std::max(_frame_count, frame_count);
         }
@@ -301,18 +324,14 @@ bool DetectionWriterFolder::processImpl()
             _frame_count = start_count;
         root_dir_param.modified(false);
         _per_class_count.clear();
-        _per_class_count.resize(labels->size(), 0);
+        _per_class_count.resize(cats->size(), 0);
         start_count = _frame_count;
     }
 
-    aq::NClassDetectedObject::DetectionList detections;
+    DetectedObjectSet detections;
     if (this->detections)
     {
         detections = pruneDetections(*this->detections, object_class);
-    }
-    else if (this->multiclass_detections)
-    {
-        detections = pruneDetections(*this->multiclass_detections, object_class);
     }
 
     std::vector<WritePair> written_detections;
@@ -330,11 +349,12 @@ bool DetectionWriterFolder::processImpl()
             std::stringstream ss;
             cv::Mat save_img;
             img(rect).download(save_img, stream());
-            int idx = detection.classification[0].classNumber;
+            const std::string& name = detection.classifications[0].cat->name;
+            unsigned int idx = detection.classifications[0].cat->index;
             ++_per_class_count[idx];
             {
                 std::stringstream folderss;
-                folderss << root_dir.string() << "/" << (*labels)[idx] << "/";
+                folderss << root_dir.string() << "/" << name << "/";
                 folderss << std::setw(4) << std::setfill('0') << _per_class_count[idx] / max_subfolder_size;
                 if (!boost::filesystem::is_directory(folderss.str()))
                 {
@@ -349,7 +369,7 @@ bool DetectionWriterFolder::processImpl()
                 [this, save_img, save_name]() { this->_write_queue.enqueue(std::make_pair(save_img, save_name)); },
                 stream());
             ss = std::stringstream();
-            ss << (*labels)[idx] << "/" << std::setw(4) << std::setfill('0')
+            ss << name << "/" << std::setw(4) << std::setfill('0')
                << _per_class_count[idx] / max_subfolder_size;
             ss << image_stem << std::setw(8) << std::setfill('0') << _frame_count << "." + extension.getEnum();
             save_name = ss.str();
@@ -368,11 +388,12 @@ bool DetectionWriterFolder::processImpl()
                                                 detection.bounding_box.height + 2 * padding);
             std::string save_name;
             std::stringstream ss;
-            int idx = detection.classification[0].classNumber;
+            const std::string& name = detection.classifications[0].cat->name;
+            unsigned int idx = detection.classifications[0].cat->index;
             ++_per_class_count[idx];
             {
                 std::stringstream folderss;
-                folderss << root_dir.string() << "/" << (*labels)[idx] << "/";
+                folderss << root_dir.string() << "/" << name << "/";
                 folderss << std::setw(4) << std::setfill('0') << _per_class_count[idx] / max_subfolder_size;
                 if (!boost::filesystem::is_directory(folderss.str()))
                 {

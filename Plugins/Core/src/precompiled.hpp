@@ -13,7 +13,7 @@
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 #include <MetaObject/object/MetaObject.hpp>
-#include <MetaObject/params/Types.hpp>
+#include <MetaObject/types/file_types.hpp>
 #include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
 
 #include <Aquila/rcc/external_includes/cv_core.hpp>

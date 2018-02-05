@@ -2,7 +2,7 @@
 #include "Aquila/nodes/Node.hpp"
 #include "Aquila/types/ObjectDetection.hpp"
 #include "Aquila/types/SyncedMemory.hpp"
-#include <MetaObject/params/Types.hpp>
+#include <MetaObject/types/file_types.hpp>
 #include "MetaObject/core/detail/ConcurrentQueue.hpp"
 #include "MetaObject/thread/ThreadHandle.hpp"
 #include "MetaObject/thread/ThreadPool.hpp"
@@ -21,26 +21,24 @@ namespace aq
         class IDetectionWriter : public Node
         {
           public:
-            typedef std::pair<cv::Mat, aq::NClassDetectedObject::DetectionList> WriteData_t;
-            typedef moodycamel::ConcurrentQueue<WriteData_t> WriteQueue_t;
+            typedef moodycamel::ConcurrentQueue<std::function<void(void)>> WriteQueue_t;
             ~IDetectionWriter();
             MO_DERIVE(IDetectionWriter, Node)
-            PARAM(mo::WriteDirectory, output_directory, {})
-            PARAM(std::string, annotation_stem, "detection")
-            PARAM(std::string, image_stem, "image")
-            PARAM(int, object_class, -1)
-            PARAM(bool, skip_empty, true)
-            PARAM(bool, pad, true)
-            ENUM_PARAM(extension, jpg, png, tiff, bmp)
-            INPUT(SyncedMemory, image, nullptr)
-            INPUT(std::vector<DetectedObject>, detections, nullptr)
-            PROPERTY(std::shared_ptr<boost::thread>, _write_thread, {})
-            PROPERTY(std::shared_ptr<WriteQueue_t>, _write_queue, {})
+                PARAM(mo::WriteDirectory, output_directory, {})
+                PARAM(std::string, annotation_stem, "detection")
+                PARAM(std::string, image_stem, "image")
+                PARAM(int, object_class, -1)
+                PARAM(bool, skip_empty, true)
+                PARAM(bool, pad, true)
+                ENUM_PARAM(extension, jpg, png, tiff, bmp)
+                INPUT(SyncedMemory, image, nullptr)
+                PROPERTY(std::shared_ptr<boost::thread>, _write_thread, {})
+                PROPERTY(std::shared_ptr<WriteQueue_t>, _write_queue, {})
             MO_END
           protected:
-            bool processImpl();
+            //bool processImpl();
             void nodeInit(bool firstInit);
-            virtual void writeThread() = 0;
+            void writeThread();
             size_t frame_count = 0;
         };
 
@@ -48,9 +46,10 @@ namespace aq
         {
           public:
             MO_DERIVE(DetectionWriter, IDetectionWriter)
+                INPUT(DetectedObjectSet, detections, nullptr)
             MO_END
           protected:
-            virtual void writeThread();
+              bool processImpl();
         };
 
         class DetectionWriterFolder : public Node
@@ -58,18 +57,16 @@ namespace aq
           public:
             ~DetectionWriterFolder();
             MO_DERIVE(DetectionWriterFolder, Node)
-            PARAM(mo::WriteDirectory, root_dir, {})
-            PARAM(int, padding, 0)
-            PARAM(int, object_class, -1)
-            PARAM(std::string, image_stem, "image")
-            PARAM(int, max_subfolder_size, 1000)
-            PARAM(std::string, dataset_name, "")
-            ENUM_PARAM(extension, jpg, png, tiff, bmp)
-            INPUT(SyncedMemory, image, nullptr)
-            INPUT(std::vector<std::string>, labels, nullptr)
-            OPTIONAL_INPUT(std::vector<DetectedObject>, detections, nullptr)
-            OPTIONAL_INPUT(aq::NClassDetectedObject::DetectionList, multiclass_detections, nullptr)
-            PARAM(int, start_count, -1)
+                PARAM(mo::WriteDirectory, root_dir, {})
+                PARAM(int, padding, 0)
+                PARAM(int, object_class, -1)
+                PARAM(std::string, image_stem, "image")
+                PARAM(int, max_subfolder_size, 1000)
+                PARAM(std::string, dataset_name, "")
+                ENUM_PARAM(extension, jpg, png, tiff, bmp)
+                INPUT(SyncedMemory, image, nullptr)
+                INPUT(DetectedObjectSet, detections, nullptr)
+                PARAM(int, start_count, -1)
             MO_END;
 
           protected:

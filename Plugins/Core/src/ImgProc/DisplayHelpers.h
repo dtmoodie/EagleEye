@@ -50,7 +50,7 @@ namespace aq
 
         MO_DERIVE(DrawDetections, IDrawDetections)
             INPUT(SyncedMemory, image, nullptr)
-            OPTIONAL_INPUT(std::vector<DetectedObject>, detections, nullptr)
+            INPUT(DetectedObjectSet, detections, nullptr)
             PARAM(bool, draw_class_label, true)
             PARAM(bool, draw_detection_id, true)
             OUTPUT(SyncedMemory, output, SyncedMemory())

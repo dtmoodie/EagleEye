@@ -27,14 +27,16 @@ void SaveAnnotations::select_rect(std::string window_name, cv::Rect rect, int fl
 {
     if (window_name != "legend")
     {
-        if (labels && current_class >= 0 && current_class < labels->size())
+        auto cats = detections->getCatSet();
+        if (current_class >= 0 && current_class < cats->size())
         {
-            DetectedObject obj;
+            DetectedObject<5> obj;
             obj.bounding_box = cv::Rect2f(float(rect.x) / _original_image.cols,
                                           float(rect.y) / _original_image.rows,
                                           float(rect.width) / _original_image.cols,
                                           float(rect.height) / _original_image.rows);
-            obj.classification = Classification((*labels)[current_class], 1.0, current_class);
+
+            obj.classifications[0] = (*cats)[current_class](1.0);
             _annotations.push_back(obj);
             draw();
         }
@@ -67,12 +69,12 @@ void SaveAnnotations::on_key(int key)
         ar(cereal::make_nvp("Annotations", _annotations));
         if (detections && detections->size() > 0)
         {
-            std::vector<DetectedObject> objs;
+            DetectedObjectSet objs;
             for (const auto& detection : *detections)
             {
                 if (object_class != -1)
                 {
-                    if (detection.classification.classNumber == object_class)
+                    if (detection.classifications[0].cat->index == object_class)
                     {
                         objs.push_back(detection);
                     }
@@ -120,7 +122,7 @@ void SaveAnnotations::draw()
                                bb.y * draw_image.rows,
                                bb.width * draw_image.cols,
                                bb.height * draw_image.rows),
-                      h_lut.at<cv::Vec3b>(_annotations[i].classification.classNumber),
+                      _annotations[i].classifications[0].cat->color,
                       5);
     }
     if (detections)
@@ -133,11 +135,11 @@ void SaveAnnotations::draw()
                                    bb.y * draw_image.rows,
                                    bb.width * draw_image.cols,
                                    bb.height * draw_image.rows),
-                          h_lut.at<cv::Vec3b>(detection.classification.classNumber),
+                          detection.classifications[0].cat->color,
                           5);
         }
     }
-    if (labels && current_class != -1 && current_class < labels->size())
+    if (current_class != -1 && current_class < _cats->size())
     {
         // cv::putText(draw_image, (*labels)[current_class], cv::Point(15, 25), cv::FONT_HERSHEY_COMPLEX, 0.7,
         // h_lut.at<cv::Vec3b>(current_class));
@@ -147,7 +149,6 @@ void SaveAnnotations::draw()
     mo::ThreadSpecificQueue::push(
         [draw_image, this]() {
             getGraph()->getWindowCallbackManager()->imshow("original", draw_image);
-            // getGraph()->getWindowCallbackManager()->imshow("legend", h_legend);
         },
         gui_thread_id,
         this);
@@ -198,19 +199,13 @@ bool SaveAnnotations::processImpl()
         label_file_param.modified(false);
         getGraph()->getWindowCallbackManager()->imshow("legend", h_legend);
     }*/
-    if (h_lut.cols != labels->size())
-    {
-        h_lut.create(1, labels->size(), CV_8UC3);
-        for (int i = 0; i < labels->size(); ++i)
-            h_lut.at<cv::Vec3b>(i) = cv::Vec3b(i * 180 / labels->size(), 200, 255);
-        cv::cvtColor(h_lut, h_lut, cv::COLOR_HSV2BGR);
-    }
+    _cats = detections->getCatSet();
+    
     _annotations.clear();
     size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
     if (input->getSyncState() == aq::SyncedMemory::DEVICE_UPDATED)
     {
         cv::Mat img = input->getMat(stream());
-        // cv::Mat img = input->getMat(stream());
 
         aq::cuda::enqueue_callback_async(
             [img, this]() { getGraph()->getWindowCallbackManager()->imshow("original", img); },

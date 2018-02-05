@@ -3,7 +3,7 @@
 #include <Aquila/types/SyncedMemory.hpp>
 #include <MetaObject/object/MetaObject.hpp>
 #include <MetaObject/params/ParamMacros.hpp>
-#include <MetaObject/params/Types.hpp>
+#include <MetaObject/types/file_types.hpp>
 #include "opencv2/cudastereo.hpp"
 #include <opencv2/imgproc.hpp>
 #include "Aquila/utilities/cuda/CudaUtils.hpp"

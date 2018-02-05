@@ -12,7 +12,7 @@ namespace aq
             MO_DERIVE(INeuralNet, IClassifier)
             INPUT(SyncedMemory, input, nullptr)
             OPTIONAL_INPUT(std::vector<cv::Rect2f>, bounding_boxes, nullptr)
-            OPTIONAL_INPUT(std::vector<aq::DetectedObject>, input_detections, nullptr)
+            OPTIONAL_INPUT(DetectedObjectSet, input_detections, nullptr)
 
             PARAM(mo::ReadFile, model_file, mo::ReadFile())
             TOOLTIP(model_file, "File containing description of neural net")
@@ -49,7 +49,7 @@ namespace aq
 
             virtual void preBatch(int batch_size);
             virtual void postMiniBatch(const std::vector<cv::Rect>& batch_bb = std::vector<cv::Rect>(),
-                                       const std::vector<DetectedObject2d>& dets = std::vector<DetectedObject2d>()) = 0;
+                                       const DetectedObjectSet& dets = DetectedObjectSet()) = 0;
             virtual void postBatch();
 
             virtual bool forwardAll();

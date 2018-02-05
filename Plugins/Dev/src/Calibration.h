@@ -1,7 +1,7 @@
 #pragma once
 #include "precompiled.hpp"
 #include <boost/circular_buffer.hpp>
-#include <MetaObject/params/Types.hpp>
+#include <MetaObject/types/file_types.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
 namespace aq
 {

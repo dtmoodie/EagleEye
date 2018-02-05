@@ -158,15 +158,18 @@ bool aq::nodes::INeuralNet::forwardAll()
         if (forwardMinibatch())
         {
             std::vector<cv::Rect> batch_bounding_boxes;
-            std::vector<DetectedObject2d> batch_detections;
+            DetectedObjectSet batch_detections;
             for (size_t j = start; j < end; ++j)
             {
                 batch_bounding_boxes.push_back(pixel_bounding_boxes[j]);
             }
             if (input_detections != nullptr && bounding_boxes == &defaultROI)
             {
+                batch_detections.setCatSet(input_detections->getCatSet());
                 for (size_t j = start; j < end; ++j)
+                {
                     batch_detections.push_back((*input_detections)[j]);
+                }
             }
             postMiniBatch(batch_bounding_boxes, batch_detections);
         }
