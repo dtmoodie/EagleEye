@@ -2,10 +2,10 @@
 #include "Aquila/nodes/Node.hpp"
 #include "Aquila/types/ObjectDetection.hpp"
 #include "Aquila/types/SyncedMemory.hpp"
-#include <MetaObject/types/file_types.hpp>
 #include "MetaObject/core/detail/ConcurrentQueue.hpp"
 #include "MetaObject/thread/ThreadHandle.hpp"
 #include "MetaObject/thread/ThreadPool.hpp"
+#include <MetaObject/types/file_types.hpp>
 namespace aq
 {
     namespace nodes
@@ -32,6 +32,7 @@ namespace aq
                 PARAM(bool, pad, true)
                 ENUM_PARAM(extension, jpg, png, tiff, bmp)
                 INPUT(SyncedMemory, image, nullptr)
+                INPUT(DetectedObjectSet, detections, nullptr)
                 PROPERTY(std::shared_ptr<boost::thread>, _write_thread, {})
                 PROPERTY(std::shared_ptr<WriteQueue_t>, _write_queue, {})
             MO_END
@@ -63,15 +64,16 @@ namespace aq
                 PARAM(std::string, image_stem, "image")
                 PARAM(int, max_subfolder_size, 1000)
                 PARAM(std::string, dataset_name, "")
+                PARAM(int, start_count, -1)
                 ENUM_PARAM(extension, jpg, png, tiff, bmp)
                 INPUT(SyncedMemory, image, nullptr)
                 INPUT(DetectedObjectSet, detections, nullptr)
-                PARAM(int, start_count, -1)
             MO_END;
 
           protected:
             void nodeInit(bool firstInit);
             bool processImpl();
+
             int _frame_count;
             moodycamel::ConcurrentQueue<std::pair<cv::Mat, std::string>> _write_queue;
             boost::thread _write_thread;

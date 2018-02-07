@@ -11,6 +11,8 @@
 #include <fstream>
 #include <iomanip>
 #include <opencv2/imgproc.hpp>
+#include <ct/reflect/cereal.hpp>
+
 using namespace aq;
 using namespace aq::nodes;
 SaveAnnotations::SaveAnnotations()

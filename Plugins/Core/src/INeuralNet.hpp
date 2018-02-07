@@ -1,4 +1,4 @@
-#include "Aquila/nodes/IClassifier.hpp"
+#include "IClassifier.hpp"
 #include "CoreExport.hpp"
 #include <Aquila/types/ObjectDetection.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
@@ -31,8 +31,9 @@ namespace aq
             TOOLTIP(pixel_scale, "Pixel value scale to multiply image by after subtraction")
 
             PARAM(float, image_scale, 1.0)
-            TOOLTIP(image_scale, "Scale factor for input of network. 1.0 = network is resized to input image size, "
-                                 "-1.0 = image is resized to network input size")
+            TOOLTIP(image_scale,
+                    "Scale factor for input of network. 1.0 = network is resized to input image size, "
+                    "-1.0 = image is resized to network input size")
 
             PARAM(bool, swap_bgr, true)
             MO_END

@@ -79,44 +79,22 @@ bool DrawDetections::processImpl()
                           detection.bounding_box.height);
             cv::Scalar color;
             std::stringstream ss;
-            if (detection.timestamp != det_ts)
+            
+            
+            color = detection.classifications[0].cat->color;
+                
+            if (draw_class_label)
             {
-                MO_LOG(info) << "Detection timestamp does not match detection set timestamp";
+                ss << detection.classifications[0].cat->getName() << " : " << std::setprecision(3)
+                    << detection.classifications[0].conf;
             }
-            if (labels->size())
-            {
-                color = colors[detection.classification.classNumber];
-                if (detection.classification.classNumber >= 0 && detection.classification.classNumber < labels->size())
-                {
-                    if (draw_class_label)
-                        ss << (*labels)[detection.classification.classNumber] << " : " << std::setprecision(3)
-                           << detection.classification.confidence;
-                }
-                else
-                {
-                    if (draw_class_label)
-                        ss << std::setprecision(3) << detection.classification.confidence;
-                }
-                if (draw_detection_id)
-                    ss << " - ";
-            }
-            else
-            {
-                // random color for each different detection
-                if (detection.classification.classNumber >= colors.size())
-                {
-                    colors.resize(detection.classification.classNumber + 1);
-                    for (int i = 0; i < colors.size(); ++i)
-                    {
-                        colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
-                    }
-                    cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
-                    cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
-                }
-                color = colors[detection.classification.classNumber];
-            }
+                    
+                
             if (draw_detection_id)
-                ss << detection.id;
+                
+            
+            if (draw_detection_id)
+                ss << " - "  << detection.id;
             cv::cuda::rectangle(draw_image, rect, color, 3, stream());
 
             cv::Rect text_rect = cv::Rect(rect.tl() + cv::Point(10, 20), cv::Size(200, 20));
