@@ -67,5 +67,6 @@ IF(TARGET fastms)
     INCLUDE_DIRECTORIES(${fastms_INCLUDE_DIRECTORIES})
 
 ENDIF()
-#INCLUDE(../PluginTemplate.cmake)
+
 aquila_declare_plugin(Segmentation)
+set_plugin_available(Segmentation)

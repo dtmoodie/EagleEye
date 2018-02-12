@@ -1,15 +1,10 @@
 #include "Freenect.h"
-#include "EagleLib/rcc/ObjectManager.h"
-#include "EagleLib/rcc/SystemTable.hpp"
+
 #include "freenect.cuh"
 #include "libfreenect/libfreenect.hpp"
 #include <boost/lexical_cast.hpp>
-SETUP_PROJECT_IMPL
-using namespace EagleLib;
-IPerModuleInterface* GetModule()
-{
-    return PerModuleInterface::GetInstance();
-}
+
+using namespace aq;
 
 class MyFreenectDevice : public Freenect::FreenectDevice
 {
@@ -82,11 +77,12 @@ class MyFreenectDevice : public Freenect::FreenectDevice
     bool m_new_depth_frame;
 };
 
-using namespace EagleLib;
-
+namespace aq
+{
 freenect::~freenect()
 {
 }
+
 bool freenect::LoadFile(const std::string& file_path)
 {
     auto idx = file_path.find("freenect/");
@@ -116,59 +112,15 @@ bool freenect::LoadFile(const std::string& file_path)
     }
     return false;
 }
-rcc::shared_ptr<ICoordinateManager> freenect::GetCoordinateManager()
-{
-    return _coordinate_manager;
-}
-TS<SyncedMemory> freenect::GetFrameImpl(int index, cv::cuda::Stream& stream)
-{
-    return TS<SyncedMemory>();
-}
-TS<SyncedMemory> freenect::GetNextFrameImpl(cv::cuda::Stream& stream)
-{
-    if (_myDevice)
-    {
-        cv::Mat depth;
-        uint32_t timestamp;
-        _myDevice->getDepth(depth, timestamp);
-        return TS<SyncedMemory>((double)timestamp, (int)timestamp, depth);
-    }
-    return TS<SyncedMemory>();
-}
+
 
 void freenect::Serialize(ISimpleSerializer* pSerializer)
 {
     SERIALIZE(_myDevice);
     SERIALIZE(_freenect);
 }
-std::string freenect::frame_grabber_freenect_info::GetObjectName()
-{
-    return "freenect";
-}
-std::string freenect::frame_grabber_freenect_info::GetObjectTooltip()
-{
-    return "";
-}
-std::string freenect::frame_grabber_freenect_info::GetObjectHelp()
-{
-    return "";
-}
-int freenect::frame_grabber_freenect_info::CanLoadDocument(const std::string& document) const
-{
-    if (document.find("freenect/") != std::string::npos)
-    {
-        return 10;
-    }
-    return 0;
-}
-int freenect::frame_grabber_freenect_info::Priority() const
-{
-    return 0;
-}
-int freenect::frame_grabber_freenect_info::LoadTimeout() const
-{
-    return 1000;
+
 }
 
-static freenect::frame_grabber_freenect_info info;
-REGISTERCLASS(freenect, &info);
+using namespace aq;
+MO_REGISTER_CLASS(freenect);

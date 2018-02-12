@@ -44,6 +44,5 @@ RCC_LINK_LIB(Dev
     metaobject_metaparams
 )
 
-#INCLUDE(../PluginTemplate.cmake)
 aquila_declare_plugin(Dev)
-
+set_plugin_available(Dev)

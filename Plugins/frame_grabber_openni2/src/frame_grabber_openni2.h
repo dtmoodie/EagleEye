@@ -10,7 +10,7 @@ namespace aq
 {
     namespace nodes
     {
-        
+
         class frame_grabber_openni2: public openni::VideoStream::NewFrameListener, public IFrameGrabber
         {
             openni::VideoFrameRef _frame;
@@ -19,10 +19,11 @@ namespace aq
         public:
             MO_DERIVE(frame_grabber_openni2, IFrameGrabber)
                 SOURCE(SyncedMemory, xyz, {})
+                SOURCE(SyncedMemory, depth, {})
             MO_END;
-            
+
             ~frame_grabber_openni2();
-        
+
             bool loadData(std::string file_path);
             void onNewFrame(openni::VideoStream& stream);
             bool processImpl();
@@ -31,7 +32,8 @@ namespace aq
             static int loadTimeout();
             static std::vector<std::string> listLoadablePaths();
 
-            cv::Mat new_frame;
+            cv::Mat new_xyz;
+            cv::Mat new_depth;
         };
     }
 }

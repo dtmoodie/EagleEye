@@ -86,6 +86,6 @@ endif()
 if(BUILD_TESTS)
     add_subdirectory("tests")
 endif()
-#INCLUDE(../PluginTemplate.cmake)
-aquila_declare_plugin(frame_grabbers)
 
+aquila_declare_plugin(frame_grabbers)
+set_plugin_available(frame_grabbers)

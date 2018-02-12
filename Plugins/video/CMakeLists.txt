@@ -20,3 +20,4 @@ RCC_LINK_LIB(video
 
 #INCLUDE(../PluginTemplate.cmake)
 aquila_declare_plugin(video)
+set_plugin_available(video)

@@ -1,7 +1,6 @@
 #pragma once
-#include "EagleLib/frame_grabber_base.h"
-#include "EagleLib/ICoordinateManager.h"
-SETUP_PROJECT_DEF
+#include <Aquila/framegrabbers/IFrameGrabber.hpp>
+#include <Aquila/types/SyncedMemory.hpp>
 
 class MyFreenectDevice;
 namespace Freenect
@@ -9,35 +8,29 @@ namespace Freenect
     class Freenect;
 }
 
-namespace EagleLib
+namespace aq
 {
+    class frame_grabber_freenect_info : public FrameGrabberInfo
+    {
+    public:
+        virtual std::string GetObjectName();
+        virtual std::string GetObjectTooltip();
+        virtual std::string GetObjectHelp();
+        virtual int CanLoadDocument(const std::string& document) const;
+        virtual int Priority() const;
+        virtual int LoadTimeout() const;
+    };
 
-    class PLUGIN_EXPORTS freenect: public FrameGrabberBuffered
+    class freenect: public nodes::IFrameGrabber
     {
         Freenect::Freenect* _freenect;
         cv::cuda::GpuMat XYZ;
         MyFreenectDevice* _myDevice;
 
     public:
-        class PLUGIN_EXPORTS frame_grabber_freenect_info : public FrameGrabberInfo
-        {
-        public:
-            virtual std::string GetObjectName();
-            virtual std::string GetObjectTooltip();
-            virtual std::string GetObjectHelp();
-            virtual int CanLoadDocument(const std::string& document) const;
-            virtual int Priority() const;
-            virtual int LoadTimeout() const;
-        };
-        //freenect();
         ~freenect();
         virtual void Serialize(ISimpleSerializer* pSerializer);
-        virtual bool LoadFile(const std::string& file_path);
-        int GetNumFrames() { return -1; }
-        rcc::shared_ptr<ICoordinateManager> GetCoordinateManager();
-        virtual TS<SyncedMemory> GetFrameImpl(int index, cv::cuda::Stream& stream);
-        virtual TS<SyncedMemory> GetNextFrameImpl(cv::cuda::Stream& stream);
-        rcc::shared_ptr<ICoordinateManager> _coordinate_manager;
+        virtual bool loadData(std::string file_path);
     };
 
 }

@@ -1,6 +1,6 @@
 #include "openni2_initializer.h"
 #include "OpenNI.h"
-#include <Aquila/rcc/SystemTable.hpp>
+#include <MetaObject/core/SystemTable.hpp>
 #include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 #include <opencv2/core.hpp>
 
@@ -13,7 +13,7 @@ initializer_NI2::initializer_NI2()
 
 initializer_NI2* initializer_NI2::instance()
 {
-    static initializer_NI2* inst = nullptr;
+    static std::shared_ptr<initializer_NI2> inst = nullptr;
     if (inst == nullptr)
     {
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
@@ -22,14 +22,14 @@ initializer_NI2* initializer_NI2::instance()
             inst = table->getSingleton<initializer_NI2>();
             if (inst == nullptr)
             {
-                inst = new initializer_NI2();
+                inst = std::make_shared<initializer_NI2>();
                 table->setSingleton<initializer_NI2>(inst);
             }
         }
         else
         {
-            inst = new initializer_NI2();
+            inst = std::make_shared<initializer_NI2>();
         }
     }
-    return inst;
+    return inst.get();
 }
