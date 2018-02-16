@@ -1,17 +1,17 @@
 #pragma once
 
-#include "GStreamerExport.hpp"
+#include "aqgstreamer_export.hpp"
 #include <gst/gst.h>
 #include <boost/thread.hpp>
 
-class GStreamer_EXPORT glib_thread
+class aqgstreamer_EXPORT glib_thread
 {
 protected:
     boost::thread _thread;
     GMainLoop* _main_loop;
-    
+
     void loop();
-    
+
 public:
     glib_thread();
     ~glib_thread();

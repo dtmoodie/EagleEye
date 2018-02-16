@@ -3,6 +3,7 @@
 #include <MetaObject/params/MetaParam.hpp>
 #include <MetaObject/serialization/CerealPolicy.hpp>
 #include <cereal/types/vector.hpp>
+#include <ct/reflect/cereal.hpp>
 
 using namespace point_clouds;
 
@@ -13,7 +14,7 @@ Moment::Moment(float Px_, float Py_, float Pz_) : Px(Px_), Py(Py_), Pz(Pz_)
 {
 }
 
-float Moment::Evaluate(cv::Mat mask, cv::Mat points, cv::Vec3f centroid)
+float Moment::evaluate(cv::Mat mask, cv::Mat points, cv::Vec3f centroid)
 {
     float value = 0;
     uchar* mask_ptr = mask.ptr<uchar>();

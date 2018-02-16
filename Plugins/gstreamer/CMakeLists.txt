@@ -1,4 +1,4 @@
-PROJECT(GStreamer)
+PROJECT(aqgstreamer)
 CMAKE_POLICY(SET CMP0020 NEW)
 SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 include(CMake)
@@ -56,8 +56,8 @@ IF(GSTREAMER_FOUND)
         add_definitions(-DHAVE_GST_RTSPSERVER)
     endif()
     ADD_DEFINITIONS(-DPROJECT_LIB_DIRS="${LIB_DIR}")
-    ADD_LIBRARY(GStreamer SHARED ${src} ${hdr})
-    RCC_LINK_LIB(GStreamer
+    ADD_LIBRARY(aqgstreamer SHARED ${src} ${hdr})
+    RCC_LINK_LIB(aqgstreamer
         ${OpenCV_LIBS}
         aquila_core
         Qt5::Network
@@ -91,8 +91,8 @@ IF(GSTREAMER_FOUND)
         RCC_LINK_LIB(GStreamer ${GSTREAMER_gstrtspserver_LIBRARY})
     ENDIF()
 
-    aquila_declare_plugin(GStreamer)
-    set_plugin_available(GStreamer)
+    aquila_declare_plugin(aqgstreamer)
+    set_plugin_available(aqgstreamer)
 else()
-    set_plugin_unavailable(GStreamer)
+    set_plugin_unavailable(aqgstreamer)
 ENDIF()

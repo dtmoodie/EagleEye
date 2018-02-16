@@ -1,5 +1,5 @@
 #pragma once
-#include <point_cloudsExport.hpp>
+#include <aqpointclouds_export.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/core/cuda.hpp>
 
@@ -7,7 +7,7 @@ namespace aq
 {
 namespace point_clouds
 {
-    class point_clouds_EXPORT bounding_box
+    class aqpointclouds_EXPORT bounding_box
     {
     public:
         bounding_box(cv::Mat transform, cv::Scalar size);

@@ -5,7 +5,7 @@
 
 namespace aq
 {
-    class GStreamer_EXPORT chunked_file_sink:
+    class aqgstreamer_EXPORT chunked_file_sink:
         virtual public gstreamer_src_base, 
         virtual public nodes::IGrabber
     {
@@ -22,7 +22,7 @@ namespace aq
         GstElement* _filesink;
     };
 
-    class GStreamer_EXPORT JpegKeyframer:
+    class aqgstreamer_EXPORT JpegKeyframer:
         virtual public gstreamer_src_base,
         virtual public nodes::IGrabber
     {
@@ -39,7 +39,7 @@ namespace aq
     };
     namespace nodes
     {
-    class GStreamer_EXPORT GstreamerSink: virtual public gstreamer_sink_base
+    class aqgstreamer_EXPORT GstreamerSink: virtual public gstreamer_sink_base
     {
     public:
         MO_DERIVE(GstreamerSink, gstreamer_sink_base)

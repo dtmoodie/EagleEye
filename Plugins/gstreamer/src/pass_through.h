@@ -6,7 +6,7 @@ namespace aq
 {
     namespace nodes
     {
-        class GStreamer_EXPORT h264_pass_through: public gstreamer_sink_base{
+        class aqgstreamer_EXPORT h264_pass_through: public gstreamer_sink_base{
         public:
             MO_DERIVE(h264_pass_through, gstreamer_sink_base)
                 PARAM(std::string, gstreamer_string, "");

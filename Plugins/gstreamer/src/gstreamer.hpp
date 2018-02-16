@@ -7,7 +7,7 @@
 #endif
 #include "Aquila/core/detail/Export.hpp"
 #include "Aquila/nodes/Node.hpp"
-#include "GStreamerExport.hpp"
+#include "aqgstreamer_export.hpp"
 #include <Aquila/types/Stamped.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/utilities/cuda/CudaUtils.hpp>
@@ -56,7 +56,7 @@ RUNTIME_COMPILER_LINKLIBRARY("Qt5Core.lib");
 
 namespace aq
 {
-    class GStreamer_EXPORT gstreamer_base
+    class aqgstreamer_EXPORT gstreamer_base
     {
       public:
         gstreamer_base();
@@ -84,7 +84,7 @@ namespace aq
         bool _caps_set;
     };
     // used to feed data into EagleEye from gstreamer, use when creating frame grabbers
-    class GStreamer_EXPORT gstreamer_src_base : virtual public gstreamer_base
+    class aqgstreamer_EXPORT gstreamer_src_base : virtual public gstreamer_base
     {
       public:
         gstreamer_src_base();
@@ -104,7 +104,7 @@ namespace aq
     namespace nodes
     {
         // Used to feed a gstreamer pipeline from EagleEye
-        class GStreamer_EXPORT gstreamer_sink_base : virtual public gstreamer_base, virtual public Node
+        class aqgstreamer_EXPORT gstreamer_sink_base : virtual public gstreamer_base, virtual public Node
         {
           public:
             gstreamer_sink_base();
@@ -129,7 +129,7 @@ namespace aq
             virtual void cleanup();
         };
         // Decpricated ?
-        class GStreamer_EXPORT RTSP_server : public Node
+        class aqgstreamer_EXPORT RTSP_server : public Node
         {
           public:
             enum ServerType
@@ -141,13 +141,13 @@ namespace aq
             ~RTSP_server();
             virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
             MO_DERIVE(RTSP_server, Node)
-            ENUM_PARAM(server_type, TCP, UDP);
-            PARAM(unsigned short, port, 8004);
-            PARAM(std::string, host, "");
-            PARAM(std::string, gst_pipeline, "");
-            PROPERTY(time_t, delta, 0);
-            PROPERTY(time_t, prevTime, 0);
-            PROPERTY(GstClockTime, timestamp, 0);
+                ENUM_PARAM(server_type, TCP, UDP);
+                PARAM(unsigned short, port, 8004);
+                PARAM(std::string, host, "");
+                PARAM(std::string, gst_pipeline, "");
+                PROPERTY(time_t, delta, 0);
+                PROPERTY(time_t, prevTime, 0);
+                PROPERTY(GstClockTime, timestamp, 0);
             MO_END;
             void gst_loop();
             void push_image();
@@ -169,7 +169,7 @@ namespace aq
         };
 
 #ifdef HAVE_GST_RTSPSERVER
-        class GStreamer_EXPORT RTSP_server_new : public Node
+        class aqgstreamer_EXPORT RTSP_server_new : public Node
         {
           public:
             GstClockTime timestamp;
