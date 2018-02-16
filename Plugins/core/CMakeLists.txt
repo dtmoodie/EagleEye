@@ -1,4 +1,4 @@
-PROJECT(Core)
+PROJECT(aqcore)
 CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 CMAKE_POLICY(SET CMP0053 OLD)
@@ -44,10 +44,10 @@ IF(UNIX)
   set(CUDA_PROPAGATE_HOST_FLAGS OFF)
   set(CUDA_NVCC_FLAGS "-std=c++11;--expt-relaxed-constexpr;${CUDA_NVCC_FLAGS}")
 ENDIF()
-cuda_add_library(Core SHARED ${src} ${hdr} ${knl})
-ocv_add_precompiled_header_to_target(Core src/precompiled.hpp)
+cuda_add_library(aqcore SHARED ${src} ${hdr} ${knl})
+ocv_add_precompiled_header_to_target(aqcore src/precompiled.hpp)
 
-RCC_LINK_LIB(Core aquila_core
+RCC_LINK_LIB(aqcore aquila_core
     aquila_utilities
     aquila_serialization
     aquila_types
@@ -59,5 +59,5 @@ RCC_LINK_LIB(Core aquila_core
     metaobject_params
 )
 
-aquila_declare_plugin(Core)
-set_plugin_available(Core)
+aquila_declare_plugin(aqcore)
+set_plugin_available(aqcore)

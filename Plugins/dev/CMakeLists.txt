@@ -1,4 +1,4 @@
-PROJECT(Dev)
+PROJECT(aqdev)
 CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 CMAKE_POLICY(SET CMP0053 OLD)
@@ -28,10 +28,10 @@ IF(WIN32)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 ENDIF()
 
-cuda_add_library(Dev SHARED ${src} ${hdr} ${knl})
+cuda_add_library(aqdev SHARED ${src} ${hdr} ${knl})
 
 
-RCC_LINK_LIB(Dev
+RCC_LINK_LIB(aqdev
     ${OpenCV_LIBS}
     ${CUDA_CUBLAS_LIBRARIES}
     aquila_core
@@ -44,5 +44,5 @@ RCC_LINK_LIB(Dev
     metaobject_metaparams
 )
 
-aquila_declare_plugin(Dev)
-set_plugin_available(Dev)
+aquila_declare_plugin(aqdev)
+set_plugin_available(aqdev)

@@ -2,7 +2,7 @@
 
 #include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
-#include <Aquila/rcc/external_includes/Core_link_libs.hpp>
+#include <Aquila/rcc/external_includes/aqcore_link_libs.hpp>
 #include <Aquila/utilities/GpuDrawing.hpp>
 #include <MetaObject/object/detail/IMetaObjectImpl.hpp>
 #include <fstream>
@@ -79,22 +79,19 @@ bool DrawDetections::processImpl()
                           detection.bounding_box.height);
             cv::Scalar color;
             std::stringstream ss;
-            
-            
+
             color = detection.classifications[0].cat->color;
-                
+
             if (draw_class_label)
             {
                 ss << detection.classifications[0].cat->getName() << " : " << std::setprecision(3)
-                    << detection.classifications[0].conf;
+                   << detection.classifications[0].conf;
             }
-                    
-                
+
             if (draw_detection_id)
-                
-            
-            if (draw_detection_id)
-                ss << " - "  << detection.id;
+
+                if (draw_detection_id)
+                    ss << " - " << detection.id;
             cv::cuda::rectangle(draw_image, rect, color, 3, stream());
 
             cv::Rect text_rect = cv::Rect(rect.tl() + cv::Point(10, 20), cv::Size(200, 20));

@@ -110,14 +110,27 @@ bool GrabberCV::grab()
         cv::Mat img;
         if (h_cam->read(img))
         {
-            size_t fn = static_cast<size_t>(h_cam->get(CV_CAP_PROP_POS_FRAMES));
-            double ts_ = h_cam->get(CV_CAP_PROP_POS_MSEC);
+            int fn = -1;
+            if (query_frame_number)
+            {
+                fn = static_cast<int>(h_cam->get(CV_CAP_PROP_POS_FRAMES));
+                if (fn == -1)
+                {
+                    query_frame_number = false;
+                }
+            }
+            double ts_ = -1.0;
+            if (query_time)
+            {
+                ts_ = h_cam->get(CV_CAP_PROP_POS_MSEC);
+            }
             mo::Time_t ts;
-            if (ts_ == -1)
+            if (ts_ < 0.0)
             {
                 if (!initial_time)
                     initial_time = mo::getCurrentTime();
                 ts = mo::Time_t(mo::getCurrentTime() - *initial_time);
+                query_time = false;
             }
             else
             {
@@ -129,7 +142,8 @@ bool GrabberCV::grab()
             }
             else
             {
-                image_param.updateData(img, mo::tag::_timestamp = ts, mo::tag::_frame_number = fn, _ctx.get());
+                image_param.updateData(
+                    img, mo::tag::_timestamp = ts, mo::tag::_frame_number = static_cast<size_t>(fn), _ctx.get());
             }
             return true;
         }

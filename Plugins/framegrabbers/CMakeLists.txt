@@ -1,4 +1,4 @@
-PROJECT(frame_grabbers)
+PROJECT(aqframegrabbers)
 CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 CMAKE_POLICY(SET CMP0053 OLD)
@@ -51,9 +51,9 @@ file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp")
 
-cuda_add_library(frame_grabbers SHARED ${src} ${hdr} ${knl})
+cuda_add_library(aqframegrabbers SHARED ${src} ${hdr} ${knl})
 
-RCC_LINK_LIB(frame_grabbers
+RCC_LINK_LIB(aqframegrabbers
         aquila_core
         metaobject_core metaobject_object metaobject_params metaobject_metaparams
         ${OpenCV_LIBS}
@@ -62,7 +62,7 @@ RCC_LINK_LIB(frame_grabbers
         aquila_metatypes
 )
 if(GSTREAMER_FOUND)
-    RCC_LINK_LIB(frame_grabbers
+    RCC_LINK_LIB(aqframegrabbers
         ${GSTREAMER_gstapp_LIBRARY}
         ${GSTREAMER_gstaudio_LIBRARY}
         ${GSTREAMER_gstbase_LIBRARY}
@@ -87,5 +87,5 @@ if(BUILD_TESTS)
     add_subdirectory("tests")
 endif()
 
-aquila_declare_plugin(frame_grabbers)
-set_plugin_available(frame_grabbers)
+aquila_declare_plugin(aqframegrabbers)
+set_plugin_available(aqframegrabbers)

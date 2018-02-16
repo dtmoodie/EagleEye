@@ -2,13 +2,13 @@
 
 #include "cv_capture.h"
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
-#include "frame_grabbersExport.hpp"
+#include "aqframegrabbers_export.hpp"
 
 namespace aq
 {
     namespace nodes
     {
-        class frame_grabbers_EXPORT GrabberGstreamer: public GrabberCV
+        class aqframegrabbers_EXPORT GrabberGstreamer: public GrabberCV
         {
         public:
             MO_DERIVE(GrabberGstreamer, GrabberCV)
@@ -17,7 +17,7 @@ namespace aq
             MO_END;
 
             bool loadData(const std::string& file_path);
-            
+
             static int canLoad(const std::string& document);
             static void listPaths(std::vector<std::string>& paths);
         };
