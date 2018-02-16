@@ -1,4 +1,4 @@
-project(video)
+project(aqvideo)
 
 file(GLOB_RECURSE src "*.cpp" "*.cu" "*.h" "*.hpp")
 ADD_DEFINITIONS(${DEFS})
@@ -10,14 +10,13 @@ INCLUDE_DIRECTORIES(
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
 )
-cuda_add_library(video SHARED ${src})
+cuda_add_library(aqvideo SHARED ${src})
 
-RCC_LINK_LIB(video
+RCC_LINK_LIB(aqvideo
     ${OpenCV_LIBS}
     ${CUDA_CUBLAS_LIBRARIES}
     metaobject_core metaobject_object metaobject_params metaobject_metaparams aquila_core
 )
 
-#INCLUDE(../PluginTemplate.cmake)
-aquila_declare_plugin(video)
-set_plugin_available(video)
+aquila_declare_plugin(aqvideo)
+set_plugin_available(aqvideo)
