@@ -1,5 +1,5 @@
 #include "Aquila/utilities/cuda/CudaCallbacks.hpp"
-#include "Aquila/plotters/Plotter.h"
+#include <Aquila/plotting/Plotter.h>
 
 #include "qcustomplot.h"
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"

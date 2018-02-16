@@ -25,14 +25,15 @@ INCLUDE_DIRECTORIES(
 add_definitions(-DPROJECT_INCLUDE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/include")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-add_library(Plotting SHARED ${src} ${hdr} ${knl})
-add_dependencies(Plotting QCustomPlot)
+add_library(aqplotting SHARED ${src} ${hdr} ${knl})
+add_dependencies(aqplotting QCustomPlot)
 set_target_properties(QCustomPlot PROPERTIES FOLDER Dependencies)
 
-RCC_LINK_LIB(Plotting 
+RCC_LINK_LIB(aqplotting
     metaobject_core metaobject_object metaobject_params metaobject_metaparams
     QCustomPlot
     )
-INCLUDE(../PluginTemplate.cmake)
+
+aquila_declare_plugin(aqplotting)
 
 

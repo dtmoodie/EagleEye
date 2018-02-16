@@ -10,7 +10,7 @@ macro(aquila_declare_plugin tgt)
       foreach(lib ${ARGN})
       endforeach(lib ${ARGN})
     endmacro(RCC_HANDLE_LIB target lib)
-    
+
     get_target_property(target_include_dirs_ ${tgt} INCLUDE_DIRECTORIES)
     get_target_property(target_link_libs_    ${tgt} LINK_LIBRARIES)
 
@@ -23,20 +23,20 @@ macro(aquila_declare_plugin tgt)
     )
     set_target_properties(${tgt} PROPERTIES LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin/Plugins)
     INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/src)
-	target_include_directories(${tgt}
+        target_include_directories(${tgt}
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/>
     )
-	target_include_directories(${tgt}
+        target_include_directories(${tgt}
         PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Plugins/${tgt}/>
     )
-    
+
     RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
 
     ocv_add_precompiled_header_to_target(${tgt} src/precompiled.hpp)
     if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${tgt}_config.txt")
       FILE(READ "${CMAKE_CURRENT_BINARY_DIR}/${tgt}_config.txt" temp)
     endif()
-    
+
     SET(PROJECT_ID)
     IF(temp)
       STRING(FIND "${temp}" "\n" len)
@@ -57,90 +57,90 @@ macro(aquila_declare_plugin tgt)
     set(PLUGIN_NAME ${tgt})
     string(TIMESTAMP BUILD_DATE "%Y-%m-%d %H:%M")
     execute_process(
-	  COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
-	  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila
-	  OUTPUT_VARIABLE AQUILA_GIT_BRANCH
-	  OUTPUT_STRIP_TRAILING_WHITESPACE
-	  ERROR_QUIET
-	)
-	execute_process(
-	  COMMAND ${GITCOMMAND} log -1 --format=%H
-	  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila
-	  OUTPUT_VARIABLE AQUILA_GIT_COMMIT_HASH
-	  OUTPUT_STRIP_TRAILING_WHITESPACE
-	  ERROR_QUIET
-	)
-	execute_process(
-	  COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
-	  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
-	  OUTPUT_VARIABLE MO_GIT_BRANCH
-	  OUTPUT_STRIP_TRAILING_WHITESPACE
-	  ERROR_QUIET
-	)
-	execute_process(
-	  COMMAND ${GITCOMMAND} log -1 --format=%H
-	  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
-	  OUTPUT_VARIABLE MO_GIT_COMMIT_HASH
-	  OUTPUT_STRIP_TRAILING_WHITESPACE
-	  ERROR_QUIET
-	)
-	execute_process(
-		COMMAND ${GITCOMMAND} status
-		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-		RESULT_VARIABLE IS_GIT_REPO
-		OUTPUT_VARIABLE _IGNORE_
-		ERROR_QUIET
-	)
-	
-	if(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN}) # return code of 0 if success
+          COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila
+          OUTPUT_VARIABLE AQUILA_GIT_BRANCH
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+          ERROR_QUIET
+        )
+        execute_process(
+          COMMAND ${GITCOMMAND} log -1 --format=%H
+          WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila
+          OUTPUT_VARIABLE AQUILA_GIT_COMMIT_HASH
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+          ERROR_QUIET
+        )
+        execute_process(
+          COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
+          OUTPUT_VARIABLE MO_GIT_BRANCH
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+          ERROR_QUIET
+        )
+        execute_process(
+          COMMAND ${GITCOMMAND} log -1 --format=%H
+          WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../Aquila/dependencies/MetaObject
+          OUTPUT_VARIABLE MO_GIT_COMMIT_HASH
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+          ERROR_QUIET
+        )
+        execute_process(
+                COMMAND ${GITCOMMAND} status
+                WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                RESULT_VARIABLE IS_GIT_REPO
+                OUTPUT_VARIABLE _IGNORE_
+                ERROR_QUIET
+        )
+
+        if(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN}) # return code of 0 if success
         set(REPO_TYPE "git")
-		execute_process(
-		  COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
-		  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-		  OUTPUT_VARIABLE GIT_BRANCH
-		  OUTPUT_STRIP_TRAILING_WHITESPACE
-		  ERROR_QUIET
-		)
-		execute_process(
-		  COMMAND ${GITCOMMAND} log -1 --format=%H
-		  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-		  OUTPUT_VARIABLE GIT_COMMIT_HASH
-		  OUTPUT_STRIP_TRAILING_WHITESPACE
-		  ERROR_QUIET
-		)
-		
-		execute_process(
-		  COMMAND ${GITCOMMAND} config user.name
-		  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-		  OUTPUT_VARIABLE GIT_USERNAME
-		  OUTPUT_STRIP_TRAILING_WHITESPACE
-		  ERROR_QUIET
-		)
-		execute_process(
-		  COMMAND ${GITCOMMAND} config user.email
-		  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-		  OUTPUT_VARIABLE GIT_EMAIL
-		  OUTPUT_STRIP_TRAILING_WHITESPACE
-		  ERROR_QUIET
-		)
-	ELSE(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN})
-		# check if it's an SVN repoo
-		IF(SVNCOMMAND)
-			execute_process(
-				COMMAND ${SVNCOMMAND} status
-				WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-				OUTPUT_VARIABLE _IGNORE_
-				RESULT_VARIABLE IS_SVN_REPO
-				ERROR_QUIET
-			)
-			IF(NOT ${IS_SVN_REPO}) # return code is 0 if success
+                execute_process(
+                  COMMAND ${GITCOMMAND} rev-parse --abbrev-ref HEAD
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                  OUTPUT_VARIABLE GIT_BRANCH
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  ERROR_QUIET
+                )
+                execute_process(
+                  COMMAND ${GITCOMMAND} log -1 --format=%H
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                  OUTPUT_VARIABLE GIT_COMMIT_HASH
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  ERROR_QUIET
+                )
+
+                execute_process(
+                  COMMAND ${GITCOMMAND} config user.name
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                  OUTPUT_VARIABLE GIT_USERNAME
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  ERROR_QUIET
+                )
+                execute_process(
+                  COMMAND ${GITCOMMAND} config user.email
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                  OUTPUT_VARIABLE GIT_EMAIL
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  ERROR_QUIET
+                )
+        ELSE(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN})
+                # check if it's an SVN repoo
+                IF(SVNCOMMAND)
+                        execute_process(
+                                COMMAND ${SVNCOMMAND} status
+                                WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                                OUTPUT_VARIABLE _IGNORE_
+                                RESULT_VARIABLE IS_SVN_REPO
+                                ERROR_QUIET
+                        )
+                        IF(NOT ${IS_SVN_REPO}) # return code is 0 if success
                 set(REPO_TYPE "svn")
-				execute_process(
-					COMMAND ${SVNCOMMAND} info --show-item revision
-					WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-					OUTPUT_VARIABLE GIT_COMMIT_HASH
-					ERROR_QUIET
-				)
+                                execute_process(
+                                        COMMAND ${SVNCOMMAND} info --show-item revision
+                                        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                                        OUTPUT_VARIABLE GIT_COMMIT_HASH
+                                        ERROR_QUIET
+                                )
                 string(REGEX REPLACE "\n" "" GIT_COMMIT_HASH "${GIT_COMMIT_HASH}")
                 execute_process(
                   COMMAND ${SVNCOMMAND} info --show-item relative-url
@@ -154,17 +154,17 @@ macro(aquila_declare_plugin tgt)
                 else()
                     set(GIT_USERNAME "$ENV{USER}")
                 endif()
-			endif(NOT ${IS_SVN_REPO})
-		endif()
+                        endif(NOT ${IS_SVN_REPO})
+                endif()
     ENDIF(NOT ${IS_GIT_REPO} AND NOT ${aquila_declare_plugin_SVN})
 
-    CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}Export.hpp" @ONLY)
-    
+    CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}_export.hpp" @ONLY)
+
     CONFIGURE_FILE("../plugin_config.cpp.in" "${CMAKE_BINARY_DIR}/Plugins/${tgt}/plugin_config.cpp" @ONLY)
-    
+
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/Plugins/${tgt}/plugin_config.cpp")
-    set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}Export.hpp")
-    
+    set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/Plugins/${tgt}/${tgt}_export.hpp")
+
     LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
     LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
     LINK_DIRECTORIES(${LINK_DIRS})
@@ -175,20 +175,20 @@ macro(aquila_declare_plugin tgt)
     # wndows link libs
     if(LINK_LIBS_RELEASE)
       LIST(REMOVE_DUPLICATES LINK_LIBS_RELEASE)
-	  list(SORT LINK_LIBS_RELEASE)
+          list(SORT LINK_LIBS_RELEASE)
     endif()
     if(LINK_LIBS_DEBUG)
       LIST(REMOVE_DUPLICATES LINK_LIBS_DEBUG)
-	  list(SORT LINK_LIBS_DEBUG)
+          list(SORT LINK_LIBS_DEBUG)
     endif()
     set(external_include_file "${external_include_file}\n#if defined(NDEBUG) && !defined(_DEBUG)\n\n")
-	if(WIN32)
-		set(prefix "")
-		set(postfix ".lib")
-	else(WIN32)
-		set(prefix "-l")
-		set(postfix "")
-	endif(WIN32)
+        if(WIN32)
+                set(prefix "")
+                set(postfix ".lib")
+        else(WIN32)
+                set(prefix "-l")
+                set(postfix "")
+        endif(WIN32)
     foreach(lib ${LINK_LIBS_RELEASE})
         string(LENGTH ${lib} len)
         if(len GREATER 3)
@@ -237,7 +237,7 @@ macro(aquila_declare_plugin tgt)
     else()
       FILE(WRITE ${link_file_path} "${external_include_file}")
     endif()
-    
+
     INSTALL(TARGETS ${tgt}
             LIBRARY DESTINATION bin/Plugins
             RUNTIME DESTINATION bin

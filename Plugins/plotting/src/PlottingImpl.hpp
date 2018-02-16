@@ -3,9 +3,9 @@
 #include "QVector"
 
 #include "Plotting.h"
-#include "PlottingExport.hpp"
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
+#include "aqplotting_export.hpp"
 #include "boost/circular_buffer.hpp"
 #include "opencv2/core.hpp"
 #include <memory>
