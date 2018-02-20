@@ -1,6 +1,6 @@
 #pragma once
 #include <ct/reflect/reflect_data.hpp>
-#include "aqpointclouds_export.hpp"
+#include "aqpointcloudsExport.hpp"
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/types.hpp>
 #include <cereal/cereal.hpp>
