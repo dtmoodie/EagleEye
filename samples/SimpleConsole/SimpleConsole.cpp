@@ -37,8 +37,8 @@
 #include <boost/version.hpp>
 #include <signal.h> // SIGINT, etc
 
-#include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/MetaParameters.hpp"
+#include "MetaObject/core/SystemTable.hpp"
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
@@ -277,7 +277,7 @@ int main(int argc, char* argv[])
 
     mo::MetaObjectFactory::instance()->registerTranslationUnit();
 
-    auto g_allocator = mo::Allocator::getThreadSafeAllocator();
+    auto g_allocator = mo::Allocator::createAllocator();
     cv::cuda::GpuMat::setDefaultAllocator(g_allocator.get());
     cv::Mat::setDefaultAllocator(g_allocator.get());
 
