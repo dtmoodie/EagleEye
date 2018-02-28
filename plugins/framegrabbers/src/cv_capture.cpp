@@ -1,9 +1,10 @@
 #include "cv_capture.h"
 #include "Aquila/framegrabbers/GrabberInfo.hpp"
+#include "Aquila/rcc/external_includes/aqframegrabbers_link_libs.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include "precompiled.hpp"
 
-#if _MSC_VER
+#ifdef _MSC_VER
 RUNTIME_COMPILER_LINKLIBRARY("ole32.lib")
 #endif
 
@@ -155,13 +156,36 @@ class GrabberCamera : public GrabberCV
 {
   public:
     MO_DERIVE(GrabberCamera, GrabberCV)
-
+        PARAM(float, focus, -1.0f)
     MO_END;
     bool loadData(const std::string& path);
     static void listPaths(std::vector<std::string>& paths);
     static int canLoad(const std::string& doc);
     static int loadTimeout() { return 5000; }
+  protected:
+    virtual bool processImpl() override;
 };
+
+bool GrabberCamera::processImpl()
+{
+    if (h_cam)
+    {
+        if (focus_param.modified())
+        {
+            if (focus > 0)
+            {
+                h_cam->set(cv::CAP_PROP_AUTOFOCUS, 0);
+                h_cam->set(cv::CAP_PROP_FOCUS, focus);
+            }
+            else
+            {
+                h_cam->set(cv::CAP_PROP_AUTOFOCUS, 1);
+            }
+            focus_param.modified(false);
+        }
+    }
+    return GrabberCV::processImpl();
+}
 
 void GrabberCamera::listPaths(std::vector<std::string>& paths)
 {
