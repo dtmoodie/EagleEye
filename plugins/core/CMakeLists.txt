@@ -12,7 +12,7 @@ find_package(CUDA REQUIRED)
   include_directories(${CUDA_TOOLKIT_INCLUDE})
 
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaarithm cudaimgproc cudafilters cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo videoio imgcodecs)
+find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaarithm cudaimgproc cudafilters cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo videoio imgcodecs cudaobjdetect objdetect)
   set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 find_package(PkgConfig QUIET)
@@ -61,3 +61,4 @@ RCC_LINK_LIB(aqcore aquila_core
 
 aquila_declare_plugin(aqcore)
 set_plugin_available(aqcore)
+set_plugin_status(openni2openni2 "OpenNI2 found")

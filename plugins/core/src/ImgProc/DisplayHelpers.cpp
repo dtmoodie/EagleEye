@@ -34,32 +34,9 @@ bool AutoScale::processImpl()
     return true;
 }
 
-void IDrawDetections::createColormap()
-{
-    if (labels && (colors.size() != labels->size() || colormap_param.modified()))
-    {
-        colors.resize(labels->size());
-        for (int i = 0; i < colors.size(); ++i)
-        {
-            colors[i] = cv::Vec3b(i * 180 / colors.size(), 200, 255);
-        }
-        cv::Mat colors_mat(colors.size(), 1, CV_8UC3, &colors[0]);
-        cv::cvtColor(colors_mat, colors_mat, cv::COLOR_HSV2BGR);
-        for (size_t i = 0; i < labels->size(); ++i)
-        {
-            auto itr = colormap.find((*labels)[i]);
-            if (itr != colormap.end())
-            {
-                colors[i] = itr->second;
-            }
-        }
-        colormap_param.modified(false);
-    }
-}
-
 bool DrawDetections::processImpl()
 {
-    createColormap();
+
     cv::cuda::GpuMat draw_image;
     image->clone(draw_image, stream());
     std::vector<cv::Mat> drawn_text;
@@ -73,14 +50,19 @@ bool DrawDetections::processImpl()
     {
         for (auto& detection : *detections)
         {
-            cv::Rect rect(detection.bounding_box.x,
-                          detection.bounding_box.y,
-                          detection.bounding_box.width,
-                          detection.bounding_box.height);
+            cv::Rect rect(static_cast<int>(detection.bounding_box.x),
+                          static_cast<int>(detection.bounding_box.y),
+                          static_cast<int>(detection.bounding_box.width),
+                          static_cast<int>(detection.bounding_box.height));
             cv::Scalar color;
             std::stringstream ss;
-
-            color = detection.classifications[0].cat->color;
+            if (detection.classifications.size())
+            {
+                if (detection.classifications[0].cat)
+                {
+                    color = detection.classifications[0].cat->color;
+                }
+            }
 
             if (draw_class_label)
             {
@@ -122,7 +104,7 @@ bool Normalize::processImpl()
                             normalized,
                             alpha,
                             beta,
-                            norm_type.current_selection,
+                            static_cast<int>(norm_type.current_selection),
                             input_image->getDepth(),
                             mask == NULL ? cv::noArray() : mask->getGpuMat(stream()),
                             stream());
@@ -143,7 +125,7 @@ bool Normalize::processImpl()
         }
         std::vector<cv::cuda::GpuMat> normalized_channels;
         normalized_channels.resize(channels.size());
-        for (int i = 0; i < channels.size(); ++i)
+        for (size_t i = 0; i < channels.size(); ++i)
         {
             cv::cuda::normalize(channels[i],
                                 normalized_channels,
@@ -165,7 +147,6 @@ bool Normalize::processImpl()
         }
         return true;
     }
-    return false;
 }
 
 MO_REGISTER_CLASS(AutoScale)

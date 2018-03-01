@@ -8,7 +8,7 @@ namespace aq
         {
           public:
             MO_DERIVE(IImageDetector, IClassifier)
-            OUTPUT(DetectedObjecSet, detections, {})
+                OUTPUT(DetectedObjectSet, detections, {})
             MO_END;
         };
     }

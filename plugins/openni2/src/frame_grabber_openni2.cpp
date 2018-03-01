@@ -91,11 +91,18 @@ bool frame_grabber_openni2::loadData(std::string file_path)
             return false;
         }
         _depth.reset(new openni::VideoStream());
+        _color = std::make_shared<openni::VideoStream>();
 
         rc = _depth->create(*_device, openni::SENSOR_DEPTH);
         if (rc != openni::STATUS_OK)
         {
             MO_LOG(info) << "Unable to retrieve depth stream: " << openni::OpenNI::getExtendedError();
+            return false;
+        }
+        rc = _color->create(*_device, openni::SENSOR_COLOR);
+        if (rc != openni::STATUS_OK)
+        {
+            MO_LOG(info) << "Unable to retrieve color stream: " << openni::OpenNI::getExtendedError();
             return false;
         }
         // openni::VideoMode mode = _depth->getVideoMode();
@@ -105,7 +112,8 @@ bool frame_grabber_openni2::loadData(std::string file_path)
         {
             MO_LOG(info) << "Unable to set video resolution";
         }
-
+        _color->addNewFrameListener(this);
+        _color->start();
         _depth->addNewFrameListener(this);
         _depth->start();
         MO_LOG(info) << "Connected to device " << _device->getDeviceInfo().getUri();
@@ -113,43 +121,71 @@ bool frame_grabber_openni2::loadData(std::string file_path)
     }
     return false;
 }
+
 void frame_grabber_openni2::onNewFrame(openni::VideoStream& stream)
 {
-    openni::Status rc = stream.readFrame(&_frame);
+    if (&stream == _depth.get())
+    {
+        openni::Status rc = stream.readFrame(&_frame);
+        if (rc != openni::STATUS_OK)
+        {
+            MO_LOG(debug) << "Unable to read new depth frame: " << openni::OpenNI::getExtendedError();
+            return;
+        }
+        int height = _frame.getHeight();
+        int width = _frame.getWidth();
+        // auto ts = _frame.getTimestamp();
+        auto fn = _frame.getFrameIndex();
+        depth_fn = fn;
+        int scale = 1;
+        switch (_frame.getVideoMode().getPixelFormat())
+        {
+        case openni::PIXEL_FORMAT_DEPTH_100_UM:
+            scale = 10;
+        case openni::PIXEL_FORMAT_DEPTH_1_MM:
+            cv::Mat data(height, width, CV_16U, (ushort*)_frame.getData());
+            cv::Mat XYZ;
+            XYZ.create(height, width, CV_32FC3);
+            for (int i = 0; i < height; ++i)
+            {
+                ushort* ptr = data.ptr<ushort>(i);
+                cv::Vec3f* pt_ptr = XYZ.ptr<cv::Vec3f>(i);
+                for (int j = 0; j < width; ++j)
+                {
+                    openni::CoordinateConverter::convertDepthToWorld(
+                        *_depth, j, i, ptr[j], &pt_ptr[j].val[0], &pt_ptr[j].val[1], &pt_ptr[j].val[2]);
+                }
+            }
+            mo::Mutex_t::scoped_lock lock(getMutex());
+            new_xyz = XYZ;
+            new_depth = data.clone();
+            INode* node = this;
+            sig_node_updated(node);
+            break;
+        }
+        return;
+    }
+    openni::Status rc = stream.readFrame(&_color_frame);
     if (rc != openni::STATUS_OK)
     {
         MO_LOG(debug) << "Unable to read new depth frame: " << openni::OpenNI::getExtendedError();
         return;
     }
-    int height = _frame.getHeight();
-    int width = _frame.getWidth();
+    int height = _color_frame.getHeight();
+    int width = _color_frame.getWidth();
     // auto ts = _frame.getTimestamp();
-    auto fn = _frame.getFrameIndex();
+    auto fn = _color_frame.getFrameIndex();
     int scale = 1;
-    switch (_frame.getVideoMode().getPixelFormat())
+    auto pixel_format = _color_frame.getVideoMode().getPixelFormat();
+    color_fn = fn;
+    switch (pixel_format)
     {
-    case openni::PIXEL_FORMAT_DEPTH_100_UM:
-        scale = 10;
-    case openni::PIXEL_FORMAT_DEPTH_1_MM:
-        cv::Mat data(height, width, CV_16U, (ushort*)_frame.getData());
-        cv::Mat XYZ;
-        XYZ.create(height, width, CV_32FC3);
-        for (int i = 0; i < height; ++i)
-        {
-            ushort* ptr = data.ptr<ushort>(i);
-            cv::Vec3f* pt_ptr = XYZ.ptr<cv::Vec3f>(i);
-            for (int j = 0; j < width; ++j)
-            {
-                openni::CoordinateConverter::convertDepthToWorld(
-                    *_depth, j, i, ptr[j], &pt_ptr[j].val[0], &pt_ptr[j].val[1], &pt_ptr[j].val[2]);
-            }
-        }
+    case openni::PIXEL_FORMAT_RGB888:
+        cv::Mat data(height, width, CV_8UC3, (ushort*)_color_frame.getData());
         mo::Mutex_t::scoped_lock lock(getMutex());
-        new_xyz = XYZ;
-        new_depth = data.clone();
+        new_color = data.clone();
         INode* node = this;
         sig_node_updated(node);
-        break;
     }
 }
 
@@ -157,10 +193,17 @@ bool frame_grabber_openni2::processImpl()
 {
     if (!new_xyz.empty() && !new_depth.empty())
     {
-        xyz_param.updateData(new_xyz, mo::tag::_timestamp = mo::getCurrentTime());
-        depth_param.updateData(new_depth, mo::tag::_timestamp = mo::getCurrentTime());
+        xyz_param.updateData(new_xyz, mo::tag::_timestamp = mo::getCurrentTime(), mo::tag::_frame_number = depth_fn);
+        depth_param.updateData(
+            new_depth, mo::tag::_timestamp = mo::getCurrentTime(), mo::tag::_frame_number = depth_fn);
         new_xyz.release();
         new_depth.release();
+    }
+    if (!new_color.empty())
+    {
+        color_param.updateData(
+            new_color, mo::tag::_timestamp = mo::getCurrentTime(), mo::tag::_frame_number = color_fn);
+        new_color.release();
     }
 
     return true;
