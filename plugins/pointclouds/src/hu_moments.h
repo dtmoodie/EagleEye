@@ -7,17 +7,24 @@
 
 namespace point_clouds
 {
-
     class aqpointclouds_EXPORT Moment
     {
       public:
         Moment(float Px_ = 0.0f, float Py_ = 0.0f, float Pz_ = 0.0f);
 
         float evaluate(cv::Mat mask, cv::Mat points, cv::Vec3f centroid);
-        REFLECT_INTERNAL_START(Moment)
-            REFLECT_INTERNAL_MEMBER(float, Px)
-            REFLECT_INTERNAL_MEMBER(float, Py)
-            REFLECT_INTERNAL_MEMBER(float, Pz)
-        REFLECT_INTERNAL_END;
+        float Px, Py, Pz;
     };
+}
+
+namespace ct
+{
+    namespace reflect
+    {
+        REFLECT_DATA_START(point_clouds::Moment)
+            REFLECT_DATA_MEMBER(Px)
+            REFLECT_DATA_MEMBER(Py)
+            REFLECT_DATA_MEMBER(Pz)
+        REFLECT_DATA_END;
+    }
 }
