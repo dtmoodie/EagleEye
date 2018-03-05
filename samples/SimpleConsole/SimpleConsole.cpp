@@ -567,7 +567,7 @@ int main(int argc, char* argv[])
                 (void)null;
                 documents_list.clear();
                 auto constructors =
-                    mo::MetaObjectFactory::instance()->getConstructors(aq::nodes::IFrameGrabber::s_interfaceID);
+                    mo::MetaObjectFactory::instance()->getConstructors(aq::nodes::IFrameGrabber::getHash());
                 int index = 0;
                 for (auto constructor : constructors)
                 {
