@@ -31,7 +31,7 @@ file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp")
 IF(UNIX)
   set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-  set(CUDA_NVCC_FLAGS "-std=c++11;--expt-relaxed-constexpr;${CUDA_NVCC_FLAGS}")
+  set(CUDA_NVCC_FLAGS "-std=c++11;${CUDA_NVCC_FLAGS}")
 ENDIF()
 cuda_add_library(ML SHARED ${src} ${hdr} ${knl} ${knl_hdr})
 
