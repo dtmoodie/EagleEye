@@ -66,11 +66,13 @@ ENDFOREACH()
 
 
 message(STATUS "------------------- Enabled plugins-------------------------")
+add_custom_target(aquila_plugins)
 FOREACH(subdir ${SUBDIRS})
   SET(Plugin_aq${subdir} true CACHE BOOL "")
   IF(Plugin_aq${subdir})
     if(Plugin_aq${subdir}_available)
         message(STATUS "${subdir}")
+        add_dependencies(aquila_plugins aq${subdir})
     endif()
   ENDIF()
 ENDFOREACH()
