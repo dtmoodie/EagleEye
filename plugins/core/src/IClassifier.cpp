@@ -13,8 +13,8 @@ namespace aq
                                                  mo::UpdateFlags)
         {
             mo::Mutex_t::scoped_lock lock(getMutex());
-            labels = CategorySet(label_file.string());
-            BOOST_LOG_TRIVIAL(info) << "Loaded " << labels.size() << " classes";
+            labels = std::make_shared<CategorySet>(label_file.string());
+            BOOST_LOG_TRIVIAL(info) << "Loaded " << labels->size() << " classes";
             labels_param.emitUpdate();
             label_file_param.modified(false);
         }

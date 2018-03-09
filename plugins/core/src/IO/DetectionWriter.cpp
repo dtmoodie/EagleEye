@@ -83,7 +83,6 @@ DetectedObjectSet pruneDetections(const DetectedObjectSet& input, int object_cla
     return detections;
 }
 
-
 IDetectionWriter::~IDetectionWriter()
 {
     if (_write_thread && !IsRuntimeDelete())
@@ -97,7 +96,6 @@ void IDetectionWriter::nodeInit(bool firstInit)
 {
     if (firstInit)
     {
-        _write_queue.reset(new WriteQueue_t());
         _write_thread.reset(new boost::thread(&IDetectionWriter::writeThread, this));
     }
 }
@@ -125,7 +123,8 @@ void IDetectionWriter::nodeInit(bool firstInit)
     {
         cv::Mat h_mat = image->getMat(stream());
         //cuda::enqueue_callback(
-          //  [h_mat, this, detections]() { this->_write_queue->enqueue(std::make_pair(h_mat, detections)); }, stream());
+          //  [h_mat, this, detections]() { this->_write_queue->enqueue(std::make_pair(h_mat, detections)); },
+stream());
     }
     return true;
 }*/
@@ -135,7 +134,7 @@ void IDetectionWriter::writeThread()
     std::function<void(void)> work;
     while (!boost::this_thread::interruption_requested())
     {
-        if (_write_queue->try_dequeue(work))
+        if (_write_queue.try_dequeue(work))
         {
             work();
         }
@@ -170,64 +169,65 @@ bool DetectionWriter::processImpl()
         auto ts = image_param.getTimestamp();
         auto fn = image_param.getFrameNumber();
         size_t count = frame_count;
-        cuda::enqueue_callback([count, ts, fn, h_mat, dets, this]() {
-            this->_write_queue->enqueue([count, ts, fn, h_mat, dets, this]()
-            {
-                std::stringstream ss;
-                ss << output_directory.string();
-                ss << "/" << annotation_stem << std::setw(8) << std::setfill('0') << count << ".json";
-                std::ofstream ofs;
-                ofs.open(ss.str());
-                cereal::JSONOutputArchive ar(ofs);
-                ss = std::stringstream();
-                ss << output_directory.string() << "/" << image_stem << std::setw(8) << std::setfill('0') << count
-                    << "." << extension.getEnum();
-                cv::imwrite(ss.str(), h_mat);
-                ss = std::stringstream();
-                ss << image_stem << std::setw(8) << std::setfill('0') << frame_count << "." << extension.getEnum();
-                ar(cereal::make_nvp("ImageFile", ss.str()));
-                if (ts)
-                    ar(cereal::make_nvp("timestamp", *ts));
-                ar(cereal::make_nvp("framenumber", fn));
-                ar(cereal::make_nvp("detections", dets));
-            });
-        }, stream());
+        cuda::enqueue_callback(
+            [count, ts, fn, h_mat, dets, this]() {
+                this->_write_queue.enqueue([count, ts, fn, h_mat, dets, this]() {
+                    std::stringstream ss;
+                    ss << output_directory.string();
+                    ss << "/" << annotation_stem << std::setw(8) << std::setfill('0') << count << ".json";
+                    std::ofstream ofs;
+                    ofs.open(ss.str());
+                    cereal::JSONOutputArchive ar(ofs);
+                    ss = std::stringstream();
+                    ss << output_directory.string() << "/" << image_stem << std::setw(8) << std::setfill('0') << count
+                       << "." << extension.getEnum();
+                    cv::imwrite(ss.str(), h_mat);
+                    ss = std::stringstream();
+                    ss << image_stem << std::setw(8) << std::setfill('0') << frame_count << "." << extension.getEnum();
+                    ar(cereal::make_nvp("ImageFile", ss.str()));
+                    if (ts)
+                        ar(cereal::make_nvp("timestamp", *ts));
+                    ar(cereal::make_nvp("framenumber", fn));
+                    ar(cereal::make_nvp("detections", dets));
+                });
+            },
+            stream());
         ++frame_count;
     }
     return true;
 }
 
-    /*WriteData_t data;
-    mo::setThisThreadName("DetectionWriter");
-    while (!boost::this_thread::interruption_requested())
+/*WriteData_t data;
+mo::setThisThreadName("DetectionWriter");
+while (!boost::this_thread::interruption_requested())
+{
+    if (this->_write_queue->try_dequeue(data))
     {
-        if (this->_write_queue->try_dequeue(data))
-        {
-            
-            if (pad)
-                
-            else
-                ss << "/" << annotation_stem << frame_count << ".json";
-            std::ofstream ofs;
-            ofs.open(ss.str());
-            cereal::JSONOutputArchive ar(ofs);
-            ss.str("");
-            if (pad)
-                ss << output_directory.string() << "/" << image_stem << std::setw(8) << std::setfill('0') << frame_count
-                   << "." << extension.getEnum();
-            else
-                ss << output_directory.string() << "/" << image_stem << frame_count << "." << extension.getEnum();
-            cv::imwrite(ss.str(), data.first);
-            ss.str("");
-            if (pad)
-                ss << image_stem << std::setw(8) << std::setfill('0') << frame_count << "." << extension.getEnum();
-            else
-                ss << image_stem << frame_count << "." << extension.getEnum();
-            ar(cereal::make_nvp("ImageFile", ss.str()));
-            ar(cereal::make_nvp("detections", data.second));
-            ++frame_count;
-        }
-    }*/
+
+        if (pad)
+
+        else
+            ss << "/" << annotation_stem << frame_count << ".json";
+        std::ofstream ofs;
+        ofs.open(ss.str());
+        cereal::JSONOutputArchive ar(ofs);
+        ss.str("");
+        if (pad)
+            ss << output_directory.string() << "/" << image_stem << std::setw(8) << std::setfill('0') << frame_count
+               << "." << extension.getEnum();
+        else
+            ss << output_directory.string() << "/" << image_stem << frame_count << "." << extension.getEnum();
+        cv::imwrite(ss.str(), data.first);
+        ss.str("");
+        if (pad)
+            ss << image_stem << std::setw(8) << std::setfill('0') << frame_count << "." << extension.getEnum();
+        else
+            ss << image_stem << frame_count << "." << extension.getEnum();
+        ar(cereal::make_nvp("ImageFile", ss.str()));
+        ar(cereal::make_nvp("detections", data.second));
+        ++frame_count;
+    }
+}*/
 
 MO_REGISTER_CLASS(DetectionWriter)
 
@@ -369,8 +369,7 @@ bool DetectionWriterFolder::processImpl()
                 [this, save_img, save_name]() { this->_write_queue.enqueue(std::make_pair(save_img, save_name)); },
                 stream());
             ss = std::stringstream();
-            ss << name << "/" << std::setw(4) << std::setfill('0')
-               << _per_class_count[idx] / max_subfolder_size;
+            ss << name << "/" << std::setw(4) << std::setfill('0') << _per_class_count[idx] / max_subfolder_size;
             ss << image_stem << std::setw(8) << std::setfill('0') << _frame_count << "." + extension.getEnum();
             save_name = ss.str();
             written_detections.emplace_back(detection, save_name);

@@ -66,8 +66,9 @@ bool DrawDetections::processImpl()
 
             if (draw_class_label)
             {
-                ss << detection.classifications[0].cat->getName() << " : " << std::setprecision(3)
-                   << detection.classifications[0].conf;
+                if (detection.classifications[0].cat)
+                    ss << detection.classifications[0].cat->getName() << ":";
+                ss << std::setprecision(3) << detection.classifications[0].conf;
             }
 
             if (draw_detection_id)

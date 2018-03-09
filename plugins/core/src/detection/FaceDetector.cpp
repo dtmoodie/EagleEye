@@ -7,9 +7,9 @@ namespace aq
     {
         bool HaarFaceDetector::processImpl()
         {
-            if (labels.size() == 0)
+            if (labels->size() == 0)
             {
-                labels = aq::CategorySet(std::vector<std::string>({"face"}));
+                labels = std::make_shared<aq::CategorySet>(std::vector<std::string>({"face"}));
             }
             std::vector<cv::Rect> faces;
             if (input->getSyncState() <= aq::SyncedMemory::DEVICE_UPDATED)
@@ -60,9 +60,11 @@ namespace aq
             for (auto& face : faces)
             {
                 DetectedObject<5> det;
+                det.classify((*labels)[0](1.0));
                 det.bounding_box = face;
                 detections.push_back(det);
             }
+
             detections_param.emitUpdate(input_param);
             return true;
         }

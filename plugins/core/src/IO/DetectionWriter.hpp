@@ -33,14 +33,14 @@ namespace aq
                 ENUM_PARAM(extension, jpg, png, tiff, bmp)
                 INPUT(SyncedMemory, image, nullptr)
                 INPUT(DetectedObjectSet, detections, nullptr)
-                PROPERTY(std::shared_ptr<boost::thread>, _write_thread, {})
-                PROPERTY(std::shared_ptr<WriteQueue_t>, _write_queue, {})
             MO_END
           protected:
-            //bool processImpl();
+            // bool processImpl();
             void nodeInit(bool firstInit);
             void writeThread();
             size_t frame_count = 0;
+            WriteQueue_t _write_queue;
+            std::shared_ptr<boost::thread> _write_thread;
         };
 
         class DetectionWriter : public IDetectionWriter
@@ -50,7 +50,7 @@ namespace aq
                 INPUT(DetectedObjectSet, detections, nullptr)
             MO_END
           protected:
-              bool processImpl();
+            bool processImpl();
         };
 
         class DetectionWriterFolder : public Node
