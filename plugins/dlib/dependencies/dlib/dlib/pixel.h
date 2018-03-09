@@ -148,6 +148,8 @@ namespace dlib
             unsigned char red_
         ) : blue(blue_), green(green_), red(red_) {}
 
+        operator rgb_pixel() const{ return {red, green, blue}; }
+
         unsigned char blue;
         unsigned char green;
         unsigned char red;
