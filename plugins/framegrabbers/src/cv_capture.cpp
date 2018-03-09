@@ -64,10 +64,20 @@ bool GrabberCV::LoadCPU(const std::string& file_path)
         if (h_cam)
         {
             int index = -1;
+#ifdef BOOST_LEXICAL_CAST_TRY_LEXICAL_CONVERT_HPP
             if (!boost::conversion::detail::try_lexical_convert(file_path, index))
             {
                 index = -1;
             }
+#else
+            try
+            {
+                index = boost::lexical_cast<int>(file_path);
+            }catch(...)
+            {
+                index = -1;
+            }
+#endif
 
             if (index == -1)
             {
@@ -238,6 +248,7 @@ void GrabberCamera::listPaths(std::vector<std::string>& paths)
 int GrabberCamera::canLoad(const std::string& doc)
 {
     auto pos = doc.find(" - ");
+#ifdef BOOST_LEXICAL_CAST_TRY_LEXICAL_CONVERT_HPP
     if (pos != std::string::npos)
     {
         int index = 0;
@@ -254,6 +265,28 @@ int GrabberCamera::canLoad(const std::string& doc)
             return 10;
         }
     }
+#else
+    if(pos != std::string::npos)
+    {
+        try
+        {
+            int index = boost::lexical_cast<int>(doc.substr(0, pos));
+        }
+        catch(...)
+        {
+        }
+    }
+    else
+    {
+        try
+        {
+            int index = boost::lexical_cast<int>(doc);
+            return 10;
+        }
+        catch(...)
+        {}
+    }
+#endif
     std::vector<std::string> cameras;
     listPaths(cameras);
     for (const auto& camera : cameras)
@@ -267,6 +300,7 @@ int GrabberCamera::canLoad(const std::string& doc)
 bool GrabberCamera::loadData(const std::string& file_path)
 {
     int index = 0;
+#ifdef BOOST_LEXICAL_CAST_TRY_LEXICAL_CONVERT_HPP
     if (boost::conversion::detail::try_lexical_convert(file_path, index))
     {
         h_cam.reset(new cv::VideoCapture(index));
@@ -277,6 +311,17 @@ bool GrabberCamera::loadData(const std::string& file_path)
     {
         index = 0;
     }
+#else
+    try
+    {
+        index = boost::lexical_cast<int>(file_path);
+        h_cam.reset(new cv::VideoCapture(index));
+        initial_time = mo::getCurrentTime();
+        return true;
+    }catch(...){
+         index = 0;
+    }
+#endif
     std::vector<std::string> cameras;
     listPaths(cameras);
     for (int i = 0; i < cameras.size(); ++i)

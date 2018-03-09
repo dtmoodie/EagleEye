@@ -178,11 +178,11 @@ bool DetectionWriter::processImpl()
                     std::ofstream ofs;
                     ofs.open(ss.str());
                     cereal::JSONOutputArchive ar(ofs);
-                    ss = std::stringstream();
+                    ss.str(std::string()); // = std::stringstream();
                     ss << output_directory.string() << "/" << image_stem << std::setw(8) << std::setfill('0') << count
                        << "." << extension.getEnum();
                     cv::imwrite(ss.str(), h_mat);
-                    ss = std::stringstream();
+                    ss.str(std::string()); // = std::stringstream();
                     ss << image_stem << std::setw(8) << std::setfill('0') << frame_count << "." << extension.getEnum();
                     ar(cereal::make_nvp("ImageFile", ss.str()));
                     if (ts)
@@ -368,8 +368,9 @@ bool DetectionWriterFolder::processImpl()
             cuda::enqueue_callback(
                 [this, save_img, save_name]() { this->_write_queue.enqueue(std::make_pair(save_img, save_name)); },
                 stream());
-            ss = std::stringstream();
-            ss << name << "/" << std::setw(4) << std::setfill('0') << _per_class_count[idx] / max_subfolder_size;
+            ss.str(std::string());
+            ss << name << "/" << std::setw(4) << std::setfill('0')
+               << _per_class_count[idx] / max_subfolder_size;
             ss << image_stem << std::setw(8) << std::setfill('0') << _frame_count << "." + extension.getEnum();
             save_name = ss.str();
             written_detections.emplace_back(detection, save_name);
