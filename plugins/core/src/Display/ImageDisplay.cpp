@@ -128,7 +128,7 @@ bool OGLImageDisplay::processImpl()
 {
     std::string name = getTreeName();
     size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
-    if (m_use_opengl)
+    if (m_use_opengl && _ctx->device_id != -1)
     {
         cv::cuda::GpuMat gpumat = image->getGpuMat(stream());
         auto ts = image_param.getTimestamp();
@@ -153,9 +153,12 @@ bool OGLImageDisplay::processImpl()
     }
     else
     {
-        cv::Mat mat = image->getMat(stream());
-        aq::cuda::enqueue_callback_async(
-            [name, this, mat]() -> void {
+        cv::Mat mat;// = image->getMat(stream());
+        if(_ctx->device_id == -1)
+        {
+            mat = image->getMatNoSync();
+            mo::ThreadSpecificQueue::push([mat, this, name]()
+            {
                 PROFILE_RANGE(imshow);
                 try
                 {
@@ -164,9 +167,26 @@ bool OGLImageDisplay::processImpl()
                 catch (mo::ExceptionWithCallStack<cv::Exception>& e)
                 {
                 }
-            },
-            gui_thread_id,
-            stream());
+            }, gui_thread_id);
+        }
+        else
+        {
+            mat = image->getMat(stream());
+            aq::cuda::enqueue_callback_async(
+                [name, this, mat]() -> void {
+                    PROFILE_RANGE(imshow);
+                    try
+                    {
+                        getGraph()->getWindowCallbackManager()->imshow(name, mat);
+                    }
+                    catch (mo::ExceptionWithCallStack<cv::Exception>& e)
+                    {
+                    }
+                },
+                gui_thread_id,
+                stream());
+        }
+
     }
     return true;
 }

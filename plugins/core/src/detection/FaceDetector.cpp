@@ -1,5 +1,6 @@
 #include "FaceDetector.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
+#include <boost/filesystem.hpp>
 
 namespace aq
 {
@@ -12,17 +13,35 @@ namespace aq
                 labels = std::make_shared<aq::CategorySet>(std::vector<std::string>({"face"}));
             }
             std::vector<cv::Rect> faces;
-            if (input->getSyncState() <= aq::SyncedMemory::DEVICE_UPDATED)
+            if (input->getSyncState() <= aq::SyncedMemory::DEVICE_UPDATED || _ctx->device_id == -1)
             {
                 if (!m_cpu_detector || model_file_param.modified())
                 {
-                    m_cpu_detector.reset(new cv::CascadeClassifier());
-                    m_cpu_detector->load(model_file.string());
+                    if(!boost::filesystem::exists(model_file))
+                    {
+                        MO_LOG(warning) << "Cascade model file doesn't exist! " << model_file;
+                    }else
+                    {
+                        m_cpu_detector.reset(new cv::CascadeClassifier());
+                        m_cpu_detector->load(model_file.string());
+                        model_file_param.modified(false);
+                    }
                 }
-                cv::Mat img = input->getMat(stream());
-                stream().waitForCompletion();
-                m_cpu_detector->detectMultiScale(
-                    img, faces, pyramid_scale_factor, min_neighbors, 0, min_object_size, max_object_size);
+                if(m_cpu_detector)
+                {
+                    cv::Mat img;
+
+                    if(_ctx->device_id != -1)
+                    {
+                        img = input->getMat(stream());
+                        stream().waitForCompletion();
+                    }else
+                    {
+                        img = input->getMatNoSync();
+                    }
+                    m_cpu_detector->detectMultiScale(
+                        img, faces, pyramid_scale_factor, min_neighbors, 0, min_object_size, max_object_size);
+                }
             }
             else
             {
@@ -60,7 +79,7 @@ namespace aq
             for (auto& face : faces)
             {
                 DetectedObject<5> det;
-                det.classify((*labels)[0](1.0));
+                det.classify((*labels)[static_cast<size_t>(0)](1.0));
                 det.bounding_box = face;
                 detections.push_back(det);
             }

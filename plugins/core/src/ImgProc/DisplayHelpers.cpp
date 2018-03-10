@@ -36,9 +36,18 @@ bool AutoScale::processImpl()
 
 bool DrawDetections::processImpl()
 {
-
-    cv::cuda::GpuMat draw_image;
-    image->clone(draw_image, stream());
+    cv::cuda::GpuMat device_draw_image;
+    cv::Mat host_draw_image;
+    cv::Size size;
+    if(_ctx->device_id != -1)
+    {
+        image->clone(device_draw_image, stream());
+        size = device_draw_image.size();
+    }else
+    {
+        image->clone(host_draw_image);
+        size = host_draw_image.size();
+    }
     std::vector<cv::Mat> drawn_text;
     auto det_ts = detections_param.getTimestamp();
     if (det_ts != image_param.getTimestamp())
@@ -75,23 +84,39 @@ bool DrawDetections::processImpl()
 
                 if (draw_detection_id)
                     ss << " - " << detection.id;
-            cv::cuda::rectangle(draw_image, rect, color, 3, stream());
+            if(!device_draw_image.empty())
+                cv::cuda::rectangle(device_draw_image, rect, color, 3, stream());
+            else
+                cv::rectangle(host_draw_image, rect.tl(), rect.br(), color, 3);
 
             cv::Rect text_rect = cv::Rect(rect.tl() + cv::Point(10, 20), cv::Size(200, 20));
-            if ((cv::Rect({0, 0}, draw_image.size()) & text_rect) == text_rect)
+            if ((cv::Rect({0, 0}, size) & text_rect) == text_rect)
             {
                 cv::Mat text_image(20, 200, CV_8UC3);
                 text_image.setTo(cv::Scalar::all(0));
                 cv::putText(text_image, ss.str(), {0, 15}, cv::FONT_HERSHEY_COMPLEX, 0.4, color);
-                cv::cuda::GpuMat d_text;
-                d_text.upload(text_image, stream());
-                cv::cuda::GpuMat text_roi = draw_image(text_rect);
-                cv::cuda::add(text_roi, d_text, text_roi, cv::noArray(), -1, stream());
-                drawn_text.push_back(text_image); // need to prevent recycling of the images too early
+                if(!device_draw_image.empty())
+                {
+                    cv::cuda::GpuMat d_text;
+                    d_text.upload(text_image, stream());
+                    cv::cuda::GpuMat text_roi = device_draw_image(text_rect);
+                    cv::cuda::add(text_roi, d_text, text_roi, cv::noArray(), -1, stream());
+                    drawn_text.push_back(text_image); // need to prevent recycling of the images too early
+                }else
+                {
+                    auto text_roi = host_draw_image(text_rect);
+                    cv::add(text_roi, text_image, text_roi);
+                }
             }
         }
     }
-    output_param.updateData(draw_image, mo::tag::_param = image_param, _ctx.get());
+    if(device_draw_image.empty())
+    {
+        output_param.updateData(host_draw_image, mo::tag::_param = image_param, _ctx.get());
+    }else
+    {
+        output_param.updateData(device_draw_image, mo::tag::_param = image_param, _ctx.get());
+    }
     return true;
 }
 

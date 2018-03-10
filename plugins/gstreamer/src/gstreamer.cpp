@@ -110,11 +110,11 @@ gstreamer_base::gstreamer_base()
     _pipeline = nullptr;
     if (!gst_is_initialized())
     {
-        char** argv;
-        argv = new char* {"-vvv"};
+        std::string str("-vvv");
+        std::vector<char*> vec({const_cast<char*>(str.c_str())});
         int argc = 1;
+        char** argv = vec.data();
         gst_init(&argc, &argv);
-        delete argv;
     }
 }
 gstreamer_base::~gstreamer_base()
@@ -669,7 +669,9 @@ void RTSP_server::setup(std::string pipeOverride)
     if (!gst_is_initialized())
     {
         char** argv;
-        argv = new char* {"-vvv"};
+        std::string str("-vvv");
+        std::vector<char*> vec({const_cast<char*>(str.c_str())});
+        argv = vec.data();
         int argc = 1;
         gst_init(&argc, &argv);
     }
