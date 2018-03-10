@@ -31,8 +31,16 @@ namespace aq
             }
             if (detections->size())
             {
-                const cv::Mat& img = image->getMat(stream());
-                stream().waitForCompletion();
+                cv::Mat img;
+                if(_ctx->device_id == -1)
+                {
+                    img = image->getMatNoSync();
+                }else
+                {
+                    img = image->getMat(stream());
+                    stream().waitForCompletion();
+                }
+
                 dlib::cv_image<dlib::bgr_pixel> dlib_img(img);
                 std::vector<dlib::matrix<dlib::bgr_pixel>> aligned_faces;
                 for (const auto& det : *detections)
