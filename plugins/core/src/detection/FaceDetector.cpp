@@ -78,7 +78,7 @@ namespace aq
             detections.clear();
             for (auto& face : faces)
             {
-                DetectedObject<5> det;
+                DetectedObject det;
                 det.classify((*labels)[static_cast<size_t>(0)](1.0));
                 det.bounding_box = face;
                 detections.push_back(det);

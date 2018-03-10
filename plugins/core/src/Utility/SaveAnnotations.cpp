@@ -32,7 +32,7 @@ void SaveAnnotations::select_rect(std::string window_name, cv::Rect rect, int fl
         auto cats = detections->getCatSet();
         if (current_class >= 0 && current_class < cats->size())
         {
-            DetectedObject<5> obj;
+            DetectedObject obj;
             obj.bounding_box = cv::Rect2f(float(rect.x) / _original_image.cols,
                                           float(rect.y) / _original_image.rows,
                                           float(rect.width) / _original_image.cols,

@@ -261,12 +261,12 @@ DetectionWriterFolder::~DetectionWriterFolder()
 
 struct FrameDetections
 {
-    FrameDetections(const aq::DetectedObject<5>& det) : detections(det) {}
+    FrameDetections(const aq::DetectedObject& det) : detections(det) {}
 
     std::string source_path;
     mo::Time_t timestamp;
     size_t frame_number;
-    const aq::DetectedObject<5>& detections;
+    const aq::DetectedObject& detections;
     std::vector<std::string> written_detections;
     template <class AR>
     void serialize(AR& ar)
@@ -280,8 +280,8 @@ struct FrameDetections
 
 struct WritePair
 {
-    WritePair(const DetectedObject<5>& det, const std::string& name) : detection(det), patch_name(name) {}
-    DetectedObject<5> detection;
+    WritePair(const DetectedObject& det, const std::string& name) : detection(det), patch_name(name) {}
+    DetectedObject detection;
     std::string patch_name;
     template <class AR>
     void serialize(AR& ar)

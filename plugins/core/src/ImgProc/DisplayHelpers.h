@@ -1,6 +1,7 @@
 #pragma once
 #include "../precompiled.hpp"
 #include <Aquila/types/ObjectDetection.hpp>
+#include <Aquila/types/DetectionDescription.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
 #include <Aquila/utilities/ColorMapping.hpp>
 
@@ -47,17 +48,36 @@ namespace aq
             virtual bool processImpl() override;
         };
 
-        class DrawDetections : public Node
+        class DrawDetectionsBase: public Node
         {
-          public:
-            MO_DERIVE(DrawDetections, Node)
+        public:
+            MO_DERIVE(DrawDetectionsBase, Node)
                 INPUT(SyncedMemory, image, nullptr)
-                INPUT(DetectedObjectSet, detections, nullptr)
                 PARAM(bool, draw_class_label, true)
                 PARAM(bool, draw_detection_id, true)
                 OUTPUT(SyncedMemory, output, SyncedMemory())
             MO_END
+        protected:
+            std::string textLabel(const DetectedObject& det);
+        };
+
+        class DrawDetections : public DrawDetectionsBase
+        {
+          public:
+            MO_DERIVE(DrawDetections, DrawDetectionsBase)
+                INPUT(DetectedObjectSet, detections, nullptr)
+            MO_END
           protected:
+            virtual bool processImpl() override;
+        };
+
+        class DrawDescriptors: public DrawDetectionsBase
+        {
+        public:
+            MO_DERIVE(DrawDescriptors, DrawDetectionsBase)
+                INPUT(DetectionDescriptionSet, detections, nullptr)
+            MO_END
+        protected:
             virtual bool processImpl() override;
         };
     }

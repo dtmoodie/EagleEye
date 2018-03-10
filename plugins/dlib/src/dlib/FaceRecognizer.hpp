@@ -55,7 +55,7 @@ namespace aq
                 INPUT(aq::DetectedObjectSet, detections, nullptr)
                 PARAM(mo::ReadFile, shape_landmark_file, {"shape_predictor_5_face_landmarks.dat"});
                 PARAM(mo::ReadFile, face_recognizer_weight_file, {"dlib_face_recognition_resnet_model_v1.dat"});
-                OUTPUT(DetectionDescription, output, {})
+                OUTPUT(DetectionDescriptionSet, output, {})
             MO_END
           protected:
             virtual bool processImpl() override;

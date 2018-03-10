@@ -29,6 +29,7 @@ namespace aq
             {
                 return false;
             }
+            output.clear();
             if (detections->size())
             {
                 cv::Mat img;
@@ -53,10 +54,26 @@ namespace aq
                     cv::Mat roi(150, 150, CV_8UC3);
                     dlib::matrix<dlib::bgr_pixel> face_chip;
                     dlib::extract_image_chip(dlib_img, dlib::get_face_chip_details(shape, 150, 0.25), face_chip);
+                    aligned_faces.emplace_back(std::move(face_chip));
                 }
-                std::vector<dlib::matrix<float, 0, 1>> face_descriptors = m_net(aligned_faces);
+                if(!aligned_faces.empty())
+                {
+                    std::vector<dlib::matrix<float, 0, 1>> face_descriptors = m_net(aligned_faces);
+                    for(size_t i = 0; i < face_descriptors.size(); ++i)
+                    {
+                        float* start = face_descriptors[i].begin();
+                        float* end = face_descriptors[i].end();
+                        cv::Mat wrapped(1, end - start, CV_32F, start);
+                        DetectionDescription det;
+                        det.bounding_box = (*detections)[i].bounding_box;
+                        det.id = (*detections)[i].id;
+                        det.descriptor = wrapped.clone();
+                        det.classifications = (*detections)[i].classifications;
+                        output.emplace_back(std::move(det));
+                    }
+                }
             }
-
+            output_param.emitUpdate(image_param);
             return true;
         }
     }
