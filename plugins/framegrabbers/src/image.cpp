@@ -11,16 +11,18 @@ bool GrabberImage::loadData(const std::string& path)
     image = cv::imread(path);
     if (!image.empty())
     {
-        output_param.updateData(image);
+        ++count;
+        output_param.updateData(image, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
         return true;
     }
     return false;
 }
+
 bool GrabberImage::grab()
 {
     if (!image.empty())
     {
-        output_param.updateData(image);
+        output_param.updateData(image, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
         return true;
     }
     return false;

@@ -19,3 +19,4 @@ target_link_libraries(aqdlib aquila_utilities
     metaobject_params
     dlib::dlib
     )
+aq_install_python_test(tests/face_recognition.py)

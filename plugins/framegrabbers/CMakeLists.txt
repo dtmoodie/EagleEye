@@ -89,3 +89,7 @@ endif()
 
 aquila_declare_plugin(aqframegrabbers)
 set_plugin_available(aqframegrabbers)
+
+set(FRAMEGRABBERS_DATA_DIR ${CMAKE_CURRENT_LIST_DIR}/data)
+
+aq_install_python_test(tests/test_directory_grabber.py)

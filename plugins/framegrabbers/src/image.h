@@ -13,12 +13,13 @@ namespace aq
             static int canLoad(const std::string& path);
             static int loadTimeout();
             MO_DERIVE(GrabberImage, IGrabber)
-                ;
-                OUTPUT(SyncedMemory, output, {})
-            MO_END;
-            virtual bool loadData(const std::string& path);
-            virtual bool grab();
+                SOURCE(SyncedMemory, output, {})
+            MO_END
+
+            virtual bool loadData(const std::string& path) override;
+            virtual bool grab() override;
             cv::Mat image;
+            size_t count = 0;
         };
     }
 }
