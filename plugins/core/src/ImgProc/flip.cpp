@@ -19,8 +19,16 @@ bool Flip::processImpl()
     {
         if (state == input->HOST_UPDATED)
         {
+            cv::Mat source;
+            if(_ctx->device_id == -1)
+            {
+                source = input->getMatNoSync();
+            }else
+            {
+                source = input->getMat(stream());
+            }
             cv::Mat flipped;
-            cv::flip(input->getMat(stream()), flipped, axis.getValue());
+            cv::flip(source, flipped, axis.getValue());
             output_param.updateData(flipped, input_param.getTimestamp(), _ctx.get());
             return true;
         }
