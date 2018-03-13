@@ -3,6 +3,7 @@
 #include "aqgstreamer_export.hpp"
 #include <gst/gst.h>
 #include <boost/thread.hpp>
+#include <MetaObject/core/Context.hpp>
 
 class aqgstreamer_EXPORT glib_thread
 {
@@ -24,4 +25,5 @@ public:
     void start_thread();
 
     size_t get_thread_id();
+    std::shared_ptr<mo::Context> context;
 };

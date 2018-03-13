@@ -18,7 +18,7 @@
 #include <gst/gstelementfactory.h>
 #include <gst/gstpipeline.h>
 #include <gst/gstutils.h>
-
+#include "glib_thread.h"
 #include <boost/thread.hpp>
 
 #ifdef _MSC_VER
@@ -83,6 +83,7 @@ namespace aq
         virtual void cleanup();
         bool _caps_set;
     };
+
     // used to feed data into EagleEye from gstreamer, use when creating frame grabbers
     class aqgstreamer_EXPORT gstreamer_src_base : virtual public gstreamer_base
     {

@@ -115,6 +115,7 @@ gstreamer_base::gstreamer_base()
         int argc = 1;
         char** argv = vec.data();
         gst_init(&argc, &argv);
+        //glib_thread::instance()->start_thread();
     }
 }
 gstreamer_base::~gstreamer_base()
@@ -320,6 +321,7 @@ bool gstreamer_sink_base::set_caps(cv::Size img_size, int channels, int depth)
     _caps_set = true;
     return true;
 }
+
 bool gstreamer_sink_base::set_caps(const std::string& caps_)
 {
     if (_source == nullptr)

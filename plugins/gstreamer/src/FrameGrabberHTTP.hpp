@@ -13,11 +13,11 @@ namespace aq
             static int loadTimeout() { return 10000; }
 
             MO_DERIVE(FrameGrabberHTTP, IGrabber)
-                OUTPUT(SyncedMemory, image, {})
-            MO_END;
+                SOURCE(SyncedMemory, image, {})
+            MO_END
             virtual GstFlowReturn on_pull();
-            bool loadData(const ::std::string& file_path);
-            bool grab() { return true; }
+            virtual bool loadData(const ::std::string& file_path) override;
+            virtual bool grab() override { return true; }
           protected:
         };
     }

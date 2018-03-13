@@ -1,5 +1,5 @@
 #include "FrameGrabberHTTP.hpp"
-#include "Aquila/framegrabbers/FrameGrabberInfo.hpp"
+#include <Aquila/framegrabbers/GrabberInfo.hpp>
 #include <gst/base/gstbasesink.h>
 using namespace aq;
 using namespace aq::nodes;
@@ -76,7 +76,7 @@ GstFlowReturn FrameGrabberHTTP::on_pull()
         // const gchar* format = gst_structure_get_string(s, "format");
         if (!res)
         {
-            MO_LOG(debug) << "could not get snapshot dimenszion\n";
+            MO_LOG(debug) << "could not get snapshot dimension\n";
             return GST_FLOW_OK;
         }
         buffer = gst_sample_get_buffer(sample);
@@ -84,7 +84,9 @@ GstFlowReturn FrameGrabberHTTP::on_pull()
         {
             cv::Mat mapped(height, width, CV_8UC3);
             memcpy(mapped.data, map.data, map.size);
-            image_param.updateData(mapped, mo::tag::_timestamp = mo::Time_t(buffer->pts * mo::ns));
+            image_param.updateData(mapped,
+                                   mo::tag::_timestamp = mo::Time_t(buffer->pts * mo::ns),
+                                   mo::tag::_context = mo::Context::getCurrent());
         }
         gst_buffer_unmap(buffer, &map);
         gst_sample_unref(sample);

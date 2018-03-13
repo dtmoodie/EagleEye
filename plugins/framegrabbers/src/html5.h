@@ -14,7 +14,7 @@ namespace aq
             MO_DERIVE(GrabberHTML, GrabberGstreamer)
 
             MO_END;
-            virtual bool Load(const std::string& file_path);
+            virtual bool loadData(const std::string& file_path) override;
             static int canLoad(const std::string& document);
         };
     }
