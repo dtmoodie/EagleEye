@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ROSExport.hpp"
-
 namespace ros
 {
     class NodeHandle;
@@ -13,7 +11,7 @@ namespace aq
      *        it allows for a unique node handle and prevents multiple initialization of
      *        ros
      */
-    class ROS_EXPORT RosInterface
+    class RosInterface
     {
       public:
         static RosInterface* Instance();

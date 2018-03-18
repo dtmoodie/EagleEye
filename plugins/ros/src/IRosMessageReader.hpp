@@ -5,7 +5,8 @@
 #include "ros/topic.h"
 #include <Aquila/core/Algorithm.hpp>
 #include <MetaObject/object/IMetaObjectInfo.hpp>
-
+#include <MetaObject/params/ParamMacros.hpp>
+#include <MetaObject/signals/detail/SlotMacros.hpp>
 namespace ros
 {
     class MessageReaderInfo : public mo::IMetaObjectInfo
@@ -52,9 +53,9 @@ namespace ros
             }
         }
 
-        MO_BEGIN(IMessageReader)
-        PARAM(std::string, subscribed_topic, "")
-        PARAM_UPDATE_SLOT(subscribed_topic)
+        MO_DERIVE(IMessageReader, aq::Algorithm)
+            PARAM(std::string, subscribed_topic, "")
+            PARAM_UPDATE_SLOT(subscribed_topic)
         MO_END;
         typedef MessageReaderInfo InterfaceInfo;
         static std::vector<std::string> ListSubscribableTopics();

@@ -34,7 +34,7 @@ bool RosSubscriber::loadData(std::string file_path)
     return false;
 }
 
-void RosSubscriber::addComponent(rcc::weak_ptr<Algorithm> component)
+void RosSubscriber::addComponent(const rcc::weak_ptr<IAlgorithm>& component)
 {
     auto typed = component.DynamicCast<ros::IMessageReader>();
     if (typed)
@@ -43,7 +43,7 @@ void RosSubscriber::addComponent(rcc::weak_ptr<Algorithm> component)
         Algorithm::addComponent(component);
     }
 }
-void RosSubscriber::nodeInit(bool firstInit)
+void RosSubscriber::nodeInit(bool /*firstInit*/)
 {
     aq::RosInterface::Instance();
 }
@@ -53,7 +53,7 @@ bool RosSubscriber::processImpl()
     Node* This = this;
     sig_node_updated(This);
     sig_update();
-    this->_modified = true;
+    this->setModified();
     ros::spinOnce();
     boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
     return true;

@@ -11,15 +11,34 @@
 #include <Aquila/types/SyncedMemory.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-// ROS_DECLARE_MESSAGE_WITH_ALLOCATOR(sensor_msgs::Image, PinnedImage, mo::PinnedStlAllocator)
-// template<class Allocator> struct sensor_msgs::Image_;
-typedef sensor_msgs::Image_<mo::PinnedStlAllocatorPoolGlobal<void>> PinnedImage;
+template <class T>
+struct StlAllocator
+{
+    typedef T value_type;
+    typedef T* pointer;
+    typedef std::size_t size_type;
+    template <class U>
+    struct rebind
+    {
+        typedef std::allocator<U> other;
+    };
+    pointer allocate(size_type n, std::allocator<void>::const_pointer /*hint*/ = 0)
+    {
+        pointer out;
+        mo::CpuMemoryStack::globalInstance()->allocate(&out, n * sizeof(T), sizeof(T));
+        return out;
+    }
+
+    void deallocate(T* p, std::size_t n) { mo::CpuMemoryStack::globalInstance()->deallocate(p, n); }
+};
+
+typedef sensor_msgs::Image_<StlAllocator<void>> PinnedImage;
 
 class MessageReaderImage : public ros::IMessageReader
 {
   public:
     MO_DERIVE(MessageReaderImage, ros::IMessageReader)
-    OUTPUT(aq::SyncedMemory, image, {})
+        OUTPUT(aq::SyncedMemory, image, {})
     MO_END;
 
     static int CanHandleTopic(const std::string& topic)

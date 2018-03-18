@@ -4,7 +4,7 @@ using namespace ros;
 std::vector<std::string> IMessageReader::ListSubscribableTopics()
 {
     std::vector<std::string> output;
-    auto constructors = mo::MetaObjectFactory::instance()->getConstructors(IMessageReader::s_interfaceID);
+    auto constructors = mo::MetaObjectFactory::instance()->getConstructors(IMessageReader::getHash());
     for (auto constructor : constructors)
     {
         if (auto info = dynamic_cast<MessageReaderInfo*>(constructor->GetObjectInfo()))
@@ -17,7 +17,7 @@ std::vector<std::string> IMessageReader::ListSubscribableTopics()
 
 int IMessageReader::CanLoadTopic(const std::string& topic)
 {
-    auto constructors = mo::MetaObjectFactory::instance()->getConstructors(IMessageReader::s_interfaceID);
+    auto constructors = mo::MetaObjectFactory::instance()->getConstructors(IMessageReader::getHash());
     for (auto constructor : constructors)
     {
         if (auto info = dynamic_cast<MessageReaderInfo*>(constructor->GetObjectInfo()))
@@ -45,7 +45,7 @@ void IMessageReader::on_subscribed_topic_modified(mo::IParam*,
 rcc::shared_ptr<IMessageReader> IMessageReader::create(const std::string& topic)
 {
     std::map<int, IObjectConstructor*> constructor_priority;
-    auto constructors = mo::MetaObjectFactory::instance()->getConstructors(IMessageReader::s_interfaceID);
+    auto constructors = mo::MetaObjectFactory::instance()->getConstructors(IMessageReader::getHash());
     for (auto constructor : constructors)
     {
         if (auto info = dynamic_cast<MessageReaderInfo*>(constructor->GetObjectInfo()))
