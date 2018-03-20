@@ -1,4 +1,4 @@
-PROJECT(ML)
+PROJECT(ml)
 CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
 CMAKE_POLICY(SET CMP0053 OLD)
@@ -33,10 +33,10 @@ IF(UNIX)
   set(CUDA_PROPAGATE_HOST_FLAGS OFF)
   set(CUDA_NVCC_FLAGS "-std=c++11;${CUDA_NVCC_FLAGS}")
 ENDIF()
-cuda_add_library(ML SHARED ${src} ${hdr} ${knl} ${knl_hdr})
+cuda_add_library(aqml SHARED ${src} ${hdr} ${knl} ${knl_hdr})
 
-RCC_LINK_LIB(ML aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} RuntimeObjectSystem)
+RCC_LINK_LIB(aqml aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} RuntimeObjectSystem)
 
-#INCLUDE(../PluginTemplate.cmake)
-aquila_declare_plugin(ML)
+aquila_declare_plugin(aqml)
+set_plugin_available(aqml)
 

@@ -19,20 +19,19 @@ IF(LIBVLC_FOUND)
     FILE(GLOB_RECURSE hdr "include/*.h")
 
     IF(LIBVLC_LIBRARY)
-        CUDA_ADD_LIBRARY(VLC SHARED ${src} ${hdr})
-        RCC_LINK_LIB(VLC
+        CUDA_ADD_LIBRARY(aqvlc SHARED ${src} ${hdr})
+        RCC_LINK_LIB(aqvlc
             ${OpenCV_LIBS}
             aquila_core
             aquila_types
             aquila_metatypes
             metaobject_core metaobject_object metaobject_params metaobject_metaparams
         )
-        TARGET_LINK_LIBRARIES(VLC
+        TARGET_LINK_LIBRARIES(aqvlc
             ${LINK_LIBS}
             ${LIBVLC_LIBRARY} ${Boost_LIBRARIES}
             ${LIBVLCCORE_LIBRARY}
         )
-        #INCLUDE(../PluginTemplate.cmake)
-        aquila_declare_plugin(VLC)
+        aquila_declare_plugin(aqvlc)
     ENDIF()
 ENDIF(LIBVLC_FOUND)

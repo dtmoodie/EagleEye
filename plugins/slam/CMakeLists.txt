@@ -1,4 +1,4 @@
-PROJECT(SLAM)
+PROJECT(slam)
 CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
     CMAKE_POLICY(SET CMP0053 OLD)
@@ -38,10 +38,10 @@ if(EIGEN_INCLUDE_DIRS)
       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
     ENDIF()
 
-    cuda_add_library(SLAM SHARED ${src} ${hdr} ${knl})
+    cuda_add_library(aqslam SHARED ${src} ${hdr} ${knl})
 
-    add_dependencies(SLAM OpenDTAM)
-    RCC_LINK_LIB(SLAM
+    add_dependencies(aqslam OpenDTAM)
+    RCC_LINK_LIB(aqslam
       ${OpenCV_LIBS}
       ${CUDA_CUBLAS_LIBRARIES}
       aquila_core
@@ -49,7 +49,6 @@ if(EIGEN_INCLUDE_DIRS)
       metaobject_core metaobject_object metaobject_params metaobject_metaparams
     )
 
-    #INCLUDE(../PluginTemplate.cmake)
-    aquila_declare_plugin(SLAM)
+    aquila_declare_plugin(aqslam)
   endif(G2O_FOUND)
 endif()
