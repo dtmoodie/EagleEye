@@ -1,7 +1,9 @@
 #include "gstreamer.h"
 #include "precompiled.hpp"
+#include <Aquila/framegrabbers/GrabberInfo.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+
 using namespace aq;
 using namespace aq::nodes;
 
