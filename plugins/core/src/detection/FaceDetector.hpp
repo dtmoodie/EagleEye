@@ -18,7 +18,7 @@ namespace aq
                 PARAM(double, pyramid_scale_factor, 1.2)
                 PARAM(int, min_neighbors, 3)
                 PARAM(mo::ReadFile, model_file, {})
-            MO_END;
+            MO_END
 
           protected:
             virtual bool processImpl() override;

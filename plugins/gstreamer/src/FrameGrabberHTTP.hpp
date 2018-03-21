@@ -14,11 +14,19 @@ namespace aq
 
             MO_DERIVE(FrameGrabberHTTP, IGrabber)
                 SOURCE(SyncedMemory, image, {})
+                MO_SIGNAL(void, update)
             MO_END
-            virtual GstFlowReturn on_pull();
+            virtual GstFlowReturn on_pull() override;
             virtual bool loadData(const ::std::string& file_path) override;
-            virtual bool grab() override { return true; }
+            virtual bool grab() override;
+
           protected:
+            struct Data
+            {
+                SyncedMemory image;
+                size_t pts;
+            };
+            moodycamel::ConcurrentQueue<Data> m_data;
         };
     }
 }

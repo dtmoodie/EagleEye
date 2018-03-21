@@ -84,15 +84,34 @@ GstFlowReturn FrameGrabberHTTP::on_pull()
         {
             cv::Mat mapped(height, width, CV_8UC3);
             memcpy(mapped.data, map.data, map.size);
-            image_param.updateData(mapped,
+            m_data.enqueue({mapped, buffer->pts});
+            /*image_param.updateData(mapped,
                                    mo::tag::_timestamp = mo::Time_t(buffer->pts * mo::ns),
-                                   mo::tag::_context = mo::Context::getCurrent());
+                                   mo::tag::_context = mo::Context::getCurrent());*/
+            sig_update();
         }
         gst_buffer_unmap(buffer, &map);
         gst_sample_unref(sample);
         gst_buffer_unref(buffer);
     }
     return GST_FLOW_OK;
+}
+
+bool FrameGrabberHTTP::grab()
+{
+    // return true;
+    Data data;
+    bool found = false;
+    while (m_data.try_dequeue(data))
+    {
+        found = true;
+    }
+    if (found)
+    {
+        image_param.updateData(
+            data.image, mo::tag::_timestamp = mo::Time_t(data.pts * mo::ns), mo::tag::_context = _ctx.get());
+    }
+    return true;
 }
 
 MO_REGISTER_CLASS(FrameGrabberHTTP)

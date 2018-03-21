@@ -1,4 +1,4 @@
-project(MXnet)
+project(mxnet)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 find_package(mxnet QUIET)
 
@@ -7,9 +7,9 @@ if(mxnet_FOUND AND TARGET mxnet)
     file(GLOB_RECURSE hdr "src/*.hpp" "src/*.h")
     find_package(OpenCV REQUIRED COMPONENTS cudawarping)
     INCLUDE_DIRECTORIES(${mxnet_INCLUDE_DIRS} ${Aquila_INCLUDE_DIRS})
-    add_library(MXnet SHARED ${src} ${hdr})
+    add_library(aqmxnet SHARED ${src} ${hdr})
 
-    RCC_LINK_LIB(MXnet
+    RCC_LINK_LIB(aqmxnet
         ${OpenCV_LIBS}
         aquila_metatypes
         aquila_types
@@ -26,8 +26,8 @@ if(mxnet_FOUND AND TARGET mxnet)
     else()
         target_link_libraries(MXnet ${mxnet_LIBRARY_RELEASE})
     endif()
-    aquila_declare_plugin(MXnet)
-    set_target_properties(MXnet PROPERTIES CXX_STANDARD 14)
+    aquila_declare_plugin(aqmxnet)
+    set_target_properties(aqmxnet PROPERTIES CXX_STANDARD 14)
 else(mxnet_FOUND AND TARGET mxnet)
     message(STATUS "-- MXNet NotFound")
 endif(mxnet_FOUND AND TARGET mxnet)

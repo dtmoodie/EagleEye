@@ -1,5 +1,6 @@
 #include "IClassifier.hpp"
 #include "aqcore_export.hpp"
+#include <Aquila/nodes/NodeInfo.hpp>
 #include <Aquila/types/ObjectDetection.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
 
@@ -7,9 +8,17 @@ namespace aq
 {
     namespace nodes
     {
-        class aqcore_EXPORT INeuralNet : virtual public IClassifier
+        struct INeuralNetInfo : public NodeInfo
+        {
+            virtual bool canLoad(const std::string& model, const std::string& weights) = 0;
+        };
+
+        class aqcore_EXPORT INeuralNet : virtual public TInterface<INeuralNet, IClassifier>
         {
           public:
+            static rcc::shared_ptr<INeuralNet> create(const std::string& model,
+                                                      const std::string& weight = std::string());
+
             MO_DERIVE(INeuralNet, IClassifier)
                 INPUT(SyncedMemory, input, nullptr)
                 OPTIONAL_INPUT(std::vector<cv::Rect2f>, bounding_boxes, nullptr)
@@ -40,7 +49,7 @@ namespace aq
             MO_END
 
           protected:
-            virtual bool processImpl();
+            virtual bool processImpl() override;
 
             virtual bool initNetwork() = 0;
             virtual bool

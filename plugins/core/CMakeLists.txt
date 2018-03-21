@@ -61,4 +61,4 @@ RCC_LINK_LIB(aqcore aquila_core
 
 aquila_declare_plugin(aqcore)
 set_plugin_available(aqcore)
-set_plugin_status(openni2openni2 "OpenNI2 found")
+
