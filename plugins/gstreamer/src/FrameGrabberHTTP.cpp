@@ -36,7 +36,16 @@ bool FrameGrabberHTTP::loadData(const ::std::string& file_path_)
     {
         ss << "avdec_h264 ! ";
     }
-    ss << "videoconvert ! appsink";
+
+    if (this->check_feature("nvvidconv"))
+    {
+        ss << "nvvidconv ! ";
+    }
+    else
+    {
+        ss << "videoconvert ! ";
+    }
+    ss << "appsink";
     if (!this->create_pipeline(ss.str()))
     {
         MO_LOG(warning) << "Unable to create pipeline for " << ss.str();
