@@ -49,11 +49,15 @@ namespace aq
 
         void FaceDatabase::IdentityDatabase::save(cereal::JSONOutputArchive& ar) const
         {
-            cv::Mat descriptors = this->descriptors.getMatNoSync();
-            ar(cereal::make_nvp("descriptor_width", descriptors.cols));
-            for (size_t i = 0; i < identities.size(); ++i)
+            if (!descriptors.empty())
             {
-                ar.saveBinaryValue(descriptors.ptr<float>(i), sizeof(float) * descriptors.cols, identities[i].c_str());
+                cv::Mat descriptors = this->descriptors.getMatNoSync();
+                ar(cereal::make_nvp("descriptor_width", descriptors.cols));
+                for (size_t i = 0; i < identities.size(); ++i)
+                {
+                    ar.saveBinaryValue(
+                        descriptors.ptr<float>(i), sizeof(float) * descriptors.cols, identities[i].c_str());
+                }
             }
         }
 
@@ -104,9 +108,11 @@ namespace aq
 
         void FaceDatabase::saveKnownFaces()
         {
-            // std::ofstream ofs(database_path.string() + "identities.db");
-            // cereal::JSONOutputArchive ar(ofs);
-            // ar(cereal::make_nvp(""))
+            mo::Mutex_t::scoped_lock lock(getMutex());
+            std::ofstream ofs;
+            ofs.open(database_path.string() + "/identities.db");
+            cereal::JSONOutputArchive ar(ofs);
+            ar(cereal::make_nvp("face_db", m_known_faces));
         }
 
         bool FaceDatabase::processImpl()
@@ -122,74 +128,90 @@ namespace aq
             {
                 host_img = image->getMatNoSync();
             }
+            else
+            {
+                bool sync = false;
+                host_img = image->getMat(stream(), 0, &sync);
+                if (sync)
+                    stream().waitForCompletion();
+            }
             for (const auto& det : *detections)
             {
                 DetectionDescription out_det(det);
+                cv::Mat det_desc;
                 if (_ctx->device_id == -1)
                 {
-                    cv::Mat det_desc = det.descriptor.getMatNoSync();
-                    int match_index = -1;
-                    double best_match = 1000;
-                    if (!m_known_faces.descriptors.empty())
+                    det_desc = det.descriptor.getMatNoSync();
+                }
+                else
+                {
+                    bool sync = false;
+                    det_desc = det.descriptor.getMat(stream(), 0, &sync);
+                    if (sync)
+                        stream().waitForCompletion();
+                }
+
+                int match_index = -1;
+                double best_match = 1000;
+                if (!m_known_faces.descriptors.empty())
+                {
+                    cv::Mat db_desc = m_known_faces.descriptors.getMatNoSync();
+                    for (int i = 0; i < db_desc.rows; ++i)
                     {
-                        cv::Mat db_desc = m_known_faces.descriptors.getMatNoSync();
-                        for (int i = 0; i < db_desc.rows; ++i)
+                        auto dist = cv::norm(db_desc.row(i) - det_desc);
+                        if (dist < best_match)
                         {
-                            auto dist = cv::norm(db_desc.row(i) - det_desc);
-                            if (dist < best_match)
-                            {
-                                best_match = dist;
-                                match_index = static_cast<int>(i);
-                            }
-                        }
-                        if (best_match < min_distance)
-                        {
-                            out_det.classifications.resize(1);
-                            out_det.classifications[0] = (*m_identities)[static_cast<size_t>(match_index + 1)]();
-                            sig_detectedKnownFace(*image, out_det);
-                        }
-                        else
-                        {
-                            match_index = -1;
-                            out_det.classifications.resize(1);
-                            out_det.classifications[0] = (*m_identities)[static_cast<size_t>(0)]();
+                            best_match = dist;
+                            match_index = static_cast<int>(i);
                         }
                     }
-                    if (match_index == -1)
+                    if (best_match < min_distance)
                     {
-                        // match to the unknown faces
-                        for (size_t i = 0; i < m_unknown_faces.size(); ++i)
+                        out_det.classifications.resize(1);
+                        out_det.classifications[0] = (*m_identities)[static_cast<size_t>(match_index + 1)]();
+                        sig_detectedKnownFace(*image, out_det);
+                    }
+                    else
+                    {
+                        match_index = -1;
+                        out_det.classifications.resize(1);
+                        out_det.classifications[0] = (*m_identities)[static_cast<size_t>(0)]();
+                    }
+                }
+                if (match_index == -1)
+                {
+                    // match to the unknown faces
+                    for (size_t i = 0; i < m_unknown_faces.size(); ++i)
+                    {
+                        cv::Mat desc = m_unknown_faces[i].getMatNoSync();
+                        auto dist = cv::norm(desc - det_desc);
+                        if (dist < best_match)
                         {
-                            cv::Mat desc = m_unknown_faces[i].getMatNoSync();
-                            auto dist = cv::norm(desc - det_desc);
-                            if (dist < best_match)
-                            {
-                                best_match = dist;
-                                match_index = static_cast<int>(i);
-                            }
+                            best_match = dist;
+                            match_index = static_cast<int>(i);
                         }
-                        if (match_index == -1 || best_match > min_distance)
+                    }
+                    if (match_index == -1 || best_match > min_distance)
+                    {
+                        m_unknown_faces.push_back(det_desc);
+                        m_unknown_crops.push_back(host_img(det.bounding_box).clone());
+                        m_unknown_det_count.push_back(1);
+                    }
+                    else
+                    {
+                        ++m_unknown_det_count[match_index];
+                        if (m_unknown_det_count[match_index] == 10)
                         {
-                            m_unknown_faces.push_back(det_desc);
-                            m_unknown_crops.push_back(host_img(det.bounding_box).clone());
-                            m_unknown_det_count.push_back(1);
+                            auto desc = m_unknown_faces[match_index].getMatNoSync();
+                            std::string base64 = cereal::base64::encode(desc.data, desc.cols * sizeof(float));
+                            std::string stem =
+                                database_path.string() + "/unknown_" + std::to_string(m_unknown_write_count);
+                            m_unknown_write_count++;
+                            std::ofstream ofs(stem + ".bin");
+                            ofs << base64;
+                            cv::imwrite(stem + ".jpg", m_unknown_crops[match_index]);
                         }
-                        else
-                        {
-                            ++m_unknown_det_count[match_index];
-                            if (m_unknown_det_count[match_index] == 10)
-                            {
-                                auto desc = m_unknown_faces[match_index].getMatNoSync();
-                                std::string base64 = cereal::base64::encode(desc.data, desc.cols * sizeof(float));
-                                std::string stem =
-                                    database_path.string() + "/unknown_" + std::to_string(m_unknown_write_count);
-                                m_unknown_write_count++;
-                                std::ofstream ofs(stem + ".bin");
-                                ofs << base64;
-                                cv::imwrite(stem + ".jpg", m_unknown_crops[match_index]);
-                            }
-                            sig_detectedUnknownFace(*image, out_det, m_unknown_det_count[match_index]);
-                        }
+                        sig_detectedUnknownFace(*image, out_det, m_unknown_det_count[match_index]);
                     }
                 }
                 output.emplace_back(std::move(out_det));

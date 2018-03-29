@@ -33,10 +33,11 @@ namespace aq
             if (detections->size())
             {
                 cv::Mat img;
-                if(_ctx->device_id == -1)
+                if (_ctx->device_id == -1)
                 {
                     img = image->getMatNoSync();
-                }else
+                }
+                else
                 {
                     img = image->getMat(stream());
                     stream().waitForCompletion();
@@ -56,10 +57,10 @@ namespace aq
                     dlib::extract_image_chip(dlib_img, dlib::get_face_chip_details(shape, 150, 0.25), face_chip);
                     aligned_faces.emplace_back(std::move(face_chip));
                 }
-                if(!aligned_faces.empty())
+                if (!aligned_faces.empty())
                 {
                     std::vector<dlib::matrix<float, 0, 1>> face_descriptors = m_net(aligned_faces);
-                    for(size_t i = 0; i < face_descriptors.size(); ++i)
+                    for (size_t i = 0; i < face_descriptors.size(); ++i)
                     {
                         float* start = face_descriptors[i].begin();
                         float* end = face_descriptors[i].end();
