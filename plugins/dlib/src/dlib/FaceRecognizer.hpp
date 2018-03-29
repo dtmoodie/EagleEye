@@ -1,7 +1,7 @@
 #pragma once
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/types/DetectionDescription.hpp>
-
+#define DLIB_USE_CUDA
 #include <dlib/dnn.h>
 #include <dlib/image_processing/shape_predictor.h>
 

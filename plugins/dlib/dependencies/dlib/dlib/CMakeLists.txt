@@ -24,13 +24,13 @@ set(CPACK_PACKAGE_VERSION_MINOR "9")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
 # Set DLIB_VERSION in the including CMake file so they can use it to do whatever they want. 
-get_directory_property(has_parent PARENT_DIRECTORY)
-if(has_parent)
-   set(DLIB_VERSION ${VERSION} PARENT_SCOPE)
-   if (NOT DEFINED DLIB_IN_PROJECT_BUILD)
-      set(DLIB_IN_PROJECT_BUILD true)
-   endif()
-endif()
+#get_directory_property(has_parent PARENT_DIRECTORY)
+#if(has_parent)
+#   set(DLIB_VERSION ${VERSION} PARENT_SCOPE)
+#   if (NOT DEFINED DLIB_IN_PROJECT_BUILD)
+#      set(DLIB_IN_PROJECT_BUILD true)
+#   endif()
+#endif()
 
 if (CMAKE_VERSION VERSION_LESS "3.9.0")
    # Set only because there are old target_link_libraries() statements in the
@@ -754,7 +754,7 @@ if (NOT TARGET dlib)
    endif()
 
    # Install the library
-   if (NOT DLIB_IN_PROJECT_BUILD)
+   if (TRUE)
        if(UNIX)
            set_target_properties(dlib_shared PROPERTIES
                                         OUTPUT_NAME dlib 
@@ -810,6 +810,9 @@ if (NOT TARGET dlib)
        configure_file("cmake_utils/dlib.pc.in" "dlib-1.pc" @ONLY)
        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/dlib-1.pc"
            DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+
+       export(TARGETS dlib dlib_shared FILE "${PROJECT_BINARY_DIR}/${tgt}Targets.cmake")
+    
 
    endif()
 

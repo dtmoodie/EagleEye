@@ -14,5 +14,5 @@ recognizer = aquila.nodes.FaceRecognizer(image=cam, detections=face,
     face_recognizer_weight_file='/home/dan/code/eagleeye/plugins/dlib/share/dlib_face_recognition_resnet_model_v1.dat')
 facedb = aquila.nodes.FaceDatabase(detections=recognizer, image=cam)
 draw = aquila.nodes.DrawDescriptors(image=cam, detections=facedb)
-img_disp = aquila.nodes.OGLImageDisplay(name='image', image=draw)
+img_disp = aquila.nodes.QtImageDisplay(name='image', image=draw)
 graph.start()
