@@ -40,7 +40,7 @@ std::string DrawDetectionsBase::textLabel(const DetectedObject& det)
 
     if (draw_class_label)
     {
-        if(det.classifications.size())
+        if (det.classifications.size())
         {
             if (det.classifications[0].cat)
                 ss << det.classifications[0].cat->getName() << ":";
@@ -58,11 +58,12 @@ bool DrawDetections::processImpl()
     cv::cuda::GpuMat device_draw_image;
     cv::Mat host_draw_image;
     cv::Size size;
-    if(_ctx->device_id != -1)
+    if (_ctx->device_id != -1)
     {
         image->clone(device_draw_image, stream());
         size = device_draw_image.size();
-    }else
+    }
+    else
     {
         image->clone(host_draw_image);
         size = host_draw_image.size();
@@ -83,7 +84,7 @@ bool DrawDetections::processImpl()
                           static_cast<int>(detection.bounding_box.width),
                           static_cast<int>(detection.bounding_box.height));
             cv::Scalar color;
-            if(!device_draw_image.empty())
+            if (!device_draw_image.empty())
                 cv::cuda::rectangle(device_draw_image, rect, color, 3, stream());
             else
                 cv::rectangle(host_draw_image, rect.tl(), rect.br(), color, 3);
@@ -101,14 +102,15 @@ bool DrawDetections::processImpl()
                 cv::Mat text_image(20, 200, CV_8UC3);
                 text_image.setTo(cv::Scalar::all(0));
                 cv::putText(text_image, textLabel(detection), {0, 15}, cv::FONT_HERSHEY_COMPLEX, 0.4, color);
-                if(!device_draw_image.empty())
+                if (!device_draw_image.empty())
                 {
                     cv::cuda::GpuMat d_text;
                     d_text.upload(text_image, stream());
                     cv::cuda::GpuMat text_roi = device_draw_image(text_rect);
                     cv::cuda::add(text_roi, d_text, text_roi, cv::noArray(), -1, stream());
                     drawn_text.push_back(text_image); // need to prevent recycling of the images too early
-                }else
+                }
+                else
                 {
                     auto text_roi = host_draw_image(text_rect);
                     cv::add(text_roi, text_image, text_roi);
@@ -116,10 +118,11 @@ bool DrawDetections::processImpl()
             }
         }
     }
-    if(device_draw_image.empty())
+    if (device_draw_image.empty())
     {
         output_param.updateData(host_draw_image, mo::tag::_param = image_param, _ctx.get());
-    }else
+    }
+    else
     {
         output_param.updateData(device_draw_image, mo::tag::_param = image_param, _ctx.get());
     }
@@ -186,20 +189,22 @@ bool DrawDescriptors::processImpl()
     cv::cuda::GpuMat device_draw_image;
     cv::Mat host_draw_image;
     cv::Size size;
-    if(_ctx->device_id == -1)
+    if (_ctx->device_id == -1)
     {
         image->clone(host_draw_image);
         size = host_draw_image.size();
-    }else
+    }
+    else
     {
-        if(image->getSyncState() < SyncedMemory::DEVICE_UPDATED)
+        if (image->getSyncState() < SyncedMemory::DEVICE_UPDATED)
         {
-            if(image->clone(host_draw_image, stream()))
+            if (image->clone(host_draw_image, stream()))
             {
                 stream().waitForCompletion();
             }
             size = host_draw_image.size();
-        }else
+        }
+        else
         {
             image->clone(device_draw_image, stream());
             size = device_draw_image.size();
@@ -207,24 +212,25 @@ bool DrawDescriptors::processImpl()
     }
     const bool draw_gpu = !device_draw_image.empty();
     std::vector<cv::Mat> drawn_text;
-    for(const auto& det : *detections)
+    for (const auto& det : *detections)
     {
         const cv::Rect rect = det.bounding_box;
 
-        if(draw_gpu)
+        if (draw_gpu)
         {
-
-        }else
+        }
+        else
         {
             cv::Mat descriptor;
-            if(_ctx->device_id == -1)
+            if (_ctx->device_id == -1)
             {
                 descriptor = det.descriptor.getMatNoSync();
-            }else
+            }
+            else
             {
                 bool sync = false;
                 descriptor = det.descriptor.getMat(stream(), 0, &sync);
-                if(sync)
+                if (sync)
                 {
                     stream().waitForCompletion();
                 }
@@ -235,13 +241,14 @@ bool DrawDescriptors::processImpl()
             const int width = descriptor.cols / height;
             cv::Point tl = det.bounding_box.tl();
             tl.x += det.bounding_box.width + 5;
-            if(tl.x + width >= host_draw_image.cols)
+            if (tl.x + width >= host_draw_image.cols)
             {
                 tl.x = rect.x - width - 5;
             }
-            for(int i = 0; i < descriptor.cols; ++i)
+            for (int i = 0; i < descriptor.cols; ++i)
             {
-                host_draw_image.at<cv::Vec3b>(i % height + tl.y, tl.x + i / descriptor.cols) = descriptor.at<cv::Vec3b>(i);
+                host_draw_image.at<cv::Vec3b>(i % height + tl.y, tl.x + i / descriptor.cols) =
+                    descriptor.at<cv::Vec3b>(i);
             }
             cv::Scalar color;
             if (det.classifications.size())
@@ -259,14 +266,15 @@ bool DrawDescriptors::processImpl()
                 cv::Mat text_image(20, 200, CV_8UC3);
                 text_image.setTo(cv::Scalar::all(0));
                 cv::putText(text_image, textLabel(det), {0, 15}, cv::FONT_HERSHEY_COMPLEX, 0.4, color);
-                if(!device_draw_image.empty())
+                if (!device_draw_image.empty())
                 {
                     cv::cuda::GpuMat d_text;
                     d_text.upload(text_image, stream());
                     cv::cuda::GpuMat text_roi = device_draw_image(text_rect);
                     cv::cuda::add(text_roi, d_text, text_roi, cv::noArray(), -1, stream());
                     drawn_text.push_back(text_image); // need to prevent recycling of the images too early
-                }else
+                }
+                else
                 {
                     auto text_roi = host_draw_image(text_rect);
                     cv::add(text_roi, text_image, text_roi);
@@ -274,12 +282,12 @@ bool DrawDescriptors::processImpl()
             }
         }
     }
-    if(device_draw_image.empty())
+    if (device_draw_image.empty())
     {
         output_param.updateData(host_draw_image, mo::tag::_param = image_param, mo::tag::_context = _ctx.get());
-    }else
+    }
+    else
     {
-
     }
 
     return true;

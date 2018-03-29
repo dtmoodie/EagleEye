@@ -17,25 +17,27 @@ namespace aq
             {
                 if (!m_cpu_detector || model_file_param.modified())
                 {
-                    if(!boost::filesystem::exists(model_file))
+                    if (!boost::filesystem::exists(model_file))
                     {
                         MO_LOG(warning) << "Cascade model file doesn't exist! " << model_file;
-                    }else
+                    }
+                    else
                     {
                         m_cpu_detector.reset(new cv::CascadeClassifier());
                         m_cpu_detector->load(model_file.string());
                         model_file_param.modified(false);
                     }
                 }
-                if(m_cpu_detector)
+                if (m_cpu_detector)
                 {
                     cv::Mat img;
 
-                    if(_ctx->device_id != -1)
+                    if (_ctx->device_id != -1)
                     {
                         img = input->getMat(stream());
                         stream().waitForCompletion();
-                    }else
+                    }
+                    else
                     {
                         img = input->getMatNoSync();
                     }
