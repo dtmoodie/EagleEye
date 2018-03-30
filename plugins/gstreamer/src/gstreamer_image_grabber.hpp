@@ -17,6 +17,9 @@ namespace aq
                 SOURCE(SyncedMemory, image, {})
                 MO_SIGNAL(void, update)
             MO_END
+
+            virtual void initCustom(bool first_init) override;
+
           protected:
             virtual GstFlowReturn on_pull() override;
             virtual bool loadData(const ::std::string& file_path) override;

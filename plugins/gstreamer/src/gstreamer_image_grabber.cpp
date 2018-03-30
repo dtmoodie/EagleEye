@@ -1,4 +1,5 @@
 #include "gstreamer_image_grabber.hpp"
+#include "glib_thread.h"
 #include <Aquila/framegrabbers/GrabberInfo.hpp>
 #include <gst/base/gstbasesink.h>
 
@@ -13,6 +14,10 @@ namespace aq
             return 0;
         }
 
+        void GstreamerImageGrabber::initCustom(bool first_init)
+        {
+            image_param.setContext(glib_thread::instance()->getContext().get());
+        }
         GstFlowReturn GstreamerImageGrabber::on_pull()
         {
             GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(_appsink));

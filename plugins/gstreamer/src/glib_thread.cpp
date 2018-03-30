@@ -1,11 +1,11 @@
 #include "glib_thread.h"
 #include "MetaObject/core/SystemTable.hpp"
-#include <MetaObject/thread/ThreadRegistry.hpp>
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
+#include <MetaObject/thread/ThreadRegistry.hpp>
 
 #include <MetaObject/logging/logging.hpp>
-#include <MetaObject/thread/boost_thread.hpp>
 #include <MetaObject/thread/InterThread.hpp>
+#include <MetaObject/thread/boost_thread.hpp>
 
 struct GlibEventHandler;
 
@@ -19,17 +19,13 @@ gboolean glibIdle(gpointer /*user_data*/)
 
 struct GlibEventHandler
 {
-    GlibEventHandler():
-        notifier(mo::ThreadSpecificQueue::registerNotifier(std::bind(&GlibEventHandler::onEvent, this)))
+    GlibEventHandler()
+        : notifier(mo::ThreadSpecificQueue::registerNotifier(std::bind(&GlibEventHandler::onEvent, this)))
     {
-
     }
 
     // handle events from the glib thread, this should be called by a glib callback
-    void handleEvent()
-    {
-        mo::ThreadSpecificQueue::run();
-    }
+    void handleEvent() { mo::ThreadSpecificQueue::run(); }
 
     // Called from the emitting thread
     void onEvent()
@@ -40,11 +36,21 @@ struct GlibEventHandler
     mo::ThreadSpecificQueue::ScopedNotifier notifier;
 };
 
-
-
 glib_thread::glib_thread()
 {
     _main_loop = nullptr;
+
+    if (!_main_loop)
+    {
+        MO_LOG(info) << "Creating new glib event loop";
+        _main_loop = g_main_loop_new(NULL, 0);
+    }
+    if (g_main_loop_is_running(_main_loop))
+    {
+        MO_LOG(debug) << "glib main loop already running";
+        return;
+    }
+    _thread = boost::thread(boost::bind(&glib_thread::loop, this));
 }
 
 glib_thread::~glib_thread()
@@ -60,18 +66,31 @@ void glib_thread::loop()
         mo::ThreadRegistry::instance()->registerThread(mo::ThreadRegistry::GUI);
         g_idle_add(&glibIdle, nullptr);
 
-        // Ideally we can just use a notifier instead of an idle func
-        // TODO make me work...
-        // GlibEventHandler handler;
+// Ideally we can just use a notifier instead of an idle func
+// TODO make me work...
+// GlibEventHandler handler;
 #endif
-        context = mo::Context::create("glib thread");
+        {
+            boost::lock_guard<boost::mutex> lock(mtx);
+            context = mo::Context::create("glib thread");
+        }
+        cv.notify_all();
+
         MO_LOG(info) << "glib event loop starting";
         g_main_loop_run(_main_loop);
-
     }
     MO_LOG(info) << "glib event loop ending";
 }
 
+std::shared_ptr<mo::Context> glib_thread::getContext() const
+{
+    boost::unique_lock<boost::mutex> lock(mtx);
+    while (!context)
+    {
+        cv.wait(lock);
+    }
+    return context;
+}
 
 // TODO initialize at plugin load
 glib_thread* glib_thread::instance()
@@ -106,17 +125,6 @@ void glib_thread::stop_thread()
 
 void glib_thread::start_thread()
 {
-    if (!_main_loop)
-    {
-        MO_LOG(info) << "Creating new glib event loop";
-        _main_loop = g_main_loop_new(NULL, 0);
-    }
-    if (g_main_loop_is_running(_main_loop))
-    {
-        MO_LOG(debug) << "glib main loop already running";
-        return;
-    }
-    _thread = boost::thread(boost::bind(&glib_thread::loop, this));
 }
 
 size_t glib_thread::get_thread_id()

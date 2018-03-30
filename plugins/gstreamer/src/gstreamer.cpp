@@ -115,7 +115,7 @@ gstreamer_base::gstreamer_base()
         int argc = 1;
         char** argv = vec.data();
         gst_init(&argc, &argv);
-        //glib_thread::instance()->start_thread();
+        // glib_thread::instance()->start_thread();
     }
 }
 gstreamer_base::~gstreamer_base()
@@ -214,12 +214,15 @@ static GstFlowReturn gstreamer_src_base_new_sample(GstElement* pipeline, gstream
 {
     return obj->on_pull();
 }
+
 gstreamer_src_base::gstreamer_src_base()
 {
     _appsink = nullptr;
     _new_sample_id = 0;
     _new_preroll_id = 0;
+    glib_thread::instance();
 }
+
 gstreamer_src_base::~gstreamer_src_base()
 {
     if (_appsink)
