@@ -1,7 +1,10 @@
-#include "@PLUGIN_NAME@_export.hpp"
+// clang-format off
+#include "@PLUGIN_NAME@/@PLUGIN_NAME@_export.hpp"
+#include <MetaObject/object/MetaObjectFactory.hpp>
+#include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 
-
-const char* getPluginBuildInfo(){
+const char* getPluginBuildInfo()
+{
     return "@PLUGIN_NAME@\n"
            "  Compiler         : @CMAKE_CXX_COMPILER_ID@\n"
            "    version        : @CMAKE_CXX_COMPILER_VERSION@\n"
@@ -22,3 +25,13 @@ const char* getPluginBuildInfo(){
            "  CUDA VERSION     : @CUDA_VERSION@\n"
            "  builder          : @GIT_USERNAME@ - @GIT_EMAIL@\n";
 }
+
+namespace @PLUGIN_NAME@
+{
+    void initPlugin(mo::MetaObjectFactory* factory)
+    {
+        factory->setupObjectConstructors(PerModuleInterface::GetInstance());
+    }
+}
+
+// clang-format on

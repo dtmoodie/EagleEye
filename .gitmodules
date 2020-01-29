@@ -1,15 +1,12 @@
-[submodule "plugins/segmentation/fastms"]
-	path = plugins/segmentation/fastms
-	url = http://github.com/dtmoodie/fastms
-[submodule "plugins/slam/dtam"]
-	path = plugins/slam/dtam
-	url = https://github.com/dtmoodie/opendtam
-[submodule "plugins/slam/lsd_slam"]
-	path = plugins/slam/lsd_slam
-	url = https://github.com/dtmoodie/lsd_slam
 [submodule "Aquila"]
 	path = Aquila
 	url = ../Aquila
 [submodule "EagleEye/dependencies/nodeeditor"]
 	path = EagleEye/dependencies/nodeeditor
 	url = http://github.com/dtmoodie/nodeeditor
+[submodule "plugins/bio/dependencies/fmt"]
+	path = plugins/bio/dependencies/fmt
+	url = https://github.com/fmtlib/fmt
+[submodule "plugins/aqgputracking/dependencies/GPU-tracking"]
+	path = plugins/aqgputracking/dependencies/GPU-tracking
+	url = https://github.com/denismerigoux/GPU-tracking

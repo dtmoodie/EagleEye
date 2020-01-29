@@ -1,8 +1,6 @@
 project(samples)
 CMAKE_POLICY(SET CMP0020 NEW)
-IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
-    CMAKE_POLICY(SET CMP0053 OLD)
-ENDIF()
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
 
 if(NOT TARGET aquila_core)
@@ -26,12 +24,11 @@ target_link_libraries(GraphExecutor
     RuntimeCompiler
     metaobject_metaparams
     aquila_types
-    aquila_metatypes
 )
 
-if(WITH_PYTHON AND HAVE_PYTHON)
+if(WITH_PYTHON AND MO_HAVE_PYTHON)
 	target_link_libraries(GraphExecutor ${PYTHON_LIBRARY})
-endif(WITH_PYTHON AND HAVE_PYTHON)
+endif(WITH_PYTHON AND MO_HAVE_PYTHON)
 
 INSTALL(TARGETS GraphExecutor
 	RUNTIME DESTINATION bin

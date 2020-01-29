@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(Tests)
-IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
-    CMAKE_POLICY(SET CMP0053 OLD)
-ENDIF()
 
 cmake_policy(SET CMP0020 NEW)
 
@@ -36,7 +33,7 @@ FOREACH( test ${CPP_TESTS} )
   get_filename_component( name ${test} NAME_WE )
   add_executable(${name} ${test})
   target_link_libraries(${name} ${LINK_LIBS} ${Boost_LIBRARIES} ${Aquila_LIBRARIES})
-  if(WITH_PYTHON AND HAVE_PYTHON)
+  if(WITH_PYTHON AND MO_HAVE_PYTHON)
     target_link_libraries(${name} ${PYTHON_LIBRARY})
   endif()
   set_target_properties(${name} PROPERTIES FOLDER Tests/EagleEye)

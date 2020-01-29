@@ -1,4 +1,6 @@
 set(plugin_export_template_path "${CMAKE_CURRENT_LIST_DIR}/PluginExport.hpp.in" CACHE INTERNAL "")
+set(plugin_config_file_path "${CMAKE_CURRENT_LIST_DIR}/plugin_config.cpp.in" CACHE INTERNAL "")
+
 macro(aquila_declare_plugin tgt)
     set(options SVN)
     cmake_parse_arguments(aquila_declare_plugin "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
@@ -13,21 +15,26 @@ macro(aquila_declare_plugin tgt)
 
     get_target_property(target_include_dirs_ ${tgt} INCLUDE_DIRECTORIES)
     get_target_property(target_link_libs_    ${tgt} LINK_LIBRARIES)
-
-    set_target_properties(${tgt} PROPERTIES FOLDER plugins)
+    set_property(TARGET ${tgt} APPEND PROPERTY RCC_MODULE)
     set_target_properties(${tgt}
         PROPERTIES
             CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/plugins
             CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/plugins
             CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/plugins
+            LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin/plugins
+            FOLDER plugins
+            RCC_MODULE ON
     )
-    set_target_properties(${tgt} PROPERTIES LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin/plugins)
+
     INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/src)
-        target_include_directories(${tgt}
-        PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/>
+    target_include_directories(${tgt}
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/>
     )
-        target_include_directories(${tgt}
-        PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/plugins/${tgt}/>
+    target_include_directories(${tgt}
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/plugins/>
+            $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/plugins/${tgt}/>
     )
 
     RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
@@ -160,10 +167,11 @@ macro(aquila_declare_plugin tgt)
 
     CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_BINARY_DIR}/plugins/${tgt}/${tgt}_export.hpp" @ONLY)
 
-    CONFIGURE_FILE("../plugin_config.cpp.in" "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp" @ONLY)
+    CONFIGURE_FILE("${plugin_config_file_path}" "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp" @ONLY)
 
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp")
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/plugins/${tgt}/${tgt}_export.hpp")
+    set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/plugins/${tgt}/Aquila/rcc/external_includes/${tgt}_link_libs.hpp")
 
     LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
     LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
@@ -280,3 +288,18 @@ macro(aquila_declare_plugin tgt)
     ENDIF(RCC_VERBOSE_CONFIG)
 
 endmacro(aquila_declare_plugin)
+
+
+function(aquila_install_dependent_lib FILENAME)
+
+    if(EXISTS ${FILENAME})
+        if(IS_SYMLINK ${FILENAME})
+            get_filename_component(path ${FILENAME} REALPATH)
+            INSTALL(FILES ${path} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+            INSTALL(FILES ${FILENAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+        else()
+            INSTALL(FILES ${FILENAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+        endif()
+    endif()
+
+endfunction(aquila_install_dependent_lib)

@@ -5,16 +5,19 @@
 #include <boost/filesystem.hpp>
 #include <iostream>
 
-class BuildCallback : public ITestBuildNotifier {
-public:
-    BuildCallback(std::vector<std::string>& failures,std::vector<std::string>& success)
-        : m_failures(failures),
-        m_success(success)
-    {}
+class BuildCallback : public ITestBuildNotifier
+{
+  public:
+    BuildCallback(std::vector<std::string>& failures, std::vector<std::string>& success)
+        : m_failures(failures), m_success(success)
+    {
+    }
 
-    virtual bool TestBuildCallback(const char* file, TestBuildResult type) {
+    virtual bool TestBuildCallback(const char* file, TestBuildResult type)
+    {
         std::cout << "[" << file << "] - ";
-        switch (type) {
+        switch (type)
+        {
         case TESTBUILDRRESULT_SUCCESS:
             std::cout << "TESTBUILDRRESULT_SUCCESS\n";
             m_success.push_back(file);
@@ -38,19 +41,18 @@ public:
         m_failures.push_back(file);
         return false;
     }
-    virtual bool TestBuildWaitAndUpdate() {
-        return true;
-    }
+    virtual bool TestBuildWaitAndUpdate() { return true; }
     std::vector<std::string>& m_failures;
     std::vector<std::string>& m_success;
 };
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     (void)argc;
-    std::shared_ptr<SystemTable> table = SystemTable::instance();
-    mo::MetaObjectFactory::instance(table.get());
+    SystemTable table;
+    mo::MetaObjectFactory factory(&table);
     std::vector<std::string> failures, success;
-    BuildCallback           cb(failures, success);
+    BuildCallback cb(failures, success);
     boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
 #ifdef _MSC_VER
     currentDir = boost::filesystem::path(currentDir.string());
@@ -59,9 +61,12 @@ int main(int argc, char** argv) {
 #endif
 
     boost::filesystem::directory_iterator end_itr;
-    if (boost::filesystem::is_directory(currentDir)) {
-        for (boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr) {
-            if (boost::filesystem::is_regular_file(itr->path())) {
+    if (boost::filesystem::is_directory(currentDir))
+    {
+        for (boost::filesystem::directory_iterator itr(currentDir); itr != end_itr; ++itr)
+        {
+            if (boost::filesystem::is_regular_file(itr->path()))
+            {
 #ifdef _MSC_VER
                 if (itr->path().extension() == ".dll")
 #else
@@ -69,25 +74,27 @@ int main(int argc, char** argv) {
 #endif
                 {
                     std::string file = itr->path().string();
-                    mo::MetaObjectFactory::instance()->loadPlugin(file);
+                    mo::MetaObjectFactory::instance().loadPlugin(file);
                 }
             }
         }
     }
-    auto plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins();
+    auto plugins = mo::MetaObjectFactory::instance().listLoadedPlugins();
     std::cout << "Testing the following plugins:\n";
     for (auto plugin : plugins)
         std::cout << plugin << std::endl;
-    mo::MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(&cb, true);
+    mo::MetaObjectFactory::instance().getObjectSystem()->TestBuildAllRuntimeSourceFiles(&cb, true);
     if (failures.size())
         std::cout << "The following files failed RCC:\n";
-    for (auto file : failures) {
+    for (auto file : failures)
+    {
         std::cout << file << '\n';
     }
     std::cout << std::endl;
-    if(success.size())
+    if (success.size())
         std::cout << "The following files succeded:\n";
-    for(auto file : success){
+    for (auto file : success)
+    {
         std::cout << file << '\n';
     }
     return 0;
