@@ -1,5 +1,5 @@
 #pragma once
-
+// clang-format off
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined @PLUGIN_NAME@_EXPORTS
 #  define @PLUGIN_NAME@_EXPORT __declspec(dllexport)
 #elif defined __GNUC__ && __GNUC__ >= 4
@@ -31,3 +31,14 @@
 
 extern "C" @PLUGIN_NAME@_EXPORT const char* getPluginBuildInfo();
 
+namespace mo
+{
+    class MetaObjectFactory;
+}
+
+namespace @PLUGIN_NAME@
+{
+    void @PLUGIN_NAME@_EXPORT initPlugin(mo::MetaObjectFactory* factory);
+}
+
+// clang-format on

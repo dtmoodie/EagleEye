@@ -1,13 +1,14 @@
-
-#include <Aquila/core/Aquila.hpp>
+#include <Aquila/core.hpp>
 #include <Aquila/core/IGraph.hpp>
 #include <Aquila/core/Logging.hpp>
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
+#include <Aquila/gui.hpp>
 #include <Aquila/gui/UiCallbackHandlers.h>
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/nodes/NodeFactory.hpp>
 
 #include <MetaObject/core/detail/Allocator.hpp>
+#include <MetaObject/core/detail/opencv_allocator.hpp>
 #include <MetaObject/logging/profiling.hpp>
 #include <MetaObject/logging/profiling.hpp>
 #include <MetaObject/object/MetaObject.hpp>
@@ -241,7 +242,7 @@ int main(int argc, char* argv[])
     BOOST_LOG_TRIVIAL(info) << "Initializing";
     boost::program_options::options_description desc("Allowed options");
     auto table = SystemTable::instance();
-    mo::MetaObjectFactory::instance(table.get());
+    mo::MetaObjectFactory factory(table.get());
     // clang-format off
     desc.add_options()
             ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
@@ -268,18 +269,20 @@ int main(int argc, char* argv[])
     auto parsed_options =
         boost::program_options::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
     boost::program_options::store(parsed_options, vm);
-    mo::MetaParams::initialize();
+    mo::initMetaParamsModule();
 
+    factory.registerTranslationUnit();
     if (vm.count("log-dir"))
-        aq::Init(vm["log-dir"].as<std::string>());
+        aq::core::initModule(&factory, vm["log-dir"].as<std::string>());
     else
-        aq::Init();
-
-    mo::MetaObjectFactory::instance()->registerTranslationUnit();
+        aq::core::initModule(&factory);
+    aq::gui::initModule(&factory);
 
     auto g_allocator = mo::Allocator::createAllocator();
-    cv::cuda::GpuMat::setDefaultAllocator(g_allocator.get());
-    cv::Mat::setDefaultAllocator(g_allocator.get());
+    mo::CvAllocatorProxy<mo::CUDA> gpu_allocator(g_allocator);
+    mo::CvAllocatorProxy<mo::CPU> cpu_allocator(g_allocator);
+    cv::cuda::GpuMat::setDefaultAllocator(&gpu_allocator);
+    cv::Mat::setDefaultAllocator(&cpu_allocator);
 
     g_allocator->setName("Global Allocator");
 
@@ -391,19 +394,19 @@ int main(int argc, char* argv[])
     boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
 #ifdef _MSC_VER
 #ifdef _DEBUG
-    mo::MetaObjectFactory::instance()->loadPlugin("aquila_guid.dll");
-    mo::MetaObjectFactory::instance()->loadPlugin("aquila_cored.dll");
+    mo::MetaObjectFactory::instance().loadPlugin("aquila_guid.dll");
+    mo::MetaObjectFactory::instance().loadPlugin("aquila_cored.dll");
 #else
-    mo::MetaObjectFactory::instance()->loadPlugin("aquila_gui.dll");
-    mo::MetaObjectFactory::instance()->loadPlugin("aquila_core.dll");
+    mo::MetaObjectFactory::instance().loadPlugin("aquila_gui.dll");
+    mo::MetaObjectFactory::instance().loadPlugin("aquila_core.dll");
 #endif
 #else
 #ifdef NDEBUG
-    mo::MetaObjectFactory::instance()->loadPlugin("aquila_gui.so");
-    mo::MetaObjectFactory::instance()->loadPlugin("aquila_core.so");
+    mo::MetaObjectFactory::instance().loadPlugin("aquila_gui.so");
+    mo::MetaObjectFactory::instance().loadPlugin("aquila_core.so");
 #else
-    mo::MetaObjectFactory::instance()->loadPlugin("aquila_guid.so");
-    mo::MetaObjectFactory::instance()->loadPlugin("aquila_cored.so");
+    mo::MetaObjectFactory::instance().loadPlugin("aquila_guid.so");
+    mo::MetaObjectFactory::instance().loadPlugin("aquila_cored.so");
 #endif
 #endif
 
@@ -424,7 +427,7 @@ int main(int argc, char* argv[])
 #endif
                 {
                     std::string file = itr->path().string();
-                    mo::MetaObjectFactory::instance()->loadPlugin(file);
+                    mo::MetaObjectFactory::instance().loadPlugin(file);
                 }
             }
         }
@@ -505,7 +508,7 @@ int main(int argc, char* argv[])
 #endif
                 {
                     std::string file = itr->path().string();
-                    mo::MetaObjectFactory::instance()->loadPlugin(file);
+                    mo::MetaObjectFactory::instance().loadPlugin(file);
                 }
             }
         }
@@ -567,7 +570,7 @@ int main(int argc, char* argv[])
                 (void)null;
                 documents_list.clear();
                 auto constructors =
-                    mo::MetaObjectFactory::instance()->getConstructors(aq::nodes::IFrameGrabber::getHash());
+                    mo::MetaObjectFactory::instance().getConstructors(aq::nodes::IFrameGrabber::getHash());
                 int index = 0;
                 for (auto constructor : constructors)
                 {
@@ -593,10 +596,21 @@ int main(int argc, char* argv[])
             [&_Graphs, &documents_list](std::string doc) -> void {
                 std::string fg_override;
                 int index = -1;
+#ifdef BOOST_LEXICAL_CAST_TRY_LEXICAL_CONVERT_HPP
                 if (!boost::conversion::detail::try_lexical_convert(doc, index))
                 {
                     index = -1;
                 }
+#else
+                try
+                {
+                    index = boost::lexical_cast<int>(doc);
+                }
+                catch (...)
+                {
+                    index = -1;
+                }
+#endif
                 if (index != -1 && index >= 0 && static_cast<size_t>(index) < documents_list.size())
                 {
                     doc = documents_list[static_cast<size_t>(index)].first;
@@ -659,7 +673,7 @@ int main(int argc, char* argv[])
                 std::vector<mo::IParam*> parameters;
                 if (current_node)
                 {
-                    parameters = current_node->getAllParams();
+                    parameters = current_node->getParams();
                 }
                 if (current_stream)
                 {
@@ -741,7 +755,7 @@ int main(int argc, char* argv[])
                 }
                 if (current_node)
                 {
-                    auto params = current_node->getAllParams();
+                    auto params = current_node->getParams();
                     std::stringstream ss;
                     for (auto param : params)
                     {
@@ -765,7 +779,7 @@ int main(int argc, char* argv[])
             }
             if (what == "plugins")
             {
-                auto plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins();
+                auto plugins = mo::MetaObjectFactory::instance().listLoadedPlugins();
                 std::stringstream ss;
                 ss << "\n";
                 for (auto& plugin : plugins)
@@ -835,7 +849,7 @@ int main(int argc, char* argv[])
                         verb = IObjectInfo::RCC;
                     obj = obj.substr(0, pos);
                 }
-                IObjectConstructor* constructor = mo::MetaObjectFactory::instance()->getConstructor(obj.c_str());
+                IObjectConstructor* constructor = mo::MetaObjectFactory::instance().getConstructor(obj.c_str());
                 if (constructor)
                 {
                     mo::IMetaObjectInfo* info = dynamic_cast<mo::IMetaObjectInfo*>(constructor->GetObjectInfo());
@@ -932,10 +946,22 @@ int main(int argc, char* argv[])
                 }
                 int idx = -1;
                 std::string name;
+
+#ifdef BOOST_LEXICAL_CAST_TRY_LEXICAL_CONVERT_HPP
                 if (!boost::conversion::detail::try_lexical_convert(what, idx))
                 {
                     idx = -1;
                 }
+#else
+                try
+                {
+                    idx = boost::lexical_cast<int>(what);
+                }
+                catch (...)
+                {
+                    idx = -1;
+                }
+#endif
 
                 if (idx == -1)
                 {
@@ -986,7 +1012,7 @@ int main(int argc, char* argv[])
                         std::vector<mo::IParam*> parameters;
                         if (current_node)
                         {
-                            parameters = current_node->getAllParams();
+                            parameters = current_node->getParams();
                         }
                         if (current_stream)
                         {
@@ -1053,7 +1079,7 @@ int main(int argc, char* argv[])
                             std::vector<mo::IParam*> parameters;
                             if (current_node)
                             {
-                                parameters = current_node->getAllParams();
+                                parameters = current_node->getParams();
                             }
                             if (current_stream)
                             {
@@ -1068,7 +1094,7 @@ int main(int argc, char* argv[])
                         }
                         else
                         {
-                            auto params = current_node->getAllParams();
+                            auto params = current_node->getParams();
                             for (auto& param : params)
                             {
                                 std::string name = param->getName();
@@ -1158,7 +1184,7 @@ int main(int argc, char* argv[])
 
         slot = new mo::TSlot<void(std::string)>(std::bind(
             [](std::string filter) -> void {
-                auto constructors = mo::MetaObjectFactory::instance()->getConstructors();
+                auto constructors = mo::MetaObjectFactory::instance().getConstructors();
                 std::map<std::string, std::vector<IObjectConstructor*>> interface_map;
                 for (auto constructor : constructors)
                 {
@@ -1197,7 +1223,7 @@ int main(int argc, char* argv[])
                     verb = mo::MetaObjectFactory::info;
                 if (verbosity == "debug")
                     verb = mo::MetaObjectFactory::debug;
-                auto plugins = mo::MetaObjectFactory::instance()->listLoadedPlugins(verb);
+                auto plugins = mo::MetaObjectFactory::instance().listLoadedPlugins(verb);
                 std::stringstream ss;
                 ss << "Loaded / failed plugins:\n";
                 for (auto& plugin : plugins)
@@ -1221,7 +1247,7 @@ int main(int argc, char* argv[])
                     std::vector<mo::IParam*> parameters;
                     if (current_node)
                     {
-                        parameters = current_node->getAllParams();
+                        parameters = current_node->getParams();
                     }
                     for (auto& itr : parameters)
                     {
@@ -1283,7 +1309,7 @@ int main(int argc, char* argv[])
                     std::vector<mo::IParam*> parameters;
                     if (current_node)
                     {
-                        parameters = current_node->getAllParams();
+                        parameters = current_node->getParams();
                     }
                     for (auto& itr : parameters)
                     {
@@ -1408,7 +1434,7 @@ int main(int argc, char* argv[])
                 }
                 if (current_node)
                 {
-                    auto params = current_node->getAllParams();
+                    auto params = current_node->getParams();
                     for (auto& param : params)
                     {
                         auto pos = value.find(param->getName());
@@ -1535,8 +1561,8 @@ int main(int argc, char* argv[])
                     idx = boost::lexical_cast<int>(directory.substr(0, pos));
                     directory = directory.substr(pos + 1);
                 }
-                mo::MetaObjectFactory::instance()->getObjectSystem()->AddLibraryDir(directory.c_str(),
-                                                                                    static_cast<unsigned short>(idx));
+                mo::MetaObjectFactory::instance().getObjectSystem()->AddLibraryDir(directory.c_str(),
+                                                                                   static_cast<unsigned short>(idx));
             },
             std::placeholders::_1));
 
@@ -1610,11 +1636,11 @@ int main(int argc, char* argv[])
         bool compiling = false;
         bool rcc_enabled = !vm["disable-rcc"].as<bool>() && (vm.count("profile-for") == 0);
         if (rcc_enabled)
-            mo::MetaObjectFactory::instance()->checkCompile();
+            mo::MetaObjectFactory::instance().checkCompile();
         auto compile_check_function = [&_Graphs, &compiling, rcc_enabled]() {
             if (rcc_enabled)
             {
-                if (mo::MetaObjectFactory::instance()->checkCompile())
+                if (mo::MetaObjectFactory::instance().checkCompile())
                 {
                     std::cout << "Recompiling...\n";
                     for (auto& ds : _Graphs)
@@ -1625,7 +1651,7 @@ int main(int argc, char* argv[])
                 }
                 if (compiling)
                 {
-                    if (!mo::MetaObjectFactory::instance()->isCompileComplete())
+                    if (!mo::MetaObjectFactory::instance().isCompileComplete())
                     {
                         std::cout << "Still compiling\n";
                     }
@@ -1635,7 +1661,7 @@ int main(int argc, char* argv[])
                         {
                             ds->stopThread();
                         }
-                        if (mo::MetaObjectFactory::instance()->swapObjects())
+                        if (mo::MetaObjectFactory::instance().swapObjects())
                         {
                             std::cout << "Object swap success\n";
                             for (auto& ds : _Graphs)

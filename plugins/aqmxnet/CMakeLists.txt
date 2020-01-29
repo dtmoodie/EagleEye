@@ -1,0 +1,61 @@
+project(mxnet)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+find_package(mxnet QUIET)
+
+if(mxnet_FOUND AND TARGET mxnet)
+    file(GLOB_RECURSE src "src/*.cpp")
+    file(GLOB_RECURSE hdr "src/*.hpp" "src/*.h")
+    find_package(OpenCV REQUIRED COMPONENTS cudawarping)
+    INCLUDE_DIRECTORIES(SYSTEM ${mxnet_INCLUDE_DIRS})
+    add_library(aqmxnet SHARED ${src} ${hdr})
+
+    IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+        add_definitions(-DMSHADOW_USE_F16C=0)
+    endif()
+    target_link_libraries(aqmxnet
+        metaobject_object
+        ${OpenCV_LIBS}
+        aquila_types
+        aquila_core
+        metaobject_params
+        aqcore
+    )
+
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
+        if(mxnet_LIBRARY_DEBUG)
+        target_link_libraries(aqmxnet ${mxnet_LIBRARY_DEBUG})
+        elseif(mxnet_LIBRARY_RELEASE)
+            target_link_libraries(aqmxnet ${mxnet_LIBRARY_RELEASE})
+        endif()
+    else()
+        target_link_libraries(aqmxnet ${mxnet_LIBRARY_RELEASE})
+    endif()
+    aquila_declare_plugin(aqmxnet)
+    set_target_properties(aqmxnet PROPERTIES CXX_STANDARD 14)
+    set_plugin_status(aqmxnet "mxnet found at ${mxnet_DIR}")
+    set_plugin_available(aqmxnet)
+    aq_install_python_test(scripts/mxnet_yolo.py)
+
+else(mxnet_FOUND AND TARGET mxnet)
+    if(NOT OpenBLAS_FOUND)
+        set_plugin_status(aqmxnet "OpenBLAS not found")
+    elseif(NOT CUDNN_FOUND)
+        set_plugin_status(aqmxnet "CUDNN not found")
+    elseif(NOT mxnet_INCLUDE)
+        set_plugin_status(aqmxnet "mxnet_INCLUDE not defined")
+    elseif(NOT mxnet_cpp_INCLUDE)
+        set_plugin_status(aqmxnet "mxnet_cpp_INCLUDE not defined")
+    elseif(NOT dlpack_INCLUDE_DIR)
+        set_plugin_status(aqmxnet "dlpack_INCLUDE_DIR not defined")
+    elseif(NOT mshadow_INCLUDE)
+        set_plugin_status(aqmxnet "mshadow_INCLUDE not defined")
+    elseif(NOT nnvm_INCLUDE)
+        set_plugin_status(aqmxnet "nnvm_INCLUDE not defined")
+    elseif(NOT dmlc_INCLUDE)
+        set_plugin_status(aqmxnet "dmlc_INCLUDE not defined")
+    elseif(NOT mxnet_LIBRARY_RELEASE)
+        set_plugin_status(aqmxnet "mxnet_LIBRARY_RELEASE not defined")
+    elseif(NOT TARGET mxnet)
+        set_plugin_status(aqmxnet "mxnet target not created")
+    endif()
+endif(mxnet_FOUND AND TARGET mxnet)
