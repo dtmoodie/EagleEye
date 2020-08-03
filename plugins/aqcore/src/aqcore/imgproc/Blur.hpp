@@ -1,51 +1,67 @@
 #pragma once
-#include "Aquila/rcc/external_includes/cv_cudafilters.hpp"
-#include <Aquila/nodes/Node.hpp>
-#include <Aquila/types/SyncedMemory.hpp>
 #include <aqcore/aqcore_export.hpp>
+
+#include <Aquila/types/SyncedImage.hpp>
+
+#include <Aquila/nodes/Node.hpp>
+
+#include <Aquila/rcc/external_includes/cv_cudafilters.hpp>
+
 namespace cv
 {
-namespace cuda
+    namespace cuda
+    {
+        class Filter;
+    }
+} // namespace cv
+
+namespace mo
 {
-class Filter;
-}
-}
+    namespace cuda
+    {
+        struct AsyncStream;
+    }
+} // namespace mo
 
 namespace aq
 {
-namespace nodes
-{
-class MedianBlur : public Node
-{
-  public:
-    MO_DERIVE(MedianBlur, Node)
-        INPUT(SyncedMemory, input, nullptr)
-        PARAM(int, window_size, 5)
-        PARAM(int, partition, 128)
-        OUTPUT(SyncedMemory, output, {})
-    MO_END
-  protected:
-    virtual bool processImpl() override;
+    namespace nodes
+    {
+        class MedianBlur : public Node
+        {
+          public:
+            MO_DERIVE(MedianBlur, Node)
+                INPUT(SyncedImage, input)
+                PARAM(int, window_size, 5)
+                PARAM(int, partition, 128)
+                OUTPUT(SyncedMemory, output)
+            MO_END;
 
-    cv::Ptr<cv::cuda::Filter> _median_filter;
-};
+          protected:
+            bool processImpl() override;
 
-class aqcore_EXPORT GaussianBlur : public Node
-{
-  public:
-    MO_DERIVE(GaussianBlur, Node)
-        INPUT(SyncedMemory, input, nullptr)
-        PARAM(int, kerenl_size, 5)
-        PARAM(double, sigma, 1.0)
-        OUTPUT(SyncedMemory, output, {})
-    MO_END
-    virtual bool processImpl() override;
+            cv::Ptr<cv::cuda::Filter> _median_filter;
+        };
 
-    template <class CType>
-    bool processImpl(CType* ctx);
+        class aqcore_EXPORT GaussianBlur : public Node
+        {
+          public:
+            MO_DERIVE(GaussianBlur, Node)
+                INPUT(SyncedImage, input)
 
-  protected:
-    cv::Ptr<cv::cuda::Filter> _blur_filter;
-};
-}
-}
+                PARAM(int, kerenl_size, 5)
+                PARAM(double, sigma, 1.0)
+
+                OUTPUT(SyncedImage, output, {})
+            MO_END;
+
+            bool processImpl() override;
+
+            bool processImpl(mo::IAsyncStream&);
+            bool processImpl(mo::cuda::AsyncStream&);
+
+          protected:
+            cv::Ptr<cv::cuda::Filter> _blur_filter;
+        };
+    } // namespace nodes
+} // namespace aq

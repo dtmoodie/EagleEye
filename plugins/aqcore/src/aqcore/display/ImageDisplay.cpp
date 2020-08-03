@@ -1,41 +1,52 @@
 #include "ImageDisplay.h"
 #include "../precompiled.hpp"
-#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
-#include "MetaObject/params/detail/TParamPtrImpl.hpp"
+
 #include <Aquila/gui/UiCallbackHandlers.h>
-#include <Aquila/utilities/cuda/CudaCallbacks.hpp>
-#include <MetaObject/logging/profiling.hpp>
-#include <MetaObject/thread/InterThread.hpp>
+
 #include <MetaObject/core/metaobject_config.hpp>
+#include <MetaObject/logging/profiling.hpp>
+#include <MetaObject/params/detail/TInputParamPtrImpl.hpp>
+#include <MetaObject/params/detail/TParamPtrImpl.hpp>
+
+#include <MetaObject/thread/ThreadRegistry.hpp>
 
 using namespace aq;
 using namespace aq::nodes;
 
+namespace std
+{
+    ostream& operator<<(ostream& os, const cv::cuda::GpuMat& mat)
+    {
+        os << mat.type() << ' ' << mat.size();
+        return os;
+    }
+} // namespace std
+
 bool QtImageDisplay::processImpl()
 {
     cv::Mat mat;
-    boost::optional<mo::Time_t> ts;
+    mo::OptionalTime ts;
     bool overlay = overlay_timestamp;
     bool sync = false;
     if (image && !image->empty())
     {
+        mo::IAsyncStreamPtr_t stream = this->getStream();
         // TODO use proper context based processImpl overloads
-        mat = image->getMat(_ctx.get(), 0);
-        ts = image_param.getTimestamp();
+        mat = image->mat(stream.get());
+        ts = image_param.getNewestTimestamp();
     }
     if (cpu_mat)
     {
         mat = *cpu_mat;
     }
 
-    std::string name = getTreeName();
+    std::string name = getName();
     if (!mat.empty())
     {
-        size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
+        mo::IAsyncStream::Ptr_t gui_thread = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
         if (sync)
         {
-            aq::cuda::enqueue_callback_async(
-                [mat, name, overlay, ts, this]() -> void {
+            gui_thread->pushWork([mat, name, overlay, ts, this]() -> void {
                 PROFILE_RANGE(imshow);
                 cv::Mat draw_img = mat;
                 if (overlay && ts)
@@ -45,11 +56,10 @@ bool QtImageDisplay::processImpl()
                     ss << "Timestamp: " << ts;
                     cv::putText(mat, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
                 }
-                getGraph()->getWindowCallbackManager()->imshow(name, draw_img);
-            },
-                gui_thread_id,
-                stream());
-        }else
+                getGraph()->getObject<WindowCallbackHandler>()->imshow(name, draw_img);
+            });
+        }
+        else
         {
             cv::Mat draw_img = mat;
             if (overlay && ts)
@@ -59,9 +69,8 @@ bool QtImageDisplay::processImpl()
                 ss << "Timestamp: " << ts;
                 cv::putText(mat, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
             }
-            getGraph()->getWindowCallbackManager()->imshow(name, draw_img);
+            getGraph()->getObject<WindowCallbackHandler>()->imshow(name, draw_img);
         }
-        
 
         return true;
     }
@@ -109,7 +118,6 @@ bool HistogramDisplay::processImpl()
 }
 MO_REGISTER_CLASS(HistogramDisplay)
 
-
 bool HistogramOverlay::processImpl()
 {
     if (draw.empty())
@@ -147,13 +155,49 @@ bool DetectionDisplay::processImpl()
 
 bool OGLImageDisplay::processImpl()
 {
-    std::string name = getTreeName();
-    size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
-    rcc::shared_ptr<OGLImageDisplay> ptr(this);
-    if (m_use_opengl && _ctx->device_id != -1)
+    std::string name = getName();
+    mo::IAsyncStreamPtr_t gui_stream = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
+    rcc::shared_ptr<OGLImageDisplay> self(*this);
+    mo::IAsyncStreamPtr_t my_stream = this->getStream();
+    mo::OptionalTime ts = image_param.getNewestHeader()->timestamp;
+
+    if (m_use_opengl && gui_stream->isDeviceStream())
     {
-        cv::cuda::GpuMat gpumat = image->getGpuMat(stream());
-        auto ts = image_param.getTimestamp();
+        cv::cuda::GpuMat gpumat = this->image->gpuMat(gui_stream->getDeviceStream());
+
+        auto device_work_func = [this, name, self, ts, gpumat]() {
+            PROFILE_RANGE(imshow);
+            try
+            {
+                auto graph = getGraph();
+                if (graph)
+                {
+                    auto cbm = graph->getObject<WindowCallbackHandler>();
+                    if (cbm)
+                    {
+                        cbm->imshowd(name, gpumat, cv::WINDOW_OPENGL);
+                    }
+                }
+            }
+            catch (mo::TExceptionWithCallstack<cv::Exception>& e)
+            {
+                m_use_opengl = false;
+            }
+        };
+
+        if (my_stream != gui_stream)
+        {
+            gui_stream->pushWork(std::move(device_work_func));
+        }
+        else
+        {
+            device_work_func();
+        }
+    }
+
+    /*if (m_use_opengl && _ctx->device_id != -1)
+    {
+
         if (!_prev_time)
             _prev_time = ts;
         auto prev = _prev_time;
@@ -163,10 +207,10 @@ bool OGLImageDisplay::processImpl()
                 try
                 {
                     auto graph = getGraph();
-                    if(graph)
+                    if (graph)
                     {
                         auto cbm = graph->getWindowCallbackManager();
-                        if(cbm)
+                        if (cbm)
                         {
                             cbm->imshowd(name, gpumat, cv::WINDOW_OPENGL);
                         }
@@ -183,21 +227,22 @@ bool OGLImageDisplay::processImpl()
     }
     else
     {
-        cv::Mat mat;// = image->getMat(stream());
-        if(_ctx->device_id == -1)
+        cv::Mat mat; // = image->getMat(stream());
+        if (_ctx->device_id == -1)
         {
             mat = image->getMatNoSync();
-            mo::ThreadSpecificQueue::push([mat, this, ptr, name]()
-            {
-                PROFILE_RANGE(imshow);
-                try
-                {
-                    getGraph()->getWindowCallbackManager()->imshow(name, mat);
-                }
-                catch (mo::ExceptionWithCallStack<cv::Exception>& e)
-                {
-                }
-            }, gui_thread_id);
+            mo::ThreadSpecificQueue::push(
+                [mat, this, ptr, name]() {
+                    PROFILE_RANGE(imshow);
+                    try
+                    {
+                        getGraph()->getWindowCallbackManager()->imshow(name, mat);
+                    }
+                    catch (mo::ExceptionWithCallStack<cv::Exception>& e)
+                    {
+                    }
+                },
+                gui_thread_id);
         }
         else
         {
@@ -216,8 +261,7 @@ bool OGLImageDisplay::processImpl()
                 gui_thread_id,
                 stream());
         }
-
-    }
+    }*/
     return true;
 }
 

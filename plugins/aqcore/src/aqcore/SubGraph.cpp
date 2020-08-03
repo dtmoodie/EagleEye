@@ -2,110 +2,69 @@
 #include "MetaObject/thread/ThreadPool.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
 
+#include <MetaObject/core/SystemTable.hpp>
 namespace aq
 {
-namespace nodes
-{
+    namespace nodes
+    {
 
-SubGraph::SubGraph()
-{
-    m_dirty = true;
-    m_thread = mo::ThreadPool::instance()->requestThread();
-    m_thread_context = m_thread.getContext();
-    _ctx = m_thread_context;
-    m_thread_connection = m_thread.setInnerLoop(getSlot_loop<int(void)>());
-    m_thread.setThreadName("SubGraph");
-    m_thread.start();
-}
+        SubGraph::SubGraph()
+        {
+            m_dirty = true;
+            m_quit = false;
 
-SubGraph::~SubGraph()
-{
-    m_thread.stop();
-}
+            m_thread = SystemTable::instance()->getSingleton<mo::ThreadPool>()->requestThread();
+            m_thread->setName("SubGraph");
+            m_thread_stream = m_thread->asyncStream();
+            m_thread_stream->setName("SubGraph");
+        }
 
-void SubGraph::setTreeName(const std::string& name)
-{
-    Node::setTreeName(name);
-    m_thread_context->setName(name);
-    m_thread.setThreadName(name);
-}
+        SubGraph::~SubGraph() { m_quit = true; }
 
-SubGraph::Ptr SubGraph::addChild(INode* child)
-{
-    auto ptr = Node::addChild(child);
-    child->setContext(m_thread_context, true);
-    return ptr;
-}
+        void SubGraph::setName(const std::string& name)
+        {
+            Node::setName(name);
+            m_thread->setName(name);
+            m_thread_stream->setName(name);
+        }
 
-SubGraph::Ptr SubGraph::addChild(const Ptr& child)
-{
-    auto ptr = Node::addChild(child);
-    child->setContext(m_thread_context, true);
-    return ptr;
-}
+        void SubGraph::addChild(Ptr child)
+        {
+            Node::addChild(child);
+            child->setStream(m_thread_stream);
+        }
 
+        void SubGraph::startThread()
+        {
+            m_quit = false;
+            m_thread_stream->pushWork([this]() { this->loop(); });
+        }
 
-void SubGraph::startThread()
-{
-    m_thread.start();
-}
+        void SubGraph::stopThread() { m_quit = true; }
 
-void SubGraph::stopThread()
-{
-    m_thread.stop();
-}
+        void SubGraph::node_updated(INode*) { m_dirty = true; }
 
-void SubGraph::pauseThread()
-{
-    m_thread.stop();
-}
+        void SubGraph::update() { m_dirty = true; }
 
-void SubGraph::resumeThread()
-{
-    m_thread.start();
-}
+        void SubGraph::param_updated(mo::IMetaObject*, mo::IParam*) { m_dirty = true; }
 
+        void SubGraph::param_added(mo::IMetaObject*, mo::IParam*) { m_dirty = true; }
 
-void SubGraph::node_updated(INode*)
-{
-    m_dirty = true;
-}
+        bool SubGraph::processImpl() { return true; }
 
-void SubGraph::update()
-{
-    m_dirty = true;
-}
+        bool SubGraph::process() { return true; }
 
-void SubGraph::param_updated(mo::IMetaObject*, mo::IParam*)
-{
-    m_dirty = true;
-}
+        void SubGraph::loop()
+        {
+            processChildren();
+            if (!m_quit)
+            {
+                m_thread_stream->pushWork([this]() { this->loop(); });
+            }
+        }
 
-void SubGraph::param_added(mo::IMetaObject*, mo::IParam*)
-{
-    m_dirty = true;
-}
-
-
-bool SubGraph::processImpl()
-{
-    return true;
-}
-
-bool SubGraph::process()
-{
-    return true;
-}
-
-int SubGraph::loop()
-{
-    processChildren();
-    return 0;
-}
-
-
-}
-}
+    } // namespace nodes
+} // namespace aq
 
 using namespace aq::nodes;
 MO_REGISTER_CLASS(SubGraph)

@@ -1,23 +1,25 @@
 #include "SaveAnnotations.hpp"
-#include "Aquila/core/IGraph.hpp"
-#include "Aquila/gui/UiCallbackHandlers.h"
-#include "Aquila/types/ObjectDetectionSerialization.hpp"
-#include "Aquila/utilities/cuda/CudaCallbacks.hpp"
+
+#include <Aquila/core/IGraph.hpp>
+#include <Aquila/gui/UiCallbackHandlers.h>
 #include <Aquila/nodes/NodeInfo.hpp>
+#include <Aquila/types/ObjectDetectionSerialization.hpp>
+
 #include <boost/lexical_cast.hpp>
+
 #include <cereal/archives/json.hpp>
 #include <cereal/types/vector.hpp>
-#include <fstream>
+
 #include <fstream>
 #include <iomanip>
-#include <opencv2/imgproc.hpp>
+
 #include <ct/reflect/cerealize.hpp>
+#include <opencv2/imgproc.hpp>
 
 using namespace aq;
 using namespace aq::nodes;
-SaveAnnotations::SaveAnnotations()
-{
-}
+
+SaveAnnotations::SaveAnnotations() {}
 
 void SaveAnnotations::on_class_change(int new_class)
 {
@@ -149,9 +151,7 @@ void SaveAnnotations::draw()
 
     size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
     mo::ThreadSpecificQueue::push(
-        [draw_image, this]() {
-            getGraph()->getWindowCallbackManager()->imshow("original", draw_image);
-        },
+        [draw_image, this]() { getGraph()->getWindowCallbackManager()->imshow("original", draw_image); },
         gui_thread_id,
         this);
 }
@@ -202,7 +202,7 @@ bool SaveAnnotations::processImpl()
         getGraph()->getWindowCallbackManager()->imshow("legend", h_legend);
     }*/
     _cats = detections->getCatSet();
-    
+
     _annotations.clear();
     size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
     if (input->getSyncState() == aq::SyncedMemory::DEVICE_UPDATED)

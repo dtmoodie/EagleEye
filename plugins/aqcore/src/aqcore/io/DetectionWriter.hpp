@@ -1,7 +1,7 @@
 #pragma once
 #include "Aquila/nodes/Node.hpp"
 #include "Aquila/types/ObjectDetection.hpp"
-#include "Aquila/types/SyncedMemory.hpp"
+#include "Aquila/types/SyncedImage.hpp"
 #include "MetaObject/core/detail/ConcurrentQueue.hpp"
 #include "MetaObject/thread/ThreadHandle.hpp"
 #include "MetaObject/thread/ThreadPool.hpp"
@@ -31,8 +31,8 @@ namespace aq
                 PARAM(bool, skip_empty, true)
                 PARAM(bool, pad, true)
                 ENUM_PARAM(extension, jpg, png, tiff, bmp)
-                INPUT(SyncedMemory, image, nullptr)
-                INPUT(DetectedObjectSet, detections, nullptr)
+                INPUT(SyncedImage, image)
+                INPUT(DetectedObjectSet, detections)
             MO_END
           protected:
             // bool processImpl();
@@ -47,7 +47,7 @@ namespace aq
         {
           public:
             MO_DERIVE(DetectionWriter, IDetectionWriter)
-                INPUT(DetectedObjectSet, detections, nullptr)
+                INPUT(DetectedObjectSet, detections)
             MO_END
           protected:
             bool processImpl();
@@ -66,8 +66,9 @@ namespace aq
                 PARAM(std::string, dataset_name, "")
                 PARAM(int, start_count, -1)
                 ENUM_PARAM(extension, jpg, png, tiff, bmp)
-                INPUT(SyncedMemory, image, nullptr)
-                INPUT(DetectedObjectSet, detections, nullptr)
+
+                INPUT(SyncedImage, image)
+                INPUT(DetectedObjectSet, detections)
             MO_END;
 
           protected:
@@ -81,5 +82,5 @@ namespace aq
             std::shared_ptr<std::ofstream> _summary_ofs;
             std::shared_ptr<cereal::JSONOutputArchive> _summary_ar;
         };
-    }
-}
+    } // namespace nodes
+} // namespace aq

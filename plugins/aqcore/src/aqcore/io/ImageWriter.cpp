@@ -1,6 +1,5 @@
 #include "ImageWriter.h"
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <Aquila/utilities/cuda/CudaCallbacks.hpp>
 
 #include <boost/filesystem.hpp>
 

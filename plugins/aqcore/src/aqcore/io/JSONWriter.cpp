@@ -1,173 +1,111 @@
 #include "JSONWriter.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <MetaObject/params/InputParamAny.hpp>
+#include <MetaObject/params/SubscriberAny.hpp>
 #include <MetaObject/params/TParam.hpp>
-#include <MetaObject/serialization/SerializationFactory.hpp>
+
+#include <MetaObject/runtime_reflection/VisitorTraits.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/memory.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
+
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
+
 using namespace aq;
 using namespace aq::nodes;
 
-/*class InputParamAny: public mo::InputParam
-{
-public:
-    InputParamAny(const std::string& name):
-        _update_slot(std::bind(&InputParamAny::on_param_update, this, std::placeholders::_1, std::placeholders::_2)),
-        _delete_slot(std::bind(&InputParamAny::on_param_delete, this, std::placeholders::_1))
-    {
-        this->setName(name);
-        _void_type_info = mo::TypeInfo(typeid(void));
-        this->appendFlags(mo::Input_e);
-    }
-    virtual bool GetInput(long long ts = -1)
-    {
-        return true;
-    }
-
-    // This gets a pointer to the variable that feeds into this input
-    virtual IParam* getInputParam()
-    {
-        return input;
-    }
-    virtual bool setInput(std::shared_ptr<mo::IParam> param)
-    {
-        input = param.get();
-        emitUpdate();
-        return true;
-    }
-    virtual bool setInput(mo::IParam* param = nullptr)
-    {
-        input = param;
-        param->registerDeleteNotifier(&_delete_slot);
-        param->registerUpdateNotifier(&_update_slot);
-        emitUpdate();
-        return true;
-    }
-
-    virtual bool AcceptsInput(std::weak_ptr<mo::IParam> param) const
-    {
-        return true;
-    }
-    virtual bool AcceptsInput(mo::IParam* param) const
-    {
-        return true;
-    }
-    virtual bool AcceptsType(mo::TypeInfo type) const
-    {
-        return true;
-    }
-    mo::TypeInfo& getTypeInfo() const
-    {
-        return _void_type_info;
-    }
-    void on_param_update(mo::Context* ctx, mo::IParam* param)
-    {
-        emitUpdate(-1, ctx); // Notify owning parent of update
-    }
-    void on_param_delete(mo::IParam const *)
-    {
-        input = nullptr;
-    }
-    IParam* input = nullptr;
-    static mo::TypeInfo _void_type_info;
-    mo::TSlot<void(mo::Context*, mo::IParam*)> _update_slot;
-    mo::TSlot<void(mo::IParam const*)> _delete_slot;
-};
-mo::TypeInfo InputParamAny::_void_type_info;*/
-
 JSONWriter::JSONWriter()
 {
-    addParam(std::shared_ptr<mo::IParam>(new mo::InputParamAny("input-0")));
+    addParam(std::shared_ptr<mo::IParam>(new mo::SubscriberAny("input-0")));
 }
+
 JSONWriter::~JSONWriter()
 {
-    ar.reset();
+    m_ar.reset();
     ofs.close();
 }
+
 bool JSONWriter::processImpl()
 {
-    if (ar == nullptr && output_file.string().size())
+    if (m_ar == nullptr && output_file.string().size())
     {
         ofs.close();
         ofs.open(output_file.c_str(), std::ios::out);
-        ar.reset(new cereal::JSONOutputArchive(ofs));
+        m_ar.reset(new mo::JSONSaver(ofs));
     }
-    if (ar)
+    if (m_ar)
     {
         auto input_params = getInputs();
         bool found = false;
-        size_t fn = 0;
+        mo::FrameNumber fn;
         for (auto param : input_params)
         {
-            if (auto input = param->getInputParam())
+            if (mo::IPublisher* input = param->getPublisher())
             {
                 found = true;
-                fn = input->getFrameNumber();
-            }
-        }
-        if (found == false)
-            return false;
-
-        std::string name = "frame_" + boost::lexical_cast<std::string>(fn);
-        ar->setNextName(name.c_str());
-        ar->startNode();
-        for (auto param : input_params)
-        {
-            auto input_param = param->getInputParam();
-            if (input_param)
-            {
-                auto func =
-                    mo::SerializationFactory::instance()->getJsonSerializationFunction(input_param->getTypeInfo());
-                if (func)
+                boost::optional<mo::Header> hdr = input->getNewestHeader();
+                if (hdr)
                 {
-                    func(input_param, *ar);
+                    fn = hdr->frame_number;
                 }
             }
         }
-        ar->finishNode();
+        if (found == false)
+        {
+            return false;
+        }
+
+        const std::string name = "frame_" + boost::lexical_cast<std::string>(fn.val);
+
+        std::vector<mo::IDataContainerConstPtr_t> datas;
+        for (auto param : input_params)
+        {
+            mo::IPublisher* publisher = param->getPublisher();
+            if (publisher)
+            {
+                mo::IDataContainerConstPtr_t data = publisher->getData();
+                if (data)
+                {
+                    datas.push_back(std::move(data));
+                }
+            }
+        }
+
+        (*m_ar)(&datas, name);
         return true;
     }
     return false;
 }
 
-void JSONWriter::on_output_file_modified(mo::IParam*,
-                                         mo::Context*,
-                                         mo::OptionalTime_t,
-                                         size_t,
-                                         const std::shared_ptr<mo::ICoordinateSystem>&,
-                                         mo::UpdateFlags)
+void JSONWriter::on_output_file_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
 {
     ofs.close();
     ofs.open(output_file.c_str(), std::ios::out);
-    ar.reset(new cereal::JSONOutputArchive(ofs));
+    m_ar.reset(new mo::JSONSaver(ofs));
 }
 
-void JSONWriter::on_input_set(mo::IParam*,
-                              mo::Context*,
-                              mo::OptionalTime_t,
-                              size_t,
-                              const std::shared_ptr<mo::ICoordinateSystem>&,
-                              mo::UpdateFlags)
+void JSONWriter::on_input_set(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
 {
     auto inputs = getInputs();
     int count = 0;
     for (auto input : inputs)
     {
-        if (input->getInputParam() == nullptr)
+        if (!input->isInputSet())
         {
             return;
         }
         ++count;
     }
-    addParam(std::shared_ptr<mo::IParam>(new mo::InputParamAny("input-" + boost::lexical_cast<std::string>(count))));
+    std::shared_ptr<mo::SubscriberAny> ptr =
+        std::make_shared<mo::SubscriberAny>("input-" + boost::lexical_cast<std::string>(count));
+    addParam(std::static_pointer_cast<mo::IParam>(ptr));
 }
 
 MO_REGISTER_CLASS(JSONWriter)
 
 JSONReader::JSONReader()
 {
-    input = new mo::InputParamAny("input-0");
-    input->setFlags(mo::ParamFlags::Optional_e);
+    input = new mo::SubscriberAny("input-0");
+    input->setFlags(mo::ParamFlags::kOPTIONAL);
     addParam(std::shared_ptr<mo::IParam>(input));
 }
 
@@ -180,13 +118,15 @@ bool JSONReader::processImpl()
         ar.reset(new cereal::JSONInputArchive(ifs));
     }
     if (!ar)
+    {
         return false;
+    }
 
     if (input)
     {
-        if (auto input_param = input->getInputParam())
+        if (mo::IPublisher* publisher = input->getPublisher())
         {
-            input_param->getTimestamp();
+            boost::optional<mo::Header> hdr = publisher->getNewestHeader();
         }
     }
     return false;

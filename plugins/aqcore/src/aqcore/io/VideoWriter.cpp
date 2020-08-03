@@ -1,12 +1,12 @@
 #include "VideoWriter.h"
-#include "MetaObject/logging/profiling.hpp"
-#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
-#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <Aquila/utilities/cuda/CudaCallbacks.hpp>
+
 #include <MetaObject/core/metaobject_config.hpp>
-#include <MetaObject/thread/boost_thread.hpp>
+#include <MetaObject/logging/profiling.hpp>
+#include <MetaObject/params/TParamPtr.hpp>
+
 #include <boost/filesystem.hpp>
+
 #include <fstream>
 
 using namespace aq;
@@ -29,7 +29,7 @@ void VideoWriter::nodeInit(bool firstInit)
             WriteData data;
             if (_write_queue.try_dequeue(data) && h_writer)
             {
-                mo::scoped_profile profile("Writing video");
+                PROFILE_RANGE(WritingVideo);
                 h_writer->write(data.img);
                 if (!ofs && write_metadata)
                 {
@@ -40,7 +40,10 @@ void VideoWriter::nodeInit(bool firstInit)
                 {
                     (*ofs) << video_frame_number << " " << data.fn;
                     if (data.ts)
+                    {
                         (*ofs) << " " << *data.ts;
+                    }
+
                     (*ofs) << std::endl;
                 }
                 ++video_frame_number;
@@ -55,9 +58,12 @@ void VideoWriter::nodeInit(bool firstInit)
 
 bool VideoWriter::processImpl()
 {
-    if (image->empty())
+    if (this->image->empty())
+    {
         return false;
-    if (h_writer == nullptr && d_writer == nullptr)
+    }
+
+    if (this->h_writer == nullptr && this->d_writer == nullptr)
     {
         if (!boost::filesystem::exists(outdir))
         {
@@ -65,7 +71,7 @@ bool VideoWriter::processImpl()
             boost::filesystem::create_directories(outdir, ec);
             if (ec)
             {
-                MO_LOG(warning) << "Unable to create directory '" << outdir << "' " << ec.message();
+                this->getLogger().warn("Unable to create directory {} due to {}", outdir, ec.message());
             }
         }
         if (boost::filesystem::exists(outdir.string() + "/" + filename.string()))
@@ -88,14 +94,14 @@ bool VideoWriter::processImpl()
             }
         }
 #endif
-        if (!using_gpu_writer)
+        if (!this->using_gpu_writer)
         {
-            h_writer.reset(new cv::VideoWriter);
-            if (!h_writer->open(outdir.string() + "/" + filename.string(),
-                                cv::VideoWriter::fourcc('M', 'P', 'E', 'G'),
-                                30,
-                                image->getSize(),
-                                image->getChannels() == 3))
+            this->h_writer.reset(new cv::VideoWriter);
+            if (!this->h_writer->open(outdir.string() + "/" + filename.string(),
+                                      cv::VideoWriter::fourcc('M', 'P', 'E', 'G'),
+                                      30,
+                                      image->getSize(),
+                                      image->getChannels() == 3))
             {
                 MO_LOG(warning) << "Unable to open video writer for file " << filename;
             }
@@ -107,7 +113,7 @@ bool VideoWriter::processImpl()
         d_writer->write(image->getGpuMat(stream()));
     }
 #endif
-    if (h_writer)
+    if (this->h_writer)
     {
         cv::Mat h_img = image->getMat(stream());
         WriteData data;

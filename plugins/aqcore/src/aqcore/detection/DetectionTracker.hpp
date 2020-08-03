@@ -3,20 +3,20 @@
 
 namespace aq
 {
-class DetectionTracker : public TInterface<DetectionTracker, nodes::Node>
-{
-  public:
-    template <class T>
-    using InterfaceHelper = nodes::Node::InterfaceHelper<T>;
+    class DetectionTracker : public TInterface<DetectionTracker, nodes::Node>
+    {
+      public:
+        template <class T>
+        using InterfaceHelper = nodes::Node::InterfaceHelper<T>;
 
-    virtual ~DetectionTracker();
+        virtual ~DetectionTracker();
 
-    MO_DERIVE(DetectionTracker, nodes::Node)
-        MO_STATIC_SLOT(nodes::Node::Ptr, create, std::string)
-        MO_STATIC_SLOT(std::vector<std::string>, list)
-    MO_END
+        MO_DERIVE(DetectionTracker, nodes::Node)
+            MO_STATIC_SLOT(nodes::Node::Ptr, create, std::string)
+            MO_STATIC_SLOT(std::vector<std::string>, list)
+        MO_END;
 
-  protected:
-    bool processImpl() override;
-};
-}
+      protected:
+        bool processImpl() override;
+    };
+} // namespace aq

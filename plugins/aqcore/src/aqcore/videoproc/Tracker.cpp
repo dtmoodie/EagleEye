@@ -2,12 +2,11 @@
 //#include "Aquila/nodes/VideoProc/Tracking.hpp"
 #include "Aquila/rcc/external_includes/cv_imgproc.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
+
 #include <Aquila/rcc/external_includes/cv_calib3d.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 #include <Aquila/rcc/external_includes/cv_cudawarping.hpp>
 #include <Aquila/rcc/external_includes/cv_highgui.hpp>
-
-#include <MetaObject/thread/InterThread.hpp>
 
 using namespace aq;
 using namespace aq::nodes;

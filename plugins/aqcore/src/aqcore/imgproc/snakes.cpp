@@ -1,5 +1,4 @@
 #include "snakes.hpp"
-#include <Aquila/nodes/NodeInfo.hpp>
 #include <Eigen/Geometry>
 
 #include <opencv2/core.hpp>
@@ -350,80 +349,93 @@ static CVStatus icvSnake8uC1R(unsigned char* src,
     return 0;
 }
 
-namespace aq
+namespace aqcore
 {
 
-void sampleCircle(std::vector<cv::Point>& pts, aq::Circle<float> circle, float pad, int samples)
-{
-    pts.resize(samples);
-    for (size_t i = 0; i < samples; ++i)
+    void sampleCircle(mt::Tensor<cv::Point, 1> pts, aq::Circle<float> circle, float pad)
     {
-        double theta = (2.0 / static_cast<double>(samples) * 3.14159) * i;
-        pts[i].x = static_cast<int>(circle.origin(0) + pad * circle.radius * cos(theta));
-        pts[i].y = static_cast<int>(circle.origin(1) + pad * circle.radius * sin(theta));
-    }
-}
-
-bool snakePoints(const cv::Mat& img,
-                 std::vector<cv::Point>& points,
-                 int kernel_size,
-                 CvTermCriteria term_crit,
-                 int mode,
-                 float* alpha,
-                 float* beta,
-                 float* gamma,
-                 int coefficients,
-                 const float* position_weight)
-{
-    uchar* src = const_cast<uchar*>(img.ptr<uchar>());
-    int step = img.step;
-    CvSize size(img.size());
-    return 0 == icvSnake8uC1R(src,
-                              step,
-                              size,
-                              reinterpret_cast<CvPoint*>(points.data()),
-                              points.size(),
-                              alpha,
-                              beta,
-                              gamma,
-                              coefficients == 1 ? CV_VALUE : CV_ARRAY,
-                              cvSize(kernel_size, kernel_size),
-                              term_crit,
-                              mode,
-                              position_weight);
-}
-
-namespace nodes
-{
-bool SnakeCircle::snakePoints(const cv::Mat& img, std::vector<cv::Point>& points)
-{
-    return aq::snakePoints(img,
-                           points,
-                           window_size,
-                           cvTermCriteria(CV_TERMCRIT_ITER, iterations, 0.1),
-                           mode.getValue(),
-                           &alpha,
-                           &beta,
-                           &gamma);
-}
-
-bool SnakeCircle::processImpl()
-{
-    const cv::Mat& mat = input->getMat(_ctx.get());
-    output.clear();
-    for (const auto& circle : *circles)
-    {
-        std::vector<cv::Point> pt;
-        sampleCircle(pt, circle, 1.0f, num_samples);
-        if (snakePoints(mat, pt))
+        const uint32_t samples = pts.getShape()[0];
+        for (size_t i = 0; i < samples; ++i)
         {
-            output.push_back(std::move(pt));
+            double theta = (2.0 / static_cast<double>(samples) * M_PI) * i;
+
+            pts[i].x = static_cast<int>(circle.origin(0) + pad * circle.radius * cos(theta));
+            pts[i].y = static_cast<int>(circle.origin(1) + pad * circle.radius * sin(theta));
         }
     }
-    output_param.emitUpdate(input_param);
-    return true;
-}
-}
-}
-using namespace aq::nodes;
+    void sampleCircle(std::vector<cv::Point>& pts, aq::Circle<float> circle, float pad, int samples)
+    {
+        pts.resize(samples);
+        sampleCircle(mt::tensorWrap(pts), circle, pad);
+    }
+
+    bool snakePoints(const cv::Mat& img,
+                     std::vector<cv::Point>& points,
+                     int kernel_size,
+                     CvTermCriteria term_crit,
+                     int mode,
+                     float* alpha,
+                     float* beta,
+                     float* gamma,
+                     int coefficients,
+                     const float* position_weight)
+    {
+        uchar* src = const_cast<uchar*>(img.ptr<uchar>());
+        int step = img.step;
+        CvSize size(img.size());
+        return 0 == icvSnake8uC1R(src,
+                                  step,
+                                  size,
+                                  reinterpret_cast<CvPoint*>(points.data()),
+                                  points.size(),
+                                  alpha,
+                                  beta,
+                                  gamma,
+                                  coefficients == 1 ? CV_VALUE : CV_ARRAY,
+                                  cvSize(kernel_size, kernel_size),
+                                  term_crit,
+                                  mode,
+                                  position_weight);
+    }
+
+    bool SnakeCircle::snakePoints(const cv::Mat& img, std::vector<cv::Point>& points)
+    {
+        CvTermCriteria criteria = cvTermCriteria(CV_TERMCRIT_ITER, iterations, 0.1);
+        int mode = this->mode.getValue();
+
+        return aqcore::snakePoints(img, points, window_size, criteria, mode, &alpha, &beta, &gamma);
+    }
+
+    bool SnakeCircle::processImpl()
+    {
+        std::shared_ptr<mo::IAsyncStream> stream = this->getStream();
+        const cv::Mat mat = input->getMat(stream.get());
+
+        aq::TEntityComponentSystem<aq::Contour> ecs = *circles;
+        ct::ext::DataDimensionality<const aq::Circlef>::TensorView circle_view = ecs.getComponent<aq::Circlef>();
+        const uint32_t num_elems = circles->getNumEntities();
+        ecs.resize(num_elems);
+        std::vector<cv::Point> pts;
+        auto contours = ecs.getComponentMutable<aq::Contour>();
+        for (uint32_t i = 0; i < num_elems; ++i)
+        {
+            const aq::Circlef& circle = circle_view[i];
+
+            sampleCircle(pts, circle, pad, num_samples);
+            if (snakePoints(mat, pts))
+            {
+                contours[i] = pts;
+            }
+            else
+            {
+                ecs.erase(i);
+            }
+        }
+        output.publish(std::move(ecs), mo::tags::param = &input_param);
+        return true;
+    }
+} // namespace aqcore
+
+#include <Aquila/nodes/NodeInfo.hpp>
+using namespace aqcore;
 MO_REGISTER_CLASS(SnakeCircle)

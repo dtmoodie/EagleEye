@@ -1,22 +1,28 @@
 #pragma once
-#include <Aquila/nodes/Node.hpp>
-#include <Aquila/types/SyncedMemory.hpp>
+#include <Aquila/types/SyncedImage.hpp>
 
-namespace aq
+#include "../OpenCVCudaNode.hpp"
+#include <Aquila/nodes/Node.hpp>
+
+namespace aqcore
 {
-    namespace nodes
+
+    class MaskOverlay : public OpenCVCudaNode
     {
-        class MaskOverlay: public Node
-        {
-        public:
-            MO_DERIVE(MaskOverlay, Node)
-                INPUT(aq::SyncedMemory, image, nullptr)
-                INPUT(aq::SyncedMemory, mask, nullptr)
-                PARAM(cv::Scalar, color, {255,0,0})
-                OUTPUT(aq::SyncedMemory, output, {})
-            MO_END
-            protected:
-                virtual bool processImpl() override;
-        };
-    }
-}
+      public:
+        static const cv::Scalar default_color;
+
+        MO_DERIVE(MaskOverlay, OpenCVCudaNode)
+            INPUT(aq::SyncedImage, image)
+            INPUT(aq::SyncedImage, mask)
+
+            PARAM(cv::Scalar, color, default_color)
+
+            OUTPUT(aq::SyncedImage, output)
+        MO_END;
+
+      protected:
+        virtual bool processImpl() override;
+    };
+
+} // namespace aqcore

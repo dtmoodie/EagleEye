@@ -1,9 +1,10 @@
 #include <MetaObject/core/metaobject_config.hpp>
 #if MO_OPENCV_HAVE_CUDA
-#include "Blur.hpp"
 #include "Aquila/nodes/NodeInfo.hpp"
+#include "Blur.hpp"
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+
 
 using namespace aq;
 using namespace aq::nodes;

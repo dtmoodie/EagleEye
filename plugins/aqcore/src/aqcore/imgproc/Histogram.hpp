@@ -13,7 +13,7 @@ namespace cv
                        float max = 256,
                        cv::cuda::Stream& stream = cv::cuda::Stream::Null());
     }
-}
+} // namespace cv
 namespace aq
 {
     namespace nodes
@@ -22,12 +22,14 @@ namespace aq
         {
           public:
             MO_DERIVE(HistogramRange, Node)
-            PARAM(double, lower_bound, 0.0)
-            PARAM(double, upper_bound, 1.0)
-            PARAM(int, bins, 100)
-            INPUT(SyncedMemory, input, nullptr)
-            OUTPUT(SyncedMemory, histogram, SyncedMemory())
-            OUTPUT(SyncedMemory, levels, SyncedMemory())
+                PARAM(double, lower_bound, 0.0)
+                PARAM(double, upper_bound, 1.0)
+                PARAM(int, bins, 100)
+
+                INPUT(SyncedImage, input)
+
+                OUTPUT(SyncedImage, histogram)
+                OUTPUT(SyncedImage, levels)
             MO_END;
 
           protected:
@@ -38,15 +40,17 @@ namespace aq
         {
           public:
             MO_DERIVE(Histogram, Node)
-            INPUT(SyncedMemory, input, nullptr)
-            PARAM(float, min, 0)
-            PARAM(float, max, 256)
-            OUTPUT(SyncedMemory, histogram, {})
-            OUTPUT(SyncedMemory, bins, {})
+                INPUT(SyncedImage, input)
+
+                PARAM(float, min, 0)
+                PARAM(float, max, 256)
+
+                OUTPUT(SyncedImage, histogram)
+                OUTPUT(SyncedImage, bins)
             MO_END;
 
           protected:
             bool processImpl();
         };
-    }
-}
+    } // namespace nodes
+} // namespace aq

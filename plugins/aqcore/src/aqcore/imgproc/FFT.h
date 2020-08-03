@@ -10,55 +10,57 @@ RUNTIME_MODIFIABLE_INCLUDE
 
 namespace aq
 {
-namespace nodes
-{
+    namespace nodes
+    {
 
-class FFT : public Node
-{
-  public:
-    MO_DERIVE(FFT, Node)
-        INPUT(SyncedMemory, input, nullptr)
-        PARAM(bool, dft_rows, false)
-        PARAM(bool, dft_scale, false)
-        PARAM(bool, dft_inverse, false)
-        PARAM(bool, dft_real_output, false)
-        PARAM(bool, log_scale, true)
-        PARAM(bool, use_optimized_size, false)
-        OUTPUT(SyncedMemory, magnitude, SyncedMemory())
-        OUTPUT(SyncedMemory, phase, SyncedMemory())
-        OUTPUT(SyncedMemory, coefficients, SyncedMemory())
-    MO_END
+        class FFT : public Node
+        {
+          public:
+            MO_DERIVE(FFT, Node)
+                INPUT(SyncedImage, input)
 
-  protected:
-    virtual bool processImpl() override;
-};
+                PARAM(bool, dft_rows, false)
+                PARAM(bool, dft_scale, false)
+                PARAM(bool, dft_inverse, false)
+                PARAM(bool, dft_real_output, false)
+                PARAM(bool, log_scale, true)
+                PARAM(bool, use_optimized_size, false)
 
-class FFTPreShiftImage : public Node
-{
-    cv::cuda::GpuMat d_shiftMat;
+                OUTPUT(SyncedImage, magnitude)
+                OUTPUT(SyncedImage, phase)
+                OUTPUT(SyncedImage, coefficients)
+            MO_END
 
-  public:
-    MO_DERIVE(FFTPreShiftImage, Node)
-        INPUT(SyncedMemory, input, nullptr)
-        OUTPUT(SyncedMemory, output, SyncedMemory())
-    MO_END
+          protected:
+            virtual bool processImpl() override;
+        };
 
-  protected:
-    virtual bool processImpl() override;
-};
+        class FFTPreShiftImage : public Node
+        {
+            cv::cuda::GpuMat d_shiftMat;
 
-class FFTPostShift : public Node
-{
-    cv::cuda::GpuMat d_shiftMat;
+          public:
+            MO_DERIVE(FFTPreShiftImage, Node)
+                INPUT(SyncedImage, input)
+                OUTPUT(SyncedImage, output)
+            MO_END
 
-  public:
-    MO_DERIVE(FFTPostShift, Node)
-        INPUT(SyncedMemory, input, nullptr)
-        OUTPUT(SyncedMemory, output, SyncedMemory())
-    MO_END
+          protected:
+            virtual bool processImpl() override;
+        };
 
-  protected:
-    virtual bool processImpl() override;
-};
-} // namespace aq::nodes
+        class FFTPostShift : public Node
+        {
+            cv::cuda::GpuMat d_shiftMat;
+
+          public:
+            MO_DERIVE(FFTPostShift, Node)
+                INPUT(SyncedImage, input)
+                OUTPUT(SyncedImage, output)
+            MO_END
+
+          protected:
+            virtual bool processImpl() override;
+        };
+    } // namespace nodes
 } // namespace aq

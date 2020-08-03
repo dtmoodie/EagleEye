@@ -2,124 +2,126 @@
 #include <Aquila/nodes/NodeContextSwitch.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
 
-namespace aq
+namespace aqcore
 {
-namespace nodes
-{
-template <>
-bool ConvertToGrey::processImpl(mo::Context* ctx)
-{
-    const auto& mat = input->getMat(ctx, 0);
-    cv::Mat gray_mat;
-    cv::cvtColor(mat, gray_mat, cv::COLOR_BGR2GRAY);
-    grey_param.updateData(gray_mat, mo::tag::_param = input_param);
-    return true;
-}
+    template <>
+    bool ConvertToGrey::processImpl(mo::IAsyncStream& stream)
+    {
+        const cv::Mat mat = input->getMat(&stream);
+        cv::Mat gray_mat;
+        cv::cvtColor(mat, gray_mat, cv::COLOR_BGR2GRAY);
+        output.publish(gray_mat, mo::tags::param = &input_param, stream);
+        return true;
+    }
 
-bool ConvertToGrey::processImpl()
-{
-    return nodeContextSwitch(this, _ctx.get());
-}
+    bool ConvertToGrey::processImpl()
+    {
+        mo::IAsyncStreamPtr_t stream = this->getStream();
+        return nodeStreamSwitch(this, *stream);
+    }
 
-template <>
-bool ConvertToHSV::processImpl(mo::Context* ctx)
-{
-    const cv::Mat& mat = input_image->getMat(ctx);
-    cv::Mat hsv;
-    cv::cvtColor(mat, hsv, cv::COLOR_BGR2HSV);
-    hsv_image_param.updateData(hsv, input_image_param.getTimestamp(), this->_ctx.get());
-    return true;
-}
+    template <>
+    bool ConvertToHSV::processImpl(mo::IAsyncStream& stream)
+    {
+        const cv::Mat mat = input->getMat(&stream);
+        cv::Mat hsv;
+        cv::cvtColor(mat, hsv, cv::COLOR_BGR2HSV);
+        output.publish(hsv, mo::tags::param = &input_param, stream);
+        return true;
+    }
 
-bool ConvertToHSV::processImpl()
-{
-    return nodeContextSwitch(this, _ctx.get());
-}
+    bool ConvertToHSV::processImpl()
+    {
+        mo::IAsyncStreamPtr_t stream = this->getStream();
+        return nodeStreamSwitch(this, *stream);
+    }
 
-template <>
-bool SplitChannels::processImpl(mo::Context* ctx)
-{
-    std::vector<cv::Mat> _channels;
-    const cv::Mat& mat = input->getMat(ctx);
-    cv::split(mat, _channels);
-    output_param.updateData(_channels, mo::tag::_param = input_param);
-    return true;
-}
+    /*template <>
+    bool SplitChannels::processImpl(mo::IAsyncStream& stream)
+    {
+        std::vector<cv::Mat> _channels;
+        const cv::Mat mat = input->getMat(&stream);
+        cv::split(mat, _channels);
+        output.publish(_channels, mo::tags::param = &input_param);
+        return true;
+    }*/
 
-bool SplitChannels::processImpl()
-{
-    return nodeContextSwitch(this, _ctx.get());
-}
+    /*bool SplitChannels::processImpl()
+    {
+        mo::IAsyncStreamPtr_t stream = this->getStream();
+        return nodeStreamSwitch(this, *stream);
+    }*/
 
-template <>
-bool ConvertDataType::processImpl(mo::Context* ctx)
-{
-    const cv::Mat& mat = input->getMat(ctx);
-    cv::Mat output;
-    mat.convertTo(output, data_type.getValue());
-    output_param.updateData(output, mo::tag::_param = input_param);
-    return true;
-}
+    template <>
+    bool ConvertDataType::processImpl(mo::IAsyncStream& stream)
+    {
+        const cv::Mat mat = input->getMat(&stream);
+        cv::Mat output;
+        mat.convertTo(output, data_type.getValue());
+        this->output.publish(output, mo::tags::param = &input_param);
+        return true;
+    }
 
-bool ConvertDataType::processImpl()
-{
-    return nodeContextSwitch(this, _ctx.get());
-}
+    bool ConvertDataType::processImpl()
+    {
+        mo::IAsyncStreamPtr_t stream = this->getStream();
+        return nodeStreamSwitch(this, *stream);
+    }
 
-template <>
-bool Reshape::processImpl(mo::Context* ctx)
-{
-    const cv::Mat& mat = input_image->getMat(ctx);
-    cv::Mat reshaped = mat.reshape(channels, rows);
-    reshaped_image_param.updateData(reshaped, mo::tag::_param = input_image_param);
-    return true;
-}
+    template <>
+    bool Reshape::processImpl(mo::IAsyncStream& stream)
+    {
+        const cv::Mat mat = input->getMat(&stream);
+        cv::Mat reshaped = mat.reshape(channels, rows);
+        output.publish(reshaped, mo::tags::param = &input_param);
+        return true;
+    }
 
-bool Reshape::processImpl()
-{
-    return nodeContextSwitch(this, _ctx.get());
-}
+    bool Reshape::processImpl()
+    {
+        mo::IAsyncStreamPtr_t stream = this->getStream();
+        return nodeStreamSwitch(this, *stream);
+    }
 
-bool MergeChannels::processImpl()
-{
-    return false;
-}
+    bool MergeChannels::processImpl() { return false; }
 
-template <>
-bool ConvertColorspace::processImpl(mo::Context* ctx)
-{
-    const cv::Mat& in = input_image->getMat(ctx);
-    cv::Mat img;
-    cv::cvtColor(in, img, conversion_code.getValue());
-    output_image_param.updateData(img, mo::tag::_param = input_image_param);
-    return true;
-}
+    template <>
+    bool ConvertColorspace::processImpl(mo::IAsyncStream& stream)
+    {
+        const cv::Mat in = input->getMat(&stream);
+        cv::Mat img;
+        cv::cvtColor(in, img, conversion_code.getValue());
+        output.publish(img, mo::tags::param = &input_param);
+        return true;
+    }
 
-bool ConvertColorspace::processImpl()
-{
-    return nodeContextSwitch(this, _ctx.get());
-}
+    bool ConvertColorspace::processImpl()
+    {
+        mo::IAsyncStreamPtr_t stream = this->getStream();
+        return nodeStreamSwitch(this, *stream);
+    }
 
-template <>
-bool Magnitude::processImpl(mo::Context* ctx)
-{
-    // cv::Mat mag;
-    // cv::magnitude(input_image->getMat(ctx), mag);
-    // output_magnitude_param.updateData(mag, mo::tag::_param = input_image_param);
-    return false;
-}
+    template <>
+    bool Magnitude::processImpl(mo::IAsyncStream& stream)
+    {
+        // cv::Mat mag;
+        // cv::magnitude(input_image->getMat(ctx), mag);
+        // output_magnitude_param.updateData(mag, mo::tag::_param = input_image_param);
+        return false;
+    }
 
-bool Magnitude::processImpl()
-{
-    return nodeContextSwitch(this, _ctx.get());
-}
-}
-}
+    bool Magnitude::processImpl()
+    {
+        mo::IAsyncStreamPtr_t stream = this->getStream();
+        return nodeStreamSwitch(this, *stream);
+    }
 
-using namespace aq::nodes;
+} // namespace aqcore
+
+using namespace aqcore;
 MO_REGISTER_CLASS(ConvertToGrey)
 MO_REGISTER_CLASS(ConvertToHSV)
 MO_REGISTER_CLASS(ConvertDataType)
-MO_REGISTER_CLASS(SplitChannels)
+// MO_REGISTER_CLASS(SplitChannels)
 MO_REGISTER_CLASS(Reshape)
 MO_REGISTER_CLASS(Magnitude)

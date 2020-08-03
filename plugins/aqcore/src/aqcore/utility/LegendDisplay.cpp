@@ -1,7 +1,6 @@
 #include "LegendDisplay.hpp"
 #include "Aquila/core/IGraph.hpp"
 #include "Aquila/gui/UiCallbackHandlers.h"
-#include "Aquila/utilities/cuda/CudaCallbacks.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <boost/lexical_cast.hpp>
 #include <opencv2/highgui.hpp>
@@ -49,7 +48,8 @@ bool LegendDisplay::processImpl()
                     0.7,
                     cv::Scalar(color[0], color[1], color[2]));
     }
-    getGraph()->getWindowCallbackManager()->imshow("legend", h_legend);
+    rcc::shared_ptr<aq::WindowCallbackHandler> window_manager = getGraph()->getObject<aq::WindowCallbackHandler>();
+    window_manager->imshow("legend", h_legend);
     return true;
 }
 

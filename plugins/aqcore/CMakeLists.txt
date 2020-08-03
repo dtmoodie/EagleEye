@@ -1,7 +1,7 @@
 PROJECT(aqcore)
 CMAKE_POLICY(SET CMP0020 NEW)
 IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
-CMAKE_POLICY(SET CMP0053 OLD)
+  CMAKE_POLICY(SET CMP0053 OLD)
 ENDIF()
 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
@@ -12,10 +12,29 @@ find_package(CUDA REQUIRED)
   include_directories(${CUDA_TOOLKIT_INCLUDE})
 
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaarithm cudaimgproc cudafilters cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo videoio imgcodecs cudaobjdetect objdetect)
+find_package(OpenCV 3.0 QUIET 
+  COMPONENTS 
+    core 
+    imgproc 
+    highgui 
+    cudaarithm 
+    cudaimgproc 
+    cudafilters 
+    cudawarping 
+    cudafeatures2d 
+    cudaoptflow 
+    cudacodec 
+    cudastereo 
+    videoio 
+    imgcodecs 
+    cudaobjdetect 
+    objdetect
+  )
+
   set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 find_package(PkgConfig QUIET)
+
 if(PKG_CONFIG_FOUND)
     ocv_check_modules(FFMPEG libavcodec libavformat libavutil libswscale)
     ocv_check_modules(FFMPEG_libavresample libavresample)
@@ -26,6 +45,7 @@ endif()
 
 ADD_DEFINITIONS(${DEFS})
 LINK_DIRECTORIES(${LINK_DIRS})
+
 INCLUDE_DIRECTORIES(
     SYSTEM
     ${INCLUDE_DIRS}
@@ -52,14 +72,14 @@ else(MO_HAVE_CUDA)
 endif(MO_HAVE_CUDA)
 
 
-ocv_add_precompiled_header_to_target(aqcore src/precompiled.hpp)
-
 RCC_LINK_LIB(aqcore aquila_core
     aquila_utilities
     aquila_serialization
     aquila_types
+    aquila_gui
+
     ${OpenCV_LIBS}
-    ${CUDA_CUBLAS_LIBRARIES}
+    ${CUDA_cublas_LIBRARY}
     metaobject_core
     metaobject_object
     metaobject_params

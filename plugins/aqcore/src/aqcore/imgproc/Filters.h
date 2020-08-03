@@ -1,8 +1,10 @@
 #include <Aquila/nodes/Node.hpp>
+
 #include <Aquila/rcc/external_includes/cv_cudafeatures3d.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
+
 #include <Aquila/types/ObjectDetection.hpp>
-#include <Aquila/types/SyncedMemory.hpp>
+#include <Aquila/types/SyncedImage.hpp>
 #include <Aquila/types/geometry/Circle.hpp>
 
 #include "RuntimeObjectSystem/RuntimeInclude.h"
@@ -12,26 +14,27 @@ RUNTIME_MODIFIABLE_INCLUDE
 
 namespace aq
 {
-namespace nodes
-{
+    namespace nodes
+    {
 
-class Canny : public Node
-{
-    cv::Ptr<cv::cuda::CannyEdgeDetector> detector;
+        class Canny : public Node
+        {
+            cv::Ptr<cv::cuda::CannyEdgeDetector> detector;
 
-  public:
-    MO_DERIVE(Canny, Node)
-        PARAM(double, low_thresh, 0.0)
-        PARAM(double, high_thresh, 20.0)
-        PARAM(int, aperature_size, 3)
-        PARAM(bool, L2_gradient, false)
-        INPUT(SyncedMemory, input, nullptr)
-        OUTPUT(SyncedMemory, edges, SyncedMemory())
-    MO_END
+          public:
+            MO_DERIVE(Canny, Node)
+                PARAM(double, low_thresh, 0.0)
+                PARAM(double, high_thresh, 20.0)
+                PARAM(int, aperature_size, 3)
+                PARAM(bool, L2_gradient, false)
 
-  protected:
-    virtual bool processImpl() override;
-};
+                INPUT(SyncedImage, input)
+                OUTPUT(SyncedImage, edges)
+            MO_END
 
-} // namespace aq::nodes
+          protected:
+            virtual bool processImpl() override;
+        };
+
+    } // namespace nodes
 } // namespace aq

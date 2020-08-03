@@ -5,22 +5,40 @@ using namespace aq::nodes;
 
 bool Crop::processImpl()
 {
-    const cv::Size size = input->getSize();
+    const aq::Shape<3> shape = input->shape();
     cv::Rect2f bb = roi;
+    const cv::Size size(shape(0), shape(1));
     boundingBoxToPixels(bb, size);
+    aq::SyncedMemory::SyncState state = this->input->state();
+    std::shared_ptr<mo::IAsyncStream> stream = this->getStream();
+    aq::SyncedImage out;
+    const aq::PixelFormat pixel_format = this->input->pixelFormat();
+    auto input_data = this->input_param.getCurrentData();
 
-    if (input->getSyncState() < input->DEVICE_UPDATED)
+    if (state != aq::SyncedMemory::SyncState::DEVICE_UPDATED)
     {
-        auto ROI = input->getMat(stream())(bb);
-        output_param.updateData(ROI.clone(), mo::tag::_param = input_param);
+        bool sync = false;
+        const cv::Mat mat = input->mat(stream.get(), &sync);
+        const cv::Mat roi = mat(bb);
+        out = aq::SyncedImage(roi, pixel_format, stream);
+        out.setOwning(std::move(input_data));
     }
     else
     {
-        cv::cuda::GpuMat out;
-        auto ROI = input->getGpuMat(stream())(bb);
-        ROI.copyTo(out, stream());
-        output_param.updateData(out, mo::tag::_param = input_param);
+        if (!stream->isDeviceStream())
+        {
+            this->getLogger().debug(
+                "Provided input stream is not a device stream, whereas the provided input data is on a device");
+            return false;
+        }
+        mo::IDeviceStream::Ptr_t dev_stream = std::dynamic_pointer_cast<mo::IDeviceStream>(stream);
+        bool sync = false;
+        const cv::cuda::GpuMat mat = input->gpuMat(dev_stream.get(), &sync);
+        const cv::cuda::GpuMat roi = mat(bb);
+        out = aq::SyncedImage(roi, pixel_format, dev_stream);
+        out.setOwning(std::move(input_data));
     }
+    this->output.publish(out, mo::tags::param = &input_param);
     return true;
 }
 

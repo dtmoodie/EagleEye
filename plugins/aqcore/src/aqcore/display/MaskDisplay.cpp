@@ -1,29 +1,49 @@
 #include "MaskDisplay.hpp"
 #include "Aquila/nodes/NodeInfo.hpp"
 
-namespace aq
-{
-namespace nodes
+namespace aqcore
 {
     bool MaskOverlay::processImpl()
     {
-        MO_ASSERT(image->getSize() == mask->getSize());
-        if(image->getSyncState() < aq::SyncedMemory::DEVICE_UPDATED &&
-                mask->getSyncState() << aq::SyncedMemory::DEVICE_UPDATED)
+        const aq::Shape<3> img_shape = image->shape();
+        const aq::Shape<3> mask_shape = mask->shape();
+        MO_ASSERT((img_shape == mask_shape).all());
+
+        const aq::SyncedMemory::SyncState img_state = image->state();
+        const aq::SyncedMemory::SyncState mask_state = mask->state();
+        const bool img_on_device = img_state != aq::SyncedMemory::SyncState::HOST_UPDATED;
+        const bool mask_on_device = mask_state != aq::SyncedMemory::SyncState::HOST_UPDATED;
+
+        if (!img_on_device && !mask_on_device)
         {
-            cv::cuda::GpuMat draw;
-            image->clone(draw, stream());
-            draw.setTo(color, mask->getGpuMat(stream()), stream());
-            output_param.updateData(draw, mo::tag::_param = image_param);
-        }else
-        {
-            // CPU
+            // Since both are on the host, just do this on the host
+
+            return true;
         }
+
+        // device side
+        std::shared_ptr<mo::IAsyncStream> stream = this->getStream();
+        mo::IDeviceStream* dev_stream = stream->getDeviceStream();
+        const aq::PixelFormat pixel_format = image->pixelFormat();
+        const aq::DataFlag data_flag = image->dataType();
+        cv::cuda::Stream& cv_stream = this->getCVStream();
+
+        aq::SyncedImage output(aq::Shape<2>(img_shape(0), img_shape(1)), pixel_format, data_flag, stream);
+        cv::cuda::GpuMat gpu_out = output.gpuMat();
+        image->copyTo(gpu_out, stream->getDeviceStream());
+
+        cv::cuda::GpuMat gpu_mask = mask->gpuMat(dev_stream);
+
+        gpu_out.setTo(color, gpu_mask, cv_stream);
+        this->output.publish(std::move(output), mo::tags::param = &image_param);
+
         return true;
     }
-}
-}
 
-using namespace aq::nodes;
+    const cv::Scalar MaskOverlay::default_color = cv::Scalar(255, 0, 0, 0);
+
+} // namespace aqcore
+
+using namespace aqcore;
 
 MO_REGISTER_CLASS(MaskOverlay)

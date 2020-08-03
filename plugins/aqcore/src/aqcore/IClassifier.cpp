@@ -1,22 +1,21 @@
 #include "IClassifier.hpp"
+#include <MetaObject/runtime_reflection/visitor_traits/memory.hpp>
+#include <cereal/types/memory.hpp>
+#include <ct/reflect/cerealize.hpp>
 #include <fstream>
 
 namespace aq
 {
     namespace nodes
     {
-        void IClassifier::on_label_file_modified(mo::IParam*,
-                                                 mo::Context*,
-                                                 mo::OptionalTime_t,
-                                                 size_t,
-                                                 const std::shared_ptr<mo::ICoordinateSystem>&,
-                                                 mo::UpdateFlags)
+        void IClassifier::on_label_file_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
         {
-            mo::Mutex_t::scoped_lock lock(getMutex());
-            labels = std::make_shared<CategorySet>(label_file.string());
-            BOOST_LOG_TRIVIAL(info) << "Loaded " << labels->size() << " classes";
-            labels_param.emitUpdate();
-            label_file_param.modified(false);
+            mo::Mutex_t::Lock_t lock(getMutex());
+            std::shared_ptr<CategorySet> labels = std::make_shared<CategorySet>(label_file.string());
+            // this->label_file_param.setValue(std::move(labels));
+            this->labels.publish(std::move(labels));
+            this->getLogger().info("Loaded {} classes", labels->size());
+            label_file_param.setModified(false);
         }
-    }
-}
+    } // namespace nodes
+} // namespace aq

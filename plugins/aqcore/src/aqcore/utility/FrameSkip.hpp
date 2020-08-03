@@ -10,13 +10,14 @@ namespace aq
         {
           public:
             MO_DERIVE(FrameSkip, Node)
-            INPUT(SyncedMemory, input, nullptr)
-            OUTPUT(SyncedMemory, output, {})
-            PARAM(int, frame_skip, 30)
-            MO_END
+                INPUT(SyncedMemory, input)
+                OUTPUT(SyncedMemory, output, {})
+                PARAM(int, frame_skip, 30)
+            MO_END;
+
           protected:
             bool processImpl();
             int frame_count = 0;
         };
-    }
-}
+    } // namespace nodes
+} // namespace aq

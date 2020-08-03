@@ -1,7 +1,8 @@
 #include "aqcore/aqcore_export.hpp"
+
+#include <Aquila/types/SyncedImage.hpp>
+
 #include <Aquila/nodes/Node.hpp>
-#include <Aquila/types/Stamped.hpp>
-#include <Aquila/types/SyncedMemory.hpp>
 
 namespace cv
 {
@@ -15,8 +16,8 @@ namespace cv
         void aqcore_EXPORT drawPlot(cv::InputArray plot, // 1D array
                                     cv::OutputArray draw,
                                     cv::cuda::Stream& stream = cv::cuda::Stream::Null());
-    }
-}
+    } // namespace cuda
+} // namespace cv
 namespace aq
 {
     namespace nodes
@@ -25,10 +26,11 @@ namespace aq
         {
           public:
             MO_DERIVE(QtImageDisplay, Node)
-                OPTIONAL_INPUT(SyncedMemory, image, nullptr)
-                OPTIONAL_INPUT(cv::Mat, cpu_mat, nullptr)
+                OPTIONAL_INPUT(SyncedImage, image)
+                OPTIONAL_INPUT(cv::Mat, cpu_mat)
                 PARAM(bool, overlay_timestamp, true)
-            MO_END
+            MO_END;
+
           protected:
             bool processImpl();
         };
@@ -37,12 +39,12 @@ namespace aq
         {
           public:
             MO_DERIVE(OGLImageDisplay, Node)
-                INPUT(SyncedMemory, image, nullptr)
+                INPUT(SyncedImage, image)
             MO_END;
             bool processImpl();
 
           protected:
-            boost::optional<mo::Time_t> _prev_time;
+            mo::OptionalTime m_prev_time;
             bool m_use_opengl = true;
         };
 
@@ -50,10 +52,10 @@ namespace aq
         {
           public:
             MO_DERIVE(KeyPointDisplay, Node)
-                INPUT(TS<SyncedMemory>, image, nullptr)
-                INPUT(TS<SyncedMemory>, synced_points, nullptr)
-                INPUT(cv::cuda::GpuMat, gpu_points, nullptr)
-                INPUT(cv::Mat, cpu_points, nullptr)
+                INPUT(SyncedImage, image)
+                INPUT(SyncedImage, synced_points)
+                INPUT(cv::cuda::GpuMat, gpu_points)
+                INPUT(cv::Mat, cpu_points)
             MO_END;
 
           protected:
@@ -64,7 +66,7 @@ namespace aq
         {
           public:
             MO_DERIVE(FlowVectorDisplay, Node)
-                INPUT(TS<SyncedMemory>, image, nullptr)
+                INPUT(SyncedImage, image)
             MO_END;
 
           protected:
@@ -75,8 +77,8 @@ namespace aq
         {
           public:
             MO_DERIVE(HistogramDisplay, Node)
-                INPUT(SyncedMemory, histogram, nullptr)
-                OPTIONAL_INPUT(SyncedMemory, bins, nullptr)
+                INPUT(SyncedImage, histogram)
+                OPTIONAL_INPUT(SyncedImage, bins)
             MO_END;
 
           protected:
@@ -88,10 +90,10 @@ namespace aq
         {
           public:
             MO_DERIVE(HistogramOverlay, Node)
-                INPUT(SyncedMemory, histogram, nullptr)
-                INPUT(SyncedMemory, image, nullptr)
-                OPTIONAL_INPUT(SyncedMemory, bins, nullptr)
-                OUTPUT(SyncedMemory, output, {})
+                INPUT(SyncedImage, histogram)
+                INPUT(SyncedImage, image)
+                OPTIONAL_INPUT(SyncedImage, bins)
+                OUTPUT(SyncedImage, output)
             MO_END;
 
           protected:
@@ -103,8 +105,7 @@ namespace aq
         {
           public:
             MO_DERIVE(DetectionDisplay, Node)
-                ;
-                INPUT(TS<SyncedMemory>, image, nullptr);
+                INPUT(SyncedImage, image)
             MO_END;
 
           protected:

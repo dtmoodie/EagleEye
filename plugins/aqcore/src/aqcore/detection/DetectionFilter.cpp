@@ -1,47 +1,46 @@
+#include <ct/types/opencv.hpp>
+
 #include "DetectionFilter.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <MetaObject/params/TypeSelector.hpp>
 namespace aq
 {
-namespace nodes
-{
-
-template <class DetType>
-void DetectionFilter::apply()
-{
-    const DetType* in = mo::get<const DetType*>(input);
-    MO_ASSERT(in);
-    DetType out = *in;
-    for (auto itr = out.end(); itr != out.begin();)
+    namespace nodes
     {
-        --itr;
-        typename DetType::value_type& det = *itr;
-        for (int i = det.classifications.size() - 1; i >= 0; --i)
+
+        bool DetectionFilter::processImpl()
         {
-            if (det.classifications[i].cat)
+            const auto* in = input;
+            MO_ASSERT(in);
+            auto out = *in;
+            auto classifications = out.getComponentMutable<aq::detection::Classification>();
+            const auto& shape = classifications.getShape();
+            for (auto index = shape[0]; index != 0;)
             {
-                const aq::Category* cat = det.classifications[i].cat;
-                if (std::find(reject_classes.begin(), reject_classes.end(), cat->name) != reject_classes.end())
+                --index;
+                auto& classification = classifications[index];
+                const auto num_classifications = classification.size();
+                for (size_t i = num_classifications - 1; i >= 0; --i)
                 {
-                    det.classifications.erase(i);
+                    if (classification[i].cat)
+                    {
+                        const aq::Category* cat = classification[i].cat;
+                        if (std::find(reject_classes.begin(), reject_classes.end(), cat->name) != reject_classes.end())
+                        {
+                            classification.erase(i);
+                        }
+                    }
+                }
+                if (classification.size() == 0)
+                {
+                    out.erase(index);
                 }
             }
+            // output_param.updateData(std::move(out), mo::tag::_param = input_param);
+            return true;
         }
-        if (det.classifications.size() == 0)
-        {
-            itr = out.erase(itr);
-        }
-    }
-    //output_param.updateData(std::move(out), mo::tag::_param = input_param);
-}
-
-bool DetectionFilter::processImpl()
-{
-    mo::selectType<decltype(input_param)::TypeTuple>(*this, input_param.getTypeInfo());
-    return true;
-}
-}
-}
+    } // namespace nodes
+} // namespace aq
 
 using namespace aq::nodes;
 MO_REGISTER_CLASS(DetectionFilter)
