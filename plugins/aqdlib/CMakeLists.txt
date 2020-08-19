@@ -50,7 +50,7 @@ target_link_libraries(aqdlib
     aquila_serialization
     aquila_types
     ${OpenCV_LIBS}
-    ${CUDA_CUBLAS_LIBRARIES}
+    ${CUDA_cublas_LIBRARY}
     metaobject_core
     metaobject_object
     metaobject_params

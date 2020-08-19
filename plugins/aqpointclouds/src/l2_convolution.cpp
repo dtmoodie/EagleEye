@@ -1,3 +1,5 @@
+#include <Aquila/types/SyncedMemory.hpp>
+
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <l2_convolution.hpp>
 
@@ -21,7 +23,7 @@ namespace aq
                             int ksize,
                             float distance_threshold,
                             cv::cuda::Stream& stream);
-        }
+        } // namespace device
 
         bool ConvolutionL2::processImpl()
         {
@@ -51,8 +53,8 @@ namespace aq
             }
             return true;
         }
-    }
-}
+    } // namespace pointclouds
+} // namespace aq
 
 using namespace aq::pointclouds;
 MO_REGISTER_CLASS(ConvolutionL2)

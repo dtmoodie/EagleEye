@@ -14,7 +14,7 @@
 
 namespace aqcore
 {
-    cv::Scalar getColor(const aq::detection::Classification& cat)
+    cv::Scalar getColor(const aq::detection::Classifications& cat)
     {
         cv::Scalar color = cv::Scalar::all(0);
         if (cat.size() && cat[0].cat)
@@ -25,11 +25,11 @@ namespace aqcore
     }
     void DrawDetections::drawBoxes(cv::Mat& mat,
                                    mt::Tensor<const BoundingBox2d, 1> bbs,
-                                   mt::Tensor<const Classification, 1> cats)
+                                   mt::Tensor<const Classifications, 1> cats)
     {
         for (size_t i = 0; i < bbs.getShape()[0]; ++i)
         {
-            const Classification& cat = cats[i];
+            const Classifications& cat = cats[i];
             const cv::Rect bb = bbs[i];
             const cv::Scalar color = getColor(cat);
             constexpr const uint32_t thickness = 3U;
@@ -39,14 +39,14 @@ namespace aqcore
 
     void DrawDetections::drawBoxes(cv::cuda::GpuMat& mat,
                                    mt::Tensor<const BoundingBox2d, 1> bbs,
-                                   mt::Tensor<const Classification, 1> cls,
+                                   mt::Tensor<const Classifications, 1> cls,
                                    cv::cuda::Stream& stream)
     {
     }
 
     void DrawDetections::drawLabels(cv::Mat& mat,
                                     mt::Tensor<const BoundingBox2d, 1> bbs,
-                                    mt::Tensor<const Classification, 1> cats,
+                                    mt::Tensor<const Classifications, 1> cats,
                                     mt::Tensor<const Id, 1> ids)
     {
         const cv::Size size = mat.size();
@@ -64,7 +64,7 @@ namespace aqcore
 
     void DrawDetections::drawLabels(cv::cuda::GpuMat& mat,
                                     mt::Tensor<const BoundingBox2d, 1> bbs,
-                                    mt::Tensor<const Classification, 1> cats,
+                                    mt::Tensor<const Classifications, 1> cats,
                                     mt::Tensor<const Id, 1> ids,
                                     cv::cuda::Stream& stream)
     {
@@ -132,7 +132,7 @@ namespace aqcore
         drawMetaData(mat, static_cast<const aq::DetectionDescription&>(det), rect, idx);
     }*/
 
-    std::string DrawDetections::textLabel(const Classification& cat, const Id& id)
+    std::string DrawDetections::textLabel(const Classifications& cat, const Id& id)
     {
         std::stringstream ss;
 
@@ -155,7 +155,7 @@ namespace aqcore
         return std::move(ss).str();
     }
 
-    cv::Mat DrawDetections::textImage(const Classification& cat, const Id& id)
+    cv::Mat DrawDetections::textImage(const Classifications& cat, const Id& id)
     {
         cv::Mat text_image(20, 200, CV_8UC3);
         text_image.setTo(cv::Scalar::all(0));
@@ -173,7 +173,7 @@ namespace aqcore
         cv::Mat host_draw_image;
         cv::Size size;
         mt::Tensor<const BoundingBox2d, 1> bbs = detections->getComponent<BoundingBox2d>();
-        mt::Tensor<const Classification, 1> cats = detections->getComponent<Classification>();
+        mt::Tensor<const Classifications, 1> cats = detections->getComponent<Classifications>();
         mt::Tensor<const Id, 1> ids = detections->getComponent<Id>();
         mt::Tensor<const float, 2> descriptors = detections->getComponent<Descriptor>();
 

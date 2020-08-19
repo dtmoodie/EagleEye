@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Aquila/types/ObjectDetection.hpp"
-#include <Aquila/types/SyncedMemory.hpp>
+#include <Aquila/types/SyncedImage.hpp>
 
 #include "Aquila/nodes/Node.hpp"
 
@@ -15,8 +15,8 @@ namespace aq
         {
           public:
             MO_DERIVE(SaveAnnotations, Node)
-                INPUT(SyncedMemory, input)
-                INPUT(CategorySet::ConstPtr, cats)
+                INPUT(SyncedImage, input)
+                INPUT(CategorySet::Ptr, cats)
                 INPUT(DetectedObjectSet, detections)
 
                 PARAM(mo::WriteDirectory, output_directory, {})
@@ -40,6 +40,7 @@ namespace aq
           protected:
             bool processImpl();
             void draw();
+
             DetectedObjectSet _annotations;
             cv::Mat _original_image;
             cv::Mat _draw_image;

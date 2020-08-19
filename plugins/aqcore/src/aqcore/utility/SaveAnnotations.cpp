@@ -5,6 +5,8 @@
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <Aquila/types/ObjectDetectionSerialization.hpp>
 
+#include <MetaObject/serialization/JSONPrinter.hpp>
+
 #include <boost/lexical_cast.hpp>
 
 #include <cereal/archives/json.hpp>
@@ -23,7 +25,7 @@ SaveAnnotations::SaveAnnotations() {}
 
 void SaveAnnotations::on_class_change(int new_class)
 {
-    current_class_param.updateData(new_class);
+    current_class = new_class;
     draw();
 }
 
@@ -67,29 +69,19 @@ void SaveAnnotations::on_key(int key)
            << ".png";
 
         std::string image_path = ss.str();
-        cereal::JSONOutputArchive ar(ofs);
-        ar(cereal::make_nvp("ImageFile", image_path));
-        ar(cereal::make_nvp("Timestamp", input_param.getTimestamp()));
-        ar(cereal::make_nvp("Annotations", _annotations));
-        if (detections && detections->size() > 0)
+
+        mo::JSONSaver ar(ofs);
+        // cereal::JSONOutputArchive ar(ofs);
+        const mo::OptionalTime timestamp = input_param.getNewestTimestamp();
+        ar(&image_path, "ImageFile");
+        ar(&timestamp, "Timestamp");
+        ar(&_annotations, "Annotations");
+        if (detections)
         {
-            DetectedObjectSet objs;
-            for (const auto& detection : *detections)
-            {
-                if (object_class != -1)
-                {
-                    if (detection.classifications[0].cat->index == object_class)
-                    {
-                        objs.push_back(detection);
-                    }
-                }
-                else
-                {
-                    objs.push_back(detection);
-                }
-            }
-            ar(cereal::make_nvp("detections", objs));
+            // TODO filter by object_class?
+            ar(detections, "detections");
         }
+
         cv::imwrite(image_path, _original_image);
         ++save_count;
         _annotations.clear();
@@ -118,28 +110,44 @@ void SaveAnnotations::draw()
 {
     _draw_image = _original_image.clone();
     cv::Mat draw_image = _draw_image;
-    for (int i = 0; i < _annotations.size(); ++i)
+    const auto num_entities = _annotations.getNumEntities();
+    if (num_entities > 0)
     {
-        auto bb = _annotations[i].bounding_box;
-        cv::rectangle(draw_image,
-                      cv::Rect(bb.x * draw_image.cols,
-                               bb.y * draw_image.rows,
-                               bb.width * draw_image.cols,
-                               bb.height * draw_image.rows),
-                      _annotations[i].classifications[0].cat->color,
-                      5);
+        mt::Tensor<const aq::detection::BoundingBox2d, 1> bounding_boxes =
+            _annotations.getComponent<aq::detection::BoundingBox2d>();
+        mt::Tensor<const aq::detection::Classifications, 1> classifications =
+            _annotations.getComponent<aq::detection::Classifications>();
+        for (size_t i = 0; i < num_entities; ++i)
+        {
+            cv::Rect2f bb = bounding_boxes[i];
+            boundingBoxToPixels(bb, draw_image.size());
+            const cv::Scalar color = classifications[i][0].cat->color;
+            cv::rectangle(draw_image, cv::Rect(bb.x, bb.y, bb.width, bb.height), color, 5);
+        }
     }
+
     if (detections)
     {
-        for (const auto& detection : *detections)
+        mt::Tensor<const aq::detection::BoundingBox2d, 1> bounding_boxes =
+            detections->getComponent<aq::detection::BoundingBox2d>();
+
+        mt::Tensor<const aq::detection::Classifications, 1> classifications =
+            detections->getComponent<aq::detection::Classifications>();
+
+        const uint32_t num_entities = detections->getNumEntities();
+
+        for (uint32_t i = 0; i < num_entities; ++i)
         {
-            auto bb = detection.bounding_box;
+            aq::detection::BoundingBox2d bb = bounding_boxes[i];
+            boundingBoxToPixels(bb, draw_image.size());
+            const cv::Scalar color = classifications[i][0].cat->color;
+
             cv::rectangle(draw_image,
                           cv::Rect(bb.x * draw_image.cols,
                                    bb.y * draw_image.rows,
                                    bb.width * draw_image.cols,
                                    bb.height * draw_image.rows),
-                          detection.classifications[0].cat->color,
+                          color,
                           5);
         }
     }
@@ -148,12 +156,7 @@ void SaveAnnotations::draw()
         // cv::putText(draw_image, (*labels)[current_class], cv::Point(15, 25), cv::FONT_HERSHEY_COMPLEX, 0.7,
         // h_lut.at<cv::Vec3b>(current_class));
     }
-
-    size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
-    mo::ThreadSpecificQueue::push(
-        [draw_image, this]() { getGraph()->getWindowCallbackManager()->imshow("original", draw_image); },
-        gui_thread_id,
-        this);
+    this->getGraph()->getObject<aq::WindowCallbackHandler>()->imshow("original", draw_image);
 }
 
 bool SaveAnnotations::processImpl()
@@ -204,24 +207,19 @@ bool SaveAnnotations::processImpl()
     _cats = detections->getCatSet();
 
     _annotations.clear();
-    size_t gui_thread_id = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
-    if (input->getSyncState() == aq::SyncedMemory::DEVICE_UPDATED)
-    {
-        cv::Mat img = input->getMat(stream());
 
-        aq::cuda::enqueue_callback_async(
-            [img, this]() { getGraph()->getWindowCallbackManager()->imshow("original", img); },
-            gui_thread_id,
-            stream());
+    auto window_manager = this->getGraph()->getObject<aq::WindowCallbackHandler>();
+    auto stream = this->getStream();
+    bool sync = false;
+    cv::Mat img = input->getMat(stream.get(), &sync);
+    if (sync)
+    {
+        stream->pushWork([img, window_manager]() { window_manager->imshow("original", img); });
         _original_image = img;
     }
     else
     {
-        // cv::Mat img = input->getMat(stream());
-        cv::Mat img = input->getMat(stream());
-
-        mo::ThreadSpecificQueue::push(
-            [img, this]() { getGraph()->getWindowCallbackManager()->imshow("original", img); }, gui_thread_id, this);
+        window_manager->imshow("original", img);
         _original_image = img;
     }
     return true;

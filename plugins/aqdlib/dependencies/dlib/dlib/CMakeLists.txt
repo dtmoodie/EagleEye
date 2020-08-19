@@ -641,7 +641,7 @@ if (NOT TARGET dlib)
                )
 
             set(dlib_needed_libraries ${dlib_needed_libraries} 
-                                      ${CUDA_CUBLAS_LIBRARIES} 
+                                      ${CUDA_cublas_LIBRARY} 
                                       ${cudnn}
                                       ${CUDA_curand_LIBRARY}
                                       ${cusolver}

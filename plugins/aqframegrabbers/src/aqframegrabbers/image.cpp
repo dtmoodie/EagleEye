@@ -1,5 +1,7 @@
-#include "image.h"
+#include <Aquila/types/SyncedMemory.hpp>
+
 #include "Aquila/framegrabbers/GrabberInfo.hpp"
+#include "image.h"
 #include "precompiled.hpp"
 #include <opencv2/imgcodecs.hpp>
 
@@ -12,8 +14,8 @@ bool GrabberImage::loadData(const std::string& path)
     if (!image.empty())
     {
         ++count;
-        image_name_param.updateData(path, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
-        output_param.updateData(image, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
+        image_name_param.publish(path, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
+        output_param.publish(image, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
         return true;
     }
     return false;
@@ -23,7 +25,7 @@ bool GrabberImage::grab()
 {
     if (!image.empty())
     {
-        output_param.updateData(image, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
+        output_param.publish(image, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
         return true;
     }
     return false;

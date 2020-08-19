@@ -13,7 +13,7 @@ namespace aq
             const auto* in = input;
             MO_ASSERT(in);
             auto out = *in;
-            auto classifications = out.getComponentMutable<aq::detection::Classification>();
+            auto classifications = out.getComponentMutable<aq::detection::Classifications>();
             const auto& shape = classifications.getShape();
             for (auto index = shape[0]; index != 0;)
             {

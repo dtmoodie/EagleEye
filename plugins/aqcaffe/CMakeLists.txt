@@ -33,7 +33,7 @@ if(Caffe_FOUND)
     RCC_LINK_LIB(Caffe
           ${CUDA_LIBRARIES}
           ${CUDA_CUFFT_LIBRARIES}
-          ${CUDA_CUBLAS_LIBRARIES}
+          ${CUDA_cublas_LIBRARY}
           ${CUDA_cupti_LIBRARY}
           ${CUDA_curand_LIBRARY}
           ${CUDA_cusparse_LIBRARY}

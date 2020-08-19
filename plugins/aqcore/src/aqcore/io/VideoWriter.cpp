@@ -3,132 +3,148 @@
 
 #include <MetaObject/core/metaobject_config.hpp>
 #include <MetaObject/logging/profiling.hpp>
-#include <MetaObject/params/TParamPtr.hpp>
 
 #include <boost/filesystem.hpp>
 
 #include <fstream>
 
-using namespace aq;
-using namespace aq::nodes;
-
-VideoWriter::~VideoWriter()
+namespace aqcore
 {
-    _write_thread.interrupt();
-    _write_thread.join();
-}
 
-void VideoWriter::nodeInit(bool firstInit)
-{
-    _write_thread = boost::thread([this]() {
-        size_t video_frame_number = 0;
-        std::unique_ptr<std::ofstream> ofs;
-        mo::setThisThreadName("VideoWriter");
-        while (!boost::this_thread::interruption_requested())
-        {
-            WriteData data;
-            if (_write_queue.try_dequeue(data) && h_writer)
+    VideoWriter::~VideoWriter()
+    {
+        _write_thread.interrupt();
+        _write_thread.join();
+    }
+
+    void VideoWriter::nodeInit(bool firstInit)
+    {
+        _write_thread = boost::thread([this]() {
+            size_t video_frame_number = 0;
+            std::unique_ptr<std::ofstream> ofs;
+            mo::setThisThreadName("VideoWriter");
+            while (!boost::this_thread::interruption_requested())
             {
-                PROFILE_RANGE(WritingVideo);
-                h_writer->write(data.img);
-                if (!ofs && write_metadata)
+                WriteData data;
+                if (_write_queue.try_dequeue(data) && h_writer)
                 {
-                    ofs.reset(new std::ofstream(outdir.string() + "/" + metadata_stem + ".txt"));
-                    (*ofs) << dataset_name << std::endl;
-                }
-                if (ofs)
-                {
-                    (*ofs) << video_frame_number << " " << data.fn;
-                    if (data.ts)
+                    PROFILE_RANGE(WritingVideo);
+                    h_writer->write(data.img);
+                    if (!ofs && write_metadata)
                     {
-                        (*ofs) << " " << *data.ts;
+                        ofs.reset(new std::ofstream(outdir.string() + "/" + metadata_stem + ".txt"));
+                        (*ofs) << dataset_name << std::endl;
                     }
+                    if (ofs)
+                    {
+                        if (data.header)
+                        {
+                            (*ofs) << video_frame_number << " " << data.header->frame_number;
+                            if (data.header->timestamp)
+                            {
+                                (*ofs) << " " << *data.header->timestamp;
+                            }
+                        }
 
-                    (*ofs) << std::endl;
+                        (*ofs) << std::endl;
+                    }
+                    ++video_frame_number;
                 }
-                ++video_frame_number;
+                else
+                {
+                    boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+                }
+            }
+        });
+    }
+
+    bool VideoWriter::processImpl()
+    {
+        if (this->image->empty())
+        {
+            return false;
+        }
+
+        if (this->h_writer == nullptr && this->d_writer == nullptr)
+        {
+            if (!boost::filesystem::exists(outdir))
+            {
+                boost::system::error_code ec;
+                boost::filesystem::create_directories(outdir, ec);
+                if (ec)
+                {
+                    this->getLogger().warn("Unable to create directory {} due to {}", outdir, ec.message());
+                }
+            }
+            if (boost::filesystem::exists(outdir.string() + "/" + filename.string()))
+            {
+                this->getLogger().info("File exists, overwriting");
+            }
+// Attempt to initialize the device writer first
+#if MO_OPENCV_HAVE_CUDA
+            if (using_gpu_writer)
+            {
+                try
+                {
+                    cv::cudacodec::EncoderParams params;
+                    d_writer = cv::cudacodec::createVideoWriter(
+                        outdir.string() + "/" + filename.string(), image->getSize(), 30, params);
+                }
+                catch (...)
+                {
+                    using_gpu_writer_param.updateData(false);
+                }
+            }
+#endif
+            if (!this->using_gpu_writer)
+            {
+                const aq::Shape<3> shape = image->shape();
+                const cv::Size size(shape(1), shape(0));
+                const bool color = shape(2) == 3;
+                const auto fourcc = cv::VideoWriter::fourcc('M', 'P', 'E', 'G');
+                this->h_writer.reset(new cv::VideoWriter);
+                const std::string file_name = outdir.string() + "/" + filename.string();
+                if (!this->h_writer->open(file_name, fourcc, 30, size, color))
+                {
+                    this->getLogger().warn("Unable to open video writer for file {}", filename);
+                }
+            }
+        }
+#if MO_OPENCV_HAVE_CUDA
+        if (d_writer)
+        {
+            d_writer->write(image->getGpuMat(stream()));
+        }
+#endif
+        if (this->h_writer)
+        {
+            mo::IAsyncStream::Ptr_t stream = this->getStream();
+            bool sync = false;
+            cv::Mat h_img = image->getMat(stream.get(), &sync);
+
+            WriteData data;
+            data.img = h_img;
+            data.header = image_param.getNewestHeader();
+            auto work = [data, this]() { _write_queue.enqueue(data); };
+            if (sync)
+            {
+                stream->pushWork(std::move(work));
             }
             else
             {
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+                work();
             }
         }
-    });
-}
-
-bool VideoWriter::processImpl()
-{
-    if (this->image->empty())
-    {
-        return false;
+        return true;
     }
 
-    if (this->h_writer == nullptr && this->d_writer == nullptr)
+    void VideoWriter::write_out()
     {
-        if (!boost::filesystem::exists(outdir))
-        {
-            boost::system::error_code ec;
-            boost::filesystem::create_directories(outdir, ec);
-            if (ec)
-            {
-                this->getLogger().warn("Unable to create directory {} due to {}", outdir, ec.message());
-            }
-        }
-        if (boost::filesystem::exists(outdir.string() + "/" + filename.string()))
-        {
-            MO_LOG(info) << "File exists, overwriting";
-        }
-// Attempt to initialize the device writer first
-#if MO_OPENCV_HAVE_CUDA
-        if (using_gpu_writer)
-        {
-            try
-            {
-                cv::cudacodec::EncoderParams params;
-                d_writer = cv::cudacodec::createVideoWriter(
-                    outdir.string() + "/" + filename.string(), image->getSize(), 30, params);
-            }
-            catch (...)
-            {
-                using_gpu_writer_param.updateData(false);
-            }
-        }
-#endif
-        if (!this->using_gpu_writer)
-        {
-            this->h_writer.reset(new cv::VideoWriter);
-            if (!this->h_writer->open(outdir.string() + "/" + filename.string(),
-                                      cv::VideoWriter::fourcc('M', 'P', 'E', 'G'),
-                                      30,
-                                      image->getSize(),
-                                      image->getChannels() == 3))
-            {
-                MO_LOG(warning) << "Unable to open video writer for file " << filename;
-            }
-        }
+        d_writer.release();
+        h_writer.release();
     }
-#if MO_OPENCV_HAVE_CUDA
-    if (d_writer)
-    {
-        d_writer->write(image->getGpuMat(stream()));
-    }
-#endif
-    if (this->h_writer)
-    {
-        cv::Mat h_img = image->getMat(stream());
-        WriteData data;
-        data.img = h_img;
-        data.fn = image_param.getFrameNumber();
-        data.ts = image_param.getTimestamp();
-        cuda::enqueue_callback([data, this]() { _write_queue.enqueue(data); }, stream());
-    }
-    return true;
-}
 
-void VideoWriter::write_out()
-{
-    d_writer.release();
-    h_writer.release();
-}
+} // namespace aqcore
 
+using namespace aqcore;
 MO_REGISTER_CLASS(VideoWriter)

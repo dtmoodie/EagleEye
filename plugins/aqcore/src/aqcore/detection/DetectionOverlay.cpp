@@ -46,12 +46,13 @@ namespace aqcore
     void
     DetectionOverlay::updateOverlay(const aq::DetectedObjectSet& dets, const mo::Time& ts, mo::IAsyncStream& stream)
     {
-        auto classifications = dets.getComponent<aq::detection::Classification>();
-        auto confidence = dets.getComponent<aq::detection::Confidence>();
-        auto id = dets.getComponent<aq::detection::Id>();
-        auto patches = dets.getComponent<aq::AlignedPatch>();
-        auto bb = dets.getComponent<aq::detection::BoundingBox2d>();
-        const auto num_dets = dets.getNumEntities();
+        mt::Tensor<const aq::detection::Classifications, 1> classifications =
+            dets.getComponent<aq::detection::Classifications>();
+        mt::Tensor<const aq::detection::Confidence, 1> confidence = dets.getComponent<aq::detection::Confidence>();
+        mt::Tensor<const aq::detection::Id, 1> id = dets.getComponent<aq::detection::Id>();
+        mt::Tensor<const aq::AlignedPatch, 1> patches = dets.getComponent<aq::AlignedPatch>();
+        mt::Tensor<const aq::detection::BoundingBox2d, 1> bb = dets.getComponent<aq::detection::BoundingBox2d>();
+        const uint32_t num_dets = dets.getNumEntities();
 
         MO_ASSERT_EQ(id.getShape()[0], num_dets);
         MO_ASSERT_EQ(id.getShape()[0], num_dets);

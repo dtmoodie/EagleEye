@@ -31,7 +31,7 @@ find_package(OpenCV 3.0 QUIET
     objdetect
   )
 
-  set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 find_package(PkgConfig QUIET)
 
@@ -72,7 +72,8 @@ else(MO_HAVE_CUDA)
 endif(MO_HAVE_CUDA)
 
 
-RCC_LINK_LIB(aqcore aquila_core
+target_link_libraries(aqcore 
+    aquila_core
     aquila_utilities
     aquila_serialization
     aquila_types

@@ -11,7 +11,7 @@ namespace aq
         {
           public:
             MO_DERIVE(ConvolutionL2, nodes::Node)
-                INPUT(aq::SyncedMemory, input, nullptr)
+                INPUT(aq::SyncedMemory, input)
                 PARAM(int, kernel_size, 3)
                 PARAM(int, distance_threshold, 1.0f)
                 OUTPUT(aq::SyncedMemory, distance, {})
@@ -26,7 +26,7 @@ namespace aq
         {
           public:
             MO_DERIVE(ConvolutionL2ForegroundEstimate, nodes::Node)
-                INPUT(aq::SyncedMemory, input, nullptr)
+                INPUT(aq::SyncedMemory, input)
                 PARAM(int, kernel_size, 3)
                 PARAM(int, distance_threshold, 1.0f)
                 PARAM(bool, build_model, false)
@@ -39,5 +39,5 @@ namespace aq
             bool processImpl();
             cv::cuda::GpuMat prev;
         };
-    }
-}
+    } // namespace pointclouds
+} // namespace aq

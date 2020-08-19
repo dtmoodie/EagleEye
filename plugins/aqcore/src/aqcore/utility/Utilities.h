@@ -9,57 +9,35 @@
 
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
-namespace aq
+namespace aqcore
 {
-    namespace nodes
+    class RegionOfInterest : public aq::nodes::Node
     {
-        class ApplyEveryNFrames : public Node
-        {
-          public:
-            ApplyEveryNFrames();
-        };
+      public:
+        MO_DERIVE(RegionOfInterest, aq::nodes::Node)
+            PARAM(cv::Rect2f, roi, cv::Rect2f(0.0f, 0.0f, 1.0f, 1.0f))
 
-        class SyncFunctionCall : public Node
-        {
-            int numInputs = 0;
+            INPUT(aq::SyncedImage, input)
+            OUTPUT(aq::SyncedImage, output)
+        MO_END;
 
-          public:
-            void call();
-            SyncFunctionCall();
-            virtual void nodeInit(bool firstInit);
-            virtual cv::cuda::GpuMat doProcess(cv::cuda::GpuMat& img, cv::cuda::Stream& stream);
-        };
+      protected:
+        bool processImpl() override;
+    };
 
-        class SyncBool : public Node
-        {
-        };
+    class ExportRegionsOfInterest : public aq::nodes::Node
+    {
+      public:
+        MO_DERIVE(ExportRegionsOfInterest, aq::nodes::Node)
+            PARAM(std::vector<cv::Rect2f>, rois, {})
 
-        class RegionOfInterest : public Node
-        {
-          public:
-            MO_DERIVE(RegionOfInterest, Node)
-                PARAM(cv::Rect2f, roi, cv::Rect2f(0.0f, 0.0f, 1.0f, 1.0f))
-                INPUT(SyncedImage, image)
-                OUTPUT(SyncedImage, ROI)
-            MO_END;
+            OUTPUT(std::vector<cv::Rect2f>, output)
+        MO_END;
 
-          protected:
-            bool processImpl();
-        };
-        class ExportRegionsOfInterest : public Node
-        {
-          public:
-            MO_DERIVE(ExportRegionsOfInterest, Node)
-                PARAM(std::vector<cv::Rect2f>, rois, {})
+        void nodeInit(bool firstInit) override;
 
-                OUTPUT(std::vector<cv::Rect2f>, output)
-            MO_END;
+      protected:
+        bool processImpl() override;
+    };
 
-            // mo::TParamPtr<std::vector<cv::Rect2f>> output;
-            void nodeInit(bool firstInit);
-
-          protected:
-            bool processImpl();
-        };
-    } // namespace nodes
-} // namespace aq
+} // namespace aqcore

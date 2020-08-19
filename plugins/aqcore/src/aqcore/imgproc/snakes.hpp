@@ -47,7 +47,7 @@ namespace aqcore
             PARAM(int, num_samples, 200)
             ENUM_PARAM(mode, GRAD, IMAGE)
 
-            OUTPUT(aq::TEntityComponentSystem<aq::Contour>, output)
+            OUTPUT(aq::TEntityComponentSystem<ct::VariadicTypedef<aq::Contour>>, output)
         MO_END;
 
       protected:

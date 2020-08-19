@@ -11,6 +11,7 @@
 
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"
+
 RUNTIME_COMPILER_SOURCEDEPENDENCY
 RUNTIME_MODIFIABLE_INCLUDE
 
@@ -89,6 +90,7 @@ namespace aqcore
 
             OUTPUT(aq::SyncedImage, output)
         MO_END;
+
         template <class StreamType>
         bool processImpl(StreamType& stream);
 

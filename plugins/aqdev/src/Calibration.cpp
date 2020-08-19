@@ -1,6 +1,10 @@
+#include <ct/types/opencv.hpp>
+
 #include "Calibration.h"
+
 #include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
+
 #include <Aquila/rcc/external_includes/cv_calib3d.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
@@ -62,12 +66,8 @@ void CalibrateCamera::Clear()
     image_point_collection.clear();
 }
 
-void CalibrateCamera::ForceCalibration()
-{
-}
-void CalibrateCamera::SaveCalibration()
-{
-}
+void CalibrateCamera::ForceCalibration() {}
+void CalibrateCamera::SaveCalibration() {}
 bool CalibrateCamera::processImpl()
 {
     if (image_points->size() != object_points->size())
@@ -120,9 +120,7 @@ bool CalibrateCamera::processImpl()
     return true;
 }
 
-void CalibrateStereoPair::Clear()
-{
-}
+void CalibrateStereoPair::Clear() {}
 void CalibrateStereoPair::Save()
 {
     cv::FileStorage fs("StereoCalibration.yml", cv::FileStorage::WRITE);

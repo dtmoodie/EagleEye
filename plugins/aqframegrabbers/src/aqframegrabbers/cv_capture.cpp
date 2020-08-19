@@ -61,7 +61,7 @@ bool GrabberCV::LoadCPU(const std::string& file_path)
 {
     h_cam.release();
     // MO_LOG(info) << "Attemping to load " << file_path;
-    BOOST_LOG_TRIVIAL(info) << "[" << GetTypeName() << "::h_loadFile] Trying to load: \"" << file_path << "\"";
+    getLogger().info("[{}::h_loadFile] Trying to load: {}", GetTypeName(), file_path);
     try
     {
         h_cam.reset(new cv::VideoCapture());
@@ -105,7 +105,7 @@ bool GrabberCV::LoadCPU(const std::string& file_path)
     }
     catch (cv::Exception& e)
     {
-        MO_LOG(debug) << "Unable to load " << file_path << " due to " << e.what();
+        getLogger().debug("Unable to load {} due to {}", file_path, e.what());
     }
     return false;
 }

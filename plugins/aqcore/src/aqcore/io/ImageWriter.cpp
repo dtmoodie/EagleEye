@@ -1,6 +1,8 @@
 #include "ImageWriter.h"
 #include <Aquila/nodes/NodeInfo.hpp>
 
+#include <opencv2/imgcodecs.hpp>
+
 #include <boost/filesystem.hpp>
 
 #include <iomanip>
@@ -35,7 +37,7 @@ bool ImageWriter::processImpl()
         return true;
     if (request_write || (frameSkip >= frequency) || frequency == -1)
     {
-        request_write_param.updateData(false);
+        request_write = false;
         std::stringstream ss;
         if (!boost::filesystem::exists(save_directory))
         {
@@ -44,15 +46,16 @@ bool ImageWriter::processImpl()
         ss << save_directory.string() << "/" << base_name << std::setfill('0') << std::setw(4) << frame_count << ext;
         ++frame_count;
         std::string save_name = ss.str();
-        if (input_image->getSyncState() < SyncedMemory::DEVICE_UPDATED)
+        auto stream = this->getStream();
+        bool synchronize = false;
+        cv::Mat mat = input_image->getMat(stream.get(), &synchronize);
+        if (synchronize)
         {
-            cv::imwrite(save_name, input_image->getMat(stream()));
+            stream->pushWork([mat, save_name]() -> void { cv::imwrite(save_name, mat); });
         }
         else
         {
-            input_image->synchronize(stream());
-            cv::Mat mat = input_image->getMat(stream());
-            cuda::enqueue_callback_async([mat, save_name]() -> void { cv::imwrite(save_name, mat); }, stream());
+            cv::imwrite(save_name, mat);
         }
         frameSkip = 0;
     }
@@ -61,7 +64,7 @@ bool ImageWriter::processImpl()
 }
 void ImageWriter::snap()
 {
-    request_write_param.updateData(true);
+    request_write = true;
 }
 
 MO_REGISTER_CLASS(ImageWriter)

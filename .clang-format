@@ -60,7 +60,7 @@ KeepEmptyLinesAtTheStartOfBlocks: true
 MacroBlockBegin: '^REFLECT_DATA_START|REFLECT_DATA_DERIVED|REFLECT_INTERNAL_START|REFLECT_TEMPLATED_DATA_START|MO_DERIVE|MO_ABSTRACT|MO_BEGIN'
 MacroBlockEnd:   '^REFLECT_DATA_END|REFLECT_INTERNAL_END|MO_END'
 MaxEmptyLinesToKeep: 1
-NamespaceIndentation: None
+NamespaceIndentation: All
 ObjCBlockIndentWidth: 2
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true

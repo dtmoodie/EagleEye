@@ -36,10 +36,12 @@ namespace aq
             MO_END;
 
           protected:
-            size_t PrepPyramid();
+            size_t prepPyramid();
             void build_pyramid(std::vector<cv::cuda::GpuMat>& pyramid);
-            TS<std::vector<cv::cuda::GpuMat>> prevGreyImg;
-            std::vector<cv::cuda::GpuMat> greyImg;
+
+            mo::OptionalTime m_prev_time;
+            std::vector<cv::cuda::GpuMat> m_prev_grey_pyramid;
+            std::vector<cv::cuda::GpuMat> m_grey_pyramid;
         };
 
         class DensePyrLKOpticalFlow : public IPyrOpticalFlow
@@ -51,7 +53,7 @@ namespace aq
             bool processImpl();
 
           protected:
-            cv::Ptr<cv::cuda::DensePyrLKOpticalFlow> opt_flow;
+            cv::Ptr<cv::cuda::DensePyrLKOpticalFlow> m_opt_flow;
         };
 
         class SparsePyrLKOpticalFlow : public IPyrOpticalFlow
@@ -67,32 +69,37 @@ namespace aq
 
           protected:
             bool processImpl();
-            cv::cuda::GpuMat prev_key_points;
-            cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> optFlow;
+            cv::cuda::GpuMat m_prev_key_points;
+            mo::OptionalTime m_prev_time;
+            cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> m_opt_flow;
         };
 
         class PyrLKLandmarkTracker : public Node
         {
           public:
+            using Components_t = ct::VariadicTypedef<aq::detection::LandmarkDetection>;
+            using LandmarkDetectionSet_t = aq::TEntityComponentSystem<Components_t>;
+
             MO_DERIVE(PyrLKLandmarkTracker, Node)
-                INPUT(SyncedMemory, input)
-                FLAGGED_INPUT(mo::ParamFlags::kREQUIRE_BUFFERED, LandmarkDetectionSet, detections)
+                INPUT(SyncedImage, input)
+                FLAGGED_INPUT(mo::ParamFlags::kREQUIRE_BUFFERED, LandmarkDetectionSet_t, detections)
 
                 PARAM(int, window_size, 13)
                 PARAM(int, iterations, 30)
                 PARAM(int, pyramid_levels, 3)
 
-                OUTPUT(LandmarkDetectionSet, output)
+                OUTPUT(LandmarkDetectionSet_t, output)
             MO_END;
 
-            template <class CTX>
-            bool processImpl(CTX* ctx);
+            template <class STREAM>
+            bool processImpl(STREAM& stream);
 
           protected:
-            virtual bool processImpl() override;
+            bool processImpl() override;
 
             cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> d_opt_flow;
-            TS<SyncedMemory> m_prev_pyramid;
+            std::vector<aq::SyncedImage> m_prev_pyramid;
+            mo::OptionalTime m_prev_time;
         };
 
     } // namespace nodes

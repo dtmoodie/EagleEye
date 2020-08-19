@@ -1,88 +1,94 @@
 #include <MetaObject/core/metaobject_config.hpp>
-#if MO_OPENCV_HAVE_CUDA
+#include <opencv2/cvconfig.h>
+#ifdef HAVE_CUDA
 #include "Channels.h"
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <MetaObject/core/CvContext.hpp>
-namespace aq
+
+#include <Aquila/types/CVStream.hpp>
+
+namespace aqcore
 {
-    namespace nodes
+
+    template <>
+    bool ConvertToGrey::processImpl(mo::IDeviceStream& stream)
     {
-        template <>
-        bool ConvertToGrey::processImpl(mo::CvContext* ctx)
-        {
-            if (input->getSyncState() < input->DEVICE_UPDATED)
-            {
-                return processImpl(static_cast<mo::Context*>(ctx));
-            }
-            cv::cuda::GpuMat grey;
-            cv::cuda::cvtColor(input->getGpuMat(stream()), grey, cv::COLOR_BGR2GRAY, 0, stream());
-            grey_param.updateData(grey, mo::tag::_param = input_param);
-            return true;
-        }
+        cv::cuda::GpuMat input_mat = input->getGpuMat(&stream);
+        cv::cuda::GpuMat grey;
+        aq::CVStream& cv_stream = dynamic_cast<aq::CVStream&>(stream);
+        cv::cuda::cvtColor(input_mat, grey, cv::COLOR_BGR2GRAY, 0, cv_stream.getCVStream());
+        this->output.publish(grey, mo::tags::param = &input_param);
+        return true;
+    }
 
-        template <>
-        bool Magnitude::processImpl(mo::CvContext* ctx)
-        {
-            if (input->getSyncState() < input->DEVICE_UPDATED)
-            {
-                return processImpl(static_cast<mo::Context*>(ctx));
-            }
-            cv::cuda::GpuMat magnitude;
-            cv::cuda::magnitude(input->getGpuMat(stream()), magnitude, stream());
-            output_param.updateData(magnitude, input_param.getTimestamp(), _ctx.get());
-            return true;
-        }
+    template <>
+    bool Magnitude::processImpl(mo::IDeviceStream& stream)
+    {
+        cv::cuda::GpuMat input_mat = input->getGpuMat(&stream);
+        cv::cuda::GpuMat magnitude;
+        aq::CVStream& cv_stream = dynamic_cast<aq::CVStream&>(stream);
+        cv::cuda::magnitude(input_mat, magnitude, cv_stream.getCVStream());
+        this->output.publish(magnitude, mo::tags::param = &input_param);
+        return true;
+    }
 
-        template <>
-        bool SplitChannels::processImpl(mo::CvContext* ctx)
-        {
-            std::vector<cv::cuda::GpuMat> _channels;
-            cv::cuda::split(input->getGpuMat(stream()), _channels, stream());
-            output_param.updateData(_channels, input_param.getTimestamp(), _ctx.get());
-            return true;
-        }
+    /*template <>
+    bool SplitChannels::processImpl(mo::IDeviceStream& stream)
+    {
+        std::vector<cv::cuda::GpuMat> _channels;
+        cv::cuda::split(input->getGpuMat(stream()), _channels, stream());
+        output_param.updateData(_channels, input_param.getTimestamp(), _ctx.get());
+        return true;
+    }*/
 
-        template <>
-        bool ConvertDataType::processImpl(mo::CvContext* ctx)
+    template <>
+    bool ConvertDataType::processImpl(mo::IDeviceStream& stream)
+    {
+        cv::cuda::GpuMat output;
+        cv::cuda::GpuMat input_mat = input->getGpuMat(&stream);
+        if (continuous)
         {
-            cv::cuda::GpuMat output;
-            if (continuous)
-            {
-                cv::cuda::createContinuous(input->getSize(), data_type.current_selection, output);
-            }
-            input->getGpuMat(stream()).convertTo(output, data_type.current_selection, alpha, beta, stream());
-            output_param.emitUpdate(input_param);
-            return true;
+            cv::cuda::createContinuous(input_mat.size(), data_type.current_selection, output);
         }
+        aq::CVStream& cv_stream = dynamic_cast<aq::CVStream&>(stream);
 
-        template <>
-        bool ConvertColorspace::processImpl(mo::CvContext* ctx)
-        {
-            cv::cuda::GpuMat output;
-            cv::cuda::cvtColor(input_image->getGpuMat(stream()), output, conversion_code.getValue(), 0, stream());
-            output_image_param.updateData(output, input_image_param.getTimestamp(), _ctx.get());
-            return true;
-        }
+        input_mat.convertTo(output, data_type.current_selection, alpha, beta, cv_stream.getCVStream());
+        this->output.publish(output, mo::tags::param = &input_param);
+        return true;
+    }
 
-        template <>
-        bool ConvertToHSV::processImpl(mo::CvContext* ctx)
-        {
-            cv::cuda::GpuMat output;
-            cv::cuda::cvtColor(input_image->getGpuMat(ctx), output, cv::COLOR_BGR2HSV, 0, ctx->getStream());
-            hsv_image_param.updateData(output, mo::tag::_param = input_image_param);
-            return true;
-        }
+    template <>
+    bool ConvertColorspace::processImpl(mo::IDeviceStream& stream)
+    {
+        cv::cuda::GpuMat output;
+        cv::cuda::GpuMat input_mat = input->getGpuMat(&stream);
+        aq::CVStream& cv_stream = dynamic_cast<aq::CVStream&>(stream);
+        cv::cuda::cvtColor(input_mat, output, conversion_code.getValue(), 0, cv_stream.getCVStream());
+        this->output.publish(output, mo::tags::param = &input_param);
+        return true;
+    }
 
-        template <>
-        bool Reshape::processImpl(mo::CvContext* ctx)
-        {
-            reshaped_image_param.updateData(input_image->getGpuMat(ctx).reshape(channels, rows),
-                                            mo::tag::_param = input_image_param);
-            return true;
-        }
+    template <>
+    bool ConvertToHSV::processImpl(mo::IDeviceStream& stream)
+    {
+        cv::cuda::GpuMat output;
+        aq::CVStream& cv_stream = dynamic_cast<aq::CVStream&>(stream);
+        cv::cuda::GpuMat input = this->input->getGpuMat(&stream);
+        cv::cuda::cvtColor(input, output, cv::COLOR_BGR2HSV, 0, cv_stream.getCVStream());
+        this->output.publish(output, mo::tags::param = &input_param);
+        return true;
+    }
 
-    } // namespace nodes
-} // namespace aq
+    template <>
+    bool Reshape::processImpl(mo::IDeviceStream& stream)
+    {
+        cv::cuda::GpuMat output;
+        cv::cuda::GpuMat input = this->input->getGpuMat(&stream);
+        output = input.reshape(channels, rows);
+        this->output.publish(output, mo::tags::param = &input_param);
+        return true;
+    }
+
+} // namespace aqcore
 
 #endif

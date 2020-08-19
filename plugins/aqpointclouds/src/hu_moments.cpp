@@ -1,7 +1,7 @@
 #include "hu_moments.h"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include <MetaObject/params/MetaParam.hpp>
-#include <MetaObject/serialization/CerealPolicy.hpp>
+//#include <MetaObject/serialization/CerealPolicy.hpp>
 #include <cereal/types/vector.hpp>
 #include <ct/reflect/cerealize.hpp>
 
@@ -10,9 +10,7 @@ using namespace point_clouds;
 // INSTANTIATE_META_PARAM(Moment);
 // INSTANTIATE_META_PARAM(std::vector<Moment>);
 
-Moment::Moment(float Px_, float Py_, float Pz_) : Px(Px_), Py(Py_), Pz(Pz_)
-{
-}
+Moment::Moment(float Px_, float Py_, float Pz_) : Px(Px_), Py(Py_), Pz(Pz_) {}
 
 float Moment::evaluate(cv::Mat mask, cv::Mat points, cv::Vec3f centroid)
 {

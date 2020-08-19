@@ -13,13 +13,13 @@ namespace aq
         {
           public:
             MO_DERIVE(FindCheckerboard, Node)
-            INPUT(SyncedMemory, input, nullptr);
-            PARAM(int, num_corners_x, 6);
-            PARAM(int, num_corners_y, 9);
-            PARAM(float, corner_distance, 18.75f);
-            OUTPUT(ImagePoints, image_points, ImagePoints());
-            OUTPUT(ObjectPoints, object_points, ObjectPoints());
-            OUTPUT(SyncedMemory, drawn_corners, SyncedMemory());
+                INPUT(SyncedMemory, input);
+                PARAM(int, num_corners_x, 6);
+                PARAM(int, num_corners_y, 9);
+                PARAM(float, corner_distance, 18.75f);
+                OUTPUT(ImagePoints, image_points, ImagePoints());
+                OUTPUT(ObjectPoints, object_points, ObjectPoints());
+                OUTPUT(SyncedMemory, drawn_corners, SyncedMemory());
             MO_END;
 
             bool processImpl();
@@ -51,21 +51,21 @@ namespace aq
 
           public:
             MO_DERIVE(CalibrateCamera, Node)
-            INPUT(SyncedMemory, image, nullptr);
-            INPUT(ImagePoints, image_points, nullptr);
-            INPUT(ObjectPoints, object_points, nullptr);
-            PARAM(float, min_pixel_distance, 10.0f);
-            MO_SLOT(void, Save);
-            MO_SLOT(void, Clear);
-            MO_SLOT(void, ForceCalibration);
-            MO_SLOT(void, SaveCalibration);
-            STATUS(cv::Mat, camera_matrix, cv::Mat());
-            STATUS(cv::Mat, distortion_matrix, cv::Mat());
-            PARAM(mo::WriteFile, save_file, mo::WriteFile("CameraMatrix.yml"));
-            STATUS(double, reprojection_error, 0.0);
-            OUTPUT(std::vector<cv::Mat>, rotation_vecs, std::vector<cv::Mat>());
-            OUTPUT(std::vector<cv::Mat>, translation_vecs, std::vector<cv::Mat>());
-            STATE(int, lastCalibration, 0);
+                INPUT(SyncedMemory, image)
+                INPUT(ImagePoints, image_points)
+                INPUT(ObjectPoints, object_points)
+                PARAM(float, min_pixel_distance, 10.0f)
+                MO_SLOT(void, save)
+                MO_SLOT(void, clear)
+                MO_SLOT(void, forceCalibration)
+                MO_SLOT(void, saveCalibration)
+                STATUS(cv::Mat, camera_matrix, cv::Mat())
+                STATUS(cv::Mat, distortion_matrix, cv::Mat())
+                PARAM(mo::WriteFile, save_file, mo::WriteFile("CameraMatrix.yml"))
+                STATUS(double, reprojection_error, 0.0)
+                OUTPUT(std::vector<cv::Mat>, rotation_vecs)
+                OUTPUT(std::vector<cv::Mat>, translation_vecs)
+                STATE(int, lastCalibration, 0);
             MO_END;
             bool processImpl();
         };
@@ -89,24 +89,24 @@ namespace aq
             cv::Mat R1, R2, P1, P2, Q;
 
           public:
-            MO_DERIVE(CalibrateStereoPair, Node);
-            INPUT(SyncedMemory, image, nullptr);
-            INPUT(ImagePoints, camera_points_1, nullptr);
-            INPUT(ImagePoints, camera_points_2, nullptr);
-            INPUT(ObjectPoints, object_points, nullptr);
-            INPUT(cv::Mat, camera_matrix_1, nullptr);
-            INPUT(cv::Mat, camera_matrix_2, nullptr);
-            INPUT(cv::Mat, distortion_matrix_1, nullptr);
-            INPUT(cv::Mat, distortion_matrix_2, nullptr);
-            MO_SLOT(void, Save);
-            MO_SLOT(void, Clear);
-            OUTPUT(cv::Mat, rotation_matrix, cv::Mat());
-            OUTPUT(cv::Mat, translation_matrix, cv::Mat());
-            OUTPUT(cv::Mat, essential_matrix, cv::Mat());
-            OUTPUT(cv::Mat, fundamental_matrix, cv::Mat());
-            STATE(int, lastCalibration, 0);
-            STATUS(int, image_pairs, 0);
-            STATUS(double, reprojection_error, 0.0);
+            MO_DERIVE(CalibrateStereoPair, Node)
+                INPUT(SyncedMemory, image);
+                INPUT(ImagePoints, camera_points_1);
+                INPUT(ImagePoints, camera_points_2);
+                INPUT(ObjectPoints, object_points);
+                INPUT(cv::Mat, camera_matrix_1);
+                INPUT(cv::Mat, camera_matrix_2);
+                INPUT(cv::Mat, distortion_matrix_1);
+                INPUT(cv::Mat, distortion_matrix_2);
+                MO_SLOT(void, Save);
+                MO_SLOT(void, Clear);
+                OUTPUT(cv::Mat, rotation_matrix, cv::Mat());
+                OUTPUT(cv::Mat, translation_matrix, cv::Mat());
+                OUTPUT(cv::Mat, essential_matrix, cv::Mat());
+                OUTPUT(cv::Mat, fundamental_matrix, cv::Mat());
+                STATE(int, lastCalibration, 0);
+                STATUS(int, image_pairs, 0);
+                STATUS(double, reprojection_error, 0.0);
             MO_END;
 
           protected:
@@ -118,22 +118,23 @@ namespace aq
 
           public:
             MO_DERIVE(ReadStereoCalibration, Node)
-            PARAM(mo::ReadFile, calibration_file, mo::ReadFile("StereoCalibration.yml"));
-            OUTPUT(cv::Mat, camera_matrix_1, cv::Mat());
-            OUTPUT(cv::Mat, camera_matrix_2, cv::Mat());
-            OUTPUT(cv::Mat, distortion_matrix_1, cv::Mat());
-            OUTPUT(cv::Mat, distortion_matrix_2, cv::Mat());
-            OUTPUT(cv::Mat, rotation_matrix, cv::Mat());
-            OUTPUT(cv::Mat, translation_matrix, cv::Mat());
-            OUTPUT(cv::Mat, essential_matrix, cv::Mat());
-            OUTPUT(cv::Mat, fundamental_matrix, cv::Mat());
-            OUTPUT(cv::Mat, R1, cv::Mat());
-            OUTPUT(cv::Mat, R2, cv::Mat());
-            OUTPUT(cv::Mat, P1, cv::Mat());
-            OUTPUT(cv::Mat, P2, cv::Mat());
-            OUTPUT(cv::Mat, Q, cv::Mat());
-            MO_SLOT(void, OnCalibrationFileChange, mo::Context*, mo::IParam*);
+                PARAM(mo::ReadFile, calibration_file, mo::ReadFile("StereoCalibration.yml"));
+                OUTPUT(cv::Mat, camera_matrix_1, cv::Mat());
+                OUTPUT(cv::Mat, camera_matrix_2, cv::Mat());
+                OUTPUT(cv::Mat, distortion_matrix_1, cv::Mat());
+                OUTPUT(cv::Mat, distortion_matrix_2, cv::Mat());
+                OUTPUT(cv::Mat, rotation_matrix, cv::Mat());
+                OUTPUT(cv::Mat, translation_matrix, cv::Mat());
+                OUTPUT(cv::Mat, essential_matrix, cv::Mat());
+                OUTPUT(cv::Mat, fundamental_matrix, cv::Mat());
+                OUTPUT(cv::Mat, R1, cv::Mat());
+                OUTPUT(cv::Mat, R2, cv::Mat());
+                OUTPUT(cv::Mat, P1, cv::Mat());
+                OUTPUT(cv::Mat, P2, cv::Mat());
+                OUTPUT(cv::Mat, Q, cv::Mat());
+
             MO_END;
+            // MO_SLOT(void, OnCalibrationFileChange, mo::Context*, mo::IParam*);
 
           protected:
             bool processImpl();
@@ -145,13 +146,13 @@ namespace aq
 
           public:
             MO_DERIVE(ReadCameraCalibration, Node)
-            PARAM(mo::ReadFile, calibration_file, mo::ReadFile("CameraCalibration.yml"));
-            OUTPUT(cv::Mat, camera_matrix, cv::Mat());
-            OUTPUT(cv::Mat, distortion_matrix, cv::Mat());
+                PARAM(mo::ReadFile, calibration_file, mo::ReadFile("CameraCalibration.yml"));
+                OUTPUT(cv::Mat, camera_matrix, cv::Mat());
+                OUTPUT(cv::Mat, distortion_matrix, cv::Mat());
             MO_END;
 
           protected:
             bool processImpl() { return false; }
         };
-    }
-}
+    } // namespace nodes
+} // namespace aq

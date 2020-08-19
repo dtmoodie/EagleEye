@@ -15,7 +15,7 @@ namespace aqcore
     {
       public:
         using BoundingBox2d = aq::detection::BoundingBox2d;
-        using Classification = aq::detection::Classification;
+        using Classifications = aq::detection::Classifications;
         using Confidence = aq::detection::Confidence;
         using Id = aq::detection::Id;
         using Pose3d = aq::detection::Pose3d;
@@ -34,21 +34,21 @@ namespace aqcore
         MO_END;
 
       protected:
-        void drawBoxes(cv::Mat& mat, mt::Tensor<const BoundingBox2d, 1> bbs, mt::Tensor<const Classification, 1> cls);
+        void drawBoxes(cv::Mat& mat, mt::Tensor<const BoundingBox2d, 1> bbs, mt::Tensor<const Classifications, 1> cls);
 
         void drawBoxes(cv::cuda::GpuMat& mat,
                        mt::Tensor<const BoundingBox2d, 1> bbs,
-                       mt::Tensor<const Classification, 1> cls,
+                       mt::Tensor<const Classifications, 1> cls,
                        cv::cuda::Stream& stream);
 
         void drawLabels(cv::Mat& mat,
                         mt::Tensor<const BoundingBox2d, 1> bbs,
-                        mt::Tensor<const Classification, 1> cats,
+                        mt::Tensor<const Classifications, 1> cats,
                         mt::Tensor<const Id, 1> ids);
 
         void drawLabels(cv::cuda::GpuMat& mat,
                         mt::Tensor<const BoundingBox2d, 1> bbs,
-                        mt::Tensor<const Classification, 1> cats,
+                        mt::Tensor<const Classifications, 1> cats,
                         mt::Tensor<const Id, 1> ids,
                         cv::cuda::Stream& stream);
 
@@ -60,8 +60,8 @@ namespace aqcore
                           cv::cuda::Stream& stream);
 
         bool processImpl() override;
-        std::string textLabel(const Classification& cat, const Id& id);
-        cv::Mat textImage(const Classification& cat, const Id& id);
+        std::string textLabel(const Classifications& cats, const Id& id);
+        cv::Mat textImage(const Classifications& cats, const Id& id);
     };
 
 } // namespace aqcore

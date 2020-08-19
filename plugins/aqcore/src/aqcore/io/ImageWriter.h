@@ -44,7 +44,7 @@ namespace aq
             MO_END;
 
           protected:
-            virtual bool processImpl() override;
+            bool processImpl() override;
         };
     } // namespace nodes
 } // namespace aq

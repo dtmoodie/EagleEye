@@ -1,3 +1,5 @@
+#include <Aquila/types/SyncedMemory.hpp>
+
 #include "super_resolution.h"
 
 using namespace aq;

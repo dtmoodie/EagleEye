@@ -33,7 +33,7 @@ cuda_add_library(aqdev SHARED ${src} ${hdr} ${knl})
 
 RCC_LINK_LIB(aqdev
     ${OpenCV_LIBS}
-    ${CUDA_CUBLAS_LIBRARIES}
+    ${CUDA_cublas_LIBRARY}
     aquila_core
     aquila_types
     aquila_utilities

@@ -1,6 +1,8 @@
-#include "Stereo.h"
+#include <ct/reflect/cerealize.hpp>
+
 #include "Aquila/rcc/external_includes/cv_cudawarping.hpp"
 #include "Aquila/rcc/external_includes/cv_imgproc.hpp"
+#include "Stereo.h"
 
 #ifdef _WIN32
 #ifdef _DEBUG

@@ -47,7 +47,7 @@ IF(Aquila_FLANN_LIBRARY_DEBUG AND Aquila_FLANN_CUDA_LIBRARY_DEBUG)
         metaobject_params
         metaobject_metaparams
         ${OpenCV_LIBS}
-        ${CUDA_CUBLAS_LIBRARIES}
+        ${CUDA_cublas_LIBRARY}
         aquila_types
     )
     aquila_declare_plugin(aqflann)

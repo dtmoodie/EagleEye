@@ -43,7 +43,7 @@ IF(UNIX)
 ENDIF()
 cuda_add_library(aqml SHARED ${src} ${hdr} ${knl} ${knl_hdr})
 
-RCC_LINK_LIB(aqml aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_CUBLAS_LIBRARIES} RuntimeObjectSystem)
+RCC_LINK_LIB(aqml aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_cublas_LIBRARY} RuntimeObjectSystem)
 
 aquila_declare_plugin(aqml)
 set_plugin_available(aqml)

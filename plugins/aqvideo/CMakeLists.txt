@@ -14,7 +14,7 @@ cuda_add_library(aqvideo SHARED ${src})
 
 RCC_LINK_LIB(aqvideo
     ${OpenCV_LIBS}
-    ${CUDA_CUBLAS_LIBRARIES}
+    ${CUDA_cublas_LIBRARY}
     metaobject_core metaobject_object metaobject_params metaobject_metaparams aquila_core
 )
 

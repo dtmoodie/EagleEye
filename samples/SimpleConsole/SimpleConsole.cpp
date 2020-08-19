@@ -1,15 +1,14 @@
 #include <Aquila/core.hpp>
 #include <Aquila/core/IGraph.hpp>
-#include <Aquila/core/Logging.hpp>
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
-#include <Aquila/gui.hpp>
-#include <Aquila/gui/UiCallbackHandlers.h>
+//#include <Aquila/gui.hpp>
+//#include <Aquila/gui/UiCallbackHandlers.h>
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/nodes/NodeFactory.hpp>
+#include <MetaObject/logging/logging.hpp>
 
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/core/detail/opencv_allocator.hpp>
-#include <MetaObject/logging/profiling.hpp>
 #include <MetaObject/logging/profiling.hpp>
 #include <MetaObject/object/MetaObject.hpp>
 #include <MetaObject/object/RelayManager.hpp>
@@ -195,13 +194,11 @@ void sig_handler(int s)
 {
     switch (s)
     {
-    case SIGSEGV:
-    {
+    case SIGSEGV: {
         // std::cout << "Caught SIGSEGV " << mo::print_callstack(2, true);
         break;
     }
-    case SIGINT:
-    {
+    case SIGINT: {
         // std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
         std::cout << "Caught SIGINT, shutting down" << std::endl;
         static int count = 0;
@@ -213,25 +210,21 @@ void sig_handler(int s)
         }
         return;
     }
-    case SIGILL:
-    {
+    case SIGILL: {
         std::cout << "Caught SIGILL " << std::endl;
         break;
     }
-    case SIGTERM:
-    {
+    case SIGTERM: {
         std::cout << "Caught SIGTERM " << std::endl;
         break;
     }
 #ifndef _MSC_VER
-    case SIGKILL:
-    {
+    case SIGKILL: {
         std::cout << "Caught SIGKILL " << std::endl;
         break;
     }
 #endif
-    default:
-    {
+    default: {
         std::cout << "Caught signal " << s << std::endl;
     }
     }
@@ -514,9 +507,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    if (vm["mode"].as<std::string>() == "batch")
-    {
-    }
+    if (vm["mode"].as<std::string>() == "batch") {}
     else
     {
         std::vector<rcc::shared_ptr<aq::IGraph>> _Graphs;
@@ -675,9 +666,7 @@ int main(int argc, char* argv[])
                 {
                     parameters = current_node->getParams();
                 }
-                if (current_stream)
-                {
-                }
+                if (current_stream) {}
                 for (auto& itr : parameters)
                 {
                     try
@@ -1014,9 +1003,7 @@ int main(int argc, char* argv[])
                         {
                             parameters = current_node->getParams();
                         }
-                        if (current_stream)
-                        {
-                        }
+                        if (current_stream) {}
                         for (auto& itr : parameters)
                         {
                             std::stringstream ss;
@@ -1081,9 +1068,7 @@ int main(int argc, char* argv[])
                             {
                                 parameters = current_node->getParams();
                             }
-                            if (current_stream)
-                            {
-                            }
+                            if (current_stream) {}
                             for (auto& itr : parameters)
                             {
                                 std::cout << printParam(itr) << std::endl;
@@ -1210,14 +1195,12 @@ int main(int argc, char* argv[])
                         std::cout << "  " << name << std::endl;
                     }
                 }
-
             },
             std::placeholders::_1));
         connections.push_back(manager.connect(slot, "list"));
 
         slot = new mo::TSlot<void(std::string)>(std::bind(
             [](std::string verbosity) -> void {
-
                 mo::MetaObjectFactory::PluginVerbosity verb = mo::MetaObjectFactory::brief;
                 if (verbosity == "info")
                     verb = mo::MetaObjectFactory::info;
@@ -1406,9 +1389,7 @@ int main(int argc, char* argv[])
                         }
                     }
                 }
-                if (!current_param)
-                {
-                }
+                if (!current_param) {}
                 else
                 {
                     auto func = mo::SerializationFactory::instance()->getTextDeSerializationFunction(
