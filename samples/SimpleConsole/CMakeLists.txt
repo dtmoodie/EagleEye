@@ -26,9 +26,9 @@ target_link_libraries(GraphExecutor
     aquila_types
 )
 
-if(WITH_PYTHON AND MO_HAVE_PYTHON)
+if(WITH_PYTHON AND MO_HAVE_PYTHON2)
 	target_link_libraries(GraphExecutor ${PYTHON_LIBRARY})
-endif(WITH_PYTHON AND MO_HAVE_PYTHON)
+endif(WITH_PYTHON AND MO_HAVE_PYTHON2)
 
 INSTALL(TARGETS GraphExecutor
 	RUNTIME DESTINATION bin
