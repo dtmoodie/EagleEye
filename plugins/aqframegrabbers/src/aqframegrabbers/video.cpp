@@ -1,3 +1,5 @@
+#include <ct/types/opencv.hpp>
+
 #include <Aquila/types/SyncedMemory.hpp>
 
 #include "Aquila/framegrabbers/FrameGrabberInfo.hpp"

@@ -1,3 +1,5 @@
+#include <ct/types/opencv.hpp>
+
 #include <Aquila/types/SyncedMemory.hpp>
 
 #include "Aquila/framegrabbers/GrabberInfo.hpp"
@@ -7,41 +9,41 @@
 
 using namespace aq;
 using namespace aq::nodes;
-
-bool GrabberImage::loadData(const std::string& path)
+namespace aqframegrabbers
 {
-    image = cv::imread(path);
-    if (!image.empty())
+    bool GrabberImage::loadData(const std::string& path)
     {
-        ++count;
-        image_name_param.publish(path, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
-        output_param.publish(image, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
-        return true;
+        image = cv::imread(path);
+        if (!image.empty())
+        {
+            ++count;
+            image_name.publish(path, mo::tags::fn = count, mo::tags::timestamp = mo::ms * (33 * count));
+            output.publish(image, mo::tags::fn = count, mo::tags::timestamp = mo::ms * (33 * count));
+            return true;
+        }
+        return false;
     }
-    return false;
-}
 
-bool GrabberImage::grab()
-{
-    if (!image.empty())
+    bool GrabberImage::grab()
     {
-        output_param.publish(image, mo::tag::_frame_number = count, mo::tag::_timestamp = mo::ms * (33 * count));
-        return true;
+        if (!image.empty())
+        {
+            output.publish(image, mo::tags::fn = count, mo::tags::timestamp = mo::ms * (33 * count));
+            return true;
+        }
+        return false;
     }
-    return false;
-}
 
-int GrabberImage::canLoad(const std::string& document)
-{
-    auto path = boost::filesystem::path(document);
-    auto ext = path.extension().string();
-    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-    return (ext == ".jpg" || ext == ".png" || ext == ".tif") ? 3 : 0;
-}
+    int GrabberImage::canLoad(const std::string& document)
+    {
+        auto path = boost::filesystem::path(document);
+        auto ext = path.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        return (ext == ".jpg" || ext == ".png" || ext == ".tif") ? 3 : 0;
+    }
 
-int GrabberImage::loadTimeout()
-{
-    return 5000;
-}
+    int GrabberImage::loadTimeout() { return 5000; }
+} // namespace aqframegrabbers
 
+using namespace aqframegrabbers;
 MO_REGISTER_CLASS(GrabberImage);

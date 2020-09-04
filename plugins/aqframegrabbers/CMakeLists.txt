@@ -8,7 +8,7 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
   link_directories(${Boost_LIBRARY_DIR_RELEASE})
   include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core imgcodecs cudacodec cudaarithm)
+find_package(OpenCV 3.0 QUIET COMPONENTS core imgcodecs cudacodec cudaarithm videoio)
     include_directories(${OpenCV_INCLUDE_DIRS})
     set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
@@ -50,17 +50,17 @@ else(MO_HAVE_CUDA)
     add_library(aqframegrabbers SHARED ${src} ${hdr})
 endif(MO_HAVE_CUDA)
 
-RCC_LINK_LIB(aqframegrabbers
-        aquila_core
-        metaobject_core 
-        metaobject_object 
-        metaobject_params 
-        metaobject_metaparams
-        ${OpenCV_LIBS}
-        aquila_types
+target_link_libraries(aqframegrabbers
+    aquila_core
+    metaobject_core 
+    metaobject_object 
+    metaobject_params 
+    metaobject_metaparams
+    ${OpenCV_LIBS}
+    aquila_types
 )
 if(GSTREAMER_FOUND)
-    RCC_LINK_LIB(aqframegrabbers
+    target_link_libraries(aqframegrabbers
         ${GSTREAMER_gstapp_LIBRARY}
         ${GSTREAMER_gstaudio_LIBRARY}
         ${GSTREAMER_gstbase_LIBRARY}
