@@ -28,16 +28,12 @@ bool QtImageDisplay::processImpl()
     mo::OptionalTime ts;
     bool overlay = overlay_timestamp;
     bool sync = false;
-    if (image && !image->empty())
+    if (input && !input->empty())
     {
         mo::IAsyncStreamPtr_t stream = this->getStream();
         // TODO use proper context based processImpl overloads
-        mat = image->mat(stream.get());
-        ts = image_param.getNewestTimestamp();
-    }
-    if (cpu_mat)
-    {
-        mat = *cpu_mat;
+        mat = input->mat(stream.get());
+        ts = input_param.getNewestTimestamp();
     }
 
     std::string name = getName();

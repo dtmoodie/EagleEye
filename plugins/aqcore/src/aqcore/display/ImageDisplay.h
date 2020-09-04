@@ -26,8 +26,7 @@ namespace aq
         {
           public:
             MO_DERIVE(QtImageDisplay, Node)
-                OPTIONAL_INPUT(SyncedImage, image)
-                OPTIONAL_INPUT(cv::Mat, cpu_mat)
+                INPUT(SyncedImage, input)
                 PARAM(bool, overlay_timestamp, true)
             MO_END;
 

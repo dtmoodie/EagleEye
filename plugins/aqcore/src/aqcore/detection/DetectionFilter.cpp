@@ -18,7 +18,7 @@ namespace aq
             for (auto index = shape[0]; index != 0;)
             {
                 --index;
-                auto& classification = classifications[index];
+                aq::detection::Classifications& classification = classifications[index];
                 const auto num_classifications = classification.size();
                 for (size_t i = num_classifications - 1; i >= 0; --i)
                 {
@@ -36,7 +36,7 @@ namespace aq
                     out.erase(index);
                 }
             }
-            // output_param.updateData(std::move(out), mo::tag::_param = input_param);
+            output.publish(std::move(out), mo::tags::param = &input_param);
             return true;
         }
     } // namespace nodes
