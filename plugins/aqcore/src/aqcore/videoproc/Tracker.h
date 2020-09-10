@@ -1,7 +1,7 @@
 #pragma once
-#include "../precompiled.hpp"
+#include <Aquila/types/SyncedImage.hpp>
+
 #include <Aquila/nodes/Node.hpp>
-#include <boost/circular_buffer.hpp>
 
 #include <MetaObject/params/ParamMacros.hpp>
 #include <MetaObject/params/TSubscriber.hpp>
