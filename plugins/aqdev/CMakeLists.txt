@@ -31,7 +31,7 @@ ENDIF()
 cuda_add_library(aqdev SHARED ${src} ${hdr} ${knl})
 
 
-RCC_LINK_LIB(aqdev
+target_link_libraries(aqdev
     ${OpenCV_LIBS}
     ${CUDA_cublas_LIBRARY}
     aquila_core
@@ -41,6 +41,7 @@ RCC_LINK_LIB(aqdev
     metaobject_object
     metaobject_params
     metaobject_metaparams
+    aqcore
 )
 
 aquila_declare_plugin(aqdev)

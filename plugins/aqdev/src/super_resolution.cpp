@@ -1,86 +1,74 @@
-#include <Aquila/types/SyncedMemory.hpp>
-
 #include "super_resolution.h"
 
-using namespace aq;
-using namespace aq::nodes;
-
-my_frame_source::my_frame_source()
+namespace aqdev
 {
-    current_source = nullptr;
-    current_stream = nullptr;
-}
 
-void my_frame_source::nextFrame(cv::OutputArray frame)
-{
-    if (current_source && current_stream)
-        frame.getGpuMatRef() = current_source->getGpuMatMutable(*current_stream);
-}
+    FrameSource::FrameSource() {}
 
-void my_frame_source::reset()
-{
-    current_source = nullptr;
-    current_stream = nullptr;
-}
+    void FrameSource::nextFrame(cv::OutputArray frame)
+    {
+        if (!m_current_frame.empty())
+        {
+            frame.getGpuMatRef() = m_current_frame;
+        }
+    }
 
-void my_frame_source::input_frame(SyncedMemory& image, cv::cuda::Stream& stream)
-{
-    current_source = &image;
-    current_stream = &stream;
-}
+    void FrameSource::reset() { m_current_frame = cv::cuda::GpuMat(); }
 
-bool super_resolution::processImpl()
-{
-    if (scale_param.modified())
-    {
-        super_res->setScale(scale);
-        scale_param.modified(false);
-    }
-    if (iterations_param.modified())
-    {
-        super_res->setIterations(iterations);
-        iterations_param.modified(false);
-    }
-    if (tau_param.modified())
-    {
-        super_res->setTau(tau);
-        tau_param.modified(false);
-    }
-    if (lambda_param.modified())
-    {
-        super_res->setLabmda(lambda);
-        lambda_param.modified(false);
-    }
-    if (alpha_param.modified())
-    {
-        super_res->setAlpha(alpha);
-        alpha_param.modified(false);
-    }
-    if (kernel_size_param.modified())
-    {
-        super_res->setKernelSize(kernel_size);
-        kernel_size_param.modified(false);
-    }
-    if (blur_size_param.modified())
-    {
-        super_res->setBlurKernelSize(blur_size);
-        blur_size_param.modified(false);
-    }
-    if (blur_sigma_param.modified())
-    {
-        super_res->setBlurSigma(blur_sigma);
-        blur_sigma_param.modified(false);
-    }
-    if (temporal_radius_param.modified())
-    {
-        super_res->setTemporalAreaRadius(temporal_radius);
-        temporal_radius_param.modified(false);
-    }
-    cv::cuda::GpuMat result;
+    void FrameSource::inputFrame(cv::cuda::GpuMat mat) { m_current_frame = std::move(mat); }
 
-    // frame_source->input_frame(*input, stream());
+    bool SuperResolution::processImpl()
+    {
+        if (scale_param.getModified())
+        {
+            super_res->setScale(scale);
+            scale_param.setModified(false);
+        }
+        if (iterations_param.getModified())
+        {
+            super_res->setIterations(iterations);
+            iterations_param.setModified(false);
+        }
+        if (tau_param.getModified())
+        {
+            super_res->setTau(tau);
+            tau_param.setModified(false);
+        }
+        if (lambda_param.getModified())
+        {
+            super_res->setLabmda(lambda);
+            lambda_param.setModified(false);
+        }
+        if (alpha_param.getModified())
+        {
+            super_res->setAlpha(alpha);
+            alpha_param.setModified(false);
+        }
+        if (kernel_size_param.getModified())
+        {
+            super_res->setKernelSize(kernel_size);
+            kernel_size_param.setModified(false);
+        }
+        if (blur_size_param.getModified())
+        {
+            super_res->setBlurKernelSize(blur_size);
+            blur_size_param.setModified(false);
+        }
+        if (blur_sigma_param.getModified())
+        {
+            super_res->setBlurSigma(blur_sigma);
+            blur_sigma_param.setModified(false);
+        }
+        if (temporal_radius_param.getModified())
+        {
+            super_res->setTemporalAreaRadius(temporal_radius);
+            temporal_radius_param.setModified(false);
+        }
+        cv::cuda::GpuMat result;
 
-    return true;
-}
+        // frame_source->input_frame(*input, stream());
 
+        return true;
+    }
+} // namespace aqdev
 // MO_REGISTER_CLASS(super_resolution)
