@@ -50,7 +50,7 @@ namespace aqcore
             dets.getComponent<aq::detection::Classifications>();
         mt::Tensor<const aq::detection::Confidence, 1> confidence = dets.getComponent<aq::detection::Confidence>();
         mt::Tensor<const aq::detection::Id, 1> id = dets.getComponent<aq::detection::Id>();
-        mt::Tensor<const aq::AlignedPatch, 1> patches = dets.getComponent<aq::AlignedPatch>();
+        mt::Tensor<const aq::detection::AlignedPatch, 1> patches = dets.getComponent<aq::detection::AlignedPatch>();
         mt::Tensor<const aq::detection::BoundingBox2d, 1> bb = dets.getComponent<aq::detection::BoundingBox2d>();
         const uint32_t num_dets = dets.getNumEntities();
 

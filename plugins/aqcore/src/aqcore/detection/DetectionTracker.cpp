@@ -1,10 +1,10 @@
 #include "DetectionTracker.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
 
-namespace aq
+namespace aqcore
 {
 
-    nodes::Node::Ptr DetectionTracker::create(std::string name)
+    aq::nodes::Node::Ptr DetectionTracker::create(std::string name)
     {
         // TODO create a child based on name
         auto ctr = mo::MetaObjectFactory::instance()->getConstructor(name.c_str());
@@ -36,6 +36,7 @@ namespace aq
 
     bool DetectionTracker::processImpl() { return false; }
 
-} // namespace aq
-using namespace aq;
+} // namespace aqcore
+
+using namespace aqcore;
 MO_REGISTER_CLASS(DetectionTracker)
