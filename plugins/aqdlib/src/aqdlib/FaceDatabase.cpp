@@ -3,11 +3,9 @@
 #include "FaceDatabase.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
 
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/vector.hpp>
-
+#include <MetaObject/serialization/BinaryLoader.hpp>
+#include <MetaObject/serialization/BinarySaver.hpp>
+#include <MetaObject/serialization/JSONPrinter.hpp>
 #include <ct/reflect/print.hpp>
 
 #include <boost/filesystem.hpp>
@@ -152,9 +150,10 @@ namespace aqdlib
         ofs.open(unknown_detections.string() + "/unknown.db");
         if (m_unknown_crops.size())
         {
-            cereal::JSONOutputArchive ar(ofs);
+            mo::JSONSaver ar(ofs);
+
             IdentityDatabase unknown(m_unknown_face_descriptors);
-            ar(cereal::make_nvp("unknown", unknown));
+            ar(&unknown, "unknown");
             for (size_t i = 0; i < m_unknown_crops.size(); ++i)
             {
                 std::string output_path = unknown_detections.string() + '/' + std::to_string(i) + ".jpg";
@@ -172,8 +171,8 @@ namespace aqdlib
         this->getLogger().info("Saving known faces to {}", known_detections.string());
         std::ofstream ofs;
         ofs.open(known_detections.string() + "/identities.db");
-        cereal::JSONOutputArchive ar(ofs);
-        ar(cereal::make_nvp("face_db", m_known_faces));
+        mo::JSONSaver ar(ofs);
+        ar(&m_known_faces, "face_db");
     }
 
     void FaceDatabase::saveRecentFaces()
@@ -345,7 +344,7 @@ namespace aqdlib
                         classifications[i].resize(1);
                         classifications[i][0] = (*m_identities)[idx]();
                         m_recent_patches.push_back({patches[i].aligned_patch,
-                                                    wrapped_descriptor.clone(),
+                                                    aq::TSyncedMemory<float>::copyHost(det_desc, stream),
                                                     classifications[i][0].cat->getName()});
                     }
 
@@ -380,8 +379,8 @@ namespace aqdlib
         {
             std::ifstream ifs;
             ifs.open(database_path.string() + "/identities.bin");
-            cereal::BinaryInputArchive ar(ifs);
-            ar(cereal::make_nvp("face_db", load_db));
+            mo::BinaryLoader ar(ifs);
+            ar(&load_db, "face_db");
 
             loaded = true;
         }
@@ -390,8 +389,8 @@ namespace aqdlib
             this->getLogger().info("Loading identities from {}/identities.db", database_path);
             std::ifstream ifs;
             ifs.open(database_path.string() + "/identities.db");
-            cereal::JSONInputArchive ar(ifs);
-            ar(cereal::make_nvp("face_db", load_db));
+            mo::JSONLoader ar(ifs);
+            ar(&load_db, "face_db");
             loaded = true;
         }
         if (loaded)

@@ -1,4 +1,5 @@
 #include <ct/types/opencv.hpp>
+#include <dlib/opencv.h>
 
 #include "FaceAligner.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
@@ -20,11 +21,12 @@ namespace aqdlib
         }
 
         const uint32_t num_components = detections->getNumComponents();
+
         if (num_components > 0)
         {
             mo::IAsyncStreamPtr_t stream = this->getStream();
             cv::Mat img = image->getMat(stream.get());
-            const auto size = image->getSize();
+            const auto size = image->size();
             aq::TDetectedObjectSet<OutputComponents_t> out = *detections;
             std::vector<cv::Point2f> landmarks;
 
@@ -35,7 +37,7 @@ namespace aqdlib
                     detections->getComponent<aq::detection::BoundingBox2d>();
 
                 mt::Tensor<aq::detection::BoundingBox2d, 1> out_bbs =
-                    out->getComponentMutable<aq::detection::BoundingBox2d>();
+                    out.getComponentMutable<aq::detection::BoundingBox2d>();
 
                 for (uint32_t i = 0; i < num_components; ++i)
                 {
@@ -47,7 +49,8 @@ namespace aqdlib
                             continue;
                         }
                     }
-                    boundingBoxToPixels(bb, size);
+
+                    aq::boundingBoxToPixels(bb, size);
 
                     if (min_size > 1.0F)
                     {
@@ -79,8 +82,9 @@ namespace aqdlib
                     aq::detection::LandmarkDetection landmark(landmarks.data(), num_points);
                 }
             }
+            this->output.publish(std::move(out), mo::tags::param = &this->detections_param);
         }
-        output_param.emitUpdate(detections_param);
+
         return true;
     }
 } // namespace aqdlib

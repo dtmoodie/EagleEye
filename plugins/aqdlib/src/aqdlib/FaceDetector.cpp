@@ -3,50 +3,41 @@
 #include <boost/filesystem.hpp>
 
 #include <dlib/opencv.h>
-namespace aq
-{
-namespace nodes
+namespace aqdlib
 {
 
-bool DlibMMODDetector::processImpl()
-{
-    if (!m_net || model_file_param.modified())
+    bool DlibMMODDetector::processImpl()
     {
-        void createLabels();
-        m_net.reset(new dlib::mmod_net_type());
-        if (boost::filesystem::exists(model_file))
+        if (!m_net || model_file_param.getModified())
         {
-            dlib::deserialize(model_file.string()) >> *m_net;
-            model_file_param.modified(false);
+            void createLabels();
+            m_net.reset(new dlib::mmod_net_type());
+            if (boost::filesystem::exists(model_file))
+            {
+                dlib::deserialize(model_file.string()) >> *m_net;
+                model_file_param.setModified(false);
+            }
         }
-    }
-    cv::Mat img;
-    bool sync = false;
-    img = input->getMat(_ctx.get(), 0);
-    if (sync)
-    {
-        _ctx->getStream().waitForCompletion();
-    }
-    std::vector<dlib::cv_image<dlib::bgr_pixel>> dlib_img{dlib::cv_image<dlib::bgr_pixel>(img)};
-    std::vector<std::vector<dlib::mmod_rect>> dets = (*m_net)(dlib_img);
-    detections.clear();
-    for (const dlib::mmod_rect& det : dets[0])
-    {
-        aq::DetectedObject aqdet;
-        aqdet.bounding_box.x = det.rect.left();
-        aqdet.bounding_box.y = det.rect.top();
-        aqdet.bounding_box.width = det.rect.width();
-        aqdet.bounding_box.height = det.rect.height();
-        aqdet.confidence = static_cast<float>(det.detection_confidence);
-        aqdet.classifications = (*labels)[0](1.0);
-        detections.emplace_back(std::move(aqdet));
-    }
-    detections_param.emitUpdate(input_param);
-    return true;
-}
+        auto stream = this->getStream();
+        cv::Mat img = input->getMat(stream.get());
 
-} // namespace aq::nodes
-} // namespace aq
+        std::vector<dlib::cv_image<dlib::bgr_pixel>> dlib_img{dlib::cv_image<dlib::bgr_pixel>(img)};
+        std::vector<std::vector<dlib::mmod_rect>> dets = (*m_net)(dlib_img);
+        Output_t output;
+        output.resize(dets[0].size());
 
-using namespace aq::nodes;
+        for (size_t i = 0; i < dets[0].size(); ++i)
+        {
+            const dlib::mmod_rect& det = dets[0][i];
+            output[i] =
+                aq::detection::BoundingBox2d(det.rect.left(), det.rect.top(), det.rect.width(), det.rect.height());
+            output[i] = aq::detection::Confidence(det.detection_confidence);
+        }
+        this->output.publish(std::move(output), mo::tags::param = &input_param);
+        return true;
+    }
+
+} // namespace aqdlib
+
+using namespace aqdlib;
 MO_REGISTER_CLASS(DlibMMODDetector);

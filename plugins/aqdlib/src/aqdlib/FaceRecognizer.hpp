@@ -60,7 +60,8 @@ namespace aqdlib
             PARAM(mo::ReadFile, face_recognizer_weight_file, {"dlib_face_recognition_resnet_model_v1.dat"})
 
             OUTPUT(aq::TDetectedObjectSet<OutputComponents_t>, output)
-        MO_END
+        MO_END;
+
       protected:
         bool processImpl() override;
         dlib::anet_type m_net;

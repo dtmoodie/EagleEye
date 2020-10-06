@@ -30,8 +30,14 @@ namespace aqdlib
     class DlibMMODDetector : public aq::nodes::FaceDetector
     {
       public:
+        using OutputComponents_t = ct::VariadicTypedef<aq::detection::BoundingBox2d, aq::detection::Confidence>;
+
+        using Output_t = aq::TDetectedObjectSet<OutputComponents_t>;
+
         MO_DERIVE(DlibMMODDetector, IImageDetector)
             PARAM(mo::ReadFile, model_file, {})
+
+            OUTPUT(Output_t, output)
         MO_END;
 
       protected:

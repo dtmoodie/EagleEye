@@ -6,33 +6,7 @@
 namespace aqdlib
 {
 
-    void DlibCorrelationTracker::TrackState::readMetadata(const aq::DetectedObject& det)
-    {
-        classifications = det.classifications;
-        detection_id = det.id;
-        detection_confidence = det.confidence;
-    }
-
-    void DlibCorrelationTracker::TrackState::readMetadata(const aq::DetectionDescription& det)
-    {
-        track_description = det.descriptor;
-        readMetadata(static_cast<const aq::DetectedObject&>(det));
-    }
-
-    void DlibCorrelationTracker::TrackState::writeMetadata(aq::DetectedObject& det)
-    {
-        det.id = detection_id;
-        det.classifications = classifications;
-        det.confidence = detection_confidence;
-    }
-
-    void DlibCorrelationTracker::TrackState::writeMetadata(aq::DetectionDescription& det)
-    {
-        det.descriptor = track_description;
-        writeMetadata(static_cast<aq::DetectedObject&>(det));
-    }
-
-    template <class DetType>
+    /*template <class DetType>
     void DlibCorrelationTracker::apply(const cv::Mat& img)
     {
         auto ts = detections_param.getNewestTimestamp();
@@ -73,68 +47,76 @@ namespace aqdlib
             }
             output_param.updateData(std::move(output), mo::tag::_param = image_param);
         }
-    }
+    }*/
 
-    Algorithm::InputState DlibCorrelationTracker::checkInputs()
+    aq::Algorithm::InputState DlibCorrelationTracker::checkInputs()
     {
-        if (detections_param.modified())
+
+        if (detections_param.getData())
         {
-            if (detections_param.getInput(mo::OptionalTime_t()))
+            boost::optional<mo::Header> header = detections_param.getNewestHeader();
+            if (header)
             {
-                auto ts = detections_param.getTimestamp();
-                if (image_param.getInput(ts))
-                {
-                    return Algorithm::InputState::AllValid;
-                }
-                else
-                {
-                    return Algorithm::InputState::NoneValid;
-                }
+                image_param.getData(header.get_ptr());
+                return aq::Algorithm::InputState::kALL_VALID;
+            }
+            else
+            {
+                return aq::Algorithm::InputState::kNONE_VALID;
             }
         }
-        if (image_param.modified())
-        {
-            if (image_param.getInput(mo::OptionalTime_t()))
-            {
-                return Algorithm::InputState::AllValid;
-            }
-        }
-        return Algorithm::InputState::NotUpdated;
-    }
 
-    template <>
-    bool DlibCorrelationTracker::processImpl(mo::Context* ctx)
-    {
-        cv::Mat img = image->getMat(ctx, 0);
-        mo::selectType<decltype(detections_param)::TypeTuple>(*this, detections_param.getTypeInfo(), img);
-        return true;
-    }
-
-    template <>
-    bool DlibCorrelationTracker::processImpl(mo::CvContext* ctx)
-    {
-        bool sync = false;
-        cv::Mat img = image->getMat(ctx, 0, &sync);
-        if (sync)
+        if (image_param.getData())
         {
-            ctx->getStream().waitForCompletion();
+            return aq::Algorithm::InputState::kALL_VALID;
         }
-        mo::selectType<decltype(detections_param)::TypeTuple>(*this, detections_param.getTypeInfo(), img);
-        return true;
+
+        return aq::Algorithm::InputState::kNOT_UPDATED;
     }
 
     bool DlibCorrelationTracker::processImpl()
     {
         mo::IAsyncStreamPtr_t stream = this->getStream();
         const cv::Mat img = this->image->getMat(stream.get());
+        dlib::cv_image<dlib::bgr_pixel> dlib_img(img);
 
-        Input_t output = *this->detections;
-        auto bbs = this->detections.getComponent<aq::detection::BoundingBox2d>();
+        boost::optional<mo::Header> image_header = image_param.getNewestHeader();
+        boost::optional<mo::Header> detection_header = detections_param.getNewestHeader();
 
-        boost::optional<mo::Header> header = image_param.getNewestHeader();
-        if (!header)
+        if (!image_header)
         {
             return false;
+        }
+
+        if (!detection_header)
+        {
+            // no detections at all?
+            // if we have previous detections, do the track
+        }
+
+        if (*image_header == *detection_header)
+        {
+            const uint32_t num_entities = this->detections->getNumEntities();
+            m_tracked_objects = *this->detections;
+
+            auto bbs = m_tracked_objects.getComponent<aq::detection::BoundingBox2d>();
+            mt::Tensor<dlib::correlation_tracker, 1> trackers =
+                m_tracked_objects.getComponentMutable<dlib::correlation_tracker>();
+
+            for (uint32_t i = 0; i < num_entities; ++i)
+            {
+                const cv::Rect2f bb = bbs[i];
+                boundingBoxToPixels(bb, image->size());
+                dlib::rectangle rect(bb.x, bb.y, bb.x + bb.width, bb.y + bb.height);
+                trackers[i].start_track(dlib_img, rect);
+            }
+
+            return true;
+        }
+
+        if (*image_header > *detection_header)
+        {
+            // image is newer, track what we've already detected
         }
 
         return true;
@@ -142,5 +124,5 @@ namespace aqdlib
 
 } // namespace aqdlib
 
-using namespace aq::nodes;
+using namespace aqdlib;
 MO_REGISTER_CLASS(DlibCorrelationTracker)

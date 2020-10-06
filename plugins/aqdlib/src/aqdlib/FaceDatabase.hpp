@@ -6,6 +6,8 @@
 #include <Aquila/types/TSyncedImage.hpp>
 #include <Aquila/types/TSyncedMemory.hpp>
 
+#include <ct/reflect_macros.hpp>
+
 #include <MetaObject/runtime_reflection.hpp>
 
 #include <boost/circular_buffer.hpp>
@@ -60,31 +62,15 @@ namespace aqdlib
             OUTPUT(Input_t, output, {})
         MO_END;
 
-      protected:
-        bool processImpl() override;
-
         struct IdentityDatabase
         {
             IdentityDatabase();
             IdentityDatabase(const std::vector<aq::TSyncedMemory<float>>& unkown);
 
-            // TODO add visitation
-
-            void load(mo::ILoadVisitor& visitor, const std::string& name);
-            void save(mo::ISaveVisitor& visitor, const std::string& name);
-
             std::vector<std::string> identities;
             aq::TSyncedImage<aq::GRAY<float>> descriptors;
             std::vector<int> membership;
         };
-
-        std::shared_ptr<aq::CategorySet> m_identities;
-        std::vector<aq::TSyncedMemory<float>> m_unknown_face_descriptors;
-        std::vector<cv::Mat> m_unknown_crops;
-        std::vector<int> m_unknown_det_count;
-        std::map<std::string, boost::circular_buffer<cv::Mat>> m_known_face_patches;
-        IdentityDatabase m_known_faces;
-        int m_unknown_write_count = 0;
 
         struct ClassifiedPatch
         {
@@ -93,7 +79,33 @@ namespace aqdlib
             std::string classification;
             void save(const std::string file_path, const int index, mo::IAsyncStream& stream) const;
         };
+
+      protected:
+        bool processImpl() override;
+
+        std::shared_ptr<aq::CategorySet> m_identities;
+        std::vector<aq::TSyncedMemory<float>> m_unknown_face_descriptors;
+        std::vector<cv::Mat> m_unknown_crops;
+        std::vector<int> m_unknown_det_count;
+        std::map<std::string, boost::circular_buffer<cv::Mat>> m_known_face_patches;
+        IdentityDatabase m_known_faces;
+        int m_unknown_write_count = 0;
         boost::circular_buffer<ClassifiedPatch> m_recent_patches;
     };
 
 } // namespace aqdlib
+
+namespace ct
+{
+    REFLECT_BEGIN(aqdlib::FaceDatabase::IdentityDatabase)
+    PUBLIC_ACCESS(identities)
+    PUBLIC_ACCESS(descriptors)
+    PUBLIC_ACCESS(membership)
+    REFLECT_END;
+
+    REFLECT_BEGIN(aqdlib::FaceDatabase::ClassifiedPatch)
+    PUBLIC_ACCESS(patch)
+    PUBLIC_ACCESS(embeddings)
+    PUBLIC_ACCESS(classification)
+    REFLECT_END;
+} // namespace ct

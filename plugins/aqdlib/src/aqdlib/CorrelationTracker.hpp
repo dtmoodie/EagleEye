@@ -25,39 +25,27 @@ namespace aqdlib
             OUTPUT(Input_t, output)
         MO_END;
 
-        template <class DetType>
-        void apply(const cv::Mat&);
-
-        template <class CTX>
-        bool processImpl(CTX* ctx);
-
       protected:
-        InputState checkInputs() override;
+        aq::Algorithm::InputState checkInputs() override;
 
         bool processImpl() override;
 
-        struct TrackState
-        {
-            dlib::correlation_tracker tracker;
-            size_t track_count = 0;
-
-            void readMetadata(const aq::DetectedObject& det);
-            void readMetadata(const aq::DetectionDescription& det);
-
-            void writeMetadata(aq::DetectedObject& det);
-            void writeMetadata(aq::DetectionDescription& det);
-
-            // Metadata
-            mo::SmallVec<Classification, 5> classifications;
-            aq::SyncedMemory track_description;
-            size_t detection_id;
-            float detection_confidence;
-        };
-
-        std::vector<TrackState> m_trackers;
-        Input_t m_trackers;
+        using TrackState_t = ct::VariadicTypedef<aq::detection::BoundingBox2d, dlib::correlation_tracker>;
+        aq::TDetectedObjectSet<TrackState_t> m_tracked_objects;
     };
 
 } // namespace aqdlib
+
+namespace ct
+{
+    REFLECT_BEGIN(dlib::correlation_tracker)
+    PROPERTY(get_filter_size)
+    PROPERTY(get_num_scale_levels)
+    PROPERTY(get_scale_window_size)
+    PROPERTY(get_regularizer_space)
+    PROPERTY(get_regularizer_scale)
+    PROPERTY(get_scale_pyramid_alpha)
+    REFLECT_END;
+} // namespace ct
 
 #endif // AQDLIB_CORRELATION_TRACKER_HPP

@@ -3,6 +3,7 @@
 #include "FaceRecognizer.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <MetaObject/logging/logging.hpp>
+#include <MetaObject/logging/logging_macros.hpp>
 #include <MetaObject/logging/profiling.hpp>
 
 #include <boost/filesystem.hpp>
@@ -17,7 +18,7 @@ namespace dlib
 {
     void set_image_size(cv_image<bgr_pixel>& image, const long unsigned int& rows, const long unsigned int& cols)
     {
-        MO_THROW(warn, "Not actually implemented");
+        THROW(warn, "Not actually implemented");
     }
 } // namespace dlib
 
@@ -33,27 +34,34 @@ namespace aqdlib
         }
         if (!m_initialized)
         {
-            MO_LOG(warning) << "Failed to initialize face recognition model from landmark file "
-                            << face_recognizer_weight_file;
+            this->getLogger().warn("Failed to initialize face recognition model from landmark file {}",
+                                   face_recognizer_weight_file);
             return false;
         }
-        output.clear();
-        if (detections->size())
+
+        auto stream = this->getStream();
+
+        const uint32_t num_entities = this->detections->getNumEntities();
+        if (num_entities > 0)
         {
-            cv::Mat img = image->getMat(_ctx.get());
+            cv::Mat img = image->getMat(stream.get());
             dlib::cv_image<dlib::bgr_pixel> dlib_img(img);
             std::vector<dlib::matrix<dlib::bgr_pixel>> aligned_faces;
 
-            auto size = image->getSize();
-            for (const auto& det : *detections)
+            const auto size = image->size();
+            auto bbs = detections->getComponent<aq::detection::BoundingBox2d>();
+            auto landmarks = detections->getComponent<aq::detection::LandmarkDetection>();
+
+            for (uint32_t i = 0; i < num_entities; ++i)
             {
-                auto bb = det.bounding_box;
-                boundingBoxToPixels(bb, size);
+                auto bb = bbs[i];
+                aq::boundingBoxToPixels(bb, size);
                 std::vector<dlib::point> parts;
-                cv::Mat pts = det.landmark_keypoints.getMat(_ctx.get());
-                for (int i = 0; i < pts.cols; ++i)
+                auto pts = landmarks[i];
+
+                for (int j = 0; j < pts.getShape().numElements(); ++j)
                 {
-                    parts.emplace_back(dlib::point(pts.at<cv::Point2f>(0, i).x, pts.at<cv::Point2f>(0, i).y));
+                    parts.emplace_back(dlib::point(pts[j].x, pts[j].y));
                 }
 
                 dlib::rectangle rect(bb.x, bb.y, bb.x + bb.width, bb.y + bb.height);
@@ -66,24 +74,25 @@ namespace aqdlib
 
             if (!aligned_faces.empty())
             {
+                // TODO figure out how to pass in the output, thus avoiding any need to copy data.
                 std::vector<dlib::matrix<float, 0, 1>> face_descriptors = m_net(aligned_faces);
+                aq::TDetectedObjectSet<OutputComponents_t> output = *this->detections;
+                auto descriptors = output.getComponentMutable<aq::detection::Descriptor>();
+                auto provider = output.getProvider<aq::detection::Descriptor>();
+
                 for (size_t i = 0; i < face_descriptors.size(); ++i)
                 {
-                    float* start = face_descriptors[i].begin();
-                    float* end = face_descriptors[i].end();
-                    cv::Mat wrapped(1, end - start, CV_32F, start);
-                    DetectionDescriptionPatch det;
-                    det.bounding_box = (*detections)[i].bounding_box;
-                    det.id = (*detections)[i].id;
-                    det.descriptor = wrapped.clone();
-                    det.classifications = (*detections)[i].classifications;
-                    det.aligned_patch = dlib::toMat(aligned_faces[i]).clone();
-                    det.confidence = (*detections)[i].confidence;
-                    output.emplace_back(std::move(det));
+                    const float* start = face_descriptors[i].begin();
+                    const float* end = face_descriptors[i].end();
+                    ct::TArrayView<const float> view(start, end - start);
+
+                    ct::TArrayView<float> dest = descriptors[i];
+                    view.copyTo(dest);
+                    // output.emplace_back(std::move(det));
                 }
+                this->output.publish(output);
             }
         }
-        output_param.emitUpdate(image_param);
         return true;
     }
 
