@@ -642,7 +642,7 @@ if (NOT TARGET dlib)
                                       ${CUDA_cublas_LIBRARY} 
                                       ${cudnn}
                                       ${CUDA_curand_LIBRARY}
-                                      CUDA_cusolver_LIBRARY
+                                      ${CUDA_cusolver_LIBRARY}
                                       )
             IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
                 list(APPEND dlib_needed_libraries "/usr/local/cuda/lib/libculibos.a")
