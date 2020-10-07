@@ -7,19 +7,17 @@
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/types/file_types.hpp"
 
-namespace aq
+namespace aqcore
 {
-    namespace nodes
+    class AQUILA_EXPORTS IClassifier : virtual public aq::nodes::Node
     {
-        class AQUILA_EXPORTS IClassifier : public Node
-        {
-          public:
-            MO_DERIVE(IClassifier, Node)
-                PARAM(mo::ReadFile, label_file, {})
-                PARAM_UPDATE_SLOT(label_file)
+      public:
+        MO_DERIVE(IClassifier, aq::nodes::Node)
+            PARAM(mo::ReadFile, label_file, {})
+            PARAM_UPDATE_SLOT(label_file)
 
-                OUTPUT_WITH_FLAG(std::shared_ptr<CategorySet>, mo::ParamFlags::kUNSTAMPED, labels)
-            MO_END;
-        };
-    } // namespace nodes
-} // namespace aq
+            OUTPUT_WITH_FLAG(std::shared_ptr<aq::CategorySet>, mo::ParamFlags::kUNSTAMPED, labels)
+        MO_END;
+    };
+
+} // namespace aqcore
