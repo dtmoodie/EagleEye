@@ -1,15 +1,15 @@
-import aquila
+import aquila as aq
 
-graph = aquila.Graph()
+graph = aq.Graph()
 
-devices = aquila.framegrabbers.listDataSources()
+devices = aq.framegrabbers.listDataSources()
 
-cam = aquila.framegrabbers.FrameGrabber()
+cam = aq.framegrabbers.FrameGrabber()
 graph.addNode(cam)
 
 cam.loadData('v4l2src ! video/x-raw,width=1920,height=1080,format=RGB ! videoconvert ! appsink name=mysink')
-face = aquila.nodes.HaarFaceDetector(graph=graph, model_file='/home/dan/code/opencv/data/haarcascades/haarcascade_frontalface_default.xml', input=cam)
-recognizer = aquila.nodes.FaceRecognizer(image=cam, detections=face,
+face = aq.nodes.HaarFaceDetector(graph=graph, model_file='/home/dan/code/opencv/data/haarcascades/haarcascade_frontalface_default.xml', input=cam)
+recognizer = aq.nodes.FaceRecognizer(image=cam, detections=face,
     shape_landmark_file='/code/eagleeye/plugins/dlib/share/shape_predictor_5_face_landmarks.dat',
     face_recognizer_weight_file='/code/eagleeye/plugins/dlib/share/dlib_face_recognition_resnet_model_v1.dat')
 facedb = aquila.nodes.FaceDatabase(detections=recognizer, image=cam)

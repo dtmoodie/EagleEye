@@ -194,11 +194,13 @@ void sig_handler(int s)
 {
     switch (s)
     {
-    case SIGSEGV: {
+    case SIGSEGV:
+    {
         // std::cout << "Caught SIGSEGV " << mo::print_callstack(2, true);
         break;
     }
-    case SIGINT: {
+    case SIGINT:
+    {
         // std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
         std::cout << "Caught SIGINT, shutting down" << std::endl;
         static int count = 0;
@@ -210,21 +212,25 @@ void sig_handler(int s)
         }
         return;
     }
-    case SIGILL: {
+    case SIGILL:
+    {
         std::cout << "Caught SIGILL " << std::endl;
         break;
     }
-    case SIGTERM: {
+    case SIGTERM:
+    {
         std::cout << "Caught SIGTERM " << std::endl;
         break;
     }
 #ifndef _MSC_VER
-    case SIGKILL: {
+    case SIGKILL:
+    {
         std::cout << "Caught SIGKILL " << std::endl;
         break;
     }
 #endif
-    default: {
+    default:
+    {
         std::cout << "Caught signal " << s << std::endl;
     }
     }

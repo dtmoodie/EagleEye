@@ -167,7 +167,7 @@ namespace aqcore
 
     bool DrawDetections::processImpl()
     {
-        bool draw_on_device = this->isCVStream();
+        const bool draw_on_device = this->getStream()->isDeviceStream();
 
         cv::cuda::GpuMat device_draw_image;
         cv::Mat host_draw_image;

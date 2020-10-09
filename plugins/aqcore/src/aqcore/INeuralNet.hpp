@@ -1,5 +1,6 @@
 #pragma once
 #include "IClassifier.hpp"
+
 #include "aqcore/aqcore_export.hpp"
 
 #include <Aquila/nodes/NodeInfo.hpp>
@@ -9,12 +10,13 @@
 namespace aqcore
 {
 
-    struct INeuralNetInfo : public NodeInfo
+    struct INeuralNetInfo : public aq::nodes::NodeInfo
     {
-        virtual bool canLoad(const std::string& model, const std::string& weights) = 0;
+        virtual bool canLoad(const std::string& model, const std::string& weights) const = 0;
     };
 
     class aqcore_EXPORT INeuralNet : virtual public TInterface<INeuralNet, IClassifier>
+
     {
       public:
         static rcc::shared_ptr<INeuralNet> create(const std::string& model, const std::string& weight = std::string());
@@ -22,7 +24,7 @@ namespace aqcore
         MO_DERIVE(INeuralNet, IClassifier)
             INPUT(aq::SyncedImage, input)
             OPTIONAL_INPUT(std::vector<cv::Rect2f>, regions_of_interest)
-            OPTIONAL_INPUT(aq::DetectedObjectSet<ct::VariadicTypedef<aq::detections::BoundingBox2d>>, input_detections)
+            OPTIONAL_INPUT(aq::TDetectedObjectSet<ct::VariadicTypedef<aq::detection::BoundingBox2d>>, input_detections)
 
             PARAM(mo::ReadFile, model_file, mo::ReadFile())
 
@@ -38,10 +40,12 @@ namespace aqcore
             PARAM(float, image_scale, 1.0)
 
             PARAM(bool, swap_bgr, true)
-        MO_END
+        MO_END;
 
       protected:
         bool processImpl() override;
+
+        void setStream(const mo::IAsyncStreamPtr_t& stream) override;
 
         virtual bool initNetwork() = 0;
 
@@ -55,7 +59,7 @@ namespace aqcore
         virtual void preBatch(int batch_size);
 
         virtual void postMiniBatch(const std::vector<cv::Rect>& batch_bb = std::vector<cv::Rect>(),
-                                   const DetectedObjectSet& dets = DetectedObjectSet()) = 0;
+                                   const aq::DetectedObjectSet* dets = nullptr) = 0;
         virtual void postBatch();
 
         virtual bool forwardAll();
@@ -63,6 +67,7 @@ namespace aqcore
         virtual bool forwardMinibatch() = 0;
         // Return a list of pixel coordinates in the input image for processing
         std::vector<cv::Rect> getRegions() const;
+        std::unique_ptr<cv::cuda::Stream> m_cv_stream;
     };
 
 } // namespace aqcore

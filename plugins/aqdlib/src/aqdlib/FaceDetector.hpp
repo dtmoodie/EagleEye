@@ -27,14 +27,14 @@ namespace dlib
 namespace aqdlib
 {
 
-    class DlibMMODDetector : public aq::nodes::FaceDetector
+    class DlibMMODDetector : public aqcore::FaceDetector
     {
       public:
         using OutputComponents_t = ct::VariadicTypedef<aq::detection::BoundingBox2d, aq::detection::Confidence>;
 
         using Output_t = aq::TDetectedObjectSet<OutputComponents_t>;
 
-        MO_DERIVE(DlibMMODDetector, IImageDetector)
+        MO_DERIVE(DlibMMODDetector, aqcore::FaceDetector)
             PARAM(mo::ReadFile, model_file, {})
 
             OUTPUT(Output_t, output)

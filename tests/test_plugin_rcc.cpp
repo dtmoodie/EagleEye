@@ -1,4 +1,4 @@
-#include "MetaObject/core/SystemTable.hpp"
+/*#include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include <RuntimeObjectSystem/IObjectFactorySystem.h>
 #include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
@@ -99,3 +99,4 @@ int main(int argc, char** argv)
     }
     return 0;
 }
+*/

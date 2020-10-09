@@ -18,6 +18,11 @@ namespace aqcore
 
             OUTPUT_WITH_FLAG(std::shared_ptr<aq::CategorySet>, mo::ParamFlags::kUNSTAMPED, labels)
         MO_END;
+        std::shared_ptr<aq::CategorySet> getLabels() const;
+        void setLabels(std::shared_ptr<aq::CategorySet>);
+
+      private:
+        std::shared_ptr<aq::CategorySet> m_labels;
     };
 
 } // namespace aqcore

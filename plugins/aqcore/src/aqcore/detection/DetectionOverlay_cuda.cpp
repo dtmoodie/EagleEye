@@ -28,7 +28,7 @@ namespace aqcore
             return;
         }
         cv::cuda::GpuMat im;
-        auto& cv_stream = dynamic_cast<aq::CVStream&>(stream).getCVStream();
+        cv::cuda::Stream& cv_stream = this->getCVStream();
         image->copyTo(im, &stream);
         if (max_num_tiles > 0)
         {

@@ -1,3 +1,5 @@
+#include <ct/types/opencv.hpp>
+
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <Aquila/types/ObjectDetection.hpp>
@@ -67,6 +69,7 @@ class YOLO : virtual public aq::nodes::INeuralNet
         // do things with current_detections
     }
     virtual bool reshapeNetwork(int num, int channels, int height, int width) { return false; }
+
   private:
     std::shared_ptr<Detector> detector;
     std::vector<std::vector<cv::cuda::GpuMat>> input_buffer;
@@ -82,24 +85,32 @@ class YOLO : virtual public aq::nodes::INeuralNet
 #include "curand.h"
 namespace darknet
 {
-extern "C" {
+    extern "C" {
 #define CUDNN
 #define GPU
 #include "darknet.h"
 #undef GPU
 #undef CUDNN
-}
-}
+    }
+} // namespace darknet
 
-class YOLO : virtual public aq::nodes::INeuralNet
+class YOLO : virtual public aqcore::INeuralNet
 {
   public:
-    MO_DERIVE(YOLO, aq::nodes::INeuralNet)
+    using OutputComponents_t = ct::VariadicTypedef<aq::detection::BoundingBox2d,
+                                                   aq::detection::Classifications,
+                                                   aq::detection::Confidence,
+                                                   aq::detection::Id>;
+    using Output_t = aq::TDetectedObjectSet<OutputComponents_t>;
+
+    Output_t m_dets;
+
+    MO_DERIVE(YOLO, aqcore::INeuralNet)
         PARAM(float, det_thresh, 0.5f)
         PARAM(float, cat_thresh, 0.5f)
         PARAM(float, nms_threshold, 0.45f)
-        OUTPUT(aq::DetectedObjectSet, output, {})
-    MO_END
+        OUTPUT(Output_t, output)
+    MO_END;
 
   protected:
     bool initNetwork()
@@ -147,63 +158,14 @@ class YOLO : virtual public aq::nodes::INeuralNet
 
     std::vector<std::vector<cv::cuda::GpuMat>> getNetImageInput(int requested_batch_size) { return {m_input_channels}; }
 
-    void postMiniBatch(const std::vector<cv::Rect>& batch_bb, const aq::DetectedObjectSet& dets)
-    {
-        darknet::layer l = darknet::get_network_output_layer(m_net);
-        darknet::cuda_pull_array(l.output_gpu, l.output, l.outputs * l.batch);
-        int nboxes = 0;
-        auto det_ptr = darknet::get_network_boxes(
-            m_net, m_input_channels[0].cols, m_input_channels[0].rows, det_thresh, cat_thresh, 0, 1, &nboxes);
-
-        if (nms_threshold > 0.0f)
-        {
-            darknet::do_nms_sort(det_ptr, nboxes, l.classes, nms_threshold);
-        }
-
-        std::shared_ptr<darknet::detection> det_owner(
-            det_ptr, [nboxes](darknet::detection* dets) { darknet::free_detections(dets, nboxes); });
-
-        output.clear();
-        output.setCatSet(labels);
-        for (int i = 0; i < nboxes; ++i)
-        {
-            if (det_ptr[i].objectness > det_thresh)
-            {
-                darknet::box box = det_ptr[i].bbox;
-                cv::Rect2f rect(box.x, box.y, box.w, box.h);
-                rect.x = rect.x - rect.width / 2.0f;
-                rect.y = rect.y - rect.height / 2.0f;
-                aq::clipNormalizedBoundingBox(rect);
-                aq::boundingBoxToPixels(rect, batch_bb[0].size());
-                aq::DetectedObject det(rect);
-                det.confidence = det_ptr[i].objectness;
-                det.id = i;
-                std::vector<aq::Classification> cats;
-                for (int j = 0; j < labels->size(); ++j)
-                {
-                    if (det_ptr[i].prob[j] > cat_thresh)
-                    {
-                        cats.emplace_back((*labels)[j](det_ptr[i].prob[j]));
-                    }
-                }
-                if (!cats.empty())
-                {
-                    det.classifications = cats;
-                    output.push_back(det);
-                }
-            }
-        }
-        return;
-    }
-
     bool forwardMinibatch()
     {
         m_net->input_gpu = m_input;
-        stream().waitForCompletion();
+        this->getStream()->synchronize();
         int i;
         for (i = 0; i < m_net->n; ++i)
         {
-            MO_LOG(trace) << i << " forward";
+            this->getLogger().trace("{} forward", i);
             m_net->index = i;
             darknet::layer l = m_net->layers[i];
             if (l.delta_gpu)
@@ -222,7 +184,62 @@ class YOLO : virtual public aq::nodes::INeuralNet
         return true;
     }
 
-    void postBatch() { output_param.emitUpdate(input_param); }
+    Output_t m_output;
+
+    void postMiniBatch(const std::vector<cv::Rect>& batch_bb, const aq::DetectedObjectSet* dets) override
+    {
+        darknet::layer l = darknet::get_network_output_layer(m_net);
+        darknet::cuda_pull_array(l.output_gpu, l.output, l.outputs * l.batch);
+        int nboxes = 0;
+        auto det_ptr = darknet::get_network_boxes(
+            m_net, m_input_channels[0].cols, m_input_channels[0].rows, det_thresh, cat_thresh, 0, 1, &nboxes);
+
+        if (nms_threshold > 0.0f)
+        {
+            darknet::do_nms_sort(det_ptr, nboxes, l.classes, nms_threshold);
+        }
+
+        std::shared_ptr<darknet::detection> det_owner(
+            det_ptr, [nboxes](darknet::detection* dets) { darknet::free_detections(dets, nboxes); });
+        auto labels = this->getLabels();
+        m_output.setCatSet(labels);
+        for (int i = 0; i < nboxes; ++i)
+        {
+            if (det_ptr[i].objectness > det_thresh)
+            {
+                darknet::box box = det_ptr[i].bbox;
+                cv::Rect2f rect(box.x, box.y, box.w, box.h);
+                rect.x = rect.x - rect.width / 2.0f;
+                rect.y = rect.y - rect.height / 2.0f;
+                aq::clipNormalizedBoundingBox(rect);
+                aq::boundingBoxToPixels(rect, batch_bb[0].size());
+                aq::DetectedObject det(rect);
+                det.confidence = det_ptr[i].objectness;
+                det.id = i;
+                std::vector<aq::Classification> cats;
+                for (int j = 0; j < labels->size(); ++j)
+                {
+                    if (det_ptr[i].prob[j] > cat_thresh)
+                    {
+                        auto label = (*labels)[j](det_ptr[i].prob[j]);
+                        cats.emplace_back(std::move(label));
+                    }
+                }
+                if (!cats.empty())
+                {
+                    det.classifications = cats;
+                    m_output.push_back(std::move(det));
+                }
+            }
+        }
+        return;
+    }
+
+    void postBatch()
+    {
+        // output_param.emitUpdate(input_param);
+        this->output.publish(std::move(m_output), mo::tags::param = &input_param);
+    }
 
   private:
     darknet::network* m_net;

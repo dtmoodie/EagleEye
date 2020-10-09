@@ -11,10 +11,14 @@ namespace aqcore
     {
         mo::Mutex_t::Lock_t lock(getMutex());
         std::shared_ptr<aq::CategorySet> labels = std::make_shared<aq::CategorySet>(label_file.string());
-        // this->label_file_param.setValue(std::move(labels));
+        m_labels = labels;
         this->labels.publish(std::move(labels));
         this->getLogger().info("Loaded {} classes", labels->size());
         label_file_param.setModified(false);
     }
+
+    std::shared_ptr<aq::CategorySet> IClassifier::getLabels() const { return m_labels; }
+
+    void IClassifier::setLabels(std::shared_ptr<aq::CategorySet> labels) { m_labels = std::move(labels); }
 
 } // namespace aqcore

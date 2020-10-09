@@ -1,226 +1,230 @@
 #include <MetaObject/core/metaobject_config.hpp>
-#if MO_OPENCV_HAVE_CUDA
+
 #include "INeuralNet.hpp"
 #include <opencv2/cudaarithm.hpp>
 #include <opencv2/cudawarping.hpp>
-#ifndef NDEBUG
-#include <opencv2/imgproc.hpp>
-#endif
 
-namespace aq
+#include <opencv2/imgproc.hpp>
+
+#include "OpenCVCudaNode.hpp"
+namespace aqcore
 {
-    namespace nodes
+    rcc::shared_ptr<INeuralNet> INeuralNet::create(const std::string& model, const std::string& weight)
     {
-        rcc::shared_ptr<INeuralNet> INeuralNet::create(const std::string& model, const std::string& weight)
+        std::shared_ptr<mo::MetaObjectFactory> factory = mo::MetaObjectFactory::instance();
+        std::vector<IObjectConstructor*> ctrs = factory->getConstructors(getHash());
+        for (IObjectConstructor* ctr : ctrs)
         {
-            auto ctrs = mo::MetaObjectFactory::instance().getConstructors(getHash());
-            for (auto ctr : ctrs)
+            const INeuralNetInfo* info = dynamic_cast<const INeuralNetInfo*>(ctr->GetObjectInfo());
+            if (info)
             {
-                INeuralNetInfo* info = dynamic_cast<INeuralNetInfo*>(ctr->GetObjectInfo());
-                if (info)
+                if (info->canLoad(model, weight))
                 {
-                    if (info->canLoad(model, weight))
+                    auto obj = ctr->Construct();
+                    if (obj)
                     {
-                        auto obj = ctr->Construct();
-                        if (obj)
-                        {
-                            auto tobj = dynamic_cast<INeuralNet*>(obj);
-                            if (!tobj)
-                            {
-                                delete obj;
-                                return {};
-                            }
-                            tobj->model_file = model;
-                            tobj->weight_file = weight;
-                            return {tobj};
-                        }
+                        rcc::shared_ptr<INeuralNet> tobj(obj);
+                        tobj->model_file = model;
+                        tobj->weight_file = weight;
+                        return tobj;
                     }
                 }
             }
-            return {};
+        }
+        return {};
+    }
+
+    void INeuralNet::on_weight_file_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
+    {
+        initNetwork();
+    }
+
+    void INeuralNet::preBatch(int batch_size) { (void)batch_size; }
+
+    void INeuralNet::postBatch() {}
+
+    bool INeuralNet::processImpl()
+    {
+        if (initNetwork())
+        {
+            return forwardAll();
+        }
+        return false;
+    }
+
+    void INeuralNet::setStream(const mo::IAsyncStreamPtr_t& stream)
+    {
+        m_cv_stream = getCVStream(stream);
+        IClassifier::setStream(stream);
+    }
+
+    std::vector<cv::Rect> INeuralNet::getRegions() const
+    {
+        std::vector<cv::Rect2f> default_roi;
+
+        if (regions_of_interest)
+        {
+            default_roi = *regions_of_interest;
+        }
+        else
+        {
+            default_roi.push_back(cv::Rect2f(0, 0, 1.0, 1.0));
         }
 
-        void aq::nodes::INeuralNet::on_weight_file_modified(mo::IParam*,
-                                                            mo::Context*,
-                                                            mo::OptionalTime_t,
-                                                            size_t,
-                                                            const std::shared_ptr<mo::ICoordinateSystem>&,
-                                                            mo::UpdateFlags)
+        auto input_image_shape = input->size();
+        for (size_t i = 0; i < default_roi.size(); ++i)
         {
-            initNetwork();
+            aq::boundingBoxToPixels(default_roi[i], input_image_shape);
         }
 
-        void aq::nodes::INeuralNet::preBatch(int batch_size) { (void)batch_size; }
-
-        void aq::nodes::INeuralNet::postBatch() {}
-
-        bool aq::nodes::INeuralNet::processImpl()
+        if (input_detections != nullptr)
         {
-            if (initNetwork())
+            default_roi.clear();
+            mt::Tensor<const aq::detection::BoundingBox2d, 1> bbs =
+                input_detections->getComponent<aq::detection::BoundingBox2d>();
+            const uint32_t num_detections = input_detections->getNumEntities();
+            for (uint32_t i = 0; i < num_detections; ++i)
             {
-                return forwardAll();
+                cv::Rect2f bb = bbs[i];
+                default_roi.push_back(bb);
             }
+        }
+        const uint32_t image_width = input_image_shape(1);
+        const uint32_t image_height = input_image_shape(0);
+        std::vector<cv::Rect> pixel_bounding_boxes;
+        for (size_t i = 0; i < default_roi.size(); ++i)
+        {
+            cv::Rect bb;
+            bb.x = static_cast<int>(default_roi[i].x);
+            bb.y = static_cast<int>(default_roi[i].y);
+            bb.width = static_cast<int>(default_roi[i].width);
+            bb.height = static_cast<int>(default_roi[i].height);
+            if (bb.x + bb.width >= image_width)
+            {
+                bb.x -= image_width - bb.width;
+            }
+            if (bb.y + bb.height >= image_height)
+            {
+                bb.y -= image_height - bb.height;
+            }
+            bb.x = std::max(0, bb.x);
+            bb.y = std::max(0, bb.y);
+            pixel_bounding_boxes.push_back(bb);
+        }
+        return pixel_bounding_boxes;
+    }
+
+    bool INeuralNet::forwardAll()
+    {
+        cv::Scalar_<unsigned int> network_input_shape = getNetworkShape();
+        std::vector<cv::Rect> pixel_bounding_boxes = getRegions();
+        if (pixel_bounding_boxes.size() == 0)
+        {
+            preBatch(0);
+            postBatch();
             return false;
         }
+        const auto input_image_shape = input->shape();
+        const uint32_t batch_size = pixel_bounding_boxes.size();
+        const uint32_t height = input_image_shape(0);
+        const uint32_t width = input_image_shape(1);
+        const uint32_t channels = input_image_shape(2);
 
-        std::vector<cv::Rect> aq::nodes::INeuralNet::getRegions() const
+        if (image_scale > 0)
         {
-            std::vector<cv::Rect2f> defaultROI;
-
-            if (bounding_boxes)
-            {
-                defaultROI = *bounding_boxes;
-            }
-            else
-            {
-                defaultROI.push_back(cv::Rect2f(0, 0, 1.0, 1.0));
-            }
-
-            auto input_image_shape = input->getShape();
-            if (input_detections != nullptr)
-            {
-                defaultROI.clear();
-                for (const auto& itr : *input_detections)
-                {
-                    defaultROI.emplace_back(itr.bounding_box.x / input_image_shape[2],
-                                            itr.bounding_box.y / input_image_shape[1],
-                                            itr.bounding_box.width / input_image_shape[2],
-                                            itr.bounding_box.height / input_image_shape[1]);
-                }
-            }
-            std::vector<cv::Rect> pixel_bounding_boxes;
-            for (size_t i = 0; i < defaultROI.size(); ++i)
-            {
-                cv::Rect bb;
-                bb.x = static_cast<int>(defaultROI[i].x * input_image_shape[2]);
-                bb.y = static_cast<int>(defaultROI[i].y * input_image_shape[1]);
-                bb.width = static_cast<int>(defaultROI[i].width * input_image_shape[2]);
-                bb.height = static_cast<int>(defaultROI[i].height * input_image_shape[1]);
-                if (bb.x + bb.width >= input_image_shape[2])
-                {
-                    bb.x -= input_image_shape[2] - bb.width;
-                }
-                if (bb.y + bb.height >= input_image_shape[1])
-                {
-                    bb.y -= input_image_shape[1] - bb.height;
-                }
-                bb.x = std::max(0, bb.x);
-                bb.y = std::max(0, bb.y);
-                pixel_bounding_boxes.push_back(bb);
-            }
-            return pixel_bounding_boxes;
+            this->getLogger().trace("Reshaping network");
+            reshapeNetwork(batch_size, channels, height * image_scale, width * image_scale);
+            this->getLogger().trace("Reshaping complete");
         }
-
-        bool aq::nodes::INeuralNet::forwardAll()
+        // Request a larger batch size
+        if (pixel_bounding_boxes.size() != network_input_shape[0] && input_detections == nullptr)
         {
-            cv::Scalar_<unsigned int> network_input_shape = getNetworkShape();
-            std::vector<cv::Rect> pixel_bounding_boxes = getRegions();
-            if (pixel_bounding_boxes.size() == 0)
-            {
-                preBatch(0);
-                postBatch();
-                return false;
-            }
-            auto input_image_shape = input->getShape();
+            this->getLogger().trace("Resizing batch size");
 
-            if (image_scale > 0)
-            {
-                MO_LOG(trace) << this->getTreeName() << " reshaping network";
-                reshapeNetwork(static_cast<unsigned int>(pixel_bounding_boxes.size()),
-                               static_cast<unsigned int>(input_image_shape[3]),
-                               static_cast<unsigned int>(input_image_shape[1] * image_scale),
-                               static_cast<unsigned int>(input_image_shape[2] * image_scale));
-                MO_LOG(trace) << this->getTreeName() << " reshaping complete";
-            }
-            // Request a larger batch size
-            if (pixel_bounding_boxes.size() != network_input_shape[0] && input_detections == nullptr)
-            {
-                MO_LOG(trace) << this->getTreeName() << " resizing batch size";
-                reshapeNetwork(static_cast<unsigned int>(bounding_boxes->size()),
-                               network_input_shape[1],
-                               network_input_shape[2],
-                               network_input_shape[3]);
-                MO_LOG(trace) << this->getTreeName() << " batch resize complete";
-            }
+            reshapeNetwork(static_cast<unsigned int>(pixel_bounding_boxes.size()),
+                           network_input_shape[1],
+                           network_input_shape[2],
+                           network_input_shape[3]);
 
-            MO_LOG(trace) << this->getTreeName() << " preprocessing";
-            cv::cuda::GpuMat float_image;
-            if (input->getDepth() != CV_32F)
-            {
-                input->getGpuMat(stream()).convertTo(float_image, CV_32F, stream());
-            }
-            else
-            {
-                input->clone(float_image, stream());
-            }
-            if (channel_mean[0] != 0.0 || channel_mean[1] != 0.0 || channel_mean[2] != 0.0)
-            {
-                cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, stream());
-            }
-            if (pixel_scale != 1.0f)
-            {
-                cv::cuda::multiply(
-                    float_image, cv::Scalar::all(static_cast<double>(pixel_scale)), float_image, 1.0, -1, stream());
-            }
-            MO_LOG(trace) << this->getTreeName() << " preprocessing complete";
-
-            preBatch(static_cast<int>(pixel_bounding_boxes.size()));
-
-            cv::cuda::GpuMat resized;
-            auto net_input = getNetImageInput();
-            MO_ASSERT(net_input.size());
-            MO_ASSERT(net_input[0].size() == static_cast<size_t>(input->getChannels()));
-            cv::Size net_input_size = net_input[0][0].size();
-
-            for (size_t i = 0; i < pixel_bounding_boxes.size();)
-            {
-                // for each roi
-                size_t start = i, end = 0;
-                for (size_t j = 0; j < net_input.size() && i < pixel_bounding_boxes.size(); ++j, ++i)
-                { // for each image in the mini batch
-                    if (pixel_bounding_boxes[i].size() != net_input_size)
-                    {
-                        cv::cuda::resize(float_image(pixel_bounding_boxes[i]),
-                                         resized,
-                                         net_input_size,
-                                         0,
-                                         0,
-                                         cv::INTER_LINEAR,
-                                         stream());
-                    }
-                    else
-                    {
-                        resized = float_image(pixel_bounding_boxes[i]);
-                    }
-                    cv::cuda::split(resized, net_input[j], stream());
-                    end = start + j + 1;
-                }
-                MO_LOG(trace) << this->getTreeName() << " forward mini batch";
-                if (forwardMinibatch())
-                {
-                    MO_LOG(trace) << this->getTreeName() << " forward mini batch complete";
-                    std::vector<cv::Rect> batch_bounding_boxes;
-                    DetectedObjectSet batch_detections;
-                    for (size_t j = start; j < end; ++j)
-                    {
-                        batch_bounding_boxes.push_back(pixel_bounding_boxes[j]);
-                    }
-                    if (input_detections != nullptr)
-                    {
-                        batch_detections.setCatSet(input_detections->getCatSet());
-                        for (size_t j = start; j < end; ++j)
-                        {
-                            batch_detections.push_back((*input_detections)[j]);
-                        }
-                    }
-                    postMiniBatch(batch_bounding_boxes, batch_detections);
-                    MO_LOG(trace) << this->getTreeName() << " post mini batch complete";
-                }
-            }
-            postBatch();
-            MO_LOG(trace) << this->getTreeName() << " post batch complete";
-            return true;
+            this->getLogger().trace("Batch resizing complete");
         }
-    } // namespace nodes
-} // namespace aq
-#endif
+        this->getLogger().trace("Preprocessing begin");
+        mo::IAsyncStreamPtr_t stream = this->getStream();
+        mo::IDeviceStream* dev_stream = stream->getDeviceStream();
+        MO_ASSERT(dev_stream != nullptr);
+        cv::cuda::GpuMat float_image;
+        cv::cuda::Stream& cvstream = *m_cv_stream;
+        cv::cuda::GpuMat input = this->input->getGpuMat(dev_stream);
+        if (input.depth() != CV_32F)
+        {
+            input.convertTo(float_image, CV_32F, cvstream);
+        }
+        else
+        {
+            float_image = input;
+        }
+        if (channel_mean[0] != 0.0 || channel_mean[1] != 0.0 || channel_mean[2] != 0.0)
+        {
+            cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, cvstream);
+        }
+        if (pixel_scale != 1.0f)
+        {
+            const cv::Scalar scale = cv::Scalar::all(static_cast<double>(pixel_scale));
+            cv::cuda::multiply(float_image, scale, float_image, 1.0, -1, cvstream);
+        }
+        this->getLogger().trace("Preprocessing complete");
+
+        preBatch(static_cast<int>(pixel_bounding_boxes.size()));
+
+        cv::cuda::GpuMat resized;
+        auto net_input = getNetImageInput();
+        MO_ASSERT(net_input.size());
+        MO_ASSERT(net_input[0].size() == static_cast<size_t>(input.channels()));
+        cv::Size net_input_size = net_input[0][0].size();
+
+        for (size_t i = 0; i < pixel_bounding_boxes.size();)
+        {
+            // for each roi
+            size_t start = i, end = 0;
+            for (size_t j = 0; j < net_input.size() && i < pixel_bounding_boxes.size(); ++j, ++i)
+            { // for each image in the mini batch
+                if (pixel_bounding_boxes[i].size() != net_input_size)
+                {
+                    cv::cuda::resize(float_image(pixel_bounding_boxes[i]),
+                                     resized,
+                                     net_input_size,
+                                     0,
+                                     0,
+                                     cv::INTER_LINEAR,
+                                     cvstream);
+                }
+                else
+                {
+                    resized = float_image(pixel_bounding_boxes[i]);
+                }
+                cv::cuda::split(resized, net_input[j], cvstream);
+                end = start + j + 1;
+            }
+
+            this->getLogger().trace("forward mini batch");
+            if (forwardMinibatch())
+            {
+                this->getLogger().trace("Forward mini batch complete");
+                std::vector<cv::Rect> batch_bounding_boxes;
+                for (size_t j = start; j < end; ++j)
+                {
+                    batch_bounding_boxes.push_back(pixel_bounding_boxes[j]);
+                }
+
+                postMiniBatch(batch_bounding_boxes, input_detections);
+
+                this->getLogger().trace("Post mini batch complete");
+            }
+        }
+        postBatch();
+        this->getLogger().trace("Post batch complete");
+
+        return true;
+    }
+
+} // namespace aqcore

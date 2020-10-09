@@ -28,6 +28,7 @@ namespace aqframegrabbers
     {
         if (!image.empty())
         {
+            // image_name.publish(path, mo::tags::fn = count, mo::tags::timestamp = mo::ms * (33 * count));
             output.publish(image, mo::tags::fn = count, mo::tags::timestamp = mo::ms * (33 * count));
             return true;
         }

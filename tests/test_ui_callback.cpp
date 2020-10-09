@@ -1,7 +1,7 @@
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
-#include <MetaObject/thread/InterThread.hpp>
+/*#include <boost/thread.hpp>
 #include <MetaObject/logging/logging.hpp>
+#include <MetaObject/thread/InterThread.hpp>
+#include <boost/bind.hpp>
 
 
 int main()
@@ -23,7 +23,8 @@ int main()
     }));
 
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
-    while (boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - start).total_seconds() < 60)
+    while (boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() - start).total_seconds()
+< 60)
     {
         mo::ThreadSpecificQueue::run();
     }
@@ -32,3 +33,5 @@ int main()
     //aq::ShutdownLogging();
     return 0;
 }
+*/
+int main() {}

@@ -52,6 +52,13 @@ if(DARKNET_LIBRARY AND DARKNET_INCLUDE)
         set_plugin_status(aqdarknet "cudnn not found")
     endif()
 
+    # tests
+    if(TARGET aquila_python)
+        get_target_property(out_dir aquila_python ARCHIVE_OUTPUT_DIRECTORY)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_darknet.py ${out_dir}/test_darknet.py @ONLY)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/data/dog.jpg ${out_dir}/dog.jpg COPYONLY)
+    endif(TARGET aquila_python)
+
 else()
     set_plugin_unavailable(aqdarknet)
     set_plugin_status(aqdarknet "Darknet not found")

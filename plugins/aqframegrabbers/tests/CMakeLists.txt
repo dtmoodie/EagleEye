@@ -7,6 +7,8 @@ foreach(test ${tests})
     add_dependencies(${test} aqframegrabbers)
     target_link_libraries(${test} aqframegrabbers
         aquila_types
+        gtest
+        gtest_main
     )
     set_target_properties(${test} PROPERTIES FOLDER Tests/Aquila/frame_grabbers)
     add_test(${test} ${test})
