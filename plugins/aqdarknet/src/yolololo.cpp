@@ -165,7 +165,7 @@ class YOLO : virtual public aqcore::INeuralNet
         int i;
         for (i = 0; i < m_net->n; ++i)
         {
-            this->getLogger().trace("{} forward", i);
+            // this->getLogger().trace("{} forward", i);
             m_net->index = i;
             darknet::layer l = m_net->layers[i];
             if (l.delta_gpu)
@@ -202,6 +202,7 @@ class YOLO : virtual public aqcore::INeuralNet
         std::shared_ptr<darknet::detection> det_owner(
             det_ptr, [nboxes](darknet::detection* dets) { darknet::free_detections(dets, nboxes); });
         auto labels = this->getLabels();
+        MO_ASSERT(labels != nullptr);
         m_output.setCatSet(labels);
         for (int i = 0; i < nboxes; ++i)
         {
@@ -235,11 +236,7 @@ class YOLO : virtual public aqcore::INeuralNet
         return;
     }
 
-    void postBatch()
-    {
-        // output_param.emitUpdate(input_param);
-        this->output.publish(std::move(m_output), mo::tags::param = &input_param);
-    }
+    void postBatch() { this->output.publish(std::move(m_output), mo::tags::param = &input_param); }
 
   private:
     darknet::network* m_net;
