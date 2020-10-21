@@ -16,9 +16,8 @@ namespace aqframegrabbers
         image = cv::imread(path);
         if (!image.empty())
         {
-            ++count;
-            image_name.publish(path, mo::tags::fn = count, mo::tags::timestamp = mo::ms * (33 * count));
-            output.publish(image, mo::tags::fn = count, mo::tags::timestamp = mo::ms * (33 * count));
+            image_name.publish(path, mo::tags::fn = 0, mo::tags::timestamp = mo::ms * 0);
+            output.publish(image, mo::tags::fn = 0, mo::tags::timestamp = mo::ms * 0);
             return true;
         }
         return false;
@@ -28,8 +27,7 @@ namespace aqframegrabbers
     {
         if (!image.empty())
         {
-            // image_name.publish(path, mo::tags::fn = count, mo::tags::timestamp = mo::ms * (33 * count));
-            output.publish(image, mo::tags::fn = count, mo::tags::timestamp = mo::ms * (33 * count));
+            // output.publish(image, mo::tags::fn = 0, mo::tags::timestamp = mo::ms * 0);
             return true;
         }
         return false;
