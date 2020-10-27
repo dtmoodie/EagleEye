@@ -12,8 +12,8 @@ namespace aqcore
         mo::Mutex_t::Lock_t lock(getMutex());
         std::shared_ptr<aq::CategorySet> labels = std::make_shared<aq::CategorySet>(label_file.string());
         m_labels = labels;
-        this->labels.publish(std::move(labels));
         this->getLogger().info("Loaded {} classes", labels->size());
+        this->labels.publish(std::move(labels));
         label_file_param.setModified(false);
     }
 
