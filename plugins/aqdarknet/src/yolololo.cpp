@@ -204,6 +204,7 @@ class YOLO : virtual public aqcore::INeuralNet
         auto labels = this->getLabels();
         MO_ASSERT(labels != nullptr);
         m_output.setCatSet(labels);
+        uint32_t count = 0;
         for (int i = 0; i < nboxes; ++i)
         {
             if (det_ptr[i].objectness > det_thresh)
@@ -216,13 +217,15 @@ class YOLO : virtual public aqcore::INeuralNet
                 aq::boundingBoxToPixels(rect, batch_bb[0].size());
                 aq::DetectedObject det(rect);
                 det.confidence = det_ptr[i].objectness;
-                det.id = i;
+                det.id = count;
+                ++count;
                 std::vector<aq::Classification> cats;
                 for (int j = 0; j < labels->size(); ++j)
                 {
-                    if (det_ptr[i].prob[j] > cat_thresh)
+                    const float prob = det_ptr[i].prob[j];
+                    if (prob > cat_thresh)
                     {
-                        auto label = (*labels)[j](det_ptr[i].prob[j]);
+                        aq::Classification label = (*labels)[j](prob);
                         cats.emplace_back(std::move(label));
                     }
                 }
