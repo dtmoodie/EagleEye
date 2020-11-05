@@ -56,9 +56,12 @@ namespace aqcore
         {
             const cv::Point tl = cv::Point(bbs[i].tl()) + cv::Point(10, 20);
             const cv::Rect text_rect(tl, cv::Size(200, 20));
-            cv::Mat text_img = textImage(cats[i], ids[i]);
-            cv::Mat text_roi = mat(text_rect);
-            cv::add(text_roi, text_img, text_roi);
+            if ((img_rect & text_rect) == text_rect)
+            {
+                cv::Mat text_img = textImage(cats[i], ids[i]);
+                cv::Mat text_roi = mat(text_rect);
+                cv::add(text_roi, text_img, text_roi);
+            }
         }
     }
 
@@ -169,8 +172,6 @@ namespace aqcore
     {
         const bool draw_on_device = this->getStream()->isDeviceStream();
 
-        cv::cuda::GpuMat device_draw_image;
-        cv::Mat host_draw_image;
         cv::Size size;
         mt::Tensor<const BoundingBox2d, 1> bbs = detections->getComponent<BoundingBox2d>();
         mt::Tensor<const Classifications, 1> cats = detections->getComponent<Classifications>();
@@ -195,6 +196,7 @@ namespace aqcore
             drawBoxes(host_draw_image, bbs, cats);
             drawLabels(host_draw_image, bbs, cats, ids);
             drawMetaData(host_draw_image, bbs, descriptors);
+            this->output.publish(std::move(host_draw_image), mo::tags::param = &this->image_param);
         }
 
         /*if (_ctx->device_id != -1)
