@@ -105,7 +105,7 @@ namespace aqdlib
 
             for (uint32_t i = 0; i < num_entities; ++i)
             {
-                const cv::Rect2f bb = bbs[i];
+                cv::Rect2f bb = bbs[i];
                 boundingBoxToPixels(bb, image->size());
                 dlib::rectangle rect(bb.x, bb.y, bb.x + bb.width, bb.y + bb.height);
                 trackers[i].start_track(dlib_img, rect);
