@@ -48,10 +48,11 @@ namespace aqcore
     {
         mt::Tensor<const aq::detection::Classifications, 1> classifications =
             dets.getComponent<aq::detection::Classifications>();
-        mt::Tensor<const aq::detection::Confidence, 1> confidence = dets.getComponent<aq::detection::Confidence>();
-        mt::Tensor<const aq::detection::Id, 1> id = dets.getComponent<aq::detection::Id>();
+        mt::Tensor<const aq::detection::Confidence::DType, 1> confidence =
+            dets.getComponent<aq::detection::Confidence>();
+        mt::Tensor<const aq::detection::Id::DType, 1> id = dets.getComponent<aq::detection::Id>();
         mt::Tensor<const aq::detection::AlignedPatch, 1> patches = dets.getComponent<aq::detection::AlignedPatch>();
-        mt::Tensor<const aq::detection::BoundingBox2d, 1> bb = dets.getComponent<aq::detection::BoundingBox2d>();
+        mt::Tensor<const aq::detection::BoundingBox2d::DType, 1> bb = dets.getComponent<aq::detection::BoundingBox2d>();
         const uint32_t num_dets = dets.getNumEntities();
 
         MO_ASSERT_EQ(id.getShape()[0], num_dets);

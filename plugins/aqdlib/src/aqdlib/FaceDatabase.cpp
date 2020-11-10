@@ -220,12 +220,12 @@ namespace aqdlib
         mt::Tensor<const aq::detection::AlignedPatch, 1> patches =
             detections->getComponent<aq::detection::AlignedPatch>();
         mt::Tensor<const float, 2> descriptors = detections->getComponent<aq::detection::Descriptor>();
-        mt::Tensor<const aq::detection::BoundingBox2d, 1> bbs =
+        mt::Tensor<const aq::detection::BoundingBox2d::DType, 1> bbs =
             detections->getComponent<aq::detection::BoundingBox2d>();
 
         mt::Tensor<aq::detection::Classifications, 1> classifications =
             output.getComponentMutable<aq::detection::Classifications>();
-        mt::Tensor<aq::detection::Id, 1> ids = output.getComponentMutable<aq::detection::Id>();
+        mt::Tensor<aq::detection::Id::DType, 1> ids = output.getComponentMutable<aq::detection::Id>();
 
         const uint32_t descriptor_size = descriptors.getShape()[1];
 

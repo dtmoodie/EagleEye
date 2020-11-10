@@ -5,8 +5,9 @@ from argparse import ArgumentParser
 parser = ArgumentParser()
 
 parser.add_argument('--path', default='dog.jpg')
-parser.add_argument('--cfg', default='/home/asiansensation/code/darknet/cfg/yolov3.cfg')
-parser.add_argument('--weights', default='/home/asiansensation/code/darknet/cfg/yolov3.weights')
+parser.add_argument('--cfg', default='/home/asiansensation/code/darknet_x86/cfg/yolov3.cfg')
+parser.add_argument('--weights', default='/home/asiansensation/code/darknet_x86/cfg/yolov3.weights')
+parser.add_argument('--labels', default='/home/asiansensation/code/darknet_x86/data/coco.names')
 
 args = parser.parse_args()
 
@@ -20,13 +21,11 @@ graph.addNode(fg)
 
 detector = aq.nodes.YOLO(input=fg)
 
-detector.weight_file = '/home/asiansensation/code/darknet/cfg/yolov3-tiny.weights'
-detector.model_file = '/home/asiansensation/code/darknet/cfg/yolov3-tiny.cfg'
-detector.label_file = '/home/asiansensation/code/darknet/data/coco.names'
-#detector.channel_mean = [0,0,0,0]
-#detector.pixel_scale = 1.0
-detector.det_thresh = 0.2
-detector.cat_thresh = 0.1
+detector.weight_file = args.weights
+detector.model_file = args.cfg
+detector.label_file = args.labels
+detector.det_thresh = 0.5
+detector.cat_thresh = 0.5
 
 draw = aq.nodes.DrawDetections(image=fg, detections=detector)
 writer = aq.nodes.ImageWriter(input_image=draw)

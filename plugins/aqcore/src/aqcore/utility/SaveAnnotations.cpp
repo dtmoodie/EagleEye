@@ -113,7 +113,7 @@ void SaveAnnotations::draw()
     const auto num_entities = _annotations.getNumEntities();
     if (num_entities > 0)
     {
-        mt::Tensor<const aq::detection::BoundingBox2d, 1> bounding_boxes =
+        mt::Tensor<const aq::detection::BoundingBox2d::DType, 1> bounding_boxes =
             _annotations.getComponent<aq::detection::BoundingBox2d>();
         mt::Tensor<const aq::detection::Classifications, 1> classifications =
             _annotations.getComponent<aq::detection::Classifications>();
@@ -128,7 +128,7 @@ void SaveAnnotations::draw()
 
     if (detections)
     {
-        mt::Tensor<const aq::detection::BoundingBox2d, 1> bounding_boxes =
+        mt::Tensor<const aq::detection::BoundingBox2d::DType, 1> bounding_boxes =
             detections->getComponent<aq::detection::BoundingBox2d>();
 
         mt::Tensor<const aq::detection::Classifications, 1> classifications =
@@ -138,7 +138,7 @@ void SaveAnnotations::draw()
 
         for (uint32_t i = 0; i < num_entities; ++i)
         {
-            aq::detection::BoundingBox2d bb = bounding_boxes[i];
+            aq::detection::BoundingBox2d::DType bb = bounding_boxes[i];
             boundingBoxToPixels(bb, draw_image.size());
             const cv::Scalar color = classifications[i][0].cat->color;
 

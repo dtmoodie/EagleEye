@@ -34,28 +34,32 @@ namespace aqcore
         MO_END;
 
       protected:
-        void drawBoxes(cv::Mat& mat, mt::Tensor<const BoundingBox2d, 1> bbs, mt::Tensor<const Classifications, 1> cls);
+        void drawBoxes(cv::Mat& mat,
+                       mt::Tensor<const BoundingBox2d::DType, 1> bbs,
+                       mt::Tensor<const Classifications, 1> cls);
 
         void drawBoxes(cv::cuda::GpuMat& mat,
-                       mt::Tensor<const BoundingBox2d, 1> bbs,
+                       mt::Tensor<const BoundingBox2d::DType, 1> bbs,
                        mt::Tensor<const Classifications, 1> cls,
                        cv::cuda::Stream& stream);
 
         void drawLabels(cv::Mat& mat,
-                        mt::Tensor<const BoundingBox2d, 1> bbs,
+                        mt::Tensor<const BoundingBox2d::DType, 1> bbs,
                         mt::Tensor<const Classifications, 1> cats,
-                        mt::Tensor<const Id, 1> ids);
+                        mt::Tensor<const Id::DType, 1> ids);
 
         void drawLabels(cv::cuda::GpuMat& mat,
-                        mt::Tensor<const BoundingBox2d, 1> bbs,
+                        mt::Tensor<const BoundingBox2d::DType, 1> bbs,
                         mt::Tensor<const Classifications, 1> cats,
-                        mt::Tensor<const Id, 1> ids,
+                        mt::Tensor<const Id::DType, 1> ids,
                         cv::cuda::Stream& stream);
 
-        void drawMetaData(cv::Mat mat, mt::Tensor<const BoundingBox2d, 1> bbs, mt::Tensor<const float, 2> descriptors);
+        void drawMetaData(cv::Mat mat,
+                          mt::Tensor<const BoundingBox2d::DType, 1> bbs,
+                          mt::Tensor<const float, 2> descriptors);
 
         void drawMetaData(cv::cuda::GpuMat& mat,
-                          mt::Tensor<const BoundingBox2d, 1> bbs,
+                          mt::Tensor<const BoundingBox2d::DType, 1> bbs,
                           mt::Tensor<const float, 2> descriptors,
                           cv::cuda::Stream& stream);
 

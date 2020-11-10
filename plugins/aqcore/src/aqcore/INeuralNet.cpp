@@ -80,8 +80,7 @@ namespace aqcore
         if (input_detections != nullptr)
         {
             default_roi.clear();
-            mt::Tensor<const aq::detection::BoundingBox2d, 1> bbs =
-                input_detections->getComponent<aq::detection::BoundingBox2d>();
+            mt::Tensor<const cv::Rect2f, 1> bbs = input_detections->getComponent<aq::detection::BoundingBox2d>();
             const uint32_t num_detections = input_detections->getNumEntities();
             for (uint32_t i = 0; i < num_detections; ++i)
             {

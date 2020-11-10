@@ -33,10 +33,10 @@ namespace aqdlib
             dlib::cv_image<dlib::bgr_pixel> dlib_img(img);
             std::vector<dlib::matrix<dlib::bgr_pixel>> aligned_faces;
             {
-                mt::Tensor<const aq::detection::BoundingBox2d, 1> bbs =
+                mt::Tensor<const aq::detection::BoundingBox2d::DType, 1> bbs =
                     detections->getComponent<aq::detection::BoundingBox2d>();
 
-                mt::Tensor<aq::detection::BoundingBox2d, 1> out_bbs =
+                mt::Tensor<aq::detection::BoundingBox2d::DType, 1> out_bbs =
                     out.getComponentMutable<aq::detection::BoundingBox2d>();
 
                 for (uint32_t i = 0; i < num_components; ++i)

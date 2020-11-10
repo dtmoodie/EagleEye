@@ -24,7 +24,7 @@ namespace aqcore
         return color;
     }
     void DrawDetections::drawBoxes(cv::Mat& mat,
-                                   mt::Tensor<const BoundingBox2d, 1> bbs,
+                                   mt::Tensor<const BoundingBox2d::DType, 1> bbs,
                                    mt::Tensor<const Classifications, 1> cats)
     {
         for (size_t i = 0; i < bbs.getShape()[0]; ++i)
@@ -38,23 +38,24 @@ namespace aqcore
     }
 
     void DrawDetections::drawBoxes(cv::cuda::GpuMat& mat,
-                                   mt::Tensor<const BoundingBox2d, 1> bbs,
+                                   mt::Tensor<const BoundingBox2d::DType, 1> bbs,
                                    mt::Tensor<const Classifications, 1> cls,
                                    cv::cuda::Stream& stream)
     {
     }
 
     void DrawDetections::drawLabels(cv::Mat& mat,
-                                    mt::Tensor<const BoundingBox2d, 1> bbs,
+                                    mt::Tensor<const BoundingBox2d::DType, 1> bbs,
                                     mt::Tensor<const Classifications, 1> cats,
-                                    mt::Tensor<const Id, 1> ids)
+                                    mt::Tensor<const Id::DType, 1> ids)
     {
         const cv::Size size = mat.size();
         const cv::Rect img_rect({0, 0}, size);
         const uint32_t num_dets = bbs.getShape()[0];
         for (size_t i = 0; i < num_dets; ++i)
         {
-            const cv::Point tl = cv::Point(bbs[i].tl()) + cv::Point(10, 20);
+            const cv::Rect2f bb = bbs[i];
+            const cv::Point tl = cv::Point(bb.tl()) + cv::Point(10, 20);
             const cv::Rect text_rect(tl, cv::Size(200, 20));
             if ((img_rect & text_rect) == text_rect)
             {
@@ -66,15 +67,15 @@ namespace aqcore
     }
 
     void DrawDetections::drawLabels(cv::cuda::GpuMat& mat,
-                                    mt::Tensor<const BoundingBox2d, 1> bbs,
+                                    mt::Tensor<const typename BoundingBox2d::DType, 1> bbs,
                                     mt::Tensor<const Classifications, 1> cats,
-                                    mt::Tensor<const Id, 1> ids,
+                                    mt::Tensor<const typename Id::DType, 1> ids,
                                     cv::cuda::Stream& stream)
     {
     }
 
     void DrawDetections::drawMetaData(cv::Mat mat,
-                                      mt::Tensor<const BoundingBox2d, 1> bbs,
+                                      mt::Tensor<const typename BoundingBox2d::DType, 1> bbs,
                                       mt::Tensor<const float, 2> descriptors)
     {
         const auto num_detections = bbs.getShape()[0];
@@ -82,7 +83,7 @@ namespace aqcore
     }
 
     void DrawDetections::drawMetaData(cv::cuda::GpuMat& mat,
-                                      mt::Tensor<const BoundingBox2d, 1> bbs,
+                                      mt::Tensor<const typename BoundingBox2d::DType, 1> bbs,
                                       mt::Tensor<const float, 2> descriptors,
                                       cv::cuda::Stream& stream)
     {
@@ -153,7 +154,7 @@ namespace aqcore
 
         if (draw_detection_id)
         {
-            ss << " - " << id;
+            ss << " - " << id.m_value;
         }
         return std::move(ss).str();
     }
@@ -173,9 +174,9 @@ namespace aqcore
         const bool draw_on_device = this->getStream()->isDeviceStream();
 
         cv::Size size;
-        mt::Tensor<const BoundingBox2d, 1> bbs = detections->getComponent<BoundingBox2d>();
+        mt::Tensor<const typename BoundingBox2d::DType, 1> bbs = detections->getComponent<BoundingBox2d>();
         mt::Tensor<const Classifications, 1> cats = detections->getComponent<Classifications>();
-        mt::Tensor<const Id, 1> ids = detections->getComponent<Id>();
+        mt::Tensor<const typename Id::DType, 1> ids = detections->getComponent<Id>();
         mt::Tensor<const float, 2> descriptors = detections->getComponent<Descriptor>();
 
         if (draw_on_device)
