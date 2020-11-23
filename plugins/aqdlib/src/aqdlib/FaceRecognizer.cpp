@@ -51,6 +51,10 @@ namespace aqdlib
             const auto size = image->size();
             auto bbs = detections->getComponent<aq::detection::BoundingBox2d>();
             auto landmarks = detections->getComponent<aq::detection::LandmarkDetection>();
+            if (landmarks.getShape()[0] == 0)
+            {
+                return false;
+            }
 
             for (uint32_t i = 0; i < num_entities; ++i)
             {
@@ -68,7 +72,8 @@ namespace aqdlib
 
                 dlib::full_object_detection shape(rect, parts);
                 dlib::matrix<dlib::bgr_pixel> face_chip;
-                dlib::extract_image_chip(dlib_img, dlib::get_face_chip_details(shape, 150, 0.25), face_chip);
+                auto chip_details = dlib::get_face_chip_details(shape, 150, 0.25);
+                dlib::extract_image_chip(dlib_img, chip_details, face_chip);
                 aligned_faces.emplace_back(std::move(face_chip));
             }
 
@@ -77,6 +82,8 @@ namespace aqdlib
                 // TODO figure out how to pass in the output, thus avoiding any need to copy data.
                 std::vector<dlib::matrix<float, 0, 1>> face_descriptors = m_net(aligned_faces);
                 aq::TDetectedObjectSet<OutputComponents_t> output = *this->detections;
+                output.reshape<aq::detection::Descriptor>(
+                    mt::Shape<2>(face_descriptors.size(), face_descriptors[0].nr()));
                 auto descriptors = output.getComponentMutable<aq::detection::Descriptor>();
                 auto provider = output.getProvider<aq::detection::Descriptor>();
 

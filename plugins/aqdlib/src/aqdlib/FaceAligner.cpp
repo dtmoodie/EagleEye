@@ -20,15 +20,14 @@ namespace aqdlib
             return false;
         }
 
-        const uint32_t num_components = detections->getNumComponents();
+        const uint32_t num_entities = detections->getNumEntities();
 
-        if (num_components > 0)
+        if (num_entities > 0)
         {
             mo::IAsyncStreamPtr_t stream = this->getStream();
             cv::Mat img = image->getMat(stream.get());
             const auto size = image->size();
             aq::TDetectedObjectSet<OutputComponents_t> out = *detections;
-            std::vector<cv::Point2f> landmarks;
 
             dlib::cv_image<dlib::bgr_pixel> dlib_img(img);
             std::vector<dlib::matrix<dlib::bgr_pixel>> aligned_faces;
@@ -39,7 +38,9 @@ namespace aqdlib
                 mt::Tensor<aq::detection::BoundingBox2d::DType, 1> out_bbs =
                     out.getComponentMutable<aq::detection::BoundingBox2d>();
 
-                for (uint32_t i = 0; i < num_components; ++i)
+                mt::Tensor<cv::Point2f, 2> landmarks;
+
+                for (uint32_t i = 0; i < num_entities; ++i)
                 {
                     cv::Rect2f bb = bbs[i];
                     if (min_size < 1.0F)
@@ -71,15 +72,18 @@ namespace aqdlib
                     out_bb.height = shape.get_rect().height();
 
                     const auto num_points = shape.num_parts();
-                    landmarks.resize(num_points);
-
-                    for (size_t i = 0; i < num_points; ++i)
+                    if (landmarks.getShape()[0] == 0)
                     {
-                        const auto& part = shape.part(i);
-                        landmarks[i].x = part.x();
-                        landmarks[i].y = part.y();
+                        out.reshape<aq::detection::LandmarkDetection>(mt::Shape<2>{num_entities, num_points});
+                        landmarks = out.getComponentMutable<aq::detection::LandmarkDetection>();
                     }
-                    aq::detection::LandmarkDetection landmark(landmarks.data(), num_points);
+
+                    for (size_t j = 0; j < num_points; ++j)
+                    {
+                        const auto& part = shape.part(j);
+                        landmarks(i, j).x = part.x();
+                        landmarks(i, j).y = part.y();
+                    }
                 }
             }
             this->output.publish(std::move(out), mo::tags::param = &this->detections_param);
