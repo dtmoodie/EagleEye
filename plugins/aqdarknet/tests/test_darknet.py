@@ -40,6 +40,6 @@ graph.start()
 aq.eventLoop(10000)
 output = detector.output
 
-components = output.data.providers
+components = output.data.components
 for component in components:
-    print(component.data)
+    print(component.data.data.data)
