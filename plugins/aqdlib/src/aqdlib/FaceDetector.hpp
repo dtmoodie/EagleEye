@@ -41,7 +41,8 @@ namespace aqdlib
         MO_END;
 
       protected:
-        bool processImpl() override;
+        bool processImpl(mo::IAsyncStream& stream) override;
+        bool processImpl(mo::IDeviceStream& stream) override;
 
       private:
         std::unique_ptr<dlib::mmod_net_type> m_net;

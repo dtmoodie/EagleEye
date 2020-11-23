@@ -6,7 +6,7 @@
 namespace aqdlib
 {
 
-    bool DlibMMODDetector::processImpl()
+    bool DlibMMODDetector::processImpl(mo::IAsyncStream& stream)
     {
         if (!m_net || model_file_param.getModified())
         {
@@ -17,11 +17,17 @@ namespace aqdlib
                 dlib::deserialize(model_file.string()) >> *m_net;
                 model_file_param.setModified(false);
             }
+            else
+            {
+                this->getLogger().error("Unable to load non-existant face detector file {}", model_file.string());
+                return false;
+            }
         }
-        auto stream = this->getStream();
-        cv::Mat img = input->getMat(stream.get());
+
+        cv::Mat img = input->getMat(&stream);
 
         std::vector<dlib::cv_image<dlib::bgr_pixel>> dlib_img{dlib::cv_image<dlib::bgr_pixel>(img)};
+
         std::vector<std::vector<dlib::mmod_rect>> dets = (*m_net)(dlib_img);
         Output_t output;
         output.resize(dets[0].size());
@@ -36,6 +42,8 @@ namespace aqdlib
         this->output.publish(std::move(output), mo::tags::param = &input_param);
         return true;
     }
+
+    bool DlibMMODDetector::processImpl(mo::IDeviceStream& stream) { return false; }
 
 } // namespace aqdlib
 
