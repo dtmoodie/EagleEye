@@ -210,7 +210,7 @@ namespace aqdlib
         output.setCatSet(m_identities);
 
         mo::IAsyncStreamPtr_t stream = this->getStream();
-        cv::Mat host_img = input->getMat(stream.get());
+        cv::Mat host_img = image->getMat(stream.get());
 
         if (m_recent_patches.size() > m_recent_patches.capacity() * 0.75)
         {

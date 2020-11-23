@@ -40,7 +40,7 @@ namespace aqdlib
         ~FaceDatabase();
         MO_DERIVE(FaceDatabase, Node)
             INPUT(Input_t, detections)
-            INPUT(aq::SyncedImage, input)
+            INPUT(aq::SyncedImage, image)
 
             PARAM(mo::ReadDirectory, database_path, {"./"})
             PARAM(mo::AppendDirectory, unknown_detections, {"./", "unknown", ".jpg"})
