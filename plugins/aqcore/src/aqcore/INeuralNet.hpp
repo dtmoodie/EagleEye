@@ -43,7 +43,8 @@ namespace aqcore
         MO_END;
 
       protected:
-        bool processImpl() override;
+        bool processImpl(mo::IAsyncStream& stream) override;
+        bool processImpl(mo::IDeviceStream& stream) override;
 
         void setStream(const mo::IAsyncStreamPtr_t& stream) override;
 

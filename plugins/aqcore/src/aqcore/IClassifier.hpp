@@ -1,18 +1,19 @@
-#pragma once
+#ifndef AQCORE_ICLASSIFIER_HPP
+#define AQCORE_ICLASSIFIER_HPP
 
 #include <Aquila/types/ObjectDetection.hpp>
 
-#include "Aquila/nodes/Node.hpp"
+#include "StreamNode.hpp"
 
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/types/file_types.hpp"
 
 namespace aqcore
 {
-    class AQUILA_EXPORTS IClassifier : virtual public aq::nodes::Node
+    class AQUILA_EXPORTS IClassifier : virtual public StreamNode
     {
       public:
-        MO_DERIVE(IClassifier, aq::nodes::Node)
+        MO_DERIVE(IClassifier, StreamNode)
             PARAM(mo::ReadFile, label_file, {})
             PARAM_UPDATE_SLOT(label_file)
 
@@ -26,3 +27,5 @@ namespace aqcore
     };
 
 } // namespace aqcore
+
+#endif // AQCORE_ICLASSIFIER_HPP
