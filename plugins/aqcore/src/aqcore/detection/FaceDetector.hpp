@@ -17,21 +17,18 @@ namespace aqcore
         MO_END;
 
       protected:
-        bool processImpl() override;
         void createLabels();
     };
 
-#if MO_OPENCV_HAVE_CUDA == 1
-    class HaarFaceDetector : virtual public HaarDetector, virtual public FaceDetector
+    class HaarFaceDetector : virtual public HaarDetector
     {
       public:
         MO_DERIVE(HaarFaceDetector, HaarDetector)
 
-        MO_END
+        MO_END;
 
       protected:
         bool processImpl() override;
     };
-#endif
 
 } // namespace aqcore

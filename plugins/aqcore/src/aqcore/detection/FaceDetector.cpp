@@ -39,19 +39,14 @@ namespace aqcore
         this->labels.publish(labels);
     }
 
-    bool FaceDetector::processImpl() { return false; }
-
-#if MO_OPENCV_HAVE_CUDA == 1
     bool HaarFaceDetector::processImpl()
     {
-        createLabels();
-        return HaarDetector::processImpl();
+        auto labels = std::make_shared<aq::CategorySet>(std::vector<std::string>({"face"}));
+        this->labels.publish(labels);
+        return IImageDetector::processImpl();
     }
-#endif
+
 } // namespace aqcore
 using namespace aqcore;
 
-MO_REGISTER_CLASS(FaceDetector)
-#if MO_OPENCV_HAVE_CUDA == 1
 MO_REGISTER_CLASS(HaarFaceDetector)
-#endif
