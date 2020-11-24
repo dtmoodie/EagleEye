@@ -2,6 +2,7 @@
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/types/DetectionDescription.hpp>
 #include <Aquila/types/SyncedImage.hpp>
+#include <Aquila/types/DetectionPatch.hpp>
 #define DLIB_USE_CUDA
 #include <dlib/dnn.h>
 
@@ -51,7 +52,7 @@ namespace aqdlib
       public:
         using InputComponents_t = ct::VariadicTypedef<aq::detection::BoundingBox2d, aq::detection::LandmarkDetection>;
         using OutputComponents_t = ct::
-            VariadicTypedef<aq::detection::BoundingBox2d, aq::detection::LandmarkDetection, aq::detection::Descriptor>;
+            VariadicTypedef<aq::detection::BoundingBox2d, aq::detection::LandmarkDetection, aq::detection::Descriptor, aq::detection::AlignedPatch>;
 
         MO_DERIVE(FaceRecognizer, aq::nodes::Node)
             INPUT(aq::SyncedImage, image)

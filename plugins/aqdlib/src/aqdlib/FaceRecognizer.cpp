@@ -55,7 +55,7 @@ namespace aqdlib
             {
                 return false;
             }
-
+            
             for (uint32_t i = 0; i < num_entities; ++i)
             {
                 auto bb = bbs[i];
@@ -74,6 +74,7 @@ namespace aqdlib
                 dlib::matrix<dlib::bgr_pixel> face_chip;
                 auto chip_details = dlib::get_face_chip_details(shape, 150, 0.25);
                 dlib::extract_image_chip(dlib_img, chip_details, face_chip);
+                
                 aligned_faces.emplace_back(std::move(face_chip));
             }
 
@@ -85,7 +86,10 @@ namespace aqdlib
                 output.reshape<aq::detection::Descriptor>(
                     mt::Shape<2>(face_descriptors.size(), face_descriptors[0].nr()));
                 auto descriptors = output.getComponentMutable<aq::detection::Descriptor>();
-                auto provider = output.getProvider<aq::detection::Descriptor>();
+                //auto provider = output.getProvider<aq::detection::Descriptor>();
+                output.reshape<aq::detection::AlignedPatch>(mt::Shape<1>(num_entities));
+                auto aligned_patch = output.getComponentMutable<aq::detection::AlignedPatch>();
+                auto stream = this->getStream();
 
                 for (size_t i = 0; i < face_descriptors.size(); ++i)
                 {
@@ -95,9 +99,14 @@ namespace aqdlib
 
                     ct::TArrayView<float> dest = descriptors[i];
                     view.copyTo(dest);
-                    // output.emplace_back(std::move(det));
+                    std::shared_ptr<dlib::matrix<dlib::bgr_pixel>> matrix = std::make_shared<dlib::matrix<dlib::bgr_pixel>>(std::move(aligned_faces[i]));
+                    const aq::Shape<2> shape(matrix->nr(), matrix->nc());
+                    dlib::bgr_pixel* data = matrix->begin();
+                    aq::BGR<uint8_t>* pixel_ptr = ct::ptrCast<aq::BGR<uint8_t>>(data);
+                    aq::SyncedImage aligned(shape, pixel_ptr, std::move(matrix), stream);
+                    aligned_patch[i] = aq::detection::AlignedPatch{*image, std::move(aligned)};
                 }
-                this->output.publish(output);
+                this->output.publish(output, mo::tags::param=&this->detections_param);
             }
         }
         return true;
