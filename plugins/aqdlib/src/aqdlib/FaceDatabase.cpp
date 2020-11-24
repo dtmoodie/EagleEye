@@ -367,7 +367,7 @@ namespace aqdlib
                 }
             }
         }
-        this->output.publish(std::move(output));
+        this->output.publish(std::move(output), mo::tags::param = &this->detections_param);
         return true;
     }
 
