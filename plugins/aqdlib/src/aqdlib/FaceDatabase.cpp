@@ -22,7 +22,7 @@ namespace aqdlib
 
     FaceDatabase::IdentityDatabase::IdentityDatabase() {}
 
-    FaceDatabase::IdentityDatabase::IdentityDatabase(const std::vector<aq::TSyncedMemory<float>>& unknown)
+    FaceDatabase::IdentityDatabase::IdentityDatabase(const std::vector<aq::TSyncedMemory<float>>& unknown, mo::IAsyncStreamPtr_t stream)
     {
         const size_t descriptor_size = unknown[0].size();
         cv::Mat desc(unknown.size(), descriptor_size, CV_32F);
@@ -36,7 +36,7 @@ namespace aqdlib
             membership[i] = i;
         }
 
-        descriptors = aq::TSyncedImage<aq::GRAY<float>>();
+        descriptors = aq::TSyncedImage<aq::GRAY<float>>(aq::SyncedImage(desc, aq::PixelFormat::kGRAY, stream));
     }
 
     /*template <class AR>
@@ -152,7 +152,7 @@ namespace aqdlib
         {
             mo::JSONSaver ar(ofs);
 
-            IdentityDatabase unknown(m_unknown_face_descriptors);
+            IdentityDatabase unknown(m_unknown_face_descriptors, this->getStream());
             ar(&unknown, "unknown");
             for (size_t i = 0; i < m_unknown_crops.size(); ++i)
             {
@@ -232,7 +232,7 @@ namespace aqdlib
         for (uint32_t i = 0; i < num_detections; ++i)
         {
             mt::Tensor<const float, 1> det_desc = descriptors[i];
-            cv::Mat_<float> wrapped_descriptor(descriptor_size, 1, const_cast<float*>(det_desc.data()));
+            cv::Mat_<float> wrapped_descriptor(1, descriptor_size, const_cast<float*>(det_desc.data()));
 
             int match_index = -1;
             const bool euclidean = (distance_measurement.getValue() == Euclidean);

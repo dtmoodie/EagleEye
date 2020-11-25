@@ -65,7 +65,7 @@ namespace aqdlib
         struct IdentityDatabase
         {
             IdentityDatabase();
-            IdentityDatabase(const std::vector<aq::TSyncedMemory<float>>& unkown);
+            IdentityDatabase(const std::vector<aq::TSyncedMemory<float>>& unkown, mo::IAsyncStreamPtr_t);
 
             std::vector<std::string> identities;
             aq::TSyncedImage<aq::GRAY<float>> descriptors;
