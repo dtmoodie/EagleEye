@@ -40,10 +40,13 @@ writer = aq.nodes.ImageWriter(input_image=draw)
 writer.request_write = True
 
 graph.start()
-aq.eventLoop(100)
+aq.eventLoop(10000)
 
 output = recognizer.output
 
 components = output.data.components
 for component in components:
+    print(component.data.data.typename)
     print(component.data.data.data)
+
+facedb.saveUnknownFaces()
