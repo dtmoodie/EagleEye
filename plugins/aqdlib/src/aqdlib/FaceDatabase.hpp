@@ -83,9 +83,22 @@ namespace aqdlib
       protected:
         bool processImpl() override;
 
+        bool matchKnownFaces(const mt::Tensor<const float, 1>& descriptor,
+                             aq::detection::Classifications& cls,
+                             aq::detection::Id::DType& id,
+                             const double mag0,
+                             mo::IAsyncStream& stream);
+
+        bool matchUnknownFaces(const mt::Tensor<const float, 1>& descriptor,
+                               aq::detection::Classifications& cls,
+                               aq::detection::Id::DType& id,
+                               const double mag0,
+                               const aq::SyncedImage& patch,
+                               mo::IAsyncStream& stream);
+
         std::shared_ptr<aq::CategorySet> m_identities;
         std::vector<aq::TSyncedMemory<float>> m_unknown_face_descriptors;
-        std::vector<cv::Mat> m_unknown_crops;
+        std::vector<aq::SyncedImage> m_unknown_crops;
         std::vector<int> m_unknown_det_count;
         std::map<std::string, boost::circular_buffer<cv::Mat>> m_known_face_patches;
         IdentityDatabase m_known_faces;

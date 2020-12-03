@@ -22,7 +22,8 @@ namespace aqdlib
 
     FaceDatabase::IdentityDatabase::IdentityDatabase() {}
 
-    FaceDatabase::IdentityDatabase::IdentityDatabase(const std::vector<aq::TSyncedMemory<float>>& unknown, mo::IAsyncStreamPtr_t stream)
+    FaceDatabase::IdentityDatabase::IdentityDatabase(const std::vector<aq::TSyncedMemory<float>>& unknown,
+                                                     mo::IAsyncStreamPtr_t stream)
     {
         const size_t descriptor_size = unknown[0].size();
         cv::Mat desc(unknown.size(), descriptor_size, CV_32F);
@@ -157,7 +158,8 @@ namespace aqdlib
             for (size_t i = 0; i < m_unknown_crops.size(); ++i)
             {
                 std::string output_path = unknown_detections.string() + '/' + std::to_string(i) + ".jpg";
-                if (!cv::imwrite(output_path, m_unknown_crops[i]))
+                cv::Mat mat = m_unknown_crops[i];
+                if (!cv::imwrite(output_path, mat))
                 {
                     this->getLogger().warn("Failed to write {} to disk", output_path);
                 }
@@ -186,6 +188,124 @@ namespace aqdlib
             m_recent_patches[i].save(recent_detections.string(), idx, *stream);
         }
         m_recent_patches.clear();
+    }
+
+    bool FaceDatabase::matchKnownFaces(const mt::Tensor<const float, 1>& det_desc,
+                                       aq::detection::Classifications& cls,
+                                       aq::detection::Id::DType& id,
+                                       const double mag0,
+                                       mo::IAsyncStream& stream)
+    {
+        const uint32_t descriptor_size = det_desc.getShape()[0];
+        cv::Mat_<float> wrapped_descriptor(1, descriptor_size, const_cast<float*>(det_desc.data()));
+        if (!m_known_faces.descriptors.empty())
+        {
+            const bool euclidean = (distance_measurement.getValue() == Euclidean);
+            double best_match = euclidean ? 1000.0 : 0.0;
+            cv::Mat database_descriptors = m_known_faces.descriptors.getMat(&stream);
+            std::vector<float> scores(database_descriptors.rows);
+            int32_t match_index = -1;
+            for (int j = 0; j < database_descriptors.rows; ++j)
+            {
+                double dist = 0;
+                if (euclidean)
+                {
+                    dist = cv::norm(database_descriptors.row(j) - wrapped_descriptor);
+                }
+                else
+                {
+                    double mag1 = cv::norm(database_descriptors.row(j));
+                    dist = wrapped_descriptor.dot(database_descriptors.row(j)) / (mag1 * mag0);
+                }
+                scores[j] = dist;
+                if ((euclidean && (dist < best_match)) || (!euclidean && (dist > best_match)))
+                {
+                    best_match = dist;
+                    if (j < m_known_faces.membership.size())
+                    {
+                        match_index = static_cast<int32_t>(m_known_faces.membership[j]);
+                    }
+                }
+            }
+            if ((euclidean && (best_match < min_distance)) || (!euclidean && (best_match > min_distance)))
+            {
+                if (match_index < m_identities->size())
+                {
+                    cls.resize(1);
+                    cls[0] = (*m_identities)[static_cast<size_t>(match_index)](best_match);
+                    id = match_index + 1;
+
+                    /*ClassifiedPatch patch{patches[i].aligned_patch,
+                                          aq::TSyncedMemory<float>::copyHost(descriptors[i]),
+                                          cls[0].cat->getName()};
+                    m_recent_patches.push_back(std::move(patch));*/
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool FaceDatabase::matchUnknownFaces(const mt::Tensor<const float, 1>& det_desc,
+                                         aq::detection::Classifications& cls,
+                                         aq::detection::Id::DType& id,
+                                         const double mag0,
+                                         const aq::SyncedImage& patch,
+                                         mo::IAsyncStream& stream)
+    {
+        const uint32_t descriptor_size = det_desc.getShape()[0];
+        cv::Mat_<float> wrapped_descriptor(1, descriptor_size, const_cast<float*>(det_desc.data()));
+        const bool euclidean = (distance_measurement.getValue() == Euclidean);
+        double best_match = euclidean ? 1000.0 : 0.0;
+
+        // match to the unknown faces
+        int32_t match_index = -1;
+        for (size_t i = 0; i < m_unknown_face_descriptors.size(); ++i)
+        {
+            auto desc_view = m_unknown_face_descriptors[i].host(&stream);
+            cv::Mat_<float> desc(1, desc_view.size(), const_cast<float*>(desc_view.data()));
+            double dist;
+            if (euclidean)
+            {
+                dist = cv::norm(desc - wrapped_descriptor);
+                if (dist < best_match)
+                {
+                    best_match = dist;
+                    match_index = static_cast<int32_t>(i);
+                }
+            }
+            else
+            {
+                auto mag1 = cv::norm(desc);
+                dist = desc.dot(wrapped_descriptor) / (mag0 * mag1);
+                if (dist > best_match)
+                {
+                    best_match = dist;
+                    match_index = static_cast<int32_t>(i);
+                }
+            }
+        }
+
+        if (match_index == -1 ||
+            ((euclidean && (best_match > min_distance)) || (!euclidean && (best_match < min_distance))))
+        {
+            // new unknown face
+            size_t unknown_count = m_identities->size() - m_known_faces.identities.size();
+            m_identities->push_back("unknown" + boost::lexical_cast<std::string>(unknown_count));
+
+            m_unknown_face_descriptors.push_back(aq::TSyncedMemory<float>::copyHost(det_desc));
+
+            m_unknown_crops.push_back(patch);
+            m_unknown_det_count.push_back(1);
+
+            cls.resize(1);
+            cls[0] = (*m_identities).back()();
+            id = m_identities->size() - 1;
+
+            // m_recent_patches.push_back(
+            //    {patches[i].aligned_patch, aq::TSyncedMemory<float>::copyHost(det_desc), cls[0].cat->getName()});
+            return false;
+        }
     }
 
     bool FaceDatabase::processImpl()
@@ -219,153 +339,64 @@ namespace aqdlib
 
         mt::Tensor<const aq::detection::AlignedPatch, 1> patches =
             detections->getComponent<aq::detection::AlignedPatch>();
+
         mt::Tensor<const float, 2> descriptors = detections->getComponent<aq::detection::Descriptor>();
+
         mt::Tensor<const aq::detection::BoundingBox2d::DType, 1> bbs =
             detections->getComponent<aq::detection::BoundingBox2d>();
 
         mt::Tensor<aq::detection::Classifications, 1> classifications =
             output.getComponentMutable<aq::detection::Classifications>();
-        mt::Tensor<aq::detection::Id::DType, 1> ids = output.getComponentMutable<aq::detection::Id>();
 
-        const uint32_t descriptor_size = descriptors.getShape()[1];
+        mt::Tensor<aq::detection::Id::DType, 1> ids = output.getComponentMutable<aq::detection::Id>();
 
         for (uint32_t i = 0; i < num_detections; ++i)
         {
             mt::Tensor<const float, 1> det_desc = descriptors[i];
-            cv::Mat_<float> wrapped_descriptor(1, descriptor_size, const_cast<float*>(det_desc.data()));
-
-            int match_index = -1;
+            cv::Mat_<float> wrapped_descriptor(1, det_desc.getShape()[0], const_cast<float*>(det_desc.data()));
             const bool euclidean = (distance_measurement.getValue() == Euclidean);
-            double best_match = euclidean ? 1000.0 : 0.0;
             double mag0;
             if (!euclidean)
             {
                 mag0 = cv::norm(wrapped_descriptor);
             }
-            if (!m_known_faces.descriptors.empty())
-            {
-                cv::Mat database_descriptors = m_known_faces.descriptors.getMat(stream.get());
-                std::vector<float> scores(database_descriptors.rows);
-                for (int i = 0; i < database_descriptors.rows; ++i)
-                {
-                    double dist = 0;
-                    if (euclidean)
-                    {
-                        dist = cv::norm(database_descriptors.row(i) - wrapped_descriptor);
-                    }
-                    else
-                    {
-                        double mag1 = cv::norm(database_descriptors.row(i));
-                        dist = wrapped_descriptor.dot(database_descriptors.row(i)) / (mag1 * mag0);
-                    }
-                    scores[i] = dist;
-                    if ((euclidean && (dist < best_match)) || (!euclidean && (dist > best_match)))
-                    {
-                        best_match = dist;
-                        if (i < m_known_faces.membership.size())
-                        {
-                            match_index = static_cast<int>(m_known_faces.membership[i]);
-                        }
-                    }
-                }
-                if ((euclidean && (best_match < min_distance)) || (!euclidean && (best_match > min_distance)))
-                {
-                    if (match_index < m_identities->size())
-                    {
-                        aq::detection::Classifications& cls = classifications[i];
-                        cls.resize(1);
-                        cls[0] = (*m_identities)[static_cast<size_t>(match_index)](best_match);
-                        ids[i] = match_index + 1;
-                        // sig_detectedKnownFace(*image, out_det);
 
-                        ClassifiedPatch patch{patches[i].aligned_patch,
-                                              aq::TSyncedMemory<float>::copyHost(descriptors[i]),
-                                              cls[0].cat->getName()};
-                        m_recent_patches.push_back(std::move(patch));
-                    }
-                }
-                else
-                {
-                    match_index = -1;
-                }
+            if (matchKnownFaces(det_desc, classifications[i], ids[i], mag0, *stream))
+            {
+                continue;
             }
-            if (match_index == -1)
+
+            /*if (match_index == -1) {}
+            else
             {
-                auto stream = this->getStream();
-                // match to the unknown faces
-                for (size_t i = 0; i < m_unknown_face_descriptors.size(); ++i)
+                const auto idx = match_index + m_known_faces.identities.size();
+                if (idx < m_identities->size())
                 {
-                    auto desc_view = m_unknown_face_descriptors[i].host(stream.get());
-                    cv::Mat_<float> desc(1, desc_view.size(), const_cast<float*>(desc_view.data()));
-                    double dist;
-                    if (euclidean)
-                    {
-                        dist = cv::norm(desc - wrapped_descriptor);
-                    }
-                    else
-                    {
-                        auto mag1 = cv::norm(desc);
-                        dist = desc.dot(wrapped_descriptor) / (mag0 * mag1);
-                    }
-
-                    if ((euclidean && (dist < best_match)) || (!euclidean && (dist > best_match)))
-                    {
-                        best_match = dist;
-                        match_index = static_cast<int>(i);
-                    }
-                }
-
-                if (match_index == -1 ||
-                    ((euclidean && (best_match > min_distance)) || (!euclidean && (best_match < min_distance))))
-                {
-                    // new unknown face
-                    size_t unknown_count = m_identities->size() - m_known_faces.identities.size();
-                    m_identities->push_back("unknown" + boost::lexical_cast<std::string>(unknown_count));
-
-                    m_unknown_face_descriptors.push_back(aq::TSyncedMemory<float>::copyHost(det_desc));
-                    auto crop_bb = bbs[i];
-                    crop_bb = crop_bb & cv::Rect2f(cv::Point2f(), host_img.size());
-                    m_unknown_crops.push_back(patches[i].aligned_patch.getMat(stream.get()).clone());
-                    m_unknown_det_count.push_back(1);
-
                     classifications[i].resize(1);
-                    classifications[i][0] = (*m_identities).back()();
-                    ids[i] = m_identities->size() - 1;
-
+                    classifications[i][0] = (*m_identities)[idx]();
                     m_recent_patches.push_back({patches[i].aligned_patch,
-                                                aq::TSyncedMemory<float>::copyHost(det_desc),
+                                                aq::TSyncedMemory<float>::copyHost(det_desc, stream),
                                                 classifications[i][0].cat->getName()});
                 }
-                else
-                {
-                    const auto idx = match_index + m_known_faces.identities.size();
-                    if (idx < m_identities->size())
-                    {
-                        classifications[i].resize(1);
-                        classifications[i][0] = (*m_identities)[idx]();
-                        m_recent_patches.push_back({patches[i].aligned_patch,
-                                                    aq::TSyncedMemory<float>::copyHost(det_desc, stream),
-                                                    classifications[i][0].cat->getName()});
-                    }
 
-                    ++m_unknown_det_count[match_index];
-                    if (m_unknown_det_count[match_index] == 10)
+                ++m_unknown_det_count[match_index];
+                if (m_unknown_det_count[match_index] == 10)
+                {
+                    if (match_index < m_unknown_face_descriptors.size())
                     {
-                        if (match_index < m_unknown_face_descriptors.size())
-                        {
-                            auto desc = m_unknown_face_descriptors[match_index].host(stream.get());
-                            std::string base64 = cereal::base64::encode(ct::ptrCast<unsigned char>(desc.data()),
-                                                                        desc.size() * sizeof(float));
-                            int idx = unknown_detections.nextFileIndex();
-                            std::string stem = database_path.string() + "/unknown_" + std::to_string(idx);
-                            std::ofstream ofs(stem + ".bin");
-                            ofs << base64;
-                            cv::imwrite(stem + ".jpg", m_unknown_crops[match_index]);
-                        }
+                        auto desc = m_unknown_face_descriptors[match_index].host(stream.get());
+                        std::string base64 = cereal::base64::encode(ct::ptrCast<unsigned char>(desc.data()),
+                                                                    desc.size() * sizeof(float));
+                        int idx = unknown_detections.nextFileIndex();
+                        std::string stem = database_path.string() + "/unknown_" + std::to_string(idx);
+                        std::ofstream ofs(stem + ".bin");
+                        ofs << base64;
+                        cv::imwrite(stem + ".jpg", m_unknown_crops[match_index]);
                     }
-                    // sig_detectedUnknownFace(*image, out_det, m_unknown_det_count[match_index]);
                 }
+                // sig_detectedUnknownFace(*image, out_det, m_unknown_det_count[match_index]);
             }
+        }*/
         }
         this->output.publish(std::move(output), mo::tags::param = &this->detections_param);
         return true;
@@ -396,7 +427,9 @@ namespace aqdlib
         if (loaded)
         {
             mo::Mutex_t::Lock_t lock(getMutex());
-            m_known_faces = load_db;
+            const aq::SyncedMemory& tmp_desc_loaded = *load_db.descriptors.data();
+            m_known_faces = std::move(load_db);
+            const aq::SyncedMemory& tmp_desc = *m_known_faces.descriptors.data();
             auto tmp = m_known_faces.identities;
             m_identities = std::make_shared<aq::CategorySet>(tmp);
             this->getLogger().info("Loaded: {}", *m_identities);

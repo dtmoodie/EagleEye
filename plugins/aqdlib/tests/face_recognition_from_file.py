@@ -42,11 +42,11 @@ writer.request_write = True
 graph.start()
 aq.eventLoop(10000)
 
-output = recognizer.output
+output = facedb.output
 
 components = output.data.components
 for component in components:
     print(component.data.data.typename)
     print(component.data.data.data)
 
-facedb.saveUnknownFaces()
+assert components[1].data.data.data[0].data[0].cat.data.name == 'JerryRyan'
