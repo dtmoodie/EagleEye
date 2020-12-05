@@ -16,8 +16,13 @@ namespace aqframegrabbers
         image = cv::imread(path);
         if (!image.empty())
         {
-            image_name.publish(path, mo::tags::fn = 0, mo::tags::timestamp = mo::ms * 0);
-            output.publish(image, mo::tags::fn = 0, mo::tags::timestamp = mo::ms * 0);
+            image_name.publish(path, mo::tags::fn = count, mo::tags::timestamp = mo::ms * count);
+            output.publish(image, mo::tags::fn = count, mo::tags::timestamp = mo::ms * count);
+            if(m_path != path)
+            {
+                ++count;
+                m_path = path;
+            }
             return true;
         }
         return false;
