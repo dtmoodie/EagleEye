@@ -65,7 +65,13 @@ if(CUDNN_FOUND)
     aq_install_python_test(tests/face_recognition_from_file.py)
     aq_install_python_test(scripts/door_face.py)
     get_target_property(out_dir aquila_python ARCHIVE_OUTPUT_DIRECTORY)
-    configure_file(${CMAKE_CURRENT_LIST_DIR}/data/maxresdefault.jpg ${out_dir}/maxresdefault.jpg COPYONLY)
+    #configure_file(${CMAKE_CURRENT_LIST_DIR}/data/images ${out_dir}/images COPYONLY)
+    add_custom_command(TARGET aqdlib POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory
+                       ${CMAKE_CURRENT_LIST_DIR}/data/images 
+                       ${out_dir}/images
+    )
+
     configure_file(${CMAKE_CURRENT_LIST_DIR}/data/identities.db ${out_dir}/identities.db COPYONLY)
     file(GLOB_RECURSE MODELS "share/*")
     add_custom_target(aqdlib_models ${MODELS})
