@@ -44,7 +44,6 @@ bool ImageWriter::processImpl()
             boost::filesystem::create_directories(save_directory);
         }
         ss << save_directory.string() << "/" << base_name << std::setfill('0') << std::setw(4) << frame_count << ext;
-        ++frame_count;
         std::string save_name = ss.str();
         auto stream = this->getStream();
         bool synchronize = false;
