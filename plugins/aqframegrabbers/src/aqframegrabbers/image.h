@@ -21,5 +21,6 @@ namespace aqframegrabbers
 
         cv::Mat image;
         size_t count = 0;
+        std::string m_path;
     };
 } // namespace aqframegrabbers
