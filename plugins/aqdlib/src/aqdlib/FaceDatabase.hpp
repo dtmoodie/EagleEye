@@ -70,6 +70,9 @@ namespace aqdlib
             std::vector<std::string> identities;
             aq::TSyncedImage<aq::GRAY<float>> descriptors;
             std::vector<int> membership;
+
+            void load(mo::ILoadVisitor&, const std::string&);
+            void save(mo::ISaveVisitor&, const std::string&) const;
         };
 
         struct ClassifiedPatch
@@ -87,6 +90,7 @@ namespace aqdlib
                              aq::detection::Classifications& cls,
                              aq::detection::Id::DType& id,
                              const double mag0,
+                             const aq::SyncedImage& patch,
                              mo::IAsyncStream& stream);
 
         bool matchUnknownFaces(const mt::Tensor<const float, 1>& descriptor,
@@ -95,6 +99,13 @@ namespace aqdlib
                                const double mag0,
                                const aq::SyncedImage& patch,
                                mo::IAsyncStream& stream);
+
+        void onNewUnknownFace(const mt::Tensor<const float, 1>& det_desc, aq::detection::Classifications& cls,
+                                         aq::detection::Id::DType& id, const aq::SyncedImage& patch);
+        
+        void saveUnknownFace(uint32_t index);
+
+
 
         std::shared_ptr<aq::CategorySet> m_identities;
         std::vector<aq::TSyncedMemory<float>> m_unknown_face_descriptors;
