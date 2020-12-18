@@ -48,10 +48,10 @@ namespace aqdlib
         visitor(&membership, "membership");
         size_t descriptor_size = 0;
         visitor(&descriptor_size, "descriptor_size");
-        descriptors.create(identities.size(), descriptor_size);
+        descriptors.create(membership.size(), descriptor_size);
         cv::Mat mat = descriptors.mat();
         std::vector<ct::TArrayView<void>> arrs;
-        for(size_t i = 0; i < identities.size(); ++i)
+        for(size_t i = 0; i < membership.size(); ++i)
         {
             cv::Mat view = mat.row(i);
             ct::TArrayView<void> arr(ct::ptrCast<void>(view.data), descriptor_size * sizeof(float));
@@ -65,12 +65,17 @@ namespace aqdlib
         visitor(&identities, "identities");
         visitor(&membership, "membership");
         const auto size = descriptors.size();
-        MO_ASSERT_EQ(size(0), identities.size());
+        for(const auto& mem : membership)
+        {
+            //MO_ASSERT_EQ(size(0), identities.size());
+            MO_ASSERT_GT(identities.size(), mem);
+        }
+        
         const size_t descriptor_size = size(1);
         visitor(&descriptor_size, "descriptor_size");
         cv::Mat mat = descriptors.mat();
         std::vector<ct::TArrayView<const void>> arrs;
-        for(size_t i = 0; i < identities.size(); ++i)
+        for(size_t i = 0; i < membership.size(); ++i)
         {
             cv::Mat view = mat.row(i);
             ct::TArrayView<const void> arr(ct::ptrCast<const void>(view.data), descriptor_size * sizeof(float));
