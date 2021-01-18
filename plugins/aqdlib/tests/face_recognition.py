@@ -1,18 +1,45 @@
 import aquila as aq
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+
+parser.add_argument('--path', default='0')
+parser.add_argument('--cfg', default='/home/asiansensation/code/yolo_tiny_face/yolov3-tiny.cfg')
+parser.add_argument('--weights', default='/home/asiansensation/code/yolo_tiny_face/yolov3-tiny_final.weights')
+parser.add_argument('--labels', default='/home/asiansensation/code/yolo_tiny_face/labels.txt')
+
+args = parser.parse_args()
+
+stream = aq.createStream()
+aq.setGuiStream(stream)
 
 graph = aq.Graph()
+graph.setStream(stream)
 
-devices = aq.framegrabbers.listDataSources()
+fg = aq.framegrabbers.create(args.path)
+graph.addNode(fg)
 
-cam = aq.framegrabbers.FrameGrabber()
-graph.addNode(cam)
+face = aq.nodes.YOLO(input=fg)
 
-cam.loadData('v4l2src ! video/x-raw,width=1920,height=1080,format=RGB ! videoconvert ! appsink name=mysink')
-face = aq.nodes.HaarFaceDetector(graph=graph, model_file='/home/dan/code/opencv/data/haarcascades/haarcascade_frontalface_default.xml', input=cam)
-recognizer = aq.nodes.FaceRecognizer(image=cam, detections=face,
-    shape_landmark_file='/code/eagleeye/plugins/dlib/share/shape_predictor_5_face_landmarks.dat',
-    face_recognizer_weight_file='/code/eagleeye/plugins/dlib/share/dlib_face_recognition_resnet_model_v1.dat')
-facedb = aquila.nodes.FaceDatabase(detections=recognizer, image=cam)
-draw = aquila.nodes.DrawDescriptors(image=cam, detections=facedb)
-img_disp = aquila.nodes.QtImageDisplay(name='image', image=draw)
-#graph.start()
+face.weight_file = args.weights
+face.model_file = args.cfg
+face.label_file = args.labels
+face.det_thresh = 0.01
+face.cat_thresh = 0.01
+
+aligner = aq.nodes.FaceAligner(image=fg, detections=face, shape_landmark_file='/home/asiansensation/code/EagleEye/plugins/aqdlib/share/shape_predictor_5_face_landmarks.dat')
+
+recognizer = aq.nodes.FaceRecognizer(image=fg, detections=aligner,
+    face_recognizer_weight_file='/home/asiansensation/code/EagleEye/plugins/aqdlib/share/dlib_face_recognition_resnet_model_v1.dat')
+
+facedb = aq.nodes.FaceDatabase(detections=recognizer, image=fg)
+
+draw = aq.nodes.DrawDetections(image=fg, detections=facedb)
+disp = aq.nodes.QtImageDisplay(input=draw)
+#writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./')
+
+graph.start()
+aq.eventLoop(10000)
+
+
+
