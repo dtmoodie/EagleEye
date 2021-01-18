@@ -8,17 +8,13 @@
 #include <MetaObject/logging/logging.hpp>
 
 #include <MetaObject/core/detail/Allocator.hpp>
-#include <MetaObject/core/detail/opencv_allocator.hpp>
+
 #include <MetaObject/logging/profiling.hpp>
 #include <MetaObject/object/MetaObject.hpp>
 #include <MetaObject/object/RelayManager.hpp>
-#include <MetaObject/params/ICoordinateSystem.hpp>
-#include <MetaObject/params/IVariableManager.hpp>
-#include <MetaObject/params/buffers/IBuffer.hpp>
-#include <MetaObject/serialization/SerializationFactory.hpp>
+
 #include <MetaObject/thread/ThreadPool.hpp>
-#include <MetaObject/thread/boost_thread.hpp>
-//#include <MetaObject/serialization/ParamMonitor.hpp>
+
 #include <RuntimeObjectSystem/RuntimeObjectSystem.h>
 
 #include <boost/asio.hpp>
