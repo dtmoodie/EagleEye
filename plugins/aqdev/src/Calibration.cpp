@@ -38,7 +38,6 @@ namespace aqdev
             corner_distance_param.setModified(false);
         }
         mo::IAsyncStreamPtr_t stream = this->getStream();
-        mo::IDeviceStream* dev_stream = stream->getDeviceStream();
 
         auto& mat = input->getMat(stream.get());
 
