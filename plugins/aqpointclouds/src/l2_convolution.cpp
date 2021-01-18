@@ -1,4 +1,4 @@
-#include <Aquila/types/SyncedMemory.hpp>
+#include <Aquila/types/SyncedImage.hpp>
 
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <l2_convolution.hpp>
@@ -28,9 +28,13 @@ namespace aq
         bool ConvolutionL2::processImpl()
         {
             cv::cuda::GpuMat dist, idx;
-            device::convolveL2(dist, idx, input->getGpuMat(stream()), kernel_size, distance_threshold, stream());
-            distance_param.updateData(dist, mo::tag::_param = input_param, mo::tag::_context = _ctx.get());
-            index_param.updateData(idx, mo::tag::_param = input_param, mo::tag::_context = _ctx.get());
+            auto stream = this->getStream();
+            mo::IDeviceStream* dev_stream = stream->getDeviceStream();
+            cv::cuda::GpuMat input_mat = input->getGpuMat(dev_stream);
+            cv::cuda::Stream& cvstream = this->getCVStream();
+            device::convolveL2(dist, idx, input_mat, kernel_size, distance_threshold, cvstream);
+            distance.publish(dist, mo::tags::param = &input_param, mo::tags::stream = stream.get());
+            index.publish(idx, mo::tags::param = &input_param, mo::tags::stream = stream.get());
             return true;
         }
 
@@ -38,18 +42,22 @@ namespace aq
 
         bool ConvolutionL2ForegroundEstimate::processImpl()
         {
+            auto stream = this->getStream();
             if (build_model)
             {
-                prev = input->getGpuMat(stream());
+                prev = input->getGpuMat();
                 build_model = false;
             }
             if (!prev.empty())
             {
                 cv::cuda::GpuMat dist, idx;
-                device::convolveL2(
-                    dist, idx, prev, input->getGpuMat(stream()), kernel_size, distance_threshold, stream());
-                distance_param.updateData(dist, mo::tag::_param = input_param, mo::tag::_context = _ctx.get());
-                index_param.updateData(idx, mo::tag::_param = input_param, mo::tag::_context = _ctx.get());
+                mo::IDeviceStream* dev_stream = stream->getDeviceStream();
+                cv::cuda::GpuMat in_mat = input->getGpuMat(dev_stream);
+                cv::cuda::Stream& cvstream = this->getCVStream();
+                device::convolveL2(dist, idx, prev, in_mat, kernel_size, distance_threshold, cvstream);
+
+                distance.publish(dist, mo::tags::param = &input_param, mo::tags::stream = stream.get());
+                index.publish(idx, mo::tags::param = &input_param, mo::tags::stream = stream.get());
             }
             return true;
         }

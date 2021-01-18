@@ -14,14 +14,15 @@ namespace aq
             static int loadTimeout() { return 10000; }
 
             MO_DERIVE(RosSubscriber, IFrameGrabber)
-            MO_END
-            virtual bool loadData(std::string file_path) override;
+            MO_END;
 
-            virtual void addComponent(const rcc::weak_ptr<IAlgorithm>& component) override;
-            virtual void nodeInit(bool firstInit) override;
+            bool loadData(std::string file_path) override;
+
+            void addComponent(const rcc::weak_ptr<IAlgorithm>& component) override;
+            void nodeInit(bool firstInit) override;
 
           protected:
-            virtual bool processImpl() override;
+            bool processImpl() override;
 
             std::vector<rcc::shared_ptr<ros::IMessageReader>> _readers;
         };

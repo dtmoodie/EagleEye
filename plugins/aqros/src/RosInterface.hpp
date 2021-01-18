@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 namespace ros
 {
 class NodeHandle;
@@ -14,7 +15,7 @@ namespace aq
 class RosInterface
 {
   public:
-    static RosInterface* Instance();
+    static std::shared_ptr<RosInterface> Instance();
     ros::NodeHandle* nh() const;
     RosInterface();
     ~RosInterface();

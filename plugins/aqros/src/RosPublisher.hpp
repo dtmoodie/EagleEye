@@ -3,36 +3,34 @@
 #include "IRosMessageWriter.hpp"
 #include "ros/publisher.h"
 #include <Aquila/types/CompressedImage.hpp>
-#include <Aquila/types/SyncedMemory.hpp>
-#include <MetaObject/params/TMultiInput.hpp>
+#include <Aquila/types/SyncedImage.hpp>
 
-namespace aq
+namespace aqros
 {
-namespace nodes
-{
-class RosPublisher : public Node
-{
-  public:
-    MO_DERIVE(RosPublisher, Node)
 
-    MO_END
-  protected:
-};
+  class RosPublisher : public aq::nodes::Node
+  {
+    public:
+      MO_DERIVE(RosPublisher, aq::nodes::Node)
 
-class ImagePublisher : public Node
-{
-  public:
-    MO_DERIVE(ImagePublisher, Node)
-        MULTI_INPUT(input, SyncedMemory, types::CompressedImage)
-        PARAM(std::string, topic_name, "image")
-    MO_END
-    virtual void nodeInit(bool firstInit) override;
+      MO_END;
+    protected:
+  };
 
-  protected:
-    virtual bool processImpl() override;
-    ros::Publisher _image_publisher;
-    // Hack for bug in MULTI_INPUT for now :/
-    mo::OptionalTime_t m_prev_time;
-};
-}
+  class ImagePublisher : public aq::nodes::Node
+  {
+    public:
+      MO_DERIVE(ImagePublisher, aq::nodes::Node)
+          MULTI_INPUT(input, aq::SyncedImage, types::CompressedImage)
+          PARAM(std::string, topic_name, "image")
+      MO_END;
+      void nodeInit(bool firstInit) override;
+
+    protected:
+      bool processImpl() override;
+      ros::Publisher _image_publisher;
+      // Hack for bug in MULTI_INPUT for now :/
+      mo::OptionalTime_t m_prev_time;
+  };
+
 }

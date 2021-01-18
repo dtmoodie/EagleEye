@@ -9,17 +9,14 @@
 #endif
 #endif
 
-namespace aq
+namespace aqbio
 {
 
 aqbio_EXPORT void findMaximalSeam(const cv::Mat& score, cv::Mat& seam, int search_window = 5);
 
-namespace bio
-{
-
 struct Cell
 {
-    REFLECT_INTERNAL_START(Cell)
+    REFLECT_INTERNAL_BEGIN(Cell)
         REFLECT_INTERNAL_MEMBER(Eigen::Vector2f, center)
         REFLECT_INTERNAL_MEMBER(std::vector<cv::Point>, inner_membrane)
         REFLECT_INTERNAL_MEMBER(std::vector<cv::Point>, outer_membrane)
@@ -28,7 +25,7 @@ struct Cell
         REFLECT_INTERNAL_MEMBER(bool, inner_updated, false)
         REFLECT_INTERNAL_MEMBER(bool, outer_updated, false)
         REFLECT_INTERNAL_MEMBER(size_t, fn)
-    REFLECT_INTERNAL_END
+    REFLECT_INTERNAL_END;
 
 
     float dist(const cv::Point& pt) const;
@@ -42,7 +39,7 @@ private:
     void push(cv::Point& pt, const float dist);
 };
 
-class aqbio_EXPORT FindCellMembrane : public nodes::SnakeCircle
+class aqbio_EXPORT FindCellMembrane : public aqcore::SnakeCircle
 {
   public:
     enum Method
@@ -51,7 +48,7 @@ class aqbio_EXPORT FindCellMembrane : public nodes::SnakeCircle
         DynamicProgramming
     };
 
-    MO_DERIVE(FindCellMembrane, nodes::SnakeCircle)
+    MO_DERIVE(FindCellMembrane, aqcore::SnakeCircle)
         PARAM(float, confidence_threshold, 0.8f)
         PARAM(float, inner_pad, 1.1f)
         PARAM(float, outer_pad, 1.8f)
@@ -63,9 +60,9 @@ class aqbio_EXPORT FindCellMembrane : public nodes::SnakeCircle
         ENUM_PARAM(method, DynamicProgramming, Naive)
         PARAM(bool, user_update, false)
         OUTPUT(Cell, cell, {})
-    MO_END
+    MO_END;
   protected:
-    virtual bool processImpl() override;
+    bool processImpl() override;
 
     bool snakePoints(const cv::Mat& img, std::vector<cv::Point>& points, const std::vector<float>& point_weight);
 
@@ -77,12 +74,5 @@ class aqbio_EXPORT FindCellMembrane : public nodes::SnakeCircle
     void reweightEnergy(cv::Mat_<float>& energy);
     Cell m_current_cell;
 };
-}
-}
 
-namespace ct
-{
-namespace reflect
-{
-}
 }

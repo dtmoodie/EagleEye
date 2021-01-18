@@ -24,12 +24,13 @@ file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp" "src/*.hpp" "src/*.h")
 REMOVE_VTK_DEFINITIONS()
 cuda_add_library(aqpointclouds SHARED ${src} ${knl} ${hdr})
 
-RCC_LINK_LIB(aqpointclouds
+target_link_libraries(aqpointclouds
       metaobject_core metaobject_object metaobject_params metaobject_metaparams
       ${OpenCV_LIBS}
       ${PCL_LIBRARIES}
       aquila_core
       aquila_types
+      aqcore
 )
 
 if(PCL_FOUND)

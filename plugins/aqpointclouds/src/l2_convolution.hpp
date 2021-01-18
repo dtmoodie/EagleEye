@@ -1,42 +1,44 @@
 #pragma once
 
 #include <Aquila/nodes/Node.hpp>
-#include <Aquila/types/SyncedMemory.hpp>
+#include <Aquila/types/SyncedImage.hpp>
+#include <aqcore/OpenCVCudaNode.hpp>
+#include <opencv2/core/cuda.hpp>
 
 namespace aq
 {
     namespace pointclouds
     {
-        class ConvolutionL2 : public nodes::Node
+        class ConvolutionL2 : public aqcore::OpenCVCudaNode
         {
           public:
-            MO_DERIVE(ConvolutionL2, nodes::Node)
-                INPUT(aq::SyncedMemory, input)
+            MO_DERIVE(ConvolutionL2, aqcore::OpenCVCudaNode)
+                INPUT(aq::SyncedImage, input)
                 PARAM(int, kernel_size, 3)
                 PARAM(int, distance_threshold, 1.0f)
-                OUTPUT(aq::SyncedMemory, distance, {})
-                OUTPUT(aq::SyncedMemory, index, {})
-            MO_END
+                OUTPUT(aq::SyncedImage, distance, {})
+                OUTPUT(aq::SyncedImage, index, {})
+            MO_END;
 
           protected:
-            bool processImpl();
+            bool processImpl() override;
         };
 
-        class ConvolutionL2ForegroundEstimate : public nodes::Node
+        class ConvolutionL2ForegroundEstimate : public aqcore::OpenCVCudaNode
         {
           public:
-            MO_DERIVE(ConvolutionL2ForegroundEstimate, nodes::Node)
-                INPUT(aq::SyncedMemory, input)
+            MO_DERIVE(ConvolutionL2ForegroundEstimate, aqcore::OpenCVCudaNode)
+                INPUT(aq::SyncedImage, input)
                 PARAM(int, kernel_size, 3)
                 PARAM(int, distance_threshold, 1.0f)
                 PARAM(bool, build_model, false)
                 MO_SLOT(void, buildModel)
-                OUTPUT(aq::SyncedMemory, distance, {})
-                OUTPUT(aq::SyncedMemory, index, {})
-            MO_END
+                OUTPUT(aq::SyncedImage, distance, {})
+                OUTPUT(aq::SyncedImage, index, {})
+            MO_END;
 
           protected:
-            bool processImpl();
+            bool processImpl() override;
             cv::cuda::GpuMat prev;
         };
     } // namespace pointclouds

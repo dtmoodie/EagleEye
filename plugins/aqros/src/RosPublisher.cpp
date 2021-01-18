@@ -1,9 +1,11 @@
+#include <Aquila/types/SyncedImage.hpp>
+
 #include "RosPublisher.hpp"
 #include "RosInterface.hpp"
 
 #include "Aquila/nodes/NodeInfo.hpp"
-#include "Aquila/utilities/cuda/CudaCallbacks.hpp"
-#include <MetaObject/params/TMultiInput-inl.hpp>
+
+#include <MetaObject/params/TMultiSubscriber.hpp>
 #include <MetaObject/params/TypeSelector.hpp>
 
 #include "sensor_msgs/CompressedImage.h"
@@ -34,7 +36,7 @@ sensor_msgs::Image::Ptr copyToMsg(cv::Mat mat)
 
 bool ImagePublisher::processImpl()
 {
-    auto ts = input_param.getTimestamp();
+    auto ts = input_param.getNewestTimestamp();
     // remove once TMultiInput time syncing is fixed
     if (m_prev_time && ts)
     {

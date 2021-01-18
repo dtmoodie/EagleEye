@@ -1,23 +1,36 @@
+#include <Aquila/types/SyncedImage.hpp>
+
 #include "IRosMessageReader.hpp"
 #include "MessageReaderInfo.hpp"
-#include "MetaObject/core/detail/AllocatorImpl.hpp"
-#include "MetaObject/core/detail/MemoryStack.hpp"
+#include "MetaObject/core/detail/Allocator.hpp"
 #include "RosInterface.hpp"
+
 #include "ros/ros.h"
 #include "ros/topic.h"
+
 #include "sensor_msgs/Image.h"
 #include "sensor_msgs/image_encodings.h"
+
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
-#include <Aquila/types/SyncedMemory.hpp>
+
 #include <opencv2/cudaimgproc.hpp>
+
+#include <cuda_runtime_api.h>
 
 template <class T>
 struct StlAllocator
 {
-    typedef T value_type;
-    typedef T* pointer;
-    typedef std::size_t size_type;
+    StlAllocator()
+    {
+        mo::IAsyncStream::Ptr_t stream = mo::IAsyncStream::current();
+        m_allocator = stream->hostAllocator();
+        MO_ASSERT(m_allocator != nullptr);
+    }
+    using value_type = T;
+    using pointer = T*;
+    using size_type = std::size_t;
+
     template <class U>
     struct rebind
     {
@@ -26,11 +39,13 @@ struct StlAllocator
     pointer allocate(size_type n, std::allocator<void>::const_pointer /*hint*/ = 0)
     {
         pointer out;
-        mo::CpuMemoryStack::globalInstance()->allocate(&out, n * sizeof(T), sizeof(T));
+        out = ct::ptrCast<T>(m_allocator->allocate(n * sizeof(T), sizeof(T)));
         return out;
     }
 
-    void deallocate(T* p, std::size_t n) { mo::CpuMemoryStack::globalInstance()->deallocate(p, n); }
+    void deallocate(T* p, std::size_t n) { m_allocator->deallocate(p, n * sizeof(T)); }
+
+    mo::Allocator::Ptr_t m_allocator;
 };
 
 typedef sensor_msgs::Image_<StlAllocator<void>> PinnedImage;
@@ -112,30 +127,46 @@ class MessageReaderImage : public ros::IMessageReader
 
     void imageCb(PinnedImage::ConstPtr msg)
     {
-        cv::cuda::GpuMat gpu_buf;
         std::string enc = msg->encoding.c_str();
-        int c = sensor_msgs::image_encodings::numChannels(enc);
-        int depth = sensor_msgs::image_encodings::bitDepth(enc) == 8 ? CV_8U : CV_16U;
-        gpu_buf.create(msg->height, msg->width, CV_MAKE_TYPE(depth, c));
-        size_t src_stride = (depth == CV_8U ? 1 : 2) * msg->width * c;
-        cudaMemcpy2DAsync(gpu_buf.datastart,
-                          gpu_buf.step,
-                          (const void*)msg->data.data(),
-                          src_stride,
-                          src_stride,
-                          msg->height,
-                          cudaMemcpyHostToDevice,
-                          _ctx->getCudaStream());
-        if (c == 1 && sensor_msgs::image_encodings::isBayer(enc))
+        const int num_channels = sensor_msgs::image_encodings::numChannels(enc);
+
+        const aq::DataFlag depth =
+            sensor_msgs::image_encodings::bitDepth(enc) == 8 ? aq::DataFlag::kUINT8 : aq::DataFlag::kUINT16;
+
+        aq::PixelType pixel_type;
+        pixel_type.data_type = depth;
+        if (enc.find("bgr") == 0)
         {
-            cv::cuda::GpuMat color;
-            cv::cuda::demosaicing(gpu_buf, color, cvBayerCode(enc), -1, _ctx->getStream());
-            gpu_buf = color;
+            pixel_type.pixel_format = aq::PixelFormat::kBGR;
+            MO_ASSERT_EQ(num_channels, 3);
         }
-        image_param.updateData(gpu_buf,
-                               mo::tag::_timestamp = mo::second * msg->header.stamp.toSec(),
-                               mo::tag::_frame_number = msg->header.seq,
-                               _ctx);
+        else if (enc.find("rgb") == 0)
+        {
+            pixel_type.pixel_format = aq::PixelFormat::kRGB;
+            MO_ASSERT_EQ(num_channels, 3);
+        }
+        else if (enc.find("mono") == 0)
+        {
+            pixel_type.pixel_format = aq::PixelFormat::kGRAY;
+        }
+        else if (enc.find("bayer") == 0)
+        {
+            // TODO
+            MO_THROW("Unsupported image format");
+        }
+
+        auto stream = this->getStream();
+        aq::Shape<2> shape(msg->height, msg->width);
+
+        aq::SyncedImage image(shape,
+                              pixel_type,
+                              msg->data.data(),
+                              std::shared_ptr<const void>(msg.data(), [msg](const void*) {}),
+                              stream);
+
+        image_param.publish(image,
+                            mo::tags::timestamp = mo::second * msg->header.stamp.toSec(),
+                            mo::tags::frame_number = msg->header.seq);
     }
 
     ros::Subscriber _sub;

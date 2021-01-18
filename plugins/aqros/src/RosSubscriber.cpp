@@ -36,13 +36,18 @@ bool RosSubscriber::loadData(std::string file_path)
 
 void RosSubscriber::addComponent(const rcc::weak_ptr<IAlgorithm>& component)
 {
-    auto typed = component.DynamicCast<ros::IMessageReader>();
-    if (typed)
+    rcc::shared_ptr<IAlgorithm> locked = component.lock();
+    if (locked)
     {
-        _readers.push_back(typed);
-        Algorithm::addComponent(component);
+        rcc::shared_ptr<ros::IMessageReader> typed(locked);
+        if (typed)
+        {
+            _readers.push_back(typed);
+            Algorithm::addComponent(component);
+        }
     }
 }
+
 void RosSubscriber::nodeInit(bool /*firstInit*/)
 {
     aq::RosInterface::Instance();
