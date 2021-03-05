@@ -27,7 +27,7 @@ if(WITH_QT AND Qt5_FOUND)
         if(NOT TARGET aquila_core)
             find_package(Aquila REQUIRED COMPONENTS core)
         endif()
-        find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
+        find_package(OpenCV QUIET COMPONENTS core imgproc highgui cudaimgproc cudawarping cudafeatures2d)
 
         find_package(CUDA REQUIRED)
 
