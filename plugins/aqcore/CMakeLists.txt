@@ -12,7 +12,7 @@ find_package(CUDA REQUIRED)
   include_directories(${CUDA_TOOLKIT_INCLUDE})
 
 
-find_package(OpenCV 3.0 QUIET 
+find_package(OpenCV QUIET 
   COMPONENTS 
     core 
     imgproc 
@@ -43,7 +43,7 @@ if(PKG_CONFIG_FOUND)
     endif()
 endif()
 
-ADD_DEFINITIONS(${DEFS})
+
 LINK_DIRECTORIES(${LINK_DIRS})
 
 INCLUDE_DIRECTORIES(
@@ -84,6 +84,11 @@ target_link_libraries(aqcore
     metaobject_core
     metaobject_object
     metaobject_params
+)
+
+target_compile_definitions(aqcore
+  PUBLIC
+    THRUST_IGNORE_DEPRECATED_CPP_DIALECT
 )
 
 aquila_declare_plugin(aqcore)
