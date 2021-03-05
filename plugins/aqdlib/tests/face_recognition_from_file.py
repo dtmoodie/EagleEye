@@ -4,9 +4,9 @@ from argparse import ArgumentParser
 parser = ArgumentParser()
 
 parser.add_argument('--path', default='images')
-parser.add_argument('--cfg', default='/home/asiansensation/code/yolo_tiny_face/yolov3-tiny.cfg')
-parser.add_argument('--weights', default='/home/asiansensation/code/yolo_tiny_face/yolov3-tiny_final.weights')
-parser.add_argument('--labels', default='/home/asiansensation/code/yolo_tiny_face/labels.txt')
+parser.add_argument('--cfg', default='/home/dan/code/yolo_tiny_face/yolov3-tiny.cfg')
+parser.add_argument('--weights', default='/home/dan/code/yolo_tiny_face/yolov3-tiny_final.weights')
+parser.add_argument('--labels', default='/home/dan/code/yolo_tiny_face/labels.txt')
 
 args = parser.parse_args()
 
@@ -27,10 +27,10 @@ face.label_file = args.labels
 face.det_thresh = 0.01
 face.cat_thresh = 0.01
 
-aligner = aq.nodes.FaceAligner(image=fg, detections=face, shape_landmark_file='/home/asiansensation/code/EagleEye/plugins/aqdlib/share/shape_predictor_5_face_landmarks.dat')
+aligner = aq.nodes.FaceAligner(image=fg, detections=face, shape_landmark_file='/home/dan/code/EagleEye/plugins/aqdlib/share/shape_predictor_5_face_landmarks.dat')
 
 recognizer = aq.nodes.FaceRecognizer(image=fg, detections=aligner,
-    face_recognizer_weight_file='/home/asiansensation/code/EagleEye/plugins/aqdlib/share/dlib_face_recognition_resnet_model_v1.dat')
+    face_recognizer_weight_file='/home/dan/code/EagleEye/plugins/aqdlib/share/dlib_face_recognition_resnet_model_v1.dat')
 
 facedb = aq.nodes.FaceDatabase(detections=recognizer, image=fg)
 

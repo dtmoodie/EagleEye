@@ -6,6 +6,7 @@
 #include <MetaObject/serialization/BinaryLoader.hpp>
 #include <MetaObject/serialization/BinarySaver.hpp>
 #include <MetaObject/serialization/JSONPrinter.hpp>
+
 #include <ct/reflect/print.hpp>
 
 #include <boost/filesystem.hpp>
@@ -13,11 +14,11 @@
 
 #include <opencv2/imgcodecs.hpp>
 
+#include <cereal/external/base64.hpp>
+
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
-
-
 
 namespace aqdlib
 {
@@ -51,7 +52,7 @@ namespace aqdlib
         descriptors.create(membership.size(), descriptor_size);
         cv::Mat mat = descriptors.mat();
         std::vector<ct::TArrayView<void>> arrs;
-        for(size_t i = 0; i < membership.size(); ++i)
+        for (size_t i = 0; i < membership.size(); ++i)
         {
             cv::Mat view = mat.row(i);
             ct::TArrayView<void> arr(ct::ptrCast<void>(view.data), descriptor_size * sizeof(float));
@@ -65,17 +66,17 @@ namespace aqdlib
         visitor(&identities, "identities");
         visitor(&membership, "membership");
         const auto size = descriptors.size();
-        for(const auto& mem : membership)
+        for (const auto& mem : membership)
         {
-            //MO_ASSERT_EQ(size(0), identities.size());
+            // MO_ASSERT_EQ(size(0), identities.size());
             MO_ASSERT_GT(identities.size(), mem);
         }
-        
+
         const size_t descriptor_size = size(1);
         visitor(&descriptor_size, "descriptor_size");
         cv::Mat mat = descriptors.mat();
         std::vector<ct::TArrayView<const void>> arrs;
-        for(size_t i = 0; i < membership.size(); ++i)
+        for (size_t i = 0; i < membership.size(); ++i)
         {
             cv::Mat view = mat.row(i);
             ct::TArrayView<const void> arr(ct::ptrCast<const void>(view.data), descriptor_size * sizeof(float));
@@ -108,10 +109,11 @@ namespace aqdlib
                     this->getLogger().warn("Failed to write {} to disk", output_path);
                 }
 
-                const aq::TSyncedMemory<float>& desc =  m_unknown_face_descriptors[i];
+                const aq::TSyncedMemory<float>& desc = m_unknown_face_descriptors[i];
                 const ct::TArrayView<const float> view = desc.host(stream.get());
                 std::ofstream ofs(output_path + ".bin");
-                std::string base64 = cereal::base64::encode(ct::ptrCast<const uint8_t>(view.data()), view.size() * sizeof(float));
+                std::string base64 =
+                    cereal::base64::encode(ct::ptrCast<const uint8_t>(view.data()), view.size() * sizeof(float));
                 ofs << base64;
             }
         }
@@ -240,7 +242,8 @@ namespace aqdlib
         {
             onNewUnknownFace(det_desc, cls, id, patch);
             return false;
-        }else
+        }
+        else
         {
             const auto idx = match_index + m_known_faces.identities.size();
             if (idx < m_identities->size())
@@ -267,7 +270,8 @@ namespace aqdlib
             auto stream = this->getStream();
             const auto& descriptor = m_unknown_face_descriptors[match_index];
             const ct::TArrayView<const float> view = descriptor.host(stream.get());
-            std::string base64 = cereal::base64::encode(ct::ptrCast<const uint8_t>(view.data()), view.size() * sizeof(float));
+            std::string base64 =
+                cereal::base64::encode(ct::ptrCast<const uint8_t>(view.data()), view.size() * sizeof(float));
             int file_idx = unknown_detections.nextFileIndex();
             std::string stem = database_path.string() + "/unknown_" + std::to_string(file_idx);
             std::ofstream ofs(stem + ".bin");
@@ -276,26 +280,27 @@ namespace aqdlib
         }
     }
 
-    void FaceDatabase::onNewUnknownFace(const mt::Tensor<const float, 1>& det_desc, aq::detection::Classifications& cls,
-                                         aq::detection::Id::DType& id, const aq::SyncedImage& patch)
+    void FaceDatabase::onNewUnknownFace(const mt::Tensor<const float, 1>& det_desc,
+                                        aq::detection::Classifications& cls,
+                                        aq::detection::Id::DType& id,
+                                        const aq::SyncedImage& patch)
     {
-                                                // new unknown face
-            size_t unknown_count = m_identities->size() - m_known_faces.identities.size();
-            std::string name = "unknown" + boost::lexical_cast<std::string>(unknown_count);
-            m_identities->push_back(name);
+        // new unknown face
+        size_t unknown_count = m_identities->size() - m_known_faces.identities.size();
+        std::string name = "unknown" + boost::lexical_cast<std::string>(unknown_count);
+        m_identities->push_back(name);
 
-            m_unknown_face_descriptors.push_back(aq::TSyncedMemory<float>::copyHost(det_desc));
+        m_unknown_face_descriptors.push_back(aq::TSyncedMemory<float>::copyHost(det_desc));
 
-            m_unknown_crops.push_back(patch);
-            m_unknown_det_count.push_back(1);
+        m_unknown_crops.push_back(patch);
+        m_unknown_det_count.push_back(1);
 
-            cls.resize(1);
-            cls[0] = (*m_identities).back()();
-            id = m_identities->size() - 1;
+        cls.resize(1);
+        cls[0] = (*m_identities).back()();
+        id = m_identities->size() - 1;
 
-             m_recent_patches.push_back({patch, aq::TSyncedMemory<float>::copyHost(det_desc), name});
+        m_recent_patches.push_back({patch, aq::TSyncedMemory<float>::copyHost(det_desc), name});
     }
-
 
     bool FaceDatabase::processImpl()
     {
@@ -352,12 +357,10 @@ namespace aqdlib
                 continue;
             }
 
-            if(matchUnknownFaces(det_desc, classifications[i], ids[i], mag0, patches[i].aligned_patch, *stream))
+            if (matchUnknownFaces(det_desc, classifications[i], ids[i], mag0, patches[i].aligned_patch, *stream))
             {
                 continue;
             }
-
-
         }
         this->output.publish(std::move(output), mo::tags::param = &this->detections_param);
         return true;

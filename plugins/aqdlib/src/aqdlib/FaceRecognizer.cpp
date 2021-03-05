@@ -9,8 +9,6 @@
 #include <boost/filesystem.hpp>
 
 #include <cudnn.h>
-#include <dlib/dnn/cudnn_dlibapi.h>
-#include <dlib/dnn/tensor_tools.h>
 #include <dlib/image_processing.h>
 #include <dlib/opencv.h>
 
@@ -45,8 +43,9 @@ namespace aqdlib
         if (num_entities > 0)
         {
             cv::Mat img = image->getMat(stream.get());
-            dlib::cv_image<dlib::bgr_pixel> dlib_img(img);
-            std::vector<dlib::matrix<dlib::bgr_pixel>> aligned_faces;
+            MO_ASSERT(image->pixelFormat() == aq::PixelFormat::kRGB);
+            dlib::cv_image<dlib::rgb_pixel> dlib_img(img);
+            std::vector<dlib::matrix<dlib::rgb_pixel>> aligned_faces;
 
             const auto size = image->size();
             auto bbs = detections->getComponent<aq::detection::BoundingBox2d>();
@@ -55,7 +54,7 @@ namespace aqdlib
             {
                 return false;
             }
-            
+
             for (uint32_t i = 0; i < num_entities; ++i)
             {
                 auto bb = bbs[i];
@@ -71,10 +70,10 @@ namespace aqdlib
                 dlib::rectangle rect(bb.x, bb.y, bb.x + bb.width, bb.y + bb.height);
 
                 dlib::full_object_detection shape(rect, parts);
-                dlib::matrix<dlib::bgr_pixel> face_chip;
+                dlib::matrix<dlib::rgb_pixel> face_chip;
                 auto chip_details = dlib::get_face_chip_details(shape, 150, 0.25);
                 dlib::extract_image_chip(dlib_img, chip_details, face_chip);
-                
+
                 aligned_faces.emplace_back(std::move(face_chip));
             }
 
@@ -86,7 +85,7 @@ namespace aqdlib
                 output.reshape<aq::detection::Descriptor>(
                     mt::Shape<2>(face_descriptors.size(), face_descriptors[0].nr()));
                 auto descriptors = output.getComponentMutable<aq::detection::Descriptor>();
-                //auto provider = output.getProvider<aq::detection::Descriptor>();
+                // auto provider = output.getProvider<aq::detection::Descriptor>();
                 output.reshape<aq::detection::AlignedPatch>(mt::Shape<1>(num_entities));
                 auto aligned_patch = output.getComponentMutable<aq::detection::AlignedPatch>();
                 auto stream = this->getStream();
@@ -99,14 +98,15 @@ namespace aqdlib
 
                     ct::TArrayView<float> dest = descriptors[i];
                     view.copyTo(dest);
-                    std::shared_ptr<dlib::matrix<dlib::bgr_pixel>> matrix = std::make_shared<dlib::matrix<dlib::bgr_pixel>>(std::move(aligned_faces[i]));
+                    std::shared_ptr<dlib::matrix<dlib::rgb_pixel>> matrix =
+                        std::make_shared<dlib::matrix<dlib::rgb_pixel>>(std::move(aligned_faces[i]));
                     const aq::Shape<2> shape(matrix->nr(), matrix->nc());
-                    dlib::bgr_pixel* data = matrix->begin();
-                    aq::BGR<uint8_t>* pixel_ptr = ct::ptrCast<aq::BGR<uint8_t>>(data);
+                    dlib::rgb_pixel* data = matrix->begin();
+                    aq::RGB<uint8_t>* pixel_ptr = ct::ptrCast<aq::RGB<uint8_t>>(data);
                     aq::SyncedImage aligned(shape, pixel_ptr, std::move(matrix), stream);
                     aligned_patch[i] = aq::detection::AlignedPatch{*image, std::move(aligned)};
                 }
-                this->output.publish(output, mo::tags::param=&this->detections_param);
+                this->output.publish(output, mo::tags::param = &this->detections_param);
             }
         }
         return true;
