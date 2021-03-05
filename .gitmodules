@@ -10,6 +10,3 @@
 [submodule "plugins/aqgputracking/dependencies/GPU-tracking"]
 	path = plugins/aqgputracking/dependencies/GPU-tracking
 	url = https://github.com/denismerigoux/GPU-tracking
-[submodule "plugins/aqdlib/dependencies/dlib"]
-	path = plugins/aqdlib/dependencies/dlib
-	url = https://github.com/davisking/dlib
