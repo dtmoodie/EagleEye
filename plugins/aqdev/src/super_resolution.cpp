@@ -36,7 +36,7 @@ namespace aqdev
         }
         if (lambda_param.getModified())
         {
-            super_res->setLabmda(lambda);
+            super_res->setLambda(lambda);
             lambda_param.setModified(false);
         }
         if (alpha_param.getModified())
