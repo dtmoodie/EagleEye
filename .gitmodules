@@ -7,6 +7,3 @@
 [submodule "plugins/bio/dependencies/fmt"]
 	path = plugins/bio/dependencies/fmt
 	url = https://github.com/fmtlib/fmt
-[submodule "plugins/aqgputracking/dependencies/GPU-tracking"]
-	path = plugins/aqgputracking/dependencies/GPU-tracking
-	url = https://github.com/denismerigoux/GPU-tracking
