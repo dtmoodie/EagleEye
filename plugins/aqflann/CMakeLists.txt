@@ -11,7 +11,7 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 find_package(CUDA REQUIRED)
 SET(CUDA_VERBOSE_BUILD ON)
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core)
+find_package(OpenCV QUIET COMPONENTS core)
 
 FIND_PACKAGE(Flann QUIET)
 

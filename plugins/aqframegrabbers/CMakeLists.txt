@@ -8,7 +8,7 @@ find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
   link_directories(${Boost_LIBRARY_DIR_RELEASE})
   include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core imgcodecs cudacodec cudaarithm videoio)
+find_package(OpenCV QUIET COMPONENTS core imgcodecs cudacodec cudaarithm videoio)
     include_directories(${OpenCV_INCLUDE_DIRS})
     set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 

@@ -18,7 +18,7 @@ if(THRUST_VERSION VERSION_LESS 1.8)
     return()
 endif()
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc highgui cudaimgproc cudaarithm cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo videoio)
+find_package(OpenCV QUIET COMPONENTS core imgproc highgui cudaimgproc cudaarithm cudawarping cudafeatures2d cudaoptflow cudacodec cudastereo videoio)
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
 ADD_DEFINITIONS(${DEFS})
