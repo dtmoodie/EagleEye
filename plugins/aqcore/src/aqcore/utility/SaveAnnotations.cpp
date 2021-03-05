@@ -3,7 +3,6 @@
 #include <Aquila/core/IGraph.hpp>
 #include <Aquila/gui/UiCallbackHandlers.h>
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <Aquila/types/ObjectDetectionSerialization.hpp>
 
 #include <MetaObject/serialization/JSONPrinter.hpp>
 
