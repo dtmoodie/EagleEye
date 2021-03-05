@@ -4,6 +4,7 @@
 #include <MetaObject/types/file_types.hpp>
 
 #include <fstream>
+#include <memory>
 namespace aq
 {
     namespace nodes
@@ -36,7 +37,7 @@ namespace aq
 
           protected:
             bool processImpl();
-            std::shared_ptr<cereal::JSONInputArchive> ar;
+            std::unique_ptr<mo::JSONLoader> m_ar;
             std::ifstream ifs;
             mo::ISubscriber* input;
         };

@@ -111,13 +111,13 @@ JSONReader::JSONReader()
 
 bool JSONReader::processImpl()
 {
-    if (!ar && boost::filesystem::is_regular_file(input_file))
+    if (!m_ar && boost::filesystem::is_regular_file(input_file))
     {
         ifs.close();
         ifs.open(input_file.c_str(), std::ios::in);
-        ar.reset(new cereal::JSONInputArchive(ifs));
+        m_ar.reset(new mo::JSONLoader(ifs));
     }
-    if (!ar)
+    if (!m_ar)
     {
         return false;
     }
