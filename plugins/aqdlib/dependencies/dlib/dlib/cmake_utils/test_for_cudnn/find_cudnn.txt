@@ -8,13 +8,8 @@ find_path(cudnn_include cudnn.h
     PATH_SUFFIXES include
     )
 get_filename_component(cudnn_hint_path "${CUDA_CUBLAS_LIBRARIES}" PATH)
-set(cudnn_lib_name cudnn)
-IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-    set(cudnn_lib_name cudnn_static)
-endif()
-
-find_library(cudnn ${cudnn_lib_name}
-    HINTS ${cudnn_hint_path} ENV CUDNN_LIBRARY_DIR  ENV CUDNN_HOME
+find_library(cudnn cudnn
+    HINTS ${cudnn_hint_path} ENV CUDNN_LIBRARY_DIR  ENV CUDNN_HOME 
     PATHS /usr/local /usr/local/cuda ENV LD_LIBRARY_PATH
     PATH_SUFFIXES lib64 lib x64
     )

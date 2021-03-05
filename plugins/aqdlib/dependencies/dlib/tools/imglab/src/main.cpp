@@ -21,7 +21,7 @@
 #include <dlib/dir_nav.h>
 
 
-const char* VERSION = "1.13";
+const char* VERSION = "1.17";
 
 
 
@@ -121,6 +121,44 @@ int split_dataset (
 
     save_image_dataset_metadata(data_with, left_substr(parser[0],".") + "_with_"+label + ".xml");
     save_image_dataset_metadata(data_without, left_substr(parser[0],".") + "_without_"+label + ".xml");
+
+    return EXIT_SUCCESS;
+}
+
+// ----------------------------------------------------------------------------------------
+
+int make_train_test_splits (
+    const command_line_parser& parser
+)
+{
+    if (parser.number_of_arguments() != 1)
+    {
+        cerr << "The --split-train-test option requires you to give one XML file on the command line." << endl;
+        return EXIT_FAILURE;
+    }
+
+    const double train_frac = get_option(parser, "split-train-test", 0.5);
+
+    dlib::image_dataset_metadata::dataset data, data_train, data_test;
+    load_image_dataset_metadata(data, parser[0]);
+
+    data_train.name = data.name;
+    data_train.comment = data.comment;
+    data_test.name = data.name;
+    data_test.comment = data.comment;
+
+    const unsigned long num_train_images = static_cast<unsigned long>(std::round(train_frac*data.images.size()));
+
+    for (unsigned long i = 0; i < data.images.size(); ++i)
+    {
+        if (i < num_train_images)
+            data_train.images.push_back(data.images[i]);
+        else
+            data_test.images.push_back(data.images[i]);
+    }
+
+    save_image_dataset_metadata(data_train, left_substr(parser[0],".") + "_train.xml");
+    save_image_dataset_metadata(data_test, left_substr(parser[0],".") + "_test.xml");
 
     return EXIT_SUCCESS;
 }
@@ -304,25 +342,13 @@ void rotate_dataset(const command_line_parser& parser)
             save_png(temp, filename);
         }
 
+        rectangle_transform rtran = tran;
         for (unsigned long j = 0; j < metadata.images[i].boxes.size(); ++j)
         {
-            const rectangle rect = metadata.images[i].boxes[j].rect;
-            rectangle newrect;
-            newrect += tran(rect.tl_corner());
-            newrect += tran(rect.tr_corner());
-            newrect += tran(rect.bl_corner());
-            newrect += tran(rect.br_corner());
-            // now make newrect have the same area as the starting rect.
-            double ratio = std::sqrt(rect.area()/(double)newrect.area());
-            newrect = centered_rect(newrect, newrect.width()*ratio, newrect.height()*ratio);
-            metadata.images[i].boxes[j].rect = newrect;
+            metadata.images[i].boxes[j].rect = rtran(metadata.images[i].boxes[j].rect);
 
-            // rotate all the object parts
-            std::map<std::string,point>::iterator k;
-            for (k = metadata.images[i].boxes[j].parts.begin(); k != metadata.images[i].boxes[j].parts.end(); ++k)
-            {
-                k->second = tran(k->second); 
-            }
+            for (auto& p : metadata.images[i].boxes[j].parts)
+                p.second = tran(p.second);
         }
 
         metadata.images[i].filename = filename;
@@ -539,12 +565,17 @@ int main(int argc, char** argv)
                                     "the md5 hash of each image file and removing duplicate images. " );
         parser.add_option("rmdiff","Set the ignored flag to true for boxes marked as difficult.");
         parser.add_option("rmtrunc","Set the ignored flag to true for boxes that are partially outside the image.");
+        parser.add_option("box-images","Add a box to each image that contains the entire image.");
         parser.add_option("sort-num-objects","Sort the images listed an XML file so images with many objects are listed first.");
         parser.add_option("sort","Alphabetically sort the images in an XML file.");
         parser.add_option("shuffle","Randomly shuffle the order of the images listed in an XML file.");
         parser.add_option("seed", "When using --shuffle, set the random seed to the string <arg>.",1);
         parser.add_option("split", "Split the contents of an XML file into two separate files.  One containing the "
             "images with objects labeled <arg> and another file with all the other images. ",1);
+        parser.add_option("split-train-test", "Split the contents of an XML file into two separate files.  A training "
+            "file containing <arg> fraction of the images and a testing file containing the remaining (1-<arg>) images. "
+            "The partitioning is done deterministically by putting the first images in the input xml file into the training split "
+            "and the later images into the test split.",1);
         parser.add_option("add", "Add the image metadata from <arg1> into <arg2>.  If any of the image "
                                  "tags are in both files then the ones in <arg2> are deleted and replaced with the "
                                  "image tags from <arg1>.  The results are saved into merged.xml and neither <arg1> or "
@@ -557,7 +588,7 @@ int main(int argc, char** argv)
                                         "The parts are instead simply mirrored to the flipped dataset.", 1);
         parser.add_option("rotate", "Read an XML image dataset and output a copy that is rotated counter clockwise by <arg> degrees. "
                                   "The output is saved to an XML file prefixed with rotated_<arg>.",1);
-        parser.add_option("cluster", "Cluster all the objects in an XML file into <arg> different clusters and save "
+        parser.add_option("cluster", "Cluster all the objects in an XML file into <arg> different clusters (pass 0 to find automatically) and save "
                                      "the results as cluster_###.xml and cluster_###.jpg files.",1);
         parser.add_option("ignore", "Mark boxes labeled as <arg> as ignored.  The resulting XML file is output as a separate file and the original is not modified.",1);
         parser.add_option("rmlabel","Remove all boxes labeled <arg> and save the results to a new XML file.",1);
@@ -581,7 +612,7 @@ int main(int argc, char** argv)
         const char* singles[] = {"h","c","r","l","files","convert","parts","rmdiff", "rmtrunc", "rmdupes", "seed", "shuffle", "split", "add", 
                                  "flip-basic", "flip", "rotate", "tile", "size", "cluster", "resample", "min-object-size", "rmempty",
                                  "crop-size", "cropped-object-size", "rmlabel", "rm-other-labels", "rm-if-overlaps", "sort-num-objects", 
-                                 "one-object-per-image", "jpg", "rmignore", "sort"};
+                                 "one-object-per-image", "jpg", "rmignore", "sort", "split-train-test", "box-images"};
         parser.check_one_time_options(singles);
         const char* c_sub_ops[] = {"r", "convert"};
         parser.check_sub_options("c", c_sub_ops);
@@ -600,6 +631,7 @@ int main(int argc, char** argv)
         parser.check_incompatible_options("c", "rm-if-overlaps");
         parser.check_incompatible_options("c", "rmdupes");
         parser.check_incompatible_options("c", "rmtrunc");
+        parser.check_incompatible_options("c", "box-images");
         parser.check_incompatible_options("c", "add");
         parser.check_incompatible_options("c", "flip");
         parser.check_incompatible_options("c", "flip-basic");
@@ -668,14 +700,17 @@ int main(int argc, char** argv)
         parser.check_incompatible_options("rmdupes", "ignore");
         parser.check_incompatible_options("rmtrunc", "rename");
         parser.check_incompatible_options("rmtrunc", "ignore");
+        parser.check_incompatible_options("box-images", "rename");
+        parser.check_incompatible_options("box-images", "ignore");
         const char* convert_args[] = {"pascal-xml","pascal-v1","idl"};
         parser.check_option_arg_range("convert", convert_args);
-        parser.check_option_arg_range("cluster", 2, 999);
+        parser.check_option_arg_range("cluster", 0, 999);
         parser.check_option_arg_range("rotate", -360, 360);
         parser.check_option_arg_range("size", 10*10, 1000*1000);
         parser.check_option_arg_range("min-object-size", 1, 10000*10000);
         parser.check_option_arg_range("cropped-object-size", 4, 10000*10000);
         parser.check_option_arg_range("crop-size", 1.0, 100.0);
+        parser.check_option_arg_range("split-train-test", 0.0, 1.0);
 
         if (parser.option("h"))
         {
@@ -954,6 +989,29 @@ int main(int argc, char** argv)
             return EXIT_SUCCESS;
         }
 
+        if (parser.option("box-images"))
+        {
+            if (parser.number_of_arguments() != 1)
+            {
+                cerr << "The --box-images option requires you to give one XML file on the command line." << endl;
+                return EXIT_FAILURE;
+            }
+
+            dlib::image_dataset_metadata::dataset   data;
+            load_image_dataset_metadata(data, parser[0]);
+            {
+                locally_change_current_dir chdir(get_parent_directory(file(parser[0])));
+                parallel_for(0, data.images.size(), [&](long i) 
+                {
+                    array2d<unsigned char> img;
+                    load_image(img, data.images[i].filename);
+                    data.images[i].boxes.emplace_back(get_rect(img));
+                });
+            }
+            save_image_dataset_metadata(data, parser[0]+".boxed.xml");
+            return EXIT_SUCCESS;
+        }
+
         if (parser.option("rmtrunc"))
         {
             if (parser.number_of_arguments() != 1)
@@ -1014,6 +1072,11 @@ int main(int argc, char** argv)
         if (parser.option("split"))
         {
             return split_dataset(parser);
+        }
+
+        if (parser.option("split-train-test"))
+        {
+            return make_train_test_splits(parser);
         }
 
         if (parser.option("shuffle"))

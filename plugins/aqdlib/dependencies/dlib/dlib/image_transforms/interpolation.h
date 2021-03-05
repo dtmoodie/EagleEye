@@ -3,6 +3,9 @@
 #ifndef DLIB_INTERPOlATIONh_
 #define DLIB_INTERPOlATIONh_ 
 
+#include "../threads.h"
+#include <algorithm>
+
 #include "interpolation_abstract.h"
 #include "../pixel.h"
 #include "../matrix.h"
@@ -11,6 +14,7 @@
 #include "../simd.h"
 #include "../image_processing/full_object_detection.h"
 #include <limits>
+#include <array>
 #include "../rand.h"
 
 namespace dlib
@@ -224,28 +228,24 @@ namespace dlib
 
     class interpolate_bilinear
     {
-        template <typename T>
-        struct is_rgb_image 
-        {
-            const static bool value = pixel_traits<typename T::pixel_type>::rgb;
-        };
-
     public:
-
         template <typename T, typename image_view_type, typename pixel_type>
-        typename disable_if<is_rgb_image<image_view_type>,bool>::type operator() (
+        bool operator() (
             const image_view_type& img,
             const dlib::vector<T,2>& p,
             pixel_type& result
         ) const
         {
-            COMPILE_TIME_ASSERT(pixel_traits<typename image_view_type::pixel_type>::has_alpha == false);
+            // Assign pixel gives special meaning to alpha channel that would break interpolation
+            static_assert(pixel_traits<typename image_view_type::pixel_type>::has_alpha == false, "Images with alpha channel not supported");
+            // Interpolation currently supports only fully cartesian (non-polar) spaces.
+            static_assert(is_color_space_cartesian_image<image_view_type>::value == true, "Non-cartesian color space used in interpolation");
+
 
             const long left   = static_cast<long>(std::floor(p.x()));
             const long top    = static_cast<long>(std::floor(p.y()));
             const long right  = left+1;
             const long bottom = top+1;
-
 
             // if the interpolation goes outside img 
             if (!(left >= 0 && top >= 0 && right < img.nc() && bottom < img.nr()))
@@ -254,175 +254,64 @@ namespace dlib
             const double lr_frac = p.x() - left;
             const double tb_frac = p.y() - top;
 
-            double tl = 0, tr = 0, bl = 0, br = 0;
-
-            assign_pixel(tl, img[top][left]);
-            assign_pixel(tr, img[top][right]);
-            assign_pixel(bl, img[bottom][left]);
-            assign_pixel(br, img[bottom][right]);
-            
-            double temp = (1-tb_frac)*((1-lr_frac)*tl + lr_frac*tr) + 
-                              tb_frac*((1-lr_frac)*bl + lr_frac*br);
-                            
+            const auto tl = pixel_to_vector<double>(img[top][left]);
+            const auto tr = pixel_to_vector<double>(img[top][right]);
+            const auto bl = pixel_to_vector<double>(img[bottom][left]);
+            const auto br = pixel_to_vector<double>(img[bottom][right]);
+            typename image_view_type::pixel_type temp;
+            vector_to_pixel(temp, (1 - tb_frac) * ((1 - lr_frac) * tl + lr_frac * tr) +
+                tb_frac * ((1 - lr_frac) * bl + lr_frac * br));
             assign_pixel(result, temp);
             return true;
         }
 
-        template <typename T, typename image_view_type, typename pixel_type>
-        typename enable_if<is_rgb_image<image_view_type>,bool>::type operator() (
-            const image_view_type& img,
-            const dlib::vector<T,2>& p,
-            pixel_type& result
-        ) const
-        {
-            COMPILE_TIME_ASSERT(pixel_traits<typename image_view_type::pixel_type>::has_alpha == false);
-
-            const long left   = static_cast<long>(std::floor(p.x()));
-            const long top    = static_cast<long>(std::floor(p.y()));
-            const long right  = left+1;
-            const long bottom = top+1;
-
-
-            // if the interpolation goes outside img 
-            if (!(left >= 0 && top >= 0 && right < img.nc() && bottom < img.nr()))
-                return false;
-
-            const double lr_frac = p.x() - left;
-            const double tb_frac = p.y() - top;
-
-            double tl, tr, bl, br;
-
-            tl = img[top][left].red;
-            tr = img[top][right].red;
-            bl = img[bottom][left].red;
-            br = img[bottom][right].red;
-            const double red = (1-tb_frac)*((1-lr_frac)*tl + lr_frac*tr) + 
-                                   tb_frac*((1-lr_frac)*bl + lr_frac*br);
-
-            tl = img[top][left].green;
-            tr = img[top][right].green;
-            bl = img[bottom][left].green;
-            br = img[bottom][right].green;
-            const double green = (1-tb_frac)*((1-lr_frac)*tl + lr_frac*tr) + 
-                                   tb_frac*((1-lr_frac)*bl + lr_frac*br);
-
-            tl = img[top][left].blue;
-            tr = img[top][right].blue;
-            bl = img[bottom][left].blue;
-            br = img[bottom][right].blue;
-            const double blue = (1-tb_frac)*((1-lr_frac)*tl + lr_frac*tr) + 
-                                   tb_frac*((1-lr_frac)*bl + lr_frac*br);
-                            
-            rgb_pixel temp;
-            assign_pixel(temp.red, red);
-            assign_pixel(temp.green, green);
-            assign_pixel(temp.blue, blue);
-            assign_pixel(result, temp);
-            return true;
-        }
     };
 
 // ----------------------------------------------------------------------------------------
 
     class interpolate_quadratic
     {
-        template <typename T>
-        struct is_rgb_image 
-        {
-            const static bool value = pixel_traits<typename T::pixel_type>::rgb;
-        };
 
     public:
 
         template <typename T, typename image_view_type, typename pixel_type>
-        typename disable_if<is_rgb_image<image_view_type>,bool>::type operator() (
+        bool operator() (
             const image_view_type& img,
             const dlib::vector<T,2>& p,
             pixel_type& result
         ) const
         {
-            COMPILE_TIME_ASSERT(pixel_traits<typename image_view_type::pixel_type>::has_alpha == false);
+            // Assign pixel gives special meaning to alpha channel that would break interpolation
+            static_assert(pixel_traits<typename image_view_type::pixel_type>::has_alpha == false, "Images with alpha channel not supported");
+            // Interpolation currently supports only fully cartesian (non-polar) spaces.
+            static_assert(is_color_space_cartesian_image<image_view_type>::value == true, "Non-cartesian color space used in interpolation");
+
+            using traits = pixel_traits<typename image_view_type::pixel_type>;
 
             const point pp(p);
 
             // if the interpolation goes outside img 
-            if (!get_rect(img).contains(grow_rect(pp,1))) 
+            if (!get_rect(img).contains(grow_rect(pp,1)))
                 return false;
 
             const long r = pp.y();
             const long c = pp.x();
 
-            const double temp = interpolate(p-pp, 
-                                    img[r-1][c-1],
-                                    img[r-1][c  ],
-                                    img[r-1][c+1],
-                                    img[r  ][c-1],
-                                    img[r  ][c  ],
-                                    img[r  ][c+1],
-                                    img[r+1][c-1],
-                                    img[r+1][c  ],
-                                    img[r+1][c+1]);
-
+            matrix<double, traits::num, 1> pvout;
+            for (long i = 0; i < traits::num; ++i)
+                pvout(i) = interpolate(p-pp,
+                    pixel_to_vector<double>(img[r-1][c-1])(i),
+                    pixel_to_vector<double>(img[r-1][c  ])(i),
+                    pixel_to_vector<double>(img[r-1][c+1])(i),
+                    pixel_to_vector<double>(img[r  ][c-1])(i),
+                    pixel_to_vector<double>(img[r  ][c  ])(i),
+                    pixel_to_vector<double>(img[r  ][c+1])(i),
+                    pixel_to_vector<double>(img[r+1][c-1])(i),
+                    pixel_to_vector<double>(img[r+1][c  ])(i),
+                    pixel_to_vector<double>(img[r+1][c+1])(i));
+            typename image_view_type::pixel_type temp;
+            vector_to_pixel(temp, pvout);
             assign_pixel(result, temp);
-            return true;
-        }
-
-        template <typename T, typename image_view_type, typename pixel_type>
-        typename enable_if<is_rgb_image<image_view_type>,bool>::type operator() (
-            const image_view_type& img,
-            const dlib::vector<T,2>& p,
-            pixel_type& result
-        ) const
-        {
-            COMPILE_TIME_ASSERT(pixel_traits<typename image_view_type::pixel_type>::has_alpha == false);
-
-            const point pp(p);
-
-            // if the interpolation goes outside img 
-            if (!get_rect(img).contains(grow_rect(pp,1))) 
-                return false;
-
-            const long r = pp.y();
-            const long c = pp.x();
-
-            const double red = interpolate(p-pp, 
-                            img[r-1][c-1].red,
-                            img[r-1][c  ].red,
-                            img[r-1][c+1].red,
-                            img[r  ][c-1].red,
-                            img[r  ][c  ].red,
-                            img[r  ][c+1].red,
-                            img[r+1][c-1].red,
-                            img[r+1][c  ].red,
-                            img[r+1][c+1].red);
-            const double green = interpolate(p-pp, 
-                            img[r-1][c-1].green,
-                            img[r-1][c  ].green,
-                            img[r-1][c+1].green,
-                            img[r  ][c-1].green,
-                            img[r  ][c  ].green,
-                            img[r  ][c+1].green,
-                            img[r+1][c-1].green,
-                            img[r+1][c  ].green,
-                            img[r+1][c+1].green);
-            const double blue = interpolate(p-pp, 
-                            img[r-1][c-1].blue,
-                            img[r-1][c  ].blue,
-                            img[r-1][c+1].blue,
-                            img[r  ][c-1].blue,
-                            img[r  ][c  ].blue,
-                            img[r  ][c+1].blue,
-                            img[r+1][c-1].blue,
-                            img[r+1][c  ].blue,
-                            img[r+1][c+1].blue);
-
-
-            rgb_pixel temp;
-            assign_pixel(temp.red, red);
-            assign_pixel(temp.green, green);
-            assign_pixel(temp.blue, blue);
-            assign_pixel(result, temp);
-
             return true;
         }
 
@@ -701,11 +590,6 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    template <typename image_type>
-    struct is_rgb_image { const static bool value = pixel_traits<typename image_traits<image_type>::pixel_type>::rgb; };
-    template <typename image_type>
-    struct is_grayscale_image { const static bool value = pixel_traits<typename image_traits<image_type>::pixel_type>::grayscale; };
-
     // This is an optimized version of resize_image for the case where bilinear
     // interpolation is used.
     template <
@@ -877,10 +761,18 @@ namespace dlib
                 float fout[4];
                 out.store(fout);
 
-                out_img[r][c]   = static_cast<T>(fout[0]);
-                out_img[r][c+1] = static_cast<T>(fout[1]);
-                out_img[r][c+2] = static_cast<T>(fout[2]);
-                out_img[r][c+3] = static_cast<T>(fout[3]);
+                const auto convert_to_output_type = [](float value)
+                {
+                    if (std::is_integral<T>::value)
+                        return static_cast<T>(value + 0.5);
+                    else
+                        return static_cast<T>(value);
+                };
+
+                out_img[r][c]   = convert_to_output_type(fout[0]);
+                out_img[r][c+1] = convert_to_output_type(fout[1]);
+                out_img[r][c+2] = convert_to_output_type(fout[2]);
+                out_img[r][c+3] = convert_to_output_type(fout[3]);
             }
             x = -x_scale + c*x_scale;
             for (; c < out_img.nc(); ++c)
@@ -908,11 +800,12 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
-        typename image_type
+        typename image_type1,
+        typename image_type2
         >
-    typename enable_if<is_rgb_image<image_type> >::type resize_image (
-        const image_type& in_img_,
-        image_type& out_img_,
+    typename enable_if_c<is_rgb_image<image_type1>::value && is_rgb_image<image_type2>::value >::type resize_image (
+        const image_type1& in_img_,
+        image_type2& out_img_,
         interpolate_bilinear
     )
     {
@@ -923,14 +816,14 @@ namespace dlib
             << "\n\t is_same_object(in_img_, out_img_):  " << is_same_object(in_img_, out_img_)
             );
 
-        const_image_view<image_type> in_img(in_img_);
-        image_view<image_type> out_img(out_img_);
+        const_image_view<image_type1> in_img(in_img_);
+        image_view<image_type2> out_img(out_img_);
 
         if (out_img.size() == 0 || in_img.size() == 0)
             return;
 
 
-        typedef typename image_traits<image_type>::pixel_type T;
+        typedef typename image_traits<image_type1>::pixel_type T;
         const double x_scale = (in_img.nc()-1)/(double)std::max<long>((out_img.nc()-1),1);
         const double y_scale = (in_img.nr()-1)/(double)std::max<long>((out_img.nr()-1),1);
         double y = -y_scale;
@@ -1065,7 +958,7 @@ namespace dlib
             << "\n\t Invalid inputs were given to this function."
             << "\n\t size_scale:  " << size_scale
             );
-
+        if (size_scale == 1.0) return; // no need to do anything at all
         image_type temp;
         set_image_size(temp, std::round(size_scale*num_rows(img)), std::round(size_scale*num_columns(img)));
         resize_image(img, temp);
@@ -1157,15 +1050,15 @@ namespace dlib
         }
 
         inline rectangle tform_object (
-            const point_transform_affine& tran,
+            const rectangle_transform& tran,
             const rectangle& rect
         )
         {
-            return centered_rect(tran(center(rect)), rect.width(), rect.height());
+            return tran(rect);
         }
 
         inline mmod_rect tform_object (
-            const point_transform_affine& tran,
+            const rectangle_transform& tran,
             mmod_rect rect
         )
         {
@@ -1182,7 +1075,10 @@ namespace dlib
             parts.reserve(obj.num_parts());
             for (unsigned long i = 0; i < obj.num_parts(); ++i)
             {
-                parts.push_back(tran(obj.part(i)));
+                if (obj.part(i) != OBJECT_PART_NOT_PRESENT)
+                    parts.push_back(tran(obj.part(i)));
+                else
+                    parts.push_back(OBJECT_PART_NOT_PRESENT);
             }
             return full_object_detection(tform_object(tran,obj.get_rect()), parts);
         }
@@ -1466,12 +1362,12 @@ namespace dlib
         typename image_array_type::value_type temp;
         for (unsigned long i = 0; i < images.size(); ++i)
         {
-            const point_transform_affine tran = rotate_image(images[i], temp, angle);
+            const rectangle_transform tran = rotate_image(images[i], temp, angle);
             swap(temp, images[i]);
             for (unsigned long j = 0; j < objects[i].size(); ++j)
             {
                 const rectangle rect = objects[i][j];
-                objects[i][j] = centered_rect(tran(center(rect)), rect.width(), rect.height());
+                objects[i][j] = tran(rect);
             }
         }
     }
@@ -1497,17 +1393,17 @@ namespace dlib
         typename image_array_type::value_type temp;
         for (unsigned long i = 0; i < images.size(); ++i)
         {
-            const point_transform_affine tran = rotate_image(images[i], temp, angle);
+            const rectangle_transform tran = rotate_image(images[i], temp, angle);
             swap(temp, images[i]);
             for (unsigned long j = 0; j < objects[i].size(); ++j)
             {
                 const rectangle rect = objects[i][j];
-                objects[i][j] = centered_rect(tran(center(rect)), rect.width(), rect.height());
+                objects[i][j] = tran(rect);
             }
             for (unsigned long j = 0; j < objects2[i].size(); ++j)
             {
                 const rectangle rect = objects2[i][j];
-                objects2[i][j] = centered_rect(tran(center(rect)), rect.width(), rect.height());
+                objects2[i][j] = tran(rect);
             }
         }
     }
@@ -1540,33 +1436,29 @@ namespace dlib
             << "\n\t objects2.size():   " << objects2.size() 
             );
 
-        image_array_type new_images;
-        std::vector<std::vector<T> > new_objects;
-        std::vector<std::vector<U> > new_objects2;
+        using namespace impl;
 
-        using namespace impl; 
+        image_array_type new_images(images.size() * angles.size());
+        std::vector<std::vector<T>> new_objects(images.size() * angles.size());
+        std::vector<std::vector<U>> new_objects2(images.size() * angles.size());
 
-        std::vector<T> objtemp;
-        std::vector<U> objtemp2;
-        typename image_array_type::value_type temp;
-        for (long i = 0; i < angles.size(); ++i)
-        {
-            for (unsigned long j = 0; j < images.size(); ++j)
+        dlib::parallel_for(0, images.size(), [&](long j) {
+            typename image_array_type::value_type temp;
+
+            long dst_base = j * angles.size();
+            for (long i = 0; i < angles.size(); ++i)
             {
+                long dst = dst_base + i;
                 const point_transform_affine tran = rotate_image(images[j], temp, angles(i));
-                new_images.push_back(std::move(temp));
+                exchange(new_images[dst], temp);
 
-                objtemp.clear();
                 for (unsigned long k = 0; k < objects[j].size(); ++k)
-                    objtemp.push_back(tform_object(tran, objects[j][k]));
-                new_objects.push_back(objtemp);
+                    new_objects[dst].push_back(tform_object(tran, objects[j][k]));
 
-                objtemp2.clear();
                 for (unsigned long k = 0; k < objects2[j].size(); ++k)
-                    objtemp2.push_back(tform_object(tran, objects2[j][k]));
-                new_objects2.push_back(objtemp2);
+                    new_objects2[dst].push_back(tform_object(tran, objects2[j][k]));
             }
-        }
+        });
 
         new_images.swap(images);
         new_objects.swap(objects);
@@ -1760,11 +1652,18 @@ namespace dlib
             unsigned long size
         ) 
         {
-            const double relative_size = std::sqrt(size/(double)rect.area());
-            rows = static_cast<unsigned long>(rect.height()*relative_size + 0.5);
-            cols  = static_cast<unsigned long>(size/(double)rows + 0.5);
-            rows = std::max(1ul,rows);
-            cols = std::max(1ul,cols);
+            if (rect.is_empty())
+            {
+                cols = rows = std::round(std::sqrt((double)size));
+            }
+            else
+            {
+                const double relative_size = std::sqrt(size/(double)rect.area());
+                rows = static_cast<unsigned long>(rect.height()*relative_size + 0.5);
+                cols  = static_cast<unsigned long>(size/(double)rows + 0.5);
+                rows = std::max(1ul,rows);
+                cols = std::max(1ul,cols);
+            }
         }
     };
 
@@ -1798,7 +1697,12 @@ namespace dlib
         full_object_detection res(det);
         // map the parts
         for (unsigned long l = 0; l < det.num_parts(); ++l)
-            res.part(l) = tform(det.part(l));
+        {
+            if (det.part(l) != OBJECT_PART_NOT_PRESENT)
+                res.part(l) = tform(det.part(l));
+            else
+                res.part(l) = OBJECT_PART_NOT_PRESENT;
+        }
         // map the main rectangle
         rectangle rect;
         rect += tform(det.get_rect().tl_corner());
@@ -1880,6 +1784,12 @@ namespace dlib
         }
 #endif 
 
+        // If nearest-neighbor interpolation is wanted, then don't use an image pyramid.
+        constexpr bool image_pyramid_enabled = !std::is_same<
+            typename std::remove_const<typename std::remove_reference<decltype(interp)>::type>::type,
+            interpolate_nearest_neighbor
+        >::value;
+
         pyramid_down<2> pyr;
         long max_depth = 0;
         // If the chip is supposed to be much smaller than the source subwindow then you
@@ -1894,7 +1804,7 @@ namespace dlib
             long depth = 0;
             double grow = 2;
             drectangle rect = pyr.rect_down(chip_locations[i].rect);
-            while (rect.area() > chip_locations[i].size())
+            while (rect.area() > chip_locations[i].size() && image_pyramid_enabled)
             {
                 rect = pyr.rect_down(rect);
                 ++depth;
@@ -1942,7 +1852,7 @@ namespace dlib
                 // figure out which level in the pyramid to use to extract the chip
                 int level = -1;
                 drectangle rect = translate_rect(chip_locations[i].rect, -bounding_box.tl_corner());
-                while (pyr.rect_down(rect).area() > chip_locations[i].size())
+                while (pyr.rect_down(rect).area() > chip_locations[i].size() && image_pyramid_enabled)
                 {
                     ++level;
                     rect = pyr.rect_down(rect);
@@ -2139,6 +2049,68 @@ namespace dlib
     }
 
 // ----------------------------------------------------------------------------------------
+    
+
+    template <
+        typename image_type
+        >
+    void extract_image_4points (
+        const image_type& img_,
+        image_type& out_,
+        const std::array<dpoint,4>& pts
+    )
+    {
+        const_image_view<image_type> img(img_);
+        image_view<image_type> out(out_);
+        if (out.size() == 0)
+            return;
+
+        drectangle bounding_box;
+        for (auto& p : pts)
+            bounding_box += p;
+
+        const std::array<dpoint,4> corners = {{bounding_box.tl_corner(), bounding_box.tr_corner(),
+                                               bounding_box.bl_corner(), bounding_box.br_corner()}};
+
+        matrix<double> dists(4,4);
+        for (long r = 0; r < dists.nr(); ++r)
+        {
+            for (long c = 0; c < dists.nc(); ++c)
+            {
+                dists(r,c) = length_squared(corners[r] - pts[c]);
+            }
+        }
+
+        matrix<long long> idists = matrix_cast<long long>(-round(std::numeric_limits<long long>::max()*(dists/max(dists))));
+
+
+        const drectangle area = get_rect(out);
+        std::vector<dpoint> from_points = {area.tl_corner(), area.tr_corner(),
+                                           area.bl_corner(), area.br_corner()};
+
+        // find the assignment of corners to pts
+        auto assignment = max_cost_assignment(idists);
+        std::vector<dpoint> to_points(4);
+        for (size_t i = 0; i < assignment.size(); ++i)
+            to_points[i] = pts[assignment[i]];
+
+        auto tform = find_projective_transform(from_points, to_points);
+        transform_image(img_, out_, interpolate_bilinear(), tform);
+    }
+
+    template <
+        typename image_type
+        >
+    void extract_image_4points (
+        const image_type& img,
+        image_type& out,
+        const std::array<line,4>& lines 
+    )
+    {
+        extract_image_4points(img, out, find_convex_quadrilateral(lines));
+    }
+
+// ----------------------------------------------------------------------------------------
 
     template <
         typename image_type
@@ -2170,7 +2142,7 @@ namespace dlib
         const auto crop_rect = centered_rect(center(rect)+rand_translate, box_size, box_size);
         const double angle = rnd.get_double_in_range(-max_rotation_degrees, max_rotation_degrees)*pi/180;
         image_type crop;
-        extract_image_chip(img, chip_details(crop_rect, chip_dims(img.nr(),img.nc()), angle), crop);
+        extract_image_chip(img, chip_details(crop_rect, chip_dims(num_rows(img),num_columns(img)), angle), crop);
         if (rnd.get_random_double() > 0.5)
             flip_image_left_right(crop); 
 

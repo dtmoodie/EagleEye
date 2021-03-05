@@ -11,6 +11,7 @@
 #include "../image_transforms/interpolation.h"
 #include "../image_transforms/fhog.h"
 
+
 namespace dlib
 {
 

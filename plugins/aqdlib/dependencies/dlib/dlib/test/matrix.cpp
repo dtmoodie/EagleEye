@@ -1060,6 +1060,8 @@ namespace
             DLIB_TEST(subm(m,range(1,1),range(0,2)) == rowm(m,1));
             DLIB_TEST(subm(m,range(2,2),range(0,2)) == rowm(m,2));
             DLIB_TEST(subm(m,range(3,3),range(0,2)) == rowm(m,3));
+            DLIB_TEST(rowm(m,matrix<long>()).size()==0);
+            DLIB_TEST(colm(m,matrix<long>()).size()==0);
 
             DLIB_TEST(subm(m,0,0,2,2) == subm(m,range(0,1),range(0,1)));
             DLIB_TEST(subm(m,1,1,2,2) == subm(m,range(1,2),range(1,2)));
@@ -1164,6 +1166,10 @@ namespace
             DLIB_TEST((complex_matrix(ones_matrix<double>(3,3), zeros_matrix<double>(3,3)) == complex_matrix(ones_matrix<double>(3,3))));
             DLIB_TEST((pointwise_multiply(complex_matrix(ones_matrix<double>(3,3)), ones_matrix<double>(3,3)*2) ==
                        complex_matrix(2*ones_matrix<double>(3,3))));
+            DLIB_TEST((pointwise_divide(complex_matrix(ones_matrix<double>(3,3)), ones_matrix<double>(3,3)) ==
+                       complex_matrix(ones_matrix<double>(3,3))));
+            DLIB_TEST((pointwise_divide(complex_matrix(zeros_matrix<double>(3,3)), ones_matrix<double>(3,3)) ==
+                       complex_matrix(zeros_matrix<double>(3,3))));
         }
 
         {

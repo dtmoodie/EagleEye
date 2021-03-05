@@ -185,7 +185,7 @@ namespace dlib
         ) const;
         /*!
             requires
-                - idx < num_detectors
+                - idx < num_detectors()
             ensures
                 - returns the idx-th weight vector loaded into this object.  All the weight vectors
                   have the same dimension and logically each represents a different detector.
@@ -283,7 +283,7 @@ namespace dlib
             >
         std::vector<rectangle> operator() (
             const image_type& img,
-            const adjust_threshold = 0
+            double adjust_threshold = 0
         );
         /*!
             requires

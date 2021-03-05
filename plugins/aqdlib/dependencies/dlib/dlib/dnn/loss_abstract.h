@@ -232,10 +232,16 @@ namespace dlib
             WHAT THIS OBJECT REPRESENTS
                 This object implements the loss layer interface defined above by
                 EXAMPLE_LOSS_LAYER_.  In particular, it implements the log loss, which is
-                appropriate for binary classification problems.  Therefore, the possible
-                labels when using this loss are +1 and -1.  Moreover, it will cause the
-                network to produce outputs > 0 when predicting a member of the +1 class and
-                values < 0 otherwise.
+                appropriate for binary classification problems.  Therefore, there are two possible
+                classes of labels: positive (> 0) and negative (< 0) when using this loss.
+                The absolute value of the label represents its weight.  Putting a larger weight
+                on a sample increases the importance of getting its prediction correct during 
+                training.  A good rule of thumb is to use weights with absolute value 1 unless 
+                you have a very unbalanced training dataset, in that case, give larger weight
+                to the class with less training examples.
+                
+                This loss will cause the network to produce outputs > 0 when predicting a
+                member of the positive class and values < 0 otherwise.
 
                 To be more specific, this object contains a sigmoid layer followed by a 
                 cross-entropy layer.  
@@ -284,7 +290,8 @@ namespace dlib
                 - sub.get_output().k() == 1
                 - sub.get_output().num_samples() == input_tensor.num_samples()
                 - sub.sample_expansion_factor() == 1
-                - all values pointed to by truth are +1 or -1.
+                - all values pointed to by truth are non-zero.  Nominally they should be +1 or -1,
+                  each indicating the desired class label.
         !*/
 
     };
@@ -363,6 +370,330 @@ namespace dlib
     using loss_multiclass_log = add_loss_layer<loss_multiclass_log_, SUBNET>;
 
 // ----------------------------------------------------------------------------------------
+
+    template <typename label_type>
+    struct weighted_label
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This object represents the truth label of a single sample, together with
+                an associated weight (the higher the weight, the more emphasis the
+                corresponding sample is given during the training).
+                This object is used in the following loss layers:
+                    - loss_multiclass_log_weighted_ with unsigned long as label_type
+                    - loss_multiclass_log_per_pixel_weighted_ with uint16_t as label_type,
+                      since, in semantic segmentation, 65536 classes ought to be enough for
+                      anybody. 
+        !*/
+        weighted_label()
+        {}
+
+        weighted_label(label_type label, float weight = 1.f)
+            : label(label), weight(weight)
+        {}
+
+        // The ground truth label
+        label_type label{};
+
+        // The weight of the corresponding sample
+        float weight = 1.f;
+    };
+
+// ----------------------------------------------------------------------------------------
+
+    class loss_multiclass_log_weighted_
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This object implements the loss layer interface defined above by
+                EXAMPLE_LOSS_LAYER_.  In particular, it implements the multiclass logistic
+                regression loss (e.g. negative log-likelihood loss), which is appropriate
+                for multiclass classification problems.  It is basically just like the
+                loss_multiclass_log except that it lets you define per-sample weights,
+                which might be useful e.g. if you want to emphasize rare classes while
+                training.  If the classification problem is difficult, a flat weight
+                structure may lead the network to always predict the most common label,
+                in particular if the degree of imbalance is high.  To emphasize a certain
+                class or classes, simply increase the weights of the corresponding samples,
+                relative to the weights of other pixels.
+
+                Note that if you set all the weights equals to 1, then you get
+                loss_multiclass_log_ as a special case.
+        !*/
+
+    public:
+
+        typedef dlib::weighted_label<unsigned long> weighted_label;
+        typedef weighted_label training_label_type;
+        typedef unsigned long output_label_type;
+
+        template <
+            typename SUB_TYPE,
+            typename label_iterator
+            >
+        void to_label (
+            const tensor& input_tensor,
+            const SUB_TYPE& sub,
+            label_iterator iter
+        ) const;
+        /*!
+            This function has the same interface as EXAMPLE_LOSS_LAYER_::to_label() except
+            it has the additional calling requirements that: 
+                - sub.get_output().nr() == 1
+                - sub.get_output().nc() == 1
+                - sub.get_output().num_samples() == input_tensor.num_samples()
+                - sub.sample_expansion_factor() == 1
+            and the output label is the predicted class for each classified object.  The number
+            of possible output classes is sub.get_output().k().
+        !*/
+
+        template <
+            typename const_label_iterator,
+            typename SUBNET
+            >
+        double compute_loss_value_and_gradient (
+            const tensor& input_tensor,
+            const_label_iterator truth, 
+            SUBNET& sub
+        ) const;
+        /*!
+            This function has the same interface as EXAMPLE_LOSS_LAYER_::compute_loss_value_and_gradient() 
+            except it has the additional calling requirements that: 
+                - sub.get_output().nr() == 1
+                - sub.get_output().nc() == 1
+                - sub.get_output().num_samples() == input_tensor.num_samples()
+                - sub.sample_expansion_factor() == 1
+                - all values pointed to by truth are < sub.get_output().k()
+        !*/
+
+    };
+
+    template <typename SUBNET>
+    using loss_multiclass_log_weighted = add_loss_layer<loss_multiclass_log_weighted_, SUBNET>;// ----------------------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------------------
+
+    class loss_multimulticlass_log_ 
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This object implements the loss layer interface defined above by
+                EXAMPLE_LOSS_LAYER_.  In particular, it implements a collection of
+                multiclass classifiers.  An example will make its use clear.  So suppose,
+                for example, that you want to make something that takes a picture of a
+                vehicle and answers the following questions:
+                    - What type of vehicle is it? A sedan or a truck?
+                    - What color is it? red, green, blue, gray, or black?
+                You need two separate multi-class classifiers to do this.  One to decide
+                the type of vehicle, and another to decide the color.  The
+                loss_multimulticlass_log_ allows you to pack these two classifiers into one
+                neural network.  This means that when you use the network to process an
+                image it will output 2 labels for each image, the type label and the color
+                label.  
+
+                To create a loss_multimulticlass_log_ for the above case you would
+                construct it as follows:
+                    std::map<std::string,std::vector<std::string>> labels;
+                    labels["type"] = {"sedan", "truck"};
+                    labels["color"] = {"red", "green", "blue", "gray", "black"};
+                    loss_multimulticlass_log_ myloss(labels);
+                Then you could use myloss with a network object and train it to do this
+                task.  More generally, you can use any number of classifiers and labels
+                when using this object.  Finally, each of the classifiers uses a standard
+                multi-class logistic regression loss.
+        !*/
+
+    public:
+
+        loss_multimulticlass_log_(
+        ); 
+        /*!
+            ensures
+                - #number_of_labels() == 0
+                - #get_labels().size() == 0
+        !*/
+
+        loss_multimulticlass_log_ (
+            const std::map<std::string,std::vector<std::string>>& labels
+        );
+        /*!
+            requires
+                - Each vector in labels must contain at least 2 strings.  I.e. each
+                  classifier must have at least two possible labels.
+            ensures
+                - #number_of_labels() == the total number of strings in all the
+                  std::vectors in labels.
+                - #number_of_classifiers() == labels.size()
+                - #get_labels() == labels
+        !*/
+
+        unsigned long number_of_labels(
+        ) const; 
+        /*!
+            ensures
+                - returns the total number of labels known to this loss.  This is the count of 
+                  all the labels in each classifier.
+        !*/
+
+        unsigned long number_of_classifiers(
+        ) const; 
+        /*!
+            ensures
+                - returns the number of classifiers defined by this loss.
+        !*/
+
+        std::map<std::string,std::vector<std::string>> get_labels ( 
+        ) const;
+        /*!
+            ensures
+                - returns the names of the classifiers and labels used by this loss.  In
+                  particular, if the returned object is L then:
+                    - L[CLASS] == the set of labels used by the classifier CLASS.
+                    - L.size() == number_of_classifiers()
+                    - The count of strings in the vectors in L == number_of_labels()
+        !*/
+
+        class classifier_output
+        {
+            /*!
+                WHAT THIS OBJECT REPRESENTS
+                    This object stores the predictions from one of the classifiers in
+                    loss_multimulticlass_log_.  It allows you to find out the most likely
+                    string label predicted by that classifier, as well as get the class
+                    conditional probability of any of the classes in the classifier.
+            !*/
+
+        public:
+
+            classifier_output(
+            );
+            /*!
+                ensures
+                    - #num_classes() == 0
+            !*/
+
+            size_t num_classes(
+            ) const; 
+            /*!
+                ensures
+                    - returns the number of possible classes output by this classifier.
+            !*/
+
+            double probability_of_class (
+                size_t i
+            ) const;
+            /*!
+                requires
+                    - i < num_classes()
+                ensures
+                    - returns the probability that the true class has a label of label(i).
+                    - The sum of probability_of_class(j) for j in the range [0, num_classes()) is always 1.
+            !*/
+
+            const std::string& label(
+                size_t i
+            ) const;
+            /*!
+                requires
+                    - i < num_classes()
+                ensures
+                    - returns the string label for the ith class.
+            !*/
+
+            operator std::string(
+            ) const;
+            /*!
+                requires
+                    - num_classes() != 0
+                ensures
+                    - returns the string label for the most probable class.
+            !*/
+
+            friend std::ostream& operator<< (std::ostream& out, const classifier_output& item);
+            /*!
+                requires
+                    - num_classes() != 0
+                ensures
+                    - prints the most probable class label to out.
+            !*/
+
+        };
+
+        // Both training_label_type and output_label_type should always have sizes equal to
+        // number_of_classifiers().  That is, the std::map should have an entry for every
+        // classifier known to this loss.
+        typedef std::map<std::string,std::string> training_label_type;
+        typedef std::map<std::string,classifier_output> output_label_type;
+
+
+        template <
+            typename SUB_TYPE,
+            typename label_iterator
+            >
+        void to_label (
+            const tensor& input_tensor,
+            const SUB_TYPE& sub,
+            label_iterator iter
+        ) const;
+        /*!
+            This function has the same interface as EXAMPLE_LOSS_LAYER_::to_label() except
+            it has the additional calling requirements that: 
+                - number_of_labels() != 0
+                - sub.get_output().k() == number_of_labels()
+                - sub.get_output().nr() == 1
+                - sub.get_output().nc() == 1
+                - sub.get_output().num_samples() == input_tensor.num_samples()
+                - sub.sample_expansion_factor() == 1
+        !*/
+
+        template <
+            typename const_label_iterator,
+            typename SUBNET
+            >
+        double compute_loss_value_and_gradient (
+            const tensor& input_tensor,
+            const_label_iterator truth, 
+            SUBNET& sub
+        ) const;
+        /*!
+            This function has the same interface as EXAMPLE_LOSS_LAYER_::compute_loss_value_and_gradient() 
+            except it has the additional calling requirements that: 
+                - number_of_labels() != 0
+                - sub.get_output().k() == number_of_labels()
+                    It should be noted that the last layer in your network should usually
+                    be an fc layer.  If so, you can satisfy this requirement of k() being
+                    number_of_labels() by calling set_num_outputs() prior to training your
+                    network like so:
+                    your_network.subnet().layer_details().set_num_outputs(your_network.loss_details().number_of_labels());
+                - sub.get_output().nr() == 1
+                - sub.get_output().nc() == 1
+                - sub.get_output().num_samples() == input_tensor.num_samples()
+                - sub.sample_expansion_factor() == 1
+                - All the std::maps pointed to by truth contain entries for all the
+                  classifiers known to this loss.  That is, it must be valid to call
+                  truth[i][classifier] for any of the classifiers known to this loss.  To
+                  say this another way, all the training samples must contain labels for
+                  each of the classifiers defined by this loss.
+
+                  To really belabor this, this also means that truth[i].size() ==
+                  get_labels().size() and that both truth[i] and get_labels() have the same
+                  set of key strings.  It also means that the value strings in truth[i]
+                  must be strings known to the loss, i.e. they are valid labels according
+                  to get_labels().
+        !*/
+    };
+
+    template <typename SUBNET>
+    using loss_multimulticlass_log = add_loss_layer<loss_multimulticlass_log_, SUBNET>;
+
+    // Allow comparison between classifier_outputs and std::string to check if the
+    // predicted class is a particular string.
+    inline bool operator== (const std::string& lhs, const loss_multimulticlass_log_::classifier_output& rhs)
+    { return lhs == static_cast<const std::string&>(rhs); }
+    inline bool operator== (const loss_multimulticlass_log_::classifier_output& lhs, const std::string& rhs)
+    { return rhs == static_cast<const std::string&>(lhs); }
+
+// ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
     enum class use_image_pyramid : uint8_t
@@ -429,6 +760,21 @@ namespace dlib
         // Usually the detector would be scale-invariant, and used with an image pyramid.
         // However, sometimes scale-invariance may not be desired.
         use_image_pyramid assume_image_pyramid = use_image_pyramid::yes;
+
+        // By default, the mmod loss doesn't train any bounding box regression model.  But
+        // if you set use_bounding_box_regression == true then it expects the network to
+        // output a tensor with detector_windows.size()*5 channels rather than just
+        // detector_windows.size() channels.  The 4 extra channels per window are trained
+        // to give a bounding box regression output that improves the positioning of the
+        // output detection box.
+        bool use_bounding_box_regression = false; 
+        // When using bounding box regression, bbr_lambda determines how much you care
+        // about getting the bounding box shape correct vs just getting the detector to
+        // find objects.  That is, the objective function being optimized is
+        // basic_mmod_loss + bbr_lambda*bounding_box_regression_loss.  So setting
+        // bbr_lambda to a larger value will cause the overall loss to care more about
+        // getting the bounding box shape correct.
+        double bbr_lambda = 100; 
 
         mmod_options (
             const std::vector<std::vector<mmod_rect>>& boxes,
@@ -1041,6 +1387,68 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    class loss_binary_log_per_pixel_
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This object implements the loss layer interface defined above by
+                EXAMPLE_LOSS_LAYER_.  In particular, it implements the log loss, which is
+                appropriate for binary classification problems.  It is basically just like
+                loss_binary_log_ except that it lets you define matrix outputs instead
+                of scalar outputs.  It should be useful, for example, in segmentation
+                where we want to classify each pixel of an image, and also get at least
+                some sort of confidence estimate for each pixel.
+        !*/
+    public:
+
+        typedef matrix<float> training_label_type;
+        typedef matrix<float> output_label_type;
+
+        template <
+            typename SUB_TYPE,
+            typename label_iterator
+            >
+        void to_label (
+            const tensor& input_tensor,
+            const SUB_TYPE& sub,
+            label_iterator iter
+        ) const;
+        /*!
+            This function has the same interface as EXAMPLE_LOSS_LAYER_::to_label() except
+            it has the additional calling requirements that:
+                - sub.get_output().num_samples() == input_tensor.num_samples()
+                - sub.sample_expansion_factor() == 1
+            and the output label is the raw score for each classified object.  If the score
+            is > 0 then the classifier is predicting the +1 class, otherwise it is
+            predicting the -1 class.
+        !*/
+
+        template <
+            typename const_label_iterator,
+            typename SUBNET
+            >
+        double compute_loss_value_and_gradient (
+            const tensor& input_tensor,
+            const_label_iterator truth,
+            SUBNET& sub
+        ) const;
+        /*!
+            This function has the same interface as EXAMPLE_LOSS_LAYER_::compute_loss_value_and_gradient()
+            except it has the additional calling requirements that:
+                - sub.get_output().num_samples() == input_tensor.num_samples()
+                - sub.sample_expansion_factor() == 1
+                - all pixel values pointed to by truth correspond to the desired target values.
+                  Nominally they should be +1 or -1, each indicating the desired class label,
+                  or 0 to indicate that the corresponding pixel is to be ignored.
+        !*/
+
+    };
+
+    template <typename SUBNET>
+    using loss_binary_log_per_pixel = add_loss_layer<loss_binary_log_per_pixel_, SUBNET>;
+
+// ----------------------------------------------------------------------------------------
+
     class loss_multiclass_log_per_pixel_
     {
         /*!
@@ -1128,26 +1536,7 @@ namespace dlib
         !*/
     public:
 
-        struct weighted_label
-        {
-            /*!
-                WHAT THIS OBJECT REPRESENTS
-                    This object represents the truth label of a single pixel, together with
-                    an associated weight (the higher the weight, the more emphasis the
-                    corresponding pixel is given during the training).
-            !*/
-
-            weighted_label();
-            weighted_label(uint16_t label, float weight = 1.f);
-
-            // The ground-truth label. In semantic segmentation, 65536 classes ought to be
-            // enough for anybody.
-            uint16_t label = 0;
-
-            // The weight of the corresponding pixel.
-            float weight = 1.f;
-        };
-
+        typedef dlib::weighted_label<uint16_t> weighted_label;
         typedef matrix<weighted_label> training_label_type;
         typedef matrix<uint16_t> output_label_type;
 
@@ -1252,7 +1641,68 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    class loss_dot_ 
+    template<long _num_channels>
+    class loss_mean_squared_per_channel_and_pixel_
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This object implements the loss layer interface defined above by
+                EXAMPLE_LOSS_LAYER_.  In particular, it implements the mean squared loss,
+                which is appropriate for regression problems.  It is basically just like
+                loss_mean_squared_per_pixel_ except that it computes the loss over all
+                channels, not just the first one.
+        !*/
+    public:
+
+        typedef std::array<matrix<float>, _num_channels> training_label_type;
+        typedef std::array<matrix<float>, _num_channels> output_label_type;
+
+
+        template <
+            typename SUB_TYPE,
+            typename label_iterator
+            >
+        void to_label (
+            const tensor& input_tensor,
+            const SUB_TYPE& sub,
+            label_iterator iter
+        ) const;
+        /*!
+            This function has the same interface as EXAMPLE_LOSS_LAYER_::to_label() except
+            it has the additional calling requirements that:
+                - sub.get_output().num_samples() == input_tensor.num_samples()
+                - sub.get_output().k() == _num_channels
+                - sub.sample_expansion_factor() == 1
+            and the output labels are the predicted continuous variables.
+        !*/
+
+        template <
+            typename const_label_iterator,
+            typename SUBNET
+            >
+        double compute_loss_value_and_gradient (
+            const tensor& input_tensor,
+            const_label_iterator truth,
+            SUBNET& sub
+        ) const;
+        /*!
+            This function has the same interface as EXAMPLE_LOSS_LAYER_::compute_loss_value_and_gradient()
+            except it has the additional calling requirements that:
+                - sub.get_output().k() == _num_channels
+                - sub.get_output().num_samples() == input_tensor.num_samples()
+                - sub.sample_expansion_factor() == 1
+                - for all idx such that 0 <= idx < sub.get_output().num_samples():
+                    - sub.get_output().nr() == (*(truth + idx)).nr()
+                    - sub.get_output().nc() == (*(truth + idx)).nc()
+        !*/
+    };
+
+    template <long num_channels, typename SUBNET>
+    using loss_mean_squared_per_channel_and_pixel = add_loss_layer<loss_mean_squared_per_channel_and_pixel_<num_channels>, SUBNET>;
+
+// ----------------------------------------------------------------------------------------
+
+    class loss_dot_
     {
         /*!
             WHAT THIS OBJECT REPRESENTS

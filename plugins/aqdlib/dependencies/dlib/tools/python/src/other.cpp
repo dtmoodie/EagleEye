@@ -1,6 +1,7 @@
 // Copyright (C) 2013  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
+#include "opaque_types.h"
 #include <dlib/python.h>
 #include <dlib/matrix.h>
 #include <dlib/data_io.h>
@@ -96,6 +97,16 @@ size_t py_count_steps_without_decrease_robust (
     DLIB_CASSERT(0.5 < probability_of_decrease && probability_of_decrease < 1);
     DLIB_CASSERT(0 <= quantile_discard && quantile_discard <= 1);
     return count_steps_without_decrease_robust(python_list_to_vector<double>(arr), probability_of_decrease, quantile_discard); 
+}
+
+// ----------------------------------------------------------------------------------------
+
+double probability_that_sequence_is_increasing (
+    py::object arr
+)
+{
+    DLIB_CASSERT(len(arr) > 2);
+    return probability_gradient_greater_than(python_list_to_vector<double>(arr), 0);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -251,5 +262,7 @@ ensures \n\
     !*/
     );
 
+    m.def("probability_that_sequence_is_increasing",probability_that_sequence_is_increasing, py::arg("time_series"),
+        "returns the probability that the given sequence of real numbers is increasing in value over time.");
 }
 

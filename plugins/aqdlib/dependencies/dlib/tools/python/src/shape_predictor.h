@@ -25,11 +25,14 @@ namespace dlib
             num_trees_per_cascade_level = 500;
             nu = 0.1;
             oversampling_amount = 20;
+            oversampling_translation_jitter = 0;
             feature_pool_size = 400;
             lambda_param = 0.1;
             num_test_splits = 20;
             feature_pool_region_padding = 0;
             random_seed = "";
+            num_threads = 0;
+            landmark_relative_padding_mode = true;
         }
 
         bool be_verbose;
@@ -38,11 +41,16 @@ namespace dlib
         unsigned long num_trees_per_cascade_level;
         double nu;
         unsigned long oversampling_amount;
+        double oversampling_translation_jitter;
         unsigned long feature_pool_size;
         double lambda_param;
         unsigned long num_test_splits;
         double feature_pool_region_padding;
         std::string random_seed;
+        bool landmark_relative_padding_mode;
+
+        // not serialized
+        unsigned long num_threads;
     };
 
     inline void serialize (
@@ -52,17 +60,20 @@ namespace dlib
     {
         try
         {
+            serialize("shape_predictor_training_options_v2", out);
             serialize(item.be_verbose,out);
             serialize(item.cascade_depth,out);
             serialize(item.tree_depth,out);
             serialize(item.num_trees_per_cascade_level,out);
             serialize(item.nu,out);
             serialize(item.oversampling_amount,out);
+            serialize(item.oversampling_translation_jitter,out);
             serialize(item.feature_pool_size,out);
             serialize(item.lambda_param,out);
             serialize(item.num_test_splits,out);
             serialize(item.feature_pool_region_padding,out);
             serialize(item.random_seed,out);
+            serialize(item.landmark_relative_padding_mode,out);
         }
         catch (serialization_error& e)
         {
@@ -77,17 +88,20 @@ namespace dlib
     {
         try
         {
+            check_serialized_version("shape_predictor_training_options_v2", in);
             deserialize(item.be_verbose,in);
             deserialize(item.cascade_depth,in);
             deserialize(item.tree_depth,in);
             deserialize(item.num_trees_per_cascade_level,in);
             deserialize(item.nu,in);
             deserialize(item.oversampling_amount,in);
+            deserialize(item.oversampling_translation_jitter,in);
             deserialize(item.feature_pool_size,in);
             deserialize(item.lambda_param,in);
             deserialize(item.num_test_splits,in);
             deserialize(item.feature_pool_region_padding,in);
             deserialize(item.random_seed,in);
+            deserialize(item.landmark_relative_padding_mode,in);
         }
         catch (serialization_error& e)
         {
@@ -95,21 +109,24 @@ namespace dlib
         }
     }
 
-    string print_shape_predictor_training_options(const shape_predictor_training_options& o)
+    inline string print_shape_predictor_training_options(const shape_predictor_training_options& o)
     {
         std::ostringstream sout;
         sout << "shape_predictor_training_options("
-            << "be_verbose=" << o.be_verbose << ","
-            << "cascade_depth=" << o.cascade_depth << ","
-            << "tree_depth=" << o.tree_depth << ","
-            << "num_trees_per_cascade_level=" << o.num_trees_per_cascade_level << ","
-            << "nu=" << o.nu << ","
-            << "oversampling_amount=" << o.oversampling_amount << ","
-            << "feature_pool_size=" << o.feature_pool_size << ","
-            << "lambda_param=" << o.lambda_param << ","
-            << "num_test_splits=" << o.num_test_splits << ","
-            << "feature_pool_region_padding=" << o.feature_pool_region_padding << ","
-            << "random_seed=" << o.random_seed
+            << "be_verbose=" << o.be_verbose << ", "
+            << "cascade_depth=" << o.cascade_depth << ", "
+            << "tree_depth=" << o.tree_depth << ", "
+            << "num_trees_per_cascade_level=" << o.num_trees_per_cascade_level << ", "
+            << "nu=" << o.nu << ", "
+            << "oversampling_amount=" << o.oversampling_amount << ", "
+            << "oversampling_translation_jitter=" << o.oversampling_translation_jitter << ", "
+            << "feature_pool_size=" << o.feature_pool_size << ", "
+            << "lambda_param=" << o.lambda_param << ", "
+            << "num_test_splits=" << o.num_test_splits << ", "
+            << "feature_pool_region_padding=" << o.feature_pool_region_padding << ", "
+            << "random_seed=" << o.random_seed << ", "
+            << "num_threads=" << o.num_threads << ", "
+            << "landmark_relative_padding_mode=" << o.landmark_relative_padding_mode
         << ")";
         return sout.str();
     }
@@ -144,8 +161,8 @@ namespace dlib
             throw error("Invalid lambda_param value given to train_shape_predictor(), lambda_param must be > 0.");
         if (!(0 < options.nu && options.nu <= 1))
             throw error("Invalid nu value given to train_shape_predictor(). It is required that 0 < nu <= 1.");
-        if (options.feature_pool_region_padding < 0)
-            throw error("Invalid feature_pool_region_padding value given to train_shape_predictor(), feature_pool_region_padding must be >= 0.");
+        if (options.feature_pool_region_padding <= -0.5)
+            throw error("Invalid feature_pool_region_padding value given to train_shape_predictor(), feature_pool_region_padding must be > -0.5.");
 
         if (images.size() != detections.size())
             throw error("The list of images must have the same length as the list of detections.");
@@ -161,10 +178,16 @@ namespace dlib
         trainer.set_nu(options.nu);
         trainer.set_random_seed(options.random_seed);
         trainer.set_oversampling_amount(options.oversampling_amount);
+        trainer.set_oversampling_translation_jitter(options.oversampling_translation_jitter);
         trainer.set_feature_pool_size(options.feature_pool_size);
         trainer.set_feature_pool_region_padding(options.feature_pool_region_padding);
         trainer.set_lambda(options.lambda_param);
         trainer.set_num_test_splits(options.num_test_splits);
+        trainer.set_num_threads(options.num_threads);
+        if (options.landmark_relative_padding_mode)
+            trainer.set_padding_mode(shape_predictor_trainer::landmark_relative);
+        else
+            trainer.set_padding_mode(shape_predictor_trainer::bounding_box_relative);
 
         if (options.be_verbose)
         {
@@ -174,8 +197,11 @@ namespace dlib
             std::cout << "Training with nu: " << options.nu << std::endl;
             std::cout << "Training with random seed: " << options.random_seed << std::endl;
             std::cout << "Training with oversampling amount: " << options.oversampling_amount << std::endl;
+            std::cout << "Training with oversampling translation jitter: " << options.oversampling_translation_jitter << std::endl;
+            std::cout << "Training with landmark_relative_padding_mode: " << options.landmark_relative_padding_mode << std::endl;
             std::cout << "Training with feature pool size: " << options.feature_pool_size << std::endl;
             std::cout << "Training with feature pool region padding: " << options.feature_pool_region_padding << std::endl;
+            std::cout << "Training with " << options.num_threads << " threads." << std::endl;
             std::cout << "Training with lambda_param: " << options.lambda_param << std::endl;
             std::cout << "Training with " << options.num_test_splits << " split tests."<< std::endl;
             trainer.be_verbose();

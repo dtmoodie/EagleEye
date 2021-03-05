@@ -127,7 +127,7 @@ namespace dlib
                 - returns the number of columns in this image
         !*/
 
-        unsigned long size (
+        size_t size (
         ) const; 
         /*!
             ensures
@@ -179,70 +179,6 @@ namespace dlib
             ensures
                 - returns a reference to the pixel at coordinates (row, column)
                   of this image
-        !*/
-
-        cv_image& operator= ( 
-            const cv_image& item
-        );
-        /*!
-            ensures
-                - #*this is an identical copy of item
-                - returns #*this
-        !*/
-
-        cv_image& operator=( 
-            const IplImage* img
-        );
-        /*!
-            requires
-                - img->dataOrder == 0
-                  (i.e. Only interleaved color channels are supported with cv_image)
-                - (img->depth&0xFF)/8*img->nChannels == sizeof(pixel_type)
-                  (i.e. The size of the pixel_type needs to match the size of the pixels 
-                  inside the OpenCV image)
-            ensures
-                - #nr() == img->height
-                  #nc() == img->width
-                - using the operator[] on this object you will be able to access the pixels
-                  inside this OpenCV image.
-                - returns #*this
-        !*/
-
-        cv_image& operator=( 
-            const IplImage img
-        );
-        /*!
-            requires
-                - img->dataOrder == 0
-                  (i.e. Only interleaved color channels are supported with cv_image)
-                - (img->depth&0xFF)/8*img->nChannels == sizeof(pixel_type)
-                  (i.e. The size of the pixel_type needs to match the size of the pixels 
-                  inside the OpenCV image)
-            ensures
-                - #nr() == img->height
-                  #nc() == img->width
-                - using the operator[] on this object you will be able to access the pixels
-                  inside this OpenCV image.
-                - returns #*this
-        !*/
-
-        cv_image& operator=( 
-            const cv::Mat img
-        );
-        /*!
-            requires
-                - img.depth() == cv::DataType<pixel_traits<pixel_type>::basic_pixel_type>::depth
-                  (i.e. The pixel_type template argument needs to match the type of pixel 
-                  used inside the OpenCV image)
-                - img.channels() == pixel_traits<pixel_type>::num
-                  (i.e. the number of channels in the pixel_type needs to match the number of 
-                  channels in the OpenCV image)
-            ensures
-                - #nr() == img.rows
-                - #nc() == img.cols
-                - using the operator[] on this object you will be able to access the pixels
-                  inside this OpenCV image.
-                - returns #*this
         !*/
 
         long width_step (

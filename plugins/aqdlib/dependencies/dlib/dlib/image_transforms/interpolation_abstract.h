@@ -6,6 +6,7 @@
 #include "../pixel.h"
 #include "../image_processing/full_object_detection_abstract.h"
 #include "../image_processing/generic_image.h"
+#include <array>
 
 namespace dlib
 {
@@ -77,14 +78,13 @@ namespace dlib
                 - image_view_type == an image_view or const_image_view object 
                 - pixel_traits<typename image_view_type::pixel_type>::has_alpha == false
                 - pixel_traits<pixel_type> is defined
+                - is_color_space_cartesian_image<image_view_type>::value == true
             ensures
                 - if (there is an interpolatable image location at point p in img) then
                     - #result == the interpolated pixel value from img at point p.
                     - assign_pixel() will be used to write to #result, therefore any
                       necessary color space conversion will be performed.
                     - returns true
-                    - if img contains RGB pixels then the interpolation will be in color.
-                      Otherwise, the interpolation will be performed in a grayscale mode.
                 - else
                     - returns false
         !*/
@@ -118,14 +118,13 @@ namespace dlib
                 - image_view_type == an image_view or const_image_view object. 
                 - pixel_traits<typename image_view_type::pixel_type>::has_alpha == false
                 - pixel_traits<pixel_type> is defined
+                - is_color_space_cartesian_image<image_view_type>::value == true
             ensures
                 - if (there is an interpolatable image location at point p in img) then
                     - #result == the interpolated pixel value from img at point p
                     - assign_pixel() will be used to write to #result, therefore any
                       necessary color space conversion will be performed.
                     - returns true
-                    - if img contains RGB pixels then the interpolation will be in color.
-                      Otherwise, the interpolation will be performed in a grayscale mode.
                 - else
                     - returns false
         !*/
@@ -429,11 +428,12 @@ namespace dlib
               dlib/image_processing/generic_image.h 
             - pixel_traits<typename image_traits<image_type>::pixel_type>::has_alpha == false
         ensures
-            - Resizes img so that each of it's dimensions are size_scale times larger than img.
+            - Resizes img so that each of its dimensions are size_scale times larger than img.
               In particular, we will have:
                 - #img.nr() == std::round(size_scale*img.nr())
                 - #img.nc() == std::round(size_scale*img.nc())
                 - #img == a bilinearly interpolated copy of the input image.
+            - Returns immediately, if size_scale == 1.0
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1035,7 +1035,7 @@ namespace dlib
                 - #angle == 0
                 - #rows and #cols is set such that the total size of the chip is as close
                   to size_ as possible but still matches the aspect ratio of rect_.
-                - As long as size_ and the aspect ratio of of rect_ stays constant then
+                - As long as size_ and the aspect ratio of rect_ stays constant then
                   #rows and #cols will always have the same values.  This means that, for
                   example, if you want all your chips to have the same dimensions then
                   ensure that size_ is always the same and also that rect_ always has the
@@ -1057,7 +1057,7 @@ namespace dlib
                 - #angle == angle_
                 - #rows and #cols is set such that the total size of the chip is as close
                   to size_ as possible but still matches the aspect ratio of rect_.
-                - As long as size_ and the aspect ratio of of rect_ stays constant then
+                - As long as size_ and the aspect ratio of rect_ stays constant then
                   #rows and #cols will always have the same values.  This means that, for
                   example, if you want all your chips to have the same dimensions then
                   ensure that size_ is always the same and also that rect_ always has the
@@ -1446,6 +1446,58 @@ namespace dlib
             - This function is identical to the version of get_face_chip_details() defined
               above except that it creates and returns an array of chip_details objects,
               one for each input full_object_detection.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename image_type
+        >
+    void extract_image_4points (
+        const image_type& img,
+        image_type& out,
+        const std::array<dpoint,4>& pts
+    );
+    /*!
+        requires
+            - image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - pixel_traits<typename image_traits<image_type>::pixel_type>::has_alpha == false
+        ensures
+            - The 4 points in pts define a convex quadrilateral and this function extracts
+              that part of the input image img and stores it into #out.  Therefore, each
+              corner of the quadrilateral is associated to a corner of #out and bilinear
+              interpolation and a projective mapping is used to transform the pixels in the
+              quadrilateral into #out.  To determine which corners of the quadrilateral map
+              to which corners of #out we fit the tightest possible rectangle to the
+              quadrilateral and map its vertices to their nearest rectangle corners.  These
+              corners are then trivially mapped to #out (i.e.  upper left corner to upper
+              left corner, upper right corner to upper right corner, etc.).
+            - #out.nr() == out.nr() && #out.nc() == out.nc().  
+              I.e. out should already be sized to whatever size you want it to be.
+    !*/
+
+    template <
+        typename image_type
+        >
+    void extract_image_4points (
+        const image_type& img,
+        image_type& out,
+        const std::array<line,4>& lines 
+    );
+    /*!
+        requires
+            - image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - pixel_traits<typename image_traits<image_type>::pixel_type>::has_alpha == false
+        ensures
+            - This routine finds the 4 intersecting points of the given lines which form a
+              convex quadrilateral and uses them in a call to the version of
+              extract_image_4points() defined above.  i.e. extract_image_4points(img, out,
+              intersections_between_lines)
+        throws 
+            - no_convex_quadrilateral: this is thrown if you can't make a convex
+              quadrilateral out of the given lines.
     !*/
 
 // ----------------------------------------------------------------------------------------

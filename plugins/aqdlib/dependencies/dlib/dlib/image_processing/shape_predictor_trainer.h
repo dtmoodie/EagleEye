@@ -7,6 +7,8 @@
 #include "shape_predictor.h"
 #include "../console_progress_indicator.h"
 #include "../threads.h"
+#include "../data_io/image_dataset_metadata.h"
+#include "box_overlap_testing.h"
 
 namespace dlib
 {
@@ -35,6 +37,7 @@ namespace dlib
             _num_trees_per_cascade_level = 500;
             _nu = 0.1;
             _oversampling_amount = 20;
+            _oversampling_translation_jitter = 0;
             _feature_pool_size = 400;
             _lambda = 0.1;
             _num_test_splits = 20;
@@ -114,6 +117,7 @@ namespace dlib
 
         unsigned long get_oversampling_amount (
         ) const { return _oversampling_amount; }
+
         void set_oversampling_amount (
             unsigned long amount
         )
@@ -125,6 +129,22 @@ namespace dlib
             );
 
             _oversampling_amount = amount;
+        }
+
+        double get_oversampling_translation_jitter (
+        ) const { return _oversampling_translation_jitter; }
+
+        void set_oversampling_translation_jitter (
+            double amount
+        )
+        {
+            DLIB_CASSERT(amount >= 0, 
+                "\t void shape_predictor_trainer::set_oversampling_translation_jitter()"
+                << "\n\t Invalid inputs were given to this function. "
+                << "\n\t amount: " << amount 
+            );
+
+            _oversampling_translation_jitter = amount;
         }
 
         unsigned long get_feature_pool_size (
@@ -351,6 +371,11 @@ namespace dlib
                     shape(2*i+1) = p.y();
                     present(2*i)   = 1;
                     present(2*i+1) = 1;
+
+                    if (length(p) > 100)
+                    {
+                        std::cout << "Warning, one of your objects has parts that are way outside its bounding box!  This is probably an error in your annotation." << std::endl;
+                    }
                 }
                 else
                 {
@@ -516,15 +541,18 @@ namespace dlib
         {
             const double lambda = get_lambda(); 
             impl::split_feature feat;
-            double accept_prob;
-            do 
+            const size_t max_iters = get_feature_pool_size()*get_feature_pool_size();
+            for (size_t i = 0; i < max_iters; ++i)
             {
-                feat.idx1   = rnd.get_random_32bit_number()%get_feature_pool_size();
-                feat.idx2   = rnd.get_random_32bit_number()%get_feature_pool_size();
+                feat.idx1   = rnd.get_integer(get_feature_pool_size());
+                feat.idx2   = rnd.get_integer(get_feature_pool_size());
+                while (feat.idx1 == feat.idx2)
+                    feat.idx2   = rnd.get_integer(get_feature_pool_size());
                 const double dist = length(pixel_coordinates[feat.idx1]-pixel_coordinates[feat.idx2]);
-                accept_prob = std::exp(-dist/lambda);
+                const double accept_prob = std::exp(-dist/lambda);
+                if (accept_prob > rnd.get_random_double())
+                    break;
             }
-            while(feat.idx1 == feat.idx2 || !(accept_prob > rnd.get_random_double()));
 
             feat.thresh = (rnd.get_random_double()*256 - 128)/2.0;
 
@@ -696,6 +724,18 @@ namespace dlib
                         hits += alpha*samples[rand_idx].present;
                     }
                     samples[i].current_shape = pointwise_multiply(samples[i].current_shape, reciprocal(hits));
+
+                    if (_oversampling_translation_jitter != 0)
+                    {
+                        dpoint off;
+                        off.x() = rnd.get_double_in_range(-_oversampling_translation_jitter,_oversampling_translation_jitter);
+                        off.y() = rnd.get_double_in_range(-_oversampling_translation_jitter,_oversampling_translation_jitter);
+                        for (long j = 0; j < samples[i].current_shape.size()/2; ++j)
+                        {
+                            samples[i].current_shape(2*j) += off.x();
+                            samples[i].current_shape(2*j+1) += off.y();
+                        }
+                    }
                 }
 
             }
@@ -785,7 +825,55 @@ namespace dlib
         bool _verbose;
         unsigned long _num_threads;
         padding_mode_t _padding_mode;
+        double _oversampling_translation_jitter;
     };
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename some_type_of_rectangle
+        >
+    image_dataset_metadata::dataset make_bounding_box_regression_training_data (
+        const image_dataset_metadata::dataset& truth,
+        const std::vector<std::vector<some_type_of_rectangle>>& detections
+    )
+    {
+        DLIB_CASSERT(truth.images.size() == detections.size(), 
+            "truth.images.size(): "<< truth.images.size() <<
+            "\tdetections.size(): "<< detections.size()
+        );
+        image_dataset_metadata::dataset result = truth;
+
+        for (size_t i = 0; i < truth.images.size(); ++i)
+        {
+            result.images[i].boxes.clear();
+            for (auto truth_box : truth.images[i].boxes)
+            {
+                if (truth_box.ignore)
+                    continue;
+
+                // Find the detection that best matches the current truth_box.
+                auto det = max_scoring_element(detections[i], [&truth_box](const rectangle& r) { return box_intersection_over_union(r, truth_box.rect); });
+                if (det.second > 0.5)
+                {
+                    // Remove any existing parts and replace them with the truth_box corners.
+                    truth_box.parts.clear();
+                    auto b = truth_box.rect;
+                    truth_box.parts["left"]     = (b.tl_corner()+b.bl_corner())/2;
+                    truth_box.parts["right"]    = (b.tr_corner()+b.br_corner())/2;
+                    truth_box.parts["top"]      = (b.tl_corner()+b.tr_corner())/2;
+                    truth_box.parts["bottom"]   = (b.bl_corner()+b.br_corner())/2;
+                    truth_box.parts["middle"]   = center(b);
+
+                    // Now replace the bounding truth_box with the detector's bounding truth_box.
+                    truth_box.rect = det.first;
+
+                    result.images[i].boxes.push_back(truth_box);
+                }
+            }
+        }
+        return result;
+    }
 
 // ----------------------------------------------------------------------------------------
 

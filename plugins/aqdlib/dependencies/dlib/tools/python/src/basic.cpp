@@ -4,6 +4,7 @@
 #include <dlib/matrix.h>
 #include <sstream>
 #include <string>
+#include "opaque_types.h"
 
 #include <dlib/string.h>
 #include <pybind11/stl_bind.h>
@@ -12,29 +13,13 @@ using namespace std;
 using namespace dlib;
 namespace py = pybind11;
 
-PYBIND11_MAKE_OPAQUE(std::vector<double>);
-
-typedef std::vector<matrix<double,0,1>> column_vectors;
-PYBIND11_MAKE_OPAQUE(column_vectors);
-PYBIND11_MAKE_OPAQUE(std::vector<column_vectors>);
-
-typedef pair<unsigned long,unsigned long> ulong_pair;
-PYBIND11_MAKE_OPAQUE(ulong_pair);
-PYBIND11_MAKE_OPAQUE(std::vector<ulong_pair>);
-PYBIND11_MAKE_OPAQUE(std::vector<std::vector<ulong_pair>>);
-
-typedef pair<unsigned long,double> ulong_double_pair;
-PYBIND11_MAKE_OPAQUE(ulong_double_pair);
-PYBIND11_MAKE_OPAQUE(std::vector<ulong_double_pair>);
-PYBIND11_MAKE_OPAQUE(std::vector<std::vector<ulong_double_pair>>);
-PYBIND11_MAKE_OPAQUE(std::vector<std::vector<std::vector<ulong_double_pair> > >);
 
 std::shared_ptr<std::vector<double> > array_from_object(py::object obj)
 {
     try {
         long nr = obj.cast<long>();
         return std::make_shared<std::vector<double>>(nr);
-    } catch (py::cast_error &e) {
+    } catch (py::cast_error&) {
         py::list li = obj.cast<py::list>();
         const long nr = len(li);
         auto temp = std::make_shared<std::vector<double>>(nr);
@@ -197,6 +182,7 @@ void bind_basic_types(py::module& m)
     typedef pair<unsigned long,unsigned long> range_type;
     py::class_<range_type>(m, "range", "This object is used to represent a range of elements in an array.")
         .def(py::init<unsigned long,unsigned long>())
+        .def(py::init([](unsigned long end){return range_type(0,end); }))
         .def_readwrite("begin",&range_type::first, "The index of the first element in the range.  This is represented using an unsigned integer.")
         .def_readwrite("end",&range_type::second, "One past the index of the last element in the range.  This is represented using an unsigned integer.")
         .def("__str__", range__str__)

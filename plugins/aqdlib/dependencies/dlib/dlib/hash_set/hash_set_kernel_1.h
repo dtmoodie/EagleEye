@@ -85,7 +85,7 @@ namespace dlib
             );
 
             // functions from the enumerable interface
-            inline unsigned long size (
+            inline size_t size (
             ) const;
 
             inline bool at_start (
@@ -151,7 +151,7 @@ namespace dlib
                 item.add(temp);
             }
         }
-        catch (serialization_error e)
+        catch (serialization_error& e)
         { 
             item.clear();
             throw serialization_error(e.info + "\n   while deserializing object of type hash_set_kernel_1"); 
@@ -266,7 +266,7 @@ namespace dlib
         typename hash_table,
         typename mem_manager
         >
-    unsigned long hash_set_kernel_1<T,expnum,hash_table,mem_manager>::
+    size_t hash_set_kernel_1<T,expnum,hash_table,mem_manager>::
     size (
     ) const
     {

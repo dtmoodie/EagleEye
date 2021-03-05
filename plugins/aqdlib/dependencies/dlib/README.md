@@ -30,6 +30,11 @@ cmake .. -G "Visual Studio 14 2015 Win64" -T host=x64
 
 The examples folder has a [CMake tutorial](https://github.com/davisking/dlib/blob/master/examples/CMakeLists.txt) that tells you what to do.  There are also additional instructions on the [dlib web site](http://dlib.net/compile.html).
 
+Alternatively, if you are using the [vcpkg](https://github.com/Microsoft/vcpkg/) dependency manager you can download and install dlib with CMake integration in a single command:
+```bash
+vcpkg install dlib
+```
+
 ## Compiling dlib Python API
 
 Before you can run the Python example programs you must compile dlib. Type:
@@ -37,15 +42,6 @@ Before you can run the Python example programs you must compile dlib. Type:
 ```bash
 python setup.py install
 ```
-
-or type
-
-```bash
-python setup.py install --yes USE_AVX_INSTRUCTIONS
-```
-
-if you have a CPU that supports AVX instructions, since this makes some things run faster.  
-
 
 
 ## Running the unit test suite
@@ -69,6 +65,3 @@ This library is licensed under the Boost Software License, which can be found in
 
 This research is based in part upon work supported by the Office of the Director of National Intelligence (ODNI), Intelligence Advanced Research Projects Activity (IARPA) under contract number 2014-14071600010. The views and conclusions contained herein are those of the authors and should not be interpreted as necessarily representing the official policies or endorsements, either expressed or implied, of ODNI, IARPA, or the U.S. Government.
 
-Version: 19.9
-Date:    Mon Jan 22 19:29:39 EST 2018
-Mercurial Revision ID: f9ef9feebe06

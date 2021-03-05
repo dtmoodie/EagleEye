@@ -103,7 +103,7 @@ namespace dlib
             );
 
             // functions from the enumerable interface
-            inline unsigned long size (
+            inline size_t size (
             ) const;
 
             inline bool at_start (
@@ -134,7 +134,7 @@ namespace dlib
                 requires
                     - start points to a node in a singly linked list 
                     - start->last points to the next node in the list 
-                    - there are at least length nodes in the list begining with start
+                    - there are at least length nodes in the list beginning with start
                 ensures
                     - length nodes have been deleted starting with the node pointed 
                       to by start
@@ -184,7 +184,7 @@ namespace dlib
                 item.enqueue(temp);
             }
         }
-        catch (serialization_error e)
+        catch (serialization_error& e)
         { 
             item.clear();
             throw serialization_error(e.info + "\n   while deserializing object of type queue_kernel_1"); 
@@ -402,7 +402,7 @@ namespace dlib
         typename T,
         typename mem_manager
         >
-    unsigned long queue_kernel_1<T,mem_manager>::
+    size_t queue_kernel_1<T,mem_manager>::
     size (
     ) const
     {

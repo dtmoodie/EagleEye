@@ -1,6 +1,7 @@
 // Copyright (C) 2014  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
+#include "opaque_types.h"
 #include <dlib/python.h>
 #include <dlib/geometry.h>
 #include <dlib/image_processing.h>
@@ -14,17 +15,17 @@ namespace py = pybind11;
 
 void start_track (
     correlation_tracker& tracker,
-    py::object img,
+    py::array img,
     const drectangle& bounding_box
 )
 {
-    if (is_gray_python_image(img))
+    if (is_image<unsigned char>(img))
     {
-        tracker.start_track(numpy_gray_image(img), bounding_box);
+        tracker.start_track(numpy_image<unsigned char>(img), bounding_box);
     }
-    else if (is_rgb_python_image(img))
+    else if (is_image<rgb_pixel>(img))
     {
-        tracker.start_track(numpy_rgb_image(img), bounding_box);
+        tracker.start_track(numpy_image<rgb_pixel>(img), bounding_box);
     }
     else
     {
@@ -34,7 +35,7 @@ void start_track (
 
 void start_track_rec (
     correlation_tracker& tracker,
-    py::object img,
+    py::array img,
     const rectangle& bounding_box
 )
 {
@@ -44,16 +45,16 @@ void start_track_rec (
 
 double update (
     correlation_tracker& tracker,
-    py::object img
+    py::array img
 )
 {
-    if (is_gray_python_image(img))
+    if (is_image<unsigned char>(img))
     {
-        return tracker.update(numpy_gray_image(img));
+        return tracker.update(numpy_image<unsigned char>(img));
     }
-    else if (is_rgb_python_image(img))
+    else if (is_image<rgb_pixel>(img))
     {
-        return tracker.update(numpy_rgb_image(img));
+        return tracker.update(numpy_image<rgb_pixel>(img));
     }
     else
     {
@@ -63,17 +64,17 @@ double update (
 
 double update_guess (
     correlation_tracker& tracker,
-    py::object img,
+    py::array img,
     const drectangle& bounding_box
 )
 {
-    if (is_gray_python_image(img))
+    if (is_image<unsigned char>(img))
     {
-        return tracker.update(numpy_gray_image(img), bounding_box);
+        return tracker.update(numpy_image<unsigned char>(img), bounding_box);
     }
-    else if (is_rgb_python_image(img))
+    else if (is_image<rgb_pixel>(img))
     {
-        return tracker.update(numpy_rgb_image(img), bounding_box);
+        return tracker.update(numpy_image<rgb_pixel>(img), bounding_box);
     }
     else
     {
@@ -83,7 +84,7 @@ double update_guess (
 
 double update_guess_rec (
     correlation_tracker& tracker,
-    py::object img,
+    py::array img,
     const rectangle& bounding_box
 )
 {

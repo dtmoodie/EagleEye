@@ -10,6 +10,7 @@
 #include <dlib/dir_nav.h>
 #include <dlib/clustering.h>
 #include <dlib/svm.h>
+#include <dlib/statistics.h>
 
 // ----------------------------------------------------------------------------------------
 
@@ -40,19 +41,13 @@ std::vector<assignment> angular_cluster (
     }
 
     // find the centroid of feats
-    matrix<double,0,1> m;
-    for (unsigned long i = 0; i < feats.size(); ++i)
-        m += feats[i];
-    m /= feats.size();
+    const matrix<double,0,1> m = mean(mat(feats));
 
     // Now center feats and then project onto the unit sphere.  The reason for projecting
     // onto the unit sphere is so pick_initial_centers() works in a sensible way.
-    for (unsigned long i = 0; i < feats.size(); ++i)
+    for (auto& f : feats) 
     {
-        feats[i] -= m;
-        double len = length(feats[i]);
-        if (len != 0)
-            feats[i] /= len;
+        f = normalize(f-m);
     }
 
     // now do angular clustering of the points
@@ -67,6 +62,59 @@ std::vector<assignment> angular_cluster (
         assignment temp;
         temp.c = nearest_center(centers, feats[i]);
         temp.dist = length(feats[i] - centers[temp.c]);
+        temp.idx = i;
+        assignments.push_back(temp);
+    }
+    return assignments;
+}
+std::vector<assignment> chinese_cluster (
+    std::vector<matrix<double,0,1> > feats,
+    unsigned long &num_clusters
+    )
+{
+    DLIB_CASSERT(feats.size() != 0, "The dataset can't be empty");
+    for (unsigned long i = 0; i < feats.size(); ++i)
+    {
+        DLIB_CASSERT(feats[i].size() == feats[0].size(), "All feature vectors must have the same length.");
+    }
+
+    // Try to find a good value to select if we should add a vertex in the graph.  First we
+    // normalize the features.
+    const matrix<double,0,1> m = mean(mat(feats));
+
+    for (auto& f : feats) 
+    {
+        f = normalize(f-m);
+    }
+
+    // Then we find the average distance between them, that average will be a good threshold to
+    // decide if pairs are connected.
+    running_stats<double> rs;
+    for (size_t i = 0; i < feats.size(); ++i) {
+        for (size_t j = i; j < feats.size(); ++j) {
+            rs.add(length(feats[i] - feats[j]));
+        }
+    }
+
+    // add vertices for chinese whispers to find clusters
+    std::vector<sample_pair> edges;
+    for (size_t i = 0; i < feats.size(); ++i) {
+        for (size_t j = i; j < feats.size(); ++j) {
+            if (length(feats[i] - feats[j]) < rs.mean()) {
+                edges.push_back(sample_pair(i, j, length(feats[i] - feats[j])));
+            }
+        }
+    }
+
+    std::vector<unsigned long> labels;
+    num_clusters = chinese_whispers(edges, labels);
+
+    std::vector<assignment> assignments;
+    for (unsigned long i = 0; i < feats.size(); ++i)
+    {
+        assignment temp;
+        temp.c = labels[i];
+        temp.dist = length(feats[i]);
         temp.idx = i;
         assignments.push_back(temp);
     }
@@ -134,7 +182,7 @@ int cluster_dataset(
         return EXIT_FAILURE;
     }
 
-    const unsigned long num_clusters = get_option(parser, "cluster", 2);
+    unsigned long num_clusters = get_option(parser, "cluster", 0);
     const unsigned long chip_size = get_option(parser, "size", 8000);
 
     image_dataset_metadata::dataset data;
@@ -177,7 +225,12 @@ int cluster_dataset(
     }
 
     cout << "\nClustering objects..." << endl;
-    std::vector<assignment> assignments = angular_cluster(feats, num_clusters);
+    std::vector<assignment> assignments;
+    if (num_clusters) {
+        assignments = angular_cluster(feats, num_clusters);
+    } else {
+        assignments = chinese_cluster(feats, num_clusters);
+    }
 
 
     // Now output each cluster to disk as an XML file.

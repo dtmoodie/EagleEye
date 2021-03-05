@@ -15,16 +15,19 @@ To package the wheel (after pip installing twine and wheel):
 To upload the binary wheel to PyPi
     twine upload dist/*.whl
 To upload the source distribution to PyPi
-    python setup.py sdist upload
-To exclude/include certain options in the cmake config use --yes and --no:
+    python setup.py sdist 
+    twine upload dist/dlib-*.tar.gz
+To exclude certain options in the cmake config use --no:
     for example:
-    --yes USE_AVX_INSTRUCTIONS: will set -DUSE_AVX_INSTRUCTIONS=yes
     --no USE_AVX_INSTRUCTIONS: will set -DUSE_AVX_INSTRUCTIONS=no
 Additional options:
-    --compiler-flags: pass flags onto the compiler, e.g. --compiler-flag "-Os -Wall" passes -Os -Wall onto GCC.
+    --compiler-flags: pass flags onto the compiler, e.g. --compiler-flags "-Os -Wall" passes -Os -Wall onto GCC.
+    -G: Set the CMake generator.  E.g. -G "Visual Studio 14 2015"
     --clean: delete any previous build folders and rebuild.  You should do this if you change any build options
-             by setting --compiler-flags or --yes or --no since last time you ran a build to make sure the changes
-             take effect.
+             by setting --compiler-flags or --no since the last time you ran a build.  This will
+             ensure the changes take effect.
+    --set: set arbitrary cmake options e.g. --set CUDA_HOST_COMPILER=/usr/bin/gcc-6.4.0
+           passes -DCUDA_HOST_COMPILER=/usr/bin/gcc-6.4.0 to CMake.
 """
 import os
 import re
@@ -42,7 +45,7 @@ from distutils.version import LooseVersion
 
 
 def get_extra_cmake_options():
-    """read --clean, --yes, --no, and --compiler-flag options from the command line and add them as cmake switches.
+    """read --clean, --no, --set, --compiler-flags, and -G options from the command line and add them as cmake switches.
     """
     _cmake_extra_options = []
     _clean_build_folder = False
@@ -51,13 +54,15 @@ def get_extra_cmake_options():
 
     argv = [arg for arg in sys.argv]  # take a copy
     # parse command line options and consume those we care about
-    for opt_idx, arg in enumerate(argv):
+    for arg in argv:
         if opt_key == 'compiler-flags':
             _cmake_extra_options.append('-DCMAKE_CXX_FLAGS={arg}'.format(arg=arg.strip()))
-        elif opt_key == 'yes':
-            _cmake_extra_options.append('-D{arg}=yes'.format(arg=arg.strip()))
+        elif opt_key == 'G':
+            _cmake_extra_options += ['-G', arg.strip()]
         elif opt_key == 'no':
             _cmake_extra_options.append('-D{arg}=no'.format(arg=arg.strip()))
+        elif opt_key == 'set':
+            _cmake_extra_options.append('-D{arg}'.format(arg=arg.strip()))
 
         if opt_key:
             sys.argv.remove(arg)
@@ -69,8 +74,16 @@ def get_extra_cmake_options():
             sys.argv.remove(arg)
             continue
 
-        if arg in ['--yes', '--no', '--compiler-flags']:
+        if arg == '--yes':
+            print("The --yes options to dlib's setup.py don't do anything since all these options ")
+            print("are on by default.  So --yes has been removed.  Do not give it to setup.py.")
+            sys.exit(1)
+        if arg in ['--no', '--set', '--compiler-flags']:
             opt_key = arg[2:].lower()
+            sys.argv.remove(arg)
+            continue
+        if arg in ['-G']:
+            opt_key = arg[1:]
             sys.argv.remove(arg)
             continue
 
@@ -106,13 +119,16 @@ class CMakeBuild(build_ext):
         try:
             out = subprocess.check_output(['cmake', '--version'])
         except OSError:
-            raise RuntimeError("CMake must be installed to build the following extensions: " +
-                               ", ".join(e.name for e in self.extensions))
+            raise RuntimeError("\n*******************************************************************\n" +
+                                  " CMake must be installed to build the following extensions: " +
+                               ", ".join(e.name for e in self.extensions) + 
+                               "\n*******************************************************************\n")
         return re.search(r'version\s*([\d.]+)', out.decode()).group(1)
 
     def run(self):
+        cmake_version = self.get_cmake_version()
         if platform.system() == "Windows":
-            if LooseVersion(self.get_cmake_version()) < '3.1.0':
+            if LooseVersion(cmake_version) < '3.1.0':
                 raise RuntimeError("CMake >= 3.1.0 is required on Windows")
 
         for ext in self.extensions:
@@ -133,11 +149,12 @@ class CMakeBuild(build_ext):
             cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
             if sys.maxsize > 2**32:
                 cmake_args += ['-A', 'x64']
-            build_args += ['--', '/m']
+            # Do a parallel build
+            build_args += ['--', '/m'] 
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             # Do a parallel build
-            build_args += ['--', '-j'+str(num_available_cpu_cores(4))]
+            build_args += ['--', '-j'+str(num_available_cpu_cores(2))]
 
         build_folder = os.path.abspath(self.build_temp)
 
@@ -149,9 +166,12 @@ class CMakeBuild(build_ext):
         cmake_setup = ['cmake', ext.sourcedir] + cmake_args
         cmake_build = ['cmake', '--build', '.'] + build_args
 
+        print("Building extension for Python {}".format(sys.version.split('\n',1)[0]))
         print("Invoking CMake setup: '{}'".format(' '.join(cmake_setup)))
+        sys.stdout.flush()
         subprocess.check_call(cmake_setup, cwd=build_folder)
         print("Invoking CMake build: '{}'".format(' '.join(cmake_build)))
+        sys.stdout.flush()
         subprocess.check_call(cmake_build, cwd=build_folder)
 
 def num_available_cpu_cores(ram_per_build_process_in_gb):
@@ -162,9 +182,8 @@ def num_available_cpu_cores(ram_per_build_process_in_gb):
     try:
         mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')  
         mem_gib = mem_bytes/(1024.**3)
-        # Assume hyperthreading so divide by 2
-        num_cores = int(ceil(multiprocessing.cpu_count()/2.0)) 
-        # Require 4gb of ram per build thread.
+        num_cores = multiprocessing.cpu_count() 
+        # make sure we have enough ram for each build process.
         mem_cores = int(floor(mem_gib/float(ram_per_build_process_in_gb)+0.5));
         # We are limited either by RAM or CPU cores.  So pick the limiting amount
         # and return that.
@@ -179,7 +198,7 @@ class PyTest(TestCommand):
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = ''
+        self.pytest_args = '--ignore docs --ignore dlib'
 
     def run_tests(self):
         import shlex
@@ -205,16 +224,19 @@ setup(
     name='dlib',
     version=read_version_from_cmakelists('dlib/CMakeLists.txt'),
     description='A toolkit for making real world machine learning and data analysis applications',
-    long_description=read_entire_file('README.md'),
+    long_description='See http://dlib.net for documentation.',
     author='Davis King',
     author_email='davis@dlib.net',
     url='https://github.com/davisking/dlib',
     license='Boost Software License',
-    ext_modules=[CMakeExtension('dlib','tools/python')],
+    ext_modules=[CMakeExtension('_dlib_pybind11','tools/python')],
     cmdclass=dict(build_ext=CMakeBuild, test=PyTest),
     zip_safe=False,
-    tests_require=['pytest'],
+    # We need an older more-itertools version because v6 broke pytest (for everyone, not just dlib)
+    tests_require=['pytest==3.8', 'more-itertools<6.0.0'],
+    #install_requires=['cmake'], # removed because the pip cmake package is busted, maybe someday it will be usable.
     packages=['dlib'],
+    package_dir={'': 'tools/python'},
     keywords=['dlib', 'Computer Vision', 'Machine Learning'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -232,6 +254,8 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Image Recognition',

@@ -3,7 +3,7 @@
 #undef DLIB_DNn_LAYERS_ABSTRACT_H_
 #ifdef DLIB_DNn_LAYERS_ABSTRACT_H_
 
-#include "tensor_abstract.h"
+#include "../cuda/tensor_abstract.h"
 #include "core_abstract.h"
 
 
@@ -366,7 +366,7 @@ namespace dlib
             follows:
 
             ensures
-                - calling clean() Causes this object to forget about everything except its
+                - calling clean() causes this object to forget about everything except its
                   parameters.  This is useful if your layer caches information between
                   forward and backward passes and you want to clean out that cache
                   information before saving the network to disk.  
@@ -1191,7 +1191,7 @@ namespace dlib
                     - OUT.num_samples() == IN.num_samples()
                     - OUT.k()  == IN.k() 
                     - OUT.nr() == IN.nr()*scale_y
-                    - OUT.nc() == IN.nr()*scale_x
+                    - OUT.nc() == IN.nc()*scale_x
                     - for all valid i,k:  image_plane(OUT,i,k) is a copy of
                       image_plane(IN,i,k) that has been bilinearly interpolated to fit into
                       the shape of image_plane(OUT,i,k).
@@ -1224,6 +1224,62 @@ namespace dlib
         >
     using upsample = add_layer<upsample_<scale,scale>, SUBNET>;
 
+// ----------------------------------------------------------------------------------------
+
+    template <
+        long NR_, 
+        long NC_
+        >
+    class resize_to_
+    {
+        /*!
+            REQUIREMENTS ON THE INPUT ARGUMENTS
+                - NR_ >= 1
+                - NC_ >= 1
+
+            WHAT THIS OBJECT REPRESENTS
+                This is an implementation of the EXAMPLE_COMPUTATIONAL_LAYER_ interface
+                defined above.  In particular, it allows you to resize a layer using
+                bilinear interpolation.  To be very specific, it resizes each of the
+                channels in an input tensor.  Therefore, if IN is the input tensor to this
+                layer and OUT the output tensor, then we will have:
+                    - OUT.num_samples() == IN.num_samples()
+                    - OUT.k()  == IN.k() 
+                    - OUT.nr() == NR_
+                    - OUT.nc() == NC_
+                    - for all valid i,k:  image_plane(OUT,i,k) is a copy of
+                      image_plane(IN,i,k) that has been bilinearly interpolated to fit into
+                      the shape of image_plane(OUT,i,k).
+        !*/
+    public:
+
+        resize_to_(
+        );
+        /*!
+            ensures
+                - This object has no state, so the constructor does nothing, aside from
+                  providing default constructability.
+        !*/
+
+        template <typename SUBNET> void setup (const SUBNET& sub);
+        template <typename SUBNET> void forward(const SUBNET& sub, resizable_tensor& output);
+        template <typename SUBNET> void backward(const tensor& gradient_input, SUBNET& sub, tensor& params_grad);
+        dpoint map_input_to_output(dpoint p) const;
+        dpoint map_output_to_input(dpoint p) const;
+        const tensor& get_layer_params() const; 
+        tensor& get_layer_params(); 
+        /*!
+            These functions are implemented as described in the EXAMPLE_COMPUTATIONAL_LAYER_ interface.
+        !*/
+    };
+
+    template <
+        long NR,
+        long NC,
+        typename SUBNET
+        >
+    using resize_to = add_layer<resize_to_<NR,NC>, SUBNET>;
+    
 // ----------------------------------------------------------------------------------------
 
     class dropout_
@@ -1575,7 +1631,7 @@ namespace dlib
                 where all operations are performed element wise and each sample in the
                 INPUT tensor is processed separately.
 
-                Moreover, this object has two modes that effect the dimensionalities of A
+                Moreover, this object has two modes that affect the dimensionalities of A
                 and B and how they are applied to compute A*INPUT+B.  If
                 get_mode()==FC_MODE then A and B each have the same dimensionality as the
                 input tensor, except their num_samples() dimensions are 1.  If
@@ -2036,6 +2092,57 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    class leaky_relu_
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This is an implementation of the EXAMPLE_COMPUTATIONAL_LAYER_ interface
+                defined above.  In particular, it defines a leaky rectified linear
+                layer.  Therefore, it passes its inputs through the function
+                    f(x) = x>0 ? x : alpha*x
+                where f() is applied pointwise across the input tensor and alpha is a
+                non-learned scalar.
+
+                This is the layer type introduced in the paper:
+                    A. L. Maas, A. Y. Hannun, and A. Y. Ng. "Rectifier nonlinearities improve
+                    neural network acoustic models". In ICML, 2013.
+        !*/
+
+    public:
+        explicit leaky_relu_(
+            float alpha = 0.01f
+        );
+        /*!
+            ensures
+                - the alpha parameter will be initialized with the alpha value
+        !*/
+
+        float get_alpha(
+        ) const;
+        /*!
+            ensures
+                - returns the alpha parameter of the leaky_relu
+        !*/
+
+        template <typename SUBNET> void setup(const SUBNET& sub);
+        void forward_inplace(const tensor& input, tensor& output);
+        void backward_inplace(const tensor& computed_output, const tensor& gradient_input, tensor& data_grad, tensor& params_grad);
+        dpoint map_input_to_output(dpoint p) const;
+        dpoint map_output_to_input(dpoint p) const;
+        const tensor& get_layer_params() const;
+        tensor& get_layer_params();
+        /*!
+            These functions are implemented as described in the EXAMPLE_COMPUTATIONAL_LAYER_
+            interface.  Note that this layer doesn't have any parameters, so the tensor
+            returned by get_layer_params() is always empty.
+        !*/
+    };
+
+    template <typename SUBNET>
+    using leaky_relu = add_layer<prelu_, SUBNET>;
+
+// ----------------------------------------------------------------------------------------
+
     class sig_
     {
         /*!
@@ -2068,6 +2175,41 @@ namespace dlib
 
     template <typename SUBNET>
     using sig = add_layer<sig_, SUBNET>;
+
+// ----------------------------------------------------------------------------------------
+
+    class mish_
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This is an implementation of the EXAMPLE_COMPUTATIONAL_LAYER_ interface
+                defined above.  In particular, it defines a mish layer.  Therefore, it
+                passes its inputs through the function
+                    f(x)= x*tanh(log(1+exp(x)))
+                where f() is applied pointwise across the input tensor.
+        !*/
+
+    public:
+
+        mish_(
+        );
+
+        template <typename SUBNET> void setup (const SUBNET& sub);
+        template <typename SUBNET> void forward(const SUBNET& sub, resizable_tensor& data_output);
+        template <typename SUBNET> void backward(const tensor& gradient_input, SUBNET& sub, tensor&);
+        dpoint map_input_to_output(dpoint p) const;
+        dpoint map_output_to_input(dpoint p) const;
+        const tensor& get_layer_params() const;
+        tensor& get_layer_params();
+        /*!
+            These functions are implemented as described in the EXAMPLE_COMPUTATIONAL_LAYER_
+            interface.  Note that this layer doesn't have any parameters, so the tensor
+            returned by get_layer_params() is always empty.
+        !*/
+    };
+
+    template <typename SUBNET>
+    using mish = add_layer<mish_, SUBNET>;
 
 // ----------------------------------------------------------------------------------------
 
@@ -2325,6 +2467,126 @@ namespace dlib
     using mult_prev8_  = mult_prev_<tag8>;
     using mult_prev9_  = mult_prev_<tag9>;
     using mult_prev10_ = mult_prev_<tag10>;
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        template<typename> class tag
+        >
+    class resize_prev_to_tagged_
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This is an implementation of the EXAMPLE_COMPUTATIONAL_LAYER_ interface
+                defined above.  This layer resizes the output channels of the previous layer
+                to have the same number of rows and columns as the output of the tagged layer.
+
+                This layer uses bilinear interpolation. If the sizes match already, then it
+                simply copies the data.
+
+                Therefore, you supply a tag via resize_prev_to_tagged's template argument that
+                tells it what layer to use for the target size.
+
+                If tensor PREV is resized to size of tensor TAGGED, then a tensor OUT is
+                produced such that:
+                    - OUT.num_samples() == PREV.num_samples()
+                    - OUT.k()  == PREV.k()
+                    - OUT.nr() == TAGGED.nr()
+                    - OUT.nc() == TAGGED.nc()
+        !*/
+
+    public:
+        resize_prev_to_tagged_(
+        ); 
+
+        template <typename SUBNET> void setup(const SUBNET& sub);
+        template <typename SUBNET> void forward(const SUBNET& sub, resizable_tensor& output);
+        template <typename SUBNET> void backward(const tensor& gradient_input, SUBNET& sub, tensor& params_grad);
+        dpoint map_input_to_output(dpoint p) const;
+        dpoint map_output_to_input(dpoint p) const;
+        const tensor& get_layer_params() const; 
+        tensor& get_layer_params(); 
+        /*!
+            These functions are implemented as described in the EXAMPLE_COMPUTATIONAL_LAYER_ interface.
+        !*/
+    };
+
+
+    template <
+        template<typename> class tag,
+        typename SUBNET
+        >
+    using resize_prev_to_tagged = add_layer<resize_prev_to_tagged_<tag>, SUBNET>;
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        template<typename> class tag
+        >
+    class scale_
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This is an implementation of the EXAMPLE_COMPUTATIONAL_LAYER_ interface
+                defined above.  This layer scales the output channels of the tagged layer
+                by multiplying it with the output of the previous layer.  To be specific:
+                    - Let INPUT  == layer<tag>(sub).get_output()
+                    - Let SCALES == sub.get_output()
+                    - This layer takes INPUT and SCALES as input.
+                    - The output of this layer has the same dimensions as INPUT.
+                    - This layer requires:
+                        - SCALES.num_samples() == INPUT.num_samples()
+                        - SCALES.k()  == INPUT.k()
+                        - SCALES.nr() == 1
+                        - SCALES.nc() == 1
+                    - The output tensor is produced by pointwise multiplying SCALES with
+                      INPUT at each spatial location.  Therefore, if OUT is the output of
+                      this layer then we would have:
+                        OUT(n,k,r,c) == INPUT(n,k,r,c)*SCALES(n,k)
+        !*/
+
+    public:
+        scale_(
+        ); 
+
+        template <typename SUBNET> void setup (const SUBNET& sub);
+        template <typename SUBNET> void forward(const SUBNET& sub, resizable_tensor& output);
+        template <typename SUBNET> void backward(const tensor& gradient_input, SUBNET& sub, tensor& params_grad);
+        const tensor& get_layer_params() const; 
+        tensor& get_layer_params(); 
+        /*!
+            These functions are implemented as described in the EXAMPLE_COMPUTATIONAL_LAYER_ interface.
+        !*/
+    };
+
+
+    template <
+        template<typename> class tag,
+        typename SUBNET
+        >
+    using scale = add_layer<scale_<tag>, SUBNET>;
+
+    // Here we add some convenient aliases for using scale_ with the tag layers. 
+    template <typename SUBNET> using scale1  = scale<tag1, SUBNET>;
+    template <typename SUBNET> using scale2  = scale<tag2, SUBNET>;
+    template <typename SUBNET> using scale3  = scale<tag3, SUBNET>;
+    template <typename SUBNET> using scale4  = scale<tag4, SUBNET>;
+    template <typename SUBNET> using scale5  = scale<tag5, SUBNET>;
+    template <typename SUBNET> using scale6  = scale<tag6, SUBNET>;
+    template <typename SUBNET> using scale7  = scale<tag7, SUBNET>;
+    template <typename SUBNET> using scale8  = scale<tag8, SUBNET>;
+    template <typename SUBNET> using scale9  = scale<tag9, SUBNET>;
+    template <typename SUBNET> using scale10 = scale<tag10, SUBNET>;
+    using scale1_  = scale_<tag1>;
+    using scale2_  = scale_<tag2>;
+    using scale3_  = scale_<tag3>;
+    using scale4_  = scale_<tag4>;
+    using scale5_  = scale_<tag5>;
+    using scale6_  = scale_<tag6>;
+    using scale7_  = scale_<tag7>;
+    using scale8_  = scale_<tag8>;
+    using scale9_  = scale_<tag9>;
+    using scale10_ = scale_<tag10>;
 
 // ----------------------------------------------------------------------------------------
 

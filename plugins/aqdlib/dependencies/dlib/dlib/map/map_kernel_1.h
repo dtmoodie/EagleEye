@@ -91,7 +91,7 @@ namespace dlib
             );
 
             // functions from the enumerable interface
-            inline unsigned long size (
+            inline size_t size (
             ) const;
 
             inline bool at_start (
@@ -160,7 +160,7 @@ namespace dlib
                 item.add(d,r);
             }
         }
-        catch (serialization_error e)
+        catch (serialization_error& e)
         { 
             item.clear();
             throw serialization_error(e.info + "\n   while deserializing object of type map_kernel_1"); 
@@ -311,7 +311,7 @@ namespace dlib
         typename bst_base,
         typename mem_manager
         >
-    unsigned long map_kernel_1<domain,range,bst_base,mem_manager>::
+    size_t map_kernel_1<domain,range,bst_base,mem_manager>::
     size (
     ) const
     {

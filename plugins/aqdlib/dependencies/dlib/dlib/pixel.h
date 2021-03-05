@@ -105,7 +105,6 @@ namespace dlib
     !*/
 
 // ----------------------------------------------------------------------------------------
-    struct bgr_pixel;
 
     struct rgb_pixel
     {
@@ -123,11 +122,22 @@ namespace dlib
             unsigned char blue_
         ) : red(red_), green(green_), blue(blue_) {}
 
-        inline rgb_pixel(const bgr_pixel& pixel); //:red(pixel.red), green(pixel.green) blue(pixel.blue){}
-
         unsigned char red;
         unsigned char green;
         unsigned char blue;
+
+        bool operator == (const rgb_pixel& that) const
+        {
+            return this->red   == that.red
+                && this->green == that.green
+                && this->blue  == that.blue;
+        }
+
+        bool operator != (const rgb_pixel& that) const
+        {
+            return !(*this == that);
+        }
+
     };
 
 // ----------------------------------------------------------------------------------------
@@ -154,9 +164,20 @@ namespace dlib
         unsigned char blue;
         unsigned char green;
         unsigned char red;
-    };
 
-    rgb_pixel::rgb_pixel(const bgr_pixel& pixel):red(pixel.red), green(pixel.green), blue(pixel.blue){}
+        bool operator == (const bgr_pixel& that) const
+        {
+            return this->blue  == that.blue
+                && this->green == that.green
+                && this->red   == that.red;
+        }
+
+        bool operator != (const bgr_pixel& that) const
+        {
+            return !(*this == that);
+        }
+
+    };
 
 // ----------------------------------------------------------------------------------------
 
@@ -182,6 +203,20 @@ namespace dlib
         unsigned char green;
         unsigned char blue;
         unsigned char alpha;
+
+        bool operator == (const rgb_alpha_pixel& that) const
+        {
+            return this->red   == that.red
+                && this->green == that.green
+                && this->blue  == that.blue
+                && this->alpha == that.alpha;
+        }
+
+        bool operator != (const rgb_alpha_pixel& that) const
+        {
+            return !(*this == that);
+        }
+
     };
 
 // ----------------------------------------------------------------------------------------
@@ -205,7 +240,21 @@ namespace dlib
         unsigned char h;
         unsigned char s;
         unsigned char i;
+
+        bool operator == (const hsi_pixel& that) const
+        {
+            return this->h == that.h
+                && this->s == that.s
+                && this->i == that.i;
+        }
+
+        bool operator != (const hsi_pixel& that) const
+        {
+            return !(*this == that);
+        }
+
     };
+
     // ----------------------------------------------------------------------------------------
 
     struct lab_pixel
@@ -227,7 +276,20 @@ namespace dlib
         unsigned char l;
         unsigned char a;
         unsigned char b;
-    };
+
+        bool operator == (const lab_pixel& that) const
+        {
+            return this->l == that.l
+                && this->a == that.a
+                && this->b == that.b;
+        }
+
+        bool operator != (const lab_pixel& that) const
+        {
+            return !(*this == that);
+        }
+
+    };    
 
 // ----------------------------------------------------------------------------------------
 

@@ -2,8 +2,29 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 if (POLICY CMP0054)
-    cmake_policy(SET CMP0054 NEW)
+   cmake_policy(SET CMP0054 NEW)
 endif()
+
+
+
+# Check if we are being built as part of a pybind11 module. 
+if (COMMAND pybind11_add_module)
+   # For python users, enable SSE4 and AVX if they have these instructions.
+   include(${CMAKE_CURRENT_LIST_DIR}/check_if_sse4_instructions_executable_on_host.cmake)
+   if (SSE4_IS_AVAILABLE_ON_HOST)
+      set(USE_SSE4_INSTRUCTIONS ON CACHE BOOL "Compile your program with SSE4 instructions")
+   endif()
+   include(${CMAKE_CURRENT_LIST_DIR}/check_if_avx_instructions_executable_on_host.cmake)
+   if (AVX_IS_AVAILABLE_ON_HOST)
+      set(USE_AVX_INSTRUCTIONS ON CACHE BOOL "Compile your program with AVX instructions")
+   endif()
+   include(${CMAKE_CURRENT_LIST_DIR}/check_if_neon_available.cmake)
+   if (ARM_NEON_IS_AVAILABLE)
+      set(USE_NEON_INSTRUCTIONS ON CACHE BOOL "Compile your program with ARM-NEON instructions")
+   endif()
+endif()
+
+
 
 set(USING_OLD_VISUAL_STUDIO_COMPILER 0)
 if(MSVC AND MSVC_VERSION VERSION_LESS 1900)
@@ -121,6 +142,11 @@ if (MSVC)
    # them.  So this flag enables > 65k sections, but produces .obj files
    # that will not be readable by VS 2005.
    list(APPEND active_compile_opts "/bigobj")
+
+   # Build dlib with all cores.  Don't propagate the setting to client programs
+   # though since they might compile large translation units that use too much
+   # RAM.
+   list(APPEND active_compile_opts_private "/MP")
 
    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.3) 
       # Clang can compile all Dlib's code at Windows platform. Tested with Clang 5

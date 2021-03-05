@@ -15,28 +15,6 @@
 
 #include "tester.h"
 
-namespace dlib
-{
-    static bool operator!=(const rgb_pixel& a, const rgb_pixel& b)
-    {
-        return !(a.red==b.red && a.green==b.green && a.blue==b.blue);
-    }
-    static bool operator!=(const bgr_pixel& a, const bgr_pixel& b)
-    {
-        return !(a.red==b.red && a.green==b.green && a.blue==b.blue);
-    }
-
-    static bool operator!=(const hsi_pixel& a, const hsi_pixel& b)
-    {
-        return !(a.h==b.h && a.s==b.s && a.i==b.i);
-    }
-    static bool operator!=(const rgb_alpha_pixel& a, const rgb_alpha_pixel& b)
-    {
-        return !(a.red==b.red && a.green==b.green && a.blue==b.blue && a.alpha==b.alpha);
-    }
-
-}
-
 namespace  
 {
 
@@ -1020,6 +998,34 @@ namespace
         DLIB_TEST(buf2[3] == 0);
         DLIB_TEST(buf2[4] == 3);
         DLIB_TEST(buf2[5] == 3);
+
+
+
+        // make sure ramdump() overloads compile and work.
+        {
+            matrix<double,2,2> a = {1,2,3,4};
+            const matrix<double,2,2> b = {3,2,3,4};
+            dlib::serialize("ramdump_mat.dat") << ramdump(a) << ramdump(b);
+            matrix<double,2,2> A, B;
+            dlib::deserialize("ramdump_mat.dat") >> ramdump(A) >> ramdump(B);
+
+            DLIB_TEST(A == a);
+            DLIB_TEST(B == b);
+            A = 0;
+            B = 0;
+            DLIB_TEST(A != a);
+            DLIB_TEST(B != b);
+
+            ostringstream sout;
+            dlib::serialize(ramdump(a), sout);
+            dlib::serialize(ramdump(b), sout);
+            istringstream sin(sout.str());
+            dlib::deserialize(ramdump(A), sin);
+            dlib::deserialize(ramdump(B), sin);
+
+            DLIB_TEST(A == a);
+            DLIB_TEST(B == b);
+        }
     }
 
 // ----------------------------------------------------------------------------------------

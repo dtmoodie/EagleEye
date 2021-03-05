@@ -168,7 +168,7 @@ namespace dlib
             );
 
             // functions from the enumerable interface
-            inline unsigned long size (
+            inline size_t size (
             ) const;
 
             bool at_start (
@@ -534,7 +534,7 @@ namespace dlib
                 item.add(d,r);
             }
         }
-        catch (serialization_error e)
+        catch (serialization_error& e)
         { 
             item.clear();
             throw serialization_error(e.info + "\n   while deserializing object of type binary_search_tree_kernel_1"); 
@@ -597,7 +597,7 @@ namespace dlib
         typename mem_manager,
         typename compare
         >   
-    unsigned long binary_search_tree_kernel_1<domain,range,mem_manager,compare>::
+    size_t binary_search_tree_kernel_1<domain,range,mem_manager,compare>::
     size (
     ) const
     {

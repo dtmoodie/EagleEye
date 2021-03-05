@@ -225,7 +225,7 @@ namespace dlib
                     // Suppose we want to find which of these functions, F() and G(), have
                     // the largest output and what input is necessary to produce the
                     // maximal output.
-                    auto F = [](double a, double b) { return  -std::pow(a-2,2.0) - std::pow(a-4,2.0); };
+                    auto F = [](double a, double b) { return  -std::pow(a-2,2.0) - std::pow(b-4,2.0); };
                     auto G = [](double x)           { return 2-std::pow(x-5,2.0); };
 
                     // We first define function_spec objects that specify bounds on the
@@ -295,7 +295,12 @@ namespace dlib
                 for processing.  Those separate threads can run the functions being
                 optimized (e.g. F and G or whatever) and report back by calling
                 function_evaluation_request::set().  You could even spread the work across
-                a compute cluster if you have one.
+                a compute cluster if you have one.  Note that find_max_global() optionally
+                supports this type of parallel execution, however you get more flexibility
+                with the global_function_search's API.  As another example, it's possible
+                to save the state of the solver to disk so you can restart the optimization
+                from that point at a later date when using global_function_search, but not
+                with find_max_global().
 
                 So what happens if you have N outstanding function evaluation requests?
                 Or in other words, what happens if you called get_next_x() N times and

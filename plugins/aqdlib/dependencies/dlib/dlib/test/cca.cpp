@@ -108,7 +108,7 @@ namespace
 
         matrix<double> L = randm(m,rank, rnd)*randm(rank,n, rnd);
         //matrix<double> R = randm(m,rank, rnd)*randm(rank,n2, rnd);
-        matrix<double> R = L*randm(n,n2);
+        matrix<double> R = L*randm(n,n2, rnd);
         //matrix<double> L = randm(m,n, rnd);
         //matrix<double> R = randm(m,n2, rnd);
 
@@ -126,7 +126,7 @@ namespace
 
             const double trans_error = max(abs(L*Ltrans - R*Rtrans));
             dlog << LINFO << "trans_error: "<< trans_error;
-            DLIB_TEST(trans_error < 1e-9);
+            DLIB_TEST_MSG(trans_error < 1e-9, trans_error);
         }
         {
             correlations = cca(mat_to_sparse(L), mat_to_sparse(R), Ltrans, Rtrans, min(m,n), max(n,n2)+6, 4);
@@ -237,7 +237,7 @@ namespace
                 // non-matching pairs of projections.
                 const double corr_rot1_error = max(abs(compute_correlations(rm_zeros(L*rotate<0,1>(Ltrans)), rm_zeros(R*Rtrans))));
                 dlog << LINFO << "corr_rot1_error: "<< corr_rot1_error;
-                DLIB_TEST(std::abs(corr_rot1_error) < 2e-9);
+                DLIB_TEST(std::abs(corr_rot1_error) < 1e-7);
             }
             // Matching projection directions should be correlated with the amount of
             // correlation indicated by the return value of cca().
@@ -305,7 +305,7 @@ namespace
         DLIB_TEST(max(abs(trans(u)*u - identity_matrix<double>(u.nc()))) < 1e-13);
         DLIB_TEST(max(abs(trans(v)*v - identity_matrix<double>(u.nc()))) < 1e-13);
 
-        DLIB_TEST(max(abs(tmp(A - u*diagm(w)*trans(v)))) < 1e-13);
+        DLIB_TEST(max(abs(tmp(A - u*diagm(w)*trans(v)))) < 1e-11);
         svd_fast(mat_to_sparse(A), u, w, v, rank, 2);
         DLIB_TEST(u.nr() == m);
         DLIB_TEST(u.nc() == rank);
@@ -336,7 +336,7 @@ namespace
         DLIB_TEST(v.nc() == rank);
         DLIB_TEST(max(abs(trans(u)*u - identity_matrix<double>(u.nc()))) < 1e-13);
         DLIB_TEST(max(abs(trans(v)*v - identity_matrix<double>(u.nc()))) < 1e-13);
-        DLIB_TEST(max(abs(tmp(A - u*diagm(w)*trans(v)))) < 1e-10);
+        DLIB_TEST(max(abs(tmp(A - u*diagm(w)*trans(v)))) < 1e-9);
 
         svd_fast(A, u, w, v, rank+5, 0);
         DLIB_TEST(max(abs(trans(u)*u - identity_matrix<double>(u.nc()))) < 1e-13);

@@ -4,7 +4,7 @@
 #define DLIB_DNn_CORE_H_
 
 #include "core_abstract.h"
-#include "tensor.h"
+#include "../cuda/tensor.h"
 #include <iterator>
 #include <memory>
 #include <sstream>
@@ -16,7 +16,7 @@
 #include <tuple>
 #include <cmath>
 #include <vector>
-#include "tensor_tools.h"
+#include "../cuda/tensor_tools.h"
 #include <type_traits>
 #include "../metaprogramming.h"
 
@@ -47,6 +47,66 @@ namespace dlib
     template <typename T>
     double get_learning_rate_multiplier(const T& obj) { return impl::get_learning_rate_multiplier(obj, special_()); }
 
+    namespace impl
+    {
+        template <typename T, typename int_<decltype(&T::set_learning_rate_multiplier)>::type = 0>
+        void set_learning_rate_multiplier (
+            T& obj,
+            special_,
+            double learning_rate_multiplier
+        ) { obj.set_learning_rate_multiplier(learning_rate_multiplier); }
+
+        template <typename T>
+        void set_learning_rate_multiplier (T& , general_, double) { }
+    }
+    template <typename T>
+    void set_learning_rate_multiplier(
+        T& obj,
+        double learning_rate_multiplier
+    )
+    {
+        DLIB_CASSERT(learning_rate_multiplier >= 0);
+        impl::set_learning_rate_multiplier(obj, special_(), learning_rate_multiplier);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    namespace impl
+    {
+        template <typename T, typename int_<decltype(&T::get_bias_learning_rate_multiplier)>::type = 0>
+        double get_bias_learning_rate_multiplier (
+            const T& obj,
+            special_
+        ) { return obj.get_bias_learning_rate_multiplier(); }
+
+        template <typename T>
+        double get_bias_learning_rate_multiplier ( const T& , general_) { return 1; }
+    }
+    template <typename T>
+    double get_bias_learning_rate_multiplier(const T& obj) { return impl::get_bias_learning_rate_multiplier(obj, special_()); }
+
+    namespace impl
+    {
+        template <typename T, typename int_<decltype(&T::set_bias_learning_rate_multiplier)>::type = 0>
+        void set_bias_learning_rate_multiplier (
+            T& obj,
+            special_,
+            double bias_learning_rate_multiplier
+        ) { obj.set_bias_learning_rate_multiplier(bias_learning_rate_multiplier); }
+
+        template <typename T>
+        void set_bias_learning_rate_multiplier (T& , general_, double) { }
+    }
+    template <typename T>
+    void set_bias_learning_rate_multiplier(
+        T& obj,
+        double bias_learning_rate_multiplier
+    )
+    {
+        DLIB_CASSERT(bias_learning_rate_multiplier >= 0);
+        impl::set_bias_learning_rate_multiplier(obj, special_(), bias_learning_rate_multiplier);
+    }
+
 // ----------------------------------------------------------------------------------------
 
     namespace impl
@@ -62,6 +122,66 @@ namespace dlib
     }
     template <typename T>
     double get_weight_decay_multiplier(const T& obj) { return impl::get_weight_decay_multiplier(obj, special_()); }
+
+    namespace impl
+    {
+        template <typename T, typename int_<decltype(&T::set_weight_decay_multiplier)>::type = 0>
+        void set_weight_decay_multiplier (
+            T& obj,
+            special_,
+            double weight_decay_multiplier
+        ) { obj.set_weight_decay_multiplier(weight_decay_multiplier); }
+
+        template <typename T>
+        void set_weight_decay_multiplier (T& , general_, double) { }
+    }
+    template <typename T>
+    void set_weight_decay_multiplier(
+        T& obj,
+        double weight_decay_multiplier
+    )
+    {
+        DLIB_CASSERT(weight_decay_multiplier >= 0);
+        impl::set_weight_decay_multiplier(obj, special_(), weight_decay_multiplier);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    namespace impl
+    {
+        template <typename T, typename int_<decltype(&T::get_bias_weight_decay_multiplier)>::type = 0>
+        double get_bias_weight_decay_multiplier (
+            const T& obj,
+            special_
+        ) { return obj.get_bias_weight_decay_multiplier(); }
+
+        template <typename T>
+        double get_bias_weight_decay_multiplier ( const T& , general_) { return 1; }
+    }
+    template <typename T>
+    double get_bias_weight_decay_multiplier(const T& obj) { return impl::get_bias_weight_decay_multiplier(obj, special_()); }
+
+    namespace impl
+    {
+        template <typename T, typename int_<decltype(&T::set_bias_weight_decay_multiplier)>::type = 0>
+        void set_bias_weight_decay_multiplier (
+            T& obj,
+            special_,
+            double bias_weight_decay_multiplier
+        ) { obj.set_bias_weight_decay_multiplier(bias_weight_decay_multiplier); }
+
+        template <typename T>
+        void set_bias_weight_decay_multiplier (T& , general_, double) { }
+    }
+    template <typename T>
+    void set_bias_weight_decay_multiplier(
+        T& obj,
+        double bias_weight_decay_multiplier
+    )
+    {
+        DLIB_CASSERT(bias_weight_decay_multiplier >= 0);
+        impl::set_bias_weight_decay_multiplier(obj, special_(), bias_weight_decay_multiplier);
+    }
 
 // ----------------------------------------------------------------------------------------
 
@@ -880,6 +1000,12 @@ namespace dlib
             subnetwork->update_parameters(solvers.pop(), learning_rate);
         }
 
+        template <typename solver_type>
+        void update_parameters(std::vector<solver_type>& solvers, double learning_rate)
+        {
+            update_parameters(make_sstack(solvers), learning_rate);
+        }
+
         const tensor& get_parameter_gradient(
         ) const { return params_grad; }
 
@@ -1243,6 +1369,12 @@ namespace dlib
             }
         }
 
+        template <typename solver_type>
+        void update_parameters(std::vector<solver_type>& solvers, double learning_rate)
+        {
+            update_parameters(make_sstack(solvers), learning_rate);
+        }
+
         const tensor& get_parameter_gradient(
         ) const { return params_grad; }
 
@@ -1481,6 +1613,12 @@ namespace dlib
         void update_parameters(sstack<solver_type> solvers, double learning_rate)
         {
             subnetwork.update_parameters(solvers, learning_rate);
+        }
+
+        template <typename solver_type>
+        void update_parameters(std::vector<solver_type>& solvers, double learning_rate)
+        {
+            update_parameters(make_sstack(solvers), learning_rate);
         }
 
         const tensor& get_parameter_gradient(
@@ -1779,6 +1917,12 @@ namespace dlib
             subnetwork.update_parameters(solvers.pop(comp_layers_in_each_group*details.size()),learning_rate);
         }
 
+        template <typename solver_type>
+        void update_parameters(std::vector<solver_type>& solvers, double learning_rate)
+        {
+            update_parameters(make_sstack(solvers), learning_rate);
+        }
+
         const subnet_type& subnet() const { return subnetwork; }
         subnet_type& subnet() { return subnetwork; }
 
@@ -2007,6 +2151,12 @@ namespace dlib
         void update_parameters(sstack<solver_type> /*solvers*/, double /*learning_rate*/)
         {
             // nothing to do
+        }
+
+        template <typename solver_type>
+        void update_parameters(std::vector<solver_type>& solvers, double learning_rate)
+        {
+            update_parameters(make_sstack(solvers), learning_rate);
         }
 
         const subnet_type& subnet() const { return input_layer; }
@@ -2311,6 +2461,27 @@ namespace dlib
             return results;
         }
 
+        void back_propagate_error(const tensor& x)
+        {
+            subnet().back_propagate_error(x);
+        }
+
+        void back_propagate_error(const tensor& x, const tensor& gradient_input) 
+        {
+            subnet().back_propagate_error(x, gradient_input);
+        }
+
+        const tensor& get_final_data_gradient(
+        ) const 
+        { 
+            return subnet().get_final_data_gradient(); 
+        }
+
+        const tensor& forward(const tensor& x)
+        {
+            return subnet().forward(x);
+        }
+
         template <typename iterable_type>
         std::vector<output_label_type> operator() (
             const iterable_type& data,
@@ -2424,6 +2595,12 @@ namespace dlib
             subnetwork.update_parameters(solvers, learning_rate);
         }
 
+        template <typename solver_type>
+        void update_parameters(std::vector<solver_type>& solvers, double learning_rate)
+        {
+            update_parameters(make_sstack(solvers), learning_rate);
+        }
+
         const subnet_type& subnet() const { return subnetwork; }
         subnet_type& subnet() { return subnetwork; }
         const loss_details_type& loss_details() const { return loss; }
@@ -2507,6 +2684,9 @@ namespace dlib
         {
             static_assert(i < T::num_layers, "Call to layer() attempted to access non-existing layer in neural network.");
             static T& makeT();
+            // If you get error here mentioning lack of member "subnet" in "dlib::input<...>",
+            // then likely your "dlib::layer<...>" invocation wasn't able to find requested layer.
+            // This could happen for instance when trying to use skip layer for non-existing tag.
             using next_type = typename std::remove_reference<decltype(makeT().subnet())>::type;
             using type = typename layer_helper<i-1,next_type>::type;
             static type& layer(T& n)
@@ -2812,6 +2992,12 @@ namespace dlib
         void update_parameters(sstack<solver_type> solvers, double learning_rate)
         {
             subnetwork.update_parameters(solvers, learning_rate);
+        }
+
+        template <typename solver_type>
+        void update_parameters(std::vector<solver_type>& solvers, double learning_rate)
+        {
+            update_parameters(make_sstack(solvers), learning_rate);
         }
 
         const tensor& get_parameter_gradient(

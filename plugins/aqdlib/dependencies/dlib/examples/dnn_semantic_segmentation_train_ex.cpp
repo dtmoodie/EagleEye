@@ -41,7 +41,7 @@ struct training_sample
 
 // ----------------------------------------------------------------------------------------
 
-rectangle make_random_cropping_rect_resnet(
+rectangle make_random_cropping_rect(
     const matrix<rgb_pixel>& img,
     dlib::rand& rnd
 )
@@ -66,7 +66,7 @@ void randomly_crop_image (
     dlib::rand& rnd
 )
 {
-    const auto rect = make_random_cropping_rect_resnet(input_image, rnd);
+    const auto rect = make_random_cropping_rect(input_image, rnd);
 
     const chip_details chip_details(rect, chip_dims(227, 227));
 
@@ -91,107 +91,6 @@ void randomly_crop_image (
 
 // ----------------------------------------------------------------------------------------
 
-// The names of the input image and the associated RGB label image in the PASCAL VOC 2012
-// data set.
-struct image_info
-{
-    string image_filename;
-    string label_filename;
-};
-
-// Read the list of image files belonging to either the "train", "trainval", or "val" set
-// of the PASCAL VOC2012 data.
-std::vector<image_info> get_pascal_voc2012_listing(
-    const std::string& voc2012_folder,
-    const std::string& file = "train" // "train", "trainval", or "val"
-)
-{
-    std::ifstream in(voc2012_folder + "/ImageSets/Segmentation/" + file + ".txt");
-
-    std::vector<image_info> results;
-
-    while (in)
-    {
-        std::string basename;
-        in >> basename;
-
-        if (!basename.empty())
-        {
-            image_info image_info;
-            image_info.image_filename = voc2012_folder + "/JPEGImages/" + basename + ".jpg";
-            image_info.label_filename = voc2012_folder + "/SegmentationClass/" + basename + ".png";
-            results.push_back(image_info);
-        }
-    }
-
-    return results;
-}
-
-// Read the list of image files belong to the "train" set of the PASCAL VOC2012 data.
-std::vector<image_info> get_pascal_voc2012_train_listing(
-    const std::string& voc2012_folder
-)
-{
-    return get_pascal_voc2012_listing(voc2012_folder, "train");
-}
-
-// Read the list of image files belong to the "val" set of the PASCAL VOC2012 data.
-std::vector<image_info> get_pascal_voc2012_val_listing(
-    const std::string& voc2012_folder
-)
-{
-    return get_pascal_voc2012_listing(voc2012_folder, "val");
-}
-
-// ----------------------------------------------------------------------------------------
-
-// The PASCAL VOC2012 dataset contains 20 ground-truth classes + background.  Each class
-// is represented using an RGB color value.  We associate each class also to an index in the
-// range [0, 20], used internally by the network.  To convert the ground-truth data to
-// something that the network can efficiently digest, we need to be able to map the RGB
-// values to the corresponding indexes.
-
-// Given an RGB representation, find the corresponding PASCAL VOC2012 class
-// (e.g., 'dog').
-const Voc2012class& find_voc2012_class(const dlib::rgb_pixel& rgb_label)
-{
-    return find_voc2012_class(
-        [&rgb_label](const Voc2012class& voc2012class)
-        {
-            return rgb_label == voc2012class.rgb_label;
-        }
-    );
-}
-
-// Convert an RGB class label to an index in the range [0, 20].
-inline uint16_t rgb_label_to_index_label(const dlib::rgb_pixel& rgb_label)
-{
-    return find_voc2012_class(rgb_label).index;
-}
-
-// Convert an image containing RGB class labels to a corresponding
-// image containing indexes in the range [0, 20].
-void rgb_label_image_to_index_label_image(
-    const dlib::matrix<dlib::rgb_pixel>& rgb_label_image,
-    dlib::matrix<uint16_t>& index_label_image
-)
-{
-    const long nr = rgb_label_image.nr();
-    const long nc = rgb_label_image.nc();
-
-    index_label_image.set_size(nr, nc);
-
-    for (long r = 0; r < nr; ++r)
-    {
-        for (long c = 0; c < nc; ++c)
-        {
-            index_label_image(r, c) = rgb_label_to_index_label(rgb_label_image(r, c));
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------------------
-
 // Calculate the per-pixel accuracy on a dataset whose file names are supplied as a parameter.
 double calculate_accuracy(anet_type& anet, const std::vector<image_info>& dataset)
 {
@@ -209,14 +108,14 @@ double calculate_accuracy(anet_type& anet, const std::vector<image_info>& datase
         load_image(input_image, image_info.image_filename);
 
         // Load the ground-truth (RGB) labels.
-        load_image(rgb_label_image, image_info.label_filename);
+        load_image(rgb_label_image, image_info.class_label_filename);
 
         // Create predictions for each pixel. At this point, the type of each prediction
         // is an index (a value between 0 and 20). Note that the net may return an image
         // that is not exactly the same size as the input.
         const matrix<uint16_t> temp = anet(input_image);
 
-        // Convert the indexes to RGB values.
+        // Convert the RGB values to indexes.
         rgb_label_image_to_index_label_image(rgb_label_image, index_label_image);
 
         // Crop the net output to be exactly the same size as the input.
@@ -259,12 +158,12 @@ double calculate_accuracy(anet_type& anet, const std::vector<image_info>& datase
 
 int main(int argc, char** argv) try
 {
-    if (argc != 2)
+    if (argc < 2 || argc > 3)
     {
         cout << "To run this program you need a copy of the PASCAL VOC2012 dataset." << endl;
         cout << endl;
         cout << "You call this program like this: " << endl;
-        cout << "./dnn_semantic_segmentation_train_ex /path/to/VOC2012" << endl;
+        cout << "./dnn_semantic_segmentation_train_ex /path/to/VOC2012 [minibatch-size]" << endl;
         return 1;
     }
 
@@ -277,14 +176,17 @@ int main(int argc, char** argv) try
         cout << "Didn't find the VOC2012 dataset. " << endl;
         return 1;
     }
-        
+
+    // a mini-batch smaller than the default can be used with GPUs having less memory
+    const unsigned int minibatch_size = argc == 3 ? std::stoi(argv[2]) : 23;
+    cout << "mini-batch size: " << minibatch_size << endl;
 
     const double initial_learning_rate = 0.1;
     const double weight_decay = 0.0001;
     const double momentum = 0.9;
 
-    net_type net;
-    dnn_trainer<net_type> trainer(net,sgd(weight_decay, momentum));
+    bnet_type bnet;
+    dnn_trainer<bnet_type> trainer(bnet,sgd(weight_decay, momentum));
     trainer.be_verbose();
     trainer.set_learning_rate(initial_learning_rate);
     trainer.set_synchronization_file("pascal_voc2012_trainer_state_file.dat", std::chrono::minutes(10));
@@ -292,7 +194,7 @@ int main(int argc, char** argv) try
     trainer.set_iterations_without_progress_threshold(5000);
     // Since the progress threshold is so large might as well set the batch normalization
     // stats window to something big too.
-    set_all_bn_running_stats_window_sizes(net, 1000);
+    set_all_bn_running_stats_window_sizes(bnet, 1000);
 
     // Output training parameters.
     cout << endl << trainer << endl;
@@ -321,9 +223,9 @@ int main(int argc, char** argv) try
             load_image(input_image, image_info.image_filename);
 
             // Load the ground-truth (RGB) labels.
-            load_image(rgb_label_image, image_info.label_filename);
+            load_image(rgb_label_image, image_info.class_label_filename);
 
-            // Convert the indexes to RGB values.
+            // Convert the RGB values to indexes.
             rgb_label_image_to_index_label_image(rgb_label_image, index_label_image);
 
             // Randomly pick a part of the image.
@@ -345,9 +247,9 @@ int main(int argc, char** argv) try
         samples.clear();
         labels.clear();
 
-        // make a 30-image mini-batch
+        // make a mini-batch
         training_sample temp;
-        while(samples.size() < 30)
+        while(samples.size() < minibatch_size)
         {
             data.dequeue(temp);
 
@@ -369,13 +271,13 @@ int main(int argc, char** argv) try
     // also wait for threaded processing to stop in the trainer.
     trainer.get_net();
 
-    net.clean();
+    bnet.clean();
     cout << "saving network" << endl;
-    serialize("semantic_segmentation_voc2012net.dnn") << net;
+    serialize(semantic_segmentation_net_filename) << bnet;
 
 
     // Make a copy of the network to use it for inference.
-    anet_type anet = net;
+    anet_type anet = bnet;
 
     cout << "Testing the network..." << endl;
 

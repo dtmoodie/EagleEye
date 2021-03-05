@@ -73,6 +73,7 @@ set (tests
    image.cpp
    iosockstream.cpp
    is_same_object.cpp
+   isotonic_regression.cpp
    kcentroid.cpp
    kernel_matrix.cpp
    kmeans.cpp
@@ -118,6 +119,7 @@ set (tests
    read_write_mutex.cpp
    reference_counter.cpp
    rls.cpp
+   random_forest.cpp
    sammon.cpp
    scan_image.cpp
    sequence.cpp
@@ -166,6 +168,9 @@ ADD_EXECUTABLE(${target_name} main.cpp tester.cpp ${tests})
 # Turn on all warnings when using gcc.
 if (CMAKE_COMPILER_IS_GNUCXX)
    add_definitions("-W -Wall")
+   # I don't care about unused testing functions though.  I like to keep them
+   # around.  Don't warn about it.
+   add_definitions("-Wno-unused-function")
 endif()
 
 

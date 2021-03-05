@@ -136,7 +136,7 @@ namespace dlib
             dpoint& p;
 
             template<typename input_layer_type>
-            void operator()(const input_layer_type& net) 
+            void operator()(const input_layer_type& ) 
             {
             }
 
@@ -196,7 +196,7 @@ namespace dlib
             dpoint& p;
 
             template<typename input_layer_type>
-            void operator()(const input_layer_type& net) 
+            void operator()(const input_layer_type& ) 
             {
             }
 
@@ -273,6 +273,87 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    namespace impl
+    {
+        class visitor_count_parameters
+        {
+        public:
+            visitor_count_parameters(size_t& num_parameters_) : num_parameters(num_parameters_) {}
+
+            void operator()(size_t, const tensor& t)
+            {
+                num_parameters += t.size();
+            }
+
+        private:
+            size_t& num_parameters;
+        };
+    }
+
+    template <typename net_type>
+    inline size_t count_parameters(
+        const net_type& net
+    )
+    {
+        size_t num_parameters = 0;
+        impl::visitor_count_parameters temp(num_parameters);
+        visit_layer_parameters(net, temp);
+        return num_parameters;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    namespace impl
+    {
+        class visitor_learning_rate_multiplier
+        {
+        public:
+            visitor_learning_rate_multiplier(double new_learning_rate_multiplier_) :
+                new_learning_rate_multiplier(new_learning_rate_multiplier_) {}
+
+            template <typename input_layer_type>
+            void operator()(size_t , input_layer_type& ) const
+            {
+                // ignore other layers
+            }
+
+            template <typename T, typename U, typename E>
+            void operator()(size_t , add_layer<T,U,E>& l) const
+            {
+                set_learning_rate_multiplier(l.layer_details(), new_learning_rate_multiplier);
+            }
+                
+        private:
+
+            double new_learning_rate_multiplier;
+        };
+    }
+
+    template <typename net_type>
+    void set_all_learning_rate_multipliers(
+        net_type& net,
+        double learning_rate_multiplier
+    )
+    {
+        DLIB_CASSERT(learning_rate_multiplier >= 0);
+        impl::visitor_learning_rate_multiplier temp(learning_rate_multiplier);
+        visit_layers(net, temp);
+    }
+
+    template <size_t begin, size_t end, typename net_type>
+    void set_learning_rate_multipliers_range(
+        net_type& net,
+        double learning_rate_multiplier
+    )
+    {
+        static_assert(begin <= end, "Invalid range");
+        static_assert(end <= net_type::num_layers, "Invalid range");
+        DLIB_CASSERT(learning_rate_multiplier >= 0);
+        impl::visitor_learning_rate_multiplier temp(learning_rate_multiplier);
+        visit_layers_range<begin, end>(net, temp);
+    }
+
+// ----------------------------------------------------------------------------------------
 }
 
 #endif // DLIB_DNn_UTILITIES_H_ 

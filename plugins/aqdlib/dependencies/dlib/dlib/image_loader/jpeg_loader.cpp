@@ -27,7 +27,7 @@ namespace dlib
     jpeg_loader::
     jpeg_loader( const char* filename ) : height_( 0 ), width_( 0 ), output_components_(0)
     {
-        read_image( filename );
+        read_image( check_file( filename ), NULL, 0L );
     }
 
 // ----------------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ namespace dlib
     jpeg_loader::
     jpeg_loader( const std::string& filename ) : height_( 0 ), width_( 0 ), output_components_(0)
     {
-        read_image( filename.c_str() );
+        read_image( check_file( filename.c_str() ), NULL, 0L );
     }
 
 // ----------------------------------------------------------------------------------------
@@ -43,7 +43,15 @@ namespace dlib
     jpeg_loader::
     jpeg_loader( const dlib::file& f ) : height_( 0 ), width_( 0 ), output_components_(0)
     {
-        read_image( f.full_name().c_str() );
+        read_image( check_file( f.full_name().c_str() ), NULL, 0L );
+    }
+
+// ----------------------------------------------------------------------------------------
+    
+    jpeg_loader::
+    jpeg_loader( const unsigned char* imgbuffer, size_t imgbuffersize ) : height_( 0 ), width_( 0 ), output_components_(0)
+    {
+        read_image( NULL, imgbuffer, imgbuffersize );
     }
 
 // ----------------------------------------------------------------------------------------
@@ -69,35 +77,45 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    struct jpeg_loader_error_mgr
+    struct jpeg_loader_error_mgr 
     {
         jpeg_error_mgr pub;    /* "public" fields */
         jmp_buf setjmp_buffer;  /* for return to caller */
+        char jpegLastErrorMsg[JMSG_LENGTH_MAX];
     };
 
     void jpeg_loader_error_exit (j_common_ptr cinfo)
     {
         /* cinfo->err really points to a jpeg_loader_error_mgr struct, so coerce pointer */
         jpeg_loader_error_mgr* myerr = (jpeg_loader_error_mgr*) cinfo->err;
+        
+        /* Create the message */
+        ( *( cinfo->err->format_message ) ) ( cinfo, myerr->jpegLastErrorMsg );
 
         /* Return control to the setjmp point */
         longjmp(myerr->setjmp_buffer, 1);
     }
 
 // ----------------------------------------------------------------------------------------
-
-    void jpeg_loader::read_image( const char* filename )
+    FILE * jpeg_loader::check_file( const char* filename )
     {
-        if ( filename == NULL )
-        {
-            throw image_load_error("jpeg_loader: invalid filename, it is NULL");
-        }
-        FILE *fp = fopen( filename, "rb" );
-        if ( !fp )
-        {
-            throw image_load_error(std::string("jpeg_loader: unable to open file ") + filename);
-        }
+      if ( filename == NULL )
+      {
+          throw image_load_error("jpeg_loader: invalid filename, it is NULL");
+      }
+      FILE *fp = fopen( filename, "rb" );
+      if ( !fp )
+      {
+          throw image_load_error(std::string("jpeg_loader: unable to open file ") + filename);
+      }
+      return fp;
+    }
 
+// ----------------------------------------------------------------------------------------
+
+    void jpeg_loader::read_image( FILE * file, const unsigned char* imgbuffer, size_t imgbuffersize )
+    {
+        
         jpeg_decompress_struct cinfo;
         jpeg_loader_error_mgr jerr;
 
@@ -106,20 +124,22 @@ namespace dlib
         jerr.pub.error_exit = jpeg_loader_error_exit;
 
         /* Establish the setjmp return context for my_error_exit to use. */
-        if (setjmp(jerr.setjmp_buffer))
+        if (setjmp(jerr.setjmp_buffer)) 
         {
             /* If we get here, the JPEG code has signaled an error.
-             * We need to clean up the JPEG object, close the input file, and return.
+             * We need to clean up the JPEG object, and return.
              */
             jpeg_destroy_decompress(&cinfo);
-            fclose(fp);
-            throw image_load_error(std::string("jpeg_loader: error while reading ") + filename);
+            if (file != NULL) fclose(file);
+            throw image_load_error(std::string("jpeg_loader: error while loading image: ") + jerr.jpegLastErrorMsg);
         }
 
 
         jpeg_create_decompress(&cinfo);
-
-        jpeg_stdio_src(&cinfo, fp);
+        
+        if (file != NULL) jpeg_stdio_src(&cinfo, file);
+        else if (imgbuffer != NULL) jpeg_mem_src(&cinfo, (unsigned char*)imgbuffer, imgbuffersize);
+        else throw image_load_error(std::string("jpeg_loader: no valid image source"));
 
         jpeg_read_header(&cinfo, TRUE);
 
@@ -129,14 +149,14 @@ namespace dlib
         width_ = cinfo.output_width;
         output_components_ = cinfo.output_components;
 
-        if (output_components_ != 1 &&
+        if (output_components_ != 1 && 
             output_components_ != 3 &&
             output_components_ != 4)
         {
-            fclose( fp );
+            if (file != NULL) fclose(file);
             jpeg_destroy_decompress(&cinfo);
             std::ostringstream sout;
-            sout << "jpeg_loader: Unsupported number of colors (" << output_components_ << ") in file " << filename;
+            sout << "jpeg_loader: Unsupported number of colors (" << output_components_ << ") in image";
             throw image_load_error(sout.str());
         }
 
@@ -159,7 +179,7 @@ namespace dlib
         jpeg_finish_decompress(&cinfo);
         jpeg_destroy_decompress(&cinfo);
 
-        fclose( fp );
+        if (file != NULL) fclose(file);
     }
 
 // ----------------------------------------------------------------------------------------

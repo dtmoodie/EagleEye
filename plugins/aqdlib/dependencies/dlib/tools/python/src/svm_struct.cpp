@@ -1,6 +1,7 @@
 // Copyright (C) 2013  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
+#include "opaque_types.h"
 #include <dlib/python.h>
 #include <dlib/matrix.h>
 #include <dlib/svm.h>
@@ -55,7 +56,7 @@ public:
         try {
             loss = t[0].cast<scalar_type>();
             psi = t[1].cast<feature_vector_type&>();
-        } catch(py::cast_error &e) {
+        } catch(py::cast_error&) {
             psi = t[0].cast<feature_vector_type&>();
             loss = t[1].cast<scalar_type>();
        }
