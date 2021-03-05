@@ -13,5 +13,5 @@ initializer_NI2::initializer_NI2()
 
 initializer_NI2* initializer_NI2::instance()
 {
-    return singleton<initializer_NI2>();
+    return mo::singleton<initializer_NI2>().get();
 }
