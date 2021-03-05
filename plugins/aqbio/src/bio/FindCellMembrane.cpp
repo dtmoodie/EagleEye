@@ -396,7 +396,7 @@ namespace aqbio
         return aqcore::snakePoints(img,
                                    points,
                                    window_size,
-                                   cvTermCriteria(CV_TERMCRIT_ITER, iterations, 0.1),
+                                   cv::TermCriteria(cv::TermCriteria::max_num, iterations, 0.1),
                                    mode.getValue(),
                                    &alpha,
                                    &beta,
@@ -491,7 +491,7 @@ namespace aqbio
         // output.emitUpdate(input_param);
         return true;
     }
-}
+} // namespace aqbio
 
 using namespace aqbio;
 MO_REGISTER_CLASS(FindCellMembrane)

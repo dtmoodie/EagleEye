@@ -6,7 +6,7 @@ if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
     return()
 endif()
 
-find_package(OpenCV 3.0 QUIET COMPONENTS core imgproc)
+find_package(OpenCV QUIET COMPONENTS core imgproc)
 
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp")
