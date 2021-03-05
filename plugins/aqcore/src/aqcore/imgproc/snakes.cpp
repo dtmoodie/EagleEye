@@ -11,19 +11,19 @@
 #define CV_VALUE 0
 #define CV_ARRAY 1
 
-static CVStatus icvSnake8uC1R(unsigned char* src,
-                              int srcStep,
-                              CvSize roi,
-                              CvPoint* pt,
-                              int n,
-                              float* alpha,
-                              float* beta,
-                              float* gamma,
-                              int coeffUsage,
-                              CvSize win,
-                              CvTermCriteria criteria,
-                              int scheme,
-                              const float* position_weight)
+static void icvSnake8uC1R(unsigned char* src,
+                          int srcStep,
+                          cv::Size roi,
+                          cv::Point* pt,
+                          int n,
+                          float* alpha,
+                          float* beta,
+                          float* gamma,
+                          int coeffUsage,
+                          cv::Size win,
+                          cv::TermCriteria criteria,
+                          int scheme,
+                          const float* position_weight)
 {
     int i, j, k;
     int neighbors = win.height * win.width;
@@ -35,24 +35,19 @@ static CVStatus icvSnake8uC1R(unsigned char* src,
     int iteration = 0;
     int converged = 0;
 
-    float* Econt;
-    float* Ecurv;
-    float* Eimg;
-    float* E;
-
     float _alpha, _beta, _gamma;
 
     /*#ifdef GRAD_SNAKE */
-    float* gradient = NULL;
-    uchar* map = NULL;
+    std::vector<float> gradient;
+    std::vector<uchar> map;
     int map_width = ((roi.width - 1) >> 3) + 1;
     int map_height = ((roi.height - 1) >> 3) + 1;
 #define WTILE_SIZE 8
 #define TILE_SIZE (WTILE_SIZE + 2)
     short dx[TILE_SIZE * TILE_SIZE], dy[TILE_SIZE * TILE_SIZE];
-    CvMat _dx = cvMat(TILE_SIZE, TILE_SIZE, CV_16SC1, dx);
-    CvMat _dy = cvMat(TILE_SIZE, TILE_SIZE, CV_16SC1, dy);
-    CvMat _src = cvMat(roi.height, roi.width, CV_8UC1, src);
+    cv::Mat _dx(TILE_SIZE, TILE_SIZE, CV_16SC1, dx);
+    cv::Mat _dy(TILE_SIZE, TILE_SIZE, CV_16SC1, dy);
+    cv::Mat _src(roi.height, roi.width, CV_8UC1, src);
 
     // cv::Ptr<cv::FilterEngine> pX, pY;
 
@@ -62,28 +57,24 @@ static CVStatus icvSnake8uC1R(unsigned char* src,
     /*#endif */
 
     /* check bad arguments */
-    if (src == NULL)
-        return CV_StsNullPtr;
-    if ((roi.height <= 0) || (roi.width <= 0))
-        return CV_StsBadSize;
-    if (srcStep < roi.width)
-        return CV_StsBadSize;
-    if (pt == NULL)
-        return CV_StsNullPtr;
-    if (n < 3)
-        return CV_StsBadSize;
-    if (alpha == NULL)
-        return CV_StsNullPtr;
-    if (beta == NULL)
-        return CV_StsNullPtr;
-    if (gamma == NULL)
-        return CV_StsNullPtr;
-    if (coeffUsage != CV_VALUE && coeffUsage != CV_ARRAY)
-        return CV_StsBadFlag;
-    if ((win.height <= 0) || (!(win.height & 1)))
-        return CV_StsBadSize;
-    if ((win.width <= 0) || (!(win.width & 1)))
-        return CV_StsBadSize;
+    MO_ASSERT(src != nullptr);
+    MO_ASSERT(roi.height > 0 && roi.width > 0);
+    MO_ASSERT(srcStep >= roi.width);
+    MO_ASSERT(pt != nullptr);
+    MO_ASSERT(n >= 3);
+    MO_ASSERT(alpha != nullptr);
+    MO_ASSERT(beta != nullptr);
+    MO_ASSERT(gamma != nullptr);
+
+    MO_ASSERT(coeffUsage == CV_VALUE || coeffUsage == CV_ARRAY);
+    MO_ASSERT(win.height > 0);
+    MO_ASSERT(win.height & 1);
+    // if ((win.height <= 0) || (!(win.height & 1)))
+    //    return CV_StsBadSize;
+    MO_ASSERT(win.width > 0);
+    MO_ASSERT(win.width & 1);
+    // if ((win.width <= 0) || (!(win.width & 1)))
+    // return CV_StsBadSize;
 
     invn = 1 / ((float)n);
 
@@ -92,16 +83,18 @@ static CVStatus icvSnake8uC1R(unsigned char* src,
 
         // pX = cv::createDerivFilter( CV_8U, CV_16S, 1, 0, 3, cv::BORDER_REPLICATE );
         // pY = cv::createDerivFilter( CV_8U, CV_16S, 0, 1, 3, cv::BORDER_REPLICATE );
-        gradient = (float*)cvAlloc(roi.height * roi.width * sizeof(float));
+        // gradient = (float*)cvAlloc(roi.height * roi.width * sizeof(float));
+        gradient.resize(roi.height * roi.width);
 
-        map = (uchar*)cvAlloc(map_width * map_height);
+        // map = (uchar*)cvAlloc(map_width * map_height);
+        map.resize(map_width * map_height, 0);
         /* clear map - no gradient computed */
-        memset((void*)map, 0, map_width * map_height);
+        // memset((void*)map, 0, map_width * map_height);
     }
-    Econt = (float*)cvAlloc(neighbors * sizeof(float));
-    Ecurv = (float*)cvAlloc(neighbors * sizeof(float));
-    Eimg = (float*)cvAlloc(neighbors * sizeof(float));
-    E = (float*)cvAlloc(neighbors * sizeof(float));
+    std::vector<float> Econt(neighbors);
+    std::vector<float> Ecurv(neighbors);
+    std::vector<float> Eimg(neighbors);
+    std::vector<float> E(neighbors);
 
     while (!converged)
     {
@@ -116,10 +109,10 @@ static CVStatus icvSnake8uC1R(unsigned char* src,
             int diffx = pt[i - 1].x - pt[i].x;
             int diffy = pt[i - 1].y - pt[i].y;
 
-            ave_d += cvSqrt((float)(diffx * diffx + diffy * diffy));
+            ave_d += std::sqrt((float)(diffx * diffx + diffy * diffy));
         }
-        ave_d += cvSqrt((float)((pt[0].x - pt[n - 1].x) * (pt[0].x - pt[n - 1].x) +
-                                (pt[0].y - pt[n - 1].y) * (pt[0].y - pt[n - 1].y)));
+        ave_d += std::sqrt((float)((pt[0].x - pt[n - 1].x) * (pt[0].x - pt[n - 1].x) +
+                                   (pt[0].y - pt[n - 1].y) * (pt[0].y - pt[n - 1].y)));
 
         ave_d *= invn;
         /* average distance computed */
@@ -164,7 +157,7 @@ static CVStatus icvSnake8uC1R(unsigned char* src,
                         diffy = pt[i - 1].y - (pt[i].y + j);
                     }
                     Econt[(j + centery) * win.width + k + centerx] = energy =
-                        (float)fabs(ave_d - cvSqrt((float)(diffx * diffx + diffy * diffy)));
+                        (float)fabs(ave_d - std::sqrt((float)(diffx * diffx + diffy * diffy)));
 
                     maxEcont = MAX(maxEcont, energy);
                     minEcont = MIN(minEcont, energy);
@@ -236,20 +229,16 @@ static CVStatus icvSnake8uC1R(unsigned char* src,
                             int leftshift = x ? 1 : 0;
                             int bottomshift = MIN(1, roi.height - (y + 1) * WTILE_SIZE);
                             int rightshift = MIN(1, roi.width - (x + 1) * WTILE_SIZE);
-                            CvRect g_roi = {x * WTILE_SIZE - leftshift,
-                                            y * WTILE_SIZE - upshift,
-                                            leftshift + WTILE_SIZE + rightshift,
-                                            upshift + WTILE_SIZE + bottomshift};
-                            CvMat _src1;
-                            cvGetSubArr(&_src, &_src1, g_roi);
+                            cv::Rect g_roi = {x * WTILE_SIZE - leftshift,
+                                              y * WTILE_SIZE - upshift,
+                                              leftshift + WTILE_SIZE + rightshift,
+                                              upshift + WTILE_SIZE + bottomshift};
 
-                            cv::Mat _src_ = cv::cvarrToMat(&_src1);
-                            cv::Mat _dx_ = cv::cvarrToMat(&_dx);
-                            cv::Mat _dy_ = cv::cvarrToMat(&_dy);
+                            cv::Mat _src_ = _src(g_roi);
+                            cv::Mat _dx_ = _dx;
+                            cv::Mat _dy_ = _dy;
                             cv::Sobel(_src_, _dx_, CV_16S, 1, 0, 3, 1.0, 0, cv::BORDER_REPLICATE);
                             cv::Sobel(_src_, _dy_, CV_16S, 0, 1, 3, 1.0, 0, cv::BORDER_REPLICATE);
-                            // pX->apply( _src_, _dx_, cv::Rect(0,0,-1,-1), cv::Point(), true );
-                            // pY->apply( _src_, _dy_, cv::Rect(0,0,-1,-1), cv::Point(), true );
 
                             for (l = 0; l < WTILE_SIZE + bottomshift; l++)
                             {
@@ -330,23 +319,17 @@ static CVStatus icvSnake8uC1R(unsigned char* src,
             }
         }
         converged = (moved == 0);
-        if ((criteria.type & CV_TERMCRIT_ITER) && (iteration >= criteria.max_iter))
+        if ((criteria.type & cv::TermCriteria::MAX_ITER) && (iteration >= criteria.maxCount))
+        {
             converged = 1;
-        if ((criteria.type & CV_TERMCRIT_EPS) && (moved <= criteria.epsilon))
+        }
+
+        if ((criteria.type & cv::TermCriteria::EPS) && (moved <= criteria.epsilon))
+        {
             converged = 1;
+        }
     }
-
-    cvFree(&Econt);
-    cvFree(&Ecurv);
-    cvFree(&Eimg);
-    cvFree(&E);
-
-    if (scheme == _CV_SNAKE_GRAD)
-    {
-        cvFree(&gradient);
-        cvFree(&map);
-    }
-    return 0;
+    return;
 }
 
 namespace aqcore
@@ -372,7 +355,7 @@ namespace aqcore
     bool snakePoints(const cv::Mat& img,
                      std::vector<cv::Point>& points,
                      int kernel_size,
-                     CvTermCriteria term_crit,
+                     cv::TermCriteria term_crit,
                      int mode,
                      float* alpha,
                      float* beta,
@@ -382,25 +365,26 @@ namespace aqcore
     {
         uchar* src = const_cast<uchar*>(img.ptr<uchar>());
         int step = img.step;
-        CvSize size(img.size());
-        return 0 == icvSnake8uC1R(src,
-                                  step,
-                                  size,
-                                  reinterpret_cast<CvPoint*>(points.data()),
-                                  points.size(),
-                                  alpha,
-                                  beta,
-                                  gamma,
-                                  coefficients == 1 ? CV_VALUE : CV_ARRAY,
-                                  cvSize(kernel_size, kernel_size),
-                                  term_crit,
-                                  mode,
-                                  position_weight);
+        cv::Size size(img.size());
+        icvSnake8uC1R(src,
+                      step,
+                      size,
+                      points.data(),
+                      points.size(),
+                      alpha,
+                      beta,
+                      gamma,
+                      coefficients == 1 ? CV_VALUE : CV_ARRAY,
+                      cv::Size(kernel_size, kernel_size),
+                      term_crit,
+                      mode,
+                      position_weight);
+        return true;
     }
 
     bool SnakeCircle::snakePoints(const cv::Mat& img, std::vector<cv::Point>& points)
     {
-        CvTermCriteria criteria = cvTermCriteria(CV_TERMCRIT_ITER, iterations, 0.1);
+        cv::TermCriteria criteria(cv::TermCriteria::MAX_ITER, iterations, 0.1);
         int mode = this->mode.getValue();
 
         return aqcore::snakePoints(img, points, window_size, criteria, mode, &alpha, &beta, &gamma);

@@ -5,6 +5,8 @@
 #include <Aquila/types/geometry/Circle.hpp>
 #include <Aquila/types/geometry/Contour.hpp>
 
+#include <opencv2/core.hpp>
+
 #include <Aquila/nodes/Node.hpp>
 
 namespace aqcore
@@ -12,7 +14,7 @@ namespace aqcore
     AQUILA_EXPORTS bool snakePoints(const cv::Mat& img,
                                     std::vector<cv::Point>& points,
                                     int kernel_size,
-                                    CvTermCriteria term_crit,
+                                    cv::TermCriteria term_crit,
                                     int mode,
                                     float* alpha,
                                     float* beta,
