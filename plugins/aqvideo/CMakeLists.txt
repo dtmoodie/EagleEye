@@ -12,10 +12,14 @@ INCLUDE_DIRECTORIES(
 )
 cuda_add_library(aqvideo SHARED ${src})
 
-RCC_LINK_LIB(aqvideo
+target_link_libraries(aqvideo
     ${OpenCV_LIBS}
     ${CUDA_cublas_LIBRARY}
-    metaobject_core metaobject_object metaobject_params metaobject_metaparams aquila_core
+    metaobject_core 
+    metaobject_object 
+    metaobject_params 
+    metaobject_metaparams 
+    aquila_core
 )
 
 aquila_declare_plugin(aqvideo)
