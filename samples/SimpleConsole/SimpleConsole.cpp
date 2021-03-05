@@ -46,9 +46,9 @@ std::string printParam(mo::IParam* param)
     std::stringstream ss;
     ss << " - " << param->getTreeName() << " ";
     ;
-    if (param->checkFlags(mo::ParamFlags::Input_e))
+    if (param->checkFlags(mo::ParamFlags::kINPUT))
     {
-        if (auto input = dynamic_cast<mo::InputParam*>(param))
+        if (auto input = dynamic_cast<mo::ISubscriber*>(param))
         {
             ss << " [";
             auto input_param = input->getInputParam();
@@ -190,13 +190,11 @@ void sig_handler(int s)
 {
     switch (s)
     {
-    case SIGSEGV:
-    {
+    case SIGSEGV: {
         // std::cout << "Caught SIGSEGV " << mo::print_callstack(2, true);
         break;
     }
-    case SIGINT:
-    {
+    case SIGINT: {
         // std::cout << "Caught SIGINT " << mo::print_callstack(2, true);
         std::cout << "Caught SIGINT, shutting down" << std::endl;
         static int count = 0;
@@ -208,25 +206,21 @@ void sig_handler(int s)
         }
         return;
     }
-    case SIGILL:
-    {
+    case SIGILL: {
         std::cout << "Caught SIGILL " << std::endl;
         break;
     }
-    case SIGTERM:
-    {
+    case SIGTERM: {
         std::cout << "Caught SIGTERM " << std::endl;
         break;
     }
 #ifndef _MSC_VER
-    case SIGKILL:
-    {
+    case SIGKILL: {
         std::cout << "Caught SIGKILL " << std::endl;
         break;
     }
 #endif
-    default:
-    {
+    default: {
         std::cout << "Caught signal " << s << std::endl;
     }
     }
@@ -1776,19 +1770,19 @@ int main(int argc, char* argv[])
         gui_thread.join();
         mo::ThreadSpecificQueue::cleanup();
         _Graphs.clear();
-        MO_LOG(info) << "Gui thread shut down complete";
+        MO_LOG(info, "Gui thread shut down complete");
         mo::ThreadPool::instance()->cleanup();
-        MO_LOG(info) << "Thread pool cleanup complete";
-        MO_LOG(info) << "Cleaning up singletons";
+        MO_LOG(info, "Thread pool cleanup complete");
+        MO_LOG(info, "Cleaning up singletons");
         std::cout << "Program exiting" << std::endl;
         return 0;
     }
     gui_thread.interrupt();
     gui_thread.join();
     mo::ThreadSpecificQueue::cleanup();
-    MO_LOG(info) << "Gui thread shut down complete, cleaning up thread pool";
+    MO_LOG(info, "Gui thread shut down complete, cleaning up thread pool");
     mo::ThreadPool::instance()->cleanup();
-    MO_LOG(info) << "Thread pool cleanup complete";
+    MO_LOG(info, "Thread pool cleanup complete");
     std::cout << "Program exiting" << std::endl;
     return 0;
 }
