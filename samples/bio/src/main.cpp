@@ -1,11 +1,12 @@
-#include <Aquila/core.hpp>
+#include <aqcore/display/ImageDisplay.h>
+
 #include <Aquila/core.hpp>
 #include <Aquila/core/IGraph.hpp>
 #include <Aquila/gui.hpp>
 #include <Aquila/gui/ViewControllers.hpp>
 
 #include <MetaObject/object/RelayManager.hpp>
-#include <aqcore/display/ImageDisplay.h>
+
 #include <aqcore/imgproc/Blur.hpp>
 #include <aqcore/imgproc/Channels.h>
 #include <aqcore/imgproc/HoughCircles.hpp>
@@ -42,46 +43,44 @@ int main(int argc, char** argv)
 
     std::cout << "Loading " << file_path << std::endl;
 
-    SystemTable table;
-    mo::MetaObjectFactory factory(&table);
-    factory.registerTranslationUnit();
+    std::shared_ptr<SystemTable> table = SystemTable::instance();
+    mo::MetaObjectFactory::Ptr_t factory = mo::MetaObjectFactory::instance(table.get());
+    factory->registerTranslationUnit();
 
-    aq::core::initModule(&factory);
-    aq::gui::initModule(&factory);
-    aqcore::initPlugin(&factory);
-    aqbio::initPlugin(&factory);
-    aqframegrabbers::initPlugin(&factory);
+    aq::core::initModule(factory.get());
+    aq::gui::initModule(factory.get());
+    aqcore::initPlugin(factory.get());
+    aqbio::initPlugin(factory.get());
+    aqframegrabbers::initPlugin(factory.get());
 
     std::cout << "Initialization complete" << std::endl;
     auto gui_thread = aq::gui::createGuiThread();
     auto graph = aq::IGraph::create();
-    graph->stopThread();
-    auto fg = aq::nodes::FrameGrabberDirectory::create();
+    graph->stop();
+    auto fg = aqframegrabbers::FrameGrabberDirectory::create();
     fg->synchronous = true;
     auto kbcontroller = aq::gui::KeyboardSignalController::create();
-    kbcontroller->signal_map_param.updateData({ 
-        {13, "nextFrame"}
-    });
+    kbcontroller->signal_map_param.setValue({{13, "nextFrame"}});
     kbcontroller->print_unused_keys = true;
-    
+
     kbcontroller->setupSignals(graph->getRelayManager());
     graph->addNode(fg);
     fg->loadData(file_path);
 
-    auto gray = aq::nodes::ConvertToGrey::create();
-    gray->connectInput(fg, "output", "input");
+    auto gray = aqcore::ConvertToGrey::create();
+    gray->connectInput(*fg, "output", "input");
 
-    auto blur = aq::nodes::GaussianBlur::create();
-    blur->connectInput(gray, "grey", "input");
+    auto blur = aqcore::GaussianBlur::create();
+    blur->connectInput(*gray, "grey", "input");
     blur->sigma = 2.0;
 
-    auto circles = aq::nodes::HoughCircle::create();
-    circles->connectInput(blur, "output", "input");
+    auto circles = aqcore::HoughCircle::create();
+    circles->connectInput(*blur, "output", "input");
     circles->center_threshold = 12;
 
-    auto membrane = aq::bio::FindCellMembrane::create();
-    membrane->connectInput(blur, "output", "input");
-    membrane->connectInput(circles, "circles", "circles");
+    auto membrane = aqbio::FindCellMembrane::create();
+    membrane->connectInput(*blur, "output", "input");
+    membrane->connectInput(*circles, "circles", "circles");
     membrane->alpha = 2.0;
     membrane->beta = 2.0;
     membrane->num_samples = 400;
@@ -91,18 +90,18 @@ int main(int argc, char** argv)
     membrane->radial_resolution = 0.5;
     membrane->radial_weight = 4.5;
 
-    auto measure = aq::bio::MeasureCell::create();
-    measure->connectInput(membrane, "", "cell");
-    measure->connectInput(fg, "", "image_name");
-    measure->connectInput(fg, "", "image");
+    auto measure = aqbio::MeasureCell::create();
+    measure->connectInput(*membrane, "", "cell");
+    measure->connectInput(*fg, "", "image_name");
+    measure->connectInput(*fg, "", "image");
     measure->out_dir = file_path + "/results";
 
     auto disp = aq::nodes::QtImageDisplay::create();
-    disp->connectInput(measure, "overlay", "image");
+    disp->connectInput(*measure, "overlay", "image");
 
     std::cout << "Starting to process data" << std::endl;
 
-    graph->startThread();
+    graph->start();
     graph->waitForSignal("eos");
     std::cout << "Done!!!!!" << std::endl;
     return 0;
