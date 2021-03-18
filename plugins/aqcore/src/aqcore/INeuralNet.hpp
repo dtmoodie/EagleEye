@@ -59,13 +59,14 @@ namespace aqcore
 
         virtual void preBatch(int batch_size);
 
-        virtual void postMiniBatch(const std::vector<cv::Rect>& batch_bb = std::vector<cv::Rect>(),
+        virtual void postMiniBatch(mo::IDeviceStream& stream,
+                                   const std::vector<cv::Rect>& batch_bb = std::vector<cv::Rect>(),
                                    const aq::DetectedObjectSet* dets = nullptr) = 0;
         virtual void postBatch();
 
-        virtual bool forwardAll();
+        virtual bool forwardAll(mo::IDeviceStream& stream);
 
-        virtual bool forwardMinibatch() = 0;
+        virtual bool forwardMinibatch(mo::IDeviceStream& stream) = 0;
         // Return a list of pixel coordinates in the input image for processing
         std::vector<cv::Rect> getRegions() const;
         std::unique_ptr<cv::cuda::Stream> m_cv_stream;

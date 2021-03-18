@@ -45,11 +45,11 @@ namespace aqcore
 
     bool INeuralNet::processImpl(mo::IAsyncStream&) { return false; }
 
-    bool INeuralNet::processImpl(mo::IDeviceStream&)
+    bool INeuralNet::processImpl(mo::IDeviceStream& stream)
     {
         if (initNetwork())
         {
-            return forwardAll();
+            return forwardAll(stream);
         }
         return false;
     }
@@ -115,7 +115,7 @@ namespace aqcore
         return pixel_bounding_boxes;
     }
 
-    bool INeuralNet::forwardAll()
+    bool INeuralNet::forwardAll(mo::IDeviceStream& stream)
     {
         cv::Scalar_<unsigned int> network_input_shape = getNetworkShape();
         std::vector<cv::Rect> pixel_bounding_boxes = getRegions();
@@ -134,8 +134,14 @@ namespace aqcore
         if (image_scale > 0)
         {
             this->getLogger().trace("Reshaping network");
-            reshapeNetwork(batch_size, channels, height * image_scale, width * image_scale);
-            this->getLogger().trace("Reshaping complete");
+            if (reshapeNetwork(batch_size, channels, height * image_scale, width * image_scale))
+            {
+                this->getLogger().trace("Reshaping complete");
+            }
+            else
+            {
+                this->getLogger().trace("unable to reshape network");
+            }
         }
         // Request a larger batch size
         if (pixel_bounding_boxes.size() != network_input_shape[0] && input_detections == nullptr)
@@ -150,12 +156,10 @@ namespace aqcore
             this->getLogger().trace("Batch resizing complete");
         }
         this->getLogger().trace("Preprocessing begin");
-        mo::IAsyncStreamPtr_t stream = this->getStream();
-        mo::IDeviceStream* dev_stream = stream->getDeviceStream();
-        MO_ASSERT(dev_stream != nullptr);
+
         cv::cuda::GpuMat float_image;
         cv::cuda::Stream& cvstream = *m_cv_stream;
-        cv::cuda::GpuMat input = this->input->getGpuMat(dev_stream);
+        cv::cuda::GpuMat input = this->input->getGpuMat(&stream);
         if (input.depth() != CV_32F)
         {
             input.convertTo(float_image, CV_32F, cvstream);
@@ -204,11 +208,12 @@ namespace aqcore
                     resized = float_image(pixel_bounding_boxes[i]);
                 }
                 cv::cuda::split(resized, net_input[j], cvstream);
+                cv::Mat dbg(net_input[j][0]);
                 end = start + j + 1;
             }
 
             this->getLogger().trace("forward mini batch");
-            if (forwardMinibatch())
+            if (forwardMinibatch(stream))
             {
                 this->getLogger().trace("Forward mini batch complete");
                 std::vector<cv::Rect> batch_bounding_boxes;
@@ -217,7 +222,7 @@ namespace aqcore
                     batch_bounding_boxes.push_back(pixel_bounding_boxes[j]);
                 }
 
-                postMiniBatch(batch_bounding_boxes, input_detections);
+                postMiniBatch(stream, batch_bounding_boxes, input_detections);
 
                 this->getLogger().trace("Post mini batch complete");
             }

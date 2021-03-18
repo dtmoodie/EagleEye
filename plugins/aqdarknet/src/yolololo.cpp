@@ -15,6 +15,7 @@ class YOLO : virtual public aq::nodes::INeuralNet
 {
   public:
     MO_DERIVE(YOLO, aq::nodes::INeuralNet)
+
     MO_END;
 
   protected:
@@ -94,6 +95,158 @@ namespace darknet
     }
 } // namespace darknet
 
+std::vector<cv::cuda::GpuMat> getInput(float* ptr, int width, int height, int c)
+{
+    std::vector<cv::cuda::GpuMat> output;
+    for (int i = 0; i < c; ++i)
+    {
+        output.emplace_back(height, width, CV_32F, ptr);
+        ptr += (width * height);
+    }
+    return output;
+}
+
+std::vector<cv::cuda::GpuMat> getInput(float** ptr, int width, int height, int c)
+{
+    std::vector<cv::cuda::GpuMat> output;
+    for (int i = 0; i < c; ++i)
+    {
+        output.emplace_back(height, width, CV_32F, ptr);
+        ptr += (width * height);
+    }
+    return output;
+}
+
+namespace darknet
+{
+
+    // create a compatibility layer depending on if this is the OG darknet from pjreddie or if this is the new darknet
+#ifdef LIB_API
+    struct Network
+    {
+        Network(const std::string& model_file, const std::string& weight_file, const uint32_t batch_size) : state{0}
+        {
+            char* mf = const_cast<char*>(model_file.c_str());
+            char* wf = const_cast<char*>(weight_file.c_str());
+            m_network = load_network_custom(mf, wf, 0, batch_size);
+
+            // m_network = load_network(mf, wf, 0);
+        }
+
+        ~Network() {}
+
+        cv::Scalar_<unsigned int> getInputShape() const
+        {
+            return {1, uint32_t(m_network->h), uint32_t(m_network->w), uint32_t(m_network->c)};
+        }
+
+        std::vector<cv::cuda::GpuMat> getInputBindings()
+        {
+            float** input = m_network->input_gpu;
+
+            // TODO replace with some kind of managed tensor
+            cv::cuda::createContinuous(m_network->h * m_network->c, m_network->w, CV_32F, m_buffer);
+            float* ptr = ct::ptrCast<float>(m_buffer.data);
+            input[0] = ptr;
+            m_input = ptr;
+            std::vector<cv::cuda::GpuMat> output;
+            for (int i = 0; i < m_network->c; ++i)
+            {
+                output.emplace_back(m_network->h, m_network->w, CV_32F, ptr);
+                ptr += (m_network->h * m_network->w);
+            }
+            m_network->input_state_gpu = ptr;
+
+            return output;
+        }
+
+        void forward(mo::IDeviceStream& stream)
+        {
+            state.index = 0;
+            state.net = *m_network;
+            state.workspace = m_network->workspace;
+            state.input = m_network->input_state_gpu;
+            state.input = m_input;
+            state.truth = 0;
+            state.train = 0;
+            state.delta = 0;
+
+            for (int i = 0; i < m_network->n; ++i)
+            {
+                state.index = i;
+                darknet::layer l = m_network->layers[i];
+
+                l.forward_gpu(l, state);
+                state.input = l.output_gpu;
+            }
+        }
+
+        void getDetections(float original_height,
+                           float original_width,
+                           float thresh,
+                           float hier,
+                           float nms,
+                           aq::DetectedObjectSet& output,
+                           mo::IDeviceStream& stream)
+        {
+            cudaDeviceSynchronize();
+            for (int i = 0; i < m_network->n; ++i)
+            {
+                darknet::layer l = m_network->layers[i];
+                if (l.type == darknet::YOLO)
+                {
+                    float* output_cpu = l.output;
+                    const float* output_gpu = l.output_gpu;
+                    const size_t size = l.outputs * l.batch;
+                    stream.deviceToHost({output_cpu, size}, {output_gpu, size});
+                }
+            }
+            stream.synchronize();
+
+            int* map = nullptr;
+            int nboxes = 0;
+            const int letter_box = m_network->letter_box;
+            detection* dets = get_network_boxes(
+                m_network, original_width, original_height, thresh, hier, map, 0, &nboxes, letter_box);
+
+            layer l = m_network->layers[m_network->n - 1];
+            do_nms_sort(dets, nboxes, l.classes, nms);
+
+            output.resize(nboxes);
+            auto ids = output.getComponentMutable<aq::detection::Id>();
+            auto bbs = output.getComponentMutable<aq::detection::BoundingBox2d>();
+            auto cls = output.getComponentMutable<aq::detection::Classifications>();
+            auto conf = output.getComponentMutable<aq::detection::Confidence>();
+            for (int i = 0; i < nboxes; ++i)
+            {
+                float xmin = dets[i].bbox.x - dets[i].bbox.w / 2. + 1;
+                float ymin = dets[i].bbox.y - dets[i].bbox.h / 2. + 1;
+
+                bbs[i].x = xmin;
+                bbs[i].y = ymin;
+                bbs[i].width = dets[i].bbox.w;
+                bbs[i].height = dets[i].bbox.h;
+
+                conf[i] = dets[i].objectness;
+
+                ids[i] = i;
+                // TODO iterate over classes
+            }
+            free_detections(dets, nboxes);
+        }
+
+        network* m_network = nullptr;
+        network_state state = {0};
+        float* m_input = nullptr;
+        cv::cuda::GpuMat m_buffer;
+    };
+
+#else
+    // TODO compatibility layer for original darknet
+#endif
+
+} // namespace darknet
+
 class YOLO : virtual public aqcore::INeuralNet
 {
   public:
@@ -119,20 +272,11 @@ class YOLO : virtual public aqcore::INeuralNet
         {
             if (boost::filesystem::exists(model_file) && boost::filesystem::exists(weight_file))
             {
-                darknet::network* net = darknet::load_network(
-                    const_cast<char*>(model_file.string().c_str()), const_cast<char*>(weight_file.string().c_str()), 0);
-                darknet::set_batch_network(net, 1);
-                m_net = net;
-                net->train = false;
-                int width = m_net->w;
-                int height = m_net->h;
-                float* ptr = m_net->input_gpu;
-                m_input = ptr;
-                for (int i = 0; i < m_net->c; ++i)
-                {
-                    m_input_channels.emplace_back(height, width, CV_32F, ptr);
-                    ptr += (width * height);
-                }
+                std::string model = model_file.string();
+                std::string weights = weight_file.string();
+                m_net.reset(new darknet::Network(model, weights, 1));
+
+                m_input_channels = m_net->getInputBindings();
                 if (swap_bgr)
                 {
                     std::swap(m_input_channels[0], m_input_channels[2]);
@@ -151,101 +295,34 @@ class YOLO : virtual public aqcore::INeuralNet
         return false;
     }
 
-    cv::Scalar_<unsigned int> getNetworkShape() const
-    {
-        return {1, 3, static_cast<unsigned int>(m_net->h), static_cast<unsigned int>(m_net->h)};
-    }
+    cv::Scalar_<unsigned int> getNetworkShape() const { return m_net->getInputShape(); }
 
     std::vector<std::vector<cv::cuda::GpuMat>> getNetImageInput(int requested_batch_size) { return {m_input_channels}; }
 
-    bool forwardMinibatch()
+    bool forwardMinibatch(mo::IDeviceStream& stream)
     {
-        m_net->input_gpu = m_input;
-        this->getStream()->synchronize();
-        int i;
-        for (i = 0; i < m_net->n; ++i)
-        {
-            // this->getLogger().trace("{} forward", i);
-            m_net->index = i;
-            darknet::layer l = m_net->layers[i];
-            if (l.delta_gpu)
-            {
-                darknet::fill_gpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
-            }
-            l.forward_gpu(l, *m_net);
-            m_net->input_gpu = l.output_gpu;
-            m_net->input = l.output;
-            if (l.truth)
-            {
-                m_net->truth_gpu = l.output_gpu;
-                m_net->truth = l.output;
-            }
-        }
+        stream.synchronize();
+
+        m_net->forward(stream);
         return true;
     }
 
-    Output_t m_output;
-
-    void postMiniBatch(const std::vector<cv::Rect>& batch_bb, const aq::DetectedObjectSet* dets) override
+    void postMiniBatch(mo::IDeviceStream& stream,
+                       const std::vector<cv::Rect>& batch_bb,
+                       const aq::DetectedObjectSet* dets) override
     {
-        darknet::layer l = darknet::get_network_output_layer(m_net);
-        darknet::cuda_pull_array(l.output_gpu, l.output, l.outputs * l.batch);
-        int nboxes = 0;
-        auto det_ptr = darknet::get_network_boxes(
-            m_net, m_input_channels[0].cols, m_input_channels[0].rows, det_thresh, cat_thresh, 0, 1, &nboxes);
-
-        if (nms_threshold > 0.0f)
-        {
-            darknet::do_nms_sort(det_ptr, nboxes, l.classes, nms_threshold);
-        }
-
-        std::shared_ptr<darknet::detection> det_owner(
-            det_ptr, [nboxes](darknet::detection* dets) { darknet::free_detections(dets, nboxes); });
-        auto labels = this->getLabels();
-        MO_ASSERT(labels != nullptr);
-        m_output.setCatSet(labels);
-        uint32_t count = 0;
-        for (int i = 0; i < nboxes; ++i)
-        {
-            if (det_ptr[i].objectness > det_thresh)
-            {
-                darknet::box box = det_ptr[i].bbox;
-                cv::Rect2f rect(box.x, box.y, box.w, box.h);
-                rect.x = rect.x - rect.width / 2.0f;
-                rect.y = rect.y - rect.height / 2.0f;
-                aq::clipNormalizedBoundingBox(rect);
-                aq::boundingBoxToPixels(rect, batch_bb[0].size());
-                aq::DetectedObject det(rect);
-                det.confidence = det_ptr[i].objectness;
-                det.id = count;
-                ++count;
-                std::vector<aq::Classification> cats;
-                for (int j = 0; j < labels->size(); ++j)
-                {
-                    const float prob = det_ptr[i].prob[j];
-                    if (prob > cat_thresh)
-                    {
-                        aq::Classification label = (*labels)[j](prob);
-                        cats.emplace_back(std::move(label));
-                    }
-                }
-                if (!cats.empty())
-                {
-                    det.classifications = cats;
-                    m_output.push_back(std::move(det));
-                }
-            }
-        }
+        auto input_image_shape = this->input->size();
+        m_net->getDetections(
+            input_image_shape(0), input_image_shape(1), det_thresh, cat_thresh, nms_threshold, m_dets, stream);
         return;
     }
 
-    void postBatch() { this->output.publish(std::move(m_output), mo::tags::param = &input_param); }
+    void postBatch() { this->output.publish(std::move(m_dets), mo::tags::param = &input_param); }
 
   private:
-    darknet::network* m_net;
+    std::unique_ptr<darknet::Network> m_net;
     std::vector<cv::cuda::GpuMat> m_input_channels;
     cv::cuda::GpuMat m_input_buffer;
-    float* m_input = nullptr;
 };
 
 #endif
