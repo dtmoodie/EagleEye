@@ -51,29 +51,17 @@ std::string printParam(mo::IParam* param)
         if (auto input = dynamic_cast<mo::ISubscriber*>(param))
         {
             ss << " [";
-            auto input_param = input->getInputParam();
+            auto input_param = input->getPublisher();
             if (input_param)
             {
-                auto func =
-                    mo::SerializationFactory::instance()->getTextSerializationFunction(input_param->getTypeInfo());
-                if (func)
-                {
-                    func(input_param, ss);
-                }
+                input_param->print(ss);
                 ss << input_param->getTreeName() << " ";
-                auto cs = input_param->getCoordinateSystem();
-                if (cs)
+                auto hdr = input_param->getNewestHeader();
+
+                if (hdr)
                 {
-                    ss << " " << cs->getName();
+                    ss << " " << *hdr;
                 }
-                auto ts = input_param->getTimestamp();
-                if (ts)
-                {
-                    ss << " " << *ts;
-                }
-                auto fn = input_param->getFrameNumber();
-                if (fn != std::numeric_limits<size_t>::max())
-                    ss << " " << fn;
             }
             else
             {
@@ -84,24 +72,7 @@ std::string printParam(mo::IParam* param)
     }
     else
     {
-        auto func = mo::SerializationFactory::instance()->getTextSerializationFunction(param->getTypeInfo());
-        if (func)
-        {
-            func(param, ss);
-        }
-        auto cs = param->getCoordinateSystem();
-        if (cs)
-        {
-            ss << " " << cs->getName();
-        }
-        auto ts = param->getTimestamp();
-        if (ts)
-        {
-            ss << " " << *ts;
-        }
-        auto fn = param->getFrameNumber();
-        if (fn != std::numeric_limits<size_t>::max())
-            ss << " " << fn;
+        param->print(ss);
     }
     return ss.str();
 }
@@ -327,7 +298,7 @@ int main(int argc, char* argv[])
         std::stringstream ss;
         for (const auto& pair : replace_map)
             ss << "\n" << pair.first << " = " << pair.second;
-        MO_LOG(debug) << "Input string replacements: " << ss.str();
+        MO_LOG(debug, "Input string replacements: {}", ss.str());
     }
 
     if (variable_replace_map.size())
@@ -335,7 +306,7 @@ int main(int argc, char* argv[])
         std::stringstream ss;
         for (const auto& pair : variable_replace_map)
             ss << "\n" << pair.first << " = " << pair.second;
-        MO_LOG(debug) << "Input variable replacements: " << ss.str();
+        MO_LOG(debug, "Input variable replacements: ", ss.str());
     }
 
     if (vm["profile"].as<bool>() || vm.count("profile-for"))
@@ -345,18 +316,18 @@ int main(int argc, char* argv[])
     cv::cuda::setDevice(vm["gpu"].as<int>());
     {
         boost::posix_time::ptime initialization_start = boost::posix_time::microsec_clock::universal_time();
-        MO_LOG(info) << "Initializing GPU...";
+        MO_LOG(info, "Initializing GPU...");
         cv::cuda::GpuMat(10, 10, CV_32F);
         boost::posix_time::ptime initialization_end = boost::posix_time::microsec_clock::universal_time();
         if (boost::posix_time::time_duration(initialization_end - initialization_start).total_seconds() > 1)
         {
             cudaDeviceProp props;
             cudaGetDeviceProperties(&props, cv::cuda::getDevice());
-            MO_LOG(warning)
-                << "Initialization took "
-                << boost::posix_time::time_duration(initialization_end - initialization_start).total_milliseconds()
-                << " ms.  CUDA code likely not generated for this architecture (" << props.major << "." << props.minor
-                << ")";
+            MO_LOG(warning,
+                   "Initialization took {} ms. CUDA code likely not generated for this architecture ({}.{})",
+                   boost::posix_time::time_duration(initialization_end - initialization_start).total_milliseconds(),
+                   props.major,
+                   props.minor);
         }
     }
 
@@ -383,19 +354,19 @@ int main(int argc, char* argv[])
     boost::filesystem::path currentDir = boost::filesystem::path(argv[0]).parent_path();
 #ifdef _MSC_VER
 #ifdef _DEBUG
-    mo::MetaObjectFactory::instance().loadPlugin("aquila_guid.dll");
-    mo::MetaObjectFactory::instance().loadPlugin("aquila_cored.dll");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_guid.dll");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_cored.dll");
 #else
-    mo::MetaObjectFactory::instance().loadPlugin("aquila_gui.dll");
-    mo::MetaObjectFactory::instance().loadPlugin("aquila_core.dll");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_gui.dll");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_core.dll");
 #endif
 #else
 #ifdef NDEBUG
-    mo::MetaObjectFactory::instance().loadPlugin("aquila_gui.so");
-    mo::MetaObjectFactory::instance().loadPlugin("aquila_core.so");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_gui.so");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_core.so");
 #else
-    mo::MetaObjectFactory::instance().loadPlugin("aquila_guid.so");
-    mo::MetaObjectFactory::instance().loadPlugin("aquila_cored.so");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_guid.so");
+    mo::MetaObjectFactory::instance()->loadPlugin("aquila_cored.so");
 #endif
 #endif
 
@@ -416,7 +387,7 @@ int main(int argc, char* argv[])
 #endif
                 {
                     std::string file = itr->path().string();
-                    mo::MetaObjectFactory::instance().loadPlugin(file);
+                    mo::MetaObjectFactory::instance()->loadPlugin(file);
                 }
             }
         }
@@ -442,7 +413,7 @@ int main(int argc, char* argv[])
             }
             catch (mo::ExceptionWithCallStack<cv::Exception>& e)
             {
-                MO_LOG(debug) << "Opencv exception with callstack " << e.what() << " " << e.callStack();
+                MO_LOG(debug, "Opencv exception with callstack {} {}", e.what(), e.callStack());
             }
             catch (mo::IExceptionWithCallStackBase& e)
             {
@@ -760,7 +731,7 @@ int main(int argc, char* argv[])
             }
             if (what == "projects")
             {
-                THROW(debug) << "Needs to be reimplemented";
+                THROW(debug, "Needs to be reimplemented");
             }
             if (what == "plugins")
             {
