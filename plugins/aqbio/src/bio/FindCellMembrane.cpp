@@ -396,7 +396,7 @@ namespace aqbio
         return aqcore::snakePoints(img,
                                    points,
                                    window_size,
-                                   cv::TermCriteria(cv::TermCriteria::max_num, iterations, 0.1),
+                                   cv::TermCriteria(cv::TermCriteria::COUNT, iterations, 0.1),
                                    mode.getValue(),
                                    &alpha,
                                    &beta,
@@ -409,16 +409,21 @@ namespace aqbio
     {
         auto stream = this->getStream();
         const cv::Mat mat = input->getMat(stream.get());
-        output.clear();
-        if (!circles->empty())
+
+        if (circles->getNumEntities() > 0)
         {
-            auto largest = std::max_element(circles->begin(),
-                                            circles->end(),
-                                            [](const Detection<Circle<float>>& i1, const Detection<Circle<float>>& i2) {
-                                                return i1.confidence < i2.confidence;
-                                            });
-            if (largest->radius > 10)
+            auto circle_view = circles->getComponent<aq::Circle<float>>();
+            auto conf_view = circles->getComponent<aq::detection::Confidence>();
+
+            auto largest = std::max_element(
+                conf_view.data(),
+                conf_view.data() + circles->getNumEntities(),
+                [](const aq::detection::Confidence& i1, const aq::detection::Confidence& i2) { return i1 < i2; });
+            auto largest_index = std::distance(largest, conf_view.data());
+
+            if (circle_view[largest_index].radius > 10)
             {
+                Cell cell;
 
                 std::vector<cv::Point> inner_pts;
                 std::vector<cv::Point> outer_pts;
@@ -437,13 +442,13 @@ namespace aqbio
                     if (m_current_cell.outer_updated)
                         refine_outer = true;
                     user_update = false;
-                    user_update_param.modified(false);
+                    user_update_param.setModified(false);
                 }
                 else
                 {
                     m_current_cell.clear();
-                    sampleCircle(inner_pts, *largest, 1.0f, num_samples);
-                    m_current_cell.center = largest->origin;
+                    aqcore::sampleCircle(inner_pts, *largest, 1.0f, num_samples);
+                    m_current_cell.center = circle_view[largest_index].origin;
                 }
 
                 if (refine_inner)
@@ -454,13 +459,13 @@ namespace aqbio
                     }
                     if (snakePoints(mat, inner_pts, m_current_cell.inner_point_position_confidence))
                     {
-                        output.push_back(inner_pts);
+                        cell.inner_membrane = inner_pts;
                         m_current_cell.inner_membrane = std::move(inner_pts);
                     }
                 }
                 else
                 {
-                    output.push_back(inner_pts);
+                    cell.inner_membrane = inner_pts;
                 }
 
                 if (find_outer)
@@ -480,15 +485,15 @@ namespace aqbio
                         m_current_cell.outer_point_position_confidence = std::vector<float>(outer_pts.size(), 1.0f);
                     if (snakePoints(mat, outer_pts, m_current_cell.outer_point_position_confidence))
                     {
-                        output.push_back(outer_pts);
+                        cell.outer_membrane = outer_pts;
                         m_current_cell.outer_membrane = std::move(outer_pts);
-                        m_current_cell.fn = input_param.getFrameNumber();
-                        cell_param.publish(m_current_cell, mo::tags::param = &input_param);
+                        m_current_cell.fn = input_param.getNewestHeader()->frame_number;
+                        this->cell.publish(m_current_cell, mo::tags::param = &input_param);
                     }
                 }
             }
         }
-        // output.emitUpdate(input_param);
+
         return true;
     }
 } // namespace aqbio
