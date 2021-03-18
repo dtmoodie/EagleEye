@@ -1,8 +1,5 @@
 PROJECT(aqdev)
 CMAKE_POLICY(SET CMP0020 NEW)
-IF(${CMAKE_VERSION} VERSION_GREATER 3.1)
-CMAKE_POLICY(SET CMP0053 OLD)
-ENDIF()
 
 set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 
