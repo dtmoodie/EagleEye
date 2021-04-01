@@ -210,28 +210,49 @@ namespace darknet
                 m_network, original_width, original_height, thresh, hier, map, 0, &nboxes, letter_box);
 
             layer l = m_network->layers[m_network->n - 1];
-            do_nms_sort(dets, nboxes, l.classes, nms);
+            do_nms_obj(dets, nboxes, l.classes, nms);
 
+            // TODO need a reserve function
             output.resize(nboxes);
             auto ids = output.getComponentMutable<aq::detection::Id>();
             auto bbs = output.getComponentMutable<aq::detection::BoundingBox2d>();
             auto cls = output.getComponentMutable<aq::detection::Classifications>();
             auto conf = output.getComponentMutable<aq::detection::Confidence>();
+            const auto cats = output.getCatSet();
+            int count = 0;
             for (int i = 0; i < nboxes; ++i)
             {
-                float xmin = dets[i].bbox.x - dets[i].bbox.w / 2. + 1;
-                float ymin = dets[i].bbox.y - dets[i].bbox.h / 2. + 1;
+                const float xmin = dets[i].bbox.x - dets[i].bbox.w / 2. + 1;
+                const float ymin = dets[i].bbox.y - dets[i].bbox.h / 2. + 1;
+                const auto confidence = dets[i].objectness;
+                if (confidence > thresh)
+                {
+                    bbs[count].x = xmin;
+                    bbs[count].y = ymin;
+                    bbs[count].width = dets[i].bbox.w;
+                    bbs[count].height = dets[i].bbox.h;
 
-                bbs[i].x = xmin;
-                bbs[i].y = ymin;
-                bbs[i].width = dets[i].bbox.w;
-                bbs[i].height = dets[i].bbox.h;
+                    conf[count] = confidence;
 
-                conf[i] = dets[i].objectness;
+                    ids[count] = count;
 
-                ids[i] = i;
-                // TODO iterate over classes
+                    // TODO iterate over classes
+                    const auto num_classes = dets[i].classes;
+                    MO_ASSERT_EQ(num_classes, cats->size());
+                    for (int j = 0; j < num_classes; ++j)
+                    {
+                        const float prob = dets[i].prob[j];
+
+                        if (prob > 0.0)
+                        {
+                            const aq::Category& cat = (*cats)[j];
+                            cls[count].append(cat(prob));
+                        }
+                    }
+                    ++count;
+                }
             }
+            output.resize(count);
             free_detections(dets, nboxes);
         }
 
@@ -312,6 +333,7 @@ class YOLO : virtual public aqcore::INeuralNet
                        const aq::DetectedObjectSet* dets) override
     {
         auto input_image_shape = this->input->size();
+        m_dets.setCatSet(this->getLabels());
         m_net->getDetections(
             input_image_shape(0), input_image_shape(1), det_thresh, cat_thresh, nms_threshold, m_dets, stream);
         return;

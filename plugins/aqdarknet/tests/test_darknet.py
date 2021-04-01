@@ -5,9 +5,9 @@ from argparse import ArgumentParser
 parser = ArgumentParser()
 
 parser.add_argument('--path', default='dog.jpg')
-parser.add_argument('--cfg', default='/home/asiansensation/code/darknet_x86/cfg/yolov3.cfg')
-parser.add_argument('--weights', default='/home/asiansensation/code/darknet_x86/cfg/yolov3.weights')
-parser.add_argument('--labels', default='/home/asiansensation/code/darknet_x86/data/coco.names')
+parser.add_argument('--cfg', default='/home/dan/code/ml/darknet/cfg/yolov4.cfg')
+parser.add_argument('--weights', default='/home/dan/code/ml/darknet/cfg/yolov4.weights')
+parser.add_argument('--labels', default='/home/dan/code/ml/darknet/data/coco.names')
 
 args = parser.parse_args()
 
@@ -21,10 +21,12 @@ graph.addNode(fg)
 
 detector = aq.nodes.YOLO(input=fg)
 
+#detector.pixel_scale=1.0
+detector.channel_mean = [0.0, 0.0, 0.0, 0.0]
 detector.weight_file = args.weights
 detector.model_file = args.cfg
 detector.label_file = args.labels
-detector.det_thresh = 0.5
+detector.det_thresh = 0.8
 detector.cat_thresh = 0.5
 
 draw = aq.nodes.DrawDetections(image=fg, detections=detector)
@@ -35,11 +37,11 @@ print(detector)
 print('Weight file: \n{}'.format(detector.weight_file))
 
 aq.log('trace')
-graph.start()
 
-aq.eventLoop(10000)
+graph.step()
 output = detector.output
 
 components = output.data.components
 for component in components:
+    print(component.type)
     print(component.data.data.data)
