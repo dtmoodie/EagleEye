@@ -66,8 +66,8 @@ if(CUDNN_FOUND)
         get_target_property(out_dir aquila_python ARCHIVE_OUTPUT_DIRECTORY)
         add_custom_command(TARGET aqdlib POST_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_directory
-                        ${CMAKE_SOURCE_DIR}/data/images 
-                        $<TARGET_FILE_DIR:aquila_python>
+                        ${CMAKE_CURRENT_LIST_DIR}/data/images/
+                        $<TARGET_FILE_DIR:aquila_python>/images
         )
     #endif()
 

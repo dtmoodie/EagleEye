@@ -1,3 +1,4 @@
+/*
 #include "CorrelationTracker.hpp"
 #include <Aquila/nodes/NodeContextSwitch.hpp>
 #include <Aquila/nodes/NodeInfo.hpp>
@@ -6,7 +7,7 @@
 namespace aqdlib
 {
 
-    /*template <class DetType>
+    template <class DetType>
     void DlibCorrelationTracker::apply(const cv::Mat& img)
     {
         auto ts = detections_param.getNewestTimestamp();
@@ -47,7 +48,7 @@ namespace aqdlib
             }
             output_param.updateData(std::move(output), mo::tag::_param = image_param);
         }
-    }*/
+    }
 
     aq::Algorithm::InputState DlibCorrelationTracker::checkInputs()
     {
@@ -126,3 +127,4 @@ namespace aqdlib
 
 using namespace aqdlib;
 MO_REGISTER_CLASS(DlibCorrelationTracker)
+*/

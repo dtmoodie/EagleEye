@@ -12,6 +12,8 @@
 #include <dlib/image_processing.h>
 #include <dlib/opencv.h>
 
+#include <opencv2/imgproc.hpp>
+
 namespace dlib
 {
     void set_image_size(cv_image<bgr_pixel>& image, const long unsigned int& rows, const long unsigned int& cols)
@@ -43,7 +45,11 @@ namespace aqdlib
         if (num_entities > 0)
         {
             cv::Mat img = image->getMat(stream.get());
-            MO_ASSERT(image->pixelFormat() == aq::PixelFormat::kRGB);
+            if (image->pixelFormat() == ct::value(aq::PixelFormat::kBGR))
+            {
+                cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
+            }
+            // MO_ASSERT_EQ(image->pixelFormat(), aq::PixelFormat::kRGB);
             dlib::cv_image<dlib::rgb_pixel> dlib_img(img);
             std::vector<dlib::matrix<dlib::rgb_pixel>> aligned_faces;
 
@@ -88,7 +94,6 @@ namespace aqdlib
                 // auto provider = output.getProvider<aq::detection::Descriptor>();
                 output.reshape<aq::detection::AlignedPatch>(mt::Shape<1>(num_entities));
                 auto aligned_patch = output.getComponentMutable<aq::detection::AlignedPatch>();
-                auto stream = this->getStream();
 
                 for (size_t i = 0; i < face_descriptors.size(); ++i)
                 {
