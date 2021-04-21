@@ -39,7 +39,9 @@ draw = aq.nodes.DrawDetections(image=fg, detections=facedb)
 writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./')
 
 graph.start()
-aq.eventLoop(10000)
+#aq.eventLoop(10000)
+for _ in range(10):
+    graph.step()
 facedb.saveUnknownFaces()
 
 output = facedb.output
