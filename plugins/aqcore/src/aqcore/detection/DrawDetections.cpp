@@ -171,7 +171,9 @@ namespace aqcore
 
     bool DrawDetections::processImpl()
     {
-        const bool draw_on_device = this->getStream()->isDeviceStream();
+        // Drawing on the CPU is very cheap, so only draw on the GPU if the image is already there
+        const bool image_is_on_device = this->image->state() == aq::SyncedMemory::SyncState::DEVICE_UPDATED;
+        const bool draw_on_device = this->getStream()->isDeviceStream() && image_is_on_device;
 
         cv::Size size;
         mt::Tensor<const typename BoundingBox2d::DType, 1> bbs = detections->getComponent<BoundingBox2d>();
