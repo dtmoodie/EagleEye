@@ -160,7 +160,7 @@ namespace darknet
             return output;
         }
 
-        void forward(mo::IDeviceStream& stream)
+        void forward(mo::IDeviceStream&)
         {
             state.index = 0;
             state.net = *m_network;
@@ -287,7 +287,7 @@ class YOLO : virtual public aqcore::INeuralNet
     MO_END;
 
   protected:
-    bool initNetwork()
+    bool initNetwork() override
     {
         if ((m_net == nullptr))
         {
@@ -311,16 +311,16 @@ class YOLO : virtual public aqcore::INeuralNet
         return true;
     }
 
-    bool reshapeNetwork(unsigned int num, unsigned int channels, unsigned int height, unsigned int width)
+    bool reshapeNetwork(unsigned int , unsigned int , unsigned int , unsigned int ) override
     {
         return false;
     }
 
-    cv::Scalar_<unsigned int> getNetworkShape() const { return m_net->getInputShape(); }
+    cv::Scalar_<unsigned int> getNetworkShape() const override { return m_net->getInputShape(); }
 
-    std::vector<std::vector<cv::cuda::GpuMat>> getNetImageInput(int requested_batch_size) { return {m_input_channels}; }
+    std::vector<std::vector<cv::cuda::GpuMat>> getNetImageInput(int ) override { return {m_input_channels}; }
 
-    bool forwardMinibatch(mo::IDeviceStream& stream)
+    bool forwardMinibatch(mo::IDeviceStream& stream) override
     {
         stream.synchronize();
 
@@ -329,8 +329,8 @@ class YOLO : virtual public aqcore::INeuralNet
     }
 
     void postMiniBatch(mo::IDeviceStream& stream,
-                       const std::vector<cv::Rect>& batch_bb,
-                       const aq::DetectedObjectSet* dets) override
+                       const std::vector<cv::Rect>& ,
+                       const aq::DetectedObjectSet* ) override
     {
         auto input_image_shape = this->input->size();
         m_dets.setCatSet(this->getLabels());
@@ -339,7 +339,11 @@ class YOLO : virtual public aqcore::INeuralNet
         return;
     }
 
-    void postBatch() { this->output.publish(std::move(m_dets), mo::tags::param = &input_param); }
+    void postBatch() override
+    {
+        this->output.publish(std::move(m_dets), mo::tags::param = &input_param);
+        m_dets = Output_t();
+    }
 
   private:
     std::unique_ptr<darknet::Network> m_net;
