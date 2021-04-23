@@ -12,7 +12,7 @@ args = parser.parse_args()
 
 stream = aq.createStream()
 aq.setGuiStream(stream)
-
+aq.log('warning')
 graph = aq.Graph()
 graph.setStream(stream)
 
@@ -38,18 +38,19 @@ draw = aq.nodes.DrawDetections(image=fg, detections=facedb)
 
 writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./')
 
-graph.start()
+#graph.start()
 #aq.eventLoop(10000)
 for _ in range(10):
     graph.step()
+    output = facedb.output
+
+    components = output.data.components
+    for component in components:
+        print(component.data.data.typename)
+        print(component.data.data.data)
 facedb.saveUnknownFaces()
 
-output = facedb.output
 
-components = output.data.components
-for component in components:
-    print(component.data.data.typename)
-    print(component.data.data.data)
     #if('Classification' in component.data.data.typename):
         #assert component.data.data.data[0].data[0].cat.data.name == 'JerryRyan'
 
