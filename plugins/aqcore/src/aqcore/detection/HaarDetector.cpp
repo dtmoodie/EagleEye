@@ -27,7 +27,7 @@ namespace aqcore
         {
             cv::Mat img;
             img = input->getMat(&stream);
-            auto original_window_size = m_cpu_detector->getOriginalWindowSize();
+            // auto original_window_size = m_cpu_detector->getOriginalWindowSize();
             auto regions = getRegions();
             aq::CategorySet::ConstPtr labels = this->getLabels();
             aq::DetectedObjectSet detections(labels);
