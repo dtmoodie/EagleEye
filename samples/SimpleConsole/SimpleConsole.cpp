@@ -85,7 +85,7 @@ void PrintNodeTree(aq::nodes::INode* node, int depth)
     {
         std::cout << "=";
     }
-    std::cout << node->getTreeName() << std::endl;
+    std::cout << node->getName() << std::endl;
     auto children = node->getChildren();
     for (size_t i = 0; i < children.size(); ++i)
     {
@@ -104,15 +104,15 @@ std::ostream& operator<<(std::ostream& os, const std::vector<std::string>& strs)
 
 void PrintBuffers(aq::nodes::INode* node, std::vector<std::string>& printed_nodes)
 {
-    std::string name = node->getTreeName();
+    std::string name = node->getName();
     if (std::find(printed_nodes.begin(), printed_nodes.end(), name) != printed_nodes.end())
     {
         return;
     }
     printed_nodes.push_back(name);
-    std::vector<mo::InputParam*> inputs = node->getInputs();
+    std::vector<mo::ISubscriber*> inputs = node->getInputs();
     std::cout << "--------\n" << name << std::endl;
-    for (mo::InputParam* input : inputs)
+    for (mo::ISubscriber* input : inputs)
     {
         mo::IParam* param = input->getInputParam();
         mo::Buffer::IBuffer* buf = dynamic_cast<mo::Buffer::IBuffer*>(param);
@@ -131,7 +131,7 @@ void PrintBuffers(aq::nodes::INode* node, std::vector<std::string>& printed_node
 
 void printStatus(aq::nodes::INode* node, std::vector<std::string>& printed_nodes)
 {
-    std::string name = node->getTreeName();
+    std::string name = node->getName();
     if (std::find(printed_nodes.begin(), printed_nodes.end(), name) != printed_nodes.end())
     {
         return;
@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
     BOOST_LOG_TRIVIAL(info) << "Initializing";
     boost::program_options::options_description desc("Allowed options");
     auto table = SystemTable::instance();
-    mo::MetaObjectFactory factory(table.get());
+    mo::MetaObjectFactory::Ptr_t factory = mo::MetaObjectFactory::instance((table.get());
     // clang-format off
     desc.add_options()
             ("file", boost::program_options::value<std::string>(), "Optional - File to load for processing")
@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
     boost::program_options::store(parsed_options, vm);
     mo::initMetaParamsModule();
 
-    factory.registerTranslationUnit();
+    factory->registerTranslationUnit();
     if (vm.count("log-dir"))
         aq::core::initModule(&factory, vm["log-dir"].as<std::string>());
     else
