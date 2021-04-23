@@ -31,16 +31,17 @@ namespace aq
             MO_END;
 
           protected:
-            bool processImpl();
+            bool processImpl() override;
         };
 
         class OGLImageDisplay : public Node
         {
           public:
             MO_DERIVE(OGLImageDisplay, Node)
-                INPUT(SyncedImage, image)
+                INPUT(SyncedImage, input)
             MO_END;
-            bool processImpl();
+
+            bool processImpl() override;
 
           protected:
             mo::OptionalTime m_prev_time;
@@ -58,7 +59,7 @@ namespace aq
             MO_END;
 
           protected:
-            bool processImpl();
+            bool processImpl() override;
         };
 
         class FlowVectorDisplay : public Node
@@ -69,7 +70,7 @@ namespace aq
             MO_END;
 
           protected:
-            bool processImpl();
+            bool processImpl() override;
         };
 
         class HistogramDisplay : public Node
@@ -81,7 +82,7 @@ namespace aq
             MO_END;
 
           protected:
-            bool processImpl();
+            bool processImpl() override;
             cv::cuda::GpuMat draw;
         };
 
@@ -96,7 +97,7 @@ namespace aq
             MO_END;
 
           protected:
-            bool processImpl();
+            bool processImpl() override;
             cv::cuda::GpuMat draw;
         };
 
@@ -108,7 +109,7 @@ namespace aq
             MO_END;
 
           protected:
-            bool processImpl();
+            bool processImpl() override;
         };
     } // namespace nodes
 } // namespace aq

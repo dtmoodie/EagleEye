@@ -56,7 +56,8 @@ namespace aq
 
         void SubGraph::loop()
         {
-            processChildren();
+            MO_ASSERT(m_thread_stream != nullptr);
+            processChildren(*m_thread_stream);
             if (!m_quit)
             {
                 m_thread_stream->pushWork([this]() { this->loop(); });

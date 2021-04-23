@@ -2,24 +2,25 @@
 
 #include <Aquila/types/SyncedMemory.hpp>
 
-#include "Aquila/framegrabbers/FrameGrabberInfo.hpp"
 #include "boost/filesystem.hpp"
 #include "video.h"
+#include <Aquila/framegrabbers/GrabberInfo.hpp>
 #include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
-using namespace aq;
-using namespace aq::nodes;
-/*frame_grabber_video::~frame_grabber_video()
+
+namespace aqframegrabbers
 {
-    StopThreads();
-}
-int frame_grabber_video::CanLoadDocument(const std::string& document)
-{
-    boost::filesystem::path path(document);
-    auto extension = path.extension().string();
-    return (extension == ".avi" || extension == ".mp4") ? 1 : 0;
-}
 
+    int FrameGrabberVideo::canLoad(const std::string& document)
+    {
+        boost::filesystem::path path(document);
+        if (!boost::filesystem::exists(path))
+        {
+            return 0;
+        }
+        auto extension = path.extension().string();
+        return (extension == ".avi" || extension == ".mp4" || extension == ".mkv") ? 1 : 0;
+    }
+} // namespace aqframegrabbers
+using namespace aqframegrabbers;
 
-
-MO_REGISTER_CLASS(frame_grabber_video);
-*/
+MO_REGISTER_CLASS(FrameGrabberVideo);

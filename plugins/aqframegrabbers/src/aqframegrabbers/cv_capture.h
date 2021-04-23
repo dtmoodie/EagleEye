@@ -6,7 +6,6 @@
 #include <Aquila/rcc/external_includes/cv_videoio.hpp>
 
 #include <Aquila/types/SyncedImage.hpp>
-#include <MetaObject/params/detail/TParamPtrImpl.hpp>
 #include <RuntimeObjectSystem/RuntimeSourceDependency.h>
 
 namespace cv
@@ -28,12 +27,12 @@ namespace aqframegrabbers
             MO_SIGNAL(void, eos)
             SOURCE(aq::SyncedImage, output)
         MO_END;
-        virtual bool loadData(const std::string& path) override;
-        virtual bool grab() override;
+        bool loadData(const std::string& path) override;
+        bool grab() override;
 
       protected:
-        virtual bool LoadGPU(const std::string& path);
-        virtual bool LoadCPU(const std::string& path);
+        virtual bool loadGPU(const std::string& path);
+        virtual bool loadCPU(const std::string& path);
 
         mo::OptionalTime initial_time;
         bool query_time = true;

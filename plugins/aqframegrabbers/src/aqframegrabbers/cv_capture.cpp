@@ -26,18 +26,18 @@ namespace aqframegrabbers
 
     bool GrabberCV::loadData(const std::string& file_path)
     {
-        if (LoadGPU(file_path))
+        if (loadGPU(file_path))
         {
             return true;
         }
         else
         {
-            return LoadCPU(file_path);
+            return loadCPU(file_path);
         }
         return false;
     }
 
-    bool GrabberCV::LoadGPU(const std::string& file_path)
+    bool GrabberCV::loadGPU(const std::string& file_path)
     {
 #if MO_OPENCV_HAVE_CUDA
         d_cam.release();
@@ -54,11 +54,13 @@ namespace aqframegrabbers
         catch (cv::Exception& /*e*/)
         {
         }
+#else
+        (void)file_path;
 #endif
         return false;
     }
 
-    bool GrabberCV::LoadCPU(const std::string& file_path)
+    bool GrabberCV::loadCPU(const std::string& file_path)
     {
         h_cam.release();
         getLogger().info("[{}::h_loadFile] Trying to load: {}", GetTypeName(), file_path);
@@ -320,7 +322,7 @@ namespace aqframegrabbers
 
         m_cDevices = 0;
 #else
-
+    (void)paths;
 #endif
     }
 
@@ -406,7 +408,7 @@ namespace aqframegrabbers
 #endif
         std::vector<std::string> cameras;
         listPaths(cameras);
-        for (int i = 0; i < cameras.size(); ++i)
+        for (size_t i = 0; i < cameras.size(); ++i)
         {
             if (cameras[i] == file_path)
             {
@@ -429,7 +431,7 @@ namespace aqframegrabbers
         this->getLogger().debug("Unable to load {} queried cameras: trying to requery", file_path, func());
 
         listPaths(cameras);
-        for (int i = 0; i < cameras.size(); ++i)
+        for (size_t i = 0; i < cameras.size(); ++i)
         {
             if (cameras[i] == file_path)
             {

@@ -43,7 +43,15 @@ namespace aqcore
 
     void INeuralNet::postBatch() {}
 
-    bool INeuralNet::processImpl(mo::IAsyncStream&) { return false; }
+    bool INeuralNet::processImpl(mo::IAsyncStream& stream)
+    {
+        mo::IDeviceStream* dev_stream = stream.getDeviceStream();
+        if (dev_stream)
+        {
+            return this->processImpl(*dev_stream);
+        }
+        return false;
+    }
 
     bool INeuralNet::processImpl(mo::IDeviceStream& stream)
     {

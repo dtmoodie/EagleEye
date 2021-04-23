@@ -1,19 +1,19 @@
-#pragma once
+#ifndef AQFRAMEGRABBERS_VIDEO_HPP
+#define AQFRAMEGRABBERS_VIDEO_HPP
 
 #include "cv_capture.h"
-namespace aq
+
+namespace aqframegrabbers
 {
-    namespace nodes
+    class FrameGrabberVideo : public GrabberCV
     {
-    /*class frame_grabber_video : public frame_grabber_cv
-    {
-    public:
-        ~frame_grabber_video();
-        MO_DERIVE(frame_grabber_video, frame_grabber_cv);
+      public:
+        MO_DERIVE(FrameGrabberVideo, GrabberCV)
         MO_END;
-        static int CanLoadDocument(const std::string& document);
-    protected:
-        rcc::shared_ptr<ICoordinateManager>          coordinate_manager;
-    };*/
-    }
-}
+        static int canLoad(const std::string& document);
+
+      protected:
+    };
+} // namespace aqframegrabbers
+
+#endif // AQFRAMEGRABBERS_VIDEO_HPP

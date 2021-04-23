@@ -36,12 +36,14 @@ TEST(gstreamer, construct_dynamic)
 
 TEST(gstreamer, videotestsrc)
 {
+    auto stream = mo::IAsyncStream::create();
+    ASSERT_NE(stream, nullptr);
     auto fg = aq::nodes::IFrameGrabber::create("videotestsrc ! appsink", "frame_grabber_gstreamer");
     ASSERT_TRUE(fg);
     mo::IPublisher* output = fg->getOutput("current_frame");
     mo::TPublisher<aq::SyncedImage>* typed = dynamic_cast<mo::TPublisher<aq::SyncedImage>*>(output);
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-    fg->process();
+    fg->process(*stream);
     auto data = typed->getData();
     ASSERT_TRUE(data != nullptr);
     auto tdata = std::dynamic_pointer_cast<const mo::TDataContainer<aq::SyncedImage>>(data);

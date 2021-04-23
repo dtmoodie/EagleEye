@@ -13,8 +13,8 @@ namespace aqcore
 
         bool processImpl() override;
 
-        virtual bool processImpl(mo::IAsyncStream& stream) = 0;
-        virtual bool processImpl(mo::IDeviceStream& stream) = 0;
+        bool processImpl(mo::IAsyncStream& stream) override = 0;
+        bool processImpl(mo::IDeviceStream& stream) override = 0;
     };
 } // namespace aqcore
 #endif // AQCORE_STREAM_NODE_HPP

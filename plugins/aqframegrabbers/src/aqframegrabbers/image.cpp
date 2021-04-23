@@ -9,6 +9,7 @@
 
 using namespace aq;
 using namespace aq::nodes;
+
 namespace aqframegrabbers
 {
     bool GrabberImage::loadData(const std::string& path)

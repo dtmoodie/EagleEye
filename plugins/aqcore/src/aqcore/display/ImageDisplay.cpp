@@ -65,7 +65,11 @@ bool QtImageDisplay::processImpl()
                 ss << "Timestamp: " << ts;
                 cv::putText(mat, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
             }
-            getGraph()->getObject<WindowCallbackHandler>()->imshow(name, draw_img);
+            auto graph = getGraph();
+            MO_ASSERT(graph != nullptr);
+            auto window_manager = graph->getObject<WindowCallbackHandler>();
+            MO_ASSERT(window_manager != nullptr);
+            window_manager->imshow(name, draw_img);
         }
 
         return true;
@@ -155,11 +159,11 @@ bool OGLImageDisplay::processImpl()
     mo::IAsyncStreamPtr_t gui_stream = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
     rcc::shared_ptr<OGLImageDisplay> self(*this);
     mo::IAsyncStreamPtr_t my_stream = this->getStream();
-    mo::OptionalTime ts = image_param.getNewestHeader()->timestamp;
+    mo::OptionalTime ts = input_param.getNewestHeader()->timestamp;
 
     if (m_use_opengl && gui_stream->isDeviceStream())
     {
-        cv::cuda::GpuMat gpumat = this->image->gpuMat(gui_stream->getDeviceStream());
+        cv::cuda::GpuMat gpumat = this->input->gpuMat(gui_stream->getDeviceStream());
 
         auto device_work_func = [this, name, self, ts, gpumat]() {
             PROFILE_RANGE(imshow);
