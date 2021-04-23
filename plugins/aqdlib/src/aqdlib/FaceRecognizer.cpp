@@ -16,7 +16,7 @@
 
 namespace dlib
 {
-    void set_image_size(cv_image<bgr_pixel>& image, const long unsigned int& rows, const long unsigned int& cols)
+    void set_image_size(cv_image<bgr_pixel>& , const long unsigned int& , const long unsigned int& )
     {
         THROW(warn, "Not actually implemented");
     }
@@ -45,9 +45,13 @@ namespace aqdlib
         if (num_entities > 0)
         {
             cv::Mat img = image->getMat(stream.get());
+            cv::Mat rgb;
             if (image->pixelFormat() == ct::value(aq::PixelFormat::kBGR))
             {
-                cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
+                cv::cvtColor(img, rgb, cv::COLOR_BGR2RGB);
+            }else
+            {
+                rgb = img;
             }
             // MO_ASSERT_EQ(image->pixelFormat(), aq::PixelFormat::kRGB);
             dlib::cv_image<dlib::rgb_pixel> dlib_img(img);
@@ -67,8 +71,8 @@ namespace aqdlib
                 aq::boundingBoxToPixels(bb, size);
                 std::vector<dlib::point> parts;
                 auto pts = landmarks[i];
-
-                for (int j = 0; j < pts.getShape().numElements(); ++j)
+                const size_t num_points = pts.getShape().numElements();
+                for (size_t j = 0; j < num_points; ++j)
                 {
                     parts.emplace_back(dlib::point(pts[j].x, pts[j].y));
                 }
