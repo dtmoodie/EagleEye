@@ -135,12 +135,14 @@ namespace aqopenni2
             // auto ts = _frame.getTimestamp();
             auto fn = _frame.getFrameIndex();
             depth_fn = fn;
-            int scale = 1;
+            // int scale = 1;
             switch (_frame.getVideoMode().getPixelFormat())
             {
-            case openni::PIXEL_FORMAT_DEPTH_100_UM:
-                scale = 10;
-            case openni::PIXEL_FORMAT_DEPTH_1_MM:
+            case openni::PIXEL_FORMAT_DEPTH_100_UM: {
+                // scale = 10;
+            }
+
+            case openni::PIXEL_FORMAT_DEPTH_1_MM: {
                 cv::Mat data(height, width, CV_16U, (ushort*)_frame.getData());
                 cv::Mat XYZ;
                 XYZ.create(height, width, CV_32FC3);
@@ -161,6 +163,9 @@ namespace aqopenni2
                 sig_node_updated(node);
                 break;
             }
+            default:
+                break;
+            }
             return;
         }
         openni::Status rc = stream.readFrame(&_color_frame);
@@ -178,12 +183,15 @@ namespace aqopenni2
         color_fn = fn;
         switch (pixel_format)
         {
-        case openni::PIXEL_FORMAT_RGB888:
+        default:
+            break;
+        case openni::PIXEL_FORMAT_RGB888: {
             cv::Mat data(height, width, CV_8UC3, (ushort*)_color_frame.getData());
             mo::Mutex_t::Lock_t lock(getMutex());
             new_color = data.clone();
             INode* node = this;
             sig_node_updated(node);
+        }
         }
     }
 
