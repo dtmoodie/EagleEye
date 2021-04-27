@@ -1,39 +1,45 @@
+#include <ct/types/opencv.hpp>
+
 #include "pass_through.h"
 #include <Aquila/nodes/NodeInfo.hpp>
 
-using namespace aq;
-using namespace aq::nodes;
-
-bool h264_pass_through::processImpl()
+namespace aqgstreamer
 {
-    if (gstreamer_string_param.modified())
-    {
-        create_pipeline(gstreamer_string);
-        if (get_pipeline_state() != GST_STATE_PLAYING && _pipeline)
-            start_pipeline();
-        gstreamer_string_param.modified(false);
-        valve = gst_bin_get_by_name(GST_BIN(_pipeline), "myvalve");
-        if (!valve)
-        {
-            LOG_NODE(warning) << "No valve found in pipeline with name 'myvalve'";
-        }
-        previously_active = false;
-    }
-    if (active_param.modified() && active != previously_active)
-    {
-        if (active)
-        {
-            g_object_set(valve, "drop", false, NULL);
-            previously_active = true;
-        }
-        else
-        {
-            g_object_set(valve, "drop", true, NULL);
-            previously_active = false;
-        }
-        active_param.modified(false);
-    }
-    return true;
-}
 
-MO_REGISTER_CLASS(h264_pass_through);
+    bool H264PassThrough::processImpl()
+    {
+        if (pipeline_param.getModified())
+        {
+            createPipeline(pipeline);
+            if (getPipelineState() != GST_STATE_PLAYING && m_pipeline)
+            {
+                startPipeline();
+            }
+            pipeline_param.setModified(false);
+            m_valve = gst_bin_get_by_name(GST_BIN(m_pipeline), "myvalve");
+            if (!m_valve)
+            {
+                this->getLogger().warn("No valve found in pipeline with name 'myvalve'");
+            }
+            m_previously_active = false;
+        }
+        if (active_param.getModified() && active != m_previously_active)
+        {
+            if (active)
+            {
+                g_object_set(m_valve, "drop", false, NULL);
+                m_previously_active = true;
+            }
+            else
+            {
+                g_object_set(m_valve, "drop", true, NULL);
+                m_previously_active = false;
+            }
+            active_param.setModified(false);
+        }
+        return true;
+    }
+} // namespace aqgstreamer
+
+using namespace aqgstreamer;
+MO_REGISTER_CLASS(H264PassThrough);

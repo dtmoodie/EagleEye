@@ -1,53 +1,59 @@
-#pragma once
+#ifndef AQGSTREAMER_CHUNKED_FILES_SINK_HPP
+#define AQGSTREAMER_CHUNKED_FILES_SINK_HPP
 
-#include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include "gstreamer.hpp"
 
-namespace aq
+#include "Aquila/framegrabbers/IFrameGrabber.hpp"
+
+namespace aqgstreamer
 {
-    class aqgstreamer_EXPORT chunked_file_sink:
-        virtual public gstreamer_src_base, 
-        virtual public nodes::IGrabber
+    class aqgstreamer_EXPORT ChunkedFileSink : public GstreamerSrcBase, virtual public aq::nodes::IGrabber
     {
     public:
         static int canLoad(const std::string& doc);
         static int loadTimeout();
-        MO_DERIVE(chunked_file_sink, nodes::IGrabber)
+
+        MO_DERIVE(ChunkedFileSink, aq::nodes::IGrabber)
             PARAM(size_t, chunk_size, 10 * 1024 * 1024)
         MO_END;
-        virtual bool loadData(const std::string& file_path);
-        virtual GstFlowReturn on_pull();
-    protected:
-        bool grab(){return true;}
+
+        bool loadData(const std::string& file_path) override;
+        GstFlowReturn onPull() override;
+
+      protected:
+        bool grab() override { return true; }
         GstElement* _filesink;
     };
 
-    class aqgstreamer_EXPORT JpegKeyframer:
-        virtual public gstreamer_src_base,
-        virtual public nodes::IGrabber
+    class aqgstreamer_EXPORT JpegKeyframer : public GstreamerSrcBase, public aq::nodes::IGrabber
     {
-    public:
-        MO_DERIVE(JpegKeyframer, nodes::IGrabber)
+      public:
+        MO_DERIVE(JpegKeyframer, aq::nodes::IGrabber)
             STATE(long long, keyframe_count, 0)
         MO_END;
+
         static int canLoad(const std::string& doc);
         static int loadTimeout();
-        bool loadData(const std::string& file_path);
-        GstFlowReturn on_pull();
-    protected:
-        bool grab(){return true;}
+
+        bool loadData(const std::string& file_path) override;
+        GstFlowReturn onPull() override;
+
+      protected:
+        bool grab() override { return true; }
     };
-    namespace nodes
+
+    class aqgstreamer_EXPORT GstreamerSink : virtual public GstreamerSinkBase
     {
-    class aqgstreamer_EXPORT GstreamerSink: virtual public gstreamer_sink_base
-    {
-    public:
-        MO_DERIVE(GstreamerSink, gstreamer_sink_base)
-            INPUT(SyncedMemory, image, nullptr);
+      public:
+        MO_DERIVE(GstreamerSink, GstreamerSinkBase)
+            INPUT(aq::SyncedImage, image);
             PARAM(std::string, pipeline, "");
         MO_END;
-    protected:
-        bool processImpl();
+
+      protected:
+        bool processImpl() override;
     };
-    }
-}
+
+} // namespace aqgstreamer
+
+#endif // AQGSTREAMER_CHUNKED_FILES_SINK_HPP

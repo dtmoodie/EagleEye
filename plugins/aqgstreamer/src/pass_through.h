@@ -1,21 +1,26 @@
-#pragma once
+#ifndef AQGSTREAMER_PASS_THROUGH_HPP
+#define AQGSTREAMER_PASS_THROUGH_HPP
 #include <MetaObject/object/MetaObject.hpp>
 #include "gstreamer.hpp"
 
-namespace aq
+namespace aqgstreamer
 {
-    namespace nodes
+
+    class aqgstreamer_EXPORT H264PassThrough : public GstreamerSinkBase
     {
-        class aqgstreamer_EXPORT h264_pass_through: public gstreamer_sink_base{
-        public:
-            MO_DERIVE(h264_pass_through, gstreamer_sink_base)
-                PARAM(std::string, gstreamer_string, "");
-                PARAM(bool, active, false);
-            MO_END;
-        protected:
-            bool processImpl();
-            GstElement* valve = nullptr;
-            bool previously_active = false;
-        };
-    }
-}
+      public:
+        MO_DERIVE(H264PassThrough, GstreamerSinkBase)
+            PARAM(std::string, pipeline, "");
+            PARAM(bool, active, false);
+        MO_END;
+
+      protected:
+        bool processImpl() override;
+
+      private:
+        GstElement* m_valve = nullptr;
+        bool m_previously_active = false;
+    };
+} // namespace aqgstreamer
+
+#endif // AQGSTREAMER_PASS_THROUGH_HPP

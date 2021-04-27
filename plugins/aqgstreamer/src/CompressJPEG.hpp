@@ -1,34 +1,42 @@
-#pragma once
+#ifndef AQGSTREAMER_COMPRESS_JPEG_HPP
+#define AQGSTREAMER_COMPRESS_JPEG_HPP
 #include "sinks.hpp"
+
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/types/CompressedImage.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
+
 namespace aqgstreamer
 {
-class CompressImage : virtual public aq::nodes::gstreamer_sink_base, virtual public aq::gstreamer_src_base
-{
-  public:
-    static constexpr const int32_t jpg = aq::types::CompressedImage::Encoding::jpg;
-    static constexpr const int32_t png = aq::types::CompressedImage::Encoding::png;
-    CompressImage();
-    ~CompressImage();
-    MO_DERIVE(CompressImage, aq::nodes::gstreamer_sink_base)
-        INPUT(aq::SyncedMemory, input, nullptr)
 
-        PARAM(int, quality, 90)
-        PARAM(bool, use_hardware_accel, true)
-        ENUM_PARAM(encoding, jpg, png)
+    class CompressImage : virtual public GstreamerSinkBase, virtual public GstreamerSrcBase
+    {
+      public:
+        static constexpr const aq::ImageEncoding jpg = aq::ImageEncoding::JPG;
+        static constexpr const aq::ImageEncoding png = aq::ImageEncoding::PNG;
 
-        OUTPUT(aq::types::CompressedImage, output, {})
+        CompressImage();
+        ~CompressImage();
 
-    MO_END
+        MO_DERIVE(CompressImage, GstreamerSinkBase)
+            INPUT(aq::SyncedImage, input)
 
-    virtual bool create_pipeline(const std::string& pipeline_) final;
+            PARAM(int, quality, 90)
+            PARAM(bool, use_hardware_accel, true)
+            ENUM_PARAM(encoding, jpg, png)
 
-  protected:
-    virtual GstFlowReturn on_pull() override;
-    virtual bool processImpl() override;
+            OUTPUT(aq::CompressedImage, output)
 
-    std::shared_ptr<mo::Context> m_gstreamer_context;
-};
-}
+        MO_END;
+
+        bool createPipeline(const std::string& pipeline_) final;
+
+      protected:
+        GstFlowReturn onPull() override;
+        bool processImpl() override;
+
+        mo::IAsyncStreamPtr_t m_gstreamer_stream;
+    };
+} // namespace aqgstreamer
+
+#endif // AQGSTREAMER_COMPRESS_JPEG_HPP

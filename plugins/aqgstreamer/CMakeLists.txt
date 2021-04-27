@@ -8,93 +8,74 @@ ADD_DEFINITIONS(${DEFS})
 IF(WIN32)
     FIND_PACKAGE(GStreamerWindows QUIET)
 ELSE(WIN32)
-    FIND_PACKAGE(Gstreamer QUIET)
+    FIND_PACKAGE(Gstreamer REQUIRED)
 ENDIF(WIN32)
 
-IF(GSTREAMER_FOUND)
-    set(BIN_DIRS "${BIN_DIRS};GSTREAMER" CACHE STRING "" FORCE)
-    set(GSTREAMER_BIN_DIR_DEBUG "${GSTREAMER_gst_BIN_DIR}" CACHE PATH "" FORCE)
-    set(GSTREAMER_BIN_DIR_RELEASE "${GSTREAMER_gst_BIN_DIR}" CACHE PATH "" FORCE)
-
-    if(WIN32)
-
-    else()
-        FIND_PACKAGE(PkgConfig)
-        pkg_search_module(GLIB2 glib-2.0)
-            INCLUDE_DIRECTORIES(${GSTREAMER_gst_INCLUDE_DIR})
-            INCLUDE_DIRECTORIES(${GSTREAMER_gstconfig_INCLUDE_DIR})
-            INCLUDE_DIRECTORIES(${Glib_INCLUDE_DIR})
-
-        if(GLIB2_FOUND)
-            INCLUDE_DIRECTORIES("/usr/lib/x86_64-linux-gnu/glib-2.0/include")
-            INCLUDE_DIRECTORIES("/usr/lib/arm-linux-gnueabihf/glib-2.0/include")
-            INCLUDE_DIRECTORIES("/usr/include/glib-2.0")
-        else(GLIB2_FOUND)
-            message(STATUS "glib2 not found")
-        endif(GLIB2_FOUND)
-        LINK_DIRECTORIES(${CUDA_TOOLKIT_ROOT_DIR}/lib)
-    endif()
-
-    INCLUDE_DIRECTORIES(${GSTREAMER_gst_INCLUDE_DIR})
-    INCLUDE_DIRECTORIES(${GSTREAMER_gstconfig_INCLUDE_DIR})
-    INCLUDE_DIRECTORIES(${GSTREAMER_glibconfig_INCLUDE_DIR})
-    INCLUDE_DIRECTORIES(${GSTREAMER_glib_INCLUDE_DIR})
-    LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_gst_INCLUDE_DIR})
-    LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_gstconfig_INCLUDE_DIR})
-    LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glibconfig_INCLUDE_DIR})
-    LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glib_INCLUDE_DIR})
-    FIND_PACKAGE(OpenCV QUIET COMPONENTS core imgcodecs)
-    if(OpenCV_FOUND)
-        FILE(GLOB_RECURSE src "src/*.cpp")
-        FILE(GLOB_RECURSE hdr "src/*.hpp" "src/*.h")
-        INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
-        LINK_DIRECTORIES(${LINK_DIRS})
-        STRING(REGEX REPLACE ";" "+" PROJECT_INCLUDES "${PROJECT_INCLUDES}" )
-        #ADD_DEFINITIONS(-DPROJECT_INCLUDES="${PROJECT_INCLUDES}")
-        GET_FILENAME_COMPONENT(LIB_DIR "${GSTREAMER_gstapp_LIBRARY}" DIRECTORY)
-        IF(${GSTREAMER_gstrtspserver_LIBRARY})
-            add_definitions(-DHAVE_GST_RTSPSERVER)
-        endif()
-        ADD_DEFINITIONS(-DPROJECT_LIB_DIRS="${LIB_DIR}")
-        ADD_LIBRARY(aqgstreamer SHARED ${src} ${hdr})
-        RCC_LINK_LIB(aqgstreamer
-            ${OpenCV_LIBS}
-            aquila_core
-            ${GSTREAMER_gstapp_LIBRARY}
-            ${GSTREAMER_gstaudio_LIBRARY}
-            ${GSTREAMER_gstbase_LIBRARY}
-            ${GSTREAMER_gstcontroller_LIBRARY}
-            ${GSTREAMER_gstnet_LIBRARY}
-            ${GSTREAMER_gstpbutils_LIBRARY}
-            ${GSTREAMER_gstreamer_LIBRARY}
-            ${GSTREAMER_gstriff_LIBRARY}
-            ${GSTREAMER_gstrtp_LIBRARY}
-            ${GSTREAMER_gstrtsp_LIBRARY}
-            ${GSTREAMER_gstsdp_LIBRARY}
-            ${GSTREAMER_gsttag_LIBRARY}
-            ${GSTREAMER_gstvideo_LIBRARY}
-            ${Glib_LIBRARY}
-            ${GLIB_LIBRARY}
-            ${GLIB2_LIBRARIES}
-
-            ${GOBJECT_LIBRARY}
-            metaobject_core
-            metaobject_object
-            metaobject_params
-            metaobject_metaparams
-            aquila_types
-            aquila_utilities
-        )
-        IF(${GSTREAMER_gstrtspserver_LIBRARY})
-            RCC_LINK_LIB(GStreamer ${GSTREAMER_gstrtspserver_LIBRARY})
-        ENDIF()
-
-        aquila_declare_plugin(aqgstreamer)
-        set_plugin_available(aqgstreamer)
-    else()
-        set_plugin_status(aqgstreamer "OpenCV core and imgcodecs not found")
-        set_plugin_unavailable(aqgstreamer)
-    endif()
-else()
+IF(NOT GSTREAMER_FOUND)
     set_plugin_unavailable(aqgstreamer)
-ENDIF()
+    set_plugin_status(aqgstreamer "gstreamer not found")
+    return()
+endif(NOT GSTREAMER_FOUND)
+
+FIND_PACKAGE(PkgConfig)
+pkg_search_module(GLIB2 glib-2.0)
+
+if(NOT GLIB2_FOUND)
+    set_plugin_unavailable(aqgstreamer)
+    set_plugin_status(aqgstreamer "glib2 not found")
+    return()
+endif(GLIB2_FOUND)
+
+FIND_PACKAGE(OpenCV QUIET COMPONENTS core imgcodecs)
+if(NOT OpenCV_FOUND)
+    set_plugin_status(aqgstreamer "OpenCV core and imgcodecs not found")
+    set_plugin_unavailable(aqgstreamer)
+    return()
+endif()
+
+
+FILE(GLOB_RECURSE src "src/*.cpp")
+FILE(GLOB_RECURSE hdr "src/*.hpp" "src/*.h")
+add_library(aqgstreamer SHARED ${src} ${hdr})
+
+target_include_directories(aqgstreamer
+    PUBLIC
+        ${GSTREAMER_gst_INCLUDE_DIR}
+        ${GSTREAMER_gstconfig_INCLUDE_DIR}
+        ${GSTREAMER_glibconfig_INCLUDE_DIR}
+        ${GSTREAMER_glib_INCLUDE_DIR}
+        "/usr/lib/x86_64-linux-gnu/glib-2.0/include"
+        "/usr/lib/arm-linux-gnueabihf/glib-2.0/include"
+        "/usr/include/glib-2.0"
+)
+
+target_link_libraries(aqgstreamer
+    ${OpenCV_LIBS}
+
+    ${GSTREAMER_gstreamer_LIBRARY}
+    ${GSTREAMER_gstapp_LIBRARY}
+    ${GSTREAMER_gstbase_LIBRARY}
+    ${Glib_LIBRARY}
+    ${GLIB_LIBRARY}
+    ${GLIB2_LIBRARIES}
+
+    ${GOBJECT_LIBRARY}
+    metaobject_core
+    metaobject_object
+    metaobject_params
+    metaobject_metaparams
+
+    aquila_core
+    aquila_types
+    aquila_utilities
+)
+
+GET_FILENAME_COMPONENT(LIB_DIR "${GSTREAMER_gstapp_LIBRARY}" DIRECTORY)
+IF(${GSTREAMER_gstrtspserver_LIBRARY})
+    target_compile_definitions(aqgstreamer -DHAVE_GST_RTSPSERVER)
+    target_link_libraries(aqgstreamer ${GSTREAMER_gstrtspserver_LIBRARY})
+endif()
+
+aquila_declare_plugin(aqgstreamer)
+set_plugin_available(aqgstreamer)
+set_plugin_status(aqgstreamer "gstreamer include: ${GSTREAMER_gst_INCLUDE_DIR} library: ${GSTREAMER_gstreamer_LIBRARY}")

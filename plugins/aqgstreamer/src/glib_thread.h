@@ -1,32 +1,45 @@
-#pragma once
+#ifndef AQGSTREAMER_GLIB_THREAD_HPP
+#define AQGSTREAMER_GLIB_THREAD_HPP
 
 #include "aqgstreamer/aqgstreamer_export.hpp"
-#include <MetaObject/core/Context.hpp>
+
+#include <MetaObject/thread/ConditionVariable.hpp>
+#include <MetaObject/thread/Mutex.hpp>
+
 #include <boost/thread.hpp>
 #include <gst/gst.h>
 
-class aqgstreamer_EXPORT glib_thread
+namespace aqgstreamer
 {
-  protected:
-    boost::thread _thread;
-    GMainLoop* _main_loop;
-    mutable boost::condition_variable cv;
-    mutable boost::mutex mtx;
-    std::shared_ptr<mo::Context> context;
-    void loop();
+    class aqgstreamer_EXPORT GLibThread
+    {
 
-  public:
-    glib_thread();
-    ~glib_thread();
-    static glib_thread* instance();
-    // gobject main event loop
-    GMainLoop* get_main_loop();
+        boost::thread m_thread;
+        GMainLoop* m_main_loop = nullptr;
+        mutable mo::ConditionVariable m_cv;
+        mutable mo::Mutex_t m_mtx;
+        mo::IAsyncStreamPtr_t m_stream;
 
-    void stop_thread();
+        void loop();
 
-    void start_thread();
+      public:
+        GLibThread();
+        ~GLibThread();
+        static std::shared_ptr<GLibThread> instance();
+        static std::shared_ptr<GLibThread> instance(SystemTable* table);
+        // gobject main event loop
+        GMainLoop* getMainLoop();
 
-    size_t get_thread_id();
+        void stopThread();
 
-    std::shared_ptr<mo::Context> getContext() const;
-};
+        void startThread();
+
+        size_t getThreadId();
+
+        void yield();
+
+        mo::IAsyncStreamPtr_t getStream() const;
+    };
+} // namespace aqgstreamer
+
+#endif // AQGSTREAMER_GLIB_THREAD_HPP

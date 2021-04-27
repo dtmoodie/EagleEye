@@ -1,29 +1,35 @@
-#pragma once
+#ifndef AQGSTREAMER_IMAGE_GRABBER_HPP
+#define AQGSTREAMER_IMAGE_GRABBER_HPP
+#include "gstreamer.hpp"
+
 #include "Aquila/framegrabbers/IFrameGrabber.hpp"
 #include "aqgstreamer/aqgstreamer_export.hpp"
-#include "gstreamer.hpp"
 
 namespace aq
 {
 namespace grabbers
 {
-class aqgstreamer_EXPORT GstreamerImageGrabber : virtual public gstreamer_src_base, virtual public nodes::IGrabber
-{
-  public:
-    static int canLoad(const std::string& doc);
-    static int loadTimeout() { return 10000; }
-    MO_DERIVE(GstreamerImageGrabber, IGrabber)
-        SOURCE(SyncedMemory, image, {})
-        MO_SIGNAL(void, update)
-        PARAM(bool, use_system_time, false)
-    MO_END
+    class aqgstreamer_EXPORT GstreamerImageGrabber : virtual public aqgstreamer::GstreamerSrcBase,
+                                                     virtual public nodes::IGrabber
+    {
+      public:
+        static int canLoad(const std::string& doc);
+        static int loadTimeout();
 
-    virtual void initCustom(bool first_init) override;
+        MO_DERIVE(GstreamerImageGrabber, IGrabber)
+            SOURCE(SyncedImage, image)
+            MO_SIGNAL(void, update)
+            PARAM(bool, use_system_time, false)
+        MO_END;
 
-  protected:
-    virtual GstFlowReturn on_pull() override;
-    virtual bool loadData(const ::std::string& file_path) override;
-    virtual bool grab() override;
-};
+        void initCustom(bool first_init) override;
+
+      protected:
+        GstFlowReturn onPull() override;
+        bool loadData(const ::std::string& file_path) override;
+        bool grab() override;
+    };
+} // namespace grabbers
 }
-}
+
+#endif // AQGSTREAMER_IMAGE_GRABBER_HPP
