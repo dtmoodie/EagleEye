@@ -36,9 +36,7 @@ namespace mo
     class MetaObjectFactory;
 }
 
-namespace @PLUGIN_NAME@
-{
-    void @PLUGIN_NAME@_EXPORT initPlugin(mo::MetaObjectFactory* factory);
-}
+
+extern "C" void @PLUGIN_NAME@_EXPORT initPlugin(mo::MetaObjectFactory* factory);
 
 // clang-format on

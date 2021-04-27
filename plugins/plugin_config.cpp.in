@@ -26,12 +26,10 @@ const char* getPluginBuildInfo()
            "  builder          : @GIT_USERNAME@ - @GIT_EMAIL@\n";
 }
 
-namespace @PLUGIN_NAME@
+
+void initPlugin(mo::MetaObjectFactory* factory)
 {
-    void initPlugin(mo::MetaObjectFactory* factory)
-    {
-        factory->setupObjectConstructors(PerModuleInterface::GetInstance());
-    }
+    factory->setupObjectConstructors(PerModuleInterface::GetInstance());
 }
 
 // clang-format on
