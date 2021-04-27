@@ -37,7 +37,7 @@ using namespace aq::nodes;
 #else
 
 #endif
-void InitModule()
+void initModule(SystemTable*)
 {
 #ifndef _MSC_VER
     dlopen("libpython2.7.so", RTLD_LAZY | RTLD_GLOBAL);

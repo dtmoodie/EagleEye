@@ -1,4 +1,5 @@
 #pragma once
+#include <MetaObject/core/SystemTable.hpp>
 
 #include <memory>
 namespace ros
@@ -26,5 +27,5 @@ class RosInterface
 }
 
 extern "C" {
-void InitModule();
+void initModule(SystemTable*);
 }

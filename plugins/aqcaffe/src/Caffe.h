@@ -22,7 +22,7 @@
 #include <caffe/common.hpp>
 #include <caffe/net.hpp>
 
-extern "C" Caffe_EXPORT void InitModule();
+extern "C" Caffe_EXPORT void initModule(SystemTable*);
 
 namespace aq {
 namespace nodes {

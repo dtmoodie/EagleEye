@@ -42,7 +42,5 @@ std::shared_ptr<RosInterface> RosInterface::Instance()
 }
 
 extern "C" {
-void InitModule()
-{
-}
+void initModule(SystemTable*) {}
 }
