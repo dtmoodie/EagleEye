@@ -1,4 +1,7 @@
 #pragma once
+
+#include <opencv2/core/types.hpp>
+
 #include <Aquila/types/SyncedImage.hpp>
 
 #include "../OpenCVCudaNode.hpp"
