@@ -12,26 +12,6 @@ find_package(OpenCV QUIET COMPONENTS core imgcodecs cudacodec cudaarithm videoio
     include_directories(${OpenCV_INCLUDE_DIRS})
     set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 
-if(WIN32)
-    FIND_PACKAGE(GStreamerWindows QUIET)
-else(WIN32)
-    FIND_PACKAGE(Gstreamer QUIET)
-    INCLUDE_DIRECTORIES("/usr/lib/x86_64-linux-gnu/glib-2.0/include")
-    INCLUDE_DIRECTORIES("/usr/lib/arm-linux-gnueabihf/glib-2.0/include")
-    INCLUDE_DIRECTORIES("/usr/include/glib-2.0")
-endif(WIN32)
-if(GSTREAMER_FOUND)
-    INCLUDE_DIRECTORIES(${GSTREAMER_gst_INCLUDE_DIR})
-    INCLUDE_DIRECTORIES(${GSTREAMER_gstconfig_INCLUDE_DIR})
-    INCLUDE_DIRECTORIES(${GSTREAMER_glibconfig_INCLUDE_DIR})
-    INCLUDE_DIRECTORIES(${GSTREAMER_glib_INCLUDE_DIR})
-
-    LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_gst_INCLUDE_DIR})
-    LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_gstconfig_INCLUDE_DIR})
-    LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glibconfig_INCLUDE_DIR})
-    LIST(APPEND PROJECT_INCLUDES ${GSTREAMER_glib_INCLUDE_DIR})
-    add_definitions(-DHAVE_GSTREAMER)
-endif()
 
 ADD_DEFINITIONS(${DEFS})
 
@@ -59,26 +39,7 @@ target_link_libraries(aqframegrabbers
     ${OpenCV_LIBS}
     aquila_types
 )
-if(GSTREAMER_FOUND)
-    target_link_libraries(aqframegrabbers
-        ${GSTREAMER_gstapp_LIBRARY}
-        ${GSTREAMER_gstaudio_LIBRARY}
-        ${GSTREAMER_gstbase_LIBRARY}
-        ${GSTREAMER_gstcontroller_LIBRARY}
-        ${GSTREAMER_gstnet_LIBRARY}
-        ${GSTREAMER_gstpbutils_LIBRARY}
-        ${GSTREAMER_gstreamer_LIBRARY}
-        ${GSTREAMER_gstriff_LIBRARY}
-        ${GSTREAMER_gstrtp_LIBRARY}
-        ${GSTREAMER_gstrtsp_LIBRARY}
-        ${GSTREAMER_gstsdp_LIBRARY}
-        ${GSTREAMER_gsttag_LIBRARY}
-        ${GSTREAMER_gstvideo_LIBRARY}
-        ${Glib_LIBRARY}
-        ${GLIB_LIBRARY}
-        ${GOBJECT_LIBRARY}
-    )
-endif()
+
 
 # ------------- tests
 if(BUILD_TESTS)
