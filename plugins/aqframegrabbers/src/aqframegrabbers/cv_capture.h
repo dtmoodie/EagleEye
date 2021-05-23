@@ -1,4 +1,6 @@
 #pragma once
+#include <aqframegrabbers_export.hpp>
+
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
 
 #include <Aquila/rcc/external_includes/cv_cudacodec.hpp>

@@ -1,4 +1,5 @@
 #pragma once
+#include <aqcore_export.hpp>
 
 #include <Aquila/types/ObjectDetection.hpp>
 #include <Aquila/types/SyncedImage.hpp>

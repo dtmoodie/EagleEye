@@ -37,7 +37,11 @@ namespace aq
         void SubGraph::startThread()
         {
             m_quit = false;
-            m_thread_stream->pushWork([this]() { this->loop(); });
+            m_thread_stream->pushWork([this](mo::IAsyncStream& stream)
+            {
+                MO_ASSERT(&stream == this->m_thread_stream.get());
+                this->loop();
+            });
         }
 
         void SubGraph::stopThread() { m_quit = true; }
@@ -60,7 +64,11 @@ namespace aq
             processChildren(*m_thread_stream);
             if (!m_quit)
             {
-                m_thread_stream->pushWork([this]() { this->loop(); });
+                m_thread_stream->pushWork([this](mo::IAsyncStream& stream)
+                {
+                    MO_ASSERT(&stream == this->m_thread_stream.get());
+                    this->loop();
+                });
             }
         }
 

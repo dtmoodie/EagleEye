@@ -42,7 +42,7 @@ if(DARKNET_LIBRARY AND DARKNET_INCLUDE)
             aqcore
             ${CUDNN_LIBRARY}
         )
-        aquila_declare_plugin(aqdarknet)
+        metaobject_declare_plugin(aqdarknet)
         set_plugin_available(aqdarknet)
         set_plugin_status(aqdarknet "Darknet ${DARKNET_DIR}")
         aq_install_python_test(scripts/test_yolo.py)

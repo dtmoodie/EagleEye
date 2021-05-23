@@ -1,6 +1,6 @@
 #pragma once
 #ifdef HAVE_GSTREAMER
-#include "aqframegrabbers/aqframegrabbers_export.hpp"
+
 #include "gstreamer.h"
 
 namespace aq

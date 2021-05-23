@@ -1,6 +1,5 @@
 #ifndef AQFRAMEGRABBERS_VIDEO_HPP
 #define AQFRAMEGRABBERS_VIDEO_HPP
-
 #include "cv_capture.h"
 
 namespace aqframegrabbers

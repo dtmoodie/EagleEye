@@ -56,6 +56,33 @@ namespace aqgstreamer
         return false;
     }
 
+    bool mapBuffer(std::shared_ptr<GstBuffer> buffer,
+                   aq::SyncedImage& output,
+                   aq::Shape<2> size,
+                   aq::PixelType type,
+                   GstMapFlags flags,
+                   mo::IAsyncStreamPtr_t stream)
+    {
+        std::shared_ptr<GstMapInfo> map(new GstMapInfo, [buffer](GstMapInfo* map) {
+            gst_buffer_unmap(buffer.get(), map);
+            delete map;
+        });
+        if (gst_buffer_map(buffer.get(), map.get(), flags))
+        {
+
+            if (flags == GstMapFlags::GST_MAP_READ)
+            {
+                output = aq::SyncedImage(size, type, static_cast<const void*>(map->data), map, stream);
+            }
+            else
+            {
+                output = aq::SyncedImage(size, type, static_cast<void*>(map->data), map, stream);
+            }
+            return true;
+        }
+        return false;
+    }
+
     bool mapBuffer(std::shared_ptr<GstBuffer> buffer, ce::shared_ptr<aq::SyncedMemory>& output, GstMapFlags flags)
     {
         GstMapInfo map;
@@ -386,7 +413,7 @@ namespace aqgstreamer
             bool sync = false;
             cv::Mat h_mat = img.getMat(&stream, &sync);
 
-            auto push = [this, wrapping, buffer, h_mat, delta, timestamp]() mutable {
+            auto push = [this, wrapping, buffer, h_mat, delta, timestamp](mo::IAsyncStream&) mutable {
                 h_mat.copyTo(*wrapping);
 
                 GST_BUFFER_PTS(buffer.get()) = m_timestamp;
@@ -411,7 +438,7 @@ namespace aqgstreamer
             }
             else
             {
-                push();
+                push(stream);
             }
         }
     }

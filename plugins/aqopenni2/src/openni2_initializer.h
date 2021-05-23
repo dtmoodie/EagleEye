@@ -1,8 +1,8 @@
 #pragma once
-
+#include "aqopenni2_export.hpp"
 namespace aq
 {
-    class initializer_NI2
+    class aqopenni2_EXPORT initializer_NI2
     {
     public:
         initializer_NI2();

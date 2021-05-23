@@ -22,8 +22,7 @@ namespace grabbers
     void GstreamerImageGrabber::initCustom(bool /*first_init*/)
     {
         std::shared_ptr<aqgstreamer::GLibThread> inst = aqgstreamer::GLibThread::instance();
-        // std::shared_ptr<mo::IAsyncStream> stream = inst->getStream();
-        // image.setStream(*stream);
+        m_gstreamer_stream = inst->getStream();
     }
 
     GstFlowReturn GstreamerImageGrabber::onPull()
@@ -35,7 +34,7 @@ namespace grabbers
             GstCaps* caps = gst_sample_get_caps(sample);
             if (!caps)
             {
-                getLogger().debug("could not get sample caps");
+                this->getLogger().debug("could not get sample caps");
                 return GST_FLOW_OK;
             }
             GstStructure* s = gst_caps_get_structure(caps, 0);
@@ -46,24 +45,39 @@ namespace grabbers
 
             if (!res)
             {
-                getLogger().debug("Could not get image dimension");
+                this->getLogger().debug("Could not get image dimension");
                 return GST_FLOW_OK;
             }
 
             const gchar* format = gst_structure_get_string(s, "format");
-            int32_t pixel_format = CV_8UC3;
+            aq::PixelType pixel_type;
+            pixel_type.data_type = aq::DataFlag::kUINT8;
+            pixel_type.pixel_format = aq::PixelFormat::kBGR;
             if (format)
             {
                 if (std::string("RGBA") == format)
                 {
-                    pixel_format = CV_8UC4;
+                    pixel_type.pixel_format = aq::PixelFormat::kRGBA;
+                }
+                else if (std::string("BGRA") == format)
+                {
+                    pixel_type.pixel_format = aq::PixelFormat::kRGBA;
+                }
+                else if (std::string("BGR") == format)
+                {
+                    pixel_type.pixel_format = aq::PixelFormat::kBGR;
+                }
+                else if (std::string("RGB") == format)
+                {
+                    pixel_type.pixel_format = aq::PixelFormat::kRGB;
                 }
             }
 
             std::shared_ptr<GstBuffer> buffer = aqgstreamer::ownBuffer(gst_sample_get_buffer(sample));
-            std::shared_ptr<cv::Mat> wrapping;
+            aq::SyncedImage image;
 
-            const bool success = aqgstreamer::mapBuffer(buffer, wrapping, cv::Size(width, height), pixel_format);
+            const bool success = aqgstreamer::mapBuffer(
+                buffer, image, aq::Shape<2>(height, width), pixel_type, GstMapFlags::GST_MAP_READ, m_gstreamer_stream);
 
             if (success)
             {
@@ -75,10 +89,8 @@ namespace grabbers
                 }
 
                 this->getLogger().trace("Received image at {}", time);
-                auto stream = mo::IAsyncStream::current();
-                aq::SyncedImage image(*wrapping, aq::PixelFormat::kBGR, stream);
-                image.setOwning(wrapping);
-                this->image.publish(image, mo::tags::timestamp = time, mo::tags::stream = stream.get());
+
+                this->image.publish(std::move(image), mo::tags::timestamp = time, mo::tags::stream = m_gstreamer_stream.get());
                 sig_update();
             }
         }

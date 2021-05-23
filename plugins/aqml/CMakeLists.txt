@@ -42,6 +42,6 @@ cuda_add_library(aqml SHARED ${src} ${hdr} ${knl} ${knl_hdr})
 
 RCC_LINK_LIB(aqml aquila_core aquila_utilities ${OpenCV_LIBS} ${CUDA_cublas_LIBRARY} RuntimeObjectSystem)
 
-aquila_declare_plugin(aqml)
+metaobject_declare_plugin(aqml)
 set_plugin_available(aqml)
 set_plugin_status(aqml "Using thrust version ${THRUST_VERSION}")

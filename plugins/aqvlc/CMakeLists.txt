@@ -34,7 +34,7 @@ IF(LIBVLC_FOUND)
             ${LIBVLC_LIBRARY} ${Boost_LIBRARIES}
             ${LIBVLCCORE_LIBRARY}
         )
-        aquila_declare_plugin(aqvlc)
+        metaobject_declare_plugin(aqvlc)
     ENDIF()
 else()
     set_plugin_status(aqvlc "VLC lib not found")

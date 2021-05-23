@@ -213,7 +213,7 @@ bool SaveAnnotations::processImpl()
     cv::Mat img = input->getMat(stream.get(), &sync);
     if (sync)
     {
-        stream->pushWork([img, window_manager]() { window_manager->imshow("original", img); });
+        stream->pushWork([img, window_manager](mo::IAsyncStream&) { window_manager->imshow("original", img); });
         _original_image = img;
     }
     else

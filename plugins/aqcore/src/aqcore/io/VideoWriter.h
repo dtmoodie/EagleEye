@@ -52,6 +52,8 @@ namespace aqcore
 
       protected:
         bool processImpl();
+        bool processImpl(mo::IAsyncStream&);
+        bool processImpl(mo::IDeviceStream&);
         boost::thread _write_thread;
 
         cv::Ptr<cv::cudacodec::VideoWriter> d_writer;

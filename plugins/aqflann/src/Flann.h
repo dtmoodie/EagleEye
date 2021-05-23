@@ -1,6 +1,6 @@
 #pragma once
 #include "Aquila/nodes/Node.hpp"
-#include "Aquila/core/detail/Export.hpp"
+#include "Aquila/detail/export.hpp"
 #include "Aquila/types/SyncedMemory.hpp"
 #include <Aquila/utilities/cuda/CudaUtils.hpp>
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"

@@ -1,6 +1,6 @@
 project(aqpointclouds)
-#find_package(vtk QUIET)
-#find_package(PCL QUIET)
+
+find_package(OpenCV REQUIRED COMPONENTS core)
 
 # https://github.com/PointCloudLibrary/pcl/blob/master/cmake/pcl_utils.cmake
 macro(REMOVE_VTK_DEFINITIONS)
@@ -25,7 +25,10 @@ REMOVE_VTK_DEFINITIONS()
 cuda_add_library(aqpointclouds SHARED ${src} ${knl} ${hdr})
 
 target_link_libraries(aqpointclouds
-      metaobject_core metaobject_object metaobject_params metaobject_metaparams
+      metaobject_core
+      metaobject_object
+      metaobject_params
+      metaobject_metaparams
       ${OpenCV_LIBS}
       ${PCL_LIBRARIES}
       aquila_core
@@ -41,5 +44,5 @@ if(vtk_FOUND)
     target_compile_definitions(aqpointclouds PRIVATE HAVE_VTK)
 endif()
 
-aquila_declare_plugin(aqpointclouds)
+metaobject_declare_plugin(aqpointclouds)
 set_plugin_available(aqpointclouds)

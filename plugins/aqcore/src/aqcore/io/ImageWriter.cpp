@@ -50,7 +50,7 @@ bool ImageWriter::processImpl()
         cv::Mat mat = input_image->getMat(stream.get(), &synchronize);
         if (synchronize)
         {
-            stream->pushWork([mat, save_name]() -> void { cv::imwrite(save_name, mat); });
+            stream->pushWork([mat, save_name](mo::IAsyncStream&) -> void { cv::imwrite(save_name, mat); });
         }
         else
         {

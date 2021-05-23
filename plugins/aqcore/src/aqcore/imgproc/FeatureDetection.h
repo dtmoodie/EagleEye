@@ -1,3 +1,5 @@
+#include <aqcore_export.hpp>
+
 #include "Aquila/rcc/external_includes/cv_cudafeatures2d.hpp"
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/types/SyncedImage.hpp>

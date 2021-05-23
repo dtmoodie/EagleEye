@@ -5,6 +5,19 @@
 #include <MetaObject/logging/profiling.hpp>
 #include <opencv2/core.hpp>
 
+#ifdef _MSC_VER // Windows
+#ifdef _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY("opencv_calib3d" CV_VERSION_ "d.lib")
+#else
+RUNTIME_COMPILER_LINKLIBRARY("opencv_calib3d" CV_VERSION_ ".lib")
+#endif
+
+#else // Linux
+RUNTIME_COMPILER_LINKLIBRARY("-lOpenNI2")
+
+#endif
+#include <Aquila/rcc/external_includes/cv_core.hpp>
+
 namespace aqopenni2
 {
 

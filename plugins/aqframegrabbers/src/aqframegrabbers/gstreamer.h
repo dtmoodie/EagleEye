@@ -1,7 +1,5 @@
 #pragma once
 
-#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
-#include "aqframegrabbers/aqframegrabbers_export.hpp"
 #include "cv_capture.h"
 
 namespace aqframegrabbers

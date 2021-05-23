@@ -1,6 +1,8 @@
 #pragma once
+#include <aqframegrabbers_export.hpp>
+
 #include "Aquila/framegrabbers/IFrameGrabber.hpp"
-#include "aqframegrabbers/aqframegrabbers_export.hpp"
+
 
 namespace aqframegrabbers
 {

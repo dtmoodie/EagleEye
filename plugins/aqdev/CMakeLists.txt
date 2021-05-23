@@ -41,5 +41,5 @@ target_link_libraries(aqdev
     aqcore
 )
 
-aquila_declare_plugin(aqdev)
+metaobject_declare_plugin(aqdev)
 set_plugin_available(aqdev)

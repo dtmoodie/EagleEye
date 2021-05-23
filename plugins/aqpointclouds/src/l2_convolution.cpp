@@ -1,7 +1,12 @@
 #include <Aquila/types/SyncedImage.hpp>
 
+#include "l2_convolution.hpp"
+
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <l2_convolution.hpp>
+
+#include <RuntimeObjectSystem/RuntimeSourceDependency.h>
+
+RUNTIME_COMPILER_SOURCEDEPENDENCY_EXT(".cu")
 
 namespace aq
 {

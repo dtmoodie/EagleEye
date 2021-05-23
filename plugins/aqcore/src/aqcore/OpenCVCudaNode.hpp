@@ -1,7 +1,7 @@
 #ifndef AQCORE_OPENCV_CUDA_NODE_HPP
 #define AQCORE_OPENCV_CUDA_NODE_HPP
 #include <Aquila/nodes/Node.hpp>
-
+#include <aqcore_export.hpp>
 namespace cv
 {
     namespace cuda
@@ -13,8 +13,9 @@ namespace cv
 namespace aqcore
 {
 
-    AQUILA_EXPORTS std::unique_ptr<cv::cuda::Stream> getCVStream(const mo::IAsyncStreamPtr_t& stream);
-    struct OpenCVCudaNode : virtual aq::nodes::Node
+    aqcore_EXPORT std::unique_ptr<cv::cuda::Stream> getCVStream(const mo::IAsyncStreamPtr_t& stream);
+
+    struct aqcore_EXPORT OpenCVCudaNode : virtual aq::nodes::Node
     {
         MO_DERIVE(OpenCVCudaNode, aq::nodes::Node)
         MO_END;

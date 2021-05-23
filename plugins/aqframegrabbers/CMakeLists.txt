@@ -46,7 +46,7 @@ if(BUILD_TESTS)
     add_subdirectory("tests")
 endif()
 
-aquila_declare_plugin(aqframegrabbers)
+metaobject_declare_plugin(aqframegrabbers)
 set_plugin_available(aqframegrabbers)
 
 set(FRAMEGRABBERS_DATA_DIR ${CMAKE_CURRENT_LIST_DIR}/data)

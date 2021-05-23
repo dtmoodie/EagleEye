@@ -1,4 +1,6 @@
 #pragma once
+#include <aqcore_export.hpp>
+
 #include "Aquila/nodes/Node.hpp"
 #include <MetaObject/serialization/JSONPrinter.hpp>
 #include <MetaObject/types/file_types.hpp>

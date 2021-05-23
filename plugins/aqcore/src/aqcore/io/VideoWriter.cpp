@@ -17,7 +17,7 @@ namespace aqcore
         _write_thread.join();
     }
 
-    void VideoWriter::nodeInit(bool firstInit)
+    void VideoWriter::nodeInit(bool )
     {
         _write_thread = boost::thread([this]() {
             size_t video_frame_number = 0;
@@ -59,6 +59,16 @@ namespace aqcore
     }
 
     bool VideoWriter::processImpl()
+    {
+        return false;
+    }
+
+    bool VideoWriter::processImpl(mo::IDeviceStream& stream)
+    {
+        return this->processImpl(static_cast<mo::IAsyncStream&>(stream));
+    }
+
+    bool VideoWriter::processImpl(mo::IAsyncStream& stream)
     {
         if (this->image->empty())
         {
@@ -118,21 +128,21 @@ namespace aqcore
 #endif
         if (this->h_writer)
         {
-            mo::IAsyncStream::Ptr_t stream = this->getStream();
+
             bool sync = false;
-            cv::Mat h_img = image->getMat(stream.get(), &sync);
+            cv::Mat h_img = image->getMat(&stream, &sync);
 
             WriteData data;
             data.img = h_img;
             data.header = image_param.getNewestHeader();
-            auto work = [data, this]() { _write_queue.enqueue(data); };
+            auto work = [data, this](mo::IAsyncStream&) { _write_queue.enqueue(data); };
             if (sync)
             {
-                stream->pushWork(std::move(work));
+                stream.pushWork(std::move(work));
             }
             else
             {
-                work();
+                work(stream);
             }
         }
         return true;

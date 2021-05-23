@@ -28,6 +28,8 @@ namespace grabbers
         GstFlowReturn onPull() override;
         bool loadData(const ::std::string& file_path) override;
         bool grab() override;
+
+        mo::IAsyncStreamPtr_t m_gstreamer_stream;
     };
 } // namespace grabbers
 }

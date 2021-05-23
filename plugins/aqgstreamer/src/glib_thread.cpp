@@ -60,20 +60,21 @@ namespace aqgstreamer
     {
         if (!g_main_loop_is_running(m_main_loop))
         {
+            {
+                mo::Mutex_t::Lock_t lock(m_mtx);
+                m_stream = mo::IAsyncStream::create("glib thread");
+                mo::IAsyncStream::setCurrent(m_stream);
+            }
+
+            m_cv.notify_all();
 #ifndef _MSC_VER
-            mo::ThreadRegistry::instance()->registerThread(mo::ThreadRegistry::GUI);
+            mo::ThreadRegistry::instance()->registerThread(mo::ThreadRegistry::GUI, m_stream);
             g_idle_add(&glibIdle, this);
 
 // Ideally we can just use a notifier instead of an idle func
 // TODO make me work...
 // GlibEventHandler handler;
 #endif
-            {
-                mo::Mutex_t::Lock_t lock(m_mtx);
-
-                m_stream = mo::IAsyncStream::create("glib thread");
-            }
-            m_cv.notify_all();
 
             MO_LOG(info, "glib event loop starting");
             g_main_loop_run(m_main_loop);

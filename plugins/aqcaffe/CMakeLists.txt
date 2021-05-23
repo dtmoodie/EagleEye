@@ -68,7 +68,7 @@ if(Caffe_FOUND)
             caffe
         )
     ENDIF(WIN32)
-    aquila_declare_plugin(Caffe)
+    metaobject_declare_plugin(Caffe)
     set_plugin_available(aqcaffe)
     set_plugin_status(aqcaffe "Building aqcaffe")
   else()

@@ -22,5 +22,5 @@ target_link_libraries(aqvideo
     aquila_core
 )
 
-aquila_declare_plugin(aqvideo)
+metaobject_declare_plugin(aqvideo)
 set_plugin_available(aqvideo)

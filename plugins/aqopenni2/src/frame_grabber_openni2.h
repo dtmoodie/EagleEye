@@ -8,7 +8,7 @@
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 #include <Aquila/framegrabbers/IFrameGrabber.hpp>
 
-RUNTIME_COMPILER_LINKLIBRARY("OpenNI2.lib");
+#include <aqopenni2_export.hpp>
 
 namespace aqopenni2
 {

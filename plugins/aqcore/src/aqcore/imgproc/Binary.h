@@ -1,3 +1,5 @@
+#include <aqcore_export.hpp>
+
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/types/Stamped.hpp>
 #include <Aquila/types/SyncedMemory.hpp>

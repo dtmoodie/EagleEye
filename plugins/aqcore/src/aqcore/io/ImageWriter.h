@@ -1,4 +1,6 @@
 #pragma once
+#include <aqcore_export.hpp>
+
 #include <Aquila/types/SyncedImage.hpp>
 
 #include <Aquila/nodes/Node.hpp>

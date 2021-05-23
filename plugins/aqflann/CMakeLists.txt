@@ -47,7 +47,7 @@ IF(Aquila_FLANN_LIBRARY_DEBUG AND Aquila_FLANN_CUDA_LIBRARY_DEBUG)
         ${CUDA_cublas_LIBRARY}
         aquila_types
     )
-    aquila_declare_plugin(aqflann)
+    metaobject_declare_plugin(aqflann)
     set_plugin_available(aqflann)
 ELSE()
     set_plugin_unavailable(aqflann)

@@ -4,14 +4,14 @@
 #ifdef HAVE_GST_RTSPSERVER
 #include <gst/rtsp-server/rtsp-server.h>
 #endif
-#include "aqgstreamer/Aquila/rcc/external_includes/aqgstreamer_link_libs.hpp"
+//#include "aqgstreamer/Aquila/rcc/external_includes/aqgstreamer_link_libs.hpp"
 #include "aqgstreamer/aqgstreamer_export.hpp"
 
 #include "glib_thread.h"
 
 #include <Aquila/types/SyncedImage.hpp>
 
-#include <Aquila/core/detail/Export.hpp>
+#include <Aquila/detail/export.hpp>
 #include <Aquila/nodes/Node.hpp>
 
 #include <MetaObject/core/detail/Time.hpp>
@@ -29,6 +29,8 @@
 #include <gst/gstpipeline.h>
 #include <gst/gstutils.h>
 
+
+
 namespace aqgstreamer
 {
     std::shared_ptr<GstBuffer> ownBuffer(GstBuffer*);
@@ -38,6 +40,12 @@ namespace aqgstreamer
                    cv::Size size,
                    int32_t type = CV_8UC1,
                    GstMapFlags flags = GstMapFlags::GST_MAP_READ);
+    bool mapBuffer(std::shared_ptr<GstBuffer> buffer,
+                   aq::SyncedImage& output,
+                   aq::Shape<2> size,
+                   aq::PixelType type = aq::PixelType(),
+                   GstMapFlags flags = GstMapFlags::GST_MAP_READ,
+                   mo::IAsyncStreamPtr_t stream = mo::IAsyncStream::current());
     bool mapBuffer(std::shared_ptr<GstBuffer> buffer,
                    std::shared_ptr<cv::Mat>& output,
                    GstMapFlags flags = GstMapFlags::GST_MAP_READ);

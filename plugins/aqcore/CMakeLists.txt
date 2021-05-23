@@ -9,8 +9,6 @@ set(BOOST_REQUIRED_MODULES system filesystem thread date_time iostreams chrono)
 find_package(Boost 1.47.0 QUIET COMPONENTS ${BOOST_REQUIRED_MODULES})
 
 find_package(CUDA REQUIRED)
-  include_directories(${CUDA_TOOLKIT_INCLUDE})
-
 
 find_package(OpenCV QUIET 
   COMPONENTS 
@@ -53,9 +51,9 @@ INCLUDE_DIRECTORIES(
     ${Boost_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CUDA_TOOLKIT_INCLUDE}
+    ${MetaObject_INCLUDE_DIRS}
 )
-
-include_directories(${MetaObject_INCLUDE_DIRS})
 
 
 file(GLOB_RECURSE src "*.cpp")
@@ -91,6 +89,6 @@ target_compile_definitions(aqcore
     THRUST_IGNORE_DEPRECATED_CPP_DIALECT
 )
 
-aquila_declare_plugin(aqcore)
+metaobject_declare_plugin(aqcore)
 set_plugin_available(aqcore)
 

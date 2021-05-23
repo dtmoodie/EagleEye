@@ -1,9 +1,12 @@
 #pragma once
+#include "aqpointclouds_export.hpp"
 
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/types/SyncedImage.hpp>
 #include <aqcore/OpenCVCudaNode.hpp>
 #include <opencv2/core/cuda.hpp>
+
+#include <Aquila/rcc/external_includes/cv_core.hpp>
 
 namespace aq
 {

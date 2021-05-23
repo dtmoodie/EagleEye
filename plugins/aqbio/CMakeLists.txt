@@ -25,7 +25,7 @@ target_link_libraries(aqbio
     aqcore
 )
 
-aquila_declare_plugin(aqbio)
+metaobject_declare_plugin(aqbio)
 set_plugin_available(aqbio)
 aq_install_python_test(scripts/activated_bovine.py)
 set_plugin_status(aqbio "")

@@ -1,4 +1,6 @@
 #pragma once
+#include <aqcore_export.hpp>
+
 #include "FeatureDetection.h"
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"

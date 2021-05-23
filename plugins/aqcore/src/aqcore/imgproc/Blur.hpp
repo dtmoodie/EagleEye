@@ -1,5 +1,5 @@
 #pragma once
-#include <aqcore/aqcore_export.hpp>
+#include <aqcore_export.hpp>
 
 #include <Aquila/types/SyncedImage.hpp>
 

@@ -39,6 +39,11 @@ if(CUDNN_FOUND)
         set(dlib_needed_libraries ${dlib_needed_libraries};${OpenBLAS_LIB})
     endif()
 
+    find_package(OpenCV QUIET
+      COMPONENTS
+        core
+      )
+
     file(GLOB_RECURSE knl "src/*.cu")
     file(GLOB_RECURSE src "src/*.cpp")
     file(GLOB_RECURSE hdr "src/*.h" "src/*.hpp")
@@ -49,7 +54,7 @@ if(CUDNN_FOUND)
         aquila_utilities
         aquila_serialization
         aquila_types
-        ${OpenCV_LIBS}
+        opencv_core
         ${CUDA_cublas_LIBRARY}
         metaobject_core
         metaobject_object
@@ -77,7 +82,7 @@ if(CUDNN_FOUND)
     if(NOT dlib_FOUND)
         export(TARGETS dlib FILE "${PROJECT_BINARY_DIR}/dlibTargets.cmake")
     endif()
-    aquila_declare_plugin(aqdlib)
+    metaobject_declare_plugin(aqdlib)
     set_plugin_available(aqdlib)
     aquila_install_dependent_lib(${DLIB_SHARED_LIB})
 
