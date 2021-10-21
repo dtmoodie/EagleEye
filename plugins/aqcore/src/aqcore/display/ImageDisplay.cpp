@@ -42,9 +42,9 @@ bool QtImageDisplay::processImpl()
         mo::IAsyncStream::Ptr_t gui_thread = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
         if (sync)
         {
-            gui_thread->pushWork([mat, name, overlay, ts, this, gui_thread](mo::IAsyncStream& stream) -> void {
+            gui_thread->pushWork([mat, name, overlay, ts, this, gui_thread](mo::IAsyncStream* stream) -> void {
                 PROFILE_RANGE(imshow);
-                MO_ASSERT(gui_thread.get() == &stream);
+                MO_ASSERT(gui_thread.get() == stream);
                 cv::Mat draw_img = mat;
                 if (overlay && ts)
                 {
@@ -167,7 +167,7 @@ bool OGLImageDisplay::processImpl()
         auto current_data = this->input_param.getCurrentData(gui_stream.get());
         cv::cuda::GpuMat gpumat = this->input->gpuMat(gui_stream->getDeviceStream());
 
-        auto device_work_func = [this, name, self, ts, gpumat, current_data](mo::IAsyncStream&) {
+        auto device_work_func = [this, name, self, ts, gpumat, current_data](mo::IAsyncStream*) {
             PROFILE_RANGE(imshow);
             try
             {
@@ -193,7 +193,7 @@ bool OGLImageDisplay::processImpl()
         }
         else
         {
-            device_work_func(*my_stream);
+            device_work_func(my_stream.get());
         }
     }
 

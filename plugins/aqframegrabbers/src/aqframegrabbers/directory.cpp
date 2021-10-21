@@ -90,7 +90,9 @@ namespace aqframegrabbers
                 while (!fg->loadData(files_on_disk[frame_index]))
                 {
                     if (!synchronous)
+                    {
                         ++frame_index;
+                    }
                     if (frame_index >= files_on_disk.size())
                     {
                         sig_eos();

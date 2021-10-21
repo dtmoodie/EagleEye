@@ -17,7 +17,7 @@ namespace aqcore
         cv::cuda::GpuMat grey;
         aq::CVStream& cv_stream = dynamic_cast<aq::CVStream&>(stream);
         cv::cuda::cvtColor(input_mat, grey, cv::COLOR_BGR2GRAY, 0, cv_stream.getCVStream());
-        this->output.publish(grey, mo::tags::param = &input_param);
+        this->output.publish(aq::SyncedImage(grey), mo::tags::param = &input_param);
         return true;
     }
 
@@ -28,7 +28,7 @@ namespace aqcore
         cv::cuda::GpuMat magnitude;
         aq::CVStream& cv_stream = dynamic_cast<aq::CVStream&>(stream);
         cv::cuda::magnitude(input_mat, magnitude, cv_stream.getCVStream());
-        this->output.publish(magnitude, mo::tags::param = &input_param);
+        this->output.publish(aq::SyncedImage(magnitude), mo::tags::param = &input_param);
         return true;
     }
 
@@ -53,7 +53,7 @@ namespace aqcore
         aq::CVStream& cv_stream = dynamic_cast<aq::CVStream&>(stream);
 
         input_mat.convertTo(output, data_type.current_selection, alpha, beta, cv_stream.getCVStream());
-        this->output.publish(output, mo::tags::param = &input_param);
+        this->output.publish(aq::SyncedImage(output), mo::tags::param = &input_param);
         return true;
     }
 
@@ -64,7 +64,7 @@ namespace aqcore
         cv::cuda::GpuMat input_mat = input->getGpuMat(&stream);
         aq::CVStream& cv_stream = dynamic_cast<aq::CVStream&>(stream);
         cv::cuda::cvtColor(input_mat, output, conversion_code.getValue(), 0, cv_stream.getCVStream());
-        this->output.publish(output, mo::tags::param = &input_param);
+        this->output.publish(aq::SyncedImage(output), mo::tags::param = &input_param);
         return true;
     }
 
@@ -75,7 +75,7 @@ namespace aqcore
         aq::CVStream& cv_stream = dynamic_cast<aq::CVStream&>(stream);
         cv::cuda::GpuMat input = this->input->getGpuMat(&stream);
         cv::cuda::cvtColor(input, output, cv::COLOR_BGR2HSV, 0, cv_stream.getCVStream());
-        this->output.publish(output, mo::tags::param = &input_param);
+        this->output.publish(aq::SyncedImage(output), mo::tags::param = &input_param);
         return true;
     }
 
@@ -85,7 +85,7 @@ namespace aqcore
         cv::cuda::GpuMat output;
         cv::cuda::GpuMat input = this->input->getGpuMat(&stream);
         output = input.reshape(channels, rows);
-        this->output.publish(output, mo::tags::param = &input_param);
+        this->output.publish(aq::SyncedImage(output), mo::tags::param = &input_param);
         return true;
     }
 

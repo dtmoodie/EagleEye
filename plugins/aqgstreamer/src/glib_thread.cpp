@@ -5,6 +5,7 @@
 #include <MetaObject/logging/logging.hpp>
 #include <MetaObject/thread/ThreadInfo.hpp>
 #include <MetaObject/thread/ThreadRegistry.hpp>
+#include <MetaObject/thread/Thread.hpp>
 
 namespace aqgstreamer
 {
@@ -60,8 +61,10 @@ namespace aqgstreamer
     {
         if (!g_main_loop_is_running(m_main_loop))
         {
+
             {
                 mo::Mutex_t::Lock_t lock(m_mtx);
+                mo::initThread();
                 m_stream = mo::IAsyncStream::create("glib thread");
                 mo::IAsyncStream::setCurrent(m_stream);
             }

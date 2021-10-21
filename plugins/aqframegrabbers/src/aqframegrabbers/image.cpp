@@ -17,8 +17,8 @@ namespace aqframegrabbers
         image = cv::imread(path);
         if (!image.empty())
         {
-            image_name.publish(path, mo::tags::fn = count, mo::tags::timestamp = mo::ms * count);
-            output.publish(image, mo::tags::fn = count, mo::tags::timestamp = mo::ms * count);
+            image_name.publish(path, mo::tags::fn = count);
+            output.publish(aq::SyncedImage(image), mo::tags::fn = count);
             if(m_path != path)
             {
                 ++count;
@@ -52,3 +52,4 @@ namespace aqframegrabbers
 
 using namespace aqframegrabbers;
 MO_REGISTER_CLASS(GrabberImage);
+

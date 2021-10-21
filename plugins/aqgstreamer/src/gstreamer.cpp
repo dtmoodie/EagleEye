@@ -413,7 +413,7 @@ namespace aqgstreamer
             bool sync = false;
             cv::Mat h_mat = img.getMat(&stream, &sync);
 
-            auto push = [this, wrapping, buffer, h_mat, delta, timestamp](mo::IAsyncStream&) mutable {
+            auto push = [this, wrapping, buffer, h_mat, delta, timestamp](mo::IAsyncStream*) mutable {
                 h_mat.copyTo(*wrapping);
 
                 GST_BUFFER_PTS(buffer.get()) = m_timestamp;
@@ -438,7 +438,7 @@ namespace aqgstreamer
             }
             else
             {
-                push(stream);
+                push(&stream);
             }
         }
     }

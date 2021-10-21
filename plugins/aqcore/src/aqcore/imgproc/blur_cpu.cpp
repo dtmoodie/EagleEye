@@ -14,7 +14,7 @@ namespace aq
             cv::Mat blurred;
             cv::Mat in = input->getMat(&stream);
             cv::GaussianBlur(in, blurred, {kerenl_size, kerenl_size}, sigma, sigma);
-            output.publish(blurred, mo::tags::param = &input_param);
+            output.publish(aq::SyncedImage(blurred), mo::tags::param = &input_param);
             return true;
         }
 

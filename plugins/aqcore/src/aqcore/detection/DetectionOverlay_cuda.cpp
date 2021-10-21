@@ -104,9 +104,9 @@ namespace aqcore
                     }
                 }
             }
-            stream.pushWork([draw_mats](mo::IAsyncStream&) {});
+            stream.pushWork([draw_mats](mo::IAsyncStream*) {});
         }
 
-        output.publish(im, mo::tags::param = &image_param);
+        output.publish(aq::SyncedImage(im), mo::tags::param = &image_param);
     }
 } // namespace aqcore

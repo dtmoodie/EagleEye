@@ -54,7 +54,7 @@ class MessageReaderImage : public ros::IMessageReader
 {
   public:
     MO_DERIVE(MessageReaderImage, ros::IMessageReader)
-        OUTPUT(aq::SyncedMemory, image, {})
+        OUTPUT(aq::SyncedImage, image, {})
     MO_END;
 
     static int CanHandleTopic(const std::string& topic)
@@ -131,7 +131,7 @@ class MessageReaderImage : public ros::IMessageReader
         const int num_channels = sensor_msgs::image_encodings::numChannels(enc);
 
         const aq::DataFlag depth =
-            sensor_msgs::image_encodings::bitDepth(enc) == 8 ? aq::DataFlag::kUINT8 : aq::DataFlag::kUINT16;
+            sensor_msgs::image_encodings::bitDepth(enc) == 8 ? ct::value(aq::DataFlag::kUINT8) : ct::value(aq::DataFlag::kUINT16);
 
         aq::PixelType pixel_type;
         pixel_type.data_type = depth;
@@ -152,7 +152,7 @@ class MessageReaderImage : public ros::IMessageReader
         else if (enc.find("bayer") == 0)
         {
             // TODO
-            MO_THROW("Unsupported image format");
+            THROW(debug, "Unsupported image format");
         }
 
         auto stream = this->getStream();
@@ -161,12 +161,12 @@ class MessageReaderImage : public ros::IMessageReader
         aq::SyncedImage image(shape,
                               pixel_type,
                               msg->data.data(),
-                              std::shared_ptr<const void>(msg.data(), [msg](const void*) {}),
+                              std::shared_ptr<const void>(msg->data.data(), [msg](const void*) {}),
                               stream);
 
-        image_param.publish(image,
+        this->image.publish(std::move(image),
                             mo::tags::timestamp = mo::second * msg->header.stamp.toSec(),
-                            mo::tags::frame_number = msg->header.seq);
+                            mo::tags::fn = msg->header.seq);
     }
 
     ros::Subscriber _sub;

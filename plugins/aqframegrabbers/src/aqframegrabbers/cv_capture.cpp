@@ -3,8 +3,8 @@
 #include <MetaObject/core/metaobject_config.hpp>
 
 #include "Aquila/framegrabbers/GrabberInfo.hpp"
-#include "Aquila/rcc/external_includes/aqframegrabbers_link_libs.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
+#include "aqframegrabbers_link_libs.hpp"
 #include "cv_capture.h"
 #include "precompiled.hpp"
 
@@ -322,7 +322,7 @@ namespace aqframegrabbers
 
         m_cDevices = 0;
 #else
-    (void)paths;
+        (void)paths;
 #endif
     }
 

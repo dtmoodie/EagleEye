@@ -15,6 +15,8 @@
 
 using namespace aq;
 using namespace aq::nodes;
+namespace aqros
+{
 
 void ImagePublisher::nodeInit(bool firstInit)
 {
@@ -51,7 +53,8 @@ bool ImagePublisher::processImpl()
     {
         header.stamp.fromNSec(std::chrono::duration_cast<std::chrono::nanoseconds>(ts->time_since_epoch()).count());
     }
-    if (auto in = mo::get<const SyncedMemory*>(input))
+    std::shared_ptr<mo::IAsyncStream> stream = this->getStream();
+    if (auto in = mo::get<const SyncedImage*>(input))
     {
         if (!_image_publisher)
         {
@@ -59,11 +62,12 @@ bool ImagePublisher::processImpl()
         }
 
         // Check where the data resides
-        SyncedMemory::SYNC_STATE state = in->getSyncState();
+        SyncedMemory::SyncState state = in->state();
         // Download to the CPU
-        cv::Mat h_input = in->getMat(stream());
+        // TODO custom serializer
+        cv::Mat h_input = in->getMat(stream.get());
         // If data is already on the cpu, we don't need to wait for the async download to finish
-        if (state < SyncedMemory::DEVICE_UPDATED)
+        if (state < SyncedMemory::SyncState::DEVICE_UPDATED)
         {
             // data already updated on cpu
             auto msg = copyToMsg(h_input);
@@ -75,21 +79,18 @@ bool ImagePublisher::processImpl()
         {
             // data on gpu, do async publish
             auto tmp = *in;
-            size_t id = mo::getThisThread();
-            aq::cuda::enqueue_callback_async(
-                [header,tmp, h_input, this]() -> void {
+            stream->pushWork(
+                [header,tmp, h_input, this](mo::IAsyncStream*) -> void {
                     // This code is executed on cpu thead id after the download is complete
                     auto msg = copyToMsg(h_input);
                     msg->header = header;
                     _image_publisher.publish(msg);
-                },
-                id,
-                stream());
+                });
         }
     }
     else
     {
-        if (const types::CompressedImage* in = mo::get<const types::CompressedImage*>(input))
+        if (const aq::CompressedImage* in = mo::get<const aq::CompressedImage*>(input))
         {
             if (!_image_publisher)
             {
@@ -97,15 +98,18 @@ bool ImagePublisher::processImpl()
                     topic_name + "/compressed", 1);
             }
             sensor_msgs::CompressedImage::Ptr msg = boost::make_shared<sensor_msgs::CompressedImage>();
-            msg->data.resize(in->data.cols);
+            const auto data = in->getData();
+            msg->data.resize(data->size());
             msg->format = "jpeg";
             msg->header = header;
-
-            memcpy(msg->data.data(), in->data.data, in->data.cols);
+            auto host_view = data->host(stream.get());
+            // TODO custom serializer
+            memcpy(msg->data.data(), host_view.data(), host_view.size());
             _image_publisher.publish(msg);
         }
     }
     return false;
 }
-
+}
+using namespace aqros;
 MO_REGISTER_CLASS(ImagePublisher)

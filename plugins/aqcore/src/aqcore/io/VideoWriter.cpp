@@ -135,14 +135,14 @@ namespace aqcore
             WriteData data;
             data.img = h_img;
             data.header = image_param.getNewestHeader();
-            auto work = [data, this](mo::IAsyncStream&) { _write_queue.enqueue(data); };
+            auto work = [data, this](mo::IAsyncStream*) { _write_queue.enqueue(data); };
             if (sync)
             {
                 stream.pushWork(std::move(work));
             }
             else
             {
-                work(stream);
+                work(&stream);
             }
         }
         return true;
