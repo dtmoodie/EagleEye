@@ -89,6 +89,7 @@ namespace aqdlib
 
     void FaceDatabase::saveUnknownFaces()
     {
+        return;
         mo::Mutex_t::Lock_t lock(getMutex());
         this->getLogger().info("Saving {} unknown faces to {}", m_unknown_crops.size(), unknown_detections.string());
         std::ofstream ofs;
@@ -131,6 +132,7 @@ namespace aqdlib
 
     void FaceDatabase::saveRecentFaces()
     {
+        return;
         mo::Mutex_t::Lock_t lock(getMutex());
         auto stream = this->getStream();
         this->getLogger().info("Saving {} recent faces to {}", m_recent_patches.size(), recent_detections.string());
@@ -150,6 +152,10 @@ namespace aqdlib
                                        mo::IAsyncStream& stream)
     {
         const uint32_t descriptor_size = det_desc.getShape()[0];
+        if(descriptor_size == 0)
+        {
+            return false;
+        }
         cv::Mat_<float> wrapped_descriptor(1, descriptor_size, const_cast<float*>(det_desc.data()));
         if (!m_known_faces.descriptors.empty())
         {
