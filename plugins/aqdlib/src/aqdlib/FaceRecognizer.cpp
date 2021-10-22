@@ -40,7 +40,7 @@ namespace aqdlib
         }
 
         auto stream = this->getStream();
-
+        aq::TDetectedObjectSet<OutputComponents_t> output = *this->detections;
         const uint32_t num_entities = this->detections->getNumEntities();
         if (num_entities > 0)
         {
@@ -91,7 +91,7 @@ namespace aqdlib
             {
                 // TODO figure out how to pass in the output, thus avoiding any need to copy data.
                 std::vector<dlib::matrix<float, 0, 1>> face_descriptors = m_net(aligned_faces);
-                aq::TDetectedObjectSet<OutputComponents_t> output = *this->detections;
+
                 output.reshape<aq::detection::Descriptor>(
                     mt::Shape<2>(face_descriptors.size(), face_descriptors[0].nr()));
                 auto descriptors = output.getComponentMutable<aq::detection::Descriptor>();
@@ -115,9 +115,9 @@ namespace aqdlib
                     aq::SyncedImage aligned(shape, pixel_ptr, std::move(matrix), stream);
                     aligned_patch[i] = aq::detection::AlignedPatch{*image, std::move(aligned)};
                 }
-                this->output.publish(output, mo::tags::param = &this->detections_param);
             }
         }
+        this->output.publish(output, mo::tags::param = &this->detections_param);
         return true;
     }
 

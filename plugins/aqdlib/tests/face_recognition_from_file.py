@@ -38,8 +38,6 @@ draw = aq.nodes.DrawDetections(image=fg, detections=facedb)
 
 writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./')
 
-#graph.start()
-#aq.eventLoop(10000)
 for _ in range(10):
     graph.step()
     output = facedb.output
@@ -50,8 +48,5 @@ for _ in range(10):
         print(component.data.data.data)
 facedb.saveUnknownFaces()
 
-
-    #if('Classification' in component.data.data.typename):
-        #assert component.data.data.data[0].data[0].cat.data.name == 'JerryRyan'
 
 

@@ -21,13 +21,13 @@ namespace aqdlib
         }
 
         const uint32_t num_entities = detections->getNumEntities();
+        aq::TDetectedObjectSet<OutputComponents_t> out = *detections;
 
         if (num_entities > 0)
         {
             mo::IAsyncStreamPtr_t stream = this->getStream();
             cv::Mat img = image->getMat(stream.get());
             const auto size = image->size();
-            aq::TDetectedObjectSet<OutputComponents_t> out = *detections;
 
             dlib::cv_image<dlib::bgr_pixel> dlib_img(img);
             std::vector<dlib::matrix<dlib::bgr_pixel>> aligned_faces;
@@ -86,8 +86,8 @@ namespace aqdlib
                     }
                 }
             }
-            this->output.publish(std::move(out), mo::tags::param = &this->detections_param);
         }
+        this->output.publish(std::move(out), mo::tags::param = &this->detections_param);
 
         return true;
     }
