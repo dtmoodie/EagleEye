@@ -145,7 +145,12 @@ namespace darknet
             float** input = m_network->input_gpu;
 
             // TODO replace with some kind of managed tensor
-            cv::cuda::createContinuous(m_network->h * m_network->c, m_network->w, CV_32F, m_buffer);
+            const size_t buffer_size = m_buffer.cols * m_buffer.rows;
+            const size_t input_size = m_network->h * m_network->c * m_network->w;
+            if(buffer_size != input_size)
+            {
+                cv::cuda::createContinuous(m_network->h * m_network->c, m_network->w, CV_32F, m_buffer);
+            }
             float* ptr = ct::ptrCast<float>(m_buffer.data);
             input[0] = ptr;
             m_input = ptr;
