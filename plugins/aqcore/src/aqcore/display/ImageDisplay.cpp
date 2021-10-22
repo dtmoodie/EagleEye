@@ -64,7 +64,7 @@ bool QtImageDisplay::processImpl()
                 draw_img = mat.clone();
                 std::stringstream ss;
                 ss << "Timestamp: " << ts;
-                cv::putText(mat, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
+                cv::putText(draw_img, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
             }
             auto graph = getGraph();
             MO_ASSERT(graph != nullptr);
