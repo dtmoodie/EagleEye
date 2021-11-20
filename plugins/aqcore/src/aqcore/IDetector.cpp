@@ -6,7 +6,7 @@ namespace aqcore
 {
     std::vector<cv::Rect> IImageDetector::getRegions() const
     {
-        std::vector<cv::Rect2f> defaultROI;
+        mo::vector<cv::Rect2f> defaultROI;
 
         if (regions_of_interest)
         {

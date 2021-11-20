@@ -70,7 +70,7 @@ namespace aqcore
 
     std::vector<cv::Rect> INeuralNet::getRegions() const
     {
-        std::vector<cv::Rect2f> default_roi;
+        mo::vector<cv::Rect2f> default_roi;
 
         if (regions_of_interest)
         {
