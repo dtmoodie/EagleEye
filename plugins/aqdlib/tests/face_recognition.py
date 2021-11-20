@@ -1,6 +1,19 @@
 import aquila as aq
 from argparse import ArgumentParser
 
+import signal
+import sys
+
+
+global loop
+loop = True
+
+def signal_handler(sig, frame):
+    global loop
+    print('You pressed Ctrl+C!')
+    loop = False
+signal.signal(signal.SIGINT, signal_handler)
+
 parser = ArgumentParser()
 
 parser.add_argument('--path', default='0')
@@ -38,9 +51,6 @@ draw = aq.nodes.DrawDetections(image=fg, detections=facedb)
 disp = aq.nodes.QtImageDisplay(input=draw)
 #writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./')
 
-while True:
+for _ in range(100):
     graph.step()
     aq.eventLoop(10)
-
-
-
