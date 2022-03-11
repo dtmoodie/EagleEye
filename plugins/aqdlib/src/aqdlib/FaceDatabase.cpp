@@ -6,6 +6,7 @@
 #include <MetaObject/serialization/BinaryLoader.hpp>
 #include <MetaObject/serialization/BinarySaver.hpp>
 #include <MetaObject/serialization/JSONPrinter.hpp>
+#include <MetaObject/thread/ThreadRegistry.hpp>
 
 #include <ct/reflect/print.hpp>
 
@@ -85,63 +86,108 @@ namespace aqdlib
         visitor(&arrs, "descriptors");
     }
 
-    FaceDatabase::~FaceDatabase() {}
+    FaceDatabase::~FaceDatabase()
+    {
+//        saveUnknownFaces();
+//        saveKnownFaces();
+//        saveRecentFaces();
+    }
 
     void FaceDatabase::saveUnknownFaces()
     {
-        return;
-        mo::Mutex_t::Lock_t lock(getMutex());
-        this->getLogger().info("Saving {} unknown faces to {}", m_unknown_crops.size(), unknown_detections.string());
-        std::ofstream ofs;
-        ofs.open(unknown_detections.string() + "/unknown.db");
-        if (m_unknown_crops.size())
+        std::vector<aq::TSyncedMemory<float>> unknown_face_descriptors;
+        std::vector<aq::SyncedImage> unknown_crops;
+        mo::IAsyncStreamPtr_t dst_stream = m_worker_stream;
+
         {
-            mo::JSONSaver ar(ofs);
-
-            IdentityDatabase unknown(m_unknown_face_descriptors, this->getStream());
-            ar(&unknown, "unknown");
-            auto stream = this->getStream();
-            for (size_t i = 0; i < m_unknown_crops.size(); ++i)
-            {
-                const std::string output_path = unknown_detections.string() + '/' + std::to_string(i);
-                cv::Mat mat = m_unknown_crops[i];
-                if (!cv::imwrite(output_path + ".jpg", mat))
-                {
-                    this->getLogger().warn("Failed to write {} to disk", output_path);
-                }
-
-                const aq::TSyncedMemory<float>& desc = m_unknown_face_descriptors[i];
-                const ct::TArrayView<const float> view = desc.host(stream.get());
-                std::ofstream ofs(output_path + ".bin");
-                std::string base64 =
-                    cereal::base64::encode(ct::ptrCast<const uint8_t>(view.data()), view.size() * sizeof(float));
-                ofs << base64;
-            }
+            mo::Mutex_t::Lock_t lock(getMutex());
+            auto src_stream = this->getStream();
+            m_worker_stream->synchronize(*src_stream);
+            unknown_crops = std::move(m_unknown_crops);
+            unknown_face_descriptors = std::move(m_unknown_face_descriptors);
         }
+
+        std::string unknown_detections = this->unknown_detections.string();
+        auto& logger = this->getLogger();
+        logger.info("Saving {} unknown faces to {}", m_unknown_crops.size(), unknown_detections);
+
+        auto work = [unknown_crops, unknown_face_descriptors, unknown_detections, &logger, dst_stream](
+                        mo::IAsyncStream*) {
+            std::ofstream ofs;
+            ofs.open(unknown_detections + "/unknown.db");
+            if (unknown_crops.size())
+            {
+                mo::JSONSaver ar(ofs);
+
+                IdentityDatabase unknown(unknown_face_descriptors, dst_stream);
+                ar(&unknown, "unknown");
+                for (size_t i = 0; i < unknown_crops.size(); ++i)
+                {
+                    const std::string output_path = unknown_detections + '/' + std::to_string(i);
+                    cv::Mat mat = unknown_crops[i].mat(dst_stream.get());
+                    if (!cv::imwrite(output_path + ".jpg", mat))
+                    {
+                        logger.warn("Failed to write {} to disk", output_path);
+                    }
+
+                    const aq::TSyncedMemory<float>& desc = unknown_face_descriptors[i];
+                    const ct::TArrayView<const float> view = desc.host(dst_stream.get());
+                    std::ofstream ofs(output_path + ".bin");
+                    std::string base64 =
+                        cereal::base64::encode(ct::ptrCast<const uint8_t>(view.data()), view.size() * sizeof(float));
+                    ofs << base64;
+                }
+            }
+        };
+        dst_stream->pushWork(std::move(work));
     }
 
     void FaceDatabase::saveKnownFaces()
     {
-        mo::Mutex_t::Lock_t lock(getMutex());
-        this->getLogger().info("Saving known faces to {}", known_detections.string());
-        std::ofstream ofs;
-        ofs.open(known_detections.string() + "/identities.db");
-        mo::JSONSaver ar(ofs);
-        ar(&m_known_faces, "face_db");
+        std::string dest_file_db;
+        IdentityDatabase save;
+        {
+            mo::Mutex_t::Lock_t lock(getMutex());
+            dest_file_db = known_detections.string() + "/identities.db";
+            this->getLogger().info("Saving known faces to {}", dest_file_db);
+            save = std::move(m_known_faces);
+        }
+        auto work = [save, dest_file_db](mo::IAsyncStream*)
+        {
+            std::ofstream ofs;
+            ofs.open(dest_file_db);
+            mo::JSONSaver ar(ofs);
+            ar(&save, "face_db");
+        };
+        m_worker_stream->pushWork(std::move(work));
     }
 
     void FaceDatabase::saveRecentFaces()
     {
-        return;
-        mo::Mutex_t::Lock_t lock(getMutex());
-        auto stream = this->getStream();
-        this->getLogger().info("Saving {} recent faces to {}", m_recent_patches.size(), recent_detections.string());
-        for (size_t i = 0; i < m_recent_patches.size(); ++i)
+        boost::circular_buffer<ClassifiedPatch> patches;
+        std::vector<std::string> save_names;
+        std::vector<int> indices;
+        mo::IAsyncStreamPtr_t stream;
         {
-            const auto idx = recent_detections.nextFileIndex();
-            m_recent_patches[i].save(recent_detections.string(), idx, *stream);
+            mo::Mutex_t::Lock_t lock(getMutex());
+            stream = this->getStream();
+            this->getLogger().info("Saving {} recent faces to {}", m_recent_patches.size(), recent_detections.string());
+            for (size_t i = 0; i < m_recent_patches.size(); ++i)
+            {
+                const int idx = recent_detections.nextFileIndex();
+                save_names.push_back(recent_detections.string());
+                indices.push_back(idx);
+            }
+            patches = std::move(m_recent_patches);
         }
-        m_recent_patches.clear();
+        auto work = [patches, save_names, indices](mo::IAsyncStream* stream)
+        {
+            for(size_t i = 0; i < indices.size(); ++i)
+            {
+                patches[i].save(save_names[i], indices[i], *stream);
+            }
+        };
+        m_worker_stream->pushWork(std::move(work));
     }
 
     bool FaceDatabase::matchKnownFaces(const mt::Tensor<const float, 1>& det_desc,
@@ -152,7 +198,7 @@ namespace aqdlib
                                        mo::IAsyncStream& stream)
     {
         const uint32_t descriptor_size = det_desc.getShape()[0];
-        if(descriptor_size == 0)
+        if (descriptor_size == 0)
         {
             return false;
         }
@@ -295,8 +341,8 @@ namespace aqdlib
         size_t unknown_count = m_identities->size() - m_known_faces.identities.size();
         std::string name = "unknown" + boost::lexical_cast<std::string>(unknown_count);
         m_identities->push_back(name);
-
-        m_unknown_face_descriptors.push_back(aq::TSyncedMemory<float>::copyHost(det_desc));
+        mo::IAsyncStream::Ptr_t stream = this->getStream();
+        m_unknown_face_descriptors.push_back(aq::TSyncedMemory<float>::copyHost(det_desc, stream));
 
         m_unknown_crops.push_back(patch);
         m_unknown_det_count.push_back(1);
@@ -305,7 +351,7 @@ namespace aqdlib
         cls[0] = (*m_identities).back()();
         id = m_identities->size() - 1;
 
-        m_recent_patches.push_back({patch, aq::TSyncedMemory<float>::copyHost(det_desc), name});
+        m_recent_patches.push_back({patch, aq::TSyncedMemory<float>::copyHost(det_desc, stream), name});
     }
 
     bool FaceDatabase::processImpl()
@@ -406,6 +452,12 @@ namespace aqdlib
         {
             this->getLogger().warn("Failed to load identities from {}", database_path);
         }
+    }
+
+    void FaceDatabase::nodeInit(bool)
+    {
+        m_worker_stream = m_worker_thread.asyncStream();
+        MO_ASSERT(m_worker_stream);
     }
 
     void

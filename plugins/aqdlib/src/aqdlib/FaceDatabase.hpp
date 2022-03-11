@@ -6,6 +6,7 @@
 #include <Aquila/types/TSyncedImage.hpp>
 #include <Aquila/types/TSyncedMemory.hpp>
 
+#include <MetaObject/thread/Thread.hpp>
 #include <ct/reflect_macros.hpp>
 
 #include <MetaObject/runtime_reflection.hpp>
@@ -100,12 +101,14 @@ namespace aqdlib
                                const aq::SyncedImage& patch,
                                mo::IAsyncStream& stream);
 
-        void onNewUnknownFace(const mt::Tensor<const float, 1>& det_desc, aq::detection::Classifications& cls,
-                                         aq::detection::Id::DType& id, const aq::SyncedImage& patch);
-        
+        void onNewUnknownFace(const mt::Tensor<const float, 1>& det_desc,
+                              aq::detection::Classifications& cls,
+                              aq::detection::Id::DType& id,
+                              const aq::SyncedImage& patch);
+
         void saveUnknownFace(uint32_t index);
 
-
+        void nodeInit(bool) override;
 
         std::shared_ptr<aq::CategorySet> m_identities;
         std::vector<aq::TSyncedMemory<float>> m_unknown_face_descriptors;
@@ -115,6 +118,8 @@ namespace aqdlib
         IdentityDatabase m_known_faces;
         int m_unknown_write_count = 0;
         boost::circular_buffer<ClassifiedPatch> m_recent_patches;
+        mo::Thread m_worker_thread;
+        mo::IAsyncStreamPtr_t m_worker_stream;
     };
 
 } // namespace aqdlib
