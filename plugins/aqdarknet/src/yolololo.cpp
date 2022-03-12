@@ -4,6 +4,8 @@
 #include <Aquila/nodes/NodeInfo.hpp>
 #include <Aquila/types/ObjectDetection.hpp>
 #include <Aquila/types/SyncedMemory.hpp>
+#include <MetaObject/logging/profiling.hpp>
+
 #include <aqcore/INeuralNet.hpp>
 #include <boost/filesystem.hpp>
 
@@ -167,6 +169,7 @@ namespace darknet
 
         void forward(mo::IDeviceStream&)
         {
+            PROFILE_FUNCTION
             state.index = 0;
             state.net = *m_network;
             state.workspace = m_network->workspace;
@@ -178,6 +181,7 @@ namespace darknet
 
             for (int i = 0; i < m_network->n; ++i)
             {
+                mo::ScopedProfile profile(std::to_string(i));
                 state.index = i;
                 darknet::layer l = m_network->layers[i];
 
@@ -243,6 +247,7 @@ namespace darknet
 
                     // TODO iterate over classes
                     const auto num_classes = dets[i].classes;
+                    MO_ASSERT(cats);
                     MO_ASSERT_EQ(num_classes, cats->size());
                     for (int j = 0; j < num_classes; ++j)
                     {
@@ -276,6 +281,9 @@ namespace darknet
 class YOLO : virtual public aqcore::INeuralNet
 {
   public:
+    YOLO()
+    {
+    }
     using OutputComponents_t = ct::VariadicTypedef<aq::detection::BoundingBox2d,
                                                    aq::detection::Classifications,
                                                    aq::detection::Confidence,
@@ -327,6 +335,7 @@ class YOLO : virtual public aqcore::INeuralNet
 
     bool forwardMinibatch(mo::IDeviceStream& stream) override
     {
+        PROFILE_FUNCTION
         stream.synchronize();
 
         m_net->forward(stream);
@@ -337,6 +346,7 @@ class YOLO : virtual public aqcore::INeuralNet
                        const std::vector<cv::Rect>& ,
                        const aq::DetectedObjectSet* ) override
     {
+        PROFILE_FUNCTION
         auto input_image_shape = this->input->size();
         m_dets.setCatSet(this->getLabels());
         m_net->getDetections(
@@ -346,6 +356,7 @@ class YOLO : virtual public aqcore::INeuralNet
 
     void postBatch() override
     {
+        PROFILE_FUNCTION
         this->output.publish(std::move(m_dets), mo::tags::param = &input_param);
         m_dets = Output_t();
     }

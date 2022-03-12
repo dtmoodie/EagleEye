@@ -76,7 +76,7 @@ bool JSONWriter::processImpl()
     return false;
 }
 
-void JSONWriter::on_output_file_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
+void JSONWriter::on_output_file_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream*)
 {
     ofs.close();
     ofs.open(output_file.c_str(), std::ios::out);

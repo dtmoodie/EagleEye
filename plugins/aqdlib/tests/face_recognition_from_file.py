@@ -1,5 +1,6 @@
 import aquila as aq
 from argparse import ArgumentParser
+import time
 
 parser = ArgumentParser()
 
@@ -12,13 +13,12 @@ args = parser.parse_args()
 
 stream = aq.createStream()
 aq.setGuiStream(stream)
-aq.log('warning')
 graph = aq.Graph()
 graph.setStream(stream)
 
 fg = aq.framegrabbers.create(args.path)
 graph.addNode(fg)
-
+aq.log('warning')
 face = aq.nodes.YOLO(input=fg)
 
 face.weight_file = args.weights
@@ -36,17 +36,19 @@ facedb = aq.nodes.FaceDatabase(detections=recognizer, image=fg)
 
 draw = aq.nodes.DrawDetections(image=fg, detections=facedb)
 
+display = aq.nodes.QtImageDisplay(input=draw)
 writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./')
 
-for _ in range(10):
+while(not fg.eos.data):
     graph.step()
+    aq.eventLoop(10)
     output = facedb.output
 
     components = output.data.components
     for component in components:
         print(component.data.data.typename)
         print(component.data.data.data)
+
 facedb.saveUnknownFaces()
 
-
-
+time.sleep(1)

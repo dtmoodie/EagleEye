@@ -10,6 +10,14 @@
 using namespace aq;
 using namespace aq::nodes;
 
+
+void ImageWriter::nodeInit(bool first)
+{
+    m_worker_stream = m_worker_thread.asyncStream();
+    MO_ASSERT(m_worker_stream);
+}
+
+
 bool ImageWriter::processImpl()
 {
     std::string ext;
@@ -48,14 +56,14 @@ bool ImageWriter::processImpl()
         auto stream = this->getStream();
         bool synchronize = false;
         cv::Mat mat = input_image->getMat(stream.get(), &synchronize);
+        auto data_owner = input_image->data();
+
+        auto work = [mat, save_name, data_owner](mo::IAsyncStream*) -> void { cv::imwrite(save_name, mat); };
         if (synchronize)
         {
-            stream->pushWork([mat, save_name](mo::IAsyncStream*) -> void { cv::imwrite(save_name, mat); });
+            m_worker_stream->synchronize(*stream);
         }
-        else
-        {
-            cv::imwrite(save_name, mat);
-        }
+        m_worker_stream->pushWork(std::move(work));
         frameSkip = 0;
     }
     ++frameSkip;

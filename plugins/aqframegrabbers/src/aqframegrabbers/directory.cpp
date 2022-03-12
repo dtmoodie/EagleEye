@@ -95,7 +95,8 @@ namespace aqframegrabbers
                     }
                     if (frame_index >= files_on_disk.size())
                     {
-                        sig_eos();
+                        this->eos = true;
+                        sig_onEos();
                         return false;
                     }
                 }
@@ -106,7 +107,8 @@ namespace aqframegrabbers
             }
             else if (frame_index >= files_on_disk.size())
             {
-                sig_eos();
+                this->eos = true;
+                sig_onEos();
                 return false;
             }
         }

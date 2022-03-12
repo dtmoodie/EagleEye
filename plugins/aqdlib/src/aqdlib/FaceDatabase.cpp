@@ -98,11 +98,11 @@ namespace aqdlib
         std::vector<aq::TSyncedMemory<float>> unknown_face_descriptors;
         std::vector<aq::SyncedImage> unknown_crops;
         mo::IAsyncStreamPtr_t dst_stream = m_worker_stream;
+        mo::IAsyncStreamPtr_t src_stream;
 
         {
             mo::Mutex_t::Lock_t lock(getMutex());
-            auto src_stream = this->getStream();
-            m_worker_stream->synchronize(*src_stream);
+            src_stream = this->getStream();
             unknown_crops = std::move(m_unknown_crops);
             unknown_face_descriptors = std::move(m_unknown_face_descriptors);
         }
@@ -139,6 +139,10 @@ namespace aqdlib
                 }
             }
         };
+        MO_ASSERT(src_stream);
+        MO_ASSERT(dst_stream);
+        // I don't know why this synchronize call hangs everything
+        dst_stream->synchronize(*src_stream);
         dst_stream->pushWork(std::move(work));
     }
 
@@ -298,7 +302,7 @@ namespace aqdlib
         else
         {
             const auto idx = match_index + m_known_faces.identities.size();
-            if (idx < m_identities->size())
+           if (idx < m_identities->size())
             {
                 cls.resize(1);
                 cls[0] = (*m_identities)[idx]();

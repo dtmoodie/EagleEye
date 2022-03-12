@@ -30,6 +30,7 @@ graph = aq.Graph()
 graph.setStream(stream)
 
 fg = aq.framegrabbers.create(args.path)
+assert fg is not None, 'Unable to load {}'.format(args.path)
 graph.addNode(fg)
 
 face = aq.nodes.YOLO(input=fg)

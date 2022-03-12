@@ -23,7 +23,7 @@ namespace aqcore
 
         MO_DERIVE(INeuralNet, IClassifier)
             INPUT(aq::SyncedImage, input)
-            OPTIONAL_INPUT(std::vector<cv::Rect2f>, regions_of_interest)
+            OPTIONAL_INPUT(mo::vector<cv::Rect2f>, regions_of_interest)
             OPTIONAL_INPUT(aq::TDetectedObjectSet<ct::VariadicTypedef<aq::detection::BoundingBox2d>>, input_detections)
 
             PARAM(mo::ReadFile, model_file, mo::ReadFile())

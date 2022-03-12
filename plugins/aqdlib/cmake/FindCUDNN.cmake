@@ -30,17 +30,18 @@ include(FindPackageHandleStandardArgs)
 set(cudnn_DIR "" CACHE PATH "Folder contains NVIDIA cuDNN")
 
 find_path(CUDNN_INCLUDE_DIR cudnn.h
-    HINTS ${cudnn_DIR} ${CUDA_TOOLKIT_ROOT_DIR}
+    HINTS ${cudnn_DIR} ${CUDA_TOOLKIT_ROOT_DIR} /usr /usr/local
     PATH_SUFFIXES cuda/include include)
 
 find_library(CUDNN_LIBRARY cudnn
     HINTS ${cudnn_DIR} ${CUDA_TOOLKIT_ROOT_DIR}
-    PATH_SUFFIXES lib lib64 cuda/lib cuda/lib64 lib/x64)
+    PATH_SUFFIXES lib lib64 cuda/lib cuda/lib64 lib/x64 lib/x86_64-linux-gnu
+)
 
 find_package_handle_standard_args(
     CUDNN DEFAULT_MSG CUDNN_INCLUDE_DIR CUDNN_LIBRARY)
-
-if(CUDNN_FOUND)
+message(STATUS "Looking for cuDNN: v${CUDNN_VERSION}  (include: ${CUDNN_INCLUDE_DIR}, library: ${CUDNN_LIBRARY})")
+if(CUDNN_LIBRARY AND CUDNN_INCLUDE_DIR)
     # get cuDNN version
   file(READ ${CUDNN_INCLUDE_DIR}/cudnn.h CUDNN_HEADER_CONTENTS)
     string(REGEX MATCH "define CUDNN_MAJOR * +([0-9]+)"
@@ -71,9 +72,15 @@ if(CUDNN_FOUND)
   set_target_properties(cudnn PROPERTIES
     IMPORTED_LINK_INTERFACE_LIBRARIES "${CUDNN_LIBRARY}"
   )
+  set_target_properties(cudnn PROPERTIES
+    IMPORTED_LOCATION "${CUDNN_LIBRARY}"
+  )
 
   set(CUDNN_INCLUDE_DIRS ${CUDNN_INCLUDE_DIR})
   set(CUDNN_LIBRARIES ${CUDNN_LIBRARY})
   message(STATUS "Found cuDNN: v${CUDNN_VERSION}  (include: ${CUDNN_INCLUDE_DIR}, library: ${CUDNN_LIBRARY})")
   mark_as_advanced(cudnn_DIR CUDNN_LIBRARY CUDNN_INCLUDE_DIR)
+  set(CUDNN_FOUND ON)
+else()
+  set(CUDNN_FOUND OFF)
 endif()

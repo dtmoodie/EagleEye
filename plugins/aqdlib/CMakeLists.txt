@@ -1,7 +1,9 @@
 project(dlib)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+
 find_package(dlib QUIET)
-find_package(CUDNN QUIET)
+find_package(CUDNN REQUIRED)
 if(CUDNN_FOUND)
     if(NOT dlib_FOUND)
         set(DLIB_USE_CUDA ON)
@@ -11,7 +13,7 @@ if(CUDNN_FOUND)
         set(DLIB_SHARED_LIB dlib)
         set(DLIB_STATIC_LIB dlib)
     else()
-        print_target_properties(dlib::dlib_shared)
+
         if(TARGET dlib::dlib_shared)
             set(DLIB_SHARED_LIB dlib::dlib_shared)
         else()
@@ -63,7 +65,11 @@ if(CUDNN_FOUND)
         ${dlib_needed_libraries}
         lapack
         aqcore
+        cudnn
+        curand
+        cusolver
     )
+
     aq_install_python_test(tests/face_recognition.py)
     aq_install_python_test(tests/face_recognition_from_file.py)
     aq_install_python_test(scripts/door_face.py)

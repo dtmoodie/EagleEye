@@ -1,6 +1,8 @@
 #include <MetaObject/core/metaobject_config.hpp>
 
 #include "INeuralNet.hpp"
+#include <MetaObject/logging/profiling.hpp>
+
 #include <opencv2/cudaarithm.hpp>
 #include <opencv2/cudawarping.hpp>
 
@@ -34,7 +36,7 @@ namespace aqcore
         return {};
     }
 
-    void INeuralNet::on_weight_file_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
+    void INeuralNet::on_weight_file_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream*)
     {
         initNetwork();
     }
@@ -168,24 +170,30 @@ namespace aqcore
         cv::cuda::GpuMat float_image;
         cv::cuda::Stream& cvstream = *m_cv_stream;
         cv::cuda::GpuMat input = this->input->getGpuMat(&stream);
-        if (input.depth() != CV_32F)
+
         {
-            input.convertTo(float_image, CV_32F, cvstream);
+            mo::ScopedProfile preprocessing("INeuralNet::preprocessing");
+            if (input.depth() != CV_32F)
+            {
+                input.convertTo(float_image, CV_32F, cvstream);
+            }
+            else
+            {
+                float_image = input;
+            }
+            if (channel_mean[0] != 0.0 || channel_mean[1] != 0.0 || channel_mean[2] != 0.0)
+            {
+                cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, cvstream);
+            }
+            if (pixel_scale != 1.0f)
+            {
+                const cv::Scalar scale = cv::Scalar::all(static_cast<double>(pixel_scale));
+                cv::cuda::multiply(float_image, scale, float_image, 1.0, -1, cvstream);
+            }
+            this->getLogger().trace("Preprocessing complete");
         }
-        else
-        {
-            float_image = input;
-        }
-        if (channel_mean[0] != 0.0 || channel_mean[1] != 0.0 || channel_mean[2] != 0.0)
-        {
-            cv::cuda::subtract(float_image, channel_mean, float_image, cv::noArray(), -1, cvstream);
-        }
-        if (pixel_scale != 1.0f)
-        {
-            const cv::Scalar scale = cv::Scalar::all(static_cast<double>(pixel_scale));
-            cv::cuda::multiply(float_image, scale, float_image, 1.0, -1, cvstream);
-        }
-        this->getLogger().trace("Preprocessing complete");
+
+
 
         preBatch(static_cast<int>(pixel_bounding_boxes.size()));
 
@@ -216,7 +224,6 @@ namespace aqcore
                     resized = float_image(pixel_bounding_boxes[i]);
                 }
                 cv::cuda::split(resized, net_input[j], cvstream);
-                cv::Mat dbg(net_input[j][0]);
                 end = start + j + 1;
             }
 

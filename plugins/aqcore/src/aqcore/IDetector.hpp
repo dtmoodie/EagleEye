@@ -20,7 +20,7 @@ namespace aqcore
         MO_DERIVE(IImageDetector, IClassifier)
             INPUT(aq::SyncedImage, input)
 
-            OPTIONAL_INPUT(std::vector<cv::Rect2f>, regions_of_interest)
+            OPTIONAL_INPUT(mo::vector<cv::Rect2f>, regions_of_interest)
             OPTIONAL_INPUT(Input_t, input_detections)
 
             OUTPUT(Output_t, detections)

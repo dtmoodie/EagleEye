@@ -2,8 +2,8 @@
 #include <aqcore_export.hpp>
 
 #include <Aquila/types/SyncedImage.hpp>
-
 #include <Aquila/nodes/Node.hpp>
+#include <MetaObject/thread/Thread.hpp>
 
 #include <RuntimeObjectSystem/RuntimeInclude.h>
 #include <RuntimeObjectSystem/RuntimeSourceDependency.h>
@@ -32,7 +32,7 @@ namespace aq
             MO_DERIVE(ImageWriter, Node)
                 INPUT(SyncedImage, input_image)
                 PARAM(std::string, base_name, "Image-")
-                ENUM_PARAM(extension, jpg, png, tiff, bmp)
+                ENUM_PARAM(extension, png, jpg, tiff, bmp)
                 PARAM(int, frequency, 30)
 #ifdef _MSC_VER
                 PARAM(mo::WriteDirectory, save_directory, mo::WriteDirectory("C:/tmp"))
@@ -46,7 +46,11 @@ namespace aq
             MO_END;
 
           protected:
+
+            void nodeInit(bool first) override;
             bool processImpl() override;
+            mo::Thread m_worker_thread;
+            mo::IAsyncStream::Ptr_t m_worker_stream;
         };
     } // namespace nodes
 } // namespace aq

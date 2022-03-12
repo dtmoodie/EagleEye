@@ -9,6 +9,7 @@
 #include <MetaObject/thread/Thread.hpp>
 #include <ct/reflect_macros.hpp>
 
+#include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/runtime_reflection.hpp>
 
 #include <boost/circular_buffer.hpp>

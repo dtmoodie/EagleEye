@@ -15,9 +15,10 @@ namespace aqframegrabbers
 
         MO_DERIVE(FrameGrabberDirectory, aq::nodes::IFrameGrabber)
             STATUS(int, frame_index, 0)
-            MO_SIGNAL(void, eos)
+            MO_SIGNAL(void, onEos)
             MO_SIGNAL(void, update)
             PARAM(bool, synchronous, false)
+            PARAM(bool, eos, false)
             MO_SLOT(void, nextFrame)
             MO_SLOT(void, prevFrame)
 

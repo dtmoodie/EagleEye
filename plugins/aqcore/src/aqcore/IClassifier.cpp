@@ -7,7 +7,7 @@
 namespace aqcore
 {
 
-    void IClassifier::on_label_file_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
+    void IClassifier::on_label_file_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream*)
     {
         mo::Mutex_t::Lock_t lock(getMutex());
         std::shared_ptr<aq::CategorySet> labels = std::make_shared<aq::CategorySet>(label_file.string());

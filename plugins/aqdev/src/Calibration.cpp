@@ -233,7 +233,7 @@ namespace aqdev
     void ReadStereoCalibration::on_calibration_file_modified(const mo::IParam&,
                                                              mo::Header,
                                                              mo::UpdateFlags,
-                                                             mo::IAsyncStream&)
+                                                             mo::IAsyncStream*)
     {
         cv::FileStorage fs(calibration_file.string(), cv::FileStorage::READ);
         cv::Mat K1;

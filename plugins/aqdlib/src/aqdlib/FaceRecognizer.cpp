@@ -57,38 +57,42 @@ namespace aqdlib
             dlib::cv_image<dlib::rgb_pixel> dlib_img(img);
             std::vector<dlib::matrix<dlib::rgb_pixel>> aligned_faces;
 
-            const auto size = image->size();
-            auto bbs = detections->getComponent<aq::detection::BoundingBox2d>();
-            auto landmarks = detections->getComponent<aq::detection::LandmarkDetection>();
-            if (landmarks.getShape()[0] == 0)
             {
-                return false;
-            }
-
-            for (uint32_t i = 0; i < num_entities; ++i)
-            {
-                auto bb = bbs[i];
-                aq::boundingBoxToPixels(bb, size);
-                std::vector<dlib::point> parts;
-                auto pts = landmarks[i];
-                const size_t num_points = pts.getShape().numElements();
-                if(num_points > 0)
+                mo::ScopedProfile profile("extracting face chips");
+                const auto size = image->size();
+                auto bbs = detections->getComponent<aq::detection::BoundingBox2d>();
+                auto landmarks = detections->getComponent<aq::detection::LandmarkDetection>();
+                if (landmarks.getShape()[0] == 0)
                 {
-                    for (size_t j = 0; j < num_points; ++j)
+                    return false;
+                }
+
+                for (uint32_t i = 0; i < num_entities; ++i)
+                {
+                    auto bb = bbs[i];
+                    aq::boundingBoxToPixels(bb, size);
+                    std::vector<dlib::point> parts;
+                    auto pts = landmarks[i];
+                    const size_t num_points = pts.getShape().numElements();
+                    if(num_points > 0)
                     {
-                        parts.emplace_back(dlib::point(pts[j].x, pts[j].y));
+                        for (size_t j = 0; j < num_points; ++j)
+                        {
+                            parts.emplace_back(dlib::point(pts[j].x, pts[j].y));
+                        }
+
+                        dlib::rectangle rect(bb.x, bb.y, bb.x + bb.width, bb.y + bb.height);
+
+                        dlib::full_object_detection shape(rect, parts);
+                        dlib::matrix<dlib::rgb_pixel> face_chip;
+                        auto chip_details = dlib::get_face_chip_details(shape, 150, 0.25);
+                        dlib::extract_image_chip(dlib_img, chip_details, face_chip);
+
+                        aligned_faces.emplace_back(std::move(face_chip));
                     }
-
-                    dlib::rectangle rect(bb.x, bb.y, bb.x + bb.width, bb.y + bb.height);
-
-                    dlib::full_object_detection shape(rect, parts);
-                    dlib::matrix<dlib::rgb_pixel> face_chip;
-                    auto chip_details = dlib::get_face_chip_details(shape, 150, 0.25);
-                    dlib::extract_image_chip(dlib_img, chip_details, face_chip);
-
-                    aligned_faces.emplace_back(std::move(face_chip));
                 }
             }
+
 
             if (!aligned_faces.empty())
             {

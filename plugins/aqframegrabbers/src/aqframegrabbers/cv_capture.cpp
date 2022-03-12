@@ -201,7 +201,7 @@ namespace aqframegrabbers
         bool processImpl() override;
     };
 
-    void GrabberCamera::on_exposure_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
+    void GrabberCamera::on_exposure_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream*)
     {
         mo::Mutex_t::Lock_t lock(getMutex());
         if (h_cam)
@@ -218,7 +218,7 @@ namespace aqframegrabbers
         }
     }
 
-    void GrabberCamera::on_focus_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
+    void GrabberCamera::on_focus_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream*)
     {
         mo::Mutex_t::Lock_t lock(getMutex());
         if (h_cam)
@@ -238,7 +238,7 @@ namespace aqframegrabbers
         }
     }
 
-    void GrabberCamera::on_height_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
+    void GrabberCamera::on_height_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream*)
     {
         mo::Mutex_t::Lock_t lock(getMutex());
         if (h_cam)
@@ -247,7 +247,7 @@ namespace aqframegrabbers
         }
     }
 
-    void GrabberCamera::on_width_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
+    void GrabberCamera::on_width_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream*)
     {
         mo::Mutex_t::Lock_t lock(getMutex());
         if (h_cam)

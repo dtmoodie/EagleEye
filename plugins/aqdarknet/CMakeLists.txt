@@ -20,6 +20,7 @@ else(WIN32)
 endif(WIN32)
 
 if(DARKNET_LIBRARY AND DARKNET_INCLUDE)
+    LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../aqdlib/cmake)
     find_package(CUDNN QUIET)
     if(CUDNN_FOUND)
         find_package(OpenCV QUIET COMPONENTS cudawarping cudaimgproc)

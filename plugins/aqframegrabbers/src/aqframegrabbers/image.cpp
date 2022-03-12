@@ -17,8 +17,9 @@ namespace aqframegrabbers
         image = cv::imread(path);
         if (!image.empty())
         {
+            auto stream = this->getStream();
             image_name.publish(path, mo::tags::fn = count);
-            output.publish(aq::SyncedImage(image), mo::tags::fn = count);
+            output.publish(aq::SyncedImage(image, PixelFormat::kBGR, stream), mo::tags::fn = count);
             if(m_path != path)
             {
                 ++count;
@@ -33,6 +34,7 @@ namespace aqframegrabbers
     {
         if (!image.empty())
         {
+            // published on load, no timestamp for images
             // output.publish(image, mo::tags::fn = 0, mo::tags::timestamp = mo::ms * 0);
             return true;
         }
