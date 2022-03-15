@@ -34,8 +34,8 @@ namespace aqframegrabbers
             return 0;
         }
 
-        boost::filesystem::directory_iterator end_itr;
-        for (boost::filesystem::directory_iterator itr(doc); itr != end_itr; ++itr)
+        boost::filesystem::recursive_directory_iterator end_itr;
+        for (boost::filesystem::recursive_directory_iterator itr(doc); itr != end_itr; ++itr)
         {
             auto path = itr->path();
             std::string path_str = path.string();
@@ -123,18 +123,21 @@ namespace aqframegrabbers
 
     bool FrameGrabberDirectory::loadData(std::string file_path)
     {
-        auto path = boost::filesystem::path(file_path);
+        boost::filesystem::path path(file_path);
         if (boost::filesystem::exists(path) && boost::filesystem::is_directory(path))
         {
-            boost::filesystem::directory_iterator end_itr;
+            boost::filesystem::recursive_directory_iterator end_itr;
             std::vector<std::string> files;
             // cycle through the directory
             std::map<std::string, std::vector<std::string>> extension_map;
-            for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr)
+            for (boost::filesystem::recursive_directory_iterator itr(path); itr != end_itr; ++itr)
             {
-                if (is_regular_file(itr->path()))
+                const boost::filesystem::path file_path = itr->path();
+                if (is_regular_file(file_path))
                 {
-                    extension_map[itr->path().extension().string()].push_back(itr->path().string());
+                    const boost::filesystem::path ext = file_path.extension();
+                    std::string str = file_path.string();
+                    extension_map[ext.string()].push_back(std::move(str));
                 }
             }
             for (auto& itr : extension_map)
