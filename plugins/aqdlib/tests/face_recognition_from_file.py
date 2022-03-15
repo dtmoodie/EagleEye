@@ -33,13 +33,17 @@ recognizer = aq.nodes.FaceRecognizer(image=fg, detections=aligner,
     face_recognizer_weight_file='/home/dan/code/EagleEye/plugins/aqdlib/share/dlib_face_recognition_resnet_model_v1.dat')
 
 facedb = aq.nodes.FaceDatabase(detections=recognizer, image=fg)
+facedb.unknown_detections = './unknown'
+facedb.recent_detections = './recent'
+facedb.known_detections ='./known'
+
 
 draw = aq.nodes.DrawDetections(image=fg, detections=facedb)
 
 display = aq.nodes.QtImageDisplay(input=draw)
-writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./')
+writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./overlays')
 
-while(not fg.eos.data):
+while(not fg.getParam('eos').data.data):
     graph.step()
     aq.eventLoop(10)
     output = facedb.output
