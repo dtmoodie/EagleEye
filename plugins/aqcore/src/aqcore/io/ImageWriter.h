@@ -39,8 +39,7 @@ namespace aq
 #else
                 PARAM(mo::WriteDirectory, save_directory, mo::WriteDirectory("/tmp"))
 #endif
-                // STATUS(int, frame_count, 0)
-                int frame_count = 0;
+                STATE(int32_t, frame_count, 0)
                 PARAM(bool, request_write, false)
                 MO_SLOT(void, snap)
             MO_END;

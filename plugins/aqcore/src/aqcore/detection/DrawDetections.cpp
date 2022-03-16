@@ -191,6 +191,7 @@ namespace aqcore
             drawBoxes(device_draw_image, bbs, cats, stream);
             drawLabels(device_draw_image, bbs, cats, ids, stream);
             drawMetaData(device_draw_image, bbs, descriptors, stream);
+            this->output.publish(std::move(device_draw_image), mo::tags::param = &this->image_param);
         }
         else
         {
