@@ -70,6 +70,9 @@ target_link_libraries(aqgstreamer
     aquila_utilities
 )
 
+aq_install_python_test(tests/v4l2_h264.py)
+aq_install_python_test(tests/v4l2_mjpeg.py)
+
 GET_FILENAME_COMPONENT(LIB_DIR "${GSTREAMER_gstapp_LIBRARY}" DIRECTORY)
 IF(${GSTREAMER_gstrtspserver_LIBRARY})
     target_compile_definitions(aqgstreamer -DHAVE_GST_RTSPSERVER)

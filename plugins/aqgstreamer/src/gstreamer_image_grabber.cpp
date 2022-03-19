@@ -19,14 +19,23 @@ namespace grabbers
 
     int GstreamerImageGrabber::loadTimeout() { return 10000; }
 
+    void GstreamerImageGrabber::setStream(const mo::IAsyncStreamPtr_t&)
+    {
+        nodes::IGrabber::setStream(m_gstreamer_stream);
+    }
+
     void GstreamerImageGrabber::initCustom(bool /*first_init*/)
     {
         std::shared_ptr<aqgstreamer::GLibThread> inst = aqgstreamer::GLibThread::instance();
         m_gstreamer_stream = inst->getStream();
+        this->setStream(m_gstreamer_stream);
     }
 
     GstFlowReturn GstreamerImageGrabber::onPull()
     {
+        // This is called here since this could be called by a thread created by gstreamer
+        mo::initThread();
+        mo::IAsyncStream::setCurrent(m_gstreamer_stream);
         GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(m_appsink));
         // g_signal_emit_by_name(_appsink, "pull-sample", &sample, NULL);
         if (sample)
@@ -90,7 +99,8 @@ namespace grabbers
 
                 this->getLogger().trace("Received image at {}", time);
 
-                this->image.publish(std::move(image), mo::tags::timestamp = time, mo::tags::stream = m_gstreamer_stream.get());
+                this->image.publish(std::move(image), mo::Header(time, mo::FrameNumber(m_sample_counter)), m_gstreamer_stream.get());
+                ++m_sample_counter;
                 sig_update();
             }
         }

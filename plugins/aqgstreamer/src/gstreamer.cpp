@@ -89,7 +89,10 @@ namespace aqgstreamer
         if (gst_buffer_map(buffer.get(), &map, flags))
         {
             std::shared_ptr<GstBuffer> tmp(buffer.get(),
-                                           [buffer, map](GstBuffer*) mutable { gst_buffer_unmap(buffer.get(), &map); });
+                                           [buffer, map](GstBuffer*) mutable {
+                                               gst_buffer_unmap(buffer.get(), &map);
+                                               buffer.reset();
+                                           });
 
             ct::TArrayView<uint8_t> wrapping(map.data, map.size);
             output = ce::make_shared<aq::SyncedMemory>(aq::SyncedMemory::wrapHost(wrapping, 1, tmp));
@@ -217,7 +220,7 @@ namespace aqgstreamer
 
         if (error != nullptr)
         {
-            MO_LOG(error, "Error parsing pipeline {}", error->message);
+            MO_LOG(error, "Error parsing pipeline '{}' error = {}", pipeline_, error->message);
             return false;
         }
         MO_LOG(debug, "Input pipeline parsed {}", pipeline_);
@@ -561,7 +564,7 @@ namespace aqgstreamer
             gst_caps_append(caps, bgr);
         }
 
-        {
+        /*{
             GstCaps* bgr = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "I420", nullptr);
             gst_caps_append(caps, bgr);
         }
@@ -569,7 +572,7 @@ namespace aqgstreamer
         {
             GstCaps* yuv = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "YUV", nullptr);
             gst_caps_append(caps, yuv);
-        }
+        }*/
 
         gst_app_sink_set_caps(m_appsink, caps);
         caps = gst_app_sink_get_caps(m_appsink);

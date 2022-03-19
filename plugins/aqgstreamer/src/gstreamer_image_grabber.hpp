@@ -23,6 +23,7 @@ namespace grabbers
         MO_END;
 
         void initCustom(bool first_init) override;
+        void setStream(const mo::IAsyncStreamPtr_t& ctx) override;
 
       protected:
         GstFlowReturn onPull() override;
@@ -30,6 +31,7 @@ namespace grabbers
         bool grab() override;
 
         mo::IAsyncStreamPtr_t m_gstreamer_stream;
+        uint32_t m_sample_counter = 0;
     };
 } // namespace grabbers
 }

@@ -118,11 +118,15 @@ namespace aqgstreamer
     {
         MO_LOG(info, "Stopping glib thread");
         g_main_loop_quit(m_main_loop);
+        m_stream.reset();
         m_thread.interrupt();
         m_thread.join();
     }
 
-    void GLibThread::yield() { m_stream->synchronize(); }
+    void GLibThread::yield()
+    {
+        m_stream->synchronize();
+    }
 
     void GLibThread::startThread() {}
 
