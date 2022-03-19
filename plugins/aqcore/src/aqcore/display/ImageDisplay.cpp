@@ -32,7 +32,7 @@ bool QtImageDisplay::processImpl()
     {
         mo::IAsyncStreamPtr_t stream = this->getStream();
         // TODO use proper context based processImpl overloads
-        mat = input->mat(stream.get());
+        mat = input->mat(stream.get(), &sync);
         ts = input_param.getNewestTimestamp();
     }
 
