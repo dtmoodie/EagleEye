@@ -261,6 +261,10 @@ namespace aqdlib
                                          mo::IAsyncStream& stream)
     {
         const uint32_t descriptor_size = det_desc.getShape()[0];
+        if (descriptor_size == 0)
+        {
+            return false;
+        }
         cv::Mat_<float> wrapped_descriptor(1, descriptor_size, const_cast<float*>(det_desc.data()));
         const bool euclidean = (distance_measurement.getValue() == Euclidean);
         double best_match = euclidean ? 1000.0 : 0.0;
