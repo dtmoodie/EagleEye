@@ -1,7 +1,7 @@
 #include <opencv2/core.hpp>
 
-#include "gstreamer.hpp"
 #include "glib_thread.h"
+#include "gstreamer.hpp"
 
 #include <Aquila/nodes/NodeInfo.hpp>
 
@@ -15,7 +15,12 @@ namespace aqgstreamer
 {
     std::shared_ptr<GstBuffer> ownBuffer(GstBuffer* buffer)
     {
-        return std::shared_ptr<GstBuffer>(buffer, &gst_buffer_unref);
+        // clang-format off
+        return std::shared_ptr<GstBuffer>(buffer, [](GstBuffer* buffer)
+        {
+            gst_buffer_unref(buffer);
+        });
+        // clang-format on
     }
 
     bool mapBuffer(std::shared_ptr<GstBuffer> buffer,
@@ -88,14 +93,13 @@ namespace aqgstreamer
         GstMapInfo map;
         if (gst_buffer_map(buffer.get(), &map, flags))
         {
-            std::shared_ptr<GstBuffer> tmp(buffer.get(),
-                                           [buffer, map](GstBuffer*) mutable {
-                                               gst_buffer_unmap(buffer.get(), &map);
-                                               buffer.reset();
-                                           });
+            std::shared_ptr<GstBuffer> tmp(buffer.get(), [buffer, map](GstBuffer*) mutable {
+                gst_buffer_unmap(buffer.get(), &map);
+                buffer.reset();
+            });
 
             ct::TArrayView<uint8_t> wrapping(map.data, map.size);
-            output = ce::make_shared<aq::SyncedMemory>(aq::SyncedMemory::wrapHost(wrapping, 1, tmp));
+            output = ce::make_shared<aq::SyncedMemory>(aq::SyncedMemory::wrapHost(wrapping, 1, std::move(tmp)));
             return true;
         }
         return false;
@@ -822,12 +826,8 @@ RTSP_server_new::~RTSP_server_new()
     if (appsrc)
         gst_object_unref(appsrc);
 }
-void RTSP_server_new::push_image()
-{
-}
-void RTSP_server_new::onPipeChange()
-{
-}
+void RTSP_server_new::push_image() {}
+void RTSP_server_new::onPipeChange() {}
 void RTSP_server_new::glibThread()
 {
     MO_LOG(info) << "Starting gmain loop";
@@ -837,9 +837,7 @@ void RTSP_server_new::glibThread()
     }
     MO_LOG(info) << "[RTSP Server] Gmain loop quitting";
 }
-void RTSP_server_new::setup(std::string pipeOverride)
-{
-}
+void RTSP_server_new::setup(std::string pipeOverride) {}
 void rtsp_server_new_need_data_callback(GstElement* appsrc, guint unused, gpointer user_data)
 {
     MO_LOG(debug) << __FUNCTION__;
@@ -878,8 +876,7 @@ static gboolean bus_message_new(GstBus* bus, GstMessage* message, RTSP_server_ne
 
     switch (GST_MESSAGE_TYPE(message))
     {
-    case GST_MESSAGE_ERROR:
-    {
+    case GST_MESSAGE_ERROR: {
         GError* err = NULL;
         gchar* dbg_info = NULL;
 

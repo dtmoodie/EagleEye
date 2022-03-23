@@ -39,7 +39,7 @@ bool QtImageDisplay::processImpl()
     std::string name = getName();
     if (!mat.empty())
     {
-        mo::IAsyncStream::Ptr_t gui_thread = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
+        mo::IAsyncStream::Ptr_t gui_thread = mo::ThreadRegistry::instance()->getGUIStream();
         if (sync)
         {
             gui_thread->pushWork([mat, name, overlay, ts, this, gui_thread](mo::IAsyncStream* stream) -> void {
@@ -64,7 +64,8 @@ bool QtImageDisplay::processImpl()
                 draw_img = mat.clone();
                 std::stringstream ss;
                 ss << "Timestamp: " << ts;
-                cv::putText(draw_img, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
+                cv::putText(
+                    draw_img, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
             }
             auto graph = getGraph();
             MO_ASSERT(graph != nullptr);
@@ -157,7 +158,7 @@ bool DetectionDisplay::processImpl()
 bool OGLImageDisplay::processImpl()
 {
     std::string name = getName();
-    mo::IAsyncStreamPtr_t gui_stream = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::GUI);
+    mo::IAsyncStreamPtr_t gui_stream = mo::ThreadRegistry::instance()->getGUIStream();
     rcc::shared_ptr<OGLImageDisplay> self(*this);
     mo::IAsyncStreamPtr_t my_stream = this->getStream();
     mo::OptionalTime ts = input_param.getNewestHeader()->timestamp;

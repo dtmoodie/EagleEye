@@ -105,7 +105,7 @@ namespace aqframegrabbers
                     ++frame_index;
                 }
             }
-            else if (frame_index >= files_on_disk.size())
+            else
             {
                 this->eos = true;
                 sig_onEos();

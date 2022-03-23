@@ -35,7 +35,7 @@ int IMessageReader::CanLoadTopic(const std::string& topic)
 void IMessageReader::on_subscribed_topic_modified(const mo::IParam&,
                                                   mo::Header,
                                                   mo::UpdateFlags,
-                                                  mo::IAsyncStream&)
+                                                  mo::IAsyncStream*)
 {
     this->subscribe(subscribed_topic);
 }

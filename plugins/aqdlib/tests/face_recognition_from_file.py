@@ -12,7 +12,7 @@ parser.add_argument('--labels', default='/home/dan/code/yolo_tiny_face/labels.tx
 args = parser.parse_args()
 
 stream = aq.createStream()
-aq.setGuiStream(stream)
+gui_stream = aq.getGUIStream();
 graph = aq.Graph()
 graph.setStream(stream)
 
@@ -43,15 +43,18 @@ draw = aq.nodes.DrawDetections(image=fg, detections=facedb)
 display = aq.nodes.QtImageDisplay(input=draw)
 writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./overlays')
 
+count = 0
 while(not fg.getParam('eos').data.data):
     graph.step()
-    aq.eventLoop(10)
+    #aq.eventLoop(10)
+    gui_stream.synchronize()
     output = facedb.output
 
     components = output.data.components
     for component in components:
         print(component.data.data.typename)
         print(component.data.data.data)
+    count += 1
 
 facedb.saveUnknownFaces()
 

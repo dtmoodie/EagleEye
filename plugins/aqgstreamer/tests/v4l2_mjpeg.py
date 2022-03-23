@@ -33,8 +33,8 @@ fg = aq.framegrabbers.create(path)
 assert fg is not None, 'Unable to load {}'.format(path)
 graph.addNode(fg)
 
-disp = aq.nodes.QtImageDisplay(input=fg)
+disp = aq.nodes.QtImageDisplay(graph=graph, input=fg)
 
-while(loop):
+while(True):
     graph.step()
 

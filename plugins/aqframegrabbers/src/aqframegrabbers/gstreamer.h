@@ -8,6 +8,7 @@ namespace aqframegrabbers
     class aqframegrabbers_EXPORT GrabberGstreamer : public GrabberCV
     {
       public:
+        static int loadTimeout() { return 10000; }
         MO_DERIVE(GrabberGstreamer, GrabberCV)
             PARAM(bool, loop, true);
             MO_SIGNAL(void, eof);

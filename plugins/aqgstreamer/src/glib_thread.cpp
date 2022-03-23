@@ -3,9 +3,9 @@
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
 #include <MetaObject/logging/logging.hpp>
+#include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/thread/ThreadInfo.hpp>
 #include <MetaObject/thread/ThreadRegistry.hpp>
-#include <MetaObject/thread/Thread.hpp>
 
 namespace aqgstreamer
 {
@@ -71,7 +71,7 @@ namespace aqgstreamer
 
             m_cv.notify_all();
 #ifndef _MSC_VER
-            mo::ThreadRegistry::instance()->registerThread(mo::ThreadRegistry::GUI, m_stream);
+            mo::ThreadRegistry::instance()->setGUIStream(m_stream);
             g_idle_add(&glibIdle, this);
 
 // Ideally we can just use a notifier instead of an idle func
@@ -123,10 +123,7 @@ namespace aqgstreamer
         m_thread.join();
     }
 
-    void GLibThread::yield()
-    {
-        m_stream->synchronize();
-    }
+    void GLibThread::yield() { m_stream->synchronize(); }
 
     void GLibThread::startThread() {}
 
