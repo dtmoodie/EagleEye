@@ -10,13 +10,11 @@
 using namespace aq;
 using namespace aq::nodes;
 
-
 void ImageWriter::nodeInit(bool first)
 {
     m_worker_stream = m_worker_thread.asyncStream();
     MO_ASSERT(m_worker_stream);
 }
-
 
 bool ImageWriter::processImpl()
 {

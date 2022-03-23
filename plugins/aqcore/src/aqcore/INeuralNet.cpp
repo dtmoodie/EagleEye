@@ -193,8 +193,6 @@ namespace aqcore
             this->getLogger().trace("Preprocessing complete");
         }
 
-
-
         preBatch(static_cast<int>(pixel_bounding_boxes.size()));
 
         cv::cuda::GpuMat resized;

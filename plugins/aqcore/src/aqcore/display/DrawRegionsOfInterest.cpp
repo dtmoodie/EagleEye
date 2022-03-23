@@ -1,8 +1,8 @@
 #include <MetaObject/core/metaobject_config.hpp>
 #if MO_OPENCV_HAVE_CUDA
-#include "DrawRegionsOfInterest.hpp"
 #include "Aquila/nodes/NodeInfo.hpp"
 #include "Aquila/utilities/GpuDrawing.hpp"
+#include "DrawRegionsOfInterest.hpp"
 
 using namespace aq::nodes;
 

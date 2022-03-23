@@ -1,10 +1,10 @@
 #pragma once
 #ifdef _MSC_VER
 #define NOMINMAX
-#include <windows.h>
 #include <Dbt.h>
 #include <Wmcodecdsp.h>
 #include <assert.h>
+#include <limits>
 #include <mfapi.h>
 #include <mfidl.h>
 #include <mfobjects.h>
@@ -12,7 +12,7 @@
 #include <mfreadwrite.h>
 #include <new>
 #include <shlwapi.h>
-#include <limits>
+#include <windows.h>
 #pragma comment(lib, "Mfplat.lib")
 #pragma comment(lib, "Mf.lib")
 #endif
@@ -25,4 +25,3 @@
 #include <MetaObject/object/detail/IMetaObjectImpl.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-

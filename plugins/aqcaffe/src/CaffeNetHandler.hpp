@@ -25,7 +25,7 @@ namespace aq
             typedef NetHandlerInfo InterfaceInfo;
             typedef NetHandler Interface;
             MO_BEGIN(NetHandler)
-            PARAM(std::string, output_blob_name, "score")
+                PARAM(std::string, output_blob_name, "score")
             MO_END
             virtual void setOutputBlob(const caffe::Net<float>& net, int output_blob_index);
             virtual void startBatch() {}
@@ -35,9 +35,10 @@ namespace aq
                                       const std::vector<DetectedObject2d>& objs) = 0;
             virtual void endBatch(boost::optional<mo::Time_t> timestamp) {}
             void setLabels(std::vector<std::string>* labels) { this->labels = labels; }
+
           protected:
             bool processImpl() { return true; }
             std::vector<std::string>* labels = nullptr;
         };
-    }
-}
+    } // namespace Caffe
+} // namespace aq

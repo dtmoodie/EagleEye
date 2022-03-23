@@ -1,7 +1,7 @@
 #include <MetaObject/core/metaobject_config.hpp>
 #if MO_OPENCV_HAVE_CUDA
-#include "Histogram.hpp"
 #include "Aquila/nodes/NodeInfo.hpp"
+#include "Histogram.hpp"
 #include "opencv2/cudaimgproc.hpp"
 using namespace aq::nodes;
 

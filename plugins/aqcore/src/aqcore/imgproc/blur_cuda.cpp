@@ -2,7 +2,7 @@
 #if MO_OPENCV_HAVE_CUDA
 #include "Blur.hpp"
 #include <MetaObject/core/CvContext.hpp>
-#inclue < MetaObject / cuda / AsyncStream.hpp >
+#inclue < MetaObject / cuda / AsyncStream.hpp>
 
 namespace aq
 {

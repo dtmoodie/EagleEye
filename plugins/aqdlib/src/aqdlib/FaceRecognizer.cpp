@@ -16,7 +16,7 @@
 
 namespace dlib
 {
-    void set_image_size(cv_image<bgr_pixel>& , const long unsigned int& , const long unsigned int& )
+    void set_image_size(cv_image<bgr_pixel>&, const long unsigned int&, const long unsigned int&)
     {
         THROW(warn, "Not actually implemented");
     }
@@ -49,7 +49,8 @@ namespace aqdlib
             if (image->pixelFormat() == ct::value(aq::PixelFormat::kBGR))
             {
                 cv::cvtColor(img, rgb, cv::COLOR_BGR2RGB);
-            }else
+            }
+            else
             {
                 rgb = img;
             }
@@ -74,7 +75,7 @@ namespace aqdlib
                     std::vector<dlib::point> parts;
                     auto pts = landmarks[i];
                     const size_t num_points = pts.getShape().numElements();
-                    if(num_points > 0)
+                    if (num_points > 0)
                     {
                         for (size_t j = 0; j < num_points; ++j)
                         {
@@ -92,7 +93,6 @@ namespace aqdlib
                     }
                 }
             }
-
 
             if (!aligned_faces.empty())
             {

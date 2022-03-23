@@ -12,4 +12,4 @@ namespace mo
         int CanHandleTopic(const std::string& type) const { return Type::CanHandleTopic(type); }
         void ListTopics(std::vector<std::string>& topics) const { Type::ListTopics(topics); }
     };
-}
+} // namespace mo

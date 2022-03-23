@@ -17,12 +17,8 @@ bounding_box::bounding_box(cv::Mat transform, cv::Scalar size) : _size(size)
     {
         _inv_transform = _transform.inv();
     }
-    if (_transform.cols == 1 && (_transform.rows == 4 || _transform.rows == 3))
-    {
-    }
-    if (_transform.rows == 1 && (_transform.cols == 4 || _transform.cols == 3))
-    {
-    }
+    if (_transform.cols == 1 && (_transform.rows == 4 || _transform.rows == 3)) {}
+    if (_transform.rows == 1 && (_transform.cols == 4 || _transform.cols == 3)) {}
 }
 bool bounding_box::contains(const cv::Vec3f& point)
 {

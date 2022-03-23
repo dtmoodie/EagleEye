@@ -7,4 +7,4 @@ namespace Ros
     {
       public:
     };
-}
+} // namespace Ros

@@ -19,7 +19,6 @@ bool Scale::processImpl()
     return true;
 }
 
-
 bool AutoScale::processImpl()
 {
     std::vector<cv::cuda::GpuMat> channels;

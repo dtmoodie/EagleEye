@@ -17,7 +17,7 @@ namespace aqcore
         _write_thread.join();
     }
 
-    void VideoWriter::nodeInit(bool )
+    void VideoWriter::nodeInit(bool)
     {
         _write_thread = boost::thread([this]() {
             size_t video_frame_number = 0;
@@ -58,10 +58,7 @@ namespace aqcore
         });
     }
 
-    bool VideoWriter::processImpl()
-    {
-        return false;
-    }
+    bool VideoWriter::processImpl() { return false; }
 
     bool VideoWriter::processImpl(mo::IDeviceStream& stream)
     {

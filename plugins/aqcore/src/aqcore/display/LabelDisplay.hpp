@@ -35,5 +35,5 @@ namespace aq
             int legend_width;
             cv::Ptr<cv::cuda::Filter> _dilate_filter;
         };
-    }
-}
+    } // namespace nodes
+} // namespace aq

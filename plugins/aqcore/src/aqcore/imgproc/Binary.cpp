@@ -196,9 +196,7 @@ bool ContourBoundingBox::processImpl()
         }
         if (merge_contours)
         {
-            for (size_t i = 0; i < boxes.size(); ++i)
-            {
-            }
+            for (size_t i = 0; i < boxes.size(); ++i) {}
         }
     }
     return false;
@@ -302,9 +300,7 @@ histogram to threshold");
     node->runFilter();
 }*/
 
-void HistogramThreshold::runFilter()
-{
-}
+void HistogramThreshold::runFilter() {}
 
 /*cv::cuda::GpuMat HistogramThreshold::doProcess(cv::cuda::GpuMat &img,
 cv::cuda::Stream& stream)

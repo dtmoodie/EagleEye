@@ -88,9 +88,9 @@ namespace aqdlib
 
     FaceDatabase::~FaceDatabase()
     {
-//        saveUnknownFaces();
-//        saveKnownFaces();
-//        saveRecentFaces();
+        //        saveUnknownFaces();
+        //        saveKnownFaces();
+        //        saveRecentFaces();
     }
 
     void FaceDatabase::saveUnknownFaces()
@@ -156,8 +156,7 @@ namespace aqdlib
             this->getLogger().info("Saving known faces to {}", dest_file_db);
             save = std::move(m_known_faces);
         }
-        auto work = [save, dest_file_db](mo::IAsyncStream*)
-        {
+        auto work = [save, dest_file_db](mo::IAsyncStream*) {
             std::ofstream ofs;
             ofs.open(dest_file_db);
             mo::JSONSaver ar(ofs);
@@ -184,9 +183,8 @@ namespace aqdlib
             }
             patches = std::move(m_recent_patches);
         }
-        auto work = [patches, save_names, indices](mo::IAsyncStream* stream)
-        {
-            for(size_t i = 0; i < indices.size(); ++i)
+        auto work = [patches, save_names, indices](mo::IAsyncStream* stream) {
+            for (size_t i = 0; i < indices.size(); ++i)
             {
                 patches[i].save(save_names[i], indices[i], *stream);
             }
@@ -306,7 +304,7 @@ namespace aqdlib
         else
         {
             const auto idx = match_index + m_known_faces.identities.size();
-           if (idx < m_identities->size())
+            if (idx < m_identities->size())
             {
                 cls.resize(1);
                 cls[0] = (*m_identities)[idx]();

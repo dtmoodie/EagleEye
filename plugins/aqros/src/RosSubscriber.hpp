@@ -26,5 +26,5 @@ namespace aq
 
             std::vector<rcc::shared_ptr<ros::IMessageReader>> _readers;
         };
-    }
-}
+    } // namespace nodes
+} // namespace aq

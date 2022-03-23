@@ -77,9 +77,7 @@ vlcCamera::~vlcCamera()
     {
         libvlc_media_release(media);
     }
-    if (vlcInstance)
-    {
-    }
+    if (vlcInstance) {}
 }
 
 bool vlcCamera::processImpl()

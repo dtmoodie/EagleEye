@@ -1,8 +1,8 @@
 #pragma once
 #include <Aquila/nodes/Node.hpp>
 #include <Aquila/types/DetectionDescription.hpp>
-#include <Aquila/types/SyncedImage.hpp>
 #include <Aquila/types/DetectionPatch.hpp>
+#include <Aquila/types/SyncedImage.hpp>
 #define DLIB_USE_CUDA
 #include <dlib/dnn.h>
 
@@ -10,13 +10,15 @@ namespace dlib
 {
     template <template <int, template <typename> class, int, typename> class block,
               int N,
-              template <typename> class BN,
+              template <typename>
+              class BN,
               typename SUBNET>
     using residual = add_prev1<block<N, BN, 1, tag1<SUBNET>>>;
 
     template <template <int, template <typename> class, int, typename> class block,
               int N,
-              template <typename> class BN,
+              template <typename>
+              class BN,
               typename SUBNET>
     using residual_down = add_prev2<avg_pool<2, 2, 2, 2, skip1<tag2<block<N, BN, 2, tag1<SUBNET>>>>>>;
 
@@ -51,8 +53,10 @@ namespace aqdlib
     {
       public:
         using InputComponents_t = ct::VariadicTypedef<aq::detection::BoundingBox2d, aq::detection::LandmarkDetection>;
-        using OutputComponents_t = ct::
-            VariadicTypedef<aq::detection::BoundingBox2d, aq::detection::LandmarkDetection, aq::detection::Descriptor, aq::detection::AlignedPatch>;
+        using OutputComponents_t = ct::VariadicTypedef<aq::detection::BoundingBox2d,
+                                                       aq::detection::LandmarkDetection,
+                                                       aq::detection::Descriptor,
+                                                       aq::detection::AlignedPatch>;
 
         MO_DERIVE(FaceRecognizer, aq::nodes::Node)
             INPUT(aq::SyncedImage, image)

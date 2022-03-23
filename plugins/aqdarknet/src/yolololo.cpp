@@ -149,7 +149,7 @@ namespace darknet
             // TODO replace with some kind of managed tensor
             const size_t buffer_size = m_buffer.cols * m_buffer.rows;
             const size_t input_size = m_network->h * m_network->c * m_network->w;
-            if(buffer_size != input_size)
+            if (buffer_size != input_size)
             {
                 cv::cuda::createContinuous(m_network->h * m_network->c, m_network->w, CV_32F, m_buffer);
             }
@@ -281,9 +281,7 @@ namespace darknet
 class YOLO : virtual public aqcore::INeuralNet
 {
   public:
-    YOLO()
-    {
-    }
+    YOLO() {}
     using OutputComponents_t = ct::VariadicTypedef<aq::detection::BoundingBox2d,
                                                    aq::detection::Classifications,
                                                    aq::detection::Confidence,
@@ -324,14 +322,11 @@ class YOLO : virtual public aqcore::INeuralNet
         return true;
     }
 
-    bool reshapeNetwork(unsigned int , unsigned int , unsigned int , unsigned int ) override
-    {
-        return false;
-    }
+    bool reshapeNetwork(unsigned int, unsigned int, unsigned int, unsigned int) override { return false; }
 
     cv::Scalar_<unsigned int> getNetworkShape() const override { return m_net->getInputShape(); }
 
-    std::vector<std::vector<cv::cuda::GpuMat>> getNetImageInput(int ) override { return {m_input_channels}; }
+    std::vector<std::vector<cv::cuda::GpuMat>> getNetImageInput(int) override { return {m_input_channels}; }
 
     bool forwardMinibatch(mo::IDeviceStream& stream) override
     {
@@ -342,9 +337,7 @@ class YOLO : virtual public aqcore::INeuralNet
         return true;
     }
 
-    void postMiniBatch(mo::IDeviceStream& stream,
-                       const std::vector<cv::Rect>& ,
-                       const aq::DetectedObjectSet* ) override
+    void postMiniBatch(mo::IDeviceStream& stream, const std::vector<cv::Rect>&, const aq::DetectedObjectSet*) override
     {
         PROFILE_FUNCTION
         auto input_image_shape = this->input->size();

@@ -52,7 +52,7 @@ namespace aq
                         // This should be a kernel function so each classification can happen separately
                         //__device__ void classify_set(const cv::cuda::PtrStepSzf& X, cv::cuda::PtrStepSzf& result);
                         //__host__   void classify_set(const cv::cuda::GpuMat& X, cv::cuda::GpuMat& result,
-                        //cv::cuda::Stream& stream);
+                        // cv::cuda::Stream& stream);
                         //__host__   void classify_set(const cv::Mat& X, cv::Mat& result);
 
                         float mu0, mu1, sig0, sig1;

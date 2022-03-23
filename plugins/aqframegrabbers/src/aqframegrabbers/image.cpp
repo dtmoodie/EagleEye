@@ -20,7 +20,7 @@ namespace aqframegrabbers
             auto stream = this->getStream();
             image_name.publish(path, mo::tags::fn = count);
             output.publish(aq::SyncedImage(image, PixelFormat::kBGR, stream), mo::tags::fn = count);
-            if(m_path != path)
+            if (m_path != path)
             {
                 ++count;
                 m_path = path;
@@ -54,4 +54,3 @@ namespace aqframegrabbers
 
 using namespace aqframegrabbers;
 MO_REGISTER_CLASS(GrabberImage);
-

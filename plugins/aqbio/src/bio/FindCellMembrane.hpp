@@ -12,11 +12,11 @@
 namespace aqbio
 {
 
-aqbio_EXPORT void findMaximalSeam(const cv::Mat& score, cv::Mat& seam, int search_window = 5);
+    aqbio_EXPORT void findMaximalSeam(const cv::Mat& score, cv::Mat& seam, int search_window = 5);
 
-struct Cell
-{
-    REFLECT_INTERNAL_BEGIN(Cell)
+    struct Cell
+    {
+        REFLECT_INTERNAL_BEGIN(Cell)
         REFLECT_INTERNAL_MEMBER(Eigen::Vector2f, center)
         REFLECT_INTERNAL_MEMBER(std::vector<cv::Point>, inner_membrane)
         REFLECT_INTERNAL_MEMBER(std::vector<cv::Point>, outer_membrane)
@@ -25,19 +25,21 @@ struct Cell
         REFLECT_INTERNAL_MEMBER(bool, inner_updated, false)
         REFLECT_INTERNAL_MEMBER(bool, outer_updated, false)
         REFLECT_INTERNAL_MEMBER(size_t, fn)
-    REFLECT_INTERNAL_END;
+REFLECT_INTERNAL_END
+;
 
+float dist(const cv::Point& pt) const;
 
-    float dist(const cv::Point& pt) const;
+void pushInner(const ssize_t idx, const float dist);
 
-    void pushInner(const ssize_t idx, const float dist);
+void pushOuter(const ssize_t idx, const float dist);
 
-    void pushOuter(const ssize_t idx, const float dist);
+void clear();
 
-    void clear();
 private:
-    void push(cv::Point& pt, const float dist);
-};
+void push(cv::Point& pt, const float dist);
+}
+;
 
 class aqbio_EXPORT FindCellMembrane : public aqcore::SnakeCircle
 {
@@ -61,6 +63,7 @@ class aqbio_EXPORT FindCellMembrane : public aqcore::SnakeCircle
         PARAM(bool, user_update, false)
         OUTPUT(Cell, cell, {})
     MO_END;
+
   protected:
     bool processImpl() override;
 
@@ -74,5 +77,4 @@ class aqbio_EXPORT FindCellMembrane : public aqcore::SnakeCircle
     void reweightEnergy(cv::Mat_<float>& energy);
     Cell m_current_cell;
 };
-
 }

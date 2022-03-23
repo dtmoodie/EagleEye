@@ -5,7 +5,6 @@
 #include <Aquila/rcc/external_includes/cv_cudaarithm.hpp>
 #include <Aquila/rcc/external_includes/cv_cudaimgproc.hpp>
 
-
 using namespace aq;
 using namespace aq::nodes;
 

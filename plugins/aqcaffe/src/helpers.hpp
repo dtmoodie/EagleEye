@@ -17,5 +17,5 @@ namespace aq
                                  cv::cuda::GpuMat& confidence,
                                  cv::cuda::Stream& stream);
         Caffe_EXPORT void argMax(const caffe::Blob<float>* blob, cv::Mat& label, cv::Mat& confidence);
-    }
-}
+    } // namespace Caffe
+} // namespace aq

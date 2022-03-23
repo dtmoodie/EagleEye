@@ -37,4 +37,4 @@ namespace aqbio
             float diff = 0;
         };
     };
-}
+} // namespace aqbio

@@ -11,8 +11,8 @@ namespace aq
             static std::map<int, int> CanHandleNetwork(const caffe::Net<float>& net);
 
             MO_DERIVE(ClassifierHandler, NetHandler)
-            OUTPUT(std::vector<DetectedObject>, classified_detections, {})
-            PARAM(float, classification_threshold, 0.5)
+                OUTPUT(std::vector<DetectedObject>, classified_detections, {})
+                PARAM(float, classification_threshold, 0.5)
             MO_END
             virtual void startBatch();
             virtual void handleOutput(const caffe::Net<float>& net,
@@ -21,5 +21,5 @@ namespace aq
                                       const std::vector<DetectedObject2d>& objs);
             virtual void endBatch(boost::optional<mo::Time_t> timestamp);
         };
-    }
-}
+    } // namespace Caffe
+} // namespace aq

@@ -8,4 +8,4 @@ namespace mo
     {
         std::map<int, int> CanHandleNetwork(const caffe::Net<float>& net) const { return Type::CanHandleNetwork(net); }
     };
-}
+} // namespace mo

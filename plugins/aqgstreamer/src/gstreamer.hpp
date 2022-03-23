@@ -29,8 +29,6 @@
 #include <gst/gstpipeline.h>
 #include <gst/gstutils.h>
 
-
-
 namespace aqgstreamer
 {
     std::shared_ptr<GstBuffer> ownBuffer(GstBuffer*);
@@ -160,34 +158,34 @@ namespace aqgstreamer
     };
 
 #ifdef HAVE_GST_RTSPSERVER
-class aqgstreamer_EXPORT RTSP_server_new : public Node
-{
-  public:
-    GstClockTime timestamp;
-    time_t prevTime;
-    time_t delta;
-    GMainLoop* loop;
-    GstRTSPServer* server;
-    int clientCount;
-    bool connected;
-    bool first_run;
-    guint server_id;
-    GstRTSPMediaFactory* factory;
-    GstElement *pipeline, *appsrc;
+    class aqgstreamer_EXPORT RTSP_server_new : public Node
+    {
+      public:
+        GstClockTime timestamp;
+        time_t prevTime;
+        time_t delta;
+        GMainLoop* loop;
+        GstRTSPServer* server;
+        int clientCount;
+        bool connected;
+        bool first_run;
+        guint server_id;
+        GstRTSPMediaFactory* factory;
+        GstElement *pipeline, *appsrc;
 
-    boost::thread glib_thread;
-    void glibThread();
-    concurrent_notifier<cv::Mat> notifier;
-    cv::cuda::HostMem* currentNewestFrame;
-    RTSP_server_new();
-    void push_image();
-    void onPipeChange();
-    void setup(std::string pipeOverride = std::string());
-    ~RTSP_server_new();
-    virtual void nodeInit(bool firstInit);
-    virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
-    cv::Size imgSize;
-};
+        boost::thread glib_thread;
+        void glibThread();
+        concurrent_notifier<cv::Mat> notifier;
+        cv::cuda::HostMem* currentNewestFrame;
+        RTSP_server_new();
+        void push_image();
+        void onPipeChange();
+        void setup(std::string pipeOverride = std::string());
+        ~RTSP_server_new();
+        virtual void nodeInit(bool firstInit);
+        virtual TS<SyncedMemory> doProcess(TS<SyncedMemory> img, cv::cuda::Stream& stream);
+        cv::Size imgSize;
+    };
 #endif
 
 } // namespace aqgstreamer

@@ -12,11 +12,9 @@
 
 #include <boost/thread.hpp>
 
-
 TEST(gstreamer, construct_dynamic)
 {
-    rcc::shared_ptr<aq::nodes::IGrabber> obj =
-        mo::MetaObjectFactory::instance()->create("GrabberGstreamer");
+    rcc::shared_ptr<aq::nodes::IGrabber> obj = mo::MetaObjectFactory::instance()->create("GrabberGstreamer");
     ASSERT_TRUE(obj);
 }
 

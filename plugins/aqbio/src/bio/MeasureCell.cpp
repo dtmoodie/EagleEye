@@ -227,7 +227,7 @@ namespace aqbio
         overlay.publish(draw_image, mo::tags::param = &image_param);
         return true;
     }
-}
+} // namespace aqbio
 
 using namespace aqbio;
 

@@ -11,7 +11,6 @@
 #include <mxnet-cpp/kvstore.hpp>
 #include <mxnet-cpp/ndarray.hpp>
 #include <mxnet-cpp/symbol.hpp>
-#include <mxnet-cpp/symbol.hpp>
 
 #include <boost/filesystem.hpp>
 

@@ -130,8 +130,8 @@ class MessageReaderImage : public ros::IMessageReader
         std::string enc = msg->encoding.c_str();
         const int num_channels = sensor_msgs::image_encodings::numChannels(enc);
 
-        const aq::DataFlag depth =
-            sensor_msgs::image_encodings::bitDepth(enc) == 8 ? ct::value(aq::DataFlag::kUINT8) : ct::value(aq::DataFlag::kUINT16);
+        const aq::DataFlag depth = sensor_msgs::image_encodings::bitDepth(enc) == 8 ? ct::value(aq::DataFlag::kUINT8)
+                                                                                    : ct::value(aq::DataFlag::kUINT16);
 
         aq::PixelType pixel_type;
         pixel_type.data_type = depth;

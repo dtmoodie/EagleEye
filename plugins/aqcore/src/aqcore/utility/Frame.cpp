@@ -13,9 +13,7 @@
 using namespace aq;
 using namespace aq::nodes;
 
-FrameRate::FrameRate() : m_framerate_rolling_mean(boost::accumulators::tag::rolling_window::window_size = 30)
-{
-}
+FrameRate::FrameRate() : m_framerate_rolling_mean(boost::accumulators::tag::rolling_window::window_size = 30) {}
 
 bool FrameRate::processImpl()
 {
