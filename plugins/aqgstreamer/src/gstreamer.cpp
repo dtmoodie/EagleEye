@@ -98,8 +98,8 @@ namespace aqgstreamer
                 buffer.reset();
             });
 
-            ct::TArrayView<uint8_t> wrapping(map.data, map.size);
-            output = ce::make_shared<aq::SyncedMemory>(aq::SyncedMemory::wrapHost(wrapping, 1, std::move(tmp)));
+            ct::TArrayView<const void> wrapping(map.data, map.size);
+            output = ce::make_shared<aq::SyncedMemory>(aq::SyncedMemory::copyHost(wrapping, 1));
             return true;
         }
         return false;
@@ -450,11 +450,15 @@ namespace aqgstreamer
         }
     }
 
-    static GstFlowReturn gstreamerSrcBaseNewSample(GstElement*, GstreamerSrcBase* obj) { return obj->onPull(); }
+    static GstFlowReturn gstreamerSrcBaseNewSample(GstElement* element, GstreamerSrcBase* obj)
+    {
+        GstAppSink* sink = GST_APP_SINK(element);
+        MO_ASSERT(sink != nullptr);
+        return obj->onPull(sink);
+    }
 
     GstreamerSrcBase::GstreamerSrcBase()
     {
-        m_appsink = nullptr;
         m_new_sample_id = 0;
         m_new_preroll_id = 0;
         GLibThread::instance();
@@ -462,38 +466,63 @@ namespace aqgstreamer
 
     GstreamerSrcBase::~GstreamerSrcBase()
     {
-        if (m_appsink)
+        for (auto appsink : m_appsinks)
         {
-            g_signal_handler_disconnect(m_appsink, m_new_sample_id);
-            g_signal_handler_disconnect(m_appsink, m_new_preroll_id);
+            g_signal_handler_disconnect(appsink, m_new_sample_id);
+            g_signal_handler_disconnect(appsink, m_new_preroll_id);
+            gst_object_unref(appsink);
         }
     }
     bool GstreamerSrcBase::createPipeline(const std::string& pipeline_)
     {
         if (GstreamerBase::createPipeline(pipeline_))
         {
-            m_appsink = GST_APP_SINK(gst_bin_get_by_name(GST_BIN(m_pipeline), "appsink0"));
-            if (!m_appsink)
+            GValue item = G_VALUE_INIT;
+            GstBin* bin = GST_BIN(m_pipeline);
+            const GType app_sink_type = GST_TYPE_APP_SINK;
+
+            // GstIterator* appsink_iterator = gst_bin_iterate_all_by_interface(bin, GST_TYPE_APP_SINK);
+            GstIterator* appsink_iterator = gst_bin_iterate_elements(bin);
+
+            GstIteratorResult result = gst_iterator_next(appsink_iterator, &item);
+            bool done = false;
+            while (!done)
             {
-                m_appsink = GST_APP_SINK(gst_bin_get_by_name(GST_BIN(m_pipeline), "mysink"));
+                switch (result)
+                {
+                case GST_ITERATOR_OK: {
+                    gpointer object = g_value_get_object(&item);
+                    GstElement* element = GST_ELEMENT_CAST(gst_object_ref(object));
+                    GstElementFactory* factory = gst_element_get_factory(element);
+                    GType element_type = gst_element_factory_get_element_type(factory);
+                    if (element_type == app_sink_type)
+                    {
+                        GstAppSink* appsink = GST_APP_SINK(element);
+                        m_appsinks.push_back(appsink);
+                        g_object_set(G_OBJECT(appsink), "emit-signals", true, NULL);
+                        m_new_sample_id =
+                            g_signal_connect(appsink, "new-sample", G_CALLBACK(gstreamerSrcBaseNewSample), this);
+                        m_new_preroll_id =
+                            g_signal_connect(appsink, "new-preroll", G_CALLBACK(gstreamerSrcBaseNewSample), this);
+                    }
+
+                    break;
+                }
+
+                default:
+                    done = true;
+                }
+                result = gst_iterator_next(appsink_iterator, &item);
             }
-            if (!m_appsink)
-            {
-                MO_LOG(warn, "No appsink with name \"mysink\" found");
-                return false;
-            }
-            g_object_set(G_OBJECT(m_appsink), "emit-signals", true, NULL);
-            m_new_sample_id = g_signal_connect(m_appsink, "new-sample", G_CALLBACK(gstreamerSrcBaseNewSample), this);
-            m_new_preroll_id = g_signal_connect(m_appsink, "new-preroll", G_CALLBACK(gstreamerSrcBaseNewSample), this);
 
             return true;
         }
         return false;
     }
 
-    bool GstreamerSrcBase::setCaps(const std::string& caps_)
+    bool GstreamerSrcBase::setCaps(const std::string& caps_, int32_t index)
     {
-        if (m_appsink == nullptr)
+        if (m_appsinks.empty())
         {
             return false;
         }
@@ -505,17 +534,29 @@ namespace aqgstreamer
             MO_LOG(error, "Error creating caps \"{}\"", caps_);
             return false;
         }
+        if (index == -1)
+        {
+            for (GstAppSink* appsink : m_appsinks)
+            {
+                gst_app_sink_set_caps(appsink, caps);
+            }
+        }
+        else
+        {
+            MO_ASSERT(index < m_appsinks.size());
+            gst_app_sink_set_caps(m_appsinks[index], caps);
+        }
 
-        gst_app_sink_set_caps(GST_APP_SINK(m_appsink), caps);
         return true;
     }
 
     bool GstreamerSrcBase::setCaps()
     {
-        if (m_appsink == nullptr)
+        if (m_appsinks.empty())
         {
             return false;
         }
+
         GstCaps* caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "BGR", nullptr);
         if (caps == nullptr)
         {
@@ -577,10 +618,12 @@ namespace aqgstreamer
             GstCaps* yuv = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "YUV", nullptr);
             gst_caps_append(caps, yuv);
         }*/
-
-        gst_app_sink_set_caps(m_appsink, caps);
-        caps = gst_app_sink_get_caps(m_appsink);
-        MO_LOG(debug, "Set appsink caps to {}", gst_caps_to_string(caps));
+        for (GstAppSink* appsink : m_appsinks)
+        {
+            gst_app_sink_set_caps(appsink, caps);
+            caps = gst_app_sink_get_caps(appsink);
+            MO_LOG(debug, "Set appsink caps to {}", gst_caps_to_string(caps));
+        }
 
         return true;
     }

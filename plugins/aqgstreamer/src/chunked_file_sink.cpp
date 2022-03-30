@@ -12,9 +12,9 @@ namespace aqgstreamer
 
     int ChunkedFileSink::loadTimeout() { return 3000; }
 
-    GstFlowReturn ChunkedFileSink::onPull()
+    GstFlowReturn ChunkedFileSink::onPull(GstAppSink* appsink)
     {
-        GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(m_appsink));
+        GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(appsink));
         if (sample)
         {
             GstCaps* caps = gst_sample_get_caps(sample);
@@ -89,9 +89,9 @@ namespace aqgstreamer
         return false;
     }
 
-    GstFlowReturn JpegKeyframer::onPull()
+    GstFlowReturn JpegKeyframer::onPull(GstAppSink* appsink)
     {
-        GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(m_appsink));
+        GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(appsink));
         if (sample)
         {
             GstCaps* caps;

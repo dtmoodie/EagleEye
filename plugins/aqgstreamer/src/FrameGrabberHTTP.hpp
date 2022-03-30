@@ -20,7 +20,7 @@ namespace aqgstreamer
             MO_SIGNAL(void, update)
         MO_END;
 
-        GstFlowReturn onPull() override;
+        GstFlowReturn onPull(GstAppSink*) override;
         bool loadData(const ::std::string& file_path) override;
         bool grab() override;
 

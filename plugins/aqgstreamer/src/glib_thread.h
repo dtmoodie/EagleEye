@@ -11,7 +11,7 @@
 
 namespace aqgstreamer
 {
-    class aqgstreamer_EXPORT GLibThread
+    class aqgstreamer_EXPORT GLibThread : public std::enable_shared_from_this<GLibThread>
     {
 
         boost::thread m_thread;

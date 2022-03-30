@@ -31,12 +31,12 @@ namespace aq
             this->setStream(m_gstreamer_stream);
         }
 
-        GstFlowReturn GstreamerImageGrabber::onPull()
+        GstFlowReturn GstreamerImageGrabber::onPull(GstAppSink* appsink)
         {
             // This is called here since this could be called by a thread created by gstreamer
             mo::initThread();
             mo::IAsyncStream::setCurrent(m_gstreamer_stream);
-            GstSample* sample_ = gst_base_sink_get_last_sample(GST_BASE_SINK(m_appsink));
+            GstSample* sample_ = gst_base_sink_get_last_sample(GST_BASE_SINK(appsink));
             std::shared_ptr<GstSample> sample(sample_, &gst_sample_unref);
             // g_signal_emit_by_name(_appsink, "pull-sample", &sample, NULL);
             if (sample)

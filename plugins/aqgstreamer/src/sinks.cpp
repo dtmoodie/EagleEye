@@ -103,9 +103,9 @@ namespace aqgstreamer
         return true;
     }
 
-    GstFlowReturn JPEGSink::onPull()
+    GstFlowReturn JPEGSink::onPull(GstAppSink* appsink)
     {
-        GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(m_appsink));
+        GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(appsink));
         if (sample)
         {
 

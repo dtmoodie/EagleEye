@@ -86,12 +86,12 @@ namespace aqgstreamer
         virtual ~GstreamerSrcBase();
         virtual bool createPipeline(const std::string& pipeline_);
         // Called when data is ready to be pulled from the appsink
-        virtual GstFlowReturn onPull() = 0;
-        virtual bool setCaps(const std::string& caps);
+        virtual GstFlowReturn onPull(GstAppSink* sink) = 0;
+        virtual bool setCaps(const std::string& caps, int32_t index = -1);
         virtual bool setCaps();
 
       protected:
-        GstAppSink* m_appsink;
+        std::vector<GstAppSink*> m_appsinks;
         guint m_new_sample_id;
         guint m_new_preroll_id;
     };

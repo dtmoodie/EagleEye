@@ -40,7 +40,7 @@ namespace aqgstreamer
 
       protected:
         bool processImpl() override;
-        GstFlowReturn onPull() override;
+        GstFlowReturn onPull(GstAppSink*) override;
 
         cv::Mat m_decode_buffer;
         std::shared_ptr<mo::IAsyncStream> m_gstreamer_stream;

@@ -1,4 +1,4 @@
-#include "FrameGrabberHTTP.hpp"
+#include "FrameGrabberHTTP.hpp" x
 #include <Aquila/framegrabbers/GrabberInfo.hpp>
 #include <gst/base/gstbasesink.h>
 
@@ -70,10 +70,9 @@ namespace aqgstreamer
         return startPipeline();
     }
 
-    GstFlowReturn FrameGrabberHTTP::onPull()
+    GstFlowReturn FrameGrabberHTTP::onPull(GstAppSink* appsink)
     {
-        GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(m_appsink));
-        // g_signal_emit_by_name(_appsink, "pull-sample", &sample, NULL);
+        GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(appsink));
         if (sample)
         {
             GstBuffer* buffer;

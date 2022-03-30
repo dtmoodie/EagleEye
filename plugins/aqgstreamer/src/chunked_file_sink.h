@@ -9,7 +9,7 @@ namespace aqgstreamer
 {
     class aqgstreamer_EXPORT ChunkedFileSink : public GstreamerSrcBase, virtual public aq::nodes::IGrabber
     {
-    public:
+      public:
         static int canLoad(const std::string& doc);
         static int loadTimeout();
 
@@ -18,7 +18,7 @@ namespace aqgstreamer
         MO_END;
 
         bool loadData(const std::string& file_path) override;
-        GstFlowReturn onPull() override;
+        GstFlowReturn onPull(GstAppSink* appsink) override;
 
       protected:
         bool grab() override { return true; }
@@ -36,7 +36,7 @@ namespace aqgstreamer
         static int loadTimeout();
 
         bool loadData(const std::string& file_path) override;
-        GstFlowReturn onPull() override;
+        GstFlowReturn onPull(GstAppSink* appsink) override;
 
       protected:
         bool grab() override { return true; }

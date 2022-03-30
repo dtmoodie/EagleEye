@@ -32,7 +32,7 @@ namespace aqgstreamer
         bool createPipeline(const std::string& pipeline_) final;
 
       protected:
-        GstFlowReturn onPull() override;
+        GstFlowReturn onPull(GstAppSink* appsink) override;
         bool processImpl() override;
 
         mo::IAsyncStreamPtr_t m_gstreamer_stream;

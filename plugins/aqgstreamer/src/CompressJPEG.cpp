@@ -27,9 +27,9 @@ namespace aqgstreamer
         m_gstreamer_stream = GLibThread::instance()->getStream();
     }
 
-    GstFlowReturn CompressImage::onPull()
+    GstFlowReturn CompressImage::onPull(GstAppSink* appsink)
     {
-        GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(m_appsink));
+        GstSample* sample = gst_base_sink_get_last_sample(GST_BASE_SINK(appsink));
         if (sample)
         {
 

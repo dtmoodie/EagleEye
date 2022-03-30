@@ -26,7 +26,7 @@ namespace aq
             void setStream(const mo::IAsyncStreamPtr_t& ctx) override;
 
           protected:
-            GstFlowReturn onPull() override;
+            GstFlowReturn onPull(GstAppSink*) override;
             bool loadData(const ::std::string& file_path) override;
             bool grab() override;
 

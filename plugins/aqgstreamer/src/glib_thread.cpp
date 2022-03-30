@@ -67,6 +67,7 @@ namespace aqgstreamer
                 mo::initThread();
                 m_stream = mo::IAsyncStream::create("glib thread");
                 mo::IAsyncStream::setCurrent(m_stream);
+                mo::setThisThreadName("glib thread");
             }
 
             m_cv.notify_all();
@@ -78,6 +79,7 @@ namespace aqgstreamer
 // TODO make me work...
 // GlibEventHandler handler;
 #endif
+            std::shared_ptr<GLibThread> ptr = this->shared_from_this();
 
             MO_LOG(info, "glib event loop starting");
             g_main_loop_run(m_main_loop);
