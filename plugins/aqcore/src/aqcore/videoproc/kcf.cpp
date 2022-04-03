@@ -1,6 +1,6 @@
 #include "kcf.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
-#include <Aquila/types/ObjectTracking.hpp>
+#include <Aquila/types/ObjectTrackingUtils.hpp>
 
 namespace aqcore
 {
@@ -46,7 +46,7 @@ namespace aqcore
             int32_t best_iou_match = -1;
             for (size_t i = 0; i < num_dets; ++i)
             {
-                const float iou = aq::iou(bb, boxes[i]);
+                const float iou = aq::iou(cv::Rect2f(bb), boxes[i]);
                 if (iou > iou_threshold)
                 {
                     if (iou > best_iou)
@@ -73,6 +73,7 @@ namespace aqcore
             else
             {
                 // We have not found a match, so add this detection to the database
+                // TODO propogate components for this entity from the detection
             }
         }
 
