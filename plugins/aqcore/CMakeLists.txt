@@ -27,6 +27,7 @@ find_package(OpenCV QUIET
     imgcodecs 
     cudaobjdetect 
     objdetect
+    tracking
   )
 
 set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
