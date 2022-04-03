@@ -42,6 +42,8 @@ face.label_file = args.labels
 face.det_thresh = 0.01
 face.cat_thresh = 0.01
 
+face_tracker = aq.nodes.TrackerKCF(graph=graph, image=fg, detections=face)
+
 aligner = aq.nodes.FaceAligner(graph=graph, image=fg, detections=face, shape_landmark_file='/home/dan/code/EagleEye/plugins/aqdlib/share/shape_predictor_5_face_landmarks.dat')
 
 recognizer = aq.nodes.FaceRecognizer(graph=graph, image=fg, detections=aligner,
