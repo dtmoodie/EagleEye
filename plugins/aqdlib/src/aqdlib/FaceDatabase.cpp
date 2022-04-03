@@ -3,6 +3,7 @@
 #include "FaceDatabase.hpp"
 #include <Aquila/nodes/NodeInfo.hpp>
 
+#include <MetaObject/logging/profiling.hpp>
 #include <MetaObject/serialization/BinaryLoader.hpp>
 #include <MetaObject/serialization/BinarySaver.hpp>
 #include <MetaObject/serialization/JSONPrinter.hpp>
@@ -199,6 +200,7 @@ namespace aqdlib
                                        const aq::SyncedImage& patch,
                                        mo::IAsyncStream& stream)
     {
+        PROFILE_FUNCTION
         const uint32_t descriptor_size = det_desc.getShape()[0];
         if (descriptor_size == 0)
         {
@@ -258,6 +260,7 @@ namespace aqdlib
                                          const aq::SyncedImage& patch,
                                          mo::IAsyncStream& stream)
     {
+        PROFILE_FUNCTION
         const uint32_t descriptor_size = det_desc.getShape()[0];
         if (descriptor_size == 0)
         {
@@ -365,6 +368,7 @@ namespace aqdlib
         m_recent_patches.set_capacity(patch_buffer_size);
         if (m_known_faces.descriptors.empty() || (m_identities == nullptr))
         {
+            mo::ScopedProfile profile("FaceDatabase::loadDatabase");
             loadDatabase();
         }
         if (m_identities == nullptr)
@@ -386,6 +390,7 @@ namespace aqdlib
 
         if (m_recent_patches.size() > m_recent_patches.capacity() * 0.75)
         {
+            mo::ScopedProfile profile("FaceDatabase::saveRecentFaces");
             saveRecentFaces();
         }
 
@@ -399,27 +404,31 @@ namespace aqdlib
 
         mt::Tensor<aq::detection::Id::DType, 1> ids = output.getComponentMutable<aq::detection::Id>();
 
-        for (uint32_t i = 0; i < num_detections; ++i)
         {
-            mt::Tensor<const float, 1> det_desc = descriptors[i];
-            cv::Mat_<float> wrapped_descriptor(1, det_desc.getShape()[0], const_cast<float*>(det_desc.data()));
-            const bool euclidean = (distance_measurement.getValue() == Euclidean);
-            double mag0;
-            if (!euclidean)
+            mo::ScopedProfile profile("FaceDatabase::matching");
+            for (uint32_t i = 0; i < num_detections; ++i)
             {
-                mag0 = cv::norm(wrapped_descriptor);
-            }
+                mt::Tensor<const float, 1> det_desc = descriptors[i];
+                cv::Mat_<float> wrapped_descriptor(1, det_desc.getShape()[0], const_cast<float*>(det_desc.data()));
+                const bool euclidean = (distance_measurement.getValue() == Euclidean);
+                double mag0;
+                if (!euclidean)
+                {
+                    mag0 = cv::norm(wrapped_descriptor);
+                }
 
-            if (matchKnownFaces(det_desc, classifications[i], ids[i], mag0, patches[i].aligned_patch, *stream))
-            {
-                continue;
-            }
+                if (matchKnownFaces(det_desc, classifications[i], ids[i], mag0, patches[i].aligned_patch, *stream))
+                {
+                    continue;
+                }
 
-            if (matchUnknownFaces(det_desc, classifications[i], ids[i], mag0, patches[i].aligned_patch, *stream))
-            {
-                continue;
+                if (matchUnknownFaces(det_desc, classifications[i], ids[i], mag0, patches[i].aligned_patch, *stream))
+                {
+                    continue;
+                }
             }
         }
+
         this->output.publish(std::move(output), mo::tags::param = &this->detections_param);
         return true;
     }
@@ -462,6 +471,7 @@ namespace aqdlib
 
     void FaceDatabase::nodeInit(bool)
     {
+        m_worker_thread.setName("FaceDB");
         m_worker_stream = m_worker_thread.asyncStream();
         MO_ASSERT(m_worker_stream);
     }

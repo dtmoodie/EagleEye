@@ -1,4 +1,4 @@
-#include "FrameGrabberHTTP.hpp" x
+#include "FrameGrabberHTTP.hpp"
 #include <Aquila/framegrabbers/GrabberInfo.hpp>
 #include <gst/base/gstbasesink.h>
 

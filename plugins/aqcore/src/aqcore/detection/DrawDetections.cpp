@@ -74,18 +74,46 @@ namespace aqcore
     {
     }
 
-    void DrawDetections::drawMetaData(cv::Mat mat,
-                                      mt::Tensor<const typename BoundingBox2d::DType, 1> bbs,
-                                      mt::Tensor<const float, 2> descriptors)
+    void DrawDetections::drawDescriptors(cv::Mat3b mat,
+                                         mt::Tensor<const typename BoundingBox2d::DType, 1> bbs,
+                                         mt::Tensor<const float, 2> descriptors)
     {
         const auto num_detections = bbs.getShape()[0];
-        for (size_t i = 0; i < num_detections; ++i) {}
+        cv::Mat normalized_descriptor;
+        cv::Mat3b colorized_descriptor;
+        const size_t descriptor_width = descriptors.getShape()[1];
+        for (size_t i = 0; i < num_detections; ++i)
+        {
+            cv::Rect rect = bbs[i];
+            mt::Tensor<const float, 1> descriptor = descriptors[i];
+            cv::Mat_<float> tmp(1, descriptor_width, const_cast<float*>(descriptor.data()));
+            cv::normalize(tmp, normalized_descriptor, 0, 255, cv::NORM_MINMAX, CV_8U);
+            cv::applyColorMap(normalized_descriptor, colorized_descriptor, cv::COLORMAP_JET);
+            const int height = static_cast<int>(rect.height);
+            const int width = descriptor_width / height;
+            cv::Point tl = rect.tl();
+            tl.x += rect.width + 5;
+            if (tl.x + width >= mat.cols)
+            {
+                tl.x = rect.x - width - 5;
+            }
+            if (tl.y < 0)
+            {
+                tl.y = 0;
+            }
+            for (int32_t i = 0; i < descriptor_width; ++i)
+            {
+                const int32_t row = i % height + tl.y;
+                const int32_t col = tl.x + i / descriptor_width;
+                mat(row, col) = colorized_descriptor(i);
+            }
+        }
     }
 
-    void DrawDetections::drawMetaData(cv::cuda::GpuMat& mat,
-                                      mt::Tensor<const typename BoundingBox2d::DType, 1> bbs,
-                                      mt::Tensor<const float, 2> descriptors,
-                                      cv::cuda::Stream& stream)
+    void DrawDetections::drawDescriptors(cv::cuda::GpuMat& mat,
+                                         mt::Tensor<const typename BoundingBox2d::DType, 1> bbs,
+                                         mt::Tensor<const float, 2> descriptors,
+                                         cv::cuda::Stream& stream)
     {
     }
 
@@ -180,110 +208,36 @@ namespace aqcore
         mt::Tensor<const Classifications, 1> cats = detections->getComponent<Classifications>();
         mt::Tensor<const typename Id::DType, 1> ids = detections->getComponent<Id>();
         mt::Tensor<const float, 2> descriptors = detections->getComponent<Descriptor>();
-
-        if (draw_on_device)
+        const size_t num_detections = bbs.getShape()[0];
+        if (num_detections > 0)
         {
-            cv::cuda::GpuMat device_draw_image;
-
-            this->image->copyTo(device_draw_image, this->getStream()->getDeviceStream());
-
-            auto& stream = this->getCVStream();
-            drawBoxes(device_draw_image, bbs, cats, stream);
-            drawLabels(device_draw_image, bbs, cats, ids, stream);
-            drawMetaData(device_draw_image, bbs, descriptors, stream);
-            this->output.publish(std::move(device_draw_image), mo::tags::param = &this->image_param);
-        }
-        else
-        {
-            cv::Mat host_draw_image;
-            image->copyTo(host_draw_image);
-            drawBoxes(host_draw_image, bbs, cats);
-            drawLabels(host_draw_image, bbs, cats, ids);
-            drawMetaData(host_draw_image, bbs, descriptors);
-            this->output.publish(std::move(host_draw_image), mo::tags::param = &this->image_param);
-        }
-
-        /*if (_ctx->device_id != -1)
-        {
-            image->clone(device_draw_image, stream());
-            size = device_draw_image.size();
-        }
-        else
-        {
-            image->clone(host_draw_image);
-            size = host_draw_image.size();
-        }
-        const bool draw_gpu = !device_draw_image.empty();
-        std::vector<cv::Mat> drawn_text;
-        auto det_ts = detections_param.getInputTimestamp();
-        if (det_ts != image_param.getInputTimestamp())
-        {
-            *success = true;
-            return;
-        }
-        const DType* dets = mo::get<const DType*>(detections);
-
-        for (size_t i = 0; i < dets->size(); ++i)
-        {
-            auto detection = (*dets)[i];
-            boundingBoxToPixels(detection.bounding_box, size);
-            cv::Rect rect(static_cast<int>(detection.bounding_box.x),
-                          static_cast<int>(detection.bounding_box.y),
-                          static_cast<int>(detection.bounding_box.width),
-                          static_cast<int>(detection.bounding_box.height));
-            cv::Scalar color;
-            if (detection.classifications.size())
+            if (draw_on_device)
             {
-                if (detection.classifications[0].cat)
-                {
-                    color = detection.classifications[0].cat->color;
-                }
-            }
+                cv::cuda::GpuMat device_draw_image;
 
-            if (draw_gpu)
-            {
-                cv::cuda::rectangle(device_draw_image, rect, color, 3, stream());
+                this->image->copyTo(device_draw_image, this->getStream()->getDeviceStream());
+
+                auto& stream = this->getCVStream();
+                drawBoxes(device_draw_image, bbs, cats, stream);
+                drawLabels(device_draw_image, bbs, cats, ids, stream);
+                drawDescriptors(device_draw_image, bbs, descriptors, stream);
+                this->output.publish(std::move(device_draw_image), mo::tags::param = &this->image_param);
             }
             else
             {
-                cv::rectangle(host_draw_image, rect.tl(), rect.br(), color, 3);
-                drawMetaData(host_draw_image, detection, rect, i);
-            }
-
-            cv::Rect text_rect = cv::Rect(rect.tl() + cv::Point(10, 20), cv::Size(200, 20));
-            if ((cv::Rect({0, 0}, size) & text_rect) == text_rect)
-            {
-                cv::Mat text_image(20, 200, CV_8UC3);
-                text_image.setTo(cv::Scalar::all(0));
-                cv::putText(text_image, textLabel(detection), {0, 15}, cv::FONT_HERSHEY_COMPLEX, 0.4, color);
-                if (draw_gpu)
-                {
-                    cv::cuda::GpuMat d_text;
-                    d_text.upload(text_image, stream());
-                    cv::cuda::GpuMat text_roi = device_draw_image(text_rect);
-                    cv::cuda::add(text_roi, d_text, text_roi, cv::noArray(), -1, stream());
-                    drawn_text.push_back(text_image); // need to prevent recycling of the images too early
-                }
-                else
-                {
-                    auto text_roi = host_draw_image(text_rect);
-                    cv::add(text_roi, text_image, text_roi);
-                }
+                cv::Mat host_draw_image;
+                image->copyTo(host_draw_image);
+                drawBoxes(host_draw_image, bbs, cats);
+                drawLabels(host_draw_image, bbs, cats, ids);
+                drawDescriptors(host_draw_image, bbs, descriptors);
+                this->output.publish(std::move(host_draw_image), mo::tags::param = &this->image_param);
             }
         }
-        if (publish_empty_dets || !dets->empty())
+        else
         {
-            if (device_draw_image.empty())
-            {
-                output_param.updateData(host_draw_image, mo::tag::_param = image_param, _ctx.get());
-            }
-            else
-            {
-                output_param.updateData(device_draw_image, mo::tag::_param = image_param, _ctx.get());
-            }
+            this->output.publish(*image, mo::tags::param = &this->image_param);
         }
 
-        *success = true;*/
         return true;
     }
 

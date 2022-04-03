@@ -193,7 +193,10 @@ namespace aqcore
             this->getLogger().trace("Preprocessing complete");
         }
 
-        preBatch(static_cast<int>(pixel_bounding_boxes.size()));
+        {
+            mo::ScopedProfile preprocessing("INeuralNet::preBatch");
+            preBatch(static_cast<int>(pixel_bounding_boxes.size()));
+        }
 
         cv::cuda::GpuMat resized;
         auto net_input = getNetImageInput();
@@ -205,24 +208,27 @@ namespace aqcore
         {
             // for each roi
             size_t start = i, end = 0;
-            for (size_t j = 0; j < net_input.size() && i < pixel_bounding_boxes.size(); ++j, ++i)
-            { // for each image in the mini batch
-                if (pixel_bounding_boxes[i].size() != net_input_size)
-                {
-                    cv::cuda::resize(float_image(pixel_bounding_boxes[i]),
-                                     resized,
-                                     net_input_size,
-                                     0,
-                                     0,
-                                     cv::INTER_LINEAR,
-                                     cvstream);
+            {
+                mo::ScopedProfile preprocessing("INeuralNet roi extraction");
+                for (size_t j = 0; j < net_input.size() && i < pixel_bounding_boxes.size(); ++j, ++i)
+                { // for each image in the mini batch
+                    if (pixel_bounding_boxes[i].size() != net_input_size)
+                    {
+                        cv::cuda::resize(float_image(pixel_bounding_boxes[i]),
+                                         resized,
+                                         net_input_size,
+                                         0,
+                                         0,
+                                         cv::INTER_LINEAR,
+                                         cvstream);
+                    }
+                    else
+                    {
+                        resized = float_image(pixel_bounding_boxes[i]);
+                    }
+                    cv::cuda::split(resized, net_input[j], cvstream);
+                    end = start + j + 1;
                 }
-                else
-                {
-                    resized = float_image(pixel_bounding_boxes[i]);
-                }
-                cv::cuda::split(resized, net_input[j], cvstream);
-                end = start + j + 1;
             }
 
             this->getLogger().trace("forward mini batch");

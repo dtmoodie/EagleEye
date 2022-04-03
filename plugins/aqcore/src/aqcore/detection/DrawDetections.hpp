@@ -54,14 +54,14 @@ namespace aqcore
                         mt::Tensor<const Id::DType, 1> ids,
                         cv::cuda::Stream& stream);
 
-        void drawMetaData(cv::Mat mat,
-                          mt::Tensor<const BoundingBox2d::DType, 1> bbs,
-                          mt::Tensor<const float, 2> descriptors);
+        void drawDescriptors(cv::Mat3b mat,
+                             mt::Tensor<const BoundingBox2d::DType, 1> bbs,
+                             mt::Tensor<const float, 2> descriptors);
 
-        void drawMetaData(cv::cuda::GpuMat& mat,
-                          mt::Tensor<const BoundingBox2d::DType, 1> bbs,
-                          mt::Tensor<const float, 2> descriptors,
-                          cv::cuda::Stream& stream);
+        void drawDescriptors(cv::cuda::GpuMat& mat,
+                             mt::Tensor<const BoundingBox2d::DType, 1> bbs,
+                             mt::Tensor<const float, 2> descriptors,
+                             cv::cuda::Stream& stream);
 
         bool processImpl() override;
         std::string textLabel(const Classifications& cats, const Id& id);

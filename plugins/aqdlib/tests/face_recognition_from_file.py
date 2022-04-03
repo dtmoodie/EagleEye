@@ -33,6 +33,7 @@ recognizer = aq.nodes.FaceRecognizer(image=fg, detections=aligner,
     face_recognizer_weight_file='/home/dan/code/EagleEye/plugins/aqdlib/share/dlib_face_recognition_resnet_model_v1.dat')
 
 facedb = aq.nodes.FaceDatabase(detections=recognizer, image=fg)
+
 facedb.unknown_detections = './unknown'
 facedb.recent_detections = './recent'
 facedb.known_detections ='./known'
@@ -57,5 +58,4 @@ while(not fg.getParam('eos').data.data):
     count += 1
 
 facedb.saveUnknownFaces()
-
 time.sleep(1)

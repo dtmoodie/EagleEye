@@ -84,7 +84,6 @@ namespace aqgstreamer
             MO_LOG(info, "glib event loop starting");
             g_main_loop_run(m_main_loop);
         }
-        MO_LOG(info, "glib event loop ending");
     }
 
     mo::IAsyncStreamPtr_t GLibThread::getStream() const
@@ -118,7 +117,6 @@ namespace aqgstreamer
 
     void GLibThread::stopThread()
     {
-        MO_LOG(info, "Stopping glib thread");
         g_main_loop_quit(m_main_loop);
         m_stream.reset();
         m_thread.interrupt();

@@ -26,7 +26,7 @@ bool QtImageDisplay::processImpl()
 {
     cv::Mat mat;
     mo::OptionalTime ts;
-    bool overlay = overlay_timestamp;
+    const bool overlay = overlay_timestamp;
     bool sync = false;
     if (input && !input->empty())
     {
@@ -51,7 +51,8 @@ bool QtImageDisplay::processImpl()
                     draw_img = mat.clone();
                     std::stringstream ss;
                     ss << "Timestamp: " << ts;
-                    cv::putText(mat, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
+                    cv::putText(
+                        draw_img, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
                 }
                 getGraph()->getObject<WindowCallbackHandler>()->imshow(name, draw_img);
             });

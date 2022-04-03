@@ -195,7 +195,6 @@ namespace aqgstreamer
 
         if (m_pipeline)
         {
-            MO_LOG(debug, "Cleaning up pipeline");
             gst_element_set_state(m_pipeline, GST_STATE_NULL);
             gst_object_unref(m_pipeline);
             m_pipeline = nullptr;
@@ -328,7 +327,6 @@ namespace aqgstreamer
     {
         if (m_pipeline && m_source)
         {
-            MO_LOG(debug, "Disconnecting data request signals");
             g_signal_handler_disconnect(m_source, m_need_data_id);
             g_signal_handler_disconnect(m_source, m_enough_data_id);
             gst_object_unref(m_source);

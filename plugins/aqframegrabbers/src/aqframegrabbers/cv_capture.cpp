@@ -4,7 +4,6 @@
 
 #include "Aquila/framegrabbers/GrabberInfo.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
-#include "aqframegrabbers_link_libs.hpp"
 #include "cv_capture.h"
 #include "precompiled.hpp"
 
