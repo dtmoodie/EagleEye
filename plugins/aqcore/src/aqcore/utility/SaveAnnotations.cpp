@@ -114,7 +114,7 @@ void SaveAnnotations::draw()
     {
         mt::Tensor<const aq::detection::BoundingBox2d::DType, 1> bounding_boxes =
             _annotations.getComponent<aq::detection::BoundingBox2d>();
-        mt::Tensor<const aq::detection::Classifications, 1> classifications =
+        mt::Tensor<const aq::Classification, 2> classifications =
             _annotations.getComponent<aq::detection::Classifications>();
         for (size_t i = 0; i < num_entities; ++i)
         {
@@ -130,7 +130,7 @@ void SaveAnnotations::draw()
         mt::Tensor<const aq::detection::BoundingBox2d::DType, 1> bounding_boxes =
             detections->getComponent<aq::detection::BoundingBox2d>();
 
-        mt::Tensor<const aq::detection::Classifications, 1> classifications =
+        mt::Tensor<const aq::Classification, 2> classifications =
             detections->getComponent<aq::detection::Classifications>();
 
         const uint32_t num_entities = detections->getNumEntities();

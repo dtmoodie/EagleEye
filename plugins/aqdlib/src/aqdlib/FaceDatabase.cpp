@@ -194,7 +194,7 @@ namespace aqdlib
     }
 
     bool FaceDatabase::matchKnownFaces(const mt::Tensor<const float, 1>& det_desc,
-                                       aq::detection::Classifications& cls,
+                                       mt::Tensor<aq::Classification, 1> cls,
                                        aq::detection::Id::DType& id,
                                        const double mag0,
                                        const aq::SyncedImage& patch,
@@ -240,7 +240,6 @@ namespace aqdlib
             {
                 if (match_index < m_identities->size())
                 {
-                    cls.resize(1);
                     cls[0] = (*m_identities)[static_cast<size_t>(match_index)](best_match);
                     id = match_index + 1;
 
@@ -254,7 +253,7 @@ namespace aqdlib
     }
 
     bool FaceDatabase::matchUnknownFaces(const mt::Tensor<const float, 1>& det_desc,
-                                         aq::detection::Classifications& cls,
+                                         mt::Tensor<aq::Classification, 1> cls,
                                          aq::detection::Id::DType& id,
                                          const double mag0,
                                          const aq::SyncedImage& patch,
@@ -309,7 +308,6 @@ namespace aqdlib
             const auto idx = match_index + m_known_faces.identities.size();
             if (idx < m_identities->size())
             {
-                cls.resize(1);
                 cls[0] = (*m_identities)[idx]();
                 ClassifiedPatch tmp{patch, aq::TSyncedMemory<float>::copyHost(det_desc), cls[0].cat->getName()};
                 m_recent_patches.push_back(std::move(tmp));
@@ -342,7 +340,7 @@ namespace aqdlib
     }
 
     void FaceDatabase::onNewUnknownFace(const mt::Tensor<const float, 1>& det_desc,
-                                        aq::detection::Classifications& cls,
+                                        mt::Tensor<aq::Classification, 1> cls,
                                         aq::detection::Id::DType& id,
                                         const aq::SyncedImage& patch)
     {
@@ -356,7 +354,6 @@ namespace aqdlib
         m_unknown_crops.push_back(patch);
         m_unknown_det_count.push_back(1);
 
-        cls.resize(1);
         cls[0] = (*m_identities).back()();
         id = m_identities->size() - 1;
 
@@ -399,7 +396,7 @@ namespace aqdlib
 
         mt::Tensor<const float, 2> descriptors = detections->getComponent<aq::detection::Descriptor>();
 
-        mt::Tensor<aq::detection::Classifications, 1> classifications =
+        mt::Tensor<aq::Classification, 2> classifications =
             output.getComponentMutable<aq::detection::Classifications>();
 
         mt::Tensor<aq::detection::Id::DType, 1> ids = output.getComponentMutable<aq::detection::Id>();

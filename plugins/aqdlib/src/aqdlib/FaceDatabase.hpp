@@ -89,21 +89,21 @@ namespace aqdlib
         bool processImpl() override;
 
         bool matchKnownFaces(const mt::Tensor<const float, 1>& descriptor,
-                             aq::detection::Classifications& cls,
+                             mt::Tensor<aq::Classification, 1> cls,
                              aq::detection::Id::DType& id,
                              const double mag0,
                              const aq::SyncedImage& patch,
                              mo::IAsyncStream& stream);
 
         bool matchUnknownFaces(const mt::Tensor<const float, 1>& descriptor,
-                               aq::detection::Classifications& cls,
+                               mt::Tensor<aq::Classification, 1> cls,
                                aq::detection::Id::DType& id,
                                const double mag0,
                                const aq::SyncedImage& patch,
                                mo::IAsyncStream& stream);
 
         void onNewUnknownFace(const mt::Tensor<const float, 1>& det_desc,
-                              aq::detection::Classifications& cls,
+                              mt::Tensor<aq::Classification, 1> cls,
                               aq::detection::Id::DType& id,
                               const aq::SyncedImage& patch);
 

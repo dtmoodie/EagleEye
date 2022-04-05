@@ -46,8 +46,7 @@ namespace aqcore
     void
     DetectionOverlay::updateOverlay(const aq::DetectedObjectSet& dets, const mo::Time& ts, mo::IAsyncStream& stream)
     {
-        mt::Tensor<const aq::detection::Classifications, 1> classifications =
-            dets.getComponent<aq::detection::Classifications>();
+        mt::Tensor<const aq::Classification, 2> classifications = dets.getComponent<aq::detection::Classifications>();
         mt::Tensor<const aq::detection::Confidence::DType, 1> confidence =
             dets.getComponent<aq::detection::Confidence>();
         mt::Tensor<const aq::detection::Id::DType, 1> id = dets.getComponent<aq::detection::Id>();
@@ -68,7 +67,7 @@ namespace aqcore
             std::string cat = "None";
             if (classifications.getShape()[0] != 0)
             {
-                if (classifications[i].size() > 0)
+                if (classifications[i].getShape()[0] > 0)
                 {
                     cat_conf = classifications[i][0].conf;
                     if (classifications[i][0].cat)

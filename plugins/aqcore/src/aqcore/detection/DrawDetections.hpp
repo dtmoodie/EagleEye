@@ -36,21 +36,21 @@ namespace aqcore
       protected:
         void drawBoxes(cv::Mat& mat,
                        mt::Tensor<const BoundingBox2d::DType, 1> bbs,
-                       mt::Tensor<const Classifications, 1> cls);
+                       mt::Tensor<const aq::Classification, 2> cls);
 
         void drawBoxes(cv::cuda::GpuMat& mat,
                        mt::Tensor<const BoundingBox2d::DType, 1> bbs,
-                       mt::Tensor<const Classifications, 1> cls,
+                       mt::Tensor<const aq::Classification, 2> cls,
                        cv::cuda::Stream& stream);
 
         void drawLabels(cv::Mat& mat,
                         mt::Tensor<const BoundingBox2d::DType, 1> bbs,
-                        mt::Tensor<const Classifications, 1> cats,
+                        mt::Tensor<const aq::Classification, 2> cats,
                         mt::Tensor<const Id::DType, 1> ids);
 
         void drawLabels(cv::cuda::GpuMat& mat,
                         mt::Tensor<const BoundingBox2d::DType, 1> bbs,
-                        mt::Tensor<const Classifications, 1> cats,
+                        mt::Tensor<const aq::Classification, 2> cats,
                         mt::Tensor<const Id::DType, 1> ids,
                         cv::cuda::Stream& stream);
 
@@ -64,8 +64,8 @@ namespace aqcore
                              cv::cuda::Stream& stream);
 
         bool processImpl() override;
-        std::string textLabel(const Classifications& cats, const Id& id);
-        cv::Mat textImage(const Classifications& cats, const Id& id);
+        std::string textLabel(const mt::Tensor<const aq::Classification, 1>& cats, const Id& id);
+        cv::Mat textImage(const mt::Tensor<const aq::Classification, 1>& cats, const Id& id);
     };
 
 } // namespace aqcore

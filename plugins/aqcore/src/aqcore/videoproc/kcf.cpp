@@ -12,7 +12,8 @@ namespace aqcore
         auto boxes = detections->getComponent<aq::detection::BoundingBox2d>();
         auto IDs = detections->getComponent<aq::detection::Id>();
         const size_t num_dets = boxes.getShape()[0];
-        if (!m_tracker)
+
+        if (!m_tracker && num_dets)
         {
             cv::TrackerKCF::Params params;
             params.detect_thresh = detect_thresh;
@@ -32,6 +33,12 @@ namespace aqcore
             m_tracker = cv::TrackerKCF::create(params);
             m_tracker->init(img, boxes[0]);
             m_previous_id = IDs[0];
+            m_previous_detection = *detections;
+            return true;
+        }
+        if (!m_tracker)
+        {
+            // Tracker not initialized because we haven't had any detections yet
             return true;
         }
         cv::Rect bb;
@@ -66,14 +73,16 @@ namespace aqcore
                     // Need to update the current ID and all other IDs in this detection set
                     auto IDs = output.getComponentMutable<aq::detection::Id>();
                     IDs[best_iou_match] = m_previous_id;
+                    m_previous_detection = output;
 
-                    // Now make the ID unique
+                    // TODO Now make the ID unique
                 }
             }
             else
             {
                 // We have not found a match, so add this detection to the database
                 // TODO propogate components for this entity from the detection
+                // output.getComponent
             }
         }
 

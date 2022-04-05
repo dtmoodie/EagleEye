@@ -225,8 +225,11 @@ namespace darknet
             output.resize(nboxes);
             auto ids = output.getComponentMutable<aq::detection::Id>();
             auto bbs = output.getComponentMutable<aq::detection::BoundingBox2d>();
+            const uint32_t K = 5;
+            output.template reshape<aq::detection::Classifications>(mt::Shape<1>(K));
             auto cls = output.getComponentMutable<aq::detection::Classifications>();
             auto conf = output.getComponentMutable<aq::detection::Confidence>();
+
             const auto cats = output.getCatSet();
             int count = 0;
             for (int i = 0; i < nboxes; ++i)
@@ -249,14 +252,16 @@ namespace darknet
                     const auto num_classes = dets[i].classes;
                     MO_ASSERT(cats);
                     MO_ASSERT_EQ(num_classes, cats->size());
+                    uint32_t k = 0;
                     for (int j = 0; j < num_classes; ++j)
                     {
                         const float prob = dets[i].prob[j];
 
-                        if (prob > 0.0)
+                        if (prob > 0.0 && k < K)
                         {
                             const aq::Category& cat = (*cats)[j];
-                            cls[count].append(cat(prob));
+                            cls[count][k] = cat(prob);
+                            ++k;
                         }
                     }
                     ++count;

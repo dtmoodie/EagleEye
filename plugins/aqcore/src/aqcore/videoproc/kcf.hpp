@@ -53,6 +53,7 @@ namespace aqcore
         boost::optional<mo::Header> m_previous_header;
         // Should save more than just the previous ID, we should save all components
         aq::detection::Id m_previous_id;
+        aq::DetectedObjectSet m_previous_detection;
     };
 } // namespace aqcore
 

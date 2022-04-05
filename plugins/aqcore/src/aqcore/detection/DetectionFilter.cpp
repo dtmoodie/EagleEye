@@ -18,8 +18,8 @@ namespace aq
             for (auto index = shape[0]; index != 0;)
             {
                 --index;
-                aq::detection::Classifications& classification = classifications[index];
-                const auto num_classifications = classification.size();
+                auto classification = classifications[index];
+                const auto num_classifications = classification.getShape()[0];
                 for (size_t i = num_classifications - 1; i >= 0; --i)
                 {
                     if (classification[i].cat)
@@ -27,13 +27,10 @@ namespace aq
                         const aq::Category* cat = classification[i].cat;
                         if (std::find(reject_classes.begin(), reject_classes.end(), cat->name) != reject_classes.end())
                         {
-                            classification.erase(i);
+                            classification[i].cat = nullptr;
+                            classification[i].conf = 0.0F;
                         }
                     }
-                }
-                if (classification.size() == 0)
-                {
-                    out.erase(index);
                 }
             }
             output.publish(std::move(out), mo::tags::param = &input_param);
