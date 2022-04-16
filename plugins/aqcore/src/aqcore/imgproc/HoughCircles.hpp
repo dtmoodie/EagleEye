@@ -18,7 +18,7 @@ namespace aqcore
     class aqcore_EXPORT HoughCircle : public aq::nodes::Node
     {
       public:
-        using Components_t = ct::VariadicTypedef<aq::Circlef, aq::detection::Confidence>;
+        using Components_t = ct::VariadicTypedef<aq::CircleComponent, aq::detection::Confidence>;
         using Output_t = aq::TEntityComponentSystem<Components_t>;
 
         MO_DERIVE(HoughCircle, aq::nodes::Node)

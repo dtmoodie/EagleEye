@@ -54,7 +54,7 @@ namespace aqgstreamer
                     gst_buffer_unmap(buffer.get(), &map);
                     gst_sample_unref(sample);
                 });
-                ct::TArrayView<uint8_t> view(map.data, map.size);
+                ct::TArrayView<void> view(map.data, map.size);
                 ce::shared_ptr<aq::SyncedMemory> wrapped =
                     ce::make_shared<aq::SyncedMemory>(aq::SyncedMemory::wrapHost(view, 1, owning));
                 aq::ImageEncoding encoding = ct::fromString<aq::ImageEncoding>(this->encoding.getEnum());

@@ -412,7 +412,7 @@ namespace aqbio
 
         if (circles->getNumEntities() > 0)
         {
-            auto circle_view = circles->getComponent<aq::Circle<float>>();
+            auto circle_view = circles->getComponent<aq::CircleComponent>();
             auto conf_view = circles->getComponent<aq::detection::Confidence>();
 
             auto largest = std::max_element(

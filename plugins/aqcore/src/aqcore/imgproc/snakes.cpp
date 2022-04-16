@@ -396,7 +396,7 @@ namespace aqcore
         const cv::Mat mat = input->getMat(stream.get());
 
         aq::TEntityComponentSystem<aq::Contour> ecs = *circles;
-        ct::ext::DataDimensionality<const aq::Circlef>::TensorView circle_view = ecs.getComponent<aq::Circlef>();
+        mt::Tensor<const aq::Circlef, 1> circle_view = ecs.getComponent<aq::CircleComponent>();
         const uint32_t num_elems = circles->getNumEntities();
         ecs.resize(num_elems);
         std::vector<cv::Point> pts;

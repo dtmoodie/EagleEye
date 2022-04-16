@@ -1,24 +1,22 @@
 # requires a rather new version of cmake to correctly handle target_include_directories when compiling .cu files
 cmake_minimum_required(VERSION 3.5)
-
+CMAKE_POLICY(SET CMP0020 NEW)
 project(EagleEye)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_STANDARD 11)
-SET(BIN_DIRS "" CACHE STRING "" FORCE)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 option(BUILD_DEPENDENCIES "Build dependencies within the AquilOS family" ON)
+
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+SET(CMAKE_CXX_STANDARD 11)
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+SET(CMAKE_CONFIGURATION_TYPES "Debug;Release")
+SET(CMAKE_DEBUG_POSTFIX "d")
+
 find_package(CUDA REQUIRED)
   include_directories(${CUDA_INCLUDE_DIRS})
 
-set(PROJECT_BIN_DIRS_DEBUG)
-set(PROJECT_BIN_DIRS_RELWITHDEBINFO)
-set(PROJECT_BIN_DIRS_RELEASE "")
-CMAKE_POLICY(SET CMP0020 NEW)
-SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-SET(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 
-SET(CMAKE_DEBUG_POSTFIX "d")
-STRING(TOUPPER "${CMAKE_BUILD_TYPE}" _BUILD_TYPE)
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 include("cmake/FindNVToolsExt.cmake")
 include("cmake/Utils.cmake")
 
@@ -75,16 +73,11 @@ ENDIF(WIN32)
 SET(Aquila_JETSON FALSE CACHE BOOL "True if building for jetson platform")
 if(NOT BUILD_DEPENDENCIES)
     find_package(Aquila REQUIRED)
-    include_directories(${Aquila_INCLUDE_DIRS})
 else()
     message(STATUS "Building Aquila as part of project")
     add_subdirectory(Aquila)
 endif()
 
-LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
-LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
-
-INCLUDE_DIRECTORIES(${Aquila_INCLUDE_DIRS})
 add_subdirectory(plugins)
 add_subdirectory(samples)
 add_subdirectory(tests)
