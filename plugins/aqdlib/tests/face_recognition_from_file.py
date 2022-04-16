@@ -36,7 +36,7 @@ facedb = aq.nodes.FaceDatabase(detections=recognizer, image=fg)
 
 facedb.unknown_detections = './unknown'
 facedb.recent_detections = './recent'
-facedb.known_detections ='./known'
+facedb.known_detections = './known'
 
 
 draw = aq.nodes.DrawDetections(image=fg, detections=facedb)
@@ -54,7 +54,7 @@ while(not fg.getParam('eos').data.data):
     components = output.data.components
     for component in components:
         print(component.data.data.typename)
-        print(component.data.data.data)
+        print(component.data.data.host)
     count += 1
 
 facedb.saveUnknownFaces()
