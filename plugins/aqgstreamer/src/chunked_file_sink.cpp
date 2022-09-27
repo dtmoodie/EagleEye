@@ -51,7 +51,7 @@ namespace aqgstreamer
     {
         if (GstreamerSrcBase::createPipeline(file_path))
         {
-            _filesink = gst_bin_get_by_name(GST_BIN(m_pipeline), "filesink0");
+            _filesink = gst_bin_get_by_name(GST_BIN(m_pipeline.get()), "filesink0");
             if (_filesink)
             {
                 startPipeline();

@@ -11,14 +11,14 @@
 
 namespace aqgstreamer
 {
-    class aqgstreamer_EXPORT GLibThread : public std::enable_shared_from_this<GLibThread>
+    class aqgstreamer_EXPORT GLibThread : private std::enable_shared_from_this<GLibThread>
     {
 
         boost::thread m_thread;
         GMainLoop* m_main_loop = nullptr;
         mutable mo::ConditionVariable m_cv;
         mutable mo::Mutex_t m_mtx;
-        mo::IAsyncStreamPtr_t m_stream;
+        mo::IAsyncStreamWeakPtr_t m_stream;
 
         void loop();
 
@@ -35,8 +35,6 @@ namespace aqgstreamer
         void startThread();
 
         size_t getThreadId();
-
-        void yield();
 
         mo::IAsyncStreamPtr_t getStream() const;
     };

@@ -17,11 +17,18 @@ namespace aq
             return 0;
         }
 
+        GstreamerImageGrabber::~GstreamerImageGrabber()
+        {
+            // This comment is so clang-format doesn't make this one line so we can breakpoint nicely.
+            this->m_gstreamer_stream.reset();
+        }
+
         int GstreamerImageGrabber::loadTimeout() { return 10000; }
 
-        void GstreamerImageGrabber::setStream(const mo::IAsyncStreamPtr_t&)
+        void GstreamerImageGrabber::setStream(const mo::IAsyncStreamPtr_t& stream)
         {
-            nodes::IGrabber::setStream(m_gstreamer_stream);
+            nodes::IGrabber::setStream(stream);
+            nodes::IGrabber::setPublisherStream(m_gstreamer_stream.get());
         }
 
         void GstreamerImageGrabber::initCustom(bool /*first_init*/)
@@ -83,7 +90,8 @@ namespace aq
                     }
                 }
 
-                std::shared_ptr<GstBuffer> buffer = aqgstreamer::ownBuffer(gst_sample_get_buffer(sample.get()));
+                std::shared_ptr<GstBuffer> buffer = aqgstreamer::ownBuffer(sample.get());
+
                 aq::SyncedImage image;
 
                 const GstClockTime pts = buffer->pts;

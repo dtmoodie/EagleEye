@@ -16,7 +16,7 @@ namespace aqgstreamer
                 startPipeline();
             }
             pipeline_param.setModified(false);
-            m_valve = gst_bin_get_by_name(GST_BIN(m_pipeline), "myvalve");
+            m_valve = gst_bin_get_by_name(GST_BIN(m_pipeline.get()), "myvalve");
             if (!m_valve)
             {
                 this->getLogger().warn("No valve found in pipeline with name 'myvalve'");

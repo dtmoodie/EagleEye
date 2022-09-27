@@ -13,9 +13,21 @@
 
 namespace aqgstreamer
 {
+    std::shared_ptr<GstBuffer> ownBuffer(GstSample* sample)
+    {
+        // As per https://gstreamer.freedesktop.org/documentation/gstreamer/gstsample.html?gi-language=c
+        // We increment the ref count on the buffer since we are taking ownership of it with the shared ptr
+        GstBuffer* buffer = gst_sample_get_buffer(sample);
+        gst_buffer_ref(buffer);
+
+        std::shared_ptr<GstBuffer> owning(buffer, &gst_buffer_unref);
+        return owning;
+    }
+
     std::shared_ptr<GstBuffer> ownBuffer(GstBuffer* buffer)
     {
         // clang-format off
+        //gst_buffer_ref(buffer);
         return std::shared_ptr<GstBuffer>(buffer, [](GstBuffer* buffer)
         {
             gst_buffer_unref(buffer);
@@ -68,6 +80,7 @@ namespace aqgstreamer
                    GstMapFlags flags,
                    mo::IAsyncStreamPtr_t stream)
     {
+        // The map object holds ownership of the buffer
         std::shared_ptr<GstMapInfo> map(new GstMapInfo, [buffer](GstMapInfo* map) {
             gst_buffer_unmap(buffer.get(), map);
             delete map;
@@ -110,7 +123,8 @@ namespace aqgstreamer
     {
         (void)bus;
         (void)app;
-        MO_LOG(debug, "Received message type: {}", gst_message_type_get_name(GST_MESSAGE_TYPE(message)));
+        auto app_ = static_cast<GstreamerBase*>(app);
+        app_->logger->debug("Received message type: {}", gst_message_type_get_name(GST_MESSAGE_TYPE(message)));
 
         switch (GST_MESSAGE_TYPE(message))
         {
@@ -119,8 +133,8 @@ namespace aqgstreamer
             gchar* dbg_info = NULL;
 
             gst_message_parse_error(message, &err, &dbg_info);
-            MO_LOG(error, "Error from element {}: {}", GST_OBJECT_NAME(message->src), err->message);
-            MO_LOG(error, "Debugging info: {}", dbg_info ? dbg_info : "none");
+            app_->logger->debug("Error from element {}: {}", GST_OBJECT_NAME(message->src), err->message);
+            app_->logger->debug("Debugging info: {}", dbg_info ? dbg_info : "none");
             g_error_free(err);
             g_free(dbg_info);
             break;
@@ -133,23 +147,23 @@ namespace aqgstreamer
             switch (newstate)
             {
             case GST_STATE_VOID_PENDING: {
-                MO_LOG(debug, "State changed to GST_STATE_VOID_PENDING");
+                app_->logger->debug("State changed to GST_STATE_VOID_PENDING");
                 break;
             }
             case GST_STATE_NULL: {
-                MO_LOG(debug, "State changed to GST_STATE_NULL");
+                app_->logger->debug("State changed to GST_STATE_NULL");
                 break;
             }
             case GST_STATE_READY: {
-                MO_LOG(debug, "State changed to GST_STATE_READY");
+                app_->logger->debug("State changed to GST_STATE_READY");
                 break;
             }
             case GST_STATE_PAUSED: {
-                MO_LOG(debug, "State changed to GST_STATE_PAUSED");
+                app_->logger->debug("State changed to GST_STATE_PAUSED");
                 break;
             }
             case GST_STATE_PLAYING: {
-                MO_LOG(debug, "State changed to GST_STATE_PLAYING");
+                app_->logger->debug("State changed to GST_STATE_PLAYING");
                 break;
             }
             }
@@ -176,7 +190,8 @@ namespace aqgstreamer
 
     GstreamerBase::GstreamerBase()
     {
-        m_pipeline = nullptr;
+        m_glib_thread = GLibThread::instance();
+        this->logger = SystemTable::instance()->getLogger();
         if (!gst_is_initialized())
         {
             std::string str("-vvv");
@@ -188,55 +203,61 @@ namespace aqgstreamer
         }
     }
 
-    GstreamerBase::~GstreamerBase() { cleanup(); }
-
-    void GstreamerBase::cleanup()
+    GstreamerBase::~GstreamerBase()
     {
-
-        if (m_pipeline)
-        {
-            gst_element_set_state(m_pipeline, GST_STATE_NULL);
-            gst_object_unref(m_pipeline);
-            m_pipeline = nullptr;
-        }
+        cleanup();
+        m_glib_thread.reset();
     }
+
+    void GstreamerBase::cleanup() {}
 
     bool GstreamerBase::createPipeline(const std::string& pipeline_)
     {
         cleanup();
-        MO_ASSERT(!pipeline_.empty());
+        MO_ASSERT_LOGGER(*logger, !pipeline_.empty());
         GLibThread::instance()->startThread();
 
-        MO_LOG(info, "Attempting to create pipeline: {}", pipeline_);
+        this->logger->info("Attempting to create pipeline: {}", pipeline_);
         GError* error = nullptr;
-        m_pipeline = gst_parse_launch(pipeline_.c_str(), &error);
+        m_pipeline.reset(gst_parse_launch(pipeline_.c_str(), &error), [](GstElement* pipeline) {
+            GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_NULL);
+
+            if (GST_STATE_CHANGE_SUCCESS != ret)
+            {
+                std::cout << "Unable to stop gstreamer pipeline" << std::endl;
+            }
+            else
+            {
+                gst_object_unref(pipeline);
+            }
+        });
 
         if (m_pipeline == nullptr)
         {
-            MO_LOG(error, "Error parsing pipeline {}", pipeline_);
+            this->logger->error("Error parsing pipeline {}", pipeline_);
             return false;
         }
         else
         {
-            MO_LOG(info, "Successfully created pipeline");
+            this->logger->info("Successfully created pipeline");
         }
 
         if (error != nullptr)
         {
-            MO_LOG(error, "Error parsing pipeline '{}' error = {}", pipeline_, error->message);
+            this->logger->error("Error parsing pipeline '{}' error = {}", pipeline_, error->message);
             return false;
         }
-        MO_LOG(debug, "Input pipeline parsed {}", pipeline_);
+        this->logger->debug("Input pipeline parsed {}", pipeline_);
         // Error callback
-        auto bus = gst_pipeline_get_bus(GST_PIPELINE(m_pipeline));
+        auto bus = gst_pipeline_get_bus(GST_PIPELINE(m_pipeline.get()));
         if (!bus)
         {
-            MO_LOG(error, "Unable to get bus from pipeline");
+            this->logger->error("Unable to get bus from pipeline");
             return false;
         }
         gst_bus_add_watch(bus, (GstBusFunc)busMessage, this);
         gst_object_unref(bus);
-        MO_LOG(debug, "Successfully created pipeline");
+        this->logger->debug("Successfully created pipeline");
         return true;
     }
 
@@ -246,13 +267,13 @@ namespace aqgstreamer
         {
             return false;
         }
-        GstStateChangeReturn ret = gst_element_set_state(m_pipeline, GST_STATE_PLAYING);
+        GstStateChangeReturn ret = gst_element_set_state(m_pipeline.get(), GST_STATE_PLAYING);
         if (ret == GST_STATE_CHANGE_FAILURE)
         {
-            MO_LOG(error, "Unable to start pipeline");
+            this->logger->error("Unable to start pipeline");
             return false;
         }
-        MO_LOG(debug, "Starting pipeline");
+        this->logger->debug("Starting pipeline");
         return true;
     }
 
@@ -260,13 +281,13 @@ namespace aqgstreamer
     {
         if (!m_pipeline)
             return false;
-        GstStateChangeReturn ret = gst_element_set_state(m_pipeline, GST_STATE_NULL);
+        GstStateChangeReturn ret = gst_element_set_state(m_pipeline.get(), GST_STATE_NULL);
         if (ret == GST_STATE_CHANGE_FAILURE)
         {
-            MO_LOG(error, "Unable to stop pipeline");
+            this->logger->error("Unable to stop pipeline");
             return false;
         }
-        MO_LOG(debug, "Stopping pipeline");
+        this->logger->debug("Stopping pipeline");
         return true;
     }
 
@@ -276,14 +297,14 @@ namespace aqgstreamer
         {
             return false;
         }
-        GstStateChangeReturn ret = gst_element_set_state(m_pipeline, GST_STATE_PAUSED);
+        GstStateChangeReturn ret = gst_element_set_state(m_pipeline.get(), GST_STATE_PAUSED);
 
         if (ret == GST_STATE_CHANGE_FAILURE)
         {
-            MO_LOG(error, "Unable to pause pipeline");
+            this->logger->error("Unable to pause pipeline");
             return false;
         }
-        MO_LOG(debug, "Pausing pipeline");
+        this->logger->debug("Pausing pipeline");
         return true;
     }
 
@@ -293,7 +314,8 @@ namespace aqgstreamer
         {
             GstState ret;
             GstState pending;
-            if (gst_element_get_state(m_pipeline, &ret, &pending, GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_FAILURE)
+            if (gst_element_get_state(m_pipeline.get(), &ret, &pending, GST_CLOCK_TIME_NONE) !=
+                GST_STATE_CHANGE_FAILURE)
             {
                 return ret;
             }
@@ -339,10 +361,10 @@ namespace aqgstreamer
     {
         if (GstreamerBase::createPipeline(pipeline_))
         {
-            m_source = (GstAppSrc*)gst_bin_get_by_name(GST_BIN(m_pipeline), "mysource");
+            m_source = (GstAppSrc*)gst_bin_get_by_name(GST_BIN(m_pipeline.get()), "mysource");
             if (!m_source)
             {
-                MO_LOG(warn, "No appsrc with name \"mysource\" found");
+                this->logger->warn("No appsrc with name \"mysource\" found");
                 return false;
             }
             return true;
@@ -361,7 +383,7 @@ namespace aqgstreamer
 
         if (caps == nullptr)
         {
-            MO_LOG(error, "Error creating caps for appsrc");
+            this->logger->error("Error creating caps for appsrc");
             return false;
         }
 
@@ -369,7 +391,7 @@ namespace aqgstreamer
 
         g_object_set(G_OBJECT(m_source), "stream-type", GST_APP_STREAM_TYPE_STREAM, "format", GST_FORMAT_TIME, NULL);
 
-        MO_LOG(debug, "Connecting need/enough data callbacks");
+        this->logger->debug("Connecting need/enough data callbacks");
         m_need_data_id = g_signal_connect(m_source, "need-data", G_CALLBACK(_start_feed), this);
         m_enough_data_id = g_signal_connect(m_source, "enough-data", G_CALLBACK(_stop_feed), this);
         return true;
@@ -386,7 +408,7 @@ namespace aqgstreamer
         }
         m_prev_time = timestamp;
 
-        MO_LOG(trace, "Estimated frame time: {} ns", delta.count());
+        this->logger->trace("Estimated frame time: {} ns", delta.count());
 
         const aq::Shape<3> shape = img.shape();
         const aq::PixelType pixel = img.pixelType();
@@ -434,7 +456,7 @@ namespace aqgstreamer
 
                 if (rw != GST_FLOW_OK)
                 {
-                    MO_LOG(error, "Error pushing buffer into appsrc {}", rw);
+                    this->logger->error("Error pushing buffer into appsrc {}", rw);
                 }
             };
             if (sync)
@@ -476,7 +498,7 @@ namespace aqgstreamer
         if (GstreamerBase::createPipeline(pipeline_))
         {
             GValue item = G_VALUE_INIT;
-            GstBin* bin = GST_BIN(m_pipeline);
+            GstBin* bin = GST_BIN(m_pipeline.get());
             const GType app_sink_type = GST_TYPE_APP_SINK;
 
             // GstIterator* appsink_iterator = gst_bin_iterate_all_by_interface(bin, GST_TYPE_APP_SINK);
@@ -529,7 +551,7 @@ namespace aqgstreamer
 
         if (caps == nullptr)
         {
-            MO_LOG(error, "Error creating caps \"{}\"", caps_);
+            this->logger->error("Error creating caps \"{}\"", caps_);
             return false;
         }
         if (index == -1)
@@ -620,7 +642,7 @@ namespace aqgstreamer
         {
             gst_app_sink_set_caps(appsink, caps);
             caps = gst_app_sink_get_caps(appsink);
-            MO_LOG(debug, "Set appsink caps to {}", gst_caps_to_string(caps));
+            this->logger->debug("Set appsink caps to {}", gst_caps_to_string(caps));
         }
 
         return true;
@@ -632,7 +654,7 @@ namespace aqgstreamer
         {
             return false;
         }
-        MO_ASSERT(depth == CV_8U);
+        MO_ASSERT_LOGGER(*logger, depth == CV_8U);
         std::string format;
         if (channels == 3)
         {
@@ -664,14 +686,14 @@ namespace aqgstreamer
 
         if (caps == nullptr)
         {
-            MO_LOG(error, "Error creating caps for appsrc");
+            this->logger->error("Error creating caps for appsrc");
             return false;
         }
 
         gst_app_src_set_caps(GST_APP_SRC(m_source), caps);
 
         g_object_set(G_OBJECT(m_source), "stream-type", GST_APP_STREAM_TYPE_STREAM, "format", GST_FORMAT_TIME, NULL);
-        MO_LOG(debug, "Connecting need/enough data callbacks");
+        this->logger->debug("Connecting need/enough data callbacks");
         m_need_data_id = g_signal_connect(m_source, "need-data", G_CALLBACK(_start_feed), this);
         m_enough_data_id = g_signal_connect(m_source, "enough-data", G_CALLBACK(_stop_feed), this);
         m_caps_set = true;
@@ -786,7 +808,7 @@ namespace aqgstreamer
                 }
                 else
                 {
-                    MO_LOG(warn, "host not set, setting to localhost");
+                    this->logger->warn("host not set, setting to localhost");
                     host_param.setValue("127.0.0.1");
                     ss << "127.0.0.1";
                 }

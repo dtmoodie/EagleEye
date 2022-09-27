@@ -10,7 +10,7 @@ namespace aqgstreamer
     {
         if (GstreamerSrcBase::createPipeline(pipeline_))
         {
-            m_source = (GstAppSrc*)gst_bin_get_by_name(GST_BIN(m_pipeline), "mysource");
+            m_source = (GstAppSrc*)gst_bin_get_by_name(GST_BIN(m_pipeline.get()), "mysource");
             if (!m_source)
             {
                 getLogger().warn("No appsrc with name \"mysource\" found");

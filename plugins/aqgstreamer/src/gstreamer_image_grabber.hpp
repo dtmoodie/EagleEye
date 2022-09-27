@@ -16,6 +16,8 @@ namespace aq
             static int canLoad(const std::string& doc);
             static int loadTimeout();
 
+            ~GstreamerImageGrabber();
+
             MO_DERIVE(GstreamerImageGrabber, IGrabber)
                 SOURCE(SyncedImage, image)
                 MO_SIGNAL(void, update)

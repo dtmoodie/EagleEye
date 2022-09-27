@@ -43,7 +43,7 @@ namespace aqgstreamer
         GstFlowReturn onPull(GstAppSink*) override;
 
         cv::Mat m_decode_buffer;
-        std::shared_ptr<mo::IAsyncStream> m_gstreamer_stream;
+        mo::IAsyncStreamPtr_t m_gstreamer_stream;
     };
 } // namespace aqgstreamer
 

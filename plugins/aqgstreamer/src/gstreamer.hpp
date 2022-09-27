@@ -31,6 +31,7 @@
 
 namespace aqgstreamer
 {
+    std::shared_ptr<GstBuffer> ownBuffer(GstSample* sample);
     std::shared_ptr<GstBuffer> ownBuffer(GstBuffer*);
 
     bool mapBuffer(std::shared_ptr<GstBuffer> buffer,
@@ -69,13 +70,18 @@ namespace aqgstreamer
         // Attempt to detect if a string is a valid gstreamer pipeline
         static bool isPipeline(const std::string& string);
 
+        std::shared_ptr<spdlog::logger> logger;
+
+        std::shared_ptr<const GstElement> getPipeline() const { return m_pipeline; }
+
       protected:
         // The gstreamer pipeline
-        GstElement* m_pipeline;
+        std::shared_ptr<GstElement> m_pipeline;
         GstClockTime m_timestamp;
         mo::OptionalTime m_prev_time;
         virtual void cleanup();
         bool m_caps_set = false;
+        std::shared_ptr<GLibThread> m_glib_thread;
     };
 
     // used to feed data into EagleEye from gstreamer, use when creating frame grabbers

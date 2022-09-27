@@ -7,6 +7,8 @@
 #include <MetaObject/thread/ThreadInfo.hpp>
 #include <MetaObject/thread/ThreadRegistry.hpp>
 
+#include <opencv2/core.hpp>
+
 namespace aqgstreamer
 {
     struct GlibEventHandler;
@@ -15,8 +17,8 @@ namespace aqgstreamer
     // the glib thread. This is an ugly hack for now :/
     gboolean glibIdle(gpointer user_data)
     {
-        GLibThread* obj = static_cast<GLibThread*>(user_data);
-        obj->yield();
+        mo::IAsyncStream* stream = static_cast<mo::IAsyncStream*>(user_data);
+        stream->synchronize();
         return TRUE;
     }
 
@@ -51,49 +53,34 @@ namespace aqgstreamer
         m_thread = boost::thread(boost::bind(&GLibThread::loop, this));
     }
 
-    GLibThread::~GLibThread()
-    {
-        MO_LOG(info, "Cleaning up glib thread");
-        stopThread();
-    }
+    GLibThread::~GLibThread() { stopThread(); }
 
     void GLibThread::loop()
     {
+        auto cv_cpu_allocator = SystemTable::instance()->getSingletonOptional<cv::MatAllocator>();
         if (!g_main_loop_is_running(m_main_loop))
         {
-
+            mo::IAsyncStreamPtr_t stream;
             {
                 mo::Mutex_t::Lock_t lock(m_mtx);
                 mo::initThread();
-                m_stream = mo::IAsyncStream::create("glib thread");
-                mo::IAsyncStream::setCurrent(m_stream);
+                stream = mo::IAsyncStream::create("glib thread");
+                mo::IAsyncStream::setCurrent(stream);
                 mo::setThisThreadName("glib thread");
             }
-
+            m_stream = stream;
             m_cv.notify_all();
 #ifndef _MSC_VER
-            mo::ThreadRegistry::instance()->setGUIStream(m_stream);
-            g_idle_add(&glibIdle, this);
+            mo::ThreadRegistry::instance()->setGUIStream(stream);
+            g_idle_add(&glibIdle, stream.get());
 
 // Ideally we can just use a notifier instead of an idle func
 // TODO make me work...
 // GlibEventHandler handler;
 #endif
-            std::shared_ptr<GLibThread> ptr = this->shared_from_this();
-
-            MO_LOG(info, "glib event loop starting");
             g_main_loop_run(m_main_loop);
         }
-    }
-
-    mo::IAsyncStreamPtr_t GLibThread::getStream() const
-    {
-        mo::Mutex_t::Lock_t lock(m_mtx);
-        while (!m_stream)
-        {
-            m_cv.wait(lock);
-        }
-        return m_stream;
+        std::cout << "GlibThread loop exit" << std::endl;
     }
 
     // TODO initialize at plugin load
@@ -115,15 +102,27 @@ namespace aqgstreamer
         return m_main_loop;
     }
 
+    mo::IAsyncStreamPtr_t GLibThread::getStream() const
+    {
+        mo::Mutex_t::Lock_t lock(m_mtx);
+        mo::IAsyncStreamPtr_t output = m_stream.lock();
+        if (!output)
+        {
+            m_cv.wait(lock);
+            output = m_stream.lock();
+        }
+        return output;
+    }
+
     void GLibThread::stopThread()
     {
-        g_main_loop_quit(m_main_loop);
-        m_stream.reset();
+        if (g_main_loop_is_running(m_main_loop))
+        {
+            g_main_loop_quit(m_main_loop);
+        }
         m_thread.interrupt();
         m_thread.join();
     }
-
-    void GLibThread::yield() { m_stream->synchronize(); }
 
     void GLibThread::startThread() {}
 
