@@ -71,6 +71,7 @@ namespace aqdlib
         bool processImpl() override;
         dlib::anet_type m_net;
         bool m_initialized = false;
+        dlib::resizable_tensor m_input_tensor;
     };
 
 } // namespace aqdlib

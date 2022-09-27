@@ -18,8 +18,13 @@ graph.setStream(stream)
 
 fg = aq.framegrabbers.create(args.path)
 graph.addNode(fg)
+
+sub_graph = aq.nodes.SubGraph(graph=graph)
+worker_thread = graph
+#worker_thread = sub_graph
+
 aq.log('warning')
-face = aq.nodes.YOLO(input=fg)
+face = aq.nodes.YOLO(graph=worker_thread, input=fg)
 
 face.weight_file = args.weights
 face.model_file = args.cfg
@@ -27,24 +32,25 @@ face.label_file = args.labels
 face.det_thresh = 0.01
 face.cat_thresh = 0.01
 
-aligner = aq.nodes.FaceAligner(image=fg, detections=face, shape_landmark_file='/home/dan/code/EagleEye/plugins/aqdlib/share/shape_predictor_5_face_landmarks.dat')
+aligner = aq.nodes.FaceAligner(graph=worker_thread, image=fg, detections=face, shape_landmark_file='/home/dan/code/EagleEye/plugins/aqdlib/share/shape_predictor_5_face_landmarks.dat')
 
-recognizer = aq.nodes.FaceRecognizer(image=fg, detections=aligner,
+recognizer = aq.nodes.FaceRecognizer(graph=worker_thread, image=fg, detections=aligner,
     face_recognizer_weight_file='/home/dan/code/EagleEye/plugins/aqdlib/share/dlib_face_recognition_resnet_model_v1.dat')
 
-facedb = aq.nodes.FaceDatabase(detections=recognizer, image=fg)
+facedb = aq.nodes.FaceDatabase(graph=worker_thread, detections=recognizer, image=fg)
 
 facedb.unknown_detections = './unknown'
 facedb.recent_detections = './recent'
 facedb.known_detections = './known'
 
 
-draw = aq.nodes.DrawDetections(image=fg, detections=facedb)
+draw = aq.nodes.DrawDetections(graph=worker_thread, image=fg, detections=facedb)
 
-display = aq.nodes.QtImageDisplay(input=draw)
-writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./overlays')
+display = aq.nodes.QtImageDisplay(graph=worker_thread, input=draw)
+writer = aq.nodes.ImageWriter(graph=worker_thread, input_image=draw, request_write=True, frequency=1, save_directory='./overlays')
 
 count = 0
+sub_graph.startThread()
 while(not fg.getParam('eos').data.data):
     graph.step()
     #aq.eventLoop(10)
@@ -53,8 +59,8 @@ while(not fg.getParam('eos').data.data):
 
     components = output.data.components
     for component in components:
-        print(component.data.data.typename)
-        print(component.data.data.host)
+        print(component.data.typename)
+        print(component.data.data)
     count += 1
 
 facedb.saveUnknownFaces()

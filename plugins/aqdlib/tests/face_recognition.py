@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 import signal
 import sys
-
+import time
 
 global loop
 loop = True
@@ -24,46 +24,52 @@ parser.add_argument('--labels', default='/home/dan/code/yolo_tiny_face/labels.tx
 
 args = parser.parse_args()
 
-stream = aq.createStream()
-#aq.setGuiStream(stream)
+stream = aq.createStream(name='main')
+aq.Stream.setCurrent(stream)
+graph = aq.Graph(stream=stream)
 
-graph = aq.Graph()
-graph.setStream(stream)
 
 fg = aq.framegrabbers.create(args.path)
 assert fg is not None, 'Unable to load {}'.format(args.path)
+#fg.logging_verbosity = 'trace'
 graph.addNode(fg)
-
-face = aq.nodes.YOLO(graph=graph, input=fg, queue_size=0.01)
-
+face = aq.nodes.YOLO(graph=graph, input=fg, name="face_detector", queue_size=1)
+#face.logging_verbosity = 'trace'
 face.weight_file = args.weights
 face.model_file = args.cfg
 face.label_file = args.labels
 face.det_thresh = 0.01
 face.cat_thresh = 0.01
 
-face_tracker = aq.nodes.TrackerKCF(graph=graph, image=fg, detections=face)
+aligner = aq.nodes.FaceAligner(image=fg,
+                                detections=face,
+                                shape_landmark_file='/home/dan/code/EagleEye/plugins/aqdlib/share/shape_predictor_5_face_landmarks.dat',
+                                queue_size=300)
 
-aligner = aq.nodes.FaceAligner(graph=graph, image=fg, detections=face, shape_landmark_file='/home/dan/code/EagleEye/plugins/aqdlib/share/shape_predictor_5_face_landmarks.dat')
+recognizer = aq.nodes.FaceRecognizer(image=fg, detections=aligner,
+                                     queue_size=300,
+                                     face_recognizer_weight_file='/home/dan/code/EagleEye/plugins/aqdlib/share/dlib_face_recognition_resnet_model_v1.dat')
 
-recognizer = aq.nodes.FaceRecognizer(graph=graph, image=fg, detections=aligner,
-    face_recognizer_weight_file='/home/dan/code/EagleEye/plugins/aqdlib/share/dlib_face_recognition_resnet_model_v1.dat')
-
-facedb = aq.nodes.FaceDatabase(graph=graph, detections=recognizer, image=fg)
+facedb = aq.nodes.FaceDatabase(graph=graph, detections=recognizer, image=fg, queue_size=300)
 facedb.unknown_detections = './unknown'
 facedb.recent_detections = './recent'
 facedb.known_detections ='./known'
 
-draw = aq.nodes.DrawDetections(graph=graph, image=fg, detections=facedb)
-disp = aq.nodes.QtImageDisplay(graph=graph, input=draw)
-#writer = aq.nodes.ImageWriter(input_image=draw, request_write=True, frequency=1, save_directory='./')
+draw = aq.nodes.DrawDetections(image=fg, detections=face, name="face_renderer", queue_size=300)
+disp = aq.nodes.QtImageDisplay(input=draw, name="image_display")
+start = time.time()
 
-while(loop):
+def printInputBufferSizes(obj):
+    inputs = obj.getInputs()
+    for x in inputs:
+        print('{} buffer size = {}'.format(x.getName(), x.getInputBufferSize()))
+
+while(loop and (time.time() - start) < 10.0):
     graph.step()
-    #X = face.getInputs()
-    #for x in X:
-        #pub = x.getPublisher()
-        #if pub is not None:
-            #headers = pub.getAvailableHeaders()
-            #print(len(headers))
+    stream.synchronize()
+
+#    printInputBufferSizes(disp)
+#    printInputBufferSizes(draw)
+#    printInputBufferSizes(disp)
+print('---------------------- Script exit ---------------------')
 

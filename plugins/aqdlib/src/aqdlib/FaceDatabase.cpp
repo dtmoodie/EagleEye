@@ -348,7 +348,7 @@ namespace aqdlib
         size_t unknown_count = m_identities->size() - m_known_faces.identities.size();
         std::string name = "unknown" + boost::lexical_cast<std::string>(unknown_count);
         m_identities->push_back(name);
-        mo::IAsyncStream::Ptr_t stream = this->getStream();
+        mo::IAsyncStreamPtr_t stream = this->getStream();
         m_unknown_face_descriptors.push_back(aq::TSyncedMemory<float>::copyHost(det_desc, stream));
 
         m_unknown_crops.push_back(patch);

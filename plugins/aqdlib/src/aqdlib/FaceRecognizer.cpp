@@ -96,6 +96,21 @@ namespace aqdlib
 
             if (!aligned_faces.empty())
             {
+                /*
+                // The following code block gets descriptors in GPU memory thus preventing unnecessary copies if we have
+                a component that can
+                // Work out of GPU memory
+                // Now need to just make descriptors a synced image or something like that
+                auto& subnet = m_net.subnet();
+                subnet.to_tensor(aligned_faces.begin(), aligned_faces.end(), m_input_tensor);
+                subnet.forward(m_input_tensor);
+                const dlib::tensor& output_tensor = subnet.get_output();
+                const float* descriptor_ptr = output_tensor.device();
+                const uint32_t descriptor_width = output_tensor.k();
+                */
+
+                // Now copy output to descriptors
+
                 // TODO figure out how to pass in the output, thus avoiding any need to copy data.
                 std::vector<dlib::matrix<float, 0, 1>> face_descriptors = m_net(aligned_faces);
 
