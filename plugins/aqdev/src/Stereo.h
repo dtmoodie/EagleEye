@@ -33,7 +33,7 @@ namespace aqdev
         MO_END;
 
       protected:
-        bool processImpl() override;
+        bool processImpl(aq::CVStream&) override;
         cv::Ptr<cv::cuda::StereoBM> stereoBM;
     };
     class StereoBilateralFilter : public aqcore::OpenCVCudaNode
@@ -57,7 +57,7 @@ namespace aqdev
         MO_END;
 
       protected:
-        bool processImpl() override;
+        bool processImpl(aq::CVStream&) override;
         cv::Ptr<cv::cuda::StereoBeliefPropagation> bp;
     };
 
@@ -74,7 +74,7 @@ namespace aqdev
         MO_END;
 
       protected:
-        bool processImpl() override;
+        bool processImpl(aq::CVStream&) override;
     };
 
     class UndistortStereo : public aqcore::OpenCVCudaNode
@@ -112,7 +112,7 @@ namespace aqdev
       protected:
         cv::cuda::GpuMat m_map_x;
         cv::cuda::GpuMat m_map_y;
-        bool processImpl() override;
+        bool processImpl(aq::CVStream&) override;
     };
 
 } // namespace aqdev

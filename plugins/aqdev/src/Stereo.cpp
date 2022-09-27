@@ -10,7 +10,7 @@
 
 namespace aqdev
 {
-    bool StereoBM::processImpl()
+    bool StereoBM::processImpl(aq::CVStream& stream)
     {
         if (!stereoBM || num_disparities_param.getModified() || block_size_param.getModified())
         {
@@ -24,13 +24,11 @@ namespace aqdev
             return false;
         }
 
-        mo::IAsyncStreamPtr_t stream = this->getStream();
-        mo::IDeviceStream* dev_stream = stream->getDeviceStream();
-
-        cv::cuda::GpuMat left = this->left_image->getGpuMat(dev_stream);
-        cv::cuda::GpuMat right = this->right_image->getGpuMat(dev_stream);
+        cv::cuda::GpuMat left = this->left_image->getGpuMat(&stream);
+        cv::cuda::GpuMat right = this->right_image->getGpuMat(&stream);
         cv::cuda::GpuMat disparity;
-        cv::cuda::Stream& cv_stream = this->getCVStream();
+        cv::cuda::Stream& cv_stream = stream.getCVStream();
+        MO_ASSERT(cv_stream != nullptr);
 
         stereoBM->compute(left, right, disparity, cv_stream);
 
@@ -38,7 +36,7 @@ namespace aqdev
         return true;
     }
 
-    bool StereoBeliefPropagation::processImpl()
+    bool StereoBeliefPropagation::processImpl(aq::CVStream& stream)
     {
         if (bp == nullptr || num_iters_param.getModified() || num_disparities_param.getModified() ||
                 num_levels_param.getModified(),
@@ -52,12 +50,10 @@ namespace aqdev
             num_levels_param.setModified(true);
             message_type_param.setModified(true);
         }
-        mo::IAsyncStreamPtr_t stream = this->getStream();
-        mo::IDeviceStream* dev_stream = stream->getDeviceStream();
 
-        cv::cuda::GpuMat left = this->left_image->getGpuMat(dev_stream);
-        cv::cuda::GpuMat right = this->right_image->getGpuMat(dev_stream);
-        cv::cuda::Stream& cv_stream = this->getCVStream();
+        cv::cuda::GpuMat left = this->left_image->getGpuMat(&stream);
+        cv::cuda::GpuMat right = this->right_image->getGpuMat(&stream);
+        cv::cuda::Stream& cv_stream = stream.getCVStream();
         cv::cuda::GpuMat disparity;
 
         this->bp->compute(left, right, disparity, cv_stream);
@@ -84,7 +80,7 @@ namespace aqdev
             _parameters[0]->changed = true;
         }
     }*/
-    bool StereoConstantSpaceBP::processImpl()
+    bool StereoConstantSpaceBP::processImpl(aq::CVStream& stream)
     {
         if (num_levels_param.getModified() || nr_plane_param.getModified() || num_disparities_param.getModified() ||
             num_iterations_param.getModified() || !csbp)
@@ -96,13 +92,11 @@ namespace aqdev
             num_disparities_param.setModified(false);
             num_iterations_param.setModified(false);
         }
-        mo::IAsyncStreamPtr_t stream = this->getStream();
-        mo::IDeviceStream* dev_stream = stream->getDeviceStream();
 
-        cv::cuda::GpuMat left = this->left_image->getGpuMat(dev_stream);
-        cv::cuda::GpuMat right = this->right_image->getGpuMat(dev_stream);
+        cv::cuda::GpuMat left = this->left_image->getGpuMat(&stream);
+        cv::cuda::GpuMat right = this->right_image->getGpuMat(&stream);
         cv::cuda::GpuMat disparity;
-        cv::cuda::Stream& cv_stream = this->getCVStream();
+        cv::cuda::Stream cv_stream = stream.getCVStream();
 
         csbp->compute(left, right, disparity, cv_stream);
 
@@ -110,12 +104,13 @@ namespace aqdev
         return true;
     }
 
-    bool UndistortStereo::processImpl()
+    bool UndistortStereo::processImpl(aq::CVStream& stream)
     {
         const bool updated_intrinsic_params = camera_matrix_param.hasNewData() || distortion_matrix_param.hasNewData();
         const bool updated_extrinsic_params =
             rotation_matrix_param.hasNewData() || projection_matrix_param.hasNewData();
         const bool warp_maps_need_initialization = (this->m_map_x.empty() || this->m_map_y.empty());
+        cv::cuda::Stream& cvstream = stream.getCVStream();
 
         if (updated_intrinsic_params || updated_extrinsic_params || warp_maps_need_initialization)
         {
@@ -124,30 +119,25 @@ namespace aqdev
             cv::Mat X, Y;
             cv::initUndistortRectifyMap(
                 *camera_matrix, *distortion_matrix, *rotation_matrix, *projection_matrix, sz, CV_32FC1, X, Y);
-            cv::cuda::Stream& stream = this->getCVStream();
 
-            m_map_x.upload(X, stream);
-            m_map_y.upload(Y, stream);
+            m_map_x.upload(X, cvstream);
+            m_map_y.upload(Y, cvstream);
 
             this->mapX.publish(X);
             this->mapY.publish(Y);
         }
-        mo::IAsyncStreamPtr_t stream = this->getStream();
-        mo::IDeviceStream* dev_ptr = stream->getDeviceStream();
 
         cv::cuda::GpuMat remapped;
-        cv::cuda::GpuMat in = input->getGpuMat(dev_ptr);
+        cv::cuda::GpuMat in = input->getGpuMat(&stream);
 
-        cv::cuda::Stream& cv_stream = this->getCVStream();
-
-        cv::cuda::remap(input->getGpuMat(dev_ptr),
+        cv::cuda::remap(input->getGpuMat(&stream),
                         remapped,
                         this->m_map_x,
                         this->m_map_y,
                         interpolation_method.getValue(),
                         boarder_mode.getValue(),
                         cv::Scalar(),
-                        cv_stream);
+                        cvstream);
         undistorted.publish(remapped, mo::tags::param = &this->input_param);
         return true;
     }
