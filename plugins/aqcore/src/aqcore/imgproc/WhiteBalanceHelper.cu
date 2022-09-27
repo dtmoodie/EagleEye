@@ -122,7 +122,7 @@ void transform(const cv::cuda::GpuMat& in,
     transform_kernel<T1, T2><<<grid, block, 0, stream>>>(in, out, saturate, dyn_range);
 }
 
-namespace aq
+namespace aqcore
 {
     void applyWhiteBalance(const cv::cuda::GpuMat& input,
                            cv::cuda::GpuMat& output,

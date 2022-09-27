@@ -4,7 +4,7 @@ namespace aqcore
 {
     bool StreamNode::processImpl()
     {
-        mo::IAsyncStream::Ptr_t stream = this->getStream();
+        mo::IAsyncStreamPtr_t stream = this->getStream();
         if (!stream)
         {
             return false;

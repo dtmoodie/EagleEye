@@ -28,8 +28,9 @@ namespace aqcore
             return;
         }
         cv::cuda::GpuMat im;
-        cv::cuda::Stream& cv_stream = this->getCVStream();
+        cv::cuda::Stream* cv_stream = this->getCVStream();
         image->copyTo(im, &stream);
+        MO_ASSERT(cv_stream);
         if (max_num_tiles > 0)
         {
             const uint32_t width = static_cast<uint32_t>(im.cols) / max_num_tiles;
@@ -47,16 +48,16 @@ namespace aqcore
                         auto dest_roi = im(cv::Rect(i * width, im.rows - width - y_offset, width, width));
                         if (roi.size() == dest_roi.size())
                         {
-                            roi.copyTo(dest_roi, cv_stream);
+                            roi.copyTo(dest_roi, *cv_stream);
                         }
                         else
                         {
-                            cv::cuda::resize(roi, dest_roi, dest_roi.size(), 0, 0, cv::INTER_NEAREST, cv_stream);
+                            cv::cuda::resize(roi, dest_roi, dest_roi.size(), 0, 0, cv::INTER_NEAREST, *cv_stream);
                         }
 
-                        auto draw_text = [&draw_mats, &y_offset, &cv_stream, &im, width, i](cv::Mat img) {
+                        auto draw_text = [&draw_mats, &y_offset, cv_stream, &im, width, i](cv::Mat img) {
                             auto dest_roi = im(cv::Rect(i * width, im.rows - width - y_offset, width, text_height));
-                            dest_roi.upload(img, cv_stream);
+                            dest_roi.upload(img, *cv_stream);
                             draw_mats.push_back(std::move(img));
                             y_offset += text_height;
                         };
@@ -64,19 +65,19 @@ namespace aqcore
                         if (draw_conf)
                         {
                             auto color = patch_itr->second.color;
-                            dest_roi.colRange(0, 3).setTo(cv::Scalar::all(0), cv_stream);
+                            dest_roi.colRange(0, 3).setTo(cv::Scalar::all(0), *cv_stream);
                             uint32_t conf_rows = width * patch_itr->second.det_conf;
                             conf_rows = std::max<uint32_t>(conf_rows, 1);
                             conf_rows = std::min<uint32_t>(conf_rows, width);
-                            dest_roi.colRange(0, 3).rowRange(width - conf_rows, width).setTo(color, cv_stream);
+                            dest_roi.colRange(0, 3).rowRange(width - conf_rows, width).setTo(color, *cv_stream);
 
                             conf_rows = width * patch_itr->second.cat_conf;
                             conf_rows = std::max<uint32_t>(conf_rows, 1);
                             conf_rows = std::min<uint32_t>(conf_rows, width);
-                            dest_roi.colRange(width - 3, width).setTo(cv::Scalar::all(0), cv_stream);
+                            dest_roi.colRange(width - 3, width).setTo(cv::Scalar::all(0), *cv_stream);
                             dest_roi.colRange(width - 3, width)
                                 .rowRange(width - conf_rows, width)
-                                .setTo(color, cv_stream);
+                                .setTo(color, *cv_stream);
 
                             if (draw_classification)
                             {

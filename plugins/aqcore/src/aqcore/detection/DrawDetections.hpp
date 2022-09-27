@@ -63,7 +63,7 @@ namespace aqcore
                              mt::Tensor<const float, 2> descriptors,
                              cv::cuda::Stream& stream);
 
-        bool processImpl() override;
+        bool processImpl(mo::IAsyncStream& stream) override;
         std::string textLabel(const mt::Tensor<const aq::Classification, 1>& cats, const Id& id);
         cv::Mat textImage(const mt::Tensor<const aq::Classification, 1>& cats, const Id& id);
     };

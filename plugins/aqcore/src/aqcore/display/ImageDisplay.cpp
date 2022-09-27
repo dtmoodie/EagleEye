@@ -25,32 +25,33 @@ namespace std
 bool QtImageDisplay::processImpl()
 {
     cv::Mat mat;
-    mo::OptionalTime ts;
+    boost::optional<mo::Header> header;
     const bool overlay = overlay_timestamp;
     bool sync = false;
     if (input && !input->empty())
     {
         mo::IAsyncStreamPtr_t stream = this->getStream();
         // TODO use proper context based processImpl overloads
-        mat = input->mat(stream.get(), &sync);
-        ts = input_param.getNewestTimestamp();
+        auto current_data = input_param.getCurrentData(stream.get());
+        mat = aq::wrapImage(*input, current_data, stream.get(), &sync);
+        header = input_param.getNewestHeader();
     }
 
     std::string name = getName();
     if (!mat.empty())
     {
-        mo::IAsyncStream::Ptr_t gui_thread = mo::ThreadRegistry::instance()->getGUIStream();
+        mo::IAsyncStreamPtr_t gui_thread = mo::ThreadRegistry::instance()->getGUIStream();
         if (sync)
         {
-            gui_thread->pushWork([mat, name, overlay, ts, this, gui_thread](mo::IAsyncStream* stream) -> void {
+            gui_thread->pushWork([mat, name, overlay, header, this, gui_thread](mo::IAsyncStream* stream) -> void {
                 PROFILE_RANGE(imshow);
                 MO_ASSERT(gui_thread.get() == stream);
                 cv::Mat draw_img = mat;
-                if (overlay && ts)
+                if (overlay && header && header->timestamp)
                 {
                     draw_img = mat.clone();
                     std::stringstream ss;
-                    ss << "Timestamp: " << ts;
+                    ss << "Timestamp: " << header->timestamp;
                     cv::putText(
                         draw_img, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
                 }
@@ -60,13 +61,18 @@ bool QtImageDisplay::processImpl()
         else
         {
             cv::Mat draw_img = mat;
-            if (overlay && ts)
+            if (header && header->timestamp)
             {
-                draw_img = mat.clone();
                 std::stringstream ss;
-                ss << "Timestamp: " << ts;
-                cv::putText(
-                    draw_img, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
+                ss << "Timestamp: " << header->timestamp;
+                if (overlay)
+                {
+                    draw_img = mat.clone();
+
+                    cv::putText(
+                        draw_img, ss.str(), cv::Point(20, 40), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0, 255, 0));
+                }
+                std::cout << ss.str() << std::endl;
             }
             auto graph = getGraph();
             MO_ASSERT(graph != nullptr);

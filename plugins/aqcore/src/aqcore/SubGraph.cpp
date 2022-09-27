@@ -17,9 +17,14 @@ namespace aq
             m_thread->setName("SubGraph");
             m_thread_stream = m_thread->asyncStream();
             m_thread_stream->setName("SubGraph");
+            this->setStream(m_thread_stream);
         }
 
-        SubGraph::~SubGraph() { m_quit = true; }
+        SubGraph::~SubGraph()
+        {
+            m_quit = true;
+            m_thread.reset();
+        }
 
         void SubGraph::setName(const std::string& name)
         {
@@ -34,6 +39,8 @@ namespace aq
             child->setStream(m_thread_stream);
         }
 
+        void SubGraph::addParent(Node::WeakPtr parent_) { Node::addParent(parent_); }
+
         void SubGraph::startThread()
         {
             m_quit = false;
@@ -42,6 +49,8 @@ namespace aq
                 this->loop();
             });
         }
+
+        mo::IAsyncStreamPtr_t SubGraph::getStream() const { return m_thread_stream; }
 
         void SubGraph::stopThread() { m_quit = true; }
 
@@ -59,14 +68,10 @@ namespace aq
 
         void SubGraph::loop()
         {
-            MO_ASSERT(m_thread_stream != nullptr);
-            processChildren(*m_thread_stream);
             if (!m_quit)
             {
-                m_thread_stream->pushWork([this](mo::IAsyncStream* stream) {
-                    MO_ASSERT(stream == this->m_thread_stream.get());
-                    this->loop();
-                });
+                processChildren(*m_thread_stream);
+                m_thread_stream->pushWork([this](mo::IAsyncStream* stream) { this->loop(); });
             }
         }
 

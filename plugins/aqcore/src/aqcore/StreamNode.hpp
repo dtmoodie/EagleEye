@@ -4,10 +4,10 @@
 
 namespace aqcore
 {
-    class AQUILA_EXPORTS StreamNode : virtual public aq::nodes::Node
+    class AQUILA_EXPORTS StreamNode : virtual public aq::nodes::GPUNode
     {
       public:
-        MO_DERIVE(StreamNode, aq::nodes::Node)
+        MO_DERIVE(StreamNode, aq::nodes::GPUNode)
 
         MO_END;
 

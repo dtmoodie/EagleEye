@@ -49,7 +49,7 @@ namespace aq
             void nodeInit(bool first) override;
             bool processImpl() override;
             mo::Thread m_worker_thread;
-            mo::IAsyncStream::Ptr_t m_worker_stream;
+            mo::IAsyncStreamPtr_t m_worker_stream;
         };
     } // namespace nodes
 } // namespace aq

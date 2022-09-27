@@ -22,11 +22,12 @@ namespace aqcore
         }
 
         // device side
-        std::shared_ptr<mo::IAsyncStream> stream = this->getStream();
+        mo::IAsyncStreamPtr_t stream = this->getStream();
         mo::IDeviceStream* dev_stream = stream->getDeviceStream();
         const aq::PixelFormat pixel_format = image->pixelFormat();
         const aq::DataFlag data_flag = image->dataType();
-        cv::cuda::Stream& cv_stream = this->getCVStream();
+        cv::cuda::Stream* cv_stream = this->getCVStream();
+        MO_ASSERT(cv_stream != nullptr);
 
         aq::SyncedImage output(aq::Shape<2>(img_shape(0), img_shape(1)), pixel_format, data_flag, stream);
         cv::cuda::GpuMat gpu_out = output.gpuMat();
@@ -34,7 +35,7 @@ namespace aqcore
 
         cv::cuda::GpuMat gpu_mask = mask->gpuMat(dev_stream);
 
-        gpu_out.setTo(color, gpu_mask, cv_stream);
+        gpu_out.setTo(color, gpu_mask, *cv_stream);
         this->output.publish(std::move(output), mo::tags::param = &image_param);
 
         return true;

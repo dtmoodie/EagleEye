@@ -59,16 +59,14 @@ INCLUDE_DIRECTORIES(
 
 file(GLOB_RECURSE src "*.cpp")
 file(GLOB_RECURSE hdr "*.h" "*.hpp")
-if(MO_HAVE_CUDA)
-    IF(UNIX)
-      set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-      set(CUDA_NVCC_FLAGS "-std=c++11;${CUDA_NVCC_FLAGS}")
-    ENDIF()
-    file(GLOB_RECURSE knl "*.cu")
-    cuda_add_library(aqcore SHARED ${src} ${hdr} ${knl})
-else(MO_HAVE_CUDA)
-    add_library(aqcore SHARED ${src} ${hdr})
-endif(MO_HAVE_CUDA)
+file(GLOB_RECURSE knl "*.cu")
+
+IF(UNIX)
+  set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+  set(CUDA_NVCC_FLAGS "-std=c++11;${CUDA_NVCC_FLAGS}")
+ENDIF()
+
+cuda_add_library(aqcore SHARED ${src} ${hdr} ${knl})
 
 
 target_link_libraries(aqcore 
@@ -92,4 +90,4 @@ target_compile_definitions(aqcore
 
 metaobject_declare_plugin(aqcore)
 set_plugin_available(aqcore)
-
+aq_install_python_test(tests/static_camera_object_tracking.py)

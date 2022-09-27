@@ -41,6 +41,11 @@ namespace aqcore
         initNetwork();
     }
 
+    void INeuralNet::on_model_file_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream*)
+    {
+        initNetwork();
+    }
+
     void INeuralNet::preBatch(int batch_size) { (void)batch_size; }
 
     void INeuralNet::postBatch() {}
@@ -169,7 +174,8 @@ namespace aqcore
 
         cv::cuda::GpuMat float_image;
         cv::cuda::Stream& cvstream = *m_cv_stream;
-        cv::cuda::GpuMat input = this->input->getGpuMat(&stream);
+        bool sync = false;
+        cv::cuda::GpuMat input = this->input->getGpuMat(&stream, &sync);
 
         {
             mo::ScopedProfile preprocessing("INeuralNet::preprocessing");

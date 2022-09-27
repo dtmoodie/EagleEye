@@ -21,7 +21,7 @@ namespace aqcore
             aq::boundingBoxToPixels(used_roi, img_size);
             const cv::Rect pixel_roi = cv::Rect(used_roi) & cv::Rect(cv::Point(), img_size);
 
-            std::shared_ptr<mo::IAsyncStream> stream = this->getStream();
+            mo::IAsyncStreamPtr_t stream = this->getStream();
             mo::IDeviceStream* dev_stream = stream->getDeviceStream();
             const aq::SyncedMemory::SyncState state = input->state();
             aq::SyncedImage output_image;

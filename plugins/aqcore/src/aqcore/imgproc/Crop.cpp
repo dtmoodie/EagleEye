@@ -10,7 +10,7 @@ bool Crop::processImpl()
     const cv::Size size(shape(0), shape(1));
     boundingBoxToPixels(bb, size);
     aq::SyncedMemory::SyncState state = this->input->state();
-    std::shared_ptr<mo::IAsyncStream> stream = this->getStream();
+    mo::IAsyncStreamPtr_t stream = this->getStream();
     aq::SyncedImage out;
     const aq::PixelFormat pixel_format = this->input->pixelFormat();
     auto input_data = this->input_param.getCurrentData();

@@ -27,6 +27,7 @@ namespace aqcore
             OPTIONAL_INPUT(aq::TDetectedObjectSet<ct::VariadicTypedef<aq::detection::BoundingBox2d>>, input_detections)
 
             PARAM(mo::ReadFile, model_file, mo::ReadFile())
+            PARAM_UPDATE_SLOT(model_file)
 
             PARAM(mo::ReadFile, weight_file, mo::ReadFile())
             PARAM_UPDATE_SLOT(weight_file)

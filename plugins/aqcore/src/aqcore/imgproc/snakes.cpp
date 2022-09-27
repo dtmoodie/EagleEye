@@ -392,7 +392,7 @@ namespace aqcore
 
     bool SnakeCircle::processImpl()
     {
-        std::shared_ptr<mo::IAsyncStream> stream = this->getStream();
+        mo::IAsyncStreamPtr_t stream = this->getStream();
         const cv::Mat mat = input->getMat(stream.get());
 
         aq::TEntityComponentSystem<aq::Contour> ecs = *circles;

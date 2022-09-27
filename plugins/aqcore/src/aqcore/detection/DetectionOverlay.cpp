@@ -135,7 +135,8 @@ namespace aqcore
         // Square patches
         const cv::Size size(width, width);
         const auto interpolation = cv::INTER_LINEAR;
-        if (state < state.DEVICE_UPDATED)
+        auto cvstream = this->getCVStream();
+        if (state < state.DEVICE_UPDATED && cvstream)
         {
             cv::Mat resized;
             auto mat = patch_.mat();
@@ -147,7 +148,7 @@ namespace aqcore
         {
             cv::cuda::GpuMat resized;
             cv::cuda::GpuMat tmp = patch_.gpuMat();
-            cv::cuda::resize(tmp, resized, size, 0.0, 0.0, interpolation, this->getCVStream());
+            cv::cuda::resize(tmp, resized, size, 0.0, 0.0, interpolation, *cvstream);
             // not sure if this is necessary
             stream.synchronize();
             patch = aq::SyncedImage(resized);

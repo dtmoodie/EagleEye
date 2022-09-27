@@ -90,27 +90,31 @@ namespace aqcore
         for (size_t i = 0; i < num_detections; ++i)
         {
             cv::Rect rect = bbs[i];
-            mt::Tensor<const float, 1> descriptor = descriptors[i];
-            cv::Mat_<float> tmp(1, descriptor_width, const_cast<float*>(descriptor.data()));
-            cv::normalize(tmp, normalized_descriptor, 0, 255, cv::NORM_MINMAX, CV_8U);
-            cv::applyColorMap(normalized_descriptor, colorized_descriptor, cv::COLORMAP_JET);
-            const int height = static_cast<int>(rect.height);
-            const int width = descriptor_width / height;
-            cv::Point tl = rect.tl();
-            tl.x += rect.width + 5;
-            if (tl.x + width >= mat.cols)
+
+            if (rect.height > 0 and rect.width > 0)
             {
-                tl.x = rect.x - width - 5;
-            }
-            if (tl.y < 0)
-            {
-                tl.y = 0;
-            }
-            for (int32_t i = 0; i < descriptor_width; ++i)
-            {
-                const int32_t row = i % height + tl.y;
-                const int32_t col = tl.x + i / descriptor_width;
-                mat(row, col) = colorized_descriptor(i);
+                mt::Tensor<const float, 1> descriptor = descriptors[i];
+                cv::Mat_<float> tmp(1, descriptor_width, const_cast<float*>(descriptor.data()));
+                cv::normalize(tmp, normalized_descriptor, 0, 255, cv::NORM_MINMAX, CV_8U);
+                cv::applyColorMap(normalized_descriptor, colorized_descriptor, cv::COLORMAP_JET);
+                cv::Point tl = rect.tl();
+                const int height = static_cast<int>(rect.height);
+                const int width = descriptor_width / height;
+                tl.x += rect.width + 5;
+                if (tl.x + width >= mat.cols)
+                {
+                    tl.x = rect.x - width - 5;
+                }
+                if (tl.y < 0)
+                {
+                    tl.y = 0;
+                }
+                for (int32_t i = 0; i < descriptor_width; ++i)
+                {
+                    const int32_t row = i % height + tl.y;
+                    const int32_t col = tl.x + i / descriptor_width;
+                    mat(row, col) = colorized_descriptor(i);
+                }
             }
         }
     }
@@ -202,7 +206,7 @@ namespace aqcore
         return text_image;
     }
 
-    bool DrawDetections::processImpl()
+    bool DrawDetections::processImpl(mo::IAsyncStream& stream)
     {
         // Drawing on the CPU is very cheap, so only draw on the GPU if the image is already there
         const bool image_is_on_device = this->image->state() == aq::SyncedMemory::SyncState::DEVICE_UPDATED;
@@ -216,16 +220,16 @@ namespace aqcore
         const size_t num_detections = bbs.getShape()[0];
         if (num_detections > 0)
         {
-            if (draw_on_device)
+            auto* cvstream = this->getCVStream();
+            if (draw_on_device && cvstream)
             {
                 cv::cuda::GpuMat device_draw_image;
 
                 this->image->copyTo(device_draw_image, this->getStream()->getDeviceStream());
 
-                auto& stream = this->getCVStream();
-                drawBoxes(device_draw_image, bbs, cats, stream);
-                drawLabels(device_draw_image, bbs, cats, ids, stream);
-                drawDescriptors(device_draw_image, bbs, descriptors, stream);
+                drawBoxes(device_draw_image, bbs, cats, *cvstream);
+                drawLabels(device_draw_image, bbs, cats, ids, *cvstream);
+                drawDescriptors(device_draw_image, bbs, descriptors, *cvstream);
                 this->output.publish(std::move(device_draw_image), mo::tags::param = &this->image_param);
             }
             else

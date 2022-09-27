@@ -25,12 +25,15 @@ namespace aq
 
             MO_END;
 
-            virtual void setName(const std::string& name) override;
-            virtual void addChild(Ptr child) override;
+            void setName(const std::string& name) override;
+            void addChild(Ptr child) override;
+            void addParent(Node::WeakPtr parent_) override;
+
+            mo::IAsyncStreamPtr_t getStream() const override;
 
           protected:
-            virtual bool processImpl() override;
-            virtual bool process() override;
+            bool processImpl() override;
+            bool process() override;
 
           private:
             void loop();
@@ -38,7 +41,7 @@ namespace aq
             mo::ConnectionPtr_t m_thread_connection;
             std::atomic<bool> m_dirty;
             std::atomic<bool> m_quit;
-            std::shared_ptr<mo::IAsyncStream> m_thread_stream;
+            mo::IAsyncStreamPtr_t m_thread_stream;
         };
     } // namespace nodes
 } // namespace aq
