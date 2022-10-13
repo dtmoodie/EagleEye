@@ -131,11 +131,16 @@ namespace darknet
             char* mf = const_cast<char*>(model_file.c_str());
             char* wf = const_cast<char*>(weight_file.c_str());
             m_network = load_network_custom(mf, wf, 0, batch_size);
+            m_allocator = SystemTable::instance()->getSingletonOptional<cv::cuda::GpuMat::Allocator>();
 
             // m_network = load_network(mf, wf, 0);
         }
 
-        ~Network() {}
+        ~Network()
+        {
+            m_buffer.release();
+            m_allocator.reset();
+        }
 
         cv::Scalar_<unsigned int> getInputShape() const
         {
@@ -275,6 +280,7 @@ namespace darknet
         network_state state = {0};
         float* m_input = nullptr;
         cv::cuda::GpuMat m_buffer;
+        std::shared_ptr<cv::cuda::GpuMat::Allocator> m_allocator;
     };
 
 #else
