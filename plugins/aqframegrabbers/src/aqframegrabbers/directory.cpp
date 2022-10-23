@@ -1,7 +1,11 @@
 #include "directory.h"
 #include "precompiled.hpp"
+
 #include <Aquila/framegrabbers/FrameGrabberInfo.hpp>
 #include <Aquila/rcc/external_includes/cv_imgcodec.hpp>
+
+#include <MetaObject/logging/profiling.hpp>
+
 #include <algorithm>
 
 namespace aqframegrabbers
@@ -87,6 +91,13 @@ namespace aqframegrabbers
         {
             if (frame_index < files_on_disk.size())
             {
+                if (m_prefetching)
+                {
+                    auto future = m_prefetch_promise.get_future();
+                    future.wait();
+                    m_prefetching = false;
+                }
+                mo::ScopedProfile profile_range("loading data");
                 while (!fg->loadData(files_on_disk[frame_index]))
                 {
                     if (!synchronous)
@@ -116,10 +127,38 @@ namespace aqframegrabbers
         {
             setModified(false);
         }
+        prefetch(0);
         return true;
     }
 
+    void FrameGrabberDirectory::prefetch(int dist)
+    {
+        if (frame_index + dist < files_on_disk.size())
+        {
+            m_prefetch_promise = boost::fibers::promise<bool>();
+            m_prefetching = true;
+            auto path = files_on_disk[frame_index + dist];
+            m_prefetch_stream->pushWork([path, this](mo::IAsyncStream*) {
+                mo::ScopedProfile profile_range("Prefetching");
+                bool success = false;
+                try
+                {
+                    success = fg->prefetch(path);
+                }
+                catch (const std::exception_ptr exception)
+                {
+                    m_prefetch_promise.set_exception(exception);
+                    return;
+                }
+
+                m_prefetch_promise.set_value(success);
+            });
+        }
+    }
+
     void FrameGrabberDirectory::restart() { frame_index = 0; }
+
+    void FrameGrabberDirectory::initCustom(bool first_init) { m_prefetch_stream = m_prefetch_thread.asyncStream(); }
 
     bool FrameGrabberDirectory::loadData(std::string file_path)
     {
@@ -183,6 +222,7 @@ namespace aqframegrabbers
                     setModified();
                     sig_update();
                     step = true;
+                    prefetch(0);
                     return true;
                 }
             }

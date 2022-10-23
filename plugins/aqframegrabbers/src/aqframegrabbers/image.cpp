@@ -14,7 +14,19 @@ namespace aqframegrabbers
 {
     bool GrabberImage::loadData(const std::string& path)
     {
-        image = cv::imread(path);
+        {
+            mo::Lock_t lock(m_prefetch_mutex);
+            if (m_prefetched_path == path)
+            {
+                image = m_prefetched_image;
+            }
+            else
+            {
+                lock.unlock();
+                image = cv::imread(path);
+            }
+        }
+
         if (!image.empty())
         {
             auto stream = this->getStream();
@@ -50,6 +62,19 @@ namespace aqframegrabbers
     }
 
     int GrabberImage::loadTimeout() { return 5000; }
+
+    bool GrabberImage::prefetch(const std::string& path)
+    {
+        cv::Mat img = cv::imread(path);
+        if (!img.empty())
+        {
+            mo::Lock_t lock(m_prefetch_mutex);
+            m_prefetched_image = img;
+            m_prefetched_path = path;
+            return true;
+        }
+        return false;
+    }
 } // namespace aqframegrabbers
 
 using namespace aqframegrabbers;

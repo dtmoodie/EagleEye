@@ -162,13 +162,14 @@ namespace aqframegrabbers
                 {
                     ts = mo::Time::now();
                 }
+                aq::SyncedImage synced_image(img, aq::PixelFormat::kBGR);
                 if (fn == -1)
                 {
-                    output.publish(img, mo::tags::timestamp = ts);
+                    output.publish(synced_image, mo::tags::timestamp = ts);
                 }
                 else
                 {
-                    output.publish(img, mo::tags::timestamp = ts, mo::tags::fn = static_cast<size_t>(fn));
+                    output.publish(synced_image, mo::tags::timestamp = ts, mo::tags::fn = static_cast<size_t>(fn));
                 }
                 return true;
             }
